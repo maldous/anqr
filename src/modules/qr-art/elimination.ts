@@ -192,6 +192,29 @@ function buildBlockAffectionMatrix(
   return matrix;
 }
 
+function eliminatePixelFromOtherRows(
+  matrix: Uint32Array[],
+  resultVectors: RSBasisVector[],
+  pivotRow: number,
+  numVectors: number,
+  wordIndex: number,
+  bitIndex: number,
+  bitsetWordCount: number
+): void {
+  const pivotMatrixRow = matrix[pivotRow];
+  for (let r = 0; r < numVectors; r++) {
+    if (r !== pivotRow && ((matrix[r][wordIndex] >>> bitIndex) & 1) === 1) {
+      const row = matrix[r];
+      for (let word = 0; word < bitsetWordCount; word++) {
+        row[word] ^= pivotMatrixRow[word];
+      }
+      for (let i = 0; i < resultVectors[r].blockBits.length; i++) {
+        resultVectors[r].blockBits[i] ^= resultVectors[pivotRow].blockBits[i];
+      }
+    }
+  }
+}
+
 /**
  * Perform Gauss-Jordan elimination for a SINGLE RS block
  * This assigns each basis vector to control one specific pixel
@@ -269,21 +292,15 @@ function eliminateBlock(
       ];
     }
 
-    // Eliminate this pixel from all other rows IN THIS BLOCK ONLY
-    const pivotMatrixRow = matrix[pivotRow];
-    for (let r = 0; r < numVectors; r++) {
-      if (r !== pivotRow && ((matrix[r][wordIndex] >>> bitIndex) & 1) === 1) {
-        const row = matrix[r];
-        // XOR row r with pivot row (valid because both are from same RS block)
-        for (let word = 0; word < bitsetWordCount; word++) {
-          row[word] ^= pivotMatrixRow[word];
-        }
-        // Also XOR the actual vector data
-        for (let i = 0; i < resultVectors[r].blockBits.length; i++) {
-          resultVectors[r].blockBits[i] ^= resultVectors[pivotRow].blockBits[i];
-        }
-      }
-    }
+    eliminatePixelFromOtherRows(
+      matrix,
+      resultVectors,
+      pivotRow,
+      numVectors,
+      wordIndex,
+      bitIndex,
+      bitsetWordCount
+    );
 
     // Mark this row as pivoting on this pixel
     rowPivot[pivotRow] = pixelIdx;
@@ -313,6 +330,31 @@ function eliminateBlock(
     controllablePixels: controlledPixels.length,
     controlledPixels,
   };
+}
+
+function shrinkAvailablePixelOrder(
+  availablePixelOrder: number[],
+  controlledPixels: number[],
+  assignedPixelMask: Uint8Array,
+  totalPixels: number
+): number[] {
+  for (const pixel of controlledPixels) {
+    if (pixel >= 0 && pixel < totalPixels) {
+      assignedPixelMask[pixel] = 1;
+    }
+  }
+
+  const remainingPixels: number[] = [];
+  for (const pixel of availablePixelOrder) {
+    if (assignedPixelMask[pixel] === 0) remainingPixels.push(pixel);
+  }
+
+  for (const pixel of controlledPixels) {
+    if (pixel >= 0 && pixel < totalPixels) {
+      assignedPixelMask[pixel] = 0;
+    }
+  }
+  return remainingPixels;
 }
 
 /**
@@ -383,25 +425,13 @@ export function gaussJordanEliminate(
 
       blockResults.push(result);
 
-      // Remove newly controlled pixels from future blocks while preserving order.
       if (result.controlledPixels.length > 0 && availablePixelOrder.length > 0) {
-        for (const pixel of result.controlledPixels) {
-          if (pixel >= 0 && pixel < totalPixels) {
-            assignedPixelMask[pixel] = 1;
-          }
-        }
-
-        const remainingPixels: number[] = [];
-        for (const pixel of availablePixelOrder) {
-          if (assignedPixelMask[pixel] === 0) remainingPixels.push(pixel);
-        }
-        availablePixelOrder = remainingPixels;
-
-        for (const pixel of result.controlledPixels) {
-          if (pixel >= 0 && pixel < totalPixels) {
-            assignedPixelMask[pixel] = 0;
-          }
-        }
+        availablePixelOrder = shrinkAvailablePixelOrder(
+          availablePixelOrder,
+          result.controlledPixels,
+          assignedPixelMask,
+          totalPixels
+        );
       }
 
       // Add vectors to combined list
@@ -587,6 +617,71 @@ export function applyAllSelectedVectors(
   }
 }
 
+function buildBlockBitToPixelTables(mappings: BitPixelMapping[]): Array<Int32Array | undefined> {
+  const blockMaxBitKeys: number[] = [];
+  for (const mapping of mappings) {
+    const bitKey = mapping.posInBlock * 8 + mapping.bitInByte;
+    const existing = blockMaxBitKeys[mapping.rsBlockIndex];
+    if (existing === undefined || bitKey > existing) {
+      blockMaxBitKeys[mapping.rsBlockIndex] = bitKey;
+    }
+  }
+
+  const tables: Array<Int32Array | undefined> = new Array(blockMaxBitKeys.length);
+  for (let blockIndex = 0; blockIndex < blockMaxBitKeys.length; blockIndex++) {
+    const maxBitKey = blockMaxBitKeys[blockIndex];
+    if (maxBitKey === undefined) continue;
+    const table = new Int32Array(maxBitKey + 1);
+    table.fill(-1);
+    tables[blockIndex] = table;
+  }
+  for (const mapping of mappings) {
+    const table = tables[mapping.rsBlockIndex];
+    if (!table) continue;
+    table[mapping.posInBlock * 8 + mapping.bitInByte] = mapping.pixelIndex;
+  }
+
+  return tables;
+}
+
+function computeFlipParity(
+  blockSelections: BlockSelectionResult[],
+  blockResultByIndex: Array<BlockEliminationResult | undefined>,
+  blockBitToPixelTables: Array<Int32Array | undefined>,
+  flipParity: Uint8Array,
+  maxPixelCount: number
+): void {
+  for (const sel of blockSelections) {
+    const { blockIndex, selectedVectorIndices } = sel;
+    const blockResult = blockResultByIndex[blockIndex];
+    const bitToPixelTable = blockBitToPixelTables[blockIndex];
+    if (!(blockResult && bitToPixelTable)) continue;
+
+    for (const vectorIdx of selectedVectorIndices) {
+      const vector = blockResult.vectors[vectorIdx];
+      if (!vector) continue;
+
+      for (let byteIdx = 0; byteIdx < vector.blockBits.length; byteIdx++) {
+        let remainingBits = vector.blockBits[byteIdx];
+        if (remainingBits === 0) continue;
+
+        const byteBase = byteIdx * 8;
+        while (remainingBits !== 0) {
+          const bitIdx = 31 - Math.clz32(remainingBits);
+          remainingBits &= remainingBits - 1;
+
+          const bitKey = byteBase + bitIdx;
+          if (bitKey >= bitToPixelTable.length) continue;
+          const pixelIdx = bitToPixelTable[bitKey];
+          if (pixelIdx >= 0 && pixelIdx < maxPixelCount) {
+            flipParity[pixelIdx] ^= 1;
+          }
+        }
+      }
+    }
+  }
+}
+
 /**
  * Count how many pixels match the target after applying selected vectors
  *
@@ -613,29 +708,7 @@ export function countMatchingPixels(
   mappings: BitPixelMapping[]
 ): { matching: number; total: number } {
   const maxPixelCount = moduleCount * moduleCount;
-  const blockMaxBitKeys: number[] = [];
-  for (const mapping of mappings) {
-    const bitKey = mapping.posInBlock * 8 + mapping.bitInByte;
-    const existing = blockMaxBitKeys[mapping.rsBlockIndex];
-    if (existing === undefined || bitKey > existing) {
-      blockMaxBitKeys[mapping.rsBlockIndex] = bitKey;
-    }
-  }
-
-  // Build per-block lookup table: bitKey(posInBlock * 8 + bitInByte) -> pixelIndex.
-  const blockBitToPixelTables: Array<Int32Array | undefined> = new Array(blockMaxBitKeys.length);
-  for (let blockIndex = 0; blockIndex < blockMaxBitKeys.length; blockIndex++) {
-    const maxBitKey = blockMaxBitKeys[blockIndex];
-    if (maxBitKey === undefined) continue;
-    const table = new Int32Array(maxBitKey + 1);
-    table.fill(-1);
-    blockBitToPixelTables[blockIndex] = table;
-  }
-  for (const mapping of mappings) {
-    const table = blockBitToPixelTables[mapping.rsBlockIndex];
-    if (!table) continue;
-    table[mapping.posInBlock * 8 + mapping.bitInByte] = mapping.pixelIndex;
-  }
+  const blockBitToPixelTables = buildBlockBitToPixelTables(mappings);
 
   // Track flip parity directly (odd = flipped, even = unchanged).
   const flipParity = acquireUint8Buffer(maxPixelCount);
@@ -652,38 +725,13 @@ export function countMatchingPixels(
   }
 
   try {
-    // For each selected vector, iterate through ALL bits in its blockBits
-    for (const sel of blockSelections) {
-      const { blockIndex, selectedVectorIndices } = sel;
-
-      const blockResult = blockResultByIndex[blockIndex];
-      const bitToPixelTable = blockBitToPixelTables[blockIndex];
-      if (!(blockResult && bitToPixelTable)) continue;
-
-      for (const vectorIdx of selectedVectorIndices) {
-        const vector = blockResult.vectors[vectorIdx];
-        if (!vector) continue;
-
-        // Iterate through each byte in blockBits
-        for (let byteIdx = 0; byteIdx < vector.blockBits.length; byteIdx++) {
-          let remainingBits = vector.blockBits[byteIdx];
-          if (remainingBits === 0) continue; // Skip zero bytes for efficiency
-
-          const byteBase = byteIdx * 8;
-          while (remainingBits !== 0) {
-            const bitIdx = 31 - Math.clz32(remainingBits);
-            remainingBits &= remainingBits - 1;
-
-            const bitKey = byteBase + bitIdx;
-            if (bitKey >= bitToPixelTable.length) continue;
-            const pixelIdx = bitToPixelTable[bitKey];
-            if (pixelIdx >= 0 && pixelIdx < maxPixelCount) {
-              flipParity[pixelIdx] ^= 1;
-            }
-          }
-        }
-      }
-    }
+    computeFlipParity(
+      blockSelections,
+      blockResultByIndex,
+      blockBitToPixelTables,
+      flipParity,
+      maxPixelCount
+    );
 
     let matching = 0;
     let total = 0;

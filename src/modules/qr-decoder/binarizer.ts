@@ -277,6 +277,37 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     }
   }
 
+  private static calculateBlockStats(
+    luminances: Uint8ClampedArray,
+    xoffset: number,
+    yoffset: number,
+    width: number
+  ): { sum: number; min: number; max: number } {
+    let sum = 0;
+    let min = 0xff;
+    let max = 0;
+    for (
+      let yy = 0, offset = yoffset * width + xoffset;
+      yy < HybridBinarizer.BLOCK_SIZE;
+      yy++, offset += width
+    ) {
+      for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
+        const pixel = luminances[offset + xx] & 0xff;
+        sum += pixel;
+        if (pixel < min) min = pixel;
+        if (pixel > max) max = pixel;
+      }
+      if (max - min > HybridBinarizer.MIN_DYNAMIC_RANGE) {
+        for (yy++, offset += width; yy < HybridBinarizer.BLOCK_SIZE; yy++, offset += width) {
+          for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
+            sum += luminances[offset + xx] & 0xff;
+          }
+        }
+      }
+    }
+    return { sum, min, max };
+  }
+
   private static calculateBlackPoints(
     luminances: Uint8ClampedArray,
     subWidth: number,
@@ -295,36 +326,16 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
       for (let x = 0; x < subWidth; x++) {
         let xoffset = x << HybridBinarizer.BLOCK_SIZE_POWER;
         if (xoffset > maxXOffset) xoffset = maxXOffset;
-        let sum = 0;
-        let min = 0xff;
-        let max = 0;
-        for (
-          let yy = 0, offset = yoffset * width + xoffset;
-          yy < HybridBinarizer.BLOCK_SIZE;
-          yy++, offset += width
-        ) {
-          for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
-            const pixel = luminances[offset + xx] & 0xff;
-            sum += pixel;
-            if (pixel < min) min = pixel;
-            if (pixel > max) max = pixel;
-          }
-          if (max - min > HybridBinarizer.MIN_DYNAMIC_RANGE) {
-            for (yy++, offset += width; yy < HybridBinarizer.BLOCK_SIZE; yy++, offset += width) {
-              for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
-                sum += luminances[offset + xx] & 0xff;
-              }
-            }
-          }
-        }
 
-        let average = sum >> (HybridBinarizer.BLOCK_SIZE_POWER * 2);
-        if (max - min <= HybridBinarizer.MIN_DYNAMIC_RANGE) {
-          average = min / 2;
+        const stats = HybridBinarizer.calculateBlockStats(luminances, xoffset, yoffset, width);
+
+        let average = stats.sum >> (HybridBinarizer.BLOCK_SIZE_POWER * 2);
+        if (stats.max - stats.min <= HybridBinarizer.MIN_DYNAMIC_RANGE) {
+          average = stats.min / 2;
           if (y > 0 && x > 0) {
             const averageNeighborBlackPoint =
               (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
-            if (min < averageNeighborBlackPoint) {
+            if (stats.min < averageNeighborBlackPoint) {
               average = averageNeighborBlackPoint;
             }
           }

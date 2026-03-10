@@ -353,47 +353,6 @@ type ResolvedPreservationOptions = {
   protectVersionInfo: boolean;
 };
 
-type CharacterEncoding = 'default' | 'utf8' | 'shift-jis';
-
-export function detectCharacterEncoding(content: string): CharacterEncoding {
-  if (!content) return 'default';
-
-  const isUniquelyJapanese = (charCode: number): boolean => {
-    if (charCode >= 0x3040 && charCode <= 0x309f) return true; // Hiragana
-    if (charCode >= 0x30a0 && charCode <= 0x30ff) return true; // Katakana
-    if (charCode >= 0xff65 && charCode <= 0xff9f) return true; // Half-width Katakana
-    return false;
-  };
-
-  const isSharedCJK = (charCode: number): boolean => {
-    if (charCode >= 0x4e00 && charCode <= 0x9fff) return true; // CJK Unified Ideographs
-    if (charCode >= 0x3000 && charCode <= 0x303f) return true; // CJK Symbols and Punctuation
-    return false;
-  };
-
-  let hasUniquelyJapanese = false; // Hiragana, Katakana - definitively Japanese
-  let hasSharedCJK = false; // Kanji - could be Chinese or Japanese
-  let hasOtherNonLatin1 = false; // Emojis, Korean, etc.
-
-  for (let i = 0; i < content.length; i++) {
-    const charCode = content.charCodeAt(i);
-    if (charCode <= 255) continue;
-
-    if (isUniquelyJapanese(charCode)) {
-      hasUniquelyJapanese = true;
-    } else if (isSharedCJK(charCode)) {
-      hasSharedCJK = true;
-    } else {
-      hasOtherNonLatin1 = true;
-    }
-  }
-
-  if (hasOtherNonLatin1) return 'utf8';
-  if (hasUniquelyJapanese) return 'shift-jis';
-  if (hasSharedCJK) return 'utf8';
-  return 'default';
-}
-
 export function resolveOverlayPreservationOptions(params: {
   overlayEnabled: boolean;
   overlayMode: string | undefined;
@@ -911,10 +870,73 @@ function useQRGenerator(): UseQRGeneratorResult {
   // Auto-detect the most appropriate character encoding based on content
   // This helps users who paste UTF-8 content (emojis, Chinese, Japanese, etc.)
   // without manually changing the encoding setting
-  const detectedCharacterEncoding = useMemo(
-    () => detectCharacterEncoding(rawContent),
-    [rawContent]
-  );
+  const detectedCharacterEncoding = useMemo(() => {
+    if (!rawContent) return 'default';
+
+    // Helper functions to categorize characters
+    // Uniquely Japanese: only found in Japanese text (hiragana, katakana)
+    const isUniquelyJapanese = (charCode: number): boolean => {
+      // Hiragana: U+3040 - U+309F
+      if (charCode >= 0x3040 && charCode <= 0x309f) return true;
+      // Katakana: U+30A0 - U+30FF
+      if (charCode >= 0x30a0 && charCode <= 0x30ff) return true;
+      // Half-width Katakana: U+FF65 - U+FF9F
+      if (charCode >= 0xff65 && charCode <= 0xff9f) return true;
+      return false;
+    };
+
+    // Shared CJK: characters used in Chinese, Japanese, and Korean
+    // Shift-JIS can encode these, but presence alone doesn't indicate Japanese
+    const isSharedCJK = (charCode: number): boolean => {
+      // CJK Unified Ideographs (Kanji/Hanzi): U+4E00 - U+9FFF
+      if (charCode >= 0x4e00 && charCode <= 0x9fff) return true;
+      // CJK Symbols and Punctuation: U+3000 - U+303F
+      if (charCode >= 0x3000 && charCode <= 0x303f) return true;
+      return false;
+    };
+
+    let hasUniquelyJapanese = false; // Hiragana, Katakana - definitively Japanese
+    let hasSharedCJK = false; // Kanji - could be Chinese or Japanese
+    let hasOtherNonLatin1 = false; // Emojis, Korean, etc.
+
+    // Check each character in the content
+    for (let i = 0; i < rawContent.length; i++) {
+      const charCode = rawContent.charCodeAt(i);
+
+      // Skip characters within Latin-1 range (0-255)
+      if (charCode <= 255) continue;
+
+      // Categorize the character
+      if (isUniquelyJapanese(charCode)) {
+        hasUniquelyJapanese = true;
+      } else if (isSharedCJK(charCode)) {
+        hasSharedCJK = true;
+      } else {
+        // Non-Latin-1, non-CJK character (e.g., emoji, Korean, etc.)
+        hasOtherNonLatin1 = true;
+      }
+    }
+
+    // Priority 1: If content has non-CJK Unicode (emojis, Korean, etc.), use UTF-8
+    if (hasOtherNonLatin1) {
+      return 'utf8';
+    }
+
+    // Priority 2: If content has uniquely Japanese chars (hiragana/katakana),
+    // use Shift-JIS for efficiency (it's a native QR code encoding mode)
+    if (hasUniquelyJapanese) {
+      return 'shift-jis';
+    }
+
+    // Priority 3: If content has only shared CJK (kanji without hiragana/katakana),
+    // it's likely Chinese text - use UTF-8 as Shift-JIS may not encode all Chinese chars
+    if (hasSharedCJK) {
+      return 'utf8';
+    }
+
+    // Content fits within Latin-1 range, default encoding works
+    return 'default';
+  }, [rawContent]);
 
   // Auto-update character encoding when user has 'default' selected and content requires
   // a different encoding (UTF-8 or Shift-JIS)

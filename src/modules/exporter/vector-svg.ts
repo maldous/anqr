@@ -243,6 +243,95 @@ function generateGradientDef(gradient: VectorGradient, id: string): string {
   }
 }
 
+function buildSvgTimingPaths(
+  matrix: boolean[][],
+  moduleCount: number,
+  marginPx: number,
+  moduleSize: number,
+  timingStyle: VectorTimingStyle,
+  moduleStyle: VectorModuleStyle,
+  cornerRadius: number
+): string {
+  let pathData = '';
+  for (let col = 8; col < moduleCount - 8; col++) {
+    if (matrix[6][col]) {
+      const x = marginPx + col * moduleSize;
+      const y = marginPx + 6 * moduleSize;
+      pathData += `${generateTimingModulePath(x, y, moduleSize, timingStyle, moduleStyle, cornerRadius)} `;
+    }
+  }
+  for (let row = 8; row < moduleCount - 8; row++) {
+    if (matrix[row][6]) {
+      const x = marginPx + 6 * moduleSize;
+      const y = marginPx + row * moduleSize;
+      pathData += `${generateTimingModulePath(x, y, moduleSize, timingStyle, moduleStyle, cornerRadius)} `;
+    }
+  }
+  return pathData;
+}
+
+function buildSvgDataPaths(
+  matrix: boolean[][],
+  moduleCount: number,
+  marginPx: number,
+  moduleSize: number,
+  moduleStyle: VectorModuleStyle,
+  cornerRadius: number
+): string {
+  let pathData = '';
+  const version = getVersionFromModuleCount(moduleCount);
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (isFinderPattern(row, col, moduleCount)) continue;
+      if (isAlignmentPattern(row, col, moduleCount, version)) continue;
+      if (isTimingPattern(row, col, moduleCount)) continue;
+
+      if (matrix[row][col]) {
+        const x = marginPx + col * moduleSize;
+        const y = marginPx + row * moduleSize;
+        pathData += `${generateModulePath(x, y, moduleSize, moduleStyle, cornerRadius)} `;
+      }
+    }
+  }
+  return pathData;
+}
+
+function buildSvgMetadata(metadata: VectorSvgConfig['metadata']): string {
+  if (!metadata) return '';
+  const m = metadata;
+  let content = '';
+  if (m.title) {
+    content += `  <title>${escapeXml(m.title)}</title>\n`;
+  }
+  if (m.description) {
+    content += `  <desc>${escapeXml(m.description)}</desc>\n`;
+  }
+  const dcElements: string[] = [];
+  if (m.author) {
+    dcElements.push(`        <dc:creator>${escapeXml(m.author)}</dc:creator>`);
+  }
+  if (m.copyright) {
+    dcElements.push(`        <dc:rights>${escapeXml(m.copyright)}</dc:rights>`);
+  }
+  if (m.creationTime) {
+    dcElements.push(`        <dc:date>${new Date().toISOString()}</dc:date>`);
+  }
+  if (m.software) {
+    dcElements.push(`        <dc:source>${escapeXml(m.software)}</dc:source>`);
+  }
+  if (dcElements.length > 0) {
+    content += `  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <rdf:Description>
+${dcElements.join('\n')}
+      </rdf:Description>
+    </rdf:RDF>
+  </metadata>\n`;
+  }
+  return content;
+}
+
 /**
  * Export QR matrix as true vector SVG with full styling support
  */
@@ -303,71 +392,24 @@ export function exportVectorSvg(matrix: boolean[][], config: VectorSvgConfig = {
     );
   }
 
-  let timingPathData = '';
-  for (let col = 8; col < moduleCount - 8; col++) {
-    if (matrix[6][col]) {
-      const x = marginPx + col * moduleSize;
-      const y = marginPx + 6 * moduleSize;
-      timingPathData += `${generateTimingModulePath(x, y, moduleSize, timingStyle, moduleStyle, cornerRadius)} `;
-    }
-  }
-  for (let row = 8; row < moduleCount - 8; row++) {
-    if (matrix[row][6]) {
-      const x = marginPx + 6 * moduleSize;
-      const y = marginPx + row * moduleSize;
-      timingPathData += `${generateTimingModulePath(x, y, moduleSize, timingStyle, moduleStyle, cornerRadius)} `;
-    }
-  }
-
-  let dataPathData = '';
-  const version = getVersionFromModuleCount(moduleCount);
-  for (let row = 0; row < moduleCount; row++) {
-    for (let col = 0; col < moduleCount; col++) {
-      if (isFinderPattern(row, col, moduleCount)) continue;
-      if (isAlignmentPattern(row, col, moduleCount, version)) continue;
-      if (isTimingPattern(row, col, moduleCount)) continue;
-
-      if (matrix[row][col]) {
-        const x = marginPx + col * moduleSize;
-        const y = marginPx + row * moduleSize;
-        dataPathData += `${generateModulePath(x, y, moduleSize, moduleStyle, cornerRadius)} `;
-      }
-    }
-  }
-
-  let metadataContent = '';
-  if (config.metadata) {
-    const m = config.metadata;
-    if (m.title) {
-      metadataContent += `  <title>${escapeXml(m.title)}</title>\n`;
-    }
-    if (m.description) {
-      metadataContent += `  <desc>${escapeXml(m.description)}</desc>\n`;
-    }
-    const dcElements: string[] = [];
-    if (m.author) {
-      dcElements.push(`        <dc:creator>${escapeXml(m.author)}</dc:creator>`);
-    }
-    if (m.copyright) {
-      dcElements.push(`        <dc:rights>${escapeXml(m.copyright)}</dc:rights>`);
-    }
-    if (m.creationTime) {
-      dcElements.push(`        <dc:date>${new Date().toISOString()}</dc:date>`);
-    }
-    if (m.software) {
-      dcElements.push(`        <dc:source>${escapeXml(m.software)}</dc:source>`);
-    }
-    if (dcElements.length > 0) {
-      metadataContent += `  <metadata>
-    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-             xmlns:dc="http://purl.org/dc/elements/1.1/">
-      <rdf:Description>
-${dcElements.join('\n')}
-      </rdf:Description>
-    </rdf:RDF>
-  </metadata>\n`;
-    }
-  }
+  const timingPathData = buildSvgTimingPaths(
+    matrix,
+    moduleCount,
+    marginPx,
+    moduleSize,
+    timingStyle,
+    moduleStyle,
+    cornerRadius
+  );
+  const dataPathData = buildSvgDataPaths(
+    matrix,
+    moduleCount,
+    marginPx,
+    moduleSize,
+    moduleStyle,
+    cornerRadius
+  );
+  const metadataContent = buildSvgMetadata(config.metadata);
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges">

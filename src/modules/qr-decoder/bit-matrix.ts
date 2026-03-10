@@ -281,6 +281,17 @@ export class BitMatrix {
     return bits;
   }
 
+  private static finalizeRow(bitsPos: number, rowStartPos: number, rowLength: number): number {
+    if (bitsPos > rowStartPos) {
+      if (rowLength === -1) {
+        return bitsPos - rowStartPos;
+      } else if (bitsPos - rowStartPos !== rowLength) {
+        throw new IllegalArgumentException('row lengths do not match');
+      }
+    }
+    return rowLength;
+  }
+
   static parseFromString(
     stringRepresentation: string,
     setString: string,
@@ -297,12 +308,8 @@ export class BitMatrix {
     let pos = 0;
     while (pos < stringRepresentation.length) {
       if (stringRepresentation.charAt(pos) === '\n' || stringRepresentation.charAt(pos) === '\r') {
+        rowLength = BitMatrix.finalizeRow(bitsPos, rowStartPos, rowLength);
         if (bitsPos > rowStartPos) {
-          if (rowLength === -1) {
-            rowLength = bitsPos - rowStartPos;
-          } else if (bitsPos - rowStartPos !== rowLength) {
-            throw new IllegalArgumentException('row lengths do not match');
-          }
           rowStartPos = bitsPos;
           nRows++;
         }
@@ -321,12 +328,8 @@ export class BitMatrix {
         );
       }
     }
+    rowLength = BitMatrix.finalizeRow(bitsPos, rowStartPos, rowLength);
     if (bitsPos > rowStartPos) {
-      if (rowLength === -1) {
-        rowLength = bitsPos - rowStartPos;
-      } else if (bitsPos - rowStartPos !== rowLength) {
-        throw new IllegalArgumentException('row lengths do not match');
-      }
       nRows++;
     }
     const matrix = new BitMatrix(rowLength, nRows);
@@ -432,6 +435,24 @@ export class BitMatrix {
     }
   }
 
+  private static findLeftBit(theBits: number, x32: number, currentLeft: number): number {
+    if (x32 * 32 < currentLeft) {
+      let bit = 0;
+      while (((theBits << (31 - bit)) & 0xffffffff) === 0) bit++;
+      if (x32 * 32 + bit < currentLeft) return x32 * 32 + bit;
+    }
+    return currentLeft;
+  }
+
+  private static findRightBit(theBits: number, x32: number, currentRight: number): number {
+    if (x32 * 32 + 31 > currentRight) {
+      let bit = 31;
+      while (theBits >>> bit === 0) bit--;
+      if (x32 * 32 + bit > currentRight) return x32 * 32 + bit;
+    }
+    return currentRight;
+  }
+
   getEnclosingRectangle(): Int32Array | null {
     let left = this.width;
     let top = this.height;
@@ -443,16 +464,8 @@ export class BitMatrix {
         if (theBits !== 0) {
           if (y < top) top = y;
           if (y > bottom) bottom = y;
-          if (x32 * 32 < left) {
-            let bit = 0;
-            while (((theBits << (31 - bit)) & 0xffffffff) === 0) bit++;
-            if (x32 * 32 + bit < left) left = x32 * 32 + bit;
-          }
-          if (x32 * 32 + 31 > right) {
-            let bit = 31;
-            while (theBits >>> bit === 0) bit--;
-            if (x32 * 32 + bit > right) right = x32 * 32 + bit;
-          }
+          left = BitMatrix.findLeftBit(theBits, x32, left);
+          right = BitMatrix.findRightBit(theBits, x32, right);
         }
       }
     }

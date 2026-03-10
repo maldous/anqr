@@ -11,7 +11,7 @@ import { getECCLevelChar, readFormatInfo, unmaskMatrix } from './format';
 import { findFinderPatterns, selectFinderPatterns } from './locate';
 import { correctRSCodewords } from './rs-decoder';
 import { rsRootabilityFor } from './rs-rootability';
-import type { DecodeResult } from './types';
+import type { DecodeResult, ECCLevelChar } from './types';
 
 const qrDecoderLog = createLogger('DECODER');
 
@@ -39,6 +39,159 @@ export function decodeQR(
   }
 
   return null;
+}
+
+// Validate traversal on timing patterns.
+function collectTimingDiagnostics(rawMatrix: boolean[][], moduleCount: number): void {
+  const timingMismatches: Array<{ r: number; c: number; exp: 0 | 1; got: 0 | 1 }> = [];
+  for (let c = 8; c < moduleCount - 8; c++) {
+    const exp: 0 | 1 = (c % 2 === 0 ? 1 : 0) as 0 | 1;
+    const got: 0 | 1 = (rawMatrix[6]?.[c] ? 1 : 0) as 0 | 1;
+    if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r: 6, c, exp, got });
+  }
+  for (let r = 8; r < moduleCount - 8; r++) {
+    const exp: 0 | 1 = (r % 2 === 0 ? 1 : 0) as 0 | 1;
+    const got: 0 | 1 = (rawMatrix[r]?.[6] ? 1 : 0) as 0 | 1;
+    if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r, c: 6, exp, got });
+  }
+  qrDecoderLog.trace('diag: Timing pattern mismatches (first 12)', {
+    count: timingMismatches.length,
+    mismatches: timingMismatches.map((m) => `(${m.r},${m.c}) exp=${m.exp} got=${m.got}`),
+  });
+}
+
+// Alignment pattern score (5x5), expected at spec centers.
+function collectAlignmentDiagnostics(
+  rawMatrix: boolean[][],
+  moduleCount: number,
+  versionRounded: number
+): void {
+  const centers = getAlignmentPatternCenters(versionRounded, moduleCount);
+  const alignmentScores: Array<{ center: string; score: string; mismatches: string[] }> = [];
+  for (const center of centers) {
+    const cx = center.col;
+    const cy = center.row;
+    // Skip centers that overlap finders (spec rule).
+    if (
+      (cx <= 8 && cy <= 8) ||
+      (cx >= moduleCount - 9 && cy <= 8) ||
+      (cx <= 8 && cy >= moduleCount - 9)
+    ) {
+      continue;
+    }
+
+    let good = 0;
+    let total = 0;
+    const mism: string[] = [];
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const r = cy + dy;
+        const c = cx + dx;
+        const got = rawMatrix[r]?.[c] ? 1 : 0;
+        const exp = Math.max(Math.abs(dx), Math.abs(dy)) === 2 || (dx === 0 && dy === 0) ? 1 : 0;
+        total++;
+        if (got === exp) good++;
+        else if (mism.length < 6) mism.push(`(${r},${c}) exp=${exp} got=${got}`);
+      }
+    }
+    alignmentScores.push({
+      center: `(${cx},${cy})`,
+      score: `${good}/${total}`,
+      mismatches: mism,
+    });
+  }
+  if (alignmentScores.length) {
+    qrDecoderLog.trace('diag: Alignment pattern scores', {
+      version: versionRounded,
+      scores: alignmentScores,
+    });
+  } else {
+    qrDecoderLog.trace('diag: Alignment pattern scores', {
+      version: versionRounded,
+      scores: 'none (v1 or finder-overlap only)',
+    });
+  }
+}
+
+// RS rootability across masks 0..7 (without changing anything else).
+function runMaskRootabilitySweep(
+  rawMatrix: boolean[][],
+  moduleCount: number,
+  versionRounded: number,
+  diagEccChar: ECCLevelChar
+): void {
+  const maskSweep: Array<{
+    mask: number;
+    codewords: number;
+    blocks: Array<{ b: number; nz: number; deg: number; roots: number }>;
+  }> = [];
+  for (let m = 0; m <= 7; m++) {
+    const unmasked = unmaskMatrix(rawMatrix, m, moduleCount);
+    const cw = readCodewords(unmasked, moduleCount);
+    const rs = rsRootabilityFor(cw, versionRounded, diagEccChar);
+    maskSweep.push({
+      mask: m,
+      codewords: cw.length,
+      blocks: rs.map((b) => ({
+        b: b.blockIndex,
+        nz: b.syndromeNonZeroCount,
+        deg: b.bmDegree,
+        roots: b.chienRootsFound,
+      })),
+    });
+  }
+  qrDecoderLog.trace('diag: RS rootability sweep (masks 0..7)', {
+    version: versionRounded,
+    ecc: diagEccChar,
+    maskSweep,
+  });
+}
+
+// Attempt RS correction with mask fallback.
+function attemptRSCorrectionWithFallback(
+  rawMatrix: boolean[][],
+  moduleCount: number,
+  rsBlocks: number[][],
+  formatMaskPattern: number
+): { rsResult: { dataCodewords: number[]; correctionsMade: number }; usedMask: number } | null {
+  const matrix = unmaskMatrix(rawMatrix, formatMaskPattern, moduleCount);
+  const codewords = readCodewords(matrix, moduleCount);
+  qrDecoderLog.trace('main: Read codewords', { count: codewords.length });
+
+  let rsResult = correctRSCodewords(codewords, rsBlocks);
+  let usedMask = formatMaskPattern;
+
+  if (rsResult === null) {
+    qrDecoderLog.trace('main: RS error correction failed with detected mask, trying fallback');
+
+    for (let testMask = 0; testMask < 8; testMask++) {
+      if (testMask === formatMaskPattern) continue;
+
+      const testMatrix = unmaskMatrix(rawMatrix, testMask, moduleCount);
+      const testCodewords = readCodewords(testMatrix, moduleCount);
+      const testRsResult = correctRSCodewords(testCodewords, rsBlocks);
+
+      if (testRsResult !== null) {
+        qrDecoderLog.trace('main: Mask fallback SUCCESS', {
+          originalMask: formatMaskPattern,
+          workingMask: testMask,
+          corrections: testRsResult.correctionsMade,
+        });
+        rsResult = testRsResult;
+        usedMask = testMask;
+        break;
+      }
+    }
+
+    if (rsResult === null) {
+      qrDecoderLog.trace(
+        'main: Failed - RS error correction failed (too many errors, all masks tried)'
+      );
+      return null;
+    }
+  }
+
+  return { rsResult, usedMask };
 }
 
 /**
@@ -82,167 +235,49 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       return null;
     }
 
-    // --- Diagnostics -----------------------------------------------------
-    // 2) Validate traversal on timing patterns and alignment pattern.
-    // If these scores are poor, the grid mapping is still off.
     const moduleCount = location.moduleCount;
     const versionRounded = Math.round(version);
 
-    // Timing patterns (row 6 and col 6), expected alternation.
-    const timingMismatches: Array<{ r: number; c: number; exp: 0 | 1; got: 0 | 1 }> = [];
-    for (let c = 8; c < moduleCount - 8; c++) {
-      const exp: 0 | 1 = (c % 2 === 0 ? 1 : 0) as 0 | 1;
-      const got: 0 | 1 = (rawMatrix[6]?.[c] ? 1 : 0) as 0 | 1;
-      if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r: 6, c, exp, got });
-    }
-    for (let r = 8; r < moduleCount - 8; r++) {
-      const exp: 0 | 1 = (r % 2 === 0 ? 1 : 0) as 0 | 1;
-      const got: 0 | 1 = (rawMatrix[r]?.[6] ? 1 : 0) as 0 | 1;
-      if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r, c: 6, exp, got });
-    }
-    qrDecoderLog.trace('diag: Timing pattern mismatches (first 12)', {
-      count: timingMismatches.length,
-      mismatches: timingMismatches.map((m) => `(${m.r},${m.c}) exp=${m.exp} got=${m.got}`),
-    });
+    // --- Diagnostics ---
+    collectTimingDiagnostics(rawMatrix, moduleCount);
+    collectAlignmentDiagnostics(rawMatrix, moduleCount, versionRounded);
+    runMaskRootabilitySweep(
+      rawMatrix,
+      moduleCount,
+      versionRounded,
+      getECCLevelChar(formatInfo.eccLevel)
+    );
 
-    // Alignment pattern score (5x5), expected at spec centers.
-    const centers = getAlignmentPatternCenters(versionRounded, moduleCount);
-    const alignmentScores: Array<{ center: string; score: string; mismatches: string[] }> = [];
-    for (const center of centers) {
-      const cx = center.col;
-      const cy = center.row;
-      // Skip centers that overlap finders (spec rule).
-      if (
-        (cx <= 8 && cy <= 8) ||
-        (cx >= moduleCount - 9 && cy <= 8) ||
-        (cx <= 8 && cy >= moduleCount - 9)
-      ) {
-        continue;
-      }
-
-      let good = 0;
-      let total = 0;
-      const mism: string[] = [];
-      for (let dy = -2; dy <= 2; dy++) {
-        for (let dx = -2; dx <= 2; dx++) {
-          const r = cy + dy;
-          const c = cx + dx;
-          const got = rawMatrix[r]?.[c] ? 1 : 0;
-          const exp = Math.max(Math.abs(dx), Math.abs(dy)) === 2 || (dx === 0 && dy === 0) ? 1 : 0;
-          total++;
-          if (got === exp) good++;
-          else if (mism.length < 6) mism.push(`(${r},${c}) exp=${exp} got=${got}`);
-        }
-      }
-      alignmentScores.push({
-        center: `(${cx},${cy})`,
-        score: `${good}/${total}`,
-        mismatches: mism,
-      });
-    }
-    if (alignmentScores.length) {
-      qrDecoderLog.trace('diag: Alignment pattern scores', {
-        version: versionRounded,
-        scores: alignmentScores,
-      });
-    } else {
-      qrDecoderLog.trace('diag: Alignment pattern scores', {
-        version: versionRounded,
-        scores: 'none (v1 or finder-overlap only)',
-      });
-    }
-
-    // 1) RS rootability across masks 0..7 (without changing anything else).
-    // If exactly one mask produces "rootsFound == degree" (or far fewer non-zero syndromes),
-    // the issue is format/mask selection. If none do, look at traversal or sampling/grid.
-    const diagEccChar = getECCLevelChar(formatInfo.eccLevel);
-    const maskSweep: any[] = [];
-    for (let m = 0; m <= 7; m++) {
-      const unmasked = unmaskMatrix(rawMatrix, m, moduleCount);
-      const cw = readCodewords(unmasked, moduleCount);
-      const rs = rsRootabilityFor(cw, versionRounded, diagEccChar);
-      maskSweep.push({
-        mask: m,
-        codewords: cw.length,
-        blocks: rs.map((b) => ({
-          b: b.blockIndex,
-          nz: b.syndromeNonZeroCount,
-          deg: b.bmDegree,
-          roots: b.chienRootsFound,
-        })),
-      });
-    }
-    qrDecoderLog.trace('diag: RS rootability sweep (masks 0..7)', {
-      version: versionRounded,
-      ecc: diagEccChar,
-      maskSweep,
-    });
-    // --------------------------------------------------------------------
-
-    // Step 6: Unmask the matrix
-    const matrix = unmaskMatrix(rawMatrix, formatInfo.maskPattern, location.moduleCount);
-
-    // Step 7: Read codewords
-    const codewords = readCodewords(matrix, location.moduleCount);
-    qrDecoderLog.trace('main: Read codewords', { count: codewords.length });
-
-    // Step 8: RS Error Correction
-    // Get RS block configuration for this version/ECC
+    // Step 6-8: Unmask, read codewords, RS error correction
     const eccChar = getECCLevelChar(formatInfo.eccLevel) as keyof typeof RS_BLOCKS;
-    const rsBlocks = RS_BLOCKS[eccChar]?.[Math.round(version) - 1];
+    const rsBlocks = RS_BLOCKS[eccChar]?.[versionRounded - 1];
 
     if (!rsBlocks) {
       qrDecoderLog.trace('main: Failed - No RS block configuration found', {
-        version: Math.round(version),
+        version: versionRounded,
         eccLevel: eccChar,
       });
       return null;
     }
 
     qrDecoderLog.trace('main: Starting RS error correction', {
-      version: Math.round(version),
+      version: versionRounded,
       eccLevel: eccChar,
       rsBlocks: rsBlocks.map((b) => `${b[0]}x(${b[2]}d+${b[1] - b[2]}e)`).join(', '),
-      totalCodewords: codewords.length,
     });
 
-    // De-interleave and correct each RS block
-    let rsResult = correctRSCodewords(codewords, rsBlocks);
-    let usedMask = formatInfo.maskPattern;
+    const correctionResult = attemptRSCorrectionWithFallback(
+      rawMatrix,
+      moduleCount,
+      rsBlocks,
+      formatInfo.maskPattern
+    );
+    if (!correctionResult) return null;
 
-    if (rsResult === null) {
-      qrDecoderLog.trace('main: RS error correction failed with detected mask, trying fallback');
-
-      // Use the rootability sweep to find a mask that produces rootable blocks
-      // This helps when format info is ambiguous (copies disagreed)
-      for (let testMask = 0; testMask < 8; testMask++) {
-        if (testMask === formatInfo.maskPattern) continue; // Already tried
-
-        const testMatrix = unmaskMatrix(rawMatrix, testMask, location.moduleCount);
-        const testCodewords = readCodewords(testMatrix, location.moduleCount);
-        const testRsResult = correctRSCodewords(testCodewords, rsBlocks);
-
-        if (testRsResult !== null) {
-          qrDecoderLog.trace('main: Mask fallback SUCCESS', {
-            originalMask: formatInfo.maskPattern,
-            workingMask: testMask,
-            corrections: testRsResult.correctionsMade,
-          });
-          rsResult = testRsResult;
-          usedMask = testMask;
-          break;
-        }
-      }
-
-      if (rsResult === null) {
-        qrDecoderLog.trace(
-          'main: Failed - RS error correction failed (too many errors, all masks tried)'
-        );
-        return null;
-      }
-    }
-
-    const { dataCodewords, correctionsMade } = rsResult;
+    const {
+      rsResult: { dataCodewords, correctionsMade },
+      usedMask,
+    } = correctionResult;
 
     qrDecoderLog.trace('main: RS correction completed', {
       dataCodewords: dataCodewords.length,
@@ -254,13 +289,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     });
 
     // Step 9: Decode data
-    // Use rounded version to avoid fractional char-count tables on jittery inputs
-    const decoded = decodeDataCodewordsDetailed(dataCodewords, Math.round(version));
+    const decoded = decodeDataCodewordsDetailed(dataCodewords, versionRounded);
     const data = decoded.text;
     const dataBytes = decoded.bytes;
     const encodingMode = decoded.encodingMode;
 
-    // Check if decode was valid (no truncation or corrupt segments)
     if (!decoded.valid) {
       qrDecoderLog.trace('main: Failed - decode reported invalid (truncation or corrupt data)', {
         structurallyValid: decoded.structurallyValid,
@@ -280,7 +313,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     }
 
     qrDecoderLog.trace('main: Decode SUCCESS', {
-      version: Math.round(version),
+      version: versionRounded,
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       dataLength: data.length,
       dataPreview: data.slice(0, 50),
@@ -298,7 +331,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
         bottomLeftCorner: bottomLeft.center,
         bottomRightCorner: location.bottomRight,
       },
-      version: Math.round(version),
+      version: versionRounded,
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       maskPattern: usedMask,
       structurallyValid: decoded.structurallyValid,

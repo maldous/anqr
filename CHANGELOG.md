@@ -5,9 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
-- fix: audit URL/query parsing and normalization parity risks
-- fix: inventory gallery execution paths and parameter sources
-- fix(workflow): retry in-session tool call failures up to 2 times with explicit error feedback before fallback
+- fix(sonar): reduce S3776 cognitive complexity across 30+ module files via helper extraction
 - fix: reduce semantic validation complexity in qr-art generator
 - fix: add CI reliability gate criteria and machine-readable reporting
 - fix(workflow): keep Pending human-only by routing non-human 3B workflow paths to Todo/Rework
@@ -17,15 +15,10 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): add structured startup diagnostics and error categorization for codex credit gate failures
 - fix: reduce qr-generator overlay mode complexity via handler extraction
 - perf: add CI performance budget guard for `/` and `/gallery` key paths
-- refactor: extract `useQRGenerator` character encoding detection helper and add focused tests
-- fix: add gallery execution path and parameter source matrix
-- fix(ops): retry failed workflow commands once and route repeat failures to `Rework`
-- fix: normalize canvas dimensions and reset initial 2d state for browser/netlify parity
 
 ## 2026-03-09
 
 - fix(sonar): use globalThis instead of self in worker contexts (ANQ-284)
-- fix: reset pooled canvas smoothing quality/state for cross-environment render parity
 - fix(sonar): remove unused catch parameters in server function (ANQ-284)
 - fix(sonar): use element.remove() instead of parentNode.removeChild (ANQ-280)
 - fix(sonar): prefer Math.trunc/Math.round over bitwise OR zero truncation (ANQ-282)

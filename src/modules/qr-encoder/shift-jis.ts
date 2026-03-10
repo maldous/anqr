@@ -466,77 +466,59 @@ function katakanaToShiftJIS(codePoint: number): number[] {
   return [(sjis >> 8) & 0xff, sjis & 0xff];
 }
 
+function mapFullWidthASCII(codePoint: number): number[] | null {
+  const offset = codePoint - FULLWIDTH_ASCII_START;
+  if (offset === 0) return [0x81, 0x49]; // ！
+  // Full-width digits 0-9 (U+FF10-U+FF19) -> 0x824F-0x8258
+  if (offset >= 0x0f && offset <= 0x18) {
+    return [0x82, 0x4f + (offset - 0x0f)];
+  }
+  // Full-width uppercase A-Z (U+FF21-U+FF3A) -> 0x8260-0x8279
+  if (offset >= 0x20 && offset <= 0x39) {
+    const charOffset = offset - 0x20;
+    let lowByte = 0x60 + charOffset;
+    if (lowByte >= 0x7f) lowByte += 1;
+    return [0x82, lowByte];
+  }
+  // Full-width lowercase a-z (U+FF41-U+FF5A) -> 0x8281-0x829A
+  if (offset >= 0x40 && offset <= 0x59) {
+    return [0x82, 0x81 + (offset - 0x40)];
+  }
+  return null;
+}
+
+function lookupShiftJIS(codePoint: number): number[] | null {
+  if (codePoint < 0x80) return [codePoint];
+  if (codePoint >= HW_KATAKANA_START && codePoint <= HW_KATAKANA_END) {
+    return [HW_KATAKANA_SJIS_START + (codePoint - HW_KATAKANA_START)];
+  }
+  if (codePoint >= HIRAGANA_START && codePoint <= HIRAGANA_END) {
+    return hiraganaToShiftJIS(codePoint);
+  }
+  if (codePoint >= KATAKANA_START && codePoint <= KATAKANA_END) {
+    return katakanaToShiftJIS(codePoint);
+  }
+  if (FULLWIDTH_MAP[codePoint] !== undefined) {
+    const sjis = FULLWIDTH_MAP[codePoint];
+    return [(sjis >> 8) & 0xff, sjis & 0xff];
+  }
+  if (codePoint >= FULLWIDTH_ASCII_START && codePoint <= FULLWIDTH_ASCII_END) {
+    return mapFullWidthASCII(codePoint);
+  }
+  if (KANJI_MAP[codePoint] !== undefined) {
+    const sjis = KANJI_MAP[codePoint];
+    return [(sjis >> 8) & 0xff, sjis & 0xff];
+  }
+  return null;
+}
+
 /**
  * Convert a single Unicode character to Shift-JIS bytes
  * @param codePoint Unicode code point
  * @returns Array of bytes (1 or 2 bytes)
  */
 function unicodeToShiftJIS(codePoint: number): number[] {
-  // ASCII (0x00 - 0x7F) - direct mapping
-  if (codePoint < 0x80) {
-    return [codePoint];
-  }
-
-  // Half-width Katakana (single byte 0xA1-0xDF)
-  if (codePoint >= HW_KATAKANA_START && codePoint <= HW_KATAKANA_END) {
-    return [HW_KATAKANA_SJIS_START + (codePoint - HW_KATAKANA_START)];
-  }
-
-  // Hiragana
-  if (codePoint >= HIRAGANA_START && codePoint <= HIRAGANA_END) {
-    return hiraganaToShiftJIS(codePoint);
-  }
-
-  // Katakana
-  if (codePoint >= KATAKANA_START && codePoint <= KATAKANA_END) {
-    return katakanaToShiftJIS(codePoint);
-  }
-
-  // Full-width punctuation and symbols
-  if (FULLWIDTH_MAP[codePoint] !== undefined) {
-    const sjis = FULLWIDTH_MAP[codePoint];
-    return [(sjis >> 8) & 0xff, sjis & 0xff];
-  }
-
-  // Full-width ASCII (U+FF01 - U+FF5E)
-  if (codePoint >= FULLWIDTH_ASCII_START && codePoint <= FULLWIDTH_ASCII_END) {
-    const offset = codePoint - FULLWIDTH_ASCII_START;
-
-    // Map based on character type
-    if (offset === 0) return [0x81, 0x49]; // ！
-
-    // Full-width digits 0-9 (U+FF10-U+FF19) -> 0x824F-0x8258
-    if (offset >= 0x0f && offset <= 0x18) {
-      return [0x82, 0x4f + (offset - 0x0f)];
-    }
-
-    // Full-width uppercase A-Z (U+FF21-U+FF3A) -> 0x8260-0x8279
-    if (offset >= 0x20 && offset <= 0x39) {
-      const charOffset = offset - 0x20;
-      let lowByte = 0x60 + charOffset;
-      // Skip 0x7F
-      if (lowByte >= 0x7f) lowByte += 1;
-      return [0x82, lowByte];
-    }
-
-    // Full-width lowercase a-z (U+FF41-U+FF5A) -> 0x8281-0x829A
-    if (offset >= 0x40 && offset <= 0x59) {
-      const charOffset = offset - 0x40;
-      const lowByte = 0x81 + charOffset;
-      // Skip 0x7F (already past it for lowercase)
-      return [0x82, lowByte];
-    }
-  }
-
-  // Kanji lookup
-  if (KANJI_MAP[codePoint] !== undefined) {
-    const sjis = KANJI_MAP[codePoint];
-    return [(sjis >> 8) & 0xff, sjis & 0xff];
-  }
-
-  // For unmapped characters, use the replacement character
-  // Using '?' (0x3F) as fallback
-  return [0x3f];
+  return lookupShiftJIS(codePoint) ?? [0x3f];
 }
 
 /**
@@ -576,28 +558,12 @@ export function canEncodeAsShiftJIS(s: string): boolean {
   for (let i = 0; i < s.length; i++) {
     const codePoint = s.codePointAt(i);
     if (codePoint === undefined) continue;
-
-    // Skip surrogate pair low surrogates
     if (codePoint > 0xffff) {
       i++;
-      return false; // Characters outside BMP generally not in Shift-JIS
+      return false;
     }
-
-    // ASCII is always supported
-    if (codePoint < 0x80) continue;
-
-    // Check if we have a mapping
-    if (codePoint >= HW_KATAKANA_START && codePoint <= HW_KATAKANA_END) continue;
-    if (codePoint >= HIRAGANA_START && codePoint <= HIRAGANA_END) continue;
-    if (codePoint >= KATAKANA_START && codePoint <= KATAKANA_END) continue;
-    if (FULLWIDTH_MAP[codePoint] !== undefined) continue;
-    if (codePoint >= FULLWIDTH_ASCII_START && codePoint <= FULLWIDTH_ASCII_END) continue;
-    if (KANJI_MAP[codePoint] !== undefined) continue;
-
-    // No mapping found
-    return false;
+    if (lookupShiftJIS(codePoint) === null) return false;
   }
-
   return true;
 }
 

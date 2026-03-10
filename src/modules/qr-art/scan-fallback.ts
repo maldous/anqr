@@ -435,6 +435,57 @@ export function applySubsetAndRegenerate(
   return { matrix, modifiedBlockData, modifiedBlockEcc };
 }
 
+interface CandidateValidation {
+  isValid: boolean;
+  validation: BinarySearchValidationResult;
+  formatVerification?: FormatVerificationResult;
+}
+
+function validateCandidate(
+  scan: { success: boolean; data?: string },
+  matrix: boolean[][],
+  expectedData: string,
+  expectedEcc: ECCLevel | undefined,
+  expectedMask: number | undefined,
+  strictSuffix: boolean
+): CandidateValidation {
+  if (!scan.success) {
+    return {
+      isValid: false,
+      validation: {
+        valid: false,
+        reason: 'SCAN_FAILED',
+        description: 'not scanned',
+        hardGateFailed: true,
+      },
+    };
+  }
+
+  const validation = validateByteExactPrefix(scan.data, expectedData, strictSuffix);
+  if (!validation.valid) {
+    return { isValid: false, validation };
+  }
+
+  if (expectedEcc !== undefined && expectedMask !== undefined) {
+    const formatVerification = verifyMatrixFormatInfo(matrix, expectedEcc, expectedMask);
+    if (!formatVerification.valid) {
+      return {
+        isValid: false,
+        validation: {
+          valid: false,
+          reason: formatVerification.reason || 'ECC_MISMATCH',
+          description: `Format info mismatch: ECC ${formatVerification.extractedEcc} vs ${expectedEcc}, mask ${formatVerification.extractedMask} vs ${expectedMask}`,
+          hardGateFailed: true,
+        },
+        formatVerification,
+      };
+    }
+    return { isValid: true, validation, formatVerification };
+  }
+
+  return { isValid: true, validation };
+}
+
 /**
  * Result of binary search for maximum scannable vectors
  */
@@ -664,44 +715,19 @@ export function binarySearchMaxVectors(
     // The suffix CAN be modified - that's the point of QR-Art!
     // Only the original URL/data (protected region) must be byte-for-byte identical.
 
-    let isValid = false;
-    let validation: BinarySearchValidationResult = {
-      valid: false,
-      reason: 'SCAN_FAILED',
-      description: 'not scanned',
-      hardGateFailed: true,
-    };
-    let formatVerification: FormatVerificationResult | undefined;
-
     rejectionHistogram.total++;
-
-    if (scan.success) {
-      // Step 1: Byte-exact prefix validation (HARD GATE)
-      // Suffix charset is now a SOFT PENALTY unless strictSuffix is true
-      validation = validateByteExactPrefix(scan.data, expectedData, strictSuffix);
-
-      if (validation.valid) {
-        // Step 2: Format info verification (if ECC and mask provided)
-        if (expectedEcc !== undefined && expectedMask !== undefined) {
-          formatVerification = verifyMatrixFormatInfo(result.matrix, expectedEcc, expectedMask);
-          if (!formatVerification.valid) {
-            validation = {
-              valid: false,
-              reason: formatVerification.reason || 'ECC_MISMATCH',
-              description: `Format info mismatch: ECC ${formatVerification.extractedEcc} vs ${expectedEcc}, mask ${formatVerification.extractedMask} vs ${expectedMask}`,
-              hardGateFailed: true,
-            };
-          } else {
-            isValid = true;
-            rejectionHistogram.ACCEPTED++;
-          }
-        } else {
-          // No format verification requested, byte-exact is enough
-          isValid = true;
-          rejectionHistogram.ACCEPTED++;
-        }
-      }
-    }
+    const candidateResult = validateCandidate(
+      scan,
+      result.matrix,
+      expectedData,
+      expectedEcc,
+      expectedMask,
+      strictSuffix
+    );
+    const isValid = candidateResult.isValid;
+    const validation = candidateResult.validation;
+    const formatVerification = candidateResult.formatVerification;
+    if (isValid) rejectionHistogram.ACCEPTED++;
 
     // Track rejection reasons in histogram
     if (!isValid && validation.reason) {

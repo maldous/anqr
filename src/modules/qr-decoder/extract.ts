@@ -460,70 +460,32 @@ export function extractModuleMatrix(
   });
 
   // Validate matrix by checking finder patterns (reuse finderPattern defined above)
-
-  // Validate top-left finder pattern
-  let tlMatches = 0;
-  let tlMismatches = 0;
-  const tlErrors: string[] = [];
-
-  for (let row = 0; row < 7; row++) {
-    for (let col = 0; col < 7; col++) {
-      const expected = finderPattern[row][col] === 1;
-      const actual = matrix[row]?.[col] ?? false;
-      if (expected === actual) {
-        tlMatches++;
-      } else {
-        tlMismatches++;
-        if (tlErrors.length < 5) {
-          tlErrors.push(
-            `(${row},${col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
-          );
-        }
-      }
-    }
-  }
+  const tlResult = validateFinderRegion(matrix, finderPattern, 0, 0);
 
   qrDecoderLog.trace('extract: Top-left finder pattern validation', {
-    matches: tlMatches,
-    mismatches: tlMismatches,
-    accuracy: `${((tlMatches / 49) * 100).toFixed(1)}%`,
-    errors: tlErrors.length > 0 ? tlErrors : 'none',
+    matches: tlResult.matches,
+    mismatches: tlResult.mismatches,
+    accuracy: `${((tlResult.matches / 49) * 100).toFixed(1)}%`,
+    errors: tlResult.errors.length > 0 ? tlResult.errors : 'none',
   });
 
   // Validate top-right finder pattern (at columns moduleCount-7 to moduleCount-1)
-  let trMatches = 0;
-  let trMismatches = 0;
-  const trErrors: string[] = [];
   const trColOffset = moduleCount - 7;
-
-  for (let row = 0; row < 7; row++) {
-    for (let col = 0; col < 7; col++) {
-      const expected = finderPattern[row][col] === 1;
-      const actual = matrix[row]?.[trColOffset + col] ?? false;
-      if (expected === actual) {
-        trMatches++;
-      } else {
-        trMismatches++;
-        if (trErrors.length < 5) {
-          trErrors.push(
-            `(${row},${trColOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
-          );
-        }
-      }
-    }
-  }
+  const trResult = validateFinderRegion(matrix, finderPattern, 0, trColOffset);
 
   qrDecoderLog.trace('extract: Top-right finder pattern validation', {
-    matches: trMatches,
-    mismatches: trMismatches,
-    accuracy: `${((trMatches / 49) * 100).toFixed(1)}%`,
-    errors: trErrors.length > 0 ? trErrors : 'none',
+    matches: trResult.matches,
+    mismatches: trResult.mismatches,
+    accuracy: `${((trResult.matches / 49) * 100).toFixed(1)}%`,
+    errors: trResult.errors.length > 0 ? trResult.errors : 'none',
   });
 
   // Check for potential 180° rotation: if top-right is very wrong but top-left is ok,
   // or if both are wrong in complementary ways
-  const tlAccuracy = tlMatches / 49;
-  const trAccuracy = trMatches / 49;
+  const tlMismatches = tlResult.mismatches;
+  const trMismatches = trResult.mismatches;
+  const tlAccuracy = tlResult.matches / 49;
+  const trAccuracy = trResult.matches / 49;
 
   if (tlMismatches > 20 || trMismatches > 20) {
     qrDecoderLog.debug('extract: Finder pattern accuracy very low - matrix may be mis-oriented', {
@@ -544,6 +506,34 @@ export function extractModuleMatrix(
   }
 
   return matrix;
+}
+
+function validateFinderRegion(
+  matrix: boolean[][],
+  finderPattern: number[][],
+  rowOffset: number,
+  colOffset: number
+): { matches: number; mismatches: number; errors: string[] } {
+  let matches = 0;
+  let mismatches = 0;
+  const errors: string[] = [];
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 7; col++) {
+      const expected = finderPattern[row][col] === 1;
+      const actual = matrix[rowOffset + row]?.[colOffset + col] ?? false;
+      if (expected === actual) {
+        matches++;
+      } else {
+        mismatches++;
+        if (errors.length < 5) {
+          errors.push(
+            `(${rowOffset + row},${colOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
+          );
+        }
+      }
+    }
+  }
+  return { matches, mismatches, errors };
 }
 
 // Re-export from canonical source

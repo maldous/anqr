@@ -744,6 +744,212 @@ async function evaluateDecodeScenarios(
   return { ok: true, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
 }
 
+interface ScanGateCallbacks {
+  buildAttemptConfig: (patch: DitherAttemptPatch) => QRGeneratorConfig;
+  renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>;
+  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>;
+  rememberPatch: (patch: DitherAttemptPatch) => void;
+}
+
+function buildDitherAttemptList(
+  baseAttempts: DitherAttemptPatch[],
+  cachedPatch: DitherAttemptPatch | null,
+  isAnimatedFrame: boolean,
+  isFirstAnimatedFrame: boolean,
+  isAnimatedPreviewFrame: boolean,
+  patchSignature: (patch: DitherAttemptPatch) => string
+): DitherAttemptPatch[] {
+  let attempts: DitherAttemptPatch[] = [];
+  const seenAttemptSignatures = new Set<string>();
+  const pushUniqueAttempt = (patch: DitherAttemptPatch): void => {
+    const sig = patchSignature(patch);
+    if (seenAttemptSignatures.has(sig)) return;
+    seenAttemptSignatures.add(sig);
+    attempts.push(patch);
+  };
+  if (baseAttempts.length > 0) {
+    pushUniqueAttempt(baseAttempts[0]);
+    for (const patch of baseAttempts.slice(1)) pushUniqueAttempt(patch);
+  }
+  if (cachedPatch) {
+    if (isAnimatedFrame && !isFirstAnimatedFrame) {
+      // Prioritize cached patch for animation frames after the first so they
+      // reuse frame 0's validated result instead of the base config.
+      const sig = patchSignature(cachedPatch);
+      if (!seenAttemptSignatures.has(sig)) {
+        seenAttemptSignatures.add(sig);
+        attempts.unshift(cachedPatch);
+      }
+    } else {
+      pushUniqueAttempt(cachedPatch);
+    }
+  }
+  if (isAnimatedPreviewFrame) {
+    // Animated preview fast path: keep a compact attempt ladder so each frame
+    // still validates/recovers decode, but avoids running the full fallback stack.
+    const compact: DitherAttemptPatch[] = [];
+    const compactSeen = new Set<string>();
+    const pushCompact = (patch: DitherAttemptPatch | undefined): void => {
+      if (!patch) return;
+      const sig = patchSignature(patch);
+      if (compactSeen.has(sig)) return;
+      compactSeen.add(sig);
+      compact.push(patch);
+    };
+    pushCompact(cachedPatch ?? undefined);
+    pushCompact(baseAttempts[0]);
+    pushCompact(baseAttempts[1]);
+    pushCompact(baseAttempts[2]);
+    if (compact.length === 0 && attempts[0]) {
+      pushCompact(attempts[0]);
+    }
+    attempts = compact;
+  }
+  return attempts;
+}
+
+interface ScanGateMainLoopResult {
+  earlyReturn: HTMLCanvasElement | OffscreenCanvas | null;
+  lastCanvas: HTMLCanvasElement | OffscreenCanvas | null;
+}
+
+async function runScanGateMainLoop(
+  pool: CanvasPool,
+  sgctx: ScanGateCtx,
+  moduleCount: number,
+  attempts: DitherAttemptPatch[],
+  thresholds: { edge: number; toneStd: number; edgeWorsen: number },
+  scenarioSeed: number,
+  skipScanGateEscalation: boolean,
+  cb: ScanGateCallbacks
+): Promise<ScanGateMainLoopResult> {
+  let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
+  let bestBaseDecodable: HTMLCanvasElement | OffscreenCanvas | null = null;
+  let bestBaseDecodablePatch: DitherAttemptPatch | null = null;
+  let prevEdgeImprint: number | null = null;
+  for (const patch of attempts) {
+    if (lastCanvas && lastCanvas !== bestBaseDecodable) {
+      pool.release(lastCanvas);
+      lastCanvas = null;
+    }
+    const attemptCanvas = await cb.renderScaled(cb.buildAttemptConfig(patch));
+    try {
+      const evaluated = await evaluateDecodeScenarios(
+        sgctx,
+        pool,
+        moduleCount,
+        attemptCanvas,
+        prevEdgeImprint,
+        thresholds,
+        scenarioSeed,
+        cb.runDecode
+      );
+      lastCanvas = evaluated.evaluatedCanvas;
+      if (evaluated.baseDecodeOk && !bestBaseDecodable) {
+        bestBaseDecodable = evaluated.evaluatedCanvas;
+        bestBaseDecodablePatch = patch;
+      }
+      if (
+        evaluated.metrics &&
+        (prevEdgeImprint === null || evaluated.metrics.edgeImprint < prevEdgeImprint)
+      ) {
+        prevEdgeImprint = evaluated.metrics.edgeImprint;
+      }
+      if (evaluated.ok) {
+        cb.rememberPatch(patch);
+        return { earlyReturn: evaluated.evaluatedCanvas, lastCanvas: null };
+      }
+      if (skipScanGateEscalation) {
+        if (evaluated.baseDecodeOk) {
+          cb.rememberPatch(patch);
+          return { earlyReturn: evaluated.evaluatedCanvas, lastCanvas: null };
+        }
+      }
+    } catch {
+      lastCanvas = attemptCanvas;
+    }
+  }
+  if (bestBaseDecodable) {
+    if (bestBaseDecodablePatch) cb.rememberPatch(bestBaseDecodablePatch);
+    return { earlyReturn: bestBaseDecodable, lastCanvas: null };
+  }
+  return { earlyReturn: null, lastCanvas };
+}
+
+async function runScanGateRescueLoop(
+  pool: CanvasPool,
+  patches: DitherAttemptPatch[],
+  isPreviewScanGate: boolean,
+  cb: ScanGateCallbacks,
+  lastCanvas: HTMLCanvasElement | OffscreenCanvas | null
+): Promise<{
+  found: HTMLCanvasElement | OffscreenCanvas | null;
+  lastCanvas: HTMLCanvasElement | OffscreenCanvas | null;
+}> {
+  let tracking = lastCanvas;
+  for (const patch of patches) {
+    if (tracking) {
+      pool.release(tracking);
+      tracking = null;
+    }
+    const rescueCanvas = await cb.renderScaled(cb.buildAttemptConfig(patch));
+    const rescueRaster = isPreviewScanGate
+      ? rescueCanvas
+      : await roundtripToFinalRaster(pool, rescueCanvas);
+    if (await cb.runDecode(rescueRaster)) {
+      cb.rememberPatch(patch);
+      return { found: rescueRaster, lastCanvas: tracking };
+    }
+    tracking = rescueRaster;
+  }
+  return { found: null, lastCanvas: tracking };
+}
+
+async function runScanGateQRFirstFallback(
+  pool: CanvasPool,
+  sgctx: ScanGateCtx,
+  isPreviewScanGate: boolean,
+  requestedOverlayIntensity: number,
+  effectiveConfig: QRGeneratorConfig,
+  lastPatch: DitherAttemptPatch,
+  cb: ScanGateCallbacks
+): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+  const qrFirstDrops = isPreviewScanGate ? [10, 16, 22, 28, 34] : [8, 14, 20, 26, 32, 38, 44];
+  const qrFirstIntensities = qrFirstDrops
+    .map((drop) => resolveScanGateIntensity(sgctx, drop, { minIntensity: 6, maxDrop: 46 }))
+    .filter(
+      (intensity, idx, values) =>
+        intensity < requestedOverlayIntensity && values.indexOf(intensity) === idx
+    );
+  let qrFirstLast: HTMLCanvasElement | OffscreenCanvas | null = null;
+  for (const intensity of qrFirstIntensities) {
+    if (qrFirstLast) {
+      pool.release(qrFirstLast);
+      qrFirstLast = null;
+    }
+    const qrFirstFallback = await cb.renderScaled({
+      ...cb.buildAttemptConfig(lastPatch),
+      qrFirstMode: true,
+      overlayIntensity: Math.min(intensity, effectiveConfig.overlayIntensity ?? 100),
+    });
+    const fallbackRaster = isPreviewScanGate
+      ? qrFirstFallback
+      : await roundtripToFinalRaster(pool, qrFirstFallback);
+    qrFirstLast = fallbackRaster;
+    if (await cb.runDecode(fallbackRaster)) {
+      if (effectiveConfig.qrFirstMode === true) {
+        cb.rememberPatch({
+          ...lastPatch,
+          qrFirstMode: true,
+          overlayIntensity: intensity,
+        });
+      }
+      return fallbackRaster;
+    }
+  }
+  return qrFirstLast;
+}
+
 export class QRGenerator {
   private qrcode: typeof qrcode;
   private canvasFactory: CanvasFactory;
@@ -1490,54 +1696,15 @@ export class QRGenerator {
     };
 
     const baseAttempts = buildScanGateBaseAttempts(sgctx);
-
-    let attempts: DitherAttemptPatch[] = [];
-    const seenAttemptSignatures = new Set<string>();
-    const pushUniqueAttempt = (patch: DitherAttemptPatch): void => {
-      const sig = patchSignature(patch);
-      if (seenAttemptSignatures.has(sig)) return;
-      seenAttemptSignatures.add(sig);
-      attempts.push(patch);
-    };
-    if (baseAttempts.length > 0) {
-      pushUniqueAttempt(baseAttempts[0]);
-      for (const patch of baseAttempts.slice(1)) pushUniqueAttempt(patch);
-    }
     const cachedPatch = getCachedPatch();
-    if (cachedPatch) {
-      if (isAnimatedFrame && !isFirstAnimatedFrame) {
-        // Prioritize cached patch for animation frames after the first so they
-        // reuse frame 0's validated result instead of the base config.
-        const sig = patchSignature(cachedPatch);
-        if (!seenAttemptSignatures.has(sig)) {
-          seenAttemptSignatures.add(sig);
-          attempts.unshift(cachedPatch);
-        }
-      } else {
-        pushUniqueAttempt(cachedPatch);
-      }
-    }
-    if (isAnimatedPreviewFrame) {
-      // Animated preview fast path: keep a compact attempt ladder so each frame
-      // still validates/recovers decode, but avoids running the full fallback stack.
-      const compact: DitherAttemptPatch[] = [];
-      const compactSeen = new Set<string>();
-      const pushCompact = (patch: DitherAttemptPatch | undefined): void => {
-        if (!patch) return;
-        const sig = patchSignature(patch);
-        if (compactSeen.has(sig)) return;
-        compactSeen.add(sig);
-        compact.push(patch);
-      };
-      pushCompact(cachedPatch ?? undefined);
-      pushCompact(baseAttempts[0]);
-      pushCompact(baseAttempts[1]);
-      pushCompact(baseAttempts[2]);
-      if (compact.length === 0 && attempts[0]) {
-        pushCompact(attempts[0]);
-      }
-      attempts = compact;
-    }
+    const attempts = buildDitherAttemptList(
+      baseAttempts,
+      cachedPatch,
+      isAnimatedFrame,
+      isFirstAnimatedFrame,
+      isAnimatedPreviewFrame,
+      patchSignature
+    );
 
     const buildAttemptConfig = (patch: DitherAttemptPatch): QRGeneratorConfig => ({
       ...effectiveConfig,
@@ -1562,6 +1729,8 @@ export class QRGenerator {
       return decoded?.success === true && decoded?.data === effectiveConfig.content;
     };
 
+    const cb: ScanGateCallbacks = { buildAttemptConfig, renderScaled, runDecode, rememberPatch };
+
     const scenarioSeed = effectiveConfig.seed ?? 1337;
     const thresholds = {
       edge: adaptiveEdgeImprintThreshold,
@@ -1569,78 +1738,31 @@ export class QRGenerator {
       edgeWorsen: adaptiveEdgeWorsenLimit,
     };
 
-    let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
-    let bestBaseDecodable: HTMLCanvasElement | OffscreenCanvas | null = null;
-    let bestBaseDecodablePatch: DitherAttemptPatch | null = null;
-    let prevEdgeImprint: number | null = null;
-    for (const patch of attempts) {
-      if (lastCanvas && lastCanvas !== bestBaseDecodable) {
-        pool.release(lastCanvas);
-        lastCanvas = null;
-      }
-      const attemptCanvas = await renderScaled(buildAttemptConfig(patch));
-      try {
-        const evaluated = await evaluateDecodeScenarios(
-          sgctx,
-          pool,
-          moduleCount,
-          attemptCanvas,
-          prevEdgeImprint,
-          thresholds,
-          scenarioSeed,
-          runDecode
-        );
-        lastCanvas = evaluated.evaluatedCanvas;
-        if (evaluated.baseDecodeOk && !bestBaseDecodable) {
-          bestBaseDecodable = evaluated.evaluatedCanvas;
-          bestBaseDecodablePatch = patch;
-        }
-        if (
-          evaluated.metrics &&
-          (prevEdgeImprint === null || evaluated.metrics.edgeImprint < prevEdgeImprint)
-        ) {
-          prevEdgeImprint = evaluated.metrics.edgeImprint;
-        }
-        if (evaluated.ok) {
-          rememberPatch(patch);
-          return evaluated.evaluatedCanvas;
-        }
-        if (skipScanGateEscalation) {
-          if (evaluated.baseDecodeOk) {
-            rememberPatch(patch);
-            return evaluated.evaluatedCanvas;
-          }
-        }
-      } catch {
-        lastCanvas = attemptCanvas;
-        // Keep iterating without escalating occupancy pressure aggressively.
-        if (skipScanGateEscalation) {
-        }
-      }
-    }
-    if (bestBaseDecodable) {
-      if (bestBaseDecodablePatch) rememberPatch(bestBaseDecodablePatch);
-      return bestBaseDecodable;
-    }
+    const mainResult = await runScanGateMainLoop(
+      pool,
+      sgctx,
+      moduleCount,
+      attempts,
+      thresholds,
+      scenarioSeed,
+      skipScanGateEscalation,
+      cb
+    );
+    if (mainResult.earlyReturn) return mainResult.earlyReturn;
+    let lastCanvas = mainResult.lastCanvas;
 
     const lastPatch = attempts[attempts.length - 1] || {};
     if (skipScanGateEscalation) {
       const finderRescuePatches = buildScanGateFinderRescuePatches(sgctx);
-      for (const patch of finderRescuePatches) {
-        if (lastCanvas && lastCanvas !== bestBaseDecodable) {
-          pool.release(lastCanvas);
-          lastCanvas = null;
-        }
-        const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
-        const rescueRaster = isPreviewScanGate
-          ? rescueCanvas
-          : await roundtripToFinalRaster(pool, rescueCanvas);
-        if (await runDecode(rescueRaster)) {
-          rememberPatch(patch);
-          return rescueRaster;
-        }
-        lastCanvas = rescueRaster;
-      }
+      const rescue = await runScanGateRescueLoop(
+        pool,
+        finderRescuePatches,
+        isPreviewScanGate,
+        cb,
+        lastCanvas
+      );
+      if (rescue.found) return rescue.found;
+      lastCanvas = rescue.lastCanvas;
       const fallback = lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
       if (Object.keys(lastPatch).length > 0) rememberPatch(lastPatch);
       return fallback;
@@ -1653,21 +1775,15 @@ export class QRGenerator {
     if (isAnimatedPreviewFrame) {
       rescuePatches = rescuePatches.slice(0, 4);
     }
-    for (const patch of rescuePatches) {
-      if (lastCanvas && lastCanvas !== bestBaseDecodable) {
-        pool.release(lastCanvas);
-        lastCanvas = null;
-      }
-      const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
-      const rescueRaster = isPreviewScanGate
-        ? rescueCanvas
-        : await roundtripToFinalRaster(pool, rescueCanvas);
-      if (await runDecode(rescueRaster)) {
-        rememberPatch(patch);
-        return rescueRaster;
-      }
-      lastCanvas = rescueRaster;
-    }
+    const rescue = await runScanGateRescueLoop(
+      pool,
+      rescuePatches,
+      isPreviewScanGate,
+      cb,
+      lastCanvas
+    );
+    if (rescue.found) return rescue.found;
+    lastCanvas = rescue.lastCanvas;
 
     const requireDecodableResult = !isScanGateDisabled;
     if (!requireDecodableResult && effectiveConfig.qrFirstMode !== true) {
@@ -1682,43 +1798,17 @@ export class QRGenerator {
     }
 
     // Emergency scan fallback: QR-first variants with conservative intensity.
-    // This only runs when scan gating is enabled or QR-first was explicitly requested.
-    let qrFirstLast: HTMLCanvasElement | OffscreenCanvas | null = null;
-    const qrFirstDrops = isPreviewScanGate ? [10, 16, 22, 28, 34] : [8, 14, 20, 26, 32, 38, 44];
-    const qrFirstIntensities = qrFirstDrops
-      .map((drop) => resolveScanGateIntensity(sgctx, drop, { minIntensity: 6, maxDrop: 46 }))
-      .filter(
-        (intensity, idx, values) =>
-          intensity < requestedOverlayIntensity && values.indexOf(intensity) === idx
-      );
-    for (const intensity of qrFirstIntensities) {
-      if (qrFirstLast) {
-        pool.release(qrFirstLast);
-        qrFirstLast = null;
-      }
-      const qrFirstFallback = await renderScaled({
-        ...buildAttemptConfig(lastPatch),
-        qrFirstMode: true,
-        overlayIntensity: Math.min(intensity, effectiveConfig.overlayIntensity ?? 100),
-      });
-      const fallbackRaster = isPreviewScanGate
-        ? qrFirstFallback
-        : await roundtripToFinalRaster(pool, qrFirstFallback);
-      qrFirstLast = fallbackRaster;
-      if (await runDecode(fallbackRaster)) {
-        if (effectiveConfig.qrFirstMode === true) {
-          rememberPatch({
-            ...lastPatch,
-            qrFirstMode: true,
-            overlayIntensity: intensity,
-          });
-        }
-        return fallbackRaster;
-      }
-    }
+    const qrFirstResult = await runScanGateQRFirstFallback(
+      pool,
+      sgctx,
+      isPreviewScanGate,
+      requestedOverlayIntensity,
+      effectiveConfig,
+      lastPatch,
+      cb
+    );
 
-    // If strict decode still fails, return best QR-first artifact (never plain QR in artistic mode).
-    return qrFirstLast ?? (lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch))));
+    return qrFirstResult ?? (lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch))));
   }
 
   /**

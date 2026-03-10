@@ -274,34 +274,27 @@ export function softenBWImage(imageData: ImageData): ImageData {
 }
 
 /**
- * Preprocess image data with configured filters
- * Uses overlay module's applyFilters (canonical source) with QR config mapping
+ * Build FilterOptions from QR generator config.
+ *
+ * NOTE: UI/store values for overlay preprocessing use overlay module ranges.
+ * We keep QRGeneratorConfig.filter* in those same ranges to avoid double scaling.
+ * - brightness: -100..100
+ * - contrast:   -100..100 (overlay supports broader range, but -100..100 is fine)
+ * - saturation: -100..100 (overlay expects 0..200, where 100 is neutral)
+ * - hue:        0..360 degrees
+ * - blur:       px radius (0..)
+ * - sharpen:    0..100
+ * - posterize:  0..16 levels
+ * - threshold:  0..255, where 0 means disabled
  */
-export function preprocessImageData(
-  imageData: ImageData,
-  config: QRGeneratorConfig,
-  debug = false
-): ImageData {
-  // Map QR config to FilterOptions
+function buildFilterOptionsFromConfig(config: QRGeneratorConfig): FilterOptions {
   const filterOptions: FilterOptions = {};
-
-  // NOTE: UI/store values for overlay preprocessing use overlay module ranges.
-  // We keep QRGeneratorConfig.filter* in those same ranges to avoid double scaling.
-  // - brightness: -100..100
-  // - contrast:   -100..100 (overlay supports broader range, but -100..100 is fine)
-  // - saturation: -100..100 (overlay expects 0..200, where 100 is neutral)
-  // - hue:        0..360 degrees
-  // - blur:       px radius (0..)
-  // - sharpen:    0..100
-  // - posterize:  0..16 levels
-  // - threshold:  0..255, where 0 means disabled
 
   if (config.filterBrightness !== undefined && config.filterBrightness !== 0) {
     filterOptions.brightness = config.filterBrightness;
   }
 
   if (config.filterContrast !== undefined && config.filterContrast !== 0) {
-    // overlay contrast function accepts a broader range, but the UI uses -100..100.
     filterOptions.contrast = config.filterContrast;
   }
 
@@ -313,22 +306,18 @@ export function preprocessImageData(
     filterOptions.hue = config.filterHue;
   }
 
-  // Gamma: Direct pass-through
   if (config.filterGamma !== undefined && config.filterGamma !== 1) {
     filterOptions.gamma = config.filterGamma;
   }
 
-  // Invert: Direct pass-through
   if (config.filterInvert) {
     filterOptions.invert = true;
   }
 
-  // Grayscale: Direct pass-through
   if (config.filterGrayscale) {
     filterOptions.grayscale = true;
   }
 
-  // Threshold: 0..255, where 0 means disabled
   if (config.filterThreshold !== undefined && config.filterThreshold > 0) {
     filterOptions.threshold = config.filterThreshold;
   }
@@ -354,7 +343,6 @@ export function preprocessImageData(
     config.filterDuotone2 &&
     config.colorMode !== 'color'
   ) {
-    // Parse hex color strings into RGB objects for duotone filter
     const lightRgb = parseColor(config.filterDuotone1);
     const darkRgb = parseColor(config.filterDuotone2);
     if (lightRgb && darkRgb) {
@@ -367,19 +355,27 @@ export function preprocessImageData(
   // The applyFilters function supports colorMode at the end of its processing chain
   if (config.colorMode) {
     if (config.colorMode === 'color') {
-      // When colorMode is 'color', ensure we DON'T apply grayscale filter
-      // This fixes the issue where center logos appeared grayscale even with colorMode='color'
       filterOptions.grayscale = false;
-      // Don't set filterOptions.colorMode - applyColorMode returns early for 'color' anyway
     } else {
-      // For 'grayscale' or 'bw', set the colorMode and disable separate grayscale filter
-      // to avoid double-processing (colorMode handles conversion internally)
       filterOptions.colorMode = config.colorMode as ColorMode;
       filterOptions.grayscale = false;
     }
   }
 
-  // Debug logging for preprocessing decisions
+  return filterOptions;
+}
+
+/**
+ * Preprocess image data with configured filters
+ * Uses overlay module's applyFilters (canonical source) with QR config mapping
+ */
+export function preprocessImageData(
+  imageData: ImageData,
+  config: QRGeneratorConfig,
+  debug = false
+): ImageData {
+  const filterOptions = buildFilterOptionsFromConfig(config);
+
   if (debug) {
     log.debug('preprocessImageData - filter options', {
       brightness: filterOptions.brightness,

@@ -5,7 +5,6 @@ This directory defines report ownership and generation commands.
 ## Canonical Report Docs
 
 - [Payload verification matrix](payload-verification-matrix.md)
-- [Gallery execution path matrix](gallery-execution-path-matrix.md)
 - [Coverage gap](coverage-gap.md)
 - [Test ID coverage](testid-coverage.md)
 - [Bundle budget](bundle-budget.md)

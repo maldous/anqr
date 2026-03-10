@@ -1,7 +1,7 @@
 ---
 tracker:
   kind: linear
-  project_slug: "symphony-c7a7906a4fa6"
+  project_slug: 'symphony-c7a7906a4fa6'
   active_states:
     - Backlog
     - Todo
@@ -60,7 +60,7 @@ You are a code editor. Follow these steps exactly.
 
 1. If the issue title starts with `[PARENT]`, this is a tracking issue — do not execute it. Run:
    ```bash
-   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Todo"
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "[PARENT] tracking issue — not directly executable by automation."
    ```
    Then stop.
@@ -70,12 +70,7 @@ You are a code editor. Follow these steps exactly.
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Requires human action: <describe exact steps and validation evidence needed>"
    ```
    Then stop.
-3. If the task requires subjective judgment, strategy, UX design, or document writing (no concrete code changes possible), run:
-   ```bash
-   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Todo"
-   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Requires human decision: <describe the decision needed and concrete unblock criteria>"
-   ```
-   Then stop.
+3. If the task requires subjective judgment, strategy, UX design, or document writing (no concrete code changes possible), escalate to Pending the same way as step 2.
 4. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
    **To create child issues, use the CLI helper instead of raw GraphQL:**
    ```bash
@@ -105,12 +100,7 @@ You are a code editor. Follow these steps exactly.
 
 If any command exits with a non-zero status or produces an error:
 
-1. **Tool call failures inside a running session — retry in place (no reset).**
-   - For failed tool calls (example: `apply_patch` validation errors, `linear_graphql`/CLI syntax errors), retry the same tool call up to **2 times** in the current session.
-   - Include the exact previous error output in the retry attempt so the model can self-correct.
-   - If retries still fail, continue the session and try an alternative approach instead of crashing the run.
-
-2. **Other command failures — retry once with reset.** Reset the workspace and try the failed command again:
+1. **First failure — retry once.** Reset the workspace and try the failed command again:
 
    ```bash
    git rebase --abort 2>/dev/null; git checkout . && git clean -fd
@@ -118,7 +108,7 @@ If any command exits with a non-zero status or produces an error:
 
    Then re-run the failed command. If it succeeds, continue with the workflow.
 
-3. **Second failure after reset retry — give up.** If the command fails again after the retry:
+2. **Second failure — give up.** If the command fails again after the retry:
    a. Post the error as a comment:
    ```bash
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed (after retry): <paste the error output>"
@@ -129,7 +119,7 @@ If any command exits with a non-zero status or produces an error:
    ```
    c. Stop.
 
-> **Important:** Only use `Pending` for genuinely non-automatable tasks (Step 1.2 above).
+> **Important:** Only use `Pending` for genuinely non-automatable tasks (Steps 1.1–1.3 above).
 > Use `Rework` for all recoverable failures so Symphony can retry the issue.
 
 ## Step 2: Post evidence and complete

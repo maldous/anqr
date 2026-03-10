@@ -11,6 +11,201 @@ import { DIFFUSION_KERNELS } from './kernels';
 import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
 import { clamp01, generateBlueNoiseTile, rgbToGray, sampleBlueNoise } from './utils';
 
+interface BlueNoisePixelResult {
+  isDark: boolean;
+  color: RGB;
+}
+
+function quantizeBlueNoisePixel(
+  r: number,
+  g: number,
+  b: number,
+  threshold: number,
+  strengthFactor: number,
+  colorMode: ColorMode,
+  levels: number
+): BlueNoisePixelResult {
+  if (colorMode === 'bw') {
+    const gray = rgbToGray(r, g, b);
+    const adjustedThreshold = 0.5 + (threshold - 0.5) * strengthFactor;
+    const isDark = gray < adjustedThreshold;
+    return { isDark, color: isDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 } };
+  } else if (colorMode === 'grayscale') {
+    const gray = rgbToGray(r, g, b);
+    const scaled = gray * (levels - 1);
+    const low = Math.floor(scaled);
+    const high = Math.min(low + 1, levels - 1);
+    const frac = scaled - low;
+    const t = 0.5 + (threshold - 0.5) * strengthFactor;
+    const newVal = (frac > t ? high : low) / (levels - 1);
+    const grayByte = Math.round(newVal * 255);
+    return { isDark: newVal < 0.5, color: { r: grayByte, g: grayByte, b: grayByte } };
+  }
+  const quantize = (val: number, noiseOffset: number): number => {
+    const t = (threshold + noiseOffset) % 1;
+    const adjustedT = 0.5 + (t - 0.5) * strengthFactor;
+    const scaled = val * (levels - 1);
+    const low = Math.floor(scaled);
+    const high = Math.min(low + 1, levels - 1);
+    const frac = scaled - low;
+    return (frac > adjustedT ? high : low) / (levels - 1);
+  };
+  const newR = quantize(r, 0);
+  const newG = quantize(g, 0.33);
+  const newB = quantize(b, 0.67);
+  const brightness = rgbToGray(newR, newG, newB);
+  return {
+    isDark: brightness < 0.5,
+    color: { r: Math.round(newR * 255), g: Math.round(newG * 255), b: Math.round(newB * 255) },
+  };
+}
+
+interface DiffusionPixelResult {
+  isDark: boolean;
+  color: RGB;
+  errorR: number;
+  errorG: number;
+  errorB: number;
+}
+
+function quantizeBNEDPixel(
+  pixel: { r: number; g: number; b: number },
+  colorMode: ColorMode,
+  step: number,
+  strengthFactor: number,
+  thresholdMod: number
+): DiffusionPixelResult {
+  if (colorMode === 'bw') {
+    const gray = rgbToGray(pixel.r, pixel.g, pixel.b);
+    const threshold = 0.5 + thresholdMod;
+    const newVal = gray > threshold ? 1 : 0;
+    const error = (gray - newVal) * strengthFactor;
+    return {
+      isDark: newVal === 0,
+      color: { r: newVal * 255, g: newVal * 255, b: newVal * 255 },
+      errorR: error,
+      errorG: error,
+      errorB: error,
+    };
+  }
+  const newR = Math.round(pixel.r / step) * step;
+  const newG = Math.round(pixel.g / step) * step;
+  const newB = Math.round(pixel.b / step) * step;
+  return {
+    isDark: rgbToGray(newR, newG, newB) < 0.5,
+    color: {
+      r: Math.round(clamp01(newR) * 255),
+      g: Math.round(clamp01(newG) * 255),
+      b: Math.round(clamp01(newB) * 255),
+    },
+    errorR: (pixel.r - newR) * strengthFactor,
+    errorG: (pixel.g - newG) * strengthFactor,
+    errorB: (pixel.b - newB) * strengthFactor,
+  };
+}
+
+function quantizePerceptualPixel(
+  pixel: { r: number; g: number; b: number },
+  colorMode: ColorMode,
+  step: number,
+  strengthFactor: number,
+  toSRGB: (v: number) => number
+): DiffusionPixelResult {
+  if (colorMode === 'bw') {
+    const gray = pixel.r * 0.2126 + pixel.g * 0.7152 + pixel.b * 0.0722;
+    const newVal = gray > 0.5 ? 1 : 0;
+    const error = (gray - newVal) * strengthFactor;
+    const outVal = Math.round(toSRGB(newVal) * 255);
+    return {
+      isDark: newVal === 0,
+      color: { r: outVal, g: outVal, b: outVal },
+      errorR: error,
+      errorG: error,
+      errorB: error,
+    };
+  }
+  const newR = Math.round(pixel.r / step) * step;
+  const newG = Math.round(pixel.g / step) * step;
+  const newB = Math.round(pixel.b / step) * step;
+  return {
+    isDark: newR * 0.2126 + newG * 0.7152 + newB * 0.0722 < 0.5,
+    color: {
+      r: Math.round(clamp01(toSRGB(newR)) * 255),
+      g: Math.round(clamp01(toSRGB(newG)) * 255),
+      b: Math.round(clamp01(toSRGB(newB)) * 255),
+    },
+    errorR: (pixel.r - newR) * strengthFactor,
+    errorG: (pixel.g - newG) * strengthFactor,
+    errorB: (pixel.b - newB) * strengthFactor,
+  };
+}
+
+function computeSobelEdgeMap(imageData: Float32Array[], width: number, height: number): number[][] {
+  const edgeMap: number[][] = [];
+  for (let y = 0; y < height; y++) {
+    edgeMap.push(new Array(width).fill(0));
+  }
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const getGray = (px: number, py: number) => {
+        const idx = px * 3;
+        return rgbToGray(imageData[py][idx], imageData[py][idx + 1], imageData[py][idx + 2]);
+      };
+      const gx =
+        -getGray(x - 1, y - 1) +
+        getGray(x + 1, y - 1) +
+        -2 * getGray(x - 1, y) +
+        2 * getGray(x + 1, y) +
+        -getGray(x - 1, y + 1) +
+        getGray(x + 1, y + 1);
+      const gy =
+        -getGray(x - 1, y - 1) -
+        2 * getGray(x, y - 1) -
+        getGray(x + 1, y - 1) +
+        getGray(x - 1, y + 1) +
+        2 * getGray(x, y + 1) +
+        getGray(x + 1, y + 1);
+      edgeMap[y][x] = Math.min(1, Math.hypot(gx, gy));
+    }
+  }
+  return edgeMap;
+}
+
+function quantizeEdgeAwarePixel(
+  pixel: { r: number; g: number; b: number },
+  colorMode: ColorMode,
+  step: number,
+  strengthFactor: number,
+  edgeFactor: number
+): DiffusionPixelResult {
+  if (colorMode === 'bw') {
+    const gray = rgbToGray(pixel.r, pixel.g, pixel.b);
+    const newVal = gray > 0.5 ? 1 : 0;
+    const error = (gray - newVal) * strengthFactor * edgeFactor;
+    return {
+      isDark: newVal === 0,
+      color: { r: newVal * 255, g: newVal * 255, b: newVal * 255 },
+      errorR: error,
+      errorG: error,
+      errorB: error,
+    };
+  }
+  const newR = Math.round(pixel.r / step) * step;
+  const newG = Math.round(pixel.g / step) * step;
+  const newB = Math.round(pixel.b / step) * step;
+  return {
+    isDark: rgbToGray(newR, newG, newB) < 0.5,
+    color: {
+      r: Math.round(clamp01(newR) * 255),
+      g: Math.round(clamp01(newG) * 255),
+      b: Math.round(clamp01(newB) * 255),
+    },
+    errorR: (pixel.r - newR) * strengthFactor * edgeFactor,
+    errorG: (pixel.g - newG) * strengthFactor * edgeFactor,
+    errorB: (pixel.b - newB) * strengthFactor * edgeFactor,
+  };
+}
+
 /** Options for blue noise dithering */
 interface BlueNoiseOptions {
   tileSize?: number;
@@ -45,53 +240,17 @@ export function blueNoiseDither(
     for (let x = 0; x < width; x++) {
       const threshold = sampleBlueNoise(x, y, tile, tileSize);
       const idx = x * 3;
-      const r = imageData[y][idx];
-      const g = imageData[y][idx + 1];
-      const b = imageData[y][idx + 2];
-
-      if (colorMode === 'bw') {
-        const gray = rgbToGray(r, g, b);
-        const adjustedThreshold = 0.5 + (threshold - 0.5) * strengthFactor;
-        const isDark = gray < adjustedThreshold;
-
-        matrixRow.push(isDark);
-        colorRow.push(isDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 });
-      } else if (colorMode === 'grayscale') {
-        const gray = rgbToGray(r, g, b);
-        const scaled = gray * (levels - 1);
-        const low = Math.floor(scaled);
-        const high = Math.min(low + 1, levels - 1);
-        const frac = scaled - low;
-        const t = 0.5 + (threshold - 0.5) * strengthFactor;
-        const newVal = (frac > t ? high : low) / (levels - 1);
-
-        matrixRow.push(newVal < 0.5);
-        const grayByte = Math.round(newVal * 255);
-        colorRow.push({ r: grayByte, g: grayByte, b: grayByte });
-      } else {
-        // Color mode
-        const quantize = (val: number, noiseOffset: number): number => {
-          const t = (threshold + noiseOffset) % 1;
-          const adjustedT = 0.5 + (t - 0.5) * strengthFactor;
-          const scaled = val * (levels - 1);
-          const low = Math.floor(scaled);
-          const high = Math.min(low + 1, levels - 1);
-          const frac = scaled - low;
-          return (frac > adjustedT ? high : low) / (levels - 1);
-        };
-
-        const newR = quantize(r, 0);
-        const newG = quantize(g, 0.33);
-        const newB = quantize(b, 0.67);
-        const brightness = rgbToGray(newR, newG, newB);
-
-        matrixRow.push(brightness < 0.5);
-        colorRow.push({
-          r: Math.round(newR * 255),
-          g: Math.round(newG * 255),
-          b: Math.round(newB * 255),
-        });
-      }
+      const px = quantizeBlueNoisePixel(
+        imageData[y][idx],
+        imageData[y][idx + 1],
+        imageData[y][idx + 2],
+        threshold,
+        strengthFactor,
+        colorMode,
+        levels
+      );
+      matrixRow.push(px.isDark);
+      colorRow.push(px.color);
     }
 
     resultMatrix.push(matrixRow);
@@ -160,58 +319,23 @@ export function blueNoiseErrorDiffusion(
     const deltaX = leftToRight ? 1 : -1;
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
-      const pixel = pixels[y][x];
       const blueNoiseVal = sampleBlueNoise(x, y, tile, tileSize);
       const thresholdMod = (blueNoiseVal - 0.5) * 0.3 * strengthFactor;
-
-      if (colorMode === 'bw') {
-        const gray = rgbToGray(pixel.r, pixel.g, pixel.b);
-        const threshold = 0.5 + thresholdMod;
-        const newVal = gray > threshold ? 1 : 0;
-        const error = (gray - newVal) * strengthFactor;
-
-        resultMatrix[y][x] = newVal === 0;
-        resultColors[y][x] = { r: newVal * 255, g: newVal * 255, b: newVal * 255 };
-        distributeErrorWithKernel({
-          pixels,
-          x,
-          y,
-          width,
-          height,
-          errorR: error,
-          errorG: error,
-          errorB: error,
-          kernel,
-          leftToRight,
-        });
-      } else {
-        const newR = Math.round(pixel.r / step) * step;
-        const newG = Math.round(pixel.g / step) * step;
-        const newB = Math.round(pixel.b / step) * step;
-        const errR = (pixel.r - newR) * strengthFactor;
-        const errG = (pixel.g - newG) * strengthFactor;
-        const errB = (pixel.b - newB) * strengthFactor;
-
-        const brightness = rgbToGray(newR, newG, newB);
-        resultMatrix[y][x] = brightness < 0.5;
-        resultColors[y][x] = {
-          r: Math.round(clamp01(newR) * 255),
-          g: Math.round(clamp01(newG) * 255),
-          b: Math.round(clamp01(newB) * 255),
-        };
-        distributeErrorWithKernel({
-          pixels,
-          x,
-          y,
-          width,
-          height,
-          errorR: errR,
-          errorG: errG,
-          errorB: errB,
-          kernel,
-          leftToRight,
-        });
-      }
+      const q = quantizeBNEDPixel(pixels[y][x], colorMode, step, strengthFactor, thresholdMod);
+      resultMatrix[y][x] = q.isDark;
+      resultColors[y][x] = q.color;
+      distributeErrorWithKernel({
+        pixels,
+        x,
+        y,
+        width,
+        height,
+        errorR: q.errorR,
+        errorG: q.errorG,
+        errorB: q.errorB,
+        kernel,
+        leftToRight,
+      });
     }
   }
 
@@ -336,56 +460,21 @@ export function perceptualDither(
     const deltaX = leftToRight ? 1 : -1;
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
-      const pixel = pixels[y][x];
-
-      if (colorMode === 'bw') {
-        const gray = pixel.r * 0.2126 + pixel.g * 0.7152 + pixel.b * 0.0722;
-        const newVal = gray > 0.5 ? 1 : 0;
-        const error = (gray - newVal) * strengthFactor;
-
-        resultMatrix[y][x] = newVal === 0;
-        const outVal = Math.round(toSRGB(newVal) * 255);
-        resultColors[y][x] = { r: outVal, g: outVal, b: outVal };
-        distributeErrorWithKernel({
-          pixels,
-          x,
-          y,
-          width,
-          height,
-          errorR: error,
-          errorG: error,
-          errorB: error,
-          kernel,
-          leftToRight,
-        });
-      } else {
-        const newR = Math.round(pixel.r / step) * step;
-        const newG = Math.round(pixel.g / step) * step;
-        const newB = Math.round(pixel.b / step) * step;
-        const errR = (pixel.r - newR) * strengthFactor;
-        const errG = (pixel.g - newG) * strengthFactor;
-        const errB = (pixel.b - newB) * strengthFactor;
-
-        const brightness = newR * 0.2126 + newG * 0.7152 + newB * 0.0722;
-        resultMatrix[y][x] = brightness < 0.5;
-        resultColors[y][x] = {
-          r: Math.round(clamp01(toSRGB(newR)) * 255),
-          g: Math.round(clamp01(toSRGB(newG)) * 255),
-          b: Math.round(clamp01(toSRGB(newB)) * 255),
-        };
-        distributeErrorWithKernel({
-          pixels,
-          x,
-          y,
-          width,
-          height,
-          errorR: errR,
-          errorG: errG,
-          errorB: errB,
-          kernel,
-          leftToRight,
-        });
-      }
+      const q = quantizePerceptualPixel(pixels[y][x], colorMode, step, strengthFactor, toSRGB);
+      resultMatrix[y][x] = q.isDark;
+      resultColors[y][x] = q.color;
+      distributeErrorWithKernel({
+        pixels,
+        x,
+        y,
+        width,
+        height,
+        errorR: q.errorR,
+        errorG: q.errorG,
+        errorB: q.errorB,
+        kernel,
+        leftToRight,
+      });
     }
   }
 
@@ -417,38 +506,7 @@ export function edgeAwareDither(
   const strengthFactor = strength / 100;
   const step = 1 / (levels - 1);
 
-  // Compute edge map using Sobel
-  const edgeMap: number[][] = [];
-  for (let y = 0; y < height; y++) {
-    edgeMap.push(new Array(width).fill(0));
-  }
-
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
-      const getGray = (px: number, py: number) => {
-        const idx = px * 3;
-        return rgbToGray(imageData[py][idx], imageData[py][idx + 1], imageData[py][idx + 2]);
-      };
-
-      const gx =
-        -getGray(x - 1, y - 1) +
-        getGray(x + 1, y - 1) +
-        -2 * getGray(x - 1, y) +
-        2 * getGray(x + 1, y) +
-        -getGray(x - 1, y + 1) +
-        getGray(x + 1, y + 1);
-
-      const gy =
-        -getGray(x - 1, y - 1) -
-        2 * getGray(x, y - 1) -
-        getGray(x + 1, y - 1) +
-        getGray(x - 1, y + 1) +
-        2 * getGray(x, y + 1) +
-        getGray(x + 1, y + 1);
-
-      edgeMap[y][x] = Math.min(1, Math.hypot(gx, gy));
-    }
-  }
+  const edgeMap = computeSobelEdgeMap(imageData, width, height);
 
   const pixels: { r: number; g: number; b: number }[][] = [];
   for (let y = 0; y < height; y++) {
@@ -479,56 +537,22 @@ export function edgeAwareDither(
     const deltaX = leftToRight ? 1 : -1;
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
-      const pixel = pixels[y][x];
       const edgeFactor = 1 - edgeMap[y][x] * 0.8;
-
-      if (colorMode === 'bw') {
-        const gray = rgbToGray(pixel.r, pixel.g, pixel.b);
-        const newVal = gray > 0.5 ? 1 : 0;
-        const error = (gray - newVal) * strengthFactor * edgeFactor;
-
-        resultMatrix[y][x] = newVal === 0;
-        resultColors[y][x] = { r: newVal * 255, g: newVal * 255, b: newVal * 255 };
-        distributeErrorWithKernel({
-          pixels,
-          x,
-          y,
-          width,
-          height,
-          errorR: error,
-          errorG: error,
-          errorB: error,
-          kernel,
-          leftToRight,
-        });
-      } else {
-        const newR = Math.round(pixel.r / step) * step;
-        const newG = Math.round(pixel.g / step) * step;
-        const newB = Math.round(pixel.b / step) * step;
-        const errR = (pixel.r - newR) * strengthFactor * edgeFactor;
-        const errG = (pixel.g - newG) * strengthFactor * edgeFactor;
-        const errB = (pixel.b - newB) * strengthFactor * edgeFactor;
-
-        const brightness = rgbToGray(newR, newG, newB);
-        resultMatrix[y][x] = brightness < 0.5;
-        resultColors[y][x] = {
-          r: Math.round(clamp01(newR) * 255),
-          g: Math.round(clamp01(newG) * 255),
-          b: Math.round(clamp01(newB) * 255),
-        };
-        distributeErrorWithKernel({
-          pixels,
-          x,
-          y,
-          width,
-          height,
-          errorR: errR,
-          errorG: errG,
-          errorB: errB,
-          kernel,
-          leftToRight,
-        });
-      }
+      const q = quantizeEdgeAwarePixel(pixels[y][x], colorMode, step, strengthFactor, edgeFactor);
+      resultMatrix[y][x] = q.isDark;
+      resultColors[y][x] = q.color;
+      distributeErrorWithKernel({
+        pixels,
+        x,
+        y,
+        width,
+        height,
+        errorR: q.errorR,
+        errorG: q.errorG,
+        errorB: q.errorB,
+        kernel,
+        leftToRight,
+      });
     }
   }
 

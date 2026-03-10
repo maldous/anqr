@@ -168,6 +168,40 @@ export function indexToPixel(index: number, moduleCount: number): { row: number;
   };
 }
 
+interface InterleavingEntry {
+  rsBlockIndex: number;
+  posInBlock: number;
+  isData: boolean;
+}
+
+function buildInterleavingMap(rsBlockInfo: RSBlockInfo[]): InterleavingEntry[] {
+  const map: InterleavingEntry[] = [];
+  const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));
+  const maxEccCount = Math.max(...rsBlockInfo.map((b) => b.eccCount));
+
+  for (let i = 0; i < maxDataCount; i++) {
+    for (let blockIdx = 0; blockIdx < rsBlockInfo.length; blockIdx++) {
+      if (i < rsBlockInfo[blockIdx].dataCount) {
+        map.push({ rsBlockIndex: blockIdx, posInBlock: i, isData: true });
+      }
+    }
+  }
+
+  for (let i = 0; i < maxEccCount; i++) {
+    for (let blockIdx = 0; blockIdx < rsBlockInfo.length; blockIdx++) {
+      if (i < rsBlockInfo[blockIdx].eccCount) {
+        map.push({
+          rsBlockIndex: blockIdx,
+          posInBlock: rsBlockInfo[blockIdx].dataCount + i,
+          isData: false,
+        });
+      }
+    }
+  }
+
+  return map;
+}
+
 /**
  * Build the complete bit-to-pixel mapping by simulating the zigzag traversal
  *
@@ -200,42 +234,7 @@ export function buildBitPixelMap(
   const _maskFunc = getMaskFunction(maskPattern);
 
   // Build interleaving map: which byte index in final stream maps to which block/position
-  // First all data bytes (interleaved), then all ECC bytes (interleaved)
-  const interleavingMap: Array<{
-    rsBlockIndex: number;
-    posInBlock: number;
-    isData: boolean;
-  }> = [];
-
-  // Find max data count and max ECC count
-  const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));
-  const maxEccCount = Math.max(...rsBlockInfo.map((b) => b.eccCount));
-
-  // Interleave data bytes
-  for (let i = 0; i < maxDataCount; i++) {
-    for (let blockIdx = 0; blockIdx < rsBlockInfo.length; blockIdx++) {
-      if (i < rsBlockInfo[blockIdx].dataCount) {
-        interleavingMap.push({
-          rsBlockIndex: blockIdx,
-          posInBlock: i,
-          isData: true,
-        });
-      }
-    }
-  }
-
-  // Interleave ECC bytes
-  for (let i = 0; i < maxEccCount; i++) {
-    for (let blockIdx = 0; blockIdx < rsBlockInfo.length; blockIdx++) {
-      if (i < rsBlockInfo[blockIdx].eccCount) {
-        interleavingMap.push({
-          rsBlockIndex: blockIdx,
-          posInBlock: rsBlockInfo[blockIdx].dataCount + i,
-          isData: false,
-        });
-      }
-    }
-  }
+  const interleavingMap = buildInterleavingMap(rsBlockInfo);
 
   // Now simulate the zigzag traversal
   const mappings: BitPixelMapping[] = [];

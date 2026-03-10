@@ -142,6 +142,90 @@ export async function getSubpixelOverlayData(
   return { brightness, colors };
 }
 
+interface SubpixelCellCtx {
+  qr: QRCodeObject;
+  config: QRGeneratorConfig;
+  brightness: number[][];
+  colors: { r: number; g: number; b: number }[][];
+  actualScale: number;
+  centerIdx: number;
+  neutralColor: { r: number; g: number; b: number } | null;
+  useHalftone: boolean;
+  finderOverride: string;
+  moduleCount: number;
+  version: number;
+  intensity: number;
+}
+
+function processSubpixelCell(
+  ctx: SubpixelCellCtx,
+  x: number,
+  y: number,
+  matrix: boolean[][],
+  colorMatrix: (RGBWithMeta | null)[][]
+): void {
+  const moduleRow = Math.floor(y / ctx.actualScale);
+  const moduleCol = Math.floor(x / ctx.actualScale);
+  const subX = x % ctx.actualScale;
+  const subY = y % ctx.actualScale;
+  const isCenter = subX === ctx.centerIdx && subY === ctx.centerIdx;
+
+  const qrValue = ctx.qr.isDark(moduleRow, moduleCol);
+  const overlayBrightness = ctx.brightness[y]?.[x] ?? 0.5;
+  const overlayColor = ctx.colors[y]?.[x];
+
+  const lockModule = shouldLockModule(
+    moduleRow,
+    moduleCol,
+    ctx.moduleCount,
+    ctx.version,
+    ctx.config
+  );
+  const isFinderModule =
+    isFinderPattern(moduleRow, moduleCol, ctx.moduleCount) ||
+    isFinderSeparator(moduleRow, moduleCol, ctx.moduleCount);
+  const forceSolidFinder = ctx.finderOverride === 'solid' && isFinderModule && lockModule;
+
+  // Locked modules must preserve canonical QR values.
+  if (lockModule || forceSolidFinder) {
+    matrix[y][x] = qrValue;
+    colorMatrix[y][x] = null;
+    return;
+  }
+
+  if (isCenter) {
+    matrix[y][x] = qrValue;
+
+    if (ctx.useHalftone && qrValue) {
+      colorMatrix[y][x] = overlayColor
+        ? {
+            ...overlayColor,
+            halftone: true,
+            sizeRatio: 0.5 + overlayBrightness * 0.5,
+          }
+        : ctx.neutralColor
+          ? { ...ctx.neutralColor, halftone: true, sizeRatio: 0.5 + overlayBrightness * 0.5 }
+          : null;
+    } else {
+      colorMatrix[y][x] = overlayColor
+        ? { ...overlayColor }
+        : ctx.neutralColor
+          ? { ...ctx.neutralColor }
+          : null;
+    }
+    return;
+  }
+
+  // Surrounding pixels show overlay
+  const threshold = 0.5 - ctx.intensity * 0.3;
+  matrix[y][x] = overlayBrightness < threshold;
+  colorMatrix[y][x] = overlayColor
+    ? { ...overlayColor }
+    : ctx.neutralColor
+      ? { ...ctx.neutralColor }
+      : null;
+}
+
 /**
  * Generate subpixel matrix
  */
@@ -154,13 +238,11 @@ export async function generateSubpixelMatrix(
   useHalftoneCenter: boolean,
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
-  // Parse subpixel options from config
   const gridScale = parseGridSize(config.subpixelGridSize) || scale;
-  const actualScale = gridScale; // Use parsed grid size as scale
+  const actualScale = gridScale;
   const scaledSize = moduleCount * actualScale;
   const intensity = curveIntensity(config.overlayIntensity ?? 100);
 
-  // Get subpixel overlay data with the actual scale
   const { brightness, colors } = await getSubpixelOverlayData(
     overlayCanvas,
     moduleCount,
@@ -172,20 +254,11 @@ export async function generateSubpixelMatrix(
   const matrix: boolean[][] = [];
   const colorMatrix: (RGBWithMeta | null)[][] = [];
 
-  // Use parsed grid size for center calculation
   const centerIdx = Math.floor(actualScale / 2);
-
-  // Parse neutral color for use when no overlay data
   const neutralColor = parseHexColor(config.subpixelNeutralColor);
-
-  // Get center rule: 'strict' means exact QR value, 'halftone_center' allows halftone sizing
   const centerRule = config.subpixelCenterRule || 'strict';
   const useHalftone = centerRule === 'halftone_center' || useHalftoneCenter;
-
-  // Get finder override: 'solid' means draw finders as solid, 'stylized' allows subpixel effects
   const finderOverride = config.subpixelFinderOverride || 'solid';
-
-  // Calculate version for structural pattern detection
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   log.debug('Subpixel matrix generation', {
@@ -198,70 +271,27 @@ export async function generateSubpixelMatrix(
     hasNeutralColor: !!neutralColor,
   });
 
+  const cellCtx: SubpixelCellCtx = {
+    qr,
+    config,
+    brightness,
+    colors,
+    actualScale,
+    centerIdx,
+    neutralColor,
+    useHalftone,
+    finderOverride,
+    moduleCount,
+    version,
+    intensity,
+  };
+
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
     colorMatrix[y] = [];
 
     for (let x = 0; x < scaledSize; x++) {
-      // Determine which module this subpixel belongs to
-      const moduleRow = Math.floor(y / actualScale);
-      const moduleCol = Math.floor(x / actualScale);
-      const subX = x % actualScale;
-      const subY = y % actualScale;
-
-      // Check if this is the center subpixel
-      const isCenter = subX === centerIdx && subY === centerIdx;
-
-      const qrValue = qr.isDark(moduleRow, moduleCol);
-      const overlayBrightness = brightness[y]?.[x] ?? 0.5;
-      const overlayColor = colors[y]?.[x];
-
-      const lockModule = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
-      const isFinderModule =
-        isFinderPattern(moduleRow, moduleCol, moduleCount) ||
-        isFinderSeparator(moduleRow, moduleCol, moduleCount);
-      const forceSolidFinder = finderOverride === 'solid' && isFinderModule && lockModule;
-
-      // Locked modules must preserve canonical QR values.
-      // Finder override is a finder-only stylistic control on top of preserve flags.
-      if (lockModule || forceSolidFinder) {
-        matrix[y][x] = qrValue;
-        colorMatrix[y][x] = null; // No overlay color for solid structural patterns
-        continue;
-      }
-
-      if (isCenter) {
-        // Center pixel preserves QR data
-        matrix[y][x] = qrValue;
-
-        if (useHalftone && qrValue) {
-          // Use halftone sizing based on brightness
-          colorMatrix[y][x] = overlayColor
-            ? {
-                ...overlayColor,
-                halftone: true,
-                sizeRatio: 0.5 + overlayBrightness * 0.5,
-              }
-            : neutralColor
-              ? { ...neutralColor, halftone: true, sizeRatio: 0.5 + overlayBrightness * 0.5 }
-              : null;
-        } else {
-          colorMatrix[y][x] = overlayColor
-            ? { ...overlayColor }
-            : neutralColor
-              ? { ...neutralColor }
-              : null;
-        }
-      } else {
-        // Surrounding pixels show overlay
-        const threshold = 0.5 - intensity * 0.3;
-        matrix[y][x] = overlayBrightness < threshold;
-        colorMatrix[y][x] = overlayColor
-          ? { ...overlayColor }
-          : neutralColor
-            ? { ...neutralColor }
-            : null;
-      }
+      processSubpixelCell(cellCtx, x, y, matrix, colorMatrix);
     }
   }
 
@@ -270,6 +300,6 @@ export async function generateSubpixelMatrix(
     colors: colorMatrix,
     scale: actualScale,
     overlayData: null,
-    effectiveIntensity: intensity * 100, // Return as percentage (0-100) for consistency
+    effectiveIntensity: intensity * 100,
   };
 }

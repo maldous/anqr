@@ -324,7 +324,17 @@ interface StructuralPreservationCtx {
   debug: boolean;
 }
 
-function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void {
+function resolveDarkFillStyle(
+  forceBinary: boolean,
+  effectiveFgColor: string,
+  useGradient: boolean,
+  gradientFill: string | CanvasGradient | null
+): string | CanvasGradient {
+  if (forceBinary) return effectiveFgColor;
+  return useGradient && gradientFill ? gradientFill : effectiveFgColor;
+}
+
+function preserveTimingModules(spctx: StructuralPreservationCtx): void {
   const {
     ctx,
     marginPx,
@@ -332,37 +342,145 @@ function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void
     effectiveModuleSize,
     qr,
     config,
-    version,
     forceBinaryFunctionPatterns,
-    preserveFinders,
-    preserveTiming,
-    preserveAlignment,
+    effectiveFgColor,
+    effectiveBgColor,
+    useGradient,
+    gradientFill,
+  } = spctx;
+  const timingStyle = config.timingStyle || 'match_module';
+  const darkFill = resolveDarkFillStyle(
+    forceBinaryFunctionPatterns,
+    effectiveFgColor,
+    useGradient,
+    gradientFill
+  );
+  // Horizontal timing (row 6, between finders)
+  const timingRow = 6;
+  for (let col = 8; col < moduleCount - 8; col++) {
+    const isDark = qr.isDark(timingRow, col);
+    const x = marginPx + col * effectiveModuleSize;
+    const y = marginPx + timingRow * effectiveModuleSize;
+    if (isDark) {
+      ctx.fillStyle = darkFill;
+      drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
+    } else {
+      ctx.fillStyle = effectiveBgColor;
+      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+    }
+  }
+  // Vertical timing (col 6, between finders)
+  const timingCol = 6;
+  for (let row = 8; row < moduleCount - 8; row++) {
+    const isDark = qr.isDark(row, timingCol);
+    const x = marginPx + timingCol * effectiveModuleSize;
+    const y = marginPx + row * effectiveModuleSize;
+    if (isDark) {
+      ctx.fillStyle = darkFill;
+      drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
+    } else {
+      ctx.fillStyle = effectiveBgColor;
+      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+    }
+  }
+}
+
+function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
+  const {
+    ctx,
+    marginPx,
+    moduleCount,
+    effectiveModuleSize,
+    qr,
+    forceBinaryFunctionPatterns,
     protectFormat,
     protectVersion,
     effectiveFgColor,
     effectiveBgColor,
     useGradient,
     gradientFill,
-    overlayCanvas,
     getPatternFlags,
     debug,
+    preserveTiming,
+  } = spctx;
+  const shouldProtectFormatInfo = !forceBinaryFunctionPatterns && protectFormat;
+  const shouldProtectVersionInfo = !forceBinaryFunctionPatterns && protectVersion;
+  if (!shouldProtectFormatInfo && !shouldProtectVersionInfo) return;
+
+  const darkFill = resolveDarkFillStyle(
+    forceBinaryFunctionPatterns,
+    effectiveFgColor,
+    useGradient,
+    gradientFill
+  );
+  let formatCount = 0;
+  let versionCount = 0;
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const flags = getPatternFlags(row, col);
+      const isFormat = shouldProtectFormatInfo && (flags & PATTERN_FORMAT) !== 0;
+      const isVersion = shouldProtectVersionInfo && (flags & PATTERN_VERSION) !== 0;
+      if (!(isFormat || isVersion)) continue;
+
+      const isDark = qr.isDark(row, col);
+      const x = marginPx + col * effectiveModuleSize;
+      const y = marginPx + row * effectiveModuleSize;
+      ctx.fillStyle = isDark ? darkFill : effectiveBgColor;
+      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+
+      if (isFormat) formatCount++;
+      if (isVersion) versionCount++;
+    }
+  }
+
+  // Also preserve the fixed dark module (scan critical)
+  const dmRow = moduleCount - 8;
+  const dmCol = 8;
+  if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
+    const x = marginPx + dmCol * effectiveModuleSize;
+    const y = marginPx + dmRow * effectiveModuleSize;
+    ctx.fillStyle = darkFill;
+    ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+  }
+
+  if (debug) {
+    const shouldPreserveTimingModules = !forceBinaryFunctionPatterns && preserveTiming;
+    log.debug('ScaledRender preserved', {
+      protectFormat: shouldProtectFormatInfo,
+      protectVersion: shouldProtectVersionInfo,
+      formatCount,
+      versionCount,
+      preservedTiming: shouldPreserveTimingModules,
+    });
+  }
+}
+
+function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void {
+  const {
+    ctx,
+    marginPx,
+    moduleCount,
+    effectiveModuleSize,
+    config,
+    version,
+    forceBinaryFunctionPatterns,
+    preserveTiming,
+    effectiveFgColor,
+    effectiveBgColor,
+    overlayCanvas,
   } = spctx;
 
-  // UNIFIED: Draw styled finder patterns on top of pixel rendering
-  // Only draw finders separately if preserveFinders is true OR there's no overlay
-  // When preserveFinders=false with overlay, finder modules were already rendered with overlay effects
   const shouldDrawFindersFirst =
     !forceBinaryFunctionPatterns && (config.preserveFinders !== false || !overlayCanvas);
 
   const finderPositions = [
-    { row: 0, col: 0 }, // Top-left
-    { row: 0, col: moduleCount - 7 }, // Top-right
-    { row: moduleCount - 7, col: 0 }, // Bottom-left
+    { row: 0, col: 0 },
+    { row: 0, col: moduleCount - 7 },
+    { row: moduleCount - 7, col: 0 },
   ];
 
   if (shouldDrawFindersFirst) {
     for (const pos of finderPositions) {
-      // Position is in module coordinates, convert to pixels
       const x = marginPx + pos.col * effectiveModuleSize;
       const y = marginPx + pos.row * effectiveModuleSize;
       if (forceBinaryFunctionPatterns) {
@@ -378,17 +496,12 @@ function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void
     }
   }
 
-  // UNIFIED: Draw styled alignment patterns (for version 2+)
-  // Only draw alignment patterns separately if preserveAlignment is true OR there's no overlay
-  // When preserveAlignment=false with overlay, alignment modules were already rendered with overlay effects
   const shouldDrawAlignmentFirst =
     !forceBinaryFunctionPatterns && (config.preserveAlignment !== false || !overlayCanvas);
   if (version >= 2 && shouldDrawAlignmentFirst) {
     const alignPositions = getAlignmentPositionsCached(version, moduleCount);
     const alignmentStyle = config.alignmentStyle || 'match_finder';
     for (const pos of alignPositions) {
-      // pos.row/col is the CENTER module of the alignment pattern
-      // Convert to pixel center position
       const centerX = marginPx + (pos.col + 0.5) * effectiveModuleSize;
       const centerY = marginPx + (pos.row + 0.5) * effectiveModuleSize;
       if (forceBinaryFunctionPatterns) {
@@ -404,112 +517,11 @@ function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void
     }
   }
 
-  // Preserve timing pattern modules on top (scan critical)
-  // When preserveTiming is false, we intentionally leave timing modules subject to the overlay.
-  const shouldPreserveTimingModules = !forceBinaryFunctionPatterns && preserveTiming;
-  if (shouldPreserveTimingModules) {
-    const timingStyle = config.timingStyle || 'match_module';
-    // Horizontal timing (row 6, between finders)
-    const timingRow = 6;
-    for (let col = 8; col < moduleCount - 8; col++) {
-      const isDark = qr.isDark(timingRow, col);
-      const x = marginPx + col * effectiveModuleSize;
-      const y = marginPx + timingRow * effectiveModuleSize;
-      if (isDark) {
-        ctx.fillStyle = forceBinaryFunctionPatterns
-          ? effectiveFgColor
-          : useGradient && gradientFill
-            ? gradientFill
-            : effectiveFgColor;
-        drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
-      } else {
-        // Override any overlay color for light timing modules
-        ctx.fillStyle = effectiveBgColor;
-        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-      }
-    }
-    // Vertical timing (col 6, between finders)
-    const timingCol = 6;
-    for (let row = 8; row < moduleCount - 8; row++) {
-      const isDark = qr.isDark(row, timingCol);
-      const x = marginPx + timingCol * effectiveModuleSize;
-      const y = marginPx + row * effectiveModuleSize;
-      if (isDark) {
-        ctx.fillStyle = forceBinaryFunctionPatterns
-          ? effectiveFgColor
-          : useGradient && gradientFill
-            ? gradientFill
-            : effectiveFgColor;
-        drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
-      } else {
-        ctx.fillStyle = effectiveBgColor;
-        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-      }
-    }
+  if (!forceBinaryFunctionPatterns && preserveTiming) {
+    preserveTimingModules(spctx);
   }
 
-  // Preserve format + version info modules on top (scan critical)
-  // These are small fixed areas, and should be kept clean when protection is enabled.
-  const shouldProtectFormatInfo = !forceBinaryFunctionPatterns && protectFormat;
-  const shouldProtectVersionInfo = !forceBinaryFunctionPatterns && protectVersion;
-
-  if (shouldProtectFormatInfo || shouldProtectVersionInfo) {
-    let formatCount = 0;
-    let versionCount = 0;
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        const flags = getPatternFlags(row, col);
-        const isFormat = shouldProtectFormatInfo && (flags & PATTERN_FORMAT) !== 0;
-        const isVersion = shouldProtectVersionInfo && (flags & PATTERN_VERSION) !== 0;
-        if (!(isFormat || isVersion)) continue;
-
-        const isDark = qr.isDark(row, col);
-        const x = marginPx + col * effectiveModuleSize;
-        const y = marginPx + row * effectiveModuleSize;
-
-        if (isDark) {
-          ctx.fillStyle = forceBinaryFunctionPatterns
-            ? effectiveFgColor
-            : useGradient && gradientFill
-              ? gradientFill
-              : effectiveFgColor;
-        } else {
-          ctx.fillStyle = effectiveBgColor;
-        }
-        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-
-        if (isFormat) formatCount++;
-        if (isVersion) versionCount++;
-      }
-    }
-
-    // Also preserve the fixed dark module (scan critical)
-    // Spec location: (moduleCount - 8, 8)
-    const dmRow = moduleCount - 8;
-    const dmCol = 8;
-    if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
-      const x = marginPx + dmCol * effectiveModuleSize;
-      const y = marginPx + dmRow * effectiveModuleSize;
-      ctx.fillStyle = forceBinaryFunctionPatterns
-        ? effectiveFgColor
-        : useGradient && gradientFill
-          ? gradientFill
-          : effectiveFgColor;
-      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-    }
-
-    if (debug) {
-      log.debug('ScaledRender preserved', {
-        protectFormat: shouldProtectFormatInfo,
-        protectVersion: shouldProtectVersionInfo,
-        formatCount,
-        versionCount,
-        preservedTiming: shouldPreserveTimingModules,
-      });
-    }
-  }
-
-  // Ensure quiet zone is clean after all module/pattern rendering.
+  preserveFormatVersionModules(spctx);
 }
 
 interface PixelGridCtx {
@@ -776,6 +788,326 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   }
 }
 
+interface ScaledPreserveFlags {
+  preserveFinders: boolean;
+  preserveTiming: boolean;
+  preserveAlignment: boolean;
+  protectFormat: boolean;
+  protectVersion: boolean;
+  preserveFixedDark: boolean;
+}
+
+function buildScaledPreserveFlags(config: QRGeneratorConfig): ScaledPreserveFlags {
+  const preserveFunctional = config.preserveFunctionalPatterns === true;
+  return {
+    preserveFinders: config.preserveFinders !== false,
+    preserveTiming: preserveFunctional
+      ? config.preserveTiming !== false
+      : config.preserveTiming === true,
+    preserveAlignment: preserveFunctional
+      ? config.preserveAlignment !== false
+      : config.preserveAlignment === true,
+    protectFormat: preserveFunctional
+      ? config.protectFormatInfo !== false
+      : config.protectFormatInfo === true,
+    protectVersion: preserveFunctional
+      ? config.protectVersionInfo !== false
+      : config.protectVersionInfo === true,
+    preserveFixedDark: preserveFunctional,
+  };
+}
+
+function shouldForceScaledBinaryModule(flags: number, pf: ScaledPreserveFlags): boolean {
+  if (flags === 0) return false;
+  if ((flags & PATTERN_FIXED_DARK) !== 0) return pf.preserveFixedDark;
+  if (isFinderRegionFlag(flags)) return pf.preserveFinders;
+  if ((flags & PATTERN_TIMING) !== 0) return pf.preserveTiming;
+  if ((flags & PATTERN_ALIGNMENT) !== 0) return pf.preserveAlignment;
+  if ((flags & PATTERN_FORMAT) !== 0) return pf.protectFormat;
+  if ((flags & PATTERN_VERSION) !== 0) return pf.protectVersion;
+  return false;
+}
+
+interface ContrastBoostFlags {
+  finderContrastBoost: boolean;
+  alignmentContrastBoost: boolean;
+  timingContrastBoost: boolean;
+  formatContrastBoost: boolean;
+  versionContrastBoost: boolean;
+  fixedDarkContrastBoost: boolean;
+}
+
+function isScaledPatternBoostModule(flags: number, bf: ContrastBoostFlags): boolean {
+  return (
+    (bf.finderContrastBoost && isFinderRegionFlag(flags)) ||
+    (bf.alignmentContrastBoost && (flags & PATTERN_ALIGNMENT) !== 0) ||
+    (bf.timingContrastBoost && (flags & PATTERN_TIMING) !== 0) ||
+    (bf.formatContrastBoost && (flags & PATTERN_FORMAT) !== 0) ||
+    (bf.versionContrastBoost && (flags & PATTERN_VERSION) !== 0) ||
+    (bf.fixedDarkContrastBoost && (flags & PATTERN_FIXED_DARK) !== 0)
+  );
+}
+
+function enforceScaledQuietZoneClean(
+  ctx: CanvasRenderingContext2D,
+  marginPx: number,
+  moduleCount: number,
+  effectiveModuleSize: number,
+  size: number,
+  transparentBg: boolean,
+  effectiveBgColor: string
+): void {
+  if (marginPx <= 0) return;
+  const qrStart = marginPx;
+  const qrSize = moduleCount * effectiveModuleSize;
+  const qrEnd = qrStart + qrSize;
+  if (transparentBg) {
+    ctx.clearRect(0, 0, size, qrStart);
+    ctx.clearRect(0, qrStart, qrStart, qrSize);
+    ctx.clearRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSize);
+    ctx.clearRect(0, qrEnd, size, Math.max(0, size - qrEnd));
+    return;
+  }
+  ctx.fillStyle = effectiveBgColor;
+  ctx.fillRect(0, 0, size, qrStart);
+  ctx.fillRect(0, qrStart, qrStart, qrSize);
+  ctx.fillRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSize);
+  ctx.fillRect(0, qrEnd, size, Math.max(0, size - qrEnd));
+}
+
+function drawScaledStrictFunctionOverlay(
+  ctx: CanvasRenderingContext2D,
+  moduleCount: number,
+  marginPx: number,
+  effectiveModuleSize: number,
+  qr: QRCodeInstance,
+  effectiveFgColor: string,
+  effectiveBgColor: string,
+  functionalMap: Uint8Array,
+  pf: ScaledPreserveFlags
+): void {
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!shouldForceScaledBinaryModule(functionalMap[row * moduleCount + col], pf)) continue;
+      const x = marginPx + col * effectiveModuleSize;
+      const y = marginPx + row * effectiveModuleSize;
+      ctx.fillStyle = qr.isDark(row, col) ? effectiveFgColor : effectiveBgColor;
+      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+    }
+  }
+}
+
+function computeScaledLocalVariance(colors: (PixelColor | null)[][], x: number, y: number): number {
+  const c = colors[y]?.[x] as PixelColor | undefined;
+  if (!c) return 0;
+  const luma = (p: PixelColor) => (0.299 * p.r + 0.587 * p.g + 0.114 * p.b) / 255;
+  const center = luma(c);
+  let sum = 0;
+  let n = 0;
+  const nb = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ];
+  for (const [ox, oy] of nb) {
+    const p = colors[y + oy]?.[x + ox] as PixelColor | undefined;
+    if (!p) continue;
+    const d = luma(p) - center;
+    sum += d * d;
+    n++;
+  }
+  return n > 0 ? Math.min(1, Math.sqrt(sum / n) * 3) : 0;
+}
+
+function sampleScaledModuleOverlayColor(
+  colors: (PixelColor | null)[][],
+  scaledSize: number,
+  scale: number,
+  row: number,
+  col: number
+): PixelColor | null {
+  if (!colors?.length) return null;
+  const px = Math.max(0, Math.min(scaledSize - 1, Math.floor((col + 0.5) * scale)));
+  const py = Math.max(0, Math.min(scaledSize - 1, Math.floor((row + 0.5) * scale)));
+  return (colors[py]?.[px] as PixelColor | undefined) ?? null;
+}
+
+function getScaledPreservationBlendTarget(
+  qr: QRCodeInstance,
+  colors: (PixelColor | null)[][],
+  matrix: boolean[][],
+  scaledSize: number,
+  scale: number,
+  isDitheredMode: boolean,
+  moduleRow: number,
+  moduleCol: number,
+  scaledRow: number,
+  scaledCol: number
+): { r: number; g: number; b: number } {
+  const moduleDark = qr.isDark(moduleRow, moduleCol);
+  const sampled =
+    (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
+    sampleScaledModuleOverlayColor(colors, scaledSize, scale, moduleRow, moduleCol);
+  if (!sampled) {
+    return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+  }
+  const pixelDark = matrix[scaledRow]?.[scaledCol] === true;
+  if (isDitheredMode) {
+    if (moduleDark) {
+      return pixelDark
+        ? adjustLumaPreserveChroma(sampled, 0.04, 1.65)
+        : adjustLumaPreserveChroma(sampled, 0.18, 1.3);
+    }
+    return pixelDark
+      ? adjustLumaPreserveChroma(sampled, 0.9, 0.9)
+      : adjustLumaPreserveChroma(sampled, 0.97, 0.8);
+  }
+  if (moduleDark) {
+    return pixelDark
+      ? adjustLumaPreserveChroma(sampled, 0.08, 1.28)
+      : adjustLumaPreserveChroma(sampled, 0.2, 1.14);
+  }
+  return pixelDark
+    ? adjustLumaPreserveChroma(sampled, 0.88, 0.95)
+    : adjustLumaPreserveChroma(sampled, 0.97, 0.84);
+}
+
+interface PatternBoostCtx {
+  ctx: CanvasRenderingContext2D;
+  size: number;
+  marginPx: number;
+  effectiveModuleSize: number;
+  subPixelSize: number;
+  scaledSize: number;
+  moduleCount: number;
+  scale: number;
+  finderStrengthN: number;
+  blendPreservations: boolean;
+  blendPreservationMode: 'dither' | 'overlay';
+  isDitheredMode: boolean;
+  bgLuma: number;
+  ditherPaperOverlayMix: number;
+  qr: QRCodeInstance;
+  colors: (PixelColor | null)[][];
+  matrix: boolean[][];
+  functionalMap: Uint8Array;
+  boostFlags: ContrastBoostFlags;
+}
+
+function drawScaledPatternContrastBoostOverlay(bctx: PatternBoostCtx): void {
+  if (bctx.finderStrengthN <= 0) return;
+  const bf = bctx.boostFlags;
+  if (
+    !(
+      bf.finderContrastBoost ||
+      bf.alignmentContrastBoost ||
+      bf.timingContrastBoost ||
+      bf.formatContrastBoost ||
+      bf.versionContrastBoost ||
+      bf.fixedDarkContrastBoost
+    )
+  ) {
+    return;
+  }
+
+  const boostedModules: Array<{ row: number; col: number }> = [];
+  for (let row = 0; row < bctx.moduleCount; row++) {
+    for (let col = 0; col < bctx.moduleCount; col++) {
+      if (!isScaledPatternBoostModule(bctx.functionalMap[row * bctx.moduleCount + col], bf))
+        continue;
+      boostedModules.push({ row, col });
+    }
+  }
+  if (boostedModules.length === 0) return;
+
+  const blendChannelToward = (src: number, target: number, t: number): number =>
+    Math.round(src + (target - src) * Math.max(0, Math.min(1, t)));
+  const estimatePaperLuma = (sampled: PixelColor | null): number => {
+    if (!sampled) return bctx.bgLuma;
+    const sampledLuma = (0.299 * sampled.r + 0.587 * sampled.g + 0.114 * sampled.b) / 255;
+    return (
+      bctx.bgLuma * (1 - bctx.ditherPaperOverlayMix) + sampledLuma * bctx.ditherPaperOverlayMix
+    );
+  };
+
+  if (bctx.blendPreservations) {
+    blendPreservationPass(
+      {
+        ctx: bctx.ctx,
+        size: bctx.size,
+        marginPx: bctx.marginPx,
+        effectiveModuleSize: bctx.effectiveModuleSize,
+        subPixelSize: bctx.subPixelSize,
+        scaledSize: bctx.scaledSize,
+        moduleCount: bctx.moduleCount,
+        finderStrengthN: bctx.finderStrengthN,
+        blendPreservationMode: bctx.blendPreservationMode,
+        isDitheredMode: bctx.isDitheredMode,
+        qr: bctx.qr,
+        colors: bctx.colors,
+        getBlendTarget: (mRow, mCol, sRow, sCol) =>
+          getScaledPreservationBlendTarget(
+            bctx.qr,
+            bctx.colors,
+            bctx.matrix,
+            bctx.scaledSize,
+            bctx.scale,
+            bctx.isDitheredMode,
+            mRow,
+            mCol,
+            sRow,
+            sCol
+          ),
+        sampleModuleColor: (row, col) =>
+          sampleScaledModuleOverlayColor(bctx.colors, bctx.scaledSize, bctx.scale, row, col),
+        estimatePaperLuma,
+        blendChannelToward,
+      },
+      boostedModules
+    );
+    return;
+  }
+
+  bctx.ctx.save();
+  bctx.ctx.globalAlpha = bctx.finderStrengthN;
+  for (const { row, col } of boostedModules) {
+    const x = bctx.marginPx + col * bctx.effectiveModuleSize;
+    const y = bctx.marginPx + row * bctx.effectiveModuleSize;
+    bctx.ctx.fillStyle = bctx.qr.isDark(row, col) ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
+    bctx.ctx.fillRect(x, y, bctx.effectiveModuleSize, bctx.effectiveModuleSize);
+  }
+  bctx.ctx.restore();
+}
+
+function drawScaledDitherBackdrop(
+  ctx: CanvasRenderingContext2D,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  marginPx: number,
+  qrDrawSize: number,
+  ditherBackdropAlpha: number,
+  ditherBackdropWash: number,
+  effectiveBgColor: string
+): void {
+  const prevSmoothingEnabled = ctx.imageSmoothingEnabled;
+  const prevSmoothingQuality = ctx.imageSmoothingQuality;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.save();
+  ctx.globalAlpha = ditherBackdropAlpha;
+  ctx.drawImage(overlayCanvas as CanvasImageSource, marginPx, marginPx, qrDrawSize, qrDrawSize);
+  if (ditherBackdropWash > 0) {
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.globalAlpha = ditherBackdropWash;
+    ctx.fillStyle = effectiveBgColor;
+    ctx.fillRect(marginPx, marginPx, qrDrawSize, qrDrawSize);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.restore();
+  ctx.imageSmoothingEnabled = prevSmoothingEnabled;
+  ctx.imageSmoothingQuality = prevSmoothingQuality;
+}
+
 /**
  * UNIFIED SCALED QR GENERATION
  * Handles ALL scaled overlay modes (dithered, blue-noise, subpixel, subpixel-size)
@@ -870,21 +1202,15 @@ export async function generateScaledQR(
   const subpixelDarkChroma = 1.15 + subpixelToneStrength * 0.35;
   const subpixelLightChroma = 0.92 - subpixelToneStrength * 0.24;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
-  const preserveFunctional = config.preserveFunctionalPatterns === true;
-  const preserveFinders = config.preserveFinders !== false;
-  const preserveTiming = preserveFunctional
-    ? config.preserveTiming !== false
-    : config.preserveTiming === true;
-  const preserveAlignment = preserveFunctional
-    ? config.preserveAlignment !== false
-    : config.preserveAlignment === true;
-  const protectFormat = preserveFunctional
-    ? config.protectFormatInfo !== false
-    : config.protectFormatInfo === true;
-  const protectVersion = preserveFunctional
-    ? config.protectVersionInfo !== false
-    : config.protectVersionInfo === true;
-  const preserveFixedDark = preserveFunctional;
+  const pf = buildScaledPreserveFlags(config);
+  const {
+    preserveFinders,
+    preserveTiming,
+    preserveAlignment,
+    protectFormat,
+    protectVersion,
+    preserveFixedDark,
+  } = pf;
   const functionalMap = getScaledFunctionalMap(moduleCount, version);
 
   const getPatternFlags = (row: number, col: number): number =>
@@ -927,24 +1253,15 @@ export async function generateScaledQR(
   }
 
   if (isDitheredMode && overlayCanvas && useColorRendering) {
-    const prevSmoothingEnabled = ctx.imageSmoothingEnabled;
-    const prevSmoothingQuality = ctx.imageSmoothingQuality;
-    // Overlay backdrop must be sampled smoothly; module rendering stays crisp below.
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.save();
-    ctx.globalAlpha = ditherBackdropAlpha;
-    ctx.drawImage(overlayCanvas as CanvasImageSource, marginPx, marginPx, qrDrawSize, qrDrawSize);
-    if (ditherBackdropWash > 0) {
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.globalAlpha = ditherBackdropWash;
-      ctx.fillStyle = effectiveBgColor;
-      ctx.fillRect(marginPx, marginPx, qrDrawSize, qrDrawSize);
-      ctx.globalCompositeOperation = 'source-over';
-    }
-    ctx.restore();
-    ctx.imageSmoothingEnabled = prevSmoothingEnabled;
-    ctx.imageSmoothingQuality = prevSmoothingQuality;
+    drawScaledDitherBackdrop(
+      ctx,
+      overlayCanvas,
+      marginPx,
+      qrDrawSize,
+      ditherBackdropAlpha,
+      ditherBackdropWash,
+      effectiveBgColor
+    );
   }
 
   const defaultDotMin = subPixelSize * 0.14;
@@ -979,28 +1296,7 @@ export async function generateScaledQR(
     return dotMinRadiusPx + q * (dotMaxRadiusPx - dotMinRadiusPx);
   };
 
-  const localVariance = (x: number, y: number): number => {
-    const c = colors[y]?.[x] as PixelColor | undefined;
-    if (!c) return 0;
-    const luma = (p: PixelColor) => (0.299 * p.r + 0.587 * p.g + 0.114 * p.b) / 255;
-    const center = luma(c);
-    let sum = 0;
-    let n = 0;
-    const nb = [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-    ];
-    for (const [ox, oy] of nb) {
-      const p = colors[y + oy]?.[x + ox] as PixelColor | undefined;
-      if (!p) continue;
-      const d = luma(p) - center;
-      sum += d * d;
-      n++;
-    }
-    return n > 0 ? Math.min(1, Math.sqrt(sum / n) * 3) : 0;
-  };
+  const localVariance = (x: number, y: number): number => computeScaledLocalVariance(colors, x, y);
 
   const drawDitherDot = (x: number, y: number, radius: number, jitterN: number): void => {
     const jitterAmp = subPixelSize * 0.2;
@@ -1021,61 +1317,9 @@ export async function generateScaledQR(
     ctx.fill();
   };
 
-  const shouldForceBinaryModule = (row: number, col: number): boolean => {
-    const flags = getPatternFlags(row, col);
-    if (flags === 0) return false;
-    // Fixed dark module follows preserve/protect policy.
-    if ((flags & PATTERN_FIXED_DARK) !== 0) return preserveFixedDark;
-    // Finder regions/separators follow preserveFinders explicitly.
-    if (isFinderRegionFlag(flags)) {
-      return preserveFinders;
-    }
-    if ((flags & PATTERN_TIMING) !== 0) return preserveTiming;
-    if ((flags & PATTERN_ALIGNMENT) !== 0) return preserveAlignment;
-    if ((flags & PATTERN_FORMAT) !== 0) return protectFormat;
-    if ((flags & PATTERN_VERSION) !== 0) return protectVersion;
-    return false;
-  };
+  const shouldForceBinaryModule = (row: number, col: number): boolean =>
+    shouldForceScaledBinaryModule(getPatternFlags(row, col), pf);
 
-  const enforceQuietZoneClean = (): void => {
-    if (marginPx <= 0) return;
-    const qrStart = marginPx;
-    const qrSize = moduleCount * effectiveModuleSize;
-    const qrEnd = qrStart + qrSize;
-    if (config.transparentBg) {
-      ctx.clearRect(0, 0, size, qrStart);
-      ctx.clearRect(0, qrStart, qrStart, qrSize);
-      ctx.clearRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSize);
-      ctx.clearRect(0, qrEnd, size, Math.max(0, size - qrEnd));
-      return;
-    }
-    ctx.fillStyle = effectiveBgColor;
-    ctx.fillRect(0, 0, size, qrStart);
-    ctx.fillRect(0, qrStart, qrStart, qrSize);
-    ctx.fillRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSize);
-    ctx.fillRect(0, qrEnd, size, Math.max(0, size - qrEnd));
-  };
-
-  const drawStrictFunctionOverlay = (): void => {
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        if (!shouldForceBinaryModule(row, col)) continue;
-        const x = marginPx + col * effectiveModuleSize;
-        const y = marginPx + row * effectiveModuleSize;
-        ctx.fillStyle = qr.isDark(row, col) ? effectiveFgColor : effectiveBgColor;
-        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-      }
-    }
-  };
-
-  // Preservation strength applies to all scaled modes, not only dithered/blue-noise.
-  // Otherwise toggles can appear inert in modes like subpixel/dither/extreme.
-  const finderContrastBoost = !preserveFinders;
-  const alignmentContrastBoost = !preserveAlignment;
-  const timingContrastBoost = !preserveTiming;
-  const formatContrastBoost = !protectFormat;
-  const versionContrastBoost = !protectVersion;
-  const fixedDarkContrastBoost = !preserveFixedDark;
   const rawFinderDitherStrength =
     typeof config.finderDitherStrength === 'number' && Number.isFinite(config.finderDitherStrength)
       ? config.finderDitherStrength
@@ -1083,131 +1327,15 @@ export async function generateScaledQR(
   const finderDitherStrength = Math.max(0, Math.min(100, rawFinderDitherStrength));
   const finderStrengthN = finderDitherStrength / 100;
   const blendPreservations = config.blendPreservations === true;
-  const blendPreservationMode = config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
-  const blendChannelToward = (src: number, target: number, t: number): number =>
-    Math.round(src + (target - src) * Math.max(0, Math.min(1, t)));
-  const sampleModuleOverlayColor = (row: number, col: number): PixelColor | null => {
-    if (!colors?.length) return null;
-    const px = Math.max(0, Math.min(scaledSize - 1, Math.floor((col + 0.5) * scale)));
-    const py = Math.max(0, Math.min(scaledSize - 1, Math.floor((row + 0.5) * scale)));
-    return (colors[py]?.[px] as PixelColor | undefined) ?? null;
-  };
-  const estimatePaperLuma = (sampled: PixelColor | null): number => {
-    if (!sampled) return bgLuma;
-    const sampledLuma = (0.299 * sampled.r + 0.587 * sampled.g + 0.114 * sampled.b) / 255;
-    return bgLuma * (1 - ditherPaperOverlayMix) + sampledLuma * ditherPaperOverlayMix;
-  };
-  const getPreservationBlendTargetForScaledPixel = (
-    moduleRow: number,
-    moduleCol: number,
-    scaledRow: number,
-    scaledCol: number
-  ): { r: number; g: number; b: number } => {
-    const moduleDark = qr.isDark(moduleRow, moduleCol);
-    const sampled =
-      (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
-      sampleModuleOverlayColor(moduleRow, moduleCol);
-    if (!sampled) {
-      return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
-    }
-    // Keep preservation blending image-aware in all scaled modes.
-    // Two rails are selected from the existing scaled pixel decision matrix so
-    // preservations stay integrated with the active mode rather than becoming solids.
-    const pixelDark = matrix[scaledRow]?.[scaledCol] === true;
-    if (isDitheredMode) {
-      if (moduleDark) {
-        return pixelDark
-          ? adjustLumaPreserveChroma(sampled, 0.04, 1.65)
-          : adjustLumaPreserveChroma(sampled, 0.18, 1.3);
-      }
-      return pixelDark
-        ? adjustLumaPreserveChroma(sampled, 0.9, 0.9)
-        : adjustLumaPreserveChroma(sampled, 0.97, 0.8);
-    }
-    if (moduleDark) {
-      return pixelDark
-        ? adjustLumaPreserveChroma(sampled, 0.08, 1.28)
-        : adjustLumaPreserveChroma(sampled, 0.2, 1.14);
-    }
-    return pixelDark
-      ? adjustLumaPreserveChroma(sampled, 0.88, 0.95)
-      : adjustLumaPreserveChroma(sampled, 0.97, 0.84);
-  };
-  const isPatternBoostModule = (row: number, col: number): boolean => {
-    const flags = getPatternFlags(row, col);
-    const isFinderBoostModule = finderContrastBoost && isFinderRegionFlag(flags);
-    const isAlignmentBoostModule = alignmentContrastBoost && (flags & PATTERN_ALIGNMENT) !== 0;
-    const isTimingBoostModule = timingContrastBoost && (flags & PATTERN_TIMING) !== 0;
-    const isFormatBoostModule = formatContrastBoost && (flags & PATTERN_FORMAT) !== 0;
-    const isVersionBoostModule = versionContrastBoost && (flags & PATTERN_VERSION) !== 0;
-    const isFixedDarkBoostModule = fixedDarkContrastBoost && (flags & PATTERN_FIXED_DARK) !== 0;
-    return (
-      isFinderBoostModule ||
-      isAlignmentBoostModule ||
-      isTimingBoostModule ||
-      isFormatBoostModule ||
-      isVersionBoostModule ||
-      isFixedDarkBoostModule
-    );
-  };
-  const drawPatternContrastBoostOverlay = (): void => {
-    if (finderStrengthN <= 0) return;
-    if (
-      !(
-        finderContrastBoost ||
-        alignmentContrastBoost ||
-        timingContrastBoost ||
-        formatContrastBoost ||
-        versionContrastBoost ||
-        fixedDarkContrastBoost
-      )
-    ) {
-      return;
-    }
-
-    const boostedModules: Array<{ row: number; col: number }> = [];
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        if (!isPatternBoostModule(row, col)) continue;
-        boostedModules.push({ row, col });
-      }
-    }
-    if (boostedModules.length === 0) return;
-
-    if (blendPreservations) {
-      blendPreservationPass(
-        {
-          ctx,
-          size,
-          marginPx,
-          effectiveModuleSize,
-          subPixelSize,
-          scaledSize,
-          moduleCount,
-          finderStrengthN,
-          blendPreservationMode,
-          isDitheredMode,
-          qr,
-          colors,
-          getBlendTarget: getPreservationBlendTargetForScaledPixel,
-          sampleModuleColor: sampleModuleOverlayColor,
-          estimatePaperLuma,
-          blendChannelToward,
-        },
-        boostedModules
-      );
-      return;
-    }
-
-    ctx.save();
-    ctx.globalAlpha = finderStrengthN;
-    for (const { row, col } of boostedModules) {
-      const x = marginPx + col * effectiveModuleSize;
-      const y = marginPx + row * effectiveModuleSize;
-      ctx.fillStyle = qr.isDark(row, col) ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
-      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-    }
-    ctx.restore();
+  const blendPreservationMode: 'dither' | 'overlay' =
+    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
+  const boostFlags: ContrastBoostFlags = {
+    finderContrastBoost: !preserveFinders,
+    alignmentContrastBoost: !preserveAlignment,
+    timingContrastBoost: !preserveTiming,
+    formatContrastBoost: !protectFormat,
+    versionContrastBoost: !protectVersion,
+    fixedDarkContrastBoost: !preserveFixedDark,
   };
 
   renderScaledPixelGrid({
@@ -1257,10 +1385,40 @@ export async function generateScaledQR(
     releaseCanvasFn,
   });
 
-  drawPatternContrastBoostOverlay();
+  drawScaledPatternContrastBoostOverlay({
+    ctx,
+    size,
+    marginPx,
+    effectiveModuleSize,
+    subPixelSize,
+    scaledSize,
+    moduleCount,
+    scale,
+    finderStrengthN,
+    blendPreservations,
+    blendPreservationMode,
+    isDitheredMode,
+    bgLuma,
+    ditherPaperOverlayMix,
+    qr,
+    colors,
+    matrix,
+    functionalMap,
+    boostFlags,
+  });
 
   if (forceBinaryFunctionPatterns) {
-    drawStrictFunctionOverlay();
+    drawScaledStrictFunctionOverlay(
+      ctx,
+      moduleCount,
+      marginPx,
+      effectiveModuleSize,
+      qr,
+      effectiveFgColor,
+      effectiveBgColor,
+      functionalMap,
+      pf
+    );
   }
   drawPreservedStructuralPatterns({
     ctx,
@@ -1285,7 +1443,15 @@ export async function generateScaledQR(
     debug,
   });
 
-  enforceQuietZoneClean();
+  enforceScaledQuietZoneClean(
+    ctx,
+    marginPx,
+    moduleCount,
+    effectiveModuleSize,
+    size,
+    config.transparentBg === true,
+    effectiveBgColor
+  );
 
   // UNIFIED: Draw frame if configured
   drawFrame(ctx, size, effectiveModuleSize, marginModules, config);

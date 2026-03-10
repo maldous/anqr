@@ -609,15 +609,6 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   let visitedModules = 0;
   let skippedAsFunction = 0;
 
-  const isSeparator = (row: number, col: number): boolean => {
-    // 1-module white border around the 7x7 finder blocks
-    if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) return true;
-    if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) return true;
-    if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) return true;
-    return false;
-  };
-  const isDarkModule = (row: number, col: number): boolean => row === moduleCount - 8 && col === 8;
-
   qrDecoderLog.trace('codewords: Starting codeword extraction', {
     moduleCount,
     matrixRows: matrix.length,
@@ -649,17 +640,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
           }
         } else {
           skippedAsFunction++;
-          // Best-effort categorization
-          // (These functions are pure coordinate checks from qr-spec.)
-          if (isFinderPattern(row, currentCol, moduleCount)) skipCounts.finder++;
-          else if (isSeparator(row, currentCol)) skipCounts.separator++;
-          else if (isTimingPattern(row, currentCol, moduleCount)) skipCounts.timing++;
-          else if (isFormatInfo(row, currentCol, moduleCount)) skipCounts.format++;
-          else if (isVersionInfo(row, currentCol, moduleCount, version)) skipCounts.version++;
-          else if (isAlignmentPattern(row, currentCol, moduleCount, version))
-            skipCounts.alignment++;
-          else if (isDarkModule(row, currentCol)) skipCounts.darkModule++;
-          else skipCounts.other++;
+          categorizeSkippedModule(row, currentCol, moduleCount, version, skipCounts);
         }
       }
     }
@@ -680,6 +661,39 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   });
 
   return codewords;
+}
+
+function isSeparatorModule(row: number, col: number, moduleCount: number): boolean {
+  if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) return true;
+  if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) return true;
+  if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) return true;
+  return false;
+}
+
+function categorizeSkippedModule(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number,
+  skipCounts: {
+    finder: number;
+    separator: number;
+    timing: number;
+    format: number;
+    version: number;
+    alignment: number;
+    darkModule: number;
+    other: number;
+  }
+): void {
+  if (isFinderPattern(row, col, moduleCount)) skipCounts.finder++;
+  else if (isSeparatorModule(row, col, moduleCount)) skipCounts.separator++;
+  else if (isTimingPattern(row, col, moduleCount)) skipCounts.timing++;
+  else if (isFormatInfo(row, col, moduleCount)) skipCounts.format++;
+  else if (isVersionInfo(row, col, moduleCount, version)) skipCounts.version++;
+  else if (isAlignmentPattern(row, col, moduleCount, version)) skipCounts.alignment++;
+  else if (row === moduleCount - 8 && col === 8) skipCounts.darkModule++;
+  else skipCounts.other++;
 }
 
 // ALIGNMENT_POSITIONS and getAlignmentPositions imported from qr-spec
@@ -843,6 +857,85 @@ function modeToName(mode: number): DecodedSegmentInfo['modeName'] {
   }
 }
 
+interface SegmentDecodeResult {
+  text: string;
+  rawBytes: number[];
+  outBytes: number[];
+  modeTag: DecodedEncodingMode;
+  valid: boolean;
+}
+
+function decodeSegmentData(bits: BitStream, mode: number, charCount: number): SegmentDecodeResult {
+  switch (mode) {
+    case MODE_NUMERIC: {
+      const text = decodeNumeric(bits, charCount);
+      if (text.length !== charCount) {
+        qrDecoderLog.debug('decode: Numeric segment truncated - decode invalid', {
+          expected: charCount,
+          got: text.length,
+        });
+      }
+      const outBytes: number[] = [];
+      for (let i = 0; i < text.length; i++) outBytes.push(text.charCodeAt(i) & 0xff);
+      return { text, rawBytes: [], outBytes, modeTag: 'numeric', valid: text.length === charCount };
+    }
+    case MODE_ALPHANUMERIC: {
+      const text = decodeAlphanumeric(bits, charCount);
+      if (text.length !== charCount) {
+        qrDecoderLog.debug('decode: Alphanumeric segment truncated - decode invalid', {
+          expected: charCount,
+          got: text.length,
+        });
+      }
+      const outBytes: number[] = [];
+      for (let i = 0; i < text.length; i++) outBytes.push(text.charCodeAt(i) & 0xff);
+      return {
+        text,
+        rawBytes: [],
+        outBytes,
+        modeTag: 'alphanumeric',
+        valid: text.length === charCount,
+      };
+    }
+    case MODE_BYTE: {
+      const r = decodeByteDetailed(bits, charCount);
+      if (r.bytes.length !== charCount) {
+        qrDecoderLog.debug('decode: Byte segment truncated - decode invalid', {
+          expected: charCount,
+          got: r.bytes.length,
+        });
+      }
+      return {
+        text: r.text,
+        rawBytes: r.bytes,
+        outBytes: [...r.bytes],
+        modeTag: 'byte',
+        valid: r.bytes.length === charCount,
+      };
+    }
+    case MODE_KANJI: {
+      const r = decodeKanjiDetailed(bits, charCount);
+      if (r.bytes.length !== charCount * 2) {
+        qrDecoderLog.debug('decode: Kanji segment truncated - decode invalid', {
+          expected: charCount * 2,
+          got: r.bytes.length,
+        });
+      }
+      return {
+        text: r.text,
+        rawBytes: r.bytes,
+        outBytes: [...r.bytes],
+        modeTag: 'kanji',
+        valid: r.bytes.length === charCount * 2,
+      };
+    }
+    default: {
+      qrDecoderLog.debug('decode: Unknown mode indicator - decode invalid', { mode });
+      return { text: '', rawBytes: [], outBytes: [], modeTag: 'unknown', valid: false };
+    }
+  }
+}
+
 export function decodeDataCodewordsDetailed(
   dataCodewords: number[],
   version: number
@@ -936,83 +1029,12 @@ export function decodeDataCodewordsDetailed(
       break;
     }
 
-    let decodedText = '';
-    let decodedBytes: number[] = [];
-    let modeTag: DecodedEncodingMode = 'unknown';
-    let segmentValid = true;
-
-    switch (mode) {
-      case MODE_NUMERIC: {
-        decodedText = decodeNumeric(bits, charCount);
-        modeTag = 'numeric';
-        // Numeric mode is ASCII digits
-        for (let i = 0; i < decodedText.length; i++)
-          outBytes.push(decodedText.charCodeAt(i) & 0xff);
-        // Validate: decoded length should match charCount
-        if (decodedText.length !== charCount) {
-          qrDecoderLog.debug('decode: Numeric segment truncated - decode invalid', {
-            expected: charCount,
-            got: decodedText.length,
-          });
-          segmentValid = false;
-        }
-        break;
-      }
-      case MODE_ALPHANUMERIC: {
-        decodedText = decodeAlphanumeric(bits, charCount);
-        modeTag = 'alphanumeric';
-        // Alphanumeric mode is ASCII subset
-        for (let i = 0; i < decodedText.length; i++)
-          outBytes.push(decodedText.charCodeAt(i) & 0xff);
-        // Validate: decoded length should match charCount
-        if (decodedText.length !== charCount) {
-          qrDecoderLog.debug('decode: Alphanumeric segment truncated - decode invalid', {
-            expected: charCount,
-            got: decodedText.length,
-          });
-          segmentValid = false;
-        }
-        break;
-      }
-      case MODE_BYTE: {
-        const r = decodeByteDetailed(bits, charCount);
-        decodedText = r.text;
-        decodedBytes = r.bytes;
-        modeTag = 'byte';
-        for (const b of decodedBytes) outBytes.push(b);
-        // Validate: byte count should match charCount
-        if (decodedBytes.length !== charCount) {
-          qrDecoderLog.debug('decode: Byte segment truncated - decode invalid', {
-            expected: charCount,
-            got: decodedBytes.length,
-          });
-          segmentValid = false;
-        }
-        break;
-      }
-      case MODE_KANJI: {
-        const r = decodeKanjiDetailed(bits, charCount);
-        decodedText = r.text;
-        decodedBytes = r.bytes;
-        modeTag = 'kanji';
-        for (const b of decodedBytes) outBytes.push(b);
-        // Validate: kanji char count (each kanji = 2 bytes in Shift-JIS)
-        if (decodedBytes.length !== charCount * 2) {
-          qrDecoderLog.debug('decode: Kanji segment truncated - decode invalid', {
-            expected: charCount * 2,
-            got: decodedBytes.length,
-          });
-          segmentValid = false;
-        }
-        break;
-      }
-      default: {
-        qrDecoderLog.debug('decode: Unknown mode indicator - decode invalid', { mode });
-        modeTag = 'unknown';
-        segmentValid = false;
-        break;
-      }
-    }
+    const seg = decodeSegmentData(bits, mode, charCount);
+    const decodedText = seg.text;
+    const decodedBytes = seg.rawBytes;
+    const modeTag = seg.modeTag;
+    const segmentValid = seg.valid;
+    for (const b of seg.outBytes) outBytes.push(b);
 
     // Track segment info
     const decodedLength =

@@ -321,47 +321,44 @@ function applyMosaicMode(context: OverlayModeContext, result: OverlayModeResult)
   result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
 }
 
-function applyDitherOrExtremeMode(context: OverlayModeContext, result: OverlayModeResult): void {
-  const {
-    overlayMode,
-    overlayData,
-    row,
-    col,
-    config,
-    isFunctionalPattern,
-    effectiveIntensity,
-    isDark,
-  } = context;
-  const ditherColor = getOverlayColorPacked(overlayData, row, col);
-  if (!ditherColor) return;
-  const ditherR = (ditherColor >> 16) & 0xff;
-  const ditherG = (ditherColor >> 8) & 0xff;
-  const ditherB = ditherColor & 0xff;
+interface DitherBlendFlags {
+  isExtreme: boolean;
+  blendPresFunctionalOverlay: boolean;
+  blendPresFunctionalDither: boolean;
+  functionalExtremeBlend: boolean;
+}
 
+function computeDitherBlendFlags(context: OverlayModeContext): DitherBlendFlags {
+  const { overlayMode, config, isFunctionalPattern } = context;
   const isExtreme = overlayMode === 'extreme';
   const blendPresFunctional = config.blendPreservations === true && isFunctionalPattern;
   const blendPreservationMode = config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
   const blendPresFunctionalOverlay = blendPresFunctional && blendPreservationMode === 'overlay';
   const blendPresFunctionalDither = blendPresFunctional && blendPreservationMode === 'dither';
   const functionalExtremeBlend = isExtreme && blendPresFunctionalOverlay;
-  const preserveBoost = blendPresFunctionalOverlay ? 1.14 : blendPresFunctionalDither ? 1.04 : 1;
-  const darkBlend = isExtreme
-    ? Math.min(1, effectiveIntensity * 1.18 * preserveBoost)
-    : Math.min(1, effectiveIntensity * 0.82 * preserveBoost);
-  // Keep extreme mode dark rail significantly darker to preserve scanner contrast.
-  const darkFactor = computeDarkFactor(
-    darkBlend,
-    functionalExtremeBlend ? 0.22 : isExtreme ? 0.44 : 0.68
-  );
-  const darkR = Math.round(ditherR * darkFactor);
-  const darkG = Math.round(ditherG * darkFactor);
-  const darkB = Math.round(ditherB * darkFactor);
-  const darkColor = `rgb(${darkR},${darkG},${darkB})`;
+  return {
+    isExtreme,
+    blendPresFunctionalOverlay,
+    blendPresFunctionalDither,
+    functionalExtremeBlend,
+  };
+}
 
-  if (isDark) {
-    result.moduleColor = blendColors(config.fgColor, darkColor, darkBlend);
-    return;
-  }
+function applyDitherLightModule(
+  result: OverlayModeResult,
+  flags: DitherBlendFlags,
+  effectiveIntensity: number,
+  ditherR: number,
+  ditherG: number,
+  ditherB: number,
+  bgColor: string
+): void {
+  const {
+    isExtreme,
+    blendPresFunctionalOverlay,
+    blendPresFunctionalDither,
+    functionalExtremeBlend,
+  } = flags;
 
   // "overlay" mode keeps unprotected functional light cells image-forward.
   // "dither" mode keeps them integrated but noticeably less pass-through.
@@ -383,11 +380,7 @@ function applyDitherOrExtremeMode(context: OverlayModeContext, result: OverlayMo
     const lightR = Math.round(ditherR + (255 - ditherR) * (whiteBase + lightMix * whitePush));
     const lightG = Math.round(ditherG + (255 - ditherG) * (whiteBase + lightMix * whitePush));
     const lightB = Math.round(ditherB + (255 - ditherB) * (whiteBase + lightMix * whitePush));
-    result.moduleColor = blendColors(
-      config.bgColor,
-      `rgb(${lightR},${lightG},${lightB})`,
-      lightMix
-    );
+    result.moduleColor = blendColors(bgColor, `rgb(${lightR},${lightG},${lightB})`, lightMix);
     result.shouldDrawCell = true;
     return;
   }
@@ -399,12 +392,51 @@ function applyDitherOrExtremeMode(context: OverlayModeContext, result: OverlayMo
   const lightR = Math.round(ditherR + (255 - ditherR) * (whiteBase + lightMix * whitePush));
   const lightG = Math.round(ditherG + (255 - ditherG) * (whiteBase + lightMix * whitePush));
   const lightB = Math.round(ditherB + (255 - ditherB) * (whiteBase + lightMix * whitePush));
-  result.moduleColor = blendColors(
-    config.bgColor,
-    `rgb(${lightR},${lightG},${lightB})`,
-    lightMix * 0.5
-  );
+  result.moduleColor = blendColors(bgColor, `rgb(${lightR},${lightG},${lightB})`, lightMix * 0.5);
   result.shouldDrawCell = true;
+}
+
+function applyDitherOrExtremeMode(context: OverlayModeContext, result: OverlayModeResult): void {
+  const { overlayData, row, col, config, effectiveIntensity, isDark } = context;
+  const ditherColor = getOverlayColorPacked(overlayData, row, col);
+  if (!ditherColor) return;
+  const ditherR = (ditherColor >> 16) & 0xff;
+  const ditherG = (ditherColor >> 8) & 0xff;
+  const ditherB = ditherColor & 0xff;
+
+  const flags = computeDitherBlendFlags(context);
+  const preserveBoost = flags.blendPresFunctionalOverlay
+    ? 1.14
+    : flags.blendPresFunctionalDither
+      ? 1.04
+      : 1;
+  const darkBlend = flags.isExtreme
+    ? Math.min(1, effectiveIntensity * 1.18 * preserveBoost)
+    : Math.min(1, effectiveIntensity * 0.82 * preserveBoost);
+  // Keep extreme mode dark rail significantly darker to preserve scanner contrast.
+  const darkFactor = computeDarkFactor(
+    darkBlend,
+    flags.functionalExtremeBlend ? 0.22 : flags.isExtreme ? 0.44 : 0.68
+  );
+  const darkR = Math.round(ditherR * darkFactor);
+  const darkG = Math.round(ditherG * darkFactor);
+  const darkB = Math.round(ditherB * darkFactor);
+  const darkColor = `rgb(${darkR},${darkG},${darkB})`;
+
+  if (isDark) {
+    result.moduleColor = blendColors(config.fgColor, darkColor, darkBlend);
+    return;
+  }
+
+  applyDitherLightModule(
+    result,
+    flags,
+    effectiveIntensity,
+    ditherR,
+    ditherG,
+    ditherB,
+    config.bgColor
+  );
 }
 
 function applyArtworkMode(context: OverlayModeContext, result: OverlayModeResult): void {

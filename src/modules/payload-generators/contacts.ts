@@ -9,14 +9,9 @@ import { escapeValue, isValidEmail, isValidPhone, isValidUrl } from './utils';
 
 const _log = createLogger('PAYLOAD');
 
-/** Generate vCard string (2.1, 3.0, or 4.0) */
-export function generateVCard(params: VCardHelper): string {
-  const lines: string[] = [];
-
-  lines.push('BEGIN:VCARD', `VERSION:${params.version}`);
-
-  // N: must come BEFORE FN: for better parser compatibility
-  // Many real-world parsers are order-dependent and ignore N if FN comes first
+// N: must come BEFORE FN: for better parser compatibility
+// Many real-world parsers are order-dependent and ignore N if FN comes first
+function appendVCardName(lines: string[], params: VCardHelper): void {
   if (params.n) {
     lines.push(`N:${escapeValue(params.n)}`);
   } else if (params.fn) {
@@ -35,20 +30,20 @@ export function generateVCard(params: VCardHelper): string {
   if (params.fn) {
     lines.push(`FN:${escapeValue(params.fn)}`);
   }
+}
 
+function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
   if (params.org) {
     lines.push(`ORG:${escapeValue(params.org)}`);
   }
-
   if (params.title) {
     lines.push(`TITLE:${escapeValue(params.title)}`);
   }
-
   if (params.role) {
     lines.push(`ROLE:${escapeValue(params.role)}`);
   }
 
-  // Only output TEL if it looks like a valid phone number (Android compatibility)
+  // Only output TEL/EMAIL if valid (Android compatibility)
   if (params.tel) {
     for (const tel of params.tel) {
       if (isValidPhone(tel)) {
@@ -64,7 +59,6 @@ export function generateVCard(params: VCardHelper): string {
     }
   }
 
-  // Only output EMAIL if it contains @ (Android compatibility)
   if (params.email) {
     for (const email of params.email) {
       if (isValidEmail(email)) {
@@ -84,17 +78,17 @@ export function generateVCard(params: VCardHelper): string {
   if (params.url && isValidUrl(params.url)) {
     lines.push(`URL:${params.url}`);
   }
+}
 
+function appendVCardOptionalFields(lines: string[], params: VCardHelper): void {
   if (params.adr) {
     for (const adr of params.adr) {
       lines.push(`ADR:${escapeValue(adr)}`);
     }
   }
-
   if (params.bday) {
     lines.push(`BDAY:${params.bday}`);
   }
-
   if (params.photo) {
     if (params.version === '4.0') {
       lines.push(`PHOTO:${params.photo}`);
@@ -102,18 +96,26 @@ export function generateVCard(params: VCardHelper): string {
       lines.push(`PHOTO;VALUE=URI:${params.photo}`);
     }
   }
-
   if (params.note) {
     lines.push(`NOTE:${escapeValue(params.note)}`);
   }
-
   if (params.impp) {
     lines.push(`IMPP:${params.impp}`);
   }
-
   if (params.uid) {
     lines.push(`UID:${params.uid}`);
   }
+}
+
+/** Generate vCard string (2.1, 3.0, or 4.0) */
+export function generateVCard(params: VCardHelper): string {
+  const lines: string[] = [];
+
+  lines.push('BEGIN:VCARD', `VERSION:${params.version}`);
+
+  appendVCardName(lines, params);
+  appendVCardContactInfo(lines, params);
+  appendVCardOptionalFields(lines, params);
 
   lines.push('END:VCARD');
 

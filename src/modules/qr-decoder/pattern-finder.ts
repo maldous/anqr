@@ -136,61 +136,79 @@ export class FinderPatternFinder {
     let done = false;
     const stateCount = new Int32Array(5);
     for (let i = iSkip - 1; i < maxI && !done; i += iSkip) {
-      FinderPatternFinder.doClearCounts(stateCount);
-      let currentState = 0;
-      for (let j = 0; j < maxJ; j++) {
-        if (image.get(j, i)) {
-          if ((currentState & 1) === 1) currentState++;
-          stateCount[currentState]++;
-        } else {
-          if ((currentState & 1) === 0) {
-            if (currentState === 4) {
-              if (FinderPatternFinder.foundPatternCross(stateCount)) {
-                const confirmed = this.handlePossibleCenter(stateCount, i, j);
-                if (confirmed) {
-                  iSkip = 2;
-                  if (this.hasSkipped) {
-                    done = this.haveMultiplyConfirmedCenters();
-                  } else {
-                    const rowSkip = this.findRowSkip();
-                    if (rowSkip > stateCount[2]) {
-                      i += rowSkip - stateCount[2] - iSkip;
-                      j = maxJ - 1;
-                    }
-                  }
-                } else {
-                  FinderPatternFinder.doShiftCounts2(stateCount);
-                  currentState = 3;
-                  continue;
-                }
-                currentState = 0;
-                FinderPatternFinder.doClearCounts(stateCount);
-              } else {
-                FinderPatternFinder.doShiftCounts2(stateCount);
-                currentState = 3;
-              }
-            } else {
-              stateCount[++currentState]++;
-            }
-          } else {
-            stateCount[currentState]++;
-          }
-        }
-      }
-      if (FinderPatternFinder.foundPatternCross(stateCount)) {
-        const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
-        if (confirmed) {
-          iSkip = stateCount[0];
-          if (this.hasSkipped) {
-            done = this.haveMultiplyConfirmedCenters();
-          }
-        }
+      const rowResult = this.processFinderRow(image, i, maxJ, stateCount, iSkip);
+      iSkip = rowResult.iSkip;
+      done = rowResult.done;
+      if (rowResult.rowJump > 0) {
+        i += rowResult.rowJump;
       }
     }
 
     const patternInfo = this.selectBestPatterns();
     ResultPoint.orderBestPatterns(patternInfo);
     return new FinderPatternInfo(patternInfo[0], patternInfo[1], patternInfo[2]);
+  }
+
+  private processFinderRow(
+    image: BitMatrix,
+    i: number,
+    maxJ: number,
+    stateCount: Int32Array,
+    iSkip: number
+  ): { iSkip: number; done: boolean; rowJump: number } {
+    FinderPatternFinder.doClearCounts(stateCount);
+    let currentState = 0;
+    let done = false;
+    let rowJump = 0;
+    for (let j = 0; j < maxJ; j++) {
+      if (image.get(j, i)) {
+        if ((currentState & 1) === 1) currentState++;
+        stateCount[currentState]++;
+      } else {
+        if ((currentState & 1) === 0) {
+          if (currentState === 4) {
+            if (FinderPatternFinder.foundPatternCross(stateCount)) {
+              const confirmed = this.handlePossibleCenter(stateCount, i, j);
+              if (confirmed) {
+                iSkip = 2;
+                if (this.hasSkipped) {
+                  done = this.haveMultiplyConfirmedCenters();
+                } else {
+                  const rowSkipVal = this.findRowSkip();
+                  if (rowSkipVal > stateCount[2]) {
+                    rowJump = rowSkipVal - stateCount[2] - iSkip;
+                    j = maxJ - 1;
+                  }
+                }
+              } else {
+                FinderPatternFinder.doShiftCounts2(stateCount);
+                currentState = 3;
+                continue;
+              }
+              currentState = 0;
+              FinderPatternFinder.doClearCounts(stateCount);
+            } else {
+              FinderPatternFinder.doShiftCounts2(stateCount);
+              currentState = 3;
+            }
+          } else {
+            stateCount[++currentState]++;
+          }
+        } else {
+          stateCount[currentState]++;
+        }
+      }
+    }
+    if (FinderPatternFinder.foundPatternCross(stateCount)) {
+      const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
+      if (confirmed) {
+        iSkip = stateCount[0];
+        if (this.hasSkipped) {
+          done = this.haveMultiplyConfirmedCenters();
+        }
+      }
+    }
+    return { iSkip, done, rowJump };
   }
 
   private static doClearCounts(counts: Int32Array): void {
@@ -439,31 +457,12 @@ export class FinderPatternFinder {
           const maxModuleSize = fpk.getEstimatedModuleSize();
           if (maxModuleSize > minModuleSize * 1.4) continue;
 
-          const a = squares0;
-          const b = FinderPatternFinder.squaredDistance(fpj, fpk);
-          const c = FinderPatternFinder.squaredDistance(fpi, fpk);
-
-          let sides: number[];
-          if (a >= b && a >= c) {
-            sides = [a, b, c];
-          } else if (b >= a && b >= c) {
-            sides = [b, a, c];
-          } else {
-            sides = [c, a, b];
-          }
-
-          const d = Math.abs(sides[1] - sides[2]) / Math.min(sides[1], sides[2]);
-          if (d < 0.1) {
-            const estimatedModuleCount =
-              Math.sqrt(sides[0]) /
-              ((fpi.getEstimatedModuleSize() + fpk.getEstimatedModuleSize()) / 2);
-            const distanceFromIdeal = Math.abs(estimatedModuleCount - 14);
-            if (distanceFromIdeal < distortion) {
-              distortion = distanceFromIdeal;
-              bestPatterns[0] = fpi;
-              bestPatterns[1] = fpj;
-              bestPatterns[2] = fpk;
-            }
+          const score = FinderPatternFinder.evaluateTriple(fpi, fpj, fpk, squares0);
+          if (score >= 0 && score < distortion) {
+            distortion = score;
+            bestPatterns[0] = fpi;
+            bestPatterns[1] = fpj;
+            bestPatterns[2] = fpk;
           }
         }
       }
@@ -471,6 +470,33 @@ export class FinderPatternFinder {
 
     if (distortion === Number.MAX_VALUE) throw new NotFoundException();
     return bestPatterns;
+  }
+
+  private static evaluateTriple(
+    fpi: FinderPattern,
+    fpj: FinderPattern,
+    fpk: FinderPattern,
+    squares0: number
+  ): number {
+    const a = squares0;
+    const b = FinderPatternFinder.squaredDistance(fpj, fpk);
+    const c = FinderPatternFinder.squaredDistance(fpi, fpk);
+
+    let sides: number[];
+    if (a >= b && a >= c) {
+      sides = [a, b, c];
+    } else if (b >= a && b >= c) {
+      sides = [b, a, c];
+    } else {
+      sides = [c, a, b];
+    }
+
+    const d = Math.abs(sides[1] - sides[2]) / Math.min(sides[1], sides[2]);
+    if (d >= 0.1) return -1;
+
+    const estimatedModuleCount =
+      Math.sqrt(sides[0]) / ((fpi.getEstimatedModuleSize() + fpk.getEstimatedModuleSize()) / 2);
+    return Math.abs(estimatedModuleCount - 14);
   }
 
   private static squaredDistance(a: FinderPattern, b: FinderPattern): number {
@@ -506,46 +532,57 @@ export class AlignmentPatternFinder {
 
     for (let iGen = 0; iGen < height; iGen++) {
       const i = middleI + ((iGen & 0x01) === 0 ? (iGen + 1) / 2 : -((iGen + 1) / 2));
-      stateCount[0] = 0;
-      stateCount[1] = 0;
-      stateCount[2] = 0;
-      let j = startX;
-      while (j < maxJ && !this.image.get(j, Math.floor(i))) j++;
-      let currentState = 0;
-      while (j < maxJ) {
-        if (this.image.get(j, Math.floor(i))) {
-          if (currentState === 1) {
-            stateCount[1]++;
-          } else {
-            if (currentState === 2) {
-              if (this.foundPatternCross(stateCount)) {
-                const confirmed = this.handlePossibleCenter(stateCount, Math.floor(i), j);
-                if (confirmed !== null) return confirmed;
-              }
-              stateCount[0] = stateCount[2];
-              stateCount[1] = 1;
-              stateCount[2] = 0;
-              currentState = 1;
-            } else {
-              stateCount[++currentState]++;
-            }
-          }
-        } else {
-          if (currentState === 1) currentState++;
-          stateCount[currentState]++;
-        }
-        j++;
-      }
-      if (this.foundPatternCross(stateCount)) {
-        const confirmed = this.handlePossibleCenter(stateCount, Math.floor(i), maxJ);
-        if (confirmed !== null) return confirmed;
-      }
+      const result = this.processAlignmentRow(Math.floor(i), startX, maxJ, stateCount);
+      if (result !== null) return result;
     }
 
     if (this.possibleCenters.length !== 0) {
       return this.possibleCenters[0];
     }
     throw new NotFoundException();
+  }
+
+  private processAlignmentRow(
+    i: number,
+    startX: number,
+    maxJ: number,
+    stateCount: Int32Array
+  ): AlignmentPattern | null {
+    stateCount[0] = 0;
+    stateCount[1] = 0;
+    stateCount[2] = 0;
+    let j = startX;
+    while (j < maxJ && !this.image.get(j, i)) j++;
+    let currentState = 0;
+    while (j < maxJ) {
+      if (this.image.get(j, i)) {
+        if (currentState === 1) {
+          stateCount[1]++;
+        } else {
+          if (currentState === 2) {
+            if (this.foundPatternCross(stateCount)) {
+              const confirmed = this.handlePossibleCenter(stateCount, i, j);
+              if (confirmed !== null) return confirmed;
+            }
+            stateCount[0] = stateCount[2];
+            stateCount[1] = 1;
+            stateCount[2] = 0;
+            currentState = 1;
+          } else {
+            stateCount[++currentState]++;
+          }
+        }
+      } else {
+        if (currentState === 1) currentState++;
+        stateCount[currentState]++;
+      }
+      j++;
+    }
+    if (this.foundPatternCross(stateCount)) {
+      const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
+      if (confirmed !== null) return confirmed;
+    }
+    return null;
   }
 
   private foundPatternCross(stateCount: Int32Array): boolean {

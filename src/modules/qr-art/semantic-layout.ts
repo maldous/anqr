@@ -199,6 +199,20 @@ export function calculateVersionForSlack(
   return 40;
 }
 
+function findBlockForLinearByte(
+  linearByte: number,
+  blockStartBytes: number[],
+  blockEndBytes: number[],
+  numBlocks: number
+): { blockIdx: number; localByte: number } | null {
+  for (let b = 0; b < numBlocks; b++) {
+    if (linearByte >= blockStartBytes[b] && linearByte < blockEndBytes[b]) {
+      return { blockIdx: b, localByte: linearByte - blockStartBytes[b] };
+    }
+  }
+  return null;
+}
+
 /**
  * Map allowed bit ranges from the LINEAR BUFFER to per-block allowed bits.
  *
@@ -270,22 +284,15 @@ export function mapAllowedRangesToBlocks(
         continue;
       }
 
-      // Find which block this linear byte belongs to
-      let blockIdx = -1;
-      let localByte = -1;
-      for (let b = 0; b < numBlocks; b++) {
-        if (linearByte >= blockStartBytes[b] && linearByte < blockEndBytes[b]) {
-          blockIdx = b;
-          localByte = linearByte - blockStartBytes[b];
-          break;
-        }
-      }
-
-      if (blockIdx >= 0 && localByte >= 0) {
-        // Local bit index uses same convention: byteIndex * 8 + bitInByte
-        // where bitInByte 0 = MSB (matches buildBlockBasis convention)
-        const localBitIndex = localByte * 8 + bitInByte;
-        blockAllowedBits.get(blockIdx)!.add(localBitIndex);
+      const blockMatch = findBlockForLinearByte(
+        linearByte,
+        blockStartBytes,
+        blockEndBytes,
+        numBlocks
+      );
+      if (blockMatch) {
+        const localBitIndex = blockMatch.localByte * 8 + bitInByte;
+        blockAllowedBits.get(blockMatch.blockIdx)!.add(localBitIndex);
       }
     }
   }

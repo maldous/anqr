@@ -42,65 +42,28 @@ export function getErrorCorrectPolynomial(errorCorrectLength: number): QRPolynom
   return a;
 }
 
+// Lookup table: mode -> [version 1-9, version 10-26, version 27-40]
+const LENGTH_BITS: Record<number, [number, number, number]> = {
+  [QRMode.MODE_NUMBER]: [10, 12, 14],
+  [QRMode.MODE_ALPHA_NUM]: [9, 11, 13],
+  [QRMode.MODE_8BIT_BYTE]: [8, 16, 16],
+  [QRMode.MODE_KANJI]: [8, 10, 12],
+};
+
 /**
  * Get character count indicator length in bits
  */
 export function getLengthInBits(mode: number, type: number): number {
-  if (1 <= type && type < 10) {
-    // Version 1-9
-    switch (mode) {
-      case QRMode.MODE_NUMBER:
-        return 10;
-      case QRMode.MODE_ALPHA_NUM:
-        return 9;
-      case QRMode.MODE_8BIT_BYTE:
-        return 8;
-      case QRMode.MODE_KANJI:
-        return 8;
-      default:
-        throw new Error(`mode:${mode}`);
-    }
-  } else if (type < 27) {
-    // Version 10-26
-    switch (mode) {
-      case QRMode.MODE_NUMBER:
-        return 12;
-      case QRMode.MODE_ALPHA_NUM:
-        return 11;
-      case QRMode.MODE_8BIT_BYTE:
-        return 16;
-      case QRMode.MODE_KANJI:
-        return 10;
-      default:
-        throw new Error(`mode:${mode}`);
-    }
-  } else if (type < 41) {
-    // Version 27-40
-    switch (mode) {
-      case QRMode.MODE_NUMBER:
-        return 14;
-      case QRMode.MODE_ALPHA_NUM:
-        return 13;
-      case QRMode.MODE_8BIT_BYTE:
-        return 16;
-      case QRMode.MODE_KANJI:
-        return 12;
-      default:
-        throw new Error(`mode:${mode}`);
-    }
-  } else {
-    throw new Error(`type:${type}`);
-  }
+  if (type < 1 || type >= 41) throw new Error(`type:${type}`);
+  const entry = LENGTH_BITS[mode];
+  if (!entry) throw new Error(`mode:${mode}`);
+  const versionRange = type < 10 ? 0 : type < 27 ? 1 : 2;
+  return entry[versionRange];
 }
 
-/**
- * Calculate penalty score for mask pattern selection
- */
-export function getLostPoint(qrcode: QRCodeInstance): number {
-  const moduleCount = qrcode.getModuleCount();
-  let lostPoint = 0;
-
-  // LEVEL1: Same color in a row/column (5+ consecutive)
+// LEVEL1: Same color in a row/column (5+ consecutive)
+function penaltyLevel1AdjacentModules(qrcode: QRCodeInstance, moduleCount: number): number {
+  let penalty = 0;
   for (let row = 0; row < moduleCount; row += 1) {
     for (let col = 0; col < moduleCount; col += 1) {
       let sameCount = 0;
@@ -120,12 +83,16 @@ export function getLostPoint(qrcode: QRCodeInstance): number {
       }
 
       if (sameCount > 5) {
-        lostPoint += 3 + sameCount - 5;
+        penalty += 3 + sameCount - 5;
       }
     }
   }
+  return penalty;
+}
 
-  // LEVEL2: 2x2 blocks of same color
+// LEVEL2: 2x2 blocks of same color
+function penaltyLevel2Blocks(qrcode: QRCodeInstance, moduleCount: number): number {
+  let penalty = 0;
   for (let row = 0; row < moduleCount - 1; row += 1) {
     for (let col = 0; col < moduleCount - 1; col += 1) {
       let count = 0;
@@ -134,12 +101,16 @@ export function getLostPoint(qrcode: QRCodeInstance): number {
       if (qrcode.isDark(row, col + 1)) count += 1;
       if (qrcode.isDark(row + 1, col + 1)) count += 1;
       if (count === 0 || count === 4) {
-        lostPoint += 3;
+        penalty += 3;
       }
     }
   }
+  return penalty;
+}
 
-  // LEVEL3: Finder-like patterns
+// LEVEL3: Finder-like patterns
+function penaltyLevel3FinderLike(qrcode: QRCodeInstance, moduleCount: number): number {
+  let penalty = 0;
   for (let row = 0; row < moduleCount; row += 1) {
     for (let col = 0; col < moduleCount - 6; col += 1) {
       if (
@@ -151,7 +122,7 @@ export function getLostPoint(qrcode: QRCodeInstance): number {
         !qrcode.isDark(row, col + 5) &&
         qrcode.isDark(row, col + 6)
       ) {
-        lostPoint += 40;
+        penalty += 40;
       }
     }
   }
@@ -167,12 +138,15 @@ export function getLostPoint(qrcode: QRCodeInstance): number {
         !qrcode.isDark(row + 5, col) &&
         qrcode.isDark(row + 6, col)
       ) {
-        lostPoint += 40;
+        penalty += 40;
       }
     }
   }
+  return penalty;
+}
 
-  // LEVEL4: Dark/light ratio deviation from 50%
+// LEVEL4: Dark/light ratio deviation from 50%
+function penaltyLevel4Ratio(qrcode: QRCodeInstance, moduleCount: number): number {
   let darkCount = 0;
   for (let col = 0; col < moduleCount; col += 1) {
     for (let row = 0; row < moduleCount; row += 1) {
@@ -183,9 +157,20 @@ export function getLostPoint(qrcode: QRCodeInstance): number {
   }
 
   const ratio = Math.abs((100 * darkCount) / moduleCount / moduleCount - 50) / 5;
-  lostPoint += ratio * 10;
+  return ratio * 10;
+}
 
-  return lostPoint;
+/**
+ * Calculate penalty score for mask pattern selection
+ */
+export function getLostPoint(qrcode: QRCodeInstance): number {
+  const moduleCount = qrcode.getModuleCount();
+  return (
+    penaltyLevel1AdjacentModules(qrcode, moduleCount) +
+    penaltyLevel2Blocks(qrcode, moduleCount) +
+    penaltyLevel3FinderLike(qrcode, moduleCount) +
+    penaltyLevel4Ratio(qrcode, moduleCount)
+  );
 }
 
 export const QRUtil = {

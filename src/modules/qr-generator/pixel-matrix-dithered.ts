@@ -1346,54 +1346,38 @@ function computeDitherThreshold(
   }
 }
 
-/**
- * Generate dithered pixel matrix
- * Uses error-diffusion over a "desired darkness" field.
- */
-export async function generateDitheredMatrix(
-  qr: QRCodeInstance,
+interface DitherResolvedConfig {
+  intensity: number;
+  version: number;
+  serpentine: boolean;
+  colorDitherMode: string;
+  useColorDither: boolean;
+  ditherKind: string;
+  thresholdPattern: DitherThresholdPattern;
+  thresholdOnly: boolean;
+  kernelName: DiffusionKernel;
+  tileSize: number;
+  staticState: DitherStaticState;
+  noiseTile: ReturnType<typeof generateBlueNoiseTile>;
+  temporalOffsetX: number;
+  temporalOffsetY: number;
+  mix: number;
+  qrBitBiasStrength: number;
+}
+
+function buildDitherResolvedConfig(
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
-  scale: number,
   effectiveIntensity: number,
-  _effectiveConfig: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
-): Promise<PixelDecisionMatrix> {
-  const scaledSize = moduleCount * scale;
-
-  // =========================================
-  // QR-FIRST MODE (manual toggle or auto-detect)
-  // =========================================
-  // For high-contrast B&W images (like spirals), use QR-first mode
-  // which GUARANTEES scannability by always preserving QR data.
-  // Standard dithering fails on B&W images because error diffusion
-  // accumulates errors that flip modules incorrectly.
-
-  // Check for manual QR-first mode toggle
-  if (config.qrFirstMode) {
-    log.debug('QR-first mode enabled via config - using QR-first matrix');
-    return generateBWFirstMatrix(
-      qr,
-      config,
-      overlayCanvas,
-      moduleCount,
-      scale,
-      effectiveIntensity,
-      createCanvasFn,
-      releaseCanvasFn
-    );
-  }
-
-  const rawIntensity = effectiveIntensity; // 0..1
+  scaledSize: number
+): DitherResolvedConfig {
+  const rawIntensity = effectiveIntensity;
   const intensity = clamp01(rawIntensity);
   const rawStrength = config.ditherStrength ?? 0.85;
   const ditherStrength = rawStrength > 1 ? rawStrength / 100 : rawStrength;
   const ditherScale = Math.max(0, config.ditherScale ?? 1);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  // Get configurable dither settings
   const serpentine = config.ditherSerpentine ?? true;
   const colorDitherMode = config.colorDither ?? 'none';
   const useColorDither = colorDitherMode !== 'none';
@@ -1413,18 +1397,153 @@ export async function generateDitheredMatrix(
     colorDitherMode,
     scaledSize,
   });
-  const kernel = staticState.kernel;
   const noiseTile = staticState.noiseTile;
-  const orderedMatrix = staticState.orderedMatrix;
-  const orderedH = staticState.orderedH;
-  const orderedW = staticState.orderedW;
-  const orderedDivisor = staticState.orderedDivisor;
-  const whiteNoiseField = staticState.whiteNoiseField;
-  const gaussianNoiseField = staticState.gaussianNoiseField;
-  const triangularNoiseField = staticState.triangularNoiseField;
   const frameIndex = config.frameIndex ?? 0;
   const temporalOffsetX = (frameIndex * 17) % tileSize;
   const temporalOffsetY = (frameIndex * 29) % tileSize;
+  const mix = clamp01(intensity * ditherStrength * ditherScale);
+  const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
+
+  return {
+    intensity,
+    version,
+    serpentine,
+    colorDitherMode,
+    useColorDither,
+    ditherKind,
+    thresholdPattern,
+    thresholdOnly,
+    kernelName,
+    tileSize,
+    staticState,
+    noiseTile,
+    temporalOffsetX,
+    temporalOffsetY,
+    mix,
+    qrBitBiasStrength,
+  };
+}
+
+function serpentineRowParams(
+  y: number,
+  scaledSize: number,
+  serpentine: boolean
+): { leftToRight: boolean; startX: number; endX: number; deltaX: number } {
+  const leftToRight = serpentine ? y % 2 === 0 : true;
+  const startX = leftToRight ? 0 : scaledSize - 1;
+  const endX = leftToRight ? scaledSize : -1;
+  const deltaX = leftToRight ? 1 : -1;
+  return { leftToRight, startX, endX, deltaX };
+}
+
+interface ErrorDiffusionPixelCtx {
+  qr: QRCodeInstance;
+  config: QRGeneratorConfig;
+  data: Uint8ClampedArray;
+  scaledSize: number;
+  scale: number;
+  version: number;
+  moduleCount: number;
+  mix: number;
+  thresholdOnly: boolean;
+  useColorDither: boolean;
+  qrBitBiasStrength: number;
+  kernel: DiffusionKernelDef;
+  sampleThreshold: (x: number, y: number, sampleIdx: number, overlayDark: number) => number;
+}
+
+function processErrorDiffusionPixel(
+  ctx: ErrorDiffusionPixelCtx,
+  x: number,
+  y: number,
+  leftToRight: boolean,
+  matrixBits: Uint8Array,
+  packedColors: Uint32Array,
+  desire: Float32Array,
+  errors: Float32Array
+): void {
+  const sampleIdx = pixelIndex(x, y, ctx.scaledSize);
+  const idx = sampleIdx * 4;
+  const r = ctx.data[idx];
+  const g = ctx.data[idx + 1];
+  const b = ctx.data[idx + 2];
+
+  const moduleRow = Math.floor(y / ctx.scale);
+  const moduleCol = Math.floor(x / ctx.scale);
+  const qrIsDark = ctx.qr.isDark(moduleRow, moduleCol);
+  const moduleLocked = shouldLockModule(
+    moduleRow,
+    moduleCol,
+    ctx.moduleCount,
+    ctx.version,
+    ctx.config
+  );
+  const fixedDarkUnlocked =
+    !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, ctx.moduleCount);
+
+  // ART-FIRST: generate a global halftone candidate from artwork only.
+  // QR bits are applied later in the projection/correction stage.
+  const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
+  const centerW = moduleCenterWeight(x, y, ctx.scale);
+  const qrBias = fixedDarkUnlocked
+    ? 0
+    : (qrIsDark ? 1 : -1) * ctx.qrBitBiasStrength * centerW * (0.45 + ctx.mix * 0.8);
+  const biasedOverlayDark = clamp01(overlayDark + qrBias);
+  const threshold = ctx.sampleThreshold(x, y, sampleIdx, overlayDark);
+
+  let isDarkCandidate: boolean;
+  if (ctx.thresholdOnly && !ctx.useColorDither) {
+    isDarkCandidate = biasedOverlayDark > threshold;
+  } else {
+    const adjusted = biasedOverlayDark + errors[sampleIdx];
+    isDarkCandidate = adjusted > threshold;
+    const err = (biasedOverlayDark - (isDarkCandidate ? 1 : 0)) * ctx.mix;
+    distributeError(errors, x, y, err, ctx.kernel, ctx.scaledSize, leftToRight);
+  }
+
+  // Apply structural lock at the final write stage only.
+  // This keeps diffusion state consistent so toggling locks doesn't re-shape the entire texture.
+  matrixBits[sampleIdx] = moduleLocked ? (qrIsDark ? 1 : 0) : isDarkCandidate ? 1 : 0;
+  // Desire is artwork-driven and used later for minimal-cost correction ranking.
+  desire[sampleIdx] = moduleLocked ? (qrIsDark ? 1 : 0) : overlayDark;
+  if (ctx.config.colorMode !== 'bw') {
+    packedColors[sampleIdx] = packColor(r, g, b);
+  }
+}
+
+/**
+ * Generate dithered pixel matrix
+ * Uses error-diffusion over a "desired darkness" field.
+ */
+export async function generateDitheredMatrix(
+  qr: QRCodeInstance,
+  config: QRGeneratorConfig,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
+  scale: number,
+  effectiveIntensity: number,
+  _effectiveConfig: QRGeneratorConfig,
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+): Promise<PixelDecisionMatrix> {
+  const scaledSize = moduleCount * scale;
+
+  // QR-FIRST MODE: for high-contrast B&W images, guarantee scannability
+  if (config.qrFirstMode) {
+    log.debug('QR-first mode enabled via config - using QR-first matrix');
+    return generateBWFirstMatrix(
+      qr,
+      config,
+      overlayCanvas,
+      moduleCount,
+      scale,
+      effectiveIntensity,
+      createCanvasFn,
+      releaseCanvasFn
+    );
+  }
+
+  const dc = buildDitherResolvedConfig(config, moduleCount, effectiveIntensity, scaledSize);
 
   const data = await readOverlayPixelsAtSize(
     overlayCanvas,
@@ -1443,83 +1562,68 @@ export async function generateDitheredMatrix(
   const errors = new Float32Array(pixelCount);
   desire.fill(0.5);
 
-  const mix = clamp01(intensity * ditherStrength * ditherScale);
-  const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
   const sampleThreshold = (x: number, y: number, sampleIdx: number, overlayDark: number): number =>
     computeDitherThreshold(
       x,
       y,
       sampleIdx,
       overlayDark,
-      mix,
-      thresholdPattern,
-      staticState,
-      noiseTile,
-      tileSize,
-      temporalOffsetX,
-      temporalOffsetY
+      dc.mix,
+      dc.thresholdPattern,
+      dc.staticState,
+      dc.noiseTile,
+      dc.tileSize,
+      dc.temporalOffsetX,
+      dc.temporalOffsetY
     );
 
+  const edCtx: ErrorDiffusionPixelCtx = {
+    qr,
+    config,
+    data,
+    scaledSize,
+    scale,
+    version: dc.version,
+    moduleCount,
+    mix: dc.mix,
+    thresholdOnly: dc.thresholdOnly,
+    useColorDither: dc.useColorDither,
+    qrBitBiasStrength: dc.qrBitBiasStrength,
+    kernel: dc.staticState.kernel,
+    sampleThreshold,
+  };
+
   for (let y = 0; y < scaledSize; y++) {
-    // Serpentine: alternate scan direction per row
-    const leftToRight = serpentine ? y % 2 === 0 : true;
-    const startX = leftToRight ? 0 : scaledSize - 1;
-    const endX = leftToRight ? scaledSize : -1;
-    const deltaX = leftToRight ? 1 : -1;
+    const rp = serpentineRowParams(y, scaledSize, dc.serpentine);
 
-    for (let x = startX; leftToRight ? x < endX : x > endX; x += deltaX) {
-      const sampleIdx = pixelIndex(x, y, scaledSize);
-      const idx = sampleIdx * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-
-      const moduleRow = Math.floor(y / scale);
-      const moduleCol = Math.floor(x / scale);
-      const qrIsDark = qr.isDark(moduleRow, moduleCol);
-      const moduleLocked = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
-      const fixedDarkUnlocked =
-        !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
-
-      // ART-FIRST: generate a global halftone candidate from artwork only.
-      // QR bits are applied later in the projection/correction stage.
-      const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
-      const centerW = moduleCenterWeight(x, y, scale);
-      const qrBias = fixedDarkUnlocked
-        ? 0
-        : (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + mix * 0.8);
-      const biasedOverlayDark = clamp01(overlayDark + qrBias);
-      const threshold = sampleThreshold(x, y, sampleIdx, overlayDark);
-
-      let isDarkCandidate: boolean;
-      if (thresholdOnly && !useColorDither) {
-        isDarkCandidate = biasedOverlayDark > threshold;
-      } else {
-        // Global error diffusion over artwork luminance, with dither-kind specific threshold fields.
-        const adjusted = biasedOverlayDark + errors[sampleIdx];
-        isDarkCandidate = adjusted > threshold;
-        const err = (biasedOverlayDark - (isDarkCandidate ? 1 : 0)) * mix;
-        distributeError(errors, x, y, err, kernel, scaledSize, leftToRight);
-      }
-
-      // Apply structural lock at the final write stage only.
-      // This keeps diffusion state consistent so toggling locks doesn't re-shape the entire texture.
-      matrixBits[sampleIdx] = moduleLocked ? (qrIsDark ? 1 : 0) : isDarkCandidate ? 1 : 0;
-      // Desire is artwork-driven and used later for minimal-cost correction ranking.
-      desire[sampleIdx] = moduleLocked ? (qrIsDark ? 1 : 0) : overlayDark;
-      if (config.colorMode !== 'bw') {
-        packedColors[sampleIdx] = packColor(r, g, b);
-      }
+    for (let x = rp.startX; rp.leftToRight ? x < rp.endX : x > rp.endX; x += rp.deltaX) {
+      processErrorDiffusionPixel(
+        edCtx,
+        x,
+        y,
+        rp.leftToRight,
+        matrixBits,
+        packedColors,
+        desire,
+        errors
+      );
     }
   }
 
-  // Post-pass: enforce adaptive data-module occupancy constraints.
-  enforceModuleConstraints(qr, matrixBits, desire, moduleCount, scale, scaledSize, version, config);
+  enforceModuleConstraints(
+    qr,
+    matrixBits,
+    desire,
+    moduleCount,
+    scale,
+    scaledSize,
+    dc.version,
+    config
+  );
   if (config.cleanupSpeckle === true) {
-    removeIsolatedSpeckles(qr, matrixBits, scaledSize, moduleCount, scale, version, config);
+    removeIsolatedSpeckles(qr, matrixBits, scaledSize, moduleCount, scale, dc.version, config);
   }
 
-  // Log key stats for debugging
   const center = Math.floor(scale / 2);
   const sampleMr = Math.min(10, moduleCount - 1);
   const sampleMc = Math.min(10, moduleCount - 1);
@@ -1529,15 +1633,15 @@ export async function generateDitheredMatrix(
     scaledSize,
     moduleCount,
     scale,
-    rawIntensity,
-    effectiveIntensityForFrame: intensity,
-    mix,
-    serpentine,
-    ditherKind,
-    thresholdPattern,
-    thresholdOnly,
-    colorDitherMode,
-    kernelName,
+    rawIntensity: effectiveIntensity,
+    effectiveIntensityForFrame: dc.intensity,
+    mix: dc.mix,
+    serpentine: dc.serpentine,
+    ditherKind: dc.ditherKind,
+    thresholdPattern: dc.thresholdPattern,
+    thresholdOnly: dc.thresholdOnly,
+    colorDitherMode: dc.colorDitherMode,
+    kernelName: dc.kernelName,
     sample: {
       module: { row: sampleMr, col: sampleMc, qrIsDark: qr.isDark(sampleMr, sampleMc) },
       centerPixel: {
@@ -1559,6 +1663,98 @@ export async function generateDitheredMatrix(
   };
 }
 
+interface BlueNoisePixelCtx {
+  qr: QRCodeInstance;
+  config: QRGeneratorConfig;
+  data: Uint8ClampedArray;
+  scaledSize: number;
+  scale: number;
+  version: number;
+  moduleCount: number;
+  intensity: number;
+  effectiveBitBias: number;
+  scanGateActive: boolean;
+  tile: ReturnType<typeof generateBlueNoiseTile>;
+  tileSize: number;
+}
+
+function processBlueNoisePixel(
+  ctx: BlueNoisePixelCtx,
+  x: number,
+  y: number,
+  matrixBits: Uint8Array,
+  packedColors: Uint32Array,
+  desire: Float32Array
+): void {
+  const sampleIdx = pixelIndex(x, y, ctx.scaledSize);
+  const idx = sampleIdx * 4;
+  const r = ctx.data[idx];
+  const g = ctx.data[idx + 1];
+  const b = ctx.data[idx + 2];
+
+  const moduleRow = Math.floor(y / ctx.scale);
+  const moduleCol = Math.floor(x / ctx.scale);
+  const qrIsDark = ctx.qr.isDark(moduleRow, moduleCol);
+  const moduleLocked = shouldLockModule(
+    moduleRow,
+    moduleCol,
+    ctx.moduleCount,
+    ctx.version,
+    ctx.config
+  );
+  const fixedDarkUnlocked =
+    !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, ctx.moduleCount);
+
+  if (moduleLocked) {
+    matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
+    if (ctx.config.colorMode !== 'bw') {
+      packedColors[sampleIdx] = packColor(r, g, b);
+    }
+    desire[sampleIdx] = qrIsDark ? 1 : 0;
+    return;
+  }
+
+  const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
+  // ART-FIRST: base decision solely on artwork luminance + global noise field.
+  const centerW = moduleCenterWeight(x, y, ctx.scale);
+  const polarityBoost = ctx.scanGateActive ? 1.18 : 1;
+  const polarityBias =
+    (qrIsDark ? 1 : -1) * (0.14 + ctx.intensity * 0.18) * (0.4 + centerW * 0.6) * polarityBoost;
+  const qrBias = fixedDarkUnlocked
+    ? 0
+    : (qrIsDark ? 1 : -1) * ctx.effectiveBitBias * centerW * (0.45 + ctx.intensity * 0.8);
+  const decisionGain = (0.64 + ctx.intensity * 0.44) * (ctx.scanGateActive ? 1.04 : 1);
+  const d = clamp01((overlayDark + qrBias + polarityBias) * decisionGain);
+  desire[sampleIdx] = clamp01(overlayDark + (qrIsDark ? 0.12 : -0.12));
+
+  const n = sampleBlueNoise(x, y, ctx.tile, ctx.tileSize);
+  const isDark = n < d;
+
+  matrixBits[sampleIdx] = isDark ? 1 : 0;
+  if (ctx.config.colorMode !== 'bw') {
+    packedColors[sampleIdx] = packColor(r, g, b);
+  }
+}
+
+function buildStrictConstraintConfig(
+  config: QRGeneratorConfig,
+  scanGateActive: boolean,
+  intensity: number
+): QRGeneratorConfig {
+  return {
+    ...config,
+    darkMinOccupancy: Math.max(
+      config.darkMinOccupancy ?? 0,
+      (scanGateActive ? 0.56 : 0.52) + intensity * 0.08
+    ),
+    lightMaxOccupancy: Math.min(
+      config.lightMaxOccupancy ?? 1,
+      (scanGateActive ? 0.44 : 0.48) - intensity * 0.08
+    ),
+    optimizeIterations: Math.max(config.optimizeIterations ?? 0, scanGateActive ? 10 : 8),
+  };
+}
+
 /**
  * Generate blue noise pixel matrix
  * Uses a blue noise threshold field over the same desired-darkness model.
@@ -1576,12 +1772,7 @@ export async function generateBlueNoiseMatrix(
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
 
-  // =========================================
-  // QR-FIRST MODE (manual toggle or auto-detect)
-  // =========================================
-  // For high-contrast B&W images (like spirals), use QR-first mode
-
-  // Check for manual QR-first mode toggle
+  // QR-FIRST MODE: for high-contrast B&W images, guarantee scannability
   if (config.qrFirstMode) {
     log.debug('QR-first mode enabled via config in blue-noise mode - using QR-first matrix');
     return generateBWFirstMatrix(
@@ -1596,7 +1787,7 @@ export async function generateBlueNoiseMatrix(
     );
   }
 
-  const rawIntensity = effectiveIntensity; // 0..1
+  const rawIntensity = effectiveIntensity;
   const intensity = clamp01(rawIntensity);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
@@ -1629,65 +1820,28 @@ export async function generateBlueNoiseMatrix(
     minPolarityBias + scanGateBiasBoost * 0.4
   );
 
+  const bnCtx: BlueNoisePixelCtx = {
+    qr,
+    config,
+    data,
+    scaledSize,
+    scale,
+    version,
+    moduleCount,
+    intensity,
+    effectiveBitBias,
+    scanGateActive,
+    tile,
+    tileSize,
+  };
+
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
-      const sampleIdx = pixelIndex(x, y, scaledSize);
-      const idx = sampleIdx * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-
-      const moduleRow = Math.floor(y / scale);
-      const moduleCol = Math.floor(x / scale);
-      const qrIsDark = qr.isDark(moduleRow, moduleCol);
-      const moduleLocked = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
-      const fixedDarkUnlocked =
-        !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
-
-      if (moduleLocked) {
-        matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
-        if (config.colorMode !== 'bw') {
-          packedColors[sampleIdx] = packColor(r, g, b);
-        }
-        desire[sampleIdx] = qrIsDark ? 1 : 0;
-        continue;
-      }
-
-      const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
-      // ART-FIRST: base decision solely on artwork luminance + global noise field.
-      const centerW = moduleCenterWeight(x, y, scale);
-      const polarityBoost = scanGateActive ? 1.18 : 1;
-      const polarityBias =
-        (qrIsDark ? 1 : -1) * (0.14 + intensity * 0.18) * (0.4 + centerW * 0.6) * polarityBoost;
-      const qrBias = fixedDarkUnlocked
-        ? 0
-        : (qrIsDark ? 1 : -1) * effectiveBitBias * centerW * (0.45 + intensity * 0.8);
-      const decisionGain = (0.64 + intensity * 0.44) * (scanGateActive ? 1.04 : 1);
-      const d = clamp01((overlayDark + qrBias + polarityBias) * decisionGain);
-      desire[sampleIdx] = clamp01(overlayDark + (qrIsDark ? 0.12 : -0.12));
-
-      const n = sampleBlueNoise(x, y, tile, tileSize);
-      const isDark = n < d;
-
-      matrixBits[sampleIdx] = isDark ? 1 : 0;
-      if (config.colorMode !== 'bw') {
-        packedColors[sampleIdx] = packColor(r, g, b);
-      }
+      processBlueNoisePixel(bnCtx, x, y, matrixBits, packedColors, desire);
     }
   }
 
-  const strictConstraintConfig: QRGeneratorConfig = {
-    ...config,
-    darkMinOccupancy: Math.max(
-      config.darkMinOccupancy ?? 0,
-      (scanGateActive ? 0.56 : 0.52) + intensity * 0.08
-    ),
-    lightMaxOccupancy: Math.min(
-      config.lightMaxOccupancy ?? 1,
-      (scanGateActive ? 0.44 : 0.48) - intensity * 0.08
-    ),
-    optimizeIterations: Math.max(config.optimizeIterations ?? 0, scanGateActive ? 10 : 8),
-  };
+  const strictConstraintConfig = buildStrictConstraintConfig(config, scanGateActive, intensity);
   enforceModuleConstraints(
     qr,
     matrixBits,

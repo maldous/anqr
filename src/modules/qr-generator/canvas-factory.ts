@@ -6,48 +6,6 @@
 import { createLogger } from '../../lib/logger';
 
 const _log = createLogger('GENERATE');
-const MIN_CANVAS_DIMENSION = 1;
-
-type Resettable2DContext = {
-  setTransform: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-  globalCompositeOperation: string;
-  globalAlpha: number;
-  imageSmoothingEnabled: boolean;
-  imageSmoothingQuality?: ImageSmoothingQuality;
-  filter?: string;
-  clearRect: (x: number, y: number, w: number, h: number) => void;
-};
-
-function normalizeCanvasDimension(value: number): number {
-  if (!Number.isFinite(value)) {
-    return MIN_CANVAS_DIMENSION;
-  }
-  return Math.max(MIN_CANVAS_DIMENSION, Math.round(value));
-}
-
-export function normalizeCanvasDimensions(
-  width: number,
-  height: number
-): { width: number; height: number } {
-  return {
-    width: normalizeCanvasDimension(width),
-    height: normalizeCanvasDimension(height),
-  };
-}
-
-export function resetCanvas2DState(ctx: Resettable2DContext, width: number, height: number): void {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 1;
-  ctx.imageSmoothingEnabled = false;
-  if ('imageSmoothingQuality' in ctx && ctx.imageSmoothingQuality !== undefined) {
-    ctx.imageSmoothingQuality = 'low';
-  }
-  if ('filter' in ctx && typeof ctx.filter === 'string') {
-    ctx.filter = 'none';
-  }
-  ctx.clearRect(0, 0, width, height);
-}
 
 /**
  * Canvas factory interface for environment-agnostic canvas creation.
@@ -64,14 +22,9 @@ export interface CanvasFactory {
  */
 export const defaultBrowserCanvasFactory: CanvasFactory = {
   createCanvas: (width: number, height: number): Promise<HTMLCanvasElement> => {
-    const normalized = normalizeCanvasDimensions(width, height);
     const canvas = document.createElement('canvas');
-    canvas.width = normalized.width;
-    canvas.height = normalized.height;
-    const ctx = canvas.getContext('2d') as Resettable2DContext | null;
-    if (ctx) {
-      resetCanvas2DState(ctx, normalized.width, normalized.height);
-    }
+    canvas.width = width;
+    canvas.height = height;
     return Promise.resolve(canvas);
   },
   loadImage: (src: string): Promise<HTMLImageElement> => {
@@ -101,18 +54,21 @@ export class CanvasPool {
   }
 
   async acquire(width: number, height: number): Promise<HTMLCanvasElement | OffscreenCanvas> {
-    const normalized = normalizeCanvasDimensions(width, height);
-    const key = `${normalized.width}x${normalized.height}`;
+    const key = `${width}x${height}`;
     const bucket = this.pool.get(key);
     if (bucket?.length) {
       const canvas = bucket.pop()!;
-      const ctx = canvas.getContext('2d') as Resettable2DContext | null;
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null;
       if (ctx) {
-        resetCanvas2DState(ctx, normalized.width, normalized.height);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+        if ('filter' in ctx) (ctx as CanvasRenderingContext2D).filter = 'none';
+        ctx.clearRect(0, 0, width, height);
       }
       return canvas;
     }
-    return this.factory.createCanvas(normalized.width, normalized.height);
+    return this.factory.createCanvas(width, height);
   }
 
   release(canvas: HTMLCanvasElement | OffscreenCanvas): void {

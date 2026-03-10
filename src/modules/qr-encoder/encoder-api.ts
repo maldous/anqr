@@ -57,6 +57,42 @@ function isAlphanumeric(char: string): boolean {
   return /^[0-9A-Z $%*+\-./:]$/.test(char);
 }
 
+function scanNumericRun(text: string, start: number): number {
+  let i = start;
+  while (i < text.length && isNumeric(text[i])) i++;
+  return i;
+}
+
+function scanAlphanumericRun(text: string, upperText: string, start: number): number {
+  let i = start;
+  while (i < text.length && isAlphanumeric(upperText[i]) && text[i] === upperText[i]) i++;
+  return i;
+}
+
+function scanByteRunEnd(text: string, upperText: string, start: number): number {
+  let i = start;
+  while (i < text.length) {
+    const numEnd = scanNumericRun(text, i);
+    if (numEnd - i >= 4) break;
+    const alphaEnd = scanAlphanumericRun(text, upperText, i);
+    if (alphaEnd - i >= 6) break;
+    i++;
+  }
+  return i;
+}
+
+function mergeAdjacentSegments(segments: DataSegment[]): DataSegment[] {
+  const merged: DataSegment[] = [];
+  for (const seg of segments) {
+    if (merged.length > 0 && merged[merged.length - 1].mode === seg.mode) {
+      merged[merged.length - 1].data += seg.data;
+    } else {
+      merged.push({ ...seg });
+    }
+  }
+  return merged;
+}
+
 /**
  * Optimize a string into segments using the most efficient encoding modes.
  * This is crucial for QArt codes which use numeric fragments in URLs.
@@ -77,82 +113,32 @@ export function optimizeSegments(text: string): DataSegment[] {
   }
 
   const segments: DataSegment[] = [];
+  const upperText = text.toUpperCase();
   let i = 0;
 
   while (i < text.length) {
-    // Try to find a numeric run (minimum 4 digits for efficiency)
-    const numericStart = i;
-    while (i < text.length && isNumeric(text[i])) {
-      i++;
-    }
-    const numericLen = i - numericStart;
-
-    if (numericLen >= 4) {
-      // Worth using numeric mode
-      segments.push({ data: text.slice(numericStart, i), mode: 'numeric' });
+    const numEnd = scanNumericRun(text, i);
+    if (numEnd - i >= 4) {
+      segments.push({ data: text.slice(i, numEnd), mode: 'numeric' });
+      i = numEnd;
       continue;
     }
 
-    // Reset if numeric run was too short
-    i = numericStart;
-
-    // Try to find an alphanumeric run (minimum 6 chars, uppercase only)
-    const alphaStart = i;
-    const upperText = text.toUpperCase();
-    while (i < text.length && isAlphanumeric(upperText[i]) && text[i] === upperText[i]) {
-      i++;
-    }
-    const alphaLen = i - alphaStart;
-
-    if (alphaLen >= 6) {
-      // Worth using alphanumeric mode
-      segments.push({ data: text.slice(alphaStart, i), mode: 'alphanumeric' });
+    const alphaEnd = scanAlphanumericRun(text, upperText, i);
+    if (alphaEnd - i >= 6) {
+      segments.push({ data: text.slice(i, alphaEnd), mode: 'alphanumeric' });
+      i = alphaEnd;
       continue;
     }
 
-    // Reset if alphanumeric run was too short
-    i = alphaStart;
-
-    // Collect bytes until we hit a potential numeric/alphanumeric run
-    const byteStart = i;
-    while (i < text.length) {
-      // Look ahead for numeric run
-      let numAhead = 0;
-      let j = i;
-      while (j < text.length && isNumeric(text[j])) {
-        numAhead++;
-        j++;
-      }
-      if (numAhead >= 4) break;
-
-      // Look ahead for alphanumeric run (uppercase)
-      let alphaAhead = 0;
-      j = i;
-      while (j < text.length && isAlphanumeric(upperText[j]) && text[j] === upperText[j]) {
-        alphaAhead++;
-        j++;
-      }
-      if (alphaAhead >= 6) break;
-
-      i++;
-    }
-
-    if (i > byteStart) {
-      segments.push({ data: text.slice(byteStart, i), mode: 'byte' });
+    const byteEnd = scanByteRunEnd(text, upperText, i);
+    if (byteEnd > i) {
+      segments.push({ data: text.slice(i, byteEnd), mode: 'byte' });
+      i = byteEnd;
     }
   }
 
-  // Merge adjacent segments of the same mode
-  const merged: DataSegment[] = [];
-  for (const seg of segments) {
-    if (merged.length > 0 && merged[merged.length - 1].mode === seg.mode) {
-      merged[merged.length - 1].data += seg.data;
-    } else {
-      merged.push({ ...seg });
-    }
-  }
-
-  return merged;
+  return mergeAdjacentSegments(segments);
 }
 
 /**

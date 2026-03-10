@@ -75,6 +75,33 @@ function collectComponent(
   return { cells, touchesBoundary };
 }
 
+function removeSmallComponents(
+  grid: boolean[][],
+  moduleCount: number,
+  targetValue: boolean,
+  maxArea: number,
+  skipBoundaryTouching: boolean
+): void {
+  const visited = new Uint8Array(moduleCount * moduleCount);
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const cellIdx = row * moduleCount + col;
+      if (visited[cellIdx] === 1) continue;
+      if ((grid[row]?.[col] ?? false) !== targetValue) continue;
+
+      const component = collectComponent(grid, moduleCount, row, col, targetValue, visited);
+      if (skipBoundaryTouching && component.touchesBoundary) continue;
+      if (component.cells.length <= maxArea) {
+        for (const idx of component.cells) {
+          const r = Math.floor(idx / moduleCount);
+          const c = idx % moduleCount;
+          if (grid[r]) grid[r][c] = !targetValue;
+        }
+      }
+    }
+  }
+}
+
 function cleanupBinaryTargets(
   targets: boolean[][],
   moduleCount: number,
@@ -85,42 +112,11 @@ function cleanupBinaryTargets(
   if (moduleCount <= 0) return cleaned;
 
   if (maxDarkSpeckleArea > 0) {
-    const visited = new Uint8Array(moduleCount * moduleCount);
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        const cellIdx = row * moduleCount + col;
-        if (visited[cellIdx] === 1 || !(cleaned[row]?.[col] ?? false)) continue;
-
-        const component = collectComponent(cleaned, moduleCount, row, col, true, visited);
-        if (component.cells.length <= maxDarkSpeckleArea) {
-          for (const idx of component.cells) {
-            const r = Math.floor(idx / moduleCount);
-            const c = idx % moduleCount;
-            if (cleaned[r]) cleaned[r][c] = false;
-          }
-        }
-      }
-    }
+    removeSmallComponents(cleaned, moduleCount, true, maxDarkSpeckleArea, false);
   }
 
   if (maxLightHoleArea > 0) {
-    const visited = new Uint8Array(moduleCount * moduleCount);
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        const cellIdx = row * moduleCount + col;
-        if (visited[cellIdx] === 1 || (cleaned[row]?.[col] ?? false)) continue;
-
-        const component = collectComponent(cleaned, moduleCount, row, col, false, visited);
-        if (component.touchesBoundary) continue;
-        if (component.cells.length <= maxLightHoleArea) {
-          for (const idx of component.cells) {
-            const r = Math.floor(idx / moduleCount);
-            const c = idx % moduleCount;
-            if (cleaned[r]) cleaned[r][c] = true;
-          }
-        }
-      }
-    }
+    removeSmallComponents(cleaned, moduleCount, false, maxLightHoleArea, true);
   }
 
   return cleaned;

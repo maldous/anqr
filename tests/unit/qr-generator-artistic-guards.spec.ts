@@ -15,20 +15,18 @@ describe('qr-generator artistic guards', () => {
     expect(src).toContain('(config.lightGrainAlpha ?? 0.05)');
     expect(src).toContain('if (isDitheredMode) {');
     expect(src).toContain('const grainChance = Math.max(');
-    expect(src).toContain(
-      'const shouldForceBinaryModule = (row: number, col: number): boolean => {'
-    );
+    expect(src).toContain('const shouldForceBinaryModule = (row: number, col: number): boolean =>');
+    expect(src).toContain('shouldForceScaledBinaryModule(getPatternFlags(row, col), pf)');
     expect(src).toContain('const getPatternFlags = (row: number, col: number): number =>');
     expect(src).toContain('function isFinderRegionFlag(flags: number): boolean {');
-    expect(src).toContain('const flags = getPatternFlags(row, col);');
-    expect(src).toContain('if (isFinderRegionFlag(flags)) {');
-    expect(src).toContain('return preserveFinders;');
-    expect(src).toContain('if ((flags & PATTERN_TIMING) !== 0) return preserveTiming;');
-    expect(src).toContain('if ((flags & PATTERN_ALIGNMENT) !== 0) return preserveAlignment;');
-    expect(src).toContain('if ((flags & PATTERN_FORMAT) !== 0) return protectFormat;');
-    expect(src).toContain('if ((flags & PATTERN_VERSION) !== 0) return protectVersion;');
-    expect(src).toContain('const preserveFixedDark =');
-    expect(src).toContain('if ((flags & PATTERN_FIXED_DARK) !== 0) return preserveFixedDark;');
+    expect(src).toContain('function shouldForceScaledBinaryModule(');
+    expect(src).toContain('if (isFinderRegionFlag(flags)) return pf.preserveFinders;');
+    expect(src).toContain('if ((flags & PATTERN_TIMING) !== 0) return pf.preserveTiming;');
+    expect(src).toContain('if ((flags & PATTERN_ALIGNMENT) !== 0) return pf.preserveAlignment;');
+    expect(src).toContain('if ((flags & PATTERN_FORMAT) !== 0) return pf.protectFormat;');
+    expect(src).toContain('if ((flags & PATTERN_VERSION) !== 0) return pf.protectVersion;');
+    expect(src).toContain('preserveFixedDark:');
+    expect(src).toContain('if ((flags & PATTERN_FIXED_DARK) !== 0) return pf.preserveFixedDark;');
   });
 
   it('removes center-lock writeback and module-local target quotas in dither correction', () => {

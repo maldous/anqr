@@ -64,11 +64,7 @@ const PATTERN_FIXED_DARK = 32;
  * Replaces per-cell isFinderPattern/isTimingPattern/… function calls
  * with a single array read in the hot render loop.
  */
-function buildFunctionalMap(moduleCount: number, version: number): Uint8Array {
-  const mc = moduleCount;
-  const map = new Uint8Array(mc * mc);
-
-  // Finder patterns (7×7 at three corners)
+function markFinderPatterns(map: Uint8Array, mc: number): void {
   const finderStarts: [number, number][] = [
     [0, 0],
     [0, mc - 7],
@@ -84,32 +80,34 @@ function buildFunctionalMap(moduleCount: number, version: number): Uint8Array {
       }
     }
   }
+}
 
-  // Timing patterns (row 6 and col 6, between finders)
+function markTimingPatterns(map: Uint8Array, mc: number): void {
   for (let i = 8; i < mc - 8; i++) {
     map[6 * mc + i] |= PATTERN_TIMING;
     map[i * mc + 6] |= PATTERN_TIMING;
   }
+}
 
-  // Alignment patterns (version ≥ 2)
-  if (version >= 2) {
-    const centers = getAlignmentPositionsCached(version, mc);
-    for (const center of centers) {
-      for (let dr = -2; dr <= 2; dr++) {
-        const r = center.row + dr;
-        if (r < 0 || r >= mc) continue;
-        const rowBase = r * mc;
-        for (let dc = -2; dc <= 2; dc++) {
-          const c = center.col + dc;
-          if (c >= 0 && c < mc) {
-            map[rowBase + c] |= PATTERN_ALIGNMENT;
-          }
+function markAlignmentPatterns(map: Uint8Array, mc: number, version: number): void {
+  if (version < 2) return;
+  const centers = getAlignmentPositionsCached(version, mc);
+  for (const center of centers) {
+    for (let dr = -2; dr <= 2; dr++) {
+      const r = center.row + dr;
+      if (r < 0 || r >= mc) continue;
+      const rowBase = r * mc;
+      for (let dc = -2; dc <= 2; dc++) {
+        const c = center.col + dc;
+        if (c >= 0 && c < mc) {
+          map[rowBase + c] |= PATTERN_ALIGNMENT;
         }
       }
     }
   }
+}
 
-  // Format info – specific sparse positions (row 8 and col 8)
+function markFormatInfo(map: Uint8Array, mc: number): void {
   const row8 = 8 * mc;
   for (let c = 0; c <= 5; c++) map[row8 + c] |= PATTERN_FORMAT;
   map[row8 + 7] |= PATTERN_FORMAT;
@@ -118,24 +116,34 @@ function buildFunctionalMap(moduleCount: number, version: number): Uint8Array {
   for (let r = 0; r <= 5; r++) map[r * mc + 8] |= PATTERN_FORMAT;
   map[7 * mc + 8] |= PATTERN_FORMAT;
   for (let r = mc - 7; r < mc; r++) map[r * mc + 8] |= PATTERN_FORMAT;
+}
 
-  // Version info (version ≥ 7)
-  if (version >= 7) {
-    for (let r = 0; r < 6; r++) {
-      const rowBase = r * mc;
-      for (let c = mc - 11; c < mc - 8; c++) {
-        map[rowBase + c] |= PATTERN_VERSION;
-      }
-    }
-    for (let r = mc - 11; r < mc - 8; r++) {
-      const rowBase = r * mc;
-      for (let c = 0; c < 6; c++) {
-        map[rowBase + c] |= PATTERN_VERSION;
-      }
+function markVersionInfo(map: Uint8Array, mc: number, version: number): void {
+  if (version < 7) return;
+  for (let r = 0; r < 6; r++) {
+    const rowBase = r * mc;
+    for (let c = mc - 11; c < mc - 8; c++) {
+      map[rowBase + c] |= PATTERN_VERSION;
     }
   }
+  for (let r = mc - 11; r < mc - 8; r++) {
+    const rowBase = r * mc;
+    for (let c = 0; c < 6; c++) {
+      map[rowBase + c] |= PATTERN_VERSION;
+    }
+  }
+}
 
-  // Fixed dark module
+function buildFunctionalMap(moduleCount: number, version: number): Uint8Array {
+  const mc = moduleCount;
+  const map = new Uint8Array(mc * mc);
+
+  markFinderPatterns(map, mc);
+  markTimingPatterns(map, mc);
+  markAlignmentPatterns(map, mc, version);
+  markFormatInfo(map, mc);
+  markVersionInfo(map, mc, version);
+
   if (mc > 8) {
     map[(mc - 8) * mc + 8] |= PATTERN_FIXED_DARK;
   }
@@ -373,6 +381,211 @@ function drawStyledModule(
   }
 }
 
+const _snapResult = { x: 0, y: 0 };
+function applyPixelSnap(x: number, y: number, pixelSnap: string): { x: number; y: number } {
+  if (pixelSnap === 'floor') {
+    _snapResult.x = Math.floor(x);
+    _snapResult.y = Math.floor(y);
+  } else if (pixelSnap === 'round') {
+    _snapResult.x = Math.round(x);
+    _snapResult.y = Math.round(y);
+  } else if (pixelSnap === 'ceil') {
+    _snapResult.x = Math.ceil(x);
+    _snapResult.y = Math.ceil(y);
+  } else {
+    _snapResult.x = x;
+    _snapResult.y = y;
+  }
+  return _snapResult;
+}
+
+function computeModuleGap(
+  config: QRGeneratorConfig,
+  moduleSize: number
+): { gap: number; strokeWidth: number; isStrokeGapMode: boolean } {
+  const baseGap = config.moduleGap ? (moduleSize * config.moduleGap) / 100 : 0;
+  const gapMode = config.gapMode || 'none';
+  let gap = baseGap;
+  let strokeWidth = 0;
+  if (gapMode === 'inset') {
+    gap = Math.max(baseGap, moduleSize * 0.1);
+  } else if (gapMode === 'stroke') {
+    strokeWidth = Math.max(1, moduleSize * 0.15);
+    gap = strokeWidth;
+  } else if (gapMode === 'negative_space') {
+    gap = Math.max(baseGap, moduleSize * 0.2);
+  }
+  return { gap, strokeWidth, isStrokeGapMode: gapMode === 'stroke' };
+}
+
+interface RenderCellCtx {
+  qr: QRCodeInstance;
+  config: QRGeneratorConfig;
+  moduleCount: number;
+  moduleSize: number;
+  margin: number;
+  overlayData: OverlayData | null;
+  ditherPattern: boolean[][] | null;
+  effectiveIntensity: number;
+  functionalMap: Uint8Array;
+  moduleDrawCtx: ModuleDrawContext;
+  effectiveFgColor: string;
+  effectiveBgColor: string;
+  needsExplicitLightModules: boolean;
+  hasOverlayData: boolean;
+  preserveFinders: boolean | undefined;
+  preserveTiming: boolean | undefined;
+  preserveAlignment: boolean | undefined;
+  protectFormat: boolean | undefined;
+  protectVersion: boolean | undefined;
+  hasPerModuleColor: boolean;
+  hasPalette: boolean;
+  hasContrastGuard: boolean;
+  hasJitter: boolean;
+  jitterPx: number;
+  frameIndex: number;
+  pixelSnap: string;
+  gap: number;
+  isFastPreview: boolean;
+  useGradient: boolean;
+  gradientFill: CanvasGradient | null | undefined;
+}
+
+interface RenderCellState {
+  currentAlpha: number;
+  currentFillStyle: string | CanvasGradient | null;
+}
+
+function processRenderCell(
+  rctx: RenderCellCtx,
+  row: number,
+  col: number,
+  idx: number,
+  state: RenderCellState
+): void {
+  const isDark = rctx.ditherPattern ? rctx.ditherPattern[row][col] : rctx.qr.isDark(row, col);
+  const x = (col + rctx.margin) * rctx.moduleSize;
+  const y = (row + rctx.margin) * rctx.moduleSize;
+
+  const flags = rctx.functionalMap[idx];
+  const isFinder = (flags & PATTERN_FINDER) !== 0;
+  const isTiming = (flags & PATTERN_TIMING) !== 0;
+  const isAlignment = (flags & PATTERN_ALIGNMENT) !== 0;
+  const isFormat = (flags & PATTERN_FORMAT) !== 0;
+  const isVersion = (flags & PATTERN_VERSION) !== 0;
+  const isFunctionalPattern = flags !== 0;
+
+  const applyOverlay =
+    rctx.hasOverlayData &&
+    !(rctx.preserveFinders && isFinder) &&
+    !(rctx.preserveTiming && isTiming) &&
+    !(rctx.preserveAlignment && isAlignment) &&
+    !(rctx.protectFormat && isFormat) &&
+    !(rctx.protectVersion && isVersion);
+
+  let moduleColor = isDark ? rctx.effectiveFgColor : rctx.effectiveBgColor;
+  let moduleSizeModifier = 1;
+  let moduleOpacity = 1;
+  let waveOffsetX = 0;
+  let waveOffsetY = 0;
+  let drawOutlineOnly = false;
+  let useHalftoneRendering = false;
+  let halftoneBrightness = 0.5;
+  let shouldDrawCell = isDark || rctx.needsExplicitLightModules;
+  const overlayBrightness = rctx.hasOverlayData
+    ? getOverlayBrightness(rctx.overlayData, row, col)
+    : 0.5;
+
+  if (applyOverlay) {
+    const modeResult = applyQROverlayMode({
+      overlayMode: rctx.config.overlayMode,
+      isDark,
+      brightness: overlayBrightness,
+      overlayData: rctx.overlayData!,
+      row,
+      col,
+      moduleCount: rctx.moduleCount,
+      effectiveIntensity: rctx.effectiveIntensity,
+      config: rctx.config,
+      isFunctionalPattern,
+    });
+
+    moduleColor = modeResult.moduleColor;
+    moduleSizeModifier = modeResult.moduleSizeModifier;
+    moduleOpacity = modeResult.moduleOpacity;
+    waveOffsetX = modeResult.waveOffsetX;
+    waveOffsetY = modeResult.waveOffsetY;
+    drawOutlineOnly = modeResult.drawOutlineOnly;
+    useHalftoneRendering = modeResult.useHalftoneRendering;
+    halftoneBrightness = modeResult.halftoneBrightness;
+    shouldDrawCell = modeResult.shouldDrawCell || rctx.needsExplicitLightModules;
+  }
+
+  if (!shouldDrawCell || moduleOpacity <= 0) return;
+
+  if (moduleOpacity !== state.currentAlpha) {
+    rctx.moduleDrawCtx.ctx.globalAlpha = moduleOpacity;
+    state.currentAlpha = moduleOpacity;
+  }
+
+  const finalModuleColor =
+    rctx.hasPerModuleColor || rctx.hasPalette || rctx.hasContrastGuard
+      ? computeFinalModuleColor(
+          moduleColor,
+          isDark,
+          overlayBrightness,
+          rctx.overlayData,
+          row,
+          col,
+          rctx.moduleCount,
+          rctx.config,
+          rctx.hasPerModuleColor,
+          rctx.hasPalette,
+          rctx.hasContrastGuard
+        )
+      : moduleColor;
+
+  const moduleFillStyle: string | CanvasGradient =
+    isDark && !rctx.isFastPreview && rctx.useGradient && rctx.gradientFill
+      ? rctx.gradientFill
+      : finalModuleColor;
+  rctx.moduleDrawCtx.setFillStyle(moduleFillStyle);
+
+  const adjustedSize = (rctx.moduleSize - rctx.gap) * moduleSizeModifier;
+  const offset = (rctx.moduleSize - adjustedSize) / 2;
+
+  let drawX = x + offset + waveOffsetX;
+  let drawY = y + offset + waveOffsetY;
+
+  if (rctx.hasJitter) {
+    const jitterSeed = (row * 31 + col * 17 + rctx.frameIndex * 13) % 1000;
+    const jitterX = ((jitterSeed % 100) / 100 - 0.5) * 2 * rctx.jitterPx;
+    const jitterY = (((jitterSeed * 7) % 100) / 100 - 0.5) * 2 * rctx.jitterPx;
+    drawX += jitterX;
+    drawY += jitterY;
+  }
+
+  const snapped = applyPixelSnap(drawX, drawY, rctx.pixelSnap);
+  drawX = snapped.x;
+  drawY = snapped.y;
+
+  drawStyledModule(
+    rctx.moduleDrawCtx,
+    drawX,
+    drawY,
+    adjustedSize,
+    isDark,
+    isTiming,
+    drawOutlineOnly,
+    useHalftoneRendering,
+    halftoneBrightness,
+    finalModuleColor,
+    moduleFillStyle,
+    row,
+    col
+  );
+}
+
 /**
  * Render all QR modules with styling and overlay effects
  */
@@ -392,53 +605,14 @@ export function renderModules(options: RenderModulesOptions): void {
     gradientFill,
     useGradient,
   } = options;
-  // === HOISTED LOOP-INVARIANT COMPUTATIONS ===
   const isFastPreview = config.fastPreview === true;
-  const cornerRadius = config.cornerRadius || 0;
-  const dotRotation = config.dotRotationDeg || 0;
-  const timingStyle = config.timingStyle || 'match_module';
   const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
   const effectiveFgColor = validateColor(config.fgColor, '#000000');
   const needsExplicitLightModules = config.transparentBg === true;
-  const protectFormat = config.protectFormatInfo;
-  const protectVersion = config.protectVersionInfo;
-  const preserveFinders = config.preserveFinders;
-  const preserveTiming = config.preserveTiming;
-  const preserveAlignment = config.preserveAlignment;
   const hasOverlayData = overlayData !== null;
-  const overlayModeIsHalftoneDithered =
-    !isFastPreview && config.overlayMode === 'halftone-dithered';
-  // In fast preview mode, skip expensive per-module color/palette/contrast/jitter
-  const hasPerModuleColor =
-    !isFastPreview &&
-    !!config.perModuleColorMode &&
-    config.perModuleColorMode !== 'solid' &&
-    hasOverlayData;
-  const hasPalette = !isFastPreview && !!(config.palette && config.palette.length > 0);
-  const hasContrastGuard = !isFastPreview && !!(config.contrastGuard && config.minContrastRatio);
-  const hasJitter = !isFastPreview && !!(config.moduleJitterPx && config.moduleJitterPx > 0);
-  const jitterPx = isFastPreview ? 0 : config.moduleJitterPx || 0;
-  const frameIndex = config.frameIndex || 0;
-  const pixelSnap = config.pixelSnap || 'floor';
 
-  // Precompute gap settings (constant for all modules)
-  const baseGap = config.moduleGap ? (moduleSize * config.moduleGap) / 100 : 0;
-  const gapMode = config.gapMode || 'none';
-  let gap = baseGap;
-  let strokeWidth = 0;
-  if (gapMode === 'inset') {
-    gap = Math.max(baseGap, moduleSize * 0.1);
-  } else if (gapMode === 'stroke') {
-    strokeWidth = Math.max(1, moduleSize * 0.15);
-    gap = strokeWidth;
-  } else if (gapMode === 'negative_space') {
-    gap = Math.max(baseGap, moduleSize * 0.2);
-  }
-  const isStrokeGapMode = gapMode === 'stroke';
+  const { gap, strokeWidth, isStrokeGapMode } = computeModuleGap(config, moduleSize);
 
-  // === FAST PATH: batch fillRect with run-length encoding ===
-  // When modules are simple squares with no per-module effects, skip the
-  // expensive functional-pattern map and per-cell overhead entirely.
   if (canUseFastPath(config, hasOverlayData, gap)) {
     const fgFill: string | CanvasGradient =
       useGradient && gradientFill ? gradientFill : effectiveFgColor;
@@ -457,28 +631,27 @@ export function renderModules(options: RenderModulesOptions): void {
     return;
   }
 
-  // === FULL PATH: per-module styling with overlay/pattern support ===
-
-  // Build functional pattern map once (cached across frames for animation)
   const functionalMap = getCachedFunctionalMap(moduleCount, version);
 
-  // Tracked canvas state (replaces per-module ctx.save/restore)
-  let currentAlpha = ctx.globalAlpha;
-  let currentFillStyle: string | CanvasGradient | null = null;
+  const state: RenderCellState = {
+    currentAlpha: ctx.globalAlpha,
+    currentFillStyle: null,
+  };
   const setFillStyle = (fillStyle: string | CanvasGradient): void => {
-    if (currentFillStyle === fillStyle) return;
+    if (state.currentFillStyle === fillStyle) return;
     ctx.fillStyle = fillStyle;
-    currentFillStyle = fillStyle;
+    state.currentFillStyle = fillStyle;
   };
 
-  // Pre-built context object for drawStyledModule (zero per-cell allocation)
+  const overlayModeIsHalftoneDithered =
+    !isFastPreview && config.overlayMode === 'halftone-dithered';
   const moduleDrawCtx: ModuleDrawContext = {
     ctx,
     config,
     isFastPreview,
-    cornerRadius,
-    dotRotation,
-    timingStyle,
+    cornerRadius: config.cornerRadius || 0,
+    dotRotation: config.dotRotationDeg || 0,
+    timingStyle: config.timingStyle || 'match_module',
     isStrokeGapMode,
     strokeWidth,
     overlayModeIsHalftoneDithered,
@@ -486,153 +659,53 @@ export function renderModules(options: RenderModulesOptions): void {
     setFillStyle,
   };
 
-  // Draw QR modules
+  const rctx: RenderCellCtx = {
+    qr,
+    config,
+    moduleCount,
+    moduleSize,
+    margin,
+    overlayData,
+    ditherPattern,
+    effectiveIntensity,
+    functionalMap,
+    moduleDrawCtx,
+    effectiveFgColor,
+    effectiveBgColor,
+    needsExplicitLightModules,
+    hasOverlayData,
+    preserveFinders: config.preserveFinders,
+    preserveTiming: config.preserveTiming,
+    preserveAlignment: config.preserveAlignment,
+    protectFormat: config.protectFormatInfo,
+    protectVersion: config.protectVersionInfo,
+    hasPerModuleColor:
+      !isFastPreview &&
+      !!config.perModuleColorMode &&
+      config.perModuleColorMode !== 'solid' &&
+      hasOverlayData,
+    hasPalette: !isFastPreview && !!(config.palette && config.palette.length > 0),
+    hasContrastGuard: !isFastPreview && !!(config.contrastGuard && config.minContrastRatio),
+    hasJitter: !isFastPreview && !!(config.moduleJitterPx && config.moduleJitterPx > 0),
+    jitterPx: isFastPreview ? 0 : config.moduleJitterPx || 0,
+    frameIndex: config.frameIndex || 0,
+    pixelSnap: config.pixelSnap || 'floor',
+    gap,
+    isFastPreview,
+    useGradient: useGradient === true,
+    gradientFill,
+  };
+
   for (let row = 0; row < moduleCount; row++) {
     const rowBase = row * moduleCount;
     for (let col = 0; col < moduleCount; col++) {
       const idx = rowBase + col;
-
-      // Skip already-drawn structural patterns (Uint8Array lookup – no string allocs)
       if (skipMask[idx]) continue;
-
-      // Use dithered pattern if available, otherwise use original QR
-      const isDark = ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col);
-      const x = (col + margin) * moduleSize;
-      const y = (row + margin) * moduleSize;
-
-      // Pattern classification from precomputed map (array read, not function calls)
-      const flags = functionalMap[idx];
-      const isFinder = (flags & PATTERN_FINDER) !== 0;
-      const isTiming = (flags & PATTERN_TIMING) !== 0;
-      const isAlignment = (flags & PATTERN_ALIGNMENT) !== 0;
-      const isFormat = (flags & PATTERN_FORMAT) !== 0;
-      const isVersion = (flags & PATTERN_VERSION) !== 0;
-      const isFunctionalPattern = flags !== 0;
-
-      const applyOverlay =
-        hasOverlayData &&
-        !(preserveFinders && isFinder) &&
-        !(preserveTiming && isTiming) &&
-        !(preserveAlignment && isAlignment) &&
-        !(protectFormat && isFormat) &&
-        !(protectVersion && isVersion);
-
-      // Default rendering parameters
-      let moduleColor = isDark ? effectiveFgColor : effectiveBgColor;
-      let moduleSizeModifier = 1;
-      let moduleOpacity = 1;
-      let waveOffsetX = 0;
-      let waveOffsetY = 0;
-      let drawOutlineOnly = false;
-      let useHalftoneRendering = false;
-      let halftoneBrightness = 0.5;
-      // Draw dark modules always; draw light modules only when background is transparent
-      let shouldDrawCell = isDark || needsExplicitLightModules;
-      const overlayBrightness = hasOverlayData ? getOverlayBrightness(overlayData, row, col) : 0.5;
-
-      if (applyOverlay) {
-        const modeResult = applyQROverlayMode({
-          overlayMode: config.overlayMode,
-          isDark,
-          brightness: overlayBrightness,
-          overlayData: overlayData!,
-          row,
-          col,
-          moduleCount,
-          effectiveIntensity,
-          config,
-          isFunctionalPattern,
-        });
-
-        moduleColor = modeResult.moduleColor;
-        moduleSizeModifier = modeResult.moduleSizeModifier;
-        moduleOpacity = modeResult.moduleOpacity;
-        waveOffsetX = modeResult.waveOffsetX;
-        waveOffsetY = modeResult.waveOffsetY;
-        drawOutlineOnly = modeResult.drawOutlineOnly;
-        useHalftoneRendering = modeResult.useHalftoneRendering;
-        halftoneBrightness = modeResult.halftoneBrightness;
-        // Preserve transparentBg requirement: if background is transparent, light modules must be drawn
-        shouldDrawCell = modeResult.shouldDrawCell || needsExplicitLightModules;
-      }
-
-      if (shouldDrawCell && moduleOpacity > 0) {
-        // Update globalAlpha only when changed (avoids per-module save/restore)
-        if (moduleOpacity !== currentAlpha) {
-          ctx.globalAlpha = moduleOpacity;
-          currentAlpha = moduleOpacity;
-        }
-
-        const finalModuleColor =
-          hasPerModuleColor || hasPalette || hasContrastGuard
-            ? computeFinalModuleColor(
-                moduleColor,
-                isDark,
-                overlayBrightness,
-                overlayData,
-                row,
-                col,
-                moduleCount,
-                config,
-                hasPerModuleColor,
-                hasPalette,
-                hasContrastGuard
-              )
-            : moduleColor;
-
-        // Use gradient for dark modules if configured (skipped in fast preview)
-        const moduleFillStyle: string | CanvasGradient =
-          isDark && !isFastPreview && useGradient && gradientFill ? gradientFill : finalModuleColor;
-        setFillStyle(moduleFillStyle);
-
-        const adjustedSize = (moduleSize - gap) * moduleSizeModifier;
-        const offset = (moduleSize - adjustedSize) / 2;
-
-        let drawX = x + offset + waveOffsetX;
-        let drawY = y + offset + waveOffsetY;
-
-        // Apply module jitter if configured (for animation effects)
-        if (hasJitter) {
-          const jitterSeed = (row * 31 + col * 17 + frameIndex * 13) % 1000;
-          const jitterX = ((jitterSeed % 100) / 100 - 0.5) * 2 * jitterPx;
-          const jitterY = (((jitterSeed * 7) % 100) / 100 - 0.5) * 2 * jitterPx;
-          drawX += jitterX;
-          drawY += jitterY;
-        }
-
-        // Apply pixel snap if configured
-        if (pixelSnap === 'floor') {
-          drawX = Math.floor(drawX);
-          drawY = Math.floor(drawY);
-        } else if (pixelSnap === 'round') {
-          drawX = Math.round(drawX);
-          drawY = Math.round(drawY);
-        } else if (pixelSnap === 'ceil') {
-          drawX = Math.ceil(drawX);
-          drawY = Math.ceil(drawY);
-        }
-
-        drawStyledModule(
-          moduleDrawCtx,
-          drawX,
-          drawY,
-          adjustedSize,
-          isDark,
-          isTiming,
-          drawOutlineOnly,
-          useHalftoneRendering,
-          halftoneBrightness,
-          finalModuleColor,
-          moduleFillStyle,
-          row,
-          col
-        );
-      }
+      processRenderCell(rctx, row, col, idx, state);
     }
   }
 
-  // Restore globalAlpha after the loop (single call, not per-module)
-  if (currentAlpha !== 1) {
+  if (state.currentAlpha !== 1) {
     ctx.globalAlpha = 1;
   }
 }

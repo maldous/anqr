@@ -32,6 +32,44 @@ import {
 const PAD0 = 0xec;
 const PAD1 = 0x11;
 
+interface SvgAccessibilityAttr {
+  text: string | null;
+  id: string | null;
+}
+
+function composeSvgAccessibilityAttr(value: unknown, defaultId: string): SvgAccessibilityAttr {
+  let result: SvgAccessibilityAttr = { text: null, id: null };
+  if (typeof value === 'string') {
+    result = { text: value, id: value ? defaultId : null };
+  } else if (value && typeof value === 'object') {
+    result = value as SvgAccessibilityAttr;
+  }
+  result.text = result.text || null;
+  result.id = result.text ? result.id || defaultId : null;
+  return result;
+}
+
+function autoDetectTypeNumber(errorCorrectionLevel: number, dataList: QRDataSegment[]): number {
+  for (let typeNum = 1; typeNum < 40; typeNum++) {
+    const rsBlocks = getRSBlocks(typeNum, errorCorrectionLevel);
+    const buffer = qrBitBuffer();
+    for (let i = 0; i < dataList.length; i++) {
+      const data = dataList[i];
+      buffer.put(data.getMode(), 4);
+      buffer.put(data.getLength(), getLengthInBits(data.getMode(), typeNum));
+      data.write(buffer);
+    }
+    let totalDataCount = 0;
+    for (let i = 0; i < rsBlocks.length; i++) {
+      totalDataCount += rsBlocks[i].dataCount;
+    }
+    if (buffer.getLengthInBits() <= totalDataCount * 8) {
+      return typeNum;
+    }
+  }
+  return 40;
+}
+
 /**
  * Create a QR code instance
  * @param typeNumber QR version (1-40), 0 for auto
@@ -491,30 +529,7 @@ export function qrcode(
 
     make: (maskPattern?: number): void => {
       if (_typeNumber < 1) {
-        let typeNum = 1;
-
-        for (; typeNum < 40; typeNum++) {
-          const rsBlocks = getRSBlocks(typeNum, _errorCorrectionLevel);
-          const buffer = qrBitBuffer();
-
-          for (let i = 0; i < _dataList.length; i++) {
-            const data = _dataList[i];
-            buffer.put(data.getMode(), 4);
-            buffer.put(data.getLength(), getLengthInBits(data.getMode(), typeNum));
-            data.write(buffer);
-          }
-
-          let totalDataCount = 0;
-          for (let i = 0; i < rsBlocks.length; i++) {
-            totalDataCount += rsBlocks[i].dataCount;
-          }
-
-          if (buffer.getLengthInBits() <= totalDataCount * 8) {
-            break;
-          }
-        }
-
-        _typeNumber = typeNum;
+        _typeNumber = autoDetectTypeNumber(_errorCorrectionLevel, _dataList);
       }
 
       // Use specified mask pattern (0-7) or auto-select best one
@@ -595,25 +610,8 @@ export function qrcode(
       const cellSizeVal = cellSize || 2;
       const marginVal = typeof margin === 'undefined' ? cellSizeVal * 4 : margin;
 
-      // Compose alt property surrogate
-      let altObj: { text: string | null; id: string | null } = { text: null, id: null };
-      if (typeof alt === 'string') {
-        altObj = { text: alt, id: alt ? 'qrcode-description' : null };
-      } else if (alt && typeof alt === 'object') {
-        altObj = alt as { text: string | null; id: string | null };
-      }
-      altObj.text = altObj.text || null;
-      altObj.id = altObj.text ? altObj.id || 'qrcode-description' : null;
-
-      // Compose title property surrogate
-      let titleObj: { text: string | null; id: string | null } = { text: null, id: null };
-      if (typeof title === 'string') {
-        titleObj = { text: title, id: title ? 'qrcode-title' : null };
-      } else if (title && typeof title === 'object') {
-        titleObj = title as { text: string | null; id: string | null };
-      }
-      titleObj.text = titleObj.text || null;
-      titleObj.id = titleObj.text ? titleObj.id || 'qrcode-title' : null;
+      const altObj = composeSvgAccessibilityAttr(alt, 'qrcode-description');
+      const titleObj = composeSvgAccessibilityAttr(title, 'qrcode-title');
 
       const size = _this.getModuleCount() * cellSizeVal + marginVal * 2;
       const rect = `l${cellSizeVal},0 0,${cellSizeVal} -${cellSizeVal},0 0,-${cellSizeVal}z `;

@@ -572,6 +572,84 @@ interface ScoredTriplet {
   moduleSizeVariance: number;
 }
 
+function evaluateCandidateTriplet(
+  p1: FinderPattern,
+  p2: FinderPattern,
+  p3: FinderPattern
+): ScoredTriplet | null {
+  const avgSize = (p1.moduleSize + p2.moduleSize + p3.moduleSize) / 3;
+  const sizeVariance =
+    (Math.abs(p1.moduleSize - avgSize) +
+      Math.abs(p2.moduleSize - avgSize) +
+      Math.abs(p3.moduleSize - avgSize)) /
+    avgSize;
+
+  if (sizeVariance > 0.3) return null;
+
+  const ordered = orderFinderPatterns(p1, p2, p3);
+  if (!ordered) return null;
+
+  const [topLeft, topRight, bottomLeft] = ordered;
+
+  const topDist = pointDistance(topLeft.center, topRight.center);
+  const leftDist = pointDistance(topLeft.center, bottomLeft.center);
+  const avgDist = (topDist + leftDist) / 2;
+  const squareness = Math.abs(topDist - leftDist) / avgDist;
+
+  const vecRight = {
+    x: topRight.center.x - topLeft.center.x,
+    y: topRight.center.y - topLeft.center.y,
+  };
+  const vecDown = {
+    x: bottomLeft.center.x - topLeft.center.x,
+    y: bottomLeft.center.y - topLeft.center.y,
+  };
+  const dotProduct = vecRight.x * vecDown.x + vecRight.y * vecDown.y;
+  const magRight = Math.sqrt(vecRight.x ** 2 + vecRight.y ** 2);
+  const magDown = Math.sqrt(vecDown.x ** 2 + vecDown.y ** 2);
+  const cosAngle = dotProduct / (magRight * magDown);
+  const angleDev = Math.abs(cosAngle);
+
+  const minHits = Math.min(p1.count, p2.count, p3.count);
+  const _totalHits = p1.count + p2.count + p3.count;
+  const hitCountPenalty = Math.max(0, (8 - minHits) / 8);
+
+  const spanInModules = avgDist / avgSize;
+  const referenceSpan = 22;
+  const spanBonus = (referenceSpan - spanInModules) / referenceSpan;
+
+  const score = squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
+
+  qrDecoderLog.trace('select: Evaluating triplet', {
+    topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
+    topRight: { x: topRight.center.x.toFixed(1), y: topRight.center.y.toFixed(1) },
+    bottomLeft: { x: bottomLeft.center.x.toFixed(1), y: bottomLeft.center.y.toFixed(1) },
+    topDist: topDist.toFixed(1),
+    leftDist: leftDist.toFixed(1),
+    squareness: squareness.toFixed(3),
+    angleDev: angleDev.toFixed(3),
+    spanInModules: spanInModules.toFixed(1),
+    hitCounts: `${p1.count}/${p2.count}/${p3.count}`,
+    score: score.toFixed(3),
+  });
+
+  if (squareness > 0.1) {
+    qrDecoderLog.trace('select: Rejecting - not square enough', {
+      squareness: squareness.toFixed(3),
+    });
+    return null;
+  }
+
+  if (angleDev > 0.26) {
+    qrDecoderLog.trace('select: Rejecting - angle not close to 90°', {
+      angleDev: angleDev.toFixed(3),
+    });
+    return null;
+  }
+
+  return { ordered, score, squareness, moduleSizeVariance: sizeVariance };
+}
+
 /**
  * Select the 3 finder patterns that form the QR code corners
  * Returns [topLeft, topRight, bottomLeft] or null if not found
@@ -590,115 +668,8 @@ export function selectFinderPatterns(
   for (let i = 0; i < Math.min(patterns.length, 10); i++) {
     for (let j = i + 1; j < Math.min(patterns.length, 10); j++) {
       for (let k = j + 1; k < Math.min(patterns.length, 10); k++) {
-        const p1 = patterns[i];
-        const p2 = patterns[j];
-        const p3 = patterns[k];
-
-        // Check module sizes are similar
-        const avgSize = (p1.moduleSize + p2.moduleSize + p3.moduleSize) / 3;
-        const sizeVariance =
-          (Math.abs(p1.moduleSize - avgSize) +
-            Math.abs(p2.moduleSize - avgSize) +
-            Math.abs(p3.moduleSize - avgSize)) /
-          avgSize;
-
-        if (sizeVariance > 0.3) {
-          continue;
-        }
-
-        // Find the pattern that forms the right angle (top-left corner)
-        const ordered = orderFinderPatterns(p1, p2, p3);
-        if (!ordered) continue;
-
-        const [topLeft, topRight, bottomLeft] = ordered;
-
-        // Calculate squareness: the two sides from topLeft should be equal
-        const topDist = pointDistance(topLeft.center, topRight.center);
-        const leftDist = pointDistance(topLeft.center, bottomLeft.center);
-        const avgDist = (topDist + leftDist) / 2;
-        const squareness = Math.abs(topDist - leftDist) / avgDist;
-
-        // Calculate angle at topLeft - should be close to 90 degrees
-        const vecRight = {
-          x: topRight.center.x - topLeft.center.x,
-          y: topRight.center.y - topLeft.center.y,
-        };
-        const vecDown = {
-          x: bottomLeft.center.x - topLeft.center.x,
-          y: bottomLeft.center.y - topLeft.center.y,
-        };
-        const dotProduct = vecRight.x * vecDown.x + vecRight.y * vecDown.y;
-        const magRight = Math.sqrt(vecRight.x ** 2 + vecRight.y ** 2);
-        const magDown = Math.sqrt(vecDown.x ** 2 + vecDown.y ** 2);
-        const cosAngle = dotProduct / (magRight * magDown);
-        const angleDev = Math.abs(cosAngle); // Should be 0 for 90 degrees
-
-        // Score: lower is better
-        // Weight factors:
-        // - squareness: how square the triplet is (lower = better)
-        // - angleDev: how close to 90° the angle is (lower = better)
-        // - sizeVariance: how consistent module sizes are (lower = better)
-        // - hitCount: higher hit count = more confident detection
-        // - span: larger spans indicate patterns at actual corners (better)
-
-        // Use MINIMUM hit count - the weakest link matters most
-        const minHits = Math.min(p1.count, p2.count, p3.count);
-        const _totalHits = p1.count + p2.count + p3.count;
-
-        // Penalty for low minimum hit count
-        const hitCountPenalty = Math.max(0, (8 - minHits) / 8);
-
-        // IMPORTANT: Prefer larger spans - real finder patterns are at the CORNERS
-        // of the QR code, not inside it. False positives tend to be inside,
-        // resulting in smaller spans.
-        // Normalize by module size: avgDist / moduleSize gives us the span in modules
-        const spanInModules = avgDist / avgSize;
-
-        // Direct bonus for larger spans (larger span = lower score = better)
-        // Normalize to reasonable range: span of 22 modules = spanBonus of 0
-        // span of 20 modules = spanBonus of 0.09 (small penalty)
-        const referenceSpan = 22;
-        const spanBonus = (referenceSpan - spanInModules) / referenceSpan;
-
-        const score =
-          squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
-
-        qrDecoderLog.trace('select: Evaluating triplet', {
-          topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
-          topRight: { x: topRight.center.x.toFixed(1), y: topRight.center.y.toFixed(1) },
-          bottomLeft: { x: bottomLeft.center.x.toFixed(1), y: bottomLeft.center.y.toFixed(1) },
-          topDist: topDist.toFixed(1),
-          leftDist: leftDist.toFixed(1),
-          squareness: squareness.toFixed(3),
-          angleDev: angleDev.toFixed(3),
-          spanInModules: spanInModules.toFixed(1),
-          hitCounts: `${p1.count}/${p2.count}/${p3.count}`,
-          score: score.toFixed(3),
-        });
-
-        // Only accept triplets that are reasonably square (< 10% difference)
-        if (squareness > 0.1) {
-          qrDecoderLog.trace('select: Rejecting - not square enough', {
-            squareness: squareness.toFixed(3),
-          });
-          continue;
-        }
-
-        // Only accept triplets with angles close to 90 degrees (< 15 degrees off)
-        if (angleDev > 0.26) {
-          // cos(75°) ≈ 0.26
-          qrDecoderLog.trace('select: Rejecting - angle not close to 90°', {
-            angleDev: angleDev.toFixed(3),
-          });
-          continue;
-        }
-
-        candidates.push({
-          ordered,
-          score,
-          squareness,
-          moduleSizeVariance: sizeVariance,
-        });
+        const triplet = evaluateCandidateTriplet(patterns[i], patterns[j], patterns[k]);
+        if (triplet) candidates.push(triplet);
       }
     }
   }
