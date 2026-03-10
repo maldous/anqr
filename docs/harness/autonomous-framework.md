@@ -23,7 +23,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 │  TIER 1: LOCAL DETERMINISTIC CHECKS                     │
 │  scripts/ops/harness-report.mjs                         │
 │  make harness · make harness:quick · make harness:cont  │
-│  22 check domains → unified JSON report                 │
+│  24 check domains → unified JSON report                 │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -32,8 +32,8 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 | Profile      | Checks                                       | Duration | When                  |
 | ------------ | -------------------------------------------- | -------- | --------------------- |
 | `quick`      | 4 (typecheck, lint, lockfile, git)           | ~30s     | Local dev, pre-commit |
-| `continuous` | 8 (quick + services, sentry, i18n, required) | ~3min    | Hourly ops pass       |
-| `full`       | 22 (all domains)                             | ~15min   | Nightly ops pass      |
+| `continuous` | 10 (quick + provider, services, sentry, i18n, required, VRAM) | ~3min    | Hourly ops pass       |
+| `full`       | 24 (all domains)                                             | ~15min   | Nightly ops pass      |
 
 ## Check Domains
 
@@ -46,21 +46,23 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 | 5   | `services_health`    | Third-party API health           | continuous, full        |
 | 6   | `sentry_regression`  | Sentry unresolved errors         | continuous, full        |
 | 7   | `i18n_coverage`      | Translation completeness         | continuous, full        |
-| 8   | `bundle_budget`      | Bundle size thresholds           | continuous, full        |
-| 9   | `test_required_gap`  | Required test matrix             | continuous, full        |
-| 10  | `dep_outdated`       | npm outdated (major/minor/patch) | full                    |
-| 11  | `dep_audit`          | npm audit vulnerabilities        | full                    |
-| 12  | `dep_osv`            | OSV vulnerability scanner        | full                    |
-| 13  | `security_semgrep`   | Semgrep static analysis          | full                    |
-| 14  | `type_coverage`      | Type coverage % (target ≥95%)    | full                    |
-| 15  | `test_unit`          | Vitest unit suite                | full                    |
-| 16  | `test_coverage_gap`  | Uncovered files                  | full                    |
-| 17  | `duplication`        | Code duplication (jscpd)         | full                    |
-| 18  | `spelling`           | Spelling (cspell)                | full                    |
-| 19  | `dep_cruiser`        | Dependency boundary violations   | full                    |
-| 20  | `knip_unused`        | Unused exports/dependencies      | full                    |
-| 21  | `license_compliance` | Copyleft license detection       | full                    |
-| 22  | `docs_freshness`     | Stale documentation (>60 days)   | full                    |
+| 8   | `provider_cascade_integration` | Model-injector cascade integration | continuous, full |
+| 9   | `ollama_vram_health` | Ollama VRAM/KV cache pressure    | continuous, full        |
+| 10  | `bundle_budget`      | Bundle size thresholds           | full                    |
+| 11  | `test_required_gap`  | Required test matrix             | continuous, full        |
+| 12  | `dep_outdated`       | npm outdated (major/minor/patch) | full                    |
+| 13  | `dep_audit`          | npm audit vulnerabilities        | full                    |
+| 14  | `dep_osv`            | OSV vulnerability scanner        | full                    |
+| 15  | `security_semgrep`   | Semgrep static analysis          | full                    |
+| 16  | `type_coverage`      | Type coverage % (target ≥95%)    | full                    |
+| 17  | `test_unit`          | Vitest unit suite                | full                    |
+| 18  | `test_coverage_gap`  | Uncovered files                  | full                    |
+| 19  | `duplication`        | Code duplication (jscpd)         | full                    |
+| 20  | `spelling`           | Spelling (cspell)                | full                    |
+| 21  | `dep_cruiser`        | Dependency boundary violations   | full                    |
+| 22  | `knip_unused`        | Unused exports/dependencies      | full                    |
+| 23  | `license_compliance` | Copyleft license detection       | full                    |
+| 24  | `docs_freshness`     | Stale documentation (>60 days)   | full                    |
 
 ## Report Format
 
@@ -70,7 +72,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
   "profile": "full",
   "durationMs": 900000,
   "overall": "PASS|WARN|FAIL",
-  "checkCount": 22,
+  "checkCount": 24,
   "checks": {
     "dep_outdated": {
       "status": "WARN",
@@ -124,9 +126,9 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 ## Commands
 
 ```bash
-make harness            # Full 22-check report
+make harness            # Full 24-check report
 make harness:quick      # Quick 4-check smoke test
-make harness:continuous # Continuous 9-check pass
+make harness:continuous # Continuous 10-check pass
 make monitor:ci         # GitHub CI failure monitor (create/close [CI] issues)
 ```
 

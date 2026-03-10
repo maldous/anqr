@@ -33,6 +33,23 @@ function run(cmd, args, timeoutMs = 60_000) {
   };
 }
 
+function toInt(value, fallback = 0) {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function bytesToMiB(bytes) {
+  return Math.round((bytes / (1024 * 1024)) * 100) / 100;
+}
+
+function parseJson(text, fallback = null) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return fallback;
+  }
+}
+
 function loadHistory() {
   ensureDir(REPORTS_DIR);
   const files = fs
@@ -498,6 +515,132 @@ function checkSentryRegression() {
   };
 }
 
+function checkOllamaVramHealth() {
+  const nvidiaResult = run(
+    'nvidia-smi',
+    ['--query-gpu=memory.total,memory.used', '--format=csv,noheader,nounits'],
+    10_000
+  );
+  if (!nvidiaResult.ok) {
+    return {
+      status: 'SKIP',
+      metrics: {},
+      findings: [{ severity: 'low', message: 'nvidia-smi unavailable; skipping VRAM health check' }],
+    };
+  }
+
+  const gpuRows = nvidiaResult.stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [totalRaw, usedRaw] = line.split(',').map((part) => part.trim());
+      return { totalMiB: toInt(totalRaw, 0), usedMiB: toInt(usedRaw, 0) };
+    })
+    .filter((row) => row.totalMiB > 0);
+
+  if (gpuRows.length === 0) {
+    return {
+      status: 'SKIP',
+      metrics: {},
+      findings: [{ severity: 'low', message: 'No GPU memory rows returned by nvidia-smi' }],
+    };
+  }
+
+  const totalVramMiB = gpuRows.reduce((sum, row) => sum + row.totalMiB, 0);
+  const usedVramMiB = gpuRows.reduce((sum, row) => sum + row.usedMiB, 0);
+
+  const ollamaHost = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
+  const ollamaPsResult = run('curl', ['-fsS', `${ollamaHost.replace(/\/$/, '')}/api/ps`], 10_000);
+  if (!ollamaPsResult.ok) {
+    return {
+      status: 'SKIP',
+      metrics: { total_vram_mib: totalVramMiB, used_vram_mib: usedVramMiB },
+      findings: [{ severity: 'low', message: 'Ollama /api/ps unavailable; skipping KV/VRAM check' }],
+    };
+  }
+
+  const ollamaPs = parseJson(ollamaPsResult.stdout, {});
+  const models = Array.isArray(ollamaPs?.models) ? ollamaPs.models : [];
+  if (models.length === 0) {
+    return {
+      status: 'SKIP',
+      metrics: { total_vram_mib: totalVramMiB, used_vram_mib: usedVramMiB, model_count: 0 },
+      findings: [{ severity: 'low', message: 'No active Ollama models; skipping KV/VRAM check' }],
+    };
+  }
+
+  const modelWithVram = models.find((model) => Number.isFinite(Number(model?.size_vram))) || null;
+  const numParallel = Math.max(1, toInt(process.env.OLLAMA_NUM_PARALLEL, 1));
+  const numCtx = Math.max(1, toInt(process.env.OLLAMA_CONTEXT_LENGTH, 32768));
+  const sizeVramBytes = Number(modelWithVram?.size_vram || 0);
+  const modelKvSizeBytes = sizeVramBytes > 0 ? Math.round(sizeVramBytes / numCtx) : 0;
+  const estimatedKvAllocBytes = numCtx * numParallel * modelKvSizeBytes;
+  const estimatedKvAllocMiB = bytesToMiB(estimatedKvAllocBytes);
+  const estimatedKvAllocPct =
+    totalVramMiB > 0 ? Math.round((estimatedKvAllocMiB / totalVramMiB) * 1000) / 10 : 0;
+  const modelVramMiB = bytesToMiB(sizeVramBytes);
+  const modelName = String(modelWithVram?.name || models[0]?.name || 'unknown');
+
+  const metrics = {
+    total_vram_mib: totalVramMiB,
+    used_vram_mib: usedVramMiB,
+    available_vram_mib: Math.max(0, totalVramMiB - usedVramMiB),
+    model_count: models.length,
+    num_parallel: numParallel,
+    num_ctx: numCtx,
+    model_vram_mib: modelVramMiB,
+    model_kv_size_bytes: modelKvSizeBytes,
+    estimated_kv_alloc_mib: estimatedKvAllocMiB,
+    estimated_kv_alloc_pct: estimatedKvAllocPct,
+  };
+
+  if (modelKvSizeBytes === 0) {
+    return {
+      status: 'WARN',
+      metrics,
+      findings: [
+        {
+          severity: 'medium',
+          message: `Unable to infer model_kv_size for ${modelName}; verify Ollama model VRAM reporting`,
+        },
+      ],
+    };
+  }
+
+  if (estimatedKvAllocMiB > totalVramMiB) {
+    return {
+      status: 'FAIL',
+      metrics,
+      findings: [
+        {
+          severity: 'critical',
+          message: `Estimated KV allocation exceeds VRAM: ${estimatedKvAllocMiB} MiB > ${totalVramMiB} MiB (${modelName})`,
+        },
+      ],
+    };
+  }
+
+  if (estimatedKvAllocPct >= 85) {
+    return {
+      status: 'WARN',
+      metrics,
+      findings: [
+        {
+          severity: 'high',
+          message: `Estimated KV allocation is ${estimatedKvAllocPct}% of VRAM (${modelName}); risk of KV thrash`,
+        },
+      ],
+    };
+  }
+
+  return {
+    status: 'PASS',
+    metrics,
+    findings: [],
+  };
+}
+
 function checkDocsFreshness() {
   const docsDir = path.join(PROJECT_ROOT, 'docs');
   const stale = [];
@@ -628,6 +771,12 @@ const CHECK_REGISTRY = [
     profiles: ['continuous', 'full'],
   },
   {
+    id: 'ollama_vram_health',
+    title: 'Ollama VRAM / KV cache health',
+    fn: checkOllamaVramHealth,
+    profiles: ['continuous', 'full'],
+  },
+  {
     id: 'services_health',
     title: 'Third-party services health',
     fn: checkServicesHealth,
@@ -750,6 +899,7 @@ function main() {
     ['test_unit', 'pass_count'],
     ['dep_outdated', 'major'],
     ['dep_audit', 'critical'],
+    ['ollama_vram_health', 'estimated_kv_alloc_pct'],
     ['duplication', 'clone_count'],
     ['lint', 'error_count'],
   ];
