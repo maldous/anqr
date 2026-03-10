@@ -271,6 +271,54 @@ interface BlueNoiseErrorDiffusionOptions {
   seed?: number;
 }
 
+function copyImageToPixels(
+  imageData: Float32Array[],
+  width: number,
+  height: number,
+  transform?: (r: number, g: number, b: number) => { r: number; g: number; b: number }
+): { r: number; g: number; b: number }[][] {
+  const pixels: { r: number; g: number; b: number }[][] = [];
+  for (let y = 0; y < height; y++) {
+    const row: { r: number; g: number; b: number }[] = [];
+    for (let x = 0; x < width; x++) {
+      const idx = x * 3;
+      const r = imageData[y][idx];
+      const g = imageData[y][idx + 1];
+      const b = imageData[y][idx + 2];
+      row.push(transform ? transform(r, g, b) : { r, g, b });
+    }
+    pixels.push(row);
+  }
+  return pixels;
+}
+
+function initDitherResults(
+  width: number,
+  height: number
+): { resultMatrix: boolean[][]; resultColors: RGB[][] } {
+  const resultMatrix: boolean[][] = [];
+  const resultColors: RGB[][] = [];
+  for (let y = 0; y < height; y++) {
+    resultMatrix.push(new Array(width).fill(false));
+    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
+  }
+  return { resultMatrix, resultColors };
+}
+
+function getScanParams(
+  y: number,
+  width: number,
+  serpentine: boolean
+): { startX: number; endX: number; deltaX: number; leftToRight: boolean } {
+  const leftToRight = serpentine ? y % 2 === 0 : true;
+  return {
+    leftToRight,
+    startX: leftToRight ? 0 : width - 1,
+    endX: leftToRight ? width : -1,
+    deltaX: leftToRight ? 1 : -1,
+  };
+}
+
 /** Blue noise modulated error diffusion */
 export function blueNoiseErrorDiffusion(
   imageData: Float32Array[],
@@ -290,33 +338,11 @@ export function blueNoiseErrorDiffusion(
   const step = 1 / (levels - 1);
   const tile = generateBlueNoiseTile(tileSize, seed);
 
-  const pixels: { r: number; g: number; b: number }[][] = [];
-  for (let y = 0; y < height; y++) {
-    const row: { r: number; g: number; b: number }[] = [];
-    for (let x = 0; x < width; x++) {
-      const idx = x * 3;
-      row.push({
-        r: imageData[y][idx],
-        g: imageData[y][idx + 1],
-        b: imageData[y][idx + 2],
-      });
-    }
-    pixels.push(row);
-  }
-
-  const resultMatrix: boolean[][] = [];
-  const resultColors: RGB[][] = [];
+  const pixels = copyImageToPixels(imageData, width, height);
+  const { resultMatrix, resultColors } = initDitherResults(width, height);
 
   for (let y = 0; y < height; y++) {
-    resultMatrix.push(new Array(width).fill(false));
-    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
-  }
-
-  for (let y = 0; y < height; y++) {
-    const leftToRight = serpentine ? y % 2 === 0 : true;
-    const startX = leftToRight ? 0 : width - 1;
-    const endX = leftToRight ? width : -1;
-    const deltaX = leftToRight ? 1 : -1;
+    const { startX, endX, deltaX, leftToRight } = getScanParams(y, width, serpentine);
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
       const blueNoiseVal = sampleBlueNoise(x, y, tile, tileSize);
@@ -431,33 +457,15 @@ export function perceptualDither(
   const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
   const toSRGB = (v: number) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055);
 
-  const pixels: { r: number; g: number; b: number }[][] = [];
-  for (let y = 0; y < height; y++) {
-    const row: { r: number; g: number; b: number }[] = [];
-    for (let x = 0; x < width; x++) {
-      const idx = x * 3;
-      row.push({
-        r: toLinear(imageData[y][idx]),
-        g: toLinear(imageData[y][idx + 1]),
-        b: toLinear(imageData[y][idx + 2]),
-      });
-    }
-    pixels.push(row);
-  }
-
-  const resultMatrix: boolean[][] = [];
-  const resultColors: RGB[][] = [];
+  const pixels = copyImageToPixels(imageData, width, height, (r, g, b) => ({
+    r: toLinear(r),
+    g: toLinear(g),
+    b: toLinear(b),
+  }));
+  const { resultMatrix, resultColors } = initDitherResults(width, height);
 
   for (let y = 0; y < height; y++) {
-    resultMatrix.push(new Array(width).fill(false));
-    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
-  }
-
-  for (let y = 0; y < height; y++) {
-    const leftToRight = serpentine ? y % 2 === 0 : true;
-    const startX = leftToRight ? 0 : width - 1;
-    const endX = leftToRight ? width : -1;
-    const deltaX = leftToRight ? 1 : -1;
+    const { startX, endX, deltaX, leftToRight } = getScanParams(y, width, serpentine);
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
       const q = quantizePerceptualPixel(pixels[y][x], colorMode, step, strengthFactor, toSRGB);
@@ -507,34 +515,11 @@ export function edgeAwareDither(
   const step = 1 / (levels - 1);
 
   const edgeMap = computeSobelEdgeMap(imageData, width, height);
-
-  const pixels: { r: number; g: number; b: number }[][] = [];
-  for (let y = 0; y < height; y++) {
-    const row: { r: number; g: number; b: number }[] = [];
-    for (let x = 0; x < width; x++) {
-      const idx = x * 3;
-      row.push({
-        r: imageData[y][idx],
-        g: imageData[y][idx + 1],
-        b: imageData[y][idx + 2],
-      });
-    }
-    pixels.push(row);
-  }
-
-  const resultMatrix: boolean[][] = [];
-  const resultColors: RGB[][] = [];
+  const pixels = copyImageToPixels(imageData, width, height);
+  const { resultMatrix, resultColors } = initDitherResults(width, height);
 
   for (let y = 0; y < height; y++) {
-    resultMatrix.push(new Array(width).fill(false));
-    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
-  }
-
-  for (let y = 0; y < height; y++) {
-    const leftToRight = serpentine ? y % 2 === 0 : true;
-    const startX = leftToRight ? 0 : width - 1;
-    const endX = leftToRight ? width : -1;
-    const deltaX = leftToRight ? 1 : -1;
+    const { startX, endX, deltaX, leftToRight } = getScanParams(y, width, serpentine);
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
       const edgeFactor = 1 - edgeMap[y][x] * 0.8;

@@ -111,6 +111,54 @@ function quantizeErrorDiffusionPixel(
   };
 }
 
+function copyImageToPixels(
+  imageData: Float32Array[],
+  width: number,
+  height: number
+): { r: number; g: number; b: number }[][] {
+  const pixels: { r: number; g: number; b: number }[][] = [];
+  for (let y = 0; y < height; y++) {
+    const row: { r: number; g: number; b: number }[] = [];
+    for (let x = 0; x < width; x++) {
+      const idx = x * 3;
+      row.push({
+        r: imageData[y][idx],
+        g: imageData[y][idx + 1],
+        b: imageData[y][idx + 2],
+      });
+    }
+    pixels.push(row);
+  }
+  return pixels;
+}
+
+function initDitherResults(
+  width: number,
+  height: number
+): { resultMatrix: boolean[][]; resultColors: RGB[][] } {
+  const resultMatrix: boolean[][] = [];
+  const resultColors: RGB[][] = [];
+  for (let y = 0; y < height; y++) {
+    resultMatrix.push(new Array(width).fill(false));
+    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
+  }
+  return { resultMatrix, resultColors };
+}
+
+function getScanParams(
+  y: number,
+  width: number,
+  serpentine: boolean
+): { startX: number; endX: number; deltaX: number; leftToRight: boolean } {
+  const leftToRight = serpentine ? y % 2 === 0 : true;
+  return {
+    leftToRight,
+    startX: leftToRight ? 0 : width - 1,
+    endX: leftToRight ? width : -1,
+    deltaX: leftToRight ? 1 : -1,
+  };
+}
+
 /** Apply error diffusion dithering */
 export function errorDiffusion(
   imageData: Float32Array[],
@@ -127,36 +175,12 @@ export function errorDiffusion(
   const strengthFactor = strength / 100;
   const step = 1 / (levels - 1);
 
-  // Make a copy of image data as floating point for error accumulation
-  const pixels: { r: number; g: number; b: number }[][] = [];
-  for (let y = 0; y < height; y++) {
-    const row: { r: number; g: number; b: number }[] = [];
-    for (let x = 0; x < width; x++) {
-      const idx = x * 3;
-      row.push({
-        r: imageData[y][idx],
-        g: imageData[y][idx + 1],
-        b: imageData[y][idx + 2],
-      });
-    }
-    pixels.push(row);
-  }
-
-  const resultMatrix: boolean[][] = [];
-  const resultColors: RGB[][] = [];
-
-  // Initialize result arrays
-  for (let y = 0; y < height; y++) {
-    resultMatrix.push(new Array(width).fill(false));
-    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
-  }
+  const pixels = copyImageToPixels(imageData, width, height);
+  const { resultMatrix, resultColors } = initDitherResults(width, height);
 
   // Process each pixel
   for (let y = 0; y < height; y++) {
-    const leftToRight = serpentine ? y % 2 === 0 : true;
-    const startX = leftToRight ? 0 : width - 1;
-    const endX = leftToRight ? width : -1;
-    const deltaX = leftToRight ? 1 : -1;
+    const { startX, endX, deltaX, leftToRight } = getScanParams(y, width, serpentine);
 
     for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
       const q = quantizeErrorDiffusionPixel(pixels[y][x], colorMode, step, strengthFactor);

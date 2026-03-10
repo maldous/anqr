@@ -51,6 +51,51 @@ type CapacitorAppPlugin = {
 
 const log = createLogger('APP');
 
+function updateHreflangLinks(showEditor: boolean, currentPage: string): void {
+  const staticPageTypes = ['learn', 'examples', 'guide', 'about', 'privacy', 'terms', 'contact'];
+  const isStaticPage = staticPageTypes.includes(currentPage);
+  const shouldAddHreflang = isStaticPage || showEditor;
+
+  // Remove existing hreflang links (including static ones from index.html)
+  for (const el of document.querySelectorAll('link[rel="alternate"][hreflang]')) {
+    el.remove();
+  }
+
+  if (!shouldAddHreflang) return;
+
+  const baseUrl = 'https://anqr.link';
+  const pagePath = showEditor ? '/' : `/${currentPage}`;
+
+  const xDefaultLink = document.createElement('link');
+  xDefaultLink.rel = 'alternate';
+  xDefaultLink.hreflang = 'x-default';
+  xDefaultLink.href = `${baseUrl}${pagePath}`;
+  document.head.appendChild(xDefaultLink);
+
+  for (const lang of languages) {
+    const link = document.createElement('link');
+    link.rel = 'alternate';
+    link.hreflang = lang.code === 'en-GB' ? 'en' : lang.code.toLowerCase();
+    link.href =
+      lang.code === 'en-GB' ? `${baseUrl}${pagePath}` : `${baseUrl}${pagePath}?lang=${lang.code}`;
+    document.head.appendChild(link);
+  }
+}
+
+function updateCanonicalUrl(showEditor: boolean, currentPage: string, currentLang: string): void {
+  let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!canonicalLink) {
+    canonicalLink = document.createElement('link');
+    canonicalLink.rel = 'canonical';
+    document.head.appendChild(canonicalLink);
+  }
+  const basePath = showEditor ? '/' : `/${currentPage}`;
+  canonicalLink.href =
+    currentLang === 'en-GB'
+      ? `https://anqr.link${basePath}`
+      : `https://anqr.link${basePath}?lang=${currentLang}`;
+}
+
 /** Type alias for gradient update configuration */
 interface GradientUpdate {
   type: 'none' | 'linear' | 'radial' | 'conic';
@@ -256,58 +301,8 @@ function AppContent() {
     document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language.split('-')[0];
 
-    // Update hreflang links for SEO
-    // Add hreflang for all translatable pages (static pages and editor)
-    const staticPageTypes = ['learn', 'examples', 'guide', 'about', 'privacy', 'terms', 'contact'];
-    const isStaticPage = staticPageTypes.includes(currentPage);
-    const shouldAddHreflang = isStaticPage || showEditor;
-
-    // Remove existing hreflang links (including static ones from index.html)
-    for (const el of document.querySelectorAll('link[rel="alternate"][hreflang]')) {
-      el.remove();
-    }
-
-    // Add hreflang links for translatable pages
-    if (shouldAddHreflang) {
-      const baseUrl = 'https://anqr.link';
-      // For editor (root), use '/' as path; for other pages, use '/page'
-      const pagePath = showEditor ? '/' : `/${currentPage}`;
-
-      // Add x-default pointing to English version first
-      const xDefaultLink = document.createElement('link');
-      xDefaultLink.rel = 'alternate';
-      xDefaultLink.hreflang = 'x-default';
-      xDefaultLink.href = `${baseUrl}${pagePath}`;
-      document.head.appendChild(xDefaultLink);
-
-      // Add hreflang for each supported language
-      for (const lang of languages) {
-        const link = document.createElement('link');
-        link.rel = 'alternate';
-        // Use 'en' for en-GB (broader match), lowercase for others
-        link.hreflang = lang.code === 'en-GB' ? 'en' : lang.code.toLowerCase();
-        // en-GB is the default, so no lang parameter; others get ?lang=code
-        link.href =
-          lang.code === 'en-GB'
-            ? `${baseUrl}${pagePath}`
-            : `${baseUrl}${pagePath}?lang=${lang.code}`;
-        document.head.appendChild(link);
-      }
-    }
-
-    // Update canonical URL based on current page and language
-    let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonicalLink) {
-      canonicalLink = document.createElement('link');
-      canonicalLink.rel = 'canonical';
-      document.head.appendChild(canonicalLink);
-    }
-    const currentLang = i18n.language;
-    const basePath = showEditor ? '/' : `/${currentPage}`;
-    canonicalLink.href =
-      currentLang === 'en-GB'
-        ? `https://anqr.link${basePath}`
-        : `https://anqr.link${basePath}?lang=${currentLang}`;
+    updateHreflangLinks(showEditor, currentPage);
+    updateCanonicalUrl(showEditor, currentPage, i18n.language);
 
     // Cleanup: remove hreflang links when component unmounts or dependencies change
     return () => {

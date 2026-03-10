@@ -427,6 +427,32 @@ export function qrcode(
     return escaped;
   };
 
+  const _isHalfDark = (x: number, y: number, min: number, max: number, row: number): boolean => {
+    return (
+      min <= x && x < max && min <= y && y < max && _this.isDark(row, Math.floor((x - min) / 1))
+    );
+  };
+
+  const _buildHalfRow = (
+    y: number,
+    size: number,
+    min: number,
+    max: number,
+    marginVal: number,
+    blocks: Record<string, string>,
+    blocksLastLineNoMargin: Record<string, string>
+  ): string => {
+    const r1 = Math.floor((y - min) / 1);
+    const r2 = Math.floor((y + 1 - min) / 1);
+    let row = '';
+    for (let x = 0; x < size; x += 1) {
+      let p = _isHalfDark(x, y, min, max, r1) ? ' ' : '█';
+      p += _isHalfDark(x, y + 1, min, max, r2) ? ' ' : '█';
+      row += marginVal < 1 && y + 1 >= max ? blocksLastLineNoMargin[p] : blocks[p];
+    }
+    return row;
+  };
+
   const _createHalfASCII = (margin?: number): string => {
     const cellSize = 1;
     const marginVal = margin === undefined ? cellSize * 2 : margin;
@@ -451,36 +477,7 @@ export function qrcode(
 
     let ascii = '';
     for (let y = 0; y < size; y += 2) {
-      const r1 = Math.floor((y - min) / cellSize);
-      const r2 = Math.floor((y + 1 - min) / cellSize);
-      for (let x = 0; x < size; x += 1) {
-        let p = '█';
-
-        if (
-          min <= x &&
-          x < max &&
-          min <= y &&
-          y < max &&
-          _this.isDark(r1, Math.floor((x - min) / cellSize))
-        ) {
-          p = ' ';
-        }
-
-        if (
-          min <= x &&
-          x < max &&
-          min <= y + 1 &&
-          y + 1 < max &&
-          _this.isDark(r2, Math.floor((x - min) / cellSize))
-        ) {
-          p += ' ';
-        } else {
-          p += '█';
-        }
-
-        ascii += marginVal < 1 && y + 1 >= max ? blocksLastLineNoMargin[p] : blocks[p];
-      }
-
+      ascii += _buildHalfRow(y, size, min, max, marginVal, blocks, blocksLastLineNoMargin);
       ascii += '\n';
     }
 
