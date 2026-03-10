@@ -189,6 +189,33 @@ async function parseStaticImageAsFrame(source: ArrayBuffer): Promise<AnimationFr
   });
 }
 
+function extractGifFramesViaCompositor(
+  compositor: ReturnType<typeof createGifCompositor>,
+  disposalHandling: 'respect' | 'simplify'
+): AnimationFrame[] {
+  const animationFrames: AnimationFrame[] = [];
+  for (let i = 0; i < compositor.frameCount; i++) {
+    compositor.apply(i);
+    const frameCanvas = document.createElement('canvas');
+    frameCanvas.width = compositor.width;
+    frameCanvas.height = compositor.height;
+    const frameCtx = frameCanvas.getContext('2d');
+    if (frameCtx) {
+      frameCtx.drawImage(compositor.canvas, 0, 0);
+    }
+    const srcDisposal = compositor.disposalType(i);
+    const effectiveDisposal =
+      disposalHandling === 'simplify' && srcDisposal === 3 ? 2 : srcDisposal;
+    animationFrames.push({
+      canvas: frameCanvas,
+      delay: compositor.delayMs(i),
+      disposalType: effectiveDisposal,
+    });
+    compositor.dispose(i);
+  }
+  return animationFrames;
+}
+
 /**
  * Parse any animated image (GIF or WebP) and extract frames
  */
@@ -215,26 +242,7 @@ export async function parseAnimatedImage(
 
   if (format === 'gif') {
     const compositor = createGifCompositor(arrayBuffer);
-    const animationFrames: AnimationFrame[] = [];
-    for (let i = 0; i < compositor.frameCount; i++) {
-      compositor.apply(i);
-      const frameCanvas = document.createElement('canvas');
-      frameCanvas.width = compositor.width;
-      frameCanvas.height = compositor.height;
-      const frameCtx = frameCanvas.getContext('2d');
-      if (frameCtx) {
-        frameCtx.drawImage(compositor.canvas, 0, 0);
-      }
-      const srcDisposal = compositor.disposalType(i);
-      const effectiveDisposal =
-        disposalHandling === 'simplify' && srcDisposal === 3 ? 2 : srcDisposal;
-      animationFrames.push({
-        canvas: frameCanvas,
-        delay: compositor.delayMs(i),
-        disposalType: effectiveDisposal,
-      });
-      compositor.dispose(i);
-    }
+    const animationFrames = extractGifFramesViaCompositor(compositor, disposalHandling);
     const totalMs = animationFrames.reduce((s, f) => s + f.delay, 0);
     const uniqueDisposals = [...new Set(animationFrames.map((f) => f.disposalType))].sort(
       (a, b) => a - b

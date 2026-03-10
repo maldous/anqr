@@ -664,6 +664,26 @@ function buildScanGateFinderRescuePatches(ctx: ScanGateCtx): DitherAttemptPatch[
   }));
 }
 
+async function runRobustnessScenarios(
+  pool: CanvasPool,
+  finalRaster: HTMLCanvasElement | OffscreenCanvas,
+  scenarios: Array<{
+    blur: number;
+    exposure: number;
+    skewX: number;
+    skewY: number;
+    downscale: number;
+  }>,
+  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>
+): Promise<boolean> {
+  for (const s of scenarios) {
+    if (!(await simulateScenarioDecode(pool, finalRaster, s, runDecode))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function evaluateDecodeScenarios(
   ctx: ScanGateCtx,
   pool: CanvasPool,
@@ -735,10 +755,9 @@ async function evaluateDecodeScenarios(
     },
   ];
 
-  for (const s of scenarios) {
-    if (!(await simulateScenarioDecode(pool, finalRaster, s, runDecode))) {
-      return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
-    }
+  const allScenariosPass = await runRobustnessScenarios(pool, finalRaster, scenarios, runDecode);
+  if (!allScenariosPass) {
+    return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
   }
 
   return { ok: true, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };

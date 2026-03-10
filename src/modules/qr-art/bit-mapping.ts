@@ -130,6 +130,13 @@ export function getTotalCodewords(version: number, ecc: ECCLevel): number {
   return blocks.reduce((sum, b) => sum + b.totalCount, 0);
 }
 
+function isQuietZoneSeparator(row: number, col: number, moduleCount: number): boolean {
+  if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) return true;
+  if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) return true;
+  if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) return true;
+  return false;
+}
+
 /**
  * Check if a module is structural (not data/ECC)
  */
@@ -143,12 +150,7 @@ function isStructural(row: number, col: number, moduleCount: number, version: nu
   // Fixed dark module
   if (row === moduleCount - 8 && col === 8) return true;
 
-  // Quiet zone separators
-  if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) return true;
-  if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) return true;
-  if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) return true;
-
-  return false;
+  return isQuietZoneSeparator(row, col, moduleCount);
 }
 
 /**

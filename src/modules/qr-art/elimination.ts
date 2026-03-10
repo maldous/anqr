@@ -484,6 +484,43 @@ export interface BlockSelectionResult {
  * @param moduleCount Module count
  * @returns Per-block selection results
  */
+
+function selectVectorsForBlock(
+  blockResult: BlockEliminationResult,
+  targets: boolean[][],
+  baseMatrix: boolean[][],
+  moduleCount: number,
+  pixelDiff: Uint8Array | undefined
+): number[] {
+  const selectedVectorIndices: number[] = [];
+
+  for (let vectorIndex = 0; vectorIndex < blockResult.vectors.length; vectorIndex++) {
+    const pivotPixel = blockResult.vectors[vectorIndex]?.pivotPixel ?? -1;
+    if (pivotPixel < 0) continue;
+
+    if (pixelDiff) {
+      if (pixelDiff[pivotPixel]) {
+        selectedVectorIndices.push(vectorIndex);
+      }
+      continue;
+    }
+
+    const { row, col } = indexToPixel(pivotPixel, moduleCount);
+    const target = targets[row]?.[col] ?? false;
+    const base = baseMatrix[row]?.[col] ?? false;
+
+    if (target !== base) {
+      selectedVectorIndices.push(vectorIndex);
+    }
+  }
+
+  return selectedVectorIndices;
+}
+
+/**
+ * Select which basis vectors to apply to achieve the target pattern
+ * Returns selections per RS block (needed for proper re-encoding)
+ */
 export function selectBasisVectorsForTarget(
   eliminationResult: EliminationResult,
   targets: boolean[][],
@@ -494,28 +531,13 @@ export function selectBasisVectorsForTarget(
   const results: BlockSelectionResult[] = [];
 
   for (const blockResult of eliminationResult.blockResults) {
-    const selectedVectorIndices: number[] = [];
-
-    for (let vectorIndex = 0; vectorIndex < blockResult.vectors.length; vectorIndex++) {
-      const pivotPixel = blockResult.vectors[vectorIndex]?.pivotPixel ?? -1;
-      if (pivotPixel < 0) continue;
-
-      if (pixelDiff) {
-        if (pixelDiff[pivotPixel]) {
-          selectedVectorIndices.push(vectorIndex);
-        }
-        continue;
-      }
-
-      const { row, col } = indexToPixel(pivotPixel, moduleCount);
-      const target = targets[row]?.[col] ?? false;
-      const base = baseMatrix[row]?.[col] ?? false;
-
-      if (target !== base) {
-        selectedVectorIndices.push(vectorIndex);
-      }
-    }
-
+    const selectedVectorIndices = selectVectorsForBlock(
+      blockResult,
+      targets,
+      baseMatrix,
+      moduleCount,
+      pixelDiff
+    );
     results.push({ blockIndex: blockResult.blockIndex, selectedVectorIndices });
   }
 

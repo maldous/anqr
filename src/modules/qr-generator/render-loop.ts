@@ -299,6 +299,38 @@ function computeFinalModuleColor(
   return finalColor;
 }
 
+function drawHalftoneDitheredBackground(
+  dctx: ModuleDrawContext,
+  drawX: number,
+  drawY: number,
+  adjustedSize: number,
+  isDark: boolean,
+  moduleFillStyle: string | CanvasGradient,
+  row: number,
+  col: number
+): void {
+  const cellColor = getOverlayColorPacked(dctx.overlayData, row, col);
+  if (!cellColor) return;
+  const cellR = (cellColor >> 16) & 0xff;
+  const cellG = (cellColor >> 8) & 0xff;
+  const cellB = cellColor & 0xff;
+  if (isDark) {
+    const darkBackdrop = 0.5;
+    const backR = Math.round(cellR * darkBackdrop);
+    const backG = Math.round(cellG * darkBackdrop);
+    const backB = Math.round(cellB * darkBackdrop);
+    dctx.setFillStyle(`rgb(${backR},${backG},${backB})`);
+  } else {
+    const lightBlend = 0.46;
+    const backR = Math.round(cellR + (255 - cellR) * lightBlend);
+    const backG = Math.round(cellG + (255 - cellG) * lightBlend);
+    const backB = Math.round(cellB + (255 - cellB) * lightBlend);
+    dctx.setFillStyle(`rgb(${backR},${backG},${backB})`);
+  }
+  dctx.ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);
+  dctx.setFillStyle(moduleFillStyle);
+}
+
 function drawStyledModule(
   dctx: ModuleDrawContext,
   drawX: number,
@@ -325,27 +357,16 @@ function drawStyledModule(
     );
   } else if (useHalftoneRendering && !dctx.isFastPreview) {
     if (dctx.overlayModeIsHalftoneDithered) {
-      const cellColor = getOverlayColorPacked(dctx.overlayData, row, col);
-      if (cellColor) {
-        const cellR = (cellColor >> 16) & 0xff;
-        const cellG = (cellColor >> 8) & 0xff;
-        const cellB = cellColor & 0xff;
-        if (isDark) {
-          const darkBackdrop = 0.5;
-          const backR = Math.round(cellR * darkBackdrop);
-          const backG = Math.round(cellG * darkBackdrop);
-          const backB = Math.round(cellB * darkBackdrop);
-          dctx.setFillStyle(`rgb(${backR},${backG},${backB})`);
-        } else {
-          const lightBlend = 0.46;
-          const backR = Math.round(cellR + (255 - cellR) * lightBlend);
-          const backG = Math.round(cellG + (255 - cellG) * lightBlend);
-          const backB = Math.round(cellB + (255 - cellB) * lightBlend);
-          dctx.setFillStyle(`rgb(${backR},${backG},${backB})`);
-        }
-        dctx.ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);
-        dctx.setFillStyle(moduleFillStyle);
-      }
+      drawHalftoneDitheredBackground(
+        dctx,
+        drawX,
+        drawY,
+        adjustedSize,
+        isDark,
+        moduleFillStyle,
+        row,
+        col
+      );
     }
     drawHalftoneModule(
       dctx.ctx as CanvasRenderingContext2D,
@@ -456,6 +477,24 @@ interface RenderCellState {
   currentFillStyle: string | CanvasGradient | null;
 }
 
+function shouldApplyOverlayToModule(
+  rctx: RenderCellCtx,
+  isFinder: boolean,
+  isTiming: boolean,
+  isAlignment: boolean,
+  isFormat: boolean,
+  isVersion: boolean
+): boolean {
+  return (
+    rctx.hasOverlayData &&
+    !(rctx.preserveFinders && isFinder) &&
+    !(rctx.preserveTiming && isTiming) &&
+    !(rctx.preserveAlignment && isAlignment) &&
+    !(rctx.protectFormat && isFormat) &&
+    !(rctx.protectVersion && isVersion)
+  );
+}
+
 function processRenderCell(
   rctx: RenderCellCtx,
   row: number,
@@ -475,13 +514,14 @@ function processRenderCell(
   const isVersion = (flags & PATTERN_VERSION) !== 0;
   const isFunctionalPattern = flags !== 0;
 
-  const applyOverlay =
-    rctx.hasOverlayData &&
-    !(rctx.preserveFinders && isFinder) &&
-    !(rctx.preserveTiming && isTiming) &&
-    !(rctx.preserveAlignment && isAlignment) &&
-    !(rctx.protectFormat && isFormat) &&
-    !(rctx.protectVersion && isVersion);
+  const applyOverlay = shouldApplyOverlayToModule(
+    rctx,
+    isFinder,
+    isTiming,
+    isAlignment,
+    isFormat,
+    isVersion
+  );
 
   let moduleColor = isDark ? rctx.effectiveFgColor : rctx.effectiveBgColor;
   let moduleSizeModifier = 1;

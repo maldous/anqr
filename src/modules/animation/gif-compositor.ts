@@ -20,6 +20,21 @@ function asClampedRgbaView(pixels: Uint8Array): Uint8ClampedArray<ArrayBuffer> {
   ) as Uint8ClampedArray<ArrayBuffer>;
 }
 
+function getOrCreatePatchImageData(
+  patchImageDataCache: Array<ImageData | null>,
+  i: number,
+  patch: Uint8Array,
+  w: number,
+  h: number
+): ImageData {
+  let imageData = patchImageDataCache[i];
+  if (!imageData) {
+    imageData = new ImageData(asClampedRgbaView(patch), w, h);
+    patchImageDataCache[i] = imageData;
+  }
+  return imageData;
+}
+
 /**
  * Create a GIF compositor from an ArrayBuffer.
  * Uses patch-only decode for minimal memory usage.
@@ -128,11 +143,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
         return;
       }
       if (!patchBitmapPromiseCache[i]) {
-        let imageData = patchImageDataCache[i];
-        if (!imageData) {
-          imageData = new ImageData(asClampedRgbaView(f.patch), w, h);
-          patchImageDataCache[i] = imageData;
-        }
+        const imageData = getOrCreatePatchImageData(patchImageDataCache, i, f.patch, w, h);
         patchBitmapPromiseCache[i] = createImageBitmap(imageData)
           .then((created) => {
             patchBitmapCache[i] = created;
@@ -145,12 +156,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
 
     if (patchCtx) {
       patchCtx.clearRect(0, 0, w, h);
-      let imageData = patchImageDataCache[i];
-      if (!imageData) {
-        // Cache decoded patch pixels per frame and avoid copying patch buffers.
-        imageData = new ImageData(asClampedRgbaView(f.patch), w, h);
-        patchImageDataCache[i] = imageData;
-      }
+      const imageData = getOrCreatePatchImageData(patchImageDataCache, i, f.patch, w, h);
       patchCtx.putImageData(imageData, 0, 0);
       ctx.drawImage(patchCanvas, 0, 0, w, h, left, top, w, h);
     }

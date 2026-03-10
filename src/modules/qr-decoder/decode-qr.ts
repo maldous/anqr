@@ -41,23 +41,59 @@ export function decodeQR(
   return null;
 }
 
+function checkTimingPosition(
+  rawMatrix: boolean[][],
+  r: number,
+  c: number,
+  index: number,
+  mismatches: Array<{ r: number; c: number; exp: 0 | 1; got: 0 | 1 }>
+): void {
+  const exp: 0 | 1 = (index % 2 === 0 ? 1 : 0) as 0 | 1;
+  const got: 0 | 1 = (rawMatrix[r]?.[c] ? 1 : 0) as 0 | 1;
+  if (exp !== got && mismatches.length < 12) mismatches.push({ r, c, exp, got });
+}
+
 // Validate traversal on timing patterns.
 function collectTimingDiagnostics(rawMatrix: boolean[][], moduleCount: number): void {
   const timingMismatches: Array<{ r: number; c: number; exp: 0 | 1; got: 0 | 1 }> = [];
   for (let c = 8; c < moduleCount - 8; c++) {
-    const exp: 0 | 1 = (c % 2 === 0 ? 1 : 0) as 0 | 1;
-    const got: 0 | 1 = (rawMatrix[6]?.[c] ? 1 : 0) as 0 | 1;
-    if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r: 6, c, exp, got });
+    checkTimingPosition(rawMatrix, 6, c, c, timingMismatches);
   }
   for (let r = 8; r < moduleCount - 8; r++) {
-    const exp: 0 | 1 = (r % 2 === 0 ? 1 : 0) as 0 | 1;
-    const got: 0 | 1 = (rawMatrix[r]?.[6] ? 1 : 0) as 0 | 1;
-    if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r, c: 6, exp, got });
+    checkTimingPosition(rawMatrix, r, 6, r, timingMismatches);
   }
   qrDecoderLog.trace('diag: Timing pattern mismatches (first 12)', {
     count: timingMismatches.length,
     mismatches: timingMismatches.map((m) => `(${m.r},${m.c}) exp=${m.exp} got=${m.got}`),
   });
+}
+
+function overlapsFinderRegion(cx: number, cy: number, moduleCount: number): boolean {
+  return (
+    (cx <= 8 && cy <= 8) || (cx >= moduleCount - 9 && cy <= 8) || (cx <= 8 && cy >= moduleCount - 9)
+  );
+}
+
+function scoreAlignmentCenter(
+  rawMatrix: boolean[][],
+  cx: number,
+  cy: number
+): { good: number; total: number; mismatches: string[] } {
+  let good = 0;
+  let total = 0;
+  const mism: string[] = [];
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      const r = cy + dy;
+      const c = cx + dx;
+      const got = rawMatrix[r]?.[c] ? 1 : 0;
+      const exp = Math.max(Math.abs(dx), Math.abs(dy)) === 2 || (dx === 0 && dy === 0) ? 1 : 0;
+      total++;
+      if (got === exp) good++;
+      else if (mism.length < 6) mism.push(`(${r},${c}) exp=${exp} got=${got}`);
+    }
+  }
+  return { good, total, mismatches: mism };
 }
 
 // Alignment pattern score (5x5), expected at spec centers.
@@ -71,33 +107,13 @@ function collectAlignmentDiagnostics(
   for (const center of centers) {
     const cx = center.col;
     const cy = center.row;
-    // Skip centers that overlap finders (spec rule).
-    if (
-      (cx <= 8 && cy <= 8) ||
-      (cx >= moduleCount - 9 && cy <= 8) ||
-      (cx <= 8 && cy >= moduleCount - 9)
-    ) {
-      continue;
-    }
+    if (overlapsFinderRegion(cx, cy, moduleCount)) continue;
 
-    let good = 0;
-    let total = 0;
-    const mism: string[] = [];
-    for (let dy = -2; dy <= 2; dy++) {
-      for (let dx = -2; dx <= 2; dx++) {
-        const r = cy + dy;
-        const c = cx + dx;
-        const got = rawMatrix[r]?.[c] ? 1 : 0;
-        const exp = Math.max(Math.abs(dx), Math.abs(dy)) === 2 || (dx === 0 && dy === 0) ? 1 : 0;
-        total++;
-        if (got === exp) good++;
-        else if (mism.length < 6) mism.push(`(${r},${c}) exp=${exp} got=${got}`);
-      }
-    }
+    const { good, total, mismatches } = scoreAlignmentCenter(rawMatrix, cx, cy);
     alignmentScores.push({
       center: `(${cx},${cy})`,
       score: `${good}/${total}`,
-      mismatches: mism,
+      mismatches,
     });
   }
   if (alignmentScores.length) {
