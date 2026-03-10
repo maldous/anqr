@@ -7,8 +7,7 @@ import { createLogger } from '../../lib/logger';
 import { blendColors, getRelativeLuminance, parseColor } from '../core';
 import { getOverlayBrightness, getOverlayColor } from './overlay-data-packed';
 import { curveIntensity } from './pixel-matrix-utils';
-import type { QRGeneratorConfig } from './types';
-import type { OverlayData } from './types';
+import type { QRGeneratorConfig, OverlayData } from './types';
 import { getContrastRatio } from './utils';
 
 const log = createLogger('GENERATE');

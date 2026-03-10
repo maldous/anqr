@@ -848,7 +848,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
 
                     {/* External links only (e.g., iubenda privacy policy) */}
                     {section.links &&
-                      section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
+                      section.links.some((link) => link.href.startsWith('http')) && (
                         <div className="flex flex-wrap gap-3 mt-4">
                           {section.links
                             .filter((link) => link.href.startsWith('http'))
@@ -964,20 +964,19 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                 )}
 
                 {/* External links only (e.g., iubenda privacy policy) */}
-                {section.links &&
-                  section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
-                    <div className="flex flex-wrap gap-3 mt-4">
-                      {section.links
-                        .filter((link) => link.href.startsWith('http'))
-                        .map((link) => (
-                          <Button key={link.href} asChild variant="outline" size="default">
-                            <a href={link.href} target="_blank" rel="noopener noreferrer">
-                              {link.label}
-                            </a>
-                          </Button>
-                        ))}
-                    </div>
-                  )}
+                {section.links && section.links.some((link) => link.href.startsWith('http')) && (
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    {section.links
+                      .filter((link) => link.href.startsWith('http'))
+                      .map((link) => (
+                        <Button key={link.href} asChild variant="outline" size="default">
+                          <a href={link.href} target="_blank" rel="noopener noreferrer">
+                            {link.label}
+                          </a>
+                        </Button>
+                      ))}
+                  </div>
+                )}
               </section>
             ))}
 

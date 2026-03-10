@@ -2202,6 +2202,7 @@ function parseGifFramesServer(
   // Limit frame count to prevent excessive processing
   const framesToProcess = decoded.frames.slice(0, MAX_GIF_FRAMES);
   if (decoded.frames.length > MAX_GIF_FRAMES) {
+    // Frame count exceeded MAX_GIF_FRAMES — silently truncated above
   }
 
   // Calculate total duration and warn if excessive
@@ -3145,6 +3146,7 @@ async function handler(request: Request) {
     qaSimulateRotationClientOnly ||
     qaShowHeatmapClientOnly
   ) {
+    // Client-only QA simulation flags — no server action needed
   }
 
   // Output extras (missing from server previously)

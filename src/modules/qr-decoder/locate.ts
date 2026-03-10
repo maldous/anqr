@@ -702,8 +702,8 @@ function evaluateCandidateTriplet(
     y: bottomLeft.center.y - topLeft.center.y,
   };
   const dotProduct = vecRight.x * vecDown.x + vecRight.y * vecDown.y;
-  const magRight = Math.sqrt(vecRight.x ** 2 + vecRight.y ** 2);
-  const magDown = Math.sqrt(vecDown.x ** 2 + vecDown.y ** 2);
+  const magRight = Math.hypot(vecRight.x, vecRight.y);
+  const magDown = Math.hypot(vecDown.x, vecDown.y);
   const cosAngle = dotProduct / (magRight * magDown);
   const angleDev = Math.abs(cosAngle);
 

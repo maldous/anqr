@@ -120,7 +120,7 @@ export interface QRGeneratorConfig {
 
   // Encoding
   encodingMode?: string;
-  maskPattern?: number | 'auto' | undefined;
+  maskPattern?: number | 'auto';
   characterEncoding?: string;
 
   // Advanced

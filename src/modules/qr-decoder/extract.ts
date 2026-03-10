@@ -316,13 +316,13 @@ export function extractModuleMatrix(
   // FIX: Use ONE unified module pitch for both axes to prevent drift
   // ========================================
   // Calculate distances and unified pitch
-  const topDist = Math.sqrt(
-    (location.topRight.x - location.topLeft.x) ** 2 +
-      (location.topRight.y - location.topLeft.y) ** 2
+  const topDist = Math.hypot(
+    location.topRight.x - location.topLeft.x,
+    location.topRight.y - location.topLeft.y
   );
-  const leftDist = Math.sqrt(
-    (location.bottomLeft.x - location.topLeft.x) ** 2 +
-      (location.bottomLeft.y - location.topLeft.y) ** 2
+  const leftDist = Math.hypot(
+    location.bottomLeft.x - location.topLeft.x,
+    location.bottomLeft.y - location.topLeft.y
   );
   const avgDist = (topDist + leftDist) / 2;
   const unifiedPitch = avgDist / moduleSpan;
@@ -374,8 +374,9 @@ export function extractModuleMatrix(
     x: origin.x + finderOffset * rightVec.x + finderOffset * downVec.x,
     y: origin.y + finderOffset * rightVec.y + finderOffset * downVec.y,
   };
-  const topLeftError = Math.sqrt(
-    (verifyTopLeft.x - location.topLeft.x) ** 2 + (verifyTopLeft.y - location.topLeft.y) ** 2
+  const topLeftError = Math.hypot(
+    verifyTopLeft.x - location.topLeft.x,
+    verifyTopLeft.y - location.topLeft.y
   );
 
   // The finder center at module position (moduleCount-3.5, 3.5) should map to topRight
@@ -383,8 +384,9 @@ export function extractModuleMatrix(
     x: origin.x + (moduleCount - finderOffset) * rightVec.x + finderOffset * downVec.x,
     y: origin.y + (moduleCount - finderOffset) * rightVec.y + finderOffset * downVec.y,
   };
-  const topRightError = Math.sqrt(
-    (verifyTopRight.x - location.topRight.x) ** 2 + (verifyTopRight.y - location.topRight.y) ** 2
+  const topRightError = Math.hypot(
+    verifyTopRight.x - location.topRight.x,
+    verifyTopRight.y - location.topRight.y
   );
 
   // The finder center at module position (3.5, moduleCount-3.5) should map to bottomLeft
@@ -392,9 +394,9 @@ export function extractModuleMatrix(
     x: origin.x + finderOffset * rightVec.x + (moduleCount - finderOffset) * downVec.x,
     y: origin.y + finderOffset * rightVec.y + (moduleCount - finderOffset) * downVec.y,
   };
-  const bottomLeftError = Math.sqrt(
-    (verifyBottomLeft.x - location.bottomLeft.x) ** 2 +
-      (verifyBottomLeft.y - location.bottomLeft.y) ** 2
+  const bottomLeftError = Math.hypot(
+    verifyBottomLeft.x - location.bottomLeft.x,
+    verifyBottomLeft.y - location.bottomLeft.y
   );
 
   qrDecoderLog.trace('extract: Origin validation', {

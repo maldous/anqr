@@ -87,7 +87,7 @@ export function isValidCryptoAddress(address: string, type: string): boolean {
     case 'bitcoin':
       // Legacy (1...), P2SH (3...), Bech32 (bc1...)
       return (
-        /^(1|3)[a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[a-z0-9]{39,59}$/i.test(address)
+        /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[a-z0-9]{39,59}$/i.test(address)
       );
     case 'ethereum':
       // 0x followed by 40 hex characters

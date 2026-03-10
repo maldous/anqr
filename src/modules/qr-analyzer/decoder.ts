@@ -180,13 +180,13 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     });
 
     // Calculate distances between finder pattern centers
-    const topEdgeDist = Math.sqrt(
-      (location.topRightCorner.x - location.topLeftCorner.x) ** 2 +
-        (location.topRightCorner.y - location.topLeftCorner.y) ** 2
+    const topEdgeDist = Math.hypot(
+      location.topRightCorner.x - location.topLeftCorner.x,
+      location.topRightCorner.y - location.topLeftCorner.y
     );
-    const leftEdgeDist = Math.sqrt(
-      (location.bottomLeftCorner.x - location.topLeftCorner.x) ** 2 +
-        (location.bottomLeftCorner.y - location.topLeftCorner.y) ** 2
+    const leftEdgeDist = Math.hypot(
+      location.bottomLeftCorner.x - location.topLeftCorner.x,
+      location.bottomLeftCorner.y - location.topLeftCorner.y
     );
     const avgFinderDist = (topEdgeDist + leftEdgeDist) / 2;
 
