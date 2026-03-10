@@ -1088,8 +1088,7 @@ export function decodeDataCodewordsDetailed(
 
   const encodingMode: DecodedEncodingMode = (() => {
     if (modesSeen.size === 1) {
-      // Get the only element
-      for (const m of modesSeen) return m;
+      return modesSeen.values().next().value!;
     }
     if (modesSeen.size > 1) return 'mixed';
     return 'unknown';

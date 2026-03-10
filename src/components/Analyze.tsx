@@ -1583,10 +1583,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         strategy: isGeneratorSource ? 'exact' : 'detected_only',
         reproductionMismatch,
         encoderInputKind: encoderInput.kind,
-        payloadPreview:
-          encoderInput.kind === 'bytes'
-            ? (result.payload ?? '').slice(0, 80)
-            : (result.payload ?? '').slice(0, 80),
+        payloadPreview: (result.payload ?? '').slice(0, 80),
         payloadBytesLen: result.payloadBytes?.length ?? null,
         payloadBytesHead,
         ecc,

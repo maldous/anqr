@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 
-ID_RE = re.compile(r"^\s*(\d+)\s*(?:\t|\s{2,}|,)\s*(.+?)\s*$")
+ID_RE = re.compile(r"^\s*(\d+)\s*(?:[\t,]|\s{2,})\s*(.+?)\s*$")
 
 
 def load_id_mapping(txt_path: str) -> Dict[str, str]:

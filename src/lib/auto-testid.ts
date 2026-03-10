@@ -21,7 +21,7 @@ function normalizeToken(value: string): string {
     .trim()
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '')
+    .replaceAll(/(^-+)|(-+$)/g, '')
     .replaceAll(/--+/g, '-');
 }
 

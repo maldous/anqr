@@ -3,6 +3,10 @@
 All notable changes to ANQR are documented here.
 Each resolved issue should add an entry under the current date heading.
 
+## 2026-03-11
+
+- fix(sonar): resolve 7 BUG-type reliability findings — S5850 regex grouping, S3923 redundant ternary, S1751 single-iteration loop, S5855 redundant regex alternatives
+
 ## 2026-03-10
 
 - fix(sonar): resolve 10 BLOCKER findings — S3516 same-return in qr.ts + S2699 assertion-less tests (9 files)
