@@ -17,6 +17,254 @@ import {
 } from '@/modules/share-links';
 import { useQRStore } from '@/store/qr-store';
 
+type StoreState = ReturnType<typeof useQRStore.getState>;
+
+function buildShareQRSettings(qr: StoreState['qr'], render: StoreState['render']) {
+  return {
+    ec: qr.ecc,
+    version: qr.version === 0 ? undefined : qr.version,
+    modulePx: render.modulePx === 20 ? undefined : render.modulePx,
+    margin: qr.quietZoneModules === 4 ? undefined : qr.quietZoneModules,
+    encodingMode: qr.encodingMode === 'auto' ? undefined : qr.encodingMode,
+    borderModulesExtra: qr.borderModulesExtra === 0 ? undefined : qr.borderModulesExtra,
+    quietZoneMinEnforce: qr.quietZoneMinEnforce === false ? false : undefined,
+  };
+}
+
+function buildShareColors(render: StoreState['render']) {
+  return {
+    fg: render.fgColor === '#000000' ? undefined : render.fgColor,
+    bg: render.bgColor === '#ffffff' ? undefined : render.bgColor,
+    transparent: render.bgTransparent || undefined,
+  };
+}
+
+function buildShareStyles(render: StoreState['render']) {
+  return {
+    style: render.moduleStyle === 'square' ? undefined : render.moduleStyle,
+    finder: render.finderStyle === 'square' ? undefined : render.finderStyle,
+    alignmentStyle: render.alignmentStyle === 'match_finder' ? undefined : render.alignmentStyle,
+    timingStyle: render.timingStyle === 'match_module' ? undefined : render.timingStyle,
+    moduleGap: render.moduleGapPercent === 0 ? undefined : render.moduleGapPercent,
+    gapMode: render.gapMode === 'none' ? undefined : render.gapMode,
+    cornerRadius: render.cornerRadius === 0 ? undefined : render.cornerRadius,
+    gradientType: render.gradient.type === 'none' ? undefined : render.gradient.type,
+    eyeOuterStyle: render.eyeOuterStyle === 'square' ? undefined : render.eyeOuterStyle,
+    eyeInnerStyle: render.eyeInnerStyle === 'square' ? undefined : render.eyeInnerStyle,
+    eyeScale: render.eyeScale === 100 ? undefined : render.eyeScale,
+    frameStyle: render.frameStyle === 'none' ? undefined : render.frameStyle,
+    frameText: render.frameText || undefined,
+    dotRotation: render.dotRotationDeg === 0 ? undefined : render.dotRotationDeg,
+    crispEdges: render.crispEdges === false ? false : undefined,
+    pixelSnap: render.pixelSnap === 'floor' ? undefined : render.pixelSnap,
+    perModuleColorMode:
+      render.perModuleColorMode === 'solid' ? undefined : render.perModuleColorMode,
+    contrastGuard: render.contrastGuard ? true : undefined,
+    minContrastRatio:
+      render.contrastGuard && render.minContrastRatio !== 4.5 ? render.minContrastRatio : undefined,
+  };
+}
+
+function buildShareOverlay(overlay: StoreState['overlay']) {
+  if (!overlay.enabled) return {};
+  return {
+    mode: overlay.mode,
+    intensity: overlay.intensity !== 100 ? overlay.intensity : undefined,
+    overlayUrl: overlay.url || undefined,
+    fit: overlay.fit !== 'cover' ? overlay.fit : undefined,
+    rotate: overlay.rotateDeg !== 0 ? overlay.rotateDeg : undefined,
+    flipX: overlay.flipX ? true : undefined,
+    flipY: overlay.flipY ? true : undefined,
+    preserveFinders: !overlay.preserveFinders ? false : undefined,
+    preserveTiming: overlay.preserveTiming ? true : undefined,
+    preserveAlignment: overlay.preserveAlignment ? true : undefined,
+    protectFormatInfo: overlay.protectFormatInfo ? true : undefined,
+    protectVersionInfo: overlay.protectVersionInfo ? true : undefined,
+    eccAwareEnabled: overlay.eccAwareEnabled ? true : undefined,
+    eccAwareRiskBudget:
+      overlay.eccAwareEnabled && overlay.eccAwareRiskBudget !== 50
+        ? overlay.eccAwareRiskBudget
+        : undefined,
+    eccAwareWeightMap:
+      overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== 'distance_to_finders'
+        ? overlay.eccAwareWeightMap
+        : undefined,
+    colorMode: overlay.colorMode !== 'color' ? overlay.colorMode : undefined,
+    brightness: overlay.brightness !== 0 ? overlay.brightness : undefined,
+    contrast: overlay.contrast !== 0 ? overlay.contrast : undefined,
+    gamma: overlay.gamma !== 1 ? overlay.gamma : undefined,
+    saturation: overlay.saturation !== 0 ? overlay.saturation : undefined,
+    hue: overlay.hueRotateDeg !== 0 ? overlay.hueRotateDeg : undefined,
+    blur: overlay.blurPx !== 0 ? overlay.blurPx : undefined,
+    sharpen: overlay.sharpen !== 0 ? overlay.sharpen : undefined,
+    posterize: overlay.posterizeLevels !== 0 ? overlay.posterizeLevels : undefined,
+    threshold: overlay.threshold !== 128 ? overlay.threshold : undefined,
+    edge: overlay.edgeDetect !== 'off' ? overlay.edgeDetect : undefined,
+    invert: overlay.invert || undefined,
+    ditherKind: overlay.ditherKind !== 'error_diffusion' ? overlay.ditherKind : undefined,
+    diffusionKernel:
+      overlay.diffusionKernel !== 'floyd_steinberg' ? overlay.diffusionKernel : undefined,
+    ditherStrength: overlay.ditherStrength !== 50 ? overlay.ditherStrength : undefined,
+    finderDitherStrength:
+      overlay.finderDitherStrength !== 65 ? overlay.finderDitherStrength : undefined,
+    blendPreservations: overlay.blendPreservations ? true : undefined,
+    blendPreservationMode:
+      overlay.blendPreservations && overlay.blendPreservationMode !== 'overlay'
+        ? overlay.blendPreservationMode
+        : undefined,
+    ditherSerpentine: overlay.ditherSerpentine ? true : undefined,
+    orderedMatrix: overlay.orderedMatrix !== 'bayer4' ? overlay.orderedMatrix : undefined,
+    blueNoiseTileSize: overlay.blueNoiseTileSize !== 64 ? overlay.blueNoiseTileSize : undefined,
+    blueNoiseSeed: overlay.blueNoiseSeed !== 0 ? overlay.blueNoiseSeed : undefined,
+    colorDither: overlay.colorDither !== 'none' ? overlay.colorDither : undefined,
+    subpixelGridSize:
+      overlay.mode === 'subpixel' && overlay.subpixelGridSize !== '3x3'
+        ? overlay.subpixelGridSize
+        : undefined,
+    subpixelCenterRule:
+      overlay.mode === 'subpixel' && overlay.subpixelCenterRule !== 'strict'
+        ? overlay.subpixelCenterRule
+        : undefined,
+    subpixelNeutralColor:
+      overlay.mode === 'subpixel' && overlay.subpixelNeutralColor !== '#808080'
+        ? overlay.subpixelNeutralColor
+        : undefined,
+    subpixelFinderOverride:
+      overlay.mode === 'subpixel' && overlay.subpixelFinderOverride !== 'solid'
+        ? overlay.subpixelFinderOverride
+        : undefined,
+    halftoneCell:
+      overlay.mode === 'halftone' && overlay.halftoneCell !== 'per_module'
+        ? overlay.halftoneCell
+        : undefined,
+    halftoneDotShape:
+      overlay.mode === 'halftone' && overlay.halftoneDotShape !== 'circle'
+        ? overlay.halftoneDotShape
+        : undefined,
+    brightnessCurve:
+      overlay.mode === 'halftone' && overlay.brightnessCurve !== 'linear'
+        ? overlay.brightnessCurve
+        : undefined,
+    duotoneColor1:
+      overlay.mode === 'duotone' && overlay.duotoneColors[0] !== '#000000'
+        ? overlay.duotoneColors[0]
+        : undefined,
+    duotoneColor2:
+      overlay.mode === 'duotone' && overlay.duotoneColors[1] !== '#ffffff'
+        ? overlay.duotoneColors[1]
+        : undefined,
+  };
+}
+
+function buildShareAnimation(animation: StoreState['animation']) {
+  return {
+    speed: animation.speedMs === 100 ? undefined : animation.speedMs,
+    loop: animation.loop === false ? false : undefined,
+    reverse: animation.bounce ? true : undefined,
+    startFrame: animation.startFrame === 0 ? undefined : animation.startFrame,
+    maxFrames: animation.maxFrames === 0 ? undefined : animation.maxFrames,
+    frameStep: animation.frameStep === 1 ? undefined : animation.frameStep,
+    interpolate: animation.interpolate === 'none' ? undefined : animation.interpolate,
+    temporalDither: animation.temporalDither === 'off' ? undefined : animation.temporalDither,
+    pattern: animation.pattern === 'none' ? undefined : animation.pattern,
+    target: animation.target === 'result' ? undefined : animation.target,
+    waveAxis:
+      animation.pattern !== 'wave' || animation.waveAxis === 'y' ? undefined : animation.waveAxis,
+    pattern2: animation.pattern2 === 'none' ? undefined : animation.pattern2,
+    target2:
+      animation.pattern2 === 'none' || animation.target2 === 'result'
+        ? undefined
+        : animation.target2,
+    waveAxis2:
+      animation.pattern2 !== 'wave' || animation.waveAxis2 === 'x'
+        ? undefined
+        : animation.waveAxis2,
+    moduleJitter: animation.moduleJitterPx === 0 ? undefined : animation.moduleJitterPx,
+    colorCycle: animation.colorCycle ? true : undefined,
+    seed: animation.seed === 0 ? undefined : animation.seed,
+    animationSeed: animation.seed === 0 ? undefined : animation.seed,
+  };
+}
+
+function buildShareOutput(output: StoreState['output']) {
+  return {
+    width: output.widthPx === 400 ? undefined : output.widthPx,
+    height: output.heightPx === 400 ? undefined : output.heightPx,
+    format: output.format === 'gif' ? undefined : output.format,
+    quality: output.quality === 0.9 ? undefined : output.quality,
+    filename: output.filename === 'anqr-qrcode' ? undefined : output.filename,
+    gifPaletteSize:
+      output.format === 'gif' && output.gifPaletteSize !== 256 ? output.gifPaletteSize : undefined,
+    gifQuantizer:
+      output.format === 'gif' && output.gifQuantizer !== 'median_cut'
+        ? output.gifQuantizer
+        : undefined,
+    gifDither:
+      output.format === 'gif' && output.gifDither !== 'floyd' ? output.gifDither : undefined,
+    svgTrueVector: output.format === 'svg' && output.svgTrueVector ? true : undefined,
+    dpi: output.dpi === 72 ? undefined : output.dpi,
+    includeQuietZone: output.includeQuietZone === false ? false : undefined,
+    bgOverride: output.bgOverride ? output.bgOverride : undefined,
+    gifTransparentColor:
+      output.format === 'gif' && output.gifTransparentColor
+        ? output.gifTransparentColor
+        : undefined,
+    svgShapePrecision:
+      output.format === 'svg' && output.svgShapePrecision !== 'pixel'
+        ? output.svgShapePrecision
+        : undefined,
+    svgEmbedRasterOverlay:
+      output.format === 'svg' && output.svgEmbedRasterOverlay === false ? false : undefined,
+    formatExtra: output.formatExtra === 'none' ? undefined : output.formatExtra,
+  };
+}
+
+function buildShareSafetyQaAuto(
+  safety: StoreState['safety'],
+  qa: StoreState['qa'],
+  auto: StoreState['auto'],
+  watermark: StoreState['watermark'],
+  metadata: StoreState['metadata']
+) {
+  return {
+    safetyMode: safety.mode === 'off' ? undefined : safety.mode,
+    safetyMinModulePx:
+      safety.mode !== 'off' && safety.minModulePx !== 2 ? safety.minModulePx : undefined,
+    safetyMinQuietZone:
+      safety.mode !== 'off' && safety.minQuietZoneModules !== 4
+        ? safety.minQuietZoneModules
+        : undefined,
+    lockFinders: safety.mode !== 'off' && !safety.lockFinders ? false : undefined,
+    lockTiming: safety.mode !== 'off' && !safety.lockTiming ? false : undefined,
+    lockAlign: safety.mode !== 'off' && !safety.lockAlign ? false : undefined,
+    lockFormat: safety.mode !== 'off' && !safety.lockFormat ? false : undefined,
+    lockVersion: safety.mode !== 'off' && !safety.lockVersion ? false : undefined,
+    qaContrastCheck: qa.contrastCheck ? true : undefined,
+    qaSimulateBlur: qa.simulateBlurPx === 0 ? undefined : qa.simulateBlurPx,
+    qaSimulateNoise: qa.simulateNoise === 0 ? undefined : qa.simulateNoise,
+    qaSimulateRotation: qa.simulateRotationDeg === 0 ? undefined : qa.simulateRotationDeg,
+    qaShowHeatmap: qa.showHeatmap ? true : undefined,
+    autoPickVersion: auto.pickVersion === false ? false : undefined,
+    autoPickEcc: auto.pickEcc ? true : undefined,
+    autoReduceIntensity: auto.reduceIntensityUntilSafe ? true : undefined,
+    watermarkEnabled: watermark.enabled ? true : undefined,
+    watermarkKind: watermark.enabled && watermark.kind !== 'text' ? watermark.kind : undefined,
+    watermarkText:
+      watermark.enabled && watermark.kind === 'text' && watermark.text ? watermark.text : undefined,
+    watermarkPosition:
+      watermark.enabled && watermark.position !== 'center' ? watermark.position : undefined,
+    watermarkOpacity: watermark.enabled && watermark.opacity !== 50 ? watermark.opacity : undefined,
+    watermarkBlend: watermark.enabled && watermark.blend !== 'normal' ? watermark.blend : undefined,
+    metaTitle: metadata.title || undefined,
+    metaAuthor: metadata.author || undefined,
+    metaCopyright: metadata.copyright || undefined,
+    metaLicense: metadata.license || undefined,
+    metaDescription: metadata.description || undefined,
+    metaCreationTime: metadata.creationTime ? true : undefined,
+    metaCustomKv: metadata.customKv.length > 0 ? JSON.stringify(metadata.customKv) : undefined,
+  };
+}
+
 export function ShareSection() {
   const {
     share,
@@ -41,249 +289,13 @@ export function ShareSection() {
     const config = {
       data: getPayloadText(),
       lang: i18n.language,
-      // QR settings
-      ec: qr.ecc,
-      version: qr.version === 0 ? undefined : qr.version,
-      modulePx: render.modulePx === 20 ? undefined : render.modulePx,
-      margin: qr.quietZoneModules === 4 ? undefined : qr.quietZoneModules,
-      encodingMode: qr.encodingMode === 'auto' ? undefined : qr.encodingMode,
-      borderModulesExtra: qr.borderModulesExtra === 0 ? undefined : qr.borderModulesExtra,
-      quietZoneMinEnforce: qr.quietZoneMinEnforce === false ? false : undefined,
-      // Colors
-      fg: render.fgColor === '#000000' ? undefined : render.fgColor,
-      bg: render.bgColor === '#ffffff' ? undefined : render.bgColor,
-      transparent: render.bgTransparent || undefined,
-      // Styles
-      style: render.moduleStyle === 'square' ? undefined : render.moduleStyle,
-      finder: render.finderStyle === 'square' ? undefined : render.finderStyle,
-      alignmentStyle: render.alignmentStyle === 'match_finder' ? undefined : render.alignmentStyle,
-      timingStyle: render.timingStyle === 'match_module' ? undefined : render.timingStyle,
-      // Render settings
-      moduleGap: render.moduleGapPercent === 0 ? undefined : render.moduleGapPercent,
-      gapMode: render.gapMode === 'none' ? undefined : render.gapMode,
-      cornerRadius: render.cornerRadius === 0 ? undefined : render.cornerRadius,
-      gradientType: render.gradient.type === 'none' ? undefined : render.gradient.type,
-      eyeOuterStyle: render.eyeOuterStyle === 'square' ? undefined : render.eyeOuterStyle,
-      eyeInnerStyle: render.eyeInnerStyle === 'square' ? undefined : render.eyeInnerStyle,
-      eyeScale: render.eyeScale === 100 ? undefined : render.eyeScale,
-      frameStyle: render.frameStyle === 'none' ? undefined : render.frameStyle,
-      frameText: render.frameText || undefined,
-      dotRotation: render.dotRotationDeg === 0 ? undefined : render.dotRotationDeg,
-      crispEdges: render.crispEdges === false ? false : undefined,
-      pixelSnap: render.pixelSnap === 'floor' ? undefined : render.pixelSnap,
-      perModuleColorMode:
-        render.perModuleColorMode === 'solid' ? undefined : render.perModuleColorMode,
-      contrastGuard: render.contrastGuard ? true : undefined,
-      minContrastRatio:
-        render.contrastGuard && render.minContrastRatio !== 4.5
-          ? render.minContrastRatio
-          : undefined,
-      // Overlay
-      mode: overlay.enabled ? overlay.mode : undefined,
-      intensity: overlay.enabled && overlay.intensity !== 100 ? overlay.intensity : undefined,
-      overlayUrl: overlay.enabled && overlay.url ? overlay.url : undefined,
-      fit: overlay.enabled && overlay.fit !== 'cover' ? overlay.fit : undefined,
-      rotate: overlay.enabled && overlay.rotateDeg !== 0 ? overlay.rotateDeg : undefined,
-      flipX: overlay.enabled && overlay.flipX ? true : undefined,
-      flipY: overlay.enabled && overlay.flipY ? true : undefined,
-      preserveFinders: overlay.enabled && !overlay.preserveFinders ? false : undefined,
-      preserveTiming: overlay.enabled && overlay.preserveTiming ? true : undefined,
-      preserveAlignment: overlay.enabled && overlay.preserveAlignment ? true : undefined,
-      protectFormatInfo: overlay.enabled && overlay.protectFormatInfo ? true : undefined,
-      protectVersionInfo: overlay.enabled && overlay.protectVersionInfo ? true : undefined,
-      eccAwareEnabled: overlay.enabled && overlay.eccAwareEnabled ? true : undefined,
-      eccAwareRiskBudget:
-        overlay.enabled && overlay.eccAwareEnabled && overlay.eccAwareRiskBudget !== 50
-          ? overlay.eccAwareRiskBudget
-          : undefined,
-      eccAwareWeightMap:
-        overlay.enabled &&
-        overlay.eccAwareEnabled &&
-        overlay.eccAwareWeightMap !== 'distance_to_finders'
-          ? overlay.eccAwareWeightMap
-          : undefined,
-      // Overlay preprocessing (only if overlay enabled)
-      colorMode: overlay.enabled && overlay.colorMode !== 'color' ? overlay.colorMode : undefined,
-      brightness: overlay.enabled && overlay.brightness !== 0 ? overlay.brightness : undefined,
-      contrast: overlay.enabled && overlay.contrast !== 0 ? overlay.contrast : undefined,
-      gamma: overlay.enabled && overlay.gamma !== 1 ? overlay.gamma : undefined,
-      saturation: overlay.enabled && overlay.saturation !== 0 ? overlay.saturation : undefined,
-      hue: overlay.enabled && overlay.hueRotateDeg !== 0 ? overlay.hueRotateDeg : undefined,
-      blur: overlay.enabled && overlay.blurPx !== 0 ? overlay.blurPx : undefined,
-      sharpen: overlay.enabled && overlay.sharpen !== 0 ? overlay.sharpen : undefined,
-      posterize:
-        overlay.enabled && overlay.posterizeLevels !== 0 ? overlay.posterizeLevels : undefined,
-      threshold: overlay.enabled && overlay.threshold !== 128 ? overlay.threshold : undefined,
-      edge: overlay.enabled && overlay.edgeDetect !== 'off' ? overlay.edgeDetect : undefined,
-      invert: overlay.enabled && overlay.invert ? overlay.invert : undefined,
-      // Dithering (only if overlay enabled)
-      ditherKind:
-        overlay.enabled && overlay.ditherKind !== 'error_diffusion'
-          ? overlay.ditherKind
-          : undefined,
-      diffusionKernel:
-        overlay.enabled && overlay.diffusionKernel !== 'floyd_steinberg'
-          ? overlay.diffusionKernel
-          : undefined,
-      ditherStrength:
-        overlay.enabled && overlay.ditherStrength !== 50 ? overlay.ditherStrength : undefined,
-      finderDitherStrength:
-        overlay.enabled && overlay.finderDitherStrength !== 65
-          ? overlay.finderDitherStrength
-          : undefined,
-      blendPreservations: overlay.enabled && overlay.blendPreservations ? true : undefined,
-      blendPreservationMode:
-        overlay.enabled && overlay.blendPreservations && overlay.blendPreservationMode !== 'overlay'
-          ? overlay.blendPreservationMode
-          : undefined,
-      ditherSerpentine: overlay.enabled && overlay.ditherSerpentine ? true : undefined,
-      orderedMatrix:
-        overlay.enabled && overlay.orderedMatrix !== 'bayer4' ? overlay.orderedMatrix : undefined,
-      blueNoiseTileSize:
-        overlay.enabled && overlay.blueNoiseTileSize !== 64 ? overlay.blueNoiseTileSize : undefined,
-      blueNoiseSeed:
-        overlay.enabled && overlay.blueNoiseSeed !== 0 ? overlay.blueNoiseSeed : undefined,
-      colorDither:
-        overlay.enabled && overlay.colorDither !== 'none' ? overlay.colorDither : undefined,
-      // Subpixel
-      subpixelGridSize:
-        overlay.enabled && overlay.mode === 'subpixel' && overlay.subpixelGridSize !== '3x3'
-          ? overlay.subpixelGridSize
-          : undefined,
-      subpixelCenterRule:
-        overlay.enabled && overlay.mode === 'subpixel' && overlay.subpixelCenterRule !== 'strict'
-          ? overlay.subpixelCenterRule
-          : undefined,
-      subpixelNeutralColor:
-        overlay.enabled && overlay.mode === 'subpixel' && overlay.subpixelNeutralColor !== '#808080'
-          ? overlay.subpixelNeutralColor
-          : undefined,
-      subpixelFinderOverride:
-        overlay.enabled && overlay.mode === 'subpixel' && overlay.subpixelFinderOverride !== 'solid'
-          ? overlay.subpixelFinderOverride
-          : undefined,
-      // Halftone
-      halftoneCell:
-        overlay.enabled && overlay.mode === 'halftone' && overlay.halftoneCell !== 'per_module'
-          ? overlay.halftoneCell
-          : undefined,
-      halftoneDotShape:
-        overlay.enabled && overlay.mode === 'halftone' && overlay.halftoneDotShape !== 'circle'
-          ? overlay.halftoneDotShape
-          : undefined,
-      brightnessCurve:
-        overlay.enabled && overlay.mode === 'halftone' && overlay.brightnessCurve !== 'linear'
-          ? overlay.brightnessCurve
-          : undefined,
-      duotoneColor1:
-        overlay.enabled && overlay.mode === 'duotone' && overlay.duotoneColors[0] !== '#000000'
-          ? overlay.duotoneColors[0]
-          : undefined,
-      duotoneColor2:
-        overlay.enabled && overlay.mode === 'duotone' && overlay.duotoneColors[1] !== '#ffffff'
-          ? overlay.duotoneColors[1]
-          : undefined,
-      // Animation
-      speed: animation.speedMs === 100 ? undefined : animation.speedMs,
-      loop: animation.loop === false ? false : undefined,
-      reverse: animation.bounce ? true : undefined,
-      startFrame: animation.startFrame === 0 ? undefined : animation.startFrame,
-      maxFrames: animation.maxFrames === 0 ? undefined : animation.maxFrames,
-      frameStep: animation.frameStep === 1 ? undefined : animation.frameStep,
-      interpolate: animation.interpolate === 'none' ? undefined : animation.interpolate,
-      temporalDither: animation.temporalDither === 'off' ? undefined : animation.temporalDither,
-      pattern: animation.pattern === 'none' ? undefined : animation.pattern,
-      target: animation.target === 'result' ? undefined : animation.target,
-      waveAxis:
-        animation.pattern !== 'wave' || animation.waveAxis === 'y' ? undefined : animation.waveAxis,
-      pattern2: animation.pattern2 === 'none' ? undefined : animation.pattern2,
-      target2:
-        animation.pattern2 === 'none' || animation.target2 === 'result'
-          ? undefined
-          : animation.target2,
-      waveAxis2:
-        animation.pattern2 !== 'wave' || animation.waveAxis2 === 'x'
-          ? undefined
-          : animation.waveAxis2,
-      moduleJitter: animation.moduleJitterPx === 0 ? undefined : animation.moduleJitterPx,
-      colorCycle: animation.colorCycle ? true : undefined,
-      seed: animation.seed === 0 ? undefined : animation.seed,
-      animationSeed: animation.seed === 0 ? undefined : animation.seed,
-      // Output
-      width: output.widthPx === 400 ? undefined : output.widthPx,
-      height: output.heightPx === 400 ? undefined : output.heightPx,
-      format: output.format === 'gif' ? undefined : output.format,
-      quality: output.quality === 0.9 ? undefined : output.quality,
-      filename: output.filename === 'anqr-qrcode' ? undefined : output.filename,
-      gifPaletteSize:
-        output.format === 'gif' && output.gifPaletteSize !== 256
-          ? output.gifPaletteSize
-          : undefined,
-      gifQuantizer:
-        output.format === 'gif' && output.gifQuantizer !== 'median_cut'
-          ? output.gifQuantizer
-          : undefined,
-      gifDither:
-        output.format === 'gif' && output.gifDither !== 'floyd' ? output.gifDither : undefined,
-      svgTrueVector: output.format === 'svg' && output.svgTrueVector ? true : undefined,
-      dpi: output.dpi === 72 ? undefined : output.dpi,
-      includeQuietZone: output.includeQuietZone === false ? false : undefined,
-      bgOverride: output.bgOverride ? output.bgOverride : undefined,
-      gifTransparentColor:
-        output.format === 'gif' && output.gifTransparentColor
-          ? output.gifTransparentColor
-          : undefined,
-      svgShapePrecision:
-        output.format === 'svg' && output.svgShapePrecision !== 'pixel'
-          ? output.svgShapePrecision
-          : undefined,
-      svgEmbedRasterOverlay:
-        output.format === 'svg' && output.svgEmbedRasterOverlay === false ? false : undefined,
-      formatExtra: output.formatExtra === 'none' ? undefined : output.formatExtra,
-      // Safety
-      safetyMode: safety.mode === 'off' ? undefined : safety.mode,
-      safetyMinModulePx:
-        safety.mode !== 'off' && safety.minModulePx !== 2 ? safety.minModulePx : undefined,
-      safetyMinQuietZone:
-        safety.mode !== 'off' && safety.minQuietZoneModules !== 4
-          ? safety.minQuietZoneModules
-          : undefined,
-      lockFinders: safety.mode !== 'off' && !safety.lockFinders ? false : undefined,
-      lockTiming: safety.mode !== 'off' && !safety.lockTiming ? false : undefined,
-      lockAlign: safety.mode !== 'off' && !safety.lockAlign ? false : undefined,
-      lockFormat: safety.mode !== 'off' && !safety.lockFormat ? false : undefined,
-      lockVersion: safety.mode !== 'off' && !safety.lockVersion ? false : undefined,
-      // QA
-      qaContrastCheck: qa.contrastCheck ? true : undefined,
-      qaSimulateBlur: qa.simulateBlurPx === 0 ? undefined : qa.simulateBlurPx,
-      qaSimulateNoise: qa.simulateNoise === 0 ? undefined : qa.simulateNoise,
-      qaSimulateRotation: qa.simulateRotationDeg === 0 ? undefined : qa.simulateRotationDeg,
-      qaShowHeatmap: qa.showHeatmap ? true : undefined,
-      // Auto-tuning
-      autoPickVersion: auto.pickVersion === false ? false : undefined,
-      autoPickEcc: auto.pickEcc ? true : undefined,
-      autoReduceIntensity: auto.reduceIntensityUntilSafe ? true : undefined,
-      // Watermark
-      watermarkEnabled: watermark.enabled ? true : undefined,
-      watermarkKind: watermark.enabled && watermark.kind !== 'text' ? watermark.kind : undefined,
-      watermarkText:
-        watermark.enabled && watermark.kind === 'text' && watermark.text
-          ? watermark.text
-          : undefined,
-      watermarkPosition:
-        watermark.enabled && watermark.position !== 'center' ? watermark.position : undefined,
-      watermarkOpacity:
-        watermark.enabled && watermark.opacity !== 50 ? watermark.opacity : undefined,
-      watermarkBlend:
-        watermark.enabled && watermark.blend !== 'normal' ? watermark.blend : undefined,
-      // Metadata
-      metaTitle: metadata.title || undefined,
-      metaAuthor: metadata.author || undefined,
-      metaCopyright: metadata.copyright || undefined,
-      metaLicense: metadata.license || undefined,
-      metaDescription: metadata.description || undefined,
-      metaCreationTime: metadata.creationTime ? true : undefined,
-      metaCustomKv: metadata.customKv.length > 0 ? JSON.stringify(metadata.customKv) : undefined,
+      ...buildShareQRSettings(qr, render),
+      ...buildShareColors(render),
+      ...buildShareStyles(render),
+      ...buildShareOverlay(overlay),
+      ...buildShareAnimation(animation),
+      ...buildShareOutput(output),
+      ...buildShareSafetyQaAuto(safety, qa, auto, watermark, metadata),
     };
     return getShareableUrl(config);
   }, [
