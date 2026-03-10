@@ -290,7 +290,7 @@ export class Version {
     if (dimension % 4 !== 1) throw new FormatException();
     try {
       return Version.getVersionForNumber((dimension - 17) / 4);
-    } catch (_ignored) {
+    } catch {
       throw new FormatException();
     }
   }

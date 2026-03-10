@@ -312,7 +312,7 @@ export class QRDecoder {
     }
     try {
       this.rsDecoder.decode(codewordsInts, codewordBytes.length - numDataCodewords);
-    } catch (_rse) {
+    } catch {
       throw new ChecksumException();
     }
     for (let i = 0; i < numDataCodewords; i++) {

@@ -74,7 +74,7 @@ export function isValidSSID(ssid: string): boolean {
  */
 export function isValidIBAN(iban: string): boolean {
   const cleaned = iban.replaceAll(/\s/g, '').toUpperCase();
-  return /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(cleaned);
+  return /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(cleaned);
 }
 
 /**

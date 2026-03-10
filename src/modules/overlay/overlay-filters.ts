@@ -50,7 +50,7 @@ export interface FilterOptions {
 // UTILITY FUNCTIONS - Re-exported from core
 // ============================================
 
-import { clamp, clamp01, hslToRgb, rgbToGray, rgbToHsl } from '../core';
+import { hslToRgb, rgbToGray, rgbToHsl } from '../core';
 
 // Re-export core functions for backwards compatibility
 export { clamp, clamp01, hslToRgb, rgbToGray, rgbToHsl } from '../core';
@@ -314,7 +314,7 @@ export function sobelEdge(imageData: ImageData): ImageData {
         }
       }
 
-      const magnitude = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+      const magnitude = Math.min(255, Math.hypot(gx, gy));
       const idx = (y * width + x) * 4;
       result[idx] = magnitude;
       result[idx + 1] = magnitude;

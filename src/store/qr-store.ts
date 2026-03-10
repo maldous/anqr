@@ -49,8 +49,6 @@ import {
   type TelHelper,
   type UrlHelper,
   type VCardHelper,
-  type VCardVersion,
-  type WifiAuth,
   type WifiHelper,
 } from '@/modules/payload-generators';
 

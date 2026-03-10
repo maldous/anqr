@@ -332,11 +332,11 @@ export class StringBuilder {
   }
 
   deleteCharAt(n: number): void {
-    this.value = this.value.substr(0, n) + this.value.substring(n + 1);
+    this.value = this.value.substring(0, n) + this.value.substring(n + 1);
   }
 
   setCharAt(n: number, c: string): void {
-    this.value = this.value.substr(0, n) + c + this.value.substr(n + 1);
+    this.value = this.value.substring(0, n) + c + this.value.substring(n + 1);
   }
 
   substring(start: number, end: number): string {

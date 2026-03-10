@@ -68,7 +68,7 @@ function CopyButton({ text, label, className = '' }: CopyButtonProps) {
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
-      document.body.removeChild(textarea);
+      textarea.remove();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

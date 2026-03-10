@@ -88,7 +88,7 @@ export class Detector {
             i
           );
           break;
-        } catch (_re) {
+        } catch {
           // try next
         }
       }
@@ -285,7 +285,7 @@ export class Detector {
       if (state === 3) {
         const diffX = x - fromX;
         const diffY = y - fromY;
-        return Math.sqrt(diffX * diffX + diffY * diffY);
+        return Math.hypot(diffX, diffY);
       }
       error += dy;
       if (error > 0) {
@@ -298,7 +298,7 @@ export class Detector {
     if (state === 2) {
       const diffX = toX + xstep - fromX;
       const diffY = toY - fromY;
-      return Math.sqrt(diffX * diffX + diffY * diffY);
+      return Math.hypot(diffX, diffY);
     }
     return Number.NaN;
   }

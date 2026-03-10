@@ -157,7 +157,7 @@ export async function initializeAdMob(): Promise<boolean> {
     preparedRewardedKeys.clear();
     log.info('Initialized successfully', { mode: isTestMode ? 'TEST' : 'PRODUCTION' });
     return true;
-  } catch (_err) {
+  } catch {
     log.debug('Not available (web environment or plugin not installed)');
     adMobAvailable = false;
     adMobInitialized = true;

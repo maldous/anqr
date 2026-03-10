@@ -319,7 +319,7 @@ export class DefaultGridSampler extends GridSampler {
             bits.set(x / 2, y);
           }
         }
-      } catch (_e) {
+      } catch {
         throw new NotFoundException();
       }
     }
@@ -339,7 +339,7 @@ export class MathUtils {
   static distance(aX: number, aY: number, bX: number, bY: number): number {
     const xDiff = aX - bX;
     const yDiff = aY - bY;
-    return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+    return Math.hypot(xDiff, yDiff);
   }
 
   static sum(array: Int32Array): number {

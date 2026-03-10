@@ -71,7 +71,6 @@ import {
   analyzeQRFromUrl,
   buildAnalysisExportData,
   type ContentType,
-  type ContentTypeDetails,
   type ECCLevel,
   type QRAnalysisResult,
 } from '@/modules/qr-analyzer';
@@ -368,7 +367,7 @@ function CopyButton({ text, label, className = '' }: CopyButtonProps) {
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
-      document.body.removeChild(textarea);
+      textarea.remove();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -569,7 +568,7 @@ function ModuleMatrixView({
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
-      document.body.removeChild(textarea);
+      textarea.remove();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -890,7 +889,7 @@ interface EncodingEfficiencyProps {
 
 function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEfficiencyProps) {
   const analysis = useMemo(() => {
-    const numericChars = (payload.match(/[0-9]/g) || []).length;
+    const numericChars = (payload.match(/\d/g) || []).length;
     const alphanumericChars = (payload.match(/[0-9A-Z $%*+\-./:]/gi) || []).length;
     const byteChars = payload.length;
 
@@ -2099,7 +2098,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
   }, [result, actualUsedVersion, analysisSource, uiTimings]);
 

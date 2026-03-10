@@ -256,7 +256,7 @@ export class BinaryBitmap {
   toString(): string {
     try {
       return this.getBlackMatrix().toString();
-    } catch (_e) {
+    } catch {
       return '';
     }
   }

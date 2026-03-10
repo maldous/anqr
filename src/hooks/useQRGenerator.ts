@@ -1893,12 +1893,12 @@ function useQRGenerator(): UseQRGeneratorResult {
               matchPercentage: workerResult.matchPercentage,
               encodedData: workerResult.encodedData ?? '',
             };
-          } catch (workerErr) {
+          } catch (error_) {
             if (qartAbortController.signal.aborted || isStaleRequest()) {
               return;
             }
             log.warn('QArt worker failed, falling back to main thread generation', {
-              error: workerErr,
+              error: error_,
             });
             qartResultSource = 'main';
             fullQArtResult = useAutoMask
@@ -1986,8 +1986,8 @@ function useQRGenerator(): UseQRGeneratorResult {
                 )) as HTMLCanvasElement;
               }
               useFullQArt = true;
-            } catch (renderErr) {
-              log.error('Failed to render QR-Art matrix', { error: renderErr });
+            } catch (error_) {
+              log.error('Failed to render QR-Art matrix', { error: error_ });
               // Fall through to let the standard generation path handle it
             }
           } else if (fullQArtResult.success) {
@@ -2110,9 +2110,9 @@ function useQRGenerator(): UseQRGeneratorResult {
         );
         if (isStaleRequest()) return;
         log.debug('Initial generation succeeded');
-      } catch (initialErr) {
+      } catch (error_) {
         // If overflow error, try progressively more forgiving settings
-        const msg = initialErr instanceof Error ? initialErr.message : '';
+        const msg = error_ instanceof Error ? error_.message : '';
         log.debug('Initial generation failed', {
           errorMessage: msg,
           isOverflow: msg.includes('code length overflow'),
@@ -2163,10 +2163,10 @@ function useQRGenerator(): UseQRGeneratorResult {
               } else {
                 log.info('QR generated with auto-version retry');
               }
-            } catch (eccErr) {
+            } catch (error_) {
               log.debug('ECC fallback failed', {
                 ecc,
-                error: eccErr instanceof Error ? eccErr.message : eccErr,
+                error: error_ instanceof Error ? error_.message : error_,
               });
             }
           }
@@ -2199,7 +2199,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           }
         } else {
           // Not an overflow error, re-throw
-          throw initialErr;
+          throw error_;
         }
       }
 
@@ -3523,13 +3523,13 @@ function useQRGenerator(): UseQRGeneratorResult {
               },
               { signal: animationQArtAbortController.signal }
             );
-          } catch (workerErr) {
+          } catch (error_) {
             if (isRunCancelled()) {
               return null;
             }
             log.warn('QR-Art animation frame worker failed; falling back to main thread', {
               frameIdx,
-              error: workerErr,
+              error: error_,
             });
             const qartResult =
               useAutoMask && artworkLockedMask < 0
@@ -3623,11 +3623,11 @@ function useQRGenerator(): UseQRGeneratorResult {
                 } else if (rescueResult.bitmap && typeof rescueResult.bitmap.close === 'function') {
                   rescueResult.bitmap.close();
                 }
-              } catch (rescueErr) {
+              } catch (error_) {
                 if (isRunCancelled()) return null;
                 log.warn('QR-Art frame quality rescue failed; keeping initial frame result', {
                   frameIdx,
-                  error: rescueErr,
+                  error: error_,
                 });
               }
             }

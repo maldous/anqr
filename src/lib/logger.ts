@@ -79,7 +79,7 @@ import prefix from 'loglevel-plugin-prefix';
 
 // Sentry is only functional in the main browser thread (not in Web Workers).
 // Workers lack document/DOM; guard all Sentry calls behind this flag.
-const _isMainThread = typeof document !== 'undefined';
+const _isMainThread = document !== undefined;
 
 // Lazy-loaded Sentry reference — null in Worker context to avoid importing
 // @sentry/react (which depends on DOM/React internals) into Worker bundles.
@@ -375,7 +375,7 @@ export function saveLogs(filename?: string): void {
   a.download = name;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 
   console.log(`Saved ${logs.length} log entries to ${name}`);
@@ -411,7 +411,7 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   a.download = name;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 
   console.log(
@@ -485,7 +485,7 @@ function safeSerializeContext(context: unknown): unknown {
             result[key] = '[Function]';
           } else if (typeof value === 'object') {
             // Try to serialize nested object
-            result[key] = JSON.parse(JSON.stringify(value));
+            result[key] = structuredClone(value);
           } else {
             result[key] = value;
           }
@@ -613,8 +613,7 @@ prefix.apply(loglevel, {
 // Development: show all logs (debug and above) - maximum visibility for debugging
 // Production: show only errors - minimum noise, failures only (toggle via anqrDiag)
 // Note: Handle Node.js environment where import.meta.env may not exist
-const envLevelRaw =
-  typeof process !== 'undefined' ? process.env.ANQR_LOG_LEVEL?.toLowerCase() : undefined;
+const envLevelRaw = process !== undefined ? process.env.ANQR_LOG_LEVEL?.toLowerCase() : undefined;
 const envLevel = (() => {
   switch (envLevelRaw) {
     case 'trace':
@@ -646,11 +645,9 @@ const LOG_LEVEL_INDEX: Record<RuntimeLogLevel, number> = {
 };
 
 const captureMinLevelRaw =
-  typeof process !== 'undefined'
-    ? process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase()
-    : undefined;
+  process !== undefined ? process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase() : undefined;
 const captureWhenConsoleEnabled =
-  typeof process !== 'undefined' && process.env.ANQR_LOG_CAPTURE_CONSOLE === '1';
+  process !== undefined && process.env.ANQR_LOG_CAPTURE_CONSOLE === '1';
 const captureMinLevel = (() => {
   switch (captureMinLevelRaw) {
     case 'trace':
@@ -663,8 +660,7 @@ const captureMinLevel = (() => {
       return 'warn' as RuntimeLogLevel;
   }
 })();
-const forceStructuredCaptureAll =
-  typeof process !== 'undefined' && process.env.ANQR_LOG_CAPTURE_ALL === '1';
+const forceStructuredCaptureAll = process !== undefined && process.env.ANQR_LOG_CAPTURE_ALL === '1';
 
 function isLevelEnabledForLogger(
   logger: loglevel.Logger,
@@ -707,7 +703,7 @@ function redactSensitive(obj: unknown, depth = 0): unknown {
   // Pass through special types unchanged — safeSerializeContext handles them later
   if (obj instanceof Error) return obj;
   if (obj instanceof Set || obj instanceof Map) return obj;
-  if (typeof Node !== 'undefined' && obj instanceof Node) return obj;
+  if (Node !== undefined && obj instanceof Node) return obj;
   if (ArrayBuffer.isView(obj)) return obj;
 
   const result: Record<string, unknown> = {};

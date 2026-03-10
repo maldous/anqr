@@ -4,7 +4,7 @@
 
 import { createLogger } from '../../lib/logger';
 // Import core utilities from canonical source
-import { clamp01, createRNG, rgbToGray } from '../core';
+import { createRNG } from '../core';
 import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
 import type { OrderedMatrix } from './types';
 

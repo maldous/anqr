@@ -18,9 +18,9 @@ const log = createLogger('GENERATE');
  */
 export function darkenColor(color: string, factor: number): string {
   const hex = color.replace('#', '');
-  const r = Math.round(Number.parseInt(hex.substr(0, 2), 16) * (1 - factor));
-  const g = Math.round(Number.parseInt(hex.substr(2, 2), 16) * (1 - factor));
-  const b = Math.round(Number.parseInt(hex.substr(4, 2), 16) * (1 - factor));
+  const r = Math.round(Number.parseInt(hex.substring(0, 2), 16) * (1 - factor));
+  const g = Math.round(Number.parseInt(hex.substring(2, 4), 16) * (1 - factor));
+  const b = Math.round(Number.parseInt(hex.substring(4, 6), 16) * (1 - factor));
   return `rgb(${r},${g},${b})`;
 }
 
@@ -30,13 +30,16 @@ export function darkenColor(color: string, factor: number): string {
 export function lightenColor(color: string, factor: number): string {
   const hex = color.replace('#', '');
   const r = Math.round(
-    Number.parseInt(hex.substr(0, 2), 16) + (255 - Number.parseInt(hex.substr(0, 2), 16)) * factor
+    Number.parseInt(hex.substring(0, 2), 16) +
+      (255 - Number.parseInt(hex.substring(0, 2), 16)) * factor
   );
   const g = Math.round(
-    Number.parseInt(hex.substr(2, 2), 16) + (255 - Number.parseInt(hex.substr(2, 2), 16)) * factor
+    Number.parseInt(hex.substring(2, 4), 16) +
+      (255 - Number.parseInt(hex.substring(2, 4), 16)) * factor
   );
   const b = Math.round(
-    Number.parseInt(hex.substr(4, 2), 16) + (255 - Number.parseInt(hex.substr(4, 2), 16)) * factor
+    Number.parseInt(hex.substring(4, 6), 16) +
+      (255 - Number.parseInt(hex.substring(4, 6), 16)) * factor
   );
   return `rgb(${r},${g},${b})`;
 }

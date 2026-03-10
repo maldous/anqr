@@ -1924,7 +1924,7 @@ function sobelEdgeServer(
         }
       }
 
-      const magnitude = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+      const magnitude = Math.min(255, Math.hypot(gx, gy));
       const idx = (y * width + x) * 4;
       result[idx] = magnitude;
       result[idx + 1] = magnitude;
@@ -3217,11 +3217,11 @@ async function handler(request: Request) {
           }
           qrFnLog('[BLOB] cache MISS');
         }
-      } catch (cacheReadErr) {
-        if (isMissingBlobsEnvironmentError(cacheReadErr)) {
+      } catch (error_) {
+        if (isMissingBlobsEnvironmentError(error_)) {
           markBlobStoreDisabled('missing_blob_env');
         } else {
-          console.error('[BLOB] cache read ERROR:', cacheReadErr);
+          console.error('[BLOB] cache read ERROR:', error_);
         }
       }
     }
@@ -3597,9 +3597,9 @@ async function handler(request: Request) {
     if (isArtworkMode && overlayCanvas) {
       try {
         canvas = await generateArtworkCanvas(overlayCanvas, 0, useArtworkOverlayCompositing);
-      } catch (artErr) {
+      } catch (error_) {
         console.warn('[ARTWORK] full QR-Art failed, falling back to standard render', {
-          error: artErr instanceof Error ? artErr.message : String(artErr),
+          error: error_ instanceof Error ? error_.message : String(error_),
         });
         canvas = await qrGenerator.generate(config, overlayCanvas);
       }
@@ -3800,13 +3800,10 @@ async function handler(request: Request) {
             try {
               // Preserve artwork animation by regenerating QR-Art from each source frame.
               frameCanvas = await generateArtworkCanvas(moduleOverlayInput, i);
-            } catch (artworkFrameErr) {
+            } catch (error_) {
               console.warn('[ARTWORK] frame render fallback', {
                 frame: i,
-                error:
-                  artworkFrameErr instanceof Error
-                    ? artworkFrameErr.message
-                    : String(artworkFrameErr),
+                error: error_ instanceof Error ? error_.message : String(error_),
               });
               frameCanvas = await qrGenerator.generate(frameConfig, moduleOverlayInput);
             }
@@ -3941,13 +3938,10 @@ async function handler(request: Request) {
               const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
               try {
                 frameCanvas = await generateArtworkCanvas(artworkTarget, i);
-              } catch (artworkFrameErr) {
+              } catch (error_) {
                 console.warn('[ARTWORK] static frame render fallback', {
                   frame: i,
-                  error:
-                    artworkFrameErr instanceof Error
-                      ? artworkFrameErr.message
-                      : String(artworkFrameErr),
+                  error: error_ instanceof Error ? error_.message : String(error_),
                 });
                 frameCanvas = await qrGenerator.generate(frameConfig, artworkTarget);
               }
@@ -4088,11 +4082,11 @@ async function handler(request: Request) {
           await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
           qrFnLog('[BLOB] cache write OK');
         }
-      } catch (cacheWriteErr) {
-        if (isMissingBlobsEnvironmentError(cacheWriteErr)) {
+      } catch (error_) {
+        if (isMissingBlobsEnvironmentError(error_)) {
           markBlobStoreDisabled('missing_blob_env');
         } else {
-          console.error('[BLOB] cache write FAILED:', cacheWriteErr);
+          console.error('[BLOB] cache write FAILED:', error_);
         }
       }
     }
@@ -4117,11 +4111,11 @@ async function handler(request: Request) {
             qrFnLog('[BLOB] sentinel: set new sentinel');
           }
         }
-      } catch (sentinelErr) {
-        if (isMissingBlobsEnvironmentError(sentinelErr)) {
+      } catch (error_) {
+        if (isMissingBlobsEnvironmentError(error_)) {
           markBlobStoreDisabled('missing_blob_env');
         } else {
-          console.error('[BLOB] sentinel ERROR:', sentinelErr);
+          console.error('[BLOB] sentinel ERROR:', error_);
         }
       }
       if (shouldTrigger) {

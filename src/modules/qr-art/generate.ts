@@ -2833,7 +2833,7 @@ function resolveQArtSuffixConfig(config: {
   if (suffix !== undefined) {
     if (resolvedSuffixMode === 'numeric') {
       const normalized = suffix.startsWith('#') ? suffix.slice(1) : suffix;
-      if (!/^[0-9]*$/.test(normalized)) {
+      if (!/^\d*$/.test(normalized)) {
         log.warn('Numeric suffix mode requires digits only; falling back to byte suffix mode', {
           providedSuffix: suffix,
         });

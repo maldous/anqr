@@ -285,7 +285,7 @@ export function getRSBlocks(typeNumber: number, errorCorrectionLevel: number): R
   const rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
 
   if (typeof rsBlock === 'undefined') {
-    throw new Error(
+    throw new TypeError(
       `bad rs block @ typeNumber:${typeNumber}/errorCorrectionLevel:${errorCorrectionLevel}`
     );
   }

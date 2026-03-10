@@ -126,7 +126,7 @@ export function gifImage(width: number, height: number) {
     return {
       add: (key: string): void => {
         if (typeof _map[key] !== 'undefined') {
-          throw new Error(`dup key:${key}`);
+          throw new TypeError(`dup key:${key}`);
         }
         _map[key] = _size;
         _size += 1;

@@ -47,7 +47,7 @@ export interface DataSegment {
  * Check if a character is numeric (0-9)
  */
 function isNumeric(char: string): boolean {
-  return /^[0-9]$/.test(char);
+  return /^\d$/.test(char);
 }
 
 /**
@@ -310,7 +310,7 @@ export function generateQR(data: string, options: QROptions = {}): QRMatrix {
 export function getCompatibleMode(content: string, requestedMode: string): string {
   if (requestedMode === 'auto') {
     // Auto-detect the best mode
-    if (/^[0-9]+$/.test(content)) return 'numeric';
+    if (/^\d+$/.test(content)) return 'numeric';
     if (/^[0-9A-Z $%*+\-./:']+$/.test(content)) return 'alphanumeric';
     return 'byte';
   }
@@ -318,7 +318,7 @@ export function getCompatibleMode(content: string, requestedMode: string): strin
   // Validate that requested mode can encode the content
   switch (requestedMode) {
     case 'numeric':
-      if (/^[0-9]+$/.test(content)) return 'numeric';
+      if (/^\d+$/.test(content)) return 'numeric';
       break;
     case 'alphanumeric':
       if (/^[0-9A-Z $%*+\-./:']+$/.test(content)) return 'alphanumeric';

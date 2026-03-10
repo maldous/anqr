@@ -133,8 +133,8 @@ async function handler(request: Request) {
           size: responseBody.byteLength,
           totalMs: Date.now() - t0,
         });
-      } catch (cacheErr) {
-        console.error('[BG] cache write FAILED:', cacheErr);
+      } catch (error_) {
+        console.error('[BG] cache write FAILED:', error_);
       }
     } else {
       console.warn('[BG] skipping cache write', {

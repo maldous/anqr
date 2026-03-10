@@ -59,7 +59,7 @@ export function gexp(n: number): number {
  */
 export function qrPolynomial(num: number[], shift: number): QRPolynomial {
   if (typeof num.length === 'undefined') {
-    throw new Error(`${num.length}/${shift}`);
+    throw new TypeError(`${num.length}/${shift}`);
   }
 
   // Remove leading zeros
