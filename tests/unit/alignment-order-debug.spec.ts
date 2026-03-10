@@ -140,6 +140,9 @@ describe('Alignment Pattern Order Debug', () => {
     // But wait - this is BEFORE masking is applied!
     // Let me check if the alignment pattern is being placed correctly
 
+    // Verify module count is correct for version 7
+    expect(moduleCount, 'version 7 module count').toBe(45);
+
     // Check the timing pattern (row 6, should alternate)
     console.log('\n=== Timing Pattern on Row 6 ===');
     let timingRow = 'Row 6: ';

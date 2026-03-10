@@ -450,9 +450,10 @@ describe('QR Data Decoder (qr-data-decoder.ts)', () => {
       const { BitMatrix } = await import('../../src/modules/qr-decoder/bit-matrix');
       const matrix = new BitMatrix(21, 21);
       const parser = new BitMatrixParser(matrix);
-      // Should not throw
+      // Should not throw and parser should remain valid
       parser.setMirror(true);
       parser.setMirror(false);
+      expect(parser).toBeTruthy();
     });
   });
 

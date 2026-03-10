@@ -3,7 +3,7 @@
  * Logs per-stage durations using onProgress callbacks.
  */
 
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -100,6 +100,9 @@ describe('QR-Art timing probe', () => {
       // eslint-disable-next-line no-console
       console.log(`  ${timings[i].stage}: +${delta.toFixed(1)}ms (t=${timings[i].t.toFixed(1)}ms)`);
     }
+
+    expect(result, 'generateFullQArt should return a result').toBeDefined();
+    expect(timings.length, 'should have recorded timing stages').toBeGreaterThan(0);
   }, 120000);
 
   it('compares timing vs higher version', async () => {
@@ -140,5 +143,8 @@ describe('QR-Art timing probe', () => {
       // eslint-disable-next-line no-console
       console.log(`  ${timings[i].stage}: +${delta.toFixed(1)}ms (t=${timings[i].t.toFixed(1)}ms)`);
     }
+
+    expect(result, 'generateFullQArt should return a result').toBeDefined();
+    expect(timings.length, 'should have recorded timing stages').toBeGreaterThan(0);
   }, 120000);
 });

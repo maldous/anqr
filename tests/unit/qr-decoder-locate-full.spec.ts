@@ -207,9 +207,10 @@ describe('qr-decoder locate.ts', () => {
       patterns.push(mkPat(100, 0, 4, 10));
       patterns.push(mkPat(0, 100, 4, 10));
       // Should still find a valid triplet (from the first 10)
-      const _result = select(patterns);
+      const result = select(patterns);
       // May or may not find valid triplet depending on which 10 it considers
-      // The key is it doesn't throw
+      // The key is it doesn't throw and returns a defined value (or null)
+      expect(result === null || Array.isArray(result)).toBe(true);
     });
 
     it('handles minimum hit count penalty', async () => {

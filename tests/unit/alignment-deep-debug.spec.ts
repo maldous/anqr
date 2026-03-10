@@ -8,7 +8,7 @@
  * not just WHEN.
  */
 
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { qrcode } from '../../src/modules/qr-encoder';
 import { getPatternPosition } from '../../src/modules/qr-encoder/utils';
 
@@ -88,6 +88,9 @@ describe('Deep Alignment Pattern Debug', () => {
     for (const c of innerRing) {
       console.log(`  (${c.row}, ${c.col}): ${c.dark ? 'DARK' : 'LIGHT'}`);
     }
+
+    // Center of alignment pattern at (6, 22) should be dark
+    expect(centerDark, 'alignment center (6,22) should be dark').toBe(true);
   });
 
   it('checks alignment center overlap with timing row', () => {
@@ -157,6 +160,8 @@ describe('Deep Alignment Pattern Debug', () => {
     console.log('\n=== Checking (6, 6) alignment ===');
     console.log('Position (6, 6) should be skipped because finder pattern is already there');
     console.log('Row 6, col 6 is part of top-left finder separator');
+
+    expect(positions, 'version 7 alignment positions').toEqual([6, 22, 38]);
   });
 
   it('compares encoder vs our alignment placement in isolation', () => {
@@ -258,5 +263,8 @@ describe('Deep Alignment Pattern Debug', () => {
     }
 
     console.log(`\nTotal mismatches in (6,22) alignment area: ${mismatches}`);
+
+    // Alignment pattern placement should produce 0 mismatches against encoder
+    expect(mismatches, 'alignment area mismatches vs encoder').toBe(0);
   });
 });
