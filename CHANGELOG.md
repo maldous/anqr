@@ -15,6 +15,7 @@ Each resolved issue should add an entry under the current date heading.
 - fix: reduce qr-generator overlay mode complexity via handler extraction
 - perf: add CI performance budget guard for `/` and `/gallery` key paths
 - refactor: extract `useQRGenerator` character encoding detection helper and add focused tests
+- fix: add gallery execution path and parameter source matrix
 
 ## 2026-03-09
 
