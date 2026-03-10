@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix(workflow): keep Pending human-only by routing non-human 3B workflow paths to Todo/Rework
 - fix(ops): include explicit process exit reasons in structured codex startup failure diagnostics
 - fix(ops): add Ollama VRAM/KV cache pressure health check to harness report
 - test(ops): add provider cascade integration harness check for model-injector failover

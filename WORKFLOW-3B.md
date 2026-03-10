@@ -60,7 +60,7 @@ You are a code editor. Follow these steps exactly.
 
 1. If the issue title starts with `[PARENT]`, this is a tracking issue — do not execute it. Run:
    ```bash
-   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Todo"
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "[PARENT] tracking issue — not directly executable by automation."
    ```
    Then stop.
@@ -70,7 +70,12 @@ You are a code editor. Follow these steps exactly.
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Requires human action: <describe exact steps and validation evidence needed>"
    ```
    Then stop.
-3. If the task requires subjective judgment, strategy, UX design, or document writing (no concrete code changes possible), escalate to Pending the same way as step 2.
+3. If the task requires subjective judgment, strategy, UX design, or document writing (no concrete code changes possible), run:
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Todo"
+   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Requires human decision: <describe the decision needed and concrete unblock criteria>"
+   ```
+   Then stop.
 4. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
    **To create child issues, use the CLI helper instead of raw GraphQL:**
    ```bash
@@ -119,7 +124,7 @@ If any command exits with a non-zero status or produces an error:
    ```
    c. Stop.
 
-> **Important:** Only use `Pending` for genuinely non-automatable tasks (Steps 1.1–1.3 above).
+> **Important:** Only use `Pending` for genuinely non-automatable tasks (Step 1.2 above).
 > Use `Rework` for all recoverable failures so Symphony can retry the issue.
 
 ## Step 2: Post evidence and complete
