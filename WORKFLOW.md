@@ -23,11 +23,35 @@ workspace:
 hooks:
   after_create: |
     : "${SOURCE_REPO_URL:=git@github-private:maldous/anqr.git}"
-    git clone --depth 1 "$SOURCE_REPO_URL" .
-    if command -v bash >/dev/null 2>&1 && [ -s "$HOME/.nvm/nvm.sh" ]; then
-      bash -lc 'source "$HOME/.nvm/nvm.sh" && nvm use 22 >/dev/null 2>&1 && npm ci'
-    elif command -v npm >/dev/null 2>&1; then
-      npm ci
+    : "${FORCE_FRESH_WORKSPACE:=0}"
+
+    use_existing=0
+    if [ "$FORCE_FRESH_WORKSPACE" = "1" ]; then
+      echo "[workspace] Fresh workspace forced by FORCE_FRESH_WORKSPACE=1"
+    elif [ -d .git ] && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      use_existing=1
+    fi
+
+    if [ "$use_existing" = "1" ]; then
+      if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        echo "[workspace] Retry using existing workspace with uncommitted changes"
+      else
+        echo "[workspace] Retry using existing clean workspace"
+      fi
+    else
+      if [ -n "$(find . -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+        echo "[workspace] Existing workspace appears corrupted or not a git repo; recreating fresh workspace"
+        find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+      else
+        echo "[workspace] No existing workspace found; creating fresh workspace"
+      fi
+
+      git clone --depth 1 "$SOURCE_REPO_URL" .
+      if command -v bash >/dev/null 2>&1 && [ -s "$HOME/.nvm/nvm.sh" ]; then
+        bash -lc 'source "$HOME/.nvm/nvm.sh" && nvm use 22 >/dev/null 2>&1 && npm ci'
+      elif command -v npm >/dev/null 2>&1; then
+        npm ci
+      fi
     fi
 agent:
   max_concurrent_agents: 1
