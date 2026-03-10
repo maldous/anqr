@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix(sonar): reduce Analyze calendar payload parser S3776 complexity via helper extraction (ANQ-290)
 - fix: move ad keys and app IDs from Makefile to env-injected configuration
 - fix: add share-param parity guardrail report to CI/nightly workflow
 - fix: scope gallery artifact comparison to selected baseline IDs (ANQ-149)

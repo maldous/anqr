@@ -283,6 +283,178 @@ function nowMs(): number {
     : Date.now();
 }
 
+type CalendarPayloadParseResult = Record<string, string | boolean | null>;
+
+function createEmptyCalendarPayloadResult(): CalendarPayloadParseResult {
+  return {
+    summary: null,
+    description: null,
+    location: null,
+    startDate: null,
+    startFormatted: null,
+    endDate: null,
+    endFormatted: null,
+    duration: null,
+    organizer: null,
+    attendeesCount: null,
+    recurrence: null,
+    recurrenceFormatted: null,
+    isAllDay: false,
+    timezone: null,
+    alarm: null,
+  };
+}
+
+function isCalendarPayload(payload: string): boolean {
+  const upperPayload = payload.toUpperCase();
+  return upperPayload.includes('BEGIN:VCALENDAR') || upperPayload.includes('BEGIN:VEVENT');
+}
+
+function formatCalendarDateTime(dt: string): string {
+  // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD.
+  try {
+    const isAllDay = dt.length === 8;
+    const year = Number.parseInt(dt.slice(0, 4), 10);
+    const month = Number.parseInt(dt.slice(4, 6), 10) - 1;
+    const day = Number.parseInt(dt.slice(6, 8), 10);
+    let hours = 0;
+    let minutes = 0;
+
+    if (!isAllDay && dt.includes('T')) {
+      const timePart = dt.split('T')[1];
+      hours = Number.parseInt(timePart.slice(0, 2), 10);
+      minutes = Number.parseInt(timePart.slice(2, 4), 10);
+    }
+
+    const date = new Date(year, month, day, hours, minutes);
+    if (isAllDay) {
+      return date.toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    return date.toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } catch {
+    return dt;
+  }
+}
+
+function formatCalendarRecurrence(rrule: string): string {
+  const parts: Record<string, string> = {};
+  rrule
+    .replaceAll('RRULE:', '')
+    .split(';')
+    .forEach((entry) => {
+      const [key, value] = entry.split('=');
+      if (key && value) parts[key] = value;
+    });
+
+  const freq = parts.FREQ;
+  const interval = parts.INTERVAL ? Number.parseInt(parts.INTERVAL, 10) : 1;
+  const byday = parts.BYDAY;
+  const until = parts.UNTIL;
+  const count = parts.COUNT;
+
+  const dayNames: Record<string, string> = {
+    SU: 'Sunday',
+    MO: 'Monday',
+    TU: 'Tuesday',
+    WE: 'Wednesday',
+    TH: 'Thursday',
+    FR: 'Friday',
+    SA: 'Saturday',
+  };
+
+  let text = '';
+  if (freq === 'DAILY') text = interval === 1 ? 'Daily' : `Every ${interval} days`;
+  else if (freq === 'WEEKLY') {
+    if (byday) {
+      const days = byday
+        .split(',')
+        .map((d) => dayNames[d] || d)
+        .join(', ');
+      text = interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
+    } else {
+      text = interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
+    }
+  } else if (freq === 'MONTHLY') text = interval === 1 ? 'Monthly' : `Every ${interval} months`;
+  else if (freq === 'YEARLY') text = interval === 1 ? 'Yearly' : `Every ${interval} years`;
+  else text = freq || 'Recurring';
+
+  if (until) text += ` until ${formatCalendarDateTime(until)}`;
+  if (count) text += ` (${count} times)`;
+
+  return text;
+}
+
+function applyCalendarLine({
+  baseKey,
+  keyPart,
+  value,
+  fullLine,
+  result,
+}: {
+  baseKey: string;
+  keyPart: string;
+  value: string;
+  fullLine: string;
+  result: CalendarPayloadParseResult;
+}): number {
+  switch (baseKey) {
+    case 'SUMMARY':
+      result.summary = value;
+      return 0;
+    case 'DESCRIPTION':
+      result.description = value.replaceAll('\\n', '\n').replaceAll('\\,', ',');
+      return 0;
+    case 'LOCATION':
+      result.location = value.replaceAll('\\,', ',');
+      return 0;
+    case 'DTSTART': {
+      result.startDate = value;
+      result.startFormatted = formatCalendarDateTime(value.replaceAll('Z', ''));
+      result.isAllDay = value.length === 8;
+      const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
+      if (tzMatch) result.timezone = tzMatch[1];
+      return 0;
+    }
+    case 'DTEND':
+      result.endDate = value;
+      result.endFormatted = formatCalendarDateTime(value.replaceAll('Z', ''));
+      return 0;
+    case 'DURATION':
+      result.duration = value;
+      return 0;
+    case 'ORGANIZER': {
+      const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
+      result.organizer = cnMatch ? cnMatch[1] : value.replaceAll('mailto:', '');
+      return 0;
+    }
+    case 'ATTENDEE':
+      return 1;
+    case 'RRULE':
+      result.recurrence = value;
+      result.recurrenceFormatted = formatCalendarRecurrence(fullLine);
+      return 0;
+    case 'VALARM':
+    case 'TRIGGER':
+      if (value) result.alarm = value;
+      return 0;
+    default:
+      return 0;
+  }
+}
+
 // Status Badge Component
 interface StatusBadgeProps {
   status: boolean;
@@ -2618,123 +2790,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   // Calendar event parser
   const parseCalendarPayload = useCallback(
     (payload: string): Record<string, string | boolean | null> => {
-      const result: Record<string, string | boolean | null> = {
-        summary: null,
-        description: null,
-        location: null,
-        startDate: null,
-        startFormatted: null,
-        endDate: null,
-        endFormatted: null,
-        duration: null,
-        organizer: null,
-        attendeesCount: null,
-        recurrence: null,
-        recurrenceFormatted: null,
-        isAllDay: false,
-        timezone: null,
-        alarm: null,
-      };
-
-      if (
-        !(
-          payload.toUpperCase().includes('BEGIN:VCALENDAR') ||
-          payload.toUpperCase().includes('BEGIN:VEVENT')
-        )
-      ) {
-        return result;
-      }
+      const result = createEmptyCalendarPayloadResult();
+      if (!isCalendarPayload(payload)) return result;
 
       const lines = payload.split(/\r?\n/);
       let attendeesCount = 0;
-
-      const formatDateTime = (dt: string): string => {
-        // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD
-        try {
-          const isAllDay = dt.length === 8;
-          const year = Number.parseInt(dt.slice(0, 4), 10);
-          const month = Number.parseInt(dt.slice(4, 6), 10) - 1;
-          const day = Number.parseInt(dt.slice(6, 8), 10);
-          let hours = 0,
-            minutes = 0;
-
-          if (!isAllDay && dt.includes('T')) {
-            const timePart = dt.split('T')[1];
-            hours = Number.parseInt(timePart.slice(0, 2), 10);
-            minutes = Number.parseInt(timePart.slice(2, 4), 10);
-          }
-
-          const date = new Date(year, month, day, hours, minutes);
-
-          if (isAllDay) {
-            return date.toLocaleDateString(undefined, {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            });
-          }
-          return date.toLocaleString(undefined, {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-          });
-        } catch {
-          return dt;
-        }
-      };
-
-      const formatRecurrence = (rrule: string): string => {
-        const parts: Record<string, string> = {};
-        rrule
-          .replaceAll('RRULE:', '')
-          .split(';')
-          .forEach((p) => {
-            const [k, v] = p.split('=');
-            if (k && v) parts[k] = v;
-          });
-
-        const freq = parts.FREQ;
-        const interval = parts.INTERVAL ? Number.parseInt(parts.INTERVAL, 10) : 1;
-        const byday = parts.BYDAY;
-        const until = parts.UNTIL;
-        const count = parts.COUNT;
-
-        let text = '';
-        const dayNames: Record<string, string> = {
-          SU: 'Sunday',
-          MO: 'Monday',
-          TU: 'Tuesday',
-          WE: 'Wednesday',
-          TH: 'Thursday',
-          FR: 'Friday',
-          SA: 'Saturday',
-        };
-
-        if (freq === 'DAILY') text = interval === 1 ? 'Daily' : `Every ${interval} days`;
-        else if (freq === 'WEEKLY') {
-          if (byday) {
-            const days = byday
-              .split(',')
-              .map((d) => dayNames[d] || d)
-              .join(', ');
-            text = interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
-          } else {
-            text = interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
-          }
-        } else if (freq === 'MONTHLY')
-          text = interval === 1 ? 'Monthly' : `Every ${interval} months`;
-        else if (freq === 'YEARLY') text = interval === 1 ? 'Yearly' : `Every ${interval} years`;
-        else text = freq || 'Recurring';
-
-        if (until) text += ` until ${formatDateTime(until)}`;
-        if (count) text += ` (${count} times)`;
-
-        return text;
-      };
 
       for (let i = 0; i < lines.length; i++) {
         let line = lines[i];
@@ -2749,52 +2809,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         const keyPart = line.slice(0, colonIdx).toUpperCase();
         const value = line.slice(colonIdx + 1);
         const baseKey = keyPart.split(';')[0];
-
-        switch (baseKey) {
-          case 'SUMMARY':
-            result.summary = value;
-            break;
-          case 'DESCRIPTION':
-            result.description = value.replaceAll('\\n', '\n').replaceAll('\\,', ',');
-            break;
-          case 'LOCATION':
-            result.location = value.replaceAll('\\,', ',');
-            break;
-          case 'DTSTART': {
-            result.startDate = value;
-            result.startFormatted = formatDateTime(value.replaceAll('Z', ''));
-            result.isAllDay = value.length === 8;
-            const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
-            if (tzMatch) result.timezone = tzMatch[1];
-            break;
-          }
-          case 'DTEND': {
-            result.endDate = value;
-            result.endFormatted = formatDateTime(value.replaceAll('Z', ''));
-            break;
-          }
-          case 'DURATION':
-            result.duration = value;
-            break;
-          case 'ORGANIZER': {
-            const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
-            result.organizer = cnMatch ? cnMatch[1] : value.replaceAll('mailto:', '');
-            break;
-          }
-          case 'ATTENDEE':
-            attendeesCount++;
-            break;
-          case 'RRULE': {
-            result.recurrence = value;
-            result.recurrenceFormatted = formatRecurrence(line);
-            break;
-          }
-          case 'VALARM':
-          case 'TRIGGER': {
-            if (value) result.alarm = value;
-            break;
-          }
-        }
+        attendeesCount += applyCalendarLine({
+          baseKey,
+          keyPart,
+          value,
+          fullLine: line,
+          result,
+        });
       }
 
       result.attendeesCount = attendeesCount > 0 ? String(attendeesCount) : null;
