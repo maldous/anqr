@@ -19,7 +19,7 @@ describe('qr-generator artistic guards', () => {
       'const shouldForceBinaryModule = (row: number, col: number): boolean => {'
     );
     expect(src).toContain('const getPatternFlags = (row: number, col: number): number =>');
-    expect(src).toContain('const isFinderRegionFlag = (flags: number): boolean =>');
+    expect(src).toContain('function isFinderRegionFlag(flags: number): boolean {');
     expect(src).toContain('const flags = getPatternFlags(row, col);');
     expect(src).toContain('if (isFinderRegionFlag(flags)) {');
     expect(src).toContain('return preserveFinders;');
