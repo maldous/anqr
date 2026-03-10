@@ -478,31 +478,34 @@ function safeSerializeContext(context: unknown): unknown {
 
   // Last resort: try to extract what we can
   if (typeof context === 'object') {
-    const result: Record<string, unknown> = {};
-    try {
-      for (const [key, value] of Object.entries(context as Record<string, unknown>)) {
-        try {
-          if (value === null || value === undefined) {
-            result[key] = value;
-          } else if (typeof value === 'function') {
-            result[key] = '[Function]';
-          } else if (typeof value === 'object') {
-            // Try to serialize nested object
-            result[key] = structuredClone(value);
-          } else {
-            result[key] = value;
-          }
-        } catch {
-          result[key] = `[Unserializable: ${typeof value}]`;
-        }
-      }
-      return result;
-    } catch {
-      return '[Unserializable object]';
-    }
+    return extractObjectProperties(context as Record<string, unknown>);
   }
 
   return '[Unserializable]';
+}
+
+function extractObjectProperties(obj: Record<string, unknown>): unknown {
+  const result: Record<string, unknown> = {};
+  try {
+    for (const [key, value] of Object.entries(obj)) {
+      try {
+        if (value === null || value === undefined) {
+          result[key] = value;
+        } else if (typeof value === 'function') {
+          result[key] = '[Function]';
+        } else if (typeof value === 'object') {
+          result[key] = structuredClone(value);
+        } else {
+          result[key] = value;
+        }
+      } catch {
+        result[key] = `[Unserializable: ${typeof value}]`;
+      }
+    }
+    return result;
+  } catch {
+    return '[Unserializable object]';
+  }
 }
 
 interface BufferCaptureOptions {

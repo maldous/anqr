@@ -451,6 +451,24 @@ function computeBWFirstShade(
  * - Dark modules: 0-80 grayscale - clearly dark for scanning with room for texture
  * - Light modules: 175-255 grayscale - clearly light for scanning with room for texture
  */
+function computeFinalShade(
+  overlayBrightness: number,
+  textureAmount: number,
+  noiseVariation: number,
+  qrIsDark: boolean,
+  moduleRow: number,
+  moduleCol: number,
+  moduleCount: number,
+  version: number,
+  config: QRGeneratorConfig
+): number {
+  const shade = computeBWFirstShade(overlayBrightness, textureAmount, noiseVariation, qrIsDark);
+  if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
+    return qrIsDark ? 0 : 255;
+  }
+  return shade;
+}
+
 async function generateBWFirstMatrix(
   qr: QRCodeInstance,
   config: QRGeneratorConfig,
@@ -529,11 +547,17 @@ async function generateBWFirstMatrix(
       const noise = sampleBlueNoise(x, y, blueNoiseTile, tileSize);
       const noiseVariation = (noise - 0.5) * 0.3;
 
-      let shade = computeBWFirstShade(overlayBrightness, textureAmount, noiseVariation, qrIsDark);
-
-      if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
-        shade = qrIsDark ? 0 : 255;
-      }
+      const shade = computeFinalShade(
+        overlayBrightness,
+        textureAmount,
+        noiseVariation,
+        qrIsDark,
+        moduleRow,
+        moduleCol,
+        moduleCount,
+        version,
+        config
+      );
 
       if (config.colorMode !== 'bw') {
         const mapped = mapShadeWithSourceColor(r, g, b, shade, qrIsDark);

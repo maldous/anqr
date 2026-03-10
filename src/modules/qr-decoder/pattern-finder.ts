@@ -371,31 +371,26 @@ export class FinderPatternFinder {
         stateCountTotal
       );
       if (!Number.isNaN(centerJ)) {
-        const estimatedModuleSize = stateCountTotal / 7;
-        let found = false;
-        for (let index = 0; index < this.possibleCenters.length; index++) {
-          const center = this.possibleCenters[index];
-          if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
-            this.possibleCenters[index] = center.combineEstimate(
-              centerI,
-              centerJ,
-              estimatedModuleSize
-            );
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          const point = new FinderPattern(centerJ, centerI, estimatedModuleSize);
-          this.possibleCenters.push(point);
-          if (this.resultPointCallback) {
-            this.resultPointCallback(point);
-          }
-        }
+        this.confirmCenter(centerI, centerJ, stateCountTotal / 7);
         return true;
       }
     }
     return false;
+  }
+
+  private confirmCenter(centerI: number, centerJ: number, estimatedModuleSize: number): void {
+    for (let index = 0; index < this.possibleCenters.length; index++) {
+      const center = this.possibleCenters[index];
+      if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
+        this.possibleCenters[index] = center.combineEstimate(centerI, centerJ, estimatedModuleSize);
+        return;
+      }
+    }
+    const point = new FinderPattern(centerJ, centerI, estimatedModuleSize);
+    this.possibleCenters.push(point);
+    if (this.resultPointCallback) {
+      this.resultPointCallback(point);
+    }
   }
 
   private static centerFromEnd(stateCount: Int32Array, end: number): number {

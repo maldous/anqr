@@ -1194,28 +1194,29 @@ function decodeNumeric(bits: BitStream, count: number): string {
     remaining -= 3;
   }
 
-  // Read remaining 2 digits (7 bits)
+  result += decodeNumericRemainder(bits, remaining);
+
+  return result;
+}
+
+function decodeNumericRemainder(bits: BitStream, remaining: number): string {
   if (remaining === 2 && bits.available() >= 7) {
     const value = bits.read(7);
     if (value > 99) {
       qrDecoderLog.debug('numeric: Invalid 2-digit value', { value });
-      result += '??';
-    } else {
-      result += value.toString().padStart(2, '0');
+      return '??';
     }
+    return value.toString().padStart(2, '0');
   }
-  // Read remaining 1 digit (4 bits)
-  else if (remaining === 1 && bits.available() >= 4) {
+  if (remaining === 1 && bits.available() >= 4) {
     const value = bits.read(4);
     if (value > 9) {
       qrDecoderLog.debug('numeric: Invalid 1-digit value', { value });
-      result += '?';
-    } else {
-      result += value.toString();
+      return '?';
     }
+    return value.toString();
   }
-
-  return result;
+  return '';
 }
 
 /**

@@ -89,17 +89,8 @@ export function decodeQR(
   }
 
   // Strategy 4: Try with GlobalHistogramBinarizer instead of HybridBinarizer
-  if (inversionAttempts !== 'onlyInvert') {
-    qrDecoderLog.trace('strategy: Trying Normal + GlobalHistogramBinarizer');
-    const result = tryDecodeWithGlobalBinarizer(imageData, false, tryHarderHints);
-    if (result) return result;
-  }
-
-  if (inversionAttempts !== 'dontInvert') {
-    qrDecoderLog.trace('strategy: Trying Inverted + GlobalHistogramBinarizer');
-    const result = tryDecodeWithGlobalBinarizer(imageData, true, tryHarderHints);
-    if (result) return result;
-  }
+  const globalResult = tryGlobalBinarizerStrategies(imageData, inversionAttempts, tryHarderHints);
+  if (globalResult) return globalResult;
 
   // Strategy 5: Fallback to our custom decoder (uses different finder pattern detection)
   qrDecoderLog.trace('strategy: Trying Custom decoder fallback');
@@ -110,6 +101,24 @@ export function decodeQR(
   }
 
   qrDecoderLog.trace('strategy: All strategies exhausted - no QR code detected');
+  return null;
+}
+
+function tryGlobalBinarizerStrategies(
+  imageData: ImageData,
+  inversionAttempts: string,
+  hints: Map<DecodeHintType, any>
+): DecodeResult | null {
+  if (inversionAttempts !== 'onlyInvert') {
+    qrDecoderLog.trace('strategy: Trying Normal + GlobalHistogramBinarizer');
+    const result = tryDecodeWithGlobalBinarizer(imageData, false, hints);
+    if (result) return result;
+  }
+  if (inversionAttempts !== 'dontInvert') {
+    qrDecoderLog.trace('strategy: Trying Inverted + GlobalHistogramBinarizer');
+    const result = tryDecodeWithGlobalBinarizer(imageData, true, hints);
+    if (result) return result;
+  }
   return null;
 }
 

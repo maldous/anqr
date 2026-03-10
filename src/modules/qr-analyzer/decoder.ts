@@ -578,23 +578,14 @@ function buildModuleMatrix(
   for (let row = 0; row < moduleCount; row++) {
     const matrixRow: boolean[] = [];
     for (let col = 0; col < moduleCount; col++) {
-      // Calculate pixel position for center of this module
-      // Module (col, row) is at grid position (col, row)
-      // Pixel = origin + col * rightVec + row * downVec + 0.5 offset for center
       const x = Math.round(originX + (col + 0.5) * rightVecX + (row + 0.5) * downVecX);
       const y = Math.round(originY + (col + 0.5) * rightVecY + (row + 0.5) * downVecY);
 
-      if (x >= 0 && x < imageData.width && y >= 0 && y < imageData.height) {
-        const idx = (y * width + x) * 4;
-        const gray = grayAt(data, idx);
-        const isDark = gray < 128;
-        matrixRow.push(isDark);
-        if (isDark) darkCount++;
-        else lightCount++;
-      } else {
-        matrixRow.push(false);
-        outOfBoundsCount++;
-      }
+      const sampled = sampleModulePixel(data, width, imageData.width, imageData.height, x, y);
+      matrixRow.push(sampled.isDark);
+      darkCount += sampled.dark;
+      lightCount += sampled.light;
+      outOfBoundsCount += sampled.oob;
     }
     matrix.push(matrixRow);
   }
@@ -613,6 +604,23 @@ function buildModuleMatrix(
 /**
  * Validate that finder patterns appear correctly in the matrix
  */
+function sampleModulePixel(
+  data: Uint8ClampedArray,
+  width: number,
+  imgWidth: number,
+  imgHeight: number,
+  x: number,
+  y: number
+): { isDark: boolean; dark: number; light: number; oob: number } {
+  if (x >= 0 && x < imgWidth && y >= 0 && y < imgHeight) {
+    const idx = (y * width + x) * 4;
+    const gray = grayAt(data, idx);
+    const isDark = gray < 128;
+    return { isDark, dark: isDark ? 1 : 0, light: isDark ? 0 : 1, oob: 0 };
+  }
+  return { isDark: false, dark: 0, light: 0, oob: 1 };
+}
+
 function validateFinderPatterns(matrix: boolean[][], moduleCount: number): void {
   // Check top-left finder pattern (should be 7x7 with specific pattern)
   // The outer ring should be dark, then white ring, then dark center 3x3

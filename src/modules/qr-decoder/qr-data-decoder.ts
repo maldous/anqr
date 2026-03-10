@@ -364,22 +364,7 @@ export class QRDecoder {
         }
         default: {
           const count = bits.readBits(mode.getCharacterCountBits(version));
-          switch (mode) {
-            case Mode.NUMERIC:
-              this.decodeNumericSegment(bits, result, count);
-              break;
-            case Mode.ALPHANUMERIC:
-              this.decodeAlphanumericSegment(bits, result, count, fc1InEffect);
-              break;
-            case Mode.BYTE:
-              this.decodeByteSegment(bits, result, count, byteSegments, hints);
-              break;
-            case Mode.KANJI:
-              this.decodeKanjiSegment(bits, result, count);
-              break;
-            default:
-              throw new FormatException();
-          }
+          this.decodeContentSegment(bits, result, mode, count, fc1InEffect, byteSegments, hints);
         }
       }
     } while (mode !== Mode.TERMINATOR);
@@ -390,6 +375,33 @@ export class QRDecoder {
       byteSegments.length === 0 ? null : byteSegments,
       ecLevel.toString()
     );
+  }
+
+  private decodeContentSegment(
+    bits: BitSource,
+    result: StringBuilder,
+    mode: Mode,
+    count: number,
+    fc1InEffect: boolean,
+    byteSegments: Uint8Array[],
+    hints?: Map<number, any>
+  ): void {
+    switch (mode) {
+      case Mode.NUMERIC:
+        this.decodeNumericSegment(bits, result, count);
+        break;
+      case Mode.ALPHANUMERIC:
+        this.decodeAlphanumericSegment(bits, result, count, fc1InEffect);
+        break;
+      case Mode.BYTE:
+        this.decodeByteSegment(bits, result, count, byteSegments, hints);
+        break;
+      case Mode.KANJI:
+        this.decodeKanjiSegment(bits, result, count);
+        break;
+      default:
+        throw new FormatException();
+    }
   }
 
   private parseECIValue(bits: BitSource): number {
