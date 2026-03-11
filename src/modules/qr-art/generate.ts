@@ -3189,6 +3189,467 @@ function resolveQArtSuffixConfig(config: {
   };
 }
 
+function buildQArtFailResult(
+  error: string,
+  matrix: boolean[][],
+  moduleCount: number,
+  version: number,
+  mask: number,
+  encodedData: string,
+  originalData: string,
+  suffix: string
+): FullQArtResult {
+  return {
+    success: false,
+    error,
+    matrix,
+    moduleCount,
+    version,
+    maskPattern: mask,
+    matchingPixels: 0,
+    totalControllable: 0,
+    matchPercentage: 0,
+    encodedData,
+    originalData,
+    suffix,
+  };
+}
+
+function verifyBaseMatrixScan(
+  baseMatrix: boolean[][],
+  data: string,
+  originalDataLength: number
+): string | null {
+  const baseVerificationScan = scanMatrixWithJsQR(baseMatrix);
+  if (baseVerificationScan.success) {
+    const baseValidation = validateOriginalDataPreserved(baseVerificationScan.data, data);
+    if (baseValidation.valid) {
+      log.info('BASE MATRIX VERIFICATION PASSED (byte-exact)', {
+        originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
+        decodedDataLength: baseVerificationScan.data?.length,
+        suffixPresent: (baseVerificationScan.data?.length ?? 0) > originalDataLength,
+        validationMethod: 'BYTE_EXACT_PREFIX',
+      });
+      return null;
+    }
+    log.warn('BASE MATRIX VERIFICATION FAILED - byte-exact validation failed!', {
+      expectedOriginal: data,
+      actualDecodedData: baseVerificationScan.data,
+      validationReason: baseValidation.reason,
+      mismatchDetails: baseValidation.mismatch,
+    });
+    return `Base matrix byte-exact validation failed: ${baseValidation.reason}`;
+  }
+  log.warn('BASE MATRIX VERIFICATION FAILED - base matrix does not scan!', {
+    error: baseVerificationScan.error,
+  });
+  return `Base matrix does not scan: ${baseVerificationScan.error}`;
+}
+
+function verifyRSLinearityAllBlocks(
+  modifiedBlockData: Uint8Array[],
+  modifiedBlockEcc: Uint8Array[],
+  blockEccCounts: number[]
+): boolean {
+  let ok = true;
+  for (let i = 0; i < modifiedBlockData.length; i++) {
+    const expectedEcc = computeECC(modifiedBlockData[i], blockEccCounts[i]);
+    const actualEcc = modifiedBlockEcc[i];
+    if (arraysEqual(expectedEcc, actualEcc)) {
+      log.debug('RS linearity verified for modified block', { blockIndex: i });
+    } else {
+      ok = false;
+      log.warn('RS LINEARITY BROKEN - modified codeword is invalid!', {
+        blockIndex: i,
+        dataCount: modifiedBlockData[i].length,
+        eccCount: blockEccCounts[i],
+        expectedEccFirst5: Array.from(expectedEcc.slice(0, 5)),
+        actualEccFirst5: Array.from(actualEcc.slice(0, 5)),
+        modifiedDataFirst5: Array.from(modifiedBlockData[i].slice(0, 5)),
+      });
+    }
+  }
+  if (ok) {
+    log.info('RS linearity preserved - all modified codewords are valid');
+  } else {
+    log.warn('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
+  }
+  return ok;
+}
+
+function logBlockModificationSummary(
+  blockDataArrays: Uint8Array[],
+  modifiedBlockData: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  modifiedBlockEcc: Uint8Array[]
+): void {
+  for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
+    let bytesChanged = 0;
+    let bitsChanged = 0;
+    const origData = blockDataArrays[blockIdx];
+    const modData = modifiedBlockData[blockIdx];
+    const origEcc = blockEccArrays[blockIdx];
+    const modEcc = modifiedBlockEcc[blockIdx];
+
+    for (let i = 0; i < origData.length; i++) {
+      if (origData[i] !== modData[i]) {
+        bytesChanged++;
+        let diff = origData[i] ^ modData[i];
+        while (diff) {
+          bitsChanged += diff & 1;
+          diff >>>= 1;
+        }
+      }
+    }
+
+    let eccBytesChanged = 0;
+    for (let i = 0; i < origEcc.length; i++) {
+      if (origEcc[i] !== modEcc[i]) {
+        eccBytesChanged++;
+      }
+    }
+
+    if (bytesChanged > 0 || eccBytesChanged > 0) {
+      log.debug('Block modification summary', {
+        blockIndex: blockIdx,
+        dataBytesChanged: bytesChanged,
+        dataBitsChanged: bitsChanged,
+        eccBytesChanged,
+        totalDataBytes: origData.length,
+        totalEccBytes: origEcc.length,
+      });
+    }
+  }
+}
+
+function validateFinalMatrixDiagnostics(
+  finalMatrix: boolean[][],
+  baseMatrix: boolean[][],
+  ecc: ECCLevel,
+  actualMask: number,
+  moduleCount: number
+): {
+  structuralDiffCount: number;
+  dataDiffCount: number;
+  finderValidation: ReturnType<typeof validateFinderPatterns>;
+  timingValidation: ReturnType<typeof validateTimingPatterns>;
+  baseFormatInfo: ReturnType<typeof extractFormatInfo>;
+  finalFormatInfo: ReturnType<typeof extractFormatInfo>;
+} {
+  const finalFormatVerification = verifyMatrixFormatInfo(finalMatrix, ecc, actualMask);
+  if (finalFormatVerification.valid) {
+    log.info('Final matrix format verification passed (diagnostic)', {
+      ecc,
+      mask: actualMask,
+      eccMatch: finalFormatVerification.eccMatch,
+      maskMatch: finalFormatVerification.maskMatch,
+    });
+  } else {
+    log.warn(
+      'FORMAT_PARSER_DISAGREEMENT: Final matrix format verification disagreement (diagnostic)',
+      {
+        expectedEcc: ecc,
+        extractedEcc: finalFormatVerification.extractedEcc,
+        eccMatch: finalFormatVerification.eccMatch,
+        expectedMask: actualMask,
+        extractedMask: finalFormatVerification.extractedMask,
+        maskMatch: finalFormatVerification.maskMatch,
+        parserDisagreement: finalFormatVerification.reason,
+        action: 'CONTINUE_TO_SEMANTIC_VALIDATION',
+        note: 'Encoder is authoritative. Semantic scan validation is the real gate.',
+      }
+    );
+  }
+
+  const matrixDiff = analyzeMatrixDiff(baseMatrix, finalMatrix, moduleCount);
+  const { diffCount, structuralDiffCount, dataDiffCount, sampleDiffs } = matrixDiff;
+
+  log.info('Matrix diff between base and final', {
+    diffCount,
+    structuralDiffCount,
+    dataDiffCount,
+    moduleCount,
+    totalModules: moduleCount * moduleCount,
+    diffPercent: `${((diffCount / (moduleCount * moduleCount)) * 100).toFixed(2)}%`,
+    sampleDiffs: sampleDiffs.slice(0, 5),
+  });
+
+  if (structuralDiffCount > 0) {
+    log.warn('CRITICAL: Structural patterns modified!', {
+      structuralDiffCount,
+      structuralDiffs: sampleDiffs.filter((d) => d.isStructural),
+    });
+  }
+
+  const finderValidation = validateFinderPatterns(finalMatrix);
+  if (finderValidation.allValid) {
+    log.debug('Finder patterns validated OK');
+  } else {
+    log.warn('FINDER PATTERNS CORRUPTED', {
+      topLeft: finderValidation.topLeft,
+      topRight: finderValidation.topRight,
+      bottomLeft: finderValidation.bottomLeft,
+      errors: finderValidation.errors,
+    });
+  }
+
+  const timingValidation = validateTimingPatterns(finalMatrix);
+  if (timingValidation.allValid) {
+    log.debug('Timing patterns validated OK');
+  } else {
+    log.warn('TIMING PATTERNS CORRUPTED', {
+      horizontal: timingValidation.horizontal,
+      vertical: timingValidation.vertical,
+      errors: timingValidation.errors,
+    });
+  }
+
+  const baseFormatInfo = extractFormatInfo(baseMatrix);
+  const finalFormatInfo = extractFormatInfo(finalMatrix);
+
+  log.info('Format info comparison', {
+    base: {
+      vertical: baseFormatInfo.vertical.toString(2).padStart(15, '0'),
+      horizontal: baseFormatInfo.horizontal.toString(2).padStart(15, '0'),
+      match: baseFormatInfo.match,
+    },
+    final: {
+      vertical: finalFormatInfo.vertical.toString(2).padStart(15, '0'),
+      horizontal: finalFormatInfo.horizontal.toString(2).padStart(15, '0'),
+      match: finalFormatInfo.match,
+    },
+    formatInfoUnchanged:
+      baseFormatInfo.vertical === finalFormatInfo.vertical &&
+      baseFormatInfo.horizontal === finalFormatInfo.horizontal,
+  });
+
+  if (
+    baseFormatInfo.vertical !== finalFormatInfo.vertical ||
+    baseFormatInfo.horizontal !== finalFormatInfo.horizontal
+  ) {
+    log.warn('FORMAT INFO CHANGED - This will break scanning!');
+  }
+
+  return {
+    structuralDiffCount,
+    dataDiffCount,
+    finderValidation,
+    timingValidation,
+    baseFormatInfo,
+    finalFormatInfo,
+  };
+}
+
+function performSemanticGateAndFallback(
+  finalMatrix: boolean[][],
+  baseMatrix: boolean[][],
+  originalData: string,
+  data: string,
+  encodedData: string,
+  ecc: ECCLevel,
+  actualMask: number,
+  actualSuffix: string,
+  strictSuffix: boolean,
+  resolvedSuffixMode: 'byte' | 'numeric',
+  originalDataLength: number,
+  scanResult: ScanResult,
+  blockSelections: BlockSelectionResult[],
+  elimination: EliminationResult,
+  importance: number[][],
+  moduleCount: number,
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  actualVersion: number,
+  totalSelected: number,
+  diagnostics: {
+    structuralDiffCount: number;
+    dataDiffCount: number;
+    finderValidation: ReturnType<typeof validateFinderPatterns>;
+    timingValidation: ReturnType<typeof validateTimingPatterns>;
+    baseFormatInfo: ReturnType<typeof extractFormatInfo>;
+    finalFormatInfo: ReturnType<typeof extractFormatInfo>;
+  },
+  actualControlPercentage: number,
+  basisVectorCount: number
+): { finalMatrixToUse: boolean[][]; actualVectorsApplied: number } {
+  const semanticValidation = performSemanticValidation(
+    finalMatrix,
+    originalData,
+    ecc,
+    actualMask,
+    actualSuffix,
+    scanMatrixWithJsQR,
+    strictSuffix,
+    resolvedSuffixMode
+  );
+
+  let currentScanResult = scanResult;
+  let finalMatrixToUse = finalMatrix;
+  let actualVectorsApplied = totalSelected;
+
+  if (semanticValidation.valid) {
+    log.info('QR-Art SEMANTIC-HARD-GATE validation PASSED', {
+      originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
+      originalDataLength,
+      decodedDataLength: scanResult.data?.length,
+      ecc,
+      mask: actualMask,
+      strictSuffix,
+      structurallyValid: scanResult.structurallyValid,
+      segmentCount: scanResult.segmentCount,
+      segmentModes: scanResult.segments?.map((s) => s.modeName),
+      validationMethod: 'SEMANTIC_HARD_GATE',
+      checksPerformed: [
+        'SCAN_SUCCESS',
+        'LENGTH_CHECK',
+        'BYTE_EXACT_PREFIX',
+        'ECC_INVARIANT',
+        'MASK_INVARIANT',
+        'STRUCTURAL_VALIDITY',
+        strictSuffix ? 'SUFFIX_CHARSET_STRICT' : 'SUFFIX_CHARSET_SOFT',
+      ],
+    });
+  } else {
+    log.warn('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
+      rejectionReason: semanticValidation.reason,
+      description: semanticValidation.description,
+      details: semanticValidation.details,
+      originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
+      originalDataLength,
+      ecc,
+      mask: actualMask,
+      structurallyValid: scanResult.structurallyValid,
+      segmentCount: scanResult.segmentCount,
+      segmentModes: scanResult.segments?.map((s) => s.modeName),
+      segments: scanResult.segments?.map((s) => ({
+        mode: s.modeName,
+        charCount: s.charCount,
+        valid: s.valid,
+        bitOffset: s.bitOffset,
+      })),
+      note: 'Candidate rejected by semantic-hard-gate',
+    });
+
+    if (scanResult.success && scanResult.data) {
+      const expectedBytes = stringToBytes(data);
+      const actualBytes = stringToBytes(scanResult.data);
+      log.warn('DECODED BYTES (hex comparison)', {
+        decodedPrefixHex: toHex(actualBytes.slice(0, originalDataLength)),
+        expectedPrefixHex: toHex(expectedBytes),
+        mismatchIndex: semanticValidation.details?.mismatchIndex,
+        expectedByte: semanticValidation.details?.expectedByte?.toString(16),
+        actualByte: semanticValidation.details?.actualByte?.toString(16),
+      });
+    }
+
+    currentScanResult = {
+      success: false,
+      error: `Semantic validation failed: ${semanticValidation.reason} - ${semanticValidation.description}`,
+    };
+  }
+
+  if (!currentScanResult.success) {
+    log.warn('QR-Art matrix scan validation FAILED - matrix does not scan!', {
+      error: currentScanResult.error,
+      expectedData: encodedData,
+      scanAttempts: currentScanResult.attempts,
+      finderPatternsOK: diagnostics.finderValidation.allValid,
+      timingPatternsOK: diagnostics.timingValidation.allValid,
+      formatInfoOK: diagnostics.baseFormatInfo.vertical === diagnostics.finalFormatInfo.vertical,
+      structuralDiffsCount: diagnostics.structuralDiffCount,
+      dataDiffsCount: diagnostics.dataDiffCount,
+      controllableVectors: basisVectorCount,
+      controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
+    });
+
+    const fallbackResult = handleScanFailureFallback(
+      blockSelections,
+      elimination,
+      importance,
+      moduleCount,
+      blockDataArrays,
+      blockEccArrays,
+      blockDataCounts,
+      blockEccCounts,
+      actualVersion,
+      ecc,
+      actualMask,
+      data,
+      actualSuffix,
+      strictSuffix,
+      totalSelected,
+      baseMatrix
+    );
+
+    finalMatrixToUse = fallbackResult.matrix;
+    actualVectorsApplied = fallbackResult.vectorsApplied;
+  }
+
+  return { finalMatrixToUse, actualVectorsApplied };
+}
+
+function countFinalMatchingPixels(
+  finalMatrix: boolean[][],
+  targets: boolean[][],
+  dataPixels: Set<number>,
+  moduleCount: number
+): number {
+  let matching = 0;
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const pixelIdx = row * moduleCount + col;
+      if (!dataPixels.has(pixelIdx)) continue;
+      const finalValue = finalMatrix[row]?.[col] ?? false;
+      const targetValue = targets[row]?.[col] ?? false;
+      if (finalValue === targetValue) {
+        matching++;
+      }
+    }
+  }
+  return matching;
+}
+
+function performZeroModificationTest(
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  actualVersion: number,
+  ecc: ECCLevel,
+  actualMask: number,
+  encodedData: string
+): void {
+  const zeroModMatrix = regenerateQRFromModifiedData(
+    blockDataArrays,
+    blockEccArrays,
+    blockDataCounts,
+    blockEccCounts,
+    actualVersion,
+    ecc,
+    actualMask
+  );
+  const zeroModScan = scanMatrixWithJsQR(zeroModMatrix);
+  if (zeroModScan.success) {
+    const matchesData = zeroModScan.data === encodedData;
+    if (matchesData) {
+      log.debug('Zero-modification test PASSED - decoded data matches exactly', {
+        decodedData: zeroModScan.data,
+      });
+    } else {
+      log.warn('Zero-modification test FAILED - decoded data mismatch!', {
+        decodedData: zeroModScan.data,
+        expectedData: encodedData,
+      });
+    }
+  } else {
+    log.warn('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
+      error: zeroModScan.error,
+    });
+  }
+}
+
 export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArtResult> {
   const {
     data,
@@ -3384,20 +3845,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         note: 'This is a bug in encodeDataToBytes()',
       });
       // FAIL FAST - this is a fundamental bug
-      return {
-        success: false,
-        error: 'Internal consistency failure: encoder boundary math incorrect',
-        matrix: baseMatrix,
+      return buildQArtFailResult(
+        'Internal consistency failure: encoder boundary math incorrect',
+        baseMatrix,
         moduleCount,
-        version: actualVersion,
-        maskPattern: actualMask,
-        matchingPixels: 0,
-        totalControllable: 0,
-        matchPercentage: 0,
-        encodedData: encodedData,
-        originalData: data,
-        suffix: actualSuffix,
-      };
+        actualVersion,
+        actualMask,
+        encodedData,
+        data,
+        actualSuffix
+      );
     }
 
     // Log comprehensive semantic boundary information using ENCODER-DERIVED values (TWO-INTERVAL HYBRID mode)
@@ -3467,59 +3924,18 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     });
 
     // CRITICAL VERIFICATION: Scan the base matrix to verify it encodes data correctly
-    const baseVerificationScan = scanMatrixWithJsQR(baseMatrix);
-    if (baseVerificationScan.success) {
-      // HYBRID: Check that original data is preserved using STRICT byte-exact validation
-      const baseValidation = validateOriginalDataPreserved(baseVerificationScan.data, data);
-      if (baseValidation.valid) {
-        log.info('BASE MATRIX VERIFICATION PASSED (byte-exact)', {
-          originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
-          decodedDataLength: baseVerificationScan.data?.length,
-          suffixPresent: (baseVerificationScan.data?.length ?? 0) > originalDataLength,
-          validationMethod: 'BYTE_EXACT_PREFIX',
-        });
-      } else {
-        log.warn('BASE MATRIX VERIFICATION FAILED - byte-exact validation failed!', {
-          expectedOriginal: data,
-          actualDecodedData: baseVerificationScan.data,
-          validationReason: baseValidation.reason,
-          mismatchDetails: baseValidation.mismatch,
-        });
-        // FAIL FAST - if base matrix doesn't preserve data, something is fundamentally wrong
-        return {
-          success: false,
-          error: `Base matrix byte-exact validation failed: ${baseValidation.reason}`,
-          matrix: baseMatrix,
-          moduleCount,
-          version: actualVersion,
-          maskPattern: actualMask,
-          matchingPixels: 0,
-          totalControllable: 0,
-          matchPercentage: 0,
-          encodedData: encodedData,
-          originalData: data,
-          suffix: actualSuffix,
-        };
-      }
-    } else {
-      log.warn('BASE MATRIX VERIFICATION FAILED - base matrix does not scan!', {
-        error: baseVerificationScan.error,
-      });
-      // FAIL FAST - if base matrix doesn't scan, something is fundamentally wrong
-      return {
-        success: false,
-        error: `Base matrix does not scan: ${baseVerificationScan.error}`,
-        matrix: baseMatrix,
+    const baseVerifyError = verifyBaseMatrixScan(baseMatrix, data, originalDataLength);
+    if (baseVerifyError) {
+      return buildQArtFailResult(
+        baseVerifyError,
+        baseMatrix,
         moduleCount,
-        version: actualVersion,
-        maskPattern: actualMask,
-        matchingPixels: 0,
-        totalControllable: 0,
-        matchPercentage: 0,
-        encodedData: encodedData,
-        originalData: data,
-        suffix: actualSuffix,
-      };
+        actualVersion,
+        actualMask,
+        encodedData,
+        data,
+        actualSuffix
+      );
     }
 
     onProgress?.('Building RS basis', 10);
@@ -3587,20 +4003,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       });
 
       // FAIL FAST - this is a fundamental bug in allowed range calculation
-      return {
-        success: false,
-        error: `${vectorsInProtectedRegion.length} basis vectors touch protected/gap bits - algorithm bug`,
-        matrix: baseMatrix,
+      return buildQArtFailResult(
+        `${vectorsInProtectedRegion.length} basis vectors touch protected/gap bits - algorithm bug`,
+        baseMatrix,
         moduleCount,
-        version: actualVersion,
-        maskPattern: actualMask,
-        matchingPixels: 0,
-        totalControllable: 0,
-        matchPercentage: 0,
-        encodedData: encodedData,
-        originalData: data,
-        suffix: actualSuffix,
-      };
+        actualVersion,
+        actualMask,
+        encodedData,
+        data,
+        actualSuffix
+      );
     }
 
     log.info(
@@ -3694,20 +4106,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       );
 
       if (!mutationTestResult.passed) {
-        return {
-          success: false,
-          error: mutationTestResult.error ?? 'HYBRID mutation test failed',
-          matrix: baseMatrix,
+        return buildQArtFailResult(
+          mutationTestResult.error ?? 'HYBRID mutation test failed',
+          baseMatrix,
           moduleCount,
-          version: actualVersion,
-          maskPattern: actualMask,
-          matchingPixels: 0,
-          totalControllable: 0,
-          matchPercentage: 0,
-          encodedData: encodedData,
-          originalData: data,
-          suffix: actualSuffix,
-        };
+          actualVersion,
+          actualMask,
+          encodedData,
+          data,
+          actualSuffix
+        );
       }
     }
 
@@ -3930,46 +4338,23 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       blockDataCounts
     );
 
-    // DEBUG: Verify RS linearity is preserved - modified data+ECC should still be valid codewords
-    // If computeECC(modifiedData) !== modifiedEcc, then RS linearity is broken
-    let rsLinearityOk = true;
-    for (let i = 0; i < modifiedBlockData.length; i++) {
-      const expectedEcc = computeECC(modifiedBlockData[i], blockEccCounts[i]);
-      const actualEcc = modifiedBlockEcc[i];
-      if (arraysEqual(expectedEcc, actualEcc)) {
-        log.debug('RS linearity verified for modified block', { blockIndex: i });
-      } else {
-        rsLinearityOk = false;
-        log.warn('RS LINEARITY BROKEN - modified codeword is invalid!', {
-          blockIndex: i,
-          dataCount: blockDataCounts[i],
-          eccCount: blockEccCounts[i],
-          expectedEccFirst5: Array.from(expectedEcc.slice(0, 5)),
-          actualEccFirst5: Array.from(actualEcc.slice(0, 5)),
-          modifiedDataFirst5: Array.from(modifiedBlockData[i].slice(0, 5)),
-        });
-      }
-    }
-
-    if (rsLinearityOk) {
-      log.info('RS linearity preserved - all modified codewords are valid');
-    } else {
-      log.warn('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
-      // FAIL FAST: RS linearity is fundamental - if broken, the QR will not decode
-      return {
-        success: false,
-        error: 'RS linearity broken - modified codewords are invalid',
-        matrix: baseMatrix,
+    // Verify RS linearity is preserved - modified data+ECC should still be valid codewords
+    const rsLinearityOk = verifyRSLinearityAllBlocks(
+      modifiedBlockData,
+      modifiedBlockEcc,
+      blockEccCounts
+    );
+    if (!rsLinearityOk) {
+      return buildQArtFailResult(
+        'RS linearity broken - modified codewords are invalid',
+        baseMatrix,
         moduleCount,
-        version: actualVersion,
-        maskPattern: actualMask,
-        matchingPixels: 0,
-        totalControllable: 0,
-        matchPercentage: 0,
-        encodedData: encodedData,
-        originalData: data,
-        suffix: actualSuffix,
-      };
+        actualVersion,
+        actualMask,
+        encodedData,
+        data,
+        actualSuffix
+      );
     }
 
     const { anyBlockOverBudget } = estimateBlockECCDamage(
@@ -4041,20 +4426,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
       // FAIL FAST: Return base matrix since we can't trust the modified data
       log.warn('FAILING FAST - returning base matrix due to protected byte violation');
-      return {
-        success: false,
-        error: `Protected byte violation: ${protectedCheck.violations.length} original data bytes were modified`,
-        matrix: baseMatrix,
+      return buildQArtFailResult(
+        `Protected byte violation: ${protectedCheck.violations.length} original data bytes were modified`,
+        baseMatrix,
         moduleCount,
-        version: actualVersion,
-        maskPattern: actualMask,
-        matchingPixels: 0,
-        totalControllable: 0,
-        matchPercentage: 0,
-        encodedData: encodedData,
-        originalData: data,
-        suffix: actualSuffix,
-      };
+        actualVersion,
+        actualMask,
+        encodedData,
+        data,
+        actualSuffix
+      );
     }
 
     log.info('HYBRID protection validation PASSED (TWO-INTERVAL encoder-derived)', {
@@ -4072,76 +4453,25 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     onProgress?.('Re-encoding QR code', 85);
 
-    // DEBUG: Zero-modification test - verify that regenerating with UNMODIFIED data still scans
-    const zeroModMatrix = regenerateQRFromModifiedData(
+    // Zero-modification test - verify that regenerating with UNMODIFIED data still scans
+    performZeroModificationTest(
       blockDataArrays,
       blockEccArrays,
       blockDataCounts,
       blockEccCounts,
       actualVersion,
       ecc,
-      actualMask
+      actualMask,
+      encodedData
     );
-    const zeroModScan = scanMatrixWithJsQR(zeroModMatrix);
-    if (zeroModScan.success) {
-      // Compare against encodedData (the exact data we're encoding)
-      const matchesData = zeroModScan.data === encodedData;
-
-      if (matchesData) {
-        log.debug('Zero-modification test PASSED - decoded data matches exactly', {
-          decodedData: zeroModScan.data,
-        });
-      } else {
-        log.warn('Zero-modification test FAILED - decoded data mismatch!', {
-          decodedData: zeroModScan.data,
-          expectedData: encodedData,
-        });
-      }
-    } else {
-      log.warn('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
-        error: zeroModScan.error,
-      });
-    }
 
     // Log modification summary per block
-    for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
-      let bytesChanged = 0;
-      let bitsChanged = 0;
-      const origData = blockDataArrays[blockIdx];
-      const modData = modifiedBlockData[blockIdx];
-      const origEcc = blockEccArrays[blockIdx];
-      const modEcc = modifiedBlockEcc[blockIdx];
-
-      for (let i = 0; i < origData.length; i++) {
-        if (origData[i] !== modData[i]) {
-          bytesChanged++;
-          // Count bits changed
-          let diff = origData[i] ^ modData[i];
-          while (diff) {
-            bitsChanged += diff & 1;
-            diff >>>= 1;
-          }
-        }
-      }
-
-      let eccBytesChanged = 0;
-      for (let i = 0; i < origEcc.length; i++) {
-        if (origEcc[i] !== modEcc[i]) {
-          eccBytesChanged++;
-        }
-      }
-
-      if (bytesChanged > 0 || eccBytesChanged > 0) {
-        log.debug('Block modification summary', {
-          blockIndex: blockIdx,
-          dataBytesChanged: bytesChanged,
-          dataBitsChanged: bitsChanged,
-          eccBytesChanged,
-          totalDataBytes: origData.length,
-          totalEccBytes: origEcc.length,
-        });
-      }
-    }
+    logBlockModificationSummary(
+      blockDataArrays,
+      modifiedBlockData,
+      blockEccArrays,
+      modifiedBlockEcc
+    );
 
     // Step 10: Regenerate QR with modified data AND ECC to get a valid, scannable code
     // We pass the pre-XORed ECC - do NOT recompute it (that would break RS linearity)
@@ -4155,244 +4485,46 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       actualMask
     );
 
-    // =========================================================================
-    // DIAGNOSTIC: Check format info after regeneration
-    // =========================================================================
-    // This is DIAGNOSTIC ONLY - the semantic scan validation is the real gate.
-    // If decoder parser disagrees with encoder format info, log it but continue.
-    // The scan-based validation (performSemanticValidation) will catch real issues.
-    const finalFormatVerification = verifyMatrixFormatInfo(finalMatrix, ecc, actualMask);
-    if (finalFormatVerification.valid) {
-      log.info('Final matrix format verification passed (diagnostic)', {
-        ecc,
-        mask: actualMask,
-        eccMatch: finalFormatVerification.eccMatch,
-        maskMatch: finalFormatVerification.maskMatch,
-      });
-    } else {
-      // FORMAT_PARSER_DISAGREEMENT: Log as WARNING, continue to scan validation
-      log.warn(
-        'FORMAT_PARSER_DISAGREEMENT: Final matrix format verification disagreement (diagnostic)',
-        {
-          expectedEcc: ecc,
-          extractedEcc: finalFormatVerification.extractedEcc,
-          eccMatch: finalFormatVerification.eccMatch,
-          expectedMask: actualMask,
-          extractedMask: finalFormatVerification.extractedMask,
-          maskMatch: finalFormatVerification.maskMatch,
-          parserDisagreement: finalFormatVerification.reason,
-          action: 'CONTINUE_TO_SEMANTIC_VALIDATION',
-          note: 'Encoder is authoritative. Semantic scan validation is the real gate.',
-        }
-      );
-      // DO NOT return error - continue to semantic validation
-    }
-
-    const matrixDiff = analyzeMatrixDiff(baseMatrix, finalMatrix, moduleCount);
-    const { diffCount, structuralDiffCount, dataDiffCount, sampleDiffs } = matrixDiff;
-
-    log.info('Matrix diff between base and final', {
-      diffCount,
-      structuralDiffCount,
-      dataDiffCount,
-      moduleCount,
-      totalModules: moduleCount * moduleCount,
-      diffPercent: `${((diffCount / (moduleCount * moduleCount)) * 100).toFixed(2)}%`,
-      sampleDiffs: sampleDiffs.slice(0, 5),
-    });
-
-    if (structuralDiffCount > 0) {
-      log.warn('CRITICAL: Structural patterns modified!', {
-        structuralDiffCount,
-        structuralDiffs: sampleDiffs.filter((d) => d.isStructural),
-      });
-    }
-
-    // Comprehensive finder pattern validation
-    const finderValidation = validateFinderPatterns(finalMatrix);
-    if (finderValidation.allValid) {
-      log.debug('Finder patterns validated OK');
-    } else {
-      log.warn('FINDER PATTERNS CORRUPTED', {
-        topLeft: finderValidation.topLeft,
-        topRight: finderValidation.topRight,
-        bottomLeft: finderValidation.bottomLeft,
-        errors: finderValidation.errors,
-      });
-    }
-
-    // Timing pattern validation
-    const timingValidation = validateTimingPatterns(finalMatrix);
-    if (timingValidation.allValid) {
-      log.debug('Timing patterns validated OK');
-    } else {
-      log.warn('TIMING PATTERNS CORRUPTED', {
-        horizontal: timingValidation.horizontal,
-        vertical: timingValidation.vertical,
-        errors: timingValidation.errors,
-      });
-    }
-
-    // Compare format info between base and final
-    const baseFormatInfo = extractFormatInfo(baseMatrix);
-    const finalFormatInfo = extractFormatInfo(finalMatrix);
-
-    log.info('Format info comparison', {
-      base: {
-        vertical: baseFormatInfo.vertical.toString(2).padStart(15, '0'),
-        horizontal: baseFormatInfo.horizontal.toString(2).padStart(15, '0'),
-        match: baseFormatInfo.match,
-      },
-      final: {
-        vertical: finalFormatInfo.vertical.toString(2).padStart(15, '0'),
-        horizontal: finalFormatInfo.horizontal.toString(2).padStart(15, '0'),
-        match: finalFormatInfo.match,
-      },
-      formatInfoUnchanged:
-        baseFormatInfo.vertical === finalFormatInfo.vertical &&
-        baseFormatInfo.horizontal === finalFormatInfo.horizontal,
-    });
-
-    if (
-      baseFormatInfo.vertical !== finalFormatInfo.vertical ||
-      baseFormatInfo.horizontal !== finalFormatInfo.horizontal
-    ) {
-      log.warn('FORMAT INFO CHANGED - This will break scanning!');
-    }
-
-    // DEBUG: Scan the final matrix to verify it's actually scannable
-    let scanResult = scanMatrixWithJsQR(finalMatrix);
-
-    // Track the final matrix and vector count (may be updated by binary search fallback)
-    let finalMatrixToUse = finalMatrix;
-    let actualVectorsApplied = totalSelected;
-
-    // =========================================================================
-    // SEMANTIC-HARD-GATE ACCEPTANCE CRITERIA (HYBRID mode)
-    // =========================================================================
-    // A valid QR-Art result requires ALL of:
-    // 1. Decoder successfully scans the matrix
-    // 2. Decoded data is long enough (length >= originalDataLength)
-    // 3. Byte-exact match for the original data prefix
-    // 4. Format info ECC matches requested ECC
-    // 5. Format info mask matches requested mask
-    //
-    // We use comprehensive semantic validation to catch ALL corruption types.
-
-    const semanticValidation = performSemanticValidation(
+    // Diagnostic: Check format info, matrix diff, finder/timing patterns, format info comparison
+    const diagnostics = validateFinalMatrixDiagnostics(
       finalMatrix,
+      baseMatrix,
+      ecc,
+      actualMask,
+      moduleCount
+    );
+
+    // Scan the final matrix to verify it's actually scannable
+    const scanResult = scanMatrixWithJsQR(finalMatrix);
+
+    // Semantic-hard-gate validation + fallback if needed
+    const { finalMatrixToUse, actualVectorsApplied } = performSemanticGateAndFallback(
+      finalMatrix,
+      baseMatrix,
       originalData,
+      data,
+      encodedData,
       ecc,
       actualMask,
       actualSuffix,
-      scanMatrixWithJsQR,
       strictSuffix,
-      resolvedSuffixMode
+      resolvedSuffixMode,
+      originalDataLength,
+      scanResult,
+      blockSelections,
+      elimination,
+      importance,
+      moduleCount,
+      blockDataArrays,
+      blockEccArrays,
+      blockDataCounts,
+      blockEccCounts,
+      actualVersion,
+      totalSelected,
+      diagnostics,
+      actualControlPercentage,
+      basis.vectors.length
     );
-
-    if (semanticValidation.valid) {
-      // Full semantic validation passed!
-      log.info('QR-Art SEMANTIC-HARD-GATE validation PASSED', {
-        originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
-        originalDataLength,
-        decodedDataLength: scanResult.data?.length,
-        ecc,
-        mask: actualMask,
-        strictSuffix,
-        structurallyValid: scanResult.structurallyValid,
-        segmentCount: scanResult.segmentCount,
-        segmentModes: scanResult.segments?.map((s) => s.modeName),
-        validationMethod: 'SEMANTIC_HARD_GATE',
-        checksPerformed: [
-          'SCAN_SUCCESS',
-          'LENGTH_CHECK',
-          'BYTE_EXACT_PREFIX',
-          'ECC_INVARIANT',
-          'MASK_INVARIANT',
-          'STRUCTURAL_VALIDITY',
-          strictSuffix ? 'SUFFIX_CHARSET_STRICT' : 'SUFFIX_CHARSET_SOFT',
-        ],
-      });
-    } else {
-      // Semantic validation FAILED - log detailed rejection info
-      log.warn('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
-        rejectionReason: semanticValidation.reason,
-        description: semanticValidation.description,
-        details: semanticValidation.details,
-        originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
-        originalDataLength,
-        ecc,
-        mask: actualMask,
-        structurallyValid: scanResult.structurallyValid,
-        segmentCount: scanResult.segmentCount,
-        segmentModes: scanResult.segments?.map((s) => s.modeName),
-        segments: scanResult.segments?.map((s) => ({
-          mode: s.modeName,
-          charCount: s.charCount,
-          valid: s.valid,
-          bitOffset: s.bitOffset,
-        })),
-        note: 'Candidate rejected by semantic-hard-gate',
-      });
-
-      // If we had a scan result, add byte-level debug info
-      if (scanResult.success && scanResult.data) {
-        const expectedBytes = stringToBytes(data);
-        const actualBytes = stringToBytes(scanResult.data);
-
-        log.warn('DECODED BYTES (hex comparison)', {
-          decodedPrefixHex: toHex(actualBytes.slice(0, originalDataLength)),
-          expectedPrefixHex: toHex(expectedBytes),
-          mismatchIndex: semanticValidation.details?.mismatchIndex,
-          expectedByte: semanticValidation.details?.expectedByte?.toString(16),
-          actualByte: semanticValidation.details?.actualByte?.toString(16),
-        });
-      }
-
-      // Mark scanResult as failed to trigger fallback
-      scanResult = {
-        success: false,
-        error: `Semantic validation failed: ${semanticValidation.reason} - ${semanticValidation.description}`,
-      };
-    }
-
-    if (!scanResult.success) {
-      log.warn('QR-Art matrix scan validation FAILED - matrix does not scan!', {
-        error: scanResult.error,
-        expectedData: encodedData,
-        scanAttempts: scanResult.attempts,
-        finderPatternsOK: finderValidation.allValid,
-        timingPatternsOK: timingValidation.allValid,
-        formatInfoOK: baseFormatInfo.vertical === finalFormatInfo.vertical,
-        structuralDiffsCount: structuralDiffCount,
-        dataDiffsCount: dataDiffCount,
-        controllableVectors: basis.vectors.length,
-        controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
-      });
-
-      const fallbackResult = handleScanFailureFallback(
-        blockSelections,
-        elimination,
-        importance,
-        moduleCount,
-        blockDataArrays,
-        blockEccArrays,
-        blockDataCounts,
-        blockEccCounts,
-        actualVersion,
-        ecc,
-        actualMask,
-        data,
-        actualSuffix,
-        strictSuffix,
-        totalSelected,
-        baseMatrix
-      );
-
-      finalMatrixToUse = fallbackResult.matrix;
-      actualVectorsApplied = fallbackResult.vectorsApplied;
-      // scanResult from fallback not used further
-    }
 
     // Also scan the base matrix to confirm it was valid
     const baseScanResult = scanMatrixWithJsQR(baseMatrix);
@@ -4407,19 +4539,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // Step 11: Count actual matching pixels in the final matrix
     // Use finalMatrixToUse which may have been updated by binary search fallback
-    let matching = 0;
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        const pixelIdx = row * moduleCount + col;
-        if (!dataPixels.has(pixelIdx)) continue;
-
-        const finalValue = finalMatrixToUse[row]?.[col] ?? false;
-        const targetValue = targets[row]?.[col] ?? false;
-        if (finalValue === targetValue) {
-          matching++;
-        }
-      }
-    }
+    const matching = countFinalMatchingPixels(finalMatrixToUse, targets, dataPixels, moduleCount);
 
     const matchPercentage = total > 0 ? (matching / total) * 100 : 0;
 
