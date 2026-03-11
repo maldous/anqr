@@ -203,6 +203,100 @@ function applyUniformBrightness(data: Uint8ClampedArray, factor: number): void {
   }
 }
 
+function buildWaveApplier(time: number, width: number, height: number): PatternFrameApplier {
+  const waveFactors = new Float32Array(width);
+  const waveScale = PI4 / Math.max(1, width);
+  for (let x = 0; x < width; x++) {
+    waveFactors[x] = 0.7 + 0.3 * Math.sin(time + x * waveScale);
+  }
+  return (data) => {
+    for (let y = 0; y < height; y++) {
+      let i = y * width * 4;
+      for (let x = 0; x < width; x++, i += 4) {
+        const factor = waveFactors[x];
+        data[i] = clampToByte(data[i] * factor);
+        data[i + 1] = clampToByte(data[i + 1] * factor);
+        data[i + 2] = clampToByte(data[i + 2] * factor);
+      }
+    }
+  };
+}
+
+function buildSinCosLUT(
+  time: number,
+  seed: number,
+  width: number,
+  height: number,
+  pattern: 'shimmer' | 'drift'
+): {
+  colSin: Float32Array;
+  colCos: Float32Array;
+  rowSin: Float32Array;
+  rowCos: Float32Array;
+} {
+  const colSin = new Float32Array(width);
+  const colCos = new Float32Array(width);
+  const rowSin = new Float32Array(height);
+  const rowCos = new Float32Array(height);
+
+  if (pattern === 'shimmer') {
+    const denom = Math.max(1, width + height);
+    const shimmerScale = PI4 / denom;
+    const base = time + seed;
+    for (let x = 0; x < width; x++) {
+      const angle = base + x * shimmerScale;
+      colSin[x] = Math.sin(angle);
+      colCos[x] = Math.cos(angle);
+    }
+    for (let y = 0; y < height; y++) {
+      const angle = y * shimmerScale;
+      rowSin[y] = Math.sin(angle);
+      rowCos[y] = Math.cos(angle);
+    }
+  } else {
+    const driftX = Math.sin(time + seed) * 0.1;
+    const driftY = Math.cos(time + seed) * 0.1;
+    const phase = (driftX + driftY) * TAU;
+    const invWidth = width > 0 ? 1 / width : 0;
+    const invHeight = height > 0 ? 1 / height : 0;
+    for (let x = 0; x < width; x++) {
+      const angle = x * invWidth * TAU + phase;
+      colSin[x] = Math.sin(angle);
+      colCos[x] = Math.cos(angle);
+    }
+    for (let y = 0; y < height; y++) {
+      const angle = y * invHeight * TAU;
+      rowSin[y] = Math.sin(angle);
+      rowCos[y] = Math.cos(angle);
+    }
+  }
+
+  return { colSin, colCos, rowSin, rowCos };
+}
+
+function buildSinCosApplier(
+  lut: ReturnType<typeof buildSinCosLUT>,
+  width: number,
+  height: number,
+  baseScale: number,
+  amplitudeScale: number
+): PatternFrameApplier {
+  return (data) => {
+    for (let y = 0; y < height; y++) {
+      const rs = lut.rowSin[y];
+      const rc = lut.rowCos[y];
+      let i = y * width * 4;
+      for (let x = 0; x < width; x++, i += 4) {
+        const v = lut.colSin[x] * rc + lut.colCos[x] * rs;
+        const factor = baseScale + amplitudeScale * v;
+        data[i] = clampToByte(data[i] * factor);
+        data[i + 1] = clampToByte(data[i + 1] * factor);
+        data[i + 2] = clampToByte(data[i + 2] * factor);
+      }
+    }
+  };
+}
+
 function buildPatternFrameApplier(
   pattern: AnimationPattern,
   progress: number,
@@ -221,24 +315,8 @@ function buildPatternFrameApplier(
       };
     }
 
-    case 'wave': {
-      const waveFactors = new Float32Array(width);
-      const waveScale = PI4 / Math.max(1, width);
-      for (let x = 0; x < width; x++) {
-        waveFactors[x] = 0.7 + 0.3 * Math.sin(time + x * waveScale);
-      }
-      return (data) => {
-        for (let y = 0; y < height; y++) {
-          let i = y * width * 4;
-          for (let x = 0; x < width; x++, i += 4) {
-            const factor = waveFactors[x];
-            data[i] = clampToByte(data[i] * factor);
-            data[i + 1] = clampToByte(data[i + 1] * factor);
-            data[i + 2] = clampToByte(data[i + 2] * factor);
-          }
-        }
-      };
-    }
+    case 'wave':
+      return buildWaveApplier(time, width, height);
 
     case 'scanline': {
       const scanY = ((progress * speed) % 1) * height;
@@ -260,73 +338,13 @@ function buildPatternFrameApplier(
     }
 
     case 'shimmer': {
-      const denom = Math.max(1, width + height);
-      const shimmerScale = PI4 / denom;
-      const base = time + seed;
-      const colSin = new Float32Array(width);
-      const colCos = new Float32Array(width);
-      const rowSin = new Float32Array(height);
-      const rowCos = new Float32Array(height);
-      for (let x = 0; x < width; x++) {
-        const angle = base + x * shimmerScale;
-        colSin[x] = Math.sin(angle);
-        colCos[x] = Math.cos(angle);
-      }
-      for (let y = 0; y < height; y++) {
-        const angle = y * shimmerScale;
-        rowSin[y] = Math.sin(angle);
-        rowCos[y] = Math.cos(angle);
-      }
-      return (data) => {
-        for (let y = 0; y < height; y++) {
-          const rs = rowSin[y];
-          const rc = rowCos[y];
-          let i = y * width * 4;
-          for (let x = 0; x < width; x++, i += 4) {
-            const shimmer = colSin[x] * rc + colCos[x] * rs;
-            const factor = 0.8 + 0.2 * shimmer;
-            data[i] = clampToByte(data[i] * factor);
-            data[i + 1] = clampToByte(data[i + 1] * factor);
-            data[i + 2] = clampToByte(data[i + 2] * factor);
-          }
-        }
-      };
+      const lut = buildSinCosLUT(time, seed, width, height, 'shimmer');
+      return buildSinCosApplier(lut, width, height, 0.8, 0.2);
     }
 
     case 'drift': {
-      const driftX = Math.sin(time + seed) * 0.1;
-      const driftY = Math.cos(time + seed) * 0.1;
-      const phase = (driftX + driftY) * TAU;
-      const colSin = new Float32Array(width);
-      const colCos = new Float32Array(width);
-      const rowSin = new Float32Array(height);
-      const rowCos = new Float32Array(height);
-      const invWidth = width > 0 ? 1 / width : 0;
-      const invHeight = height > 0 ? 1 / height : 0;
-      for (let x = 0; x < width; x++) {
-        const angle = x * invWidth * TAU + phase;
-        colSin[x] = Math.sin(angle);
-        colCos[x] = Math.cos(angle);
-      }
-      for (let y = 0; y < height; y++) {
-        const angle = y * invHeight * TAU;
-        rowSin[y] = Math.sin(angle);
-        rowCos[y] = Math.cos(angle);
-      }
-      return (data) => {
-        for (let y = 0; y < height; y++) {
-          const rs = rowSin[y];
-          const rc = rowCos[y];
-          let i = y * width * 4;
-          for (let x = 0; x < width; x++, i += 4) {
-            const drift = colSin[x] * rc + colCos[x] * rs;
-            const factor = 0.9 + 0.1 * drift;
-            data[i] = clampToByte(data[i] * factor);
-            data[i + 1] = clampToByte(data[i + 1] * factor);
-            data[i + 2] = clampToByte(data[i + 2] * factor);
-          }
-        }
-      };
+      const lut = buildSinCosLUT(time, seed, width, height, 'drift');
+      return buildSinCosApplier(lut, width, height, 0.9, 0.1);
     }
 
     case 'color_cycle': {

@@ -427,6 +427,28 @@ function buildPreprocessingParams(config: Partial<ShareConfig>, params: URLSearc
   if (config.invert) params.set('invert', '1');
 }
 
+function buildDitherBlendParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.blendPreservations) params.set('blendPres', '1');
+  if (
+    config.blendPreservations &&
+    config.blendPreservationMode &&
+    config.blendPreservationMode !== 'overlay'
+  ) {
+    params.set('blendPresMode', config.blendPreservationMode);
+  }
+}
+
+function buildDitherNoiseParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.orderedMatrix && config.orderedMatrix !== 'bayer4')
+    params.set('matrix', config.orderedMatrix);
+  if (config.blueNoiseTileSize !== undefined && config.blueNoiseTileSize !== 64)
+    params.set('bnTile', config.blueNoiseTileSize.toString());
+  if (config.blueNoiseSeed !== undefined && config.blueNoiseSeed !== 0)
+    params.set('bnSeed', config.blueNoiseSeed.toString());
+  if (config.colorDither && config.colorDither !== 'none')
+    params.set('colorDither', config.colorDither);
+}
+
 function buildDitheringParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.ditherKind && config.ditherKind !== 'error_diffusion')
     params.set('ditherKind', config.ditherKind);
@@ -436,23 +458,9 @@ function buildDitheringParams(config: Partial<ShareConfig>, params: URLSearchPar
     params.set('ditherStrength', config.ditherStrength.toString());
   if (config.finderDitherStrength !== undefined && config.finderDitherStrength !== 65)
     params.set('finderDither', config.finderDitherStrength.toString());
-  if (config.blendPreservations) params.set('blendPres', '1');
-  if (
-    config.blendPreservations &&
-    config.blendPreservationMode &&
-    config.blendPreservationMode !== 'overlay'
-  ) {
-    params.set('blendPresMode', config.blendPreservationMode);
-  }
+  buildDitherBlendParams(config, params);
   if (config.ditherSerpentine) params.set('serpentine', '1');
-  if (config.orderedMatrix && config.orderedMatrix !== 'bayer4')
-    params.set('matrix', config.orderedMatrix);
-  if (config.blueNoiseTileSize !== undefined && config.blueNoiseTileSize !== 64)
-    params.set('bnTile', config.blueNoiseTileSize.toString());
-  if (config.blueNoiseSeed !== undefined && config.blueNoiseSeed !== 0)
-    params.set('bnSeed', config.blueNoiseSeed.toString());
-  if (config.colorDither && config.colorDither !== 'none')
-    params.set('colorDither', config.colorDither);
+  buildDitherNoiseParams(config, params);
 }
 
 function buildHalftoneSpecificParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
@@ -554,10 +562,7 @@ function buildOutputFormatSpecificParams(
   buildMiscFormatParams(config, params);
 }
 
-function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.width && config.width !== 400) params.set('w', config.width.toString());
-  if (config.height && config.height !== 400) params.set('h', config.height.toString());
-  if (config.format && config.format !== 'gif') params.set('format', config.format);
+function buildOutputQualityParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.quality !== undefined && config.quality !== 0.9)
     params.set('quality', config.quality.toString());
   if (config.jpegQuality !== undefined && config.jpegQuality !== 92)
@@ -566,6 +571,13 @@ function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams
     params.set('webpQ', config.webpQuality.toString());
   if (config.gifColors !== undefined && config.gifColors !== 256)
     params.set('gifColors', config.gifColors.toString());
+}
+
+function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.width && config.width !== 400) params.set('w', config.width.toString());
+  if (config.height && config.height !== 400) params.set('h', config.height.toString());
+  if (config.format && config.format !== 'gif') params.set('format', config.format);
+  buildOutputQualityParams(config, params);
   if (config.filename && config.filename !== 'anqr-qrcode') params.set('fname', config.filename);
   buildOutputFormatSpecificParams(config, params);
 }
