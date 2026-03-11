@@ -1188,7 +1188,10 @@ function PlainTextEditor({
   setShowStartupHighlight,
   showStartupHighlight,
   t,
-}: EditorProps) {
+}: Pick<
+  EditorProps,
+  'payload' | 'setPayloadText' | 'setShowStartupHighlight' | 'showStartupHighlight' | 't'
+>) {
   return (
     <div className={`space-y-2 ${showStartupHighlight ? 'p-1 -m-1' : ''}`}>
       <Label>
@@ -1217,7 +1220,12 @@ function PlainTextEditor({
   );
 }
 
-function UrlEditor({ payload, setPayloadUrl, t, tier }: EditorProps) {
+function UrlEditor({
+  payload,
+  setPayloadUrl,
+  t,
+  tier,
+}: Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't' | 'tier'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1268,7 +1276,11 @@ function UrlEditor({ payload, setPayloadUrl, t, tier }: EditorProps) {
   );
 }
 
-function TelEditor({ payload, setPayloadTel, t }: EditorProps) {
+function TelEditor({
+  payload,
+  setPayloadTel,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadTel' | 't'>) {
   return (
     <div className="space-y-2">
       <Label>
@@ -1295,7 +1307,11 @@ function TelEditor({ payload, setPayloadTel, t }: EditorProps) {
   );
 }
 
-function EmailEditor({ payload, setPayloadEmail, t }: EditorProps) {
+function EmailEditor({
+  payload,
+  setPayloadEmail,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadEmail' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1353,7 +1369,11 @@ function EmailEditor({ payload, setPayloadEmail, t }: EditorProps) {
   );
 }
 
-function SmsEditor({ payload, setPayloadSms, t }: EditorProps) {
+function SmsEditor({
+  payload,
+  setPayloadSms,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadSms' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1400,7 +1420,11 @@ function SmsEditor({ payload, setPayloadSms, t }: EditorProps) {
   );
 }
 
-function GeoEditor({ payload, setPayloadGeo, t }: EditorProps) {
+function GeoEditor({
+  payload,
+  setPayloadGeo,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadGeo' | 't'>) {
   return (
     <div className="space-y-4">
       {/* Address Lookup (Nominatim) */}
@@ -1526,7 +1550,11 @@ function GeoEditor({ payload, setPayloadGeo, t }: EditorProps) {
   );
 }
 
-function WifiEditor({ payload, setPayloadWifi, t }: EditorProps) {
+function WifiEditor({
+  payload,
+  setPayloadWifi,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadWifi' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1609,7 +1637,11 @@ function WifiEditor({ payload, setPayloadWifi, t }: EditorProps) {
   );
 }
 
-function VcardEditor({ payload, setPayloadVCard, t }: EditorProps) {
+function VcardEditor({
+  payload,
+  setPayloadVCard,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadVCard' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1721,7 +1753,11 @@ function VcardEditor({ payload, setPayloadVCard, t }: EditorProps) {
   );
 }
 
-function MecardEditor({ payload, setPayloadMeCard, t }: EditorProps) {
+function MecardEditor({
+  payload,
+  setPayloadMeCard,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadMeCard' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1845,7 +1881,11 @@ function MecardEditor({ payload, setPayloadMeCard, t }: EditorProps) {
   );
 }
 
-function BizcardEditor({ payload, setPayloadBizCard, t }: EditorProps) {
+function BizcardEditor({
+  payload,
+  setPayloadBizCard,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadBizCard' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1953,7 +1993,11 @@ function BizcardEditor({ payload, setPayloadBizCard, t }: EditorProps) {
   );
 }
 
-function BluetoothEditor({ payload, setPayloadText, t }: EditorProps) {
+function BluetoothEditor({
+  payload,
+  setPayloadText,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1977,7 +2021,11 @@ function BluetoothEditor({ payload, setPayloadText, t }: EditorProps) {
   );
 }
 
-function EventEditor({ payload, setPayloadEvent, t }: EditorProps) {
+function EventEditor({
+  payload,
+  setPayloadEvent,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadEvent' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2057,7 +2105,11 @@ function EventEditor({ payload, setPayloadEvent, t }: EditorProps) {
   );
 }
 
-function EventRsvpEditor({ payload, setPayloadEventRsvp, t }: EditorProps) {
+function EventRsvpEditor({
+  payload,
+  setPayloadEventRsvp,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadEventRsvp' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2162,7 +2214,11 @@ function EventRsvpEditor({ payload, setPayloadEventRsvp, t }: EditorProps) {
   );
 }
 
-function CalendarSubscriptionEditor({ payload, setPayloadCalendarSub, t }: EditorProps) {
+function CalendarSubscriptionEditor({
+  payload,
+  setPayloadCalendarSub,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadCalendarSub' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2216,7 +2272,11 @@ function CalendarSubscriptionEditor({ payload, setPayloadCalendarSub, t }: Edito
   );
 }
 
-function SocialProfileEditor({ payload, setPayloadSocialProfile, t }: EditorProps) {
+function SocialProfileEditor({
+  payload,
+  setPayloadSocialProfile,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadSocialProfile' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2284,7 +2344,11 @@ function SocialProfileEditor({ payload, setPayloadSocialProfile, t }: EditorProp
   );
 }
 
-function MessagingLinkEditor({ payload, setPayloadMessaging, t }: EditorProps) {
+function MessagingLinkEditor({
+  payload,
+  setPayloadMessaging,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadMessaging' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2383,7 +2447,11 @@ function MessagingLinkEditor({ payload, setPayloadMessaging, t }: EditorProps) {
   );
 }
 
-function CryptoEditor({ payload, setPayloadCrypto, t }: EditorProps) {
+function CryptoEditor({
+  payload,
+  setPayloadCrypto,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadCrypto' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2470,7 +2538,12 @@ function CryptoEditor({ payload, setPayloadCrypto, t }: EditorProps) {
   );
 }
 
-function EpcSepaEditor({ epcSepaForm, payload, setEpcSepaForm, t }: EditorProps) {
+function EpcSepaEditor({
+  epcSepaForm,
+  payload,
+  setEpcSepaForm,
+  t,
+}: Pick<EditorProps, 'epcSepaForm' | 'payload' | 'setEpcSepaForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2551,7 +2624,12 @@ function EpcSepaEditor({ epcSepaForm, payload, setEpcSepaForm, t }: EditorProps)
   );
 }
 
-function UpiEditor({ payload, setUpiForm, t, upiForm }: EditorProps) {
+function UpiEditor({
+  payload,
+  setUpiForm,
+  t,
+  upiForm,
+}: Pick<EditorProps, 'payload' | 'setUpiForm' | 't' | 'upiForm'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2621,7 +2699,12 @@ function UpiEditor({ payload, setUpiForm, t, upiForm }: EditorProps) {
   );
 }
 
-function PaynowEditor({ payNowForm, payload, setPayNowForm, t }: EditorProps) {
+function PaynowEditor({
+  payNowForm,
+  payload,
+  setPayNowForm,
+  t,
+}: Pick<EditorProps, 'payNowForm' | 'payload' | 'setPayNowForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2711,7 +2794,12 @@ function PaynowEditor({ payNowForm, payload, setPayNowForm, t }: EditorProps) {
   );
 }
 
-function PromptpayEditor({ payload, promptPayForm, setPromptPayForm, t }: EditorProps) {
+function PromptpayEditor({
+  payload,
+  promptPayForm,
+  setPromptPayForm,
+  t,
+}: Pick<EditorProps, 'payload' | 'promptPayForm' | 'setPromptPayForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2790,7 +2878,12 @@ function PromptpayEditor({ payload, promptPayForm, setPromptPayForm, t }: Editor
   );
 }
 
-function PixEditor({ payload, pixForm, setPixForm, t }: EditorProps) {
+function PixEditor({
+  payload,
+  pixForm,
+  setPixForm,
+  t,
+}: Pick<EditorProps, 'payload' | 'pixForm' | 'setPixForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2857,7 +2950,12 @@ function PixEditor({ payload, pixForm, setPixForm, t }: EditorProps) {
   );
 }
 
-function SwissQrBillEditor({ payload, setSwissQrBillForm, swissQrBillForm, t }: EditorProps) {
+function SwissQrBillEditor({
+  payload,
+  setSwissQrBillForm,
+  swissQrBillForm,
+  t,
+}: Pick<EditorProps, 'payload' | 'setSwissQrBillForm' | 'swissQrBillForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2984,7 +3082,12 @@ function SwissQrBillEditor({ payload, setSwissQrBillForm, swissQrBillForm, t }: 
   );
 }
 
-function LightningEditor({ lightningForm, payload, setLightningForm, t }: EditorProps) {
+function LightningEditor({
+  lightningForm,
+  payload,
+  setLightningForm,
+  t,
+}: Pick<EditorProps, 'lightningForm' | 'payload' | 'setLightningForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3017,7 +3120,12 @@ function LightningEditor({ lightningForm, payload, setLightningForm, t }: Editor
   );
 }
 
-function EthereumEip681Editor({ ethereumForm, payload, setEthereumForm, t }: EditorProps) {
+function EthereumEip681Editor({
+  ethereumForm,
+  payload,
+  setEthereumForm,
+  t,
+}: Pick<EditorProps, 'ethereumForm' | 'payload' | 'setEthereumForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3089,7 +3197,12 @@ function EthereumEip681Editor({ ethereumForm, payload, setEthereumForm, t }: Edi
   );
 }
 
-function QrisEditor({ payload, qrisForm, setQrisForm, t }: EditorProps) {
+function QrisEditor({
+  payload,
+  qrisForm,
+  setQrisForm,
+  t,
+}: Pick<EditorProps, 'payload' | 'qrisForm' | 'setQrisForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3156,7 +3269,12 @@ function QrisEditor({ payload, qrisForm, setQrisForm, t }: EditorProps) {
   );
 }
 
-function DuitnowEditor({ duitnowForm, payload, setDuitnowForm, t }: EditorProps) {
+function DuitnowEditor({
+  duitnowForm,
+  payload,
+  setDuitnowForm,
+  t,
+}: Pick<EditorProps, 'duitnowForm' | 'payload' | 'setDuitnowForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3240,7 +3358,12 @@ function DuitnowEditor({ duitnowForm, payload, setDuitnowForm, t }: EditorProps)
   );
 }
 
-function BharatqrEditor({ bharatqrForm, payload, setBharatqrForm, t }: EditorProps) {
+function BharatqrEditor({
+  bharatqrForm,
+  payload,
+  setBharatqrForm,
+  t,
+}: Pick<EditorProps, 'bharatqrForm' | 'payload' | 'setBharatqrForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3299,7 +3422,12 @@ function BharatqrEditor({ bharatqrForm, payload, setBharatqrForm, t }: EditorPro
   );
 }
 
-function VietqrEditor({ payload, setVietqrForm, t, vietqrForm }: EditorProps) {
+function VietqrEditor({
+  payload,
+  setVietqrForm,
+  t,
+  vietqrForm,
+}: Pick<EditorProps, 'payload' | 'setVietqrForm' | 't' | 'vietqrForm'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3371,7 +3499,12 @@ function VietqrEditor({ payload, setVietqrForm, t, vietqrForm }: EditorProps) {
   );
 }
 
-function QrphEditor({ payload, qrphForm, setQrphForm, t }: EditorProps) {
+function QrphEditor({
+  payload,
+  qrphForm,
+  setQrphForm,
+  t,
+}: Pick<EditorProps, 'payload' | 'qrphForm' | 'setQrphForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3445,7 +3578,12 @@ function QrphEditor({ payload, qrphForm, setQrphForm, t }: EditorProps) {
   );
 }
 
-function TwqrEditor({ payload, setTwqrForm, t, twqrForm }: EditorProps) {
+function TwqrEditor({
+  payload,
+  setTwqrForm,
+  t,
+  twqrForm,
+}: Pick<EditorProps, 'payload' | 'setTwqrForm' | 't' | 'twqrForm'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3500,7 +3638,12 @@ function TwqrEditor({ payload, setTwqrForm, t, twqrForm }: EditorProps) {
   );
 }
 
-function HkqrEditor({ hkqrForm, payload, setHkqrForm, t }: EditorProps) {
+function HkqrEditor({
+  hkqrForm,
+  payload,
+  setHkqrForm,
+  t,
+}: Pick<EditorProps, 'hkqrForm' | 'payload' | 'setHkqrForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3562,7 +3705,12 @@ function HkqrEditor({ hkqrForm, payload, setHkqrForm, t }: EditorProps) {
   );
 }
 
-function JpqrEditor({ jpqrForm, payload, setJpqrForm, t }: EditorProps) {
+function JpqrEditor({
+  jpqrForm,
+  payload,
+  setJpqrForm,
+  t,
+}: Pick<EditorProps, 'jpqrForm' | 'payload' | 'setJpqrForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3617,7 +3765,12 @@ function JpqrEditor({ jpqrForm, payload, setJpqrForm, t }: EditorProps) {
   );
 }
 
-function AuspaynetEditor({ auspaynetForm, payload, setAuspaynetForm, t }: EditorProps) {
+function AuspaynetEditor({
+  auspaynetForm,
+  payload,
+  setAuspaynetForm,
+  t,
+}: Pick<EditorProps, 'auspaynetForm' | 'payload' | 'setAuspaynetForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3699,7 +3852,12 @@ function AuspaynetEditor({ auspaynetForm, payload, setAuspaynetForm, t }: Editor
   );
 }
 
-function PaypalMeEditor({ payload, paypalMeForm, setPaypalMeForm, t }: EditorProps) {
+function PaypalMeEditor({
+  payload,
+  paypalMeForm,
+  setPaypalMeForm,
+  t,
+}: Pick<EditorProps, 'payload' | 'paypalMeForm' | 'setPaypalMeForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3743,7 +3901,12 @@ function PaypalMeEditor({ payload, paypalMeForm, setPaypalMeForm, t }: EditorPro
   );
 }
 
-function CashappEditor({ cashappForm, payload, setCashappForm, t }: EditorProps) {
+function CashappEditor({
+  cashappForm,
+  payload,
+  setCashappForm,
+  t,
+}: Pick<EditorProps, 'cashappForm' | 'payload' | 'setCashappForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3788,7 +3951,12 @@ function CashappEditor({ cashappForm, payload, setCashappForm, t }: EditorProps)
   );
 }
 
-function EmvGenericEditor({ emvGenericForm, payload, setEmvGenericForm, t }: EditorProps) {
+function EmvGenericEditor({
+  emvGenericForm,
+  payload,
+  setEmvGenericForm,
+  t,
+}: Pick<EditorProps, 'emvGenericForm' | 'payload' | 'setEmvGenericForm' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3916,7 +4084,11 @@ function EmvGenericEditor({ emvGenericForm, payload, setEmvGenericForm, t }: Edi
   );
 }
 
-function RemovedOtpauthEditor({ payload, setPayloadOtpAuth, t }: EditorProps) {
+function RemovedOtpauthEditor({
+  payload,
+  setPayloadOtpAuth,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadOtpAuth' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4032,7 +4204,7 @@ function ShortLinkEditor({
   setShortLinkForm,
   shortLinkForm,
   t,
-}: EditorProps) {
+}: Pick<EditorProps, 'payload' | 'setPayloadText' | 'setShortLinkForm' | 'shortLinkForm' | 't'>) {
   return (
     <div className="space-y-4">
       {/* Long URL to shorten */}
@@ -4133,7 +4305,11 @@ function ShortLinkEditor({
   );
 }
 
-function UtmLinkEditor({ payload, setPayloadUrl, t }: EditorProps) {
+function UtmLinkEditor({
+  payload,
+  setPayloadUrl,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4211,7 +4387,12 @@ function UtmLinkEditor({ payload, setPayloadUrl, t }: EditorProps) {
   );
 }
 
-function AppLinkEditor({ payload, setPayloadAppLink, setPayloadText, t }: EditorProps) {
+function AppLinkEditor({
+  payload,
+  setPayloadAppLink,
+  setPayloadText,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadAppLink' | 'setPayloadText' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4353,7 +4534,11 @@ function AppLinkEditor({ payload, setPayloadAppLink, setPayloadText, t }: Editor
   );
 }
 
-function Gs1DigitalLinkEditor({ payload, setPayloadGS1, t }: EditorProps) {
+function Gs1DigitalLinkEditor({
+  payload,
+  setPayloadGS1,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadGS1' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4435,7 +4620,11 @@ function Gs1DigitalLinkEditor({ payload, setPayloadGS1, t }: EditorProps) {
   );
 }
 
-function RemovedInventoryEditor({ payload, setPayloadText, t }: EditorProps) {
+function RemovedInventoryEditor({
+  payload,
+  setPayloadText,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4488,7 +4677,11 @@ function RemovedInventoryEditor({ payload, setPayloadText, t }: EditorProps) {
   );
 }
 
-function RemovedTicketingEditor({ payload, setPayloadText, t }: EditorProps) {
+function RemovedTicketingEditor({
+  payload,
+  setPayloadText,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4549,7 +4742,11 @@ function RemovedTicketingEditor({ payload, setPayloadText, t }: EditorProps) {
   );
 }
 
-function CustomEditor({ payload, setPayloadText, t }: EditorProps) {
+function CustomEditor({
+  payload,
+  setPayloadText,
+  t,
+}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4575,7 +4772,7 @@ function ValidationOptionsEditor({
   qr,
   setPayloadValidation,
   t,
-}: EditorProps) {
+}: Pick<EditorProps, 'getPayloadText' | 'payload' | 'qr' | 'setPayloadValidation' | 't'>) {
   return (
     <div className="space-y-2 pt-4 border-t">
       <Label className="text-muted-foreground text-xs">
