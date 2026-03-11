@@ -165,6 +165,15 @@ export function qrcode(
     }
   };
 
+  const fillAlignmentModule = (row: number, col: number): void => {
+    for (let r = -2; r <= 2; r += 1) {
+      for (let c = -2; c <= 2; c += 1) {
+        _modules![row + r][col + c] =
+          r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0);
+      }
+    }
+  };
+
   const setupPositionAdjustPattern = (): void => {
     const pos = getPatternPosition(_typeNumber);
 
@@ -175,15 +184,7 @@ export function qrcode(
 
         if (_modules![row][col] != null) continue;
 
-        for (let r = -2; r <= 2; r += 1) {
-          for (let c = -2; c <= 2; c += 1) {
-            if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-              _modules![row + r][col + c] = true;
-            } else {
-              _modules![row + r][col + c] = false;
-            }
-          }
-        }
+        fillAlignmentModule(row, col);
       }
     }
   };

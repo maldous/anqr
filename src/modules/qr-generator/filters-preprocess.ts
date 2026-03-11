@@ -287,7 +287,10 @@ export function softenBWImage(imageData: ImageData): ImageData {
  * - posterize:  0..16 levels
  * - threshold:  0..255, where 0 means disabled
  */
-function applyBasicFilterOptions(config: QRGeneratorConfig, filterOptions: FilterOptions): void {
+function applyColorAdjustmentFilters(
+  config: QRGeneratorConfig,
+  filterOptions: FilterOptions
+): void {
   if (config.filterBrightness !== undefined && config.filterBrightness !== 0)
     filterOptions.brightness = config.filterBrightness;
   if (config.filterContrast !== undefined && config.filterContrast !== 0)
@@ -300,6 +303,9 @@ function applyBasicFilterOptions(config: QRGeneratorConfig, filterOptions: Filte
     filterOptions.gamma = config.filterGamma;
   if (config.filterInvert) filterOptions.invert = true;
   if (config.filterGrayscale) filterOptions.grayscale = true;
+}
+
+function applyEffectFilters(config: QRGeneratorConfig, filterOptions: FilterOptions): void {
   if (config.filterThreshold !== undefined && config.filterThreshold > 0)
     filterOptions.threshold = config.filterThreshold;
   if (config.filterBlur !== undefined && config.filterBlur > 0)
@@ -308,6 +314,11 @@ function applyBasicFilterOptions(config: QRGeneratorConfig, filterOptions: Filte
     filterOptions.sharpen = config.filterSharpen;
   if (config.filterPosterize !== undefined && config.filterPosterize > 0)
     filterOptions.posterize = config.filterPosterize;
+}
+
+function applyBasicFilterOptions(config: QRGeneratorConfig, filterOptions: FilterOptions): void {
+  applyColorAdjustmentFilters(config, filterOptions);
+  applyEffectFilters(config, filterOptions);
 }
 
 function applyDuotoneAndColorMode(config: QRGeneratorConfig, filterOptions: FilterOptions): void {

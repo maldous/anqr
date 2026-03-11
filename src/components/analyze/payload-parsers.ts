@@ -630,21 +630,34 @@ const ICAL_DAY_NAMES: Record<string, string> = {
   SA: 'Saturday',
 };
 
-function formatFrequencyText(freq: string, interval: number, byday?: string): string {
-  if (freq === 'DAILY') return interval === 1 ? 'Daily' : `Every ${interval} days`;
-  if (freq === 'WEEKLY') {
-    if (byday) {
-      const days = byday
-        .split(',')
-        .map((d) => ICAL_DAY_NAMES[d] || d)
-        .join(', ');
-      return interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
-    }
-    return interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
+function formatIntervalUnit(singular: string, plural: string, interval: number): string {
+  return interval === 1 ? singular : `Every ${interval} ${plural}`;
+}
+
+function formatWeeklyText(interval: number, byday?: string): string {
+  if (byday) {
+    const days = byday
+      .split(',')
+      .map((d) => ICAL_DAY_NAMES[d] || d)
+      .join(', ');
+    return interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
   }
-  if (freq === 'MONTHLY') return interval === 1 ? 'Monthly' : `Every ${interval} months`;
-  if (freq === 'YEARLY') return interval === 1 ? 'Yearly' : `Every ${interval} years`;
-  return freq || 'Recurring';
+  return formatIntervalUnit('Weekly', 'weeks', interval);
+}
+
+function formatFrequencyText(freq: string, interval: number, byday?: string): string {
+  switch (freq) {
+    case 'DAILY':
+      return formatIntervalUnit('Daily', 'days', interval);
+    case 'WEEKLY':
+      return formatWeeklyText(interval, byday);
+    case 'MONTHLY':
+      return formatIntervalUnit('Monthly', 'months', interval);
+    case 'YEARLY':
+      return formatIntervalUnit('Yearly', 'years', interval);
+    default:
+      return freq || 'Recurring';
+  }
 }
 
 function formatRecurrenceRule(rrule: string): string {
