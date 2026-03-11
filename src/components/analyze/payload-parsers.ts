@@ -66,6 +66,64 @@ export function parseWifiPayload(payload: string): Record<string, string | null>
 // ---------------------------------------------------------------------------
 // 2. vCard parser – parses BEGIN:VCARD...END:VCARD
 // ---------------------------------------------------------------------------
+function extractTypePrefix(keyPart: string, fallback: string): string {
+  const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+  return typeMatch ? typeMatch[1] : fallback;
+}
+
+function processVCardLine(
+  baseKey: string,
+  keyPart: string,
+  value: string,
+  result: Record<string, string | string[] | null>,
+  phones: string[],
+  emails: string[],
+  addresses: string[]
+): void {
+  switch (baseKey) {
+    case 'VERSION':
+      result.version = value;
+      break;
+    case 'FN':
+      result.fullName = value;
+      break;
+    case 'N':
+      result.name = value.replaceAll(';', ' ').trim();
+      break;
+    case 'ORG':
+      result.organization = value.replaceAll(';', ', ');
+      break;
+    case 'TITLE':
+      result.title = value;
+      break;
+    case 'TEL':
+      phones.push(`${extractTypePrefix(keyPart, 'Phone')}: ${value}`);
+      break;
+    case 'EMAIL':
+      emails.push(`${extractTypePrefix(keyPart, 'Email')}: ${value}`);
+      break;
+    case 'ADR': {
+      const addrParts = value.split(';').filter(Boolean);
+      if (addrParts.length > 0) {
+        addresses.push(`${extractTypePrefix(keyPart, 'Address')}: ${addrParts.join(', ')}`);
+      }
+      break;
+    }
+    case 'BDAY':
+      result.birthday = value;
+      break;
+    case 'URL':
+      result.url = value;
+      break;
+    case 'NOTE':
+      result.note = value;
+      break;
+    case 'PHOTO':
+      result.hasPhoto = 'true';
+      break;
+  }
+}
+
 export function parseVCardPayload(payload: string): Record<string, string | string[] | null> {
   const result: Record<string, string | string[] | null> = {
     version: null,
@@ -92,7 +150,6 @@ export function parseVCardPayload(payload: string): Record<string, string | stri
   let i = 0;
   while (i < lines.length) {
     let line = lines[i];
-    // Handle line folding (continuation lines start with space or tab)
     while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
       i++;
       line += lines[i].slice(1);
@@ -106,56 +163,7 @@ export function parseVCardPayload(payload: string): Record<string, string | stri
     const value = line.slice(colonIdx + 1);
     const baseKey = keyPart.split(';')[0];
 
-    switch (baseKey) {
-      case 'VERSION':
-        result.version = value;
-        break;
-      case 'FN':
-        result.fullName = value;
-        break;
-      case 'N':
-        result.name = value.replaceAll(';', ' ').trim();
-        break;
-      case 'ORG':
-        result.organization = value.replaceAll(';', ', ');
-        break;
-      case 'TITLE':
-        result.title = value;
-        break;
-      case 'TEL': {
-        const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
-        const type = typeMatch ? typeMatch[1] : 'Phone';
-        phones.push(`${type}: ${value}`);
-        break;
-      }
-      case 'EMAIL': {
-        const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
-        const type = typeMatch ? typeMatch[1] : 'Email';
-        emails.push(`${type}: ${value}`);
-        break;
-      }
-      case 'ADR': {
-        const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
-        const type = typeMatch ? typeMatch[1] : 'Address';
-        const addrParts = value.split(';').filter(Boolean);
-        if (addrParts.length > 0) {
-          addresses.push(`${type}: ${addrParts.join(', ')}`);
-        }
-        break;
-      }
-      case 'BDAY':
-        result.birthday = value;
-        break;
-      case 'URL':
-        result.url = value;
-        break;
-      case 'NOTE':
-        result.note = value;
-        break;
-      case 'PHOTO':
-        result.hasPhoto = 'true';
-        break;
-    }
+    processVCardLine(baseKey, keyPart, value, result, phones, emails, addresses);
   }
 
   result.phones = phones;

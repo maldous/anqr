@@ -59,6 +59,108 @@ function hammingDistance(a: number, b: number): number {
   return count;
 }
 
+type BitTrace = { bit: number; row: number; col: number; value: boolean };
+
+function readBitFromMatrix(matrix: boolean[][], row: number, col: number): boolean {
+  return matrix[row]?.[col] ?? false;
+}
+
+function readFormatBitsCopy1(matrix: boolean[][]): { bits: number; trace: BitTrace[] } {
+  const trace: BitTrace[] = [];
+  let bits = 0;
+
+  // Bits 0-5: column 8, rows 0-5
+  for (let i = 0; i <= 5; i++) {
+    const value = readBitFromMatrix(matrix, i, 8);
+    if (value) bits |= 1 << i;
+    trace.push({ bit: i, row: i, col: 8, value });
+  }
+
+  // Bit 6: column 8, row 7 (row 6 is timing pattern)
+  const v6 = readBitFromMatrix(matrix, 7, 8);
+  if (v6) bits |= 1 << 6;
+  trace.push({ bit: 6, row: 7, col: 8, value: v6 });
+
+  // Bit 7: column 8, row 8
+  const v7 = readBitFromMatrix(matrix, 8, 8);
+  if (v7) bits |= 1 << 7;
+  trace.push({ bit: 7, row: 8, col: 8, value: v7 });
+
+  // Bit 8: row 8, column 7
+  const v8 = readBitFromMatrix(matrix, 8, 7);
+  if (v8) bits |= 1 << 8;
+  trace.push({ bit: 8, row: 8, col: 7, value: v8 });
+
+  // Bits 9-14: row 8, columns 5-0
+  for (let i = 9; i <= 14; i++) {
+    const col = 14 - i;
+    const value = readBitFromMatrix(matrix, 8, col);
+    if (value) bits |= 1 << i;
+    trace.push({ bit: i, row: 8, col, value });
+  }
+
+  return { bits, trace };
+}
+
+function readFormatBitsCopy2(
+  matrix: boolean[][],
+  moduleCount: number
+): { bits: number; trace: BitTrace[] } {
+  const trace: BitTrace[] = [];
+  let bits = 0;
+
+  // Bits 0-7: row 8, columns N-1 to N-8
+  for (let i = 0; i <= 7; i++) {
+    const col = moduleCount - 1 - i;
+    const value = readBitFromMatrix(matrix, 8, col);
+    if (value) bits |= 1 << i;
+    trace.push({ bit: i, row: 8, col, value });
+  }
+
+  // Bits 8-14: column 8, rows N-7 to N-1
+  for (let i = 8; i <= 14; i++) {
+    const row = moduleCount - 15 + i;
+    const value = readBitFromMatrix(matrix, row, 8);
+    if (value) bits |= 1 << i;
+    trace.push({ bit: i, row, col: 8, value });
+  }
+
+  return { bits, trace };
+}
+
+function findBestFormatMatch(
+  bits1: number,
+  bits2: number
+): {
+  match: FormatInfo | null;
+  distance: number;
+  distCopy1: number;
+  distCopy2: number;
+  fromCopy: number;
+} {
+  let match: FormatInfo | null = null;
+  let distance = 4;
+  let distCopy1 = 15;
+  let distCopy2 = 15;
+  let fromCopy = 0;
+
+  for (const [pattern, info] of FORMAT_INFO_DECODE_TABLE) {
+    const d1 = hammingDistance(bits1, pattern);
+    const d2 = hammingDistance(bits2, pattern);
+    const minD = Math.min(d1, d2);
+
+    if (minD < distance) {
+      distance = minD;
+      distCopy1 = d1;
+      distCopy2 = d2;
+      fromCopy = d1 <= d2 ? 1 : 2;
+      match = info;
+    }
+  }
+
+  return { match, distance, distCopy1, distCopy2, fromCopy };
+}
+
 /**
  * Read format info from the matrix
  * Format info is stored in two locations for redundancy
@@ -76,82 +178,10 @@ function hammingDistance(a: number, b: number): number {
 export function readFormatInfo(matrix: boolean[][], moduleCount: number): FormatInfo | null {
   initFormatTable();
 
-  // Collect per-bit trace for debugging
-  const trace1: Array<{ bit: number; row: number; col: number; value: boolean }> = [];
-  const trace2: Array<{ bit: number; row: number; col: number; value: boolean }> = [];
-
-  // ========================================
-  // Copy 1: Around top-left finder pattern
-  // ========================================
-  let bits1 = 0;
-
-  // Bits 0-5: column 8, rows 0-5
-  for (let i = 0; i <= 5; i++) {
-    const row = i;
-    const col = 8;
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits1 |= 1 << i;
-    trace1.push({ bit: i, row, col, value });
-  }
-
-  // Bit 6: column 8, row 7 (row 6 is timing pattern)
-  {
-    const row = 7;
-    const col = 8;
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits1 |= 1 << 6;
-    trace1.push({ bit: 6, row, col, value });
-  }
-
-  // Bit 7: column 8, row 8
-  {
-    const row = 8;
-    const col = 8;
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits1 |= 1 << 7;
-    trace1.push({ bit: 7, row, col, value });
-  }
-
-  // Bit 8: row 8, column 7
-  {
-    const row = 8;
-    const col = 7;
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits1 |= 1 << 8;
-    trace1.push({ bit: 8, row, col, value });
-  }
-
-  // Bits 9-14: row 8, columns 5-0
-  for (let i = 9; i <= 14; i++) {
-    const row = 8;
-    const col = 14 - i; // i=9 → col 5, i=10 → col 4, ..., i=14 → col 0
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits1 |= 1 << i;
-    trace1.push({ bit: i, row, col, value });
-  }
-
-  // ========================================
-  // Copy 2: Around top-right and bottom-left
-  // ========================================
-  let bits2 = 0;
-
-  // Bits 0-7: row 8, columns N-1 to N-8
-  for (let i = 0; i <= 7; i++) {
-    const row = 8;
-    const col = moduleCount - 1 - i; // i=0 → col N-1, i=7 → col N-8
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits2 |= 1 << i;
-    trace2.push({ bit: i, row, col, value });
-  }
-
-  // Bits 8-14: column 8, rows N-7 to N-1
-  for (let i = 8; i <= 14; i++) {
-    const row = moduleCount - 15 + i; // i=8 → row N-7, i=14 → row N-1
-    const col = 8;
-    const value = matrix[row]?.[col] ?? false;
-    if (value) bits2 |= 1 << i;
-    trace2.push({ bit: i, row, col, value });
-  }
+  const copy1 = readFormatBitsCopy1(matrix);
+  const copy2 = readFormatBitsCopy2(matrix, moduleCount);
+  const bits1 = copy1.bits;
+  const bits2 = copy2.bits;
 
   qrDecoderLog.trace('format: Read format bits with trace', {
     bits1: bits1.toString(2).padStart(15, '0'),
@@ -159,41 +189,22 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
     bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,
     bits2Hex: `0x${bits2.toString(16).padStart(4, '0')}`,
     moduleCount,
-    trace1: trace1.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
-    trace2: trace2.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
+    trace1: copy1.trace.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
+    trace2: copy2.trace.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
   });
 
-  // Try to find a match with error correction
-  let bestMatch: FormatInfo | null = null;
-  let bestDistance = 4; // Maximum correctable errors for BCH(15,5) is 3
-  let bestDistCopy1 = 15;
-  let bestDistCopy2 = 15;
-  let bestFromCopy = 0;
+  const best = findBestFormatMatch(bits1, bits2);
 
-  for (const [pattern, info] of FORMAT_INFO_DECODE_TABLE) {
-    const d1 = hammingDistance(bits1, pattern);
-    const d2 = hammingDistance(bits2, pattern);
-    const minD = Math.min(d1, d2);
-
-    if (minD < bestDistance) {
-      bestDistance = minD;
-      bestDistCopy1 = d1;
-      bestDistCopy2 = d2;
-      bestFromCopy = d1 <= d2 ? 1 : 2;
-      bestMatch = info;
-    }
-  }
-
-  if (bestMatch) {
-    const eccChar = ECC_LEVEL_MAP[bestMatch.eccLevel];
+  if (best.match) {
+    const eccChar = ECC_LEVEL_MAP[best.match.eccLevel];
     qrDecoderLog.trace('format: Decoded format info', {
-      eccLevel: bestMatch.eccLevel,
+      eccLevel: best.match.eccLevel,
       eccChar,
-      maskPattern: bestMatch.maskPattern,
-      hammingDistance: bestDistance,
-      hammingDistCopy1: bestDistCopy1,
-      hammingDistCopy2: bestDistCopy2,
-      usedCopy: bestFromCopy,
+      maskPattern: best.match.maskPattern,
+      hammingDistance: best.distance,
+      hammingDistCopy1: best.distCopy1,
+      hammingDistCopy2: best.distCopy2,
+      usedCopy: best.fromCopy,
     });
   } else {
     qrDecoderLog.trace('format: Failed to decode format info', {
@@ -204,7 +215,7 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
     });
   }
 
-  return bestMatch;
+  return best.match;
 }
 
 function readVersionBitsBottomLeft(matrix: boolean[][], moduleCount: number): number {
