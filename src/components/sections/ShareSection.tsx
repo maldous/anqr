@@ -39,16 +39,8 @@ function buildShareColors(render: StoreState['render']) {
   };
 }
 
-function buildShareStyles(render: StoreState['render']) {
+function buildShareEyeAndFrameStyles(render: StoreState['render']) {
   return {
-    style: render.moduleStyle === 'square' ? undefined : render.moduleStyle,
-    finder: render.finderStyle === 'square' ? undefined : render.finderStyle,
-    alignmentStyle: render.alignmentStyle === 'match_finder' ? undefined : render.alignmentStyle,
-    timingStyle: render.timingStyle === 'match_module' ? undefined : render.timingStyle,
-    moduleGap: render.moduleGapPercent === 0 ? undefined : render.moduleGapPercent,
-    gapMode: render.gapMode === 'none' ? undefined : render.gapMode,
-    cornerRadius: render.cornerRadius === 0 ? undefined : render.cornerRadius,
-    gradientType: render.gradient.type === 'none' ? undefined : render.gradient.type,
     eyeOuterStyle: render.eyeOuterStyle === 'square' ? undefined : render.eyeOuterStyle,
     eyeInnerStyle: render.eyeInnerStyle === 'square' ? undefined : render.eyeInnerStyle,
     eyeScale: render.eyeScale === 100 ? undefined : render.eyeScale,
@@ -62,6 +54,20 @@ function buildShareStyles(render: StoreState['render']) {
     contrastGuard: render.contrastGuard ? true : undefined,
     minContrastRatio:
       render.contrastGuard && render.minContrastRatio !== 4.5 ? render.minContrastRatio : undefined,
+  };
+}
+
+function buildShareStyles(render: StoreState['render']) {
+  return {
+    style: render.moduleStyle === 'square' ? undefined : render.moduleStyle,
+    finder: render.finderStyle === 'square' ? undefined : render.finderStyle,
+    alignmentStyle: render.alignmentStyle === 'match_finder' ? undefined : render.alignmentStyle,
+    timingStyle: render.timingStyle === 'match_module' ? undefined : render.timingStyle,
+    moduleGap: render.moduleGapPercent === 0 ? undefined : render.moduleGapPercent,
+    gapMode: render.gapMode === 'none' ? undefined : render.gapMode,
+    cornerRadius: render.cornerRadius === 0 ? undefined : render.cornerRadius,
+    gradientType: render.gradient.type === 'none' ? undefined : render.gradient.type,
+    ...buildShareEyeAndFrameStyles(render),
   };
 }
 
@@ -103,24 +109,22 @@ function buildShareOverlayDither(overlay: StoreState['overlay']) {
   };
 }
 
+function buildShareOverlaySubpixelParams(overlay: StoreState['overlay']) {
+  if (overlay.mode !== 'subpixel') return {};
+  return {
+    subpixelGridSize: overlay.subpixelGridSize !== '3x3' ? overlay.subpixelGridSize : undefined,
+    subpixelCenterRule:
+      overlay.subpixelCenterRule !== 'strict' ? overlay.subpixelCenterRule : undefined,
+    subpixelNeutralColor:
+      overlay.subpixelNeutralColor !== '#808080' ? overlay.subpixelNeutralColor : undefined,
+    subpixelFinderOverride:
+      overlay.subpixelFinderOverride !== 'solid' ? overlay.subpixelFinderOverride : undefined,
+  };
+}
+
 function buildShareOverlayModeSpecific(overlay: StoreState['overlay']) {
   return {
-    subpixelGridSize:
-      overlay.mode === 'subpixel' && overlay.subpixelGridSize !== '3x3'
-        ? overlay.subpixelGridSize
-        : undefined,
-    subpixelCenterRule:
-      overlay.mode === 'subpixel' && overlay.subpixelCenterRule !== 'strict'
-        ? overlay.subpixelCenterRule
-        : undefined,
-    subpixelNeutralColor:
-      overlay.mode === 'subpixel' && overlay.subpixelNeutralColor !== '#808080'
-        ? overlay.subpixelNeutralColor
-        : undefined,
-    subpixelFinderOverride:
-      overlay.mode === 'subpixel' && overlay.subpixelFinderOverride !== 'solid'
-        ? overlay.subpixelFinderOverride
-        : undefined,
+    ...buildShareOverlaySubpixelParams(overlay),
     halftoneCell:
       overlay.mode === 'halftone' && overlay.halftoneCell !== 'per_module'
         ? overlay.halftoneCell
@@ -144,16 +148,8 @@ function buildShareOverlayModeSpecific(overlay: StoreState['overlay']) {
   };
 }
 
-function buildShareOverlay(overlay: StoreState['overlay']) {
-  if (!overlay.enabled) return {};
+function buildShareOverlayProtection(overlay: StoreState['overlay']) {
   return {
-    mode: overlay.mode,
-    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
-    overlayUrl: overlay.url || undefined,
-    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
-    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
-    flipX: overlay.flipX ? true : undefined,
-    flipY: overlay.flipY ? true : undefined,
     preserveFinders: overlay.preserveFinders ? undefined : false,
     preserveTiming: overlay.preserveTiming ? true : undefined,
     preserveAlignment: overlay.preserveAlignment ? true : undefined,
@@ -168,6 +164,20 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
       overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== 'distance_to_finders'
         ? overlay.eccAwareWeightMap
         : undefined,
+  };
+}
+
+function buildShareOverlay(overlay: StoreState['overlay']) {
+  if (!overlay.enabled) return {};
+  return {
+    mode: overlay.mode,
+    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
+    overlayUrl: overlay.url || undefined,
+    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
+    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
+    flipX: overlay.flipX ? true : undefined,
+    flipY: overlay.flipY ? true : undefined,
+    ...buildShareOverlayProtection(overlay),
     ...buildShareOverlayPreprocessing(overlay),
     ...buildShareOverlayDither(overlay),
     ...buildShareOverlayModeSpecific(overlay),

@@ -562,17 +562,15 @@ function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams
   buildOutputFormatSpecificParams(config, params);
 }
 
-function buildSafetyParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.safetyMode && config.safetyMode !== 'off') params.set('safeMode', config.safetyMode);
-  if (config.safetyMinModulePx !== undefined && config.safetyMinModulePx !== 2)
-    params.set('safeMinPx', config.safetyMinModulePx.toString());
-  if (config.safetyMinQuietZone !== undefined && config.safetyMinQuietZone !== 4)
-    params.set('safeMinQz', config.safetyMinQuietZone.toString());
+function buildSafetyLockParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.lockFinders === false) params.set('lockF', '0');
   if (config.lockTiming === false) params.set('lockT', '0');
   if (config.lockAlign === false) params.set('lockA', '0');
   if (config.lockFormat === false) params.set('lockFmt', '0');
   if (config.lockVersion === false) params.set('lockV', '0');
+}
+
+function buildSafetyIntensityParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.maxOverlayIntensityL !== undefined && config.maxOverlayIntensityL !== 100)
     params.set('maxIntL', config.maxOverlayIntensityL.toString());
   if (config.maxOverlayIntensityM !== undefined && config.maxOverlayIntensityM !== 100)
@@ -581,6 +579,16 @@ function buildSafetyParams(config: Partial<ShareConfig>, params: URLSearchParams
     params.set('maxIntQ', config.maxOverlayIntensityQ.toString());
   if (config.maxOverlayIntensityH !== undefined && config.maxOverlayIntensityH !== 100)
     params.set('maxIntH', config.maxOverlayIntensityH.toString());
+}
+
+function buildSafetyParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.safetyMode && config.safetyMode !== 'off') params.set('safeMode', config.safetyMode);
+  if (config.safetyMinModulePx !== undefined && config.safetyMinModulePx !== 2)
+    params.set('safeMinPx', config.safetyMinModulePx.toString());
+  if (config.safetyMinQuietZone !== undefined && config.safetyMinQuietZone !== 4)
+    params.set('safeMinQz', config.safetyMinQuietZone.toString());
+  buildSafetyLockParams(config, params);
+  buildSafetyIntensityParams(config, params);
 }
 
 function buildQAAutoTuneParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
