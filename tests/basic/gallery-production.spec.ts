@@ -9,10 +9,7 @@ import { test, expect } from '@playwright/test';
  *   ANQR_PRODUCTION_BASE=https://anqr.link npx playwright test tests/basic/gallery-production.spec.ts
  */
 
-const BASE_URL =
-  process.env.ANQR_PRODUCTION_BASE ||
-  process.env.PLAYWRIGHT_TEST_BASE_URL ||
-  'http://localhost:5173';
+const BASE_URL = process.env.ANQR_PRODUCTION_BASE || process.env.PLAYWRIGHT_TEST_BASE_URL || '';
 const GALLERY_PATH = '/gallery';
 
 async function getGalleryAssets(

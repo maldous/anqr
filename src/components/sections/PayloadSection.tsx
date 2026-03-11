@@ -3955,7 +3955,7 @@ function CashappEditor({
 
 function EmvGenericEditor({
   emvGenericForm,
-  payload,
+  payload: _payload,
   setEmvGenericForm,
   t,
 }: Readonly<Pick<EditorProps, 'emvGenericForm' | 'payload' | 'setEmvGenericForm' | 't'>>) {

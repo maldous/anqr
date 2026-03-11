@@ -96,7 +96,7 @@ const selectBlockLines = lines.slice(select_block_start + 1, select_block_end);
 // It returns: allowedBitRanges, basis, actualControllableBits, actualControlPercentage
 // Or it returns a FullQArtResult (fail/early)
 
-const basisHelperDef = `
+const _basisHelperDef = `
 interface BasisValidationSuccess {
   earlyReturn?: FullQArtResult;
   basis: ReturnType<typeof buildFullBasis>;
@@ -142,7 +142,7 @@ ${basisBlockLines.map((l) => (l.startsWith('  ') ? l : '  ' + l)).join('\n')}
 // We need to replace those with setting earlyReturn.
 
 // Let me build the helper code properly by processing the extracted lines:
-const basisCode = basisBlockLines.join('\n');
+const _basisCode = basisBlockLines.join('\n');
 
 // Replace "    return buildQArtFailResult(" with "    return { earlyReturn: buildQArtFailResult("
 // and close the object at the corresponding ");"
@@ -183,14 +183,14 @@ const basisCode = basisBlockLines.join('\n');
 // The dummy basis can be { vectors: [] }.
 
 // Let me do simple string replacement on the extracted code:
-const dummyFields = `basis: { vectors: [] } as ReturnType<typeof buildFullBasis>, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges: []`;
+const _dummyFields = `basis: { vectors: [] } as ReturnType<typeof buildFullBasis>, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges: []`;
 
 // Replace "return buildQArtFailResult(" -> "return { earlyReturn: buildQArtFailResult("
 // and the closing ");" -> `), ${dummyFields} };`
 // This is hard because the calls span multiple lines. Let me use a different approach.
 
 // Instead of complex regex, let me create a Node transform:
-function transformBasisBlock(code) {
+function _transformBasisBlock(code) {
   const lines = code.split('\n');
   const result = [];
   let i = 0;
@@ -362,7 +362,7 @@ output.push('): BasisValidationSuccess {');
 
 // Now insert the extracted basis block code, transforming returns
 const basisLines = basisBlockLines;
-const inBasisHelper = true;
+const _inBasisHelper = true;
 
 for (let i = 0; i < basisLines.length; i++) {
   const line = basisLines[i];

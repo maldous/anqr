@@ -2846,7 +2846,7 @@ interface AnalyzeVisualGridProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function AnalyzeVisualGrid({ result, combinedTimings, t }: Readonly<AnalyzeVisualGridProps>) {
+function _AnalyzeVisualGrid({ result, combinedTimings, t }: Readonly<AnalyzeVisualGridProps>) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {hasAnyTimingData(combinedTimings) ? (
@@ -3059,7 +3059,7 @@ interface AnalyzeDataGridProps {
   result: QRAnalysisResult;
 }
 
-function AnalyzeDataGrid({ result }: Readonly<AnalyzeDataGridProps>) {
+function _AnalyzeDataGrid({ result }: Readonly<AnalyzeDataGridProps>) {
   return (
     <div className="grid md:grid-cols-1 gap-4">
       {result.payloadBytes && result.payloadBytes.length > 0 && (

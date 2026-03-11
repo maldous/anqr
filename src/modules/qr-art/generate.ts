@@ -2233,7 +2233,7 @@ function drawSingleAlignmentPattern(modules: (boolean | null)[][], row: number, 
 function drawAlignmentPatterns(
   modules: (boolean | null)[][],
   version: number,
-  moduleCount: number
+  _moduleCount: number
 ): void {
   if (version < 2) return;
   const positions = getPatternPosition(version);

@@ -621,7 +621,8 @@ prefix.apply(loglevel, {
 // Development: show all logs (debug and above) - maximum visibility for debugging
 // Production: show only errors - minimum noise, failures only (toggle via anqrDiag)
 // Note: Handle Node.js environment where import.meta.env may not exist
-const envLevelRaw = process === undefined ? undefined : process.env.ANQR_LOG_LEVEL?.toLowerCase();
+const envLevelRaw =
+  typeof process === 'undefined' ? undefined : process.env.ANQR_LOG_LEVEL?.toLowerCase();
 const envLevel = (() => {
   switch (envLevelRaw) {
     case 'trace':
@@ -636,7 +637,9 @@ const envLevel = (() => {
   }
 })();
 const isDev =
-  import.meta?.env?.DEV === undefined ? process.env.NODE_ENV !== 'production' : import.meta.env.DEV;
+  import.meta?.env?.DEV === undefined
+    ? typeof process !== 'undefined' && process.env.NODE_ENV !== 'production'
+    : import.meta.env.DEV;
 const defaultLevel = envLevel ?? (isDev ? 'debug' : 'error');
 loglevel.setLevel(defaultLevel);
 type RuntimeLogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent';
@@ -651,8 +654,11 @@ const LOG_LEVEL_INDEX: Record<RuntimeLogLevel, number> = {
 };
 
 const captureMinLevelRaw =
-  process === undefined ? undefined : process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase();
-const captureWhenConsoleEnabled = process?.env?.ANQR_LOG_CAPTURE_CONSOLE === '1';
+  typeof process === 'undefined'
+    ? undefined
+    : process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase();
+const captureWhenConsoleEnabled =
+  typeof process !== 'undefined' && process?.env?.ANQR_LOG_CAPTURE_CONSOLE === '1';
 const captureMinLevel = (() => {
   switch (captureMinLevelRaw) {
     case 'trace':
@@ -665,7 +671,8 @@ const captureMinLevel = (() => {
       return 'warn' as RuntimeLogLevel;
   }
 })();
-const forceStructuredCaptureAll = process?.env?.ANQR_LOG_CAPTURE_ALL === '1';
+const forceStructuredCaptureAll =
+  typeof process !== 'undefined' && process?.env?.ANQR_LOG_CAPTURE_ALL === '1';
 
 function isLevelEnabledForLogger(
   logger: loglevel.Logger,
