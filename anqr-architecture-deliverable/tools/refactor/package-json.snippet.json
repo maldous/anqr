@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "extract:ast": "tsx tools/refactor/extract-ast-v3.ts",
+    "depcruise": "depcruise src --config config/dependency-cruiser.cjs",
+    "refactor:move": "tsx tools/refactor/move-by-manifest.ts",
+    "refactor:verify": "bash tools/refactor/verify-architecture.sh",
+    "refactor:extract-groups": "tsx tools/refactor/extract-symbol-groups.ts"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "*",
+    "eslint-import-resolver-typescript": "*",
+    "eslint-plugin-boundaries": "*",
+    "ts-morph": "27.0.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "@types/node": "*"
+  }
+}

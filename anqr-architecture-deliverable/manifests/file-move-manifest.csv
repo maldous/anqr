@@ -1,0 +1,258 @@
+source,action,target,confidence,reason
+src/App.tsx,split,src/app/shell/AppShell.tsx,high,"App.tsx contains shell composition, routing, URL parameter application, render configuration, and page logic; it should be split by responsibility."
+src/components/AdPlaceholder.tsx,move,src/features/monetization/components/AdPlaceholder.tsx,high,Advertising belongs to monetization feature.
+src/components/AdUnit.tsx,move,src/features/monetization/components/AdUnit.tsx,high,Advertising belongs to monetization feature.
+src/components/Analyze.tsx,split,src/features/analyze/components/AnalyzeScreen.tsx,high,"Analyze.tsx mixes view composition, formatting helpers, scan orchestration, reproduction logic, and analysis widgets; split into feature UI + application services."
+src/components/BusyOverlay.tsx,move,src/ui/composites/BusyOverlay.tsx,high,Reusable busy overlay UI composite.
+src/components/ErrorBoundary.tsx,move,src/app/shell/ErrorBoundary.tsx,high,Top-level error boundary belongs to app shell.
+src/components/Gallery.tsx,move,src/features/gallery/components/GalleryScreen.tsx,high,Gallery is a feature-level screen.
+src/components/Header.tsx,split,src/app/shell/Header.tsx,medium,Header appears to contain shell concerns plus feature hooks; confirm and split shell-only logic from feature actions.
+src/components/MobileDivider.tsx,move,src/ui/composites/MobileDivider.tsx,medium,Generic responsive UI composite.
+src/components/Preview.tsx,move,src/features/generator/components/Preview.tsx,high,Preview belongs to the generator feature.
+src/components/Sidebar.tsx,move,src/features/generator/components/Sidebar.tsx,medium,Sidebar is the main generator feature composition surface.
+src/components/StaticPage.tsx,move,src/app/pages/StaticPage.tsx,high,Static page rendering is an application page concern.
+src/components/WelcomeModal.tsx,move,src/features/onboarding/components/WelcomeModal.tsx,high,Welcome modal belongs to onboarding.
+src/components/analyze/content-type-renderers.tsx,move,src/features/analyze/components/content-type-renderers.tsx,high,Analysis-specific components belong to the analyze feature.
+src/components/analyze/payload-parsers.ts,move,src/features/analyze/components/payload-parsers.ts,high,Analysis-specific components belong to the analyze feature.
+src/components/sections/AnimationSection.tsx,move,src/features/generator/components/sections/AnimationSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/MetadataSection.tsx,move,src/features/generator/components/sections/MetadataSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/OutputSection.tsx,move,src/features/generator/components/sections/OutputSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/OverlaySection.tsx,move,src/features/generator/components/sections/OverlaySection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/PayloadSection.tsx,move,src/features/generator/components/sections/PayloadSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/RenderSection.tsx,move,src/features/generator/components/sections/RenderSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/SafetySection.tsx,move,src/features/generator/components/sections/SafetySection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/ShareSection.tsx,move,src/features/generator/components/sections/ShareSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/WatermarkSection.tsx,move,src/features/generator/components/sections/WatermarkSection.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/sections/qr-encoding-section.tsx,move,src/features/generator/components/sections/qr-encoding-section.tsx,high,Generator configuration sections belong to the generator feature.
+src/components/ui/accordion.tsx,move,src/ui/primitives/accordion.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/button.tsx,move,src/ui/primitives/button.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/calendar.tsx,move,src/ui/primitives/calendar.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/date-time-picker.tsx,move,src/ui/primitives/date-time-picker.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/dynamic-testid.ts,move,src/infra/testing/dynamic-testid.ts,high,"Dynamic test id generation is a testing concern, not a UI primitive."
+src/components/ui/help-link.tsx,move,src/ui/primitives/help-link.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/input.tsx,move,src/ui/primitives/input.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/label.tsx,move,src/ui/primitives/label.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/select.tsx,move,src/ui/primitives/select.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/slider.tsx,move,src/ui/primitives/slider.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/switch.tsx,move,src/ui/primitives/switch.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/tabs.tsx,move,src/ui/primitives/tabs.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/textarea.tsx,move,src/ui/primitives/textarea.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/components/ui/tooltip.tsx,move,src/ui/primitives/tooltip.tsx,high,Reusable UI primitives belong under ui/primitives.
+src/data/gallery-items.ts,move,src/content/gallery/gallery-items.ts,high,Gallery manifests and content data belong under content/gallery.
+src/data/gallery-manifest.ts,move,src/content/gallery/gallery-manifest.ts,high,Gallery manifests and content data belong under content/gallery.
+src/data/gallery-scan-scenarios.ts,move,src/content/gallery/gallery-scan-scenarios.ts,high,Gallery manifests and content data belong under content/gallery.
+src/data/gallery-showcase.generated.ts,move,src/content/generated/gallery-showcase.generated.ts,high,Generated gallery data belongs under content/generated.
+src/hooks/useBannerHeight.ts,move,src/ui/hooks/useBannerHeight.ts,medium,Reusable UI hook.
+src/hooks/useQRGenerator.ts,split,src/features/generator/hooks/useQRGenerator.ts,high,"This file contains generator orchestration, export, watermark, QArt, fallback logic, and rendering helpers; split into hook + application services."
+src/i18n/index.ts,move,src/app/i18n/index.ts,high,Runtime i18n bootstrap belongs to the application layer.
+src/lib/auto-testid.ts,move,src/infra/testing/auto-testid.ts,high,Automatic test id generation belongs to testing infra.
+src/lib/logger-remote.ts,move,src/infra/telemetry/logger-remote.ts,high,Remote diagnostics and telemetry belong to infra.
+src/lib/logger.ts,move,src/infra/logging/logger.ts,high,Cross-cutting logging belongs to infra.
+src/lib/search-context.tsx,move,src/app/search/search-context.tsx,medium,Search context is application-level context rather than generic library code.
+src/lib/utils.ts,split,src/infra/utilities/utils.ts,high,Generic utils file should be decomposed into owning modules; do not keep a god utility file.
+src/lib/zaraz.ts,move,src/infra/telemetry/zaraz.ts,high,Third-party telemetry adapter belongs to infra.
+src/main.tsx,move,src/app/boot/main.tsx,high,Application entry point belongs under app boot.
+src/modules/animation/animation-loop.ts,move,src/domain/render/animation/animation-loop.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/animation-patterns.ts,move,src/domain/render/animation/animation-patterns.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/api.ts,split,src/domain/render/animation/api.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/apply-animation-pattern.ts,move,src/domain/render/animation/apply-animation-pattern.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/color-cycle.ts,move,src/domain/render/animation/color-cycle.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/decimation.ts,move,src/domain/render/animation/decimation.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/format-detection.ts,move,src/domain/render/animation/format-detection.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/gif-codec.ts,move,src/domain/render/animation/gif-codec.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/gif-compositor.ts,move,src/domain/render/animation/gif-compositor.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/gif-lock.ts,move,src/domain/render/animation/gif-lock.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/index.ts,split,src/domain/render/animation/index.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/interpolate-frames.ts,move,src/domain/render/animation/interpolate-frames.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/parsing.ts,move,src/domain/render/animation/parsing.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/playback-delay.ts,move,src/domain/render/animation/playback-delay.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/shared-patterns.ts,move,src/domain/render/animation/shared-patterns.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/state.ts,split,src/domain/render/animation/state.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/temporal-dither.ts,move,src/domain/render/animation/temporal-dither.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/animation/types.ts,split,src/domain/render/animation/types.ts,high,Animation belongs to domain/render/animation; state entry points should be narrowed.
+src/modules/browser-clipboard/api.ts,move,src/platform/browser/clipboard/api.ts,high,Browser clipboard access is a platform adapter.
+src/modules/browser-clipboard/copy-image.ts,move,src/platform/browser/clipboard/copy-image.ts,high,Browser clipboard access is a platform adapter.
+src/modules/browser-clipboard/copy-text.ts,move,src/platform/browser/clipboard/copy-text.ts,high,Browser clipboard access is a platform adapter.
+src/modules/browser-clipboard/index.ts,move,src/platform/browser/clipboard/index.ts,high,Browser clipboard access is a platform adapter.
+src/modules/browser-io/api.ts,move,src/platform/browser/io/api.ts,high,Browser IO is a platform adapter.
+src/modules/browser-io/canvas-utils.ts,move,src/platform/browser/canvas/canvas-utils.ts,high,Browser IO is a platform adapter.
+src/modules/browser-io/download.ts,move,src/platform/browser/io/download.ts,high,Browser IO is a platform adapter.
+src/modules/browser-io/index.ts,move,src/platform/browser/io/index.ts,high,Browser IO is a platform adapter.
+src/modules/browser-io/native-save.ts,move,src/platform/browser/io/native-save.ts,high,Browser IO is a platform adapter.
+src/modules/core/api.ts,delete,,high,Broad core barrels should be removed and replaced with bounded-context public APIs.
+src/modules/core/color.ts,move,src/domain/render/color/color.ts,high,"Color, contrast, gradient, and harmony belong to render/color."
+src/modules/core/contrast.ts,move,src/domain/render/color/contrast.ts,high,"Color, contrast, gradient, and harmony belong to render/color."
+src/modules/core/gradient.ts,move,src/domain/render/color/gradient.ts,high,"Color, contrast, gradient, and harmony belong to render/color."
+src/modules/core/harmony.ts,move,src/domain/render/color/harmony.ts,high,"Color, contrast, gradient, and harmony belong to render/color."
+src/modules/core/index.ts,delete,,high,Broad core barrels should be removed and replaced with bounded-context public APIs.
+src/modules/core/math.ts,move,src/domain/render/primitives/math.ts,medium,Low-level rendering math belongs to render primitives.
+src/modules/core/types.ts,split,src/domain/render/primitives/types.ts,medium,Generic core types should be split to owning bounded contexts.
+src/modules/dither-algorithms/advanced.ts,move,src/domain/render/dither/advanced.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/api.ts,split,src/domain/render/dither/api.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/apply-dither.ts,move,src/domain/render/dither/apply-dither.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/error-diffusion.ts,move,src/domain/render/dither/error-diffusion.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/index.ts,split,src/domain/render/dither/index.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/kernels.ts,move,src/domain/render/dither/kernels.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/matrices.ts,move,src/domain/render/dither/matrices.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/noise.ts,move,src/domain/render/dither/noise.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/ordered.ts,move,src/domain/render/dither/ordered.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/temporal.ts,move,src/domain/render/dither/temporal.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/types.ts,split,src/domain/render/dither/types.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/dither-algorithms/utils.ts,split,src/domain/render/dither/utils.ts,high,Dithering algorithms belong to domain/render/dither.
+src/modules/exporter/api.ts,split,src/domain/render/export/api.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/gif-export.ts,move,src/domain/render/export/gif-export.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/image-export.ts,move,src/domain/render/export/image-export.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/index.ts,split,src/domain/render/export/index.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/png-metadata.ts,move,src/domain/render/export/png-metadata.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/svg-export.ts,move,src/domain/render/export/svg-export.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/types.ts,split,src/domain/render/export/types.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/utils.ts,split,src/domain/render/export/utils.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/exporter/vector-svg.ts,move,src/domain/render/export/vector-svg.ts,high,Export pipeline belongs to domain/render/export.
+src/modules/index.ts,delete,,high,Global barrel should be removed; each bounded context should expose a narrow public API instead.
+src/modules/overlay/api.ts,split,src/domain/render/overlay/api.ts,high,Overlay processing and watermarking belong to domain/render/overlay.
+src/modules/overlay/crop-handler.ts,move,src/domain/render/overlay/crop-handler.ts,high,Overlay processing and watermarking belong to domain/render/overlay.
+src/modules/overlay/index.ts,split,src/domain/render/overlay/index.ts,high,Overlay processing and watermarking belong to domain/render/overlay.
+src/modules/overlay/overlay-filters.ts,move,src/domain/render/overlay/overlay-filters.ts,high,Overlay processing and watermarking belong to domain/render/overlay.
+src/modules/overlay/processor.ts,move,src/domain/render/overlay/processor.ts,high,Overlay processing and watermarking belong to domain/render/overlay.
+src/modules/overlay/watermark.ts,move,src/domain/render/overlay/watermark.ts,high,Overlay processing and watermarking belong to domain/render/overlay.
+src/modules/payload-generators/api.ts,split,src/domain/payload/api.ts,medium,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/calendar.ts,move,src/domain/payload/calendar.ts,high,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/contacts.ts,move,src/domain/payload/contacts.ts,high,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/core.ts,split,src/domain/payload/core.ts,medium,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/emv.ts,move,src/domain/payload/emv.ts,high,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/enterprise.ts,move,src/domain/payload/enterprise.ts,high,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/index.ts,split,src/domain/payload/index.ts,medium,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/payments.ts,move,src/domain/payload/payments.ts,high,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/social.ts,move,src/domain/payload/social.ts,high,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/types.ts,split,src/domain/payload/types.ts,medium,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/payload-generators/utils.ts,split,src/domain/payload/utils.ts,medium,Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.
+src/modules/platform/admob.ts,move,src/platform/native/ads/admob.ts,high,AdMob is a native platform adapter.
+src/modules/platform/api.ts,split,src/platform/index.ts,medium,Platform aggregate APIs should be replaced by narrow entry points per adapter.
+src/modules/platform/index.ts,split,src/platform/index.ts,medium,Platform aggregate APIs should be replaced by narrow entry points per adapter.
+src/modules/platform/media-store.ts,move,src/platform/native/media-store/media-store.ts,high,Native media store access belongs to platform/native.
+src/modules/platform/native-toast.ts,move,src/platform/native/notifications/native-toast.ts,high,Native toast is a native notification adapter.
+src/modules/platform/web-only-assets.ts,move,src/platform/browser/boot/web-only-assets.ts,high,Web bootstrap asset loading is a browser adapter.
+src/modules/qr-analyzer/analyzer-content.ts,move,src/domain/qr/analyze/analyzer-content.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/analyzer.ts,move,src/domain/qr/analyze/analyzer.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/api.ts,split,src/domain/qr/analyze/api.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/content-detection.ts,move,src/domain/qr/analyze/content-detection.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/decoder.ts,move,src/domain/qr/analyze/decoder.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/export.ts,split,src/domain/qr/analyze/export.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/index.ts,split,src/domain/qr/analyze/index.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/safety.ts,move,src/domain/qr/analyze/safety.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/scanner.ts,move,src/domain/qr/analyze/scanner.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/telemetry-contrast.ts,move,src/domain/qr/analyze/telemetry-contrast.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/telemetry-logging.ts,move,src/domain/qr/analyze/telemetry-logging.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/telemetry-stats.ts,move,src/domain/qr/analyze/telemetry-stats.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/types.ts,split,src/domain/qr/analyze/types.ts,high,QR analysis belongs to domain/qr/analyze.
+src/modules/qr-analyzer/validation-worker-client.ts,move,src/platform/worker/analyze/validation-worker-client.ts,high,Worker client belongs to platform/worker.
+src/modules/qr-analyzer/validation-worker.ts,move,src/platform/worker/analyze/validation-worker.ts,high,Worker implementation belongs to platform/worker.
+src/modules/qr-art/bit-mapping.ts,move,src/domain/qr/qart/bit-mapping.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/buffer-pool.ts,move,src/domain/qr/qart/buffer-pool.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/elimination.ts,move,src/domain/qr/qart/elimination.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/generate.ts,move,src/domain/qr/qart/generate.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/image-utils.ts,move,src/domain/qr/qart/image-utils.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/index.ts,split,src/domain/qr/qart/index.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/qart-worker-client.ts,move,src/platform/worker/qart/worker-client.ts,high,Worker client belongs to platform/worker.
+src/modules/qr-art/qart-worker-protocol.ts,move,src/platform/worker/qart/worker-protocol.ts,medium,Worker protocol should sit with the worker boundary.
+src/modules/qr-art/qart-worker.ts,move,src/platform/worker/qart/worker.ts,high,Worker implementation belongs to platform/worker.
+src/modules/qr-art/rs-basis.ts,move,src/domain/qr/qart/rs-basis.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/scan-fallback.ts,move,src/domain/qr/qart/scan-fallback.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/semantic-layout.ts,move,src/domain/qr/qart/semantic-layout.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-art/validation.ts,move,src/domain/qr/qart/validation.ts,high,"QArt search, basis generation, and validation belong to domain/qr/qart."
+src/modules/qr-decoder/api.ts,split,src/domain/qr/decode/api.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/binarizer.ts,move,src/domain/qr/decode/binarizer.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/bit-matrix.ts,move,src/domain/qr/decode/bit-matrix.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/decode-canvas.ts,move,src/domain/qr/decode/decode-canvas.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/decode-qr.ts,move,src/domain/qr/decode/decode-qr.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/decode.ts,move,src/domain/qr/decode/decode.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/decoder-adapter.ts,move,src/domain/qr/decode/decoder-adapter.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/exceptions.ts,move,src/domain/qr/decode/exceptions.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/extract.ts,move,src/domain/qr/decode/extract.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/format.ts,move,src/domain/qr/decode/format.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/index.ts,split,src/domain/qr/decode/index.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/locate.ts,move,src/domain/qr/decode/locate.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/luminance.ts,move,src/domain/qr/decode/luminance.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/pattern-finder.ts,move,src/domain/qr/decode/pattern-finder.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/perspective.ts,move,src/domain/qr/decode/perspective.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/qr-data-decoder.ts,move,src/domain/qr/decode/qr-data-decoder.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/qr-detector.ts,move,src/domain/qr/decode/qr-detector.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/qr-version.ts,move,src/domain/qr/decode/qr-version.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/reader.ts,move,src/domain/qr/decode/reader.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/reed-solomon.ts,move,src/domain/qr/decode/reed-solomon.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/result-types.ts,move,src/domain/qr/decode/result-types.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/rs-decoder.ts,move,src/domain/qr/decode/rs-decoder.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/rs-rootability.ts,move,src/domain/qr/decode/rs-rootability.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/types.ts,split,src/domain/qr/decode/types.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/util.ts,move,src/domain/qr/decode/util.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-decoder/utils.ts,split,src/domain/qr/decode/utils.ts,high,QR decoding and detection belong to domain/qr/decode.
+src/modules/qr-encoder/api.ts,split,src/domain/qr/encode/api.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/bit-buffer.ts,move,src/domain/qr/encode/bit-buffer.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/data-modes.ts,move,src/domain/qr/encode/data-modes.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/encoder-api.ts,split,src/domain/qr/encode/encoder-api.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/encoder.ts,move,src/domain/qr/encode/encoder.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/index.ts,split,src/domain/qr/encode/index.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/math.ts,move,src/domain/qr/encode/math.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/output.ts,move,src/domain/qr/encode/output.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/rs-blocks.ts,move,src/domain/qr/encode/rs-blocks.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/shift-jis.ts,move,src/domain/qr/encode/shift-jis.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/string-bytes.ts,move,src/domain/qr/encode/string-bytes.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/types.ts,split,src/domain/qr/encode/types.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-encoder/utils.ts,move,src/domain/qr/encode/utils.ts,high,QR encoding belongs to domain/qr/encode.
+src/modules/qr-generator/api.ts,split,src/domain/render/generator/api.ts,high,"The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing."
+src/modules/qr-generator/cache.ts,split,src/domain/render/generator/cache.ts,high,"The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing."
+src/modules/qr-generator/canvas-factory.ts,move,src/platform/browser/canvas/canvas-factory.ts,high,Canvas factory is a browser platform concern.
+src/modules/qr-generator/color.ts,split,src/domain/render/color/color.ts,high,Duplicate color responsibilities exist across core and qr-generator; consolidate under render/color.
+src/modules/qr-generator/dithering-advanced.ts,move,src/domain/render/dither/dithering-advanced.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/dithering-constants.ts,move,src/domain/render/dither/dithering-constants.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/dithering-error.ts,move,src/domain/render/dither/dithering-error.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/dithering-kernels.ts,move,src/domain/render/dither/dithering-kernels.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/dithering-matrix.ts,move,src/domain/render/dither/dithering-matrix.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/dithering-true.ts,move,src/domain/render/dither/dithering-true.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/dithering.ts,move,src/domain/render/dither/dithering.ts,high,Dithering belongs to domain/render/dither.
+src/modules/qr-generator/drawing-frames.ts,move,src/domain/render/generator/drawing-frames.ts,high,Drawing pipeline belongs to domain/render/generator.
+src/modules/qr-generator/drawing-gradients.ts,move,src/domain/render/generator/drawing-gradients.ts,high,Drawing pipeline belongs to domain/render/generator.
+src/modules/qr-generator/drawing-halftone.ts,move,src/domain/render/generator/drawing-halftone.ts,high,Drawing pipeline belongs to domain/render/generator.
+src/modules/qr-generator/drawing-patterns.ts,move,src/domain/render/generator/drawing-patterns.ts,high,Drawing pipeline belongs to domain/render/generator.
+src/modules/qr-generator/drawing-primitives.ts,move,src/domain/render/generator/drawing-primitives.ts,high,Drawing pipeline belongs to domain/render/generator.
+src/modules/qr-generator/drawing.ts,move,src/domain/render/generator/drawing.ts,high,Drawing pipeline belongs to domain/render/generator.
+src/modules/qr-generator/ecc.ts,move,src/domain/qr/spec/ecc.ts,medium,"ECC policies belong to the QR domain, not the renderer."
+src/modules/qr-generator/filters-blur.ts,move,src/domain/render/filters/filters-blur.ts,high,Image preprocessing filters belong to domain/render/filters.
+src/modules/qr-generator/filters-edge.ts,move,src/domain/render/filters/filters-edge.ts,high,Image preprocessing filters belong to domain/render/filters.
+src/modules/qr-generator/filters-preprocess.ts,move,src/domain/render/filters/filters-preprocess.ts,high,Image preprocessing filters belong to domain/render/filters.
+src/modules/qr-generator/filters-sharpen.ts,move,src/domain/render/filters/filters-sharpen.ts,high,Image preprocessing filters belong to domain/render/filters.
+src/modules/qr-generator/filters.ts,move,src/domain/render/filters/filters.ts,high,Image preprocessing filters belong to domain/render/filters.
+src/modules/qr-generator/index.ts,split,src/domain/render/generator/index.ts,high,"The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing."
+src/modules/qr-generator/overlay-data-packed.ts,move,src/domain/render/overlay/overlay-data-packed.ts,high,Overlay composition belongs to domain/render/overlay.
+src/modules/qr-generator/overlay-data.ts,move,src/domain/render/overlay/overlay-data.ts,high,Overlay composition belongs to domain/render/overlay.
+src/modules/qr-generator/overlay-subpixel.ts,move,src/domain/render/overlay/overlay-subpixel.ts,high,Overlay composition belongs to domain/render/overlay.
+src/modules/qr-generator/overlay-transforms.ts,move,src/domain/render/overlay/overlay-transforms.ts,high,Overlay composition belongs to domain/render/overlay.
+src/modules/qr-generator/overlay.ts,move,src/domain/render/overlay/overlay.ts,high,Overlay composition belongs to domain/render/overlay.
+src/modules/qr-generator/pattern-helpers.ts,move,src/domain/render/generator/pattern-helpers.ts,medium,Pattern rendering helpers belong to the generator.
+src/modules/qr-generator/pixel-matrix-dither.ts,move,src/domain/render/generator/pixel-matrix-dither.ts,high,Pixel matrix rendering belongs to domain/render/generator.
+src/modules/qr-generator/pixel-matrix-dithered.ts,move,src/domain/render/generator/pixel-matrix-dithered.ts,high,Pixel matrix rendering belongs to domain/render/generator.
+src/modules/qr-generator/pixel-matrix-overlay.ts,move,src/domain/render/generator/pixel-matrix-overlay.ts,high,Pixel matrix rendering belongs to domain/render/generator.
+src/modules/qr-generator/pixel-matrix-standard.ts,move,src/domain/render/generator/pixel-matrix-standard.ts,high,Pixel matrix rendering belongs to domain/render/generator.
+src/modules/qr-generator/pixel-matrix-utils.ts,move,src/domain/render/generator/pixel-matrix-utils.ts,high,Pixel matrix rendering belongs to domain/render/generator.
+src/modules/qr-generator/pixel-matrix.ts,move,src/domain/render/generator/pixel-matrix.ts,high,Pixel matrix rendering belongs to domain/render/generator.
+src/modules/qr-generator/qr-generator-class.ts,split,src/domain/render/generator/QRGenerator.ts,high,"The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing."
+src/modules/qr-generator/render-loop.ts,move,src/domain/render/generator/render-loop.ts,high,Core rendering pipeline belongs to domain/render/generator.
+src/modules/qr-generator/render-modes.ts,move,src/domain/render/generator/render-modes.ts,high,Core rendering pipeline belongs to domain/render/generator.
+src/modules/qr-generator/scaled-render.ts,move,src/domain/render/generator/scaled-render.ts,high,Core rendering pipeline belongs to domain/render/generator.
+src/modules/qr-generator/types.ts,split,src/domain/render/generator/types.ts,high,"The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing."
+src/modules/qr-generator/utils.ts,split,src/domain/render/generator/utils.ts,high,"The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing."
+src/modules/qr-spec/api.ts,split,src/domain/qr/spec/api.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/bch.ts,move,src/domain/qr/spec/bch.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/constants.ts,move,src/domain/qr/spec/constants.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/index.ts,split,src/domain/qr/spec/index.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/masks.ts,move,src/domain/qr/spec/masks.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/qr-patterns.ts,move,src/domain/qr/spec/qr-patterns.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/types.ts,split,src/domain/qr/spec/types.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/qr-spec/verify.ts,move,src/domain/qr/spec/verify.ts,high,QR specification constants and verification belong to domain/qr/spec.
+src/modules/share-links/api.ts,split,src/domain/share/api.ts,medium,Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.
+src/modules/share-links/embed.ts,move,src/domain/share/embed.ts,medium,Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.
+src/modules/share-links/index.ts,split,src/domain/share/index.ts,medium,Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.
+src/modules/share-links/social.ts,move,src/domain/share/social.ts,medium,Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.
+src/modules/share-links/types.ts,split,src/domain/share/types.ts,medium,Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.
+src/modules/share-links/url-params.ts,move,src/domain/share/url-params.ts,medium,Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.
+src/store/qr-store.ts,split,src/state/qr-generator.store.ts,high,"The store file is acting as both state model and product taxonomy/type hub; split store, enums, and helper models."

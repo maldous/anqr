@@ -1,0 +1,152 @@
+{
+  "inventory_generated_at": "2026-03-11T12:51:26.135Z",
+  "full_inventory": {
+    "files": 1043,
+    "symbols": 5056,
+    "fileDeps": 1578,
+    "symbolDeps": 58313,
+    "reactClassifications": 5056,
+    "components": 146,
+    "hooks": 12,
+    "providers": 2,
+    "contexts": 8,
+    "handlers": 15,
+    "sideEffectFiles": 224,
+    "generatedAt": "2026-03-11T12:51:26.135Z"
+  },
+  "working_set_excluding_static_i18n": {
+    "files": 257,
+    "symbols": 3130,
+    "internal_file_dependencies": 749,
+    "direct_moves": 200,
+    "split_required": 54,
+    "deletions": 3,
+    "file_import_cycles": 0
+  },
+  "largest_clusters": [
+    {
+      "path": "src/modules/qr-generator",
+      "files": 42
+    },
+    {
+      "path": "src/modules/qr-decoder",
+      "files": 26
+    },
+    {
+      "path": "src/modules/animation",
+      "files": 18
+    },
+    {
+      "path": "src/modules/qr-analyzer",
+      "files": 15
+    },
+    {
+      "path": "src/components/ui",
+      "files": 14
+    },
+    {
+      "path": "src/modules/qr-art",
+      "files": 13
+    },
+    {
+      "path": "src/modules/qr-encoder",
+      "files": 13
+    },
+    {
+      "path": "src/modules/dither-algorithms",
+      "files": 12
+    },
+    {
+      "path": "src/modules/payload-generators",
+      "files": 11
+    },
+    {
+      "path": "src/components/sections",
+      "files": 10
+    }
+  ],
+  "highest_fanin": [
+    {
+      "path": "src/lib/logger.ts",
+      "importers": 196
+    },
+    {
+      "path": "src/modules/qr-generator/types.ts",
+      "importers": 27
+    },
+    {
+      "path": "src/components/ui/dynamic-testid.ts",
+      "importers": 22
+    },
+    {
+      "path": "src/store/qr-store.ts",
+      "importers": 17
+    },
+    {
+      "path": "src/modules/core/index.ts",
+      "importers": 17
+    },
+    {
+      "path": "src/modules/qr-encoder/types.ts",
+      "importers": 15
+    },
+    {
+      "path": "src/modules/qr-generator/cache.ts",
+      "importers": 13
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "importers": 12
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "importers": 11
+    },
+    {
+      "path": "src/lib/search-context.tsx",
+      "importers": 11
+    }
+  ],
+  "most_symbol_dense_files": [
+    {
+      "path": "src/hooks/useQRGenerator.ts",
+      "symbols": 118
+    },
+    {
+      "path": "src/modules/qr-art/generate.ts",
+      "symbols": 116
+    },
+    {
+      "path": "src/components/Analyze.tsx",
+      "symbols": 107
+    },
+    {
+      "path": "src/store/qr-store.ts",
+      "symbols": 83
+    },
+    {
+      "path": "src/modules/qr-generator/pixel-matrix-dithered.ts",
+      "symbols": 78
+    },
+    {
+      "path": "src/components/sections/PayloadSection.tsx",
+      "symbols": 77
+    },
+    {
+      "path": "src/modules/qr-generator/scaled-render.ts",
+      "symbols": 66
+    },
+    {
+      "path": "src/modules/share-links/url-params.ts",
+      "symbols": 55
+    },
+    {
+      "path": "src/lib/logger.ts",
+      "symbols": 50
+    },
+    {
+      "path": "src/modules/payload-generators/types.ts",
+      "symbols": 42
+    }
+  ]
+}

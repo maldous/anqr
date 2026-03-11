@@ -1,0 +1,101 @@
+{
+  "sourceFile": "src/components/Analyze.tsx",
+  "description": "Split analysis screen composition, widgets, input handling, reproduction logic, and exporters.",
+  "groups": [
+    {
+      "targetFile": "src/features/analyze/components/AnalyzeScreen.tsx",
+      "symbols": [
+        "Analyze"
+      ],
+      "notes": "Final screen composition only."
+    },
+    {
+      "targetFile": "src/features/analyze/model/descriptions.ts",
+      "symbols": [
+        "CONTENT_TYPE_ICONS",
+        "ECC_DESCRIPTIONS",
+        "MASK_DESCRIPTIONS"
+      ],
+      "notes": "Static descriptions and icon mapping."
+    },
+    {
+      "targetFile": "src/features/analyze/model/formatters.ts",
+      "symbols": [
+        "formatMilliseconds",
+        "nowMs",
+        "computeMarginModules",
+        "computeCanvasSizing",
+        "resolveColors",
+        "buildPayloadBytesHead",
+        "checkVersionMismatch",
+        "hasAnyTimingData",
+        "wcagComplianceClass",
+        "capacityBadgeClass",
+        "formatDecoderVersion",
+        "formatDecoderMaskPattern",
+        "formatDecoderErrors",
+        "formatDecoderErasures",
+        "formatDecoderNumBits",
+        "formatDecoderOrientation",
+        "formatRsErrorCorrection"
+      ],
+      "notes": "Formatting and display-oriented helpers."
+    },
+    {
+      "targetFile": "src/features/analyze/application/frame-scan.ts",
+      "symbols": [
+        "cloneCanvasLike",
+        "waitMs",
+        "countShiftedDiffs",
+        "findBestMatrixShift",
+        "waitForAnimationReady",
+        "buildCandidateFrameIndices",
+        "scanCachedFramesForQR"
+      ],
+      "notes": "Animation frame scan helpers."
+    },
+    {
+      "targetFile": "src/features/analyze/application/reproduction.ts",
+      "symbols": [
+        "ValidEncoderMode",
+        "ReproductionParams",
+        "resolveReproductionParams",
+        "buildEncoderInput",
+        "resolveEffectiveMode",
+        "resolveFinalVersion",
+        "buildMaskPatternOption",
+        "tryCreateQRDirect",
+        "tryMixedModeAtVersion",
+        "tryHigherVersions",
+        "createQRWithFallback",
+        "renderQRToCanvas",
+        "runMatrixDiagnostics",
+        "drawCanvasError",
+        "logFinalRenderSummary",
+        "LogReproductionResultParams",
+        "logReproductionResult",
+        "ReproduceQRCodeParams",
+        "reproduceQRCode"
+      ],
+      "notes": "Reproduction and rendering workflow."
+    },
+    {
+      "targetFile": "src/features/analyze/application/import-export.ts",
+      "symbols": [
+        "ImportToGeneratorSetters",
+        "importAnalysisToGenerator",
+        "AnalysisSourceType",
+        "AnalysisStateSetters",
+        "resetAnalysisState",
+        "useAnalysisInputHandlers",
+        "loadCameraImageFromBlob",
+        "closeBitmapSource",
+        "useReproductionEffect",
+        "analyzeGeneratorCanvasRobustImpl",
+        "ExportAnalysisJSONParams",
+        "exportAnalysisJSON"
+      ],
+      "notes": "Input handlers, generator import, and JSON export."
+    }
+  ]
+}

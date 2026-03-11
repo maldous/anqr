@@ -1,0 +1,79 @@
+{
+  "sourceFile": "src/modules/qr-generator/qr-generator-class.ts",
+  "description": "Split QR generator orchestration from scan-gate, rescue loops, metrics, and wrappers.",
+  "groups": [
+    {
+      "targetFile": "src/domain/render/generator/QRGenerator.ts",
+      "symbols": [
+        "QRGenerator"
+      ],
+      "notes": "Public fa\u00e7ade only."
+    },
+    {
+      "targetFile": "src/domain/render/generator/matrix-wrappers.ts",
+      "symbols": [
+        "MatrixWrapper",
+        "PackedMatrixWrapper"
+      ],
+      "notes": "Matrix helper wrappers."
+    },
+    {
+      "targetFile": "src/domain/render/generator/overlay-complexity.ts",
+      "symbols": [
+        "computeOverlayComplexity",
+        "OverlayComplexityCacheEntry",
+        "computeOverlaySignature",
+        "buildOverlayFamilyKey"
+      ],
+      "notes": "Overlay complexity and signatures."
+    },
+    {
+      "targetFile": "src/domain/render/generator/scan-gate.ts",
+      "symbols": [
+        "ScanGateCtx",
+        "resolveScanGateIntensity",
+        "isAggressiveScanPatch",
+        "buildScanGateBaseAttempts",
+        "buildScanGateDecodeRescuePatches",
+        "buildScanGateFinderRescuePatches",
+        "ScanGateCallbacks",
+        "buildDitherAttemptList",
+        "ScanGateMainLoopResult",
+        "ScanGateLoopState",
+        "processEvaluatedAttempt",
+        "runScanGateMainLoop",
+        "runScanGateRescueLoop",
+        "runScanGateQRFirstFallback"
+      ],
+      "notes": "Primary scan-gate orchestration."
+    },
+    {
+      "targetFile": "src/domain/render/generator/robustness.ts",
+      "symbols": [
+        "simulateScenarioDecode",
+        "computeScanGateRasterMetrics",
+        "resolveImageSource",
+        "roundtripToFinalRaster",
+        "runRobustnessScenarios",
+        "evaluateDecodeScenarios",
+        "decodeCanvasData",
+        "clearQuietZone"
+      ],
+      "notes": "Robustness and decode feedback."
+    },
+    {
+      "targetFile": "src/domain/render/generator/cache-keys.ts",
+      "symbols": [
+        "DitherAttemptPatch",
+        "DitherPatchCacheEntry",
+        "clampN",
+        "configureStringEncoding",
+        "buildFixedVisualPolicy",
+        "buildScanCacheKey",
+        "ditherPatchSignature",
+        "log"
+      ],
+      "notes": "Shared cache keys and utility contracts. Further refinement expected."
+    }
+  ]
+}
