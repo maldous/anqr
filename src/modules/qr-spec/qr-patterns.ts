@@ -35,6 +35,21 @@ export function isTimingPattern(row: number, col: number, moduleCount: number): 
 }
 
 /**
+ * Check whether the 5×5 region around (row, col) overlaps any finder pattern.
+ */
+function alignmentOverlapsFinderRegion(row: number, col: number, moduleCount: number): boolean {
+  if (isFinderPattern(row, col, moduleCount)) return true;
+  for (let dr = -2; dr <= 2; dr++) {
+    for (let dc = -2; dc <= 2; dc++) {
+      if (isFinderPattern(row + dr, col + dc, moduleCount)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Get alignment pattern center positions for a given version
  */
 export function getAlignmentPatternCenters(
@@ -48,18 +63,7 @@ export function getAlignmentPatternCenters(
 
   for (const row of positions) {
     for (const col of positions) {
-      // Skip if overlapping with finder patterns
-      if (isFinderPattern(row, col, moduleCount)) continue;
-      // Check 5x5 area around center
-      let overlapsWithFinder = false;
-      for (let dr = -2; dr <= 2 && !overlapsWithFinder; dr++) {
-        for (let dc = -2; dc <= 2 && !overlapsWithFinder; dc++) {
-          if (isFinderPattern(row + dr, col + dc, moduleCount)) {
-            overlapsWithFinder = true;
-          }
-        }
-      }
-      if (!overlapsWithFinder) {
+      if (!alignmentOverlapsFinderRegion(row, col, moduleCount)) {
         centers.push({ row, col });
       }
     }

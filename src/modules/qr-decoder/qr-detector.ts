@@ -221,6 +221,20 @@ export class Detector {
     return (moduleSizeEst1 + moduleSizeEst2) / 14;
   }
 
+  private static clampEndpoint(
+    from: number,
+    to: number,
+    size: number
+  ): { clamped: number; scale: number } {
+    if (to < 0) {
+      return { clamped: 0, scale: from / (from - to) };
+    }
+    if (to >= size) {
+      return { clamped: size - 1, scale: (size - 1 - from) / (to - from) };
+    }
+    return { clamped: to, scale: 1 };
+  }
+
   private sizeOfBlackWhiteBlackRunBothWays(
     fromX: number,
     fromY: number,
@@ -228,26 +242,15 @@ export class Detector {
     toY: number
   ): number {
     let result = this.sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
-    let scale = 1;
-    let otherToX = fromX - (toX - fromX);
-    if (otherToX < 0) {
-      scale = fromX / (fromX - otherToX);
-      otherToX = 0;
-    } else if (otherToX >= this.image.getWidth()) {
-      scale = (this.image.getWidth() - 1 - fromX) / (otherToX - fromX);
-      otherToX = this.image.getWidth() - 1;
-    }
-    let otherToY = Math.floor(fromY - (toY - fromY) * scale);
 
-    scale = 1;
-    if (otherToY < 0) {
-      scale = fromY / (fromY - otherToY);
-      otherToY = 0;
-    } else if (otherToY >= this.image.getHeight()) {
-      scale = (this.image.getHeight() - 1 - fromY) / (otherToY - fromY);
-      otherToY = this.image.getHeight() - 1;
-    }
-    otherToX = Math.floor(fromX + (otherToX - fromX) * scale);
+    let otherToX = fromX - (toX - fromX);
+    const xClamp = Detector.clampEndpoint(fromX, otherToX, this.image.getWidth());
+    otherToX = xClamp.clamped;
+    let otherToY = Math.floor(fromY - (toY - fromY) * xClamp.scale);
+
+    const yClamp = Detector.clampEndpoint(fromY, otherToY, this.image.getHeight());
+    otherToY = yClamp.clamped;
+    otherToX = Math.floor(fromX + (otherToX - fromX) * yClamp.scale);
 
     result += this.sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
     return result - 1;

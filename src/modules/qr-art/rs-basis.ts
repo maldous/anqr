@@ -366,6 +366,39 @@ export function calculateHeaderBitsPerBlock(
 }
 
 /**
+ * Create a single RS basis vector for one data bit.
+ */
+function createSingleBitBasisVector(
+  blockInfo: RSBlockInfo,
+  rsBlockIndex: number,
+  globalBitOffset: number,
+  byteIdx: number,
+  bitIdx: number
+): RSBasisVector {
+  const { dataCount, eccCount, totalCount } = blockInfo;
+  const dataBitIndex = globalBitOffset + byteIdx * 8 + (7 - bitIdx);
+
+  const dataBytes = new Uint8Array(dataCount);
+  dataBytes[byteIdx] = 1 << bitIdx;
+
+  const eccBytes = computeECC(dataBytes, eccCount);
+
+  const blockBits = new Uint8Array(totalCount);
+  blockBits.set(dataBytes, 0);
+  blockBits.set(eccBytes, dataCount);
+
+  return {
+    dataBitIndex,
+    rsBlockIndex,
+    posInBlock: byteIdx,
+    bitInByte: bitIdx,
+    blockBits,
+    affectedPixels: [],
+    pivotPixel: -1,
+  };
+}
+
+/**
  * Build basis vectors for a single RS block
  * Each vector has exactly one data bit set to 1, with corresponding ECC
  *
@@ -381,65 +414,33 @@ export function buildBlockBasis(
   globalBitOffset: number,
   allowedLocalBits?: Set<number>
 ): RSBasisVector[] {
-  const { dataCount, eccCount, totalCount } = blockInfo;
+  const { dataCount } = blockInfo;
   const vectors: RSBasisVector[] = [];
 
-  // Track statistics for logging
   let skippedCount = 0;
   let createdCount = 0;
   let firstCreatedLocalBit = -1;
   let lastCreatedLocalBit = -1;
 
-  // For each data bit, create a basis vector
   for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
     for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
-      // dataBitIndex is the global index (used for tracking, not protection)
-      const dataBitIndex = globalBitOffset + byteIdx * 8 + (7 - bitIdx);
-
-      // Calculate the local bit index within this block (0-indexed from start of block)
-      // Convention: localBitIndex 0 = MSB of byte 0, localBitIndex 7 = LSB of byte 0
-      // This matches the linear buffer convention where bit 0 is the first bit written (MSB)
       const localBitIndex = byteIdx * 8 + (7 - bitIdx);
 
-      // If allowedLocalBits is provided, only create vectors for allowed bits
-      // This is Strategy 2: only padding codewords are controllable
       if (allowedLocalBits !== undefined && !allowedLocalBits.has(localBitIndex)) {
         skippedCount++;
         continue;
       }
 
-      // Track created range
-      if (firstCreatedLocalBit < 0) {
-        firstCreatedLocalBit = localBitIndex;
-      }
+      if (firstCreatedLocalBit < 0) firstCreatedLocalBit = localBitIndex;
       lastCreatedLocalBit = localBitIndex;
       createdCount++;
 
-      // Create data bytes with just this one bit set
-      const dataBytes = new Uint8Array(dataCount);
-      dataBytes[byteIdx] = 1 << bitIdx;
-
-      // Compute ECC for this single-bit data
-      const eccBytes = computeECC(dataBytes, eccCount);
-
-      // Create the complete block bits (data + ECC)
-      const blockBits = new Uint8Array(totalCount);
-      blockBits.set(dataBytes, 0);
-      blockBits.set(eccBytes, dataCount);
-
-      vectors.push({
-        dataBitIndex,
-        rsBlockIndex,
-        posInBlock: byteIdx,
-        bitInByte: bitIdx,
-        blockBits,
-        affectedPixels: [],
-        pivotPixel: -1,
-      });
+      vectors.push(
+        createSingleBitBasisVector(blockInfo, rsBlockIndex, globalBitOffset, byteIdx, bitIdx)
+      );
     }
   }
 
-  // Log block basis creation details
   if (allowedLocalBits !== undefined) {
     log.debug('Block basis created with protection', {
       blockIndex: rsBlockIndex,
@@ -631,6 +632,103 @@ export interface OptimalVersionAndSuffix {
   paddingBits: number;
 }
 
+function getNumericBitsForDigits(digits: number): number {
+  const fullGroups = Math.floor(digits / 3);
+  const rem = digits % 3;
+  return fullGroups * 10 + (rem === 1 ? 4 : rem === 2 ? 7 : 0);
+}
+
+function getMaxNumericDigitsForBits(availableBits: number, version: number): number {
+  if (availableBits <= 0) return 0;
+  const numCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+  let low = 0;
+  let high = 10000;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    const needed = 4 + numCharCountBits + getNumericBitsForDigits(mid);
+    if (needed <= availableBits) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+  return low;
+}
+
+interface VersionCapacityResult {
+  totalDataBytes: number;
+  actualSuffixLen: number;
+  suffixCharCount: number;
+  paddingBytes: number;
+  suffixSafeBits: number;
+  paddingBitsVal: number;
+  controllableBits: number;
+  controlPercent: number;
+}
+
+function evaluateVersionCapacity(
+  version: number,
+  ecc: ECCLevel,
+  dataLength: number,
+  suffixMode: 'numeric' | 'byte'
+): VersionCapacityResult | null {
+  const blocks = getRSBlockInfo(version, ecc);
+  const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
+  const totalDataBits = totalDataBytes * 8;
+  const totalEccBytes = blocks.reduce((sum, b) => sum + b.eccCount, 0);
+
+  const eccHeadroom = Math.min(MIN_ECC_HEADROOM_BYTES, Math.floor(totalEccBytes / 4));
+  const usableBits = (totalDataBytes - eccHeadroom) * 8;
+
+  const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, version);
+  const prefixLen = suffixMode === 'numeric' ? dataLength : dataLength + 1;
+  const prefixBits = 4 + byteCharCountBits + prefixLen * 8;
+  const terminatorBits = 4;
+
+  let actualSuffixLen: number;
+  let suffixCharCount: number;
+  let bitsAfterAllData: number;
+
+  if (suffixMode === 'numeric') {
+    const availableForNumeric = usableBits - prefixBits - terminatorBits;
+    if (availableForNumeric <= 0) return null;
+    const suffixDigits = getMaxNumericDigitsForBits(availableForNumeric, version);
+    if (suffixDigits <= 0) return null;
+    const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+    bitsAfterAllData =
+      prefixBits + 4 + numericCharCountBits + getNumericBitsForDigits(suffixDigits);
+    actualSuffixLen = suffixDigits;
+    suffixCharCount = suffixDigits;
+  } else {
+    const fixedOverhead = prefixBits + terminatorBits;
+    const availableForSuffix = Math.floor((usableBits - fixedOverhead) / 8);
+    if (availableForSuffix <= 0) return null;
+    suffixCharCount = availableForSuffix;
+    actualSuffixLen = 1 + suffixCharCount;
+    bitsAfterAllData = 4 + byteCharCountBits + (prefixLen + suffixCharCount) * 8;
+  }
+
+  const protectedBits = Math.ceil(prefixBits / 8) * 8;
+  const suffixSafeBits = Math.max(0, Math.floor(bitsAfterAllData / 8) * 8 - protectedBits);
+  const bitsAfterTerminator = bitsAfterAllData + Math.min(4, totalDataBits - bitsAfterAllData);
+  const paddingStartByte = Math.ceil(bitsAfterTerminator / 8);
+  const paddingBitsVal = Math.max(0, totalDataBits - paddingStartByte * 8);
+  const paddingBytes = Math.floor(paddingBitsVal / 8);
+  const controllableBits = suffixSafeBits + paddingBitsVal;
+  const controlPercent = (controllableBits / totalDataBits) * 100;
+
+  return {
+    totalDataBytes,
+    actualSuffixLen,
+    suffixCharCount,
+    paddingBytes,
+    suffixSafeBits,
+    paddingBitsVal,
+    controllableBits,
+    controlPercent,
+  };
+}
+
 /**
  * Calculate the optimal QR version and suffix length to achieve a target control percentage.
  *
@@ -695,94 +793,27 @@ export function calculateOptimalVersionAndSuffix(
   let selectedSuffixBits = 0;
   let selectedPaddingBits = 0;
 
-  // Track best option in case no version achieves threshold
   let bestVersion = startVersion;
   let bestSuffixLength = 0;
   let bestControlPercent = 0;
   let bestCapacity = 0;
   let bestPaddingBytes = 0;
   let bestSuffixBits = 0;
-
-  const getNumericBits = (digits: number): number => {
-    const fullGroups = Math.floor(digits / 3);
-    const rem = digits % 3;
-    return fullGroups * 10 + (rem === 1 ? 4 : rem === 2 ? 7 : 0);
-  };
-
-  const getMaxNumericDigits = (availableBits: number, version: number): number => {
-    if (availableBits <= 0) return 0;
-    const numCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
-    // We will solve for max digits such that 4 + numCharCountBits + numericBits(d) <= availableBits
-    let low = 0;
-    let high = 10000;
-    while (low < high) {
-      const mid = Math.ceil((low + high) / 2);
-      const needed = 4 + numCharCountBits + getNumericBits(mid);
-      if (needed <= availableBits) {
-        low = mid;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return low;
-  };
-
   let bestPaddingBits = 0;
 
   for (let version = startVersion; version <= maxVersionToTry; version++) {
-    const blocks = getRSBlockInfo(version, ecc);
-    const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
-    const totalDataBits = totalDataBytes * 8;
-    const totalEccBytes = blocks.reduce((sum, b) => sum + b.eccCount, 0);
+    const metrics = evaluateVersionCapacity(version, ecc, dataLength, suffixMode);
+    if (!metrics) continue;
 
-    // Reserve MIN_ECC_HEADROOM_BYTES to avoid running at 100% ECC capacity
-    const eccHeadroom = Math.min(MIN_ECC_HEADROOM_BYTES, Math.floor(totalEccBytes / 4));
-    const usableBits = (totalDataBytes - eccHeadroom) * 8;
-
-    const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, version);
-    const prefixLen = suffixMode === 'numeric' ? dataLength : dataLength + 1; // numeric mode already includes '#'
-    const prefixBits = 4 + byteCharCountBits + prefixLen * 8;
-    const terminatorBits = 4;
-
-    let suffixDigits = 0;
-    let suffixCharCount = 0;
-    let actualSuffixLen = 0;
-    let bitsAfterAllData = 0;
-
-    if (suffixMode === 'numeric') {
-      const availableForNumeric = usableBits - prefixBits - terminatorBits;
-      if (availableForNumeric <= 0) continue;
-      suffixDigits = getMaxNumericDigits(availableForNumeric, version);
-      if (suffixDigits <= 0) continue;
-      const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
-      const numericBits = getNumericBits(suffixDigits);
-      bitsAfterAllData = prefixBits + 4 + numericCharCountBits + numericBits;
-      actualSuffixLen = suffixDigits; // digits only
-      suffixCharCount = suffixDigits;
-    } else {
-      // Single byte-mode segment: mode(4) + charCount + allData*8 + terminator(4)
-      const fixedOverhead = prefixBits + terminatorBits;
-      const availableForSuffix = Math.floor((usableBits - fixedOverhead) / 8);
-      if (availableForSuffix <= 0) continue;
-      suffixCharCount = availableForSuffix;
-      actualSuffixLen = 1 + suffixCharCount; // '#' + chars
-      bitsAfterAllData = 4 + byteCharCountBits + (prefixLen + suffixCharCount) * 8;
-    }
-
-    // Calculate protection and controllable regions
-    const protectedBits = Math.ceil(prefixBits / 8) * 8;
-
-    // Controllable suffix bits (between protection end and terminator boundary byte)
-    const suffixSafeBits = Math.max(0, Math.floor(bitsAfterAllData / 8) * 8 - protectedBits);
-
-    // Padding after terminator + pad-to-byte
-    const bitsAfterTerminator = bitsAfterAllData + Math.min(4, totalDataBits - bitsAfterAllData);
-    const paddingStartByte = Math.ceil(bitsAfterTerminator / 8);
-    const paddingBitsVal = Math.max(0, totalDataBits - paddingStartByte * 8);
-    const paddingBytes = Math.floor(paddingBitsVal / 8);
-
-    const controllableBits = suffixSafeBits + paddingBitsVal;
-    const controlPercent = (controllableBits / totalDataBits) * 100;
+    const {
+      controlPercent,
+      actualSuffixLen,
+      suffixCharCount,
+      paddingBytes,
+      suffixSafeBits,
+      paddingBitsVal,
+      totalDataBytes,
+    } = metrics;
 
     log.debug('Evaluating version for QR-Art (suffix mode)', {
       version,
@@ -790,15 +821,13 @@ export function calculateOptimalVersionAndSuffix(
       suffixCharCount,
       actualSuffixLen,
       paddingBytes,
-      protectedBits,
-      controllableBits,
+      controllableBits: metrics.controllableBits,
       suffixSafeBits,
       paddingBits: paddingBitsVal,
       controlPercent: `${controlPercent.toFixed(1)}%`,
       meetsThreshold: controlPercent >= minControlPercent,
     });
 
-    // Track the best option seen so far
     if (controlPercent > bestControlPercent) {
       bestVersion = version;
       bestSuffixLength = actualSuffixLen;
@@ -809,8 +838,6 @@ export function calculateOptimalVersionAndSuffix(
       bestPaddingBits = paddingBitsVal;
     }
 
-    // If this version meets minimum threshold, SELECT it and stop
-    // We want the SMALLEST version that meets threshold
     if (controlPercent >= minControlPercent && selectedVersion === startVersion) {
       selectedVersion = version;
       selectedSuffixLength = actualSuffixLen;

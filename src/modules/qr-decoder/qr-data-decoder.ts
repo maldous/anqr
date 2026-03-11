@@ -21,6 +21,31 @@ import { DecoderResult } from './result-types';
 import { StringBuilder, StringEncoding, StringUtils } from './util';
 
 /**
+ * Accumulate a single data bit from the QR matrix into the codeword buffer.
+ */
+function accumulateCodewordBit(
+  bitMatrix: BitMatrix,
+  functionPattern: BitMatrix,
+  j: number,
+  col: number,
+  i: number,
+  state: { currentByte: number; bitsRead: number; resultOffset: number },
+  result: number[]
+): void {
+  if (functionPattern.get(j - col, i)) return;
+  state.bitsRead++;
+  state.currentByte <<= 1;
+  if (bitMatrix.get(j - col, i)) {
+    state.currentByte |= 1;
+  }
+  if (state.bitsRead === 8) {
+    result[state.resultOffset++] = state.currentByte;
+    state.bitsRead = 0;
+    state.currentByte = 0;
+  }
+}
+
+/**
  * Parses the QR code bit matrix into format and version info
  */
 export class BitMatrixParser {
@@ -119,9 +144,7 @@ export class BitMatrixParser {
     const functionPattern = version.buildFunctionPattern();
     let readingUp = true;
     const result: number[] = [];
-    let resultOffset = 0;
-    let currentByte = 0;
-    let bitsRead = 0;
+    const state = { currentByte: 0, bitsRead: 0, resultOffset: 0 };
     const dimension = this.bitMatrix.getHeight();
 
     let j = dimension - 1;
@@ -130,24 +153,13 @@ export class BitMatrixParser {
       for (let count = 0; count < dimension; count++) {
         const i = readingUp ? dimension - 1 - count : count;
         for (let col = 0; col < 2; col++) {
-          if (!functionPattern.get(j - col, i)) {
-            bitsRead++;
-            currentByte <<= 1;
-            if (this.bitMatrix.get(j - col, i)) {
-              currentByte |= 1;
-            }
-            if (bitsRead === 8) {
-              result[resultOffset++] = currentByte;
-              bitsRead = 0;
-              currentByte = 0;
-            }
-          }
+          accumulateCodewordBit(this.bitMatrix, functionPattern, j, col, i, state, result);
         }
       }
       readingUp = !readingUp;
       j -= 2;
     }
-    if (resultOffset !== version.getTotalCodewords()) {
+    if (state.resultOffset !== version.getTotalCodewords()) {
       throw new FormatException();
     }
     return new Uint8Array(result);

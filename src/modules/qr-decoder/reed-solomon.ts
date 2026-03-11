@@ -355,6 +355,22 @@ export class ReedSolomonDecoder {
     }
   }
 
+  private polyDivide(
+    dividend: GenericGFPoly,
+    divisor: GenericGFPoly
+  ): { quotient: GenericGFPoly; remainder: GenericGFPoly } {
+    let r = dividend;
+    let q = this.field.getZero();
+    const dltInverse = this.field.inverse(divisor.getCoefficient(divisor.getDegree()));
+    while (r.getDegree() >= divisor.getDegree() && !r.isZero()) {
+      const degreeDiff = r.getDegree() - divisor.getDegree();
+      const scale = this.field.multiply(r.getCoefficient(r.getDegree()), dltInverse);
+      q = q.addOrSubtract(this.field.buildMonomial(degreeDiff, scale));
+      r = r.addOrSubtract(divisor.multiplyByMonomial(degreeDiff, scale));
+    }
+    return { quotient: q, remainder: r };
+  }
+
   private runEuclideanAlgorithm(a: GenericGFPoly, b: GenericGFPoly, R: number): GenericGFPoly[] {
     if (a.getDegree() < b.getDegree()) {
       const temp = a;
@@ -374,17 +390,9 @@ export class ReedSolomonDecoder {
       tLast = t;
 
       if (rLast.isZero()) throw new ReedSolomonException('r_{i-1} was zero');
-      r = rLastLast;
-      let q = this.field.getZero();
-      const denominatorLeadingTerm = rLast.getCoefficient(rLast.getDegree());
-      const dltInverse = this.field.inverse(denominatorLeadingTerm);
-      while (r.getDegree() >= rLast.getDegree() && !r.isZero()) {
-        const degreeDiff = r.getDegree() - rLast.getDegree();
-        const scale = this.field.multiply(r.getCoefficient(r.getDegree()), dltInverse);
-        q = q.addOrSubtract(this.field.buildMonomial(degreeDiff, scale));
-        r = r.addOrSubtract(rLast.multiplyByMonomial(degreeDiff, scale));
-      }
-      t = q.multiply(tLast).addOrSubtract(tLastLast);
+      const div = this.polyDivide(rLastLast, rLast);
+      r = div.remainder;
+      t = div.quotient.multiply(tLast).addOrSubtract(tLastLast);
       if (r.getDegree() >= rLast.getDegree()) {
         throw new IllegalStateException('Division algorithm failed to reduce polynomial?');
       }

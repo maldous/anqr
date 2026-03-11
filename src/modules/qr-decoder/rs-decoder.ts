@@ -517,6 +517,41 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
 }
 
 // ============================================
+// Error Application
+// ============================================
+
+/**
+ * Apply computed error corrections to the codeword.
+ * Returns the corrected codeword, or null if any error position is invalid.
+ */
+function applyErrorCorrections(
+  codeword: number[],
+  n: number,
+  errorLocators: number[],
+  magnitudes: number[]
+): number[] | null {
+  const corrected = [...codeword];
+  for (let i = 0; i < errorLocators.length; i++) {
+    const position = n - 1 - GF_LOG[errorLocators[i]];
+    if (position < 0) {
+      qrDecoderLog.debug('rs-decoder: Bad error location', {
+        position,
+        errorLocator: errorLocators[i],
+      });
+      return null;
+    }
+    corrected[position] = gfAdd(corrected[position], magnitudes[i]);
+
+    qrDecoderLog.trace(`rs-decoder: Corrected position ${position}`, {
+      original: codeword[position].toString(16).padStart(2, '0'),
+      magnitude: magnitudes[i].toString(16).padStart(2, '0'),
+      corrected: corrected[position].toString(16).padStart(2, '0'),
+    });
+  }
+  return corrected;
+}
+
+// ============================================
 // Main Correction Function
 // ============================================
 
@@ -595,27 +630,8 @@ export function correctRSBlock(
   });
 
   // Step 5: Apply corrections
-  // Position calculation: received.length - 1 - field.log(errorLocator)
-  const corrected = [...codeword];
-  for (let i = 0; i < errorLocators.length; i++) {
-    const position = n - 1 - GF_LOG[errorLocators[i]];
-    if (position < 0) {
-      qrDecoderLog.debug('rs-decoder: Bad error location', {
-        position,
-        errorLocator: errorLocators[i],
-      });
-      return null;
-    }
-
-    // In GF(2^m), addition and subtraction are both XOR
-    corrected[position] = gfAdd(corrected[position], magnitudes[i]);
-
-    qrDecoderLog.trace(`rs-decoder: Corrected position ${position}`, {
-      original: codeword[position].toString(16).padStart(2, '0'),
-      magnitude: magnitudes[i].toString(16).padStart(2, '0'),
-      corrected: corrected[position].toString(16).padStart(2, '0'),
-    });
-  }
+  const corrected = applyErrorCorrections(codeword, n, errorLocators, magnitudes);
+  if (!corrected) return null;
 
   // Step 6: Verify correction by recalculating syndromes
   const verifySyndromes = calculateSyndromePolynomial(corrected, eccCount);
