@@ -251,6 +251,51 @@ export class FinderPatternFinder {
     return { iSkip, done };
   }
 
+  private applyState4Result(
+    r: {
+      currentState: number;
+      iSkip: number;
+      done: boolean;
+      rowJump: number;
+      skipIncrement: boolean;
+      jumpToEnd: boolean;
+    },
+    stateCount: Int32Array,
+    j: number,
+    maxJ: number
+  ): {
+    currentState: number;
+    iSkip: number;
+    done: boolean;
+    rowJump: number;
+    newJ: number;
+    shouldContinue: boolean;
+  } {
+    if (r.skipIncrement) {
+      return {
+        currentState: r.currentState,
+        iSkip: r.iSkip,
+        done: r.done,
+        rowJump: r.rowJump,
+        newJ: j + 1,
+        shouldContinue: true,
+      };
+    }
+    let newJ = j;
+    if (r.jumpToEnd) {
+      newJ = maxJ - 1;
+    }
+    if (r.currentState === 0) FinderPatternFinder.doClearCounts(stateCount);
+    return {
+      currentState: r.currentState,
+      iSkip: r.iSkip,
+      done: r.done,
+      rowJump: r.rowJump,
+      newJ,
+      shouldContinue: false,
+    };
+  }
+
   private processFinderRow(
     image: BitMatrix,
     i: number,
@@ -271,19 +316,18 @@ export class FinderPatternFinder {
         if (next >= 0) {
           currentState = next;
         } else {
-          const r = this.processLightPixelAtState4(stateCount, i, j, iSkip);
-          currentState = r.currentState;
-          iSkip = r.iSkip;
-          done = r.done;
-          rowJump = r.rowJump;
-          if (r.skipIncrement) {
-            j++;
-            continue;
-          }
-          if (r.jumpToEnd) {
-            j = maxJ - 1;
-          }
-          if (r.currentState === 0) FinderPatternFinder.doClearCounts(stateCount);
+          const h = this.applyState4Result(
+            this.processLightPixelAtState4(stateCount, i, j, iSkip),
+            stateCount,
+            j,
+            maxJ
+          );
+          currentState = h.currentState;
+          iSkip = h.iSkip;
+          done = h.done;
+          rowJump = h.rowJump;
+          j = h.newJ;
+          if (h.shouldContinue) continue;
         }
       }
       j++;

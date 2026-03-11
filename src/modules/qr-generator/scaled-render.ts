@@ -451,6 +451,31 @@ function preserveFixedDarkModule(
   }
 }
 
+function paintClassifiedModule(
+  ctx: CanvasRenderingContext2D,
+  flags: number,
+  isDark: boolean,
+  x: number,
+  y: number,
+  moduleSize: number,
+  darkFill: string | CanvasGradient,
+  bgColor: string,
+  shouldProtectFormat: boolean,
+  shouldProtectVersion: boolean
+): { formatHit: boolean; versionHit: boolean } {
+  const { isFormat, isVersion } = classifyFormatVersionModule(
+    flags,
+    shouldProtectFormat,
+    shouldProtectVersion
+  );
+  if (!isFormat && !isVersion) return { formatHit: false, versionHit: false };
+
+  ctx.fillStyle = isDark ? darkFill : bgColor;
+  ctx.fillRect(x, y, moduleSize, moduleSize);
+
+  return { formatHit: isFormat, versionHit: isVersion };
+}
+
 function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
   const {
     ctx,
@@ -483,20 +508,20 @@ function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
   let versionCount = 0;
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
-      const { isFormat, isVersion } = classifyFormatVersionModule(
+      const result = paintClassifiedModule(
+        ctx,
         getPatternFlags(row, col),
+        qr.isDark(row, col),
+        marginPx + col * effectiveModuleSize,
+        marginPx + row * effectiveModuleSize,
+        effectiveModuleSize,
+        darkFill,
+        effectiveBgColor,
         shouldProtectFormatInfo,
         shouldProtectVersionInfo
       );
-      if (!(isFormat || isVersion)) continue;
-
-      const x = marginPx + col * effectiveModuleSize;
-      const y = marginPx + row * effectiveModuleSize;
-      ctx.fillStyle = qr.isDark(row, col) ? darkFill : effectiveBgColor;
-      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-
-      if (isFormat) formatCount++;
-      if (isVersion) versionCount++;
+      if (result.formatHit) formatCount++;
+      if (result.versionHit) versionCount++;
     }
   }
 

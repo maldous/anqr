@@ -110,6 +110,62 @@ function padDataBuffer(buffer: QRBitBufferType, totalDataCount: number): void {
   }
 }
 
+function computeBlockECData(
+  buffer: QRBitBufferType,
+  rsBlock: { dataCount: number; totalCount: number },
+  offset: number
+): { dcdata: number[]; ecdata: number[]; newOffset: number } {
+  const dcCount = rsBlock.dataCount;
+  const ecCount = rsBlock.totalCount - dcCount;
+
+  const dcdata = new Array(dcCount);
+  for (let i = 0; i < dcCount; i += 1) {
+    dcdata[i] = 0xff & buffer.getBuffer()[i + offset];
+  }
+
+  const rsPoly = getErrorCorrectPolynomial(ecCount);
+  const rawPoly = qrPolynomial(dcdata, rsPoly.getLength() - 1);
+  const modPoly = rawPoly.mod(rsPoly);
+  const ecdata = new Array(rsPoly.getLength() - 1);
+  for (let i = 0; i < ecdata.length; i += 1) {
+    const modIndex = i + modPoly.getLength() - ecdata.length;
+    ecdata[i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
+  }
+
+  return { dcdata, ecdata, newOffset: offset + dcCount };
+}
+
+function interleaveCodewords(
+  dcdata: number[][],
+  ecdata: number[][],
+  maxDcCount: number,
+  maxEcCount: number,
+  totalCodeCount: number
+): number[] {
+  const data = new Array<number>(totalCodeCount);
+  let index = 0;
+
+  for (let i = 0; i < maxDcCount; i += 1) {
+    for (let r = 0; r < dcdata.length; r += 1) {
+      if (i < dcdata[r].length) {
+        data[index] = dcdata[r][i];
+        index += 1;
+      }
+    }
+  }
+
+  for (let i = 0; i < maxEcCount; i += 1) {
+    for (let r = 0; r < ecdata.length; r += 1) {
+      if (i < ecdata[r].length) {
+        data[index] = ecdata[r][i];
+        index += 1;
+      }
+    }
+  }
+
+  return data;
+}
+
 /**
  * Create a QR code instance
  * @param typeNumber QR version (1-40), 0 for auto
@@ -309,36 +365,18 @@ export function qrcode(
     rsBlocks: ReturnType<typeof getRSBlocks>
   ): number[] => {
     let offset = 0;
-
     let maxDcCount = 0;
     let maxEcCount = 0;
-
     const dcdata: number[][] = new Array(rsBlocks.length);
     const ecdata: number[][] = new Array(rsBlocks.length);
 
     for (let r = 0; r < rsBlocks.length; r += 1) {
-      const dcCount = rsBlocks[r].dataCount;
-      const ecCount = rsBlocks[r].totalCount - dcCount;
-
-      maxDcCount = Math.max(maxDcCount, dcCount);
-      maxEcCount = Math.max(maxEcCount, ecCount);
-
-      dcdata[r] = new Array(dcCount);
-
-      for (let i = 0; i < dcdata[r].length; i += 1) {
-        dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
-      }
-      offset += dcCount;
-
-      const rsPoly = getErrorCorrectPolynomial(ecCount);
-      const rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
-
-      const modPoly = rawPoly.mod(rsPoly);
-      ecdata[r] = new Array(rsPoly.getLength() - 1);
-      for (let i = 0; i < ecdata[r].length; i += 1) {
-        const modIndex = i + modPoly.getLength() - ecdata[r].length;
-        ecdata[r][i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
-      }
+      const result = computeBlockECData(buffer, rsBlocks[r], offset);
+      dcdata[r] = result.dcdata;
+      ecdata[r] = result.ecdata;
+      offset = result.newOffset;
+      maxDcCount = Math.max(maxDcCount, rsBlocks[r].dataCount);
+      maxEcCount = Math.max(maxEcCount, rsBlocks[r].totalCount - rsBlocks[r].dataCount);
     }
 
     let totalCodeCount = 0;
@@ -346,28 +384,7 @@ export function qrcode(
       totalCodeCount += rsBlocks[i].totalCount;
     }
 
-    const data = new Array<number>(totalCodeCount);
-    let index = 0;
-
-    for (let i = 0; i < maxDcCount; i += 1) {
-      for (let r = 0; r < rsBlocks.length; r += 1) {
-        if (i < dcdata[r].length) {
-          data[index] = dcdata[r][i];
-          index += 1;
-        }
-      }
-    }
-
-    for (let i = 0; i < maxEcCount; i += 1) {
-      for (let r = 0; r < rsBlocks.length; r += 1) {
-        if (i < ecdata[r].length) {
-          data[index] = ecdata[r][i];
-          index += 1;
-        }
-      }
-    }
-
-    return data;
+    return interleaveCodewords(dcdata, ecdata, maxDcCount, maxEcCount, totalCodeCount);
   };
 
   const createData = (

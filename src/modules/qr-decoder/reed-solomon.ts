@@ -45,6 +45,40 @@ export abstract class AbstractGenericGF {
   }
 }
 
+function formatPolyTermSign(coefficient: number, hasExistingTerms: boolean): string {
+  if (coefficient < 0) return ' - ';
+  if (hasExistingTerms) return ' + ';
+  return '';
+}
+
+function formatPolyCoefficientValue(field: AbstractGenericGF, coefficient: number): string {
+  const alphaPower = field.log(coefficient);
+  if (alphaPower === 0) return '1';
+  if (alphaPower === 1) return 'a';
+  return `a^${alphaPower}`;
+}
+
+function formatPolyDegreeLabel(degree: number): string {
+  if (degree === 0) return '';
+  if (degree === 1) return 'x';
+  return `x^${degree}`;
+}
+
+function formatPolyTerm(
+  field: AbstractGenericGF,
+  degree: number,
+  coefficient: number,
+  hasExistingTerms: boolean
+): string {
+  let result = formatPolyTermSign(coefficient, hasExistingTerms);
+  const absCoefficient = coefficient < 0 ? -coefficient : coefficient;
+  if (degree === 0 || absCoefficient !== 1) {
+    result += formatPolyCoefficientValue(field, absCoefficient);
+  }
+  result += formatPolyDegreeLabel(degree);
+  return result;
+}
+
 /**
  * Polynomial over a Galois Field
  */
@@ -203,32 +237,9 @@ export class GenericGFPoly {
   toString(): string {
     let result = '';
     for (let degree = this.getDegree(); degree >= 0; degree--) {
-      let coefficient = this.getCoefficient(degree);
-      if (coefficient !== 0) {
-        if (coefficient < 0) {
-          result += ' - ';
-          coefficient = -coefficient;
-        } else if (result.length > 0) {
-          result += ' + ';
-        }
-        if (degree === 0 || coefficient !== 1) {
-          const alphaPower = this.field.log(coefficient);
-          if (alphaPower === 0) {
-            result += '1';
-          } else if (alphaPower === 1) {
-            result += 'a';
-          } else {
-            result += `a^${alphaPower}`;
-          }
-        }
-        if (degree !== 0) {
-          if (degree === 1) {
-            result += 'x';
-          } else {
-            result += `x^${degree}`;
-          }
-        }
-      }
+      const coefficient = this.getCoefficient(degree);
+      if (coefficient === 0) continue;
+      result += formatPolyTerm(this.field, degree, coefficient, result.length > 0);
     }
     return result;
   }

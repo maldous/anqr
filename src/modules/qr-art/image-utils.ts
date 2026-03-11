@@ -87,6 +87,28 @@ function collectComponent(
   return { cells, touchesBoundary };
 }
 
+function shouldRemoveComponent(
+  component: BinaryComponent,
+  maxArea: number,
+  skipBoundaryTouching: boolean
+): boolean {
+  if (skipBoundaryTouching && component.touchesBoundary) return false;
+  return component.cells.length <= maxArea;
+}
+
+function flipComponentCells(
+  grid: boolean[][],
+  moduleCount: number,
+  cells: number[],
+  targetValue: boolean
+): void {
+  for (const idx of cells) {
+    const r = Math.floor(idx / moduleCount);
+    const c = idx % moduleCount;
+    if (grid[r]) grid[r][c] = !targetValue;
+  }
+}
+
 function removeSmallComponents(
   grid: boolean[][],
   moduleCount: number,
@@ -102,13 +124,8 @@ function removeSmallComponents(
       if ((grid[row]?.[col] ?? false) !== targetValue) continue;
 
       const component = collectComponent(grid, moduleCount, row, col, targetValue, visited);
-      if (skipBoundaryTouching && component.touchesBoundary) continue;
-      if (component.cells.length <= maxArea) {
-        for (const idx of component.cells) {
-          const r = Math.floor(idx / moduleCount);
-          const c = idx % moduleCount;
-          if (grid[r]) grid[r][c] = !targetValue;
-        }
+      if (shouldRemoveComponent(component, maxArea, skipBoundaryTouching)) {
+        flipComponentCells(grid, moduleCount, component.cells, targetValue);
       }
     }
   }
