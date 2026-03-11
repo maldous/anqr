@@ -153,9 +153,9 @@ export class FinderPatternFinder {
 
   private processConfirmedCenter(
     stateCount: Int32Array,
-    iSkip: number
+    _iSkip: number
   ): { iSkip: number; done: boolean; rowJump: number; jumpToEnd: boolean } {
-    iSkip = 2;
+    const iSkip = 2;
     if (this.hasSkipped) {
       return { iSkip, done: this.haveMultiplyConfirmedCenters(), rowJump: 0, jumpToEnd: false };
     }

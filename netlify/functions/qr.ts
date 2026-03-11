@@ -3821,7 +3821,7 @@ function parseCoreQRParams(
   const size = Math.max(outputWidth, outputHeight);
   const charsetParam = params.get('charset') || 'default';
   const lang = params.get('lang') || undefined;
-  lang;
+  void lang;
   return {
     data: params.get('data') || '',
     isFullRender: params.get('_fullRender') === '1',
@@ -3926,11 +3926,11 @@ function parseProtectionParams(
   | 'autoPickEcc'
   | 'autoReduceIntensity'
 > {
-  params.get('qaContrast');
-  params.get('qaBlur');
-  params.get('qaNoise');
-  params.get('qaRot');
-  params.get('qaHeatmap');
+  void params.get('qaContrast');
+  void params.get('qaBlur');
+  void params.get('qaNoise');
+  void params.get('qaRot');
+  void params.get('qaHeatmap');
   return {
     preserveFinders: params.get('keepFinders') !== '0',
     preserveTiming: params.get('keepTiming') === '1',
@@ -4144,11 +4144,11 @@ function parseOutputParams(
   const gifDither = params.get('gifDith') || undefined;
   const gifTransparentColor = params.get('gifTrans') ? `#${params.get('gifTrans')}` : undefined;
   const svgTrueVector = params.get('svgVec') === '1';
-  _jpegQuality;
-  gifQuantizer;
-  gifDither;
-  gifTransparentColor;
-  svgTrueVector;
+  void _jpegQuality;
+  void gifQuantizer;
+  void gifDither;
+  void gifTransparentColor;
+  void svgTrueVector;
   return {
     explicitFormat,
     outputFormat: (explicitFormat || DEFAULT_OUTPUT_FORMAT) as OutputFormat,
