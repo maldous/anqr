@@ -213,6 +213,44 @@ export class FinderPatternFinder {
     };
   }
 
+  private static advanceFinderDarkPixel(currentState: number, stateCount: Int32Array): number {
+    if ((currentState & 1) === 1) currentState++;
+    stateCount[currentState]++;
+    return currentState;
+  }
+
+  private static advanceFinderLightPixel(
+    currentState: number,
+    stateCount: Int32Array
+  ): number | -1 {
+    if ((currentState & 1) !== 0) {
+      stateCount[currentState]++;
+      return currentState;
+    }
+    if (currentState === 4) return -1;
+    stateCount[++currentState]++;
+    return currentState;
+  }
+
+  private checkEndOfRowFinderPattern(
+    stateCount: Int32Array,
+    i: number,
+    maxJ: number,
+    iSkip: number,
+    done: boolean
+  ): { iSkip: number; done: boolean } {
+    if (FinderPatternFinder.foundPatternCross(stateCount)) {
+      const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
+      if (confirmed) {
+        iSkip = stateCount[0];
+        if (this.hasSkipped) {
+          done = this.haveMultiplyConfirmedCenters();
+        }
+      }
+    }
+    return { iSkip, done };
+  }
+
   private processFinderRow(
     image: BitMatrix,
     i: number,
@@ -227,39 +265,31 @@ export class FinderPatternFinder {
     let j = 0;
     while (j < maxJ) {
       if (image.get(j, i)) {
-        if ((currentState & 1) === 1) currentState++;
-        stateCount[currentState]++;
-      } else if ((currentState & 1) !== 0) {
-        stateCount[currentState]++;
-      } else if (currentState === 4) {
-        const r = this.processLightPixelAtState4(stateCount, i, j, iSkip);
-        currentState = r.currentState;
-        iSkip = r.iSkip;
-        done = r.done;
-        rowJump = r.rowJump;
-        if (r.skipIncrement) {
-          j++;
-          continue;
-        }
-        if (r.jumpToEnd) {
-          j = maxJ - 1;
-        }
-        if (r.currentState === 0) FinderPatternFinder.doClearCounts(stateCount);
+        currentState = FinderPatternFinder.advanceFinderDarkPixel(currentState, stateCount);
       } else {
-        stateCount[++currentState]++;
+        const next = FinderPatternFinder.advanceFinderLightPixel(currentState, stateCount);
+        if (next >= 0) {
+          currentState = next;
+        } else {
+          const r = this.processLightPixelAtState4(stateCount, i, j, iSkip);
+          currentState = r.currentState;
+          iSkip = r.iSkip;
+          done = r.done;
+          rowJump = r.rowJump;
+          if (r.skipIncrement) {
+            j++;
+            continue;
+          }
+          if (r.jumpToEnd) {
+            j = maxJ - 1;
+          }
+          if (r.currentState === 0) FinderPatternFinder.doClearCounts(stateCount);
+        }
       }
       j++;
     }
-    if (FinderPatternFinder.foundPatternCross(stateCount)) {
-      const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
-      if (confirmed) {
-        iSkip = stateCount[0];
-        if (this.hasSkipped) {
-          done = this.haveMultiplyConfirmedCenters();
-        }
-      }
-    }
-    return { iSkip, done, rowJump };
+    const endResult = this.checkEndOfRowFinderPattern(stateCount, i, maxJ, iSkip, done);
+    return { iSkip: endResult.iSkip, done: endResult.done, rowJump };
   }
 
   private static doClearCounts(counts: Int32Array): void {
@@ -665,6 +695,29 @@ export class AlignmentPatternFinder {
     return { currentState: 1, result: null };
   }
 
+  private processAlignmentPixel(
+    isDark: boolean,
+    currentState: number,
+    stateCount: Int32Array,
+    i: number,
+    j: number
+  ): { currentState: number; result: AlignmentPattern | null } {
+    if (isDark) {
+      if (currentState === 1) {
+        stateCount[1]++;
+        return { currentState, result: null };
+      }
+      if (currentState === 2) {
+        return this.handleAlignmentDarkAtState2(stateCount, i, j);
+      }
+      stateCount[++currentState]++;
+      return { currentState, result: null };
+    }
+    if (currentState === 1) currentState++;
+    stateCount[currentState]++;
+    return { currentState, result: null };
+  }
+
   private processAlignmentRow(
     i: number,
     startX: number,
@@ -678,20 +731,9 @@ export class AlignmentPatternFinder {
     while (j < maxJ && !this.image.get(j, i)) j++;
     let currentState = 0;
     while (j < maxJ) {
-      if (this.image.get(j, i)) {
-        if (currentState === 1) {
-          stateCount[1]++;
-        } else if (currentState === 2) {
-          const r = this.handleAlignmentDarkAtState2(stateCount, i, j);
-          if (r.result !== null) return r.result;
-          currentState = r.currentState;
-        } else {
-          stateCount[++currentState]++;
-        }
-      } else {
-        if (currentState === 1) currentState++;
-        stateCount[currentState]++;
-      }
+      const r = this.processAlignmentPixel(this.image.get(j, i), currentState, stateCount, i, j);
+      if (r.result !== null) return r.result;
+      currentState = r.currentState;
       j++;
     }
     return this.checkAlignmentPatternCross(stateCount, i, maxJ);

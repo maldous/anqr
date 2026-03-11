@@ -567,6 +567,42 @@ export function selectBasisVectorsForTarget(
  * @param selectedIndices Indices of vectors within this block to apply
  * @param dataCount Number of data bytes in this block
  */
+function applyVectorSparseXOR(
+  nzIdx: Uint16Array,
+  nzVals: Uint8Array,
+  blockData: Uint8Array,
+  blockEcc: Uint8Array,
+  dataCount: number
+): void {
+  for (let k = 0; k < nzIdx.length; k++) {
+    const byteIdx = nzIdx[k];
+    const byteVal = nzVals[k];
+    if (byteIdx < dataCount) {
+      blockData[byteIdx] ^= byteVal;
+    } else {
+      const eccIdx = byteIdx - dataCount;
+      if (eccIdx >= 0 && eccIdx < blockEcc.length) {
+        blockEcc[eccIdx] ^= byteVal;
+      }
+    }
+  }
+}
+
+function applyVectorDenseXOR(
+  blockBits: Uint8Array,
+  blockData: Uint8Array,
+  blockEcc: Uint8Array,
+  dataCount: number
+): void {
+  for (let i = 0; i < dataCount; i++) {
+    blockData[i] ^= blockBits[i];
+  }
+  const eccCount = blockEcc.length;
+  for (let i = 0; i < eccCount; i++) {
+    blockEcc[i] ^= blockBits[dataCount + i];
+  }
+}
+
 export function applySelectedVectorsToBlock(
   blockData: Uint8Array,
   blockEcc: Uint8Array,
@@ -576,33 +612,16 @@ export function applySelectedVectorsToBlock(
 ): void {
   for (const idx of selectedIndices) {
     const v = blockVectors[idx];
-    const nzIdx = v.nonZeroByteIndices;
-    const nzVals = v.nonZeroByteValues;
-    if (nzIdx && nzVals) {
-      for (let k = 0; k < nzIdx.length; k++) {
-        const byteIdx = nzIdx[k];
-        const byteVal = nzVals[k];
-        if (byteIdx < dataCount) {
-          blockData[byteIdx] ^= byteVal;
-        } else {
-          const eccIdx = byteIdx - dataCount;
-          if (eccIdx >= 0 && eccIdx < blockEcc.length) {
-            blockEcc[eccIdx] ^= byteVal;
-          }
-        }
-      }
-      continue;
-    }
-
-    // XOR the data portion of this vector with the block's data
-    for (let i = 0; i < dataCount; i++) {
-      blockData[i] ^= v.blockBits[i];
-    }
-    // XOR the ECC portion of this vector with the block's ECC
-    // blockBits layout: [data0, data1, ..., dataN-1, ecc0, ecc1, ..., eccM-1]
-    const eccCount = blockEcc.length;
-    for (let i = 0; i < eccCount; i++) {
-      blockEcc[i] ^= v.blockBits[dataCount + i];
+    if (v.nonZeroByteIndices && v.nonZeroByteValues) {
+      applyVectorSparseXOR(
+        v.nonZeroByteIndices,
+        v.nonZeroByteValues,
+        blockData,
+        blockEcc,
+        dataCount
+      );
+    } else {
+      applyVectorDenseXOR(v.blockBits, blockData, blockEcc, dataCount);
     }
   }
 }

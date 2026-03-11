@@ -424,6 +424,33 @@ function preserveTimingModules(spctx: StructuralPreservationCtx): void {
   }
 }
 
+function classifyFormatVersionModule(
+  flags: number,
+  shouldProtectFormat: boolean,
+  shouldProtectVersion: boolean
+): { isFormat: boolean; isVersion: boolean } {
+  const isFormat = shouldProtectFormat && (flags & PATTERN_FORMAT) !== 0;
+  const isVersion = shouldProtectVersion && (flags & PATTERN_VERSION) !== 0;
+  return { isFormat, isVersion };
+}
+
+function preserveFixedDarkModule(
+  ctx: CanvasRenderingContext2D,
+  marginPx: number,
+  moduleCount: number,
+  effectiveModuleSize: number,
+  darkFill: string | CanvasGradient
+): void {
+  const dmRow = moduleCount - 8;
+  const dmCol = 8;
+  if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
+    const x = marginPx + dmCol * effectiveModuleSize;
+    const y = marginPx + dmRow * effectiveModuleSize;
+    ctx.fillStyle = darkFill;
+    ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+  }
+}
+
 function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
   const {
     ctx,
@@ -456,15 +483,16 @@ function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
   let versionCount = 0;
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
-      const flags = getPatternFlags(row, col);
-      const isFormat = shouldProtectFormatInfo && (flags & PATTERN_FORMAT) !== 0;
-      const isVersion = shouldProtectVersionInfo && (flags & PATTERN_VERSION) !== 0;
+      const { isFormat, isVersion } = classifyFormatVersionModule(
+        getPatternFlags(row, col),
+        shouldProtectFormatInfo,
+        shouldProtectVersionInfo
+      );
       if (!(isFormat || isVersion)) continue;
 
-      const isDark = qr.isDark(row, col);
       const x = marginPx + col * effectiveModuleSize;
       const y = marginPx + row * effectiveModuleSize;
-      ctx.fillStyle = isDark ? darkFill : effectiveBgColor;
+      ctx.fillStyle = qr.isDark(row, col) ? darkFill : effectiveBgColor;
       ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
 
       if (isFormat) formatCount++;
@@ -472,24 +500,15 @@ function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
     }
   }
 
-  // Also preserve the fixed dark module (scan critical)
-  const dmRow = moduleCount - 8;
-  const dmCol = 8;
-  if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
-    const x = marginPx + dmCol * effectiveModuleSize;
-    const y = marginPx + dmRow * effectiveModuleSize;
-    ctx.fillStyle = darkFill;
-    ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-  }
+  preserveFixedDarkModule(ctx, marginPx, moduleCount, effectiveModuleSize, darkFill);
 
   if (debug) {
-    const shouldPreserveTimingModules = !forceBinaryFunctionPatterns && preserveTiming;
     log.debug('ScaledRender preserved', {
       protectFormat: shouldProtectFormatInfo,
       protectVersion: shouldProtectVersionInfo,
       formatCount,
       versionCount,
-      preservedTiming: shouldPreserveTimingModules,
+      preservedTiming: !forceBinaryFunctionPatterns && preserveTiming,
     });
   }
 }
@@ -1181,6 +1200,110 @@ function drawScaledDitherBackdrop(
   ctx.imageSmoothingQuality = prevSmoothingQuality;
 }
 
+interface ScaledOverlayModeInfo {
+  isDitheredMode: boolean;
+  forceBinaryFunctionPatterns: boolean;
+  isSubpixelMode: boolean;
+  needsBothDarkAndLightColors: boolean;
+}
+
+function classifyScaledOverlayMode(config: QRGeneratorConfig): ScaledOverlayModeInfo {
+  const isDitheredMode =
+    config.overlayMode === 'dithered' ||
+    config.overlayMode === 'blue_noise' ||
+    config.overlayMode === 'blue-noise';
+  const isSubpixelMode =
+    config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
+  return {
+    isDitheredMode,
+    forceBinaryFunctionPatterns: isDitheredMode,
+    isSubpixelMode,
+    needsBothDarkAndLightColors: isSubpixelMode,
+  };
+}
+
+interface SubpixelToneParams {
+  subpixelDarkTargetLuma: number;
+  subpixelLightTargetLuma: number;
+  subpixelDarkChroma: number;
+  subpixelLightChroma: number;
+}
+
+function computeSubpixelToneParams(config: QRGeneratorConfig): SubpixelToneParams {
+  const strength = curveIntensity(config.overlayIntensity ?? 100);
+  return {
+    subpixelDarkTargetLuma: 0.2 - strength * 0.1,
+    subpixelLightTargetLuma: 0.8 + strength * 0.15,
+    subpixelDarkChroma: 1.15 + strength * 0.35,
+    subpixelLightChroma: 0.92 - strength * 0.24,
+  };
+}
+
+interface DitherBackdropParams {
+  ditherBackdropAlpha: number;
+  ditherBackdropWash: number;
+  bgLuma: number;
+  ditherPaperOverlayMix: number;
+}
+
+function computeDitherBackdropParams(
+  config: QRGeneratorConfig,
+  effectiveBgColor: string,
+  isDitheredMode: boolean,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+  useColorRendering: boolean
+): DitherBackdropParams {
+  const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
+  const overlayTone = curveIntensity(config.overlayIntensity ?? 100);
+  const adaptiveBackdropWash = Math.max(0.06, Math.min(0.22, 0.06 + overlayTone * 0.14));
+  const ditherBackdropWash = Math.max(
+    0,
+    Math.min(1, config.ditherBackdropWash ?? adaptiveBackdropWash)
+  );
+  const bgRgb = parseColor(effectiveBgColor) ?? { r: 255, g: 255, b: 255, a: 1 };
+  const bgLuma = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
+  const ditherPaperOverlayMix =
+    isDitheredMode && overlayCanvas && useColorRendering
+      ? Math.max(0, Math.min(1, ditherBackdropAlpha * (1 - ditherBackdropWash)))
+      : 0;
+  return { ditherBackdropAlpha, ditherBackdropWash, bgLuma, ditherPaperOverlayMix };
+}
+
+interface DitherDotParams {
+  dotMinRadiusPx: number;
+  dotMaxRadiusPx: number;
+  lightGrainDensity: number;
+  lightGrainAlpha: number;
+  seed: number;
+}
+
+function computeDitherDotParams(config: QRGeneratorConfig, subPixelSize: number): DitherDotParams {
+  const defaultDotMin = subPixelSize * 0.14;
+  const defaultDotMax = subPixelSize * 0.62;
+  const dotMinRadiusPx = Math.max(
+    0.02,
+    Math.min(subPixelSize * 0.42, config.dotMinRadiusPx ?? defaultDotMin)
+  );
+  const dotMaxRadiusPx = Math.max(
+    dotMinRadiusPx + Math.max(0.01, subPixelSize * 0.08),
+    Math.min(subPixelSize * 0.78, config.dotMaxRadiusPx ?? defaultDotMax)
+  );
+  const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;
+  return {
+    dotMinRadiusPx,
+    dotMaxRadiusPx,
+    lightGrainDensity: Math.max(
+      0,
+      Math.min(0.025, (config.lightGrainDensity ?? 0.004) * qrFirstLightBoost)
+    ),
+    lightGrainAlpha: Math.max(
+      0,
+      Math.min(0.1, (config.lightGrainAlpha ?? 0.05) * (config.qrFirstMode ? 1.15 : 1))
+    ),
+    seed: config.seed ?? 1337,
+  };
+}
+
 /**
  * UNIFIED SCALED QR GENERATION
  * Handles ALL scaled overlay modes (dithered, blue-noise, subpixel, subpixel-size)
@@ -1258,22 +1381,18 @@ export async function generateScaledQR(
   // Determine color rendering mode
   const useColorRendering = Boolean(overlayCanvas && config.colorMode !== 'bw');
 
-  // Dithered mode is ink-dominant: render dark dots over mostly open paper.
-  const isDitheredMode =
-    config.overlayMode === 'dithered' ||
-    config.overlayMode === 'blue_noise' ||
-    config.overlayMode === 'blue-noise';
-  const forceBinaryFunctionPatterns = isDitheredMode;
-  const isSubpixelMode =
-    config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
-  const needsBothDarkAndLightColors = isSubpixelMode;
-  const subpixelToneStrength = curveIntensity(config.overlayIntensity ?? 100);
-  // Subpixel needs explicit dark/light tonal rails; otherwise both rails collapse to
-  // near-identical image color and QR structure disappears.
-  const subpixelDarkTargetLuma = 0.2 - subpixelToneStrength * 0.1;
-  const subpixelLightTargetLuma = 0.8 + subpixelToneStrength * 0.15;
-  const subpixelDarkChroma = 1.15 + subpixelToneStrength * 0.35;
-  const subpixelLightChroma = 0.92 - subpixelToneStrength * 0.24;
+  const {
+    isDitheredMode,
+    forceBinaryFunctionPatterns,
+    isSubpixelMode,
+    needsBothDarkAndLightColors,
+  } = classifyScaledOverlayMode(config);
+  const {
+    subpixelDarkTargetLuma,
+    subpixelLightTargetLuma,
+    subpixelDarkChroma,
+    subpixelLightChroma,
+  } = computeSubpixelToneParams(config);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
   const pf = buildScaledPreserveFlags(config);
   const {
@@ -1289,19 +1408,14 @@ export async function generateScaledQR(
   const getPatternFlags = (row: number, col: number): number =>
     functionalMap[row * moduleCount + col];
   const qrDrawSize = scaledSize * subPixelSize;
-  const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
-  const overlayTone = curveIntensity(config.overlayIntensity ?? 100);
-  const adaptiveBackdropWash = Math.max(0.06, Math.min(0.22, 0.06 + overlayTone * 0.14));
-  const ditherBackdropWash = Math.max(
-    0,
-    Math.min(1, config.ditherBackdropWash ?? adaptiveBackdropWash)
-  );
-  const bgRgb = parseColor(effectiveBgColor) ?? { r: 255, g: 255, b: 255, a: 1 };
-  const bgLuma = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
-  const ditherPaperOverlayMix =
-    isDitheredMode && overlayCanvas && useColorRendering
-      ? Math.max(0, Math.min(1, ditherBackdropAlpha * (1 - ditherBackdropWash)))
-      : 0;
+  const { ditherBackdropAlpha, ditherBackdropWash, bgLuma, ditherPaperOverlayMix } =
+    computeDitherBackdropParams(
+      config,
+      effectiveBgColor,
+      isDitheredMode,
+      overlayCanvas,
+      useColorRendering
+    );
 
   const debug = config.debugOverlayDither === true;
   if (debug) {
@@ -1337,27 +1451,9 @@ export async function generateScaledQR(
     );
   }
 
-  const defaultDotMin = subPixelSize * 0.14;
-  const defaultDotMax = subPixelSize * 0.62;
-  const dotMinRadiusPx = Math.max(
-    0.02,
-    Math.min(subPixelSize * 0.42, config.dotMinRadiusPx ?? defaultDotMin)
-  );
-  const dotMaxRadiusPx = Math.max(
-    dotMinRadiusPx + Math.max(0.01, subPixelSize * 0.08),
-    Math.min(subPixelSize * 0.78, config.dotMaxRadiusPx ?? defaultDotMax)
-  );
+  const { dotMinRadiusPx, dotMaxRadiusPx, lightGrainDensity, lightGrainAlpha, seed } =
+    computeDitherDotParams(config, subPixelSize);
   const maxRadiusBound = subPixelSize * 0.78;
-  const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;
-  const lightGrainDensity = Math.max(
-    0,
-    Math.min(0.025, (config.lightGrainDensity ?? 0.004) * qrFirstLightBoost)
-  );
-  const lightGrainAlpha = Math.max(
-    0,
-    Math.min(0.1, (config.lightGrainAlpha ?? 0.05) * (config.qrFirstMode ? 1.15 : 1))
-  );
-  const seed = config.seed ?? 1337;
   const radiusBins = 9;
 
   const quantizeRadius = (r: number): number => {

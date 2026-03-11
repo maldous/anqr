@@ -260,6 +260,38 @@ export function analyzeQRArtCapacity(
 }
 
 /**
+ * Simulate the QR interleaving pattern to determine the highest protected byte
+ * index in each RS block.
+ */
+function simulateInterleavingProtection(
+  rsBlockInfo: RSBlockInfo[],
+  numBlocks: number,
+  protectedByteCount: number
+): number[] {
+  const maxProtectedByteInBlock: number[] = new Array(numBlocks).fill(-1);
+  const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));
+  let interleavedByteIndex = 0;
+
+  for (let bytePos = 0; bytePos < maxDataCount; bytePos++) {
+    for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
+      if (bytePos >= rsBlockInfo[blockIdx].dataCount) continue;
+
+      if (
+        interleavedByteIndex < protectedByteCount &&
+        bytePos > maxProtectedByteInBlock[blockIdx]
+      ) {
+        maxProtectedByteInBlock[blockIdx] = bytePos;
+      }
+      interleavedByteIndex++;
+      if (interleavedByteIndex >= protectedByteCount) break;
+    }
+    if (interleavedByteIndex >= protectedByteCount) break;
+  }
+
+  return maxProtectedByteInBlock;
+}
+
+/**
  * Calculate how many protected bits belong to each RS block.
  *
  * CRITICAL: QR data is INTERLEAVED before placement into the matrix!
@@ -296,47 +328,13 @@ export function calculateProtectedBitsPerBlock(
     return protectedBitsPerBlock;
   }
 
-  // Calculate how many interleaved BYTES need protection
   const protectedByteCount = Math.ceil(protectedBitCount / 8);
+  const maxProtectedByteInBlock = simulateInterleavingProtection(
+    rsBlockInfo,
+    numBlocks,
+    protectedByteCount
+  );
 
-  // Track the highest byte index in each block that needs protection
-  // We protect from byte 0 up to this index (inclusive)
-  const maxProtectedByteInBlock: number[] = new Array(numBlocks).fill(-1);
-
-  // Find max data count for interleaving pattern
-  const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));
-
-  // Simulate interleaving to find which block bytes are in protected positions
-  let interleavedByteIndex = 0;
-
-  // Interleaving pattern: for each byte position, iterate through blocks
-  for (let bytePos = 0; bytePos < maxDataCount; bytePos++) {
-    for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-      // Check if this block has a byte at this position
-      if (bytePos < rsBlockInfo[blockIdx].dataCount) {
-        // This block contributes a byte at this interleaved position
-        if (interleavedByteIndex < protectedByteCount) {
-          // This interleaved byte needs protection
-          // Update the max protected byte for this block
-          if (bytePos > maxProtectedByteInBlock[blockIdx]) {
-            maxProtectedByteInBlock[blockIdx] = bytePos;
-          }
-        }
-        interleavedByteIndex++;
-
-        // Early exit if we've covered all protected bytes
-        if (interleavedByteIndex >= protectedByteCount) {
-          break;
-        }
-      }
-    }
-    if (interleavedByteIndex >= protectedByteCount) {
-      break;
-    }
-  }
-
-  // Convert to bit counts: protect from byte 0 to maxProtectedByte (inclusive)
-  // This means (maxProtectedByte + 1) * 8 bits are protected
   for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
     if (maxProtectedByteInBlock[blockIdx] >= 0) {
       protectedBitsPerBlock[blockIdx] = (maxProtectedByteInBlock[blockIdx] + 1) * 8;

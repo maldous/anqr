@@ -594,6 +594,63 @@ function createSeededRandom(seed: number): () => number {
   };
 }
 
+interface FragmentSearchState {
+  targets: boolean[][] | null;
+  importance: number[][] | null;
+  cachedModuleCount: number;
+  bestFragment: string;
+  bestScore: number;
+  bestMatchingModules: number;
+  bestTotalControllable: number;
+}
+
+function tryFragmentCandidate(
+  baseUrl: string,
+  fragment: string,
+  version: number,
+  ecc: ECCLevel,
+  maskPattern: number,
+  targetImage: ImageData | HTMLCanvasElement | OffscreenCanvas,
+  state: FragmentSearchState,
+  iterationIndex: number
+): void {
+  const testUrl = `${baseUrl}#${fragment}`;
+  const qr = qrcode(version, ecc);
+  qr.addData(testUrl);
+  qr.make(maskPattern >= 0 ? maskPattern : undefined);
+
+  const moduleCount = qr.getModuleCount();
+
+  if (!state.targets || moduleCount !== state.cachedModuleCount) {
+    const mapped = mapImageToTargetsSupersampled(targetImage, moduleCount);
+    state.targets = mapped.targets;
+    state.importance = mapped.importance;
+    state.cachedModuleCount = moduleCount;
+  }
+
+  const actualVersion = version > 0 ? version : Math.ceil((moduleCount - 17) / 4);
+  const { score, matchingModules, totalControllable } = evaluateQRMatch(
+    (row, col) => qr.isDark(row, col),
+    moduleCount,
+    actualVersion,
+    state.targets!,
+    state.importance!
+  );
+
+  if (score > state.bestScore) {
+    state.bestScore = score;
+    state.bestFragment = fragment;
+    state.bestMatchingModules = matchingModules;
+    state.bestTotalControllable = totalControllable;
+
+    log.debug('New best fragment', {
+      fragment,
+      score: `${(score * 100).toFixed(1)}%`,
+      iteration: iterationIndex,
+    });
+  }
+}
+
 /**
  * Search for the best numeric fragment to match the target image
  * Uses batch processing to keep the UI responsive
@@ -613,22 +670,18 @@ export async function searchBestFragment(
     onProgress,
   } = config;
 
-  // Map target image to module targets
-  // We'll determine moduleCount after first QR generation
-  let targets: boolean[][] | null = null;
-  let importance: number[][] | null = null;
-  let cachedModuleCount = 0;
-
-  // Create seeded RNG for reproducibility
   const rng = createSeededRandom(seed);
 
-  // Track best result
-  let bestFragment = '';
-  let bestScore = -1;
-  let bestMatchingModules = 0;
-  let bestTotalControllable = 0;
+  const state: FragmentSearchState = {
+    targets: null,
+    importance: null,
+    cachedModuleCount: 0,
+    bestFragment: '',
+    bestScore: -1,
+    bestMatchingModules: 0,
+    bestTotalControllable: 0,
+  };
 
-  // Process in batches to keep UI responsive
   const batchSize = 50;
   const totalBatches = Math.ceil(iterations / batchSize);
 
@@ -640,77 +693,36 @@ export async function searchBestFragment(
 
     for (let i = batchStart; i < batchEnd; i++) {
       const fragment = generateRandomFragment(fragmentLength, rng);
-      const testUrl = `${baseUrl}#${fragment}`;
-
       try {
-        // Generate QR code for this URL
-        const qr = qrcode(version, ecc);
-        qr.addData(testUrl);
-        qr.make(maskPattern >= 0 ? maskPattern : undefined);
-
-        const moduleCount = qr.getModuleCount();
-
-        // Initialize targets on first successful QR generation
-        if (!targets || moduleCount !== cachedModuleCount) {
-          const mapped = mapImageToTargetsSupersampled(targetImage, moduleCount);
-          targets = mapped.targets;
-          importance = mapped.importance;
-          cachedModuleCount = moduleCount;
-        }
-
-        // Calculate version for alignment pattern detection
-        const actualVersion = version > 0 ? version : Math.ceil((moduleCount - 17) / 4);
-
-        // Evaluate match
-        const { score, matchingModules, totalControllable } = evaluateQRMatch(
-          (row, col) => qr.isDark(row, col),
-          moduleCount,
-          actualVersion,
-          targets!,
-          importance!
-        );
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestFragment = fragment;
-          bestMatchingModules = matchingModules;
-          bestTotalControllable = totalControllable;
-
-          log.debug('New best fragment', {
-            fragment,
-            score: `${(score * 100).toFixed(1)}%`,
-            iteration: i,
-          });
-        }
+        tryFragmentCandidate(baseUrl, fragment, version, ecc, maskPattern, targetImage, state, i);
       } catch (err) {
-        // Skip URLs that cause encoding errors
         log.trace('Fragment caused encoding error', { fragment, error: err });
       }
     }
 
-    // Report progress
     if (onProgress) {
       const percent = Math.round(((batch + 1) / totalBatches) * 100);
       onProgress(percent);
     }
 
-    // Yield to main thread between batches
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
 
   const result: FragmentSearchResult = {
-    fragment: bestFragment,
-    url: `${baseUrl}#${bestFragment}`,
-    score: bestScore,
-    matchingModules: bestMatchingModules,
-    totalControllable: bestTotalControllable,
+    fragment: state.bestFragment,
+    url: `${baseUrl}#${state.bestFragment}`,
+    score: state.bestScore,
+    matchingModules: state.bestMatchingModules,
+    totalControllable: state.bestTotalControllable,
     matchPercentage:
-      bestTotalControllable > 0 ? (bestMatchingModules / bestTotalControllable) * 100 : 0,
+      state.bestTotalControllable > 0
+        ? (state.bestMatchingModules / state.bestTotalControllable) * 100
+        : 0,
   };
 
   log.info('Fragment search complete', {
-    bestFragment,
-    score: `${(bestScore * 100).toFixed(1)}%`,
+    bestFragment: state.bestFragment,
+    score: `${(state.bestScore * 100).toFixed(1)}%`,
     matchPercentage: `${result.matchPercentage.toFixed(1)}%`,
     iterations,
   });
