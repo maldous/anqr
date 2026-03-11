@@ -28,13 +28,14 @@ function getRegistry(): RegistryState {
 }
 
 function normalizeToken(value: string): string {
-  return value
+  let result = value
     .trim()
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
     .replace(/^-+/, '')
-    .replace(/-+$/, '')
-    .replaceAll(/--+/g, '-');
+    .replace(/-+$/, '');
+  while (result.includes('--')) result = result.replaceAll('--', '-');
+  return result;
 }
 
 function baseFromProps(props: TestIdProps, fallbackPrefix: string, reactId: string): string {
