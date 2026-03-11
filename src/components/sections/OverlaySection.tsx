@@ -348,6 +348,245 @@ function computeCropOverlayStyle(
   };
 }
 
+function useOverlayCropDrag(
+  overlay: ReturnType<typeof useQRStore.getState>['overlay'],
+  previewImageSize: { width: number; height: number } | null,
+  previewContainerRef: React.RefObject<HTMLDivElement | null>,
+  setOverlayCrop: ReturnType<typeof useQRStore.getState>['setOverlayCrop']
+) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragMode, setDragMode] = useState<CropDragMode>(null);
+  const [draftCropRegion, setDraftCropRegion] = useState<{
+    x: number;
+    y: number;
+    size: number;
+  } | null>(null);
+
+  const getCropHalfExtents = useCallback(
+    (size: number): { halfX: number; halfY: number } => {
+      if (!previewImageSize || previewImageSize.width <= 0 || previewImageSize.height <= 0) {
+        const half = size / 2;
+        return { halfX: half, halfY: half };
+      }
+      const minEdge = Math.min(previewImageSize.width, previewImageSize.height);
+      const cropSizePx = Math.max(1, minEdge * size);
+      return {
+        halfX: Math.min(0.5, cropSizePx / (2 * previewImageSize.width)),
+        halfY: Math.min(0.5, cropSizePx / (2 * previewImageSize.height)),
+      };
+    },
+    [previewImageSize]
+  );
+
+  const activeCropRegion = isDragging && draftCropRegion ? draftCropRegion : overlay.cropRegion;
+
+  const commitCropRegionIfChanged = useCallback(
+    (nextRegion: { x: number; y: number; size: number }) => {
+      const eps = 0.0001;
+      if (
+        Math.abs(nextRegion.x - overlay.cropRegion.x) < eps &&
+        Math.abs(nextRegion.y - overlay.cropRegion.y) < eps &&
+        Math.abs(nextRegion.size - overlay.cropRegion.size) < eps
+      ) {
+        return;
+      }
+      setOverlayCrop({ region: nextRegion });
+    },
+    [overlay.cropRegion, setOverlayCrop]
+  );
+
+  const mapPointerToImageSpace = useCallback(
+    (
+      clientX: number,
+      clientY: number
+    ): { x: number; y: number; imageRect: ContainedImageRect } | null => {
+      const container = previewContainerRef.current;
+      if (!container) return null;
+      const rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+
+      const imageRect =
+        previewImageSize && previewImageSize.width > 0 && previewImageSize.height > 0
+          ? getContainedImageRect(
+              rect.width,
+              rect.height,
+              previewImageSize.width,
+              previewImageSize.height
+            )
+          : { x: 0, y: 0, width: rect.width, height: rect.height };
+      if (imageRect.width <= 0 || imageRect.height <= 0) return null;
+
+      const relativeX = (clientX - rect.left - imageRect.x) / imageRect.width;
+      const relativeY = (clientY - rect.top - imageRect.y) / imageRect.height;
+
+      return {
+        x: Math.max(0, Math.min(1, relativeX)),
+        y: Math.max(0, Math.min(1, relativeY)),
+        imageRect,
+      };
+    },
+    [previewImageSize, previewContainerRef]
+  );
+
+  const beginDragAtPoint = useCallback(
+    (clientX: number, clientY: number): void => {
+      if (!overlay.cropEnabled) return;
+      const mapped = mapPointerToImageSpace(clientX, clientY);
+      if (!mapped) return;
+
+      const currentRegion = overlay.cropRegion;
+      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
+      const left = currentRegion.x - halfX;
+      const right = currentRegion.x + halfX;
+      const top = currentRegion.y - halfY;
+      const bottom = currentRegion.y + halfY;
+      const insideCrop =
+        mapped.x >= left && mapped.x <= right && mapped.y >= top && mapped.y <= bottom;
+
+      const corners = [
+        { x: left, y: top },
+        { x: right, y: top },
+        { x: left, y: bottom },
+        { x: right, y: bottom },
+      ];
+      const cornerThresholdPx = 18;
+      const nearCorner = corners.some((corner) => {
+        const dxPx = (mapped.x - corner.x) * mapped.imageRect.width;
+        const dyPx = (mapped.y - corner.y) * mapped.imageRect.height;
+        return Math.hypot(dxPx, dyPx) <= cornerThresholdPx;
+      });
+
+      if (!insideCrop && !nearCorner) {
+        return;
+      }
+
+      setDraftCropRegion(currentRegion);
+      setDragMode(nearCorner ? 'resize' : 'move');
+      setIsDragging(true);
+    },
+    [overlay.cropEnabled, overlay.cropRegion, mapPointerToImageSpace, getCropHalfExtents]
+  );
+
+  const handleCropDrag = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!(isDragging && previewContainerRef.current)) return;
+      e.preventDefault();
+
+      const mapped = mapPointerToImageSpace(e.clientX, e.clientY);
+      if (!mapped) return;
+
+      const currentRegion = draftCropRegion ?? overlay.cropRegion;
+
+      if (dragMode === 'resize') {
+        const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
+        setDraftCropRegion({ ...currentRegion, size: newSize });
+        return;
+      }
+
+      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
+      const clampedX = Math.max(halfX, Math.min(1 - halfX, mapped.x));
+      const clampedY = Math.max(halfY, Math.min(1 - halfY, mapped.y));
+      setDraftCropRegion({ ...currentRegion, x: clampedX, y: clampedY });
+    },
+    [
+      isDragging,
+      dragMode,
+      previewImageSize,
+      mapPointerToImageSpace,
+      getCropHalfExtents,
+      draftCropRegion,
+      overlay.cropRegion,
+      previewContainerRef,
+    ]
+  );
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (!overlay.cropEnabled || e.touches.length === 0) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      beginDragAtPoint(touch.clientX, touch.clientY);
+    },
+    [overlay.cropEnabled, beginDragAtPoint]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (!(isDragging && previewContainerRef.current) || e.touches.length === 0) return;
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const mapped = mapPointerToImageSpace(touch.clientX, touch.clientY);
+      if (!mapped) return;
+
+      const currentRegion = draftCropRegion ?? overlay.cropRegion;
+      if (dragMode === 'resize') {
+        const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
+        setDraftCropRegion({ ...currentRegion, size: newSize });
+        return;
+      }
+
+      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
+      const clampedX = Math.max(halfX, Math.min(1 - halfX, mapped.x));
+      const clampedY = Math.max(halfY, Math.min(1 - halfY, mapped.y));
+
+      setDraftCropRegion({ ...currentRegion, x: clampedX, y: clampedY });
+    },
+    [
+      isDragging,
+      dragMode,
+      previewImageSize,
+      mapPointerToImageSpace,
+      getCropHalfExtents,
+      draftCropRegion,
+      overlay.cropRegion,
+      previewContainerRef,
+    ]
+  );
+
+  const finishDrag = useCallback(() => {
+    if (!isDragging) return;
+    if (draftCropRegion) {
+      commitCropRegionIfChanged(draftCropRegion);
+    }
+    setDraftCropRegion(null);
+    setDragMode(null);
+    setIsDragging(false);
+  }, [isDragging, draftCropRegion, commitCropRegionIfChanged]);
+
+  const handleTouchEnd = useCallback(() => {
+    finishDrag();
+  }, [finishDrag]);
+
+  return {
+    activeCropRegion,
+    getCropHalfExtents,
+    beginDragAtPoint,
+    handleCropDrag,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    finishDrag,
+  };
+}
+
+function getAvailableOverlayModes(tier: string) {
+  return [
+    ...BASIC_OVERLAY_MODES,
+    ...(tier === 'advanced' || tier === 'professional' ? ADVANCED_OVERLAY_MODES : []),
+    ...(tier === 'professional' ? PRO_OVERLAY_MODES : []),
+  ];
+}
+
+const GALLERY_IMAGES = [
+  { id: 'tsunami', name: 'Tsunami', url: '/tsunami.jpg', isAnimated: false },
+  { id: 'king', name: 'King', url: '/king.gif', isAnimated: true },
+  { id: 'logo', name: 'Logo', url: '/logo.png', isAnimated: false },
+  { id: 'test', name: 'Test', url: '/test.png', isAnimated: false },
+  { id: 'santa', name: 'Santa', url: '/santa.png', isAnimated: false },
+  { id: 'dance', name: 'Dance', url: '/dance.gif', isAnimated: true },
+];
+
 export function OverlaySection() {
   const {
     tier,
@@ -392,13 +631,6 @@ export function OverlaySection() {
     width: number;
     height: number;
   } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragMode, setDragMode] = useState<CropDragMode>(null);
-  const [draftCropRegion, setDraftCropRegion] = useState<{
-    x: number;
-    y: number;
-    size: number;
-  } | null>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const [urlInput, setUrlInput] = useState(overlay.url || '');
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
@@ -408,6 +640,13 @@ export function OverlaySection() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showGalleryPicker, setShowGalleryPicker] = useState(false);
   const [galleryLoading, setGalleryLoading] = useState(false);
+
+  const cropDrag = useOverlayCropDrag(
+    overlay,
+    previewImageSize,
+    previewContainerRef,
+    setOverlayCrop
+  );
 
   const getImageDimensionsFromFile = useCallback(
     (file: File) => getImageDimensionsFromFileStandalone(file),
@@ -420,8 +659,6 @@ export function OverlaySection() {
       if (!dims) return;
       setPreviewImageSize(dims);
 
-      // Non-square overlays should default to centered square crop
-      // to avoid stretched/distorted rendering.
       if (Math.abs(dims.width - dims.height) > 1) {
         setOverlayCrop({
           enabled: true,
@@ -489,13 +726,11 @@ export function OverlaySection() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setOverlayUrl(''); // Clear URL when file is selected
+      setOverlayUrl('');
       setOverlayFile(file);
-      setOverlayEnabled(true); // Auto-enable overlay when file is uploaded
+      setOverlayEnabled(true);
       void autoEnableSquareCropForNonSquareInput(file);
     }
-    // Reset input value so the same file can be selected again
-    // This is necessary because browsers don't fire onChange if the value hasn't changed
     e.target.value = '';
   };
 
@@ -506,18 +741,6 @@ export function OverlaySection() {
     setUrlError(null);
   };
 
-  // Built-in gallery images are shipped in /public and available on the current origin.
-  // Using same-origin paths avoids native WebView CORS failures when fetch() creates a File.
-  const GALLERY_IMAGES = [
-    { id: 'tsunami', name: 'Tsunami', url: '/tsunami.jpg', isAnimated: false },
-    { id: 'king', name: 'King', url: '/king.gif', isAnimated: true },
-    { id: 'logo', name: 'Logo', url: '/logo.png', isAnimated: false },
-    { id: 'test', name: 'Test', url: '/test.png', isAnimated: false },
-    { id: 'santa', name: 'Santa', url: '/santa.png', isAnimated: false },
-    { id: 'dance', name: 'Dance', url: '/dance.gif', isAnimated: true },
-  ];
-
-  // Load image from gallery
   const loadGalleryImage = useCallback(
     async (imageUrl: string) => {
       setGalleryLoading(true);
@@ -546,214 +769,13 @@ export function OverlaySection() {
     [autoEnableSquareCropForNonSquareInput, setOverlayFile, setOverlayUrl, setOverlayEnabled]
   );
 
-  const getCropHalfExtents = useCallback(
-    (size: number): { halfX: number; halfY: number } => {
-      if (!previewImageSize || previewImageSize.width <= 0 || previewImageSize.height <= 0) {
-        const half = size / 2;
-        return { halfX: half, halfY: half };
-      }
-      const minEdge = Math.min(previewImageSize.width, previewImageSize.height);
-      const cropSizePx = Math.max(1, minEdge * size);
-      return {
-        halfX: Math.min(0.5, cropSizePx / (2 * previewImageSize.width)),
-        halfY: Math.min(0.5, cropSizePx / (2 * previewImageSize.height)),
-      };
-    },
-    [previewImageSize]
-  );
-
-  const activeCropRegion = isDragging && draftCropRegion ? draftCropRegion : overlay.cropRegion;
-
-  const commitCropRegionIfChanged = useCallback(
-    (nextRegion: { x: number; y: number; size: number }) => {
-      const eps = 0.0001;
-      if (
-        Math.abs(nextRegion.x - overlay.cropRegion.x) < eps &&
-        Math.abs(nextRegion.y - overlay.cropRegion.y) < eps &&
-        Math.abs(nextRegion.size - overlay.cropRegion.size) < eps
-      ) {
-        return;
-      }
-      setOverlayCrop({ region: nextRegion });
-    },
-    [overlay.cropRegion, setOverlayCrop]
-  );
-
-  const mapPointerToImageSpace = useCallback(
-    (
-      clientX: number,
-      clientY: number
-    ): { x: number; y: number; imageRect: ContainedImageRect } | null => {
-      const container = previewContainerRef.current;
-      if (!container) return null;
-      const rect = container.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return null;
-
-      const imageRect =
-        previewImageSize && previewImageSize.width > 0 && previewImageSize.height > 0
-          ? getContainedImageRect(
-              rect.width,
-              rect.height,
-              previewImageSize.width,
-              previewImageSize.height
-            )
-          : { x: 0, y: 0, width: rect.width, height: rect.height };
-      if (imageRect.width <= 0 || imageRect.height <= 0) return null;
-
-      const relativeX = (clientX - rect.left - imageRect.x) / imageRect.width;
-      const relativeY = (clientY - rect.top - imageRect.y) / imageRect.height;
-
-      return {
-        x: Math.max(0, Math.min(1, relativeX)),
-        y: Math.max(0, Math.min(1, relativeY)),
-        imageRect,
-      };
-    },
-    [previewImageSize]
-  );
-
-  const beginDragAtPoint = useCallback(
-    (clientX: number, clientY: number): void => {
-      if (!overlay.cropEnabled) return;
-      const mapped = mapPointerToImageSpace(clientX, clientY);
-      if (!mapped) return;
-
-      const currentRegion = overlay.cropRegion;
-      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
-      const left = currentRegion.x - halfX;
-      const right = currentRegion.x + halfX;
-      const top = currentRegion.y - halfY;
-      const bottom = currentRegion.y + halfY;
-      const insideCrop =
-        mapped.x >= left && mapped.x <= right && mapped.y >= top && mapped.y <= bottom;
-
-      const corners = [
-        { x: left, y: top },
-        { x: right, y: top },
-        { x: left, y: bottom },
-        { x: right, y: bottom },
-      ];
-      const cornerThresholdPx = 18;
-      const nearCorner = corners.some((corner) => {
-        const dxPx = (mapped.x - corner.x) * mapped.imageRect.width;
-        const dyPx = (mapped.y - corner.y) * mapped.imageRect.height;
-        return Math.hypot(dxPx, dyPx) <= cornerThresholdPx;
-      });
-
-      if (!insideCrop && !nearCorner) {
-        return;
-      }
-
-      setDraftCropRegion(currentRegion);
-      setDragMode(nearCorner ? 'resize' : 'move');
-      setIsDragging(true);
-    },
-    [overlay.cropEnabled, overlay.cropRegion, mapPointerToImageSpace, getCropHalfExtents]
-  );
-
   const cropOverlayStyle = computeCropOverlayStyle(
-    activeCropRegion,
+    cropDrag.activeCropRegion,
     previewImageSize,
     previewContainerRef.current
   );
 
-  // Handle crop region drag (mouse)
-  const handleCropDrag = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!(isDragging && previewContainerRef.current)) return;
-      e.preventDefault();
-
-      const mapped = mapPointerToImageSpace(e.clientX, e.clientY);
-      if (!mapped) return;
-
-      const currentRegion = draftCropRegion ?? overlay.cropRegion;
-
-      if (dragMode === 'resize') {
-        const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
-        setDraftCropRegion({ ...currentRegion, size: newSize });
-        return;
-      }
-
-      // Keep crop region centered on cursor, clamped to bounds
-      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
-      const clampedX = Math.max(halfX, Math.min(1 - halfX, mapped.x));
-      const clampedY = Math.max(halfY, Math.min(1 - halfY, mapped.y));
-      setDraftCropRegion({ ...currentRegion, x: clampedX, y: clampedY });
-    },
-    [
-      isDragging,
-      dragMode,
-      previewImageSize,
-      mapPointerToImageSpace,
-      getCropHalfExtents,
-      draftCropRegion,
-      overlay.cropRegion,
-    ]
-  );
-
-  // Handle crop region drag (touch for mobile)
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
-      if (!overlay.cropEnabled || e.touches.length === 0) return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      beginDragAtPoint(touch.clientX, touch.clientY);
-    },
-    [overlay.cropEnabled, beginDragAtPoint]
-  );
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
-      if (!(isDragging && previewContainerRef.current) || e.touches.length === 0) return;
-      e.preventDefault();
-
-      const touch = e.touches[0];
-      const mapped = mapPointerToImageSpace(touch.clientX, touch.clientY);
-      if (!mapped) return;
-
-      const currentRegion = draftCropRegion ?? overlay.cropRegion;
-      if (dragMode === 'resize') {
-        const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
-        setDraftCropRegion({ ...currentRegion, size: newSize });
-        return;
-      }
-
-      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
-      const clampedX = Math.max(halfX, Math.min(1 - halfX, mapped.x));
-      const clampedY = Math.max(halfY, Math.min(1 - halfY, mapped.y));
-
-      setDraftCropRegion({ ...currentRegion, x: clampedX, y: clampedY });
-    },
-    [
-      isDragging,
-      dragMode,
-      previewImageSize,
-      mapPointerToImageSpace,
-      getCropHalfExtents,
-      draftCropRegion,
-      overlay.cropRegion,
-    ]
-  );
-
-  const finishDrag = useCallback(() => {
-    if (!isDragging) return;
-    if (draftCropRegion) {
-      commitCropRegionIfChanged(draftCropRegion);
-    }
-    setDraftCropRegion(null);
-    setDragMode(null);
-    setIsDragging(false);
-  }, [isDragging, draftCropRegion, commitCropRegionIfChanged]);
-
-  const handleTouchEnd = useCallback(() => {
-    finishDrag();
-  }, [finishDrag]);
-
-  const availableModes = [
-    ...BASIC_OVERLAY_MODES,
-    ...(tier === 'advanced' || tier === 'professional' ? ADVANCED_OVERLAY_MODES : []),
-    ...(tier === 'professional' ? PRO_OVERLAY_MODES : []),
-  ];
+  const availableModes = getAvailableOverlayModes(tier);
 
   return (
     <div className="space-y-4">
@@ -801,14 +823,14 @@ export function OverlaySection() {
                   tabIndex: 0,
                   onMouseDown: (e: React.MouseEvent) => {
                     e.preventDefault();
-                    beginDragAtPoint(e.clientX, e.clientY);
+                    cropDrag.beginDragAtPoint(e.clientX, e.clientY);
                   },
-                  onMouseUp: finishDrag,
-                  onMouseLeave: finishDrag,
-                  onMouseMove: handleCropDrag,
-                  onTouchStart: handleTouchStart,
-                  onTouchMove: handleTouchMove,
-                  onTouchEnd: handleTouchEnd,
+                  onMouseUp: cropDrag.finishDrag,
+                  onMouseLeave: cropDrag.finishDrag,
+                  onMouseMove: cropDrag.handleCropDrag,
+                  onTouchStart: cropDrag.handleTouchStart,
+                  onTouchMove: cropDrag.handleTouchMove,
+                  onTouchEnd: cropDrag.handleTouchEnd,
                 })}
                 className="relative w-full aspect-square bg-muted/30 rounded-lg overflow-hidden border cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-ring"
               >
@@ -877,13 +899,13 @@ export function OverlaySection() {
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">{t('overlay.cropSize')}</Label>
                   <span className="text-sm text-muted-foreground">
-                    {t('qr.nPercent', { count: Math.round(activeCropRegion.size * 100) })}
+                    {t('qr.nPercent', { count: Math.round(cropDrag.activeCropRegion.size * 100) })}
                   </span>
                 </div>
                 <Slider
-                  value={[activeCropRegion.size]}
+                  value={[cropDrag.activeCropRegion.size]}
                   onValueChange={([v]) => {
-                    const { halfX, halfY } = getCropHalfExtents(v);
+                    const { halfX, halfY } = cropDrag.getCropHalfExtents(v);
                     setOverlayCrop({
                       region: {
                         ...overlay.cropRegion,

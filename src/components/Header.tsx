@@ -962,6 +962,11 @@ function HeaderMobileFooter({
   );
 }
 
+function resolveHeaderPage(activePage: HeaderPage | undefined, showGallery: boolean): HeaderPage {
+  if (activePage) return activePage;
+  return showGallery ? 'gallery' : 'editor';
+}
+
 async function changeTierWithAdGate(
   newTier: Tier,
   setTier: (t: Tier) => void,
@@ -1082,10 +1087,9 @@ export function Header({
     }
   };
 
-  const resolvedPage: HeaderPage = activePage ?? (showGallery ? 'gallery' : 'editor');
+  const resolvedPage: HeaderPage = resolveHeaderPage(activePage, showGallery);
   const isEditor = resolvedPage === 'editor';
   const isGallery = resolvedPage === 'gallery';
-  const _isStatic = !(isEditor || isGallery);
 
   useEffect(() => {
     const isDark = getInitialDarkMode();
