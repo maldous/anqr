@@ -5,7 +5,7 @@
 
 import { createLogger } from '../../lib/logger';
 
-const _log = createLogger('CLIPBOARD');
+const log = createLogger('CLIPBOARD');
 
 /**
  * Copy text to clipboard
@@ -15,6 +15,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
+    log.debug('Clipboard API failed, using execCommand fallback', { error });
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
@@ -26,6 +27,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       document.execCommand('copy'); // NOSONAR: deprecated but necessary for older browser fallback
       return true;
     } catch (fallbackError) {
+      log.debug('execCommand copy fallback also failed', { error: fallbackError });
       return false;
     } finally {
       textarea.remove();

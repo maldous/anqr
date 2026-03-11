@@ -5,7 +5,7 @@
 
 import { createLogger } from '../../lib/logger';
 
-const _log = createLogger('CLIPBOARD');
+const log = createLogger('CLIPBOARD');
 
 /**
  * Copy image to clipboard (if supported)
@@ -21,6 +21,7 @@ export async function copyImageToClipboard(canvas: HTMLCanvasElement): Promise<b
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
     return true;
   } catch (error) {
+    log.debug('Clipboard image copy failed', { error });
     return false;
   }
 }
