@@ -2731,6 +2731,76 @@ interface AnalyzeResultDetailsProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
+function hasAnyTimingData(timings: AnalyzeResultDetailsProps['combinedTimings']): boolean {
+  return (
+    [
+      timings.decodeMs,
+      timings.totalAnalysisMs,
+      timings.encodeMs,
+      timings.renderMs,
+      timings.exportMs,
+    ] as const
+  ).some((v) => v !== null && v !== undefined);
+}
+
+function wcagComplianceClass(ratio: number, threshold: number): string {
+  return ratio >= threshold
+    ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+    : 'bg-red-500/10 text-red-700 dark:text-red-400';
+}
+
+function capacityBadgeClass(percentage: number): string {
+  if (percentage > 90) return 'bg-red-500/10 text-red-700 dark:text-red-400';
+  if (percentage > 70) return 'bg-amber-500/10 text-amber-700 dark:text-amber-400';
+  return 'bg-green-500/10 text-green-700 dark:text-green-400';
+}
+
+function formatDecoderVersion(version: number | null) {
+  if (version === null) return <span className="text-red-500">— (not detected)</span>;
+  return `${version} (${version * 4 + 17}×${version * 4 + 17})`;
+}
+
+function formatDecoderMaskPattern(maskPattern: number | null) {
+  if (maskPattern === null) return <span className="text-amber-500">— (not detected)</span>;
+  return `${maskPattern}`;
+}
+
+function formatDecoderErrors(errorsCorrected: number | null) {
+  if (errorsCorrected === null)
+    return <span className="text-muted-foreground">0 (clean decode)</span>;
+  if (errorsCorrected === 0)
+    return <span className="text-green-600 dark:text-green-400">0 (no errors)</span>;
+  return <span className="text-amber-600 dark:text-amber-400">{errorsCorrected}</span>;
+}
+
+function formatDecoderErasures(erasures: number | null) {
+  if (erasures === null) return <span className="text-muted-foreground">N/A</span>;
+  if (erasures === 0) return <span className="text-green-600 dark:text-green-400">0</span>;
+  return erasures;
+}
+
+function formatDecoderNumBits(numBits: number | null) {
+  if (numBits === null) return <span className="text-muted-foreground">N/A</span>;
+  return `${numBits} bits`;
+}
+
+function formatDecoderOrientation(orientation: number | null) {
+  if (orientation !== null && orientation !== 0) return `${orientation}°`;
+  return <span className="text-muted-foreground">Standard (0°)</span>;
+}
+
+function formatRsErrorCorrection(errorsCorrected: number | null) {
+  if (errorsCorrected === null) return <span className="text-muted-foreground">Not available</span>;
+  if (errorsCorrected > 0) {
+    return (
+      <span className="text-amber-600 dark:text-amber-400 font-medium">
+        {errorsCorrected} error{errorsCorrected === 1 ? '' : 's'} recovered
+      </span>
+    );
+  }
+  return <span className="text-green-600 dark:text-green-400">No errors detected</span>;
+}
+
 function AnalyzeResultDetails({
   result,
   originalImageUrl,
@@ -2921,18 +2991,7 @@ function AnalyzeResultDetails({
               )}
               <DetailRow
                 label="RS Error Correction"
-                value={
-                  result.errorsCorrected === null ? (
-                    <span className="text-muted-foreground">Not available</span>
-                  ) : result.errorsCorrected > 0 ? (
-                    <span className="text-amber-600 dark:text-amber-400 font-medium">
-                      {result.errorsCorrected} error
-                      {result.errorsCorrected === 1 ? '' : 's'} recovered
-                    </span>
-                  ) : (
-                    <span className="text-green-600 dark:text-green-400">No errors detected</span>
-                  )
-                }
+                value={formatRsErrorCorrection(result.errorsCorrected)}
                 icon={<Shield className="w-3.5 h-3.5" />}
               />
             </div>
@@ -2950,13 +3009,9 @@ function AnalyzeResultDetails({
                   </span>
                 ) : (
                   <span
-                    className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-                      result.dataCapacity.percentage > 90
-                        ? 'bg-red-500/10 text-red-700 dark:text-red-400'
-                        : result.dataCapacity.percentage > 70
-                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                          : 'bg-green-500/10 text-green-700 dark:text-green-400'
-                    }`}
+                    className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${capacityBadgeClass(
+                      result.dataCapacity.percentage
+                    )}`}
                   >
                     {result.dataCapacity.percentage}% used
                   </span>
@@ -3082,24 +3137,12 @@ function AnalyzeResultDetails({
                 </div>
                 <DetailRow
                   label="Version"
-                  value={
-                    result.decoderMetadata.version === null ? (
-                      <span className="text-red-500">— (not detected)</span>
-                    ) : (
-                      `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
-                    )
-                  }
+                  value={formatDecoderVersion(result.decoderMetadata.version)}
                   icon={<Hash className="w-3.5 h-3.5" />}
                 />
                 <DetailRow
                   label="Mask Pattern"
-                  value={
-                    result.decoderMetadata.maskPattern === null ? (
-                      <span className="text-amber-500">— (not detected)</span>
-                    ) : (
-                      `${result.decoderMetadata.maskPattern}`
-                    )
-                  }
+                  value={formatDecoderMaskPattern(result.decoderMetadata.maskPattern)}
                   icon={<Layers className="w-3.5 h-3.5" />}
                 />
                 <DetailRow
@@ -3113,53 +3156,22 @@ function AnalyzeResultDetails({
                 />
                 <DetailRow
                   label="Errors Corrected"
-                  value={
-                    result.decoderMetadata.errorsCorrected === null ? (
-                      <span className="text-muted-foreground">0 (clean decode)</span>
-                    ) : result.decoderMetadata.errorsCorrected === 0 ? (
-                      <span className="text-green-600 dark:text-green-400">0 (no errors)</span>
-                    ) : (
-                      <span className="text-amber-600 dark:text-amber-400">
-                        {result.decoderMetadata.errorsCorrected}
-                      </span>
-                    )
-                  }
+                  value={formatDecoderErrors(result.decoderMetadata.errorsCorrected)}
                   icon={<Shield className="w-3.5 h-3.5" />}
                 />
                 <DetailRow
                   label="Erasures"
-                  value={
-                    result.decoderMetadata.erasures === null ? (
-                      <span className="text-muted-foreground">N/A</span>
-                    ) : result.decoderMetadata.erasures === 0 ? (
-                      <span className="text-green-600 dark:text-green-400">0</span>
-                    ) : (
-                      result.decoderMetadata.erasures
-                    )
-                  }
+                  value={formatDecoderErasures(result.decoderMetadata.erasures)}
                   icon={<Shield className="w-3.5 h-3.5" />}
                 />
                 <DetailRow
                   label="Raw Bits"
-                  value={
-                    result.decoderMetadata.numBits === null ? (
-                      <span className="text-muted-foreground">N/A</span>
-                    ) : (
-                      `${result.decoderMetadata.numBits} bits`
-                    )
-                  }
+                  value={formatDecoderNumBits(result.decoderMetadata.numBits)}
                   icon={<Binary className="w-3.5 h-3.5" />}
                 />
                 <DetailRow
                   label="Orientation"
-                  value={
-                    result.decoderMetadata.orientation !== null &&
-                    result.decoderMetadata.orientation !== 0 ? (
-                      `${result.decoderMetadata.orientation}°`
-                    ) : (
-                      <span className="text-muted-foreground">Standard (0°)</span>
-                    )
-                  }
+                  value={formatDecoderOrientation(result.decoderMetadata.orientation)}
                   icon={<Settings className="w-3.5 h-3.5" />}
                 />
                 <DetailRow
@@ -3254,12 +3266,7 @@ function AnalyzeResultDetails({
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          {(combinedTimings.decodeMs !== null && combinedTimings.decodeMs !== undefined) ||
-          (combinedTimings.totalAnalysisMs !== null &&
-            combinedTimings.totalAnalysisMs !== undefined) ||
-          (combinedTimings.encodeMs !== null && combinedTimings.encodeMs !== undefined) ||
-          (combinedTimings.renderMs !== null && combinedTimings.renderMs !== undefined) ||
-          (combinedTimings.exportMs !== null && combinedTimings.exportMs !== undefined) ? (
+          {hasAnyTimingData(combinedTimings) ? (
             <CollapsibleSection
               title={t('analyze.processingTimings', 'Processing Timings')}
               icon={<Timer className="w-4 h-4" />}
@@ -3352,31 +3359,28 @@ function AnalyzeResultDetails({
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center text-xs">
                     <div
-                      className={`p-2 rounded ${
-                        result.detectedColors.contrastRatio >= 3
-                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                          : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                      }`}
+                      className={`p-2 rounded ${wcagComplianceClass(
+                        result.detectedColors.contrastRatio,
+                        3
+                      )}`}
                     >
                       <div className="font-bold">AA-Large</div>
                       <div className="text-[10px]">≥3:1</div>
                     </div>
                     <div
-                      className={`p-2 rounded ${
-                        result.detectedColors.contrastRatio >= 4.5
-                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                          : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                      }`}
+                      className={`p-2 rounded ${wcagComplianceClass(
+                        result.detectedColors.contrastRatio,
+                        4.5
+                      )}`}
                     >
                       <div className="font-bold">AA</div>
                       <div className="text-[10px]">≥4.5:1</div>
                     </div>
                     <div
-                      className={`p-2 rounded ${
-                        result.detectedColors.contrastRatio >= 7
-                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                          : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                      }`}
+                      className={`p-2 rounded ${wcagComplianceClass(
+                        result.detectedColors.contrastRatio,
+                        7
+                      )}`}
                     >
                       <div className="font-bold">AAA</div>
                       <div className="text-[10px]">≥7:1</div>
