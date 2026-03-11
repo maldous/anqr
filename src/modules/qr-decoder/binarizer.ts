@@ -326,6 +326,26 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     return { sum, min, max };
   }
 
+  private static computeBlockBlackPoint(
+    stats: { sum: number; min: number; max: number },
+    y: number,
+    x: number,
+    blackPoints: Int32Array[]
+  ): number {
+    let average = stats.sum >> (HybridBinarizer.BLOCK_SIZE_POWER * 2);
+    if (stats.max - stats.min <= HybridBinarizer.MIN_DYNAMIC_RANGE) {
+      average = stats.min / 2;
+      if (y > 0 && x > 0) {
+        const averageNeighborBlackPoint =
+          (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
+        if (stats.min < averageNeighborBlackPoint) {
+          average = averageNeighborBlackPoint;
+        }
+      }
+    }
+    return average;
+  }
+
   private static calculateBlackPoints(
     luminances: Uint8ClampedArray,
     subWidth: number,
@@ -346,19 +366,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
         if (xoffset > maxXOffset) xoffset = maxXOffset;
 
         const stats = HybridBinarizer.calculateBlockStats(luminances, xoffset, yoffset, width);
-
-        let average = stats.sum >> (HybridBinarizer.BLOCK_SIZE_POWER * 2);
-        if (stats.max - stats.min <= HybridBinarizer.MIN_DYNAMIC_RANGE) {
-          average = stats.min / 2;
-          if (y > 0 && x > 0) {
-            const averageNeighborBlackPoint =
-              (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
-            if (stats.min < averageNeighborBlackPoint) {
-              average = averageNeighborBlackPoint;
-            }
-          }
-        }
-        blackPoints[y][x] = average;
+        blackPoints[y][x] = HybridBinarizer.computeBlockBlackPoint(stats, y, x, blackPoints);
       }
     }
     return blackPoints;

@@ -977,6 +977,27 @@ async function runScanGateQRFirstFallback(
   return qrFirstLast;
 }
 
+function buildOverlayFamilyKey(
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+  config: QRGeneratorConfig
+): string {
+  if (!overlayCanvas) return 'overlay:none';
+  return [
+    overlayCanvas.width,
+    overlayCanvas.height,
+    config.overlayMode ?? 'none',
+    config.colorMode ?? 'color',
+    Math.round(config.overlayIntensity ?? 100),
+    Math.round(config.ditherStrength ?? 50),
+    Math.round(config.finderDitherStrength ?? 65),
+    config.ditherKind ?? 'none',
+    config.ditherMode ?? 'none',
+    Math.round(config.renderScalePerModule ?? 18),
+    config.blendPreservations === true ? 1 : 0,
+    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
+  ].join('|');
+}
+
 export class QRGenerator {
   private readonly qrcode: typeof qrcode;
   private readonly canvasFactory: CanvasFactory;
@@ -989,6 +1010,46 @@ export class QRGenerator {
   private static readonly DITHER_PATCH_CACHE_TTL_MS = 5 * 60 * 1000;
   private static readonly OVERLAY_COMPLEXITY_CACHE_MAX_ENTRIES = 96;
   private static readonly OVERLAY_COMPLEXITY_CACHE_TTL_MS = 2 * 60 * 1000;
+
+  private readOverlayComplexityCache(key: string): number | null {
+    const entry = this._overlayComplexityCache.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.updatedAt > QRGenerator.OVERLAY_COMPLEXITY_CACHE_TTL_MS) {
+      this._overlayComplexityCache.delete(key);
+      return null;
+    }
+    return entry.complexity;
+  }
+
+  private writeOverlayComplexityCache(key: string, complexity: number): void {
+    this._overlayComplexityCache.set(key, { complexity, updatedAt: Date.now() });
+    if (this._overlayComplexityCache.size <= QRGenerator.OVERLAY_COMPLEXITY_CACHE_MAX_ENTRIES) {
+      return;
+    }
+    let oldestKey: string | null = null;
+    let oldestAt = Number.POSITIVE_INFINITY;
+    for (const [k, v] of this._overlayComplexityCache.entries()) {
+      if (v.updatedAt < oldestAt) {
+        oldestAt = v.updatedAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey) this._overlayComplexityCache.delete(oldestKey);
+  }
+
+  private async resolveOverlayComplexity(
+    pool: CanvasPool,
+    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    isAnimatedFrame: boolean,
+    overlaySignature: string
+  ): Promise<number> {
+    const cacheKey = `${isAnimatedFrame ? 'anim' : 'static'}:${overlaySignature}`;
+    const cached = this.readOverlayComplexityCache(cacheKey);
+    if (cached !== null) return cached;
+    const complexity = await computeOverlayComplexity(pool, overlayCanvas, 48);
+    this.writeOverlayComplexityCache(cacheKey, complexity);
+    return complexity;
+  }
 
   /**
    * Create a QR generator instance
@@ -1110,100 +1171,10 @@ export class QRGenerator {
     return { qr: qr as QRCodeInstance, moduleCount };
   }
 
-  /**
-   * Draw finder and alignment patterns, returning a flat skip mask.
-   * The Uint8Array is indexed by (row * moduleCount + col); non-zero = already drawn.
-   */
-  private drawStructuralPatterns(
-    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-    config: QRGeneratorConfig,
-    moduleCount: number,
-    moduleSize: number,
-    margin: number,
-    overlayData: unknown,
-    version: number
-  ): Uint8Array {
-    const skipMask = new Uint8Array(moduleCount * moduleCount);
-
-    // Only draw finder patterns separately if preserveFinders is true OR there's no overlay
-    const shouldDrawFindersFirst = config.preserveFinders !== false || !overlayData;
-
-    const finderPositions = [
-      { row: 0, col: 0 },
-      { row: 0, col: moduleCount - 7 },
-      { row: moduleCount - 7, col: 0 },
-    ];
-
-    if (shouldDrawFindersFirst) {
-      for (const pos of finderPositions) {
-        const x = (pos.col + margin) * moduleSize;
-        const y = (pos.row + margin) * moduleSize;
-        drawFinderPatternComplete(ctx as CanvasRenderingContext2D, x, y, moduleSize, config);
-
-        // Mark all modules in this finder pattern as drawn
-        for (let r = pos.row; r < pos.row + 7; r++) {
-          for (let c = pos.col; c < pos.col + 7; c++) {
-            skipMask[r * moduleCount + c] = 1;
-          }
-        }
-      }
-    }
-
-    // Draw alignment patterns (for version 2+)
-    const shouldDrawAlignmentFirst = config.preserveAlignment !== false || !overlayData;
-    const alignmentStyle = config.alignmentStyle || 'match_finder';
-
-    if (version >= 2 && shouldDrawAlignmentFirst) {
-      const alignPositions = getAlignmentPositionsCached(version, moduleCount);
-      for (const pos of alignPositions) {
-        const centerX = (pos.col + margin) * moduleSize + moduleSize / 2;
-        const centerY = (pos.row + margin) * moduleSize + moduleSize / 2;
-        drawAlignmentPattern(
-          ctx as CanvasRenderingContext2D,
-          centerX,
-          centerY,
-          moduleSize,
-          alignmentStyle,
-          config
-        );
-
-        // Mark all modules in this alignment pattern as drawn
-        for (let r = pos.row - 2; r <= pos.row + 2; r++) {
-          for (let c = pos.col - 2; c <= pos.col + 2; c++) {
-            skipMask[r * moduleCount + c] = 1;
-          }
-        }
-      }
-    }
-
-    return skipMask;
-  }
-
-  async generate(
-    config: QRGeneratorConfig,
-    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = null
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
-    if (!this.qrcode) {
-      await this.loadLibrary();
-    }
-
-    // Get encoding mode early (needed for version calculation)
-    let encodingMode = config.encodingMode || 'auto';
-    const content = config.content || '';
-
-    // Use getCompatibleMode which handles both auto-detection AND validation
-    encodingMode = getCompatibleMode(content, encodingMode);
-
-    // Auto-detect best version if set to 0
-    let typeNumber = config.typeNumber;
-    if (typeNumber === 0) {
-      typeNumber = calculateOptimalVersion(
-        config.content,
-        config.errorCorrection as 'L' | 'M' | 'Q' | 'H'
-      );
-    }
-
-    // Apply geometric transforms if needed
+  private async preprocessOverlayCanvas(
+    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    config: QRGeneratorConfig
+  ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
     let processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = overlayCanvas;
     if (overlayCanvas && hasGeometricTransforms(config)) {
       processedOverlayCanvas = await applyGeometricTransforms(
@@ -1213,9 +1184,6 @@ export class QRGenerator {
       );
     }
 
-    // Apply overlay preprocessing (brightness/contrast/gamma/etc) after geometry.
-    // This must run BEFORE we sample overlay pixels for scaled/dithered/subpixel modes.
-    // ALL overlay modes (including center) apply the full set of visual effects.
     const needsPreprocessing = hasPreprocessingOptions(config);
     log.trace('Preprocessing check', {
       hasOverlay: !!processedOverlayCanvas,
@@ -1259,6 +1227,141 @@ export class QRGenerator {
       log.trace('Skipping preprocessing - no filters to apply');
     }
 
+    return processedOverlayCanvas;
+  }
+
+  private buildEffectiveConfig(
+    config: QRGeneratorConfig,
+    typeNumber: number,
+    processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null
+  ): QRGeneratorConfig {
+    const overlayModeWithDefault =
+      processedOverlayCanvas && !config.overlayMode ? 'dithered' : config.overlayMode;
+    const blendPreservationMode: 'overlay' | 'dither' =
+      config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
+
+    return {
+      ...config,
+      typeNumber,
+      overlayMode: overlayModeWithDefault,
+      blendPreservationMode,
+    };
+  }
+
+  private drawFinderPatternsToMask(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    config: QRGeneratorConfig,
+    moduleCount: number,
+    moduleSize: number,
+    margin: number,
+    skipMask: Uint8Array
+  ): void {
+    const finderPositions = [
+      { row: 0, col: 0 },
+      { row: 0, col: moduleCount - 7 },
+      { row: moduleCount - 7, col: 0 },
+    ];
+    for (const pos of finderPositions) {
+      const x = (pos.col + margin) * moduleSize;
+      const y = (pos.row + margin) * moduleSize;
+      drawFinderPatternComplete(ctx as CanvasRenderingContext2D, x, y, moduleSize, config);
+      for (let r = pos.row; r < pos.row + 7; r++) {
+        for (let c = pos.col; c < pos.col + 7; c++) {
+          skipMask[r * moduleCount + c] = 1;
+        }
+      }
+    }
+  }
+
+  private drawAlignmentPatternsToMask(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    config: QRGeneratorConfig,
+    moduleCount: number,
+    moduleSize: number,
+    margin: number,
+    version: number,
+    skipMask: Uint8Array
+  ): void {
+    const alignmentStyle = config.alignmentStyle || 'match_finder';
+    const alignPositions = getAlignmentPositionsCached(version, moduleCount);
+    for (const pos of alignPositions) {
+      const centerX = (pos.col + margin) * moduleSize + moduleSize / 2;
+      const centerY = (pos.row + margin) * moduleSize + moduleSize / 2;
+      drawAlignmentPattern(
+        ctx as CanvasRenderingContext2D,
+        centerX,
+        centerY,
+        moduleSize,
+        alignmentStyle,
+        config
+      );
+      for (let r = pos.row - 2; r <= pos.row + 2; r++) {
+        for (let c = pos.col - 2; c <= pos.col + 2; c++) {
+          skipMask[r * moduleCount + c] = 1;
+        }
+      }
+    }
+  }
+
+  private drawStructuralPatterns(
+    ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+    config: QRGeneratorConfig,
+    moduleCount: number,
+    moduleSize: number,
+    margin: number,
+    overlayData: unknown,
+    version: number
+  ): Uint8Array {
+    const skipMask = new Uint8Array(moduleCount * moduleCount);
+
+    const shouldDrawFindersFirst = config.preserveFinders !== false || !overlayData;
+    if (shouldDrawFindersFirst) {
+      this.drawFinderPatternsToMask(ctx, config, moduleCount, moduleSize, margin, skipMask);
+    }
+
+    const shouldDrawAlignmentFirst = config.preserveAlignment !== false || !overlayData;
+    if (version >= 2 && shouldDrawAlignmentFirst) {
+      this.drawAlignmentPatternsToMask(
+        ctx,
+        config,
+        moduleCount,
+        moduleSize,
+        margin,
+        version,
+        skipMask
+      );
+    }
+
+    return skipMask;
+  }
+
+  async generate(
+    config: QRGeneratorConfig,
+    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = null
+  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    if (!this.qrcode) {
+      await this.loadLibrary();
+    }
+
+    // Get encoding mode early (needed for version calculation)
+    let encodingMode = config.encodingMode || 'auto';
+    const content = config.content || '';
+
+    // Use getCompatibleMode which handles both auto-detection AND validation
+    encodingMode = getCompatibleMode(content, encodingMode);
+
+    // Auto-detect best version if set to 0
+    let typeNumber = config.typeNumber;
+    if (typeNumber === 0) {
+      typeNumber = calculateOptimalVersion(
+        config.content,
+        config.errorCorrection as 'L' | 'M' | 'Q' | 'H'
+      );
+    }
+
+    // Apply geometric transforms and preprocessing to the overlay
+    const processedOverlayCanvas = await this.preprocessOverlayCanvas(overlayCanvas, config);
+
     // =======================================================================
     // STAGE 1: QR MATRIX GENERATION
     // =======================================================================
@@ -1284,35 +1387,17 @@ export class QRGenerator {
       });
     }
 
-    // =======================================================================
-    // FIX: Ensure overlayMode has a default when overlay canvas is provided but mode is undefined
-    // This can happen due to debounce timing - overlay canvas is passed before config updates
-    // Default to 'dithered' to match the store default in qr-store.ts
-    // IMPORTANT: This must happen BEFORE the scale factor check!
-    // =======================================================================
-    const overlayModeWithDefault =
-      processedOverlayCanvas && !config.overlayMode ? 'dithered' : config.overlayMode;
-    const blendPreservationMode: 'overlay' | 'dither' =
-      config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
-
-    const effectiveOverlayMode = overlayModeWithDefault;
-
-    const effectiveConfig: QRGeneratorConfig = {
-      ...config,
-      typeNumber,
-      overlayMode: effectiveOverlayMode,
-      blendPreservationMode,
-    };
+    const effectiveConfig = this.buildEffectiveConfig(config, typeNumber, processedOverlayCanvas);
 
     // =======================================================================
     // UNIFIED SCALED RENDERING (dithered, blue-noise, subpixel modes)
     // =======================================================================
-    const scale = getScaleFactor(effectiveOverlayMode, effectiveConfig);
+    const scale = getScaleFactor(effectiveConfig.overlayMode, effectiveConfig);
 
     log.debug('Overlay mode resolution', {
       hasOverlay: !!processedOverlayCanvas,
       configOverlayMode: config.overlayMode,
-      effectiveOverlayMode,
+      effectiveOverlayMode: effectiveConfig.overlayMode,
       scale,
       willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
       colorMode: config.colorMode,
@@ -1543,47 +1628,7 @@ export class QRGenerator {
       typeof effectiveConfig.frameIndex === 'number' && Number.isFinite(effectiveConfig.frameIndex);
     const isFirstAnimatedFrame = isAnimatedFrame && effectiveConfig.frameIndex === 0;
     const isAnimatedPreviewFrame = isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame;
-    const overlayFamilyKey = processedOverlayCanvas
-      ? [
-          processedOverlayCanvas.width,
-          processedOverlayCanvas.height,
-          effectiveConfig.overlayMode ?? 'none',
-          effectiveConfig.colorMode ?? 'color',
-          Math.round(effectiveConfig.overlayIntensity ?? 100),
-          Math.round(effectiveConfig.ditherStrength ?? 50),
-          Math.round(effectiveConfig.finderDitherStrength ?? 65),
-          effectiveConfig.ditherKind ?? 'none',
-          effectiveConfig.ditherMode ?? 'none',
-          Math.round(effectiveConfig.renderScalePerModule ?? 18),
-          effectiveConfig.blendPreservations === true ? 1 : 0,
-          effectiveConfig.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
-        ].join('|')
-      : 'overlay:none';
-    const readOverlayComplexityCache = (key: string): number | null => {
-      const entry = this._overlayComplexityCache.get(key);
-      if (!entry) return null;
-      if (Date.now() - entry.updatedAt > QRGenerator.OVERLAY_COMPLEXITY_CACHE_TTL_MS) {
-        this._overlayComplexityCache.delete(key);
-        return null;
-      }
-      return entry.complexity;
-    };
-    const writeOverlayComplexityCache = (key: string, complexity: number): void => {
-      this._overlayComplexityCache.set(key, { complexity, updatedAt: Date.now() });
-      if (this._overlayComplexityCache.size <= QRGenerator.OVERLAY_COMPLEXITY_CACHE_MAX_ENTRIES) {
-        return;
-      }
-      let oldestKey: string | null = null;
-      let oldestAt = Number.POSITIVE_INFINITY;
-      for (const [k, v] of this._overlayComplexityCache.entries()) {
-        if (v.updatedAt < oldestAt) {
-          oldestAt = v.updatedAt;
-          oldestKey = k;
-        }
-      }
-      if (oldestKey) this._overlayComplexityCache.delete(oldestKey);
-    };
-    const analysisSampleSize = 48;
+    const overlayFamilyKey = buildOverlayFamilyKey(processedOverlayCanvas, effectiveConfig);
     const overlaySignature = processedOverlayCanvas
       ? isAnimatedFrame
         ? `anim-family:${overlayFamilyKey}`
@@ -1592,14 +1637,12 @@ export class QRGenerator {
             this.createCanvas.bind(this)
           )}`
       : 'overlay:none';
-    const overlayComplexityCacheKey = `${isAnimatedFrame ? 'anim' : 'static'}:${overlaySignature}`;
-    const cachedOverlayComplexity = readOverlayComplexityCache(overlayComplexityCacheKey);
-    const overlayComplexity =
-      cachedOverlayComplexity ??
-      (await computeOverlayComplexity(pool, processedOverlayCanvas, analysisSampleSize));
-    if (cachedOverlayComplexity === null) {
-      writeOverlayComplexityCache(overlayComplexityCacheKey, overlayComplexity);
-    }
+    const overlayComplexity = await this.resolveOverlayComplexity(
+      pool,
+      processedOverlayCanvas,
+      isAnimatedFrame,
+      overlaySignature
+    );
     const sgctx: ScanGateCtx = {
       effectiveConfig,
       overlayComplexity,
