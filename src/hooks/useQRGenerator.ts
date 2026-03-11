@@ -2711,11 +2711,10 @@ function createArtworkFrameState(debouncedConfig: Record<string, unknown>): Artw
   ): ImageData => {
     const cached = artworkFrameImageDataCache.get(sourceCanvas);
     if (
-      cached &&
-      cached.frameIdx === frameIdx &&
-      cached.width === sourceCanvas.width &&
-      cached.height === sourceCanvas.height &&
-      cached.imageData.data.byteLength > 0
+      cached?.frameIdx === frameIdx &&
+      cached?.width === sourceCanvas.width &&
+      cached?.height === sourceCanvas.height &&
+      cached?.imageData.data.byteLength > 0
     ) {
       return cached.imageData;
     }
@@ -3832,7 +3831,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   const updateGenerationProgress = useCallback((stage: string, percent: number) => {
     const normalizedPercent = Math.max(0, Math.min(100, Math.round(percent)));
     setGenerationProgress((prev) => {
-      if (prev && prev.stage === stage && prev.percent === normalizedPercent) {
+      if (prev?.stage === stage && prev?.percent === normalizedPercent) {
         return prev;
       }
       return { stage, percent: normalizedPercent };

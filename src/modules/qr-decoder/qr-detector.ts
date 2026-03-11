@@ -297,7 +297,7 @@ export class Detector {
 
     let state = 0;
     const xLimit = toX + xstep;
-    for (let x = fromX, y = fromY; x !== xLimit; x += xstep) {
+    for (let x = fromX, y = fromY; xstep > 0 ? x < xLimit : x > xLimit; x += xstep) {
       const realX = steep ? y : x;
       const realY = steep ? x : y;
 

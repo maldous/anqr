@@ -43,7 +43,7 @@ function getElementToken(el: Element): string {
 }
 
 function ensureElementTestId(el: Element): void {
-  if (el.hasAttribute('data-testid')) return;
+  if ((el as HTMLElement).dataset?.testid !== undefined) return;
 
   const keyAttr = 'data-auto-testid-key';
   let sourceKey = el.getAttribute(keyAttr);
@@ -56,7 +56,7 @@ function ensureElementTestId(el: Element): void {
   const token = getElementToken(el);
   const base = `auto-${tag}-${token || 'control'}`;
   const resolved = DynamicTestId.resolve(base, sourceKey);
-  el.setAttribute('data-testid', resolved);
+  (el as HTMLElement).dataset.testid = resolved;
 }
 
 function assignInTree(root: ParentNode): void {

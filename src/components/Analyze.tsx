@@ -579,8 +579,8 @@ function HexDumpView({ bytes, maxRows = 16 }: Readonly<HexDumpViewProps>) {
             <span>ASCII</span>
           </div>
           {/* Data rows */}
-          {hexDumpMobile.map((row, i) => (
-            <div key={i} className="grid grid-cols-[4ch_1fr_1fr] gap-2">
+          {hexDumpMobile.map((row) => (
+            <div key={row.offset} className="grid grid-cols-[4ch_1fr_1fr] gap-2">
               <span className="text-blue-500 dark:text-blue-400">{row.offset}</span>
               <span className="text-foreground">{row.hex}</span>
               <span className="text-green-600 dark:text-green-400">{row.ascii}</span>
@@ -598,8 +598,8 @@ function HexDumpView({ bytes, maxRows = 16 }: Readonly<HexDumpViewProps>) {
             <span>ASCII</span>
           </div>
           {/* Data rows */}
-          {hexDumpDesktop.map((row, i) => (
-            <div key={i} className="grid grid-cols-[4ch_1fr_1fr] gap-3">
+          {hexDumpDesktop.map((row) => (
+            <div key={row.offset} className="grid grid-cols-[4ch_1fr_1fr] gap-3">
               <span className="text-blue-500 dark:text-blue-400">{row.offset}</span>
               <span className="text-foreground">{row.hex}</span>
               <span className="text-green-600 dark:text-green-400">{row.ascii}</span>
@@ -2721,8 +2721,8 @@ function AnalyzeWarnings({ warnings }: Readonly<AnalyzeWarningsProps>) {
     <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 shadow-sm">
       <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
       <div className="text-sm text-amber-700 dark:text-amber-400">
-        {warnings.map((warning, i) => (
-          <p key={i}>• {warning}</p>
+        {warnings.map((warning) => (
+          <p key={warning}>• {warning}</p>
         ))}
       </div>
     </div>
@@ -3748,16 +3748,14 @@ function AnalyzeResultDetails({
                   value={result.contentType.label}
                   icon={<Fingerprint className="w-3.5 h-3.5" />}
                 />
-                {buildContentTypeDetails(result.contentType, result.payload || '').map(
-                  (detail, i) => (
-                    <DetailRow
-                      key={i}
-                      label={detail.label}
-                      value={detail.value}
-                      icon={detail.icon}
-                    />
-                  )
-                )}
+                {buildContentTypeDetails(result.contentType, result.payload || '').map((detail) => (
+                  <DetailRow
+                    key={detail.label}
+                    label={detail.label}
+                    value={detail.value}
+                    icon={detail.icon}
+                  />
+                ))}
               </div>
             </CollapsibleSection>
           )}

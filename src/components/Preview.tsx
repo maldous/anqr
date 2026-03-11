@@ -342,7 +342,6 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                       if (contrastAnalysis.meetsAA) return 'WCAG AA';
                       return t('safety.poor');
                     })()}`}
-                    role="status"
                     aria-label={`Contrast ratio: ${contrastAnalysis.ratio.toFixed(1)} to 1, ${getContrastLabel(contrastAnalysis.ratio)}`}
                   >
                     <Eye className="h-3 w-3" aria-hidden="true" />
@@ -412,7 +411,6 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                   <div
                     className="absolute -bottom-2 -right-2 z-20 bg-amber-500/80 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm animate-in fade-in duration-150"
                     title={t('preview.fastPreview', 'Fast Preview')}
-                    role="status"
                     aria-label={t('preview.fastPreview', 'Fast Preview')}
                   >
                     <Zap className="h-2.5 w-2.5" aria-hidden="true" />
@@ -424,7 +422,6 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                   <div
                     className="absolute -top-2 -right-2 z-20 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"
                     title={t('preview.simulationActive')}
-                    role="status"
                     aria-label={t('preview.simulationActive', 'Simulation mode active')}
                   >
                     <Sparkles className="h-3 w-3" aria-hidden="true" />

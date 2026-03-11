@@ -505,12 +505,10 @@ export function qrcode(
   };
 
   const _this: QRCodeInstance = {
-    addData: (data: string, mode?: string): void => {
-      const modeVal = mode || 'Byte';
-
+    addData: (data: string, mode = 'Byte'): void => {
       let newData: QRDataSegment | null = null;
 
-      switch (modeVal) {
+      switch (mode) {
         case 'Numeric':
           newData = qrNumber(data);
           break;
@@ -524,7 +522,7 @@ export function qrcode(
           newData = qrKanji(data);
           break;
         default:
-          throw new Error(`mode:${modeVal}`);
+          throw new Error(`mode:${mode}`);
       }
 
       _dataList.push(newData);
@@ -755,13 +753,12 @@ export function qrcode(
       return ascii.substring(0, ascii.length - 1);
     },
 
-    renderTo2dContext: (context: CanvasRenderingContext2D, cellSize?: number): void => {
-      const cellSizeVal = cellSize || 2;
+    renderTo2dContext: (context: CanvasRenderingContext2D, cellSize = 2): void => {
       const length = _this.getModuleCount();
       for (let row = 0; row < length; row++) {
         for (let col = 0; col < length; col++) {
           context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
-          context.fillRect(col * cellSizeVal, row * cellSizeVal, cellSizeVal, cellSizeVal);
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
         }
       }
     },

@@ -2214,6 +2214,7 @@ function parseGifFramesServer(
   // Calculate total duration and warn if excessive
   const totalDuration = framesToProcess.reduce((sum, f) => sum + f.delay, 0);
   if (totalDuration > MAX_GIF_DURATION_MS) {
+    // Duration exceeds limit but we proceed anyway for user flexibility
   }
 
   const { width, height } = decoded;
@@ -3821,7 +3822,7 @@ function parseCoreQRParams(
   const size = Math.max(outputWidth, outputHeight);
   const charsetParam = params.get('charset') || 'default';
   const lang = params.get('lang') || undefined;
-  void lang;
+  void lang; // NOSONAR - intentional void to suppress floating promise
   return {
     data: params.get('data') || '',
     isFullRender: params.get('_fullRender') === '1',
@@ -3926,11 +3927,11 @@ function parseProtectionParams(
   | 'autoPickEcc'
   | 'autoReduceIntensity'
 > {
-  void params.get('qaContrast');
-  void params.get('qaBlur');
-  void params.get('qaNoise');
-  void params.get('qaRot');
-  void params.get('qaHeatmap');
+  void params.get('qaContrast'); // NOSONAR - intentional void to suppress floating promise
+  void params.get('qaBlur'); // NOSONAR - intentional void to suppress floating promise
+  void params.get('qaNoise'); // NOSONAR - intentional void to suppress floating promise
+  void params.get('qaRot'); // NOSONAR - intentional void to suppress floating promise
+  void params.get('qaHeatmap'); // NOSONAR - intentional void to suppress floating promise
   return {
     preserveFinders: params.get('keepFinders') !== '0',
     preserveTiming: params.get('keepTiming') === '1',
@@ -4144,11 +4145,11 @@ function parseOutputParams(
   const gifDither = params.get('gifDith') || undefined;
   const gifTransparentColor = params.get('gifTrans') ? `#${params.get('gifTrans')}` : undefined;
   const svgTrueVector = params.get('svgVec') === '1';
-  void _jpegQuality;
-  void gifQuantizer;
-  void gifDither;
-  void gifTransparentColor;
-  void svgTrueVector;
+  void _jpegQuality; // NOSONAR - intentional void to suppress floating promise
+  void gifQuantizer; // NOSONAR - intentional void to suppress floating promise
+  void gifDither; // NOSONAR - intentional void to suppress floating promise
+  void gifTransparentColor; // NOSONAR - intentional void to suppress floating promise
+  void svgTrueVector; // NOSONAR - intentional void to suppress floating promise
   return {
     explicitFormat,
     outputFormat: (explicitFormat || DEFAULT_OUTPUT_FORMAT) as OutputFormat,

@@ -44,14 +44,7 @@ export function createGradientFill(
       break;
     }
 
-    case 'radial': {
-      const centerX = size / 2;
-      const centerY = size / 2;
-      const radius = size / 2;
-      gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-      break;
-    }
-
+    case 'radial':
     case 'conic': {
       // Canvas doesn't support conic gradients natively, fall back to radial
       const centerX = size / 2;

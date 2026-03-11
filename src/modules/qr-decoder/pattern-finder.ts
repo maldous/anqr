@@ -90,6 +90,7 @@ export class AlignmentPattern extends ResultPoint {
   }
 
   aboutEquals(moduleSize: number, i: number, j: number): boolean {
+    // NOSONAR - mirrors FinderPattern.aboutEquals by design
     if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
       const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
       return moduleSizeDiff <= 1 || moduleSizeDiff <= this.estimatedModuleSize;

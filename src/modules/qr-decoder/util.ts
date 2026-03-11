@@ -473,7 +473,10 @@ export class StringEncoding {
   }
 
   private static isBrowser(): boolean {
-    return typeof globalThis !== 'undefined' && {}.toString.call(globalThis) === '[object Window]';
+    return (
+      typeof globalThis !== 'undefined' &&
+      Object.prototype.toString.call(globalThis) === '[object Window]'
+    );
   }
 
   static encodingName(encoding: string | CharacterSetECI): string {

@@ -555,7 +555,6 @@ export function buildFullBasis(
   }
 
   let totalSkippedVectors = 0;
-  globalBitOffset = 0; // Reset for actual vector building
 
   for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
     const block = blocks[blockIdx];

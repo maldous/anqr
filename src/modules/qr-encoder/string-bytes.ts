@@ -8,14 +8,7 @@ import { createLogger } from '../../lib/logger';
 const _log = createLogger('ENCODER');
 
 // Default stringToBytes function - can be replaced for different encodings
-let _stringToBytes = (s: string): number[] => {
-  const bytes: number[] = [];
-  for (let i = 0; i < s.length; i += 1) {
-    const c = s.codePointAt(i)!;
-    bytes.push(c & 0xff);
-  }
-  return bytes;
-};
+let _stringToBytes = stringToBytes;
 
 /**
  * Get current stringToBytes function

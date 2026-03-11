@@ -45,7 +45,7 @@ function baseFromProps(props: TestIdProps, fallbackPrefix: string, reactId: stri
   if (typeof props.placeholder === 'string' && props.placeholder.trim().length > 0) {
     return `${fallbackPrefix}-${normalizeToken(props.placeholder)}`;
   }
-  return `${fallbackPrefix}-${normalizeToken(reactId.replaceAll(/:/g, '-'))}`;
+  return `${fallbackPrefix}-${normalizeToken(reactId.replaceAll(':', '-'))}`;
 }
 
 function allocateUniqueId(base: string, sourceKey: string): string {

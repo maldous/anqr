@@ -274,7 +274,7 @@ async function acquireSharedReadbackCanvas(
     return null;
   }
 
-  if (!existing || !existing.inUse) {
+  if (!existing?.inUse) {
     const entry: SharedReadbackEntry = {
       canvas,
       ctx,

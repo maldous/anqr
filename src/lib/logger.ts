@@ -652,8 +652,7 @@ const LOG_LEVEL_INDEX: Record<RuntimeLogLevel, number> = {
 
 const captureMinLevelRaw =
   process === undefined ? undefined : process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase();
-const captureWhenConsoleEnabled =
-  process !== undefined && process.env.ANQR_LOG_CAPTURE_CONSOLE === '1';
+const captureWhenConsoleEnabled = process?.env?.ANQR_LOG_CAPTURE_CONSOLE === '1';
 const captureMinLevel = (() => {
   switch (captureMinLevelRaw) {
     case 'trace':
@@ -666,7 +665,7 @@ const captureMinLevel = (() => {
       return 'warn' as RuntimeLogLevel;
   }
 })();
-const forceStructuredCaptureAll = process !== undefined && process.env.ANQR_LOG_CAPTURE_ALL === '1';
+const forceStructuredCaptureAll = process?.env?.ANQR_LOG_CAPTURE_ALL === '1';
 
 function isLevelEnabledForLogger(
   logger: loglevel.Logger,
