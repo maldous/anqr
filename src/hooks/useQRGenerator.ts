@@ -3635,6 +3635,112 @@ declare global {
     | undefined;
 }
 
+function loadGifOverlayFile(
+  file: File,
+  setGifCompositor: (c: GifCompositor | null) => void,
+  setGifFrames: (f: AnimationFrame[]) => void,
+  setCurrentFrame: (n: number) => void,
+  setRawOverlayCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void,
+  setIsLoadingOverlay: (v: boolean) => void
+): void {
+  file
+    .arrayBuffer()
+    .then((arrayBuffer) => {
+      try {
+        const compositor = createGifCompositor(arrayBuffer);
+        setGifCompositor(compositor);
+        setGifFrames([]);
+        setCurrentFrame(0);
+        compositor.reset();
+        compositor.apply(0);
+        setRawOverlayCanvas(compositor.canvas);
+      } catch (err) {
+        log.error('Failed to create GIF compositor', { error: err });
+        setGifCompositor(null);
+        loadFileAsCanvas(file)
+          .then((canvas) => {
+            setRawOverlayCanvas(canvas);
+            setGifFrames([{ canvas, delay: 100, disposalType: 0 }]);
+            setIsLoadingOverlay(false);
+          })
+          .catch(() => {
+            setRawOverlayCanvas(null);
+            setIsLoadingOverlay(false);
+          });
+      }
+    })
+    .catch((err) => {
+      log.error('Failed to read GIF file', { error: err });
+      setRawOverlayCanvas(null);
+      setIsLoadingOverlay(false);
+    });
+}
+
+function loadAnimatedWebPOverlayFile(
+  file: File,
+  gifDisposalHandling: 'respect' | 'simplify' | undefined,
+  setGifFrames: (f: AnimationFrame[]) => void,
+  setGifCompositor: (c: GifCompositor | null) => void,
+  setCurrentFrame: (n: number) => void,
+  setRawOverlayCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void,
+  setIsLoadingOverlay: (v: boolean) => void
+): void {
+  file
+    .arrayBuffer()
+    .then(async (arrayBuffer) => {
+      try {
+        const frames = await parseAnimatedImage(arrayBuffer, gifDisposalHandling);
+        setGifFrames(frames);
+        setGifCompositor(null);
+        setCurrentFrame(0);
+        if (frames.length > 0) {
+          setRawOverlayCanvas(frames[0].canvas);
+        }
+        if (frames.length <= 1) {
+          setIsLoadingOverlay(false);
+        }
+      } catch (err) {
+        log.error('Failed to parse animated WebP', { error: err });
+        loadFileAsCanvas(file)
+          .then((canvas) => {
+            setRawOverlayCanvas(canvas);
+            setGifFrames([{ canvas, delay: 100, disposalType: 0 }]);
+            setIsLoadingOverlay(false);
+          })
+          .catch(() => {
+            setRawOverlayCanvas(null);
+            setIsLoadingOverlay(false);
+          });
+      }
+    })
+    .catch((err) => {
+      log.error('Failed to read WebP file', { error: err });
+      setRawOverlayCanvas(null);
+      setIsLoadingOverlay(false);
+    });
+}
+
+function loadStaticOverlayFile(
+  file: File,
+  setGifFrames: (f: AnimationFrame[]) => void,
+  setGifCompositor: (c: GifCompositor | null) => void,
+  setRawOverlayCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void,
+  setIsLoadingOverlay: (v: boolean) => void
+): void {
+  setGifFrames([]);
+  setGifCompositor(null);
+  loadFileAsCanvas(file)
+    .then((canvas) => {
+      setRawOverlayCanvas(canvas);
+      setIsLoadingOverlay(false);
+    })
+    .catch((err) => {
+      log.error('Failed to load overlay', { error: err });
+      setRawOverlayCanvas(null);
+      setIsLoadingOverlay(false);
+    });
+}
+
 function useQRGenerator(): UseQRGeneratorResult {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -4510,98 +4616,32 @@ function useQRGenerator(): UseQRGeneratorResult {
       overlay.file.type === 'image/webp' || overlay.file.name.toLowerCase().endsWith('.webp');
 
     if (isGif) {
-      // Use GIF compositor for optimal patch-only decoding
-      // Use modern Blob#arrayBuffer() API instead of FileReader
-      overlay.file
-        .arrayBuffer()
-        .then((arrayBuffer) => {
-          try {
-            const compositor = createGifCompositor(arrayBuffer);
-            setGifCompositor(compositor);
-            setGifFrames([]); // Clear legacy frames
-            setCurrentFrame(0);
-
-            // Apply first frame to get initial canvas
-            compositor.reset();
-            compositor.apply(0);
-            setRawOverlayCanvas(compositor.canvas);
-            // Note: Don't clear isLoadingOverlay here - wait for animation cache to be ready
-          } catch (err) {
-            log.error('Failed to create GIF compositor', { error: err });
-            setGifCompositor(null);
-            // Fall back to static image loading
-            const file = overlay.file;
-            if (!file) return;
-            loadFileAsCanvas(file)
-              .then((canvas) => {
-                setRawOverlayCanvas(canvas);
-                setGifFrames([{ canvas, delay: 100, disposalType: 0 }]);
-                setIsLoadingOverlay(false);
-              })
-              .catch(() => {
-                setRawOverlayCanvas(null);
-                setIsLoadingOverlay(false);
-              });
-          }
-        })
-        .catch((err) => {
-          log.error('Failed to read GIF file', { error: err });
-          setRawOverlayCanvas(null);
-          setIsLoadingOverlay(false);
-        });
+      loadGifOverlayFile(
+        overlay.file,
+        setGifCompositor,
+        setGifFrames,
+        setCurrentFrame,
+        setRawOverlayCanvas,
+        setIsLoadingOverlay
+      );
     } else if (isAnimatedWebP) {
-      // Use legacy parseAnimatedImage for WebP (compositor only supports GIF)
-      // Use modern Blob#arrayBuffer() API instead of FileReader
-      overlay.file
-        .arrayBuffer()
-        .then(async (arrayBuffer) => {
-          try {
-            const frames = await parseAnimatedImage(arrayBuffer, overlay.gifDisposalHandling);
-            setGifFrames(frames);
-            setGifCompositor(null);
-            setCurrentFrame(0);
-            if (frames.length > 0) {
-              setRawOverlayCanvas(frames[0].canvas);
-            }
-            // Note: Don't clear isLoadingOverlay here for multi-frame - wait for animation cache
-            if (frames.length <= 1) {
-              setIsLoadingOverlay(false);
-            }
-          } catch (err) {
-            log.error('Failed to parse animated WebP', { error: err });
-            const file = overlay.file;
-            if (!file) return;
-            loadFileAsCanvas(file)
-              .then((canvas) => {
-                setRawOverlayCanvas(canvas);
-                setGifFrames([{ canvas, delay: 100, disposalType: 0 }]);
-                setIsLoadingOverlay(false);
-              })
-              .catch(() => {
-                setRawOverlayCanvas(null);
-                setIsLoadingOverlay(false);
-              });
-          }
-        })
-        .catch((err) => {
-          log.error('Failed to read WebP file', { error: err });
-          setRawOverlayCanvas(null);
-          setIsLoadingOverlay(false);
-        });
+      loadAnimatedWebPOverlayFile(
+        overlay.file,
+        overlay.gifDisposalHandling,
+        setGifFrames,
+        setGifCompositor,
+        setCurrentFrame,
+        setRawOverlayCanvas,
+        setIsLoadingOverlay
+      );
     } else {
-      // Static image (PNG, JPG, etc.)
-      setGifFrames([]);
-      setGifCompositor(null);
-      loadFileAsCanvas(overlay.file)
-        .then((canvas) => {
-          setRawOverlayCanvas(canvas);
-          setIsLoadingOverlay(false);
-        })
-        .catch((err) => {
-          log.error('Failed to load overlay', { error: err });
-          setRawOverlayCanvas(null);
-          setIsLoadingOverlay(false);
-        });
+      loadStaticOverlayFile(
+        overlay.file,
+        setGifFrames,
+        setGifCompositor,
+        setRawOverlayCanvas,
+        setIsLoadingOverlay
+      );
     }
   }, [overlay.file, overlay.gifDisposalHandling]);
 
