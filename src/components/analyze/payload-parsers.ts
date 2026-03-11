@@ -666,6 +666,58 @@ function formatRecurrenceRule(rrule: string): string {
   return text;
 }
 
+function processCalendarLine(
+  baseKey: string,
+  keyPart: string,
+  value: string,
+  line: string,
+  result: Record<string, string | boolean | null>
+): boolean {
+  switch (baseKey) {
+    case 'SUMMARY':
+      result.summary = value;
+      return false;
+    case 'DESCRIPTION':
+      result.description = value.replaceAll('\\n', '\n').replaceAll('\\,', ',');
+      return false;
+    case 'LOCATION':
+      result.location = value.replaceAll('\\,', ',');
+      return false;
+    case 'DTSTART': {
+      result.startDate = value;
+      result.startFormatted = formatICalDateTime(value.replaceAll('Z', ''));
+      result.isAllDay = value.length === 8;
+      const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
+      if (tzMatch) result.timezone = tzMatch[1];
+      return false;
+    }
+    case 'DTEND':
+      result.endDate = value;
+      result.endFormatted = formatICalDateTime(value.replaceAll('Z', ''));
+      return false;
+    case 'DURATION':
+      result.duration = value;
+      return false;
+    case 'ORGANIZER': {
+      const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
+      result.organizer = cnMatch ? cnMatch[1] : value.replaceAll('mailto:', '');
+      return false;
+    }
+    case 'ATTENDEE':
+      return true;
+    case 'RRULE':
+      result.recurrence = value;
+      result.recurrenceFormatted = formatRecurrenceRule(line);
+      return false;
+    case 'VALARM':
+    case 'TRIGGER':
+      if (value) result.alarm = value;
+      return false;
+    default:
+      return false;
+  }
+}
+
 export function parseCalendarPayload(payload: string): Record<string, string | boolean | null> {
   const result: Record<string, string | boolean | null> = {
     summary: null,
@@ -700,7 +752,6 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
   let i = 0;
   while (i < lines.length) {
     let line = lines[i];
-    // Handle line folding
     while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
       i++;
       line += lines[i].slice(1);
@@ -714,50 +765,8 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
     const value = line.slice(colonIdx + 1);
     const baseKey = keyPart.split(';')[0];
 
-    switch (baseKey) {
-      case 'SUMMARY':
-        result.summary = value;
-        break;
-      case 'DESCRIPTION':
-        result.description = value.replaceAll('\\n', '\n').replaceAll('\\,', ',');
-        break;
-      case 'LOCATION':
-        result.location = value.replaceAll('\\,', ',');
-        break;
-      case 'DTSTART': {
-        result.startDate = value;
-        result.startFormatted = formatICalDateTime(value.replaceAll('Z', ''));
-        result.isAllDay = value.length === 8;
-        const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
-        if (tzMatch) result.timezone = tzMatch[1];
-        break;
-      }
-      case 'DTEND': {
-        result.endDate = value;
-        result.endFormatted = formatICalDateTime(value.replaceAll('Z', ''));
-        break;
-      }
-      case 'DURATION':
-        result.duration = value;
-        break;
-      case 'ORGANIZER': {
-        const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
-        result.organizer = cnMatch ? cnMatch[1] : value.replaceAll('mailto:', '');
-        break;
-      }
-      case 'ATTENDEE':
-        attendeesCount++;
-        break;
-      case 'RRULE': {
-        result.recurrence = value;
-        result.recurrenceFormatted = formatRecurrenceRule(line);
-        break;
-      }
-      case 'VALARM':
-      case 'TRIGGER': {
-        if (value) result.alarm = value;
-        break;
-      }
+    if (processCalendarLine(baseKey, keyPart, value, line, result)) {
+      attendeesCount++;
     }
   }
 

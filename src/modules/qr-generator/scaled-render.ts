@@ -218,6 +218,41 @@ interface ShapeMaskCtx {
   releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
 }
 
+function isStructuralPatternModule(flags: number): boolean {
+  return (
+    isFinderRegionFlag(flags) ||
+    (flags & PATTERN_ALIGNMENT) !== 0 ||
+    (flags & PATTERN_TIMING) !== 0 ||
+    (flags & PATTERN_FORMAT) !== 0 ||
+    (flags & PATTERN_VERSION) !== 0 ||
+    (flags & PATTERN_FIXED_DARK) !== 0
+  );
+}
+
+function drawShapeMaskModule(
+  maskCtx: CanvasRenderingContext2D,
+  mx: number,
+  my: number,
+  effectiveModuleSize: number,
+  config: QRGeneratorConfig,
+  moduleStyleName: string,
+  cornerRadius: number,
+  dotRotation: number
+): void {
+  let gap = config.moduleGap ? (effectiveModuleSize * config.moduleGap) / 100 : 0;
+  const gapMode = config.gapMode || 'none';
+  if (gapMode === 'inset') gap = Math.max(gap, effectiveModuleSize * 0.1);
+  else if (gapMode === 'negative_space') gap = Math.max(gap, effectiveModuleSize * 0.2);
+  const adjustedSize = effectiveModuleSize - gap;
+  const offset = (effectiveModuleSize - adjustedSize) / 2;
+
+  maskCtx.fillStyle = 'white';
+  drawModule(maskCtx, mx + offset, my + offset, adjustedSize, moduleStyleName, {
+    cornerRadius,
+    rotation: dotRotation,
+  });
+}
+
 async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
   const {
     ctx,
@@ -252,39 +287,23 @@ async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
     for (let col = 0; col < moduleCount; col++) {
       const mx = marginPx + col * effectiveModuleSize;
       const my = marginPx + row * effectiveModuleSize;
-      const flags = getPatternFlags(row, col);
 
-      if (
-        isFinderRegionFlag(flags) ||
-        (flags & PATTERN_ALIGNMENT) !== 0 ||
-        (flags & PATTERN_TIMING) !== 0 ||
-        (flags & PATTERN_FORMAT) !== 0 ||
-        (flags & PATTERN_VERSION) !== 0 ||
-        (flags & PATTERN_FIXED_DARK) !== 0
-      ) {
+      if (isStructuralPatternModule(getPatternFlags(row, col)) || !qr.isDark(row, col)) {
         maskCtx.fillStyle = 'white';
         maskCtx.fillRect(mx, my, effectiveModuleSize, effectiveModuleSize);
         continue;
       }
 
-      if (!qr.isDark(row, col)) {
-        maskCtx.fillStyle = 'white';
-        maskCtx.fillRect(mx, my, effectiveModuleSize, effectiveModuleSize);
-        continue;
-      }
-
-      let gap = config.moduleGap ? (effectiveModuleSize * config.moduleGap) / 100 : 0;
-      const gapMode = config.gapMode || 'none';
-      if (gapMode === 'inset') gap = Math.max(gap, effectiveModuleSize * 0.1);
-      else if (gapMode === 'negative_space') gap = Math.max(gap, effectiveModuleSize * 0.2);
-      const adjustedSize = effectiveModuleSize - gap;
-      const offset = (effectiveModuleSize - adjustedSize) / 2;
-
-      maskCtx.fillStyle = 'white';
-      drawModule(maskCtx, mx + offset, my + offset, adjustedSize, moduleStyleName, {
+      drawShapeMaskModule(
+        maskCtx,
+        mx,
+        my,
+        effectiveModuleSize,
+        config,
+        moduleStyleName,
         cornerRadius,
-        rotation: dotRotation,
-      });
+        dotRotation
+      );
     }
   }
 
@@ -455,7 +474,54 @@ function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
   }
 }
 
-function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void {
+function resolveBinaryConfig(
+  config: QRGeneratorConfig,
+  forceBinary: boolean,
+  effectiveFgColor: string,
+  effectiveBgColor: string
+): QRGeneratorConfig {
+  if (!forceBinary) return config;
+  return {
+    ...config,
+    gradient: { type: 'none', stops: [] },
+    fgColor: effectiveFgColor,
+    bgColor: effectiveBgColor,
+  };
+}
+
+function drawPreservedFinderPatterns(spctx: StructuralPreservationCtx): void {
+  const {
+    ctx,
+    marginPx,
+    moduleCount,
+    effectiveModuleSize,
+    config,
+    forceBinaryFunctionPatterns,
+    effectiveFgColor,
+    effectiveBgColor,
+    overlayCanvas,
+  } = spctx;
+  if (forceBinaryFunctionPatterns || (config.preserveFinders === false && overlayCanvas)) return;
+
+  const resolvedConfig = resolveBinaryConfig(
+    config,
+    forceBinaryFunctionPatterns,
+    effectiveFgColor,
+    effectiveBgColor
+  );
+  const finderPositions = [
+    { row: 0, col: 0 },
+    { row: 0, col: moduleCount - 7 },
+    { row: moduleCount - 7, col: 0 },
+  ];
+  for (const pos of finderPositions) {
+    const x = marginPx + pos.col * effectiveModuleSize;
+    const y = marginPx + pos.row * effectiveModuleSize;
+    drawFinderPatternComplete(ctx, x, y, effectiveModuleSize, resolvedConfig);
+  }
+}
+
+function drawPreservedAlignmentPatterns(spctx: StructuralPreservationCtx): void {
   const {
     ctx,
     marginPx,
@@ -464,60 +530,40 @@ function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void
     config,
     version,
     forceBinaryFunctionPatterns,
-    preserveTiming,
     effectiveFgColor,
     effectiveBgColor,
     overlayCanvas,
   } = spctx;
+  if (forceBinaryFunctionPatterns || version < 2) return;
+  if (config.preserveAlignment === false && overlayCanvas) return;
 
-  const shouldDrawFindersFirst =
-    !forceBinaryFunctionPatterns && (config.preserveFinders !== false || !overlayCanvas);
-
-  const finderPositions = [
-    { row: 0, col: 0 },
-    { row: 0, col: moduleCount - 7 },
-    { row: moduleCount - 7, col: 0 },
-  ];
-
-  if (shouldDrawFindersFirst) {
-    for (const pos of finderPositions) {
-      const x = marginPx + pos.col * effectiveModuleSize;
-      const y = marginPx + pos.row * effectiveModuleSize;
-      if (forceBinaryFunctionPatterns) {
-        drawFinderPatternComplete(ctx, x, y, effectiveModuleSize, {
-          ...config,
-          gradient: { type: 'none', stops: [] },
-          fgColor: effectiveFgColor,
-          bgColor: effectiveBgColor,
-        });
-      } else {
-        drawFinderPatternComplete(ctx, x, y, effectiveModuleSize, config);
-      }
-    }
+  const resolvedConfig = resolveBinaryConfig(
+    config,
+    forceBinaryFunctionPatterns,
+    effectiveFgColor,
+    effectiveBgColor
+  );
+  const alignPositions = getAlignmentPositionsCached(version, moduleCount);
+  const alignmentStyle = config.alignmentStyle || 'match_finder';
+  for (const pos of alignPositions) {
+    const centerX = marginPx + (pos.col + 0.5) * effectiveModuleSize;
+    const centerY = marginPx + (pos.row + 0.5) * effectiveModuleSize;
+    drawAlignmentPattern(
+      ctx,
+      centerX,
+      centerY,
+      effectiveModuleSize,
+      alignmentStyle,
+      resolvedConfig
+    );
   }
+}
 
-  const shouldDrawAlignmentFirst =
-    !forceBinaryFunctionPatterns && (config.preserveAlignment !== false || !overlayCanvas);
-  if (version >= 2 && shouldDrawAlignmentFirst) {
-    const alignPositions = getAlignmentPositionsCached(version, moduleCount);
-    const alignmentStyle = config.alignmentStyle || 'match_finder';
-    for (const pos of alignPositions) {
-      const centerX = marginPx + (pos.col + 0.5) * effectiveModuleSize;
-      const centerY = marginPx + (pos.row + 0.5) * effectiveModuleSize;
-      if (forceBinaryFunctionPatterns) {
-        drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, {
-          ...config,
-          gradient: { type: 'none', stops: [] },
-          fgColor: effectiveFgColor,
-          bgColor: effectiveBgColor,
-        });
-      } else {
-        drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, config);
-      }
-    }
-  }
+function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void {
+  drawPreservedFinderPatterns(spctx);
+  drawPreservedAlignmentPatterns(spctx);
 
-  if (!forceBinaryFunctionPatterns && preserveTiming) {
+  if (!spctx.forceBinaryFunctionPatterns && spctx.preserveTiming) {
     preserveTimingModules(spctx);
   }
 

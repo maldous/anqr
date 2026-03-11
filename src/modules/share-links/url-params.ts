@@ -495,12 +495,7 @@ function buildAnimationPatternParams(config: Partial<ShareConfig>, params: URLSe
   if (config.easing && config.easing !== 'linear') params.set('easing', config.easing);
 }
 
-function buildAnimationParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.speed !== undefined && config.speed !== 100)
-    params.set('speed', config.speed.toString());
-  if (config.loop === false) params.set('loop', '0');
-  if (config.reverse) params.set('reverse', '1');
-  if (config.bounce) params.set('bounce', '1');
+function buildAnimationFrameParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.startFrame !== undefined && config.startFrame !== 0)
     params.set('startF', config.startFrame.toString());
   if (config.maxFrames !== undefined && config.maxFrames !== 0)
@@ -510,6 +505,15 @@ function buildAnimationParams(config: Partial<ShareConfig>, params: URLSearchPar
   if (config.interpolate && config.interpolate !== 'none') params.set('interp', config.interpolate);
   if (config.temporalDither && config.temporalDither !== 'off')
     params.set('tempDither', config.temporalDither);
+}
+
+function buildAnimationParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.speed !== undefined && config.speed !== 100)
+    params.set('speed', config.speed.toString());
+  if (config.loop === false) params.set('loop', '0');
+  if (config.reverse) params.set('reverse', '1');
+  if (config.bounce) params.set('bounce', '1');
+  buildAnimationFrameParams(config, params);
   buildAnimationPatternParams(config, params);
 }
 
@@ -532,18 +536,22 @@ function buildSvgFormatParams(config: Partial<ShareConfig>, params: URLSearchPar
   if (config.svgEmbedRasterOverlay === false) params.set('svgEmbed', '0');
 }
 
-function buildOutputFormatSpecificParams(
-  config: Partial<ShareConfig>,
-  params: URLSearchParams
-): void {
-  buildGifFormatParams(config, params);
-  buildSvgFormatParams(config, params);
+function buildMiscFormatParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.dpi !== undefined && config.dpi !== 72) params.set('dpi', config.dpi.toString());
   if (config.includeQuietZone === false) params.set('inclQz', '0');
   if (config.bgOverride && config.bgOverride !== '')
     params.set('bgOver', config.bgOverride.replace('#', ''));
   if (config.formatExtra && config.formatExtra !== 'none')
     params.set('fmtExtra', config.formatExtra);
+}
+
+function buildOutputFormatSpecificParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
+  buildGifFormatParams(config, params);
+  buildSvgFormatParams(config, params);
+  buildMiscFormatParams(config, params);
 }
 
 function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
