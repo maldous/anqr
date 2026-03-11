@@ -53,11 +53,11 @@ export function generateAnimationPatternFrames(
 
   // Get source image data
   const sourceCtx =
-    ((sourceCanvas as HTMLCanvasElement).getContext('2d', {
+    (sourceCanvas.getContext('2d', {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    ((sourceCanvas as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D | null);
+    sourceCanvas.getContext('2d');
   if (!sourceCtx) {
     throw new Error('Could not get 2D context from source canvas');
   }
@@ -109,7 +109,7 @@ export function interpolateAnimationFramesWithEasing(
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-      (frames[i]?.getContext('2d') as CanvasRenderingContext2D | null);
+      frames[i]?.getContext('2d');
     framePixels[i] = frameCtx ? frameCtx.getImageData(0, 0, width, height).data : null;
   }
 

@@ -58,7 +58,7 @@ export function gexp(n: number): number {
  * Create a polynomial for Reed-Solomon encoding
  */
 export function qrPolynomial(num: number[], shift: number): QRPolynomial {
-  if (typeof num.length === 'undefined') {
+  if (num.length === undefined) {
     throw new TypeError(`${num.length}/${shift}`);
   }
 

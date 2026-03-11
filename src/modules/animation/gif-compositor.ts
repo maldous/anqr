@@ -75,7 +75,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    (canvas.getContext('2d') as CanvasRenderingContext2D | null);
+    canvas.getContext('2d');
   if (!_ctx) {
     throw new Error('Failed to get 2D context for GIF compositor canvas');
   }
@@ -95,7 +95,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    (patchCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+    patchCanvas.getContext('2d');
   const patchImageDataCache: Array<ImageData | null> = new Array(frames.length).fill(null);
   const patchBitmapCache: Array<ImageBitmap | null> = new Array(frames.length).fill(null);
   const patchBitmapPromiseCache: Array<Promise<void> | null> = new Array(frames.length).fill(null);

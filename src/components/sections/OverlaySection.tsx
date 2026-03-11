@@ -929,7 +929,7 @@ function OverlaySourcePicker({
   setUrlError,
   sourceActions,
   t,
-}: {
+}: Readonly<{
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   cameraError: string | null;
   cameraLoading: boolean;
@@ -945,7 +945,7 @@ function OverlaySourcePicker({
   setUrlError: (v: string | null) => void;
   sourceActions: ReturnType<typeof useOverlaySourceActions>;
   t: (key: string, options?: Record<string, unknown>) => string;
-}) {
+}>) {
   return (
     <div className="space-y-2">
       {cameraError && (

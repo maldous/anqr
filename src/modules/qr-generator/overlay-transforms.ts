@@ -121,5 +121,5 @@ export async function preprocessOverlay(
     });
   }
 
-  return result as HTMLCanvasElement | OffscreenCanvas;
+  return result;
 }

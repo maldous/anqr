@@ -271,7 +271,7 @@ function CollapsibleSection({
   children,
   badge,
   testId,
-}: CollapsibleSectionProps) {
+}: Readonly<CollapsibleSectionProps>) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -305,7 +305,7 @@ interface DetailRowProps {
   className?: string;
 }
 
-function DetailRow({ label, value, icon, className = '' }: DetailRowProps) {
+function DetailRow({ label, value, icon, className = '' }: Readonly<DetailRowProps>) {
   return (
     <div className={`flex items-center justify-between py-1.5 ${className}`}>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -323,7 +323,7 @@ interface ColorSwatchProps {
   label: string;
 }
 
-function ColorSwatch({ color, label }: ColorSwatchProps) {
+function ColorSwatch({ color, label }: Readonly<ColorSwatchProps>) {
   return (
     <div className="flex items-center gap-2">
       <div
@@ -346,7 +346,7 @@ interface ProgressBarProps {
   label?: string;
 }
 
-function ProgressBar({ value, max, label }: ProgressBarProps) {
+function ProgressBar({ value, max, label }: Readonly<ProgressBarProps>) {
   const percentage = Math.min((value / max) * 100, 100);
   const colorClass =
     percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-green-500';
@@ -386,7 +386,7 @@ interface StatusBadgeProps {
   falseLabel: string;
 }
 
-function StatusBadge({ status, trueLabel, falseLabel }: StatusBadgeProps) {
+function StatusBadge({ status, trueLabel, falseLabel }: Readonly<StatusBadgeProps>) {
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -407,7 +407,7 @@ interface WCAGBadgeProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-function WCAGBadge({ ratio, size = 'md' }: WCAGBadgeProps) {
+function WCAGBadge({ ratio, size = 'md' }: Readonly<WCAGBadgeProps>) {
   const meetsAAA = ratio >= 7;
   const meetsAA = ratio >= 4.5;
   const meetsAALarge = ratio >= 3;
@@ -447,7 +447,7 @@ interface CopyButtonProps {
   className?: string;
 }
 
-function CopyButton({ text, label, className = '' }: CopyButtonProps) {
+function CopyButton({ text, label, className = '' }: Readonly<CopyButtonProps>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -496,7 +496,7 @@ interface HexDumpViewProps {
   maxRows?: number;
 }
 
-function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
+function HexDumpView({ bytes, maxRows = 16 }: Readonly<HexDumpViewProps>) {
   const [expanded, setExpanded] = useState(false);
   // Use 16 bytes per row on desktop, 8 on mobile
   const bytesPerRowDesktop = 16;
@@ -634,7 +634,7 @@ function ModuleMatrixView({
   version,
   fgColor = '#000000',
   bgColor = '#ffffff',
-}: ModuleMatrixViewProps) {
+}: Readonly<ModuleMatrixViewProps>) {
   const [zoom, setZoom] = useState(1);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -757,7 +757,7 @@ interface CapacityByModeProps {
   currentBytes?: number;
 }
 
-function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByModeProps) {
+function CapacityByModeTable({ version, eccLevel, currentBytes }: Readonly<CapacityByModeProps>) {
   const versionIndex = version - 1;
 
   const capacities = [
@@ -840,7 +840,7 @@ interface SummaryBarProps {
   result: QRAnalysisResult;
 }
 
-function SummaryBar({ result }: SummaryBarProps) {
+function SummaryBar({ result }: Readonly<SummaryBarProps>) {
   if (!result.success) return null;
 
   // Common badge styling for consistent width
@@ -982,7 +982,11 @@ interface EncodingEfficiencyProps {
   encodingMode: string | null;
 }
 
-function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEfficiencyProps) {
+function EncodingEfficiency({
+  payload,
+  payloadBytes,
+  encodingMode,
+}: Readonly<EncodingEfficiencyProps>) {
   const analysis = useMemo(() => {
     const numericChars = (payload.match(/\d/g) || []).length;
     const alphanumericChars = (payload.match(/[0-9A-Z $%*+\-./:]/gi) || []).length;
@@ -1884,12 +1888,12 @@ function importAnalysisToGenerator(
     if (onNavigate) {
       onNavigate('editor');
     } else {
-      window.location.hash = '';
-      window.location.search = '';
-      if (window.location.pathname === '/' || window.location.pathname === '') {
-        window.location.reload();
+      globalThis.location.hash = '';
+      globalThis.location.search = '';
+      if (globalThis.location.pathname === '/' || globalThis.location.pathname === '') {
+        globalThis.location.reload();
       } else {
-        window.location.href = '/';
+        globalThis.location.href = '/';
       }
     }
   }, 500);
@@ -2213,7 +2217,7 @@ interface AnalyzeHeroProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function AnalyzeHero({ t }: AnalyzeHeroProps) {
+function AnalyzeHero({ t }: Readonly<AnalyzeHeroProps>) {
   return (
     <div className="text-center space-y-3">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-2 shadow-lg shadow-primary/10">
@@ -2289,7 +2293,7 @@ function GeneratorCardActive({
   );
 }
 
-function GeneratorCardDisabled({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
+function GeneratorCardDisabled({ t }: Readonly<{ t: ReturnType<typeof useTranslation>['t'] }>) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
       <QrCode className="w-6 h-6 text-muted-foreground" />
@@ -2312,7 +2316,12 @@ interface FileUploadCardProps {
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function FileUploadCard({ t, isLoading, isLoadingFile, handleFileUpload }: FileUploadCardProps) {
+function FileUploadCard({
+  t,
+  isLoading,
+  isLoadingFile,
+  handleFileUpload,
+}: Readonly<FileUploadCardProps>) {
   return (
     <label className="relative group cursor-pointer">
       <input
@@ -2361,7 +2370,7 @@ function UrlInputCard({
   urlInput,
   setUrlInput,
   handleUrlSubmit,
-}: UrlInputCardProps) {
+}: Readonly<UrlInputCardProps>) {
   return (
     <div
       className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
@@ -2411,7 +2420,7 @@ function CameraCardButton({
   isLoading,
   isLoadingCamera,
   handleCameraCapture,
-}: CameraCardButtonProps) {
+}: Readonly<CameraCardButtonProps>) {
   return (
     <button
       type="button"
@@ -2447,7 +2456,7 @@ function AnalyzeInputCards({
   handleFileUpload,
   handleUrlSubmit,
   handleCameraCapture,
-}: AnalyzeInputCardsProps) {
+}: Readonly<AnalyzeInputCardsProps>) {
   return (
     <div
       className={`grid gap-3 ${Capacitor.isNativePlatform() ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`}
@@ -2494,7 +2503,7 @@ interface AnalyzeErrorDisplayProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function AnalyzeErrorDisplay({ error, handleReset, t }: AnalyzeErrorDisplayProps) {
+function AnalyzeErrorDisplay({ error, handleReset, t }: Readonly<AnalyzeErrorDisplayProps>) {
   return (
     <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive shadow-sm">
       <AlertCircle className="w-5 h-5 shrink-0" />
@@ -2523,7 +2532,7 @@ function AnalyzeResultsHeader({
   handleFileUpload,
   isLoading,
   t,
-}: AnalyzeResultsHeaderProps) {
+}: Readonly<AnalyzeResultsHeaderProps>) {
   if (result.success) {
     return (
       <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 shadow-sm">
@@ -2707,7 +2716,7 @@ interface AnalyzeWarningsProps {
   warnings: string[];
 }
 
-function AnalyzeWarnings({ warnings }: AnalyzeWarningsProps) {
+function AnalyzeWarnings({ warnings }: Readonly<AnalyzeWarningsProps>) {
   return (
     <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 shadow-sm">
       <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
@@ -2805,7 +2814,7 @@ interface AnalyzeCapacityGridProps {
   result: QRAnalysisResult;
 }
 
-function AnalyzeCapacityGrid({ result }: AnalyzeCapacityGridProps) {
+function AnalyzeCapacityGrid({ result }: Readonly<AnalyzeCapacityGridProps>) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {result.version !== null && result.eccLevel && (
@@ -2837,7 +2846,7 @@ interface AnalyzeVisualGridProps {
   t: ReturnType<typeof useTranslation>['t'];
 }
 
-function AnalyzeVisualGrid({ result, combinedTimings, t }: AnalyzeVisualGridProps) {
+function AnalyzeVisualGrid({ result, combinedTimings, t }: Readonly<AnalyzeVisualGridProps>) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {hasAnyTimingData(combinedTimings) ? (
@@ -2879,11 +2888,7 @@ function AnalyzeVisualGrid({ result, combinedTimings, t }: AnalyzeVisualGridProp
                 <DetailRow
                   label="Non-Decode Overhead"
                   value={formatMilliseconds(
-                    Math.max(
-                      0,
-                      (combinedTimings.totalAnalysisMs as number) -
-                        (combinedTimings.decodeMs as number)
-                    )
+                    Math.max(0, combinedTimings.totalAnalysisMs - combinedTimings.decodeMs)
                   )}
                   icon={<Settings className="w-3.5 h-3.5" />}
                 />
@@ -3054,7 +3059,7 @@ interface AnalyzeDataGridProps {
   result: QRAnalysisResult;
 }
 
-function AnalyzeDataGrid({ result }: AnalyzeDataGridProps) {
+function AnalyzeDataGrid({ result }: Readonly<AnalyzeDataGridProps>) {
   return (
     <div className="grid md:grid-cols-1 gap-4">
       {result.payloadBytes && result.payloadBytes.length > 0 && (
@@ -3109,10 +3114,10 @@ function AnalyzeDataGrid({ result }: AnalyzeDataGridProps) {
 function TimingsSection({
   combinedTimings,
   t,
-}: {
+}: Readonly<{
   combinedTimings: Record<string, number | null | undefined>;
   t: ReturnType<typeof useTranslation>['t'];
-}) {
+}>) {
   if (!hasAnyTimingData(combinedTimings)) return null;
   return (
     <CollapsibleSection
@@ -3153,10 +3158,7 @@ function TimingsSection({
             <DetailRow
               label="Non-Decode Overhead"
               value={formatMilliseconds(
-                Math.max(
-                  0,
-                  (combinedTimings.totalAnalysisMs as number) - (combinedTimings.decodeMs as number)
-                )
+                Math.max(0, combinedTimings.totalAnalysisMs - combinedTimings.decodeMs)
               )}
               icon={<Settings className="w-3.5 h-3.5" />}
             />
@@ -3169,10 +3171,10 @@ function TimingsSection({
 function ColorsWcagSection({
   detectedColors,
   dominantColors,
-}: {
+}: Readonly<{
   detectedColors: NonNullable<QRAnalysisResult['detectedColors']>;
   dominantColors: QRAnalysisResult['dominantColors'];
-}) {
+}>) {
   return (
     <CollapsibleSection
       title="Colors & WCAG Compliance"
@@ -3242,12 +3244,12 @@ function SpatialAnalysisSection({
   geometry,
   quietZone,
   t,
-}: {
+}: Readonly<{
   estimatedModulePx: number | null;
   geometry: QRAnalysisResult['geometry'];
   quietZone: QRAnalysisResult['quietZone'];
   t: ReturnType<typeof useTranslation>['t'];
-}) {
+}>) {
   return (
     <CollapsibleSection
       title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
@@ -3329,9 +3331,9 @@ function SpatialAnalysisSection({
 
 function DecoderMetadataPanel({
   decoderMetadata,
-}: {
+}: Readonly<{
   decoderMetadata: NonNullable<QRAnalysisResult['decoderMetadata']>;
-}) {
+}>) {
   return (
     <CollapsibleSection
       title="Decoder Metadata"
@@ -3411,10 +3413,10 @@ function DecoderMetadataPanel({
 function FormatImagePanel({
   result,
   t,
-}: {
+}: Readonly<{
   result: QRAnalysisResult;
   t: ReturnType<typeof useTranslation>['t'];
-}) {
+}>) {
   return (
     <div className="space-y-4">
       <CollapsibleSection
@@ -3487,9 +3489,9 @@ function FormatImagePanel({
 
 function DataCapacityPanel({
   dataCapacity,
-}: {
+}: Readonly<{
   dataCapacity: NonNullable<QRAnalysisResult['dataCapacity']>;
-}) {
+}>) {
   return (
     <CollapsibleSection
       title="Data Capacity"
@@ -3547,12 +3549,12 @@ function QrStructurePanel({
   moduleCount,
   eccLevel,
   maskPattern,
-}: {
+}: Readonly<{
   version: number | null;
   moduleCount: number;
   eccLevel: ECCLevel | null;
   maskPattern: number | null;
-}) {
+}>) {
   return (
     <CollapsibleSection
       title="QR Structure"
@@ -3606,11 +3608,11 @@ function EncodingPanel({
   encodingMode,
   payloadBytes,
   errorsCorrected,
-}: {
+}: Readonly<{
   encodingMode: string | null;
   payloadBytes: Uint8Array | undefined;
   errorsCorrected: number | null;
-}) {
+}>) {
   return (
     <CollapsibleSection
       title="Encoding"
@@ -3658,7 +3660,7 @@ function AnalyzeResultDetails({
   handleImportToGenerator,
   handleExportJSON: _handleExportJSON,
   t,
-}: AnalyzeResultDetailsProps) {
+}: Readonly<AnalyzeResultDetailsProps>) {
   return (
     <>
       <SummaryBar result={result} />
@@ -3918,7 +3920,7 @@ function AnalyzeResultDetails({
   );
 }
 
-export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
+export function Analyze({ onNavigate, generatedCanvas }: Readonly<AnalyzeProps>) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [loadingSource, setLoadingSource] = useState<AnalysisSourceType>(null);

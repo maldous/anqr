@@ -885,7 +885,7 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       const isDark = matrix[y]?.[x];
-      const color = (colors[y]?.[x] ?? null) as PixelColor | null;
+      const color = colors[y]?.[x] ?? null;
 
       if (
         debug &&

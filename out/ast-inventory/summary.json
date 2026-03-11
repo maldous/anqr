@@ -1,0 +1,21 @@
+{
+  "files": 1043,
+  "symbols": 5060,
+  "fileDeps": 1578,
+  "symbolDeps": 58377,
+  "reactClassifications": 5060,
+  "components": 148,
+  "hooks": 12,
+  "providers": 2,
+  "contexts": 8,
+  "handlers": 15,
+  "sideEffectFiles": 224,
+  "testFiles": 0,
+  "workerFiles": 5,
+  "netlifyFiles": 0,
+  "generatedLikeFiles": 786,
+  "totalBytes": 23008397,
+  "totalLoc": 351350,
+  "totalNonEmptyLoc": 339694,
+  "generatedAt": "2026-03-11T13:09:54.055Z"
+}

@@ -45,7 +45,8 @@
     "test:appium": "wdio run wdio.conf.ts",
     "test:appium:android": "APPIUM_PLATFORM=android wdio run wdio.conf.ts",
     "test:appium:ios": "APPIUM_PLATFORM=ios wdio run wdio.conf.ts",
-    "ci:reliability-gate": "node scripts/ops/reliability-gate.mjs"
+    "ci:reliability-gate": "node scripts/ops/reliability-gate.mjs",
+    "extract:ast": "tsx tools/refactor/extract-ast.ts"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",
@@ -85,7 +86,6 @@
     "react-dom": "^19.2.4",
     "react-i18next": "^16.5.4",
     "tailwind-merge": "^3.4.0",
-    "tsx": "^4.21.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
@@ -134,6 +134,8 @@
     "serve": "^14.2.5",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.1.18",
+    "ts-morph": "^27.0.2",
+    "tsx": "^4.21.0",
     "type-coverage": "^2.29.7",
     "typescript": "^5.9.3",
     "vite": "^8.0.0-beta.15",

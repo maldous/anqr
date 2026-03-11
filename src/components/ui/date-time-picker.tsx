@@ -28,7 +28,7 @@ export function DateTimePicker({
   className,
   disabled,
   'data-testid': testId,
-}: DateTimePickerProps) {
+}: Readonly<DateTimePickerProps>) {
   const [open, setOpen] = React.useState(false);
 
   // Parse the datetime-local value into date and time parts

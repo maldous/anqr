@@ -54,7 +54,7 @@ interface CopyButtonProps {
   className?: string;
 }
 
-function CopyButton({ text, label, className = '' }: CopyButtonProps) {
+function CopyButton({ text, label, className = '' }: Readonly<CopyButtonProps>) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {

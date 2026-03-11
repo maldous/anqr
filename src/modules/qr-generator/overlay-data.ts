@@ -35,7 +35,7 @@ export async function getOverlayData(
   // Check cache
   const cached = overlayDataCache.get(cacheKey);
   if (cached) {
-    return cached as OverlayData;
+    return cached;
   }
 
   // Scale overlay to module count

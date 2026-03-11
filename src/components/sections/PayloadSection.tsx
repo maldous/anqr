@@ -533,11 +533,11 @@ function PlusCodeDisplay({
   lat,
   lon,
   t,
-}: {
+}: Readonly<{
   lat: number;
   lon: number;
   t: ReturnType<typeof useTranslation>['t'];
-}) {
+}>) {
   const { plusCode, shortCode, error } = useMemo(() => {
     try {
       // OpenLocationCode is a class that needs to be instantiated
@@ -1188,9 +1188,11 @@ function PlainTextEditor({
   setShowStartupHighlight,
   showStartupHighlight,
   t,
-}: Pick<
-  EditorProps,
-  'payload' | 'setPayloadText' | 'setShowStartupHighlight' | 'showStartupHighlight' | 't'
+}: Readonly<
+  Pick<
+    EditorProps,
+    'payload' | 'setPayloadText' | 'setShowStartupHighlight' | 'showStartupHighlight' | 't'
+  >
 >) {
   return (
     <div className={`space-y-2 ${showStartupHighlight ? 'p-1 -m-1' : ''}`}>
@@ -1225,7 +1227,7 @@ function UrlEditor({
   setPayloadUrl,
   t,
   tier,
-}: Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't' | 'tier'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't' | 'tier'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1280,7 +1282,7 @@ function TelEditor({
   payload,
   setPayloadTel,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadTel' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadTel' | 't'>>) {
   return (
     <div className="space-y-2">
       <Label>
@@ -1311,7 +1313,7 @@ function EmailEditor({
   payload,
   setPayloadEmail,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadEmail' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadEmail' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1373,7 +1375,7 @@ function SmsEditor({
   payload,
   setPayloadSms,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadSms' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadSms' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1424,7 +1426,7 @@ function GeoEditor({
   payload,
   setPayloadGeo,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadGeo' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadGeo' | 't'>>) {
   return (
     <div className="space-y-4">
       {/* Address Lookup (Nominatim) */}
@@ -1554,7 +1556,7 @@ function WifiEditor({
   payload,
   setPayloadWifi,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadWifi' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadWifi' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1641,7 +1643,7 @@ function VcardEditor({
   payload,
   setPayloadVCard,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadVCard' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadVCard' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1757,7 +1759,7 @@ function MecardEditor({
   payload,
   setPayloadMeCard,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadMeCard' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadMeCard' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1885,7 +1887,7 @@ function BizcardEditor({
   payload,
   setPayloadBizCard,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadBizCard' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadBizCard' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -1997,7 +1999,7 @@ function BluetoothEditor({
   payload,
   setPayloadText,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2025,7 +2027,7 @@ function EventEditor({
   payload,
   setPayloadEvent,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadEvent' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadEvent' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2109,7 +2111,7 @@ function EventRsvpEditor({
   payload,
   setPayloadEventRsvp,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadEventRsvp' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadEventRsvp' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2218,7 +2220,7 @@ function CalendarSubscriptionEditor({
   payload,
   setPayloadCalendarSub,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadCalendarSub' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadCalendarSub' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2276,7 +2278,7 @@ function SocialProfileEditor({
   payload,
   setPayloadSocialProfile,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadSocialProfile' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadSocialProfile' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2348,7 +2350,7 @@ function MessagingLinkEditor({
   payload,
   setPayloadMessaging,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadMessaging' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadMessaging' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2451,7 +2453,7 @@ function CryptoEditor({
   payload,
   setPayloadCrypto,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadCrypto' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadCrypto' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2543,7 +2545,7 @@ function EpcSepaEditor({
   payload,
   setEpcSepaForm,
   t,
-}: Pick<EditorProps, 'epcSepaForm' | 'payload' | 'setEpcSepaForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'epcSepaForm' | 'payload' | 'setEpcSepaForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2629,7 +2631,7 @@ function UpiEditor({
   setUpiForm,
   t,
   upiForm,
-}: Pick<EditorProps, 'payload' | 'setUpiForm' | 't' | 'upiForm'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setUpiForm' | 't' | 'upiForm'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2704,7 +2706,7 @@ function PaynowEditor({
   payload,
   setPayNowForm,
   t,
-}: Pick<EditorProps, 'payNowForm' | 'payload' | 'setPayNowForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payNowForm' | 'payload' | 'setPayNowForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2799,7 +2801,7 @@ function PromptpayEditor({
   promptPayForm,
   setPromptPayForm,
   t,
-}: Pick<EditorProps, 'payload' | 'promptPayForm' | 'setPromptPayForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'promptPayForm' | 'setPromptPayForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2883,7 +2885,7 @@ function PixEditor({
   pixForm,
   setPixForm,
   t,
-}: Pick<EditorProps, 'payload' | 'pixForm' | 'setPixForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'pixForm' | 'setPixForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -2955,7 +2957,7 @@ function SwissQrBillEditor({
   setSwissQrBillForm,
   swissQrBillForm,
   t,
-}: Pick<EditorProps, 'payload' | 'setSwissQrBillForm' | 'swissQrBillForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setSwissQrBillForm' | 'swissQrBillForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3087,7 +3089,7 @@ function LightningEditor({
   payload,
   setLightningForm,
   t,
-}: Pick<EditorProps, 'lightningForm' | 'payload' | 'setLightningForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'lightningForm' | 'payload' | 'setLightningForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3125,7 +3127,7 @@ function EthereumEip681Editor({
   payload,
   setEthereumForm,
   t,
-}: Pick<EditorProps, 'ethereumForm' | 'payload' | 'setEthereumForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'ethereumForm' | 'payload' | 'setEthereumForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3202,7 +3204,7 @@ function QrisEditor({
   qrisForm,
   setQrisForm,
   t,
-}: Pick<EditorProps, 'payload' | 'qrisForm' | 'setQrisForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'qrisForm' | 'setQrisForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3274,7 +3276,7 @@ function DuitnowEditor({
   payload,
   setDuitnowForm,
   t,
-}: Pick<EditorProps, 'duitnowForm' | 'payload' | 'setDuitnowForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'duitnowForm' | 'payload' | 'setDuitnowForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3363,7 +3365,7 @@ function BharatqrEditor({
   payload,
   setBharatqrForm,
   t,
-}: Pick<EditorProps, 'bharatqrForm' | 'payload' | 'setBharatqrForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'bharatqrForm' | 'payload' | 'setBharatqrForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3427,7 +3429,7 @@ function VietqrEditor({
   setVietqrForm,
   t,
   vietqrForm,
-}: Pick<EditorProps, 'payload' | 'setVietqrForm' | 't' | 'vietqrForm'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setVietqrForm' | 't' | 'vietqrForm'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3504,7 +3506,7 @@ function QrphEditor({
   qrphForm,
   setQrphForm,
   t,
-}: Pick<EditorProps, 'payload' | 'qrphForm' | 'setQrphForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'qrphForm' | 'setQrphForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3583,7 +3585,7 @@ function TwqrEditor({
   setTwqrForm,
   t,
   twqrForm,
-}: Pick<EditorProps, 'payload' | 'setTwqrForm' | 't' | 'twqrForm'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setTwqrForm' | 't' | 'twqrForm'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3643,7 +3645,7 @@ function HkqrEditor({
   payload,
   setHkqrForm,
   t,
-}: Pick<EditorProps, 'hkqrForm' | 'payload' | 'setHkqrForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'hkqrForm' | 'payload' | 'setHkqrForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3710,7 +3712,7 @@ function JpqrEditor({
   payload,
   setJpqrForm,
   t,
-}: Pick<EditorProps, 'jpqrForm' | 'payload' | 'setJpqrForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'jpqrForm' | 'payload' | 'setJpqrForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3770,7 +3772,7 @@ function AuspaynetEditor({
   payload,
   setAuspaynetForm,
   t,
-}: Pick<EditorProps, 'auspaynetForm' | 'payload' | 'setAuspaynetForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'auspaynetForm' | 'payload' | 'setAuspaynetForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3857,7 +3859,7 @@ function PaypalMeEditor({
   paypalMeForm,
   setPaypalMeForm,
   t,
-}: Pick<EditorProps, 'payload' | 'paypalMeForm' | 'setPaypalMeForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'paypalMeForm' | 'setPaypalMeForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3906,7 +3908,7 @@ function CashappEditor({
   payload,
   setCashappForm,
   t,
-}: Pick<EditorProps, 'cashappForm' | 'payload' | 'setCashappForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'cashappForm' | 'payload' | 'setCashappForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -3956,7 +3958,7 @@ function EmvGenericEditor({
   payload,
   setEmvGenericForm,
   t,
-}: Pick<EditorProps, 'emvGenericForm' | 'payload' | 'setEmvGenericForm' | 't'>) {
+}: Readonly<Pick<EditorProps, 'emvGenericForm' | 'payload' | 'setEmvGenericForm' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4088,7 +4090,7 @@ function RemovedOtpauthEditor({
   payload,
   setPayloadOtpAuth,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadOtpAuth' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadOtpAuth' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4204,7 +4206,9 @@ function ShortLinkEditor({
   setShortLinkForm,
   shortLinkForm,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadText' | 'setShortLinkForm' | 'shortLinkForm' | 't'>) {
+}: Readonly<
+  Pick<EditorProps, 'payload' | 'setPayloadText' | 'setShortLinkForm' | 'shortLinkForm' | 't'>
+>) {
   return (
     <div className="space-y-4">
       {/* Long URL to shorten */}
@@ -4309,7 +4313,7 @@ function UtmLinkEditor({
   payload,
   setPayloadUrl,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4392,7 +4396,7 @@ function AppLinkEditor({
   setPayloadAppLink,
   setPayloadText,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadAppLink' | 'setPayloadText' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadAppLink' | 'setPayloadText' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4538,7 +4542,7 @@ function Gs1DigitalLinkEditor({
   payload,
   setPayloadGS1,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadGS1' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadGS1' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4624,7 +4628,7 @@ function RemovedInventoryEditor({
   payload,
   setPayloadText,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4681,7 +4685,7 @@ function RemovedTicketingEditor({
   payload,
   setPayloadText,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4746,7 +4750,7 @@ function CustomEditor({
   payload,
   setPayloadText,
   t,
-}: Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>) {
+}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadText' | 't'>>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -4772,7 +4776,9 @@ function ValidationOptionsEditor({
   qr,
   setPayloadValidation,
   t,
-}: Pick<EditorProps, 'getPayloadText' | 'payload' | 'qr' | 'setPayloadValidation' | 't'>) {
+}: Readonly<
+  Pick<EditorProps, 'getPayloadText' | 'payload' | 'qr' | 'setPayloadValidation' | 't'>
+>) {
   return (
     <div className="space-y-2 pt-4 border-t">
       <Label className="text-muted-foreground text-xs">

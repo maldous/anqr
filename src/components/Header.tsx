@@ -74,7 +74,7 @@ const GALLERY_ICON_MAP: Record<string, LucideIcon> = {
 };
 
 // Dynamic icon component for gallery filters - uses explicit map instead of barrel import
-function DynamicIcon({ name, className }: { name: string; className?: string }) {
+function DynamicIcon({ name, className }: Readonly<{ name: string; className?: string }>) {
   const Icon = GALLERY_ICON_MAP[name];
   return Icon ? <Icon className={className} /> : null;
 }
@@ -581,7 +581,7 @@ function HeaderLanguageMenu({
   onClose,
   onChangeLanguage,
   onCloseAnimationEnd,
-}: {
+}: Readonly<{
   langMenuOpen: boolean;
   isLangMenuClosing: boolean;
   langButtonRef: React.RefObject<HTMLDivElement | null>;
@@ -590,7 +590,7 @@ function HeaderLanguageMenu({
   onClose: () => void;
   onChangeLanguage: (code: string) => void;
   onCloseAnimationEnd: () => void;
-}) {
+}>) {
   const { t, i18n } = useTranslation();
 
   return (
@@ -695,14 +695,14 @@ function HeaderMobileNav({
   onNavigate,
   onClose,
   onCloseAnimationEnd,
-}: {
+}: Readonly<{
   mobileMenuOpen: boolean;
   isMobileMenuClosing: boolean;
   resolvedPage: HeaderPage;
   onNavigate?: (page: HeaderPage) => void;
   onClose: () => void;
   onCloseAnimationEnd: () => void;
-}) {
+}>) {
   const { t } = useTranslation();
 
   if (!mobileMenuOpen && !isMobileMenuClosing) return null;
@@ -812,10 +812,10 @@ function HeaderMobileNav({
 function HeaderDesktopNav({
   resolvedPage,
   onNavigate,
-}: {
+}: Readonly<{
   resolvedPage: HeaderPage;
   onNavigate?: (page: HeaderPage) => void;
-}) {
+}>) {
   const { t } = useTranslation();
 
   return (
@@ -863,10 +863,10 @@ function HeaderDesktopNav({
 function HeaderGalleryFilter({
   galleryFilter,
   onGalleryFilterChange,
-}: {
+}: Readonly<{
   galleryFilter: GalleryCategory | 'all';
   onGalleryFilterChange?: (filter: GalleryCategory | 'all') => void;
-}) {
+}>) {
   const { t } = useTranslation();
 
   return (
@@ -911,12 +911,12 @@ function HeaderMobileFooter({
   onExport,
   copied,
   bannerHeight,
-}: {
+}: Readonly<{
   handleShare: () => void;
   onExport?: () => void;
   copied: boolean;
   bannerHeight: number;
-}) {
+}>) {
   const { t } = useTranslation();
 
   return (
@@ -1010,7 +1010,7 @@ export function Header({
   galleryFilter = 'all',
   onGalleryFilterChange,
   onNavigate,
-}: HeaderProps) {
+}: Readonly<HeaderProps>) {
   const tier = useQRStore((s) => s.tier);
   const qr = useQRStore((s) => s.qr);
   const render = useQRStore((s) => s.render);

@@ -919,8 +919,8 @@ async function downloadSvgFormat(params: {
   const moduleCount = vectorMatrix.length;
   const totalMargin = params.quietZoneModules + params.borderModulesExtra;
   const svgModuleSize = Math.floor(params.outputWidthPx / (moduleCount + totalMargin * 2)) || 10;
-  const rs = params.renderState as Record<string, unknown>;
-  const ms = params.metadataState as Record<string, unknown>;
+  const rs = params.renderState;
+  const ms = params.metadataState;
   const svgMetadata =
     ms.title || ms.author || ms.copyright || ms.description
       ? {
@@ -1951,11 +1951,11 @@ async function renderQArtResultToCanvas(params: {
       params.workerRenderedBitmap,
       params.bitmapCanvasRef.current ?? undefined
     );
-    params.bitmapCanvasRef.current = canvas as HTMLCanvasElement;
+    params.bitmapCanvasRef.current = canvas;
     if (typeof params.workerRenderedBitmap.close === 'function') {
       params.workerRenderedBitmap.close();
     }
-    return { canvas: canvas as HTMLCanvasElement, usedBitmapRender: true };
+    return { canvas: canvas, usedBitmapRender: true };
   }
   if (params.workerPackedMatrix && params.fullQArtResult.moduleCount > 0) {
     const canvas = (await qrGenerator.renderFromPackedMatrix(
@@ -2209,7 +2209,7 @@ async function executeQArtWorkerPipeline(params: {
     if (await params.yieldForResponsiveness()) return mkResult(true);
     const useAutoMask =
       typeof params.debouncedConfig.maskPattern !== 'number' ||
-      (params.debouncedConfig.maskPattern as number) < 0;
+      params.debouncedConfig.maskPattern < 0;
     const qartConfig = {
       data: params.debouncedConfig.content as string,
       version: (params.debouncedConfig.typeNumber as number) || 0,
@@ -3108,7 +3108,7 @@ async function generateArtworkFrameStandalone(params: {
   try {
     const useAutoMask =
       typeof params.debouncedConfig.maskPattern !== 'number' ||
-      (params.debouncedConfig.maskPattern as number) < 0;
+      params.debouncedConfig.maskPattern < 0;
     const qartConfig = {
       data: (params.debouncedConfig.content as string) ?? '',
       version: params.artworkState.artworkLockedVersion,
@@ -4550,7 +4550,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         !!overlay.fit;
 
       if (!needsTransform) {
-        return source as HTMLCanvasElement;
+        return source;
       }
 
       let workingCanvas: HTMLCanvasElement = source;

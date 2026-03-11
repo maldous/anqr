@@ -296,7 +296,7 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    (compositeCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+    compositeCanvas.getContext('2d');
   if (!compositeCtx) {
     throw new Error('Failed to get 2D context for GIF composite canvas');
   }
@@ -329,7 +329,7 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-      (patchCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+      patchCanvas.getContext('2d');
     if (patchCtx) {
       patchCtx.putImageData(imageData, 0, 0);
     }

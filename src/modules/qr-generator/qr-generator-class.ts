@@ -1032,10 +1032,7 @@ async function computeOverlaySignature(
 ): Promise<string> {
   if (!overlayCanvas) return 'overlay:none';
   if (isAnimatedFrame) return `anim-family:${overlayFamilyKey}`;
-  const hash = await hashCanvasContent(
-    overlayCanvas as HTMLCanvasElement | OffscreenCanvas,
-    createCanvas
-  );
+  const hash = await hashCanvasContent(overlayCanvas, createCanvas);
   return `${overlayCanvas.width}x${overlayCanvas.height}:${hash}`;
 }
 
@@ -1286,7 +1283,7 @@ export class QRGenerator {
     }
 
     // Build new QR matrix
-    const qr = this.qrcode(typeNumber, config.errorCorrection as 'L' | 'M' | 'Q' | 'H');
+    const qr = this.qrcode(typeNumber, config.errorCorrection);
 
     configureStringEncoding(characterEncodingConfig);
 
@@ -1498,7 +1495,7 @@ export class QRGenerator {
       await generateScaledQR(
         qr,
         cfg,
-        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+        processedOverlayCanvas,
         moduleCount,
         scale,
         pool.acquire.bind(pool),
@@ -1517,7 +1514,7 @@ export class QRGenerator {
     if (effectiveConfig.overlayMode === 'dithered' || effectiveConfig.forceScaledOverlay === true) {
       return await this.runDitheredScanGate(
         effectiveConfig,
-        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+        processedOverlayCanvas,
         moduleCount,
         renderScaled
       );
@@ -1544,10 +1541,7 @@ export class QRGenerator {
     // Auto-detect best version if set to 0
     let typeNumber = config.typeNumber;
     if (typeNumber === 0) {
-      typeNumber = calculateOptimalVersion(
-        config.content,
-        config.errorCorrection as 'L' | 'M' | 'Q' | 'H'
-      );
+      typeNumber = calculateOptimalVersion(config.content, config.errorCorrection);
     }
 
     // Apply geometric transforms and preprocessing to the overlay

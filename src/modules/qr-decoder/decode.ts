@@ -806,7 +806,7 @@ export function separateCodewords(
   version: number,
   eccLevel: number
 ): { dataCodewords: number[]; ecCodewords: number[] } {
-  const eccLevelChar = ['M', 'L', 'H', 'Q'][eccLevel] as keyof typeof RS_BLOCKS;
+  const eccLevelChar = ['M', 'L', 'H', 'Q'][eccLevel];
   const rsBlocks = RS_BLOCKS[eccLevelChar]?.[version - 1];
 
   qrDecoderLog.trace('separate: Separating codewords', {
