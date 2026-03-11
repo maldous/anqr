@@ -216,7 +216,7 @@ export class GenericGFPoly {
     if (other.isZero()) throw new IllegalArgumentException('Divide by 0');
 
     let quotient: GenericGFPoly = this.field.getZero();
-    let remainder: GenericGFPoly = this;
+    let remainder: GenericGFPoly = this; // NOSONAR — polynomial division requires capturing `this` before mutation
     const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
     const inverseDenominatorLeadingTerm = this.field.inverse(denominatorLeadingTerm);
 
