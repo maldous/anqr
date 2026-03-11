@@ -1096,6 +1096,83 @@ function extractActualMaskPattern(
   return actualMask;
 }
 
+function logFormatVerificationDiagnostic(
+  matrix: boolean[][],
+  ecc: ECCLevel,
+  actualMask: number
+): void {
+  const formatVerification = verifyMatrixFormatInfo(matrix, ecc, actualMask);
+  if (formatVerification.valid) {
+    log.debug('Base matrix format verification passed', { ecc, mask: actualMask });
+  } else {
+    log.warn(
+      'FORMAT_PARSER_DISAGREEMENT: Base matrix format verification disagreement (diagnostic)',
+      {
+        expectedEcc: ecc,
+        extractedEcc: formatVerification.extractedEcc,
+        eccMatch: formatVerification.eccMatch,
+        expectedMask: actualMask,
+        extractedMask: formatVerification.extractedMask,
+        maskMatch: formatVerification.maskMatch,
+        parserDisagreement: formatVerification.reason,
+        action: 'CONTINUE_TO_SCAN_VALIDATION',
+        note: 'Encoder is authoritative. Base matrix scan validation is the real gate.',
+      }
+    );
+  }
+}
+
+function logMatrixMismatchDiagnostic(
+  matrix: boolean[][],
+  data: string,
+  originalDataLength: number,
+  suffixMode: 'byte' | 'numeric',
+  ecc: ECCLevel,
+  actualVersion: number,
+  actualMask: number,
+  moduleCount: number
+): void {
+  const debugQr = createQREncoderForGenerate(
+    data,
+    originalDataLength,
+    suffixMode,
+    ecc,
+    actualVersion,
+    actualMask
+  );
+
+  let mismatchCount = 0;
+  const maxMismatches = 10;
+  for (let r = 0; r < moduleCount; r++) {
+    for (let c = 0; c < moduleCount; c++) {
+      const regenValue = matrix[r][c];
+      const encoderValue = debugQr.isDark(r, c);
+      if (regenValue !== encoderValue) {
+        if (mismatchCount < maxMismatches) {
+          log.warn('Matrix mismatch detected', {
+            row: r,
+            col: c,
+            regenerated: regenValue,
+            encoder: encoderValue,
+          });
+        }
+        mismatchCount++;
+      }
+    }
+  }
+
+  if (mismatchCount > 0) {
+    log.warn('Total matrix mismatches', {
+      mismatchCount,
+      moduleCount,
+      totalModules: moduleCount * moduleCount,
+      mismatchPercent: `${((mismatchCount / (moduleCount * moduleCount)) * 100).toFixed(2)}%`,
+    });
+  } else {
+    log.info('Matrix validation passed - regenerated matrix matches encoder exactly');
+  }
+}
+
 function generateBaseQR(
   data: string,
   version: number,
@@ -1186,76 +1263,18 @@ function generateBaseQR(
     actualMask
   );
 
-  // DIAGNOSTIC VERIFICATION: Check format info matches expected values
-  // This is now DIAGNOSTIC ONLY - the base matrix scan validation is the real gate.
-  // The encoder is the source of truth for format info. If decoder parser disagrees,
-  // it may be a parser bug. We log the disagreement but continue.
-  const formatVerification = verifyMatrixFormatInfo(matrix, ecc, actualMask);
-  if (formatVerification.valid) {
-    log.debug('Base matrix format verification passed', {
-      ecc,
-      mask: actualMask,
-    });
-  } else {
-    // FORMAT_PARSER_DISAGREEMENT: Log as WARNING, continue with regenerated matrix
-    // The real validation is whether the matrix scans correctly (checked later).
-    log.warn(
-      'FORMAT_PARSER_DISAGREEMENT: Base matrix format verification disagreement (diagnostic)',
-      {
-        expectedEcc: ecc,
-        extractedEcc: formatVerification.extractedEcc,
-        eccMatch: formatVerification.eccMatch,
-        expectedMask: actualMask,
-        extractedMask: formatVerification.extractedMask,
-        maskMatch: formatVerification.maskMatch,
-        parserDisagreement: formatVerification.reason,
-        action: 'CONTINUE_TO_SCAN_VALIDATION',
-        note: 'Encoder is authoritative. Base matrix scan validation is the real gate.',
-      }
-    );
-    // DO NOT return error - continue to base matrix scan validation
-  }
-
-  // DEBUG: Compare regenerated matrix with encoder's matrix to find discrepancies
-  const debugQr = createQREncoderForGenerate(
+  // DIAGNOSTIC VERIFICATION + DEBUG: Compare matrices
+  logFormatVerificationDiagnostic(matrix, ecc, actualMask);
+  logMatrixMismatchDiagnostic(
+    matrix,
     data,
     originalDataLength,
     suffixMode,
     ecc,
     actualVersion,
-    actualMask
+    actualMask,
+    moduleCount
   );
-
-  let mismatchCount = 0;
-  const maxMismatches = 10;
-  for (let r = 0; r < moduleCount; r++) {
-    for (let c = 0; c < moduleCount; c++) {
-      const regenValue = matrix[r][c];
-      const encoderValue = debugQr.isDark(r, c);
-      if (regenValue !== encoderValue) {
-        if (mismatchCount < maxMismatches) {
-          log.warn('Matrix mismatch detected', {
-            row: r,
-            col: c,
-            regenerated: regenValue,
-            encoder: encoderValue,
-          });
-        }
-        mismatchCount++;
-      }
-    }
-  }
-
-  if (mismatchCount > 0) {
-    log.warn('Total matrix mismatches', {
-      mismatchCount,
-      moduleCount,
-      totalModules: moduleCount * moduleCount,
-      mismatchPercent: `${((mismatchCount / (moduleCount * moduleCount)) * 100).toFixed(2)}%`,
-    });
-  } else {
-    log.info('Matrix validation passed - regenerated matrix matches encoder exactly');
-  }
 
   return {
     success: true,
@@ -1318,6 +1337,88 @@ type QArtEncodingPlan =
       originalDataLength: number;
       suffixLength: number;
     };
+
+function computeNumericGroupSafeBits(
+  suffixLength: number,
+  numericDataStart: number,
+  buffer: { getAt: (index: number) => boolean }
+): boolean[] {
+  const numericDataBits = getNumericBitsCount(suffixLength);
+  const safeBits: boolean[] = new Array(numericDataBits).fill(false);
+
+  let bitCursor = numericDataStart;
+  let remaining = suffixLength;
+  let localIndex = 0;
+
+  while (remaining > 0) {
+    const groupDigits = Math.min(3, remaining);
+    const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+
+    let value = 0;
+    for (let j = 0; j < bitsPerGroup; j++) {
+      value = (value << 1) | (buffer.getAt(bitCursor + j) ? 1 : 0);
+    }
+
+    const maxVal = getNumericGroupMax(bitsPerGroup);
+    for (let j = 0; j < bitsPerGroup; j++) {
+      const mask = 1 << (bitsPerGroup - 1 - j);
+      const flipped = value ^ mask;
+      if (flipped <= maxVal) {
+        safeBits[localIndex + j] = true;
+      }
+    }
+
+    bitCursor += bitsPerGroup;
+    localIndex += bitsPerGroup;
+    remaining -= groupDigits;
+  }
+
+  return safeBits;
+}
+
+function collectSafeBitRanges(
+  safeBits: boolean[],
+  numericDataStart: number
+): { ranges: BitRange[]; safeBitCount: number } {
+  const ranges: BitRange[] = [];
+  let safeBitCount = 0;
+  let inRange = false;
+  let start = 0;
+
+  for (let i = 0; i < safeBits.length; i++) {
+    if (safeBits[i]) {
+      safeBitCount++;
+      if (!inRange) {
+        inRange = true;
+        start = i;
+      }
+    } else if (inRange) {
+      ranges.push({ startBit: numericDataStart + start, endBit: numericDataStart + i });
+      inRange = false;
+    }
+  }
+
+  if (inRange) {
+    ranges.push({
+      startBit: numericDataStart + start,
+      endBit: numericDataStart + safeBits.length,
+    });
+  }
+
+  return { ranges, safeBitCount };
+}
+
+function buildNumericSafeRangesForEncoder(
+  bitsAfterOriginalData: number,
+  suffixLength: number,
+  version: number,
+  buffer: { getAt: (index: number) => boolean }
+): { ranges: BitRange[]; safeBitCount: number } {
+  const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+  const numericDataStart = bitsAfterOriginalData + 4 + numericCharCountBits;
+  const safeBits = computeNumericGroupSafeBits(suffixLength, numericDataStart, buffer);
+  return collectSafeBitRanges(safeBits, numericDataStart);
+}
 
 function encodeDataToBytes(
   plan: QArtEncodingPlan,
@@ -1480,81 +1581,17 @@ function encodeDataToBytes(
   const gapEndBit = paddingSafeStartBit;
   const gapBitCount = gapEndBit - gapStartBit;
 
-  const getNumericBits = (digits: number): number => {
-    const fullGroups = Math.floor(digits / 3);
-    const rem = digits % 3;
-    return fullGroups * 10 + (rem === 1 ? 4 : rem === 2 ? 7 : 0);
-  };
-
-  const getNumericMaxForBits = (bits: number): number => {
-    return bits === 10 ? 999 : bits === 7 ? 99 : 9;
-  };
-
-  const buildNumericSafeRanges = (): { ranges: BitRange[]; safeBitCount: number } => {
-    const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
-    const numericDataStart = bitsAfterOriginalData + 4 + numericCharCountBits;
-    const numericDataBits = getNumericBits(suffixLength);
-    const safeBits: boolean[] = new Array(numericDataBits).fill(false);
-
-    let bitCursor = numericDataStart;
-    let remaining = suffixLength;
-    let localIndex = 0;
-
-    while (remaining > 0) {
-      const groupDigits = Math.min(3, remaining);
-      const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
-
-      let value = 0;
-      for (let j = 0; j < bitsPerGroup; j++) {
-        value = (value << 1) | (buffer.getAt(bitCursor + j) ? 1 : 0);
-      }
-
-      const maxVal = getNumericMaxForBits(bitsPerGroup);
-      for (let j = 0; j < bitsPerGroup; j++) {
-        const mask = 1 << (bitsPerGroup - 1 - j);
-        const flipped = value ^ mask;
-        if (flipped <= maxVal) {
-          safeBits[localIndex + j] = true;
-        }
-      }
-
-      bitCursor += bitsPerGroup;
-      localIndex += bitsPerGroup;
-      remaining -= groupDigits;
-    }
-
-    const ranges: BitRange[] = [];
-    let safeBitCount = 0;
-    let inRange = false;
-    let start = 0;
-
-    for (let i = 0; i < safeBits.length; i++) {
-      if (safeBits[i]) {
-        safeBitCount++;
-        if (!inRange) {
-          inRange = true;
-          start = i;
-        }
-      } else if (inRange) {
-        ranges.push({ startBit: numericDataStart + start, endBit: numericDataStart + i });
-        inRange = false;
-      }
-    }
-
-    if (inRange) {
-      ranges.push({
-        startBit: numericDataStart + start,
-        endBit: numericDataStart + safeBits.length,
-      });
-    }
-
-    return { ranges, safeBitCount };
-  };
+  // getNumericBits / getNumericMaxForBits are defined as top-level getNumericBitsCount / getNumericGroupMax
 
   let numericSafeBitCount = 0;
   let numericSafeRanges: BitRange[] = [];
   if (suffixMode === 'numeric' && suffixLength > 0) {
-    const numericSafe = buildNumericSafeRanges();
+    const numericSafe = buildNumericSafeRangesForEncoder(
+      bitsAfterOriginalData,
+      suffixLength,
+      version,
+      buffer
+    );
     // Clamp numeric-safe ranges to the suffix-safe window (exclude terminator gap)
     numericSafeRanges = numericSafe.ranges
       .map((range) => ({
@@ -1775,6 +1812,35 @@ type NumericSelectionMask = {
   masks: Int32Array;
 };
 
+function markInvalidGroups(
+  currentValues: number[],
+  groupMax: number[],
+  groupCount: number,
+  invalid: Uint8Array
+): number {
+  let count = 0;
+  for (let g = 0; g < groupCount; g++) {
+    const bad = currentValues[g] > (groupMax[g] ?? 0);
+    invalid[g] = bad ? 1 : 0;
+    if (bad) count++;
+  }
+  return count;
+}
+
+function selectionTouchesInvalidGroup(sel: NumericSelectionMask, invalid: Uint8Array): boolean {
+  for (let j = 0; j < sel.groups.length; j++) {
+    if (invalid[sel.groups[j]]) return true;
+  }
+  return false;
+}
+
+function removeSelectionAndUpdate(sel: NumericSelectionMask, currentValues: number[]): void {
+  for (let j = 0; j < sel.groups.length; j++) {
+    const g = sel.groups[j];
+    currentValues[g] = (currentValues[g] ?? 0) ^ sel.masks[j];
+  }
+}
+
 function greedyRemoveInvalidSelections(
   selections: NumericSelectionMask[],
   currentValues: number[],
@@ -1782,46 +1848,140 @@ function greedyRemoveInvalidSelections(
   groupCount: number
 ): boolean[] {
   const invalid = new Uint8Array(groupCount);
-  const markInvalid = (): number => {
-    let count = 0;
-    for (let g = 0; g < groupCount; g++) {
-      const bad = currentValues[g] > (groupMax[g] ?? 0);
-      invalid[g] = bad ? 1 : 0;
-      if (bad) count++;
-    }
-    return count;
-  };
-
-  let invalidCount = markInvalid();
+  let invalidCount = markInvalidGroups(currentValues, groupMax, groupCount, invalid);
   const keep = new Array<boolean>(selections.length).fill(true);
 
   while (invalidCount > 0) {
     let removed = false;
     for (let i = selections.length - 1; i >= 0; i--) {
       if (!keep[i]) continue;
-      const sel = selections[i];
-      let touchesInvalid = false;
-      for (let j = 0; j < sel.groups.length; j++) {
-        if (invalid[sel.groups[j]]) {
-          touchesInvalid = true;
-          break;
-        }
-      }
-      if (!touchesInvalid) continue;
+      if (!selectionTouchesInvalidGroup(selections[i], invalid)) continue;
 
       keep[i] = false;
-      for (let j = 0; j < sel.groups.length; j++) {
-        const g = sel.groups[j];
-        currentValues[g] = (currentValues[g] ?? 0) ^ sel.masks[j];
-      }
+      removeSelectionAndUpdate(selections[i], currentValues);
       removed = true;
-      invalidCount = markInvalid();
+      invalidCount = markInvalidGroups(currentValues, groupMax, groupCount, invalid);
       break;
     }
     if (!removed) break;
   }
 
   return keep;
+}
+
+function buildNumericGroupMaps(
+  linearData: Uint8Array,
+  numericDataStart: number,
+  suffixLength: number
+): {
+  groupIndexForBit: Int32Array;
+  bitMaskForBit: Int32Array;
+  groupMax: number[];
+  baseGroupValues: number[];
+} {
+  const numericDataBits = getNumericBitsCount(suffixLength);
+  const groupIndexForBit = new Int32Array(numericDataBits).fill(-1);
+  const bitMaskForBit = new Int32Array(numericDataBits).fill(0);
+  const groupMax: number[] = [];
+  const baseGroupValues: number[] = [];
+
+  let remainingDigits = suffixLength;
+  let bitCursor = 0;
+  let groupIndex = 0;
+  while (remainingDigits > 0) {
+    const groupDigits = Math.min(3, remainingDigits);
+    const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+    const maxVal = getNumericGroupMax(bitsPerGroup);
+
+    let value = 0;
+    for (let i = 0; i < bitsPerGroup; i++) {
+      const bit = getLinearBit(linearData, numericDataStart + bitCursor + i);
+      value = (value << 1) | bit;
+      groupIndexForBit[bitCursor + i] = groupIndex;
+      bitMaskForBit[bitCursor + i] = 1 << (bitsPerGroup - 1 - i);
+    }
+
+    groupMax.push(maxVal);
+    baseGroupValues.push(value);
+
+    bitCursor += bitsPerGroup;
+    remainingDigits -= groupDigits;
+    groupIndex++;
+  }
+
+  return { groupIndexForBit, bitMaskForBit, groupMax, baseGroupValues };
+}
+
+function computeEntryGroupMasks(
+  entry: FlattenedSelection,
+  blockDataCounts: number[],
+  blockStartBytes: number[],
+  numericStartByte: number,
+  numericEndByte: number,
+  numericDataStart: number,
+  numericDataBits: number,
+  groupIndexForBit: Int32Array,
+  bitMaskForBit: Int32Array,
+  groupMasks: Int32Array,
+  touched: Int32Array
+): NumericSelectionMask {
+  const vector = entry.vector;
+  const dataCount = blockDataCounts[entry.blockIndex] ?? 0;
+  const blockStart = blockStartBytes[entry.blockIndex] ?? 0;
+  let touchedCount = 0;
+
+  const nzIdx = vector.nonZeroByteIndices;
+  const nzVals = vector.nonZeroByteValues;
+  if (nzIdx && nzVals) {
+    const firstByte = nzIdx[0] ?? -1;
+    const lastByte = nzIdx[nzIdx.length - 1] ?? -1;
+    if (firstByte < numericEndByte && lastByte >= numericStartByte) {
+      for (let k = 0; k < nzIdx.length; k++) {
+        const byteIdx = nzIdx[k];
+        if (byteIdx >= dataCount) continue;
+        touchedCount = accumulateByteGroupMasks(
+          nzVals[k],
+          blockStart + byteIdx,
+          numericDataStart,
+          numericDataBits,
+          groupIndexForBit,
+          bitMaskForBit,
+          groupMasks,
+          touched,
+          touchedCount
+        );
+      }
+    }
+  } else {
+    for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
+      const byte = vector.blockBits[byteIdx];
+      if (!byte) continue;
+      touchedCount = accumulateByteGroupMasks(
+        byte,
+        blockStart + byteIdx,
+        numericDataStart,
+        numericDataBits,
+        groupIndexForBit,
+        bitMaskForBit,
+        groupMasks,
+        touched,
+        touchedCount
+      );
+    }
+  }
+
+  if (touchedCount === 0) {
+    return { entry, groups: new Int32Array(0), masks: new Int32Array(0) };
+  }
+  const groups = new Int32Array(touchedCount);
+  const masks = new Int32Array(touchedCount);
+  for (let i = 0; i < touchedCount; i++) {
+    const g = touched[i];
+    groups[i] = g;
+    masks[i] = groupMasks[g];
+    groupMasks[g] = 0;
+  }
+  return { entry, groups, masks };
 }
 
 function filterSelectionsForNumericSuffix(
@@ -1850,37 +2010,12 @@ function filterSelectionsForNumericSuffix(
     offset += blockDataCounts[i];
   }
 
-  // Build group maps and base values
-  const groupIndexForBit = new Int32Array(numericDataBits).fill(-1);
-  const bitMaskForBit = new Int32Array(numericDataBits).fill(0);
-  const groupMax: number[] = [];
-  const baseGroupValues: number[] = [];
+  const { groupIndexForBit, bitMaskForBit, groupMax, baseGroupValues } = buildNumericGroupMaps(
+    linearData,
+    numericDataStart,
+    encoderLayout.suffixLength
+  );
 
-  let remainingDigits = encoderLayout.suffixLength;
-  let bitCursor = 0;
-  let groupIndex = 0;
-  while (remainingDigits > 0) {
-    const groupDigits = Math.min(3, remainingDigits);
-    const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
-    const maxVal = getNumericGroupMax(bitsPerGroup);
-
-    let value = 0;
-    for (let i = 0; i < bitsPerGroup; i++) {
-      const bit = getLinearBit(linearData, numericDataStart + bitCursor + i);
-      value = (value << 1) | bit;
-      groupIndexForBit[bitCursor + i] = groupIndex;
-      bitMaskForBit[bitCursor + i] = 1 << (bitsPerGroup - 1 - i);
-    }
-
-    groupMax.push(maxVal);
-    baseGroupValues.push(value);
-
-    bitCursor += bitsPerGroup;
-    remainingDigits -= groupDigits;
-    groupIndex++;
-  }
-
-  // Precompute block start byte offsets in linear buffer
   const blockStartBytes: number[] = [];
   offset = 0;
   for (const count of blockDataCounts) {
@@ -1888,73 +2023,25 @@ function filterSelectionsForNumericSuffix(
     offset += count;
   }
 
-  const selections: NumericSelectionMask[] = [];
   const groupCount = groupMax.length;
   const groupMasks = new Int32Array(groupCount);
   const touched = new Int32Array(groupCount);
 
-  for (const entry of flattened) {
-    const blockIndex = entry.blockIndex;
-    const vector = entry.vector;
-    const dataCount = blockDataCounts[blockIndex] ?? 0;
-    const blockStart = blockStartBytes[blockIndex] ?? 0;
-
-    let touchedCount = 0;
-
-    const nzIdx = vector.nonZeroByteIndices;
-    const nzVals = vector.nonZeroByteValues;
-    if (nzIdx && nzVals) {
-      const firstByte = nzIdx[0] ?? -1;
-      const lastByte = nzIdx[nzIdx.length - 1] ?? -1;
-      if (firstByte < numericEndByte && lastByte >= numericStartByte) {
-        for (let k = 0; k < nzIdx.length; k++) {
-          const byteIdx = nzIdx[k];
-          if (byteIdx >= dataCount) continue;
-          touchedCount = accumulateByteGroupMasks(
-            nzVals[k],
-            blockStart + byteIdx,
-            numericDataStart,
-            numericDataBits,
-            groupIndexForBit,
-            bitMaskForBit,
-            groupMasks,
-            touched,
-            touchedCount
-          );
-        }
-      }
-    } else {
-      for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
-        const byte = vector.blockBits[byteIdx];
-        if (!byte) continue;
-        touchedCount = accumulateByteGroupMasks(
-          byte,
-          blockStart + byteIdx,
-          numericDataStart,
-          numericDataBits,
-          groupIndexForBit,
-          bitMaskForBit,
-          groupMasks,
-          touched,
-          touchedCount
-        );
-      }
-    }
-
-    if (touchedCount === 0) {
-      selections.push({ entry, groups: new Int32Array(0), masks: new Int32Array(0) });
-    } else {
-      const groups = new Int32Array(touchedCount);
-      const masks = new Int32Array(touchedCount);
-      for (let i = 0; i < touchedCount; i++) {
-        const g = touched[i];
-        groups[i] = g;
-        masks[i] = groupMasks[g];
-        groupMasks[g] = 0;
-      }
-      selections.push({ entry, groups, masks });
-    }
-  }
+  const selections: NumericSelectionMask[] = flattened.map((entry) =>
+    computeEntryGroupMasks(
+      entry,
+      blockDataCounts,
+      blockStartBytes,
+      numericStartByte,
+      numericEndByte,
+      numericDataStart,
+      numericDataBits,
+      groupIndexForBit,
+      bitMaskForBit,
+      groupMasks,
+      touched
+    )
+  );
 
   const currentValues = baseGroupValues.slice();
   for (const sel of selections) {
@@ -2005,6 +2092,18 @@ function drawFinderPattern(
   }
 }
 
+function drawSingleAlignmentPattern(modules: (boolean | null)[][], row: number, col: number): void {
+  for (let r = -2; r <= 2; r++) {
+    for (let c = -2; c <= 2; c++) {
+      if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
+        modules[row + r][col + c] = true;
+      } else {
+        modules[row + r][col + c] = false;
+      }
+    }
+  }
+}
+
 function drawAlignmentPatterns(
   modules: (boolean | null)[][],
   version: number,
@@ -2015,15 +2114,7 @@ function drawAlignmentPatterns(
   for (const row of positions) {
     for (const col of positions) {
       if (modules[row][col] !== null) continue;
-      for (let r = -2; r <= 2; r++) {
-        for (let c = -2; c <= 2; c++) {
-          if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-            modules[row + r][col + c] = true;
-          } else {
-            modules[row + r][col + c] = false;
-          }
-        }
-      }
+      drawSingleAlignmentPattern(modules, row, col);
     }
   }
 }
@@ -2111,6 +2202,35 @@ function interleaveBlockCodewords(
   return interleaved;
 }
 
+function placeOneDataModule(
+  modules: (boolean | null)[][],
+  row: number,
+  col: number,
+  interleaved: number[],
+  byteIndex: number,
+  bitIndex: number,
+  maskFunc: (r: number, c: number) => boolean
+): { byteIndex: number; bitIndex: number } {
+  if (modules[row][col] !== null) {
+    return { byteIndex, bitIndex };
+  }
+
+  let dark = false;
+  if (byteIndex < interleaved.length) {
+    dark = ((interleaved[byteIndex] >>> bitIndex) & 1) === 1;
+  }
+  if (maskFunc(row, col)) {
+    dark = !dark;
+  }
+  modules[row][col] = dark;
+  bitIndex--;
+  if (bitIndex === -1) {
+    byteIndex++;
+    bitIndex = 7;
+  }
+  return { byteIndex, bitIndex };
+}
+
 function placeDataWithZigzag(
   modules: (boolean | null)[][],
   interleaved: number[],
@@ -2129,27 +2249,17 @@ function placeDataWithZigzag(
 
     while (true) {
       for (let c = 0; c < 2; c++) {
-        const currentCol = col - c;
-
-        if (modules[row][currentCol] === null) {
-          let dark = false;
-
-          if (byteIndex < interleaved.length) {
-            dark = ((interleaved[byteIndex] >>> bitIndex) & 1) === 1;
-          }
-
-          if (maskFunc(row, currentCol)) {
-            dark = !dark;
-          }
-
-          modules[row][currentCol] = dark;
-          bitIndex--;
-
-          if (bitIndex === -1) {
-            byteIndex++;
-            bitIndex = 7;
-          }
-        }
+        const placed = placeOneDataModule(
+          modules,
+          row,
+          col - c,
+          interleaved,
+          byteIndex,
+          bitIndex,
+          maskFunc
+        );
+        byteIndex = placed.byteIndex;
+        bitIndex = placed.bitIndex;
       }
 
       row += inc;
@@ -2460,6 +2570,82 @@ function analyzeMatrixDiff(
   return { diffCount, structuralDiffCount, dataDiffCount, sampleDiffs };
 }
 
+function computeLinearBitPosition(
+  blockIndex: number,
+  posInBlock: number,
+  bitInByte: number,
+  blockDataCounts: number[]
+): { linearByte: number; linearBit: number } {
+  let linearByteOffset = 0;
+  for (let b = 0; b < blockIndex; b++) {
+    linearByteOffset += blockDataCounts[b];
+  }
+  const linearByte = linearByteOffset + posInBlock;
+  const linearBit = linearByte * 8 + (7 - bitInByte);
+  return { linearByte, linearBit };
+}
+
+function classifyIntervalStatus(
+  linearBit: number,
+  encoderLayout: EncoderDerivedLayout
+): {
+  isInSuffixInterval: boolean;
+  isInPaddingInterval: boolean;
+  isInGap: boolean;
+  isInProtected: boolean;
+  status: string;
+} {
+  const isInSuffixInterval =
+    linearBit >= encoderLayout.suffixSafeStartBit && linearBit < encoderLayout.suffixSafeEndBit;
+  const isInPaddingInterval =
+    linearBit >= encoderLayout.paddingSafeStartBit && linearBit < encoderLayout.paddingSafeEndBit;
+  const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
+  const isInProtected = linearBit < encoderLayout.protectedBitEnd;
+  const status = isInSuffixInterval
+    ? 'Vector is in SUFFIX safe interval (EXPECTED)'
+    : isInPaddingInterval
+      ? 'Vector is in PADDING safe interval (EXPECTED)'
+      : isInGap
+        ? 'Vector is in TERMINATOR GAP - BUG!'
+        : isInProtected
+          ? 'Vector is in PROTECTED region - BUG!'
+          : 'Vector is in UNKNOWN region - BUG!';
+  return { isInSuffixInterval, isInPaddingInterval, isInGap, isInProtected, status };
+}
+
+function applyTestVectorAndScan(
+  testVector: { rsBlockIndex: number; blockBits: Uint8Array },
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  actualVersion: number,
+  ecc: ECCLevel,
+  actualMask: number
+): ScanResult {
+  const testBlockData = blockDataArrays.map((arr) => new Uint8Array(arr));
+  const testBlockEcc = blockEccArrays.map((arr) => new Uint8Array(arr));
+
+  const blockIdx = testVector.rsBlockIndex;
+  for (let byteIdx = 0; byteIdx < testBlockData[blockIdx].length; byteIdx++) {
+    testBlockData[blockIdx][byteIdx] ^= testVector.blockBits[byteIdx];
+  }
+  for (let byteIdx = 0; byteIdx < testBlockEcc[blockIdx].length; byteIdx++) {
+    testBlockEcc[blockIdx][byteIdx] ^= testVector.blockBits[blockDataCounts[blockIdx] + byteIdx];
+  }
+
+  const testMatrix = regenerateQRFromModifiedData(
+    testBlockData,
+    testBlockEcc,
+    blockDataCounts,
+    blockEccCounts,
+    actualVersion,
+    ecc,
+    actualMask
+  );
+  return scanMatrixWithJsQR(testMatrix);
+}
+
 function runDeterministicMutationTest(
   testVector: {
     rsBlockIndex: number;
@@ -2481,20 +2667,13 @@ function runDeterministicMutationTest(
   actualSuffix: string
 ): { passed: boolean; error?: string } {
   const testLocalBitIndex = testVector.posInBlock * 8 + (7 - testVector.bitInByte);
-
-  let linearByteOffset = 0;
-  for (let b = 0; b < testVector.rsBlockIndex; b++) {
-    linearByteOffset += blockDataCounts[b];
-  }
-  const linearByte = linearByteOffset + testVector.posInBlock;
-  const linearBit = linearByte * 8 + (7 - testVector.bitInByte);
-
-  const isInSuffixInterval =
-    linearBit >= encoderLayout.suffixSafeStartBit && linearBit < encoderLayout.suffixSafeEndBit;
-  const isInPaddingInterval =
-    linearBit >= encoderLayout.paddingSafeStartBit && linearBit < encoderLayout.paddingSafeEndBit;
-  const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
-  const isInProtected = linearBit < encoderLayout.protectedBitEnd;
+  const { linearByte, linearBit } = computeLinearBitPosition(
+    testVector.rsBlockIndex,
+    testVector.posInBlock,
+    testVector.bitInByte,
+    blockDataCounts
+  );
+  const interval = classifyIntervalStatus(linearBit, encoderLayout);
 
   log.info('Test vector details (TWO-INTERVAL)', {
     vectorDataBitIndex: testVector.dataBitIndex,
@@ -2505,39 +2684,18 @@ function runDeterministicMutationTest(
     linearByte,
     linearBit,
     twoIntervalAnalysis: {
-      isInSuffixInterval,
-      isInPaddingInterval,
-      isInGap,
-      isInProtected,
+      ...interval,
       suffixRange: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
       paddingRange: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
       gapRange: `${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit}`,
     },
-    status: isInSuffixInterval
-      ? 'Vector is in SUFFIX safe interval (EXPECTED)'
-      : isInPaddingInterval
-        ? 'Vector is in PADDING safe interval (EXPECTED)'
-        : isInGap
-          ? 'Vector is in TERMINATOR GAP - BUG!'
-          : isInProtected
-            ? 'Vector is in PROTECTED region - BUG!'
-            : 'Vector is in UNKNOWN region - BUG!',
+    status: interval.status,
   });
 
-  const testBlockData = blockDataArrays.map((arr) => new Uint8Array(arr));
-  const testBlockEcc = blockEccArrays.map((arr) => new Uint8Array(arr));
-
-  const blockIdx = testVector.rsBlockIndex;
-  for (let byteIdx = 0; byteIdx < testBlockData[blockIdx].length; byteIdx++) {
-    testBlockData[blockIdx][byteIdx] ^= testVector.blockBits[byteIdx];
-  }
-  for (let byteIdx = 0; byteIdx < testBlockEcc[blockIdx].length; byteIdx++) {
-    testBlockEcc[blockIdx][byteIdx] ^= testVector.blockBits[blockDataCounts[blockIdx] + byteIdx];
-  }
-
-  const testMatrix = regenerateQRFromModifiedData(
-    testBlockData,
-    testBlockEcc,
+  const testScan = applyTestVectorAndScan(
+    testVector,
+    blockDataArrays,
+    blockEccArrays,
     blockDataCounts,
     blockEccCounts,
     actualVersion,
@@ -2545,14 +2703,10 @@ function runDeterministicMutationTest(
     actualMask
   );
 
-  const testScan = scanMatrixWithJsQR(testMatrix);
-
   if (!testScan.success) {
     log.warn('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
       vectorDataBitIndex: testVector.dataBitIndex,
       vectorBlockIndex: testVector.rsBlockIndex,
-      vectorPosInBlock: testVector.posInBlock,
-      vectorBitInByte: testVector.bitInByte,
       localBitIndex: testLocalBitIndex,
       linearByte,
       linearBit,
@@ -2567,7 +2721,6 @@ function runDeterministicMutationTest(
   }
 
   const mutationValidation = validateOriginalDataPreserved(testScan.data, data);
-
   if (!mutationValidation.valid) {
     log.warn('HYBRID MUTATION TEST FAILED - byte-exact validation failed!', {
       expectedOriginal: data,
@@ -2576,33 +2729,30 @@ function runDeterministicMutationTest(
       actualLength: testScan.data?.length,
       validationReason: mutationValidation.reason,
       mismatchDetails: mutationValidation.mismatch,
-      vectorDataBitIndex: testVector.dataBitIndex,
-      vectorBlockIndex: testVector.rsBlockIndex,
       localBitIndex: testLocalBitIndex,
       linearByte,
       linearBit,
-      paddingStartByte: encoderLayout.paddingStartByte,
-      allowedBitStart: encoderLayout.allowedBitStart,
       protectedBitEnd: encoderLayout.protectedBitEnd,
-      note: 'This means our "controllable" bits include protected original data!',
     });
     return { passed: false, error: `HYBRID mutation test failed: ${mutationValidation.reason}` };
   }
 
   const decodedSuffix = testScan.data?.slice(originalDataLength) || '';
-  const suffixWasModified = decodedSuffix !== actualSuffix;
-
   log.info('HYBRID MUTATION TEST PASSED (TWO-INTERVAL byte-exact)', {
     vectorDataBitIndex: testVector.dataBitIndex,
     vectorBlockIndex: testVector.rsBlockIndex,
     localBitIndex: testLocalBitIndex,
     linearByte,
     linearBit,
-    vectorInterval: isInSuffixInterval ? 'SUFFIX' : isInPaddingInterval ? 'PADDING' : 'UNKNOWN',
+    vectorInterval: interval.isInSuffixInterval
+      ? 'SUFFIX'
+      : interval.isInPaddingInterval
+        ? 'PADDING'
+        : 'UNKNOWN',
     gapProtected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
     originalDataPreserved: true,
     validationMethod: 'BYTE_EXACT_PREFIX',
-    suffixWasModified,
+    suffixWasModified: decodedSuffix !== actualSuffix,
     matrixScansCorrectly: true,
   });
 
@@ -2772,10 +2922,152 @@ function estimateBlockECCDamage(
   return { anyBlockOverBudget, blockDamage };
 }
 
-/**
- * Resolve suffix mode, version, and encoded data for QR-Art generation.
- * Extracts the complex branching logic for suffix/version configuration.
- */
+function resolveQArtVersion(
+  forceVersion: number | undefined,
+  version: number
+): { versionToUse: number; versionWasUpgradedForQArt: boolean } {
+  let versionWasUpgradedForQArt = false;
+  let versionToUse: number;
+
+  if (forceVersion && forceVersion > 0) {
+    if (forceVersion < MIN_QART_VERSION) {
+      log.warn('Forced version is below MIN_QART_VERSION, upgrading for reliable scanning', {
+        requestedVersion: forceVersion,
+        minQArtVersion: MIN_QART_VERSION,
+        reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
+      });
+      versionToUse = MIN_QART_VERSION;
+      versionWasUpgradedForQArt = true;
+    } else {
+      versionToUse = forceVersion;
+    }
+    log.info('Using QR version for QR-Art', {
+      version: versionToUse,
+      wasUpgraded: versionWasUpgradedForQArt,
+    });
+  } else if (version > 0) {
+    versionToUse = version;
+    log.info('Using QR version for QR-Art', { version: versionToUse, wasUpgraded: false });
+  } else {
+    versionToUse = 0;
+  }
+
+  return { versionToUse, versionWasUpgradedForQArt };
+}
+
+function handleUserProvidedSuffix(
+  suffix: string,
+  resolvedSuffixMode: 'numeric' | 'byte',
+  prefix: string,
+  data: string,
+  originalDataLength: number
+): {
+  resolvedSuffixMode: 'numeric' | 'byte';
+  actualSuffix: string;
+  encodedData: string;
+  originalData: string;
+  originalDataLength: number;
+} {
+  let actualSuffix = '';
+  let encodedData = '';
+  let currentMode = resolvedSuffixMode;
+  let currentOriginalData = prefix;
+  let currentOriginalDataLength = originalDataLength;
+
+  if (currentMode === 'numeric') {
+    const normalized = suffix.startsWith('#') ? suffix.slice(1) : suffix;
+    if (/^\d*$/.test(normalized)) {
+      actualSuffix = normalized;
+      encodedData = prefix + actualSuffix;
+      log.info('Using user-provided numeric suffix', {
+        originalDataLength,
+        suffixLength: actualSuffix.length,
+        suffixPreview: actualSuffix.slice(0, 20) + (actualSuffix.length > 20 ? '...' : ''),
+      });
+    } else {
+      log.warn('Numeric suffix mode requires digits only; falling back to byte suffix mode', {
+        providedSuffix: suffix,
+      });
+      currentMode = 'byte';
+      currentOriginalData = data;
+      currentOriginalDataLength = data.length;
+    }
+  }
+
+  if (currentMode === 'byte') {
+    actualSuffix = suffix;
+    encodedData = data + suffix;
+    log.info('Using user-provided suffix', {
+      originalDataLength: currentOriginalDataLength,
+      suffixLength: suffix.length,
+      suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
+    });
+  }
+
+  return {
+    resolvedSuffixMode: currentMode,
+    actualSuffix,
+    encodedData,
+    originalData: currentOriginalData,
+    originalDataLength: currentOriginalDataLength,
+  };
+}
+
+function handleAutoSuffix(
+  data: string,
+  ecc: ECCLevel,
+  prefix: string,
+  resolvedSuffixMode: 'numeric' | 'byte',
+  originalDataLength: number,
+  versionToUse: number,
+  targetControlPercent: number,
+  lockVersionToMinimum: boolean
+): { actualSuffix: string; encodedData: string; optimalVersion: number } {
+  const controlTarget = lockVersionToMinimum || versionToUse > 0 ? 0 : targetControlPercent;
+  const optimalConfig = calculateOptimalVersionAndSuffix(
+    versionToUse,
+    ecc,
+    originalDataLength,
+    controlTarget,
+    resolvedSuffixMode
+  );
+  const seed = hashStringToSeed(data + optimalConfig.version.toString() + ecc);
+
+  let actualSuffix: string;
+  let encodedData: string;
+  if (resolvedSuffixMode === 'numeric') {
+    const suffixDigits = Math.max(0, optimalConfig.suffixLength);
+    actualSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
+    encodedData = prefix + actualSuffix;
+  } else {
+    const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
+    actualSuffix = `#${generateDeterministicSuffix(suffixCharCount, seed)}`;
+    encodedData = data + actualSuffix;
+  }
+
+  log.info('Auto-generated DETERMINISTIC suffix for HYBRID QR-Art', {
+    originalDataLength,
+    suffixLength: actualSuffix.length,
+    suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
+    encoding:
+      resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
+    optimalVersion: optimalConfig.version,
+    versionToUse,
+    expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
+    versionUpgraded: optimalConfig.versionUpgraded,
+    paddingBytes: optimalConfig.paddingBytes,
+    controllableBits: {
+      suffix: optimalConfig.suffixBits,
+      padding: optimalConfig.paddingBits,
+      total: optimalConfig.suffixBits + optimalConfig.paddingBits,
+    },
+    seedUsed: seed,
+    lockVersionToMinimum,
+  });
+
+  return { actualSuffix, encodedData, optimalVersion: optimalConfig.version };
+}
+
 function resolveQArtSuffixConfig(config: {
   data: string;
   version: number;
@@ -2834,119 +3126,49 @@ function resolveQArtSuffixConfig(config: {
   let versionToUse: number;
 
   // Determine the version to use
-  if (forceVersion && forceVersion > 0) {
-    if (forceVersion < MIN_QART_VERSION) {
-      log.warn('Forced version is below MIN_QART_VERSION, upgrading for reliable scanning', {
-        requestedVersion: forceVersion,
-        minQArtVersion: MIN_QART_VERSION,
-        reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
-      });
-      versionToUse = MIN_QART_VERSION;
-      versionWasUpgradedForQArt = true;
-    } else {
-      versionToUse = forceVersion;
-    }
-    log.info('Using QR version for QR-Art', {
-      version: versionToUse,
-      wasUpgraded: versionWasUpgradedForQArt,
-    });
-  } else if (version > 0) {
-    versionToUse = version;
-    log.info('Using QR version for QR-Art', {
-      version: versionToUse,
-      wasUpgraded: versionWasUpgradedForQArt,
-    });
-  } else {
-    versionToUse = 0;
-  }
+  const versionResult = resolveQArtVersion(forceVersion, version);
+  versionToUse = versionResult.versionToUse;
+  versionWasUpgradedForQArt = versionResult.versionWasUpgradedForQArt;
 
   // Handle suffix generation
   if (suffix !== undefined) {
-    if (resolvedSuffixMode === 'numeric') {
-      const normalized = suffix.startsWith('#') ? suffix.slice(1) : suffix;
-      if (/^\d*$/.test(normalized)) {
-        actualSuffix = normalized;
-        encodedData = prefix + actualSuffix;
-        log.info('Using user-provided numeric suffix', {
-          originalDataLength,
-          suffixLength: actualSuffix.length,
-          suffixPreview: actualSuffix.slice(0, 20) + (actualSuffix.length > 20 ? '...' : ''),
-        });
-      } else {
-        log.warn('Numeric suffix mode requires digits only; falling back to byte suffix mode', {
-          providedSuffix: suffix,
-        });
-        resolvedSuffixMode = 'byte';
-        originalData = data;
-        originalDataLength = data.length;
-      }
-    }
-
-    if (resolvedSuffixMode === 'byte') {
-      actualSuffix = suffix;
-      encodedData = data + suffix;
-      log.info('Using user-provided suffix', {
-        originalDataLength,
-        suffixLength: suffix.length,
-        suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
-      });
-    }
-  } else if (autoSuffix) {
-    const controlTarget = lockVersionToMinimum || versionToUse > 0 ? 0 : targetControlPercent;
-    const optimalConfig = calculateOptimalVersionAndSuffix(
-      versionToUse,
-      ecc,
-      originalDataLength,
-      controlTarget,
-      resolvedSuffixMode
+    const userSuffixResult = handleUserProvidedSuffix(
+      suffix,
+      resolvedSuffixMode,
+      prefix,
+      data,
+      originalDataLength
     );
-
-    const seed = hashStringToSeed(data + optimalConfig.version.toString() + ecc);
-
-    if (resolvedSuffixMode === 'numeric') {
-      const suffixDigits = Math.max(0, optimalConfig.suffixLength);
-      actualSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
-      encodedData = prefix + actualSuffix;
-    } else {
-      const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
-      actualSuffix = `#${generateDeterministicSuffix(suffixCharCount, seed)}`;
-      encodedData = data + actualSuffix;
-    }
-
-    if (versionToUse === 0) {
-      versionToUse = optimalConfig.version;
-    }
-
-    log.info('Auto-generated DETERMINISTIC suffix for HYBRID QR-Art', {
+    resolvedSuffixMode = userSuffixResult.resolvedSuffixMode;
+    actualSuffix = userSuffixResult.actualSuffix;
+    encodedData = userSuffixResult.encodedData;
+    originalData = userSuffixResult.originalData;
+    originalDataLength = userSuffixResult.originalDataLength;
+  } else if (autoSuffix) {
+    const autoResult = handleAutoSuffix(
+      data,
+      ecc,
+      prefix,
+      resolvedSuffixMode,
       originalDataLength,
-      suffixLength: actualSuffix.length,
-      suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
-      encoding:
-        resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
-      optimalVersion: optimalConfig.version,
       versionToUse,
-      expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
-      versionUpgraded: optimalConfig.versionUpgraded,
-      paddingBytes: optimalConfig.paddingBytes,
-      controllableBits: {
-        suffix: optimalConfig.suffixBits,
-        padding: optimalConfig.paddingBits,
-        total: optimalConfig.suffixBits + optimalConfig.paddingBits,
-      },
-      seedUsed: seed,
-      lockVersionToMinimum,
-    });
+      targetControlPercent,
+      lockVersionToMinimum
+    );
+    actualSuffix = autoResult.actualSuffix;
+    encodedData = autoResult.encodedData;
+    if (versionToUse === 0) {
+      versionToUse = autoResult.optimalVersion;
+    }
   } else {
     actualSuffix = '';
     encodedData = data;
     resolvedSuffixMode = 'byte';
     originalData = data;
     originalDataLength = data.length;
-
     if (versionToUse === 0) {
       versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
     }
-
     log.warn('No suffix - only padding codewords controllable (limited QR-Art control)', {
       originalDataLength,
       versionToUse,
@@ -4295,16 +4517,11 @@ function resolveSharedSuffix(
   return '';
 }
 
-export async function generateFullQArtBestMask(
-  config: Omit<FullQArtConfig, 'maskPattern'>
-): Promise<FullQArtResult> {
-  let bestResult: FullQArtResult | null = null;
-  const performanceProfile = config.performanceProfile ?? 'quality';
-  let masksWithoutMeaningfulGain = 0;
-  let lastBestMatch = -1;
-
-  // Pre-calculate optimal version and suffix for all mask comparisons
-  // This ensures consistent encoding across all mask attempts
+function prepareBestMaskConfig(config: Omit<FullQArtConfig, 'maskPattern'>): {
+  resolvedSuffixMode: 'numeric' | 'byte';
+  sharedVersion: number;
+  sharedSuffix: string;
+} {
   const targetControlPercent = config.targetControlPercent ?? 100;
   const resolvedSuffixMode: 'numeric' | 'byte' =
     config.suffixMode === 'numeric'
@@ -4347,15 +4564,65 @@ export async function generateFullQArtBestMask(
     note: 'Each mask will use the same DETERMINISTIC suffix for fair comparison',
   });
 
+  return { resolvedSuffixMode, sharedVersion, sharedSuffix };
+}
+
+function checkBalancedMaskEarlyExit(
+  bestResult: FullQArtResult,
+  lastBestMatch: number,
+  masksWithoutMeaningfulGain: number,
+  mask: number
+): { shouldExit: boolean; masksWithoutMeaningfulGain: number } {
+  if (bestResult.matchPercentage >= BALANCED_MASK_EARLY_EXIT_THRESHOLD) {
+    log.info('Balanced profile: ending mask search early after reaching target match', {
+      maskEvaluated: mask + 1,
+      matchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
+      threshold: `${BALANCED_MASK_EARLY_EXIT_THRESHOLD}%`,
+    });
+    return { shouldExit: true, masksWithoutMeaningfulGain };
+  }
+
+  if (
+    lastBestMatch >= 0 &&
+    bestResult.matchPercentage - lastBestMatch < BALANCED_MASK_STALL_DELTA
+  ) {
+    masksWithoutMeaningfulGain += 1;
+  } else {
+    masksWithoutMeaningfulGain = 0;
+  }
+
+  if (masksWithoutMeaningfulGain >= BALANCED_MASK_STALL_WINDOW && mask >= 3) {
+    log.info('Balanced profile: stopping mask search due to stalled improvement', {
+      maskEvaluated: mask + 1,
+      bestMatchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
+      stallWindow: BALANCED_MASK_STALL_WINDOW,
+      minGain: BALANCED_MASK_STALL_DELTA,
+    });
+    return { shouldExit: true, masksWithoutMeaningfulGain };
+  }
+
+  return { shouldExit: false, masksWithoutMeaningfulGain };
+}
+
+export async function generateFullQArtBestMask(
+  config: Omit<FullQArtConfig, 'maskPattern'>
+): Promise<FullQArtResult> {
+  let bestResult: FullQArtResult | null = null;
+  const performanceProfile = config.performanceProfile ?? 'quality';
+  let masksWithoutMeaningfulGain = 0;
+  let lastBestMatch = -1;
+
+  const { resolvedSuffixMode, sharedVersion, sharedSuffix } = prepareBestMaskConfig(config);
+
   for (let mask = 0; mask < 8; mask++) {
     const result = await generateFullQArt({
       ...config,
-      forceVersion: sharedVersion, // Use same version for all masks
-      suffix: sharedSuffix, // Use same suffix for fair comparison
+      forceVersion: sharedVersion,
+      suffix: sharedSuffix,
       suffixMode: resolvedSuffixMode,
-      autoSuffix: false, // Disable auto-suffix since we pre-generated it
+      autoSuffix: false,
       maskPattern: mask,
-      strictSuffix: config.strictSuffix ?? true, // Default true for phone-safe URLs
+      strictSuffix: config.strictSuffix ?? true,
       onProgress: (stage, percent) => {
         config.onProgress?.(`Mask ${mask}: ${stage}`, (mask * 100 + percent) / 8);
       },
@@ -4367,36 +4634,17 @@ export async function generateFullQArtBestMask(
       }
     }
 
-    if (performanceProfile === 'balanced' && bestResult) {
-      if (bestResult.matchPercentage >= BALANCED_MASK_EARLY_EXIT_THRESHOLD) {
-        log.info('Balanced profile: ending mask search early after reaching target match', {
-          maskEvaluated: mask + 1,
-          matchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
-          threshold: `${BALANCED_MASK_EARLY_EXIT_THRESHOLD}%`,
-        });
-        break;
-      }
+    if (performanceProfile !== 'balanced' || !bestResult) continue;
 
-      if (
-        lastBestMatch >= 0 &&
-        bestResult.matchPercentage - lastBestMatch < BALANCED_MASK_STALL_DELTA
-      ) {
-        masksWithoutMeaningfulGain += 1;
-      } else {
-        masksWithoutMeaningfulGain = 0;
-      }
-      lastBestMatch = bestResult.matchPercentage;
-
-      if (masksWithoutMeaningfulGain >= BALANCED_MASK_STALL_WINDOW && mask >= 3) {
-        log.info('Balanced profile: stopping mask search due to stalled improvement', {
-          maskEvaluated: mask + 1,
-          bestMatchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
-          stallWindow: BALANCED_MASK_STALL_WINDOW,
-          minGain: BALANCED_MASK_STALL_DELTA,
-        });
-        break;
-      }
-    }
+    const earlyExit = checkBalancedMaskEarlyExit(
+      bestResult,
+      lastBestMatch,
+      masksWithoutMeaningfulGain,
+      mask
+    );
+    masksWithoutMeaningfulGain = earlyExit.masksWithoutMeaningfulGain;
+    lastBestMatch = bestResult.matchPercentage;
+    if (earlyExit.shouldExit) break;
   }
 
   if (!bestResult) {
