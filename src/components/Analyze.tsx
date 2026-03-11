@@ -116,6 +116,82 @@ function waitMs(ms: number): Promise<void> {
   });
 }
 
+function countShiftedDiffs(
+  original: boolean[][],
+  regen: boolean[][],
+  moduleCount: number,
+  dr: number,
+  dc: number
+): number {
+  let diffCount = 0;
+  for (let r = 0; r < moduleCount; r += 1) {
+    const rr = r + dr;
+    if (rr < 0 || rr >= moduleCount) {
+      diffCount += moduleCount;
+      continue;
+    }
+    for (let c = 0; c < moduleCount; c += 1) {
+      const cc = c + dc;
+      if (cc < 0 || cc >= moduleCount) {
+        diffCount += 1;
+        continue;
+      }
+      if (original[r][c] !== regen[rr][cc]) diffCount += 1;
+    }
+  }
+  return diffCount;
+}
+
+function findBestMatrixShift(
+  originalMatrix: boolean[][],
+  regenMatrix: boolean[][],
+  moduleCount: number
+): { dr: number; dc: number; diffCount: number; diffPct: number } {
+  let best = { dr: 0, dc: 0, diffCount: Number.POSITIVE_INFINITY };
+  for (let dr = -2; dr <= 2; dr += 1) {
+    for (let dc = -2; dc <= 2; dc += 1) {
+      const diffCount = countShiftedDiffs(originalMatrix, regenMatrix, moduleCount, dr, dc);
+      if (diffCount < best.diffCount) best = { dr, dc, diffCount };
+    }
+  }
+  return {
+    ...best,
+    diffPct: moduleCount * moduleCount ? best.diffCount / (moduleCount * moduleCount) : 0,
+  };
+}
+
+function waitForAnimationReady(maxRetries: number): Promise<typeof globalThis.__ANQR_STATE__> {
+  return new Promise((resolve) => {
+    let attempts = 0;
+    const check = () => {
+      const state = globalThis.__ANQR_STATE__;
+      if (state?.isAnimationReady || attempts >= maxRetries) {
+        resolve(state);
+        return;
+      }
+      attempts++;
+      setTimeout(check, 75);
+    };
+    check();
+  });
+}
+
+function buildCandidateFrameIndices(cachedFramesLength: number, currentIdx: number): number[] {
+  const candidateIndices: number[] = [];
+  const pushUnique = (idx: number) => {
+    const clamped = Math.max(0, Math.min(cachedFramesLength - 1, Math.floor(idx)));
+    if (!candidateIndices.includes(clamped)) candidateIndices.push(clamped);
+  };
+
+  pushUnique(currentIdx);
+  pushUnique(Math.floor(cachedFramesLength * 0.25));
+  pushUnique(Math.floor(cachedFramesLength * 0.5));
+  pushUnique(Math.floor(cachedFramesLength * 0.75));
+  pushUnique(cachedFramesLength - 1);
+
+  return candidateIndices;
+}
+
 // Content type icons mapping
 const CONTENT_TYPE_ICONS: Record<ContentType, React.ReactNode> = {
   url: <Globe className="w-4 h-4" />,
@@ -1536,35 +1612,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         const originalMatrix = sampleOriginalMatrix();
         regenVsOriginal = originalMatrix ? diffMatrices(originalMatrix, regenMatrix) : null;
 
-        bestShift = (() => {
-          if (!originalMatrix) return null;
-          let best = { dr: 0, dc: 0, diffCount: Number.POSITIVE_INFINITY };
-          for (let dr = -2; dr <= 2; dr += 1) {
-            for (let dc = -2; dc <= 2; dc += 1) {
-              let diffCount = 0;
-              for (let r = 0; r < moduleCount; r += 1) {
-                const rr = r + dr;
-                if (rr < 0 || rr >= moduleCount) {
-                  diffCount += moduleCount;
-                  continue;
-                }
-                for (let c = 0; c < moduleCount; c += 1) {
-                  const cc = c + dc;
-                  if (cc < 0 || cc >= moduleCount) {
-                    diffCount += 1;
-                    continue;
-                  }
-                  if (originalMatrix[r][c] !== regenMatrix[rr][cc]) diffCount += 1;
-                }
-              }
-              if (diffCount < best.diffCount) best = { dr, dc, diffCount };
-            }
-          }
-          return {
-            ...best,
-            diffPct: moduleCount * moduleCount ? best.diffCount / (moduleCount * moduleCount) : 0,
-          };
-        })();
+        bestShift = originalMatrix
+          ? findBestMatrixShift(originalMatrix, regenMatrix, moduleCount)
+          : null;
       }
 
       const payloadBytesHead = (() => {
@@ -1937,12 +1987,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       let animationState = globalThis.__ANQR_STATE__;
       const isAnimatedSource = (animationState?.animationFrameCount ?? 0) > 1;
       if (isAnimatedSource && !animationState?.isAnimationReady) {
-        // Avoid failing early while animation cache is still settling.
-        for (let i = 0; i < 8; i++) {
-          await waitMs(75);
-          animationState = globalThis.__ANQR_STATE__;
-          if (animationState?.isAnimationReady) break;
-        }
+        animationState = await waitForAnimationReady(8);
       }
 
       const cachedFrames =
@@ -1951,21 +1996,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           : [];
 
       if (cachedFrames.length > 1) {
-        // Build candidate frame indices: current playing frame, then spread.
-        // Skip frame 0 — sourceCanvas (generatedCanvas) is typically frames[0]
-        // and was already tried above.
-        const candidateIndices: number[] = [];
-        const pushUnique = (idx: number) => {
-          const clamped = Math.max(0, Math.min(cachedFrames.length - 1, Math.floor(idx)));
-          if (!candidateIndices.includes(clamped)) candidateIndices.push(clamped);
-        };
-
-        const currentIdx = animationState?.currentFrame ?? 0;
-        pushUnique(currentIdx);
-        pushUnique(Math.floor(cachedFrames.length * 0.25));
-        pushUnique(Math.floor(cachedFrames.length * 0.5));
-        pushUnique(Math.floor(cachedFrames.length * 0.75));
-        pushUnique(cachedFrames.length - 1);
+        const candidateIndices = buildCandidateFrameIndices(
+          cachedFrames.length,
+          animationState?.currentFrame ?? 0
+        );
 
         for (const frameIdx of candidateIndices) {
           const frame = cachedFrames[frameIdx];
@@ -1980,7 +2014,6 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       }
 
       if (isAnimatedSource) {
-        // One fast retry on the live canvas to catch frame updates.
         await waitMs(90);
         const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
         if (retryResult.success) {

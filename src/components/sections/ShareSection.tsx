@@ -220,6 +220,25 @@ function buildShareAnimation(animation: StoreState['animation']) {
   };
 }
 
+function buildShareOutputGifOptions(output: StoreState['output']) {
+  if (output.format !== 'gif') return {};
+  return {
+    gifPaletteSize: output.gifPaletteSize !== 256 ? output.gifPaletteSize : undefined,
+    gifQuantizer: output.gifQuantizer !== 'median_cut' ? output.gifQuantizer : undefined,
+    gifDither: output.gifDither !== 'floyd' ? output.gifDither : undefined,
+    gifTransparentColor: output.gifTransparentColor || undefined,
+  };
+}
+
+function buildShareOutputSvgOptions(output: StoreState['output']) {
+  if (output.format !== 'svg') return {};
+  return {
+    svgTrueVector: output.svgTrueVector ? true : undefined,
+    svgShapePrecision: output.svgShapePrecision !== 'pixel' ? output.svgShapePrecision : undefined,
+    svgEmbedRasterOverlay: output.svgEmbedRasterOverlay === false ? false : undefined,
+  };
+}
+
 function buildShareOutput(output: StoreState['output']) {
   return {
     width: output.widthPx === 400 ? undefined : output.widthPx,
@@ -227,29 +246,12 @@ function buildShareOutput(output: StoreState['output']) {
     format: output.format === 'gif' ? undefined : output.format,
     quality: output.quality === 0.9 ? undefined : output.quality,
     filename: output.filename === 'anqr-qrcode' ? undefined : output.filename,
-    gifPaletteSize:
-      output.format === 'gif' && output.gifPaletteSize !== 256 ? output.gifPaletteSize : undefined,
-    gifQuantizer:
-      output.format === 'gif' && output.gifQuantizer !== 'median_cut'
-        ? output.gifQuantizer
-        : undefined,
-    gifDither:
-      output.format === 'gif' && output.gifDither !== 'floyd' ? output.gifDither : undefined,
-    svgTrueVector: output.format === 'svg' && output.svgTrueVector ? true : undefined,
     dpi: output.dpi === 72 ? undefined : output.dpi,
     includeQuietZone: output.includeQuietZone === false ? false : undefined,
     bgOverride: output.bgOverride ? output.bgOverride : undefined,
-    gifTransparentColor:
-      output.format === 'gif' && output.gifTransparentColor
-        ? output.gifTransparentColor
-        : undefined,
-    svgShapePrecision:
-      output.format === 'svg' && output.svgShapePrecision !== 'pixel'
-        ? output.svgShapePrecision
-        : undefined,
-    svgEmbedRasterOverlay:
-      output.format === 'svg' && output.svgEmbedRasterOverlay === false ? false : undefined,
     formatExtra: output.formatExtra === 'none' ? undefined : output.formatExtra,
+    ...buildShareOutputGifOptions(output),
+    ...buildShareOutputSvgOptions(output),
   };
 }
 

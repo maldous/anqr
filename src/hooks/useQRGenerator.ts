@@ -243,6 +243,237 @@ function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unk
   return (sanitized && typeof sanitized === 'object' ? sanitized : {}) as Record<string, unknown>;
 }
 
+type EccLevel = QRGeneratorConfig['errorCorrection'];
+
+interface SafetyAdjustmentResult {
+  modulePx: number;
+  quietZone: number;
+  intensity: number;
+  ecc: EccLevel;
+  warnings: string[];
+}
+
+function computeSafetyAdjustments(params: {
+  safetyMode: string;
+  minModulePx: number;
+  minQuietZoneModules: number;
+  maxOverlayIntensityByEcc: Record<string, number>;
+  modulePx: number;
+  moduleGapPercent: number;
+  moduleStyle: string;
+  quietZoneModules: number;
+  ecc: EccLevel;
+  overlayEnabled: boolean;
+  overlayIntensity: number;
+  pickEcc: boolean;
+  reduceIntensityUntilSafe: boolean;
+  autoPickedEcc: EccLevel;
+  effectiveEcc: EccLevel;
+}): SafetyAdjustmentResult {
+  const warnings: string[] = [];
+  let adjustedModulePx = params.modulePx;
+  let adjustedQuietZone = params.quietZoneModules;
+  let adjustedIntensity = params.overlayIntensity;
+
+  if (params.safetyMode !== 'off') {
+    if (params.modulePx < params.minModulePx) {
+      adjustedModulePx = params.minModulePx;
+      warnings.push(`Module size increased to ${params.minModulePx}px for scannability`);
+    }
+
+    if (params.quietZoneModules < params.minQuietZoneModules) {
+      adjustedQuietZone = params.minQuietZoneModules;
+      warnings.push(`Quiet zone increased to ${params.minQuietZoneModules} modules`);
+    }
+
+    const maxSafeIntensity = params.maxOverlayIntensityByEcc[params.effectiveEcc] ?? 50;
+
+    if (
+      params.safetyMode === 'strict' &&
+      params.overlayEnabled &&
+      params.overlayIntensity > maxSafeIntensity
+    ) {
+      adjustedIntensity = maxSafeIntensity;
+      warnings.push(
+        `Overlay intensity reduced to ${maxSafeIntensity}% for ECC level ${params.effectiveEcc}`
+      );
+    } else if (
+      params.safetyMode === 'balanced' &&
+      params.overlayEnabled &&
+      params.overlayIntensity > maxSafeIntensity
+    ) {
+      warnings.push(
+        `Overlay intensity (${params.overlayIntensity}%) may reduce scannability with ECC ${params.effectiveEcc}`
+      );
+    }
+
+    if (
+      params.reduceIntensityUntilSafe &&
+      params.overlayEnabled &&
+      params.overlayIntensity > maxSafeIntensity
+    ) {
+      adjustedIntensity = maxSafeIntensity;
+      warnings.push(`Auto-reduced overlay intensity to ${maxSafeIntensity}% for safe scanning`);
+    }
+
+    if (params.moduleGapPercent > 20) {
+      warnings.push('Large module gaps may affect QR readability');
+    }
+
+    if (params.moduleStyle === 'dots' && params.moduleGapPercent > 10) {
+      warnings.push('Dots with large gaps may be hard to scan');
+    }
+  }
+
+  if (params.pickEcc && params.autoPickedEcc !== params.ecc) {
+    warnings.push(`Auto-selected ECC level ${params.autoPickedEcc} for optimal balance`);
+  }
+
+  return {
+    modulePx: adjustedModulePx,
+    quietZone: adjustedQuietZone,
+    intensity: adjustedIntensity,
+    ecc: params.effectiveEcc,
+    warnings,
+  };
+}
+
+function applyCropTransform(
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+  cropRegion: { x: number; y: number; size: number }
+): HTMLCanvasElement | null {
+  const { x, y, size } = cropRegion;
+  const cropCanvas = document.createElement('canvas');
+  const cropCtx = cropCanvas.getContext('2d');
+  if (!cropCtx) return null;
+
+  const srcWidth = sourceCanvas.width;
+  const srcHeight = sourceCanvas.height;
+  const minEdge = Math.min(srcWidth, srcHeight);
+  const cropSizePx = Math.max(1, Math.round(minEdge * size));
+  const halfCrop = cropSizePx / 2;
+
+  const centerX = x * srcWidth;
+  const centerY = y * srcHeight;
+  const cropX = Math.max(0, Math.min(srcWidth - cropSizePx, centerX - halfCrop));
+  const cropY = Math.max(0, Math.min(srcHeight - cropSizePx, centerY - halfCrop));
+
+  cropCanvas.width = cropSizePx;
+  cropCanvas.height = cropSizePx;
+
+  cropCtx.drawImage(
+    sourceCanvas,
+    cropX,
+    cropY,
+    cropSizePx,
+    cropSizePx,
+    0,
+    0,
+    cropSizePx,
+    cropSizePx
+  );
+  return cropCanvas;
+}
+
+function applyFitTransform(
+  workingCanvas: HTMLCanvasElement,
+  fitMode: string
+): HTMLCanvasElement | null {
+  const fitCanvas = document.createElement('canvas');
+  const fitCtx = fitCanvas.getContext('2d');
+  if (!fitCtx) return null;
+  const srcW = workingCanvas.width;
+  const srcH = workingCanvas.height;
+  const targetSize = Math.max(srcW, srcH);
+
+  fitCanvas.width = targetSize;
+  fitCanvas.height = targetSize;
+
+  let drawX = 0,
+    drawY = 0,
+    drawW = srcW,
+    drawH = srcH;
+
+  if (fitMode === 'cover') {
+    const scale = Math.max(targetSize / srcW, targetSize / srcH);
+    drawW = srcW * scale;
+    drawH = srcH * scale;
+    drawX = (targetSize - drawW) / 2;
+    drawY = (targetSize - drawH) / 2;
+  } else if (fitMode === 'contain') {
+    const scale = Math.min(targetSize / srcW, targetSize / srcH);
+    drawW = srcW * scale;
+    drawH = srcH * scale;
+    drawX = (targetSize - drawW) / 2;
+    drawY = (targetSize - drawH) / 2;
+    fitCtx.fillStyle = 'transparent';
+    fitCtx.fillRect(0, 0, targetSize, targetSize);
+  } else if (fitMode === 'stretch') {
+    drawW = targetSize;
+    drawH = targetSize;
+  }
+
+  fitCtx.drawImage(workingCanvas, drawX, drawY, drawW, drawH);
+  return fitCanvas;
+}
+
+function applyRotateFlipTransform(
+  workingCanvas: HTMLCanvasElement,
+  rotateDeg: number,
+  flipX: boolean,
+  flipY: boolean
+): HTMLCanvasElement | null {
+  const processedCanvas = document.createElement('canvas');
+  const ctx = processedCanvas.getContext('2d');
+  if (!ctx) return null;
+  const angle = (rotateDeg * Math.PI) / 180;
+  const isRightAngle = rotateDeg === 90 || rotateDeg === 270;
+
+  if (isRightAngle) {
+    processedCanvas.width = workingCanvas.height;
+    processedCanvas.height = workingCanvas.width;
+  } else {
+    processedCanvas.width = workingCanvas.width;
+    processedCanvas.height = workingCanvas.height;
+  }
+
+  ctx.save();
+  ctx.translate(processedCanvas.width / 2, processedCanvas.height / 2);
+
+  if (rotateDeg !== 0) {
+    ctx.rotate(angle);
+  }
+  if (flipX) {
+    ctx.scale(-1, 1);
+  }
+  if (flipY) {
+    ctx.scale(1, -1);
+  }
+
+  ctx.drawImage(workingCanvas, -workingCanvas.width / 2, -workingCanvas.height / 2);
+  ctx.restore();
+  return processedCanvas;
+}
+
+function updateCompositorToFrame(
+  gifCompositor: GifCompositor,
+  frameIdx: number,
+  lastRendered: number
+): void {
+  if (lastRendered < 0 || frameIdx < lastRendered) {
+    gifCompositor.reset();
+    for (let i = 0; i <= frameIdx; i++) {
+      if (i > 0) gifCompositor.dispose(i - 1);
+      gifCompositor.apply(i);
+    }
+  } else if (frameIdx > lastRendered) {
+    for (let i = lastRendered + 1; i <= frameIdx; i++) {
+      if (i > 0) gifCompositor.dispose(i - 1);
+      gifCompositor.apply(i);
+    }
+  }
+}
+
 function scheduleTrackEvent(
   eventName: string,
   payload?: Record<string, string | number | boolean>
@@ -762,77 +993,33 @@ function useQRGenerator(): UseQRGeneratorResult {
 
   // Apply safety constraints and generate warnings
   const { safetyAdjustedConfig, safetyWarnings } = useMemo(() => {
-    const warnings: string[] = [];
-    let adjustedModulePx = render.modulePx;
-    let adjustedQuietZone = qr.quietZoneModules;
-    let adjustedIntensity = overlay.intensity;
     const effectiveEcc = auto.pickEcc ? autoPickedEcc : qr.ecc;
-
-    // Apply safety mode constraints
-    if (safety.mode !== 'off') {
-      // Enforce minimum module size
-      if (render.modulePx < safety.minModulePx) {
-        adjustedModulePx = safety.minModulePx;
-        warnings.push(`Module size increased to ${safety.minModulePx}px for scannability`);
-      }
-
-      // Enforce minimum quiet zone
-      if (qr.quietZoneModules < safety.minQuietZoneModules) {
-        adjustedQuietZone = safety.minQuietZoneModules;
-        warnings.push(`Quiet zone increased to ${safety.minQuietZoneModules} modules`);
-      }
-
-      // Check overlay intensity against ECC capacity (use store-configured limits)
-      const maxSafeIntensity = safety.maxOverlayIntensityByEcc[effectiveEcc] ?? 50;
-
-      if (safety.mode === 'strict' && overlay.enabled && overlay.intensity > maxSafeIntensity) {
-        adjustedIntensity = maxSafeIntensity;
-        warnings.push(
-          `Overlay intensity reduced to ${maxSafeIntensity}% for ECC level ${effectiveEcc}`
-        );
-      } else if (
-        safety.mode === 'balanced' &&
-        overlay.enabled &&
-        overlay.intensity > maxSafeIntensity
-      ) {
-        warnings.push(
-          `Overlay intensity (${overlay.intensity}%) may reduce scannability with ECC ${effectiveEcc}`
-        );
-      }
-
-      // Auto-reduce intensity if enabled
-      if (
-        auto.reduceIntensityUntilSafe &&
-        overlay.enabled &&
-        overlay.intensity > maxSafeIntensity
-      ) {
-        adjustedIntensity = maxSafeIntensity;
-        warnings.push(`Auto-reduced overlay intensity to ${maxSafeIntensity}% for safe scanning`);
-      }
-
-      // Warn about risky style combinations
-      if (render.moduleGapPercent > 20) {
-        warnings.push('Large module gaps may affect QR readability');
-      }
-
-      if (render.moduleStyle === 'dots' && render.moduleGapPercent > 10) {
-        warnings.push('Dots with large gaps may be hard to scan');
-      }
-    }
-
-    // Show auto-pick ECC info
-    if (auto.pickEcc && autoPickedEcc !== qr.ecc) {
-      warnings.push(`Auto-selected ECC level ${autoPickedEcc} for optimal balance`);
-    }
+    const result = computeSafetyAdjustments({
+      safetyMode: safety.mode,
+      minModulePx: safety.minModulePx,
+      minQuietZoneModules: safety.minQuietZoneModules,
+      maxOverlayIntensityByEcc: safety.maxOverlayIntensityByEcc,
+      modulePx: render.modulePx,
+      moduleGapPercent: render.moduleGapPercent,
+      moduleStyle: render.moduleStyle,
+      quietZoneModules: qr.quietZoneModules,
+      ecc: qr.ecc,
+      overlayEnabled: overlay.enabled,
+      overlayIntensity: overlay.intensity,
+      pickEcc: auto.pickEcc,
+      reduceIntensityUntilSafe: auto.reduceIntensityUntilSafe,
+      autoPickedEcc,
+      effectiveEcc,
+    });
 
     return {
       safetyAdjustedConfig: {
-        modulePx: adjustedModulePx,
-        quietZone: adjustedQuietZone,
-        intensity: adjustedIntensity,
-        ecc: effectiveEcc,
+        modulePx: result.modulePx,
+        quietZone: result.quietZone,
+        intensity: result.intensity,
+        ecc: result.ecc,
       },
-      safetyWarnings: warnings,
+      safetyWarnings: result.warnings,
     };
   }, [
     safety.mode,
@@ -1331,10 +1518,7 @@ function useQRGenerator(): UseQRGeneratorResult {
    */
   const applyGeometricTransforms = useCallback(
     (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): HTMLCanvasElement => {
-      // Cast to HTMLCanvasElement for DOM operations - this is safe because
-      // the hook only works in browser context where we always have HTMLCanvasElement
       const source = sourceCanvas as HTMLCanvasElement;
-      // Check if any geometric transforms are needed
       const needsTransform =
         overlay.rotateDeg !== 0 ||
         overlay.flipX ||
@@ -1346,116 +1530,28 @@ function useQRGenerator(): UseQRGeneratorResult {
         return source as HTMLCanvasElement;
       }
 
-      // First apply crop if enabled
       let workingCanvas: HTMLCanvasElement = source;
       if (overlay.cropEnabled && overlay.cropRegion) {
-        const { x, y, size } = overlay.cropRegion;
-        const cropCanvas = document.createElement('canvas');
-        const cropCtx = cropCanvas.getContext('2d');
-        if (!cropCtx) return sourceCanvas as HTMLCanvasElement;
-
-        const srcWidth = sourceCanvas.width;
-        const srcHeight = sourceCanvas.height;
-        // Crop must use a square source region to avoid aspect distortion.
-        // `size` scales against the shorter edge so 100% means a max square crop.
-        const minEdge = Math.min(srcWidth, srcHeight);
-        const cropSizePx = Math.max(1, Math.round(minEdge * size));
-        const halfCrop = cropSizePx / 2;
-
-        const centerX = x * srcWidth;
-        const centerY = y * srcHeight;
-        const cropX = Math.max(0, Math.min(srcWidth - cropSizePx, centerX - halfCrop));
-        const cropY = Math.max(0, Math.min(srcHeight - cropSizePx, centerY - halfCrop));
-
-        cropCanvas.width = cropSizePx;
-        cropCanvas.height = cropSizePx;
-
-        cropCtx.drawImage(
-          sourceCanvas,
-          cropX,
-          cropY,
-          cropSizePx,
-          cropSizePx,
-          0,
-          0,
-          cropSizePx,
-          cropSizePx
-        );
-        workingCanvas = cropCanvas;
+        const cropped = applyCropTransform(sourceCanvas, overlay.cropRegion);
+        if (!cropped) return sourceCanvas as HTMLCanvasElement;
+        workingCanvas = cropped;
       }
 
-      // Apply fit mode if specified
       if (overlay.fit) {
-        const fitCanvas = document.createElement('canvas');
-        const fitCtx = fitCanvas.getContext('2d');
-        if (!fitCtx) return workingCanvas;
-        const srcW = workingCanvas.width;
-        const srcH = workingCanvas.height;
-        const targetSize = Math.max(srcW, srcH);
-
-        fitCanvas.width = targetSize;
-        fitCanvas.height = targetSize;
-
-        let drawX = 0,
-          drawY = 0,
-          drawW = srcW,
-          drawH = srcH;
-
-        if (overlay.fit === 'cover') {
-          const scale = Math.max(targetSize / srcW, targetSize / srcH);
-          drawW = srcW * scale;
-          drawH = srcH * scale;
-          drawX = (targetSize - drawW) / 2;
-          drawY = (targetSize - drawH) / 2;
-        } else if (overlay.fit === 'contain') {
-          const scale = Math.min(targetSize / srcW, targetSize / srcH);
-          drawW = srcW * scale;
-          drawH = srcH * scale;
-          drawX = (targetSize - drawW) / 2;
-          drawY = (targetSize - drawH) / 2;
-          fitCtx.fillStyle = 'transparent';
-          fitCtx.fillRect(0, 0, targetSize, targetSize);
-        } else if (overlay.fit === 'stretch') {
-          drawW = targetSize;
-          drawH = targetSize;
-        }
-
-        fitCtx.drawImage(workingCanvas, drawX, drawY, drawW, drawH);
-        workingCanvas = fitCanvas;
+        const fitted = applyFitTransform(workingCanvas, overlay.fit);
+        if (!fitted) return workingCanvas;
+        workingCanvas = fitted;
       }
 
-      // Apply rotation and flip if needed
       if (overlay.rotateDeg !== 0 || overlay.flipX || overlay.flipY) {
-        const processedCanvas = document.createElement('canvas');
-        const ctx = processedCanvas.getContext('2d');
-        if (!ctx) return workingCanvas;
-        const angle = (overlay.rotateDeg * Math.PI) / 180;
-        const isRightAngle = overlay.rotateDeg === 90 || overlay.rotateDeg === 270;
-
-        if (isRightAngle) {
-          processedCanvas.width = workingCanvas.height;
-          processedCanvas.height = workingCanvas.width;
-        } else {
-          processedCanvas.width = workingCanvas.width;
-          processedCanvas.height = workingCanvas.height;
-        }
-
-        ctx.save();
-        ctx.translate(processedCanvas.width / 2, processedCanvas.height / 2);
-
-        if (overlay.rotateDeg !== 0) {
-          ctx.rotate(angle);
-        }
-        if (overlay.flipX) {
-          ctx.scale(-1, 1);
-        }
-        if (overlay.flipY) {
-          ctx.scale(1, -1);
-        }
-
-        ctx.drawImage(workingCanvas, -workingCanvas.width / 2, -workingCanvas.height / 2);
-        ctx.restore();
-        workingCanvas = processedCanvas;
+        const rotated = applyRotateFlipTransform(
+          workingCanvas,
+          overlay.rotateDeg,
+          overlay.flipX,
+          overlay.flipY
+        );
+        if (!rotated) return workingCanvas;
+        workingCanvas = rotated;
       }
 
       return workingCanvas;
@@ -2631,9 +2727,6 @@ function useQRGenerator(): UseQRGeneratorResult {
     if (frameIdx === undefined) return;
 
     if (gifCompositor) {
-      // Use compositor for GIF - apply frame patch to canvas
-      // OPTIMIZATION: Only replay from lastRenderedFrame instead of always from 0
-      // This reduces O(n²) to O(n) for sequential playback
       const lastRendered = lastRenderedFrameRef.current;
 
       log.trace('overlay frame update', {
@@ -2648,25 +2741,9 @@ function useQRGenerator(): UseQRGeneratorResult {
               : 'noop',
       });
 
-      if (lastRendered < 0 || frameIdx < lastRendered) {
-        // Need to reset and replay from start (seeking backward or first frame)
-        gifCompositor.reset();
-        for (let i = 0; i <= frameIdx; i++) {
-          if (i > 0) gifCompositor.dispose(i - 1);
-          gifCompositor.apply(i);
-        }
-      } else if (frameIdx > lastRendered) {
-        // Playing forward - only apply frames from lastRendered+1 to frameIdx
-        for (let i = lastRendered + 1; i <= frameIdx; i++) {
-          if (i > 0) gifCompositor.dispose(i - 1);
-          gifCompositor.apply(i);
-        }
-      }
-      // If frameIdx === lastRendered, no work needed
+      updateCompositorToFrame(gifCompositor, frameIdx, lastRendered);
 
       lastRenderedFrameRef.current = frameIdx;
-      // Use getSnapshot() to get a copy of the canvas - passing the canvas reference directly
-      // causes React to not detect changes since it's the same object
       setRawOverlayCanvas(gifCompositor.getSnapshot());
     } else if (gifFrames[frameIdx]) {
       // Legacy path for WebP

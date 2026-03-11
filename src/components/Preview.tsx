@@ -17,6 +17,45 @@ interface PreviewProps {
   hidden?: boolean;
 }
 
+function computeRenderingState(
+  isPending: boolean,
+  isRendering: boolean,
+  isLoading: boolean,
+  isPreparingAnimation: boolean
+): RenderState {
+  if (isPending) return 'pending';
+  if (isRendering || isLoading || isPreparingAnimation) return 'rendering';
+  return 'idle';
+}
+
+function computeBusyStageLabel(
+  busyStage: string | null,
+  isPending: boolean,
+  isPreparingAnimation: boolean,
+  t: (key: string, defaultValue: string) => string
+): string {
+  if (busyStage) return busyStage;
+  if (isPending)
+    return t('preview.busy.waitingForThingsToSettle', 'Waiting for things to settle...');
+  if (isPreparingAnimation)
+    return t('preview.busy.gettingAnimationPreviewReady', 'Getting the animation preview ready...');
+  return t('preview.busy.generatingPreview', 'Generating your preview...');
+}
+
+function computeBusyPercent(
+  busyProgress: number | null,
+  isPending: boolean,
+  isPreparingAnimation: boolean,
+  isRendering: boolean,
+  isLoading: boolean
+): number | null {
+  if (typeof busyProgress === 'number') return busyProgress;
+  if (isPending) return 12;
+  if (isPreparingAnimation) return 24;
+  if (isRendering || isLoading) return 48;
+  return null;
+}
+
 export function Preview({ sidebarOpen = true, hidden = false }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
   const {
@@ -34,36 +73,21 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     cancelGeneration,
   } = useQRGeneratorContext();
 
-  // Show busy overlay while loading OR while preparing multi-frame animation OR during active rendering
-  // isPreparingAnimation is true when we have multi-frame content but cache isn't ready yet
-  // isRendering is true when actively generating QR (after debounce, during expensive computation)
-  // isPending is true when config has changed but debounce hasn't settled (gives immediate feedback)
   const showBusy = isLoading || isRendering || isPending || isPreparingAnimation;
-
-  // Compute rendering state for test automation (data-rendering-state attribute)
-  // 'idle' = ready for interaction, 'pending' = debounce waiting, 'rendering' = actively generating
-  const renderingState: RenderState = isPending
-    ? 'pending'
-    : isRendering || isLoading || isPreparingAnimation
-      ? 'rendering'
-      : 'idle';
-  const busyStageLabel = busyStage
-    ? busyStage
-    : isPending
-      ? t('preview.busy.waitingForThingsToSettle', 'Waiting for things to settle...')
-      : isPreparingAnimation
-        ? t('preview.busy.gettingAnimationPreviewReady', 'Getting the animation preview ready...')
-        : t('preview.busy.generatingPreview', 'Generating your preview...');
-  const busyPercent =
-    typeof busyProgress === 'number'
-      ? busyProgress
-      : isPending
-        ? 12
-        : isPreparingAnimation
-          ? 24
-          : isRendering || isLoading
-            ? 48
-            : null;
+  const renderingState = computeRenderingState(
+    isPending,
+    isRendering,
+    isLoading,
+    isPreparingAnimation
+  );
+  const busyStageLabel = computeBusyStageLabel(busyStage, isPending, isPreparingAnimation, t);
+  const busyPercent = computeBusyPercent(
+    busyProgress,
+    isPending,
+    isPreparingAnimation,
+    isRendering,
+    isLoading
+  );
   const canCancelBusyWork = isLoading || isRendering || isPreparingAnimation;
 
   // Track previous rendering state to dispatch lifecycle events

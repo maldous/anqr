@@ -109,6 +109,103 @@ function getContainedImageRect(
   };
 }
 
+async function downscaleCameraBlob(blob: Blob, maxEdge: number): Promise<Blob> {
+  if (typeof createImageBitmap !== 'function') return blob;
+  const sourceBitmap = await createImageBitmap(blob);
+  const sourceMaxEdge = Math.max(sourceBitmap.width, sourceBitmap.height);
+  if (sourceMaxEdge <= maxEdge) {
+    sourceBitmap.close();
+    return blob;
+  }
+  const scale = maxEdge / sourceMaxEdge;
+  const targetWidth = Math.max(1, Math.round(sourceBitmap.width * scale));
+  const targetHeight = Math.max(1, Math.round(sourceBitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d', {
+    willReadFrequently: true,
+  } as CanvasRenderingContext2DSettings | undefined);
+  if (ctx) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(sourceBitmap, 0, 0, targetWidth, targetHeight);
+    const resizedBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (value) => {
+          if (value) {
+            resolve(value);
+            return;
+          }
+          reject(new Error('Could not encode resized camera image'));
+        },
+        'image/jpeg',
+        0.88
+      );
+    });
+    sourceBitmap.close();
+    return resizedBlob;
+  }
+  sourceBitmap.close();
+  return blob;
+}
+
+function classifyCameraError(error: unknown, t: (key: string) => string): string | null {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  if (errorMessage.includes('cancelled') || errorMessage.includes('User cancelled')) {
+    return null;
+  }
+  if (errorMessage.includes('permission') || errorMessage.includes('Permission')) {
+    return t('camera.permissionDenied');
+  }
+  return t('camera.error');
+}
+
+function isAllPreservationsEnabled(
+  overlay: ReturnType<typeof useQRStore.getState>['overlay']
+): boolean {
+  return (
+    overlay.preserveFinders &&
+    overlay.preserveTiming &&
+    overlay.preserveAlignment &&
+    overlay.protectFormatInfo &&
+    overlay.protectVersionInfo
+  );
+}
+
+async function getImageDimensionsFromFileStandalone(
+  file: File
+): Promise<{ width: number; height: number } | null> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file);
+      const dims = { width: bitmap.width, height: bitmap.height };
+      if (typeof bitmap.close === 'function') {
+        bitmap.close();
+      }
+      return dims;
+    } catch {
+      // Fall back to HTMLImageElement decode path below.
+    }
+  }
+
+  return await new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      const width = image.naturalWidth || image.width;
+      const height = image.naturalHeight || image.height;
+      URL.revokeObjectURL(objectUrl);
+      resolve(width > 0 && height > 0 ? { width, height } : null);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(null);
+    };
+    image.src = objectUrl;
+  });
+}
+
 export function OverlaySection() {
   const {
     tier,
@@ -134,12 +231,7 @@ export function OverlaySection() {
     setOverlayCrop,
   } = useQRStore();
   const { t } = useTranslation();
-  const allPreservationsEnabled =
-    overlay.preserveFinders &&
-    overlay.preserveTiming &&
-    overlay.preserveAlignment &&
-    overlay.protectFormatInfo &&
-    overlay.protectVersionInfo;
+  const allPreservationsEnabled = isAllPreservationsEnabled(overlay);
   const setAllPreservations = (checked: boolean) =>
     useQRStore.setState((s) => ({
       overlay: {
@@ -176,36 +268,7 @@ export function OverlaySection() {
   const [galleryLoading, setGalleryLoading] = useState(false);
 
   const getImageDimensionsFromFile = useCallback(
-    async (file: File): Promise<{ width: number; height: number } | null> => {
-      if (typeof createImageBitmap === 'function') {
-        try {
-          const bitmap = await createImageBitmap(file);
-          const dims = { width: bitmap.width, height: bitmap.height };
-          if (typeof bitmap.close === 'function') {
-            bitmap.close();
-          }
-          return dims;
-        } catch {
-          // Fall back to HTMLImageElement decode path below.
-        }
-      }
-
-      return await new Promise((resolve) => {
-        const objectUrl = URL.createObjectURL(file);
-        const image = new Image();
-        image.onload = () => {
-          const width = image.naturalWidth || image.width;
-          const height = image.naturalHeight || image.height;
-          URL.revokeObjectURL(objectUrl);
-          resolve(width > 0 && height > 0 ? { width, height } : null);
-        };
-        image.onerror = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(null);
-        };
-        image.src = objectUrl;
-      });
-    },
+    (file: File) => getImageDimensionsFromFileStandalone(file),
     []
   );
 
@@ -331,43 +394,7 @@ export function OverlaySection() {
       }
       let blob = await response.blob();
 
-      // Downscale high-resolution camera captures to keep Android memory use predictable.
-      if (typeof createImageBitmap === 'function') {
-        const sourceBitmap = await createImageBitmap(blob);
-        const maxEdge = 1920;
-        const sourceMaxEdge = Math.max(sourceBitmap.width, sourceBitmap.height);
-        if (sourceMaxEdge > maxEdge) {
-          const scale = maxEdge / sourceMaxEdge;
-          const targetWidth = Math.max(1, Math.round(sourceBitmap.width * scale));
-          const targetHeight = Math.max(1, Math.round(sourceBitmap.height * scale));
-          const canvas = document.createElement('canvas');
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-          const ctx = canvas.getContext('2d', {
-            willReadFrequently: true,
-          } as CanvasRenderingContext2DSettings | undefined);
-          if (ctx) {
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(sourceBitmap, 0, 0, targetWidth, targetHeight);
-            const resizedBlob = await new Promise<Blob>((resolve, reject) => {
-              canvas.toBlob(
-                (value) => {
-                  if (value) {
-                    resolve(value);
-                    return;
-                  }
-                  reject(new Error('Could not encode resized camera image'));
-                },
-                'image/jpeg',
-                0.88
-              );
-            });
-            blob = resizedBlob;
-          }
-        }
-        sourceBitmap.close();
-      }
+      blob = await downscaleCameraBlob(blob, 1920);
 
       const mimeType = blob.type || 'image/jpeg';
       const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
@@ -377,13 +404,9 @@ export function OverlaySection() {
       setOverlayEnabled(true);
       void autoEnableSquareCropForNonSquareInput(file);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
-        if (errorMessage.includes('permission') || errorMessage.includes('Permission')) {
-          setCameraError(t('camera.permissionDenied'));
-        } else {
-          setCameraError(t('camera.error'));
-        }
+      const errorMsg = classifyCameraError(error, t);
+      if (errorMsg) {
+        setCameraError(errorMsg);
       }
     } finally {
       setCameraLoading(false);
