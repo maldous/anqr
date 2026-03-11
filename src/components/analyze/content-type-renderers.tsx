@@ -804,62 +804,20 @@ function appendVCardEmailEntries(details: DetailEntry[], emails: string[]): void
   });
 }
 
-function buildVCardDetails(payload: string): DetailEntry[] {
-  const details: DetailEntry[] = [];
-  const vcardData = parseVCardPayload(payload);
-
-  if (vcardData.version) {
+function appendVCardAddressEntries(details: DetailEntry[], addresses: string[]): void {
+  addresses.forEach((addr) => {
     details.push({
-      label: 'vCard Version',
-      value: <span className="font-mono text-xs">v{vcardData.version}</span>,
-      icon: <FileText className="w-3 h-3" />,
+      label: 'Address',
+      value: <span className="text-xs">{addr}</span>,
+      icon: <MapPin className="w-3 h-3" />,
     });
-  }
+  });
+}
 
-  if (vcardData.fullName) {
-    details.push({
-      label: 'Full Name',
-      value: <span className="font-medium">{vcardData.fullName}</span>,
-      icon: <FileText className="w-3 h-3" />,
-    });
-  }
-
-  if (vcardData.organization) {
-    details.push({
-      label: 'Organization',
-      value: vcardData.organization,
-      icon: <FileText className="w-3 h-3" />,
-    });
-  }
-  if (vcardData.title) {
-    details.push({
-      label: 'Title',
-      value: vcardData.title,
-      icon: <FileText className="w-3 h-3" />,
-    });
-  }
-
-  const phones = vcardData.phones as string[];
-  if (phones && phones.length > 0) {
-    appendVCardPhoneEntries(details, phones);
-  }
-
-  const emails = vcardData.emails as string[];
-  if (emails && emails.length > 0) {
-    appendVCardEmailEntries(details, emails);
-  }
-
-  const addresses = vcardData.addresses as string[];
-  if (addresses && addresses.length > 0) {
-    addresses.forEach((addr) => {
-      details.push({
-        label: 'Address',
-        value: <span className="text-xs">{addr}</span>,
-        icon: <MapPin className="w-3 h-3" />,
-      });
-    });
-  }
-
+function appendVCardExtras(
+  details: DetailEntry[],
+  vcardData: ReturnType<typeof parseVCardPayload>
+): void {
   if (vcardData.birthday) {
     details.push({
       label: 'Birthday',
@@ -867,7 +825,6 @@ function buildVCardDetails(payload: string): DetailEntry[] {
       icon: <FileText className="w-3 h-3" />,
     });
   }
-
   if (vcardData.url) {
     details.push({
       label: 'Website',
@@ -884,7 +841,6 @@ function buildVCardDetails(payload: string): DetailEntry[] {
       icon: <Globe className="w-3 h-3" />,
     });
   }
-
   if (vcardData.note) {
     details.push({
       label: 'Notes',
@@ -897,7 +853,6 @@ function buildVCardDetails(payload: string): DetailEntry[] {
       icon: <FileText className="w-3 h-3" />,
     });
   }
-
   if (vcardData.hasPhoto === 'true') {
     details.push({
       label: 'Photo',
@@ -905,6 +860,51 @@ function buildVCardDetails(payload: string): DetailEntry[] {
       icon: <ImageIcon className="w-3 h-3" />,
     });
   }
+}
+
+function buildVCardDetails(payload: string): DetailEntry[] {
+  const details: DetailEntry[] = [];
+  const vcardData = parseVCardPayload(payload);
+
+  if (vcardData.version) {
+    details.push({
+      label: 'vCard Version',
+      value: <span className="font-mono text-xs">v{vcardData.version}</span>,
+      icon: <FileText className="w-3 h-3" />,
+    });
+  }
+  if (vcardData.fullName) {
+    details.push({
+      label: 'Full Name',
+      value: <span className="font-medium">{vcardData.fullName}</span>,
+      icon: <FileText className="w-3 h-3" />,
+    });
+  }
+  if (vcardData.organization) {
+    details.push({
+      label: 'Organization',
+      value: vcardData.organization,
+      icon: <FileText className="w-3 h-3" />,
+    });
+  }
+  if (vcardData.title) {
+    details.push({
+      label: 'Title',
+      value: vcardData.title,
+      icon: <FileText className="w-3 h-3" />,
+    });
+  }
+
+  const phones = vcardData.phones as string[];
+  if (phones && phones.length > 0) appendVCardPhoneEntries(details, phones);
+
+  const emails = vcardData.emails as string[];
+  if (emails && emails.length > 0) appendVCardEmailEntries(details, emails);
+
+  const addresses = vcardData.addresses as string[];
+  if (addresses && addresses.length > 0) appendVCardAddressEntries(details, addresses);
+
+  appendVCardExtras(details, vcardData);
   return details;
 }
 

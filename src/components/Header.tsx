@@ -809,6 +809,103 @@ function HeaderMobileNav({
   );
 }
 
+function HeaderDesktopNav({
+  resolvedPage,
+  onNavigate,
+}: {
+  resolvedPage: HeaderPage;
+  onNavigate?: (page: HeaderPage) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+      {NAV_LINKS.map((link) => {
+        const isActive = link.page === resolvedPage;
+        if (link.external) {
+          return (
+            <a
+              key={link.labelKey}
+              href={link.href}
+              className={`px-3 py-2 text-sm rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
+              title={t(link.labelKey, link.defaultLabel)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t(link.labelKey, link.defaultLabel)}
+            </a>
+          );
+        }
+        return (
+          <a
+            key={link.labelKey}
+            href={link.href}
+            className={`px-3 py-2 text-sm rounded-md transition-colors ${
+              isActive
+                ? 'text-foreground bg-muted font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+            onClick={(e) => {
+              if (!onNavigate) return;
+              e.preventDefault();
+              onNavigate(link.page);
+            }}
+            title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+          >
+            {t(link.labelKey, link.defaultLabel)}
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
+function HeaderGalleryFilter({
+  galleryFilter,
+  onGalleryFilterChange,
+}: {
+  galleryFilter: GalleryCategory | 'all';
+  onGalleryFilterChange?: (filter: GalleryCategory | 'all') => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="hidden lg:flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => onGalleryFilterChange?.('all')}
+        className={`p-2 rounded-md transition-colors ${
+          galleryFilter === 'all'
+            ? 'text-foreground bg-muted'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+        }`}
+        title={t('accessibility.allCategories')}
+        aria-label={t('accessibility.allCategories', 'Show all categories')}
+        aria-pressed={galleryFilter === 'all'}
+      >
+        <Grid3x3 className="w-4 h-4" aria-hidden="true" />
+      </button>
+      {gallerySectionManifest.map((section) => (
+        <button
+          type="button"
+          key={section.id}
+          onClick={() => onGalleryFilterChange?.(section.id)}
+          className={`p-2 rounded-md transition-colors ${
+            galleryFilter === section.id
+              ? 'text-foreground bg-muted'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          }`}
+          title={section.title}
+          aria-label={`Filter by ${section.title}`}
+          aria-pressed={galleryFilter === section.id}
+        >
+          <DynamicIcon name={section.icon} className="w-4 h-4" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function HeaderMobileFooter({
   handleShare,
   onExport,
@@ -1112,83 +1209,16 @@ export function Header({
               </button>
 
               {/* Desktop Nav */}
-              <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
-                {NAV_LINKS.map((link) => {
-                  const isActive = link.page === resolvedPage;
-                  // External links (like iubenda) don't navigate internally
-                  if (link.external) {
-                    return (
-                      <a
-                        key={link.labelKey}
-                        href={link.href}
-                        className={`px-3 py-2 text-sm rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
-                        title={t(link.labelKey, link.defaultLabel)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {t(link.labelKey, link.defaultLabel)}
-                      </a>
-                    );
-                  }
-                  return (
-                    <a
-                      key={link.labelKey}
-                      href={link.href}
-                      className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                        isActive
-                          ? 'text-foreground bg-muted font-medium'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                      onClick={(e) => {
-                        if (!onNavigate) return;
-                        e.preventDefault();
-                        onNavigate(link.page);
-                      }}
-                      title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
-                    >
-                      {t(link.labelKey, link.defaultLabel)}
-                    </a>
-                  );
-                })}
-              </nav>
+              <HeaderDesktopNav resolvedPage={resolvedPage} onNavigate={onNavigate} />
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 shrink-0">
               {/* Gallery Filter - icon buttons right-justified next to dark mode toggle */}
               {isGallery && (
-                <div className="hidden lg:flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onGalleryFilterChange?.('all')}
-                    className={`p-2 rounded-md transition-colors ${
-                      galleryFilter === 'all'
-                        ? 'text-foreground bg-muted'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                    title={t('accessibility.allCategories')}
-                    aria-label={t('accessibility.allCategories', 'Show all categories')}
-                    aria-pressed={galleryFilter === 'all'}
-                  >
-                    <Grid3x3 className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                  {gallerySectionManifest.map((section) => (
-                    <button
-                      type="button"
-                      key={section.id}
-                      onClick={() => onGalleryFilterChange?.(section.id)}
-                      className={`p-2 rounded-md transition-colors ${
-                        galleryFilter === section.id
-                          ? 'text-foreground bg-muted'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                      title={section.title}
-                      aria-label={`Filter by ${section.title}`}
-                      aria-pressed={galleryFilter === section.id}
-                    >
-                      <DynamicIcon name={section.icon} className="w-4 h-4" />
-                    </button>
-                  ))}
-                </div>
+                <HeaderGalleryFilter
+                  galleryFilter={galleryFilter}
+                  onGalleryFilterChange={onGalleryFilterChange}
+                />
               )}
 
               {/* Tier Toggle */}
