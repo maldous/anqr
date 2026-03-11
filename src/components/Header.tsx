@@ -572,6 +572,299 @@ function setupScrollObservers(el: HTMLElement, onUpdate: () => void): () => void
   };
 }
 
+function HeaderLanguageMenu({
+  langMenuOpen,
+  isLangMenuClosing,
+  langButtonRef,
+  currentLang,
+  onToggle,
+  onClose,
+  onChangeLanguage,
+  onCloseAnimationEnd,
+}: {
+  langMenuOpen: boolean;
+  isLangMenuClosing: boolean;
+  langButtonRef: React.RefObject<HTMLDivElement | null>;
+  currentLang: (typeof languages)[number];
+  onToggle: () => void;
+  onClose: () => void;
+  onChangeLanguage: (code: string) => void;
+  onCloseAnimationEnd: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+
+  return (
+    <div className="relative" ref={langButtonRef}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggle}
+        className="h-9 w-9"
+        title={`${t('language.select')}: ${currentLang.name}`}
+        aria-label={`${currentLang.name} - ${t('language.select', 'Select language')}`}
+        aria-expanded={langMenuOpen}
+        aria-haspopup="listbox"
+      >
+        <span className="text-base" aria-hidden="true">
+          {currentLang.flag}
+        </span>
+        <span className="sr-only">{currentLang.name}</span>
+      </Button>
+      {(langMenuOpen || isLangMenuClosing) && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[60] cursor-default bg-transparent border-none"
+            onClick={onClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+            }}
+            aria-label={t('common.close', 'Close language menu')}
+            tabIndex={-1}
+          />
+          <div
+            className={`fixed w-72 bg-card border rounded-lg shadow-lg z-[70] py-1 max-h-[50vh] overflow-y-auto origin-top ${
+              isLangMenuClosing
+                ? 'animate-[dropdown-close_0.15s_ease-in_forwards]'
+                : 'animate-[dropdown_0.2s_ease-out]'
+            }`}
+            style={{
+              top: langButtonRef.current
+                ? langButtonRef.current.getBoundingClientRect().bottom + 4
+                : 0,
+              ...(isRtlLanguage(i18n.language) ? { left: 8 } : { right: 8 }),
+            }}
+            onAnimationEnd={() => {
+              if (isLangMenuClosing) {
+                onCloseAnimationEnd();
+              }
+            }}
+            role="listbox"
+            aria-label={t('language.select', 'Select language')}
+          >
+            {[...languages]
+              .sort((a, b) => {
+                const currentCode = i18n.language.split('-')[0];
+                const aIsCurrent = a.code === currentCode || a.code === i18n.language;
+                const bIsCurrent = b.code === currentCode || b.code === i18n.language;
+                if (aIsCurrent && !bIsCurrent) return -1;
+                if (bIsCurrent && !aIsCurrent) return 1;
+                const aName = t(`languages.${a.code}`);
+                const bName = t(`languages.${b.code}`);
+                return aName.localeCompare(bName, i18n.language);
+              })
+              .map((lang) => (
+                <button
+                  type="button"
+                  key={lang.code}
+                  onClick={() => onChangeLanguage(lang.code)}
+                  className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
+                  title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
+                  aria-label={`${lang.nativeName} (${lang.name})`}
+                  aria-selected={i18n.language === lang.code || i18n.language.startsWith(lang.code)}
+                  role="option"
+                >
+                  <span>{lang.flag}</span>
+                  <span>
+                    {lang.nativeName}
+                    {(() => {
+                      const isCurrentLang =
+                        lang.code === i18n.language || i18n.language.startsWith(lang.code);
+                      if (isCurrentLang) {
+                        return lang.code === 'en-GB' ? '' : ` (${lang.name})`;
+                      }
+                      return ` (${t(`languages.${lang.code}`)})`;
+                    })()}
+                  </span>
+                  {(i18n.language === lang.code || i18n.language.startsWith(lang.code)) && (
+                    <Check className="h-4 w-4 ml-auto" aria-hidden="true" />
+                  )}
+                </button>
+              ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function HeaderMobileNav({
+  mobileMenuOpen,
+  isMobileMenuClosing,
+  resolvedPage,
+  onNavigate,
+  onClose,
+  onCloseAnimationEnd,
+}: {
+  mobileMenuOpen: boolean;
+  isMobileMenuClosing: boolean;
+  resolvedPage: HeaderPage;
+  onNavigate?: (page: HeaderPage) => void;
+  onClose: () => void;
+  onCloseAnimationEnd: () => void;
+}) {
+  const { t } = useTranslation();
+
+  if (!mobileMenuOpen && !isMobileMenuClosing) return null;
+
+  return (
+    <div
+      id="mobile-nav-menu"
+      className={`lg:hidden border-t bg-card shadow-lg p-3 overflow-hidden origin-top ${
+        isMobileMenuClosing
+          ? 'animate-[slide-up_0.2s_ease-in_forwards]'
+          : 'animate-[slide-down_0.2s_ease-out_forwards]'
+      }`}
+      onAnimationEnd={() => {
+        if (isMobileMenuClosing) {
+          onCloseAnimationEnd();
+        }
+      }}
+      role="navigation"
+      aria-label="Mobile navigation"
+    >
+      <nav className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
+          {NAV_LINKS.slice(0, 2).map((link) => {
+            const isActive = link.page === resolvedPage;
+            const IconComponent = link.icon;
+            return (
+              <a
+                key={link.labelKey}
+                href={link.href}
+                className={`px-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground font-medium'
+                    : 'bg-muted hover:bg-primary/10 text-foreground font-medium'
+                }`}
+                onClick={(e) => {
+                  if (onNavigate) {
+                    e.preventDefault();
+                    onNavigate(link.page);
+                  }
+                  onClose();
+                }}
+                title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <IconComponent className="w-5 h-5" aria-hidden="true" />
+                <span className="text-sm">{t(link.labelKey, link.defaultLabel)}</span>
+              </a>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5">
+          {NAV_LINKS.slice(2).map((link) => {
+            const isActive = link.page === resolvedPage;
+            const IconComponent = link.icon;
+            if (link.external) {
+              return (
+                <a
+                  key={link.labelKey}
+                  href={link.href}
+                  className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
+                  title={t(link.labelKey, link.defaultLabel)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => onClose()}
+                  aria-label={`${t(link.labelKey, link.defaultLabel)} (opens in new tab)`}
+                >
+                  <IconComponent className="w-5 h-5" aria-hidden="true" />
+                  <span className="text-[11px] leading-tight text-center">
+                    {t(link.labelKey, link.defaultLabel)}
+                  </span>
+                </a>
+              );
+            }
+            return (
+              <a
+                key={link.labelKey}
+                href={link.href}
+                className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm ${
+                  isActive
+                    ? 'text-foreground bg-muted font-medium'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+                onClick={(e) => {
+                  if (onNavigate) {
+                    e.preventDefault();
+                    onNavigate(link.page);
+                  }
+                  onClose();
+                }}
+                title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <IconComponent className="w-5 h-5" aria-hidden="true" />
+                <span className="text-[11px] leading-tight text-center">
+                  {t(link.labelKey, link.defaultLabel)}
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+function HeaderMobileFooter({
+  handleShare,
+  onExport,
+  copied,
+  bannerHeight,
+}: {
+  handleShare: () => void;
+  onExport?: () => void;
+  copied: boolean;
+  bannerHeight: number;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      className="md:hidden fixed left-0 right-0 z-50 border-t bg-card p-2 shadow-lg"
+      style={{
+        bottom: Capacitor.isNativePlatform() ? `${bannerHeight + 40}px` : '48px',
+        paddingBottom: Capacitor.isNativePlatform() ? '0.25rem' : 'calc(0.5rem + var(--sab, 0px))',
+      }}
+    >
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 shadow-sm"
+          onClick={handleShare}
+          title={t('accessibility.copyShareLink')}
+          aria-label={
+            copied
+              ? t('share.copied', 'Link copied')
+              : t('accessibility.copyShareLink', 'Copy share link')
+          }
+        >
+          {copied ? (
+            <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+          ) : (
+            <Share2 className="h-4 w-4 mr-2" aria-hidden="true" />
+          )}
+          {copied ? t('share.copied') : t('header.share')}
+        </Button>
+        <Button
+          size="sm"
+          className="flex-1 shadow-sm"
+          onClick={onExport}
+          title={t('accessibility.exportQrCode')}
+          aria-label={t('accessibility.exportQrCode', 'Export QR code')}
+        >
+          <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+          {t('header.export')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function Header({
   onToggleSidebar,
   onExport,
@@ -1045,108 +1338,16 @@ export function Header({
               )}
 
               {/* Language Selector */}
-              <div className="relative" ref={langButtonRef}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
-                  className="h-9 w-9"
-                  title={`${t('language.select')}: ${currentLang.name}`}
-                  aria-label={`${currentLang.name} - ${t('language.select', 'Select language')}`}
-                  aria-expanded={langMenuOpen}
-                  aria-haspopup="listbox"
-                >
-                  <span className="text-base" aria-hidden="true">
-                    {currentLang.flag}
-                  </span>
-                  <span className="sr-only">{currentLang.name}</span>
-                </Button>
-                {(langMenuOpen || isLangMenuClosing) && (
-                  <>
-                    <button
-                      type="button"
-                      className="fixed inset-0 z-[60] cursor-default bg-transparent border-none"
-                      onClick={closeLangMenu}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') closeLangMenu();
-                      }}
-                      aria-label={t('common.close', 'Close language menu')}
-                      tabIndex={-1}
-                    />
-                    <div
-                      className={`fixed w-72 bg-card border rounded-lg shadow-lg z-[70] py-1 max-h-[50vh] overflow-y-auto origin-top ${
-                        isLangMenuClosing
-                          ? 'animate-[dropdown-close_0.15s_ease-in_forwards]'
-                          : 'animate-[dropdown_0.2s_ease-out]'
-                      }`}
-                      style={{
-                        top: langButtonRef.current
-                          ? langButtonRef.current.getBoundingClientRect().bottom + 4
-                          : 0,
-                        // Position flush against the appropriate edge based on text direction
-                        ...(isRtlLanguage(i18n.language)
-                          ? { left: 8 } // RTL: flush against left edge
-                          : { right: 8 }), // LTR: flush against right edge
-                      }}
-                      onAnimationEnd={() => {
-                        if (isLangMenuClosing) {
-                          setIsLangMenuClosing(false);
-                        }
-                      }}
-                      role="listbox"
-                      aria-label={t('language.select', 'Select language')}
-                    >
-                      {/* Sort languages: current language first, then alphabetically by translated name */}
-                      {[...languages]
-                        .sort((a, b) => {
-                          const currentCode = i18n.language.split('-')[0];
-                          const aIsCurrent = a.code === currentCode || a.code === i18n.language;
-                          const bIsCurrent = b.code === currentCode || b.code === i18n.language;
-                          // Current language always first
-                          if (aIsCurrent && !bIsCurrent) return -1;
-                          if (bIsCurrent && !aIsCurrent) return 1;
-                          // Sort by translated name in current language
-                          const aName = t(`languages.${a.code}`);
-                          const bName = t(`languages.${b.code}`);
-                          return aName.localeCompare(bName, i18n.language);
-                        })
-                        .map((lang) => (
-                          <button
-                            type="button"
-                            key={lang.code}
-                            onClick={() => changeLanguage(lang.code)}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
-                            title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
-                            aria-label={`${lang.nativeName} (${lang.name})`}
-                            aria-selected={
-                              i18n.language === lang.code || i18n.language.startsWith(lang.code)
-                            }
-                            role="option"
-                          >
-                            <span>{lang.flag}</span>
-                            <span>
-                              {lang.nativeName}
-                              {/* Show English name for current language if not English, otherwise show translated name for other languages */}
-                              {(() => {
-                                const isCurrentLang =
-                                  lang.code === i18n.language ||
-                                  i18n.language.startsWith(lang.code);
-                                if (isCurrentLang) {
-                                  return lang.code === 'en-GB' ? '' : ` (${lang.name})`;
-                                }
-                                return ` (${t(`languages.${lang.code}`)})`;
-                              })()}
-                            </span>
-                            {(i18n.language === lang.code ||
-                              i18n.language.startsWith(lang.code)) && (
-                              <Check className="h-4 w-4 ml-auto" aria-hidden="true" />
-                            )}
-                          </button>
-                        ))}
-                    </div>
-                  </>
-                )}
-              </div>
+              <HeaderLanguageMenu
+                langMenuOpen={langMenuOpen}
+                isLangMenuClosing={isLangMenuClosing}
+                langButtonRef={langButtonRef}
+                currentLang={currentLang}
+                onToggle={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
+                onClose={closeLangMenu}
+                onChangeLanguage={changeLanguage}
+                onCloseAnimationEnd={() => setIsLangMenuClosing(false)}
+              />
 
               {/* Dark Mode Toggle */}
               <Button
@@ -1187,155 +1388,24 @@ export function Header({
         </div>
 
         {/* Mobile Menu - shows when desktop nav is hidden (below lg breakpoint) */}
-        {(mobileMenuOpen || isMobileMenuClosing) && (
-          <div
-            id="mobile-nav-menu"
-            className={`lg:hidden border-t bg-card shadow-lg p-3 overflow-hidden origin-top ${
-              isMobileMenuClosing
-                ? 'animate-[slide-up_0.2s_ease-in_forwards]'
-                : 'animate-[slide-down_0.2s_ease-out_forwards]'
-            }`}
-            onAnimationEnd={() => {
-              if (isMobileMenuClosing) {
-                setIsMobileMenuClosing(false);
-              }
-            }}
-            role="navigation"
-            aria-label="Mobile navigation"
-          >
-            <nav className="flex flex-col gap-2">
-              {/* Generator and Analyze - Half width each */}
-              <div className="grid grid-cols-2 gap-1.5">
-                {NAV_LINKS.slice(0, 2).map((link) => {
-                  const isActive = link.page === resolvedPage;
-                  const IconComponent = link.icon;
-                  return (
-                    <a
-                      key={link.labelKey}
-                      href={link.href}
-                      className={`px-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground font-medium'
-                          : 'bg-muted hover:bg-primary/10 text-foreground font-medium'
-                      }`}
-                      onClick={(e) => {
-                        if (onNavigate) {
-                          e.preventDefault();
-                          onNavigate(link.page);
-                        }
-                        closeMobileMenu();
-                      }}
-                      title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      <IconComponent className="w-5 h-5" aria-hidden="true" />
-                      <span className="text-sm">{t(link.labelKey, link.defaultLabel)}</span>
-                    </a>
-                  );
-                })}
-              </div>
-
-              {/* Remaining items in 3x3 grid */}
-              <div className="grid grid-cols-3 gap-1.5">
-                {NAV_LINKS.slice(2).map((link) => {
-                  const isActive = link.page === resolvedPage;
-                  const IconComponent = link.icon;
-                  // External links (like iubenda) don't navigate internally
-                  if (link.external) {
-                    return (
-                      <a
-                        key={link.labelKey}
-                        href={link.href}
-                        className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
-                        title={t(link.labelKey, link.defaultLabel)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => closeMobileMenu()}
-                        aria-label={`${t(link.labelKey, link.defaultLabel)} (opens in new tab)`}
-                      >
-                        <IconComponent className="w-5 h-5" aria-hidden="true" />
-                        <span className="text-[11px] leading-tight text-center">
-                          {t(link.labelKey, link.defaultLabel)}
-                        </span>
-                      </a>
-                    );
-                  }
-                  return (
-                    <a
-                      key={link.labelKey}
-                      href={link.href}
-                      className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm ${
-                        isActive
-                          ? 'text-foreground bg-muted font-medium'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }`}
-                      onClick={(e) => {
-                        if (onNavigate) {
-                          e.preventDefault();
-                          onNavigate(link.page);
-                        }
-                        closeMobileMenu();
-                      }}
-                      title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      <IconComponent className="w-5 h-5" aria-hidden="true" />
-                      <span className="text-[11px] leading-tight text-center">
-                        {t(link.labelKey, link.defaultLabel)}
-                      </span>
-                    </a>
-                  );
-                })}
-              </div>
-            </nav>
-          </div>
-        )}
+        <HeaderMobileNav
+          mobileMenuOpen={mobileMenuOpen}
+          isMobileMenuClosing={isMobileMenuClosing}
+          resolvedPage={resolvedPage}
+          onNavigate={onNavigate}
+          onClose={closeMobileMenu}
+          onCloseAnimationEnd={() => setIsMobileMenuClosing(false)}
+        />
       </header>
 
-      {/* Mobile Footer Bar - Share/Export buttons fixed at bottom (only in editor mode on mobile) */}
-      {/* On native platforms: position above footer (40px) + AdMob banner (dynamic height) */}
+      {/* Mobile Footer Bar */}
       {isEditor && (
-        <div
-          className="md:hidden fixed left-0 right-0 z-50 border-t bg-card p-2 shadow-lg"
-          style={{
-            bottom: Capacitor.isNativePlatform() ? `${bannerHeight + 40}px` : '48px',
-            paddingBottom: Capacitor.isNativePlatform()
-              ? '0.25rem'
-              : 'calc(0.5rem + var(--sab, 0px))',
-          }}
-        >
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 shadow-sm"
-              onClick={handleShare}
-              title={t('accessibility.copyShareLink')}
-              aria-label={
-                copied
-                  ? t('share.copied', 'Link copied')
-                  : t('accessibility.copyShareLink', 'Copy share link')
-              }
-            >
-              {copied ? (
-                <Check className="h-4 w-4 mr-2" aria-hidden="true" />
-              ) : (
-                <Share2 className="h-4 w-4 mr-2" aria-hidden="true" />
-              )}
-              {copied ? t('share.copied') : t('header.share')}
-            </Button>
-            <Button
-              size="sm"
-              className="flex-1 shadow-sm"
-              onClick={onExport}
-              title={t('accessibility.exportQrCode')}
-              aria-label={t('accessibility.exportQrCode', 'Export QR code')}
-            >
-              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              {t('header.export')}
-            </Button>
-          </div>
-        </div>
+        <HeaderMobileFooter
+          handleShare={handleShare}
+          onExport={onExport}
+          copied={copied}
+          bannerHeight={bannerHeight}
+        />
       )}
     </>
   );

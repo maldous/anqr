@@ -472,30 +472,65 @@ function buildPlainTextDetails(payload: string): DetailEntry[] {
   return details;
 }
 
+function buildUrlSocialEntries(
+  socialPlatform: ReturnType<typeof detectSocialPlatform>
+): DetailEntry[] {
+  if (!socialPlatform) return [];
+  const entries: DetailEntry[] = [
+    {
+      label: 'Platform',
+      value: socialPlatform.badge,
+      icon: <Globe className="w-3 h-3" />,
+    },
+  ];
+  if (socialPlatform.extractedInfo) {
+    entries.push({
+      label: socialPlatform.name === 'WhatsApp' ? 'Phone' : 'Handle',
+      value: socialPlatform.extractedInfo,
+      icon:
+        socialPlatform.name === 'WhatsApp' ? (
+          <Phone className="w-3 h-3" />
+        ) : (
+          <Type className="w-3 h-3" />
+        ),
+    });
+  }
+  return entries;
+}
+
+function buildUrlParamEntries(
+  params: Array<{ key: string; value: string }> | undefined
+): DetailEntry[] {
+  if (!params || params.length === 0) return [];
+  const entries: DetailEntry[] = [
+    {
+      label: 'Query Parameters',
+      value: <span className="font-medium">{params.length} parameter(s)</span>,
+      icon: <Settings className="w-3 h-3" />,
+    },
+  ];
+  params.slice(0, 5).forEach((param) => {
+    entries.push({
+      label: `  └ ${param.key}`,
+      value: <span className="font-mono text-xs truncate max-w-[150px] block">{param.value}</span>,
+      icon: <ChevronRight className="w-3 h-3 text-muted-foreground" />,
+    });
+  });
+  if (params.length > 5) {
+    entries.push({
+      label: '',
+      value: <span className="text-xs text-muted-foreground">...and {params.length - 5} more</span>,
+    });
+  }
+  return entries;
+}
+
 function buildUrlDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
   const urlData = parseUrlPayload(payload);
   const socialPlatform = detectSocialPlatform(payload);
 
-  if (socialPlatform) {
-    details.push({
-      label: 'Platform',
-      value: socialPlatform.badge,
-      icon: <Globe className="w-3 h-3" />,
-    });
-    if (socialPlatform.extractedInfo) {
-      details.push({
-        label: socialPlatform.name === 'WhatsApp' ? 'Phone' : 'Handle',
-        value: socialPlatform.extractedInfo,
-        icon:
-          socialPlatform.name === 'WhatsApp' ? (
-            <Phone className="w-3 h-3" />
-          ) : (
-            <Type className="w-3 h-3" />
-          ),
-      });
-    }
-  }
+  details.push(...buildUrlSocialEntries(socialPlatform));
 
   if (urlData.hostname) {
     details.push({
@@ -569,31 +604,7 @@ function buildUrlDetails(payload: string): DetailEntry[] {
     });
   }
 
-  const params = urlData.params;
-  if (params && params.length > 0) {
-    details.push({
-      label: 'Query Parameters',
-      value: <span className="font-medium">{params.length} parameter(s)</span>,
-      icon: <Settings className="w-3 h-3" />,
-    });
-    params.slice(0, 5).forEach((param) => {
-      details.push({
-        label: `  └ ${param.key}`,
-        value: (
-          <span className="font-mono text-xs truncate max-w-[150px] block">{param.value}</span>
-        ),
-        icon: <ChevronRight className="w-3 h-3 text-muted-foreground" />,
-      });
-    });
-    if (params.length > 5) {
-      details.push({
-        label: '',
-        value: (
-          <span className="text-xs text-muted-foreground">...and {params.length - 5} more</span>
-        ),
-      });
-    }
-  }
+  details.push(...buildUrlParamEntries(urlData.params));
 
   details.push({
     label: 'URL Length',
@@ -760,6 +771,39 @@ function buildWifiDetails(payload: string): DetailEntry[] {
   return details;
 }
 
+function appendVCardPhoneEntries(details: DetailEntry[], phones: string[]): void {
+  phones.forEach((phone) => {
+    const [type, number] = phone.includes(':') ? phone.split(': ') : ['Phone', phone];
+    details.push({
+      label: type,
+      value: (
+        <a
+          href={`tel:${number.replaceAll(/[^+\d]/g, '')}`}
+          className="font-mono text-xs text-primary hover:underline"
+        >
+          {number}
+        </a>
+      ),
+      icon: <Phone className="w-3 h-3" />,
+    });
+  });
+}
+
+function appendVCardEmailEntries(details: DetailEntry[], emails: string[]): void {
+  emails.forEach((email) => {
+    const [type, address] = email.includes(':') ? email.split(': ') : ['Email', email];
+    details.push({
+      label: type,
+      value: (
+        <a href={`mailto:${address}`} className="font-mono text-xs text-primary hover:underline">
+          {address}
+        </a>
+      ),
+      icon: <Mail className="w-3 h-3" />,
+    });
+  });
+}
+
 function buildVCardDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
   const vcardData = parseVCardPayload(payload);
@@ -797,37 +841,12 @@ function buildVCardDetails(payload: string): DetailEntry[] {
 
   const phones = vcardData.phones as string[];
   if (phones && phones.length > 0) {
-    phones.forEach((phone) => {
-      const [type, number] = phone.includes(':') ? phone.split(': ') : ['Phone', phone];
-      details.push({
-        label: type,
-        value: (
-          <a
-            href={`tel:${number.replaceAll(/[^+\d]/g, '')}`}
-            className="font-mono text-xs text-primary hover:underline"
-          >
-            {number}
-          </a>
-        ),
-        icon: <Phone className="w-3 h-3" />,
-      });
-    });
+    appendVCardPhoneEntries(details, phones);
   }
 
   const emails = vcardData.emails as string[];
   if (emails && emails.length > 0) {
-    emails.forEach((email) => {
-      const [type, address] = email.includes(':') ? email.split(': ') : ['Email', email];
-      details.push({
-        label: type,
-        value: (
-          <a href={`mailto:${address}`} className="font-mono text-xs text-primary hover:underline">
-            {address}
-          </a>
-        ),
-        icon: <Mail className="w-3 h-3" />,
-      });
-    });
+    appendVCardEmailEntries(details, emails);
   }
 
   const addresses = vcardData.addresses as string[];
@@ -1740,6 +1759,14 @@ function buildOtpAuthDetails(payload: string): DetailEntry[] {
     });
   }
 
+  appendOtpTimingEntries(details, otpData);
+  return details;
+}
+
+function appendOtpTimingEntries(
+  details: DetailEntry[],
+  otpData: ReturnType<typeof parseOtpAuthPayload>
+): void {
   if (otpData.period && otpData.type === 'TOTP') {
     details.push({
       label: 'Refresh Period',
@@ -1747,7 +1774,6 @@ function buildOtpAuthDetails(payload: string): DetailEntry[] {
       icon: <Settings className="w-3 h-3" />,
     });
   }
-
   if (otpData.counter && otpData.type === 'HOTP') {
     details.push({
       label: 'Counter',
@@ -1755,7 +1781,6 @@ function buildOtpAuthDetails(payload: string): DetailEntry[] {
       icon: <Hash className="w-3 h-3" />,
     });
   }
-
   if (otpData.hasSecret) {
     details.push({
       label: 'Secret',
@@ -1773,7 +1798,6 @@ function buildOtpAuthDetails(payload: string): DetailEntry[] {
       icon: <Lock className="w-3 h-3" />,
     });
   }
-  return details;
 }
 
 function buildDefaultDetails(payload: string): DetailEntry[] {
