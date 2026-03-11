@@ -934,6 +934,403 @@ export interface QRState {
   getPayloadText: () => string;
 }
 
+// ---------------------------------------------------------------------------
+// Payload serializer helpers (extracted from getPayloadText switch)
+// ---------------------------------------------------------------------------
+type PayloadData = QRState['payload'];
+
+function applyPayloadTransforms(text: string, payload: PayloadData): string {
+  let result = text;
+  if (payload.trim) {
+    result = result.trim();
+  }
+  if (payload.normalizeNewlines) {
+    result = result.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  }
+  return result;
+}
+
+function serializeUrlWithUtm(payload: PayloadData): string {
+  let url = payload.url.href;
+  if (payload.url.forceHttps && url.startsWith('http://')) {
+    url = url.replace('http://', 'https://');
+  }
+  const params = new URLSearchParams();
+  if (payload.url.utmSource) params.set('utm_source', payload.url.utmSource);
+  if (payload.url.utmMedium) params.set('utm_medium', payload.url.utmMedium);
+  if (payload.url.utmCampaign) params.set('utm_campaign', payload.url.utmCampaign);
+  if (payload.url.utmTerm) params.set('utm_term', payload.url.utmTerm);
+  if (payload.url.utmContent) params.set('utm_content', payload.url.utmContent);
+  const paramStr = params.toString();
+  if (!paramStr) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}${paramStr}`;
+}
+
+function serializeEmail(payload: PayloadData): string {
+  const mailto = `mailto:${payload.email.to}`;
+  const params = new URLSearchParams();
+  if (payload.email.subject) params.set('subject', payload.email.subject);
+  if (payload.email.body) params.set('body', payload.email.body);
+  const paramStr = params.toString();
+  return paramStr ? `${mailto}?${paramStr}` : mailto;
+}
+
+function serializeSms(payload: PayloadData): string {
+  let sms = `sms:${payload.sms.number}`;
+  if (payload.sms.body) sms += `?body=${encodeURIComponent(payload.sms.body)}`;
+  return sms;
+}
+
+function serializeWifi(payload: PayloadData): string {
+  const w = payload.wifi;
+  let wifi = `WIFI:T:${w.auth};S:${w.ssid};`;
+  if (w.password) wifi += `P:${w.password};`;
+  if (w.hidden) wifi += 'H:true;';
+  wifi += ';';
+  return wifi;
+}
+
+function serializeCrypto(payload: PayloadData): string {
+  const c = payload.crypto;
+  const payment = `${c.type}:${c.address}`;
+  const params = new URLSearchParams();
+  if (c.amount) params.set('amount', c.amount.toString());
+  if (c.label) params.set('label', c.label);
+  const paramStr = params.toString();
+  return paramStr ? `${payment}?${paramStr}` : payment;
+}
+
+function serializeCalendarSubscription(payload: PayloadData): string {
+  const calSub = payload.calendarSub;
+  let url = calSub.url || payload.text;
+  if (url.startsWith('https://')) {
+    url = url.replace('https://', 'webcal://');
+  } else if (url.startsWith('http://')) {
+    url = url.replace('http://', 'webcal://');
+  } else if (url && !url.startsWith('webcal://')) {
+    url = `webcal://${url}`;
+  }
+  if (calSub.calendarName && url) {
+    url += url.includes('?') ? '&' : '?';
+    url += `name=${encodeURIComponent(calSub.calendarName)}`;
+  }
+  return url;
+}
+
+function serializeEventRsvp(payload: PayloadData): string {
+  const rsvp = payload.eventRsvp;
+  if (rsvp.summary || rsvp.start) {
+    return generateEvent({
+      summary: rsvp.summary,
+      location: rsvp.location,
+      description: rsvp.description
+        ? rsvp.rsvpUrl
+          ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}`
+          : rsvp.description
+        : rsvp.rsvpUrl
+          ? `RSVP: ${rsvp.rsvpUrl}`
+          : undefined,
+      start: rsvp.start,
+      end: rsvp.end,
+    });
+  }
+  const url = rsvp.rsvpUrl || payload.text;
+  if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
+    return `mailto:${url}?subject=RSVP`;
+  }
+  return url;
+}
+
+function serializeGS1DigitalLink(payload: PayloadData): string {
+  const gs1 = payload.gs1;
+  const gtin = gs1.gtin || payload.text;
+  if (gtin) {
+    return generateGS1DigitalLink({
+      gtin: gtin.replaceAll(/[^\d]/g, ''),
+      baseUrl: gs1.resolver ? `https://${gs1.resolver}` : undefined,
+      ser: gs1.serial || undefined,
+      lot: gs1.batch || undefined,
+      expiry: gs1.expiry?.replaceAll('-', '') || undefined,
+    });
+  }
+  return '';
+}
+
+function serializeAppLink(payload: PayloadData): string {
+  const app = payload.appLink;
+  if (app.platform === 'universal') {
+    let url =
+      app.scheme && app.host ? `${app.scheme}://${app.host}${app.path || ''}` : payload.text;
+    if (url && !url.includes('://')) {
+      url = `https://${url}`;
+    }
+    return url || '';
+  }
+  if (app.platform === 'custom') {
+    if (app.scheme && app.host) {
+      return `${app.scheme}://${app.host}${app.path || ''}`;
+    }
+    return payload.text;
+  }
+  return generateAppDeepLink(app.platform, {
+    scheme: app.scheme,
+    host: app.host,
+    path: app.path,
+    package: app.package,
+    fallbackUrl: app.fallbackUrl,
+  });
+}
+
+function serializeSwissQRBill(payload: PayloadData): string {
+  const sqb = payload.swissQRBill;
+  if (!(sqb.creditorIBAN && sqb.creditorName)) return '';
+  return generateSwissQRBill({
+    creditorIBAN: sqb.creditorIBAN,
+    creditorName: sqb.creditorName,
+    creditorAddressType: sqb.creditorAddressType,
+    creditorStreet: sqb.creditorStreet,
+    creditorBuildingNumber: sqb.creditorBuildingNumber,
+    creditorPostalCode: sqb.creditorPostalCode,
+    creditorCity: sqb.creditorCity,
+    creditorCountry: sqb.creditorCountry,
+    amount: sqb.amount,
+    currency: sqb.currency,
+    referenceType: sqb.referenceType,
+    reference: sqb.reference,
+    unstructuredMessage: sqb.unstructuredMessage,
+    billInformation: sqb.billInformation,
+  });
+}
+
+function serializeEthereumEIP681(payload: PayloadData): string {
+  const eth = payload.ethereum;
+  if (!eth.targetAddress) return '';
+  return generateEthereumEIP681({
+    targetAddress: eth.targetAddress,
+    chainId: eth.chainId,
+    value: eth.value,
+    gas: eth.gas,
+    gasLimit: eth.gasLimit,
+    gasPrice: eth.gasPrice,
+    tokenAddress: eth.tokenAddress,
+    tokenValue: eth.tokenValue,
+    functionName: eth.functionName,
+  });
+}
+
+function serializeQRIS(payload: PayloadData): string {
+  const q = payload.qris;
+  if (!q.merchantName) return '';
+  return generateQRIS({
+    merchantID: q.merchantId,
+    nmid: q.nmid,
+    merchantCriteria: q.merchantCriteria,
+    merchantName: q.merchantName,
+    merchantCity: q.merchantCity,
+    postalCode: q.postalCode,
+    amount: q.amount,
+    feeType: q.feeType,
+    feeAmount: q.feeAmount,
+    terminalLabel: q.terminalLabel,
+  });
+}
+
+function serializeDuitNow(payload: PayloadData): string {
+  const d = payload.duitnow;
+  if (!(d.proxyValue && d.merchantName)) return '';
+  return generateDuitNow({
+    proxyType: d.proxyType,
+    proxyValue: d.proxyValue,
+    merchantName: d.merchantName,
+    merchantCity: d.merchantCity,
+    amount: d.amount,
+    reference: d.reference,
+  });
+}
+
+function serializeBharatQR(payload: PayloadData): string {
+  const b = payload.bharatqr;
+  if (!b.merchantName) return '';
+  return generateBharatQR({
+    merchantVPA: b.merchantVPA,
+    merchantPAN: b.merchantPAN,
+    merchantID: b.merchantID,
+    merchantName: b.merchantName,
+    merchantCity: b.merchantCity,
+    mcc: b.mcc,
+    amount: b.amount,
+    gstDetails: b.gstDetails,
+    invoiceNumber: b.invoiceNumber,
+    referenceNumber: b.referenceNumber,
+    terminalId: b.terminalId,
+  });
+}
+
+function serializeVietQR(payload: PayloadData): string {
+  const v = payload.vietqr;
+  if (!(v.bankBin && v.accountNumber)) return '';
+  return generateVietQR({
+    bankBin: v.bankBin,
+    accountNumber: v.accountNumber,
+    accountName: v.accountName,
+    serviceCode: v.serviceCode,
+    amount: v.amount,
+    description: v.description,
+  });
+}
+
+function serializeQRPh(payload: PayloadData): string {
+  const p = payload.qrph;
+  if (!(p.accountNumber && p.merchantName)) return '';
+  return generateQRPh({
+    accountNumber: p.accountNumber,
+    merchantName: p.merchantName,
+    merchantCity: p.merchantCity,
+    amount: p.amount,
+    reference: p.reference,
+  });
+}
+
+function serializeTWQR(payload: PayloadData): string {
+  const t = payload.twqr;
+  if (!t.merchantName) return '';
+  return generateTWQR({
+    merchantId: t.merchantId,
+    merchantName: t.merchantName,
+    merchantCity: t.merchantCity,
+    taxId: t.taxId,
+    amount: t.amount,
+  });
+}
+
+function serializeHKQR(payload: PayloadData): string {
+  const h = payload.hkqr;
+  if (!(h.fpsId || h.merchantName)) return '';
+  return generateHKQR({
+    fpsId: h.fpsId || undefined,
+    merchantName: h.merchantName,
+    merchantCity: h.merchantCity || undefined,
+    amount: h.amount,
+    reference: undefined,
+  });
+}
+
+function serializeJPQR(payload: PayloadData): string {
+  const j = payload.jpqr;
+  if (!j.merchantName) return '';
+  return generateJPQR({
+    storeId: j.storeId,
+    merchantName: j.merchantName,
+    merchantCity: j.merchantCity,
+    amount: j.amount,
+  });
+}
+
+function serializeAusPayNet(payload: PayloadData): string {
+  const a = payload.auspaynet;
+  if (!(a.payId || (a.bsb && a.accountNumber))) return '';
+  return generateAusPayNet({
+    payId: a.payId,
+    payIdType: a.payIdType,
+    bsb: a.bsb,
+    accountNumber: a.accountNumber,
+    merchantName: a.merchantName,
+    merchantCity: a.merchantCity,
+    amount: a.amount,
+    reference: a.reference,
+  });
+}
+
+function serializePayPalMe(payload: PayloadData): string {
+  const pp = payload.paypalMe;
+  if (!pp.username) return '';
+  return generatePayPalMe({
+    username: pp.username,
+    amount: pp.amount,
+    currencyCode: pp.currencyCode,
+  });
+}
+
+function serializeCashApp(payload: PayloadData): string {
+  const ca = payload.cashapp;
+  if (!ca.cashtag) return '';
+  return generateCashApp({
+    cashtag: ca.cashtag,
+    amount: ca.amount,
+  });
+}
+
+function serializeEMVGeneric(payload: PayloadData): string {
+  const emv = payload.emvGeneric;
+  if (!(emv.merchantName && emv.countryCode && emv.currencyCode)) return '';
+  const tipIndicatorMap: Record<string, '01' | '02' | '03' | undefined> = {
+    prompt: '01',
+    fixed: '02',
+    percent: '03',
+    none: undefined,
+  };
+  return generateEMVMPM({
+    merchantName: emv.merchantName,
+    merchantCity: emv.merchantCity,
+    countryCode: emv.countryCode,
+    currencyCode: emv.currencyCode,
+    amount: emv.amount,
+    isStatic: emv.isStatic,
+    tipIndicator: emv.tipIndicator ? tipIndicatorMap[emv.tipIndicator] : undefined,
+    tipFixed: emv.tipAmount,
+    tipPercentage: emv.tipPercent,
+    storeLabel: emv.storeLabel,
+    customerLabel: emv.customerLabel,
+    terminalLabel: emv.terminalLabel,
+    loyaltyNumber: emv.loyaltyNumber,
+    referenceLabel: emv.reference,
+    purposeOfTransaction: emv.purposeOfTransaction,
+    postalCode: emv.postalCode,
+    mcc: emv.mcc,
+  });
+}
+
+const PAYLOAD_SERIALIZERS: Partial<Record<PayloadKind, (payload: PayloadData) => string>> = {
+  plain_text: (p) => applyPayloadTransforms(p.text, p),
+  url: serializeUrlWithUtm,
+  tel: (p) => `tel:${p.tel.number}`,
+  email: serializeEmail,
+  sms: serializeSms,
+  geo: (p) => `geo:${p.geo.lat},${p.geo.lon}`,
+  wifi: serializeWifi,
+  vcard: (p) => generateVCard(p.vcard),
+  mecard: (p) => generateMeCard(p.mecard),
+  event: (p) => generateEvent(p.event),
+  crypto: serializeCrypto,
+  bizcard: (p) => generateBizCard(p.bizcard),
+  calendar_subscription: serializeCalendarSubscription,
+  event_rsvp: serializeEventRsvp,
+  social_profile: (p) => generateSocialProfile(p.socialProfile.platform, p.socialProfile.username),
+  messaging_link: (p) =>
+    generateMessagingLink(p.messaging.platform, p.messaging.identifier, p.messaging.message),
+  gs1_digital_link: serializeGS1DigitalLink,
+  app_link: serializeAppLink,
+  utm_link: serializeUrlWithUtm,
+  short_link: (p) => p.text,
+  swiss_qr_bill: serializeSwissQRBill,
+  lightning: (p) =>
+    p.lightning.invoice ? generateLightning({ invoice: p.lightning.invoice }) : '',
+  ethereum_eip681: serializeEthereumEIP681,
+  qris: serializeQRIS,
+  duitnow: serializeDuitNow,
+  bharatqr: serializeBharatQR,
+  vietqr: serializeVietQR,
+  qrph: serializeQRPh,
+  twqr: serializeTWQR,
+  hkqr: serializeHKQR,
+  jpqr: serializeJPQR,
+  auspaynet: serializeAusPayNet,
+  paypal_me: serializePayPalMe,
+  cashapp: serializeCashApp,
+  emv_generic: serializeEMVGeneric,
+  custom: (p) => applyPayloadTransforms(p.text, p),
+};
+
 // Premium access duration: 24 hours in milliseconds
 const PREMIUM_DURATION_MS = 24 * 60 * 60 * 1000;
 
@@ -1490,464 +1887,9 @@ export const useQRStore = create<QRState>((set, get) => ({
 
   // Generate final payload text based on kind
   getPayloadText: () => {
-    const state = get();
-    const { payload } = state;
-
-    // Helper to apply text transformations
-    const applyTransforms = (text: string): string => {
-      let result = text;
-      if (payload.trim) {
-        result = result.trim();
-      }
-      if (payload.normalizeNewlines) {
-        result = result.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-      }
-      return result;
-    };
-
-    let _result: string;
-
-    switch (payload.kind) {
-      case 'plain_text':
-        return applyTransforms(payload.text);
-
-      case 'url': {
-        let url = payload.url.href;
-        if (payload.url.forceHttps && url.startsWith('http://')) {
-          url = url.replace('http://', 'https://');
-        }
-        const params = new URLSearchParams();
-        if (payload.url.utmSource) params.set('utm_source', payload.url.utmSource);
-        if (payload.url.utmMedium) params.set('utm_medium', payload.url.utmMedium);
-        if (payload.url.utmCampaign) params.set('utm_campaign', payload.url.utmCampaign);
-        if (payload.url.utmTerm) params.set('utm_term', payload.url.utmTerm);
-        if (payload.url.utmContent) params.set('utm_content', payload.url.utmContent);
-        const paramStr = params.toString();
-        if (!paramStr) return url;
-        return `${url}${url.includes('?') ? '&' : '?'}${paramStr}`;
-      }
-
-      case 'tel':
-        return `tel:${payload.tel.number}`;
-
-      case 'email': {
-        const mailto = `mailto:${payload.email.to}`;
-        const params = new URLSearchParams();
-        if (payload.email.subject) params.set('subject', payload.email.subject);
-        if (payload.email.body) params.set('body', payload.email.body);
-        const paramStr = params.toString();
-        return paramStr ? `${mailto}?${paramStr}` : mailto;
-      }
-
-      case 'sms': {
-        let sms = `sms:${payload.sms.number}`;
-        if (payload.sms.body) sms += `?body=${encodeURIComponent(payload.sms.body)}`;
-        return sms;
-      }
-
-      case 'geo': {
-        // RFC 5870 geo URI format: geo:lat,lon (no query parameter)
-        return `geo:${payload.geo.lat},${payload.geo.lon}`;
-      }
-
-      case 'wifi': {
-        const w = payload.wifi;
-        let wifi = `WIFI:T:${w.auth};S:${w.ssid};`;
-        if (w.password) wifi += `P:${w.password};`;
-        if (w.hidden) wifi += 'H:true;';
-        wifi += ';';
-        return wifi;
-      }
-
-      case 'vcard': {
-        const v = payload.vcard;
-        // Use generateVCard which properly handles N: field auto-generation from FN:
-        return generateVCard(v);
-      }
-
-      case 'mecard': {
-        const m = payload.mecard;
-        // Use generateMeCard for proper escaping and formatting
-        return generateMeCard(m);
-      }
-
-      case 'event': {
-        // Use generateEvent for proper RFC 5545 compliance
-        return generateEvent(payload.event);
-      }
-
-      case 'crypto': {
-        const c = payload.crypto;
-        const payment = `${c.type}:${c.address}`;
-        const params = new URLSearchParams();
-        if (c.amount) params.set('amount', c.amount.toString());
-        if (c.label) params.set('label', c.label);
-        const paramStr = params.toString();
-        return paramStr ? `${payment}?${paramStr}` : payment;
-      }
-
-      case 'bizcard': {
-        // Use generateBizCard for proper formatting
-        return generateBizCard(payload.bizcard);
-      }
-
-      case 'calendar_subscription': {
-        // Convert URL to webcal:// protocol
-        const calSub = payload.calendarSub;
-        let url = calSub.url || payload.text;
-        if (url.startsWith('https://')) {
-          url = url.replace('https://', 'webcal://');
-        } else if (url.startsWith('http://')) {
-          url = url.replace('http://', 'webcal://');
-        } else if (url && !url.startsWith('webcal://')) {
-          url = `webcal://${url}`;
-        }
-        // Calendar name can be appended as a fragment or query param for some apps
-        if (calSub.calendarName && url) {
-          url += url.includes('?') ? '&' : '?';
-          url += `name=${encodeURIComponent(calSub.calendarName)}`;
-        }
-        return url;
-      }
-
-      case 'event_rsvp': {
-        // Generate proper iCalendar event with RSVP URL
-        const rsvp = payload.eventRsvp;
-        if (rsvp.summary || rsvp.start) {
-          // Generate an iCalendar event that includes the RSVP URL
-          return generateEvent({
-            summary: rsvp.summary,
-            location: rsvp.location,
-            description: rsvp.description
-              ? rsvp.rsvpUrl
-                ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}`
-                : rsvp.description
-              : rsvp.rsvpUrl
-                ? `RSVP: ${rsvp.rsvpUrl}`
-                : undefined,
-            start: rsvp.start,
-            end: rsvp.end,
-          });
-        }
-        // Fallback to simple URL or mailto
-        const url = rsvp.rsvpUrl || payload.text;
-        if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
-          return `mailto:${url}?subject=RSVP`;
-        }
-        return url;
-      }
-
-      case 'social_profile': {
-        // Use generateSocialProfile for proper URL generation
-        // Always generate the platform-specific URL, even with empty username
-        // This shows the URL prefix (e.g., https://linkedin.com/in/) as a placeholder
-        const social = payload.socialProfile;
-        return generateSocialProfile(social.platform, social.username);
-      }
-
-      case 'messaging_link': {
-        // Use generateMessagingLink for proper deep link generation
-        // Always generate the platform-specific URL, even with empty identifier
-        // This shows the URL prefix (e.g., https://wa.me/) as a placeholder
-        const msg = payload.messaging;
-        return generateMessagingLink(msg.platform, msg.identifier, msg.message);
-      }
-
-      case 'gs1_digital_link': {
-        // Use generateGS1DigitalLink for proper formatting
-        const gs1 = payload.gs1;
-        const gtin = gs1.gtin || payload.text;
-        if (gtin) {
-          return generateGS1DigitalLink({
-            gtin: gtin.replaceAll(/[^\d]/g, ''),
-            baseUrl: gs1.resolver ? `https://${gs1.resolver}` : undefined,
-            ser: gs1.serial || undefined,
-            lot: gs1.batch || undefined,
-            expiry: gs1.expiry?.replaceAll('-', '') || undefined,
-          });
-        }
-        return '';
-      }
-
-      case 'app_link': {
-        // Use generateAppDeepLink for proper formatting
-        const app = payload.appLink;
-        if (app.platform === 'universal') {
-          // Universal link - just use the URL directly
-          let url =
-            app.scheme && app.host ? `${app.scheme}://${app.host}${app.path || ''}` : payload.text;
-          if (url && !url.includes('://')) {
-            url = `https://${url}`;
-          }
-          return url || '';
-        }
-        // For custom scheme, build the URL directly
-        if (app.platform === 'custom') {
-          if (app.scheme && app.host) {
-            return `${app.scheme}://${app.host}${app.path || ''}`;
-          }
-          return payload.text;
-        }
-        // Use generateAppDeepLink for android/ios
-        return generateAppDeepLink(app.platform, {
-          scheme: app.scheme,
-          host: app.host,
-          path: app.path,
-          package: app.package,
-          fallbackUrl: app.fallbackUrl,
-        });
-      }
-
-      case 'utm_link': {
-        // UTM campaign link - use same logic as URL
-        let url = payload.url.href;
-        if (payload.url.forceHttps && url.startsWith('http://')) {
-          url = url.replace('http://', 'https://');
-        }
-        const params = new URLSearchParams();
-        if (payload.url.utmSource) params.set('utm_source', payload.url.utmSource);
-        if (payload.url.utmMedium) params.set('utm_medium', payload.url.utmMedium);
-        if (payload.url.utmCampaign) params.set('utm_campaign', payload.url.utmCampaign);
-        if (payload.url.utmTerm) params.set('utm_term', payload.url.utmTerm);
-        if (payload.url.utmContent) params.set('utm_content', payload.url.utmContent);
-        const paramStr = params.toString();
-        if (!paramStr) return url;
-        return `${url}${url.includes('?') ? '&' : '?'}${paramStr}`;
-      }
-
-      case 'short_link':
-        // Short link - return as-is
-        return payload.text;
-
-      case 'swiss_qr_bill': {
-        const sqb = payload.swissQRBill;
-        if (!(sqb.creditorIBAN && sqb.creditorName)) return '';
-        return generateSwissQRBill({
-          creditorIBAN: sqb.creditorIBAN,
-          creditorName: sqb.creditorName,
-          creditorAddressType: sqb.creditorAddressType,
-          creditorStreet: sqb.creditorStreet,
-          creditorBuildingNumber: sqb.creditorBuildingNumber,
-          creditorPostalCode: sqb.creditorPostalCode,
-          creditorCity: sqb.creditorCity,
-          creditorCountry: sqb.creditorCountry,
-          amount: sqb.amount,
-          currency: sqb.currency,
-          referenceType: sqb.referenceType,
-          reference: sqb.reference,
-          unstructuredMessage: sqb.unstructuredMessage,
-          billInformation: sqb.billInformation,
-        });
-      }
-
-      case 'lightning': {
-        const ln = payload.lightning;
-        if (!ln.invoice) return '';
-        return generateLightning({ invoice: ln.invoice });
-      }
-
-      case 'ethereum_eip681': {
-        const eth = payload.ethereum;
-        if (!eth.targetAddress) return '';
-        return generateEthereumEIP681({
-          targetAddress: eth.targetAddress,
-          chainId: eth.chainId,
-          value: eth.value,
-          gas: eth.gas,
-          gasLimit: eth.gasLimit,
-          gasPrice: eth.gasPrice,
-          tokenAddress: eth.tokenAddress,
-          tokenValue: eth.tokenValue,
-          functionName: eth.functionName,
-        });
-      }
-
-      case 'qris': {
-        const q = payload.qris;
-        // EMV spec requires merchantName (tag 59) for QRIS
-        if (!q.merchantName) return '';
-        return generateQRIS({
-          merchantID: q.merchantId,
-          nmid: q.nmid,
-          merchantCriteria: q.merchantCriteria,
-          merchantName: q.merchantName,
-          merchantCity: q.merchantCity,
-          postalCode: q.postalCode,
-          amount: q.amount,
-          feeType: q.feeType,
-          feeAmount: q.feeAmount,
-          terminalLabel: q.terminalLabel,
-        });
-      }
-
-      case 'duitnow': {
-        const d = payload.duitnow;
-        // ProxyValue (routing) and merchantName (EMV tag 59) are required
-        if (!(d.proxyValue && d.merchantName)) return '';
-        return generateDuitNow({
-          proxyType: d.proxyType,
-          proxyValue: d.proxyValue,
-          merchantName: d.merchantName,
-          merchantCity: d.merchantCity,
-          amount: d.amount,
-          reference: d.reference,
-        });
-      }
-
-      case 'bharatqr': {
-        const b = payload.bharatqr;
-        // MerchantName is required by EMV spec (tag 59)
-        if (!b.merchantName) return '';
-        return generateBharatQR({
-          merchantVPA: b.merchantVPA,
-          merchantPAN: b.merchantPAN,
-          merchantID: b.merchantID,
-          merchantName: b.merchantName,
-          merchantCity: b.merchantCity,
-          mcc: b.mcc,
-          amount: b.amount,
-          gstDetails: b.gstDetails,
-          invoiceNumber: b.invoiceNumber,
-          referenceNumber: b.referenceNumber,
-          terminalId: b.terminalId,
-        });
-      }
-
-      case 'vietqr': {
-        const v = payload.vietqr;
-        // BankBin and accountNumber are required for VietQR routing
-        if (!(v.bankBin && v.accountNumber)) return '';
-        return generateVietQR({
-          bankBin: v.bankBin,
-          accountNumber: v.accountNumber,
-          accountName: v.accountName,
-          serviceCode: v.serviceCode,
-          amount: v.amount,
-          description: v.description,
-        });
-      }
-
-      case 'qrph': {
-        const p = payload.qrph;
-        if (!(p.accountNumber && p.merchantName)) return '';
-        return generateQRPh({
-          accountNumber: p.accountNumber,
-          merchantName: p.merchantName,
-          merchantCity: p.merchantCity,
-          amount: p.amount,
-          reference: p.reference,
-        });
-      }
-
-      case 'twqr': {
-        const t = payload.twqr;
-        // MerchantName is required by TWQR spec
-        if (!t.merchantName) return '';
-        return generateTWQR({
-          merchantId: t.merchantId,
-          merchantName: t.merchantName,
-          merchantCity: t.merchantCity,
-          taxId: t.taxId,
-          amount: t.amount,
-        });
-      }
-
-      case 'hkqr': {
-        const h = payload.hkqr;
-        // HKQR can work with just fpsId OR just merchantName
-        if (!(h.fpsId || h.merchantName)) return '';
-        return generateHKQR({
-          fpsId: h.fpsId || undefined,
-          merchantName: h.merchantName,
-          merchantCity: h.merchantCity || undefined,
-          amount: h.amount,
-          reference: undefined,
-        });
-      }
-
-      case 'jpqr': {
-        const j = payload.jpqr;
-        // MerchantName is required by JPQR spec
-        if (!j.merchantName) return '';
-        return generateJPQR({
-          storeId: j.storeId,
-          merchantName: j.merchantName,
-          merchantCity: j.merchantCity,
-          amount: j.amount,
-        });
-      }
-
-      case 'auspaynet': {
-        const a = payload.auspaynet;
-        // NPP PayID spec: Need either PayID OR BSB+AccountNumber for routing
-        if (!(a.payId || (a.bsb && a.accountNumber))) return '';
-        return generateAusPayNet({
-          payId: a.payId,
-          payIdType: a.payIdType,
-          bsb: a.bsb,
-          accountNumber: a.accountNumber,
-          merchantName: a.merchantName,
-          merchantCity: a.merchantCity,
-          amount: a.amount,
-          reference: a.reference,
-        });
-      }
-
-      case 'paypal_me': {
-        const pp = payload.paypalMe;
-        if (!pp.username) return '';
-        return generatePayPalMe({
-          username: pp.username,
-          amount: pp.amount,
-          currencyCode: pp.currencyCode,
-        });
-      }
-
-      case 'cashapp': {
-        const ca = payload.cashapp;
-        if (!ca.cashtag) return '';
-        return generateCashApp({
-          cashtag: ca.cashtag,
-          amount: ca.amount,
-        });
-      }
-
-      case 'emv_generic': {
-        const emv = payload.emvGeneric;
-        if (!(emv.merchantName && emv.countryCode && emv.currencyCode)) return '';
-        // Map our helper interface to EMVMPMParams
-        const tipIndicatorMap: Record<string, '01' | '02' | '03' | undefined> = {
-          prompt: '01',
-          fixed: '02',
-          percent: '03',
-          none: undefined,
-        };
-        return generateEMVMPM({
-          merchantName: emv.merchantName,
-          merchantCity: emv.merchantCity,
-          countryCode: emv.countryCode,
-          currencyCode: emv.currencyCode,
-          amount: emv.amount,
-          isStatic: emv.isStatic,
-          tipIndicator: emv.tipIndicator ? tipIndicatorMap[emv.tipIndicator] : undefined,
-          tipFixed: emv.tipAmount,
-          tipPercentage: emv.tipPercent,
-          storeLabel: emv.storeLabel,
-          customerLabel: emv.customerLabel,
-          terminalLabel: emv.terminalLabel,
-          loyaltyNumber: emv.loyaltyNumber,
-          referenceLabel: emv.reference,
-          purposeOfTransaction: emv.purposeOfTransaction,
-          postalCode: emv.postalCode,
-          mcc: emv.mcc,
-        });
-      }
-
-      case 'custom':
-        return applyTransforms(payload.text);
-
-      default:
-        return applyTransforms(payload.text);
-    }
+    const { payload } = get();
+    const serializer = PAYLOAD_SERIALIZERS[payload.kind];
+    if (serializer) return serializer(payload);
+    return applyPayloadTransforms(payload.text, payload);
   },
 }));
