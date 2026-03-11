@@ -3739,6 +3739,9 @@ interface ParsedHandlerParams {
   animationSeed2: number;
   animationEasing: AnimationEasing;
   animationEasing2: AnimationEasing;
+  animationStartFrame: number;
+  animationMaxFrames: number;
+  animationFrameStep: number;
   webpQuality: number;
   gifColors: number;
   metaTitle: string | undefined;
@@ -4297,6 +4300,9 @@ function parseAnimationParams(
     animationEasing2: validAnimationEasings.includes(parsedEasing2)
       ? parsedEasing2
       : animationEasing,
+    animationStartFrame: Number.parseInt(params.get('startF') || '0', 10),
+    animationMaxFrames: Number.parseInt(params.get('maxF') || '0', 10),
+    animationFrameStep: Number.parseInt(params.get('stepF') || '1', 10),
   };
 }
 
@@ -4453,9 +4459,9 @@ function buildQRGeneratorConfig(
     animationTarget2: p.animationTarget2,
     animationWaveAxis: p.animationWaveAxis,
     animationWaveAxis2: p.animationWaveAxis2,
-    animationStartFrame: 0,
-    animationMaxFrames: 0,
-    animationFrameStep: 1,
+    animationStartFrame: p.animationStartFrame,
+    animationMaxFrames: p.animationMaxFrames,
+    animationFrameStep: p.animationFrameStep,
     moduleJitterPx: p.animationModuleJitter,
     colorCycle: p.animationColorCycle,
     colorCycle2: p.animationColorCycle2,
