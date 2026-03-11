@@ -373,12 +373,18 @@ function buildRenderParams(config: Partial<ShareConfig>, params: URLSearchParams
   buildRenderAdvancedParams(config, params);
 }
 
-function buildOverlayImageParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+function buildOverlayImageSourceParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.overlayUrl) params.set('img', config.overlayUrl);
   if (config.overlayType && config.overlayType !== 'static')
     params.set('ovType', config.overlayType);
   if (config.overlayFramePick && config.overlayFramePick !== 'all')
     params.set('ovFramePick', config.overlayFramePick);
+}
+
+function buildOverlayCropParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.cropEnabled) params.set('cropEn', '1');
   if (config.cropX !== undefined && config.cropX !== 0.5)
     params.set('cropX', config.cropX.toString());
@@ -386,11 +392,20 @@ function buildOverlayImageParams(config: Partial<ShareConfig>, params: URLSearch
     params.set('cropY', config.cropY.toString());
   if (config.cropSize !== undefined && config.cropSize !== 1)
     params.set('cropSize', config.cropSize.toString());
+}
+
+function buildOverlayGifParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.gifUseFrameDelays === false) params.set('gifDelays', '0');
   if (config.gifMaxFps !== undefined && config.gifMaxFps !== 30)
     params.set('gifMaxFps', config.gifMaxFps.toString());
   if (config.gifDisposalHandling && config.gifDisposalHandling !== 'respect')
     params.set('gifDispH', config.gifDisposalHandling);
+}
+
+function buildOverlayImageParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  buildOverlayImageSourceParams(config, params);
+  buildOverlayCropParams(config, params);
+  buildOverlayGifParams(config, params);
 }
 
 function buildOverlayTransformParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
@@ -429,7 +444,10 @@ function buildOverlayParams(config: Partial<ShareConfig>, params: URLSearchParam
   buildOverlayProtectionParams(config, params);
 }
 
-function buildPreprocessingParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+function buildPreprocessingColorParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.colorMode && config.colorMode !== 'color') params.set('colorMode', config.colorMode);
   if (config.brightness !== undefined && config.brightness !== 0)
     params.set('brightness', config.brightness.toString());
@@ -440,6 +458,12 @@ function buildPreprocessingParams(config: Partial<ShareConfig>, params: URLSearc
   if (config.saturation !== undefined && config.saturation !== 0)
     params.set('saturation', config.saturation.toString());
   if (config.hue !== undefined && config.hue !== 0) params.set('hue', config.hue.toString());
+}
+
+function buildPreprocessingFilterParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.blur !== undefined && config.blur !== 0) params.set('blur', config.blur.toString());
   if (config.sharpen !== undefined && config.sharpen !== 0)
     params.set('sharpen', config.sharpen.toString());
@@ -449,6 +473,11 @@ function buildPreprocessingParams(config: Partial<ShareConfig>, params: URLSearc
     params.set('threshold', config.threshold.toString());
   if (config.edge && config.edge !== 'off') params.set('edge', config.edge);
   if (config.invert) params.set('invert', '1');
+}
+
+function buildPreprocessingParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  buildPreprocessingColorParams(config, params);
+  buildPreprocessingFilterParams(config, params);
 }
 
 function buildDitherBlendParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
@@ -512,10 +541,19 @@ function buildSubpixelHalftoneParams(config: Partial<ShareConfig>, params: URLSe
   buildHalftoneSpecificParams(config, params);
 }
 
-function buildAnimationPatternParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+function buildAnimPatternPrimaryParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.pattern && config.pattern !== 'none') params.set('animPattern', config.pattern);
   if (config.target && config.target !== 'result') params.set('animTarget', config.target);
   if (config.waveAxis && config.waveAxis !== 'y') params.set('animWaveAxis', config.waveAxis);
+}
+
+function buildAnimPatternSecondaryParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.pattern2 && config.pattern2 !== 'none') params.set('animPattern2', config.pattern2);
   if (config.target2 && config.pattern2 && config.pattern2 !== 'none')
     params.set('animTarget2', config.target2);
@@ -525,6 +563,11 @@ function buildAnimationPatternParams(config: Partial<ShareConfig>, params: URLSe
   if (config.colorCycle) params.set('colorCycle', '1');
   if (config.seed !== undefined && config.seed !== 0) params.set('seed', config.seed.toString());
   if (config.easing && config.easing !== 'linear') params.set('easing', config.easing);
+}
+
+function buildAnimationPatternParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  buildAnimPatternPrimaryParams(config, params);
+  buildAnimPatternSecondaryParams(config, params);
 }
 
 function buildAnimationFrameParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
