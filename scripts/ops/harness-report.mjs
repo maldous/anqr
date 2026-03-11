@@ -525,7 +525,9 @@ function checkOllamaVramHealth() {
     return {
       status: 'SKIP',
       metrics: {},
-      findings: [{ severity: 'low', message: 'nvidia-smi unavailable; skipping VRAM health check' }],
+      findings: [
+        { severity: 'low', message: 'nvidia-smi unavailable; skipping VRAM health check' },
+      ],
     };
   }
 
@@ -556,7 +558,9 @@ function checkOllamaVramHealth() {
     return {
       status: 'SKIP',
       metrics: { total_vram_mib: totalVramMiB, used_vram_mib: usedVramMiB },
-      findings: [{ severity: 'low', message: 'Ollama /api/ps unavailable; skipping KV/VRAM check' }],
+      findings: [
+        { severity: 'low', message: 'Ollama /api/ps unavailable; skipping KV/VRAM check' },
+      ],
     };
   }
 

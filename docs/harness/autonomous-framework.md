@@ -29,40 +29,40 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 
 ## Profiles
 
-| Profile      | Checks                                       | Duration | When                  |
-| ------------ | -------------------------------------------- | -------- | --------------------- |
-| `quick`      | 4 (typecheck, lint, lockfile, git)           | ~30s     | Local dev, pre-commit |
+| Profile      | Checks                                                        | Duration | When                  |
+| ------------ | ------------------------------------------------------------- | -------- | --------------------- |
+| `quick`      | 4 (typecheck, lint, lockfile, git)                            | ~30s     | Local dev, pre-commit |
 | `continuous` | 10 (quick + provider, services, sentry, i18n, required, VRAM) | ~3min    | Hourly ops pass       |
-| `full`       | 24 (all domains)                                             | ~15min   | Nightly ops pass      |
+| `full`       | 24 (all domains)                                              | ~15min   | Nightly ops pass      |
 
 ## Check Domains
 
-| #   | Check ID             | Domain                           | Profiles                |
-| --- | -------------------- | -------------------------------- | ----------------------- |
-| 1   | `typecheck`          | TypeScript compilation           | quick, continuous, full |
-| 2   | `lint`               | oxlint errors/warnings           | quick, continuous, full |
-| 3   | `lockfile_integrity` | Lockfile-lint validation         | quick, continuous, full |
-| 4   | `git_status`         | Uncommitted files, branch count  | quick, continuous, full |
-| 5   | `services_health`    | Third-party API health           | continuous, full        |
-| 6   | `sentry_regression`  | Sentry unresolved errors         | continuous, full        |
-| 7   | `i18n_coverage`      | Translation completeness         | continuous, full        |
-| 8   | `provider_cascade_integration` | Model-injector cascade integration | continuous, full |
-| 9   | `ollama_vram_health` | Ollama VRAM/KV cache pressure    | continuous, full        |
-| 10  | `bundle_budget`      | Bundle size thresholds           | full                    |
-| 11  | `test_required_gap`  | Required test matrix             | continuous, full        |
-| 12  | `dep_outdated`       | npm outdated (major/minor/patch) | full                    |
-| 13  | `dep_audit`          | npm audit vulnerabilities        | full                    |
-| 14  | `dep_osv`            | OSV vulnerability scanner        | full                    |
-| 15  | `security_semgrep`   | Semgrep static analysis          | full                    |
-| 16  | `type_coverage`      | Type coverage % (target ≥95%)    | full                    |
-| 17  | `test_unit`          | Vitest unit suite                | full                    |
-| 18  | `test_coverage_gap`  | Uncovered files                  | full                    |
-| 19  | `duplication`        | Code duplication (jscpd)         | full                    |
-| 20  | `spelling`           | Spelling (cspell)                | full                    |
-| 21  | `dep_cruiser`        | Dependency boundary violations   | full                    |
-| 22  | `knip_unused`        | Unused exports/dependencies      | full                    |
-| 23  | `license_compliance` | Copyleft license detection       | full                    |
-| 24  | `docs_freshness`     | Stale documentation (>60 days)   | full                    |
+| #   | Check ID                       | Domain                             | Profiles                |
+| --- | ------------------------------ | ---------------------------------- | ----------------------- |
+| 1   | `typecheck`                    | TypeScript compilation             | quick, continuous, full |
+| 2   | `lint`                         | oxlint errors/warnings             | quick, continuous, full |
+| 3   | `lockfile_integrity`           | Lockfile-lint validation           | quick, continuous, full |
+| 4   | `git_status`                   | Uncommitted files, branch count    | quick, continuous, full |
+| 5   | `services_health`              | Third-party API health             | continuous, full        |
+| 6   | `sentry_regression`            | Sentry unresolved errors           | continuous, full        |
+| 7   | `i18n_coverage`                | Translation completeness           | continuous, full        |
+| 8   | `provider_cascade_integration` | Model-injector cascade integration | continuous, full        |
+| 9   | `ollama_vram_health`           | Ollama VRAM/KV cache pressure      | continuous, full        |
+| 10  | `bundle_budget`                | Bundle size thresholds             | full                    |
+| 11  | `test_required_gap`            | Required test matrix               | continuous, full        |
+| 12  | `dep_outdated`                 | npm outdated (major/minor/patch)   | full                    |
+| 13  | `dep_audit`                    | npm audit vulnerabilities          | full                    |
+| 14  | `dep_osv`                      | OSV vulnerability scanner          | full                    |
+| 15  | `security_semgrep`             | Semgrep static analysis            | full                    |
+| 16  | `type_coverage`                | Type coverage % (target ≥95%)      | full                    |
+| 17  | `test_unit`                    | Vitest unit suite                  | full                    |
+| 18  | `test_coverage_gap`            | Uncovered files                    | full                    |
+| 19  | `duplication`                  | Code duplication (jscpd)           | full                    |
+| 20  | `spelling`                     | Spelling (cspell)                  | full                    |
+| 21  | `dep_cruiser`                  | Dependency boundary violations     | full                    |
+| 22  | `knip_unused`                  | Unused exports/dependencies        | full                    |
+| 23  | `license_compliance`           | Copyleft license detection         | full                    |
+| 24  | `docs_freshness`               | Stale documentation (>60 days)     | full                    |
 
 ## Report Format
 

@@ -93,6 +93,7 @@
         "npm:sharp@~0.34.5",
         "npm:tailwind-merge@^3.4.0",
         "npm:tailwindcss@^4.1.18",
+        "npm:ts-morph@^27.0.2",
         "npm:tsx@^4.21.0",
         "npm:type-coverage@^2.29.7",
         "npm:typescript@^5.9.3",

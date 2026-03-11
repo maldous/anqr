@@ -335,7 +335,9 @@ async function processIssue(gql, issueIdentifier, args, extraPattern, cutoffDate
     deleted,
     skipped,
     protected: protectedCount,
-    noiseCount: results.filter((r) => r.classification === 'noise' || r.classification === 'noise-recent').length,
+    noiseCount: results.filter(
+      (r) => r.classification === 'noise' || r.classification === 'noise-recent'
+    ).length,
   };
 }
 
@@ -395,7 +397,9 @@ async function main() {
       );
       if (noiseComments.length === 0 && args.allOpen) continue;
 
-      console.log(`\n${result.issueId} — ${result.title || '(untitled)'} (${result.totalComments} comments)`);
+      console.log(
+        `\n${result.issueId} — ${result.title || '(untitled)'} (${result.totalComments} comments)`
+      );
       console.log('-'.repeat(90));
 
       if (result.comments.length === 0) {
@@ -405,13 +409,14 @@ async function main() {
 
       for (const c of result.comments) {
         const date = c.createdAt.slice(0, 10);
-        const tag = c.classification === 'noise'
-          ? '[DEL] '
-          : c.classification === 'noise-recent'
-            ? '[NEW] '
-            : c.classification === 'protected'
-              ? '[OK]  '
-              : '      ';
+        const tag =
+          c.classification === 'noise'
+            ? '[DEL] '
+            : c.classification === 'noise-recent'
+              ? '[NEW] '
+              : c.classification === 'protected'
+                ? '[OK]  '
+                : '      ';
         console.log(`  ${tag} ${date}  ${c.author.padEnd(16)} ${c.action.padEnd(24)} ${c.preview}`);
       }
     }

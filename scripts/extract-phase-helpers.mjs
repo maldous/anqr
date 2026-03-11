@@ -11,14 +11,22 @@ const src = readFileSync(FILE, 'utf8');
 const lines = src.split('\n');
 
 // Find generateFullQArtCore function start
-const coreStart = lines.findIndex(l => l.startsWith('async function generateFullQArtCore('));
-if (coreStart < 0) { console.error('Cannot find generateFullQArtCore'); process.exit(1); }
+const coreStart = lines.findIndex((l) => l.startsWith('async function generateFullQArtCore('));
+if (coreStart < 0) {
+  console.error('Cannot find generateFullQArtCore');
+  process.exit(1);
+}
 
 // Find the export generateFullQArt function (marks end of core)
-const coreEnd = lines.findIndex((l, i) => i > coreStart && l.startsWith('export async function generateFullQArt('));
-if (coreEnd < 0) { console.error('Cannot find export generateFullQArt'); process.exit(1); }
+const coreEnd = lines.findIndex(
+  (l, i) => i > coreStart && l.startsWith('export async function generateFullQArt(')
+);
+if (coreEnd < 0) {
+  console.error('Cannot find export generateFullQArt');
+  process.exit(1);
+}
 
-console.log(`generateFullQArtCore: lines ${coreStart+1} to ${coreEnd}`);
+console.log(`generateFullQArtCore: lines ${coreStart + 1} to ${coreEnd}`);
 
 // ============================================================================
 // EXTRACTION 1: buildAndValidateBasis
@@ -27,15 +35,14 @@ console.log(`generateFullQArtCore: lines ${coreStart+1} to ${coreEnd}`);
 // ============================================================================
 
 // Find start: the line "  onProgress?.('Building RS basis', 10);"
-const basis_block_start = lines.findIndex((l, i) => 
-  i > coreStart && i < coreEnd && 
-  l.includes("onProgress?.('Building RS basis', 10)")
+const basis_block_start = lines.findIndex(
+  (l, i) => i > coreStart && i < coreEnd && l.includes("onProgress?.('Building RS basis', 10)")
 );
 
 // Find end: the line "  onProgress?.('Mapping bits to pixels', 20);"
-const basis_block_end = lines.findIndex((l, i) =>
-  i > basis_block_start && i < coreEnd &&
-  l.includes("onProgress?.('Mapping bits to pixels', 20)")
+const basis_block_end = lines.findIndex(
+  (l, i) =>
+    i > basis_block_start && i < coreEnd && l.includes("onProgress?.('Mapping bits to pixels', 20)")
 );
 
 if (basis_block_start < 0 || basis_block_end < 0) {
@@ -43,27 +50,29 @@ if (basis_block_start < 0 || basis_block_end < 0) {
   process.exit(1);
 }
 
-console.log(`Basis block: lines ${basis_block_start+1} to ${basis_block_end}`);
+console.log(`Basis block: lines ${basis_block_start + 1} to ${basis_block_end}`);
 
 // Extract the basis block lines (between the two onProgress calls)
 const basisBlockLines = lines.slice(basis_block_start + 1, basis_block_end);
 
 // ============================================================================
 // EXTRACTION 2: selectAndFilterVectors
-// From: "  onProgress?.('Ranking pixels by importance', 40);" 
+// From: "  onProgress?.('Ranking pixels by importance', 40);"
 // To: just before "  logSelectionTiming(" ... then "  onProgress?.('Counting predicted matches', 75);"
 // ============================================================================
 
 // Find start: "  onProgress?.('Ranking pixels by importance', 40);"
-const select_block_start = lines.findIndex((l, i) =>
-  i > coreStart && i < coreEnd &&
-  l.includes("onProgress?.('Ranking pixels by importance', 40)")
+const select_block_start = lines.findIndex(
+  (l, i) =>
+    i > coreStart && i < coreEnd && l.includes("onProgress?.('Ranking pixels by importance', 40)")
 );
 
 // Find end: "  onProgress?.('Counting predicted matches', 75);"
-const select_block_end = lines.findIndex((l, i) =>
-  i > select_block_start && i < coreEnd &&
-  l.includes("onProgress?.('Counting predicted matches', 75)")
+const select_block_end = lines.findIndex(
+  (l, i) =>
+    i > select_block_start &&
+    i < coreEnd &&
+    l.includes("onProgress?.('Counting predicted matches', 75)")
 );
 
 if (select_block_start < 0 || select_block_end < 0) {
@@ -71,7 +80,7 @@ if (select_block_start < 0 || select_block_end < 0) {
   process.exit(1);
 }
 
-console.log(`Select block: lines ${select_block_start+1} to ${select_block_end}`);
+console.log(`Select block: lines ${select_block_start + 1} to ${select_block_end}`);
 
 // Extract the select block lines
 const selectBlockLines = lines.slice(select_block_start + 1, select_block_end);
@@ -81,7 +90,7 @@ const selectBlockLines = lines.slice(select_block_start + 1, select_block_end);
 // ============================================================================
 
 // We need to identify what variables are used from the parent scope and what's returned.
-// The basis block uses from parent: encoderLayout, actualVersion, ecc, blockDataCounts, 
+// The basis block uses from parent: encoderLayout, actualVersion, ecc, blockDataCounts,
 //   baseMatrix, moduleCount, actualMask, encodedData, data, actualSuffix,
 //   blockDataArrays, blockEccArrays, blockEccCounts, originalDataLength
 // It returns: allowedBitRanges, basis, actualControllableBits, actualControlPercentage
@@ -112,7 +121,7 @@ function buildAndValidateBasis(
   actualSuffix: string,
   originalDataLength: number
 ): BasisValidationSuccess {
-${basisBlockLines.map(l => l.startsWith('  ') ? l : '  ' + l).join('\n')}
+${basisBlockLines.map((l) => (l.startsWith('  ') ? l : '  ' + l)).join('\n')}
 
   return {
     basis,
@@ -128,12 +137,12 @@ ${basisBlockLines.map(l => l.startsWith('  ') ? l : '  ' + l).join('\n')}
 
 // Actually, let me handle this differently. The helper returns BasisValidationSuccess.
 // When there's a fail/early return, we set earlyReturn. Otherwise we return the normal result.
-// 
+//
 // The issue is that the inline code has `return buildQArtFailResult(...)` and `return { success: true, ... }`
 // We need to replace those with setting earlyReturn.
 
 // Let me build the helper code properly by processing the extracted lines:
-let basisCode = basisBlockLines.join('\n');
+const basisCode = basisBlockLines.join('\n');
 
 // Replace "    return buildQArtFailResult(" with "    return { earlyReturn: buildQArtFailResult("
 // and close the object at the corresponding ");"
@@ -143,19 +152,19 @@ let basisCode = basisBlockLines.join('\n');
 // But the buildQArtFailResult calls span multiple lines. Let me handle this differently.
 
 // Actually, let me use a different approach. Instead of returning a complex object with earlyReturn,
-// let me make the helper return `FullQArtResult | BasisSuccess` where BasisSuccess has a 
+// let me make the helper return `FullQArtResult | BasisSuccess` where BasisSuccess has a
 // discriminating field. The simplest approach:
 // - If the helper needs to "fail fast", it returns a FullQArtResult directly
 // - If it succeeds, it returns a BasisSuccess object with no `success` property conflict
 //   Actually FullQArtResult has `success: boolean`. BasisSuccess won't have that field.
 
 // Let me use a tagged union approach:
-// type BasisValidationResult = 
+// type BasisValidationResult =
 //   | { kind: 'fail'; result: FullQArtResult }
 //   | { kind: 'ok'; basis: ...; actualControllableBits: number; ... }
 
 // Actually the simplest: return `string | null` for error, and use out-params or a result object.
-// Or even simpler: the helper returns `{ error?: FullQArtResult; basis?; ... }` 
+// Or even simpler: the helper returns `{ error?: FullQArtResult; basis?; ... }`
 
 // Let me just go with a simple approach. The helper returns:
 // { earlyReturn?: FullQArtResult; basis; actualControllableBits; actualControlPercentage; allowedBitRanges }
@@ -185,11 +194,11 @@ function transformBasisBlock(code) {
   const lines = code.split('\n');
   const result = [];
   let i = 0;
-  
+
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
-    
+
     // Case 1: "return buildQArtFailResult(" - spans multiple lines
     if (trimmed.startsWith('return buildQArtFailResult(')) {
       // Collect all lines until we find the closing ");"
@@ -211,26 +220,35 @@ function transformBasisBlock(code) {
       // Now wrap in earlyReturn
       const indent = line.match(/^(\s*)/)[1];
       // Replace "return buildQArtFailResult(" with "return { earlyReturn: buildQArtFailResult("
-      block = block.replace('return buildQArtFailResult(', 'return {\n' + indent + '  earlyReturn: buildQArtFailResult(');
+      block = block.replace(
+        'return buildQArtFailResult(',
+        'return {\n' + indent + '  earlyReturn: buildQArtFailResult('
+      );
       // Replace the final ");" with "), basis, actualControllableBits, actualControlPercentage, allowedBitRanges };"
       // But basis may not be defined yet! For the first return (vector safety), basis IS defined.
       // For the mutation test return, basis IS also defined.
       // So we can use the actual variables.
-      
+
       // Actually wait - for the vector safety return, basis is already defined on the line above.
       // For the zero-vector return, basis is defined too.
       // For the mutation test return, basis is defined too.
       // So we can safely reference basis, actualControllableBits, etc.
-      
+
       // Replace the last ");" with the wrapped version
       const lastSemicolon = block.lastIndexOf(');');
-      block = block.slice(0, lastSemicolon) + '),\n' + indent + '  basis, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges,\n' + indent + '};';
-      
+      block =
+        block.slice(0, lastSemicolon) +
+        '),\n' +
+        indent +
+        '  basis, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges,\n' +
+        indent +
+        '};';
+
       result.push(block);
       continue;
     }
-    
-    // Case 2: "return {" for the zero-vectors success case  
+
+    // Case 2: "return {" for the zero-vectors success case
     if (trimmed === 'return {' && i > 0) {
       // Check if this is inside the "if (basis.vectors.length === 0)" block
       // Collect the full return statement
@@ -252,23 +270,29 @@ function transformBasisBlock(code) {
         block = block.replace('return {', 'return {\n' + indent + '  earlyReturn: {');
         // Find the last "};" and replace with "}, basis, ... };"
         const lastClose = block.lastIndexOf('};');
-        block = block.slice(0, lastClose) + '},\n' + indent + '  basis, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges,\n' + indent + '};';
+        block =
+          block.slice(0, lastClose) +
+          '},\n' +
+          indent +
+          '  basis, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges,\n' +
+          indent +
+          '};';
         result.push(block);
         continue;
       }
       result.push(block);
       continue;
     }
-    
+
     result.push(line);
     i++;
   }
-  
+
   return result.join('\n');
 }
 
 // Hmm this is getting really complex. Let me simplify dramatically.
-// 
+//
 // Instead of transforming the code, I'll just manually write the two helper functions.
 // I know exactly what the code does. Let me write them directly.
 
@@ -295,7 +319,7 @@ function transformBasisBlock(code) {
 // - When earlyReturn is set, caller returns it
 
 // For selectAndFilterVectors:
-// - Takes all needed params  
+// - Takes all needed params
 // - Returns { blockSelections, flattenedSelections, totalSelected, elimination }
 
 // Let me build the output file:
@@ -338,22 +362,28 @@ output.push('): BasisValidationSuccess {');
 
 // Now insert the extracted basis block code, transforming returns
 const basisLines = basisBlockLines;
-let inBasisHelper = true;
+const inBasisHelper = true;
 
 for (let i = 0; i < basisLines.length; i++) {
   const line = basisLines[i];
   const trimmed = line.trim();
-  
+
   // Replace direct returns with earlyReturn wrapper
   if (trimmed.startsWith('return buildQArtFailResult(')) {
     // Collect the full multi-line return statement
-    let block = [line];
+    const block = [line];
     let depth = 0;
-    for (const ch of line) { if (ch === '(') depth++; if (ch === ')') depth--; }
+    for (const ch of line) {
+      if (ch === '(') depth++;
+      if (ch === ')') depth--;
+    }
     let j = i + 1;
     while (depth > 0 && j < basisLines.length) {
       block.push(basisLines[j]);
-      for (const ch of basisLines[j]) { if (ch === '(') depth++; if (ch === ')') depth--; }
+      for (const ch of basisLines[j]) {
+        if (ch === '(') depth++;
+        if (ch === ')') depth--;
+      }
       j++;
     }
     const indent = line.match(/^(\s*)/)[1];
@@ -366,11 +396,14 @@ for (let i = 0; i < basisLines.length; i++) {
       output.push(argsMatch[1]);
     }
     output.push(indent + ');');
-    output.push(indent + 'return { earlyReturn: _failResult, basis, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges };');
+    output.push(
+      indent +
+        'return { earlyReturn: _failResult, basis, actualControllableBits: 0, actualControlPercentage: 0, allowedBitRanges };'
+    );
     i = j - 1; // Skip processed lines
     continue;
   }
-  
+
   // Replace the zero-vectors return { success: true, ... }
   if (trimmed === 'return {' || trimmed.startsWith('return {')) {
     // Check if next lines contain "success:" (it's a FullQArtResult)
@@ -380,13 +413,19 @@ for (let i = 0; i < basisLines.length; i++) {
     }
     if (lookAhead.includes('success: true') || lookAhead.includes('success: false')) {
       // Collect the full return statement
-      let block = [line];
+      const block = [line];
       let depth = 0;
-      for (const ch of line) { if (ch === '{') depth++; if (ch === '}') depth--; }
+      for (const ch of line) {
+        if (ch === '{') depth++;
+        if (ch === '}') depth--;
+      }
       let j = i + 1;
       while (depth > 0 && j < basisLines.length) {
         block.push(basisLines[j]);
-        for (const ch of basisLines[j]) { if (ch === '{') depth++; if (ch === '}') depth--; }
+        for (const ch of basisLines[j]) {
+          if (ch === '{') depth++;
+          if (ch === '}') depth--;
+        }
         j++;
       }
       const indent = line.match(/^(\s*)/)[1];
@@ -413,7 +452,7 @@ for (let i = 0; i < basisLines.length; i++) {
       continue;
     }
   }
-  
+
   output.push(line);
 }
 
@@ -449,7 +488,7 @@ output.push('  dataPixelIndices: number[],');
 output.push('  dataPixels: Set<number>,');
 output.push('  performanceSettings: QArtPerformanceSettings,');
 output.push('  performanceProfile: QArtPerformanceProfile,');
-output.push('  resolvedSuffixMode: \'numeric\' | \'byte\',');
+output.push("  resolvedSuffixMode: 'numeric' | 'byte',");
 output.push('  strictSuffix: boolean,');
 output.push('  blockDataArrays: Uint8Array[],');
 output.push('  blockDataCounts: number[],');
@@ -465,7 +504,9 @@ for (const line of selectBlockLines) {
 
 // Add the logSelectionTiming call and return
 output.push('');
-output.push('  logSelectionTiming(timingEnabled, timingMarks, preReduceTargetCount, totalSelected);');
+output.push(
+  '  logSelectionTiming(timingEnabled, timingMarks, preReduceTargetCount, totalSelected);'
+);
 output.push('');
 output.push('  return { blockSelections, flattenedSelections, totalSelected, elimination };');
 output.push('}');
@@ -491,7 +532,9 @@ output.push('  );');
 output.push('  if (basisResult.earlyReturn) {');
 output.push('    return basisResult.earlyReturn;');
 output.push('  }');
-output.push('  const { basis, actualControllableBits, actualControlPercentage, allowedBitRanges } = basisResult;');
+output.push(
+  '  const { basis, actualControllableBits, actualControlPercentage, allowedBitRanges } = basisResult;'
+);
 output.push('');
 
 // Copy from basis_block_end (the "Mapping bits to pixels" onProgress) to select_block_start (the "Ranking pixels" onProgress)
@@ -507,7 +550,9 @@ output.push('    dataPixelIndices, dataPixels, performanceSettings, performanceP
 output.push('    resolvedSuffixMode, strictSuffix, blockDataArrays, blockDataCounts,');
 output.push('    encoderLayout, actualVersion, actualMask');
 output.push('  );');
-output.push('  const { blockSelections, flattenedSelections, totalSelected, elimination } = selectionResult;');
+output.push(
+  '  const { blockSelections, flattenedSelections, totalSelected, elimination } = selectionResult;'
+);
 output.push('  const _orderedSelections = flattenedSelections;');
 output.push('');
 

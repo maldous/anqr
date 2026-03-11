@@ -10,7 +10,9 @@ const content = readFileSync(FILE, 'utf8');
 const lines = content.split('\n');
 
 // Find the start of generateFullQArt
-const funcStartIdx = lines.findIndex(l => l.startsWith('export async function generateFullQArt(config: FullQArtConfig)'));
+const funcStartIdx = lines.findIndex((l) =>
+  l.startsWith('export async function generateFullQArt(config: FullQArtConfig)')
+);
 if (funcStartIdx === -1) throw new Error('Could not find generateFullQArt');
 console.log(`Found generateFullQArt at line ${funcStartIdx + 1}`);
 
@@ -54,7 +56,7 @@ console.log(`Found function end at line ${funcEndIdx + 1}`);
 // Extract the try body (lines between try { and } catch, exclusive)
 const tryBody = lines.slice(tryIdx + 1, catchIdx);
 // Dedent by 2 spaces (remove the try-block indentation)
-const dedentedBody = tryBody.map(l => l.startsWith('    ') ? l.slice(2) : l);
+const dedentedBody = tryBody.map((l) => (l.startsWith('    ') ? l.slice(2) : l));
 
 // Build the core function params interface
 const coreParamsInterface = `interface QArtCoreParams {
@@ -117,7 +119,7 @@ const catchBlock = lines.slice(catchIdx, funcEndIdx + 1);
 const result = [
   ...lines.slice(0, funcStartIdx),
   ...coreFuncLines,
-  ...lines.slice(funcStartIdx, tryIdx),  // generateFullQArt signature through pre-try code
+  ...lines.slice(funcStartIdx, tryIdx), // generateFullQArt signature through pre-try code
   ...newTryCatch,
   ...catchBlock,
   ...lines.slice(funcEndIdx + 1),

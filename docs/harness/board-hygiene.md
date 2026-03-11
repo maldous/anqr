@@ -16,14 +16,14 @@ Exactly **one** issue may be `In Progress` at any time. This is the issue curren
 
 Every open issue must carry exactly one primary descriptor prefix:
 
-| Prefix      | Meaning                                         | State Constraint             |
-| ----------- | ----------------------------------------------- | ---------------------------- |
-| `[PARENT]`  | Umbrella issue with child decomposition         | Backlog until children close |
-| `[CHILD]`   | Atomic work item linked to a `[PARENT]`         | Any active state             |
-| `[HUMAN]`   | Requires human portal/console/legal access      | Pending (always)             |
-| `[EMAIL]`   | Created from inbound email                      | Backlog or Todo              |
-| `[CI]`      | Created by CI failure monitor                   | Auto-managed                 |
-| `[HARNESS]` | Created by harness report failure               | Auto-managed                 |
+| Prefix      | Meaning                                    | State Constraint             |
+| ----------- | ------------------------------------------ | ---------------------------- |
+| `[PARENT]`  | Umbrella issue with child decomposition    | Backlog until children close |
+| `[CHILD]`   | Atomic work item linked to a `[PARENT]`    | Any active state             |
+| `[HUMAN]`   | Requires human portal/console/legal access | Pending (always)             |
+| `[EMAIL]`   | Created from inbound email                 | Backlog or Todo              |
+| `[CI]`      | Created by CI failure monitor              | Auto-managed                 |
+| `[HARNESS]` | Created by harness report failure          | Auto-managed                 |
 
 Combinations are allowed where meaningful: `[HUMAN] [CHILD]` indicates a child issue that requires human action.
 
@@ -66,14 +66,14 @@ Backlog → Todo → In Progress → Done
                    Backlog (when unblocked)
 ```
 
-| State       | Meaning                                        | Who acts            |
-| ----------- | ---------------------------------------------- | ------------------- |
-| Backlog     | Known work, not yet prioritized for execution  | Nobody (queued)     |
-| Todo        | Prioritized, ready for next agent cycle        | Agent picks up next |
-| In Progress | Actively being worked (exactly one at a time)  | Current agent       |
-| Pending     | Blocked on human action                        | Human operator      |
-| Done        | Completed with evidence                        | Nobody (terminal)   |
-| Canceled    | Intentionally abandoned with rationale         | Nobody (terminal)   |
+| State       | Meaning                                       | Who acts            |
+| ----------- | --------------------------------------------- | ------------------- |
+| Backlog     | Known work, not yet prioritized for execution | Nobody (queued)     |
+| Todo        | Prioritized, ready for next agent cycle       | Agent picks up next |
+| In Progress | Actively being worked (exactly one at a time) | Current agent       |
+| Pending     | Blocked on human action                       | Human operator      |
+| Done        | Completed with evidence                       | Nobody (terminal)   |
+| Canceled    | Intentionally abandoned with rationale        | Nobody (terminal)   |
 
 ### Priority Must Be Explicit
 
@@ -130,6 +130,7 @@ The guardian (`scripts/ops/linear-guardian.mjs`) automatically detects and corre
 3. **Pending without [HUMAN]** — queries all Pending issues. Any issue without the `[HUMAN]` prefix is moved to Backlog with a comment explaining the Pending reservation rule.
 
 All checks follow the guardian's dry-run/apply convention:
+
 - Without `--apply`: violations are detected and logged but not corrected.
 - With `--apply`: violations are auto-corrected and a notification email is sent.
 
@@ -159,7 +160,7 @@ The guardian enforces the three critical invariants (In Progress count, stale In
 3. **[HUMAN] on non-human issues** — remove prefix from issues that can be AI-completed.
 4. **Missing [HUMAN] on human issues** — add prefix to issues requiring portal/console/legal access.
 5. **Git reconciliation** — scan last 40 commits for issue references; update states where evidence shows completion.
-6. **Stale In Progress** — issues In Progress with no commits in >48 hours should be moved to Backlog. *(Automated by guardian)*
+6. **Stale In Progress** — issues In Progress with no commits in >48 hours should be moved to Backlog. _(Automated by guardian)_
 7. **Priority gaps** — every non-terminal issue must have priority 1–4.
 8. **Orphaned children** — every `[CHILD]` issue must have a Linear parent link (not just title prefix).
 9. **Done without evidence** — spot-check recent Done issues for evidence policy compliance (see [Evidence Policy](../workflow/execution-workflow.md#evidence-policy)).
@@ -201,17 +202,17 @@ node scripts/ops/linear-cleanup-comments.mjs --all-open --older-than 7
 
 ## Common Violations and Corrections
 
-| Violation                               | Correction                                              |
-| --------------------------------------- | ------------------------------------------------------- |
-| Multiple issues In Progress             | Move extras to Backlog with audit comment                |
-| Automated task in Pending               | Move to Backlog                                         |
-| Human-dependent issue missing [HUMAN]   | Add prefix, ensure in Pending with unblock steps        |
-| [HUMAN] on AI-doable issue              | Remove prefix, move to Backlog or Todo                  |
-| Done issue with no evidence             | Move to Backlog with comment requesting evidence        |
-| Commit closes issue still in Backlog    | Move to Done, post evidence comment with commit hash    |
-| [CHILD] without Linear parent link      | Link to parent via Linear UI or API                     |
-| Stale In Progress (no activity >48h)    | Move to Backlog with staleness comment                  |
-| Issue with >10 error/retry comments     | Clean comments, consider re-scoping the issue           |
+| Violation                             | Correction                                           |
+| ------------------------------------- | ---------------------------------------------------- |
+| Multiple issues In Progress           | Move extras to Backlog with audit comment            |
+| Automated task in Pending             | Move to Backlog                                      |
+| Human-dependent issue missing [HUMAN] | Add prefix, ensure in Pending with unblock steps     |
+| [HUMAN] on AI-doable issue            | Remove prefix, move to Backlog or Todo               |
+| Done issue with no evidence           | Move to Backlog with comment requesting evidence     |
+| Commit closes issue still in Backlog  | Move to Done, post evidence comment with commit hash |
+| [CHILD] without Linear parent link    | Link to parent via Linear UI or API                  |
+| Stale In Progress (no activity >48h)  | Move to Backlog with staleness comment               |
+| Issue with >10 error/retry comments   | Clean comments, consider re-scoping the issue        |
 
 ## Relationship to Other Docs
 

@@ -1183,12 +1183,17 @@ async function main() {
       for (const issue of staleCandidates) {
         const gitCheck = spawnSync(
           'git',
-          ['log', '--all', `--since=${staleThresholdHours} hours ago`, '--oneline', `--grep=${issue.identifier}`],
+          [
+            'log',
+            '--all',
+            `--since=${staleThresholdHours} hours ago`,
+            '--oneline',
+            `--grep=${issue.identifier}`,
+          ],
           { encoding: 'utf-8', timeout: 10000, cwd: PROJECT_ROOT }
         );
         if (gitCheck.error) continue;
-        const hasRecentCommits =
-          gitCheck.status === 0 && (gitCheck.stdout || '').trim().length > 0;
+        const hasRecentCommits = gitCheck.status === 0 && (gitCheck.stdout || '').trim().length > 0;
 
         if (!hasRecentCommits) {
           summary.boardHygiene.staleInProgress.count += 1;
