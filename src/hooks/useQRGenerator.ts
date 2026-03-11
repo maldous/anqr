@@ -253,6 +253,50 @@ interface SafetyAdjustmentResult {
   warnings: string[];
 }
 
+function adjustOverlayIntensity(params: {
+  safetyMode: string;
+  overlayEnabled: boolean;
+  overlayIntensity: number;
+  maxSafeIntensity: number;
+  reduceIntensityUntilSafe: boolean;
+  effectiveEcc: EccLevel;
+}): { intensity: number; warnings: string[] } {
+  const warnings: string[] = [];
+  let adjusted = params.overlayIntensity;
+
+  if (
+    params.safetyMode === 'strict' &&
+    params.overlayEnabled &&
+    params.overlayIntensity > params.maxSafeIntensity
+  ) {
+    adjusted = params.maxSafeIntensity;
+    warnings.push(
+      `Overlay intensity reduced to ${params.maxSafeIntensity}% for ECC level ${params.effectiveEcc}`
+    );
+  } else if (
+    params.safetyMode === 'balanced' &&
+    params.overlayEnabled &&
+    params.overlayIntensity > params.maxSafeIntensity
+  ) {
+    warnings.push(
+      `Overlay intensity (${params.overlayIntensity}%) may reduce scannability with ECC ${params.effectiveEcc}`
+    );
+  }
+
+  if (
+    params.reduceIntensityUntilSafe &&
+    params.overlayEnabled &&
+    params.overlayIntensity > params.maxSafeIntensity
+  ) {
+    adjusted = params.maxSafeIntensity;
+    warnings.push(
+      `Auto-reduced overlay intensity to ${params.maxSafeIntensity}% for safe scanning`
+    );
+  }
+
+  return { intensity: adjusted, warnings };
+}
+
 function computeSafetyAdjustments(params: {
   safetyMode: string;
   minModulePx: number;
@@ -287,34 +331,16 @@ function computeSafetyAdjustments(params: {
     }
 
     const maxSafeIntensity = params.maxOverlayIntensityByEcc[params.effectiveEcc] ?? 50;
-
-    if (
-      params.safetyMode === 'strict' &&
-      params.overlayEnabled &&
-      params.overlayIntensity > maxSafeIntensity
-    ) {
-      adjustedIntensity = maxSafeIntensity;
-      warnings.push(
-        `Overlay intensity reduced to ${maxSafeIntensity}% for ECC level ${params.effectiveEcc}`
-      );
-    } else if (
-      params.safetyMode === 'balanced' &&
-      params.overlayEnabled &&
-      params.overlayIntensity > maxSafeIntensity
-    ) {
-      warnings.push(
-        `Overlay intensity (${params.overlayIntensity}%) may reduce scannability with ECC ${params.effectiveEcc}`
-      );
-    }
-
-    if (
-      params.reduceIntensityUntilSafe &&
-      params.overlayEnabled &&
-      params.overlayIntensity > maxSafeIntensity
-    ) {
-      adjustedIntensity = maxSafeIntensity;
-      warnings.push(`Auto-reduced overlay intensity to ${maxSafeIntensity}% for safe scanning`);
-    }
+    const intensityResult = adjustOverlayIntensity({
+      safetyMode: params.safetyMode,
+      overlayEnabled: params.overlayEnabled,
+      overlayIntensity: params.overlayIntensity,
+      maxSafeIntensity,
+      reduceIntensityUntilSafe: params.reduceIntensityUntilSafe,
+      effectiveEcc: params.effectiveEcc,
+    });
+    adjustedIntensity = intensityResult.intensity;
+    warnings.push(...intensityResult.warnings);
 
     if (params.moduleGapPercent > 20) {
       warnings.push('Large module gaps may affect QR readability');

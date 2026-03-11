@@ -232,7 +232,7 @@ function buildHeaderColors(render: ReturnType<typeof useQRStore.getState>['rende
   };
 }
 
-function buildHeaderStyles(render: ReturnType<typeof useQRStore.getState>['render']) {
+function buildHeaderStylesModule(render: ReturnType<typeof useQRStore.getState>['render']) {
   return {
     style: render.moduleStyle === 'square' ? undefined : render.moduleStyle,
     finder: render.finderStyle === 'square' ? undefined : render.finderStyle,
@@ -242,6 +242,11 @@ function buildHeaderStyles(render: ReturnType<typeof useQRStore.getState>['rende
     gapMode: render.gapMode === 'none' ? undefined : render.gapMode,
     cornerRadius: render.cornerRadius === 0 ? undefined : render.cornerRadius,
     gradientType: render.gradient.type === 'none' ? undefined : render.gradient.type,
+  };
+}
+
+function buildHeaderStylesEye(render: ReturnType<typeof useQRStore.getState>['render']) {
+  return {
     eyeOuterStyle: render.eyeOuterStyle === 'square' ? undefined : render.eyeOuterStyle,
     eyeInnerStyle: render.eyeInnerStyle === 'square' ? undefined : render.eyeInnerStyle,
     eyeScale: render.eyeScale === 100 ? undefined : render.eyeScale,
@@ -257,6 +262,13 @@ function buildHeaderStyles(render: ReturnType<typeof useQRStore.getState>['rende
       !render.contrastGuard || render.minContrastRatio === 4.5
         ? undefined
         : render.minContrastRatio,
+  };
+}
+
+function buildHeaderStyles(render: ReturnType<typeof useQRStore.getState>['render']) {
+  return {
+    ...buildHeaderStylesModule(render),
+    ...buildHeaderStylesEye(render),
   };
 }
 
@@ -351,7 +363,7 @@ function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['ove
   };
 }
 
-function buildHeaderAnimation(animation: ReturnType<typeof useQRStore.getState>['animation']) {
+function buildHeaderAnimationCore(animation: ReturnType<typeof useQRStore.getState>['animation']) {
   return {
     speed: animation.speedMs === 100 ? undefined : animation.speedMs,
     loop: animation.loop === false ? false : undefined,
@@ -361,6 +373,13 @@ function buildHeaderAnimation(animation: ReturnType<typeof useQRStore.getState>[
     frameStep: animation.frameStep === 1 ? undefined : animation.frameStep,
     interpolate: animation.interpolate === 'none' ? undefined : animation.interpolate,
     temporalDither: animation.temporalDither === 'off' ? undefined : animation.temporalDither,
+  };
+}
+
+function buildHeaderAnimationPattern(
+  animation: ReturnType<typeof useQRStore.getState>['animation']
+) {
+  return {
     pattern: animation.pattern === 'none' ? undefined : animation.pattern,
     target: animation.target === 'result' ? undefined : animation.target,
     waveAxis:
@@ -381,13 +400,29 @@ function buildHeaderAnimation(animation: ReturnType<typeof useQRStore.getState>[
   };
 }
 
-function buildHeaderOutput(output: ReturnType<typeof useQRStore.getState>['output']) {
+function buildHeaderAnimation(animation: ReturnType<typeof useQRStore.getState>['animation']) {
+  return {
+    ...buildHeaderAnimationCore(animation),
+    ...buildHeaderAnimationPattern(animation),
+  };
+}
+
+function buildHeaderOutputCore(output: ReturnType<typeof useQRStore.getState>['output']) {
   return {
     width: output.widthPx === 400 ? undefined : output.widthPx,
     height: output.heightPx === 400 ? undefined : output.heightPx,
     format: output.format === 'gif' ? undefined : output.format,
     quality: output.quality === 0.9 ? undefined : output.quality,
     filename: output.filename === 'anqr-qrcode' ? undefined : output.filename,
+    dpi: output.dpi === 72 ? undefined : output.dpi,
+    includeQuietZone: output.includeQuietZone === false ? false : undefined,
+    bgOverride: output.bgOverride || undefined,
+    formatExtra: output.formatExtra === 'none' ? undefined : output.formatExtra,
+  };
+}
+
+function buildHeaderOutputFormat(output: ReturnType<typeof useQRStore.getState>['output']) {
+  return {
     gifPaletteSize:
       output.format !== 'gif' || output.gifPaletteSize === 256 ? undefined : output.gifPaletteSize,
     gifQuantizer:
@@ -397,9 +432,6 @@ function buildHeaderOutput(output: ReturnType<typeof useQRStore.getState>['outpu
     gifDither:
       output.format !== 'gif' || output.gifDither === 'floyd' ? undefined : output.gifDither,
     svgTrueVector: output.format === 'svg' && output.svgTrueVector ? true : undefined,
-    dpi: output.dpi === 72 ? undefined : output.dpi,
-    includeQuietZone: output.includeQuietZone === false ? false : undefined,
-    bgOverride: output.bgOverride || undefined,
     gifTransparentColor:
       output.format !== 'gif' || !output.gifTransparentColor
         ? undefined
@@ -410,7 +442,13 @@ function buildHeaderOutput(output: ReturnType<typeof useQRStore.getState>['outpu
         : output.svgShapePrecision,
     svgEmbedRasterOverlay:
       output.format === 'svg' && output.svgEmbedRasterOverlay === false ? false : undefined,
-    formatExtra: output.formatExtra === 'none' ? undefined : output.formatExtra,
+  };
+}
+
+function buildHeaderOutput(output: ReturnType<typeof useQRStore.getState>['output']) {
+  return {
+    ...buildHeaderOutputCore(output),
+    ...buildHeaderOutputFormat(output),
   };
 }
 
@@ -596,39 +634,34 @@ export function Header({
 
   // Handle tier change - Professional requires watching ad on native
   const handleTierChange = async (newTier: Tier) => {
-    // If selecting Professional on native platform, require watching ad
-    if (newTier === 'professional' && Capacitor.isNativePlatform()) {
-      // If already has premium access, allow direct selection
-      if (checkPremiumAccess()) {
-        setTier(newTier);
-        return;
-      }
-
-      // Show interstitial ad (once) to unlock Pro
-      setLoadingAd(true);
-      try {
-        await prepareInterstitial('generation');
-        await showInterstitial('generation');
-        // Interstitial shown (user can dismiss immediately)
-        trackEvent('premium_interstitial_shown', { tier: 'professional' });
-        // Grant premium access after ad is shown (once)
-        activatePremiumAccess();
-        trackEvent('premium_activated', { tier: 'professional', source: 'interstitial' });
-        setTier('professional');
-        // Prepare next interstitial for future use
-        prepareInterstitial('generation');
-      } catch (error) {
-        log.error('Failed to show interstitial ad', { error });
-        // Still grant access even if ad fails (fail open for UX)
-        activatePremiumAccess();
-        trackEvent('premium_activated', { tier: 'professional', source: 'fallback' });
-        setTier('professional');
-      } finally {
-        setLoadingAd(false);
-      }
-    } else {
-      // Web or non-professional tier - allow direct change
+    if (newTier !== 'professional' || !Capacitor.isNativePlatform()) {
       setTier(newTier);
+      return;
+    }
+    if (checkPremiumAccess()) {
+      setTier(newTier);
+      return;
+    }
+    await unlockProfessionalViaNativeAd();
+  };
+
+  const unlockProfessionalViaNativeAd = async () => {
+    setLoadingAd(true);
+    try {
+      await prepareInterstitial('generation');
+      await showInterstitial('generation');
+      trackEvent('premium_interstitial_shown', { tier: 'professional' });
+      activatePremiumAccess();
+      trackEvent('premium_activated', { tier: 'professional', source: 'interstitial' });
+      setTier('professional');
+      prepareInterstitial('generation');
+    } catch (error) {
+      log.error('Failed to show interstitial ad', { error });
+      activatePremiumAccess();
+      trackEvent('premium_activated', { tier: 'professional', source: 'fallback' });
+      setTier('professional');
+    } finally {
+      setLoadingAd(false);
     }
   };
 

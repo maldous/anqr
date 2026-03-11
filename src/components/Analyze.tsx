@@ -192,6 +192,25 @@ function buildCandidateFrameIndices(cachedFramesLength: number, currentIdx: numb
   return candidateIndices;
 }
 
+function scanCachedFramesForQR(
+  cachedFrames: (HTMLCanvasElement | OffscreenCanvas)[],
+  currentFrame: number
+): QRAnalysisResult | null {
+  if (cachedFrames.length <= 1) return null;
+  const candidateIndices = buildCandidateFrameIndices(cachedFrames.length, currentFrame);
+  for (const frameIdx of candidateIndices) {
+    const frame = cachedFrames[frameIdx];
+    if (!frame) continue;
+    const frameResult = analyzeQRCode(cloneCanvasLike(frame));
+    if (frameResult.success) {
+      const warnings = [...(frameResult.warnings ?? [])];
+      warnings.push(`Analyzed using animation frame ${frameIdx + 1}/${cachedFrames.length}`);
+      return { ...frameResult, warnings };
+    }
+  }
+  return null;
+}
+
 // Content type icons mapping
 const CONTENT_TYPE_ICONS: Record<ContentType, React.ReactNode> = {
   url: <Globe className="w-4 h-4" />,
@@ -1995,23 +2014,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           ? animationState.animationFrames
           : [];
 
-      if (cachedFrames.length > 1) {
-        const candidateIndices = buildCandidateFrameIndices(
-          cachedFrames.length,
-          animationState?.currentFrame ?? 0
-        );
-
-        for (const frameIdx of candidateIndices) {
-          const frame = cachedFrames[frameIdx];
-          if (!frame) continue;
-          const frameResult = analyzeQRCode(cloneCanvasLike(frame));
-          if (frameResult.success) {
-            const warnings = [...(frameResult.warnings ?? [])];
-            warnings.push(`Analyzed using animation frame ${frameIdx + 1}/${cachedFrames.length}`);
-            return { ...frameResult, warnings };
-          }
-        }
-      }
+      const frameResult = scanCachedFramesForQR(cachedFrames, animationState?.currentFrame ?? 0);
+      if (frameResult) return frameResult;
 
       if (isAnimatedSource) {
         await waitMs(90);
