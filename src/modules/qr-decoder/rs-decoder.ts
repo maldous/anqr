@@ -648,72 +648,56 @@ export function correctRSBlock(
 }
 
 /**
- * Correct errors in all RS blocks of a QR code
- *
- * @param codewords All codewords (interleaved data + ECC)
- * @param rsBlocks RS block configuration [[numBlocks, totalCount, dataCount], ...]
- * @returns Corrected and de-interleaved data codewords, or null if any block is uncorrectable
+ * Build flat list of block configurations from RS block groups.
  */
-export function correctRSCodewords(
-  codewords: number[],
-  rsBlocks: number[][]
-): { dataCodewords: number[]; correctionsMade: number } | null {
-  // Build list of block configurations
-  const blockConfigs: Array<{ dataCount: number; eccCount: number }> = [];
+function buildRSBlockConfigs(rsBlocks: number[][]): Array<{ dataCount: number; eccCount: number }> {
+  const configs: Array<{ dataCount: number; eccCount: number }> = [];
   for (const blockGroup of rsBlocks) {
     const numBlocks = blockGroup[0];
     const totalCount = blockGroup[1];
     const dataCount = blockGroup[2];
     const eccCount = totalCount - dataCount;
-
     for (let i = 0; i < numBlocks; i++) {
-      blockConfigs.push({ dataCount, eccCount });
+      configs.push({ dataCount, eccCount });
     }
   }
+  return configs;
+}
 
-  const numBlocks = blockConfigs.length;
-
-  // De-interleave codewords into individual blocks
-  // Data codewords are interleaved first, then ECC codewords
-
-  // Find max data and ECC sizes
-  const maxDataCount = Math.max(...blockConfigs.map((b) => b.dataCount));
-  const maxEccCount = Math.max(...blockConfigs.map((b) => b.eccCount));
-
-  // De-interleave data codewords
-  const blockData: number[][] = blockConfigs.map(() => []);
-  let idx = 0;
-
-  for (let pos = 0; pos < maxDataCount; pos++) {
+/**
+ * De-interleave codewords into per-block arrays.
+ */
+function deinterleaveByBlock(
+  codewords: number[],
+  countsPerBlock: number[],
+  maxCount: number,
+  startIdx: number
+): { blocks: number[][]; nextIdx: number } {
+  const numBlocks = countsPerBlock.length;
+  const blocks: number[][] = Array.from({ length: numBlocks }, () => []);
+  let idx = startIdx;
+  for (let pos = 0; pos < maxCount; pos++) {
     for (let b = 0; b < numBlocks; b++) {
-      if (pos < blockConfigs[b].dataCount && idx < codewords.length) {
-        blockData[b].push(codewords[idx++]);
+      if (pos < countsPerBlock[b] && idx < codewords.length) {
+        blocks[b].push(codewords[idx++]);
       }
     }
   }
+  return { blocks, nextIdx: idx };
+}
 
-  // De-interleave ECC codewords
-  const blockEcc: number[][] = blockConfigs.map(() => []);
-
-  for (let pos = 0; pos < maxEccCount; pos++) {
-    for (let b = 0; b < numBlocks; b++) {
-      if (pos < blockConfigs[b].eccCount && idx < codewords.length) {
-        blockEcc[b].push(codewords[idx++]);
-      }
-    }
-  }
-
-  qrDecoderLog.trace('rs-decoder: De-interleaved into blocks', {
-    numBlocks,
-    blockDataLengths: blockData.map((d) => d.length).join(','),
-    blockEccLengths: blockEcc.map((e) => e.length).join(','),
-  });
-
-  // Correct each block
+/**
+ * Correct each RS block and count corrections made.
+ */
+function correctAllBlocks(
+  blockData: number[][],
+  blockEcc: number[][],
+  blockConfigs: Array<{ dataCount: number; eccCount: number }>
+): { correctedBlocks: number[][]; totalCorrections: number } | null {
   const correctedBlocks: number[][] = [];
   let totalCorrections = 0;
 
-  for (let b = 0; b < numBlocks; b++) {
+  for (let b = 0; b < blockConfigs.length; b++) {
     const blockCodeword = [...blockData[b], ...blockEcc[b]];
     const { dataCount, eccCount } = blockConfigs[b];
 
@@ -730,7 +714,6 @@ export function correctRSCodewords(
       return null;
     }
 
-    // Count corrections by comparing with original
     for (let i = 0; i < corrected.length; i++) {
       if (corrected[i] !== blockData[b][i]) {
         totalCorrections++;
@@ -740,13 +723,52 @@ export function correctRSCodewords(
     correctedBlocks.push(corrected);
   }
 
-  // Concatenate corrected data from all blocks
-  const dataCodewords = correctedBlocks.flat();
+  return { correctedBlocks, totalCorrections };
+}
+
+/**
+ * Correct errors in all RS blocks of a QR code
+ *
+ * @param codewords All codewords (interleaved data + ECC)
+ * @param rsBlocks RS block configuration [[numBlocks, totalCount, dataCount], ...]
+ * @returns Corrected and de-interleaved data codewords, or null if any block is uncorrectable
+ */
+export function correctRSCodewords(
+  codewords: number[],
+  rsBlocks: number[][]
+): { dataCodewords: number[]; correctionsMade: number } | null {
+  const blockConfigs = buildRSBlockConfigs(rsBlocks);
+  const numBlocks = blockConfigs.length;
+
+  const maxDataCount = Math.max(...blockConfigs.map((b) => b.dataCount));
+  const maxEccCount = Math.max(...blockConfigs.map((b) => b.eccCount));
+
+  const dataCounts = blockConfigs.map((b) => b.dataCount);
+  const eccCounts = blockConfigs.map((b) => b.eccCount);
+
+  const { blocks: blockData, nextIdx } = deinterleaveByBlock(
+    codewords,
+    dataCounts,
+    maxDataCount,
+    0
+  );
+  const { blocks: blockEcc } = deinterleaveByBlock(codewords, eccCounts, maxEccCount, nextIdx);
+
+  qrDecoderLog.trace('rs-decoder: De-interleaved into blocks', {
+    numBlocks,
+    blockDataLengths: blockData.map((d) => d.length).join(','),
+    blockEccLengths: blockEcc.map((e) => e.length).join(','),
+  });
+
+  const result = correctAllBlocks(blockData, blockEcc, blockConfigs);
+  if (!result) return null;
+
+  const dataCodewords = result.correctedBlocks.flat();
 
   qrDecoderLog.trace('rs-decoder: RS correction complete', {
     totalDataCodewords: dataCodewords.length,
-    totalCorrections,
+    totalCorrections: result.totalCorrections,
   });
 
-  return { dataCodewords, correctionsMade: totalCorrections };
+  return { dataCodewords, correctionsMade: result.totalCorrections };
 }

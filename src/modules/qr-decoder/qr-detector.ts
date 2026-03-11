@@ -256,16 +256,38 @@ export class Detector {
     return result - 1;
   }
 
+  private static advanceBWBState(
+    image: BitMatrix,
+    realX: number,
+    realY: number,
+    state: number
+  ): number {
+    if (state === 1) {
+      if (image.get(realX, realY)) return state + 1;
+      return state;
+    }
+    if (!image.get(realX, realY)) return state + 1;
+    return state;
+  }
+
+  private static swapIfSteep(
+    steep: boolean,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number
+  ): { fromX: number; fromY: number; toX: number; toY: number } {
+    if (!steep) return { fromX, fromY, toX, toY };
+    return { fromX: fromY, fromY: fromX, toX: toY, toY: toX };
+  }
+
   private sizeOfBlackWhiteBlackRun(fromX: number, fromY: number, toX: number, toY: number): number {
     const steep = Math.abs(toY - fromY) > Math.abs(toX - fromX);
-    if (steep) {
-      let temp = fromX;
-      fromX = fromY;
-      fromY = temp;
-      temp = toX;
-      toX = toY;
-      toY = temp;
-    }
+    const s = Detector.swapIfSteep(steep, fromX, fromY, toX, toY);
+    fromX = s.fromX;
+    fromY = s.fromY;
+    toX = s.toX;
+    toY = s.toY;
 
     const dx = Math.abs(toX - fromX);
     const dy = Math.abs(toY - fromY);
@@ -279,16 +301,10 @@ export class Detector {
       const realX = steep ? y : x;
       const realY = steep ? x : y;
 
-      if (state === 1) {
-        if (this.image.get(realX, realY)) state++;
-      } else {
-        if (!this.image.get(realX, realY)) state++;
-      }
+      state = Detector.advanceBWBState(this.image, realX, realY, state);
 
       if (state === 3) {
-        const diffX = x - fromX;
-        const diffY = y - fromY;
-        return Math.hypot(diffX, diffY);
+        return Math.hypot(x - fromX, y - fromY);
       }
       error += dy;
       if (error > 0) {
@@ -299,9 +315,7 @@ export class Detector {
     }
 
     if (state === 2) {
-      const diffX = toX + xstep - fromX;
-      const diffY = toY - fromY;
-      return Math.hypot(diffX, diffY);
+      return Math.hypot(toX + xstep - fromX, toY - fromY);
     }
     return Number.NaN;
   }

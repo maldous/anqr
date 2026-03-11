@@ -32,6 +32,29 @@ type BinaryComponent = {
   touchesBoundary: boolean;
 };
 
+function enqueueNeighbors(
+  grid: boolean[][],
+  moduleCount: number,
+  row: number,
+  col: number,
+  targetValue: boolean,
+  visited: Uint8Array,
+  queue: number[]
+): void {
+  for (const [dr, dc] of EIGHT_CONNECTED_OFFSETS) {
+    const nextRow = row + dr;
+    const nextCol = col + dc;
+    if (nextRow < 0 || nextCol < 0 || nextRow >= moduleCount || nextCol >= moduleCount) continue;
+
+    const nextIdx = nextRow * moduleCount + nextCol;
+    if (visited[nextIdx] === 1) continue;
+    if ((grid[nextRow]?.[nextCol] ?? false) !== targetValue) continue;
+
+    visited[nextIdx] = 1;
+    queue.push(nextIdx);
+  }
+}
+
 function collectComponent(
   grid: boolean[][],
   moduleCount: number,
@@ -58,18 +81,7 @@ function collectComponent(
       touchesBoundary = true;
     }
 
-    for (const [dr, dc] of EIGHT_CONNECTED_OFFSETS) {
-      const nextRow = row + dr;
-      const nextCol = col + dc;
-      if (nextRow < 0 || nextCol < 0 || nextRow >= moduleCount || nextCol >= moduleCount) continue;
-
-      const nextIdx = nextRow * moduleCount + nextCol;
-      if (visited[nextIdx] === 1) continue;
-      if ((grid[nextRow]?.[nextCol] ?? false) !== targetValue) continue;
-
-      visited[nextIdx] = 1;
-      queue.push(nextIdx);
-    }
+    enqueueNeighbors(grid, moduleCount, row, col, targetValue, visited, queue);
   }
 
   return { cells, touchesBoundary };
@@ -208,6 +220,49 @@ function computeSobelContribution(
   return { sobelX: lNx - lPx, sobelY: lNy - lPy };
 }
 
+function sampleModuleStats(
+  imageData: ImageData,
+  samplePoints: Array<{ dx: number; dy: number }>,
+  supersampleLevel: number,
+  row: number,
+  col: number,
+  scaleX: number,
+  scaleY: number,
+  maxX: number,
+  maxY: number
+): { avgGray: number; contrast: number; edgeMagnitude: number } {
+  let totalGray = 0;
+  let minGray = 255;
+  let maxGray = 0;
+  let sobelX = 0;
+  let sobelY = 0;
+
+  for (const { dx, dy } of samplePoints) {
+    const imgX = Math.max(0, Math.min(maxX, Math.floor((col + dx) * scaleX)));
+    const imgY = Math.max(0, Math.min(maxY, Math.floor((row + dy) * scaleY)));
+    const idx = (imgY * imageData.width + imgX) * 4;
+
+    const rawGray =
+      rgbToLumaLinear(imageData.data[idx], imageData.data[idx + 1], imageData.data[idx + 2]) * 255;
+    const gray = Number.isFinite(rawGray) ? rawGray : 255;
+    totalGray += gray;
+    minGray = Math.min(minGray, gray);
+    maxGray = Math.max(maxGray, gray);
+
+    if (supersampleLevel >= 2) {
+      const sobel = computeSobelContribution(imageData, imgX, imgY, maxX, maxY);
+      sobelX += sobel.sobelX;
+      sobelY += sobel.sobelY;
+    }
+  }
+
+  return {
+    avgGray: totalGray / samplePoints.length,
+    contrast: maxGray - minGray,
+    edgeMagnitude: Math.min(255, Math.hypot(sobelX, sobelY)),
+  };
+}
+
 export function mapImageToTargetsSupersampled(
   image: ImageData | HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
@@ -268,45 +323,23 @@ export function mapImageToTargetsSupersampled(
     importance[row] = [];
 
     for (let col = 0; col < moduleCount; col++) {
-      let totalGray = 0;
-      let minGray = 255;
-      let maxGray = 0;
-      let sobelX = 0;
-      let sobelY = 0;
+      const sample = sampleModuleStats(
+        imageData,
+        samplePoints,
+        supersampleLevel,
+        row,
+        col,
+        scaleX,
+        scaleY,
+        maxX,
+        maxY
+      );
 
-      // Sample multiple points within the module
-      for (const { dx, dy } of samplePoints) {
-        const imgX = Math.max(0, Math.min(maxX, Math.floor((col + dx) * scaleX)));
-        const imgY = Math.max(0, Math.min(maxY, Math.floor((row + dy) * scaleY)));
-        const idx = (imgY * imageData.width + imgX) * 4;
+      targets[row][col] = sample.avgGray < threshold;
 
-        const rawGray =
-          rgbToLumaLinear(imageData.data[idx], imageData.data[idx + 1], imageData.data[idx + 2]) *
-          255;
-        const gray = Number.isFinite(rawGray) ? rawGray : 255;
-        totalGray += gray;
-        minGray = Math.min(minGray, gray);
-        maxGray = Math.max(maxGray, gray);
-
-        if (supersampleLevel >= 2) {
-          const sobel = computeSobelContribution(imageData, imgX, imgY, maxX, maxY);
-          sobelX += sobel.sobelX;
-          sobelY += sobel.sobelY;
-        }
-      }
-
-      const avgGray = totalGray / samplePoints.length;
-      const contrast = maxGray - minGray;
-      const edgeMagnitude = Math.min(255, Math.hypot(sobelX, sobelY));
-
-      // Target is dark if average gray is below threshold
-      targets[row][col] = avgGray < threshold;
-
-      // Importance based on distance from threshold and local contrast
-      // High contrast areas and areas far from threshold are more important
-      const distanceFromThreshold = Math.abs(avgGray - threshold) / 128;
-      const contrastBoost = Math.min(1, contrast / 100);
-      const edgeBoost = Math.min(1, edgeMagnitude / 220);
+      const distanceFromThreshold = Math.abs(sample.avgGray - threshold) / 128;
+      const contrastBoost = Math.min(1, sample.contrast / 100);
+      const edgeBoost = Math.min(1, sample.edgeMagnitude / 220);
       importance[row][col] = Math.min(
         1,
         distanceFromThreshold * 0.72 + contrastBoost * 0.18 + edgeBoost * 0.36
