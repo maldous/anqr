@@ -161,6 +161,28 @@ function classifyCameraError(error: unknown, t: (key: string) => string): string
   return t('camera.error');
 }
 
+function resolveImagePreview(
+  file: File | null,
+  url: string,
+  setImagePreview: (v: string | null) => void,
+  setPreviewImageSize: (v: { width: number; height: number } | null) => void
+): (() => void) | undefined {
+  if (file) {
+    const objectUrl = URL.createObjectURL(file);
+    setImagePreview(objectUrl);
+    setPreviewImageSize(null);
+    return () => URL.revokeObjectURL(objectUrl);
+  }
+  if (url) {
+    setImagePreview(url);
+    setPreviewImageSize(null);
+  } else {
+    setImagePreview(null);
+    setPreviewImageSize(null);
+  }
+  return undefined;
+}
+
 function isAllPreservationsEnabled(
   overlay: ReturnType<typeof useQRStore.getState>['overlay']
 ): boolean {
@@ -323,20 +345,8 @@ export function OverlaySection() {
     [getImageDimensionsFromFile, setOverlayCrop]
   );
 
-  // Create image preview URL when file or URL changes
   useEffect(() => {
-    if (overlay.file) {
-      const url = URL.createObjectURL(overlay.file);
-      setImagePreview(url);
-      setPreviewImageSize(null);
-      return () => URL.revokeObjectURL(url);
-    } else if (overlay.url) {
-      setImagePreview(overlay.url);
-      setPreviewImageSize(null);
-    } else {
-      setImagePreview(null);
-      setPreviewImageSize(null);
-    }
+    return resolveImagePreview(overlay.file, overlay.url, setImagePreview, setPreviewImageSize);
   }, [overlay.file, overlay.url]);
 
   // Load image from URL

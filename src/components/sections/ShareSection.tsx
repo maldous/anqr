@@ -255,13 +255,7 @@ function buildShareOutput(output: StoreState['output']) {
   };
 }
 
-function buildShareSafetyQaAuto(
-  safety: StoreState['safety'],
-  qa: StoreState['qa'],
-  auto: StoreState['auto'],
-  watermark: StoreState['watermark'],
-  metadata: StoreState['metadata']
-) {
+function buildShareSafety(safety: StoreState['safety']) {
   return {
     safetyMode: safety.mode === 'off' ? undefined : safety.mode,
     safetyMinModulePx:
@@ -275,6 +269,11 @@ function buildShareSafetyQaAuto(
     lockAlign: safety.mode !== 'off' && !safety.lockAlign ? false : undefined,
     lockFormat: safety.mode !== 'off' && !safety.lockFormat ? false : undefined,
     lockVersion: safety.mode !== 'off' && !safety.lockVersion ? false : undefined,
+  };
+}
+
+function buildShareQaAuto(qa: StoreState['qa'], auto: StoreState['auto']) {
+  return {
     qaContrastCheck: qa.contrastCheck ? true : undefined,
     qaSimulateBlur: qa.simulateBlurPx === 0 ? undefined : qa.simulateBlurPx,
     qaSimulateNoise: qa.simulateNoise === 0 ? undefined : qa.simulateNoise,
@@ -283,6 +282,11 @@ function buildShareSafetyQaAuto(
     autoPickVersion: auto.pickVersion === false ? false : undefined,
     autoPickEcc: auto.pickEcc ? true : undefined,
     autoReduceIntensity: auto.reduceIntensityUntilSafe ? true : undefined,
+  };
+}
+
+function buildShareWatermark(watermark: StoreState['watermark']) {
+  return {
     watermarkEnabled: watermark.enabled ? true : undefined,
     watermarkKind: watermark.enabled && watermark.kind !== 'text' ? watermark.kind : undefined,
     watermarkText:
@@ -291,6 +295,11 @@ function buildShareSafetyQaAuto(
       watermark.enabled && watermark.position !== 'center' ? watermark.position : undefined,
     watermarkOpacity: watermark.enabled && watermark.opacity !== 50 ? watermark.opacity : undefined,
     watermarkBlend: watermark.enabled && watermark.blend !== 'normal' ? watermark.blend : undefined,
+  };
+}
+
+function buildShareMetadata(metadata: StoreState['metadata']) {
+  return {
     metaTitle: metadata.title || undefined,
     metaAuthor: metadata.author || undefined,
     metaCopyright: metadata.copyright || undefined,
@@ -298,6 +307,21 @@ function buildShareSafetyQaAuto(
     metaDescription: metadata.description || undefined,
     metaCreationTime: metadata.creationTime ? true : undefined,
     metaCustomKv: metadata.customKv.length > 0 ? JSON.stringify(metadata.customKv) : undefined,
+  };
+}
+
+function buildShareSafetyQaAuto(
+  safety: StoreState['safety'],
+  qa: StoreState['qa'],
+  auto: StoreState['auto'],
+  watermark: StoreState['watermark'],
+  metadata: StoreState['metadata']
+) {
+  return {
+    ...buildShareSafety(safety),
+    ...buildShareQaAuto(qa, auto),
+    ...buildShareWatermark(watermark),
+    ...buildShareMetadata(metadata),
   };
 }
 

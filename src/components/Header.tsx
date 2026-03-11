@@ -272,16 +272,8 @@ function buildHeaderStyles(render: ReturnType<typeof useQRStore.getState>['rende
   };
 }
 
-function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['overlay']) {
-  if (!overlay.enabled) return {};
+function buildHeaderOverlayProtection(overlay: ReturnType<typeof useQRStore.getState>['overlay']) {
   return {
-    mode: overlay.mode,
-    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
-    overlayUrl: overlay.url || undefined,
-    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
-    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
-    flipX: overlay.flipX ? true : undefined,
-    flipY: overlay.flipY ? true : undefined,
     preserveFinders: !overlay.preserveFinders ? false : undefined,
     preserveTiming: overlay.preserveTiming ? true : undefined,
     preserveAlignment: overlay.preserveAlignment ? true : undefined,
@@ -296,6 +288,13 @@ function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['ove
       !overlay.eccAwareEnabled || overlay.eccAwareWeightMap === 'distance_to_finders'
         ? undefined
         : overlay.eccAwareWeightMap,
+  };
+}
+
+function buildHeaderOverlayPreprocessing(
+  overlay: ReturnType<typeof useQRStore.getState>['overlay']
+) {
+  return {
     colorMode: overlay.colorMode === 'color' ? undefined : overlay.colorMode,
     brightness: overlay.brightness === 0 ? undefined : overlay.brightness,
     contrast: overlay.contrast === 0 ? undefined : overlay.contrast,
@@ -308,6 +307,11 @@ function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['ove
     threshold: overlay.threshold === 128 ? undefined : overlay.threshold,
     edge: overlay.edgeDetect === 'off' ? undefined : overlay.edgeDetect,
     invert: overlay.invert || undefined,
+  };
+}
+
+function buildHeaderOverlayDither(overlay: ReturnType<typeof useQRStore.getState>['overlay']) {
+  return {
     ditherKind: overlay.ditherKind === 'error_diffusion' ? undefined : overlay.ditherKind,
     diffusionKernel:
       overlay.diffusionKernel === 'floyd_steinberg' ? undefined : overlay.diffusionKernel,
@@ -324,6 +328,13 @@ function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['ove
     blueNoiseTileSize: overlay.blueNoiseTileSize === 64 ? undefined : overlay.blueNoiseTileSize,
     blueNoiseSeed: overlay.blueNoiseSeed === 0 ? undefined : overlay.blueNoiseSeed,
     colorDither: overlay.colorDither === 'none' ? undefined : overlay.colorDither,
+  };
+}
+
+function buildHeaderOverlayModeSpecific(
+  overlay: ReturnType<typeof useQRStore.getState>['overlay']
+) {
+  return {
     subpixelGridSize:
       overlay.mode !== 'subpixel' || overlay.subpixelGridSize === '3x3'
         ? undefined
@@ -360,6 +371,23 @@ function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['ove
       overlay.mode !== 'duotone' || overlay.duotoneColors[1] === '#ffffff'
         ? undefined
         : overlay.duotoneColors[1],
+  };
+}
+
+function buildHeaderOverlay(overlay: ReturnType<typeof useQRStore.getState>['overlay']) {
+  if (!overlay.enabled) return {};
+  return {
+    mode: overlay.mode,
+    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
+    overlayUrl: overlay.url || undefined,
+    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
+    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
+    flipX: overlay.flipX ? true : undefined,
+    flipY: overlay.flipY ? true : undefined,
+    ...buildHeaderOverlayProtection(overlay),
+    ...buildHeaderOverlayPreprocessing(overlay),
+    ...buildHeaderOverlayDither(overlay),
+    ...buildHeaderOverlayModeSpecific(overlay),
   };
 }
 
@@ -452,13 +480,7 @@ function buildHeaderOutput(output: ReturnType<typeof useQRStore.getState>['outpu
   };
 }
 
-function buildHeaderSafetyQaAuto(
-  safety: ReturnType<typeof useQRStore.getState>['safety'],
-  qa: ReturnType<typeof useQRStore.getState>['qa'],
-  auto: ReturnType<typeof useQRStore.getState>['auto'],
-  watermark: ReturnType<typeof useQRStore.getState>['watermark'],
-  metadata: ReturnType<typeof useQRStore.getState>['metadata']
-) {
+function buildHeaderSafety(safety: ReturnType<typeof useQRStore.getState>['safety']) {
   return {
     safetyMode: safety.mode === 'off' ? undefined : safety.mode,
     safetyMinModulePx:
@@ -472,6 +494,14 @@ function buildHeaderSafetyQaAuto(
     lockAlign: safety.mode !== 'off' && !safety.lockAlign ? false : undefined,
     lockFormat: safety.mode !== 'off' && !safety.lockFormat ? false : undefined,
     lockVersion: safety.mode !== 'off' && !safety.lockVersion ? false : undefined,
+  };
+}
+
+function buildHeaderQaAuto(
+  qa: ReturnType<typeof useQRStore.getState>['qa'],
+  auto: ReturnType<typeof useQRStore.getState>['auto']
+) {
+  return {
     qaContrastCheck: qa.contrastCheck ? true : undefined,
     qaSimulateBlur: qa.simulateBlurPx === 0 ? undefined : qa.simulateBlurPx,
     qaSimulateNoise: qa.simulateNoise === 0 ? undefined : qa.simulateNoise,
@@ -480,6 +510,11 @@ function buildHeaderSafetyQaAuto(
     autoPickVersion: auto.pickVersion === false ? false : undefined,
     autoPickEcc: auto.pickEcc ? true : undefined,
     autoReduceIntensity: auto.reduceIntensityUntilSafe ? true : undefined,
+  };
+}
+
+function buildHeaderWatermark(watermark: ReturnType<typeof useQRStore.getState>['watermark']) {
+  return {
     watermarkEnabled: watermark.enabled ? true : undefined,
     watermarkKind: !watermark.enabled || watermark.kind === 'text' ? undefined : watermark.kind,
     watermarkText:
@@ -490,6 +525,11 @@ function buildHeaderSafetyQaAuto(
       !watermark.enabled || watermark.opacity === 50 ? undefined : watermark.opacity,
     watermarkBlend:
       !watermark.enabled || watermark.blend === 'normal' ? undefined : watermark.blend,
+  };
+}
+
+function buildHeaderMetadata(metadata: ReturnType<typeof useQRStore.getState>['metadata']) {
+  return {
     metaTitle: metadata.title || undefined,
     metaAuthor: metadata.author || undefined,
     metaCopyright: metadata.copyright || undefined,
@@ -497,6 +537,38 @@ function buildHeaderSafetyQaAuto(
     metaDescription: metadata.description || undefined,
     metaCreationTime: metadata.creationTime ? true : undefined,
     metaCustomKv: metadata.customKv.length > 0 ? JSON.stringify(metadata.customKv) : undefined,
+  };
+}
+
+function buildHeaderSafetyQaAuto(
+  safety: ReturnType<typeof useQRStore.getState>['safety'],
+  qa: ReturnType<typeof useQRStore.getState>['qa'],
+  auto: ReturnType<typeof useQRStore.getState>['auto'],
+  watermark: ReturnType<typeof useQRStore.getState>['watermark'],
+  metadata: ReturnType<typeof useQRStore.getState>['metadata']
+) {
+  return {
+    ...buildHeaderSafety(safety),
+    ...buildHeaderQaAuto(qa, auto),
+    ...buildHeaderWatermark(watermark),
+    ...buildHeaderMetadata(metadata),
+  };
+}
+
+function getInitialDarkMode(): boolean {
+  const stored = localStorage.getItem('darkMode');
+  if (stored !== null) return stored === 'true';
+  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function setupScrollObservers(el: HTMLElement, onUpdate: () => void): () => void {
+  onUpdate();
+  el.addEventListener('scroll', onUpdate, { passive: true });
+  const resizeObserver = new ResizeObserver(onUpdate);
+  resizeObserver.observe(el);
+  return () => {
+    el.removeEventListener('scroll', onUpdate);
+    resizeObserver.disconnect();
   };
 }
 
@@ -510,8 +582,6 @@ export function Header({
   onGalleryFilterChange,
   onNavigate,
 }: HeaderProps) {
-  // Use individual selectors to avoid re-renders when unrelated state changes
-  // State slices - these change and would cause re-renders if subscribed to whole store
   const tier = useQRStore((s) => s.tier);
   const qr = useQRStore((s) => s.qr);
   const render = useQRStore((s) => s.render);
@@ -524,7 +594,6 @@ export function Header({
   const watermark = useQRStore((s) => s.watermark);
   const metadata = useQRStore((s) => s.metadata);
 
-  // Stable function references - these don't change so grouping is fine
   const setTier = useQRStore((s) => s.setTier);
   const getPayloadText = useQRStore((s) => s.getPayloadText);
   const activatePremiumAccess = useQRStore((s) => s.activatePremiumAccess);
@@ -543,59 +612,38 @@ export function Header({
   const langButtonRef = useRef<HTMLDivElement>(null);
   const headerScrollRef = useRef<HTMLDivElement>(null);
 
-  // Check scroll state and update indicators
   const updateScrollIndicators = useCallback(() => {
     const el = headerScrollRef.current;
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
-    // Small threshold to account for rounding
     setCanScrollLeft(scrollLeft > 2);
     setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
   }, []);
 
-  // Scroll the header by a fixed amount
   const scrollHeader = useCallback((direction: 'left' | 'right') => {
     const el = headerScrollRef.current;
     if (!el) return;
-    const scrollAmount = 150;
     el.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      left: direction === 'left' ? -150 : 150,
       behavior: 'smooth',
     });
   }, []);
 
-  // Set up scroll and resize observers
   useEffect(() => {
     const el = headerScrollRef.current;
     if (!el) return;
-
-    // Initial check
-    updateScrollIndicators();
-
-    // Listen for scroll events
-    el.addEventListener('scroll', updateScrollIndicators, { passive: true });
-
-    // Listen for resize events
-    const resizeObserver = new ResizeObserver(updateScrollIndicators);
-    resizeObserver.observe(el);
-
-    return () => {
-      el.removeEventListener('scroll', updateScrollIndicators);
-      resizeObserver.disconnect();
-    };
+    return setupScrollObservers(el, updateScrollIndicators);
   }, [updateScrollIndicators]);
 
   const currentLang = languages.find((l) => l.code === i18n.language) || languages[0];
 
   const changeLanguage = async (code: string) => {
-    // Pre-load locale before switching to ensure translations are available immediately
     await loadLocale(code);
     i18n.changeLanguage(code);
     trackEvent('language_switch', { language: code });
     closeLangMenu();
   };
 
-  // Smooth close for language menu
   const closeLangMenu = () => {
     if (langMenuOpen) {
       setIsLangMenuClosing(true);
@@ -603,7 +651,6 @@ export function Header({
     }
   };
 
-  // Smooth close for mobile menu
   const closeMobileMenu = () => {
     if (mobileMenuOpen) {
       setIsMobileMenuClosing(true);
@@ -617,15 +664,11 @@ export function Header({
   const _isStatic = !(isEditor || isGallery);
 
   useEffect(() => {
-    const isDark =
-      localStorage.getItem('darkMode') === 'true' ||
-      (!localStorage.getItem('darkMode') &&
-        globalThis.matchMedia('(prefers-color-scheme: dark)').matches);
+    const isDark = getInitialDarkMode();
     setDarkMode(isDark);
     document.documentElement.classList.toggle('dark', isDark);
   }, []);
 
-  // Prepare premium interstitial ad on mount (for native platforms)
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       prepareInterstitial('generation');
