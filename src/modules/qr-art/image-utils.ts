@@ -122,12 +122,9 @@ function cleanupBinaryTargets(
   return cleaned;
 }
 
-export function mapImageToTargetsSupersampled(
-  image: ImageData | HTMLCanvasElement | OffscreenCanvas,
-  moduleCount: number,
-  threshold: number = 128,
-  options?: MapImageToTargetsOptions
-): { targets: boolean[][]; importance: number[][] } {
+function resolveImageData(
+  image: ImageData | HTMLCanvasElement | OffscreenCanvas
+): ImageData | null {
   const isCanvasLike = (value: unknown): value is HTMLCanvasElement | OffscreenCanvas =>
     !!value &&
     typeof (value as { getContext?: unknown }).getContext === 'function' &&
@@ -154,40 +151,76 @@ export function mapImageToTargetsSupersampled(
     return true;
   };
 
-  // Get image data
-  let imageData: ImageData;
   if (typeof ImageData !== 'undefined' && image instanceof ImageData) {
-    imageData = image;
-  } else if (isCanvasLike(image)) {
+    return image;
+  }
+  if (isCanvasLike(image)) {
     const ctx = image.getContext('2d') as
       | CanvasRenderingContext2D
       | OffscreenCanvasRenderingContext2D
       | null;
-    if (!ctx) {
-      // Return empty targets if we can't get context
-      return {
-        targets: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(false)),
-        importance: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0)),
-      };
-    }
-    imageData = ctx.getImageData(0, 0, image.width, image.height);
-  } else if (isImageDataLike(image)) {
-    // Accept ImageData-like objects (e.g., Node test fixtures)
+    if (!ctx) return null;
+    return ctx.getImageData(0, 0, image.width, image.height);
+  }
+  if (isImageDataLike(image)) {
     const candidate = image;
     const data = candidate.data;
-    imageData = {
+    return {
       data:
         data instanceof Uint8ClampedArray ? data : new Uint8ClampedArray(data as ArrayLike<number>),
       width: candidate.width,
       height: candidate.height,
     } as ImageData;
-  } else {
-    // Return empty targets if input is neither canvas-like nor imageData-like.
-    return {
-      targets: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(false)),
-      importance: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0)),
-    };
   }
+  return null;
+}
+
+function computeSobelContribution(
+  imageData: ImageData,
+  imgX: number,
+  imgY: number,
+  maxX: number,
+  maxY: number
+): { sobelX: number; sobelY: number } {
+  const nx = Math.max(0, Math.min(maxX, imgX + 1));
+  const px = Math.max(0, Math.min(maxX, imgX - 1));
+  const ny = Math.max(0, Math.min(maxY, imgY + 1));
+  const py = Math.max(0, Math.min(maxY, imgY - 1));
+
+  const idxPx = (imgY * imageData.width + px) * 4;
+  const idxNx = (imgY * imageData.width + nx) * 4;
+  const idxPy = (py * imageData.width + imgX) * 4;
+  const idxNy = (ny * imageData.width + imgX) * 4;
+
+  const lPx =
+    rgbToLumaLinear(imageData.data[idxPx], imageData.data[idxPx + 1], imageData.data[idxPx + 2]) *
+    255;
+  const lNx =
+    rgbToLumaLinear(imageData.data[idxNx], imageData.data[idxNx + 1], imageData.data[idxNx + 2]) *
+    255;
+  const lPy =
+    rgbToLumaLinear(imageData.data[idxPy], imageData.data[idxPy + 1], imageData.data[idxPy + 2]) *
+    255;
+  const lNy =
+    rgbToLumaLinear(imageData.data[idxNy], imageData.data[idxNy + 1], imageData.data[idxNy + 2]) *
+    255;
+
+  return { sobelX: lNx - lPx, sobelY: lNy - lPy };
+}
+
+export function mapImageToTargetsSupersampled(
+  image: ImageData | HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
+  threshold: number = 128,
+  options?: MapImageToTargetsOptions
+): { targets: boolean[][]; importance: number[][] } {
+  const emptyResult = {
+    targets: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(false)),
+    importance: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0)),
+  };
+
+  const imageData = resolveImageData(image);
+  if (!imageData) return emptyResult;
 
   const targets: boolean[][] = [];
   const importance: number[][] = [];
@@ -255,45 +288,10 @@ export function mapImageToTargetsSupersampled(
         minGray = Math.min(minGray, gray);
         maxGray = Math.max(maxGray, gray);
 
-        // Accumulate Sobel-style edge proxy directly at module sampling points.
         if (supersampleLevel >= 2) {
-          const nx = Math.max(0, Math.min(maxX, imgX + 1));
-          const px = Math.max(0, Math.min(maxX, imgX - 1));
-          const ny = Math.max(0, Math.min(maxY, imgY + 1));
-          const py = Math.max(0, Math.min(maxY, imgY - 1));
-
-          const idxPx = (imgY * imageData.width + px) * 4;
-          const idxNx = (imgY * imageData.width + nx) * 4;
-          const idxPy = (py * imageData.width + imgX) * 4;
-          const idxNy = (ny * imageData.width + imgX) * 4;
-
-          const lPx =
-            rgbToLumaLinear(
-              imageData.data[idxPx],
-              imageData.data[idxPx + 1],
-              imageData.data[idxPx + 2]
-            ) * 255;
-          const lNx =
-            rgbToLumaLinear(
-              imageData.data[idxNx],
-              imageData.data[idxNx + 1],
-              imageData.data[idxNx + 2]
-            ) * 255;
-          const lPy =
-            rgbToLumaLinear(
-              imageData.data[idxPy],
-              imageData.data[idxPy + 1],
-              imageData.data[idxPy + 2]
-            ) * 255;
-          const lNy =
-            rgbToLumaLinear(
-              imageData.data[idxNy],
-              imageData.data[idxNy + 1],
-              imageData.data[idxNy + 2]
-            ) * 255;
-
-          sobelX += lNx - lPx;
-          sobelY += lNy - lPy;
+          const sobel = computeSobelContribution(imageData, imgX, imgY, maxX, maxY);
+          sobelX += sobel.sobelX;
+          sobelY += sobel.sobelY;
         }
       }
 
