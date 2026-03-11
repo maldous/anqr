@@ -1505,6 +1505,140 @@ function drawCanvasError(
   lines.forEach((line, i) => ctx.fillText(line, 100, 80 + i * 20));
 }
 
+function buildPayloadBytesHead(payloadBytes: Uint8Array | undefined): string | null {
+  if (!payloadBytes?.length) return null;
+  return Array.from(payloadBytes.slice(0, 16))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join(' ');
+}
+
+function checkVersionMismatch(
+  result: QRAnalysisResult,
+  actualVersion: number,
+  moduleCount: number
+): void {
+  if (result.version && actualVersion !== result.version) {
+    log.warn('VERSION MISMATCH!', {
+      detectedVersion: result.version,
+      detectedModuleCount: result.moduleCount,
+      producedVersion: actualVersion,
+      producedModuleCount: moduleCount,
+      expectedModuleCount: result.version * 4 + 17,
+      diff: actualVersion - result.version,
+    });
+  }
+}
+
+function logFinalRenderSummary(
+  result: QRAnalysisResult,
+  actualVersion: number,
+  moduleCount: number,
+  marginModules: number,
+  modulePx: number,
+  size: number,
+  isGeneratorSource: boolean
+): void {
+  log.debug('STEP 7 - Final render summary', {
+    canvasSize: `${size}x${size}`,
+    modulePx,
+    moduleCount,
+    actualVersion,
+    detectedVersion: result.version,
+    versionMismatch: result.version && actualVersion !== result.version,
+    marginModules,
+    totalPixelsUsed: (moduleCount + marginModules * 2) * modulePx,
+    isGeneratorSource,
+  });
+
+  if (result.version && actualVersion !== result.version) {
+    log.warn('FINAL WARNING: Version mismatch will cause visual discrepancy!', {
+      expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
+      produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
+      sizeDiff: moduleCount - (result.version * 4 + 17),
+    });
+  }
+}
+
+interface LogReproductionResultParams {
+  result: QRAnalysisResult;
+  isGeneratorSource: boolean;
+  encoderInput: { kind: 'bytes' | 'string'; data: string };
+  ecc: ECCLevel;
+  versionToUseFinal: number;
+  maskToUse: number | undefined;
+  modeToUse: ValidEncoderMode | undefined;
+  effectiveMode: ValidEncoderMode | undefined;
+  actualVersion: number;
+  moduleCount: number;
+  marginModules: number;
+  modulePx: number;
+  size: number;
+  diagnostics: ReturnType<typeof runMatrixDiagnostics>;
+  qrState: { borderModulesExtra?: number };
+}
+
+function logReproductionResult(params: LogReproductionResultParams): void {
+  const {
+    result,
+    isGeneratorSource,
+    encoderInput,
+    ecc,
+    versionToUseFinal,
+    maskToUse,
+    modeToUse,
+    effectiveMode,
+    actualVersion,
+    moduleCount,
+    marginModules,
+    modulePx,
+    size,
+    diagnostics,
+    qrState,
+  } = params;
+
+  const payloadBytesHead = buildPayloadBytesHead(result.payloadBytes);
+  const reproductionMismatch = actualVersion !== result.version;
+
+  log.debug('Generated QR code', {
+    strategy: isGeneratorSource ? 'exact' : 'detected_only',
+    reproductionMismatch,
+    encoderInputKind: encoderInput.kind,
+    payloadPreview: (result.payload ?? '').slice(0, 80),
+    payloadBytesLen: result.payloadBytes?.length ?? null,
+    payloadBytesHead,
+    ecc,
+    detectedVersion: result.version,
+    usedVersion: versionToUseFinal,
+    detectedMaskPattern: result.maskPattern,
+    usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
+    usedMode: effectiveMode ?? null,
+    actualVersion,
+    moduleCount,
+    marginModules,
+    borderModulesExtra: isGeneratorSource ? qrState.borderModulesExtra || 0 : null,
+    modulePx,
+    canvasSize: size,
+    matrix: diagnostics,
+  });
+  if (diagnostics.regenVsOriginal && diagnostics.regenVsOriginal.diffCount > 0) {
+    log.warn('Matrix mismatch (original vs regenerated)', {
+      ecc,
+      version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
+      mask: {
+        detected: result.maskPattern,
+        used: typeof maskToUse === 'number' ? maskToUse : null,
+      },
+      mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
+      encoderInputKind: encoderInput.kind,
+      payloadBytesLen: result.payloadBytes?.length ?? null,
+      payloadBytesHead,
+      regenVsDecoded: diagnostics.regenVsDecoded,
+      regenVsOriginal: diagnostics.regenVsOriginal,
+      bestShift: diagnostics.bestShift,
+    });
+  }
+}
+
 interface ReproduceQRCodeParams {
   result: QRAnalysisResult;
   canvas: HTMLCanvasElement;
@@ -1619,16 +1753,7 @@ function reproduceQRCode(params: ReproduceQRCodeParams): {
     versionMatch: actualVersion === (result.version ?? actualVersion),
   });
 
-  if (result.version && actualVersion !== result.version) {
-    log.warn('VERSION MISMATCH!', {
-      detectedVersion: result.version,
-      detectedModuleCount: result.moduleCount,
-      producedVersion: actualVersion,
-      producedModuleCount: moduleCount,
-      expectedModuleCount: result.version * 4 + 17,
-      diff: actualVersion - result.version,
-    });
-  }
+  checkVersionMismatch(result, actualVersion, moduleCount);
 
   const marginModules = computeMarginModules(
     isGeneratorSource,
@@ -1649,25 +1774,15 @@ function reproduceQRCode(params: ReproduceQRCodeParams): {
   canvas.width = size;
   canvas.height = size;
 
-  log.debug('STEP 7 - Final render summary', {
-    canvasSize: `${size}x${size}`,
-    modulePx,
-    moduleCount,
+  logFinalRenderSummary(
+    result,
     actualVersion,
-    detectedVersion: result.version,
-    versionMismatch: result.version && actualVersion !== result.version,
+    moduleCount,
     marginModules,
-    totalPixelsUsed: (moduleCount + marginModules * 2) * modulePx,
-    isGeneratorSource,
-  });
-
-  if (result.version && actualVersion !== result.version) {
-    log.warn('FINAL WARNING: Version mismatch will cause visual discrepancy!', {
-      expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
-      produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
-      sizeDiff: moduleCount - (result.version * 4 + 17),
-    });
-  }
+    modulePx,
+    size,
+    isGeneratorSource
+  );
 
   const { fg, bg } = resolveColors(isGeneratorSource, renderState, result.detectedColors ?? null);
   const renderMs = renderQRToCanvas(ctx, qr, moduleCount, marginModules, modulePx, size, fg, bg);
@@ -1689,54 +1804,23 @@ function reproduceQRCode(params: ReproduceQRCodeParams): {
     );
   }
 
-  const payloadBytesHead = (() => {
-    const bytes = result.payloadBytes;
-    if (!bytes?.length) return null;
-    return Array.from(bytes.slice(0, 16))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join(' ');
-  })();
-
-  const reproductionMismatch = actualVersion !== result.version;
-
-  log.debug('Generated QR code', {
-    strategy: isGeneratorSource ? 'exact' : 'detected_only',
-    reproductionMismatch,
-    encoderInputKind: encoderInput.kind,
-    payloadPreview: (result.payload ?? '').slice(0, 80),
-    payloadBytesLen: result.payloadBytes?.length ?? null,
-    payloadBytesHead,
+  logReproductionResult({
+    result,
+    isGeneratorSource,
+    encoderInput,
     ecc,
-    detectedVersion: result.version,
-    usedVersion: versionToUseFinal,
-    detectedMaskPattern: result.maskPattern,
-    usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
-    usedMode: effectiveMode ?? null,
+    versionToUseFinal,
+    maskToUse,
+    modeToUse,
+    effectiveMode,
     actualVersion,
     moduleCount,
     marginModules,
-    borderModulesExtra: isGeneratorSource ? qrState.borderModulesExtra || 0 : null,
     modulePx,
-    canvasSize: size,
-    matrix: diagnostics,
+    size,
+    diagnostics,
+    qrState,
   });
-  if (diagnostics.regenVsOriginal && diagnostics.regenVsOriginal.diffCount > 0) {
-    log.warn('Matrix mismatch (original vs regenerated)', {
-      ecc,
-      version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
-      mask: {
-        detected: result.maskPattern,
-        used: typeof maskToUse === 'number' ? maskToUse : null,
-      },
-      mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
-      encoderInputKind: encoderInput.kind,
-      payloadBytesLen: result.payloadBytes?.length ?? null,
-      payloadBytesHead,
-      regenVsDecoded: diagnostics.regenVsDecoded,
-      regenVsOriginal: diagnostics.regenVsOriginal,
-      bestShift: diagnostics.bestShift,
-    });
-  }
 
   return { encodeMs, renderMs, actualVersionUsed };
 }
@@ -1811,53 +1895,293 @@ function importAnalysisToGenerator(
   }, 500);
 }
 
-export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
-  const { t } = useTranslation();
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingSource, setLoadingSource] = useState<
-    'file' | 'url' | 'camera' | 'generator' | null
-  >(null);
-  const [analysisSource, setAnalysisSource] = useState<
-    'file' | 'url' | 'camera' | 'generator' | null
-  >(null);
-  const [hasAutoAnalyzed, setHasAutoAnalyzed] = useState(false);
-  const [result, setResult] = useState<QRAnalysisResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+type AnalysisSourceType = 'file' | 'url' | 'camera' | 'generator' | null;
+
+interface AnalysisStateSetters {
+  setIsLoading: (v: boolean) => void;
+  setLoadingSource: (v: AnalysisSourceType) => void;
+  setAnalysisSource: (v: AnalysisSourceType) => void;
+  setError: (v: string | null) => void;
+  setResult: (v: QRAnalysisResult | null) => void;
+  setImported: (v: boolean) => void;
+  setUiTimings: (
+    v: React.SetStateAction<{
+      encodeMs?: number | null;
+      renderMs?: number | null;
+      exportMs?: number | null;
+    }>
+  ) => void;
+  setOriginalImageUrl: (v: React.SetStateAction<string | null>) => void;
+}
+
+function resetAnalysisState(setters: AnalysisStateSetters): void {
+  setters.setError(null);
+  setters.setResult(null);
+  setters.setImported(false);
+  setters.setUiTimings({});
+}
+
+function useAnalysisInputHandlers(
+  t: ReturnType<typeof useTranslation>['t'],
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
+  setters: AnalysisStateSetters,
+  analyzeGeneratorCanvasRobust: (
+    sourceCanvas: HTMLCanvasElement | OffscreenCanvas
+  ) => Promise<QRAnalysisResult>
+) {
   const [urlInput, setUrlInput] = useState('');
-  const [imported, setImported] = useState(false);
-  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+
+  const handleFileUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setters.setIsLoading(true);
+      setters.setLoadingSource('file');
+      setters.setAnalysisSource('file');
+      resetAnalysisState(setters);
+      const imageUrl = URL.createObjectURL(file);
+      setters.setOriginalImageUrl(imageUrl);
+      try {
+        const analysisResult = await analyzeQRFromFile(file);
+        setters.setResult(analysisResult);
+        if (!analysisResult.success) {
+          setters.setError(
+            analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code')
+          );
+        }
+      } catch (err) {
+        setters.setError(
+          err instanceof Error
+            ? err.message
+            : t('analyze.genericError', 'Failed to analyze QR code')
+        );
+      } finally {
+        setters.setIsLoading(false);
+        setters.setLoadingSource(null);
+        e.target.value = '';
+      }
+    },
+    [t, setters]
+  );
+
+  const handleUrlSubmit = useCallback(async () => {
+    if (!urlInput.trim()) {
+      setters.setError(t('analyze.urlRequired', 'Please enter a URL'));
+      return;
+    }
+    setters.setIsLoading(true);
+    setters.setLoadingSource('url');
+    setters.setAnalysisSource('url');
+    resetAnalysisState(setters);
+    setters.setOriginalImageUrl(urlInput.trim());
+    try {
+      const analysisResult = await analyzeQRFromUrl(urlInput.trim());
+      setters.setResult(analysisResult);
+      if (!analysisResult.success) {
+        setters.setError(
+          analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code')
+        );
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : t('analyze.loadFailed', 'Failed to load image');
+      setters.setError(message);
+    } finally {
+      setters.setIsLoading(false);
+      setters.setLoadingSource(null);
+    }
+  }, [urlInput, t, setters]);
+
+  const handleCameraCapture = useCallback(async () => {
+    setters.setIsLoading(true);
+    setters.setLoadingSource('camera');
+    setters.setAnalysisSource('camera');
+    resetAnalysisState(setters);
+    try {
+      const permissions = await Camera.checkPermissions();
+      if (permissions.camera === 'denied') {
+        const requested = await Camera.requestPermissions();
+        if (requested.camera === 'denied') {
+          setters.setError(t('camera.permissionDenied', 'Camera permission denied'));
+          return;
+        }
+      }
+      const image = await Camera.getPhoto({
+        quality: 70,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+      });
+      if (!image.webPath) {
+        setters.setError(t('analyze.cameraLoadFailed', 'Failed to load captured image'));
+        return;
+      }
+      setters.setOriginalImageUrl(image.webPath);
+      const response = await fetch(image.webPath);
+      if (!response.ok) {
+        throw new Error(`Camera image fetch failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const maxEdge = 1600;
+      const { source, sourceWidth, sourceHeight } = await loadCameraImageFromBlob(blob);
+      const sourceMaxEdge = Math.max(sourceWidth, sourceHeight);
+      const scale = sourceMaxEdge > maxEdge ? maxEdge / sourceMaxEdge : 1;
+      const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+      const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d', {
+        willReadFrequently: true,
+      } as CanvasRenderingContext2DSettings | undefined);
+      if (!ctx) {
+        closeBitmapSource(source);
+        setters.setError(t('analyze.cameraProcessError', 'Could not process image'));
+        return;
+      }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
+      closeBitmapSource(source);
+      const analysisResult = analyzeQRCode(canvas);
+      setters.setResult(analysisResult);
+      setters.setAnalysisSource('camera');
+      if (!analysisResult.success) {
+        setters.setError(
+          analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected')
+        );
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
+        setters.setError(t('analyze.cameraFailed', 'Camera capture failed'));
+      }
+    } finally {
+      setters.setIsLoading(false);
+      setters.setLoadingSource(null);
+    }
+  }, [t, setters]);
+
+  const handleAnalyzeGenerator = useCallback(async () => {
+    if (!generatedCanvas) return;
+    setters.setIsLoading(true);
+    setters.setLoadingSource('generator');
+    resetAnalysisState(setters);
+    try {
+      const canvasForDisplay =
+        generatedCanvas instanceof HTMLCanvasElement
+          ? generatedCanvas
+          : cloneCanvasLike(generatedCanvas);
+      if (typeof canvasForDisplay.toBlob === 'function') {
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvasForDisplay.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+        });
+        if (blob) {
+          const objectUrl = URL.createObjectURL(blob);
+          setters.setOriginalImageUrl((previous) => {
+            if (typeof previous === 'string' && previous.startsWith('blob:')) {
+              URL.revokeObjectURL(previous);
+            }
+            return objectUrl;
+          });
+        } else {
+          setters.setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
+        }
+      } else {
+        setters.setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
+      }
+      const analysisResult = await analyzeGeneratorCanvasRobust(generatedCanvas);
+      setters.setResult(analysisResult);
+      setters.setAnalysisSource('generator');
+      if (!analysisResult.success) {
+        setters.setError(
+          analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected')
+        );
+      }
+    } catch (err) {
+      setters.setError(
+        err instanceof Error ? err.message : t('analyze.genericError', 'Failed to analyze QR code')
+      );
+    } finally {
+      setters.setIsLoading(false);
+      setters.setLoadingSource(null);
+    }
+  }, [generatedCanvas, t, analyzeGeneratorCanvasRobust, setters]);
+
+  return {
+    handleFileUpload,
+    handleUrlSubmit,
+    handleCameraCapture,
+    handleAnalyzeGenerator,
+    urlInput,
+    setUrlInput,
+  };
+}
+
+function loadCameraImageFromBlob(blob: Blob): Promise<{
+  source: ImageBitmap | HTMLImageElement;
+  sourceWidth: number;
+  sourceHeight: number;
+}> {
+  if (typeof createImageBitmap === 'function') {
+    return createImageBitmap(blob).then((bitmap) => ({
+      source: bitmap,
+      sourceWidth: bitmap.width,
+      sourceHeight: bitmap.height,
+    }));
+  }
+  const objectUrl = URL.createObjectURL(blob);
+  return new Promise<{
+    source: ImageBitmap | HTMLImageElement;
+    sourceWidth: number;
+    sourceHeight: number;
+  }>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({ source: img, sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Failed to decode camera image'));
+    };
+    img.src = objectUrl;
+  });
+}
+
+function closeBitmapSource(source: ImageBitmap | HTMLImageElement): void {
+  if ('close' in source && typeof source.close === 'function') {
+    source.close();
+  }
+}
+
+function useReproductionEffect(
+  result: QRAnalysisResult | null,
+  reproducedCanvasRef: React.RefObject<HTMLCanvasElement | null>,
+  analysisSource: AnalysisSourceType,
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
+  qrState: Parameters<typeof reproduceQRCode>[0]['qrState'],
+  renderState: Parameters<typeof reproduceQRCode>[0]['renderState']
+): {
+  actualUsedVersion: number | null;
+  uiTimings: { encodeMs?: number | null; renderMs?: number | null; exportMs?: number | null };
+  setUiTimings: React.Dispatch<
+    React.SetStateAction<{
+      encodeMs?: number | null;
+      renderMs?: number | null;
+      exportMs?: number | null;
+    }>
+  >;
+} {
   const [actualUsedVersion, setActualUsedVersion] = useState<number | null>(null);
   const [uiTimings, setUiTimings] = useState<{
     encodeMs?: number | null;
     renderMs?: number | null;
     exportMs?: number | null;
   }>({});
-  const reproducedCanvasRef = useRef<HTMLCanvasElement>(null);
-
-  const qrState = useQRStore((s) => s.qr);
-  const renderState = useQRStore((s) => s.render);
-
-  const setPayloadText = useQRStore((s) => s.setPayloadText);
-  const setPayloadKind = useQRStore((s) => s.setPayloadKind);
-  const setPayloadUrl = useQRStore((s) => s.setPayloadUrl);
-  const setQrEcc = useQRStore((s) => s.setQrEcc);
-  const setQrVersion = useQRStore((s) => s.setQrVersion);
-  const setQrMaskPattern = useQRStore((s) => s.setQrMaskPattern);
-  const setQrEncodingMode = useQRStore((s) => s.setQrEncodingMode);
-  const setRenderFgColor = useQRStore((s) => s.setRenderFgColor);
-  const setRenderBgColor = useQRStore((s) => s.setRenderBgColor);
-
-  const combinedTimings = useMemo(
-    () => ({
-      ...result?.timing,
-      ...uiTimings,
-    }),
-    [result?.timing, uiTimings]
-  );
 
   useEffect(() => {
     if (!(result?.success && result.payload && reproducedCanvasRef.current)) return;
-
     const canvas = reproducedCanvasRef.current;
     try {
       const reproResult = reproduceQRCode({
@@ -1880,193 +2204,423 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       const ctx = canvas.getContext('2d');
       if (ctx) drawCanvasError(canvas, ctx, '#f5f5f5', '#999', ['Generation failed']);
     }
-  }, [result, analysisSource, generatedCanvas, qrState, renderState]);
+  }, [result, analysisSource, generatedCanvas, qrState, renderState, reproducedCanvasRef]);
 
-  // Handle file upload
-  const handleFileUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  return { actualUsedVersion, uiTimings, setUiTimings };
+}
 
-      setIsLoading(true);
-      setLoadingSource('file');
-      setAnalysisSource('file');
-      setError(null);
-      setResult(null);
-      setImported(false);
-      setUiTimings({});
+interface AnalyzeHeroProps {
+  t: ReturnType<typeof useTranslation>['t'];
+}
 
-      // Create object URL for original image display
-      const imageUrl = URL.createObjectURL(file);
-      setOriginalImageUrl(imageUrl);
+function AnalyzeHero({ t }: AnalyzeHeroProps) {
+  return (
+    <div className="text-center space-y-3">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-2 shadow-lg shadow-primary/10">
+        <ScanLine className="w-8 h-8 text-primary" />
+      </div>
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+        {t('analyze.title', 'QR Code Analyzer')}
+      </h1>
+      {!Capacitor.isNativePlatform() && (
+        <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          {t(
+            'analyze.description',
+            'The most comprehensive QR code analyzer available. Extract every technical detail, visualize the module matrix, check WCAG compliance, and export analysis data for recreation.'
+          )}
+        </p>
+      )}
+    </div>
+  );
+}
 
-      try {
-        const analysisResult = await analyzeQRFromFile(file);
-        setResult(analysisResult);
-        if (!analysisResult.success) {
-          setError(analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code'));
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : t('analyze.genericError', 'Failed to analyze QR code')
-        );
-      } finally {
-        setIsLoading(false);
-        setLoadingSource(null);
-        e.target.value = '';
+interface AnalyzeInputCardsProps {
+  t: ReturnType<typeof useTranslation>['t'];
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined;
+  isLoading: boolean;
+  loadingSource: AnalysisSourceType;
+  urlInput: string;
+  setUrlInput: (v: string) => void;
+  handleAnalyzeGenerator: () => void;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleUrlSubmit: () => void;
+  handleCameraCapture: () => void;
+}
+
+function AnalyzeInputCards({
+  t,
+  generatedCanvas,
+  isLoading,
+  loadingSource,
+  urlInput,
+  setUrlInput,
+  handleAnalyzeGenerator,
+  handleFileUpload,
+  handleUrlSubmit,
+  handleCameraCapture,
+}: AnalyzeInputCardsProps) {
+  return (
+    <div
+      className={`grid gap-3 ${Capacitor.isNativePlatform() ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`}
+    >
+      {generatedCanvas ? (
+        <button
+          type="button"
+          onClick={handleAnalyzeGenerator}
+          disabled={isLoading}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
+            isLoading && loadingSource === 'generator'
+              ? 'border-primary bg-primary/5'
+              : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
+          }`}
+        >
+          {isLoading && loadingSource === 'generator' ? (
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          ) : (
+            <QrCode className="w-6 h-6 text-primary" />
+          )}
+          <div className="text-center">
+            <p className="text-sm font-medium text-primary">
+              {t('analyze.useCurrentQr', 'Current QR')}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {t('analyze.fromGenerator', 'From Generator')}
+            </p>
+          </div>
+        </button>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
+          <QrCode className="w-6 h-6 text-muted-foreground" />
+          <div className="text-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              {t('analyze.useCurrentQr', 'Current QR')}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {t('analyze.noQrGenerated', 'Generate one first')}
+            </p>
+          </div>
+        </div>
+      )}
+      <label className="relative group cursor-pointer">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+          disabled={isLoading}
+        />
+        <div
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full shadow-sm ${
+            isLoading && loadingSource === 'file'
+              ? 'border-primary bg-primary/5'
+              : 'border-border hover:border-primary hover:bg-primary/5'
+          }`}
+        >
+          {isLoading && loadingSource === 'file' ? (
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          ) : (
+            <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+          )}
+          <div className="text-center">
+            <p className="text-sm font-medium">{t('analyze.uploadFile', 'Upload')}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {t('analyze.uploadHint', 'Click or drop')}
+            </p>
+          </div>
+        </div>
+      </label>
+      <div
+        className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
+          isLoading && loadingSource === 'url' ? 'border-primary bg-primary/5' : 'border-border'
+        }`}
+      >
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Link className="w-4 h-4" />
+          <span className="text-sm font-medium">{t('analyze.fromUrl', 'From URL')}</span>
+        </div>
+        <div className="flex gap-1.5">
+          <Input
+            type="url"
+            placeholder="https://..."
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+            disabled={isLoading}
+            className="flex-1 h-8 text-xs"
+          />
+          <Button
+            size="sm"
+            onClick={handleUrlSubmit}
+            disabled={isLoading || !urlInput.trim()}
+            className="h-8 w-8 p-0"
+          >
+            {isLoading && loadingSource === 'url' ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
+          </Button>
+        </div>
+      </div>
+      {Capacitor.isNativePlatform() && (
+        <button
+          type="button"
+          onClick={handleCameraCapture}
+          disabled={isLoading}
+          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
+            isLoading && loadingSource === 'camera'
+              ? 'border-primary bg-primary/5'
+              : 'border-border hover:border-primary hover:bg-primary/5'
+          }`}
+        >
+          {isLoading && loadingSource === 'camera' ? (
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          ) : (
+            <CameraIcon className="w-6 h-6 text-muted-foreground" />
+          )}
+          <div className="text-center">
+            <p className="text-sm font-medium">{t('analyze.captureCamera', 'Photo')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('analyze.cameraHint', 'Camera')}</p>
+          </div>
+        </button>
+      )}
+    </div>
+  );
+}
+
+interface AnalyzeErrorDisplayProps {
+  error: string;
+  handleReset: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function AnalyzeErrorDisplay({ error, handleReset, t }: AnalyzeErrorDisplayProps) {
+  return (
+    <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive shadow-sm">
+      <AlertCircle className="w-5 h-5 shrink-0" />
+      <div className="flex-1">
+        <p className="font-medium">{t('analyze.error', 'Analysis Failed')}</p>
+        <p className="text-sm opacity-80">{error}</p>
+      </div>
+      <Button variant="ghost" size="sm" onClick={handleReset}>
+        {t('analyze.tryAgain', 'Try Again')}
+      </Button>
+    </div>
+  );
+}
+
+interface AnalyzeResultsHeaderProps {
+  result: QRAnalysisResult;
+  handleExportJSON: () => void;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isLoading: boolean;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function AnalyzeResultsHeader({
+  result,
+  handleExportJSON,
+  handleFileUpload,
+  isLoading,
+  t,
+}: AnalyzeResultsHeaderProps) {
+  if (result.success) {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 shadow-sm">
+        <CheckCircle className="w-5 h-5 shrink-0" />
+        <div className="flex-1">
+          <p className="font-medium text-sm">
+            {t('analyze.success', 'QR Code Analyzed Successfully')}
+          </p>
+          {result.confidence && (
+            <p className="text-xs opacity-80">
+              {t('analyze.confidence', 'Confidence')}:{' '}
+              <span className="font-medium capitalize">{result.confidence}</span>
+            </p>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleExportJSON}
+          className="gap-1.5 text-green-700 dark:text-green-400 hover:bg-green-500/10"
+        >
+          <Download className="w-4 h-4" />
+          <span className={Capacitor.isNativePlatform() ? 'inline' : 'hidden sm:inline'}>
+            {t('analyze.exportJson', 'Export JSON')}
+          </span>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {result.errorType === 'cors_blocked' ? (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 overflow-hidden">
+          <div className="flex items-center gap-3 p-4 border-b border-amber-500/20 bg-amber-500/10">
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-700 dark:text-amber-300">
+                {t('analyze.corsBlocked', 'Image Access Blocked')}
+              </p>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {t(
+                'analyze.corsExplanation',
+                'The server hosting this image prevents other websites from accessing it directly (CORS policy). This is a security feature, not an error.'
+              )}
+            </p>
+            <div className="rounded-md bg-muted/50 p-3 space-y-2">
+              <p className="text-sm font-medium flex items-center gap-2">
+                <Info className="w-4 h-4 text-primary" />
+                {t('analyze.howToFix', 'How to fix this:')}
+              </p>
+              <ol className="text-sm text-muted-foreground space-y-1 ml-6 list-decimal">
+                <li>{t('analyze.corsStep1', 'Go to the website with the QR code image')}</li>
+                <li>
+                  {t('analyze.corsStep2', 'Right-click the image and select "Save image as..."')}
+                </li>
+                <li>{t('analyze.corsStep3', 'Come back here and upload the saved file')}</li>
+              </ol>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={isLoading}
+              />
+              <Button size="sm" variant="default" className="gap-2" asChild>
+                <span>
+                  <Upload className="w-4 h-4" />
+                  {t('analyze.uploadInstead', 'Upload Image Instead')}
+                </span>
+              </Button>
+            </label>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+          <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-1">
+            <p className="font-medium">
+              {result.errorType === 'no_qr_detected'
+                ? t('analyze.noQrDetected', 'No QR Code Found')
+                : t('analyze.failed', 'Analysis Failed')}
+            </p>
+            <p className="text-sm opacity-90 whitespace-pre-wrap">{result.error}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
+  const { t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingSource, setLoadingSource] = useState<AnalysisSourceType>(null);
+  const [analysisSource, setAnalysisSource] = useState<AnalysisSourceType>(null);
+  const [hasAutoAnalyzed, setHasAutoAnalyzed] = useState(false);
+  const [result, setResult] = useState<QRAnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [imported, setImported] = useState(false);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const reproducedCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const qrState = useQRStore((s) => s.qr);
+  const renderState = useQRStore((s) => s.render);
+
+  const setPayloadText = useQRStore((s) => s.setPayloadText);
+  const setPayloadKind = useQRStore((s) => s.setPayloadKind);
+  const setPayloadUrl = useQRStore((s) => s.setPayloadUrl);
+  const setQrEcc = useQRStore((s) => s.setQrEcc);
+  const setQrVersion = useQRStore((s) => s.setQrVersion);
+  const setQrMaskPattern = useQRStore((s) => s.setQrMaskPattern);
+  const setQrEncodingMode = useQRStore((s) => s.setQrEncodingMode);
+  const setRenderFgColor = useQRStore((s) => s.setRenderFgColor);
+  const setRenderBgColor = useQRStore((s) => s.setRenderBgColor);
+
+  const analyzeGeneratorCanvasRobust = useCallback(
+    async (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): Promise<QRAnalysisResult> => {
+      const currentFrameResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
+      if (currentFrameResult.success) return currentFrameResult;
+
+      let animationState = globalThis.__ANQR_STATE__;
+      const isAnimatedSource = (animationState?.animationFrameCount ?? 0) > 1;
+      if (isAnimatedSource && !animationState?.isAnimationReady) {
+        animationState = await waitForAnimationReady(8);
       }
+
+      const cachedFrames =
+        animationState?.isAnimationReady && Array.isArray(animationState.animationFrames)
+          ? animationState.animationFrames
+          : [];
+
+      const frameResult = scanCachedFramesForQR(cachedFrames, animationState?.currentFrame ?? 0);
+      if (frameResult) return frameResult;
+
+      if (isAnimatedSource) {
+        await waitMs(90);
+        const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
+        if (retryResult.success) {
+          const warnings = [...(retryResult.warnings ?? [])];
+          warnings.push('Analyzed using live animation frame retry');
+          return { ...retryResult, warnings };
+        }
+      }
+
+      return currentFrameResult;
     },
-    [t]
+    []
   );
 
-  // Handle URL input
-  const handleUrlSubmit = useCallback(async () => {
-    if (!urlInput.trim()) {
-      setError(t('analyze.urlRequired', 'Please enter a URL'));
-      return;
-    }
+  const reproState = useReproductionEffect(
+    result,
+    reproducedCanvasRef,
+    analysisSource,
+    generatedCanvas,
+    qrState,
+    renderState
+  );
+  const { actualUsedVersion, uiTimings } = reproState;
 
-    setIsLoading(true);
-    setLoadingSource('url');
-    setAnalysisSource('url');
-    setError(null);
-    setResult(null);
-    setImported(false);
-    setUiTimings({});
-    setOriginalImageUrl(urlInput.trim());
+  const settersWithUiTimings = useMemo<AnalysisStateSetters>(
+    () => ({
+      setIsLoading,
+      setLoadingSource,
+      setAnalysisSource,
+      setError,
+      setResult,
+      setImported,
+      setUiTimings: reproState.setUiTimings,
+      setOriginalImageUrl,
+    }),
+    [reproState.setUiTimings]
+  );
 
-    try {
-      const analysisResult = await analyzeQRFromUrl(urlInput.trim());
-      setResult(analysisResult);
-      if (!analysisResult.success) {
-        setError(analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code'));
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t('analyze.loadFailed', 'Failed to load image');
-      setError(message);
-    } finally {
-      setIsLoading(false);
-      setLoadingSource(null);
-    }
-  }, [urlInput, t]);
+  const {
+    handleFileUpload,
+    handleUrlSubmit,
+    handleCameraCapture,
+    handleAnalyzeGenerator,
+    urlInput,
+    setUrlInput,
+  } = useAnalysisInputHandlers(
+    t,
+    generatedCanvas,
+    settersWithUiTimings,
+    analyzeGeneratorCanvasRobust
+  );
 
-  const loadCameraImageFromBlob = async (
-    blob: Blob
-  ): Promise<{
-    source: ImageBitmap | HTMLImageElement;
-    sourceWidth: number;
-    sourceHeight: number;
-  }> => {
-    if (typeof createImageBitmap === 'function') {
-      const bitmap = await createImageBitmap(blob);
-      return { source: bitmap, sourceWidth: bitmap.width, sourceHeight: bitmap.height };
-    }
-    const objectUrl = URL.createObjectURL(blob);
-    const source = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(img);
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('Failed to decode camera image'));
-      };
-      img.src = objectUrl;
-    });
-    return { source, sourceWidth: source.naturalWidth, sourceHeight: source.naturalHeight };
-  };
-
-  const closeBitmapSource = (source: ImageBitmap | HTMLImageElement): void => {
-    if ('close' in source && typeof source.close === 'function') {
-      source.close();
-    }
-  };
-
-  // Handle camera capture (native only)
-  const handleCameraCapture = useCallback(async () => {
-    setIsLoading(true);
-    setLoadingSource('camera');
-    setAnalysisSource('camera');
-    setError(null);
-    setResult(null);
-    setImported(false);
-    setUiTimings({});
-
-    try {
-      const permissions = await Camera.checkPermissions();
-      if (permissions.camera === 'denied') {
-        const requested = await Camera.requestPermissions();
-        if (requested.camera === 'denied') {
-          setError(t('camera.permissionDenied', 'Camera permission denied'));
-          return;
-        }
-      }
-
-      const image = await Camera.getPhoto({
-        quality: 70,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-      });
-
-      if (!image.webPath) {
-        setError(t('analyze.cameraLoadFailed', 'Failed to load captured image'));
-        return;
-      }
-
-      setOriginalImageUrl(image.webPath);
-
-      const response = await fetch(image.webPath);
-      if (!response.ok) {
-        throw new Error(`Camera image fetch failed: ${response.status}`);
-      }
-      const blob = await response.blob();
-
-      const maxEdge = 1600;
-      const { source, sourceWidth, sourceHeight } = await loadCameraImageFromBlob(blob);
-
-      const sourceMaxEdge = Math.max(sourceWidth, sourceHeight);
-      const scale = sourceMaxEdge > maxEdge ? maxEdge / sourceMaxEdge : 1;
-      const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
-      const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-      const ctx = canvas.getContext('2d', {
-        willReadFrequently: true,
-      } as CanvasRenderingContext2DSettings | undefined);
-      if (!ctx) {
-        closeBitmapSource(source);
-        setError(t('analyze.cameraProcessError', 'Could not process image'));
-        return;
-      }
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
-      closeBitmapSource(source);
-
-      const analysisResult = analyzeQRCode(canvas);
-      setResult(analysisResult);
-      setAnalysisSource('camera');
-      if (!analysisResult.success) {
-        setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
-      }
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
-        setError(t('analyze.cameraFailed', 'Camera capture failed'));
-      }
-    } finally {
-      setIsLoading(false);
-      setLoadingSource(null);
-    }
-  }, [t]);
+  const combinedTimings = useMemo(
+    () => ({ ...result?.timing, ...uiTimings }),
+    [result?.timing, uiTimings]
+  );
 
   const handleImportToGenerator = useCallback(() => {
     if (!(result?.success && result.payload)) return;
@@ -2102,116 +2656,23 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     onNavigate,
   ]);
 
-  // Reset analysis
   const handleReset = useCallback(() => {
     setResult(null);
     setError(null);
     setUrlInput('');
     setImported(false);
     setAnalysisSource(null);
-    setActualUsedVersion(null);
-    setUiTimings({});
+    reproState.setUiTimings({});
     if (originalImageUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(originalImageUrl);
     }
     setOriginalImageUrl(null);
-  }, [originalImageUrl]);
+  }, [originalImageUrl, setUrlInput, reproState]);
 
-  const analyzeGeneratorCanvasRobust = useCallback(
-    async (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): Promise<QRAnalysisResult> => {
-      const currentFrameResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
-      if (currentFrameResult.success) {
-        return currentFrameResult;
-      }
-
-      let animationState = globalThis.__ANQR_STATE__;
-      const isAnimatedSource = (animationState?.animationFrameCount ?? 0) > 1;
-      if (isAnimatedSource && !animationState?.isAnimationReady) {
-        animationState = await waitForAnimationReady(8);
-      }
-
-      const cachedFrames =
-        animationState?.isAnimationReady && Array.isArray(animationState.animationFrames)
-          ? animationState.animationFrames
-          : [];
-
-      const frameResult = scanCachedFramesForQR(cachedFrames, animationState?.currentFrame ?? 0);
-      if (frameResult) return frameResult;
-
-      if (isAnimatedSource) {
-        await waitMs(90);
-        const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
-        if (retryResult.success) {
-          const warnings = [...(retryResult.warnings ?? [])];
-          warnings.push('Analyzed using live animation frame retry');
-          return { ...retryResult, warnings };
-        }
-      }
-
-      return currentFrameResult;
-    },
-    []
-  );
-
-  // Handle analyzing the current generator canvas
-  const handleAnalyzeGenerator = useCallback(async () => {
-    if (!generatedCanvas) return;
-
-    setIsLoading(true);
-    setLoadingSource('generator');
-    setError(null);
-    setResult(null);
-    setImported(false);
-    setUiTimings({});
-
-    try {
-      // Capture source image for display using async blob path when available.
-      const canvasForDisplay =
-        generatedCanvas instanceof HTMLCanvasElement
-          ? generatedCanvas
-          : cloneCanvasLike(generatedCanvas);
-      if (typeof canvasForDisplay.toBlob === 'function') {
-        const blob = await new Promise<Blob | null>((resolve) => {
-          canvasForDisplay.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
-        });
-        if (blob) {
-          const objectUrl = URL.createObjectURL(blob);
-          setOriginalImageUrl((previous) => {
-            if (previous?.startsWith('blob:')) {
-              URL.revokeObjectURL(previous);
-            }
-            return objectUrl;
-          });
-        } else {
-          setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
-        }
-      } else {
-        setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
-      }
-
-      // Analyze current frame, then sample animation frames/retries before failing.
-      const analysisResult = await analyzeGeneratorCanvasRobust(generatedCanvas);
-      setResult(analysisResult);
-      setAnalysisSource('generator');
-      if (!analysisResult.success) {
-        setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : t('analyze.genericError', 'Failed to analyze QR code')
-      );
-    } finally {
-      setIsLoading(false);
-      setLoadingSource(null);
-    }
-  }, [generatedCanvas, t, analyzeGeneratorCanvasRobust]);
-
-  // Reset hasAutoAnalyzed when generatedCanvas changes so re-navigating triggers auto-analysis
   useEffect(() => {
     setHasAutoAnalyzed(false);
   }, []);
 
-  // Auto-analyze the generator canvas on first load if available
   useEffect(() => {
     if (generatedCanvas && !hasAutoAnalyzed && !result && !isLoading) {
       setHasAutoAnalyzed(true);
@@ -2219,7 +2680,6 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     }
   }, [generatedCanvas, hasAutoAnalyzed, result, isLoading, handleAnalyzeGenerator]);
 
-  // Export analysis result as JSON for Netlify API
   const handleExportJSON = useCallback(() => {
     if (!result?.success) return;
     const exportStartMs = nowMs();
@@ -2233,27 +2693,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           exportMs: null,
         },
       },
-      {
-        source: analysisSource,
-        actualUsedVersion,
-      }
+      { source: analysisSource, actualUsedVersion }
     );
     const exportMs = Math.round((nowMs() - exportStartMs) * 100) / 100;
-    exportData.analysis.timing = {
-      ...exportData.analysis.timing,
-      exportMs,
-    };
+    exportData.analysis.timing = { ...exportData.analysis.timing, exportMs };
     exportData.diagnostics.summary.exportMs = exportMs;
-
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    setUiTimings((prev) => ({ ...prev, exportMs }));
+    reproState.setUiTimings((prev) => ({ ...prev, exportMs }));
     const filename = `qr-analysis-${Date.now()}.json`;
-
     if (Capacitor.isNativePlatform()) {
       void saveFileNative(filename, blob);
       return;
     }
-
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -2262,7 +2713,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  }, [result, actualUsedVersion, analysisSource, uiTimings]);
+  }, [result, actualUsedVersion, analysisSource, uiTimings, reproState]);
 
   return (
     <main className="flex-1 flex bg-background overflow-hidden">
@@ -2274,284 +2725,34 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-          {/* Hero Section */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-2 shadow-lg shadow-primary/10">
-              <ScanLine className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              {t('analyze.title', 'QR Code Analyzer')}
-            </h1>
-            {/* Hide description on Android */}
-            {!Capacitor.isNativePlatform() && (
-              <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                {t(
-                  'analyze.description',
-                  'The most comprehensive QR code analyzer available. Extract every technical detail, visualize the module matrix, check WCAG compliance, and export analysis data for recreation.'
-                )}
-              </p>
-            )}
-          </div>
+          <AnalyzeHero t={t} />
 
-          {/* Input Section - Always visible, compact cards */}
-          {/* On web: 3 columns (no camera), on native: 4 columns (with camera) */}
-          <div
-            className={`grid gap-3 ${Capacitor.isNativePlatform() ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`}
-          >
-            {/* Use Current QR Card - only shown when generator canvas is available */}
-            {generatedCanvas ? (
-              <button
-                type="button"
-                onClick={handleAnalyzeGenerator}
-                disabled={isLoading}
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-                  isLoading && loadingSource === 'generator'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
-                }`}
-              >
-                {isLoading && loadingSource === 'generator' ? (
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                ) : (
-                  <QrCode className="w-6 h-6 text-primary" />
-                )}
-                <div className="text-center">
-                  <p className="text-sm font-medium text-primary">
-                    {t('analyze.useCurrentQr', 'Current QR')}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t('analyze.fromGenerator', 'From Generator')}
-                  </p>
-                </div>
-              </button>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
-                <QrCode className="w-6 h-6 text-muted-foreground" />
-                <div className="text-center">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {t('analyze.useCurrentQr', 'Current QR')}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t('analyze.noQrGenerated', 'Generate one first')}
-                  </p>
-                </div>
-              </div>
-            )}
+          <AnalyzeInputCards
+            t={t}
+            generatedCanvas={generatedCanvas}
+            isLoading={isLoading}
+            loadingSource={loadingSource}
+            urlInput={urlInput}
+            setUrlInput={setUrlInput}
+            handleAnalyzeGenerator={handleAnalyzeGenerator}
+            handleFileUpload={handleFileUpload}
+            handleUrlSubmit={handleUrlSubmit}
+            handleCameraCapture={handleCameraCapture}
+          />
 
-            {/* File Upload Card */}
-            <label className="relative group cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-                disabled={isLoading}
-              />
-              <div
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full shadow-sm ${
-                  isLoading && loadingSource === 'file'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary hover:bg-primary/5'
-                }`}
-              >
-                {isLoading && loadingSource === 'file' ? (
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                ) : (
-                  <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                )}
-                <div className="text-center">
-                  <p className="text-sm font-medium">{t('analyze.uploadFile', 'Upload')}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t('analyze.uploadHint', 'Click or drop')}
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            {/* URL Input Card */}
-            <div
-              className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-                isLoading && loadingSource === 'url'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border'
-              }`}
-            >
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Link className="w-4 h-4" />
-                <span className="text-sm font-medium">{t('analyze.fromUrl', 'From URL')}</span>
-              </div>
-              <div className="flex gap-1.5">
-                <Input
-                  type="url"
-                  placeholder="https://..."
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                  disabled={isLoading}
-                  className="flex-1 h-8 text-xs"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleUrlSubmit}
-                  disabled={isLoading || !urlInput.trim()}
-                  className="h-8 w-8 p-0"
-                >
-                  {isLoading && loadingSource === 'url' ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Camera Card - only on native mobile */}
-            {Capacitor.isNativePlatform() && (
-              <button
-                type="button"
-                onClick={handleCameraCapture}
-                disabled={isLoading}
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-                  isLoading && loadingSource === 'camera'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary hover:bg-primary/5'
-                }`}
-              >
-                {isLoading && loadingSource === 'camera' ? (
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                ) : (
-                  <CameraIcon className="w-6 h-6 text-muted-foreground" />
-                )}
-                <div className="text-center">
-                  <p className="text-sm font-medium">{t('analyze.captureCamera', 'Photo')}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t('analyze.cameraHint', 'Camera')}
-                  </p>
-                </div>
-              </button>
-            )}
-          </div>
-
-          {/* Error State */}
           {error && !result && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive shadow-sm">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <div className="flex-1">
-                <p className="font-medium">{t('analyze.error', 'Analysis Failed')}</p>
-                <p className="text-sm opacity-80">{error}</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleReset}>
-                {t('analyze.tryAgain', 'Try Again')}
-              </Button>
-            </div>
+            <AnalyzeErrorDisplay error={error} handleReset={handleReset} t={t} />
           )}
 
-          {/* Results Section */}
           {result && (
             <div className="space-y-4">
-              {/* Status Header - Success */}
-              {result.success && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 shadow-sm">
-                  <CheckCircle className="w-5 h-5 shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      {t('analyze.success', 'QR Code Analyzed Successfully')}
-                    </p>
-                    {result.confidence && (
-                      <p className="text-xs opacity-80">
-                        {t('analyze.confidence', 'Confidence')}:{' '}
-                        <span className="font-medium capitalize">{result.confidence}</span>
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleExportJSON}
-                    className="gap-1.5 text-green-700 dark:text-green-400 hover:bg-green-500/10"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span className={Capacitor.isNativePlatform() ? 'inline' : 'hidden sm:inline'}>
-                      {t('analyze.exportJson', 'Export JSON')}
-                    </span>
-                  </Button>
-                </div>
-              )}
-
-              {/* Error Display - Failure */}
-              {!result.success && (
-                <div className="space-y-4">
-                  {/* CORS-specific error with helpful guidance */}
-                  {result.errorType === 'cors_blocked' ? (
-                    <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 overflow-hidden">
-                      <div className="flex items-center gap-3 p-4 border-b border-amber-500/20 bg-amber-500/10">
-                        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-                        <div className="flex-1">
-                          <p className="font-medium text-amber-700 dark:text-amber-300">
-                            {t('analyze.corsBlocked', 'Image Access Blocked')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          {t(
-                            'analyze.corsExplanation',
-                            'The server hosting this image prevents other websites from accessing it directly (CORS policy). This is a security feature, not an error.'
-                          )}
-                        </p>
-                        <div className="rounded-md bg-muted/50 p-3 space-y-2">
-                          <p className="text-sm font-medium flex items-center gap-2">
-                            <Info className="w-4 h-4 text-primary" />
-                            {t('analyze.howToFix', 'How to fix this:')}
-                          </p>
-                          <ol className="text-sm text-muted-foreground space-y-1 ml-6 list-decimal">
-                            <li>
-                              {t('analyze.corsStep1', 'Go to the website with the QR code image')}
-                            </li>
-                            <li>
-                              {t(
-                                'analyze.corsStep2',
-                                'Right-click the image and select "Save image as..."'
-                              )}
-                            </li>
-                            <li>
-                              {t('analyze.corsStep3', 'Come back here and upload the saved file')}
-                            </li>
-                          </ol>
-                        </div>
-                        <label className="inline-flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            disabled={isLoading}
-                          />
-                          <Button size="sm" variant="default" className="gap-2" asChild>
-                            <span>
-                              <Upload className="w-4 h-4" />
-                              {t('analyze.uploadInstead', 'Upload Image Instead')}
-                            </span>
-                          </Button>
-                        </label>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Generic error display */
-                    <div className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
-                      <XCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                      <div className="flex-1 space-y-1">
-                        <p className="font-medium">
-                          {result.errorType === 'no_qr_detected'
-                            ? t('analyze.noQrDetected', 'No QR Code Found')
-                            : t('analyze.failed', 'Analysis Failed')}
-                        </p>
-                        <p className="text-sm opacity-90 whitespace-pre-wrap">{result.error}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+              <AnalyzeResultsHeader
+                result={result}
+                handleExportJSON={handleExportJSON}
+                handleFileUpload={handleFileUpload}
+                isLoading={isLoading}
+                t={t}
+              />
 
               {/* Warnings */}
               {result.warnings && result.warnings.length > 0 && (
