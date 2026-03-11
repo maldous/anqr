@@ -840,6 +840,45 @@ interface ScanGateMainLoopResult {
   lastCanvas: HTMLCanvasElement | OffscreenCanvas | null;
 }
 
+interface ScanGateLoopState {
+  bestBaseDecodable: HTMLCanvasElement | OffscreenCanvas | null;
+  bestBaseDecodablePatch: DitherAttemptPatch | null;
+  prevEdgeImprint: number | null;
+}
+
+function processEvaluatedAttempt(
+  evaluated: {
+    ok: boolean;
+    baseDecodeOk: boolean;
+    metrics: { edgeImprint: number; toneStd: number } | null;
+    evaluatedCanvas: HTMLCanvasElement | OffscreenCanvas;
+  },
+  patch: DitherAttemptPatch,
+  state: ScanGateLoopState,
+  skipScanGateEscalation: boolean,
+  cb: ScanGateCallbacks
+): ScanGateMainLoopResult | null {
+  if (evaluated.baseDecodeOk && !state.bestBaseDecodable) {
+    state.bestBaseDecodable = evaluated.evaluatedCanvas;
+    state.bestBaseDecodablePatch = patch;
+  }
+  if (
+    evaluated.metrics &&
+    (state.prevEdgeImprint === null || evaluated.metrics.edgeImprint < state.prevEdgeImprint)
+  ) {
+    state.prevEdgeImprint = evaluated.metrics.edgeImprint;
+  }
+  if (evaluated.ok) {
+    cb.rememberPatch(patch);
+    return { earlyReturn: evaluated.evaluatedCanvas, lastCanvas: null };
+  }
+  if (skipScanGateEscalation && evaluated.baseDecodeOk) {
+    cb.rememberPatch(patch);
+    return { earlyReturn: evaluated.evaluatedCanvas, lastCanvas: null };
+  }
+  return null;
+}
+
 async function runScanGateMainLoop(
   pool: CanvasPool,
   sgctx: ScanGateCtx,
@@ -851,11 +890,13 @@ async function runScanGateMainLoop(
   cb: ScanGateCallbacks
 ): Promise<ScanGateMainLoopResult> {
   let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
-  let bestBaseDecodable: HTMLCanvasElement | OffscreenCanvas | null = null;
-  let bestBaseDecodablePatch: DitherAttemptPatch | null = null;
-  let prevEdgeImprint: number | null = null;
+  const state: ScanGateLoopState = {
+    bestBaseDecodable: null,
+    bestBaseDecodablePatch: null,
+    prevEdgeImprint: null,
+  };
   for (const patch of attempts) {
-    if (lastCanvas && lastCanvas !== bestBaseDecodable) {
+    if (lastCanvas && lastCanvas !== state.bestBaseDecodable) {
       pool.release(lastCanvas);
       lastCanvas = null;
     }
@@ -866,39 +907,21 @@ async function runScanGateMainLoop(
         pool,
         moduleCount,
         attemptCanvas,
-        prevEdgeImprint,
+        state.prevEdgeImprint,
         thresholds,
         scenarioSeed,
         cb.runDecode
       );
       lastCanvas = evaluated.evaluatedCanvas;
-      if (evaluated.baseDecodeOk && !bestBaseDecodable) {
-        bestBaseDecodable = evaluated.evaluatedCanvas;
-        bestBaseDecodablePatch = patch;
-      }
-      if (
-        evaluated.metrics &&
-        (prevEdgeImprint === null || evaluated.metrics.edgeImprint < prevEdgeImprint)
-      ) {
-        prevEdgeImprint = evaluated.metrics.edgeImprint;
-      }
-      if (evaluated.ok) {
-        cb.rememberPatch(patch);
-        return { earlyReturn: evaluated.evaluatedCanvas, lastCanvas: null };
-      }
-      if (skipScanGateEscalation) {
-        if (evaluated.baseDecodeOk) {
-          cb.rememberPatch(patch);
-          return { earlyReturn: evaluated.evaluatedCanvas, lastCanvas: null };
-        }
-      }
+      const result = processEvaluatedAttempt(evaluated, patch, state, skipScanGateEscalation, cb);
+      if (result) return result;
     } catch {
       lastCanvas = attemptCanvas;
     }
   }
-  if (bestBaseDecodable) {
-    if (bestBaseDecodablePatch) cb.rememberPatch(bestBaseDecodablePatch);
-    return { earlyReturn: bestBaseDecodable, lastCanvas: null };
+  if (state.bestBaseDecodable) {
+    if (state.bestBaseDecodablePatch) cb.rememberPatch(state.bestBaseDecodablePatch);
+    return { earlyReturn: state.bestBaseDecodable, lastCanvas: null };
   }
   return { earlyReturn: null, lastCanvas };
 }
@@ -975,6 +998,132 @@ async function runScanGateQRFirstFallback(
     }
   }
   return qrFirstLast;
+}
+
+function buildFixedVisualPolicy(config: QRGeneratorConfig): Partial<QRGeneratorConfig> {
+  return {
+    overlayMode: config.overlayMode,
+    colorMode: config.colorMode,
+    renderScalePerModule: config.renderScalePerModule,
+    ditherKind: config.ditherKind,
+    ditherMode: config.ditherMode,
+    ditherStrength: config.ditherStrength,
+    finderDitherStrength: config.finderDitherStrength,
+    blendPreservations: config.blendPreservations,
+    blendPreservationMode: config.blendPreservationMode,
+    ditherScale: config.ditherScale,
+    ditherSerpentine: config.ditherSerpentine,
+    diffusionKernel: config.diffusionKernel,
+    orderedMatrix: config.orderedMatrix,
+    blueNoiseTileSize: config.blueNoiseTileSize,
+    blueNoiseSeed: config.blueNoiseSeed,
+    colorDither: config.colorDither,
+    dotMinRadiusPx: config.dotMinRadiusPx,
+    dotMaxRadiusPx: config.dotMaxRadiusPx,
+    seed: config.seed,
+  };
+}
+
+async function computeOverlaySignature(
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+  isAnimatedFrame: boolean,
+  overlayFamilyKey: string,
+  createCanvas: (w: number, h: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
+): Promise<string> {
+  if (!overlayCanvas) return 'overlay:none';
+  if (isAnimatedFrame) return `anim-family:${overlayFamilyKey}`;
+  const hash = await hashCanvasContent(
+    overlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+    createCanvas
+  );
+  return `${overlayCanvas.width}x${overlayCanvas.height}:${hash}`;
+}
+
+function buildScanCacheKey(
+  config: QRGeneratorConfig,
+  moduleCount: number,
+  scanGateProfile: string,
+  preserveFindersValue: boolean,
+  overlayToken: string
+): string {
+  return [
+    config.content,
+    config.errorCorrection,
+    moduleCount,
+    config.overlayMode,
+    config.colorMode,
+    scanGateProfile,
+    Math.round(config.overlayIntensity ?? 100),
+    Math.round(config.ditherStrength ?? 50),
+    Math.round(config.finderDitherStrength ?? 65),
+    config.blendPreservations === true ? 1 : 0,
+    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
+    config.ditherKind ?? 'none',
+    config.ditherMode ?? 'none',
+    Math.round(config.ditherScale ?? 1),
+    config.ditherSerpentine === false ? 0 : 1,
+    config.diffusionKernel ?? 'floyd_steinberg',
+    config.orderedMatrix ?? 'bayer4',
+    Math.round(config.blueNoiseTileSize ?? 64),
+    config.blueNoiseSeed ?? 'noise-seed:auto',
+    config.colorDither ?? 'none',
+    Math.round(config.renderScalePerModule ?? 18),
+    preserveFindersValue ? 1 : 0,
+    overlayToken,
+    config.preserveTiming === true ? 1 : 0,
+    config.preserveAlignment === true ? 1 : 0,
+    config.protectFormatInfo === true ? 1 : 0,
+    config.protectVersionInfo === true ? 1 : 0,
+    config.qrFirstMode === true ? 1 : 0,
+    config.seed ?? 'seed:auto',
+  ].join('|');
+}
+
+function ditherPatchSignature(patch: DitherAttemptPatch): string {
+  return JSON.stringify({
+    d: patch.darkMinOccupancy ?? null,
+    l: patch.lightMaxOccupancy ?? null,
+    i: patch.optimizeIterations ?? null,
+    o: patch.overlayIntensity ?? null,
+    b: patch.qrBitBiasStrength ?? null,
+    q: patch.qrFirstMode ?? null,
+    f: patch.preserveFinders ?? null,
+  });
+}
+
+async function decodeCanvasData(
+  c: HTMLCanvasElement | OffscreenCanvas
+): Promise<{ success: boolean; data: string | null } | null> {
+  const ctx = c.getContext('2d') as CanvasRenderingContext2D | null;
+  if (!ctx) return null;
+  const imageData = ctx.getImageData(0, 0, c.width, c.height);
+  return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
+}
+
+function clearQuietZone(
+  ctx: CanvasRenderingContext2D,
+  config: QRGeneratorConfig,
+  bgColor: string,
+  size: number,
+  margin: number,
+  moduleCount: number,
+  moduleSize: number
+): void {
+  const qrStart = margin * moduleSize;
+  const qrSpan = moduleCount * moduleSize;
+  const qrEnd = qrStart + qrSpan;
+  if (config.transparentBg) {
+    ctx.clearRect(0, 0, size, qrStart);
+    ctx.clearRect(0, qrStart, qrStart, qrSpan);
+    ctx.clearRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSpan);
+    ctx.clearRect(0, qrEnd, size, Math.max(0, size - qrEnd));
+  } else {
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, size, qrStart);
+    ctx.fillRect(0, qrStart, qrStart, qrSpan);
+    ctx.fillRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSpan);
+    ctx.fillRect(0, qrEnd, size, Math.max(0, size - qrEnd));
+  }
 }
 
 function buildOverlayFamilyKey(
@@ -1335,6 +1484,48 @@ export class QRGenerator {
     return skipMask;
   }
 
+  private async tryScaledRenderPath(
+    qr: QRCodeInstance,
+    effectiveConfig: QRGeneratorConfig,
+    processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    moduleCount: number,
+    scale: number
+  ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+    if (!(scale > 1) || !processedOverlayCanvas) return null;
+
+    const pool = this._canvasPool;
+    const renderScaled = async (cfg: QRGeneratorConfig) =>
+      await generateScaledQR(
+        qr,
+        cfg,
+        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+        moduleCount,
+        scale,
+        pool.acquire.bind(pool),
+        this.canvasFactory,
+        this.storeMatrix.bind(this) as (
+          qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
+          moduleCount: number
+        ) => void,
+        pool.release.bind(pool)
+      );
+
+    if (effectiveConfig.fastPreview) {
+      return await renderScaled(effectiveConfig);
+    }
+
+    if (effectiveConfig.overlayMode === 'dithered' || effectiveConfig.forceScaledOverlay === true) {
+      return await this.runDitheredScanGate(
+        effectiveConfig,
+        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+        moduleCount,
+        renderScaled
+      );
+    }
+
+    return await renderScaled(effectiveConfig);
+  }
+
   async generate(
     config: QRGeneratorConfig,
     overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = null
@@ -1403,43 +1594,15 @@ export class QRGenerator {
       colorMode: config.colorMode,
       overlayIntensity: config.overlayIntensity,
     });
-    if (scale > 1 && processedOverlayCanvas) {
-      const pool = this._canvasPool;
-      const renderScaled = async (cfg: QRGeneratorConfig) =>
-        await generateScaledQR(
-          qr,
-          cfg,
-          processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
-          moduleCount,
-          scale,
-          pool.acquire.bind(pool),
-          this.canvasFactory,
-          this.storeMatrix.bind(this) as (
-            qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
-            moduleCount: number
-          ) => void,
-          pool.release.bind(pool)
-        );
 
-      // Fast preview: single render attempt, skip scan gate retry loop entirely
-      if (effectiveConfig.fastPreview) {
-        return await renderScaled(effectiveConfig);
-      }
-
-      if (
-        effectiveConfig.overlayMode === 'dithered' ||
-        effectiveConfig.forceScaledOverlay === true
-      ) {
-        return await this.runDitheredScanGate(
-          effectiveConfig,
-          processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
-          moduleCount,
-          renderScaled
-        );
-      }
-
-      return await renderScaled(effectiveConfig);
-    }
+    const scaledResult = await this.tryScaledRenderPath(
+      qr,
+      effectiveConfig,
+      processedOverlayCanvas,
+      moduleCount,
+      scale
+    );
+    if (scaledResult) return scaledResult;
 
     // =======================================================================
     // STAGE 2: OVERLAY PROCESSING (for non-scaled modes like blend, halftone, etc.)
@@ -1531,21 +1694,7 @@ export class QRGenerator {
     });
 
     // Enforce a clean quiet zone in the final composition.
-    const qrStart = margin * moduleSize;
-    const qrSpan = moduleCount * moduleSize;
-    const qrEnd = qrStart + qrSpan;
-    if (config.transparentBg) {
-      ctx.clearRect(0, 0, size, qrStart);
-      ctx.clearRect(0, qrStart, qrStart, qrSpan);
-      ctx.clearRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSpan);
-      ctx.clearRect(0, qrEnd, size, Math.max(0, size - qrEnd));
-    } else {
-      ctx.fillStyle = effectiveBgColor;
-      ctx.fillRect(0, 0, size, qrStart);
-      ctx.fillRect(0, qrStart, qrStart, qrSpan);
-      ctx.fillRect(qrEnd, qrStart, Math.max(0, size - qrEnd), qrSpan);
-      ctx.fillRect(0, qrEnd, size, Math.max(0, size - qrEnd));
-    }
+    clearQuietZone(ctx, config, effectiveBgColor, size, margin, moduleCount, moduleSize);
 
     // =======================================================================
     // STAGE 6: FINAL TOUCHES
@@ -1570,6 +1719,59 @@ export class QRGenerator {
 
     return canvas;
   }
+  private getCachedDitherPatch(
+    sgctx: ScanGateCtx,
+    scanCacheKey: string,
+    scanCacheFallbackKey: string,
+    cacheIntensityFloor: number
+  ): DitherAttemptPatch | null {
+    const keyCandidates =
+      scanCacheFallbackKey === scanCacheKey ? [scanCacheKey] : [scanCacheKey, scanCacheFallbackKey];
+    for (const resolvedKey of keyCandidates) {
+      const entry = this._ditherPatchCache.get(resolvedKey);
+      if (!entry) continue;
+      if (Date.now() - entry.updatedAt > QRGenerator.DITHER_PATCH_CACHE_TTL_MS) {
+        this._ditherPatchCache.delete(resolvedKey);
+        continue;
+      }
+      if (isAggressiveScanPatch(sgctx, entry.patch, cacheIntensityFloor)) {
+        this._ditherPatchCache.delete(resolvedKey);
+        continue;
+      }
+      return { ...entry.patch };
+    }
+    return null;
+  }
+
+  private rememberDitherPatch(
+    sgctx: ScanGateCtx,
+    patch: DitherAttemptPatch,
+    scanCacheKey: string,
+    scanCacheFallbackKey: string,
+    cacheIntensityFloor: number
+  ): void {
+    if (isAggressiveScanPatch(sgctx, patch, cacheIntensityFloor)) return;
+    const now = Date.now();
+    const keys =
+      scanCacheFallbackKey === scanCacheKey ? [scanCacheKey] : [scanCacheKey, scanCacheFallbackKey];
+    for (const key of keys) {
+      this._ditherPatchCache.set(key, {
+        patch: { ...patch },
+        updatedAt: now,
+      });
+    }
+    if (this._ditherPatchCache.size <= QRGenerator.DITHER_PATCH_CACHE_MAX_ENTRIES) return;
+    let oldestKey: string | null = null;
+    let oldestAt = Number.POSITIVE_INFINITY;
+    for (const [k, v] of this._ditherPatchCache.entries()) {
+      if (v.updatedAt < oldestAt) {
+        oldestAt = v.updatedAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey) this._ditherPatchCache.delete(oldestKey);
+  }
+
   /**
    * Dithered scan-gate retry loop.
    * Extracted from generate() to reduce cognitive complexity.
@@ -1582,61 +1784,29 @@ export class QRGenerator {
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     const pool = this._canvasPool;
 
-    const decodeCanvasData = async (
-      c: HTMLCanvasElement | OffscreenCanvas
-    ): Promise<{ success: boolean; data: string | null } | null> => {
-      const ctx = c.getContext('2d') as CanvasRenderingContext2D | null;
-      if (!ctx) return null;
-      const imageData = ctx.getImageData(0, 0, c.width, c.height);
-      return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
-    };
-
-    const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
     const scanGateProfile = effectiveConfig.scanGateProfile ?? 'full';
     const isPreviewScanGate = scanGateProfile === 'preview';
     const isScanGateDisabled = scanGateProfile === 'off';
     const skipScanGateEscalation =
       effectiveConfig.preserveFinders === false && effectiveConfig.blendPreservations !== true;
-    const edgeImprintThreshold = clamp(effectiveConfig.edgeImprintThreshold ?? 0.2, 0.05, 0.5);
-    const toneStdThreshold = clamp(effectiveConfig.toneStdThreshold ?? 0.12, 0.05, 0.3);
-    const edgeWorsenLimit = clamp(effectiveConfig.edgeImprintWorsenLimit ?? 0.015, 0, 0.2);
+    const edgeImprintThreshold = clampN(effectiveConfig.edgeImprintThreshold ?? 0.2, 0.05, 0.5);
+    const toneStdThreshold = clampN(effectiveConfig.toneStdThreshold ?? 0.12, 0.05, 0.3);
+    const edgeWorsenLimit = clampN(effectiveConfig.edgeImprintWorsenLimit ?? 0.015, 0, 0.2);
 
-    const fixedVisualPolicy: Partial<QRGeneratorConfig> = {
-      overlayMode: effectiveConfig.overlayMode,
-      colorMode: effectiveConfig.colorMode,
-      renderScalePerModule: effectiveConfig.renderScalePerModule,
-      ditherKind: effectiveConfig.ditherKind,
-      ditherMode: effectiveConfig.ditherMode,
-      ditherStrength: effectiveConfig.ditherStrength,
-      finderDitherStrength: effectiveConfig.finderDitherStrength,
-      blendPreservations: effectiveConfig.blendPreservations,
-      blendPreservationMode: effectiveConfig.blendPreservationMode,
-      ditherScale: effectiveConfig.ditherScale,
-      ditherSerpentine: effectiveConfig.ditherSerpentine,
-      diffusionKernel: effectiveConfig.diffusionKernel,
-      orderedMatrix: effectiveConfig.orderedMatrix,
-      blueNoiseTileSize: effectiveConfig.blueNoiseTileSize,
-      blueNoiseSeed: effectiveConfig.blueNoiseSeed,
-      colorDither: effectiveConfig.colorDither,
-      dotMinRadiusPx: effectiveConfig.dotMinRadiusPx,
-      dotMaxRadiusPx: effectiveConfig.dotMaxRadiusPx,
-      seed: effectiveConfig.seed,
-    };
+    const fixedVisualPolicy: Partial<QRGeneratorConfig> = buildFixedVisualPolicy(effectiveConfig);
 
-    const requestedOverlayIntensity = clamp(effectiveConfig.overlayIntensity ?? 100, 0, 100);
+    const requestedOverlayIntensity = clampN(effectiveConfig.overlayIntensity ?? 100, 0, 100);
     const isAnimatedFrame =
       typeof effectiveConfig.frameIndex === 'number' && Number.isFinite(effectiveConfig.frameIndex);
     const isFirstAnimatedFrame = isAnimatedFrame && effectiveConfig.frameIndex === 0;
     const isAnimatedPreviewFrame = isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame;
     const overlayFamilyKey = buildOverlayFamilyKey(processedOverlayCanvas, effectiveConfig);
-    const overlaySignature = processedOverlayCanvas
-      ? isAnimatedFrame
-        ? `anim-family:${overlayFamilyKey}`
-        : `${processedOverlayCanvas.width}x${processedOverlayCanvas.height}:${await hashCanvasContent(
-            processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
-            this.createCanvas.bind(this)
-          )}`
-      : 'overlay:none';
+    const overlaySignature = await computeOverlaySignature(
+      processedOverlayCanvas,
+      isAnimatedFrame,
+      overlayFamilyKey,
+      this.createCanvas.bind(this)
+    );
     const overlayComplexity = await this.resolveOverlayComplexity(
       pool,
       processedOverlayCanvas,
@@ -1651,128 +1821,54 @@ export class QRGenerator {
       isScanGateDisabled,
       skipScanGateEscalation,
     };
-    const adaptiveEdgeImprintThreshold = clamp(
+    const adaptiveEdgeImprintThreshold = clampN(
       edgeImprintThreshold +
         overlayComplexity * 0.08 +
         curveIntensity(requestedOverlayIntensity) * 0.03,
       0.05,
       0.6
     );
-    const adaptiveToneStdThreshold = clamp(toneStdThreshold - overlayComplexity * 0.035, 0.04, 0.3);
-    const adaptiveEdgeWorsenLimit = clamp(edgeWorsenLimit + overlayComplexity * 0.02, 0, 0.24);
+    const adaptiveToneStdThreshold = clampN(
+      toneStdThreshold - overlayComplexity * 0.035,
+      0.04,
+      0.3
+    );
+    const adaptiveEdgeWorsenLimit = clampN(edgeWorsenLimit + overlayComplexity * 0.02, 0, 0.24);
 
-    const patchSignature = (patch: DitherAttemptPatch): string =>
-      JSON.stringify({
-        d: patch.darkMinOccupancy ?? null,
-        l: patch.lightMaxOccupancy ?? null,
-        i: patch.optimizeIterations ?? null,
-        o: patch.overlayIntensity ?? null,
-        b: patch.qrBitBiasStrength ?? null,
-        q: patch.qrFirstMode ?? null,
-        f: patch.preserveFinders ?? null,
-      });
-
-    const buildScanCacheKey = (
-      preserveFindersValue: boolean,
-      overlayToken: string = overlaySignature
-    ): string =>
-      [
-        effectiveConfig.content,
-        effectiveConfig.errorCorrection,
-        moduleCount,
-        effectiveConfig.overlayMode,
-        effectiveConfig.colorMode,
-        scanGateProfile,
-        Math.round(effectiveConfig.overlayIntensity ?? 100),
-        Math.round(effectiveConfig.ditherStrength ?? 50),
-        Math.round(effectiveConfig.finderDitherStrength ?? 65),
-        effectiveConfig.blendPreservations === true ? 1 : 0,
-        effectiveConfig.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
-        effectiveConfig.ditherKind ?? 'none',
-        effectiveConfig.ditherMode ?? 'none',
-        Math.round(effectiveConfig.ditherScale ?? 1),
-        effectiveConfig.ditherSerpentine === false ? 0 : 1,
-        effectiveConfig.diffusionKernel ?? 'floyd_steinberg',
-        effectiveConfig.orderedMatrix ?? 'bayer4',
-        Math.round(effectiveConfig.blueNoiseTileSize ?? 64),
-        effectiveConfig.blueNoiseSeed ?? 'noise-seed:auto',
-        effectiveConfig.colorDither ?? 'none',
-        Math.round(effectiveConfig.renderScalePerModule ?? 18),
-        preserveFindersValue ? 1 : 0,
-        overlayToken,
-        effectiveConfig.preserveTiming === true ? 1 : 0,
-        effectiveConfig.preserveAlignment === true ? 1 : 0,
-        effectiveConfig.protectFormatInfo === true ? 1 : 0,
-        effectiveConfig.protectVersionInfo === true ? 1 : 0,
-        effectiveConfig.qrFirstMode === true ? 1 : 0,
-        effectiveConfig.seed ?? 'seed:auto',
-      ].join('|');
-    const scanCacheKey = buildScanCacheKey(effectiveConfig.preserveFinders !== false);
+    const scanCacheKey = buildScanCacheKey(
+      effectiveConfig,
+      moduleCount,
+      scanGateProfile,
+      effectiveConfig.preserveFinders !== false,
+      overlaySignature
+    );
     const scanCacheFallbackKey = buildScanCacheKey(
+      effectiveConfig,
+      moduleCount,
+      scanGateProfile,
       effectiveConfig.preserveFinders !== false,
       `overlay-family:${Math.round(overlayComplexity * 10)}`
     );
-    const cacheIntensityFloor = clamp(
+    const cacheIntensityFloor = clampN(
       requestedOverlayIntensity - Math.round(28 + overlayComplexity * 18),
       8,
       requestedOverlayIntensity
     );
 
-    const getCachedPatch = (): DitherAttemptPatch | null => {
-      const keyCandidates =
-        scanCacheFallbackKey === scanCacheKey
-          ? [scanCacheKey]
-          : [scanCacheKey, scanCacheFallbackKey];
-      for (const resolvedKey of keyCandidates) {
-        const entry = this._ditherPatchCache.get(resolvedKey);
-        if (!entry) continue;
-        if (Date.now() - entry.updatedAt > QRGenerator.DITHER_PATCH_CACHE_TTL_MS) {
-          this._ditherPatchCache.delete(resolvedKey);
-          continue;
-        }
-        if (isAggressiveScanPatch(sgctx, entry.patch, cacheIntensityFloor)) {
-          this._ditherPatchCache.delete(resolvedKey);
-          continue;
-        }
-        return { ...entry.patch };
-      }
-      return null;
-    };
-
-    const rememberPatch = (patch: DitherAttemptPatch): void => {
-      if (isAggressiveScanPatch(sgctx, patch, cacheIntensityFloor)) return;
-      const now = Date.now();
-      const keys =
-        scanCacheFallbackKey === scanCacheKey
-          ? [scanCacheKey]
-          : [scanCacheKey, scanCacheFallbackKey];
-      for (const key of keys) {
-        this._ditherPatchCache.set(key, {
-          patch: { ...patch },
-          updatedAt: now,
-        });
-      }
-      if (this._ditherPatchCache.size <= QRGenerator.DITHER_PATCH_CACHE_MAX_ENTRIES) return;
-      let oldestKey: string | null = null;
-      let oldestAt = Number.POSITIVE_INFINITY;
-      for (const [k, v] of this._ditherPatchCache.entries()) {
-        if (v.updatedAt < oldestAt) {
-          oldestAt = v.updatedAt;
-          oldestKey = k;
-        }
-      }
-      if (oldestKey) this._ditherPatchCache.delete(oldestKey);
-    };
-
     const baseAttempts = buildScanGateBaseAttempts(sgctx);
-    const cachedPatch = getCachedPatch();
+    const cachedPatch = this.getCachedDitherPatch(
+      sgctx,
+      scanCacheKey,
+      scanCacheFallbackKey,
+      cacheIntensityFloor
+    );
     const attempts = buildDitherAttemptList(
       baseAttempts,
       cachedPatch,
       isAnimatedFrame,
       isFirstAnimatedFrame,
       isAnimatedPreviewFrame,
-      patchSignature
+      ditherPatchSignature
     );
 
     const buildAttemptConfig = (patch: DitherAttemptPatch): QRGeneratorConfig => ({
@@ -1795,6 +1891,16 @@ export class QRGenerator {
       return decoded?.success === true && decoded?.data === effectiveConfig.content;
     };
 
+    const rememberPatch = (patch: DitherAttemptPatch): void => {
+      this.rememberDitherPatch(
+        sgctx,
+        patch,
+        scanCacheKey,
+        scanCacheFallbackKey,
+        cacheIntensityFloor
+      );
+    };
+
     const cb: ScanGateCallbacks = { buildAttemptConfig, renderScaled, runDecode, rememberPatch };
 
     const scenarioSeed = effectiveConfig.seed ?? 1337;
@@ -1815,9 +1921,45 @@ export class QRGenerator {
       cb
     );
     if (mainResult.earlyReturn) return mainResult.earlyReturn;
-    let lastCanvas = mainResult.lastCanvas;
+    const lastCanvas = mainResult.lastCanvas;
 
+    return this.runDitheredScanGateFallback(
+      sgctx,
+      effectiveConfig,
+      lastCanvas,
+      attempts,
+      isPreviewScanGate,
+      isFirstAnimatedFrame,
+      isAnimatedPreviewFrame,
+      isScanGateDisabled,
+      skipScanGateEscalation,
+      requestedOverlayIntensity,
+      cb,
+      renderScaled,
+      buildAttemptConfig,
+      rememberPatch
+    );
+  }
+
+  private async runDitheredScanGateFallback(
+    sgctx: ScanGateCtx,
+    effectiveConfig: QRGeneratorConfig,
+    lastCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    attempts: DitherAttemptPatch[],
+    isPreviewScanGate: boolean,
+    isFirstAnimatedFrame: boolean,
+    isAnimatedPreviewFrame: boolean,
+    isScanGateDisabled: boolean,
+    skipScanGateEscalation: boolean,
+    requestedOverlayIntensity: number,
+    cb: ScanGateCallbacks,
+    renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>,
+    buildAttemptConfig: (patch: DitherAttemptPatch) => QRGeneratorConfig,
+    rememberPatch: (patch: DitherAttemptPatch) => void
+  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    const pool = this._canvasPool;
     const lastPatch = attempts[attempts.length - 1] || {};
+
     if (skipScanGateEscalation) {
       const finderRescuePatches = buildScanGateFinderRescuePatches(sgctx);
       const rescue = await runScanGateRescueLoop(
@@ -1853,17 +1995,13 @@ export class QRGenerator {
 
     const requireDecodableResult = !isScanGateDisabled;
     if (!requireDecodableResult && effectiveConfig.qrFirstMode !== true) {
-      // Artistic mode defaults to art-preserving fallback unless QR-first is explicitly requested.
       return lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
     }
 
     if (isPreviewScanGate && effectiveConfig.qrFirstMode !== true && !isFirstAnimatedFrame) {
-      // Keep preview visuals stable; defer harsh QR-first fallback to settled/full validation paths.
-      // Exception: animation frame 0 must reach QR-first to guarantee Analyze decodability.
       return lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
     }
 
-    // Emergency scan fallback: QR-first variants with conservative intensity.
     const qrFirstResult = await runScanGateQRFirstFallback(
       pool,
       sgctx,
