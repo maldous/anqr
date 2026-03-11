@@ -51,6 +51,46 @@ function isCancelledOrStale(id: number): boolean {
   return cancelledRequestIds.has(id) || latestRequestId !== id;
 }
 
+async function tryWorkerSideRender(
+  response: QArtWorkerResultPayload,
+  renderConfig: unknown,
+  moduleCount: number
+): Promise<void> {
+  if (!canRenderInWorker() || !response.matrix) return;
+  try {
+    const config: QRGeneratorConfig = {
+      ...(renderConfig as unknown as QRGeneratorConfig),
+      typeNumber: response.version,
+      overlayMode: undefined,
+    };
+    const renderedCanvas = await workerRenderer.renderFromPackedMatrix(
+      response.matrix,
+      moduleCount,
+      config
+    );
+    if (
+      typeof OffscreenCanvas !== 'undefined' &&
+      renderedCanvas instanceof OffscreenCanvas &&
+      typeof renderedCanvas.transferToImageBitmap === 'function'
+    ) {
+      response.bitmap = renderedCanvas.transferToImageBitmap();
+    }
+  } catch {
+    // Ignore worker-side render failures and let main-thread rendering handle it.
+  }
+}
+
+function buildWorkerTransferList(response: QArtWorkerResultPayload): Transferable[] {
+  const transferList: Transferable[] = [];
+  if (response.matrix) {
+    transferList.push(response.matrix.buffer as ArrayBuffer);
+  }
+  if (response.bitmap) {
+    transferList.push(response.bitmap);
+  }
+  return transferList;
+}
+
 async function handleGenerate(message: QArtWorkerGenerateRequest): Promise<void> {
   const { id, payload } = message;
 
@@ -139,40 +179,13 @@ async function handleGenerate(message: QArtWorkerGenerateRequest): Promise<void>
 
     if (result.success && result.matrix.length > 0) {
       response.matrix = packBooleanMatrix(result.matrix);
-      if (payload.renderInWorker && payload.renderConfig && canRenderInWorker()) {
-        try {
-          const renderConfig: QRGeneratorConfig = {
-            ...(payload.renderConfig as unknown as QRGeneratorConfig),
-            typeNumber: result.version,
-            overlayMode: undefined,
-          };
-          const renderedCanvas = await workerRenderer.renderFromPackedMatrix(
-            response.matrix,
-            result.moduleCount,
-            renderConfig
-          );
-          if (
-            typeof OffscreenCanvas !== 'undefined' &&
-            renderedCanvas instanceof OffscreenCanvas &&
-            typeof renderedCanvas.transferToImageBitmap === 'function'
-          ) {
-            response.bitmap = renderedCanvas.transferToImageBitmap();
-          }
-        } catch {
-          // Ignore worker-side render failures and let main-thread rendering handle it.
-        }
+      if (payload.renderInWorker && payload.renderConfig) {
+        await tryWorkerSideRender(response, payload.renderConfig, result.moduleCount);
       }
     }
 
-    const transferList: Transferable[] = [];
-    if (response.matrix) {
-      transferList.push(response.matrix.buffer as ArrayBuffer);
-    }
-    if (response.bitmap) {
-      transferList.push(response.bitmap);
-    }
     const resultMessage: QArtWorkerMessage = { type: 'result', id, result: response };
-    workerContext.postMessage(resultMessage, transferList);
+    workerContext.postMessage(resultMessage, buildWorkerTransferList(response));
   } catch (err) {
     if (isCancelledOrStale(id)) return;
 

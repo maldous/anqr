@@ -263,6 +263,39 @@ function sampleModuleStats(
   };
 }
 
+function resolveSupersampleLevel(options?: MapImageToTargetsOptions): 1 | 2 | 3 {
+  if (options?.supersampleLevel === 1) return 1;
+  if (options?.supersampleLevel === 3) return 3;
+  return 2;
+}
+
+function buildSamplePoints(level: number): Array<{ dx: number; dy: number }> {
+  if (level === 1) return [{ dx: 0.5, dy: 0.5 }];
+  if (level === 3) {
+    return [
+      { dx: 1 / 6, dy: 1 / 6 },
+      { dx: 0.5, dy: 1 / 6 },
+      { dx: 5 / 6, dy: 1 / 6 },
+      { dx: 1 / 6, dy: 0.5 },
+      { dx: 0.5, dy: 0.5 },
+      { dx: 5 / 6, dy: 0.5 },
+      { dx: 1 / 6, dy: 5 / 6 },
+      { dx: 0.5, dy: 5 / 6 },
+      { dx: 5 / 6, dy: 5 / 6 },
+    ];
+  }
+  return [
+    { dx: 0.25, dy: 0.25 },
+    { dx: 0.75, dy: 0.25 },
+    { dx: 0.25, dy: 0.75 },
+    { dx: 0.75, dy: 0.75 },
+  ];
+}
+
+function resolveCleanupArea(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' ? Math.max(0, Math.floor(value)) : fallback;
+}
+
 export function mapImageToTargetsSupersampled(
   image: ImageData | HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
@@ -285,38 +318,11 @@ export function mapImageToTargetsSupersampled(
   const maxX = Math.max(0, imageData.width - 1);
   const maxY = Math.max(0, imageData.height - 1);
 
-  const supersampleLevel =
-    options?.supersampleLevel === 1 ? 1 : options?.supersampleLevel === 3 ? 3 : 2;
+  const supersampleLevel = resolveSupersampleLevel(options);
   const cleanupSpeckles = options?.cleanupSpeckles !== false;
-  const maxDarkSpeckleArea =
-    typeof options?.maxDarkSpeckleArea === 'number'
-      ? Math.max(0, Math.floor(options.maxDarkSpeckleArea))
-      : 2;
-  const maxLightHoleArea =
-    typeof options?.maxLightHoleArea === 'number'
-      ? Math.max(0, Math.floor(options.maxLightHoleArea))
-      : 2;
-  const samplePoints =
-    supersampleLevel === 1
-      ? [{ dx: 0.5, dy: 0.5 }]
-      : supersampleLevel === 3
-        ? [
-            { dx: 1 / 6, dy: 1 / 6 },
-            { dx: 0.5, dy: 1 / 6 },
-            { dx: 5 / 6, dy: 1 / 6 },
-            { dx: 1 / 6, dy: 0.5 },
-            { dx: 0.5, dy: 0.5 },
-            { dx: 5 / 6, dy: 0.5 },
-            { dx: 1 / 6, dy: 5 / 6 },
-            { dx: 0.5, dy: 5 / 6 },
-            { dx: 5 / 6, dy: 5 / 6 },
-          ]
-        : [
-            { dx: 0.25, dy: 0.25 },
-            { dx: 0.75, dy: 0.25 },
-            { dx: 0.25, dy: 0.75 },
-            { dx: 0.75, dy: 0.75 },
-          ];
+  const maxDarkSpeckleArea = resolveCleanupArea(options?.maxDarkSpeckleArea, 2);
+  const maxLightHoleArea = resolveCleanupArea(options?.maxLightHoleArea, 2);
+  const samplePoints = buildSamplePoints(supersampleLevel);
 
   for (let row = 0; row < moduleCount; row++) {
     targets[row] = [];

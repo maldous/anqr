@@ -95,6 +95,21 @@ function placeDataBitInModule(
   }
 }
 
+function padDataBuffer(buffer: QRBitBufferType, totalDataCount: number): void {
+  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+    buffer.put(0, 4);
+  }
+  while (buffer.getLengthInBits() % 8 !== 0) {
+    buffer.putBit(false);
+  }
+  while (true) {
+    if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+    buffer.put(PAD0, 8);
+    if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+    buffer.put(PAD1, 8);
+  }
+}
+
 /**
  * Create a QR code instance
  * @param typeNumber QR version (1-40), 0 for auto
@@ -381,28 +396,7 @@ export function qrcode(
       throw new Error(`code length overflow. (${buffer.getLengthInBits()}>${totalDataCount * 8})`);
     }
 
-    // end code
-    if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-      buffer.put(0, 4);
-    }
-
-    // padding
-    while (buffer.getLengthInBits() % 8 !== 0) {
-      buffer.putBit(false);
-    }
-
-    // padding
-    while (true) {
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
-        break;
-      }
-      buffer.put(PAD0, 8);
-
-      if (buffer.getLengthInBits() >= totalDataCount * 8) {
-        break;
-      }
-      buffer.put(PAD1, 8);
-    }
+    padDataBuffer(buffer, totalDataCount);
 
     return createBytes(buffer, rsBlocks);
   };

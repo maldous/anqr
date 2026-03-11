@@ -327,7 +327,7 @@ export class GenericGF extends AbstractGenericGF {
 export class ReedSolomonDecoder {
   constructor(private readonly field: GenericGF) {}
 
-  decode(received: Int32Array, twoS: number): void {
+  private computeSyndromes(received: Int32Array, twoS: number): Int32Array | null {
     const poly = new GenericGFPoly(this.field, received);
     const syndromeCoefficients = new Int32Array(twoS);
     let noError = true;
@@ -336,7 +336,24 @@ export class ReedSolomonDecoder {
       syndromeCoefficients[syndromeCoefficients.length - 1 - i] = evalResult;
       if (evalResult !== 0) noError = false;
     }
-    if (noError) return;
+    return noError ? null : syndromeCoefficients;
+  }
+
+  private applyCorrections(
+    received: Int32Array,
+    errorLocations: Int32Array,
+    errorMagnitudes: Int32Array
+  ): void {
+    for (let i = 0; i < errorLocations.length; i++) {
+      const position = received.length - 1 - this.field.log(errorLocations[i]);
+      if (position < 0) throw new ReedSolomonException('Bad error location');
+      received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
+    }
+  }
+
+  decode(received: Int32Array, twoS: number): void {
+    const syndromeCoefficients = this.computeSyndromes(received, twoS);
+    if (syndromeCoefficients === null) return;
 
     const syndrome = new GenericGFPoly(this.field, syndromeCoefficients);
     const sigmaOmega = this.runEuclideanAlgorithm(
@@ -348,11 +365,7 @@ export class ReedSolomonDecoder {
     const omega = sigmaOmega[1];
     const errorLocations = this.findErrorLocations(sigma);
     const errorMagnitudes = this.findErrorMagnitudes(omega, errorLocations);
-    for (let i = 0; i < errorLocations.length; i++) {
-      const position = received.length - 1 - this.field.log(errorLocations[i]);
-      if (position < 0) throw new ReedSolomonException('Bad error location');
-      received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
-    }
+    this.applyCorrections(received, errorLocations, errorMagnitudes);
   }
 
   private polyDivide(

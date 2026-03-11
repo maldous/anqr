@@ -6,7 +6,7 @@ import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from 
 import i18n from '@/i18n';
 import { decodeQR } from '../qr-decoder';
 import { detectContentType, extractDominantColors } from './analyzer-content';
-import type { ContentType, DecoderMetadata, QRAnalysisResult } from './types';
+import type { ContentType, DecoderMetadata, ECCLevel, QRAnalysisResult } from './types';
 
 const qrAnalyzerLog = createLogger('ANALYZER');
 
@@ -97,6 +97,40 @@ function calculateGeometryDiagnostics(location: QRLocationCorners) {
   };
 }
 
+function elapsedMs(startMs: number): number {
+  const now =
+    typeof globalThis.performance?.now === 'function' ? globalThis.performance.now() : Date.now();
+  return Math.round((now - startMs) * 100) / 100;
+}
+
+function buildDecoderMeta(code: {
+  version?: number | null;
+  maskPattern?: number | null;
+  eccLevel?: ECCLevel | null;
+  errorsCorrected?: number | null;
+  erasures?: number | null;
+  numBits?: number | null;
+  orientation?: number | null;
+  structuredAppendSequence?: number | null;
+  structuredAppendParity?: number | null;
+  dataBytes?: Uint8Array | null;
+}): DecoderMetadata {
+  return {
+    version: code.version ?? null,
+    maskPattern: code.maskPattern ?? null,
+    eccLevel: code.eccLevel ?? null,
+    errorsCorrected: code.errorsCorrected ?? null,
+    erasures: code.erasures ?? null,
+    numBits: code.numBits ?? null,
+    orientation: code.orientation ?? null,
+    structuredAppendSequence: code.structuredAppendSequence ?? null,
+    structuredAppendParity: code.structuredAppendParity ?? null,
+    hasStructuredAppend: (code.structuredAppendSequence ?? -1) >= 0,
+    byteSegmentCount: code.dataBytes ? 1 : 0,
+    totalByteLength: code.dataBytes?.length ?? 0,
+  };
+}
+
 /**
  * Decode a QR code from canvas and extract all metadata
  */
@@ -128,6 +162,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       encodingMode: null,
       errorsCorrected: null,
       estimatedModulePx: null,
+      timing: { decodeMs: elapsedMs(decodeStartMs) },
       debugLog,
     };
   }
@@ -152,16 +187,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
         encodingMode: null,
         errorsCorrected: null,
         estimatedModulePx: null,
-        timing: {
-          decodeMs:
-            Math.round(
-              ((typeof globalThis.performance?.now === 'function'
-                ? globalThis.performance.now()
-                : Date.now()) -
-                decodeStartMs) *
-                100
-            ) / 100,
-        },
+        timing: { decodeMs: elapsedMs(decodeStartMs) },
         debugLog,
       };
     }
@@ -262,21 +288,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     flushLogBuffer();
     disableLogBuffer();
 
-    // Build comprehensive decoder metadata for debugging
-    const decoderMetadata: DecoderMetadata = {
-      version: code.version ?? null,
-      maskPattern: code.maskPattern ?? null,
-      eccLevel: code.eccLevel ?? null,
-      errorsCorrected: code.errorsCorrected ?? null,
-      erasures: code.erasures ?? null,
-      numBits: code.numBits ?? null,
-      orientation: code.orientation ?? null,
-      structuredAppendSequence: code.structuredAppendSequence ?? null,
-      structuredAppendParity: code.structuredAppendParity ?? null,
-      hasStructuredAppend: (code.structuredAppendSequence ?? -1) >= 0,
-      byteSegmentCount: code.dataBytes ? 1 : 0,
-      totalByteLength: code.dataBytes?.length ?? 0,
-    };
+    const decoderMetadata = buildDecoderMeta(code);
 
     qrAnalyzerLog.trace('decoder: Complete decoder metadata (authoritative)', {
       version: decoderMetadata.version,
@@ -326,17 +338,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       geometry,
       moduleMatrix,
       confidence: 'high',
-      timing: {
-        decodeMs:
-          Math.round(
-            ((typeof globalThis.performance?.now === 'function'
-              ? globalThis.performance.now()
-              : Date.now()) -
-              decodeStartMs) *
-              100
-          ) / 100,
-      },
-      decoderMetadata, // Include decoder metadata for debugging
+      timing: { decodeMs: elapsedMs(decodeStartMs) },
+      decoderMetadata,
     };
   } catch (err) {
     qrAnalyzerLog.debug('decode: Exception during decode', { error: String(err) });
@@ -353,16 +356,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       encodingMode: null,
       errorsCorrected: null,
       estimatedModulePx: null,
-      timing: {
-        decodeMs:
-          Math.round(
-            ((typeof globalThis.performance?.now === 'function'
-              ? globalThis.performance.now()
-              : Date.now()) -
-              decodeStartMs) *
-              100
-          ) / 100,
-      },
+      timing: { decodeMs: elapsedMs(decodeStartMs) },
       debugLog,
     };
   }
