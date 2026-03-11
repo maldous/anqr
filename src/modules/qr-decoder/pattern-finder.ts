@@ -252,57 +252,129 @@ export class FinderPatternFinder {
     return this.crossCheckStateCount;
   }
 
+  private scanCrossCheckUp(
+    centerJ: number,
+    startI: number,
+    maxCount: number,
+    stateCount: Int32Array
+  ): boolean {
+    const image = this.image;
+    let i = startI;
+    while (i >= 0 && image.get(centerJ, i)) {
+      stateCount[2]++;
+      i--;
+    }
+    if (i < 0) return false;
+    while (i >= 0 && !image.get(centerJ, i) && stateCount[1] <= maxCount) {
+      stateCount[1]++;
+      i--;
+    }
+    if (i < 0 || stateCount[1] > maxCount) return false;
+    while (i >= 0 && image.get(centerJ, i) && stateCount[0] <= maxCount) {
+      stateCount[0]++;
+      i--;
+    }
+    return stateCount[0] <= maxCount;
+  }
+
+  private scanCrossCheckDown(
+    centerJ: number,
+    startI: number,
+    maxCount: number,
+    stateCount: Int32Array
+  ): number {
+    const image = this.image;
+    const maxI = image.getHeight();
+    let i = startI;
+    while (i < maxI && image.get(centerJ, i)) {
+      stateCount[2]++;
+      i++;
+    }
+    if (i === maxI) return -1;
+    while (i < maxI && !image.get(centerJ, i) && stateCount[3] < maxCount) {
+      stateCount[3]++;
+      i++;
+    }
+    if (i === maxI || stateCount[3] >= maxCount) return -1;
+    while (i < maxI && image.get(centerJ, i) && stateCount[4] < maxCount) {
+      stateCount[4]++;
+      i++;
+    }
+    if (stateCount[4] >= maxCount) return -1;
+    return i;
+  }
+
   private crossCheckVertical(
     startI: number,
     centerJ: number,
     maxCount: number,
     originalStateCountTotal: number
   ): number {
-    const image = this.image;
-    const maxI = image.getHeight();
     const stateCount = this.getCrossCheckStateCount();
 
-    let i = startI;
-    while (i >= 0 && image.get(centerJ, i)) {
-      stateCount[2]++;
-      i--;
-    }
-    if (i < 0) return Number.NaN;
-    while (i >= 0 && !image.get(centerJ, i) && stateCount[1] <= maxCount) {
-      stateCount[1]++;
-      i--;
-    }
-    if (i < 0 || stateCount[1] > maxCount) return Number.NaN;
-    while (i >= 0 && image.get(centerJ, i) && stateCount[0] <= maxCount) {
-      stateCount[0]++;
-      i--;
-    }
-    if (stateCount[0] > maxCount) return Number.NaN;
-
-    i = startI + 1;
-    while (i < maxI && image.get(centerJ, i)) {
-      stateCount[2]++;
-      i++;
-    }
-    if (i === maxI) return Number.NaN;
-    while (i < maxI && !image.get(centerJ, i) && stateCount[3] < maxCount) {
-      stateCount[3]++;
-      i++;
-    }
-    if (i === maxI || stateCount[3] >= maxCount) return Number.NaN;
-    while (i < maxI && image.get(centerJ, i) && stateCount[4] < maxCount) {
-      stateCount[4]++;
-      i++;
-    }
-    if (stateCount[4] >= maxCount) return Number.NaN;
+    if (!this.scanCrossCheckUp(centerJ, startI, maxCount, stateCount)) return Number.NaN;
+    const endI = this.scanCrossCheckDown(centerJ, startI + 1, maxCount, stateCount);
+    if (endI < 0) return Number.NaN;
 
     const stateCountTotal =
       stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal)
       return Number.NaN;
     return FinderPatternFinder.foundPatternCross(stateCount)
-      ? FinderPatternFinder.centerFromEnd(stateCount, i)
+      ? FinderPatternFinder.centerFromEnd(stateCount, endI)
       : Number.NaN;
+  }
+
+  private scanCrossCheckLeft(
+    centerI: number,
+    startJ: number,
+    maxCount: number,
+    stateCount: Int32Array
+  ): boolean {
+    const image = this.image;
+    let j = startJ;
+    while (j >= 0 && image.get(j, centerI)) {
+      stateCount[2]++;
+      j--;
+    }
+    if (j < 0) return false;
+    while (j >= 0 && !image.get(j, centerI) && stateCount[1] <= maxCount) {
+      stateCount[1]++;
+      j--;
+    }
+    if (j < 0 || stateCount[1] > maxCount) return false;
+    while (j >= 0 && image.get(j, centerI) && stateCount[0] <= maxCount) {
+      stateCount[0]++;
+      j--;
+    }
+    return stateCount[0] <= maxCount;
+  }
+
+  private scanCrossCheckRight(
+    centerI: number,
+    startJ: number,
+    maxCount: number,
+    stateCount: Int32Array
+  ): number {
+    const image = this.image;
+    const maxJ = image.getWidth();
+    let j = startJ;
+    while (j < maxJ && image.get(j, centerI)) {
+      stateCount[2]++;
+      j++;
+    }
+    if (j === maxJ) return -1;
+    while (j < maxJ && !image.get(j, centerI) && stateCount[3] < maxCount) {
+      stateCount[3]++;
+      j++;
+    }
+    if (j === maxJ || stateCount[3] >= maxCount) return -1;
+    while (j < maxJ && image.get(j, centerI) && stateCount[4] < maxCount) {
+      stateCount[4]++;
+      j++;
+    }
+    if (stateCount[4] >= maxCount) return -1;
+    return j;
   }
 
   private crossCheckHorizontal(
@@ -311,50 +383,18 @@ export class FinderPatternFinder {
     maxCount: number,
     originalStateCountTotal: number
   ): number {
-    const image = this.image;
-    const maxJ = image.getWidth();
     const stateCount = this.getCrossCheckStateCount();
 
-    let j = startJ;
-    while (j >= 0 && image.get(j, centerI)) {
-      stateCount[2]++;
-      j--;
-    }
-    if (j < 0) return Number.NaN;
-    while (j >= 0 && !image.get(j, centerI) && stateCount[1] <= maxCount) {
-      stateCount[1]++;
-      j--;
-    }
-    if (j < 0 || stateCount[1] > maxCount) return Number.NaN;
-    while (j >= 0 && image.get(j, centerI) && stateCount[0] <= maxCount) {
-      stateCount[0]++;
-      j--;
-    }
-    if (stateCount[0] > maxCount) return Number.NaN;
-
-    j = startJ + 1;
-    while (j < maxJ && image.get(j, centerI)) {
-      stateCount[2]++;
-      j++;
-    }
-    if (j === maxJ) return Number.NaN;
-    while (j < maxJ && !image.get(j, centerI) && stateCount[3] < maxCount) {
-      stateCount[3]++;
-      j++;
-    }
-    if (j === maxJ || stateCount[3] >= maxCount) return Number.NaN;
-    while (j < maxJ && image.get(j, centerI) && stateCount[4] < maxCount) {
-      stateCount[4]++;
-      j++;
-    }
-    if (stateCount[4] >= maxCount) return Number.NaN;
+    if (!this.scanCrossCheckLeft(centerI, startJ, maxCount, stateCount)) return Number.NaN;
+    const endJ = this.scanCrossCheckRight(centerI, startJ + 1, maxCount, stateCount);
+    if (endJ < 0) return Number.NaN;
 
     const stateCountTotal =
       stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= originalStateCountTotal)
       return Number.NaN;
     return FinderPatternFinder.foundPatternCross(stateCount)
-      ? FinderPatternFinder.centerFromEnd(stateCount, j)
+      ? FinderPatternFinder.centerFromEnd(stateCount, endJ)
       : Number.NaN;
   }
 

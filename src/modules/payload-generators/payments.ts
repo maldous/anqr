@@ -788,6 +788,25 @@ export function generateAusPayNet(params: AusPayNetParams): string {
   return builder.build();
 }
 
+function resolveTipValue(params: EMVMPMParams): number | undefined {
+  if (params.tipIndicator === '02') return params.tipFixed;
+  if (params.tipIndicator === '03') return params.tipPercentage;
+  return undefined;
+}
+
+function buildEMVAdditionalData(params: EMVMPMParams): Record<string, string> {
+  const data: Record<string, string> = {};
+  if (params.billNumber) data.billNumber = params.billNumber;
+  if (params.mobileNumber) data.mobileNumber = params.mobileNumber;
+  if (params.storeLabel) data.storeLabel = params.storeLabel;
+  if (params.loyaltyNumber) data.loyaltyNumber = params.loyaltyNumber;
+  if (params.referenceLabel) data.referenceLabel = params.referenceLabel;
+  if (params.customerLabel) data.customerLabel = params.customerLabel;
+  if (params.terminalLabel) data.terminalLabel = params.terminalLabel;
+  if (params.purposeOfTransaction) data.purposeOfTransaction = params.purposeOfTransaction;
+  return data;
+}
+
 /**
  * Generate a generic EMV MPM QR code
  */
@@ -813,13 +832,7 @@ export function generateEMVMPM(params: EMVMPMParams): string {
   }
 
   if (params.tipIndicator) {
-    let tipValue: number | undefined;
-    if (params.tipIndicator === '02') {
-      tipValue = params.tipFixed;
-    } else if (params.tipIndicator === '03') {
-      tipValue = params.tipPercentage;
-    }
-    builder.setTipIndicator(params.tipIndicator, tipValue);
+    builder.setTipIndicator(params.tipIndicator, resolveTipValue(params));
   }
 
   builder.setCountryCode(params.countryCode);
@@ -830,17 +843,7 @@ export function generateEMVMPM(params: EMVMPMParams): string {
     builder.setPostalCode(params.postalCode);
   }
 
-  const additionalData: Record<string, string> = {};
-  if (params.billNumber) additionalData.billNumber = params.billNumber;
-  if (params.mobileNumber) additionalData.mobileNumber = params.mobileNumber;
-  if (params.storeLabel) additionalData.storeLabel = params.storeLabel;
-  if (params.loyaltyNumber) additionalData.loyaltyNumber = params.loyaltyNumber;
-  if (params.referenceLabel) additionalData.referenceLabel = params.referenceLabel;
-  if (params.customerLabel) additionalData.customerLabel = params.customerLabel;
-  if (params.terminalLabel) additionalData.terminalLabel = params.terminalLabel;
-  if (params.purposeOfTransaction)
-    additionalData.purposeOfTransaction = params.purposeOfTransaction;
-
+  const additionalData = buildEMVAdditionalData(params);
   if (Object.keys(additionalData).length > 0) {
     builder.setAdditionalData(additionalData);
   }

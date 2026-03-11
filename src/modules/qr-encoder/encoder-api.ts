@@ -141,6 +141,23 @@ export function optimizeSegments(text: string): DataSegment[] {
   return mergeAdjacentSegments(segments);
 }
 
+function calculateModeDataBits(mode: DataSegment['mode'], dataLength: number): number {
+  switch (mode) {
+    case 'numeric':
+      // 10 bits per 3 digits, 7 bits for 2 remaining, 4 bits for 1 remaining
+      return (
+        Math.floor(dataLength / 3) * 10 + (dataLength % 3 === 2 ? 7 : dataLength % 3 === 1 ? 4 : 0)
+      );
+    case 'alphanumeric':
+      // 11 bits per 2 chars, 6 bits for 1 remaining
+      return Math.floor(dataLength / 2) * 11 + (dataLength % 2 === 1 ? 6 : 0);
+    case 'byte':
+      return dataLength * 8;
+    case 'kanji':
+      return dataLength * 13;
+  }
+}
+
 /**
  * Calculate the approximate bit length for segments at a given version
  * Used for capacity checking
@@ -155,30 +172,9 @@ export function calculateSegmentBits(segments: DataSegment[], version: number): 
   };
 
   for (const seg of segments) {
-    // Mode indicator: 4 bits
     bits += 4;
-    // Character count indicator
     bits += lengthBitsTable[seg.mode];
-    // Data bits
-    switch (seg.mode) {
-      case 'numeric':
-        // 10 bits per 3 digits, 7 bits for 2 remaining, 4 bits for 1 remaining
-        bits += Math.floor(seg.data.length / 3) * 10;
-        if (seg.data.length % 3 === 2) bits += 7;
-        else if (seg.data.length % 3 === 1) bits += 4;
-        break;
-      case 'alphanumeric':
-        // 11 bits per 2 chars, 6 bits for 1 remaining
-        bits += Math.floor(seg.data.length / 2) * 11;
-        if (seg.data.length % 2 === 1) bits += 6;
-        break;
-      case 'byte':
-        bits += seg.data.length * 8;
-        break;
-      case 'kanji':
-        bits += seg.data.length * 13; // Approximate
-        break;
-    }
+    bits += calculateModeDataBits(seg.mode, seg.data.length);
   }
 
   return bits;

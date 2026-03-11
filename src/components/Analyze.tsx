@@ -1716,6 +1716,39 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     }
   }, [urlInput, t]);
 
+  const loadCameraImageFromBlob = async (
+    blob: Blob
+  ): Promise<{
+    source: ImageBitmap | HTMLImageElement;
+    sourceWidth: number;
+    sourceHeight: number;
+  }> => {
+    if (typeof createImageBitmap === 'function') {
+      const bitmap = await createImageBitmap(blob);
+      return { source: bitmap, sourceWidth: bitmap.width, sourceHeight: bitmap.height };
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const source = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Failed to decode camera image'));
+      };
+      img.src = objectUrl;
+    });
+    return { source, sourceWidth: source.naturalWidth, sourceHeight: source.naturalHeight };
+  };
+
+  const closeBitmapSource = (source: ImageBitmap | HTMLImageElement): void => {
+    if ('close' in source && typeof source.close === 'function') {
+      source.close();
+    }
+  };
+
   // Handle camera capture (native only)
   const handleCameraCapture = useCallback(async () => {
     setIsLoading(true);
@@ -1757,32 +1790,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       const blob = await response.blob();
 
       const maxEdge = 1600;
-      let source: ImageBitmap | HTMLImageElement;
-      let sourceWidth: number;
-      let sourceHeight: number;
-
-      if (typeof createImageBitmap === 'function') {
-        const bitmap = await createImageBitmap(blob);
-        source = bitmap;
-        sourceWidth = bitmap.width;
-        sourceHeight = bitmap.height;
-      } else {
-        const objectUrl = URL.createObjectURL(blob);
-        source = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => {
-            URL.revokeObjectURL(objectUrl);
-            resolve(img);
-          };
-          img.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error('Failed to decode camera image'));
-          };
-          img.src = objectUrl;
-        });
-        sourceWidth = source.naturalWidth;
-        sourceHeight = source.naturalHeight;
-      }
+      const { source, sourceWidth, sourceHeight } = await loadCameraImageFromBlob(blob);
 
       const sourceMaxEdge = Math.max(sourceWidth, sourceHeight);
       const scale = sourceMaxEdge > maxEdge ? maxEdge / sourceMaxEdge : 1;
@@ -1796,9 +1804,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         willReadFrequently: true,
       } as CanvasRenderingContext2DSettings | undefined);
       if (!ctx) {
-        if ('close' in source && typeof source.close === 'function') {
-          source.close();
-        }
+        closeBitmapSource(source);
         setError(t('analyze.cameraProcessError', 'Could not process image'));
         return;
       }
@@ -1806,9 +1812,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
-      if ('close' in source && typeof source.close === 'function') {
-        source.close();
-      }
+      closeBitmapSource(source);
 
       const analysisResult = analyzeQRCode(canvas);
       setResult(analysisResult);

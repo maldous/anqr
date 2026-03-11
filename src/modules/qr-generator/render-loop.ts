@@ -187,6 +187,21 @@ function canUseFastPath(config: QRGeneratorConfig, hasOverlayData: boolean, gap:
  *
  * Typically reduces draw calls from O(moduleCount²) to O(moduleCount × runs).
  */
+function isRunLengthCellMatch(
+  qr: QRCodeInstance,
+  ditherPattern: boolean[][] | null,
+  skipMask: Uint8Array,
+  rowBase: number,
+  row: number,
+  col: number,
+  moduleCount: number,
+  isDarkPass: boolean
+): boolean {
+  if (col >= moduleCount || skipMask[rowBase + col]) return false;
+  const cellIsDark = ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col);
+  return isDarkPass ? cellIsDark : !cellIsDark;
+}
+
 function renderRunLengthPass(
   ctx: CanvasContext,
   qr: QRCodeInstance,
@@ -203,10 +218,16 @@ function renderRunLengthPass(
     let runStart = -1;
 
     for (let col = 0; col <= moduleCount; col++) {
-      const inBounds = col < moduleCount && !skipMask[rowBase + col];
-      const cellIsDark =
-        inBounds && (ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col));
-      const match = inBounds && (isDarkPass ? cellIsDark : !cellIsDark);
+      const match = isRunLengthCellMatch(
+        qr,
+        ditherPattern,
+        skipMask,
+        rowBase,
+        row,
+        col,
+        moduleCount,
+        isDarkPass
+      );
 
       if (match) {
         if (runStart === -1) runStart = col;
