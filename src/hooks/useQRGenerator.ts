@@ -2140,7 +2140,8 @@ function setupValidationRunner(params: {
   };
 }
 
-async function runQArtGeneration(params: {
+async function executeQArtWorkerPipeline(params: {
+  qartModule: QArtModule;
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas;
   debouncedConfig: Record<string, unknown>;
   qartAbortController: AbortController;
@@ -2150,43 +2151,25 @@ async function runQArtGeneration(params: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (...args: any[]) => any;
   translateQArtStage: (s: string) => string;
-  watermark: {
-    enabled: boolean;
-    kind: string;
-    text: string;
-    image: File | null;
-    position: string;
-    opacity: number;
-    blend: string;
-  };
-  canvasRef: { current: HTMLCanvasElement | null };
-  setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
-  qrPackedMatrixRef: { current: { packed: Uint8Array; moduleCount: number } | null };
-  setQrMatrix: (m: boolean[][] | null) => void;
-  setIsRendering: (v: boolean) => void;
-  setIsLoading: (v: boolean) => void;
-  clearGenerationProgress: () => void;
   qartPreviewBitmapCanvasRef: { current: HTMLCanvasElement | null };
-  effectiveConfig: Record<string, unknown>;
-  runValidationIfNeeded: (
-    c: HTMLCanvasElement | OffscreenCanvas,
-    content: string | undefined
-  ) => void;
-  setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
   requestId: number;
-}): Promise<{ handled: boolean }> {
-  const qartModule = await loadQArtModule();
-  if (params.isStaleRequest()) return { handled: true };
-  params.updateGenerationProgress(
-    params.t('preview.busy.preparingQrArtComputation', 'Preparing QR-Art computation...'),
-    18
-  );
-  log.info('Starting QR-Art generation', {
-    content: (params.debouncedConfig.content as string)?.substring(0, 50),
-    version: params.debouncedConfig.typeNumber,
-    ecc: params.debouncedConfig.errorCorrection,
-  });
-
+}): Promise<{
+  useFullQArt: boolean;
+  fullQArtCanvas: HTMLCanvasElement | null;
+  qartResultVersion: number;
+  qartResultMaskPattern: number;
+  qartResultModuleCount: number;
+  qartResultSource: 'worker' | 'main';
+  qartComputeMs: number | null;
+  qartRequestMarked: boolean;
+  workerPackedMatrix: Uint8Array | null;
+  usedWorkerBitmapRender: boolean;
+  qartPerfMarkPrefix: string;
+  qartRequestMark: string;
+  qartResultMark: string;
+  qartRenderMark: string;
+  aborted: boolean;
+}> {
   let useFullQArt = false;
   let fullQArtCanvas: HTMLCanvasElement | null = null;
   let qartResultVersion = 0;
@@ -2204,8 +2187,26 @@ async function runQArtGeneration(params: {
   const qartResultMark = `${qartPerfMarkPrefix}:result`;
   const qartRenderMark = `${qartPerfMarkPrefix}:render`;
 
+  const mkResult = (aborted: boolean) => ({
+    useFullQArt,
+    fullQArtCanvas,
+    qartResultVersion,
+    qartResultMaskPattern,
+    qartResultModuleCount,
+    qartResultSource,
+    qartComputeMs,
+    qartRequestMarked,
+    workerPackedMatrix,
+    usedWorkerBitmapRender,
+    qartPerfMarkPrefix,
+    qartRequestMark,
+    qartResultMark,
+    qartRenderMark,
+    aborted,
+  });
+
   try {
-    if (await params.yieldForResponsiveness()) return { handled: true };
+    if (await params.yieldForResponsiveness()) return mkResult(true);
     const useAutoMask =
       typeof params.debouncedConfig.maskPattern !== 'number' ||
       (params.debouncedConfig.maskPattern as number) < 0;
@@ -2236,7 +2237,7 @@ async function runQArtGeneration(params: {
     let fullQArtResult: QArtResult;
     try {
       const workerGenResult = await runQArtWorkerGeneration({
-        qartModule,
+        qartModule: params.qartModule,
         qartConfig,
         overlayCanvas: params.overlayCanvas,
         debouncedConfig: params.debouncedConfig,
@@ -2249,7 +2250,7 @@ async function runQArtGeneration(params: {
       workerRenderedBitmap = workerGenResult.bitmap;
     } catch (error_) {
       if (params.qartAbortController.signal.aborted || params.isStaleRequest()) {
-        return { handled: true };
+        return mkResult(true);
       }
       throw error_;
     }
@@ -2305,55 +2306,247 @@ async function runQArtGeneration(params: {
     });
   }
 
-  if (useFullQArt && fullQArtCanvas) {
-    if (params.isStaleRequest()) return { handled: true };
-    const resultCanvas = await applyWatermarkToCanvas(fullQArtCanvas, params.watermark);
+  return mkResult(false);
+}
 
-    if (params.isStaleRequest()) return { handled: true };
-    params.setCanvas(resultCanvas);
-    params.updateGenerationProgress(
-      params.t('preview.busy.finalizingPreview', 'Finalizing the preview...'),
-      96
-    );
-    if (params.canvasRef.current) {
-      drawToDisplayCanvas(params.canvasRef.current, resultCanvas);
-    }
+async function deliverQArtResult(params: {
+  fullQArtCanvas: HTMLCanvasElement;
+  watermark: {
+    enabled: boolean;
+    kind: string;
+    text: string;
+    image: File | null;
+    position: string;
+    opacity: number;
+    blend: string;
+  };
+  isStaleRequest: () => boolean;
+  canvasRef: { current: HTMLCanvasElement | null };
+  setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
+  updateGenerationProgress: (stage: string, percent: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => any;
+  qartRequestMarked: boolean;
+  qartPerfMarkPrefix: string;
+  qartRequestMark: string;
+  qartResultMark: string;
+  qartRenderMark: string;
+  qartComputeMs: number | null;
+  qartResultSource: 'worker' | 'main';
+  qartResultVersion: number;
+  qartResultMaskPattern: number;
+  qartResultModuleCount: number;
+  usedWorkerBitmapRender: boolean;
+  workerPackedMatrix: Uint8Array | null;
+  qrPackedMatrixRef: { current: { packed: Uint8Array; moduleCount: number } | null };
+  setQrMatrix: (m: boolean[][] | null) => void;
+  effectiveConfig: Record<string, unknown>;
+  runValidationIfNeeded: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    content: string | undefined
+  ) => void;
+  setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
+  setIsRendering: (v: boolean) => void;
+  setIsLoading: (v: boolean) => void;
+  clearGenerationProgress: () => void;
+}): Promise<{ handled: boolean }> {
+  if (params.isStaleRequest()) return { handled: true };
+  const resultCanvas = await applyWatermarkToCanvas(params.fullQArtCanvas, params.watermark);
 
-    const { renderMs: qartRenderMs, previewMs: qartPreviewMs } = recordQArtPerfTimings({
-      qartRequestMarked,
-      qartPerfMarkPrefix,
-      qartRequestMark,
-      qartResultMark,
-      qartRenderMark,
-      qartComputeMs,
-      qartResultSource,
-    });
-    params.setQArtPerfSnapshot({
-      source: qartResultSource,
-      computeMs: qartComputeMs,
-      renderMs: qartRenderMs,
-      previewMs: qartPreviewMs,
-      version: qartResultVersion,
-      maskPattern: qartResultMaskPattern,
-    });
+  if (params.isStaleRequest()) return { handled: true };
+  params.setCanvas(resultCanvas);
+  params.updateGenerationProgress(
+    params.t('preview.busy.finalizingPreview', 'Finalizing the preview...'),
+    96
+  );
+  if (params.canvasRef.current) {
+    drawToDisplayCanvas(params.canvasRef.current, resultCanvas);
+  }
 
-    updateQrMatrixFromResult({
-      usedWorkerBitmapRender,
-      workerPackedMatrix,
-      qartResultSource,
-      qartResultModuleCount,
+  const { renderMs: qartRenderMs, previewMs: qartPreviewMs } = recordQArtPerfTimings({
+    qartRequestMarked: params.qartRequestMarked,
+    qartPerfMarkPrefix: params.qartPerfMarkPrefix,
+    qartRequestMark: params.qartRequestMark,
+    qartResultMark: params.qartResultMark,
+    qartRenderMark: params.qartRenderMark,
+    qartComputeMs: params.qartComputeMs,
+    qartResultSource: params.qartResultSource,
+  });
+  params.setQArtPerfSnapshot({
+    source: params.qartResultSource,
+    computeMs: params.qartComputeMs,
+    renderMs: qartRenderMs,
+    previewMs: qartPreviewMs,
+    version: params.qartResultVersion,
+    maskPattern: params.qartResultMaskPattern,
+  });
+
+  updateQrMatrixFromResult({
+    usedWorkerBitmapRender: params.usedWorkerBitmapRender,
+    workerPackedMatrix: params.workerPackedMatrix,
+    qartResultSource: params.qartResultSource,
+    qartResultModuleCount: params.qartResultModuleCount,
+    qrPackedMatrixRef: params.qrPackedMatrixRef,
+    setQrMatrix: params.setQrMatrix,
+  });
+
+  params.runValidationIfNeeded(resultCanvas, params.effectiveConfig.content as string);
+  params.setIsRendering(false);
+  params.setIsLoading(false);
+  params.clearGenerationProgress();
+  return { handled: true };
+}
+
+async function runQArtGeneration(params: {
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas;
+  debouncedConfig: Record<string, unknown>;
+  qartAbortController: AbortController;
+  isStaleRequest: () => boolean;
+  yieldForResponsiveness: () => Promise<boolean>;
+  updateGenerationProgress: (stage: string, percent: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => any;
+  translateQArtStage: (s: string) => string;
+  watermark: {
+    enabled: boolean;
+    kind: string;
+    text: string;
+    image: File | null;
+    position: string;
+    opacity: number;
+    blend: string;
+  };
+  canvasRef: { current: HTMLCanvasElement | null };
+  setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
+  qrPackedMatrixRef: { current: { packed: Uint8Array; moduleCount: number } | null };
+  setQrMatrix: (m: boolean[][] | null) => void;
+  setIsRendering: (v: boolean) => void;
+  setIsLoading: (v: boolean) => void;
+  clearGenerationProgress: () => void;
+  qartPreviewBitmapCanvasRef: { current: HTMLCanvasElement | null };
+  effectiveConfig: Record<string, unknown>;
+  runValidationIfNeeded: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    content: string | undefined
+  ) => void;
+  setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
+  requestId: number;
+}): Promise<{ handled: boolean }> {
+  const qartModule = await loadQArtModule();
+  if (params.isStaleRequest()) return { handled: true };
+  params.updateGenerationProgress(
+    params.t('preview.busy.preparingQrArtComputation', 'Preparing QR-Art computation...'),
+    18
+  );
+  log.info('Starting QR-Art generation', {
+    content: (params.debouncedConfig.content as string)?.substring(0, 50),
+    version: params.debouncedConfig.typeNumber,
+    ecc: params.debouncedConfig.errorCorrection,
+  });
+
+  const pipeline = await executeQArtWorkerPipeline({
+    qartModule,
+    overlayCanvas: params.overlayCanvas,
+    debouncedConfig: params.debouncedConfig,
+    qartAbortController: params.qartAbortController,
+    isStaleRequest: params.isStaleRequest,
+    yieldForResponsiveness: params.yieldForResponsiveness,
+    updateGenerationProgress: params.updateGenerationProgress,
+    t: params.t,
+    translateQArtStage: params.translateQArtStage,
+    qartPreviewBitmapCanvasRef: params.qartPreviewBitmapCanvasRef,
+    requestId: params.requestId,
+  });
+
+  if (pipeline.aborted) return { handled: true };
+
+  if (pipeline.useFullQArt && pipeline.fullQArtCanvas) {
+    return deliverQArtResult({
+      fullQArtCanvas: pipeline.fullQArtCanvas,
+      watermark: params.watermark,
+      isStaleRequest: params.isStaleRequest,
+      canvasRef: params.canvasRef,
+      setCanvas: params.setCanvas,
+      updateGenerationProgress: params.updateGenerationProgress,
+      t: params.t,
+      qartRequestMarked: pipeline.qartRequestMarked,
+      qartPerfMarkPrefix: pipeline.qartPerfMarkPrefix,
+      qartRequestMark: pipeline.qartRequestMark,
+      qartResultMark: pipeline.qartResultMark,
+      qartRenderMark: pipeline.qartRenderMark,
+      qartComputeMs: pipeline.qartComputeMs,
+      qartResultSource: pipeline.qartResultSource,
+      qartResultVersion: pipeline.qartResultVersion,
+      qartResultMaskPattern: pipeline.qartResultMaskPattern,
+      qartResultModuleCount: pipeline.qartResultModuleCount,
+      usedWorkerBitmapRender: pipeline.usedWorkerBitmapRender,
+      workerPackedMatrix: pipeline.workerPackedMatrix,
       qrPackedMatrixRef: params.qrPackedMatrixRef,
       setQrMatrix: params.setQrMatrix,
+      effectiveConfig: params.effectiveConfig,
+      runValidationIfNeeded: params.runValidationIfNeeded,
+      setQArtPerfSnapshot: params.setQArtPerfSnapshot,
+      setIsRendering: params.setIsRendering,
+      setIsLoading: params.setIsLoading,
+      clearGenerationProgress: params.clearGenerationProgress,
     });
-
-    params.runValidationIfNeeded(resultCanvas, params.effectiveConfig.content as string);
-    params.setIsRendering(false);
-    params.setIsLoading(false);
-    params.clearGenerationProgress();
-    return { handled: true };
   }
 
   return { handled: false };
+}
+
+async function handleGenerationError(params: {
+  error: unknown;
+  effectiveConfig: Record<string, unknown>;
+  debouncedConfig: Record<string, unknown>;
+  overlayEnabled: boolean;
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;
+  isStaleRequest: () => boolean;
+  yieldForResponsiveness: () => Promise<boolean>;
+  runGeneratorWithStatus: (
+    cfg: QRGeneratorConfig,
+    overlaySource: HTMLCanvasElement | OffscreenCanvas | null
+  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
+  lastOverflowContentRef: { current: string | null };
+  isOverflowBlockedRef: { current: boolean };
+  setHasOverflowError: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  setIsRendering: (v: boolean) => void;
+  setIsLoading: (v: boolean) => void;
+  clearGenerationProgress: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => any;
+}): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; aborted: boolean }> {
+  const msg = params.error instanceof Error ? params.error.message : '';
+  log.debug('Initial generation failed', {
+    errorMessage: msg,
+    isOverflow: msg.includes('code length overflow'),
+  });
+  if (!msg.includes('code length overflow')) {
+    throw params.error;
+  }
+  const overflowResult = await handleOverflowError({
+    effectiveConfig: params.effectiveConfig,
+    debouncedConfigTypeNumber: params.debouncedConfig.typeNumber as number,
+    runGeneratorWithStatus: params.runGeneratorWithStatus,
+    yieldForResponsiveness: params.yieldForResponsiveness,
+    overlayEnabled: params.overlayEnabled,
+    overlayCanvas: params.overlayCanvas,
+    lastOverflowContentRef: params.lastOverflowContentRef,
+    isOverflowBlockedRef: params.isOverflowBlockedRef,
+    setHasOverflowError: params.setHasOverflowError,
+    setError: params.setError,
+    setIsRendering: params.setIsRendering,
+    setIsLoading: params.setIsLoading,
+    clearGenerationProgress: params.clearGenerationProgress,
+    t: params.t,
+  });
+  if (overflowResult.succeeded) {
+    if (params.isStaleRequest()) return { result: null, aborted: true };
+    log.debug('QR generated using fallback settings due to content length');
+    return { result: overflowResult.result, aborted: false };
+  }
+  return { result: null, aborted: true };
 }
 
 async function runStandardGeneration(params: {
@@ -2378,9 +2571,6 @@ async function runStandardGeneration(params: {
   setIsLoading: (v: boolean) => void;
   clearGenerationProgress: () => void;
 }): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; aborted: boolean }> {
-  let result: HTMLCanvasElement | OffscreenCanvas | null = null;
-  let usedFallback = false;
-
   try {
     log.debug('Attempting QR generation', {
       contentLength: (params.effectiveConfig.content as string)?.length,
@@ -2392,52 +2582,33 @@ async function runStandardGeneration(params: {
       58
     );
     if (await params.yieldForResponsiveness()) return { result: null, aborted: true };
-    result = await params.runGeneratorWithStatus(
+    const result = await params.runGeneratorWithStatus(
       params.effectiveConfig as unknown as QRGeneratorConfig,
       params.overlayEnabled ? params.overlayCanvas : null
     );
     if (params.isStaleRequest()) return { result: null, aborted: true };
     log.debug('Initial generation succeeded');
+    return { result, aborted: false };
   } catch (error_) {
-    const msg = error_ instanceof Error ? error_.message : '';
-    log.debug('Initial generation failed', {
-      errorMessage: msg,
-      isOverflow: msg.includes('code length overflow'),
+    return handleGenerationError({
+      error: error_,
+      effectiveConfig: params.effectiveConfig,
+      debouncedConfig: params.debouncedConfig,
+      overlayEnabled: params.overlayEnabled,
+      overlayCanvas: params.overlayCanvas,
+      isStaleRequest: params.isStaleRequest,
+      yieldForResponsiveness: params.yieldForResponsiveness,
+      runGeneratorWithStatus: params.runGeneratorWithStatus,
+      lastOverflowContentRef: params.lastOverflowContentRef,
+      isOverflowBlockedRef: params.isOverflowBlockedRef,
+      setHasOverflowError: params.setHasOverflowError,
+      setError: params.setError,
+      setIsRendering: params.setIsRendering,
+      setIsLoading: params.setIsLoading,
+      clearGenerationProgress: params.clearGenerationProgress,
+      t: params.t,
     });
-    if (msg.includes('code length overflow')) {
-      const overflowResult = await handleOverflowError({
-        effectiveConfig: params.effectiveConfig,
-        debouncedConfigTypeNumber: params.debouncedConfig.typeNumber as number,
-        runGeneratorWithStatus: params.runGeneratorWithStatus,
-        yieldForResponsiveness: params.yieldForResponsiveness,
-        overlayEnabled: params.overlayEnabled,
-        overlayCanvas: params.overlayCanvas,
-        lastOverflowContentRef: params.lastOverflowContentRef,
-        isOverflowBlockedRef: params.isOverflowBlockedRef,
-        setHasOverflowError: params.setHasOverflowError,
-        setError: params.setError,
-        setIsRendering: params.setIsRendering,
-        setIsLoading: params.setIsLoading,
-        clearGenerationProgress: params.clearGenerationProgress,
-        t: params.t,
-      });
-      if (overflowResult.succeeded) {
-        result = overflowResult.result;
-        if (params.isStaleRequest()) return { result: null, aborted: true };
-        usedFallback = true;
-      } else {
-        return { result: null, aborted: true };
-      }
-    } else {
-      throw error_;
-    }
   }
-
-  if (usedFallback) {
-    log.debug('QR generated using fallback settings due to content length');
-  }
-
-  return { result, aborted: false };
 }
 
 async function finalizeGeneratedCanvas(params: {
@@ -3150,6 +3321,176 @@ async function processAndPostProcessFrame<
     params.setCanvas(latestStoredFrame);
     if (params.canvasRef.current) {
       drawToDisplayCanvas(params.canvasRef.current, latestStoredFrame);
+    }
+  }
+}
+
+function handleGeneratePreChecks(params: {
+  lastOverflowContentRef: { current: string | null };
+  isOverflowBlockedRef: { current: boolean };
+  content: string | undefined;
+  setHasOverflowError: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  clearGenerationProgress: () => void;
+}): { shouldAbort: boolean } {
+  if (checkOverflowContentChanged(params.lastOverflowContentRef.current, params.content)) {
+    log.debug('Content changed from failed content, clearing block');
+    params.lastOverflowContentRef.current = null;
+    params.isOverflowBlockedRef.current = false;
+    params.setHasOverflowError(false);
+    params.setError(null);
+  }
+  if (params.isOverflowBlockedRef.current) {
+    log.debug('generate BLOCKED by overflow ref');
+    params.clearGenerationProgress();
+    return { shouldAbort: true };
+  }
+  return { shouldAbort: false };
+}
+
+async function executeFrameGenerationLoop<
+  W extends {
+    enabled: boolean;
+    kind: string;
+    text: string;
+    image: File | null;
+    position: string;
+    opacity: number;
+    blend: string;
+  },
+>(params: {
+  frames: (HTMLCanvasElement | OffscreenCanvas)[];
+  framesToProcess: AnimationFrame[];
+  isRunCancelled: () => boolean;
+  yieldCtrl: YieldController;
+  gifCompositor: GifCompositor | null;
+  updateGenerationProgress: (stage: string, percent: number) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => any;
+  shouldGenerateBaseAnimation: boolean;
+  hasPattern: boolean;
+  hasJitter: boolean;
+  previewScanConfigBase: QRGeneratorConfig;
+  useTemporalDither: boolean;
+  temporalMode: TemporalDitherMode;
+  animationSeed: number;
+  useCompositor: boolean;
+  effectiveFrameIndices: number[];
+  applyGeometricTransforms: (c: HTMLCanvasElement | OffscreenCanvas) => HTMLCanvasElement;
+  scratchPool: ReturnType<typeof createScratchCanvasPool>;
+  isArtworkMode: boolean;
+  generateArtworkFrame: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    i: number
+  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
+  modulePatternEffects: PatternEffect[];
+  applyModulePatternEphemeral: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number,
+    total: number
+  ) => HTMLCanvasElement | OffscreenCanvas;
+  computeJitter: (fi: number, total: number) => number;
+  moduleJitterPx: number;
+  resultPatternEffects: PatternEffect[];
+  applyResultEphemeral: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number,
+    total: number
+  ) => HTMLCanvasElement | OffscreenCanvas;
+  hasColorCycle: boolean;
+  watermarkConfig: W;
+  watermarkImage: HTMLImageElement | HTMLCanvasElement | null;
+  persistFrameCanvas: (c: HTMLCanvasElement | OffscreenCanvas) => void;
+  setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  getLatestFrame: () => HTMLCanvasElement | OffscreenCanvas | undefined;
+}): Promise<void> {
+  for (let frameIdx = 0; frameIdx < params.framesToProcess.length; frameIdx++) {
+    const frame = params.framesToProcess[frameIdx];
+    params.updateGenerationProgress(
+      params.t('preview.busy.renderingAnimationFrames', 'Rendering the animation frames...'),
+      10 + ((frameIdx + 1) / Math.max(1, params.framesToProcess.length)) * 78
+    );
+    if (params.isRunCancelled()) return;
+
+    if (params.gifCompositor?.canvas instanceof HTMLCanvasElement) {
+      canvasHashCache.delete(params.gifCompositor.canvas);
+    }
+
+    if (await params.yieldCtrl.yieldIfNeeded()) {
+      if (params.isRunCancelled()) return;
+    }
+
+    try {
+      await processAndPostProcessFrame({
+        frameIdx,
+        frame,
+        framesToProcessLength: params.framesToProcess.length,
+        shouldGenerateBaseAnimation: params.shouldGenerateBaseAnimation,
+        hasPattern: params.hasPattern,
+        hasJitter: params.hasJitter,
+        previewScanConfigBase: params.previewScanConfigBase,
+        useTemporalDither: params.useTemporalDither,
+        temporalMode: params.temporalMode,
+        animationSeed: params.animationSeed,
+        useCompositor: params.useCompositor,
+        gifCompositor: params.gifCompositor,
+        effectiveFrameIndices: params.effectiveFrameIndices,
+        applyGeometricTransforms: params.applyGeometricTransforms,
+        scratchPool: params.scratchPool,
+        isArtworkMode: params.isArtworkMode,
+        generateArtworkFrame: params.generateArtworkFrame,
+        modulePatternEffects: params.modulePatternEffects,
+        applyModulePatternEphemeral: params.applyModulePatternEphemeral,
+        computeJitter: params.computeJitter,
+        moduleJitterPx: params.moduleJitterPx,
+        resultPatternEffects: params.resultPatternEffects,
+        applyResultEphemeral: params.applyResultEphemeral,
+        hasColorCycle: params.hasColorCycle,
+        watermarkConfig: params.watermarkConfig,
+        watermarkImage: params.watermarkImage,
+        isRunCancelled: params.isRunCancelled,
+        persistFrameCanvas: params.persistFrameCanvas,
+        setCanvas: params.setCanvas,
+        canvasRef: params.canvasRef,
+        getLatestFrame: params.getLatestFrame,
+      });
+    } catch (err) {
+      log.error('Error generating frame', { error: err });
+    }
+  }
+}
+
+function completeAnimationGeneration(params: {
+  frames: (HTMLCanvasElement | OffscreenCanvas)[];
+  isRunCancelled: () => boolean;
+  replaceAnimationFrames: (frames: (HTMLCanvasElement | OffscreenCanvas)[]) => void;
+  setIsAnimationCacheReady: (v: boolean) => void;
+  setIsLoading: (v: boolean) => void;
+  setIsLoadingOverlay: (v: boolean) => void;
+  clearGenerationProgress: () => void;
+  setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
+  canvasRef: { current: HTMLCanvasElement | null };
+}): void {
+  if (params.isRunCancelled()) return;
+
+  log.debug('animation cache: complete', {
+    totalFrames: params.frames.length,
+    firstFrameSize: params.frames[0]
+      ? { w: params.frames[0].width, h: params.frames[0].height }
+      : null,
+  });
+
+  params.replaceAnimationFrames(params.frames);
+  params.setIsAnimationCacheReady(true);
+  params.setIsLoading(false);
+  params.setIsLoadingOverlay(false);
+  params.clearGenerationProgress();
+
+  if (params.frames.length > 0) {
+    params.setCanvas(params.frames[0]);
+    if (params.canvasRef.current) {
+      drawToDisplayCanvas(params.canvasRef.current, params.frames[0]);
     }
   }
 }
@@ -4244,20 +4585,15 @@ function useQRGenerator(): UseQRGeneratorResult {
       errorCorrection: debouncedConfig.errorCorrection,
     });
 
-    if (checkOverflowContentChanged(lastOverflowContentRef.current, debouncedConfig.content)) {
-      log.debug('Content changed from failed content, clearing block');
-      lastOverflowContentRef.current = null;
-      isOverflowBlockedRef.current = false;
-      setHasOverflowError(false);
-      setError(null);
-    }
-
-    // Now check if we're still blocked (same content that previously failed)
-    if (isOverflowBlockedRef.current) {
-      log.debug('generate BLOCKED by overflow ref');
-      clearGenerationProgress();
-      return;
-    }
+    const preCheckResult = handleGeneratePreChecks({
+      lastOverflowContentRef,
+      isOverflowBlockedRef,
+      content: debouncedConfig.content,
+      setHasOverflowError,
+      setError,
+      clearGenerationProgress,
+    });
+    if (preCheckResult.shouldAbort) return;
 
     activeQArtRequestAbortRef.current?.abort();
     const qartAbortController = new AbortController();
@@ -5079,60 +5415,41 @@ function useQRGenerator(): UseQRGeneratorResult {
           isRunCancelled,
         });
 
-      for (let frameIdx = 0; frameIdx < framesToProcess.length; frameIdx++) {
-        const frame = framesToProcess[frameIdx];
-        updateGenerationProgress(
-          t('preview.busy.renderingAnimationFrames', 'Rendering the animation frames...'),
-          10 + ((frameIdx + 1) / Math.max(1, framesToProcess.length)) * 78
-        );
-        if (isRunCancelled()) return;
-
-        if (gifCompositor?.canvas instanceof HTMLCanvasElement) {
-          canvasHashCache.delete(gifCompositor.canvas);
-        }
-
-        if (await yieldCtrl.yieldIfNeeded()) {
-          if (isRunCancelled()) return;
-        }
-
-        try {
-          await processAndPostProcessFrame({
-            frameIdx,
-            frame,
-            framesToProcessLength: framesToProcess.length,
-            shouldGenerateBaseAnimation,
-            hasPattern,
-            hasJitter,
-            previewScanConfigBase,
-            useTemporalDither,
-            temporalMode,
-            animationSeed: animation.seed,
-            useCompositor: !!(useCompositor && gifCompositor),
-            gifCompositor: gifCompositor ?? null,
-            effectiveFrameIndices,
-            applyGeometricTransforms,
-            scratchPool,
-            isArtworkMode,
-            generateArtworkFrame,
-            modulePatternEffects,
-            applyModulePatternEphemeral: applyModulePatternStackEphemeral,
-            computeJitter: computePatternDrivenJitter,
-            moduleJitterPx: animation.moduleJitterPx,
-            resultPatternEffects,
-            applyResultEphemeral: applyResultPatternStackEphemeral,
-            hasColorCycle,
-            watermarkConfig: watermark,
-            watermarkImage,
-            isRunCancelled,
-            persistFrameCanvas,
-            setCanvas,
-            canvasRef,
-            getLatestFrame: () => frames[frames.length - 1],
-          });
-        } catch (err) {
-          log.error('Error generating frame', { error: err });
-        }
-      }
+      await executeFrameGenerationLoop({
+        frames,
+        framesToProcess,
+        isRunCancelled,
+        yieldCtrl,
+        gifCompositor: gifCompositor ?? null,
+        updateGenerationProgress,
+        t,
+        shouldGenerateBaseAnimation,
+        hasPattern,
+        hasJitter,
+        previewScanConfigBase,
+        useTemporalDither,
+        temporalMode,
+        animationSeed: animation.seed,
+        useCompositor: !!(useCompositor && gifCompositor),
+        effectiveFrameIndices,
+        applyGeometricTransforms,
+        scratchPool,
+        isArtworkMode,
+        generateArtworkFrame,
+        modulePatternEffects,
+        applyModulePatternEphemeral: applyModulePatternStackEphemeral,
+        computeJitter: computePatternDrivenJitter,
+        moduleJitterPx: animation.moduleJitterPx,
+        resultPatternEffects,
+        applyResultEphemeral: applyResultPatternStackEphemeral,
+        hasColorCycle,
+        watermarkConfig: watermark,
+        watermarkImage,
+        persistFrameCanvas,
+        setCanvas,
+        canvasRef,
+        getLatestFrame: () => frames[frames.length - 1],
+      });
 
       frames = await finalizeAnimationFrames({
         frames,
@@ -5144,27 +5461,17 @@ function useQRGenerator(): UseQRGeneratorResult {
         t,
       });
 
-      // Only update state if not cancelled
-      if (isRunCancelled()) return;
-
-      log.debug('animation cache: complete', {
-        totalFrames: frames.length,
-        firstFrameSize: frames[0] ? { w: frames[0].width, h: frames[0].height } : null,
+      completeAnimationGeneration({
+        frames,
+        isRunCancelled,
+        replaceAnimationFrames,
+        setIsAnimationCacheReady,
+        setIsLoading,
+        setIsLoadingOverlay,
+        clearGenerationProgress,
+        setCanvas,
+        canvasRef,
       });
-
-      replaceAnimationFrames(frames);
-      setIsAnimationCacheReady(true);
-      setIsLoading(false);
-      setIsLoadingOverlay(false); // Clear overlay loading state when animation cache is ready
-      clearGenerationProgress();
-
-      // Set the first frame as current canvas
-      if (frames.length > 0) {
-        setCanvas(frames[0]);
-        if (canvasRef.current) {
-          drawToDisplayCanvas(canvasRef.current, frames[0]);
-        }
-      }
     };
 
     generateAllFrames();

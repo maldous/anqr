@@ -2247,6 +2247,195 @@ interface AnalyzeInputCardsProps {
   handleCameraCapture: () => void;
 }
 
+interface GeneratorCardButtonProps {
+  t: ReturnType<typeof useTranslation>['t'];
+  isActive: boolean;
+  isLoadingGenerator: boolean;
+  handleAnalyzeGenerator: () => void;
+  isLoading: boolean;
+}
+
+function GeneratorCardActive({
+  t,
+  isLoadingGenerator,
+  handleAnalyzeGenerator,
+  isLoading,
+}: Omit<GeneratorCardButtonProps, 'isActive'>) {
+  return (
+    <button
+      type="button"
+      onClick={handleAnalyzeGenerator}
+      disabled={isLoading}
+      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
+        isLoadingGenerator
+          ? 'border-primary bg-primary/5'
+          : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
+      }`}
+    >
+      {isLoadingGenerator ? (
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      ) : (
+        <QrCode className="w-6 h-6 text-primary" />
+      )}
+      <div className="text-center">
+        <p className="text-sm font-medium text-primary">
+          {t('analyze.useCurrentQr', 'Current QR')}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          {t('analyze.fromGenerator', 'From Generator')}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+function GeneratorCardDisabled({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
+      <QrCode className="w-6 h-6 text-muted-foreground" />
+      <div className="text-center">
+        <p className="text-sm font-medium text-muted-foreground">
+          {t('analyze.useCurrentQr', 'Current QR')}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          {t('analyze.noQrGenerated', 'Generate one first')}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+interface FileUploadCardProps {
+  t: ReturnType<typeof useTranslation>['t'];
+  isLoading: boolean;
+  isLoadingFile: boolean;
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function FileUploadCard({ t, isLoading, isLoadingFile, handleFileUpload }: FileUploadCardProps) {
+  return (
+    <label className="relative group cursor-pointer">
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+        disabled={isLoading}
+      />
+      <div
+        className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full shadow-sm ${
+          isLoadingFile
+            ? 'border-primary bg-primary/5'
+            : 'border-border hover:border-primary hover:bg-primary/5'
+        }`}
+      >
+        {isLoadingFile ? (
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        ) : (
+          <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+        )}
+        <div className="text-center">
+          <p className="text-sm font-medium">{t('analyze.uploadFile', 'Upload')}</p>
+          <p className="text-[10px] text-muted-foreground">
+            {t('analyze.uploadHint', 'Click or drop')}
+          </p>
+        </div>
+      </div>
+    </label>
+  );
+}
+
+interface UrlInputCardProps {
+  t: ReturnType<typeof useTranslation>['t'];
+  isLoading: boolean;
+  isLoadingUrl: boolean;
+  urlInput: string;
+  setUrlInput: (v: string) => void;
+  handleUrlSubmit: () => void;
+}
+
+function UrlInputCard({
+  t,
+  isLoading,
+  isLoadingUrl,
+  urlInput,
+  setUrlInput,
+  handleUrlSubmit,
+}: UrlInputCardProps) {
+  return (
+    <div
+      className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
+        isLoadingUrl ? 'border-primary bg-primary/5' : 'border-border'
+      }`}
+    >
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Link className="w-4 h-4" />
+        <span className="text-sm font-medium">{t('analyze.fromUrl', 'From URL')}</span>
+      </div>
+      <div className="flex gap-1.5">
+        <Input
+          type="url"
+          placeholder="https://..."
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+          disabled={isLoading}
+          className="flex-1 h-8 text-xs"
+        />
+        <Button
+          size="sm"
+          onClick={handleUrlSubmit}
+          disabled={isLoading || !urlInput.trim()}
+          className="h-8 w-8 p-0"
+        >
+          {isLoadingUrl ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface CameraCardButtonProps {
+  t: ReturnType<typeof useTranslation>['t'];
+  isLoading: boolean;
+  isLoadingCamera: boolean;
+  handleCameraCapture: () => void;
+}
+
+function CameraCardButton({
+  t,
+  isLoading,
+  isLoadingCamera,
+  handleCameraCapture,
+}: CameraCardButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={handleCameraCapture}
+      disabled={isLoading}
+      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
+        isLoadingCamera
+          ? 'border-primary bg-primary/5'
+          : 'border-border hover:border-primary hover:bg-primary/5'
+      }`}
+    >
+      {isLoadingCamera ? (
+        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      ) : (
+        <CameraIcon className="w-6 h-6 text-muted-foreground" />
+      )}
+      <div className="text-center">
+        <p className="text-sm font-medium">{t('analyze.captureCamera', 'Photo')}</p>
+        <p className="text-[10px] text-muted-foreground">{t('analyze.cameraHint', 'Camera')}</p>
+      </div>
+    </button>
+  );
+}
+
 function AnalyzeInputCards({
   t,
   generatedCanvas,
@@ -2264,125 +2453,36 @@ function AnalyzeInputCards({
       className={`grid gap-3 ${Capacitor.isNativePlatform() ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`}
     >
       {generatedCanvas ? (
-        <button
-          type="button"
-          onClick={handleAnalyzeGenerator}
-          disabled={isLoading}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-            isLoading && loadingSource === 'generator'
-              ? 'border-primary bg-primary/5'
-              : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
-          }`}
-        >
-          {isLoading && loadingSource === 'generator' ? (
-            <Loader2 className="w-6 h-6 text-primary animate-spin" />
-          ) : (
-            <QrCode className="w-6 h-6 text-primary" />
-          )}
-          <div className="text-center">
-            <p className="text-sm font-medium text-primary">
-              {t('analyze.useCurrentQr', 'Current QR')}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              {t('analyze.fromGenerator', 'From Generator')}
-            </p>
-          </div>
-        </button>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
-          <QrCode className="w-6 h-6 text-muted-foreground" />
-          <div className="text-center">
-            <p className="text-sm font-medium text-muted-foreground">
-              {t('analyze.useCurrentQr', 'Current QR')}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              {t('analyze.noQrGenerated', 'Generate one first')}
-            </p>
-          </div>
-        </div>
-      )}
-      <label className="relative group cursor-pointer">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileUpload}
-          className="hidden"
-          disabled={isLoading}
+        <GeneratorCardActive
+          t={t}
+          isLoadingGenerator={isLoading && loadingSource === 'generator'}
+          handleAnalyzeGenerator={handleAnalyzeGenerator}
+          isLoading={isLoading}
         />
-        <div
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full shadow-sm ${
-            isLoading && loadingSource === 'file'
-              ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-primary hover:bg-primary/5'
-          }`}
-        >
-          {isLoading && loadingSource === 'file' ? (
-            <Loader2 className="w-6 h-6 text-primary animate-spin" />
-          ) : (
-            <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-          )}
-          <div className="text-center">
-            <p className="text-sm font-medium">{t('analyze.uploadFile', 'Upload')}</p>
-            <p className="text-[10px] text-muted-foreground">
-              {t('analyze.uploadHint', 'Click or drop')}
-            </p>
-          </div>
-        </div>
-      </label>
-      <div
-        className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-          isLoading && loadingSource === 'url' ? 'border-primary bg-primary/5' : 'border-border'
-        }`}
-      >
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Link className="w-4 h-4" />
-          <span className="text-sm font-medium">{t('analyze.fromUrl', 'From URL')}</span>
-        </div>
-        <div className="flex gap-1.5">
-          <Input
-            type="url"
-            placeholder="https://..."
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-            disabled={isLoading}
-            className="flex-1 h-8 text-xs"
-          />
-          <Button
-            size="sm"
-            onClick={handleUrlSubmit}
-            disabled={isLoading || !urlInput.trim()}
-            className="h-8 w-8 p-0"
-          >
-            {isLoading && loadingSource === 'url' ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5" />
-            )}
-          </Button>
-        </div>
-      </div>
+      ) : (
+        <GeneratorCardDisabled t={t} />
+      )}
+      <FileUploadCard
+        t={t}
+        isLoading={isLoading}
+        isLoadingFile={isLoading && loadingSource === 'file'}
+        handleFileUpload={handleFileUpload}
+      />
+      <UrlInputCard
+        t={t}
+        isLoading={isLoading}
+        isLoadingUrl={isLoading && loadingSource === 'url'}
+        urlInput={urlInput}
+        setUrlInput={setUrlInput}
+        handleUrlSubmit={handleUrlSubmit}
+      />
       {Capacitor.isNativePlatform() && (
-        <button
-          type="button"
-          onClick={handleCameraCapture}
-          disabled={isLoading}
-          className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-            isLoading && loadingSource === 'camera'
-              ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-primary hover:bg-primary/5'
-          }`}
-        >
-          {isLoading && loadingSource === 'camera' ? (
-            <Loader2 className="w-6 h-6 text-primary animate-spin" />
-          ) : (
-            <CameraIcon className="w-6 h-6 text-muted-foreground" />
-          )}
-          <div className="text-center">
-            <p className="text-sm font-medium">{t('analyze.captureCamera', 'Photo')}</p>
-            <p className="text-[10px] text-muted-foreground">{t('analyze.cameraHint', 'Camera')}</p>
-          </div>
-        </button>
+        <CameraCardButton
+          t={t}
+          isLoading={isLoading}
+          isLoadingCamera={isLoading && loadingSource === 'camera'}
+          handleCameraCapture={handleCameraCapture}
+        />
       )}
     </div>
   );
@@ -2520,6 +2620,927 @@ function AnalyzeResultsHeader({
   );
 }
 
+async function analyzeGeneratorCanvasRobustImpl(
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas
+): Promise<QRAnalysisResult> {
+  const currentFrameResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
+  if (currentFrameResult.success) return currentFrameResult;
+
+  let animationState = globalThis.__ANQR_STATE__;
+  const isAnimatedSource = (animationState?.animationFrameCount ?? 0) > 1;
+  if (isAnimatedSource && !animationState?.isAnimationReady) {
+    animationState = await waitForAnimationReady(8);
+  }
+
+  const cachedFrames =
+    animationState?.isAnimationReady && Array.isArray(animationState.animationFrames)
+      ? animationState.animationFrames
+      : [];
+
+  const frameResult = scanCachedFramesForQR(cachedFrames, animationState?.currentFrame ?? 0);
+  if (frameResult) return frameResult;
+
+  if (isAnimatedSource) {
+    await waitMs(90);
+    const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
+    if (retryResult.success) {
+      const warnings = [...(retryResult.warnings ?? [])];
+      warnings.push('Analyzed using live animation frame retry');
+      return { ...retryResult, warnings };
+    }
+  }
+
+  return currentFrameResult;
+}
+
+interface ExportAnalysisJSONParams {
+  result: QRAnalysisResult;
+  uiTimings: { encodeMs?: number | null; renderMs?: number | null; exportMs?: number | null };
+  analysisSource: AnalysisSourceType;
+  actualUsedVersion: number | null;
+  setUiTimings: React.Dispatch<
+    React.SetStateAction<{
+      encodeMs?: number | null;
+      renderMs?: number | null;
+      exportMs?: number | null;
+    }>
+  >;
+}
+
+function exportAnalysisJSON(params: ExportAnalysisJSONParams): void {
+  const { result, uiTimings, analysisSource, actualUsedVersion, setUiTimings } = params;
+  if (!result.success) return;
+  const exportStartMs = nowMs();
+  const exportData = buildAnalysisExportData(
+    {
+      ...result,
+      timing: {
+        ...result.timing,
+        encodeMs: uiTimings.encodeMs ?? result.timing?.encodeMs ?? null,
+        renderMs: uiTimings.renderMs ?? result.timing?.renderMs ?? null,
+        exportMs: null,
+      },
+    },
+    { source: analysisSource, actualUsedVersion }
+  );
+  const exportMs = Math.round((nowMs() - exportStartMs) * 100) / 100;
+  exportData.analysis.timing = { ...exportData.analysis.timing, exportMs };
+  exportData.diagnostics.summary.exportMs = exportMs;
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  setUiTimings((prev) => ({ ...prev, exportMs }));
+  const filename = `qr-analysis-${Date.now()}.json`;
+  if (Capacitor.isNativePlatform()) {
+    void saveFileNative(filename, blob);
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+interface AnalyzeWarningsProps {
+  warnings: string[];
+}
+
+function AnalyzeWarnings({ warnings }: AnalyzeWarningsProps) {
+  return (
+    <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 shadow-sm">
+      <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+      <div className="text-sm text-amber-700 dark:text-amber-400">
+        {warnings.map((warning, i) => (
+          <p key={i}>• {warning}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface AnalyzeResultDetailsProps {
+  result: QRAnalysisResult;
+  originalImageUrl: string | null;
+  reproducedCanvasRef: React.RefObject<HTMLCanvasElement | null>;
+  combinedTimings: Record<string, number | null | undefined>;
+  imported: boolean;
+  handleImportToGenerator: () => void;
+  handleExportJSON: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function AnalyzeResultDetails({
+  result,
+  originalImageUrl,
+  reproducedCanvasRef,
+  combinedTimings,
+  imported,
+  handleImportToGenerator,
+  handleExportJSON: _handleExportJSON,
+  t,
+}: AnalyzeResultDetailsProps) {
+  return (
+    <>
+      <SummaryBar result={result} />
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="border rounded-lg p-4 bg-card shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <ImageIcon className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Original</span>
+            {result.imageProperties && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                {result.imageProperties.width} × {result.imageProperties.height}
+              </span>
+            )}
+          </div>
+          <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
+            {originalImageUrl ? (
+              <img
+                src={originalImageUrl}
+                alt="Original QR Code"
+                data-testid={DynamicTestId.resolve(
+                  'analyze-original-image',
+                  'analyze-original-image'
+                )}
+                className="max-w-full max-h-full object-contain"
+              />
+            ) : (
+              <div className="text-muted-foreground text-sm">No image</div>
+            )}
+          </div>
+        </div>
+
+        <div className="border rounded-lg p-4 bg-card shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <QrCode className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Reproduced</span>
+            <span className="text-xs text-muted-foreground ml-auto">From Extracted Settings</span>
+          </div>
+          <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
+            <canvas
+              ref={reproducedCanvasRef}
+              data-testid={DynamicTestId.resolve(
+                'analyze-reproduced-canvas',
+                'analyze-reproduced-canvas'
+              )}
+              className="max-w-full max-h-full object-contain"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {result.payload && (
+        <div className="border rounded-lg p-4 bg-card shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Database className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Payload Content</span>
+            <span className="text-xs text-muted-foreground ml-auto mr-2">
+              {result.payload.length} chars
+              {result.payloadBytes && ` · ${result.payloadBytes.length} bytes`}
+            </span>
+            <CopyButton text={result.payload} label="Copy" />
+          </div>
+          <pre className="text-sm font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
+            {result.payload}
+          </pre>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          {result.contentType && (
+            <CollapsibleSection
+              title="Content Analysis"
+              icon={CONTENT_TYPE_ICONS[result.contentType.type] || <QrCode className="w-4 h-4" />}
+              badge={
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                  {result.contentType.label}
+                </span>
+              }
+            >
+              <div className="space-y-2">
+                <DetailRow
+                  label="Content Type"
+                  value={result.contentType.label}
+                  icon={<Fingerprint className="w-3.5 h-3.5" />}
+                />
+                {buildContentTypeDetails(result.contentType, result.payload || '').map(
+                  (detail, i) => (
+                    <DetailRow
+                      key={i}
+                      label={detail.label}
+                      value={detail.value}
+                      icon={detail.icon}
+                    />
+                  )
+                )}
+              </div>
+            </CollapsibleSection>
+          )}
+
+          <CollapsibleSection
+            title="QR Structure"
+            icon={<Grid3x3 className="w-4 h-4" />}
+            testId="analyze-section-qr-structure"
+          >
+            <div className="space-y-2">
+              <DetailRow
+                label="Version"
+                value={
+                  result.version === null
+                    ? '—'
+                    : `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
+                }
+                icon={<Hash className="w-3.5 h-3.5" />}
+              />
+              <DetailRow
+                label="Error Correction"
+                value={
+                  result.eccLevel ? (
+                    <div className="text-right">
+                      <div>Level {result.eccLevel}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
+                      </div>
+                    </div>
+                  ) : (
+                    '—'
+                  )
+                }
+                icon={<Shield className="w-3.5 h-3.5" />}
+              />
+              <DetailRow
+                label="Mask Pattern"
+                value={
+                  result.maskPattern === null ? (
+                    '—'
+                  ) : (
+                    <div className="text-right">
+                      <div>Pattern {result.maskPattern}</div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {MASK_DESCRIPTIONS[result.maskPattern]}
+                      </div>
+                    </div>
+                  )
+                }
+                icon={<Layers className="w-3.5 h-3.5" />}
+              />
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Encoding"
+            icon={<Binary className="w-4 h-4" />}
+            testId="analyze-section-encoding"
+            badge={
+              result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  {result.errorsCorrected} error
+                  {result.errorsCorrected === 1 ? '' : 's'} corrected
+                </span>
+              ) : null
+            }
+          >
+            <div className="space-y-2">
+              <DetailRow
+                label="Mode"
+                value={<span className="capitalize">{result.encodingMode || 'Unknown'}</span>}
+                icon={<Type className="w-3.5 h-3.5" />}
+              />
+              {result.payloadBytes && (
+                <DetailRow
+                  label="Raw Bytes"
+                  value={`${result.payloadBytes.length} bytes`}
+                  icon={<Database className="w-3.5 h-3.5" />}
+                />
+              )}
+              <DetailRow
+                label="RS Error Correction"
+                value={
+                  result.errorsCorrected === null ? (
+                    <span className="text-muted-foreground">Not available</span>
+                  ) : result.errorsCorrected > 0 ? (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      {result.errorsCorrected} error
+                      {result.errorsCorrected === 1 ? '' : 's'} recovered
+                    </span>
+                  ) : (
+                    <span className="text-green-600 dark:text-green-400">No errors detected</span>
+                  )
+                }
+                icon={<Shield className="w-3.5 h-3.5" />}
+              />
+            </div>
+          </CollapsibleSection>
+
+          {result.dataCapacity && (
+            <CollapsibleSection
+              title="Data Capacity"
+              icon={<Database className="w-4 h-4" />}
+              badge={
+                result.dataCapacity.overflow ? (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Detection mismatch
+                  </span>
+                ) : (
+                  <span
+                    className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                      result.dataCapacity.percentage > 90
+                        ? 'bg-red-500/10 text-red-700 dark:text-red-400'
+                        : result.dataCapacity.percentage > 70
+                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                          : 'bg-green-500/10 text-green-700 dark:text-green-400'
+                    }`}
+                  >
+                    {result.dataCapacity.percentage}% used
+                  </span>
+                )
+              }
+            >
+              {result.dataCapacity.overflow ? (
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      Payload ({result.dataCapacity.used} bytes) exceeds detected capacity (
+                      {result.dataCapacity.total} bytes). Version or ECC detection may be
+                      inaccurate.
+                    </span>
+                  </div>
+                  <DetailRow
+                    label="Payload Size"
+                    value={`${result.dataCapacity.used} bytes`}
+                    icon={<Database className="w-3.5 h-3.5" />}
+                  />
+                  <DetailRow
+                    label="Detected Capacity"
+                    value={`${result.dataCapacity.total} bytes`}
+                    icon={<Database className="w-3.5 h-3.5" />}
+                  />
+                </div>
+              ) : (
+                <ProgressBar
+                  value={result.dataCapacity.used}
+                  max={result.dataCapacity.total}
+                  label="Byte Mode Capacity"
+                />
+              )}
+            </CollapsibleSection>
+          )}
+
+          {result.structuralAnalysis && (
+            <CollapsibleSection
+              title="Structural Patterns"
+              icon={<Settings className="w-4 h-4" />}
+              testId="analyze-section-structural-patterns"
+            >
+              <div className="space-y-2">
+                <DetailRow
+                  label="Finder Patterns"
+                  value={
+                    <StatusBadge
+                      status={result.structuralAnalysis.hasFinderPatterns}
+                      trueLabel="Detected"
+                      falseLabel="Missing"
+                    />
+                  }
+                />
+                <DetailRow
+                  label="Timing Patterns"
+                  value={
+                    <StatusBadge
+                      status={result.structuralAnalysis.hasTimingPatterns}
+                      trueLabel="Detected"
+                      falseLabel="Missing"
+                    />
+                  }
+                />
+                <DetailRow
+                  label="Alignment Patterns"
+                  value={
+                    result.structuralAnalysis.hasAlignmentPatterns ? (
+                      <span className="text-sm">
+                        {result.structuralAnalysis.alignmentPatternCount} expected
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">N/A (v1)</span>
+                    )
+                  }
+                />
+              </div>
+            </CollapsibleSection>
+          )}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {result.version !== null && result.eccLevel && (
+            <CollapsibleSection title="Capacity by Mode" icon={<BarChart3 className="w-4 h-4" />}>
+              <CapacityByModeTable
+                version={result.version}
+                eccLevel={result.eccLevel}
+                currentBytes={result.payloadBytes?.length}
+              />
+            </CollapsibleSection>
+          )}
+
+          {result.payload && (
+            <CollapsibleSection
+              title="Encoding Efficiency"
+              icon={<BarChart3 className="w-4 h-4" />}
+            >
+              <EncodingEfficiency
+                payload={result.payload}
+                payloadBytes={result.payloadBytes}
+                encodingMode={result.encodingMode}
+              />
+            </CollapsibleSection>
+          )}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {result.decoderMetadata && (
+            <CollapsibleSection
+              title="Decoder Metadata"
+              icon={<Database className="w-4 h-4" />}
+              testId="analyze-section-decoder-metadata"
+              defaultOpen={true}
+              badge={
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                  Authoritative
+                </span>
+              }
+            >
+              <div className="space-y-2">
+                <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
+                  Raw decoder output - authoritative source for reproduction.
+                </div>
+                <DetailRow
+                  label="Version"
+                  value={
+                    result.decoderMetadata.version === null ? (
+                      <span className="text-red-500">— (not detected)</span>
+                    ) : (
+                      `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
+                    )
+                  }
+                  icon={<Hash className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Mask Pattern"
+                  value={
+                    result.decoderMetadata.maskPattern === null ? (
+                      <span className="text-amber-500">— (not detected)</span>
+                    ) : (
+                      `${result.decoderMetadata.maskPattern}`
+                    )
+                  }
+                  icon={<Layers className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="ECC Level"
+                  value={
+                    result.decoderMetadata.eccLevel ?? (
+                      <span className="text-amber-500">— (not detected)</span>
+                    )
+                  }
+                  icon={<Shield className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Errors Corrected"
+                  value={
+                    result.decoderMetadata.errorsCorrected === null ? (
+                      <span className="text-muted-foreground">0 (clean decode)</span>
+                    ) : result.decoderMetadata.errorsCorrected === 0 ? (
+                      <span className="text-green-600 dark:text-green-400">0 (no errors)</span>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400">
+                        {result.decoderMetadata.errorsCorrected}
+                      </span>
+                    )
+                  }
+                  icon={<Shield className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Erasures"
+                  value={
+                    result.decoderMetadata.erasures === null ? (
+                      <span className="text-muted-foreground">N/A</span>
+                    ) : result.decoderMetadata.erasures === 0 ? (
+                      <span className="text-green-600 dark:text-green-400">0</span>
+                    ) : (
+                      result.decoderMetadata.erasures
+                    )
+                  }
+                  icon={<Shield className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Raw Bits"
+                  value={
+                    result.decoderMetadata.numBits === null ? (
+                      <span className="text-muted-foreground">N/A</span>
+                    ) : (
+                      `${result.decoderMetadata.numBits} bits`
+                    )
+                  }
+                  icon={<Binary className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Orientation"
+                  value={
+                    result.decoderMetadata.orientation !== null &&
+                    result.decoderMetadata.orientation !== 0 ? (
+                      `${result.decoderMetadata.orientation}°`
+                    ) : (
+                      <span className="text-muted-foreground">Standard (0°)</span>
+                    )
+                  }
+                  icon={<Settings className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Structured Append"
+                  value={
+                    result.decoderMetadata.hasStructuredAppend
+                      ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
+                      : 'No'
+                  }
+                  icon={<Layers className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Byte Segments"
+                  value={
+                    result.decoderMetadata.byteSegmentCount > 0
+                      ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
+                      : 'None'
+                  }
+                  icon={<Database className="w-3.5 h-3.5" />}
+                />
+              </div>
+            </CollapsibleSection>
+          )}
+
+          <div className="space-y-4">
+            <CollapsibleSection
+              title={t('analyze.formatInformation', 'Format Information')}
+              icon={<Info className="w-4 h-4" />}
+            >
+              <div className="space-y-2">
+                <DetailRow
+                  label="Module Count"
+                  value={`${result.moduleCount} × ${result.moduleCount}`}
+                  icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                />
+                {result.version !== null && (
+                  <DetailRow
+                    label="Data Modules"
+                    value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
+                    icon={<Database className="w-3.5 h-3.5" />}
+                  />
+                )}
+                {result.eccLevel && (
+                  <DetailRow
+                    label="ECC Description"
+                    value={ECC_DESCRIPTIONS[result.eccLevel].description}
+                    icon={<Info className="w-3.5 h-3.5" />}
+                  />
+                )}
+              </div>
+            </CollapsibleSection>
+
+            {result.imageProperties && (
+              <CollapsibleSection
+                title={t('analyze.imageProperties', 'Image Properties')}
+                icon={<FileImage className="w-4 h-4" />}
+              >
+                <div className="space-y-2">
+                  <DetailRow
+                    label="Image Size"
+                    value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
+                    icon={<ImageIcon className="w-3.5 h-3.5" />}
+                  />
+                  <DetailRow
+                    label="Aspect Ratio"
+                    value={
+                      result.imageProperties.aspectRatio === 1
+                        ? '1:1 (Square)'
+                        : `${result.imageProperties.aspectRatio}:1`
+                    }
+                    icon={<Ratio className="w-3.5 h-3.5" />}
+                  />
+                  {result.imageProperties.estimatedQrSizePx > 0 && (
+                    <DetailRow
+                      label="QR Code Size"
+                      value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
+                      icon={<QrCode className="w-3.5 h-3.5" />}
+                    />
+                  )}
+                  {result.imageProperties.estimatedQrSizePx > 0 &&
+                    result.imageProperties.width > 0 && (
+                      <DetailRow
+                        label="QR Coverage"
+                        value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
+                        icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                      />
+                    )}
+                </div>
+              </CollapsibleSection>
+            )}
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {(combinedTimings.decodeMs !== null && combinedTimings.decodeMs !== undefined) ||
+          (combinedTimings.totalAnalysisMs !== null &&
+            combinedTimings.totalAnalysisMs !== undefined) ||
+          (combinedTimings.encodeMs !== null && combinedTimings.encodeMs !== undefined) ||
+          (combinedTimings.renderMs !== null && combinedTimings.renderMs !== undefined) ||
+          (combinedTimings.exportMs !== null && combinedTimings.exportMs !== undefined) ? (
+            <CollapsibleSection
+              title={t('analyze.processingTimings', 'Processing Timings')}
+              icon={<Timer className="w-4 h-4" />}
+              testId="analyze-section-processing-timings"
+            >
+              <div className="space-y-2">
+                <DetailRow
+                  label="Decode Time"
+                  value={formatMilliseconds(combinedTimings.decodeMs)}
+                  icon={<ScanLine className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Total Analysis Time"
+                  value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
+                  icon={<BarChart3 className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Encode Time"
+                  value={formatMilliseconds(combinedTimings.encodeMs)}
+                  icon={<Code2 className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Render Time"
+                  value={formatMilliseconds(combinedTimings.renderMs)}
+                  icon={<Palette className="w-3.5 h-3.5" />}
+                />
+                <DetailRow
+                  label="Export Time"
+                  value={formatMilliseconds(combinedTimings.exportMs)}
+                  icon={<Download className="w-3.5 h-3.5" />}
+                />
+                {combinedTimings.decodeMs !== null &&
+                  combinedTimings.decodeMs !== undefined &&
+                  combinedTimings.totalAnalysisMs !== null &&
+                  combinedTimings.totalAnalysisMs !== undefined && (
+                    <DetailRow
+                      label="Non-Decode Overhead"
+                      value={formatMilliseconds(
+                        Math.max(
+                          0,
+                          (combinedTimings.totalAnalysisMs as number) -
+                            (combinedTimings.decodeMs as number)
+                        )
+                      )}
+                      icon={<Settings className="w-3.5 h-3.5" />}
+                    />
+                  )}
+              </div>
+            </CollapsibleSection>
+          ) : null}
+
+          {result.detectedColors && (
+            <CollapsibleSection
+              title="Colors & WCAG Compliance"
+              icon={<Palette className="w-4 h-4" />}
+              badge={<WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />}
+            >
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <ColorSwatch color={result.detectedColors.foreground} label="Foreground" />
+                  <div className="flex flex-col items-center">
+                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">contrast</span>
+                  </div>
+                  <ColorSwatch color={result.detectedColors.background} label="Background" />
+                </div>
+
+                {result.dominantColors && result.dominantColors.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Dominant Palette
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {result.dominantColors.map((entry, idx) => (
+                        <div key={`${entry.color}-${idx}`} className="p-2 rounded-md bg-muted/50">
+                          <ColorSwatch
+                            color={entry.color}
+                            label={`#${idx + 1} • ${entry.percentage}%`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">WCAG Compliance</span>
+                    <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div
+                      className={`p-2 rounded ${
+                        result.detectedColors.contrastRatio >= 3
+                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                          : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                      }`}
+                    >
+                      <div className="font-bold">AA-Large</div>
+                      <div className="text-[10px]">≥3:1</div>
+                    </div>
+                    <div
+                      className={`p-2 rounded ${
+                        result.detectedColors.contrastRatio >= 4.5
+                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                          : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                      }`}
+                    >
+                      <div className="font-bold">AA</div>
+                      <div className="text-[10px]">≥4.5:1</div>
+                    </div>
+                    <div
+                      className={`p-2 rounded ${
+                        result.detectedColors.contrastRatio >= 7
+                          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                          : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                      }`}
+                    >
+                      <div className="font-bold">AAA</div>
+                      <div className="text-[10px]">≥7:1</div>
+                    </div>
+                  </div>
+                </div>
+
+                <DetailRow
+                  label="Contrast Ratio"
+                  value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
+                  icon={<Eye className="w-3.5 h-3.5" />}
+                />
+              </div>
+            </CollapsibleSection>
+          )}
+
+          <CollapsibleSection
+            title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
+            icon={<Ruler className="w-4 h-4" />}
+            testId="analyze-section-spatial-analysis"
+          >
+            <div className="space-y-2">
+              {result.estimatedModulePx !== null && (
+                <DetailRow
+                  label="Module Size"
+                  value={`~${result.estimatedModulePx} px`}
+                  icon={<Square className="w-3.5 h-3.5" />}
+                />
+              )}
+              {result.estimatedModulePx !== null && (
+                <DetailRow
+                  label="Scan Module Size"
+                  value={
+                    <StatusBadge
+                      status={result.estimatedModulePx >= 3}
+                      trueLabel="Scan-safe"
+                      falseLabel="Too small"
+                    />
+                  }
+                  icon={<ScanLine className="w-3.5 h-3.5" />}
+                />
+              )}
+              {result.geometry && (
+                <>
+                  <DetailRow
+                    label="Rotation"
+                    value={`${result.geometry.estimatedRotationDeg.toFixed(1)}°`}
+                    icon={<Ruler className="w-3.5 h-3.5" />}
+                  />
+                  <DetailRow
+                    label="Bounding Box"
+                    value={`${Math.round(result.geometry.boundingBox.width)} × ${Math.round(result.geometry.boundingBox.height)} px`}
+                    icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                  />
+                </>
+              )}
+              {result.quietZone && (
+                <>
+                  <DetailRow
+                    label={t('safety.quietZone', 'Quiet Zone')}
+                    value={
+                      <StatusBadge
+                        status={result.quietZone.adequate}
+                        trueLabel="Adequate"
+                        falseLabel="Insufficient"
+                      />
+                    }
+                    icon={<Square className="w-3.5 h-3.5" />}
+                  />
+                  <div className="grid grid-cols-4 gap-1 text-center mt-2">
+                    <div className="p-2 rounded bg-muted/50">
+                      <div className="text-sm font-mono">{result.quietZone.top}</div>
+                      <div className="text-[10px] text-muted-foreground">Top</div>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50">
+                      <div className="text-sm font-mono">{result.quietZone.right}</div>
+                      <div className="text-[10px] text-muted-foreground">Right</div>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50">
+                      <div className="text-sm font-mono">{result.quietZone.bottom}</div>
+                      <div className="text-[10px] text-muted-foreground">Bottom</div>
+                    </div>
+                    <div className="p-2 rounded bg-muted/50">
+                      <div className="text-sm font-mono">{result.quietZone.left}</div>
+                      <div className="text-[10px] text-muted-foreground">Left</div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </CollapsibleSection>
+        </div>
+
+        <div className="grid md:grid-cols-1 gap-4">
+          {result.payloadBytes && result.payloadBytes.length > 0 && (
+            <CollapsibleSection
+              title="Binary Data (Hex Dump)"
+              icon={<Binary className="w-4 h-4" />}
+              badge={
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                  {result.payloadBytes.length} bytes
+                </span>
+              }
+            >
+              <HexDumpView bytes={result.payloadBytes} maxRows={8} />
+            </CollapsibleSection>
+          )}
+
+          {result.moduleMatrix && result.moduleMatrix.length > 0 && (
+            <CollapsibleSection
+              title="Module Matrix"
+              icon={<Grid3x3 className="w-4 h-4" />}
+              testId="analyze-section-module-matrix"
+              badge={
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                  {result.moduleMatrix.length}×{result.moduleMatrix.length}
+                </span>
+              }
+            >
+              <ModuleMatrixView
+                matrix={result.moduleMatrix}
+                version={result.version}
+                fgColor={result.detectedColors?.foreground}
+                bgColor={result.detectedColors?.background}
+              />
+            </CollapsibleSection>
+          )}
+
+          {result.debugLog && (
+            <CollapsibleSection
+              title="Debug Log"
+              icon={<Settings className="w-4 h-4" />}
+              defaultOpen={false}
+            >
+              <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
+                {result.debugLog}
+              </pre>
+            </CollapsibleSection>
+          )}
+        </div>
+      </div>
+
+      <Button
+        size="lg"
+        className="w-full gap-2 shadow-md"
+        onClick={handleImportToGenerator}
+        disabled={imported}
+      >
+        {imported ? (
+          <>
+            <Check className="w-5 h-5" />
+            {t('analyze.imported', 'Imported!')}
+          </>
+        ) : (
+          <>
+            <ArrowRight className="w-5 h-5" />
+            {t('analyze.importToGenerator', 'Import to Generator')}
+          </>
+        )}
+      </Button>
+    </>
+  );
+}
+
 export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
@@ -2545,39 +3566,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const setRenderFgColor = useQRStore((s) => s.setRenderFgColor);
   const setRenderBgColor = useQRStore((s) => s.setRenderBgColor);
 
-  const analyzeGeneratorCanvasRobust = useCallback(
-    async (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): Promise<QRAnalysisResult> => {
-      const currentFrameResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
-      if (currentFrameResult.success) return currentFrameResult;
-
-      let animationState = globalThis.__ANQR_STATE__;
-      const isAnimatedSource = (animationState?.animationFrameCount ?? 0) > 1;
-      if (isAnimatedSource && !animationState?.isAnimationReady) {
-        animationState = await waitForAnimationReady(8);
-      }
-
-      const cachedFrames =
-        animationState?.isAnimationReady && Array.isArray(animationState.animationFrames)
-          ? animationState.animationFrames
-          : [];
-
-      const frameResult = scanCachedFramesForQR(cachedFrames, animationState?.currentFrame ?? 0);
-      if (frameResult) return frameResult;
-
-      if (isAnimatedSource) {
-        await waitMs(90);
-        const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
-        if (retryResult.success) {
-          const warnings = [...(retryResult.warnings ?? [])];
-          warnings.push('Analyzed using live animation frame retry');
-          return { ...retryResult, warnings };
-        }
-      }
-
-      return currentFrameResult;
-    },
-    []
-  );
+  const analyzeGeneratorCanvasRobust = useCallback(analyzeGeneratorCanvasRobustImpl, []);
 
   const reproState = useReproductionEffect(
     result,
@@ -2681,38 +3670,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   }, [generatedCanvas, hasAutoAnalyzed, result, isLoading, handleAnalyzeGenerator]);
 
   const handleExportJSON = useCallback(() => {
-    if (!result?.success) return;
-    const exportStartMs = nowMs();
-    const exportData = buildAnalysisExportData(
-      {
-        ...result,
-        timing: {
-          ...result.timing,
-          encodeMs: uiTimings.encodeMs ?? result.timing?.encodeMs ?? null,
-          renderMs: uiTimings.renderMs ?? result.timing?.renderMs ?? null,
-          exportMs: null,
-        },
-      },
-      { source: analysisSource, actualUsedVersion }
-    );
-    const exportMs = Math.round((nowMs() - exportStartMs) * 100) / 100;
-    exportData.analysis.timing = { ...exportData.analysis.timing, exportMs };
-    exportData.diagnostics.summary.exportMs = exportMs;
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    reproState.setUiTimings((prev) => ({ ...prev, exportMs }));
-    const filename = `qr-analysis-${Date.now()}.json`;
-    if (Capacitor.isNativePlatform()) {
-      void saveFileNative(filename, blob);
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    if (!result) return;
+    exportAnalysisJSON({
+      result,
+      uiTimings,
+      analysisSource,
+      actualUsedVersion,
+      setUiTimings: reproState.setUiTimings,
+    });
   }, [result, actualUsedVersion, analysisSource, uiTimings, reproState]);
 
   return (
@@ -2754,875 +3719,21 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 t={t}
               />
 
-              {/* Warnings */}
               {result.warnings && result.warnings.length > 0 && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 shadow-sm">
-                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-                  <div className="text-sm text-amber-700 dark:text-amber-400">
-                    {result.warnings.map((warning, i) => (
-                      <p key={i}>• {warning}</p>
-                    ))}
-                  </div>
-                </div>
+                <AnalyzeWarnings warnings={result.warnings} />
               )}
 
               {result.success && (
-                <>
-                  {/* Sticky Summary Bar */}
-                  <SummaryBar result={result} />
-
-                  {/* Side-by-Side Preview */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* Original Image */}
-                    <div className="border rounded-lg p-4 bg-card shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Original</span>
-                        {result.imageProperties && (
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            {result.imageProperties.width} × {result.imageProperties.height}
-                          </span>
-                        )}
-                      </div>
-                      <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                        {originalImageUrl ? (
-                          <img
-                            src={originalImageUrl}
-                            alt="Original QR Code"
-                            data-testid={DynamicTestId.resolve(
-                              'analyze-original-image',
-                              'analyze-original-image'
-                            )}
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        ) : (
-                          <div className="text-muted-foreground text-sm">No image</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Reproduced QR */}
-                    <div className="border rounded-lg p-4 bg-card shadow-sm">
-                      <div className="flex items-center gap-2 mb-3">
-                        <QrCode className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Reproduced</span>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          From Extracted Settings
-                        </span>
-                      </div>
-                      <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                        <canvas
-                          ref={reproducedCanvasRef}
-                          data-testid={DynamicTestId.resolve(
-                            'analyze-reproduced-canvas',
-                            'analyze-reproduced-canvas'
-                          )}
-                          className="max-w-full max-h-full object-contain"
-                          style={{ imageRendering: 'pixelated' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payload Content with Copy */}
-                  {result.payload && (
-                    <div className="border rounded-lg p-4 bg-card shadow-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Database className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-medium">Payload Content</span>
-                        <span className="text-xs text-muted-foreground ml-auto mr-2">
-                          {result.payload.length} chars
-                          {result.payloadBytes && ` · ${result.payloadBytes.length} bytes`}
-                        </span>
-                        <CopyButton text={result.payload} label="Copy" />
-                      </div>
-                      <pre className="text-sm font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
-                        {result.payload}
-                      </pre>
-                    </div>
-                  )}
-
-                  {/* Analysis Sections - Continuous listing */}
-                  <div className="space-y-4">
-                    {/* Content & Structure */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {/* Content Analysis */}
-                      {result.contentType && (
-                        <CollapsibleSection
-                          title="Content Analysis"
-                          icon={
-                            CONTENT_TYPE_ICONS[result.contentType.type] || (
-                              <QrCode className="w-4 h-4" />
-                            )
-                          }
-                          badge={
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                              {result.contentType.label}
-                            </span>
-                          }
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Content Type"
-                              value={result.contentType.label}
-                              icon={<Fingerprint className="w-3.5 h-3.5" />}
-                            />
-                            {buildContentTypeDetails(result.contentType, result.payload || '').map(
-                              (detail, i) => (
-                                <DetailRow
-                                  key={i}
-                                  label={detail.label}
-                                  value={detail.value}
-                                  icon={detail.icon}
-                                />
-                              )
-                            )}
-                            {/* Geo coordinates are now handled in buildContentTypeDetails */}
-                          </div>
-                        </CollapsibleSection>
-                      )}
-
-                      {/* QR Structure */}
-                      <CollapsibleSection
-                        title="QR Structure"
-                        icon={<Grid3x3 className="w-4 h-4" />}
-                        testId="analyze-section-qr-structure"
-                      >
-                        <div className="space-y-2">
-                          <DetailRow
-                            label="Version"
-                            value={
-                              result.version === null
-                                ? '—'
-                                : `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
-                            }
-                            icon={<Hash className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Error Correction"
-                            value={
-                              result.eccLevel ? (
-                                <div className="text-right">
-                                  <div>Level {result.eccLevel}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
-                                  </div>
-                                </div>
-                              ) : (
-                                '—'
-                              )
-                            }
-                            icon={<Shield className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Mask Pattern"
-                            value={
-                              result.maskPattern === null ? (
-                                '—'
-                              ) : (
-                                <div className="text-right">
-                                  <div>Pattern {result.maskPattern}</div>
-                                  <div className="text-xs text-muted-foreground font-mono">
-                                    {MASK_DESCRIPTIONS[result.maskPattern]}
-                                  </div>
-                                </div>
-                              )
-                            }
-                            icon={<Layers className="w-3.5 h-3.5" />}
-                          />
-                        </div>
-                      </CollapsibleSection>
-
-                      {/* Encoding */}
-                      <CollapsibleSection
-                        title="Encoding"
-                        icon={<Binary className="w-4 h-4" />}
-                        testId="analyze-section-encoding"
-                        badge={
-                          result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                              <Shield className="w-3 h-3" />
-                              {result.errorsCorrected} error
-                              {result.errorsCorrected === 1 ? '' : 's'} corrected
-                            </span>
-                          ) : null
-                        }
-                      >
-                        <div className="space-y-2">
-                          <DetailRow
-                            label="Mode"
-                            value={
-                              <span className="capitalize">{result.encodingMode || 'Unknown'}</span>
-                            }
-                            icon={<Type className="w-3.5 h-3.5" />}
-                          />
-                          {result.payloadBytes && (
-                            <DetailRow
-                              label="Raw Bytes"
-                              value={`${result.payloadBytes.length} bytes`}
-                              icon={<Database className="w-3.5 h-3.5" />}
-                            />
-                          )}
-                          <DetailRow
-                            label="RS Error Correction"
-                            value={
-                              result.errorsCorrected === null ? (
-                                <span className="text-muted-foreground">Not available</span>
-                              ) : result.errorsCorrected > 0 ? (
-                                <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                  {result.errorsCorrected} error
-                                  {result.errorsCorrected === 1 ? '' : 's'} recovered
-                                </span>
-                              ) : (
-                                <span className="text-green-600 dark:text-green-400">
-                                  No errors detected
-                                </span>
-                              )
-                            }
-                            icon={<Shield className="w-3.5 h-3.5" />}
-                          />
-                        </div>
-                      </CollapsibleSection>
-
-                      {/* Data Capacity */}
-                      {result.dataCapacity && (
-                        <CollapsibleSection
-                          title="Data Capacity"
-                          icon={<Database className="w-4 h-4" />}
-                          badge={
-                            result.dataCapacity.overflow ? (
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" />
-                                Detection mismatch
-                              </span>
-                            ) : (
-                              <span
-                                className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-                                  result.dataCapacity.percentage > 90
-                                    ? 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                    : result.dataCapacity.percentage > 70
-                                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                                      : 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                }`}
-                              >
-                                {result.dataCapacity.percentage}% used
-                              </span>
-                            )
-                          }
-                        >
-                          {result.dataCapacity.overflow ? (
-                            <div className="space-y-2">
-                              <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
-                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <span>
-                                  Payload ({result.dataCapacity.used} bytes) exceeds detected
-                                  capacity ({result.dataCapacity.total} bytes). Version or ECC
-                                  detection may be inaccurate.
-                                </span>
-                              </div>
-                              <DetailRow
-                                label="Payload Size"
-                                value={`${result.dataCapacity.used} bytes`}
-                                icon={<Database className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Detected Capacity"
-                                value={`${result.dataCapacity.total} bytes`}
-                                icon={<Database className="w-3.5 h-3.5" />}
-                              />
-                            </div>
-                          ) : (
-                            <ProgressBar
-                              value={result.dataCapacity.used}
-                              max={result.dataCapacity.total}
-                              label="Byte Mode Capacity"
-                            />
-                          )}
-                        </CollapsibleSection>
-                      )}
-
-                      {/* Structural Patterns */}
-                      {result.structuralAnalysis && (
-                        <CollapsibleSection
-                          title="Structural Patterns"
-                          icon={<Settings className="w-4 h-4" />}
-                          testId="analyze-section-structural-patterns"
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Finder Patterns"
-                              value={
-                                <StatusBadge
-                                  status={result.structuralAnalysis.hasFinderPatterns}
-                                  trueLabel="Detected"
-                                  falseLabel="Missing"
-                                />
-                              }
-                            />
-                            <DetailRow
-                              label="Timing Patterns"
-                              value={
-                                <StatusBadge
-                                  status={result.structuralAnalysis.hasTimingPatterns}
-                                  trueLabel="Detected"
-                                  falseLabel="Missing"
-                                />
-                              }
-                            />
-                            <DetailRow
-                              label="Alignment Patterns"
-                              value={
-                                result.structuralAnalysis.hasAlignmentPatterns ? (
-                                  <span className="text-sm">
-                                    {result.structuralAnalysis.alignmentPatternCount} expected
-                                  </span>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">N/A (v1)</span>
-                                )
-                              }
-                            />
-                          </div>
-                        </CollapsibleSection>
-                      )}
-                    </div>
-
-                    {/* Technical Section */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {/* Capacity by Mode */}
-                      {result.version !== null && result.eccLevel && (
-                        <CollapsibleSection
-                          title="Capacity by Mode"
-                          icon={<BarChart3 className="w-4 h-4" />}
-                        >
-                          <CapacityByModeTable
-                            version={result.version}
-                            eccLevel={result.eccLevel}
-                            currentBytes={result.payloadBytes?.length}
-                          />
-                        </CollapsibleSection>
-                      )}
-
-                      {/* Encoding Efficiency */}
-                      {result.payload && (
-                        <CollapsibleSection
-                          title="Encoding Efficiency"
-                          icon={<BarChart3 className="w-4 h-4" />}
-                        >
-                          <EncodingEfficiency
-                            payload={result.payload}
-                            payloadBytes={result.payloadBytes}
-                            encodingMode={result.encodingMode}
-                          />
-                        </CollapsibleSection>
-                      )}
-                    </div>
-
-                    {/* Decoder Metadata, Format Info + Image Properties - 2 column layout */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {/* Decoder Raw Metadata - Authoritative source of truth */}
-                      {result.decoderMetadata && (
-                        <CollapsibleSection
-                          title="Decoder Metadata"
-                          icon={<Database className="w-4 h-4" />}
-                          testId="analyze-section-decoder-metadata"
-                          defaultOpen={true}
-                          badge={
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-                              Authoritative
-                            </span>
-                          }
-                        >
-                          <div className="space-y-2">
-                            <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
-                              Raw decoder output - authoritative source for reproduction.
-                            </div>
-                            <DetailRow
-                              label="Version"
-                              value={
-                                result.decoderMetadata.version === null ? (
-                                  <span className="text-red-500">— (not detected)</span>
-                                ) : (
-                                  `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
-                                )
-                              }
-                              icon={<Hash className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Mask Pattern"
-                              value={
-                                result.decoderMetadata.maskPattern === null ? (
-                                  <span className="text-amber-500">— (not detected)</span>
-                                ) : (
-                                  `${result.decoderMetadata.maskPattern}`
-                                )
-                              }
-                              icon={<Layers className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="ECC Level"
-                              value={
-                                result.decoderMetadata.eccLevel ?? (
-                                  <span className="text-amber-500">— (not detected)</span>
-                                )
-                              }
-                              icon={<Shield className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Errors Corrected"
-                              value={
-                                result.decoderMetadata.errorsCorrected === null ? (
-                                  <span className="text-muted-foreground">0 (clean decode)</span>
-                                ) : result.decoderMetadata.errorsCorrected === 0 ? (
-                                  <span className="text-green-600 dark:text-green-400">
-                                    0 (no errors)
-                                  </span>
-                                ) : (
-                                  <span className="text-amber-600 dark:text-amber-400">
-                                    {result.decoderMetadata.errorsCorrected}
-                                  </span>
-                                )
-                              }
-                              icon={<Shield className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Erasures"
-                              value={
-                                result.decoderMetadata.erasures === null ? (
-                                  <span className="text-muted-foreground">N/A</span>
-                                ) : result.decoderMetadata.erasures === 0 ? (
-                                  <span className="text-green-600 dark:text-green-400">0</span>
-                                ) : (
-                                  result.decoderMetadata.erasures
-                                )
-                              }
-                              icon={<Shield className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Raw Bits"
-                              value={
-                                result.decoderMetadata.numBits === null ? (
-                                  <span className="text-muted-foreground">N/A</span>
-                                ) : (
-                                  `${result.decoderMetadata.numBits} bits`
-                                )
-                              }
-                              icon={<Binary className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Orientation"
-                              value={
-                                result.decoderMetadata.orientation !== null &&
-                                result.decoderMetadata.orientation !== 0 ? (
-                                  `${result.decoderMetadata.orientation}°`
-                                ) : (
-                                  <span className="text-muted-foreground">Standard (0°)</span>
-                                )
-                              }
-                              icon={<Settings className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Structured Append"
-                              value={
-                                result.decoderMetadata.hasStructuredAppend
-                                  ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
-                                  : 'No'
-                              }
-                              icon={<Layers className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Byte Segments"
-                              value={
-                                result.decoderMetadata.byteSegmentCount > 0
-                                  ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
-                                  : 'None'
-                              }
-                              icon={<Database className="w-3.5 h-3.5" />}
-                            />
-                          </div>
-                        </CollapsibleSection>
-                      )}
-
-                      {/* Format Info + Image Properties stacked */}
-                      <div className="space-y-4">
-                        <CollapsibleSection
-                          title={t('analyze.formatInformation', 'Format Information')}
-                          icon={<Info className="w-4 h-4" />}
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Module Count"
-                              value={`${result.moduleCount} × ${result.moduleCount}`}
-                              icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                            />
-                            {result.version !== null && (
-                              <DetailRow
-                                label="Data Modules"
-                                value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
-                                icon={<Database className="w-3.5 h-3.5" />}
-                              />
-                            )}
-                            {result.eccLevel && (
-                              <DetailRow
-                                label="ECC Description"
-                                value={ECC_DESCRIPTIONS[result.eccLevel].description}
-                                icon={<Info className="w-3.5 h-3.5" />}
-                              />
-                            )}
-                          </div>
-                        </CollapsibleSection>
-
-                        {/* Image Properties - below Format Info */}
-                        {result.imageProperties && (
-                          <CollapsibleSection
-                            title={t('analyze.imageProperties', 'Image Properties')}
-                            icon={<FileImage className="w-4 h-4" />}
-                          >
-                            <div className="space-y-2">
-                              <DetailRow
-                                label="Image Size"
-                                value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
-                                icon={<ImageIcon className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Aspect Ratio"
-                                value={
-                                  result.imageProperties.aspectRatio === 1
-                                    ? '1:1 (Square)'
-                                    : `${result.imageProperties.aspectRatio}:1`
-                                }
-                                icon={<Ratio className="w-3.5 h-3.5" />}
-                              />
-                              {result.imageProperties.estimatedQrSizePx > 0 && (
-                                <DetailRow
-                                  label="QR Code Size"
-                                  value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
-                                  icon={<QrCode className="w-3.5 h-3.5" />}
-                                />
-                              )}
-                              {result.imageProperties.estimatedQrSizePx > 0 &&
-                                result.imageProperties.width > 0 && (
-                                  <DetailRow
-                                    label="QR Coverage"
-                                    value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
-                                    icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                                  />
-                                )}
-                            </div>
-                          </CollapsibleSection>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Visual Section */}
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {/* Processing Timings */}
-                      {(combinedTimings.decodeMs !== null &&
-                        combinedTimings.decodeMs !== undefined) ||
-                      (combinedTimings.totalAnalysisMs !== null &&
-                        combinedTimings.totalAnalysisMs !== undefined) ||
-                      (combinedTimings.encodeMs !== null &&
-                        combinedTimings.encodeMs !== undefined) ||
-                      (combinedTimings.renderMs !== null &&
-                        combinedTimings.renderMs !== undefined) ||
-                      (combinedTimings.exportMs !== null &&
-                        combinedTimings.exportMs !== undefined) ? (
-                        <CollapsibleSection
-                          title={t('analyze.processingTimings', 'Processing Timings')}
-                          icon={<Timer className="w-4 h-4" />}
-                          testId="analyze-section-processing-timings"
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Decode Time"
-                              value={formatMilliseconds(combinedTimings.decodeMs)}
-                              icon={<ScanLine className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Total Analysis Time"
-                              value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
-                              icon={<BarChart3 className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Encode Time"
-                              value={formatMilliseconds(combinedTimings.encodeMs)}
-                              icon={<Code2 className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Render Time"
-                              value={formatMilliseconds(combinedTimings.renderMs)}
-                              icon={<Palette className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Export Time"
-                              value={formatMilliseconds(combinedTimings.exportMs)}
-                              icon={<Download className="w-3.5 h-3.5" />}
-                            />
-                            {combinedTimings.decodeMs !== null &&
-                              combinedTimings.decodeMs !== undefined &&
-                              combinedTimings.totalAnalysisMs !== null &&
-                              combinedTimings.totalAnalysisMs !== undefined && (
-                                <DetailRow
-                                  label="Non-Decode Overhead"
-                                  value={formatMilliseconds(
-                                    Math.max(
-                                      0,
-                                      combinedTimings.totalAnalysisMs - combinedTimings.decodeMs
-                                    )
-                                  )}
-                                  icon={<Settings className="w-3.5 h-3.5" />}
-                                />
-                              )}
-                          </div>
-                        </CollapsibleSection>
-                      ) : null}
-
-                      {/* Colors & Contrast */}
-                      {result.detectedColors && (
-                        <CollapsibleSection
-                          title="Colors & WCAG Compliance"
-                          icon={<Palette className="w-4 h-4" />}
-                          badge={
-                            <WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />
-                          }
-                        >
-                          <div className="space-y-4">
-                            {/* Color Swatches */}
-                            <div className="flex justify-between items-center">
-                              <ColorSwatch
-                                color={result.detectedColors.foreground}
-                                label="Foreground"
-                              />
-                              <div className="flex flex-col items-center">
-                                <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">contrast</span>
-                              </div>
-                              <ColorSwatch
-                                color={result.detectedColors.background}
-                                label="Background"
-                              />
-                            </div>
-
-                            {result.dominantColors && result.dominantColors.length > 0 && (
-                              <div className="space-y-2">
-                                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                  Dominant Palette
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                  {result.dominantColors.map((entry, idx) => (
-                                    <div
-                                      key={`${entry.color}-${idx}`}
-                                      className="p-2 rounded-md bg-muted/50"
-                                    >
-                                      <ColorSwatch
-                                        color={entry.color}
-                                        label={`#${idx + 1} • ${entry.percentage}%`}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* WCAG Compliance Details */}
-                            <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">WCAG Compliance</span>
-                                <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
-                              </div>
-                              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                                <div
-                                  className={`p-2 rounded ${
-                                    result.detectedColors.contrastRatio >= 3
-                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  }`}
-                                >
-                                  <div className="font-bold">AA-Large</div>
-                                  <div className="text-[10px]">≥3:1</div>
-                                </div>
-                                <div
-                                  className={`p-2 rounded ${
-                                    result.detectedColors.contrastRatio >= 4.5
-                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  }`}
-                                >
-                                  <div className="font-bold">AA</div>
-                                  <div className="text-[10px]">≥4.5:1</div>
-                                </div>
-                                <div
-                                  className={`p-2 rounded ${
-                                    result.detectedColors.contrastRatio >= 7
-                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  }`}
-                                >
-                                  <div className="font-bold">AAA</div>
-                                  <div className="text-[10px]">≥7:1</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <DetailRow
-                              label="Contrast Ratio"
-                              value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
-                              icon={<Eye className="w-3.5 h-3.5" />}
-                            />
-                          </div>
-                        </CollapsibleSection>
-                      )}
-
-                      {/* Spatial Analysis */}
-                      <CollapsibleSection
-                        title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
-                        icon={<Ruler className="w-4 h-4" />}
-                        testId="analyze-section-spatial-analysis"
-                      >
-                        <div className="space-y-2">
-                          {result.estimatedModulePx !== null && (
-                            <DetailRow
-                              label="Module Size"
-                              value={`~${result.estimatedModulePx} px`}
-                              icon={<Square className="w-3.5 h-3.5" />}
-                            />
-                          )}
-                          {result.estimatedModulePx !== null && (
-                            <DetailRow
-                              label="Scan Module Size"
-                              value={
-                                <StatusBadge
-                                  status={result.estimatedModulePx >= 3}
-                                  trueLabel="Scan-safe"
-                                  falseLabel="Too small"
-                                />
-                              }
-                              icon={<ScanLine className="w-3.5 h-3.5" />}
-                            />
-                          )}
-                          {result.geometry && (
-                            <>
-                              <DetailRow
-                                label="Rotation"
-                                value={`${result.geometry.estimatedRotationDeg.toFixed(1)}°`}
-                                icon={<Ruler className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Bounding Box"
-                                value={`${Math.round(result.geometry.boundingBox.width)} × ${Math.round(result.geometry.boundingBox.height)} px`}
-                                icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                              />
-                            </>
-                          )}
-                          {result.quietZone && (
-                            <>
-                              <DetailRow
-                                label={t('safety.quietZone', 'Quiet Zone')}
-                                value={
-                                  <StatusBadge
-                                    status={result.quietZone.adequate}
-                                    trueLabel="Adequate"
-                                    falseLabel="Insufficient"
-                                  />
-                                }
-                                icon={<Square className="w-3.5 h-3.5" />}
-                              />
-                              <div className="grid grid-cols-4 gap-1 text-center mt-2">
-                                <div className="p-2 rounded bg-muted/50">
-                                  <div className="text-sm font-mono">{result.quietZone.top}</div>
-                                  <div className="text-[10px] text-muted-foreground">Top</div>
-                                </div>
-                                <div className="p-2 rounded bg-muted/50">
-                                  <div className="text-sm font-mono">{result.quietZone.right}</div>
-                                  <div className="text-[10px] text-muted-foreground">Right</div>
-                                </div>
-                                <div className="p-2 rounded bg-muted/50">
-                                  <div className="text-sm font-mono">{result.quietZone.bottom}</div>
-                                  <div className="text-[10px] text-muted-foreground">Bottom</div>
-                                </div>
-                                <div className="p-2 rounded bg-muted/50">
-                                  <div className="text-sm font-mono">{result.quietZone.left}</div>
-                                  <div className="text-[10px] text-muted-foreground">Left</div>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </CollapsibleSection>
-                    </div>
-
-                    {/* Advanced Section */}
-                    <div className="grid md:grid-cols-1 gap-4">
-                      {/* Binary/Hex View */}
-                      {result.payloadBytes && result.payloadBytes.length > 0 && (
-                        <CollapsibleSection
-                          title="Binary Data (Hex Dump)"
-                          icon={<Binary className="w-4 h-4" />}
-                          badge={
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
-                              {result.payloadBytes.length} bytes
-                            </span>
-                          }
-                        >
-                          <HexDumpView bytes={result.payloadBytes} maxRows={8} />
-                        </CollapsibleSection>
-                      )}
-
-                      {/* Module Matrix Visualization */}
-                      {result.moduleMatrix && result.moduleMatrix.length > 0 && (
-                        <CollapsibleSection
-                          title="Module Matrix"
-                          icon={<Grid3x3 className="w-4 h-4" />}
-                          testId="analyze-section-module-matrix"
-                          badge={
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
-                              {result.moduleMatrix.length}×{result.moduleMatrix.length}
-                            </span>
-                          }
-                        >
-                          <ModuleMatrixView
-                            matrix={result.moduleMatrix}
-                            version={result.version}
-                            fgColor={result.detectedColors?.foreground}
-                            bgColor={result.detectedColors?.background}
-                          />
-                        </CollapsibleSection>
-                      )}
-
-                      {/* Debug Log */}
-                      {result.debugLog && (
-                        <CollapsibleSection
-                          title="Debug Log"
-                          icon={<Settings className="w-4 h-4" />}
-                          defaultOpen={false}
-                        >
-                          <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
-                            {result.debugLog}
-                          </pre>
-                        </CollapsibleSection>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Import Button - Simplified */}
-                  <Button
-                    size="lg"
-                    className="w-full gap-2 shadow-md"
-                    onClick={handleImportToGenerator}
-                    disabled={imported}
-                  >
-                    {imported ? (
-                      <>
-                        <Check className="w-5 h-5" />
-                        {t('analyze.imported', 'Imported!')}
-                      </>
-                    ) : (
-                      <>
-                        <ArrowRight className="w-5 h-5" />
-                        {t('analyze.importToGenerator', 'Import to Generator')}
-                      </>
-                    )}
-                  </Button>
-                </>
+                <AnalyzeResultDetails
+                  result={result}
+                  originalImageUrl={originalImageUrl}
+                  reproducedCanvasRef={reproducedCanvasRef}
+                  combinedTimings={combinedTimings}
+                  imported={imported}
+                  handleImportToGenerator={handleImportToGenerator}
+                  handleExportJSON={handleExportJSON}
+                  t={t}
+                />
               )}
             </div>
           )}
