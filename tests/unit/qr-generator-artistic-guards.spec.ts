@@ -49,6 +49,6 @@ describe('qr-generator artistic guards', () => {
     const src = read('src/modules/qr-generator/qr-generator-class.ts');
     expect(src).toContain('const fixedVisualPolicy');
     expect(src).toContain('...fixedVisualPolicy');
-    expect(src).toContain('renderScalePerModule: effectiveConfig.renderScalePerModule');
+    expect(src).toContain('renderScalePerModule: config.renderScalePerModule');
   });
 });

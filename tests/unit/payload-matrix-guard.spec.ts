@@ -17,13 +17,11 @@ function extractPayloadKinds(storeSource: string): string[] {
 }
 
 function extractSwitchKinds(storeSource: string): Set<string> {
-  const switchMatch = storeSource.match(
-    /switch \(payload\.kind\) \{([\s\S]*?)\n\s*default:\n\s*return applyTransforms\(payload\.text\);/
-  );
-  if (!switchMatch) {
-    throw new Error('Unable to locate payload.kind switch');
+  const registryMatch = storeSource.match(/const PAYLOAD_SERIALIZERS[^{]*\{([\s\S]*?)\n\};/);
+  if (!registryMatch) {
+    throw new Error('Unable to locate PAYLOAD_SERIALIZERS registry');
   }
-  return new Set([...switchMatch[1].matchAll(/case '([^']+)':/g)].map((m) => m[1]));
+  return new Set([...registryMatch[1].matchAll(/^\s*(\w+):/gm)].map((m) => m[1]));
 }
 
 function extractUIKinds(sectionSource: string): Set<string> {
@@ -34,7 +32,7 @@ function extractTextDrivenKinds(sectionSource: string): Set<string> {
   return new Set(
     [
       ...sectionSource.matchAll(
-        /if \(payload\.kind === '([^']+)'.*?\)\s*\{[\s\S]*?setPayloadText\(/g
+        /if \(payloadKind === '([^']+)'.*?\)\s*\{[\s\S]*?setPayloadText\(/g
       ),
     ].map((m) => m[1])
   );

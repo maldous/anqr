@@ -79,7 +79,9 @@ import prefix from 'loglevel-plugin-prefix';
 
 // Sentry is only functional in the main browser thread (not in Web Workers).
 // Workers lack document/DOM; guard all Sentry calls behind this flag.
-const _isMainThread = document !== undefined;
+// NOTE: typeof is required here — `document` is undeclared in Node/Worker
+// environments, so a bare reference throws ReferenceError.
+const _isMainThread = typeof document !== 'undefined'; // NOSONAR
 
 // Lazy-loaded Sentry reference — null in Worker context to avoid importing
 // @sentry/react (which depends on DOM/React internals) into Worker bundles.
