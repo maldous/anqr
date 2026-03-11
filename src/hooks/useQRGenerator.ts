@@ -3325,6 +3325,49 @@ async function processAndPostProcessFrame<
   }
 }
 
+function handleEmptyContent(params: {
+  trimmedContent: string;
+  isStaleRequest: () => boolean;
+  setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
+  setError: (v: string | null) => void;
+  setIsLoading: (v: boolean) => void;
+  setIsRendering: (v: boolean) => void;
+  clearGenerationProgress: () => void;
+  canvasRef: { current: HTMLCanvasElement | null };
+}): { handled: boolean } {
+  if (params.trimmedContent) return { handled: false };
+  if (params.isStaleRequest()) return { handled: true };
+  params.setCanvas(null);
+  params.setError(null);
+  params.setIsLoading(false);
+  params.setIsRendering(false);
+  params.clearGenerationProgress();
+  clearDisplayCanvas(params.canvasRef.current);
+  return { handled: true };
+}
+
+function cleanupGenerateState(params: {
+  activeQArtRequestAbortRef: { current: AbortController | null };
+  qartAbortController: AbortController;
+  isStaleRequest: () => boolean;
+  setIsRendering: (v: boolean) => void;
+  setIsLoading: (v: boolean) => void;
+  clearGenerationProgress: () => void;
+  error: string | null;
+}): void {
+  if (params.activeQArtRequestAbortRef.current === params.qartAbortController) {
+    params.activeQArtRequestAbortRef.current = null;
+  }
+  if (!params.isStaleRequest()) {
+    params.setIsRendering(false);
+    params.setIsLoading(false);
+    params.clearGenerationProgress();
+    if (!params.error) {
+      dispatchRenderCompleteEvent(true);
+    }
+  }
+}
+
 function handleGeneratePreChecks(params: {
   lastOverflowContentRef: { current: string | null };
   isOverflowBlockedRef: { current: boolean };
@@ -4603,16 +4646,17 @@ function useQRGenerator(): UseQRGeneratorResult {
     const isStaleRequest = (): boolean => generationRequestIdRef.current !== requestId;
 
     const trimmedContent = debouncedConfig.content?.trim() || '';
-    if (!trimmedContent) {
-      if (isStaleRequest()) return;
-      setCanvas(null);
-      setError(null);
-      setIsLoading(false);
-      setIsRendering(false);
-      clearGenerationProgress();
-      clearDisplayCanvas(canvasRef.current);
-      return;
-    }
+    const emptyCheck = handleEmptyContent({
+      trimmedContent,
+      isStaleRequest,
+      setCanvas,
+      setError,
+      setIsLoading,
+      setIsRendering,
+      clearGenerationProgress,
+      canvasRef,
+    });
+    if (emptyCheck.handled) return;
 
     setIsLoading(true);
     setError(null);
@@ -4731,17 +4775,15 @@ function useQRGenerator(): UseQRGeneratorResult {
       clearGenerationProgress();
       dispatchRenderCompleteEvent(false, errorMessage);
     } finally {
-      if (activeQArtRequestAbortRef.current === qartAbortController) {
-        activeQArtRequestAbortRef.current = null;
-      }
-      if (!isStaleRequest()) {
-        setIsRendering(false);
-        setIsLoading(false);
-        clearGenerationProgress();
-        if (!error) {
-          dispatchRenderCompleteEvent(true);
-        }
-      }
+      cleanupGenerateState({
+        activeQArtRequestAbortRef,
+        qartAbortController,
+        isStaleRequest,
+        setIsRendering,
+        setIsLoading,
+        clearGenerationProgress,
+        error,
+      });
     }
   }, [
     debouncedConfig,

@@ -750,6 +750,298 @@ const GALLERY_IMAGES = [
   { id: 'dance', name: 'Dance', url: '/dance.gif', isAnimated: true },
 ];
 
+function OverlayPreviewPanel({
+  overlay,
+  imagePreview,
+  previewContainerRef,
+  cropDrag,
+  cropOverlayStyle,
+  setPreviewImageSize,
+  setOverlayCrop,
+  clearOverlay,
+  t,
+}: {
+  overlay: ReturnType<typeof useQRStore.getState>['overlay'];
+  imagePreview: string | null;
+  previewContainerRef: React.RefObject<HTMLDivElement | null>;
+  cropDrag: ReturnType<typeof useOverlayCropDrag>;
+  cropOverlayStyle: { left: string; top: string; width: string; height: string };
+  setPreviewImageSize: (v: { width: number; height: number } | null) => void;
+  setOverlayCrop: ReturnType<typeof useQRStore.getState>['setOverlayCrop'];
+  clearOverlay: () => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+        <span className="flex-1 text-sm truncate">
+          {overlay.file?.name || (overlay.url ? t('overlay.loadedFromUrl') : t('overlay.noFile'))}
+        </span>
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={clearOverlay}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {overlay.url && !overlay.file?.name && (
+        <div className="text-xs text-muted-foreground truncate px-2">{overlay.url}</div>
+      )}
+
+      {imagePreview && (
+        <div
+          ref={previewContainerRef}
+          role={overlay.cropEnabled ? 'application' : 'img'}
+          aria-label={
+            overlay.cropEnabled
+              ? 'Image preview with crop area selector. Drag to adjust crop position.'
+              : 'Image preview'
+          }
+          {...(overlay.cropEnabled && {
+            tabIndex: 0,
+            onMouseDown: (e: React.MouseEvent) => {
+              e.preventDefault();
+              cropDrag.beginDragAtPoint(e.clientX, e.clientY);
+            },
+            onMouseUp: cropDrag.finishDrag,
+            onMouseLeave: cropDrag.finishDrag,
+            onMouseMove: cropDrag.handleCropDrag,
+            onTouchStart: cropDrag.handleTouchStart,
+            onTouchMove: cropDrag.handleTouchMove,
+            onTouchEnd: cropDrag.handleTouchEnd,
+          })}
+          className="relative w-full aspect-square bg-muted/30 rounded-lg overflow-hidden border cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <img
+            src={imagePreview}
+            alt={t('overlay.preview')}
+            className="w-full h-full object-contain"
+            onLoad={(e) => {
+              const image = e.currentTarget;
+              const width = image.naturalWidth || image.width;
+              const height = image.naturalHeight || image.height;
+              if (width > 0 && height > 0) {
+                setPreviewImageSize({ width, height });
+              }
+            }}
+            draggable={false}
+          />
+
+          {overlay.cropEnabled && (
+            <>
+              <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+              <div
+                className="absolute border-2 border-white shadow-lg pointer-events-none"
+                style={{
+                  left: cropOverlayStyle.left,
+                  top: cropOverlayStyle.top,
+                  width: cropOverlayStyle.width,
+                  height: cropOverlayStyle.height,
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+                }}
+              >
+                <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Move className="h-6 w-6 text-white/70" />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <Label className="text-sm">
+          <HighlightedLabel>{t('overlay.enableCrop')}</HighlightedLabel>
+        </Label>
+        <Switch
+          checked={overlay.cropEnabled}
+          onCheckedChange={(checked) => setOverlayCrop({ enabled: checked })}
+          data-testid={DynamicTestId.resolve('overlay-crop-switch', 'overlay-crop-switch')}
+        />
+      </div>
+
+      {overlay.cropEnabled && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">{t('overlay.cropSize')}</Label>
+            <span className="text-sm text-muted-foreground">
+              {t('qr.nPercent', { count: Math.round(cropDrag.activeCropRegion.size * 100) })}
+            </span>
+          </div>
+          <Slider
+            value={[cropDrag.activeCropRegion.size]}
+            onValueChange={([v]) => {
+              const { halfX, halfY } = cropDrag.getCropHalfExtents(v);
+              setOverlayCrop({
+                region: {
+                  ...overlay.cropRegion,
+                  size: v,
+                  x: Math.max(halfX, Math.min(1 - halfX, overlay.cropRegion.x)),
+                  y: Math.max(halfY, Math.min(1 - halfY, overlay.cropRegion.y)),
+                },
+              });
+            }}
+            min={0.1}
+            max={1}
+            step={0.05}
+            data-testid={DynamicTestId.resolve('overlay-crop-slider', 'overlay-crop-slider')}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OverlaySourcePicker({
+  fileInputRef,
+  cameraError,
+  cameraLoading,
+  showUrlInput,
+  setShowUrlInput,
+  showGalleryPicker,
+  setShowGalleryPicker,
+  galleryLoading,
+  isLoadingUrl,
+  urlInput,
+  setUrlInput,
+  urlError,
+  setUrlError,
+  sourceActions,
+  t,
+}: {
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  cameraError: string | null;
+  cameraLoading: boolean;
+  showUrlInput: boolean;
+  setShowUrlInput: (v: boolean) => void;
+  showGalleryPicker: boolean;
+  setShowGalleryPicker: (v: boolean) => void;
+  galleryLoading: boolean;
+  isLoadingUrl: boolean;
+  urlInput: string;
+  setUrlInput: (v: string) => void;
+  urlError: string | null;
+  setUrlError: (v: string | null) => void;
+  sourceActions: ReturnType<typeof useOverlaySourceActions>;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
+  return (
+    <div className="space-y-2">
+      {cameraError && (
+        <div className="p-2 rounded-md bg-destructive/10 text-destructive text-sm">
+          {cameraError}
+        </div>
+      )}
+      <div className={`grid gap-2 ${Capacitor.isNativePlatform() ? 'grid-cols-4' : 'grid-cols-3'}`}>
+        <Button
+          variant="outline"
+          className="flex flex-col items-center justify-center h-16 p-2"
+          onClick={() => fileInputRef.current?.click()}
+          data-testid={DynamicTestId.resolve('overlay-upload', 'overlay-upload')}
+        >
+          <Upload className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('overlay.upload')}</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="flex flex-col items-center justify-center h-16 p-2"
+          onClick={() => setShowUrlInput(!showUrlInput)}
+          data-testid={DynamicTestId.resolve('overlay-from-url-button', 'overlay-from-url-button')}
+        >
+          <Link className="h-5 w-5 mb-1" />
+          <span className="text-xs">{t('payload.url')}</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="flex flex-col items-center justify-center h-16 p-2"
+          onClick={() => setShowGalleryPicker(!showGalleryPicker)}
+          disabled={galleryLoading}
+          data-testid={DynamicTestId.resolve('overlay-gallery-button', 'overlay-gallery-button')}
+        >
+          {galleryLoading ? (
+            <Loader2 className="h-5 w-5 mb-1 animate-spin" />
+          ) : (
+            <ImageIcon className="h-5 w-5 mb-1" />
+          )}
+          <span className="text-xs">{t('nav.gallery')}</span>
+        </Button>
+        {Capacitor.isNativePlatform() && (
+          <Button
+            variant="outline"
+            className="flex flex-col items-center justify-center h-16 p-2"
+            onClick={sourceActions.handleCameraCapture}
+            disabled={cameraLoading}
+            data-testid={DynamicTestId.resolve('overlay-photo-button', 'overlay-photo-button')}
+          >
+            {cameraLoading ? (
+              <Loader2 className="h-5 w-5 mb-1 animate-spin" />
+            ) : (
+              <CameraIcon className="h-5 w-5 mb-1" />
+            )}
+            <span className="text-xs">{t('overlay.photo')}</span>
+          </Button>
+        )}
+      </div>
+
+      {showGalleryPicker && (
+        <div className="space-y-2 p-3 border rounded-md bg-muted/30">
+          <Label className="text-sm">{t('overlay.selectImage')}</Label>
+          <div className="grid grid-cols-2 gap-2">
+            {GALLERY_IMAGES.map((img) => (
+              <button
+                key={img.id}
+                type="button"
+                onClick={() => sourceActions.loadGalleryImage(img.url)}
+                className="relative aspect-square rounded-md overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary focus:outline-none transition-colors"
+              >
+                <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                  <span className="text-xs text-white font-medium">{img.name}</span>
+                  {img.isAnimated && <span className="text-xs text-white/70 ml-1">(GIF)</span>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showUrlInput && (
+        <div className="space-y-2 p-3 border rounded-md bg-muted/30">
+          <Label className="text-sm">{t('overlay.imageUrl')}</Label>
+          <div className="flex gap-2">
+            <Input
+              type="url"
+              placeholder="https://anqr.link/image.gif"
+              value={urlInput}
+              onChange={(e) => {
+                setUrlInput(e.target.value);
+                setUrlError(null);
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && sourceActions.loadFromUrl()}
+              className="flex-1"
+            />
+            <Button
+              onClick={sourceActions.loadFromUrl}
+              disabled={isLoadingUrl || !urlInput.trim()}
+              size="sm"
+              data-testid={DynamicTestId.resolve(
+                'overlay-load-url-button',
+                'overlay-load-url-button'
+              )}
+            >
+              {isLoadingUrl ? <Loader2 className="h-4 w-4 animate-spin" /> : t('overlay.load')}
+            </Button>
+          </div>
+          {urlError && <p className="text-xs text-destructive">{urlError}</p>}
+          <p className="text-xs text-muted-foreground">{t('overlay.corsNote')}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function OverlaySection() {
   const {
     tier,
@@ -857,273 +1149,35 @@ export function OverlaySection() {
           className="hidden"
         />
         {overlay.file || overlay.url ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
-              <span className="flex-1 text-sm truncate">
-                {overlay.file?.name ||
-                  (overlay.url ? t('overlay.loadedFromUrl') : t('overlay.noFile'))}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={sourceActions.clearOverlay}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Show source URL if loaded from URL */}
-            {overlay.url && !overlay.file?.name && (
-              <div className="text-xs text-muted-foreground truncate px-2">{overlay.url}</div>
-            )}
-
-            {/* Image Preview with Square Crop Selector */}
-            {imagePreview && (
-              <div
-                ref={previewContainerRef}
-                role={overlay.cropEnabled ? 'application' : 'img'}
-                aria-label={
-                  overlay.cropEnabled
-                    ? 'Image preview with crop area selector. Drag to adjust crop position.'
-                    : 'Image preview'
-                }
-                {...(overlay.cropEnabled && {
-                  tabIndex: 0,
-                  onMouseDown: (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    cropDrag.beginDragAtPoint(e.clientX, e.clientY);
-                  },
-                  onMouseUp: cropDrag.finishDrag,
-                  onMouseLeave: cropDrag.finishDrag,
-                  onMouseMove: cropDrag.handleCropDrag,
-                  onTouchStart: cropDrag.handleTouchStart,
-                  onTouchMove: cropDrag.handleTouchMove,
-                  onTouchEnd: cropDrag.handleTouchEnd,
-                })}
-                className="relative w-full aspect-square bg-muted/30 rounded-lg overflow-hidden border cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <img
-                  src={imagePreview}
-                  alt={t('overlay.preview')}
-                  className="w-full h-full object-contain"
-                  onLoad={(e) => {
-                    const image = e.currentTarget;
-                    const width = image.naturalWidth || image.width;
-                    const height = image.naturalHeight || image.height;
-                    if (width > 0 && height > 0) {
-                      setPreviewImageSize({ width, height });
-                    }
-                  }}
-                  draggable={false}
-                />
-
-                {/* Square Crop Overlay */}
-                {overlay.cropEnabled && (
-                  <>
-                    {/* Darkened area outside crop region */}
-                    <div className="absolute inset-0 bg-black/50 pointer-events-none" />
-
-                    {/* Clear crop region */}
-                    <div
-                      className="absolute border-2 border-white shadow-lg pointer-events-none"
-                      style={{
-                        left: cropOverlayStyle.left,
-                        top: cropOverlayStyle.top,
-                        width: cropOverlayStyle.width,
-                        height: cropOverlayStyle.height,
-                        boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
-                      }}
-                    >
-                      {/* Corner handles */}
-                      <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                      <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-
-                      {/* Center drag indicator */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Move className="h-6 w-6 text-white/70" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Crop Controls */}
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">
-                <HighlightedLabel>{t('overlay.enableCrop')}</HighlightedLabel>
-              </Label>
-              <Switch
-                checked={overlay.cropEnabled}
-                onCheckedChange={(checked) => setOverlayCrop({ enabled: checked })}
-                data-testid={DynamicTestId.resolve('overlay-crop-switch', 'overlay-crop-switch')}
-              />
-            </div>
-
-            {overlay.cropEnabled && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">{t('overlay.cropSize')}</Label>
-                  <span className="text-sm text-muted-foreground">
-                    {t('qr.nPercent', { count: Math.round(cropDrag.activeCropRegion.size * 100) })}
-                  </span>
-                </div>
-                <Slider
-                  value={[cropDrag.activeCropRegion.size]}
-                  onValueChange={([v]) => {
-                    const { halfX, halfY } = cropDrag.getCropHalfExtents(v);
-                    setOverlayCrop({
-                      region: {
-                        ...overlay.cropRegion,
-                        size: v,
-                        x: Math.max(halfX, Math.min(1 - halfX, overlay.cropRegion.x)),
-                        y: Math.max(halfY, Math.min(1 - halfY, overlay.cropRegion.y)),
-                      },
-                    });
-                  }}
-                  min={0.1}
-                  max={1}
-                  step={0.05}
-                  data-testid={DynamicTestId.resolve('overlay-crop-slider', 'overlay-crop-slider')}
-                />
-              </div>
-            )}
-          </div>
+          <OverlayPreviewPanel
+            overlay={overlay}
+            imagePreview={imagePreview}
+            previewContainerRef={previewContainerRef}
+            cropDrag={cropDrag}
+            cropOverlayStyle={cropOverlayStyle}
+            setPreviewImageSize={setPreviewImageSize}
+            setOverlayCrop={setOverlayCrop}
+            clearOverlay={sourceActions.clearOverlay}
+            t={t}
+          />
         ) : (
-          <div className="space-y-2">
-            {/* Camera error toast */}
-            {cameraError && (
-              <div className="p-2 rounded-md bg-destructive/10 text-destructive text-sm">
-                {cameraError}
-              </div>
-            )}
-            <div
-              className={`grid gap-2 ${Capacitor.isNativePlatform() ? 'grid-cols-4' : 'grid-cols-3'}`}
-            >
-              <Button
-                variant="outline"
-                className="flex flex-col items-center justify-center h-16 p-2"
-                onClick={() => fileInputRef.current?.click()}
-                data-testid={DynamicTestId.resolve('overlay-upload', 'overlay-upload')}
-              >
-                <Upload className="h-5 w-5 mb-1" />
-                <span className="text-xs">{t('overlay.upload')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex flex-col items-center justify-center h-16 p-2"
-                onClick={() => setShowUrlInput(!showUrlInput)}
-                data-testid={DynamicTestId.resolve(
-                  'overlay-from-url-button',
-                  'overlay-from-url-button'
-                )}
-              >
-                <Link className="h-5 w-5 mb-1" />
-                <span className="text-xs">{t('payload.url')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex flex-col items-center justify-center h-16 p-2"
-                onClick={() => setShowGalleryPicker(!showGalleryPicker)}
-                disabled={galleryLoading}
-                data-testid={DynamicTestId.resolve(
-                  'overlay-gallery-button',
-                  'overlay-gallery-button'
-                )}
-              >
-                {galleryLoading ? (
-                  <Loader2 className="h-5 w-5 mb-1 animate-spin" />
-                ) : (
-                  <ImageIcon className="h-5 w-5 mb-1" />
-                )}
-                <span className="text-xs">{t('nav.gallery')}</span>
-              </Button>
-              {Capacitor.isNativePlatform() && (
-                <Button
-                  variant="outline"
-                  className="flex flex-col items-center justify-center h-16 p-2"
-                  onClick={sourceActions.handleCameraCapture}
-                  disabled={cameraLoading}
-                  data-testid={DynamicTestId.resolve(
-                    'overlay-photo-button',
-                    'overlay-photo-button'
-                  )}
-                >
-                  {cameraLoading ? (
-                    <Loader2 className="h-5 w-5 mb-1 animate-spin" />
-                  ) : (
-                    <CameraIcon className="h-5 w-5 mb-1" />
-                  )}
-                  <span className="text-xs">{t('overlay.photo')}</span>
-                </Button>
-              )}
-            </div>
-
-            {/* Gallery Picker */}
-            {showGalleryPicker && (
-              <div className="space-y-2 p-3 border rounded-md bg-muted/30">
-                <Label className="text-sm">{t('overlay.selectImage')}</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {GALLERY_IMAGES.map((img) => (
-                    <button
-                      key={img.id}
-                      type="button"
-                      onClick={() => sourceActions.loadGalleryImage(img.url)}
-                      className="relative aspect-square rounded-md overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary focus:outline-none transition-colors"
-                    >
-                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
-                        <span className="text-xs text-white font-medium">{img.name}</span>
-                        {img.isAnimated && (
-                          <span className="text-xs text-white/70 ml-1">(GIF)</span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* URL Input */}
-            {showUrlInput && (
-              <div className="space-y-2 p-3 border rounded-md bg-muted/30">
-                <Label className="text-sm">{t('overlay.imageUrl')}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type="url"
-                    placeholder="https://anqr.link/image.gif"
-                    value={urlInput}
-                    onChange={(e) => {
-                      setUrlInput(e.target.value);
-                      setUrlError(null);
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && sourceActions.loadFromUrl()}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={sourceActions.loadFromUrl}
-                    disabled={isLoadingUrl || !urlInput.trim()}
-                    size="sm"
-                    data-testid={DynamicTestId.resolve(
-                      'overlay-load-url-button',
-                      'overlay-load-url-button'
-                    )}
-                  >
-                    {isLoadingUrl ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      t('overlay.load')
-                    )}
-                  </Button>
-                </div>
-                {urlError && <p className="text-xs text-destructive">{urlError}</p>}
-                <p className="text-xs text-muted-foreground">{t('overlay.corsNote')}</p>
-              </div>
-            )}
-          </div>
+          <OverlaySourcePicker
+            fileInputRef={fileInputRef}
+            cameraError={cameraError}
+            cameraLoading={cameraLoading}
+            showUrlInput={showUrlInput}
+            setShowUrlInput={setShowUrlInput}
+            showGalleryPicker={showGalleryPicker}
+            setShowGalleryPicker={setShowGalleryPicker}
+            galleryLoading={galleryLoading}
+            isLoadingUrl={isLoadingUrl}
+            urlInput={urlInput}
+            setUrlInput={setUrlInput}
+            urlError={urlError}
+            setUrlError={setUrlError}
+            sourceActions={sourceActions}
+            t={t}
+          />
         )}
       </div>
 
