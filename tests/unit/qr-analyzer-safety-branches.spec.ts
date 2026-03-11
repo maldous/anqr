@@ -282,8 +282,12 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
           height: 1,
         });
 
-        // Mock Math.random for deterministic noise
-        vi.spyOn(Math, 'random').mockReturnValue(0.8);
+        // Mock crypto.getRandomValues for deterministic noise
+        vi.spyOn(crypto, 'getRandomValues').mockImplementation((arr) => {
+          const u8 = arr as Uint8Array;
+          for (let i = 0; i < u8.length; i++) u8[i] = 204; // 204/255 ≈ 0.8
+          return arr;
+        });
 
         const input = document.createElement('canvas');
         input.width = 2;
@@ -296,7 +300,14 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
 
       it('clamps pixel values to [0, 255]', () => {
         let callIdx = 0;
-        vi.spyOn(Math, 'random').mockImplementation(() => (callIdx++ % 2 === 0 ? 1.0 : 0.0));
+        vi.spyOn(crypto, 'getRandomValues').mockImplementation((arr) => {
+          const u8 = arr as Uint8Array;
+          for (let i = 0; i < u8.length; i++) {
+            // Alternate: 255 (max positive noise) and 0 (max negative noise)
+            u8[i] = callIdx++ % 2 === 0 ? 255 : 0;
+          }
+          return arr;
+        });
 
         (mockCtx.getImageData as ReturnType<typeof vi.fn>).mockReturnValue({
           data: new Uint8ClampedArray([250, 250, 250, 255, 5, 5, 5, 255]),

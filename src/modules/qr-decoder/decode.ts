@@ -1301,7 +1301,7 @@ function decodeAlphanumeric(bits: BitStream, count: number): string {
  *
  * Text decoding strategy:
  * - Try UTF-8.
- * - If decoding yields replacement characters (�), fall back to ISO-8859-1 (latin1).
+ * - If decoding yields replacement characters (U+FFFD), fall back to ISO-8859-1 (latin1).
  * This matches how many QR generators treat byte mode when no ECI is present.
  */
 function decodeByteDetailed(bits: BitStream, count: number): { text: string; bytes: number[] } {
@@ -1321,7 +1321,7 @@ function decodeByteDetailed(bits: BitStream, count: number): { text: string; byt
   }
 
   // If decoder had to replace invalid sequences, prefer a raw latin1 view.
-  if (utf8Text.includes('�')) {
+  if (utf8Text.includes('\uFFFD')) {
     const latin1 = String.fromCodePoint(...bytes);
     return { text: latin1, bytes };
   }

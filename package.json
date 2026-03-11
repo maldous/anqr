@@ -23,7 +23,7 @@
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
     "test:unit": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100% --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts'",
-    "test:unit:coverage": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100% --coverage --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-dithered-scan-gate.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts'",
+    "test:unit:coverage": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100% --coverage --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-dithered-scan-gate.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts' --exclude 'tests/unit/netlify-qr-function.spec.ts' --exclude 'tests/unit/netlify-qr-function-error.spec.ts' --exclude 'tests/unit/netlify-qr-helpers.spec.ts' --exclude 'tests/unit/netlify-qr-gif-disposal.spec.ts' --exclude 'tests/unit/payload-matrix-guard.spec.ts' --exclude 'tests/unit/qr-generator-artistic-guards.spec.ts'",
     "test:coverage:gap": "node scripts/report-code-coverage-gap.js",
     "test:unit:watch": "NODE_OPTIONS='--no-experimental-webstorage' vitest",
     "test:unit:ci": "npm run test:unit",
