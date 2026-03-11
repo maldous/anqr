@@ -195,7 +195,7 @@ function applyQrEncodingParams(params: Partial<ShareConfig>, store: StoreState):
     useQRStore.setState((s) => ({ qr: { ...s.qr, quietZoneMinEnforce: false } }));
 }
 
-function applyRenderStyleParams(params: Partial<ShareConfig>, store: StoreState): void {
+function applyRenderBasicStyles(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.fg) store.setRenderFgColor(params.fg);
   if (params.bg) store.setRenderBgColor(params.bg);
   if (params.transparent) store.setRenderBgTransparent(true);
@@ -216,6 +216,9 @@ function applyRenderStyleParams(params: Partial<ShareConfig>, store: StoreState)
     }
     store.setRenderGradient(gradientUpdate);
   }
+}
+
+function applyRenderEyeAndFrameStyles(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.eyeOuterStyle)
     useQRStore.setState((s) => ({
       render: {
@@ -245,6 +248,9 @@ function applyRenderStyleParams(params: Partial<ShareConfig>, store: StoreState)
     useQRStore.setState((s) => ({
       render: { ...s.render, pixelSnap: params.pixelSnap as 'floor' | 'round' | 'ceil' },
     }));
+}
+
+function applyRenderColorAndPaletteStyles(params: Partial<ShareConfig>): void {
   if (params.perModuleColorMode)
     useQRStore.setState((s) => ({
       render: {
@@ -284,7 +290,7 @@ function applyRenderStyleParams(params: Partial<ShareConfig>, store: StoreState)
     }));
 }
 
-function applyOverlayBasicParams(params: Partial<ShareConfig>, store: StoreState): void {
+function applyOverlayTransformParams(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.mode) store.setOverlayMode(params.mode as any);
   if (params.intensity !== undefined) store.setOverlayIntensity(params.intensity);
   if (params.fit) store.setOverlayFit(params.fit as 'cover' | 'contain' | 'stretch');
@@ -298,6 +304,9 @@ function applyOverlayBasicParams(params: Partial<ShareConfig>, store: StoreState
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, protectFormatInfo: true } }));
   if (params.protectVersionInfo)
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, protectVersionInfo: true } }));
+}
+
+function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
   if (params.eccAwareEnabled)
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, eccAwareEnabled: true } }));
   if (params.eccAwareRiskBudget !== undefined)
@@ -441,7 +450,7 @@ function applySubpixelAndHalftoneParams(params: Partial<ShareConfig>): void {
   }
 }
 
-function applyAnimationParams(params: Partial<ShareConfig>, store: StoreState): void {
+function applyAnimationBasicParams(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.speed !== undefined) store.setAnimationSpeedMs(params.speed);
   if (params.loop === false) store.setAnimationLoop(false);
   if (params.reverse) store.setAnimationBounce(true);
@@ -456,6 +465,9 @@ function applyAnimationParams(params: Partial<ShareConfig>, store: StoreState): 
     useQRStore.setState((s) => ({
       animation: { ...s.animation, temporalDither: params.temporalDither as any },
     }));
+}
+
+function applyAnimationPatternParams(params: Partial<ShareConfig>): void {
   if (params.pattern)
     useQRStore.setState((s) => ({
       animation: { ...s.animation, pattern: params.pattern as any },
@@ -492,7 +504,7 @@ function applyAnimationParams(params: Partial<ShareConfig>, store: StoreState): 
     useQRStore.setState((s) => ({ animation: { ...s.animation, seed: params.animationSeed! } }));
 }
 
-function applyOutputParams(params: Partial<ShareConfig>, store: StoreState): void {
+function applyOutputBasicParams(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.format) store.setOutputFormat(params.format as 'png' | 'webp' | 'gif' | 'svg');
   if (params.width !== undefined) store.setOutputWidth(params.width);
   if (params.height !== undefined) store.setOutputHeight(params.height);
@@ -503,7 +515,10 @@ function applyOutputParams(params: Partial<ShareConfig>, store: StoreState): voi
     store.setOutputGifQuantizer(params.gifQuantizer as 'median_cut' | 'neuquant' | 'octree');
   if (params.gifDither)
     useQRStore.setState((s) => ({ output: { ...s.output, gifDither: params.gifDither as any } }));
-  if (params.svgTrueVector) store.setOutputSvgTrueVector(true);
+}
+
+function applyOutputAdvancedParams(params: Partial<ShareConfig>): void {
+  if (params.svgTrueVector) useQRStore.getState().setOutputSvgTrueVector(true);
   if (params.dpi !== undefined)
     useQRStore.setState((s) => ({ output: { ...s.output, dpi: params.dpi! } }));
   if (params.includeQuietZone === false)
@@ -898,13 +913,18 @@ function AppContent() {
 
     applyTierAndPayloadParams(params, store);
     applyQrEncodingParams(params, store);
-    applyRenderStyleParams(params, store);
-    applyOverlayBasicParams(params, store);
+    applyRenderBasicStyles(params, store);
+    applyRenderEyeAndFrameStyles(params, store);
+    applyRenderColorAndPaletteStyles(params);
+    applyOverlayTransformParams(params, store);
+    applyOverlayAdvancedParams(params);
     applyOverlayPreprocessingParams(params, store);
     applyDitheringParams(params, store);
     applySubpixelAndHalftoneParams(params);
-    applyAnimationParams(params, store);
-    applyOutputParams(params, store);
+    applyAnimationBasicParams(params, store);
+    applyAnimationPatternParams(params);
+    applyOutputBasicParams(params, store);
+    applyOutputAdvancedParams(params);
     applySafetyParams(params);
     applyQaAndAutoParams(params);
     applyWatermarkParams(params);
