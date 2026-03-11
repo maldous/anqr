@@ -928,6 +928,41 @@ function computeModuleViolation(
   return { occViolation, centerViolation, toDark };
 }
 
+function scorePixelCandidate(
+  current: boolean,
+  toDark: boolean,
+  inCenter: boolean,
+  d: number,
+  edgeBand: boolean,
+  occViolation: number,
+  centerViolation: number,
+  total: number,
+  centerArea: number,
+  occViolationWeight: number,
+  centerViolationWeight: number,
+  scanScoreWeight: number,
+  artPenaltyWeight: number,
+  edgeBandPenalty: number,
+  centerPixelBonus: number
+): { score: number; scanGain: number } | null {
+  if (toDark === current) return null;
+  const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
+  const centerGain =
+    inCenter && centerViolation > 0
+      ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
+      : 0;
+  const scanGain = occGain + centerGain;
+  if (scanGain <= 0) return null;
+
+  const beforeErr = Math.abs((current ? 1 : 0) - d);
+  const afterErr = Math.abs((toDark ? 1 : 0) - d);
+  const artPenalty = afterErr - beforeErr;
+  const edgePen = edgeBand ? edgeBandPenalty : 0;
+  const centerBonus = inCenter ? centerPixelBonus : 0;
+  const score = scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePen + centerBonus;
+  return { score, scanGain };
+}
+
 function scoreModulePixels(
   ctx: ConstraintCtx,
   mr: number,
@@ -961,27 +996,31 @@ function scoreModulePixels(
       const yy = y0 + y;
       const xx = x0 + x;
       const current = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
-      if (toDark === current) continue;
       const inCenter =
         Math.abs(y - moduleCenter) <= centerRadius && Math.abs(x - moduleCenter) <= centerRadius;
-      const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
-      const centerGain =
-        inCenter && centerViolation > 0
-          ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
-          : 0;
-      const scanGain = occGain + centerGain;
-      if (scanGain <= 0) continue;
-
-      const d = desire[pixelIndex(xx, yy, scaledSize)];
-      const beforeErr = Math.abs((current ? 1 : 0) - d);
-      const afterErr = Math.abs((toDark ? 1 : 0) - d);
-      const artPenalty = afterErr - beforeErr;
       const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
-      const edgePen = edgeBand ? edgeBandPenalty : 0;
-      const centerBonus = inCenter ? centerPixelBonus : 0;
-      const score =
-        scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePen + centerBonus;
-      out.push({ y: yy, x: xx, score, toDark, scanGain });
+      const d = desire[pixelIndex(xx, yy, scaledSize)];
+
+      const result = scorePixelCandidate(
+        current,
+        toDark,
+        inCenter,
+        d,
+        edgeBand,
+        occViolation,
+        centerViolation,
+        total,
+        centerArea,
+        occViolationWeight,
+        centerViolationWeight,
+        scanScoreWeight,
+        artPenaltyWeight,
+        edgeBandPenalty,
+        centerPixelBonus
+      );
+      if (result) {
+        out.push({ y: yy, x: xx, score: result.score, toDark, scanGain: result.scanGain });
+      }
     }
   }
 }

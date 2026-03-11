@@ -585,13 +585,55 @@ export const RS_BLOCKS: Record<string, number[][][]> = {
   ],
 };
 
+interface CodewordBuildState {
+  currentByte: number;
+  bitsRead: number;
+  visitedModules: number;
+  skippedAsFunction: number;
+}
+
+function processCodewordModule(
+  matrix: boolean[][],
+  row: number,
+  currentCol: number,
+  moduleCount: number,
+  version: number,
+  state: CodewordBuildState,
+  codewords: number[],
+  skipCounts: {
+    finder: number;
+    separator: number;
+    timing: number;
+    format: number;
+    version: number;
+    alignment: number;
+    darkModule: number;
+    other: number;
+  }
+): void {
+  state.visitedModules++;
+
+  if (isStructuralModule(row, currentCol, moduleCount, version)) {
+    state.skippedAsFunction++;
+    categorizeSkippedModule(row, currentCol, moduleCount, version, skipCounts);
+    return;
+  }
+
+  state.currentByte = (state.currentByte << 1) | (matrix[row]?.[currentCol] ? 1 : 0);
+  state.bitsRead++;
+
+  if (state.bitsRead === 8) {
+    codewords.push(state.currentByte);
+    state.currentByte = 0;
+    state.bitsRead = 0;
+  }
+}
+
 /**
  * Read codewords from the matrix in the QR-specified zigzag order
  */
 export function readCodewords(matrix: boolean[][], moduleCount: number): number[] {
   const codewords: number[] = [];
-  let currentByte = 0;
-  let bitsRead = 0;
 
   // Diagnostics: verify function-module skipping is correct.
   // If this is wrong, the bitstream shifts and RS will never succeed.
@@ -606,8 +648,12 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     darkModule: 0,
     other: 0,
   };
-  let visitedModules = 0;
-  let skippedAsFunction = 0;
+  const state: CodewordBuildState = {
+    currentByte: 0,
+    bitsRead: 0,
+    visitedModules: 0,
+    skippedAsFunction: 0,
+  };
 
   qrDecoderLog.trace('codewords: Starting codeword extraction', {
     moduleCount,
@@ -627,22 +673,16 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
       row += up ? -1 : 1
     ) {
       for (let c = 0; c < 2; c++) {
-        const currentCol = col - c;
-        visitedModules++;
-
-        if (isStructuralModule(row, currentCol, moduleCount, version)) {
-          skippedAsFunction++;
-          categorizeSkippedModule(row, currentCol, moduleCount, version, skipCounts);
-        } else {
-          currentByte = (currentByte << 1) | (matrix[row]?.[currentCol] ? 1 : 0);
-          bitsRead++;
-
-          if (bitsRead === 8) {
-            codewords.push(currentByte);
-            currentByte = 0;
-            bitsRead = 0;
-          }
-        }
+        processCodewordModule(
+          matrix,
+          row,
+          col - c,
+          moduleCount,
+          version,
+          state,
+          codewords,
+          skipCounts
+        );
       }
     }
     up = !up;
@@ -656,8 +696,8 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
       .map((c) => c.toString(16).padStart(2, '0'))
       .join(' '),
     traversal: {
-      visitedModules,
-      skippedAsFunction,
+      visitedModules: state.visitedModules,
+      skippedAsFunction: state.skippedAsFunction,
       skipCounts,
     },
   });

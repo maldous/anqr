@@ -344,6 +344,45 @@ function computeDitherBlendFlags(context: OverlayModeContext): DitherBlendFlags 
   };
 }
 
+function computeOverlayLightBlendParams(flags: DitherBlendFlags): {
+  maxBlend: number;
+  whiteBase: number;
+  whitePush: number;
+} {
+  if (flags.functionalExtremeBlend) return { maxBlend: 0.62, whiteBase: 0.58, whitePush: 0.32 };
+  if (flags.blendPresFunctionalOverlay && flags.isExtreme)
+    return { maxBlend: 0.42, whiteBase: 0.82, whitePush: 0.18 };
+  if (flags.blendPresFunctionalOverlay) return { maxBlend: 0.36, whiteBase: 0.7, whitePush: 0.3 };
+  if (flags.isExtreme) return { maxBlend: 0.34, whiteBase: 0.82, whitePush: 0.18 };
+  return { maxBlend: 0.25, whiteBase: 0.7, whitePush: 0.3 };
+}
+
+function computeDitherLightBlendParams(isExtreme: boolean): {
+  maxBlend: number;
+  whiteBase: number;
+  whitePush: number;
+} {
+  if (isExtreme) return { maxBlend: 0.28, whiteBase: 0.84, whitePush: 0.14 };
+  return { maxBlend: 0.16, whiteBase: 0.92, whitePush: 0.06 };
+}
+
+function blendLightModuleColor(
+  ditherR: number,
+  ditherG: number,
+  ditherB: number,
+  whiteBase: number,
+  whitePush: number,
+  lightMix: number,
+  bgColor: string,
+  mixScale: number
+): string {
+  const factor = whiteBase + lightMix * whitePush;
+  const lightR = Math.round(ditherR + (255 - ditherR) * factor);
+  const lightG = Math.round(ditherG + (255 - ditherG) * factor);
+  const lightB = Math.round(ditherB + (255 - ditherB) * factor);
+  return blendColors(bgColor, `rgb(${lightR},${lightG},${lightB})`, lightMix * mixScale);
+}
+
 function applyDitherLightModule(
   result: OverlayModeResult,
   flags: DitherBlendFlags,
@@ -353,46 +392,38 @@ function applyDitherLightModule(
   ditherB: number,
   bgColor: string
 ): void {
-  const {
-    isExtreme,
-    blendPresFunctionalOverlay,
-    blendPresFunctionalDither,
-    functionalExtremeBlend,
-  } = flags;
-
   // "overlay" mode keeps unprotected functional light cells image-forward.
   // "dither" mode keeps them integrated but noticeably less pass-through.
-  if (isExtreme || blendPresFunctionalOverlay) {
-    const lightMix = computeLightBlend(
-      effectiveIntensity,
-      functionalExtremeBlend
-        ? 0.62
-        : blendPresFunctionalOverlay
-          ? isExtreme
-            ? 0.42
-            : 0.36
-          : isExtreme
-            ? 0.34
-            : 0.25
+  if (flags.isExtreme || flags.blendPresFunctionalOverlay) {
+    const params = computeOverlayLightBlendParams(flags);
+    const lightMix = computeLightBlend(effectiveIntensity, params.maxBlend);
+    result.moduleColor = blendLightModuleColor(
+      ditherR,
+      ditherG,
+      ditherB,
+      params.whiteBase,
+      params.whitePush,
+      lightMix,
+      bgColor,
+      1
     );
-    const whiteBase = functionalExtremeBlend ? 0.58 : isExtreme ? 0.82 : 0.7;
-    const whitePush = functionalExtremeBlend ? 0.32 : isExtreme ? 0.18 : 0.3;
-    const lightR = Math.round(ditherR + (255 - ditherR) * (whiteBase + lightMix * whitePush));
-    const lightG = Math.round(ditherG + (255 - ditherG) * (whiteBase + lightMix * whitePush));
-    const lightB = Math.round(ditherB + (255 - ditherB) * (whiteBase + lightMix * whitePush));
-    result.moduleColor = blendColors(bgColor, `rgb(${lightR},${lightG},${lightB})`, lightMix);
     result.shouldDrawCell = true;
     return;
   }
 
-  if (!blendPresFunctionalDither) return;
-  const lightMix = computeLightBlend(effectiveIntensity, isExtreme ? 0.28 : 0.16);
-  const whiteBase = isExtreme ? 0.84 : 0.92;
-  const whitePush = isExtreme ? 0.14 : 0.06;
-  const lightR = Math.round(ditherR + (255 - ditherR) * (whiteBase + lightMix * whitePush));
-  const lightG = Math.round(ditherG + (255 - ditherG) * (whiteBase + lightMix * whitePush));
-  const lightB = Math.round(ditherB + (255 - ditherB) * (whiteBase + lightMix * whitePush));
-  result.moduleColor = blendColors(bgColor, `rgb(${lightR},${lightG},${lightB})`, lightMix * 0.5);
+  if (!flags.blendPresFunctionalDither) return;
+  const params = computeDitherLightBlendParams(flags.isExtreme);
+  const lightMix = computeLightBlend(effectiveIntensity, params.maxBlend);
+  result.moduleColor = blendLightModuleColor(
+    ditherR,
+    ditherG,
+    ditherB,
+    params.whiteBase,
+    params.whitePush,
+    lightMix,
+    bgColor,
+    0.5
+  );
   result.shouldDrawCell = true;
 }
 

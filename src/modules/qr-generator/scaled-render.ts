@@ -789,11 +789,41 @@ function renderNonDitheredLightPixel(
   ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
 }
 
+function dispatchPixelRender(
+  pgctx: PixelGridCtx,
+  x: number,
+  y: number,
+  isDark: boolean | undefined,
+  color: PixelColor | null,
+  shouldDrawLightPixel: boolean
+): void {
+  const dx = pgctx.marginPx + x * pgctx.subPixelSize;
+  const dy = pgctx.marginPx + y * pgctx.subPixelSize;
+  const moduleRow = Math.floor(y / pgctx.scale);
+  const moduleCol = Math.floor(x / pgctx.scale);
+  const moduleLocked = pgctx.shouldForceBinaryModule(moduleRow, moduleCol);
+
+  if (!isDark) {
+    if (pgctx.isDitheredMode) {
+      renderDitheredLightPixel(pgctx, x, y, dx, dy, color);
+      return;
+    }
+    if (!shouldDrawLightPixel) return;
+  }
+
+  if (isDark) {
+    if (pgctx.isDitheredMode) {
+      renderDitheredDarkPixel(pgctx, x, y, dx, dy, color, moduleLocked);
+    } else {
+      renderNonDitheredDarkPixel(pgctx, dx, dy, color);
+    }
+  } else {
+    renderNonDitheredLightPixel(pgctx, dx, dy, color);
+  }
+}
+
 function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   const {
-    marginPx,
-    subPixelSize,
-    scale,
     scaledSize,
     matrix,
     colors,
@@ -802,17 +832,16 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
     needsExplicitLightModules,
     useColorRendering,
     debug,
-    shouldForceBinaryModule,
   } = pgctx;
+
+  const shouldDrawLightPixel =
+    !isDitheredMode &&
+    (needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering));
 
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       const isDark = matrix[y]?.[x];
       const color = (colors[y]?.[x] ?? null) as PixelColor | null;
-
-      const shouldDrawLightPixel =
-        !isDitheredMode &&
-        (needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering));
 
       if (
         debug &&
@@ -827,29 +856,7 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
         });
       }
 
-      const dx = marginPx + x * subPixelSize;
-      const dy = marginPx + y * subPixelSize;
-      const moduleRow = Math.floor(y / scale);
-      const moduleCol = Math.floor(x / scale);
-      const moduleLocked = shouldForceBinaryModule(moduleRow, moduleCol);
-
-      if (!isDark) {
-        if (isDitheredMode) {
-          renderDitheredLightPixel(pgctx, x, y, dx, dy, color);
-          continue;
-        }
-        if (!shouldDrawLightPixel) continue;
-      }
-
-      if (isDark) {
-        if (isDitheredMode) {
-          renderDitheredDarkPixel(pgctx, x, y, dx, dy, color, moduleLocked);
-        } else {
-          renderNonDitheredDarkPixel(pgctx, dx, dy, color);
-        }
-      } else {
-        renderNonDitheredLightPixel(pgctx, dx, dy, color);
-      }
+      dispatchPixelRender(pgctx, x, y, isDark, color, shouldDrawLightPixel);
     }
   }
 }

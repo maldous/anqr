@@ -81,6 +81,32 @@ function computeBlockThreshold(
 }
 
 /**
+ * Compute aggregate statistics (sum, min, max) for a single 8×8 block.
+ */
+function computeBlockStats(
+  pixels: Uint8ClampedArray,
+  width: number,
+  xoffset: number,
+  yoffset: number
+): { sum: number; min: number; max: number } {
+  let sum = 0;
+  let min = 255;
+  let max = 0;
+  for (let yy = 0; yy < BLOCK_SIZE; yy++) {
+    for (let xx = 0; xx < BLOCK_SIZE; xx++) {
+      const px = xoffset + xx;
+      const py = yoffset + yy;
+      const idx = (py * width + px) * 4;
+      const gray = computeGrayscale(pixels, idx);
+      sum += gray;
+      if (gray < min) min = gray;
+      if (gray > max) max = gray;
+    }
+  }
+  return { sum, min, max };
+}
+
+/**
  * Calculate per-block black point thresholds for the entire image.
  * This is the core of the HybridBinarizer algorithm.
  *
@@ -116,26 +142,7 @@ function _calculateBlackPoints(
         xoffset = maxXOffset;
       }
 
-      let sum = 0;
-      let min = 255;
-      let max = 0;
-
-      // Process block pixels
-      for (let yy = 0; yy < BLOCK_SIZE; yy++) {
-        for (let xx = 0; xx < BLOCK_SIZE; xx++) {
-          const px = xoffset + xx;
-          const py = yoffset + yy;
-          const idx = (py * width + px) * 4;
-
-          const gray = computeGrayscale(pixels, idx);
-
-          sum += gray;
-          if (gray < min) min = gray;
-          if (gray > max) max = gray;
-        }
-      }
-
-      // Calculate threshold for this block
+      const { sum, min, max } = computeBlockStats(pixels, width, xoffset, yoffset);
       blackPoints[y][x] = computeBlockThreshold(sum, min, max, y, x, blackPoints);
     }
   }

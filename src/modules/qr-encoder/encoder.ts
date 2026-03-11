@@ -70,6 +70,31 @@ function autoDetectTypeNumber(errorCorrectionLevel: number, dataList: QRDataSegm
   return 40;
 }
 
+function placeDataBitInModule(
+  modules: (boolean | null)[][],
+  row: number,
+  col: number,
+  data: number[],
+  maskFunc: (r: number, c: number) => boolean,
+  state: { bitIndex: number; byteIndex: number }
+): void {
+  if (modules[row][col] != null) return;
+
+  let dark = false;
+  if (state.byteIndex < data.length) {
+    dark = ((data[state.byteIndex] >>> state.bitIndex) & 1) === 1;
+  }
+  if (maskFunc(row, col)) {
+    dark = !dark;
+  }
+  modules[row][col] = dark;
+  state.bitIndex -= 1;
+  if (state.bitIndex === -1) {
+    state.byteIndex += 1;
+    state.bitIndex = 7;
+  }
+}
+
 /**
  * Create a QR code instance
  * @param typeNumber QR version (1-40), 0 for auto
@@ -240,9 +265,8 @@ export function qrcode(
   const mapData = (data: number[], maskPattern: number): void => {
     let inc = -1;
     let row = _moduleCount - 1;
-    let bitIndex = 7;
-    let byteIndex = 0;
     const maskFunc = getMaskFunction(maskPattern);
+    const state = { bitIndex: 7, byteIndex: 0 };
 
     let col = _moduleCount - 1;
     while (col > 0) {
@@ -250,27 +274,7 @@ export function qrcode(
 
       while (true) {
         for (let c = 0; c < 2; c += 1) {
-          if (_modules![row][col - c] == null) {
-            let dark = false;
-
-            if (byteIndex < data.length) {
-              dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
-            }
-
-            const mask = maskFunc(row, col - c);
-
-            if (mask) {
-              dark = !dark;
-            }
-
-            _modules![row][col - c] = dark;
-            bitIndex -= 1;
-
-            if (bitIndex === -1) {
-              byteIndex += 1;
-              bitIndex = 7;
-            }
-          }
+          placeDataBitInModule(_modules!, row, col - c, data, maskFunc, state);
         }
 
         row += inc;

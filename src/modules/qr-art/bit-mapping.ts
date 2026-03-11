@@ -176,6 +176,41 @@ interface InterleavingEntry {
   isData: boolean;
 }
 
+function recordDataBitMapping(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number,
+  totalCodewords: number,
+  interleavingMap: InterleavingEntry[],
+  state: { bitIndex: number; byteIndex: number },
+  mappings: BitPixelMapping[]
+): void {
+  if (isStructural(row, col, moduleCount, version)) return;
+  if (state.byteIndex >= totalCodewords) return;
+
+  const globalBitIndex = state.byteIndex * 8 + (7 - state.bitIndex);
+  const interleaveInfo = interleavingMap[state.byteIndex];
+
+  mappings.push({
+    globalBitIndex,
+    byteIndex: state.byteIndex,
+    bitInByte: state.bitIndex,
+    row,
+    col,
+    isData: interleaveInfo?.isData ?? false,
+    rsBlockIndex: interleaveInfo?.rsBlockIndex ?? 0,
+    posInBlock: interleaveInfo?.posInBlock ?? 0,
+    pixelIndex: pixelToIndex(row, col, moduleCount),
+  });
+
+  state.bitIndex -= 1;
+  if (state.bitIndex === -1) {
+    state.byteIndex += 1;
+    state.bitIndex = 7;
+  }
+}
+
 function buildInterleavingMap(rsBlockInfo: RSBlockInfo[]): InterleavingEntry[] {
   const map: InterleavingEntry[] = [];
   const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));
@@ -240,8 +275,7 @@ export function buildBitPixelMap(
 
   // Now simulate the zigzag traversal
   const mappings: BitPixelMapping[] = [];
-  let bitIndex = 7;
-  let byteIndex = 0;
+  const bitState = { bitIndex: 7, byteIndex: 0 };
   let inc = -1; // -1 = moving up, +1 = moving down
   let row = moduleCount - 1;
 
@@ -252,34 +286,16 @@ export function buildBitPixelMap(
 
     while (true) {
       for (let c = 0; c < 2; c++) {
-        const currentCol = col - c;
-
-        // Check if this is a structural module (skip it)
-        if (!isStructural(row, currentCol, moduleCount, version)) {
-          // This is a data/ECC bit position
-          if (byteIndex < totalCodewords) {
-            const globalBitIndex = byteIndex * 8 + (7 - bitIndex);
-            const interleaveInfo = interleavingMap[byteIndex];
-
-            mappings.push({
-              globalBitIndex,
-              byteIndex,
-              bitInByte: bitIndex,
-              row,
-              col: currentCol,
-              isData: interleaveInfo?.isData ?? false,
-              rsBlockIndex: interleaveInfo?.rsBlockIndex ?? 0,
-              posInBlock: interleaveInfo?.posInBlock ?? 0,
-              pixelIndex: pixelToIndex(row, currentCol, moduleCount),
-            });
-
-            bitIndex -= 1;
-            if (bitIndex === -1) {
-              byteIndex += 1;
-              bitIndex = 7;
-            }
-          }
-        }
+        recordDataBitMapping(
+          row,
+          col - c,
+          moduleCount,
+          version,
+          totalCodewords,
+          interleavingMap,
+          bitState,
+          mappings
+        );
       }
 
       row += inc;
