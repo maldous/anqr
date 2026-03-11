@@ -2801,6 +2801,281 @@ function formatRsErrorCorrection(errorsCorrected: number | null) {
   return <span className="text-green-600 dark:text-green-400">No errors detected</span>;
 }
 
+interface AnalyzeVisualGridProps {
+  result: QRAnalysisResult;
+  combinedTimings: Record<string, number | null | undefined>;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function AnalyzeVisualGrid({ result, combinedTimings, t }: AnalyzeVisualGridProps) {
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      {hasAnyTimingData(combinedTimings) ? (
+        <CollapsibleSection
+          title={t('analyze.processingTimings', 'Processing Timings')}
+          icon={<Timer className="w-4 h-4" />}
+          testId="analyze-section-processing-timings"
+        >
+          <div className="space-y-2">
+            <DetailRow
+              label="Decode Time"
+              value={formatMilliseconds(combinedTimings.decodeMs)}
+              icon={<ScanLine className="w-3.5 h-3.5" />}
+            />
+            <DetailRow
+              label="Total Analysis Time"
+              value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
+              icon={<BarChart3 className="w-3.5 h-3.5" />}
+            />
+            <DetailRow
+              label="Encode Time"
+              value={formatMilliseconds(combinedTimings.encodeMs)}
+              icon={<Code2 className="w-3.5 h-3.5" />}
+            />
+            <DetailRow
+              label="Render Time"
+              value={formatMilliseconds(combinedTimings.renderMs)}
+              icon={<Palette className="w-3.5 h-3.5" />}
+            />
+            <DetailRow
+              label="Export Time"
+              value={formatMilliseconds(combinedTimings.exportMs)}
+              icon={<Download className="w-3.5 h-3.5" />}
+            />
+            {combinedTimings.decodeMs !== null &&
+              combinedTimings.decodeMs !== undefined &&
+              combinedTimings.totalAnalysisMs !== null &&
+              combinedTimings.totalAnalysisMs !== undefined && (
+                <DetailRow
+                  label="Non-Decode Overhead"
+                  value={formatMilliseconds(
+                    Math.max(
+                      0,
+                      (combinedTimings.totalAnalysisMs as number) -
+                        (combinedTimings.decodeMs as number)
+                    )
+                  )}
+                  icon={<Settings className="w-3.5 h-3.5" />}
+                />
+              )}
+          </div>
+        </CollapsibleSection>
+      ) : null}
+
+      {result.detectedColors && (
+        <CollapsibleSection
+          title="Colors & WCAG Compliance"
+          icon={<Palette className="w-4 h-4" />}
+          badge={<WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />}
+        >
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <ColorSwatch color={result.detectedColors.foreground} label="Foreground" />
+              <div className="flex flex-col items-center">
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">contrast</span>
+              </div>
+              <ColorSwatch color={result.detectedColors.background} label="Background" />
+            </div>
+
+            {result.dominantColors && result.dominantColors.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Dominant Palette
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {result.dominantColors.map((entry, idx) => (
+                    <div key={`${entry.color}-${idx}`} className="p-2 rounded-md bg-muted/50">
+                      <ColorSwatch
+                        color={entry.color}
+                        label={`#${idx + 1} • ${entry.percentage}%`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">WCAG Compliance</span>
+                <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div
+                  className={`p-2 rounded ${wcagComplianceClass(
+                    result.detectedColors.contrastRatio,
+                    3
+                  )}`}
+                >
+                  <div className="font-bold">AA-Large</div>
+                  <div className="text-[10px]">≥3:1</div>
+                </div>
+                <div
+                  className={`p-2 rounded ${wcagComplianceClass(
+                    result.detectedColors.contrastRatio,
+                    4.5
+                  )}`}
+                >
+                  <div className="font-bold">AA</div>
+                  <div className="text-[10px]">≥4.5:1</div>
+                </div>
+                <div
+                  className={`p-2 rounded ${wcagComplianceClass(
+                    result.detectedColors.contrastRatio,
+                    7
+                  )}`}
+                >
+                  <div className="font-bold">AAA</div>
+                  <div className="text-[10px]">≥7:1</div>
+                </div>
+              </div>
+            </div>
+
+            <DetailRow
+              label="Contrast Ratio"
+              value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
+              icon={<Eye className="w-3.5 h-3.5" />}
+            />
+          </div>
+        </CollapsibleSection>
+      )}
+
+      <CollapsibleSection
+        title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
+        icon={<Ruler className="w-4 h-4" />}
+        testId="analyze-section-spatial-analysis"
+      >
+        <div className="space-y-2">
+          {result.estimatedModulePx !== null && (
+            <DetailRow
+              label="Module Size"
+              value={`~${result.estimatedModulePx} px`}
+              icon={<Square className="w-3.5 h-3.5" />}
+            />
+          )}
+          {result.estimatedModulePx !== null && (
+            <DetailRow
+              label="Scan Module Size"
+              value={
+                <StatusBadge
+                  status={result.estimatedModulePx >= 3}
+                  trueLabel="Scan-safe"
+                  falseLabel="Too small"
+                />
+              }
+              icon={<ScanLine className="w-3.5 h-3.5" />}
+            />
+          )}
+          {result.geometry && (
+            <>
+              <DetailRow
+                label="Rotation"
+                value={`${result.geometry.estimatedRotationDeg.toFixed(1)}°`}
+                icon={<Ruler className="w-3.5 h-3.5" />}
+              />
+              <DetailRow
+                label="Bounding Box"
+                value={`${Math.round(result.geometry.boundingBox.width)} × ${Math.round(result.geometry.boundingBox.height)} px`}
+                icon={<Grid3x3 className="w-3.5 h-3.5" />}
+              />
+            </>
+          )}
+          {result.quietZone && (
+            <>
+              <DetailRow
+                label={t('safety.quietZone', 'Quiet Zone')}
+                value={
+                  <StatusBadge
+                    status={result.quietZone.adequate}
+                    trueLabel="Adequate"
+                    falseLabel="Insufficient"
+                  />
+                }
+                icon={<Square className="w-3.5 h-3.5" />}
+              />
+              <div className="grid grid-cols-4 gap-1 text-center mt-2">
+                <div className="p-2 rounded bg-muted/50">
+                  <div className="text-sm font-mono">{result.quietZone.top}</div>
+                  <div className="text-[10px] text-muted-foreground">Top</div>
+                </div>
+                <div className="p-2 rounded bg-muted/50">
+                  <div className="text-sm font-mono">{result.quietZone.right}</div>
+                  <div className="text-[10px] text-muted-foreground">Right</div>
+                </div>
+                <div className="p-2 rounded bg-muted/50">
+                  <div className="text-sm font-mono">{result.quietZone.bottom}</div>
+                  <div className="text-[10px] text-muted-foreground">Bottom</div>
+                </div>
+                <div className="p-2 rounded bg-muted/50">
+                  <div className="text-sm font-mono">{result.quietZone.left}</div>
+                  <div className="text-[10px] text-muted-foreground">Left</div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </CollapsibleSection>
+    </div>
+  );
+}
+
+interface AnalyzeDataGridProps {
+  result: QRAnalysisResult;
+}
+
+function AnalyzeDataGrid({ result }: AnalyzeDataGridProps) {
+  return (
+    <div className="grid md:grid-cols-1 gap-4">
+      {result.payloadBytes && result.payloadBytes.length > 0 && (
+        <CollapsibleSection
+          title="Binary Data (Hex Dump)"
+          icon={<Binary className="w-4 h-4" />}
+          badge={
+            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+              {result.payloadBytes.length} bytes
+            </span>
+          }
+        >
+          <HexDumpView bytes={result.payloadBytes} maxRows={8} />
+        </CollapsibleSection>
+      )}
+
+      {result.moduleMatrix && result.moduleMatrix.length > 0 && (
+        <CollapsibleSection
+          title="Module Matrix"
+          icon={<Grid3x3 className="w-4 h-4" />}
+          testId="analyze-section-module-matrix"
+          badge={
+            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+              {result.moduleMatrix.length}×{result.moduleMatrix.length}
+            </span>
+          }
+        >
+          <ModuleMatrixView
+            matrix={result.moduleMatrix}
+            version={result.version}
+            fgColor={result.detectedColors?.foreground}
+            bgColor={result.detectedColors?.background}
+          />
+        </CollapsibleSection>
+      )}
+
+      {result.debugLog && (
+        <CollapsibleSection
+          title="Debug Log"
+          icon={<Settings className="w-4 h-4" />}
+          defaultOpen={false}
+        >
+          <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
+            {result.debugLog}
+          </pre>
+        </CollapsibleSection>
+      )}
+    </div>
+  );
+}
+
 function AnalyzeResultDetails({
   result,
   originalImageUrl,
@@ -3265,262 +3540,9 @@ function AnalyzeResultDetails({
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {hasAnyTimingData(combinedTimings) ? (
-            <CollapsibleSection
-              title={t('analyze.processingTimings', 'Processing Timings')}
-              icon={<Timer className="w-4 h-4" />}
-              testId="analyze-section-processing-timings"
-            >
-              <div className="space-y-2">
-                <DetailRow
-                  label="Decode Time"
-                  value={formatMilliseconds(combinedTimings.decodeMs)}
-                  icon={<ScanLine className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Total Analysis Time"
-                  value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
-                  icon={<BarChart3 className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Encode Time"
-                  value={formatMilliseconds(combinedTimings.encodeMs)}
-                  icon={<Code2 className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Render Time"
-                  value={formatMilliseconds(combinedTimings.renderMs)}
-                  icon={<Palette className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Export Time"
-                  value={formatMilliseconds(combinedTimings.exportMs)}
-                  icon={<Download className="w-3.5 h-3.5" />}
-                />
-                {combinedTimings.decodeMs !== null &&
-                  combinedTimings.decodeMs !== undefined &&
-                  combinedTimings.totalAnalysisMs !== null &&
-                  combinedTimings.totalAnalysisMs !== undefined && (
-                    <DetailRow
-                      label="Non-Decode Overhead"
-                      value={formatMilliseconds(
-                        Math.max(
-                          0,
-                          (combinedTimings.totalAnalysisMs as number) -
-                            (combinedTimings.decodeMs as number)
-                        )
-                      )}
-                      icon={<Settings className="w-3.5 h-3.5" />}
-                    />
-                  )}
-              </div>
-            </CollapsibleSection>
-          ) : null}
+        <AnalyzeVisualGrid result={result} combinedTimings={combinedTimings} t={t} />
 
-          {result.detectedColors && (
-            <CollapsibleSection
-              title="Colors & WCAG Compliance"
-              icon={<Palette className="w-4 h-4" />}
-              badge={<WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />}
-            >
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <ColorSwatch color={result.detectedColors.foreground} label="Foreground" />
-                  <div className="flex flex-col items-center">
-                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">contrast</span>
-                  </div>
-                  <ColorSwatch color={result.detectedColors.background} label="Background" />
-                </div>
-
-                {result.dominantColors && result.dominantColors.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Dominant Palette
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {result.dominantColors.map((entry, idx) => (
-                        <div key={`${entry.color}-${idx}`} className="p-2 rounded-md bg-muted/50">
-                          <ColorSwatch
-                            color={entry.color}
-                            label={`#${idx + 1} • ${entry.percentage}%`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">WCAG Compliance</span>
-                    <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div
-                      className={`p-2 rounded ${wcagComplianceClass(
-                        result.detectedColors.contrastRatio,
-                        3
-                      )}`}
-                    >
-                      <div className="font-bold">AA-Large</div>
-                      <div className="text-[10px]">≥3:1</div>
-                    </div>
-                    <div
-                      className={`p-2 rounded ${wcagComplianceClass(
-                        result.detectedColors.contrastRatio,
-                        4.5
-                      )}`}
-                    >
-                      <div className="font-bold">AA</div>
-                      <div className="text-[10px]">≥4.5:1</div>
-                    </div>
-                    <div
-                      className={`p-2 rounded ${wcagComplianceClass(
-                        result.detectedColors.contrastRatio,
-                        7
-                      )}`}
-                    >
-                      <div className="font-bold">AAA</div>
-                      <div className="text-[10px]">≥7:1</div>
-                    </div>
-                  </div>
-                </div>
-
-                <DetailRow
-                  label="Contrast Ratio"
-                  value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
-                  icon={<Eye className="w-3.5 h-3.5" />}
-                />
-              </div>
-            </CollapsibleSection>
-          )}
-
-          <CollapsibleSection
-            title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
-            icon={<Ruler className="w-4 h-4" />}
-            testId="analyze-section-spatial-analysis"
-          >
-            <div className="space-y-2">
-              {result.estimatedModulePx !== null && (
-                <DetailRow
-                  label="Module Size"
-                  value={`~${result.estimatedModulePx} px`}
-                  icon={<Square className="w-3.5 h-3.5" />}
-                />
-              )}
-              {result.estimatedModulePx !== null && (
-                <DetailRow
-                  label="Scan Module Size"
-                  value={
-                    <StatusBadge
-                      status={result.estimatedModulePx >= 3}
-                      trueLabel="Scan-safe"
-                      falseLabel="Too small"
-                    />
-                  }
-                  icon={<ScanLine className="w-3.5 h-3.5" />}
-                />
-              )}
-              {result.geometry && (
-                <>
-                  <DetailRow
-                    label="Rotation"
-                    value={`${result.geometry.estimatedRotationDeg.toFixed(1)}°`}
-                    icon={<Ruler className="w-3.5 h-3.5" />}
-                  />
-                  <DetailRow
-                    label="Bounding Box"
-                    value={`${Math.round(result.geometry.boundingBox.width)} × ${Math.round(result.geometry.boundingBox.height)} px`}
-                    icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                  />
-                </>
-              )}
-              {result.quietZone && (
-                <>
-                  <DetailRow
-                    label={t('safety.quietZone', 'Quiet Zone')}
-                    value={
-                      <StatusBadge
-                        status={result.quietZone.adequate}
-                        trueLabel="Adequate"
-                        falseLabel="Insufficient"
-                      />
-                    }
-                    icon={<Square className="w-3.5 h-3.5" />}
-                  />
-                  <div className="grid grid-cols-4 gap-1 text-center mt-2">
-                    <div className="p-2 rounded bg-muted/50">
-                      <div className="text-sm font-mono">{result.quietZone.top}</div>
-                      <div className="text-[10px] text-muted-foreground">Top</div>
-                    </div>
-                    <div className="p-2 rounded bg-muted/50">
-                      <div className="text-sm font-mono">{result.quietZone.right}</div>
-                      <div className="text-[10px] text-muted-foreground">Right</div>
-                    </div>
-                    <div className="p-2 rounded bg-muted/50">
-                      <div className="text-sm font-mono">{result.quietZone.bottom}</div>
-                      <div className="text-[10px] text-muted-foreground">Bottom</div>
-                    </div>
-                    <div className="p-2 rounded bg-muted/50">
-                      <div className="text-sm font-mono">{result.quietZone.left}</div>
-                      <div className="text-[10px] text-muted-foreground">Left</div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </CollapsibleSection>
-        </div>
-
-        <div className="grid md:grid-cols-1 gap-4">
-          {result.payloadBytes && result.payloadBytes.length > 0 && (
-            <CollapsibleSection
-              title="Binary Data (Hex Dump)"
-              icon={<Binary className="w-4 h-4" />}
-              badge={
-                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
-                  {result.payloadBytes.length} bytes
-                </span>
-              }
-            >
-              <HexDumpView bytes={result.payloadBytes} maxRows={8} />
-            </CollapsibleSection>
-          )}
-
-          {result.moduleMatrix && result.moduleMatrix.length > 0 && (
-            <CollapsibleSection
-              title="Module Matrix"
-              icon={<Grid3x3 className="w-4 h-4" />}
-              testId="analyze-section-module-matrix"
-              badge={
-                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
-                  {result.moduleMatrix.length}×{result.moduleMatrix.length}
-                </span>
-              }
-            >
-              <ModuleMatrixView
-                matrix={result.moduleMatrix}
-                version={result.version}
-                fgColor={result.detectedColors?.foreground}
-                bgColor={result.detectedColors?.background}
-              />
-            </CollapsibleSection>
-          )}
-
-          {result.debugLog && (
-            <CollapsibleSection
-              title="Debug Log"
-              icon={<Settings className="w-4 h-4" />}
-              defaultOpen={false}
-            >
-              <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
-                {result.debugLog}
-              </pre>
-            </CollapsibleSection>
-          )}
-        </div>
+        <AnalyzeDataGrid result={result} />
       </div>
 
       <Button
