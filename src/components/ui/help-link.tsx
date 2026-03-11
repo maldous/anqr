@@ -35,6 +35,98 @@ function parseTierFromUrl(href: string): Tier | undefined {
   return match ? (match[1] as Tier) : undefined;
 }
 
+async function requestProfessionalAccess(
+  activatePremiumAccess: () => void,
+  setLoadingAd: (loading: boolean) => void
+): Promise<boolean> {
+  setLoadingAd(true);
+  try {
+    const reward = await showRewardedAd('premium');
+    if (!reward) {
+      setLoadingAd(false);
+      return false;
+    }
+    activatePremiumAccess();
+  } catch (error) {
+    log.error('Failed to show rewarded ad', { error });
+    setLoadingAd(false);
+    return false;
+  }
+  setLoadingAd(false);
+  prepareRewardedAd('premium');
+  return true;
+}
+
+async function handleTierUpgrade(
+  effectiveTier: Tier,
+  currentTier: Tier,
+  setTier: (tier: Tier) => void,
+  checkPremiumAccess: () => boolean,
+  activatePremiumAccess: () => void,
+  setLoadingAd: (loading: boolean) => void
+): Promise<boolean> {
+  const tierOrder: Tier[] = ['basic', 'advanced', 'professional'];
+  const currentIndex = tierOrder.indexOf(currentTier);
+  const requiredIndex = tierOrder.indexOf(effectiveTier);
+
+  if (requiredIndex <= currentIndex) return true;
+
+  if (effectiveTier === 'professional' && Capacitor.isNativePlatform()) {
+    if (!checkPremiumAccess()) {
+      const granted = await requestProfessionalAccess(activatePremiumAccess, setLoadingAd);
+      if (!granted) return false;
+    }
+  }
+
+  setTier(effectiveTier);
+  return true;
+}
+
+function buildNavigationUrl(
+  resolvedHref: string,
+  language: string
+): { fullHref: string; hash: string } {
+  let path = resolvedHref;
+  let hash = '';
+  let query = '';
+
+  const hashIndex = resolvedHref.indexOf('#');
+  if (hashIndex !== -1) {
+    hash = resolvedHref.substring(hashIndex);
+    path = resolvedHref.substring(0, hashIndex);
+  }
+
+  const queryIndex = path.indexOf('?');
+  if (queryIndex !== -1) {
+    query = path.substring(queryIndex);
+    path = path.substring(0, queryIndex);
+  }
+
+  if (!query.includes('lang=')) {
+    const separator = query ? '&' : '?';
+    query = `${query}${separator}lang=${language}`;
+  }
+
+  return { fullHref: `${path}${query}${hash}`, hash };
+}
+
+function performSPANavigation(fullHref: string, hash: string): void {
+  globalThis.history.pushState({}, '', fullHref);
+  globalThis.dispatchEvent(new PopStateEvent('popstate'));
+
+  if (hash) {
+    const anchorId = hash.substring(1);
+    setTimeout(() => {
+      const element = document.getElementById(anchorId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
+  } else {
+    globalThis.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
 export function HelpLink({
   href,
   anchor,
@@ -58,86 +150,20 @@ export function HelpLink({
     async (e: React.MouseEvent) => {
       e.preventDefault();
 
-      // If linking to generator with a required tier, handle tier switching
       if (effectiveTier && resolvedHref.startsWith('/')) {
-        const tierOrder: Tier[] = ['basic', 'advanced', 'professional'];
-        const currentIndex = tierOrder.indexOf(currentTier);
-        const requiredIndex = tierOrder.indexOf(effectiveTier);
-
-        if (requiredIndex > currentIndex) {
-          // Professional tier on native platform requires watching ad (same flow as Header.tsx)
-          if (effectiveTier === 'professional' && Capacitor.isNativePlatform()) {
-            // If already has premium access, allow direct selection
-            if (!checkPremiumAccess()) {
-              // Show rewarded ad
-              setLoadingAd(true);
-              try {
-                const reward = await showRewardedAd('premium');
-                if (!reward) {
-                  // User didn't complete the ad - don't navigate or change tier
-                  setLoadingAd(false);
-                  return;
-                }
-                // User watched the ad, grant premium access
-                activatePremiumAccess();
-              } catch (error) {
-                log.error('Failed to show rewarded ad', { error });
-                setLoadingAd(false);
-                return;
-              }
-              setLoadingAd(false);
-              // Prepare next ad
-              prepareRewardedAd('premium');
-            }
-          }
-          // Set the tier (for all tiers, after ad if needed)
-          setTier(effectiveTier);
-        }
+        const proceed = await handleTierUpgrade(
+          effectiveTier,
+          currentTier,
+          setTier,
+          checkPremiumAccess,
+          activatePremiumAccess,
+          setLoadingAd
+        );
+        if (!proceed) return;
       }
 
-      // Parse href to handle hash and query params correctly
-      // Format: /path?query=value#hash or /path#hash or /path?query=value
-      let path = resolvedHref;
-      let hash = '';
-      let query = '';
-
-      const hashIndex = resolvedHref.indexOf('#');
-      if (hashIndex !== -1) {
-        hash = resolvedHref.substring(hashIndex);
-        path = resolvedHref.substring(0, hashIndex);
-      }
-
-      const queryIndex = path.indexOf('?');
-      if (queryIndex !== -1) {
-        query = path.substring(queryIndex);
-        path = path.substring(0, queryIndex);
-      }
-
-      // Add language parameter if not present
-      if (!query.includes('lang=')) {
-        const separator = query ? '&' : '?';
-        query = `${query}${separator}lang=${i18n.language}`;
-      }
-
-      // Build full URL: path + query + hash
-      const fullHref = `${path}${query}${hash}`;
-
-      // Navigate using history API for SPA navigation
-      globalThis.history.pushState({}, '', fullHref);
-      globalThis.dispatchEvent(new PopStateEvent('popstate'));
-
-      // Scroll to top for page navigation, or to anchor if present
-      if (hash) {
-        const anchor = hash.substring(1);
-        setTimeout(() => {
-          const element = document.getElementById(anchor);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 150);
-      } else {
-        globalThis.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+      const { fullHref, hash } = buildNavigationUrl(resolvedHref, i18n.language);
+      performSPANavigation(fullHref, hash);
     },
     [
       resolvedHref,

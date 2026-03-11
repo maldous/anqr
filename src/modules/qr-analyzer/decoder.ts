@@ -6,7 +6,7 @@ import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from 
 import i18n from '@/i18n';
 import { decodeQR } from '../qr-decoder';
 import { detectContentType, extractDominantColors } from './analyzer-content';
-import type { ContentType, DecoderMetadata, ECCLevel, QRAnalysisResult } from './types';
+import type { ContentType, DecoderMetadata, ECCLevel, ErrorType, QRAnalysisResult } from './types';
 
 const qrAnalyzerLog = createLogger('ANALYZER');
 
@@ -131,6 +131,73 @@ function buildDecoderMeta(code: {
   };
 }
 
+function buildDecodeFailure(
+  error: string,
+  errorType: ErrorType,
+  decodeStartMs: number
+): QRAnalysisResult {
+  const debugLog = flushLogBuffer();
+  disableLogBuffer();
+  return {
+    success: false,
+    error,
+    errorType,
+    version: null,
+    moduleCount: 0,
+    eccLevel: null,
+    maskPattern: null,
+    encodingMode: null,
+    errorsCorrected: null,
+    estimatedModulePx: null,
+    timing: { decodeMs: elapsedMs(decodeStartMs) },
+    debugLog,
+  };
+}
+
+function extractVersionInfo(
+  code: { version?: number | null },
+  avgFinderDist: number
+): { version: number | null; moduleCount: number; estimatedModulePx: number | null } {
+  const version =
+    typeof code.version === 'number' && code.version >= 1 && code.version <= 40
+      ? code.version
+      : null;
+  const moduleCount = version === null ? 0 : 17 + version * 4;
+  const estimatedModulePx = moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
+  return { version, moduleCount, estimatedModulePx };
+}
+
+function buildStructuralAnalysis(version: number | null) {
+  return {
+    hasFinderPatterns: true,
+    hasTimingPatterns: true,
+    hasAlignmentPatterns: version === null ? false : version > 1,
+    alignmentPatternCount: version === null ? 0 : getAlignmentPatternCount(version),
+  };
+}
+
+function extractCodeFields(code: {
+  eccLevel?: ECCLevel | null;
+  maskPattern?: number | null;
+  errorsCorrected?: number | null;
+  erasures?: number | null;
+  orientation?: number | null;
+  numBits?: number | null;
+  structuredAppendSequence?: number | null;
+  structuredAppendParity?: number | null;
+}) {
+  return {
+    eccLevel: code.eccLevel || null,
+    maskPattern: code.maskPattern ?? null,
+    errorsCorrected: code.errorsCorrected ?? null,
+    erasures: code.erasures ?? null,
+    orientation: code.orientation ?? null,
+    numBits: code.numBits ?? null,
+    structuredAppendSequence: code.structuredAppendSequence ?? null,
+    structuredAppendParity: code.structuredAppendParity ?? null,
+  };
+}
+
 /**
  * Decode a QR code from canvas and extract all metadata
  */
@@ -149,22 +216,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     qrAnalyzerLog.debug('decode: Could not get canvas context');
-    const debugLog = flushLogBuffer();
-    disableLogBuffer();
-    return {
-      success: false,
-      error: 'Could not get canvas context',
-      errorType: 'unknown',
-      version: null,
-      moduleCount: 0,
-      eccLevel: null,
-      maskPattern: null,
-      encodingMode: null,
-      errorsCorrected: null,
-      estimatedModulePx: null,
-      timing: { decodeMs: elapsedMs(decodeStartMs) },
-      debugLog,
-    };
+    return buildDecodeFailure('Could not get canvas context', 'unknown', decodeStartMs);
   }
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -174,22 +226,11 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     if (!(code?.success && code.data)) {
       qrAnalyzerLog.debug('decode: No QR code detected by our decoder');
-      const debugLog = flushLogBuffer();
-      disableLogBuffer();
-      return {
-        success: false,
-        error: i18n.t('analyze.noCodeDetectedInImage', 'No QR code detected in image'),
-        errorType: 'no_qr_detected',
-        version: null,
-        moduleCount: 0,
-        eccLevel: null,
-        maskPattern: null,
-        encodingMode: null,
-        errorsCorrected: null,
-        estimatedModulePx: null,
-        timing: { decodeMs: elapsedMs(decodeStartMs) },
-        debugLog,
-      };
+      return buildDecodeFailure(
+        i18n.t('analyze.noCodeDetectedInImage', 'No QR code detected in image'),
+        'no_qr_detected',
+        decodeStartMs
+      );
     }
 
     // Extract location info from our decoder
@@ -222,19 +263,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       average: avgFinderDist.toFixed(2),
     });
 
-    // Version must come from decoder - not estimated
-    // If decoder couldn't determine the version, it will be null
-    const version =
-      typeof code.version === 'number' && code.version >= 1 && code.version <= 40
-        ? code.version
-        : null;
-
-    // Module count derived from version (if available)
-    const moduleCount = version === null ? 0 : 17 + version * 4;
-
-    // Estimate module pixel size from finder pattern distance (for visual analysis only)
-    // This does NOT affect version - version ONLY comes from decoder
-    const estimatedModulePx = moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
+    const { version, moduleCount, estimatedModulePx } = extractVersionInfo(code, avgFinderDist);
 
     qrAnalyzerLog.trace('detection: Module count from decoder (authoritative)', {
       moduleCount,
@@ -309,26 +338,14 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       payloadBytes,
       version,
       moduleCount,
-      eccLevel: code.eccLevel || null,
-      maskPattern: code.maskPattern ?? null,
+      ...extractCodeFields(code),
       encodingMode,
-      errorsCorrected: code.errorsCorrected ?? null,
-      erasures: code.erasures ?? null,
-      orientation: code.orientation ?? null,
-      numBits: code.numBits ?? null,
-      structuredAppendSequence: code.structuredAppendSequence ?? null,
-      structuredAppendParity: code.structuredAppendParity ?? null,
       contentType,
       detectedColors,
       dominantColors,
       estimatedModulePx,
       quietZone,
-      structuralAnalysis: {
-        hasFinderPatterns: true, // If we decoded it, finder patterns were found
-        hasTimingPatterns: true,
-        hasAlignmentPatterns: version === null ? false : version > 1,
-        alignmentPatternCount: version === null ? 0 : getAlignmentPatternCount(version),
-      },
+      structuralAnalysis: buildStructuralAnalysis(version),
       imageProperties: {
         width: canvas.width,
         height: canvas.height,
@@ -343,22 +360,11 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     };
   } catch (err) {
     qrAnalyzerLog.debug('decode: Exception during decode', { error: String(err) });
-    const debugLog = flushLogBuffer();
-    disableLogBuffer();
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : 'Failed to decode QR code',
-      errorType: 'decode_error',
-      version: null,
-      moduleCount: 0,
-      eccLevel: null,
-      maskPattern: null,
-      encodingMode: null,
-      errorsCorrected: null,
-      estimatedModulePx: null,
-      timing: { decodeMs: elapsedMs(decodeStartMs) },
-      debugLog,
-    };
+    return buildDecodeFailure(
+      err instanceof Error ? err.message : 'Failed to decode QR code',
+      'decode_error',
+      decodeStartMs
+    );
   }
 }
 
