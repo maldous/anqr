@@ -74,9 +74,9 @@ def load_txt_map(path: Path) -> Dict[str, str]:
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
-        m = re.match(r"^(\d+)\s*[:=]\s*(.*)$", line)
+        m = re.match(r"^(\d+)[:=](.*)", line)
         if not m:
-            m = re.match(r"^(\d+)\s+(.*)$", line)
+            m = re.match(r"^(\d+) +(.*)", line)
         if m:
             out[m.group(1)] = m.group(2).strip()
     return out

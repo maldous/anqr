@@ -37,7 +37,7 @@ function computeCacheKey(url: URL): string {
   const entries = [...url.searchParams.entries()]
     .filter(([k]) => !NON_CACHE_PARAMS.has(k))
     .sort(([a], [b]) => a.localeCompare(b));
-  return createHash('md5').update(new URLSearchParams(entries).toString()).digest('hex');
+  return createHash('sha256').update(new URLSearchParams(entries).toString()).digest('hex');
 }
 
 /**

@@ -175,7 +175,9 @@ export default async function handler(request: Request, context: Context) {
   }
 
   // Normalize path: strip trailing slashes, default to '/'
-  const path = pathname.replace(/\/+$/, '') || '/';
+  let path = pathname;
+  while (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+  if (!path) path = '/';
 
   // Skip gallery image paths (e.g. /gallery/plain-v1-L.png) but not /gallery itself
   if (pathname.startsWith('/gallery/') && path !== '/gallery') {

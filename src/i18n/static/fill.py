@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 
-ID_LINE_RE = re.compile(r"^\s*(\d+)\s*(?:[\t,]|\s{2,})\s*(.+?)\s*$")
+ID_LINE_RE = re.compile(r"^\s*(\d+)(?:[\t,]|\s{2,})(\S.*)$")
 ID_ONLY_RE = re.compile(r"^\d+$")
 
 

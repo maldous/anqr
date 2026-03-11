@@ -141,9 +141,14 @@ export function applyNoiseSimulation(
   ctx.drawImage(canvas, 0, 0);
   const imageData = ctx.getImageData(0, 0, result.width, result.height);
   const data = imageData.data;
+  const pixelCount = data.length / 4;
+  const noiseBytes = new Uint8Array(pixelCount);
+  for (let off = 0; off < pixelCount; off += 65536) {
+    crypto.getRandomValues(noiseBytes.subarray(off, Math.min(off + 65536, pixelCount)));
+  }
 
   for (let i = 0; i < data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * noiseLevel * 255;
+    const noise = (noiseBytes[i / 4] / 255 - 0.5) * noiseLevel * 255;
     data[i] = Math.max(0, Math.min(255, data[i] + noise));
     data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
     data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));

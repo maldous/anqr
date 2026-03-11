@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import secrets
+
 class RateLimited(Exception):
     """Raised when an upstream translation service is rate-limiting or blocking us."""
 
@@ -287,7 +289,7 @@ def process_language(en_map: Dict[int, str], lang_file: Path, engine: GoogleGTXE
                 import traceback
                 traceback.print_exc()
             if attempt < 3:
-                time.sleep(backoff + random.random() * 0.3)
+                time.sleep(backoff + secrets.randbelow(300) / 1000)
                 backoff = min(backoff * 2.0, 10.0)
                 continue
             safe_print(f"  [{lang_file.name}] Failed: all attempts errored; leaving file unchanged")

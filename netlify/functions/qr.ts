@@ -422,7 +422,7 @@ function computeCacheKey(params: URLSearchParams): string {
   const entries = [...params.entries()]
     .filter(([k]) => !NON_CACHE_PARAMS.has(k))
     .sort(([a], [b]) => a.localeCompare(b));
-  return createHash('md5').update(new URLSearchParams(entries).toString()).digest('hex');
+  return createHash('sha256').update(new URLSearchParams(entries).toString()).digest('hex');
 }
 
 function isMissingBlobsEnvironmentError(error: unknown): boolean {
@@ -525,10 +525,10 @@ function isPrivateOrReservedIP(ip: string): boolean {
  * This prevents SSRF via DNS resolution to internal IPs
  */
 async function _isPrivateHostname(hostname: string): Promise<boolean> {
-  const normalizedHostname = String(hostname || '')
+  let normalizedHostname = String(hostname || '')
     .trim()
-    .toLowerCase()
-    .replace(/\.+$/, '');
+    .toLowerCase();
+  while (normalizedHostname.endsWith('.')) normalizedHostname = normalizedHostname.slice(0, -1);
 
   if (!normalizedHostname) {
     return true;
@@ -4688,7 +4688,7 @@ function buildFinalResponse(
   isDegraded: boolean
 ): Response {
   const etagSource = `${cacheKey}:${contentType}:${isDegraded ? 'degraded' : 'full'}:${outputBuffer.byteLength}`;
-  const etag = `"${createHash('md5').update(etagSource).digest('hex')}"`;
+  const etag = `"${createHash('sha256').update(etagSource).digest('hex')}"`;
   return new Response(new Uint8Array(outputBuffer), {
     status: 200,
     headers: {
