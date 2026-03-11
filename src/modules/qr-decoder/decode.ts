@@ -938,20 +938,112 @@ function decodeSegmentData(bits: BitStream, mode: number, charCount: number): Se
   }
 }
 
+interface DecodeLoopState {
+  text: string;
+  outBytes: number[];
+  modesSeen: Set<DecodedEncodingMode>;
+  segments: DecodedSegmentInfo[];
+  segmentIndex: number;
+  valid: boolean;
+  foundTerminator: boolean;
+  primarySegmentEnded: boolean;
+  hasExtraSegmentsAfterPrimary: boolean;
+}
+
+function pushInvalidSegment(
+  state: DecodeLoopState,
+  mode: number,
+  charCount: number,
+  bitOffset: number
+): void {
+  state.segments.push({
+    index: state.segmentIndex,
+    mode,
+    modeName: modeToName(mode),
+    charCount,
+    decodedLength: 0,
+    valid: false,
+    bitOffset,
+  });
+  state.segmentIndex++;
+  state.valid = false;
+  if (state.primarySegmentEnded) {
+    state.hasExtraSegmentsAfterPrimary = true;
+  }
+}
+
+function processDecodedSegment(
+  state: DecodeLoopState,
+  seg: SegmentDecodeResult,
+  mode: number,
+  charCount: number,
+  bitOffset: number
+): void {
+  for (const b of seg.outBytes) state.outBytes.push(b);
+
+  const decodedLength =
+    seg.modeTag === 'kanji'
+      ? seg.rawBytes.length / 2
+      : seg.modeTag === 'byte'
+        ? seg.rawBytes.length
+        : seg.text.length;
+  state.segments.push({
+    index: state.segmentIndex,
+    mode,
+    modeName: modeToName(mode),
+    charCount,
+    decodedLength,
+    valid: seg.valid,
+    bitOffset,
+  });
+  state.segmentIndex++;
+
+  if (seg.valid) {
+    if (seg.modeTag !== 'unknown') {
+      state.primarySegmentEnded = true;
+    }
+  } else {
+    state.valid = false;
+    if (state.primarySegmentEnded) {
+      state.hasExtraSegmentsAfterPrimary = true;
+    }
+  }
+
+  if (seg.modeTag !== 'unknown') state.modesSeen.add(seg.modeTag);
+  state.text += seg.text;
+
+  qrDecoderLog.trace(`decode: Decoded segment ${state.segmentIndex}`, {
+    mode: seg.modeTag,
+    charCount,
+    textLen: seg.text.length,
+    bytesLen: seg.rawBytes.length,
+    segmentValid: seg.valid,
+    preview: seg.text.slice(0, 50),
+  });
+}
+
+function resolveEncodingMode(modesSeen: Set<DecodedEncodingMode>): DecodedEncodingMode {
+  if (modesSeen.size === 1) return modesSeen.values().next().value!;
+  if (modesSeen.size > 1) return 'mixed';
+  return 'unknown';
+}
+
 export function decodeDataCodewordsDetailed(
   dataCodewords: number[],
   version: number
 ): DecodedDataResult {
   const bits = new BitStream(dataCodewords);
-  let text = '';
-  const outBytes: number[] = [];
-  const modesSeen = new Set<DecodedEncodingMode>();
-  const segments: DecodedSegmentInfo[] = [];
-  let segmentIndex = 0;
-  let valid = true; // Track whether decode completed without errors
-  let foundTerminator = false;
-  let primarySegmentEnded = false; // Track if we've finished decoding primary content
-  let hasExtraSegmentsAfterPrimary = false; // Track if there are non-terminator segments after primary
+  const state: DecodeLoopState = {
+    text: '',
+    outBytes: [],
+    modesSeen: new Set(),
+    segments: [],
+    segmentIndex: 0,
+    valid: true,
+    foundTerminator: false,
+    primarySegmentEnded: false,
+    hasExtraSegmentsAfterPrimary: false,
+  };
 
   qrDecoderLog.trace('decode: Starting data decode (detailed)', {
     dataCodewords: dataCodewords.length,
@@ -963,9 +1055,9 @@ export function decodeDataCodewordsDetailed(
     const mode = bits.read(4);
 
     if (mode === MODE_TERMINATOR) {
-      qrDecoderLog.trace('decode: Found terminator', { segmentIndex: segmentIndex + 1 });
-      segments.push({
-        index: segmentIndex,
+      qrDecoderLog.trace('decode: Found terminator', { segmentIndex: state.segmentIndex + 1 });
+      state.segments.push({
+        index: state.segmentIndex,
         mode,
         modeName: 'terminator',
         charCount: 0,
@@ -973,8 +1065,8 @@ export function decodeDataCodewordsDetailed(
         valid: true,
         bitOffset,
       });
-      segmentIndex++;
-      foundTerminator = true;
+      state.segmentIndex++;
+      state.foundTerminator = true;
       break;
     }
 
@@ -985,143 +1077,50 @@ export function decodeDataCodewordsDetailed(
         charCountBits,
         available: bits.available(),
       });
-      segments.push({
-        index: segmentIndex,
-        mode,
-        modeName: modeToName(mode),
-        charCount: -1, // Unknown - couldn't read
-        decodedLength: 0,
-        valid: false,
-        bitOffset,
-      });
-      segmentIndex++;
-      valid = false;
-
-      // If we already had a successful primary segment, this is an extra invalid segment
-      if (primarySegmentEnded) {
-        hasExtraSegmentsAfterPrimary = true;
-      }
+      pushInvalidSegment(state, mode, -1, bitOffset);
       break;
     }
 
     const charCount = bits.read(charCountBits);
 
-    // Sanity check: if charCount is unreasonably large, something is wrong
     if (charCount > 7000) {
       qrDecoderLog.debug('decode: Unreasonable char count, aborting - decode invalid', {
         charCount,
         mode,
       });
-      segments.push({
-        index: segmentIndex,
-        mode,
-        modeName: modeToName(mode),
-        charCount,
-        decodedLength: 0,
-        valid: false,
-        bitOffset,
-      });
-      segmentIndex++;
-      valid = false;
-
-      // If we already had a successful primary segment, this is an extra invalid segment
-      if (primarySegmentEnded) {
-        hasExtraSegmentsAfterPrimary = true;
-      }
+      pushInvalidSegment(state, mode, charCount, bitOffset);
       break;
     }
 
     const seg = decodeSegmentData(bits, mode, charCount);
-    const decodedText = seg.text;
-    const decodedBytes = seg.rawBytes;
-    const modeTag = seg.modeTag;
-    const segmentValid = seg.valid;
-    for (const b of seg.outBytes) outBytes.push(b);
+    processDecodedSegment(state, seg, mode, charCount, bitOffset);
 
-    // Track segment info
-    const decodedLength =
-      modeTag === 'kanji'
-        ? decodedBytes.length / 2
-        : modeTag === 'byte'
-          ? decodedBytes.length
-          : decodedText.length;
-    segments.push({
-      index: segmentIndex,
-      mode,
-      modeName: modeToName(mode),
-      charCount,
-      decodedLength,
-      valid: segmentValid,
-      bitOffset,
-    });
-    segmentIndex++;
-
-    if (segmentValid) {
-      // Mark that we've finished at least one successful segment
-      // For simple QR codes (single byte segment), we set this after the first valid segment
-      if (modeTag !== 'unknown') {
-        primarySegmentEnded = true;
-      }
-    } else {
-      valid = false;
-      // If we already had a successful primary segment, this is an extra invalid segment
-      if (primarySegmentEnded) {
-        hasExtraSegmentsAfterPrimary = true;
-      }
-    }
-
-    if (modeTag !== 'unknown') modesSeen.add(modeTag);
-    text += decodedText;
-
-    qrDecoderLog.trace(`decode: Decoded segment ${segmentIndex}`, {
-      mode: modeTag,
-      charCount,
-      textLen: decodedText.length,
-      bytesLen: decodedBytes.length,
-      segmentValid,
-      preview: decodedText.slice(0, 50),
-    });
-
-    // If segment was invalid, don't continue parsing (data is corrupt)
-    if (!segmentValid) {
-      break;
-    }
+    if (!seg.valid) break;
   }
 
-  const encodingMode: DecodedEncodingMode = (() => {
-    if (modesSeen.size === 1) {
-      return modesSeen.values().next().value!;
-    }
-    if (modesSeen.size > 1) return 'mixed';
-    return 'unknown';
-  })();
-
-  // Structural validity:
-  // - All segments must be valid (no truncation)
-  // - Must end with terminator OR run out of bits cleanly
-  // - No extra non-terminator segments after primary data (catches fake Kanji segments)
-  const structurallyValid = valid && !hasExtraSegmentsAfterPrimary;
+  const encodingMode = resolveEncodingMode(state.modesSeen);
+  const structurallyValid = state.valid && !state.hasExtraSegmentsAfterPrimary;
 
   qrDecoderLog.trace('decode: Data decode complete', {
-    valid,
+    valid: state.valid,
     structurallyValid,
-    foundTerminator,
-    hasExtraSegmentsAfterPrimary,
-    segmentCount: segments.length,
-    segmentModes: segments.map((s) => s.modeName),
-    textLength: text.length,
-    bytesLength: outBytes.length,
+    foundTerminator: state.foundTerminator,
+    hasExtraSegmentsAfterPrimary: state.hasExtraSegmentsAfterPrimary,
+    segmentCount: state.segments.length,
+    segmentModes: state.segments.map((s) => s.modeName),
+    textLength: state.text.length,
+    bytesLength: state.outBytes.length,
     encodingMode,
   });
 
   return {
-    text,
-    bytes: new Uint8Array(outBytes),
+    text: state.text,
+    bytes: new Uint8Array(state.outBytes),
     encodingMode,
-    valid,
+    valid: state.valid,
     structurallyValid,
-    segmentCount: segments.length,
-    segments,
+    segmentCount: state.segments.length,
+    segments: state.segments,
   };
 }
 

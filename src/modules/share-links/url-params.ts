@@ -321,12 +321,7 @@ function buildStyleParams(config: Partial<ShareConfig>, params: URLSearchParams)
     params.set('timing', config.timingStyle);
 }
 
-function buildRenderParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.moduleGap !== undefined && config.moduleGap !== 0)
-    params.set('gap', config.moduleGap.toString());
-  if (config.gapMode && config.gapMode !== 'none') params.set('gapMode', config.gapMode);
-  if (config.cornerRadius !== undefined && config.cornerRadius !== 0)
-    params.set('radius', config.cornerRadius.toString());
+function buildRenderGradientParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.gradientType && config.gradientType !== 'none') {
     params.set('grad', config.gradientType);
     if (config.gradientStops && config.gradientStops.length > 0) {
@@ -339,6 +334,9 @@ function buildRenderParams(config: Partial<ShareConfig>, params: URLSearchParams
       params.set('gradAngle', config.gradientAngle.toString());
     }
   }
+}
+
+function buildRenderEyeFrameParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.eyeOuterStyle && config.eyeOuterStyle !== 'square')
     params.set('eyeOuter', config.eyeOuterStyle);
   if (config.eyeInnerStyle && config.eyeInnerStyle !== 'square')
@@ -347,6 +345,9 @@ function buildRenderParams(config: Partial<ShareConfig>, params: URLSearchParams
     params.set('eyeScale', config.eyeScale.toString());
   if (config.frameStyle && config.frameStyle !== 'none') params.set('frame', config.frameStyle);
   if (config.frameText) params.set('frameText', config.frameText);
+}
+
+function buildRenderAdvancedParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.dotRotation !== undefined && config.dotRotation !== 0)
     params.set('dotRot', config.dotRotation.toString());
   if (config.crispEdges === false) params.set('crisp', '0');
@@ -361,16 +362,18 @@ function buildRenderParams(config: Partial<ShareConfig>, params: URLSearchParams
     params.set('spGridNum', config.subpixelGrid.toString());
 }
 
-function buildOverlayParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.overlayUrl) {
-    params.set('mode', config.mode || 'dithered');
-  } else if (config.mode && config.mode !== 'dithered') {
-    params.set('mode', config.mode);
-  }
-  if (config.intensity !== undefined && config.intensity !== 100)
-    params.set('intensity', config.intensity.toString());
-  if (config.logoSize !== undefined && config.logoSize !== 25)
-    params.set('logoSize', config.logoSize.toString());
+function buildRenderParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.moduleGap !== undefined && config.moduleGap !== 0)
+    params.set('gap', config.moduleGap.toString());
+  if (config.gapMode && config.gapMode !== 'none') params.set('gapMode', config.gapMode);
+  if (config.cornerRadius !== undefined && config.cornerRadius !== 0)
+    params.set('radius', config.cornerRadius.toString());
+  buildRenderGradientParams(config, params);
+  buildRenderEyeFrameParams(config, params);
+  buildRenderAdvancedParams(config, params);
+}
+
+function buildOverlayImageParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.overlayUrl) params.set('img', config.overlayUrl);
   if (config.overlayType && config.overlayType !== 'static')
     params.set('ovType', config.overlayType);
@@ -388,11 +391,17 @@ function buildOverlayParams(config: Partial<ShareConfig>, params: URLSearchParam
     params.set('gifMaxFps', config.gifMaxFps.toString());
   if (config.gifDisposalHandling && config.gifDisposalHandling !== 'respect')
     params.set('gifDispH', config.gifDisposalHandling);
+}
+
+function buildOverlayTransformParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.fit && config.fit !== 'cover') params.set('fit', config.fit);
   if (config.rotate !== undefined && config.rotate !== 0)
     params.set('rot', config.rotate.toString());
   if (config.flipX) params.set('flipX', '1');
   if (config.flipY) params.set('flipY', '1');
+}
+
+function buildOverlayProtectionParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.preserveFinders === false) params.set('keepFinders', '0');
   if (config.preserveTiming) params.set('keepTiming', '1');
   if (config.preserveAlignment) params.set('keepAlign', '1');
@@ -403,6 +412,21 @@ function buildOverlayParams(config: Partial<ShareConfig>, params: URLSearchParam
     params.set('eccRisk', config.eccAwareRiskBudget.toString());
   if (config.eccAwareWeightMap && config.eccAwareWeightMap !== 'distance_to_finders')
     params.set('eccMap', config.eccAwareWeightMap);
+}
+
+function buildOverlayParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.overlayUrl) {
+    params.set('mode', config.mode || 'dithered');
+  } else if (config.mode && config.mode !== 'dithered') {
+    params.set('mode', config.mode);
+  }
+  if (config.intensity !== undefined && config.intensity !== 100)
+    params.set('intensity', config.intensity.toString());
+  if (config.logoSize !== undefined && config.logoSize !== 25)
+    params.set('logoSize', config.logoSize.toString());
+  buildOverlayImageParams(config, params);
+  buildOverlayTransformParams(config, params);
+  buildOverlayProtectionParams(config, params);
 }
 
 function buildPreprocessingParams(config: Partial<ShareConfig>, params: URLSearchParams): void {

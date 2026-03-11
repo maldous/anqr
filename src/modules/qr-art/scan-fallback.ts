@@ -530,6 +530,180 @@ export interface BinarySearchResult {
  * @param strictSuffix If true, reject candidates with non-URL-safe suffix bytes (default: false)
  * @returns Binary search result with optimal matrix
  */
+interface BaseMatrixResult {
+  valid: boolean;
+  result: ReturnType<typeof applySubsetAndRegenerate>;
+  formatVerification?: FormatVerificationResult;
+}
+
+function validateBaseMatrix(
+  flattened: FlattenedSelection[],
+  originalBlockData: Uint8Array[],
+  originalBlockEcc: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  eliminationResult: EliminationResult,
+  regenerateQRFn: (
+    blockData: Uint8Array[],
+    blockEcc: Uint8Array[],
+    blockDataCounts: number[],
+    blockEccCounts: number[]
+  ) => boolean[][],
+  scanQRFn: (matrix: boolean[][]) => { success: boolean; data?: string },
+  expectedData: string,
+  expectedEcc: ECCLevel | undefined,
+  expectedMask: number | undefined,
+  strictSuffix: boolean,
+  rejectionHistogram: RejectionHistogram
+): BaseMatrixResult {
+  const baseResult = applySubsetAndRegenerate(
+    flattened,
+    0,
+    originalBlockData,
+    originalBlockEcc,
+    blockDataCounts,
+    blockEccCounts,
+    eliminationResult,
+    regenerateQRFn
+  );
+  const baseScan = scanQRFn(baseResult.matrix);
+  if (!baseScan.success) {
+    log.warn('Base matrix (0 vectors) does not scan - this is a fundamental bug');
+    return { valid: false, result: baseResult };
+  }
+
+  const baseValidation = validateByteExactPrefix(baseScan.data, expectedData, strictSuffix);
+  rejectionHistogram.total++;
+
+  if (!baseValidation.valid) {
+    logBaseValidationFailure(baseScan.data, expectedData, baseValidation);
+    return { valid: false, result: baseResult };
+  }
+
+  let baseFormatVerification: FormatVerificationResult | undefined;
+  if (expectedEcc !== undefined && expectedMask !== undefined) {
+    baseFormatVerification = verifyMatrixFormatInfo(baseResult.matrix, expectedEcc, expectedMask);
+    if (!baseFormatVerification.valid) {
+      log.warn('Base matrix (0 vectors) FORMAT VERIFICATION FAILED!', {
+        rejectionReason: baseFormatVerification.reason,
+        expectedEcc,
+        extractedEcc: baseFormatVerification.extractedEcc,
+        eccMatch: baseFormatVerification.eccMatch,
+        expectedMask,
+        extractedMask: baseFormatVerification.extractedMask,
+        maskMatch: baseFormatVerification.maskMatch,
+      });
+    }
+  }
+
+  rejectionHistogram.ACCEPTED++;
+
+  log.debug('Base matrix (0 vectors) validation PASSED', {
+    decodedData: baseScan.data,
+    decodedLength: baseScan.data?.length,
+    validationMethod: 'SEMANTIC_HARD_GATE',
+    formatVerified: baseFormatVerification?.valid,
+    extractedEcc: baseFormatVerification?.extractedEcc,
+    extractedMask: baseFormatVerification?.extractedMask,
+    suffixCharsetPenalty: baseValidation.suffixCharsetPenalty,
+  });
+
+  return { valid: true, result: baseResult, formatVerification: baseFormatVerification };
+}
+
+function logBaseValidationFailure(
+  decodedData: string | undefined,
+  expectedData: string,
+  baseValidation: BinarySearchValidationResult
+): void {
+  const decoded = decodedData || '';
+  const expectedHexDump = Array.from(expectedData.slice(0, 32))
+    .map((c) => c.codePointAt(0)!.toString(16).padStart(2, '0'))
+    .join(' ');
+  const decodedHexDump = Array.from(decoded.slice(0, 32))
+    .map((c) => c.codePointAt(0)!.toString(16).padStart(2, '0'))
+    .join(' ');
+
+  log.warn('Base matrix (0 vectors) validation FAILED - encoding bug!', {
+    rejectionReason: baseValidation.reason,
+    description: baseValidation.description,
+    expectedData,
+    expectedDataLength: expectedData.length,
+    decodedData,
+    decodedLength: decodedData?.length,
+    mismatchIndex: baseValidation.mismatchIndex,
+    expectedByte: baseValidation.expectedByte?.toString(16),
+    actualByte: baseValidation.actualByte?.toString(16),
+  });
+
+  log.warn('BYTE-LEVEL COMPARISON (first 32 bytes)', {
+    expectedHex: expectedHexDump,
+    decodedHex: decodedHexDump,
+    mismatchIndex: baseValidation.mismatchIndex,
+  });
+}
+
+function trackRejection(
+  rejectionHistogram: RejectionHistogram,
+  isValid: boolean,
+  validation: BinarySearchValidationResult
+): void {
+  rejectionHistogram.total++;
+  if (isValid) {
+    rejectionHistogram.ACCEPTED++;
+    return;
+  }
+  if (validation.reason) {
+    const reason = validation.reason as keyof RejectionHistogram;
+    if (reason in rejectionHistogram && reason !== 'ACCEPTED' && reason !== 'total') {
+      rejectionHistogram[reason]++;
+    }
+  }
+}
+
+function logSearchIteration(
+  iterations: number,
+  mid: number,
+  low: number,
+  high: number,
+  isValid: boolean,
+  validation: BinarySearchValidationResult,
+  scan: { success: boolean; data?: string },
+  formatVerification: FormatVerificationResult | undefined,
+  expectedData: string
+): void {
+  log.debug('Binary search iteration', {
+    iteration: iterations,
+    vectorsApplied: mid,
+    low,
+    high,
+    hardGatePassed: isValid,
+    hardGateFailed: validation.hardGateFailed,
+    scans: scan.success,
+    byteExactValid: validation.valid || isValid,
+    rejectionReason: isValid ? undefined : validation.reason,
+    description: isValid ? undefined : validation.description,
+    mismatchIndex: validation.mismatchIndex,
+    suffixCharsetPenalty: validation.suffixCharsetPenalty,
+    ...(formatVerification
+      ? {
+          formatVerified: formatVerification.valid,
+          extractedEcc: formatVerification.extractedEcc,
+          extractedMask: formatVerification.extractedMask,
+          eccMatch: formatVerification.eccMatch,
+          maskMatch: formatVerification.maskMatch,
+        }
+      : {}),
+    ...(scan.success
+      ? {
+          decodedLength: scan.data?.length,
+          originalLength: expectedData.length,
+          suffixPreview: scan.data?.slice(expectedData.length)?.slice(0, 20),
+        }
+      : {}),
+  });
+}
+
 export function binarySearchMaxVectors(
   flattened: FlattenedSelection[],
   originalBlockData: Uint8Array[],
@@ -550,8 +724,6 @@ export function binarySearchMaxVectors(
   strictSuffix: boolean = false
 ): BinarySearchResult {
   const totalVectors = flattened.length;
-
-  // Initialize rejection histogram for tracking why candidates were rejected
   const rejectionHistogram = createRejectionHistogram();
 
   log.info('Starting binary search for maximum scannable vectors', {
@@ -568,7 +740,6 @@ export function binarySearchMaxVectors(
       : 'SEMANTIC-HARD-GATE: prefix match + format info (suffix charset is SOFT PENALTY)',
   });
 
-  // Edge case: if there are no vectors, return empty result
   if (totalVectors === 0) {
     const { matrix, modifiedBlockData, modifiedBlockEcc } = applySubsetAndRegenerate(
       flattened,
@@ -583,111 +754,38 @@ export function binarySearchMaxVectors(
     return { maxCount: 0, matrix, modifiedBlockData, modifiedBlockEcc, iterations: 0 };
   }
 
-  // First check if 0 vectors (base) scans correctly - it MUST decode to expectedData
-  const baseResult = applySubsetAndRegenerate(
+  const base = validateBaseMatrix(
     flattened,
-    0,
     originalBlockData,
     originalBlockEcc,
     blockDataCounts,
     blockEccCounts,
     eliminationResult,
-    regenerateQRFn
+    regenerateQRFn,
+    scanQRFn,
+    expectedData,
+    expectedEcc,
+    expectedMask,
+    strictSuffix,
+    rejectionHistogram
   );
-  const baseScan = scanQRFn(baseResult.matrix);
-  if (!baseScan.success) {
-    log.warn('Base matrix (0 vectors) does not scan - this is a fundamental bug');
+
+  if (!base.valid) {
     return {
       maxCount: 0,
-      matrix: baseResult.matrix,
-      modifiedBlockData: baseResult.modifiedBlockData,
-      modifiedBlockEcc: baseResult.modifiedBlockEcc,
+      matrix: base.result.matrix,
+      modifiedBlockData: base.result.modifiedBlockData,
+      modifiedBlockEcc: base.result.modifiedBlockEcc,
       iterations: 1,
     };
   }
 
-  // CRITICAL: Use STRICT byte-exact validation for base matrix
-  // HYBRID MODE: expectedData is the original URL only - suffix may vary
-  // We use byte-exact comparison to catch subtle corruption
-  const baseValidation = validateByteExactPrefix(baseScan.data, expectedData, strictSuffix);
-  rejectionHistogram.total++;
-
-  if (!baseValidation.valid) {
-    // Generate hex dump of first 32 bytes for comparison
-    const decoded = baseScan.data || '';
-    const expectedHexDump = Array.from(expectedData.slice(0, 32))
-      .map((c) => c.codePointAt(0)!.toString(16).padStart(2, '0'))
-      .join(' ');
-    const decodedHexDump = Array.from(decoded.slice(0, 32))
-      .map((c) => c.codePointAt(0)!.toString(16).padStart(2, '0'))
-      .join(' ');
-
-    log.warn('Base matrix (0 vectors) validation FAILED - encoding bug!', {
-      rejectionReason: baseValidation.reason,
-      description: baseValidation.description,
-      expectedData: expectedData,
-      expectedDataLength: expectedData.length,
-      decodedData: baseScan.data,
-      decodedLength: baseScan.data?.length,
-      mismatchIndex: baseValidation.mismatchIndex,
-      expectedByte: baseValidation.expectedByte?.toString(16),
-      actualByte: baseValidation.actualByte?.toString(16),
-    });
-
-    log.warn('BYTE-LEVEL COMPARISON (first 32 bytes)', {
-      expectedHex: expectedHexDump,
-      decodedHex: decodedHexDump,
-      mismatchIndex: baseValidation.mismatchIndex,
-    });
-
-    // Return base matrix anyway - at least it scans to something
-    return {
-      maxCount: 0,
-      matrix: baseResult.matrix,
-      modifiedBlockData: baseResult.modifiedBlockData,
-      modifiedBlockEcc: baseResult.modifiedBlockEcc,
-      iterations: 1,
-    };
-  }
-
-  // Also verify format info for base matrix (if ECC and mask provided)
-  let baseFormatVerification: FormatVerificationResult | undefined;
-  if (expectedEcc !== undefined && expectedMask !== undefined) {
-    baseFormatVerification = verifyMatrixFormatInfo(baseResult.matrix, expectedEcc, expectedMask);
-    if (!baseFormatVerification.valid) {
-      log.warn('Base matrix (0 vectors) FORMAT VERIFICATION FAILED!', {
-        rejectionReason: baseFormatVerification.reason,
-        expectedEcc,
-        extractedEcc: baseFormatVerification.extractedEcc,
-        eccMatch: baseFormatVerification.eccMatch,
-        expectedMask,
-        extractedMask: baseFormatVerification.extractedMask,
-        maskMatch: baseFormatVerification.maskMatch,
-      });
-      // This is a critical bug in the base matrix generation
-      // Return base matrix anyway as there's nothing better to return
-    }
-  }
-
-  rejectionHistogram.ACCEPTED++;
-
-  log.debug('Base matrix (0 vectors) validation PASSED', {
-    decodedData: baseScan.data,
-    decodedLength: baseScan.data?.length,
-    validationMethod: 'SEMANTIC_HARD_GATE',
-    formatVerified: baseFormatVerification?.valid,
-    extractedEcc: baseFormatVerification?.extractedEcc,
-    extractedMask: baseFormatVerification?.extractedMask,
-    suffixCharsetPenalty: baseValidation.suffixCharsetPenalty,
-  });
-
-  // Binary search for maximum vectors
   let low = 0;
   let high = totalVectors;
   let bestCount = 0;
-  let bestMatrix = baseResult.matrix;
-  let bestBlockData = baseResult.modifiedBlockData;
-  let bestBlockEcc = baseResult.modifiedBlockEcc;
+  let bestMatrix = base.result.matrix;
+  let bestBlockData = base.result.modifiedBlockData;
+  let bestBlockEcc = base.result.modifiedBlockEcc;
   let iterations = 0;
 
   while (low <= high) {
@@ -706,20 +804,6 @@ export function binarySearchMaxVectors(
     );
 
     const scan = scanQRFn(result.matrix);
-
-    // SEMANTIC-HARD-GATE FOR HYBRID QR-ART:
-    // A configuration "works" if ALL of the following are true:
-    // 1. The QR scans successfully
-    // 2. Decoded data length >= original data length
-    // 3. First N bytes match exactly (N = original data length)
-    // 4. Format info ECC matches expected (if provided)
-    // 5. Format info mask matches expected (if provided)
-    //
-    // We use byte-exact comparison to catch subtle corruption.
-    // The suffix CAN be modified - that's the point of QR-Art!
-    // Only the original URL/data (protected region) must be byte-for-byte identical.
-
-    rejectionHistogram.total++;
     const candidateResult = validateCandidate(
       scan,
       result.matrix,
@@ -728,70 +812,32 @@ export function binarySearchMaxVectors(
       expectedMask,
       strictSuffix
     );
-    const isValid = candidateResult.isValid;
-    const validation = candidateResult.validation;
-    const formatVerification = candidateResult.formatVerification;
-    if (isValid) rejectionHistogram.ACCEPTED++;
+    const { isValid, validation, formatVerification } = candidateResult;
 
-    // Track rejection reasons in histogram
-    if (!isValid && validation.reason) {
-      const reason = validation.reason as keyof RejectionHistogram;
-      if (reason in rejectionHistogram && reason !== 'ACCEPTED' && reason !== 'total') {
-        rejectionHistogram[reason]++;
-      }
-    }
-
-    // Per-candidate logging with hardGate pass/fail, rejection reason, vectorsApplied count
-    log.debug('Binary search iteration', {
-      iteration: iterations,
-      vectorsApplied: mid,
+    trackRejection(rejectionHistogram, isValid, validation);
+    logSearchIteration(
+      iterations,
+      mid,
       low,
       high,
-      // Hard gate status
-      hardGatePassed: isValid,
-      hardGateFailed: validation.hardGateFailed,
-      scans: scan.success,
-      byteExactValid: validation.valid || isValid,
-      // Rejection details
-      rejectionReason: isValid ? undefined : validation.reason,
-      description: isValid ? undefined : validation.description,
-      mismatchIndex: validation.mismatchIndex,
-      // Soft penalty (suffix charset)
-      suffixCharsetPenalty: validation.suffixCharsetPenalty,
-      // Format info details if verified
-      ...(formatVerification
-        ? {
-            formatVerified: formatVerification.valid,
-            extractedEcc: formatVerification.extractedEcc,
-            extractedMask: formatVerification.extractedMask,
-            eccMatch: formatVerification.eccMatch,
-            maskMatch: formatVerification.maskMatch,
-          }
-        : {}),
-      // Show details about the decoded data
-      ...(scan.success
-        ? {
-            decodedLength: scan.data?.length,
-            originalLength: expectedData.length,
-            suffixPreview: scan.data?.slice(expectedData.length)?.slice(0, 20),
-          }
-        : {}),
-    });
+      isValid,
+      validation,
+      scan,
+      formatVerification,
+      expectedData
+    );
 
     if (isValid) {
-      // This count works - all semantic checks passed, try more vectors for better image
       bestCount = mid;
       bestMatrix = result.matrix;
       bestBlockData = result.modifiedBlockData;
       bestBlockEcc = result.modifiedBlockEcc;
       low = mid + 1;
     } else {
-      // This count doesn't work (scan failed, byte mismatch, or format info mismatch), try fewer
       high = mid - 1;
     }
   }
 
-  // Log rejection histogram at end of binary search
   log.info('Binary search complete', {
     maxCount: bestCount,
     totalVectors,
@@ -807,7 +853,6 @@ export function binarySearchMaxVectors(
     },
   });
 
-  // Warn if suffix charset rejections are dominating and strictSuffix is enabled
   if (strictSuffix && rejectionHistogram.SUFFIX_CHARSET_INVALID > rejectionHistogram.ACCEPTED) {
     log.warn('High suffix charset rejection rate with strictSuffix=true', {
       suffixCharsetRejections: rejectionHistogram.SUFFIX_CHARSET_INVALID,

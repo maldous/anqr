@@ -329,56 +329,60 @@ export function generateLightning(params: LightningParams): string {
 /**
  * Generate Ethereum transaction request URI (EIP-681)
  */
-export function generateEthereumEIP681(params: EthereumEIP681Params): string {
-  let uri = 'ethereum:';
+function appendGasParams(queryParams: URLSearchParams, params: EthereumEIP681Params): void {
+  if (params.gas) queryParams.set('gas', params.gas.toString());
+  if (params.gasLimit) queryParams.set('gasLimit', params.gasLimit.toString());
+  if (params.gasPrice) queryParams.set('gasPrice', params.gasPrice);
+}
 
-  if (params.tokenAddress) {
-    uri += params.tokenAddress;
-    if (params.chainId && params.chainId !== 1) {
-      uri += `@${params.chainId}`;
-    }
-    uri += '/transfer';
+function buildTokenTransferURI(params: EthereumEIP681Params): string {
+  let uri = `ethereum:${params.tokenAddress}`;
+  if (params.chainId && params.chainId !== 1) {
+    uri += `@${params.chainId}`;
+  }
+  uri += '/transfer';
 
-    const queryParams = new URLSearchParams();
-    queryParams.set('address', params.targetAddress);
-    if (params.tokenValue) {
-      queryParams.set('uint256', params.tokenValue);
-    }
-    if (params.gas) queryParams.set('gas', params.gas.toString());
-    if (params.gasLimit) queryParams.set('gasLimit', params.gasLimit.toString());
-    if (params.gasPrice) queryParams.set('gasPrice', params.gasPrice);
+  const queryParams = new URLSearchParams();
+  queryParams.set('address', params.targetAddress);
+  if (params.tokenValue) {
+    queryParams.set('uint256', params.tokenValue);
+  }
+  appendGasParams(queryParams, params);
 
-    uri += `?${queryParams.toString()}`;
-  } else {
-    uri += params.targetAddress;
+  uri += `?${queryParams.toString()}`;
+  return uri;
+}
 
-    if (params.chainId && params.chainId !== 1) {
-      uri += `@${params.chainId}`;
-    }
+function buildPlainEthURI(params: EthereumEIP681Params): string {
+  let uri = `ethereum:${params.targetAddress}`;
 
-    if (params.functionName) {
-      uri += `/${params.functionName}`;
-    }
+  if (params.chainId && params.chainId !== 1) {
+    uri += `@${params.chainId}`;
+  }
 
-    const queryParams = new URLSearchParams();
-    if (params.value) queryParams.set('value', params.value);
-    if (params.gas) queryParams.set('gas', params.gas.toString());
-    if (params.gasLimit) queryParams.set('gasLimit', params.gasLimit.toString());
-    if (params.gasPrice) queryParams.set('gasPrice', params.gasPrice);
+  if (params.functionName) {
+    uri += `/${params.functionName}`;
+  }
 
-    if (params.functionParams) {
-      for (const [key, value] of Object.entries(params.functionParams)) {
-        queryParams.set(key, value);
-      }
-    }
+  const queryParams = new URLSearchParams();
+  if (params.value) queryParams.set('value', params.value);
+  appendGasParams(queryParams, params);
 
-    const paramStr = queryParams.toString();
-    if (paramStr) {
-      uri += `?${paramStr}`;
+  if (params.functionParams) {
+    for (const [key, value] of Object.entries(params.functionParams)) {
+      queryParams.set(key, value);
     }
   }
 
+  const paramStr = queryParams.toString();
+  if (paramStr) {
+    uri += `?${paramStr}`;
+  }
   return uri;
+}
+
+export function generateEthereumEIP681(params: EthereumEIP681Params): string {
+  return params.tokenAddress ? buildTokenTransferURI(params) : buildPlainEthURI(params);
 }
 
 /**
