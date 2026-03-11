@@ -1338,6 +1338,10 @@ type QArtEncodingPlan =
       suffixLength: number;
     };
 
+function getBitsPerGroup(groupDigits: number): number {
+  return groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+}
+
 function computeNumericGroupSafeBits(
   suffixLength: number,
   numericDataStart: number,
@@ -1352,7 +1356,7 @@ function computeNumericGroupSafeBits(
 
   while (remaining > 0) {
     const groupDigits = Math.min(3, remaining);
-    const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+    const bitsPerGroup = getBitsPerGroup(groupDigits);
 
     let value = 0;
     for (let j = 0; j < bitsPerGroup; j++) {
@@ -1978,6 +1982,73 @@ function buildNumericGroupMaps(
   return { groupIndexForBit, bitMaskForBit, groupMax, baseGroupValues };
 }
 
+function accumulateSparseVectorMasks(
+  nzIdx: Uint16Array,
+  nzVals: Uint8Array,
+  dataCount: number,
+  blockStart: number,
+  numericStartByte: number,
+  numericEndByte: number,
+  numericDataStart: number,
+  numericDataBits: number,
+  groupIndexForBit: Int32Array,
+  bitMaskForBit: Int32Array,
+  groupMasks: Int32Array,
+  touched: Int32Array
+): number {
+  let touchedCount = 0;
+  const firstByte = nzIdx[0] ?? -1;
+  const lastByte = nzIdx[nzIdx.length - 1] ?? -1;
+  if (firstByte < numericEndByte && lastByte >= numericStartByte) {
+    for (let k = 0; k < nzIdx.length; k++) {
+      const byteIdx = nzIdx[k];
+      if (byteIdx >= dataCount) continue;
+      touchedCount = accumulateByteGroupMasks(
+        nzVals[k],
+        blockStart + byteIdx,
+        numericDataStart,
+        numericDataBits,
+        groupIndexForBit,
+        bitMaskForBit,
+        groupMasks,
+        touched,
+        touchedCount
+      );
+    }
+  }
+  return touchedCount;
+}
+
+function accumulateDenseVectorMasks(
+  blockBits: Uint8Array,
+  dataCount: number,
+  blockStart: number,
+  numericDataStart: number,
+  numericDataBits: number,
+  groupIndexForBit: Int32Array,
+  bitMaskForBit: Int32Array,
+  groupMasks: Int32Array,
+  touched: Int32Array
+): number {
+  let touchedCount = 0;
+  for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
+    const byte = blockBits[byteIdx];
+    if (!byte) continue;
+    touchedCount = accumulateByteGroupMasks(
+      byte,
+      blockStart + byteIdx,
+      numericDataStart,
+      numericDataBits,
+      groupIndexForBit,
+      bitMaskForBit,
+      groupMasks,
+      touched,
+      touchedCount
+    );
+  }
+  return touchedCount;
+}
+
 function computeEntryGroupMasks(
   entry: FlattenedSelection,
   blockDataCounts: number[],
@@ -1994,47 +2065,36 @@ function computeEntryGroupMasks(
   const vector = entry.vector;
   const dataCount = blockDataCounts[entry.blockIndex] ?? 0;
   const blockStart = blockStartBytes[entry.blockIndex] ?? 0;
-  let touchedCount = 0;
 
   const nzIdx = vector.nonZeroByteIndices;
   const nzVals = vector.nonZeroByteValues;
-  if (nzIdx && nzVals) {
-    const firstByte = nzIdx[0] ?? -1;
-    const lastByte = nzIdx[nzIdx.length - 1] ?? -1;
-    if (firstByte < numericEndByte && lastByte >= numericStartByte) {
-      for (let k = 0; k < nzIdx.length; k++) {
-        const byteIdx = nzIdx[k];
-        if (byteIdx >= dataCount) continue;
-        touchedCount = accumulateByteGroupMasks(
-          nzVals[k],
-          blockStart + byteIdx,
+  const touchedCount =
+    nzIdx && nzVals
+      ? accumulateSparseVectorMasks(
+          nzIdx,
+          nzVals,
+          dataCount,
+          blockStart,
+          numericStartByte,
+          numericEndByte,
           numericDataStart,
           numericDataBits,
           groupIndexForBit,
           bitMaskForBit,
           groupMasks,
-          touched,
-          touchedCount
+          touched
+        )
+      : accumulateDenseVectorMasks(
+          vector.blockBits,
+          dataCount,
+          blockStart,
+          numericDataStart,
+          numericDataBits,
+          groupIndexForBit,
+          bitMaskForBit,
+          groupMasks,
+          touched
         );
-      }
-    }
-  } else {
-    for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
-      const byte = vector.blockBits[byteIdx];
-      if (!byte) continue;
-      touchedCount = accumulateByteGroupMasks(
-        byte,
-        blockStart + byteIdx,
-        numericDataStart,
-        numericDataBits,
-        groupIndexForBit,
-        bitMaskForBit,
-        groupMasks,
-        touched,
-        touchedCount
-      );
-    }
-  }
 
   if (touchedCount === 0) {
     return { entry, groups: new Int32Array(0), masks: new Int32Array(0) };
@@ -3134,6 +3194,26 @@ function handleAutoSuffix(
   return { actualSuffix, encodedData, optimalVersion: optimalConfig.version };
 }
 
+function resolvePrefixAndSuffixMode(
+  data: string,
+  suffixMode: 'auto' | 'numeric' | 'byte'
+): { resolvedSuffixMode: 'numeric' | 'byte'; prefix: string } {
+  const isUrlLike = /^https?:\/\//i.test(data);
+  const resolvedSuffixMode: 'numeric' | 'byte' =
+    suffixMode === 'auto' ? (isUrlLike ? 'numeric' : 'byte') : suffixMode;
+
+  const hashIndex = data.indexOf('#');
+  const baseUrl = hashIndex >= 0 ? data.slice(0, hashIndex) : data;
+  if (resolvedSuffixMode === 'numeric' && hashIndex >= 0) {
+    log.warn('Numeric suffix mode: dropping existing fragment and regenerating numeric suffix', {
+      originalData: data.length > 60 ? `${data.slice(0, 60)}...` : data,
+    });
+  }
+
+  const prefix = resolvedSuffixMode === 'numeric' ? `${baseUrl}#` : data;
+  return { resolvedSuffixMode, prefix };
+}
+
 function resolveQArtSuffixConfig(config: {
   data: string;
   version: number;
@@ -3168,21 +3248,10 @@ function resolveQArtSuffixConfig(config: {
     lockVersionToMinimum,
   } = config;
 
-  const isUrlLike = /^https?:\/\//i.test(data);
-  let resolvedSuffixMode: 'numeric' | 'byte' =
-    suffixMode === 'auto' ? (isUrlLike ? 'numeric' : 'byte') : suffixMode;
-
+  const prefixResult = resolvePrefixAndSuffixMode(data, suffixMode);
+  let resolvedSuffixMode = prefixResult.resolvedSuffixMode;
   const encodingSuffixMode: 'numeric' | 'byte' = resolvedSuffixMode;
-
-  const hashIndex = data.indexOf('#');
-  const baseUrl = hashIndex >= 0 ? data.slice(0, hashIndex) : data;
-  if (resolvedSuffixMode === 'numeric' && hashIndex >= 0) {
-    log.warn('Numeric suffix mode: dropping existing fragment and regenerating numeric suffix', {
-      originalData: data.length > 60 ? `${data.slice(0, 60)}...` : data,
-    });
-  }
-
-  const prefix = resolvedSuffixMode === 'numeric' ? `${baseUrl}#` : data;
+  const prefix = prefixResult.prefix;
   let originalData = prefix;
   let originalDataLength = originalData.length;
 
@@ -3343,6 +3412,33 @@ function verifyRSLinearityAllBlocks(
   return ok;
 }
 
+function countDataDiffs(
+  origData: Uint8Array,
+  modData: Uint8Array
+): { bytesChanged: number; bitsChanged: number } {
+  let bytesChanged = 0;
+  let bitsChanged = 0;
+  for (let i = 0; i < origData.length; i++) {
+    if (origData[i] !== modData[i]) {
+      bytesChanged++;
+      let diff = origData[i] ^ modData[i];
+      while (diff) {
+        bitsChanged += diff & 1;
+        diff >>>= 1;
+      }
+    }
+  }
+  return { bytesChanged, bitsChanged };
+}
+
+function countChangedBytes(a: Uint8Array, b: Uint8Array): number {
+  let count = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) count++;
+  }
+  return count;
+}
+
 function logBlockModificationSummary(
   blockDataArrays: Uint8Array[],
   modifiedBlockData: Uint8Array[],
@@ -3350,30 +3446,13 @@ function logBlockModificationSummary(
   modifiedBlockEcc: Uint8Array[]
 ): void {
   for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
-    let bytesChanged = 0;
-    let bitsChanged = 0;
     const origData = blockDataArrays[blockIdx];
     const modData = modifiedBlockData[blockIdx];
     const origEcc = blockEccArrays[blockIdx];
     const modEcc = modifiedBlockEcc[blockIdx];
 
-    for (let i = 0; i < origData.length; i++) {
-      if (origData[i] !== modData[i]) {
-        bytesChanged++;
-        let diff = origData[i] ^ modData[i];
-        while (diff) {
-          bitsChanged += diff & 1;
-          diff >>>= 1;
-        }
-      }
-    }
-
-    let eccBytesChanged = 0;
-    for (let i = 0; i < origEcc.length; i++) {
-      if (origEcc[i] !== modEcc[i]) {
-        eccBytesChanged++;
-      }
-    }
+    const { bytesChanged, bitsChanged } = countDataDiffs(origData, modData);
+    const eccBytesChanged = countChangedBytes(origEcc, modEcc);
 
     if (bytesChanged > 0 || eccBytesChanged > 0) {
       log.debug('Block modification summary', {
@@ -3506,6 +3585,78 @@ function validateFinalMatrixDiagnostics(
   };
 }
 
+function evaluateSemanticGateResult(
+  semanticValidation: SemanticValidationResult,
+  scanResult: ScanResult,
+  data: string,
+  originalDataLength: number,
+  ecc: ECCLevel,
+  actualMask: number,
+  strictSuffix: boolean
+): ScanResult {
+  if (semanticValidation.valid) {
+    log.info('QR-Art SEMANTIC-HARD-GATE validation PASSED', {
+      originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
+      originalDataLength,
+      decodedDataLength: scanResult.data?.length,
+      ecc,
+      mask: actualMask,
+      strictSuffix,
+      structurallyValid: scanResult.structurallyValid,
+      segmentCount: scanResult.segmentCount,
+      segmentModes: scanResult.segments?.map((s) => s.modeName),
+      validationMethod: 'SEMANTIC_HARD_GATE',
+      checksPerformed: [
+        'SCAN_SUCCESS',
+        'LENGTH_CHECK',
+        'BYTE_EXACT_PREFIX',
+        'ECC_INVARIANT',
+        'MASK_INVARIANT',
+        'STRUCTURAL_VALIDITY',
+        strictSuffix ? 'SUFFIX_CHARSET_STRICT' : 'SUFFIX_CHARSET_SOFT',
+      ],
+    });
+    return scanResult;
+  }
+
+  log.warn('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
+    rejectionReason: semanticValidation.reason,
+    description: semanticValidation.description,
+    details: semanticValidation.details,
+    originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
+    originalDataLength,
+    ecc,
+    mask: actualMask,
+    structurallyValid: scanResult.structurallyValid,
+    segmentCount: scanResult.segmentCount,
+    segmentModes: scanResult.segments?.map((s) => s.modeName),
+    segments: scanResult.segments?.map((s) => ({
+      mode: s.modeName,
+      charCount: s.charCount,
+      valid: s.valid,
+      bitOffset: s.bitOffset,
+    })),
+    note: 'Candidate rejected by semantic-hard-gate',
+  });
+
+  if (scanResult.success && scanResult.data) {
+    const expectedBytes = stringToBytes(data);
+    const actualBytes = stringToBytes(scanResult.data);
+    log.warn('DECODED BYTES (hex comparison)', {
+      decodedPrefixHex: toHex(actualBytes.slice(0, originalDataLength)),
+      expectedPrefixHex: toHex(expectedBytes),
+      mismatchIndex: semanticValidation.details?.mismatchIndex,
+      expectedByte: semanticValidation.details?.expectedByte?.toString(16),
+      actualByte: semanticValidation.details?.actualByte?.toString(16),
+    });
+  }
+
+  return {
+    success: false,
+    error: `Semantic validation failed: ${semanticValidation.reason} - ${semanticValidation.description}`,
+  };
+}
+
 function performSemanticGateAndFallback(
   finalMatrix: boolean[][],
   baseMatrix: boolean[][],
@@ -3551,70 +3702,18 @@ function performSemanticGateAndFallback(
     resolvedSuffixMode
   );
 
-  let currentScanResult = scanResult;
+  const currentScanResult = evaluateSemanticGateResult(
+    semanticValidation,
+    scanResult,
+    data,
+    originalDataLength,
+    ecc,
+    actualMask,
+    strictSuffix
+  );
+
   let finalMatrixToUse = finalMatrix;
   let actualVectorsApplied = totalSelected;
-
-  if (semanticValidation.valid) {
-    log.info('QR-Art SEMANTIC-HARD-GATE validation PASSED', {
-      originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
-      originalDataLength,
-      decodedDataLength: scanResult.data?.length,
-      ecc,
-      mask: actualMask,
-      strictSuffix,
-      structurallyValid: scanResult.structurallyValid,
-      segmentCount: scanResult.segmentCount,
-      segmentModes: scanResult.segments?.map((s) => s.modeName),
-      validationMethod: 'SEMANTIC_HARD_GATE',
-      checksPerformed: [
-        'SCAN_SUCCESS',
-        'LENGTH_CHECK',
-        'BYTE_EXACT_PREFIX',
-        'ECC_INVARIANT',
-        'MASK_INVARIANT',
-        'STRUCTURAL_VALIDITY',
-        strictSuffix ? 'SUFFIX_CHARSET_STRICT' : 'SUFFIX_CHARSET_SOFT',
-      ],
-    });
-  } else {
-    log.warn('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
-      rejectionReason: semanticValidation.reason,
-      description: semanticValidation.description,
-      details: semanticValidation.details,
-      originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
-      originalDataLength,
-      ecc,
-      mask: actualMask,
-      structurallyValid: scanResult.structurallyValid,
-      segmentCount: scanResult.segmentCount,
-      segmentModes: scanResult.segments?.map((s) => s.modeName),
-      segments: scanResult.segments?.map((s) => ({
-        mode: s.modeName,
-        charCount: s.charCount,
-        valid: s.valid,
-        bitOffset: s.bitOffset,
-      })),
-      note: 'Candidate rejected by semantic-hard-gate',
-    });
-
-    if (scanResult.success && scanResult.data) {
-      const expectedBytes = stringToBytes(data);
-      const actualBytes = stringToBytes(scanResult.data);
-      log.warn('DECODED BYTES (hex comparison)', {
-        decodedPrefixHex: toHex(actualBytes.slice(0, originalDataLength)),
-        expectedPrefixHex: toHex(expectedBytes),
-        mismatchIndex: semanticValidation.details?.mismatchIndex,
-        expectedByte: semanticValidation.details?.expectedByte?.toString(16),
-        actualByte: semanticValidation.details?.actualByte?.toString(16),
-      });
-    }
-
-    currentScanResult = {
-      success: false,
-      error: `Semantic validation failed: ${semanticValidation.reason} - ${semanticValidation.description}`,
-    };
-  }
 
   if (!currentScanResult.success) {
     log.warn('QR-Art matrix scan validation FAILED - matrix does not scan!', {
