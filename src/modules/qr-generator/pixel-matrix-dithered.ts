@@ -915,7 +915,6 @@ function computeModuleViolation(
     toDark = true;
   } else if (!qrIsDark && occ > lightMax) {
     occViolation = occ - lightMax;
-    toDark = false;
   }
   if (qrIsDark && cOcc < darkCenterMin) {
     centerViolation = darkCenterMin - cOcc;

@@ -634,9 +634,7 @@ const envLevel = (() => {
   }
 })();
 const isDev =
-  typeof import.meta?.env?.DEV === 'undefined'
-    ? process.env.NODE_ENV !== 'production'
-    : import.meta.env.DEV;
+  import.meta?.env?.DEV === undefined ? process.env.NODE_ENV !== 'production' : import.meta.env.DEV;
 const defaultLevel = envLevel ?? (isDev ? 'debug' : 'error');
 loglevel.setLevel(defaultLevel);
 type RuntimeLogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent';

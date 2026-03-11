@@ -721,7 +721,6 @@ export function renderModules(options: RenderModulesOptions): void {
     margin,
     overlayData,
     ditherPattern,
-    effectiveIntensity,
     skipMask,
     version,
     gradientFill,

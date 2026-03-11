@@ -125,7 +125,7 @@ export function gifImage(width: number, height: number) {
 
     return {
       add: (key: string): void => {
-        if (typeof _map[key] !== 'undefined') {
+        if (_map[key] !== undefined) {
           throw new TypeError(`dup key:${key}`);
         }
         _map[key] = _size;
@@ -133,7 +133,7 @@ export function gifImage(width: number, height: number) {
       },
       size: () => _size,
       indexOf: (key: string) => _map[key],
-      contains: (key: string) => typeof _map[key] !== 'undefined',
+      contains: (key: string) => _map[key] !== undefined,
     };
   };
 

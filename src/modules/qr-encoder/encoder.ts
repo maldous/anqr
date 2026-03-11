@@ -471,7 +471,7 @@ export function qrcode(
 
   const _createHalfASCII = (margin?: number): string => {
     const cellSize = 1;
-    const marginVal = margin === undefined ? cellSize * 2 : margin;
+    const marginVal = margin ?? cellSize * 2;
 
     const size = _moduleCount * cellSize + marginVal * 2;
     const min = marginVal;
@@ -553,7 +553,7 @@ export function qrcode(
 
     createTableTag: (cellSize?: number, margin?: number): string => {
       const cellSizeVal = cellSize || 2;
-      const marginVal = margin === undefined ? cellSizeVal * 4 : margin;
+      const marginVal = margin ?? cellSizeVal * 4;
 
       let qrHtml = '';
 
@@ -619,7 +619,7 @@ export function qrcode(
       }
 
       const cellSizeVal = cellSize || 2;
-      const marginVal = margin === undefined ? cellSizeVal * 4 : margin;
+      const marginVal = margin ?? cellSizeVal * 4;
 
       const altObj = composeSvgAccessibilityAttr(alt, 'qrcode-description');
       const titleObj = composeSvgAccessibilityAttr(title, 'qrcode-title');
@@ -664,7 +664,7 @@ export function qrcode(
 
     createDataURL: (cellSize?: number, margin?: number): string => {
       const cellSizeVal = cellSize || 2;
-      const marginVal = margin === undefined ? cellSizeVal * 4 : margin;
+      const marginVal = margin ?? cellSizeVal * 4;
 
       const size = _this.getModuleCount() * cellSizeVal + marginVal * 2;
       const min = marginVal;
@@ -683,7 +683,7 @@ export function qrcode(
 
     createImgTag: (cellSize?: number, margin?: number, alt?: string): string => {
       const cellSizeVal = cellSize || 2;
-      const marginVal = margin === undefined ? cellSizeVal * 4 : margin;
+      const marginVal = margin ?? cellSizeVal * 4;
 
       const size = _this.getModuleCount() * cellSizeVal + marginVal * 2;
 
@@ -716,7 +716,7 @@ export function qrcode(
       }
 
       const cs = cellSizeVal - 1;
-      const marginVal = margin === undefined ? cs * 2 : margin;
+      const marginVal = margin ?? cs * 2;
 
       const size = _moduleCount * cs + marginVal * 2;
       const min = marginVal;

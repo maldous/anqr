@@ -1488,7 +1488,7 @@ export class QRGenerator {
     moduleCount: number,
     scale: number
   ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
-    if (!(scale > 1) || !processedOverlayCanvas) return null;
+    if (scale <= 1 || !processedOverlayCanvas) return null;
 
     const pool = this._canvasPool;
     const renderScaled = async (cfg: QRGeneratorConfig) =>

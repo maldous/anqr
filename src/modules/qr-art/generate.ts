@@ -3296,7 +3296,6 @@ function resolveQArtSuffixConfig(config: {
       versionToUse = autoResult.optimalVersion;
     }
   } else {
-    actualSuffix = '';
     encodedData = data;
     resolvedSuffixMode = 'byte';
     originalData = data;
@@ -4605,7 +4604,7 @@ async function generateFullQArtCore(params: QArtCoreParams): Promise<FullQArtRes
   if (basisResult.earlyReturn) {
     return basisResult.earlyReturn;
   }
-  const { basis, actualControllableBits, actualControlPercentage, allowedBitRanges } = basisResult;
+  const { basis, actualControlPercentage, allowedBitRanges } = basisResult;
 
   onProgress?.('Mapping bits to pixels', 20);
 

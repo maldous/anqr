@@ -267,10 +267,10 @@ import { getStore } from '@netlify/blobs';
 if (globalThis.ImageData === undefined) {
   (globalThis as Record<string, unknown>).ImageData = NapiImageData;
 }
-if (typeof (globalThis as Record<string, unknown>).HTMLCanvasElement === 'undefined') {
+if ((globalThis as Record<string, unknown>).HTMLCanvasElement === undefined) {
   (globalThis as Record<string, unknown>).HTMLCanvasElement = createCanvas(1, 1).constructor;
 }
-if (typeof (globalThis as Record<string, unknown>).OffscreenCanvas === 'undefined') {
+if ((globalThis as Record<string, unknown>).OffscreenCanvas === undefined) {
   (globalThis as Record<string, unknown>).OffscreenCanvas = (
     globalThis as Record<string, unknown>
   ).HTMLCanvasElement;

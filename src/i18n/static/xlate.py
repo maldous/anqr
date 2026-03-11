@@ -47,7 +47,7 @@ SEP_MARK_RE = re.compile(r"\[\[\[\s*ANQR(\d+)\s*\]\]\]")
 
 # Protect placeholders: {name}, {0}, {{var}}, %s, %d, %(name)s, %1$s, :name
 PH_RE = re.compile(
-    r"(\{\{[^{}]+\}\}|\{[^{}]+\}|%\([^)]+\)[sd]|%[0-9]+\$[sd]|%[sd]|:[A-Za-z_][A-Za-z0-9_]*|__ANQR_[A-Z0-9_]+__)",
+    r"(\{\{[^{}]+\}\}|\{[^{}]+\}|%\([^)]+\)[sd]|%\d+\$[sd]|%[sd]|:[A-Za-z_]\w*|__ANQR_[A-Z0-9_]+__)",
     re.UNICODE,
 )
 
@@ -331,7 +331,7 @@ def main() -> None:
     added_total = 0
     if args.workers <= 1:
         for lf in lang_files:
-            name, added = process_language(en_map, lf, engine, limiter, args.max_chars, args.dry_run)
+            _, added = process_language(en_map, lf, engine, limiter, args.max_chars, args.dry_run)
             added_total += added
     else:
         # NOTE: RateLimiter isn't thread-safe; enforce per-thread QPS by splitting
@@ -341,7 +341,7 @@ def main() -> None:
         with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
             futs = [ex.submit(task, lf) for lf in lang_files]
             for f in cf.as_completed(futs):
-                name, added = f.result()
+                _, added = f.result()
                 added_total += added
 
     safe_print(f"\nDone! Processed {len(lang_files)} languages, added {added_total} total translations.")

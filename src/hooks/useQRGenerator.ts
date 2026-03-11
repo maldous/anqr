@@ -669,7 +669,7 @@ async function applyWatermarkToCanvas<
   ) {
     watermarkImage = await loadFileAsCanvas(watermarkConfig.image);
   }
-  const watermarked = await applyWatermark(
+  const watermarked = applyWatermark(
     sourceCanvas as HTMLCanvasElement,
     {
       kind: watermarkConfig.kind,
@@ -5433,7 +5433,6 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // Determine frames to process
       // For GIF compositor, we need to process frames sequentially using apply/dispose
-      let framesToProcess = effectiveFrames;
       const useCompositor = gifCompositor && effectiveFrameIndices.length > 0 && overlay.enabled;
 
       log.debug('animation cache: building', {
@@ -5469,7 +5468,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         applyGeometricTransforms,
       });
       if (!baseResult.framesToProcess || isRunCancelled()) return;
-      framesToProcess = baseResult.framesToProcess;
+      const framesToProcess = baseResult.framesToProcess;
 
       if (useCompositor && gifCompositor) {
         gifCompositor.reset();

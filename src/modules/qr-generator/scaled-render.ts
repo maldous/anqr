@@ -745,7 +745,7 @@ function renderDitheredDarkPixel(
     drawDitherDot,
   } = pgctx;
   const sourceLuma = color ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255 : 0.5;
-  let drawLuma = sourceLuma;
+  let drawLuma: number;
   if (useColorRendering && color) {
     const tone = (1 - sourceLuma) ** 0.86;
     const targetLuma = Math.max(0.04, Math.min(0.21, 0.04 + (1 - tone) * 0.17));
@@ -1406,12 +1406,8 @@ export async function generateScaledQR(
   // Determine color rendering mode
   const useColorRendering = Boolean(overlayCanvas && config.colorMode !== 'bw');
 
-  const {
-    isDitheredMode,
-    forceBinaryFunctionPatterns,
-    isSubpixelMode,
-    needsBothDarkAndLightColors,
-  } = classifyScaledOverlayMode(config);
+  const { isDitheredMode, forceBinaryFunctionPatterns, needsBothDarkAndLightColors } =
+    classifyScaledOverlayMode(config);
   const {
     subpixelDarkTargetLuma,
     subpixelLightTargetLuma,
