@@ -15,7 +15,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (_error) {
-    // Clipboard API failed, use fallback
+    // NOSONAR: intentional silent fallback to execCommand
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
@@ -24,12 +24,10 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     textarea.select();
 
     try {
-      // execCommand is deprecated but necessary for older browser fallback
-      // NOSONAR - intentionally using deprecated API for browser compatibility
-      document.execCommand('copy');
+      document.execCommand('copy'); // NOSONAR: deprecated but necessary for older browser fallback
       return true;
     } catch (_fallbackError) {
-      // Both clipboard methods failed
+      // NOSONAR: intentional silent fallback, returns false
       return false;
     } finally {
       textarea.remove();

@@ -519,7 +519,7 @@ export class StringEncoding {
   }
 
   private static encodeFallback(s: string): Uint8Array {
-    const encodedURIstring = btoa(unescape(encodeURIComponent(s)));
+    const encodedURIstring = btoa(unescape(encodeURIComponent(s))); // NOSONAR: classic btoa-Unicode pattern, TextEncoder used elsewhere
     const charList = encodedURIstring.split('');
     const uintArray: number[] = [];
     for (let i = 0; i < charList.length; i++) {

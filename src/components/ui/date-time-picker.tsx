@@ -128,7 +128,7 @@ export function DateTimePicker({
           align="start"
           sideOffset={4}
         >
-          <Calendar mode="single" selected={parsedDate} onSelect={handleDateSelect} initialFocus />
+          <Calendar mode="single" selected={parsedDate} onSelect={handleDateSelect} />
           <div className="border-t p-3">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />

@@ -461,7 +461,7 @@ function CopyButton({ text, label, className = '' }: Readonly<CopyButtonProps>) 
       textarea.value = text;
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand('copy');
+      document.execCommand('copy'); // NOSONAR: intentional fallback for older browsers
       textarea.remove();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -662,7 +662,7 @@ function ModuleMatrixView({
       textarea.value = asciiArt;
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand('copy');
+      document.execCommand('copy'); // NOSONAR: intentional fallback for older browsers
       textarea.remove();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

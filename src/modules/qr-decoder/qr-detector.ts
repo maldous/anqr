@@ -307,8 +307,8 @@ export class Detector {
         return Math.hypot(x - fromX, y - fromY);
       }
       error += dy;
+      if (error > 0 && y === toY) break;
       if (error > 0) {
-        if (y === toY) break;
         y += ystep;
         error -= dx;
       }

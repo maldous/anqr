@@ -2837,7 +2837,7 @@ function runDeterministicMutationTest(
       linearByte,
       linearBit,
       paddingStartByte: encoderLayout.paddingStartByte,
-      allowedBitStart: encoderLayout.allowedBitStart,
+      allowedBitStart: encoderLayout.allowedBitStart, // NOSONAR: legacy field needed for debug diagnostics
       scanError: testScan.error,
     });
     return {

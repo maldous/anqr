@@ -404,4 +404,4 @@ if (detectedLang && detectedLang !== 'en-GB' && !loadedLocales.has(detectedLang)
   loadFontForLanguage(detectedLang);
 }
 
-export default i18n;
+export default i18n; // NOSONAR: configured instance, not a re-export

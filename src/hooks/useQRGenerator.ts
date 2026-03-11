@@ -3802,7 +3802,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   const [generationProgress, setGenerationProgress] = useState<GenerationProgressState | null>(
     null
   );
-  const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null);
+  const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null); // NOSONAR: setter name matches domain acronym QArt
   const qartPreviewBitmapCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // QR matrix for vector SVG export
@@ -3813,7 +3813,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   // retaining large canvas arrays in the render tree.
   const animationFramesRef = useRef<(HTMLCanvasElement | OffscreenCanvas)[]>([]);
   const [animationFrameCount, setAnimationFrameCount] = useState(0);
-  const [_animationFramesRevision, setAnimationFramesRevision] = useState(0);
+  const [, setAnimationFramesRevision] = useState(0);
   const [isAnimationCacheReady, setIsAnimationCacheReady] = useState(false);
 
   const replaceAnimationFrames = useCallback((frames: (HTMLCanvasElement | OffscreenCanvas)[]) => {

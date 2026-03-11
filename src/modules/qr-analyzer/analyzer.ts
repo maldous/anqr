@@ -186,7 +186,7 @@ export async function analyzeQRFromUrl(url: string): Promise<QRAnalysisResult> {
  * Analyze a QR code with full safety analysis (synchronous, for camera capture)
  */
 export function analyzeQRCode(canvas: HTMLCanvasElement): QRAnalysisResult {
-  // NOSONAR - intentionally duplicates analyzeQRFromCanvas; this is the synchronous variant
+  // NOSONAR: intentional sync variant of analyzeQRFromCanvas
   const startedAtMs = nowMs();
   const result = decodeQRFromCanvas(canvas);
   return withTotalAnalysisTiming(result, startedAtMs);

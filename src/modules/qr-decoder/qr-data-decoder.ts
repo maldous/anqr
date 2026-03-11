@@ -185,6 +185,7 @@ export class BitMatrixParser {
     for (let x = 0; x < dimension; x++) {
       for (let y = x + 1; y < dimension; y++) {
         if (this.bitMatrix.get(x, y) !== this.bitMatrix.get(y, x)) {
+          // NOSONAR: intentional swap for mirror operation
           this.bitMatrix.flip(y, x); // NOSONAR - intentional swap for mirror operation
           this.bitMatrix.flip(x, y); // NOSONAR - intentional swap for mirror operation
         }

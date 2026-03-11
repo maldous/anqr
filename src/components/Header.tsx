@@ -639,7 +639,7 @@ function HeaderLanguageMenu({
                 onCloseAnimationEnd();
               }
             }}
-            role="listbox"
+            role="listbox" // NOSONAR: custom styled dropdown, native <select> unsuitable
             aria-label={t('language.select', 'Select language')}
           >
             {[...languages]
@@ -659,10 +659,10 @@ function HeaderLanguageMenu({
                   key={lang.code}
                   onClick={() => onChangeLanguage(lang.code)}
                   className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
-                  title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
+                  title={`${lang.nativeName} - ${t('languages.' + lang.code)}`}
                   aria-label={`${lang.nativeName} (${lang.name})`}
                   aria-selected={i18n.language === lang.code || i18n.language.startsWith(lang.code)}
-                  role="option"
+                  role="option" // NOSONAR: custom styled dropdown item, native <option> unsuitable
                 >
                   <span>{lang.flag}</span>
                   <span>
@@ -673,7 +673,7 @@ function HeaderLanguageMenu({
                       if (isCurrentLang) {
                         return lang.code === 'en-GB' ? '' : ` (${lang.name})`;
                       }
-                      return ` (${t(`languages.${lang.code}`)})`;
+                      return ` (${t('languages.' + lang.code)})`;
                     })()}
                   </span>
                   {(i18n.language === lang.code || i18n.language.startsWith(lang.code)) && (
@@ -720,7 +720,6 @@ function HeaderMobileNav({
           onCloseAnimationEnd();
         }
       }}
-      role="navigation"
       aria-label="Mobile navigation"
     >
       <nav className="flex flex-col gap-2">

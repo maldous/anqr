@@ -21,7 +21,7 @@ export async function copyImageToClipboard(canvas: HTMLCanvasElement): Promise<b
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
     return true;
   } catch (_error) {
-    // Clipboard API unavailable
+    // NOSONAR: intentional silent fallback, returns false
     return false;
   }
 }

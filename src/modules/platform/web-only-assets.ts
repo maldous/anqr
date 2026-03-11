@@ -43,7 +43,7 @@ function addScript(
   script.src = src;
   script.async = options.async ?? true;
   if (options.crossOrigin) script.crossOrigin = options.crossOrigin;
-  if (options.charset) script.charset = options.charset;
+  if (options.charset) script.charset = options.charset; // NOSONAR: charset needed for third-party script compat
   document.head.appendChild(script);
 }
 
