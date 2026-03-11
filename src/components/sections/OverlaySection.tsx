@@ -750,6 +750,66 @@ const GALLERY_IMAGES = [
   { id: 'dance', name: 'Dance', url: '/dance.gif', isAnimated: true },
 ];
 
+function CropOverlayIndicator({
+  cropOverlayStyle,
+}: {
+  cropOverlayStyle: { left: string; top: string; width: string; height: string };
+}) {
+  return (
+    <>
+      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+      <div
+        className="absolute border-2 border-white shadow-lg pointer-events-none"
+        style={{
+          left: cropOverlayStyle.left,
+          top: cropOverlayStyle.top,
+          width: cropOverlayStyle.width,
+          height: cropOverlayStyle.height,
+          boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+        }}
+      >
+        <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+        <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Move className="h-6 w-6 text-white/70" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function handlePreviewImageLoad(
+  e: React.SyntheticEvent<HTMLImageElement>,
+  setPreviewImageSize: (v: { width: number; height: number } | null) => void
+): void {
+  const image = e.currentTarget;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  if (width > 0 && height > 0) {
+    setPreviewImageSize({ width, height });
+  }
+}
+
+function buildCropInteractionProps(
+  cropDrag: ReturnType<typeof useOverlayCropDrag>
+): Record<string, unknown> {
+  return {
+    tabIndex: 0,
+    onMouseDown: (e: React.MouseEvent) => {
+      e.preventDefault();
+      cropDrag.beginDragAtPoint(e.clientX, e.clientY);
+    },
+    onMouseUp: cropDrag.finishDrag,
+    onMouseLeave: cropDrag.finishDrag,
+    onMouseMove: cropDrag.handleCropDrag,
+    onTouchStart: cropDrag.handleTouchStart,
+    onTouchMove: cropDrag.handleTouchMove,
+    onTouchEnd: cropDrag.handleTouchEnd,
+  };
+}
+
 function OverlayPreviewPanel({
   overlay,
   imagePreview,
@@ -795,59 +855,18 @@ function OverlayPreviewPanel({
               ? 'Image preview with crop area selector. Drag to adjust crop position.'
               : 'Image preview'
           }
-          {...(overlay.cropEnabled && {
-            tabIndex: 0,
-            onMouseDown: (e: React.MouseEvent) => {
-              e.preventDefault();
-              cropDrag.beginDragAtPoint(e.clientX, e.clientY);
-            },
-            onMouseUp: cropDrag.finishDrag,
-            onMouseLeave: cropDrag.finishDrag,
-            onMouseMove: cropDrag.handleCropDrag,
-            onTouchStart: cropDrag.handleTouchStart,
-            onTouchMove: cropDrag.handleTouchMove,
-            onTouchEnd: cropDrag.handleTouchEnd,
-          })}
+          {...(overlay.cropEnabled && buildCropInteractionProps(cropDrag))}
           className="relative w-full aspect-square bg-muted/30 rounded-lg overflow-hidden border cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <img
             src={imagePreview}
             alt={t('overlay.preview')}
             className="w-full h-full object-contain"
-            onLoad={(e) => {
-              const image = e.currentTarget;
-              const width = image.naturalWidth || image.width;
-              const height = image.naturalHeight || image.height;
-              if (width > 0 && height > 0) {
-                setPreviewImageSize({ width, height });
-              }
-            }}
+            onLoad={(e) => handlePreviewImageLoad(e, setPreviewImageSize)}
             draggable={false}
           />
 
-          {overlay.cropEnabled && (
-            <>
-              <div className="absolute inset-0 bg-black/50 pointer-events-none" />
-              <div
-                className="absolute border-2 border-white shadow-lg pointer-events-none"
-                style={{
-                  left: cropOverlayStyle.left,
-                  top: cropOverlayStyle.top,
-                  width: cropOverlayStyle.width,
-                  height: cropOverlayStyle.height,
-                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
-                }}
-              >
-                <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Move className="h-6 w-6 text-white/70" />
-                </div>
-              </div>
-            </>
-          )}
+          {overlay.cropEnabled && <CropOverlayIndicator cropOverlayStyle={cropOverlayStyle} />}
         </div>
       )}
 
