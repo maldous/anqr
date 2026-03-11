@@ -4703,6 +4703,47 @@ function buildFinalResponse(
   });
 }
 
+async function handleCacheAndResponse(
+  p: ParsedHandlerParams,
+  outputBuffer: Buffer,
+  contentType: string,
+  cacheKey: string,
+  requestUrl: string
+): Promise<Response> {
+  const isDegraded = !!(p.overlayUrl && p.overlayMode) && !p.isFullRender;
+  qrFnLog('[BLOB] render result', {
+    isDegraded,
+    isFullRender: p.isFullRender,
+    hasOverlay: !!(p.overlayUrl && p.overlayMode),
+    bufferSize: outputBuffer.byteLength,
+    cacheKey: cacheKey.slice(0, 80),
+  });
+
+  if (!(isDegraded || p.skipCache)) {
+    await writeBlobCache(cacheKey, outputBuffer, contentType);
+  }
+  if (isDegraded && !p.skipCache) {
+    await triggerBackgroundRender(cacheKey, requestUrl);
+  }
+
+  return buildFinalResponse(outputBuffer, contentType, cacheKey, isDegraded);
+}
+
+function computeModuleSize(
+  modulePxParam: number | undefined,
+  size: number,
+  totalMargin: number,
+  estimatedModuleCount: number
+): number {
+  if (modulePxParam) {
+    return Math.max(1, Math.min(50, modulePxParam));
+  }
+  return Math.max(
+    1,
+    Math.floor((size - totalMargin * 2) / (estimatedModuleCount + totalMargin * 2))
+  );
+}
+
 async function processQRRequest(
   p: ParsedHandlerParams,
   params: URLSearchParams,
@@ -4717,12 +4758,7 @@ async function processQRRequest(
   const estimatedVersion = calculateOptimalVersion(p.data, p.ec);
   const estimatedModuleCount = estimatedVersion * 4 + 17;
   const totalMargin = p.margin + p.borderModulesExtra;
-  const moduleSize = p.modulePxParam
-    ? Math.max(1, Math.min(50, p.modulePxParam))
-    : Math.max(
-        1,
-        Math.floor((p.size - totalMargin * 2) / (estimatedModuleCount + totalMargin * 2))
-      );
+  const moduleSize = computeModuleSize(p.modulePxParam, p.size, totalMargin, estimatedModuleCount);
 
   const config = buildQRGeneratorConfig(p, moduleSize);
   const filterOptions = buildFilterOptionsFromParams(p);
@@ -4820,23 +4856,7 @@ async function processQRRequest(
     p.outputDpi
   );
 
-  const isDegraded = !!(p.overlayUrl && p.overlayMode) && !p.isFullRender;
-  qrFnLog('[BLOB] render result', {
-    isDegraded,
-    isFullRender: p.isFullRender,
-    hasOverlay: !!(p.overlayUrl && p.overlayMode),
-    bufferSize: outputBuffer.byteLength,
-    cacheKey: cacheKey.slice(0, 80),
-  });
-
-  if (!(isDegraded || p.skipCache)) {
-    await writeBlobCache(cacheKey, outputBuffer, contentType);
-  }
-  if (isDegraded && !p.skipCache) {
-    await triggerBackgroundRender(cacheKey, requestUrl);
-  }
-
-  return buildFinalResponse(outputBuffer, contentType, cacheKey, isDegraded);
+  return handleCacheAndResponse(p, outputBuffer, contentType, cacheKey, requestUrl);
 }
 
 async function handler(request: Request) {
