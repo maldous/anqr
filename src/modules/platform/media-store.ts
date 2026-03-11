@@ -73,8 +73,16 @@ export async function saveBase64ToDocuments(
   mimeType: string,
   subfolder?: string
 ): Promise<{ uri?: string; path?: string; displayName?: string }> {
-  return MediaStoreWriter.saveBase64ToDocuments!({
-    // NOSONAR: only available Capacitor API
+  const plugin = getMediaStoreWriter();
+  if (plugin.saveToDocuments) {
+    return plugin.saveToDocuments({
+      filename,
+      data: base64Data,
+      mimeType,
+      subdir: subfolder,
+    });
+  }
+  return plugin.saveBase64ToDocuments!({
     filename,
     base64Data,
     mimeType,

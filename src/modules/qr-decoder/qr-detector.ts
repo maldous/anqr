@@ -298,8 +298,7 @@ export class Detector {
     let state = 0;
     const xLimit = toX + xstep;
     for (let x = fromX, y = fromY; xstep > 0 ? x < xLimit : x > xLimit; x += xstep) {
-      const realX = steep ? y : x;
-      const realY = steep ? x : y;
+      const [realX, realY] = steep ? [y, x] : [x, y];
 
       state = Detector.advanceBWBState(this.image, realX, realY, state);
 

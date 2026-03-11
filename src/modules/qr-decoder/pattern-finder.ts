@@ -11,6 +11,21 @@ import type { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 import { ResultPoint } from './result-types';
 
+function patternAboutEquals(
+  patternX: number,
+  patternY: number,
+  patternModuleSize: number,
+  moduleSize: number,
+  i: number,
+  j: number
+): boolean {
+  if (Math.abs(i - patternY) <= moduleSize && Math.abs(j - patternX) <= moduleSize) {
+    const moduleSizeDiff = Math.abs(moduleSize - patternModuleSize);
+    return moduleSizeDiff <= 1 || moduleSizeDiff <= patternModuleSize;
+  }
+  return false;
+}
+
 /**
  * Finder pattern (one of three corner squares)
  */
@@ -37,11 +52,7 @@ export class FinderPattern extends ResultPoint {
   }
 
   aboutEquals(moduleSize: number, i: number, j: number): boolean {
-    if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
-      const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
-      return moduleSizeDiff <= 1 || moduleSizeDiff <= this.estimatedModuleSize;
-    }
-    return false;
+    return patternAboutEquals(this.getX(), this.getY(), this.estimatedModuleSize, moduleSize, i, j);
   }
 
   combineEstimate(i: number, j: number, newModuleSize: number): FinderPattern {
@@ -90,12 +101,7 @@ export class AlignmentPattern extends ResultPoint {
   }
 
   aboutEquals(moduleSize: number, i: number, j: number): boolean {
-    // NOSONAR: mirrors FinderPattern.aboutEquals by design
-    if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
-      const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
-      return moduleSizeDiff <= 1 || moduleSizeDiff <= this.estimatedModuleSize;
-    }
-    return false;
+    return patternAboutEquals(this.getX(), this.getY(), this.estimatedModuleSize, moduleSize, i, j);
   }
 
   combineEstimate(i: number, j: number, newModuleSize: number): AlignmentPattern {

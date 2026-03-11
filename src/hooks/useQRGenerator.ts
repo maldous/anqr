@@ -3566,6 +3566,7 @@ interface UseQRGeneratorResult {
   isFastPreview: boolean;
   // Animation frames for GIF export
   animationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
+  animationFramesRevision: number;
 }
 
 /**
@@ -3813,7 +3814,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   // retaining large canvas arrays in the render tree.
   const animationFramesRef = useRef<(HTMLCanvasElement | OffscreenCanvas)[]>([]);
   const [animationFrameCount, setAnimationFrameCount] = useState(0);
-  const [, setAnimationFramesRevision] = useState(0);
+  const [animationFramesRevision, setAnimationFramesRevision] = useState(0);
   const [isAnimationCacheReady, setIsAnimationCacheReady] = useState(false);
 
   const replaceAnimationFrames = useCallback((frames: (HTMLCanvasElement | OffscreenCanvas)[]) => {
@@ -5636,6 +5637,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     isFastPreview,
     // Animation frames for GIF export
     animationFrames: animationFramesRef.current,
+    animationFramesRevision,
   };
 }
 

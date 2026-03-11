@@ -182,12 +182,11 @@ export class BitMatrixParser {
 
   mirror_(): void {
     const dimension = this.bitMatrix.getHeight();
-    for (let x = 0; x < dimension; x++) {
-      for (let y = x + 1; y < dimension; y++) {
-        if (this.bitMatrix.get(x, y) !== this.bitMatrix.get(y, x)) {
-          // NOSONAR: intentional swap for mirror operation
-          this.bitMatrix.flip(y, x); // NOSONAR - intentional swap for mirror operation
-          this.bitMatrix.flip(x, y); // NOSONAR - intentional swap for mirror operation
+    for (let row = 0; row < dimension; row++) {
+      for (let col = row + 1; col < dimension; col++) {
+        if (this.bitMatrix.get(row, col) !== this.bitMatrix.get(col, row)) {
+          this.bitMatrix.flip(col, row);
+          this.bitMatrix.flip(row, col);
         }
       }
     }

@@ -26,13 +26,17 @@ function withTotalAnalysisTiming(result: QRAnalysisResult, startedAtMs: number):
   };
 }
 
+function analyzeQRSync(canvas: HTMLCanvasElement): QRAnalysisResult {
+  const startedAtMs = nowMs();
+  const result = decodeQRFromCanvas(canvas);
+  return withTotalAnalysisTiming(result, startedAtMs);
+}
+
 /**
  * Analyze a QR code from a canvas element
  */
 export async function analyzeQRFromCanvas(canvas: HTMLCanvasElement): Promise<QRAnalysisResult> {
-  const startedAtMs = nowMs();
-  const result = decodeQRFromCanvas(canvas);
-  return withTotalAnalysisTiming(result, startedAtMs);
+  return analyzeQRSync(canvas);
 }
 
 /**
@@ -186,8 +190,5 @@ export async function analyzeQRFromUrl(url: string): Promise<QRAnalysisResult> {
  * Analyze a QR code with full safety analysis (synchronous, for camera capture)
  */
 export function analyzeQRCode(canvas: HTMLCanvasElement): QRAnalysisResult {
-  // NOSONAR: intentional sync variant of analyzeQRFromCanvas
-  const startedAtMs = nowMs();
-  const result = decodeQRFromCanvas(canvas);
-  return withTotalAnalysisTiming(result, startedAtMs);
+  return analyzeQRSync(canvas);
 }

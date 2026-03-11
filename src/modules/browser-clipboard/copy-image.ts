@@ -20,8 +20,7 @@ export async function copyImageToClipboard(canvas: HTMLCanvasElement): Promise<b
 
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
     return true;
-  } catch (_error) {
-    // NOSONAR: intentional silent fallback, returns false
+  } catch (error) {
     return false;
   }
 }
