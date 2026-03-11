@@ -261,6 +261,93 @@ async function getImageDimensionsFromFileStandalone(
   });
 }
 
+async function fetchImageFromUrl(urlInput: string): Promise<File> {
+  const response = await fetch(urlInput, { mode: 'cors' });
+  if (!response.ok) {
+    throw new Error(`Failed to load: ${response.status}`);
+  }
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.startsWith('image/')) {
+    throw new Error('URL does not point to an image');
+  }
+  const blob = await response.blob();
+  const urlParts = urlInput.split('/');
+  const filename = urlParts[urlParts.length - 1].split('?')[0] || 'image';
+  return new File([blob], filename, { type: blob.type });
+}
+
+function classifyUrlLoadError(err: unknown): string {
+  if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+    return 'Cannot load: CORS blocked or invalid URL';
+  }
+  return err instanceof Error ? err.message : 'Failed to load image';
+}
+
+async function acquireCameraImage(): Promise<File> {
+  const permissions = await Camera.checkPermissions();
+  if (permissions.camera === 'denied') {
+    const requested = await Camera.requestPermissions();
+    if (requested.camera === 'denied') {
+      throw new Error('Camera permission denied');
+    }
+  }
+  const image = await Camera.getPhoto({
+    quality: 70,
+    allowEditing: false,
+    resultType: CameraResultType.Uri,
+    source: CameraSource.Camera,
+  });
+  if (!image.webPath) {
+    throw new Error('No camera image path available');
+  }
+  const response = await fetch(image.webPath);
+  if (!response.ok) {
+    throw new Error(`Camera image fetch failed: ${response.status}`);
+  }
+  let blob = await response.blob();
+  blob = await downscaleCameraBlob(blob, 1920);
+  const mimeType = blob.type || 'image/jpeg';
+  const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+  return new File([blob], `camera-${Date.now()}.${ext}`, { type: mimeType });
+}
+
+function computeCropOverlayStyle(
+  activeCropRegion: { x: number; y: number; size: number },
+  previewImageSize: { width: number; height: number } | null,
+  containerEl: HTMLDivElement | null
+): { left: string; top: string; width: string; height: string } {
+  if (!previewImageSize || previewImageSize.width <= 0 || previewImageSize.height <= 0) {
+    return {
+      left: `${(activeCropRegion.x - activeCropRegion.size / 2) * 100}%`,
+      top: `${(activeCropRegion.y - activeCropRegion.size / 2) * 100}%`,
+      width: `${activeCropRegion.size * 100}%`,
+      height: `${activeCropRegion.size * 100}%`,
+    };
+  }
+
+  const containerWidth = Math.max(1, containerEl?.clientWidth ?? 1);
+  const containerHeight = Math.max(1, containerEl?.clientHeight ?? containerWidth);
+  const imageRect = getContainedImageRect(
+    containerWidth,
+    containerHeight,
+    previewImageSize.width,
+    previewImageSize.height
+  );
+  const minEdge = Math.min(previewImageSize.width, previewImageSize.height);
+  const cropSizePx = Math.max(1, minEdge * activeCropRegion.size);
+  const cropWidthPx = (cropSizePx / previewImageSize.width) * imageRect.width;
+  const cropHeightPx = (cropSizePx / previewImageSize.height) * imageRect.height;
+  const centerXPx = imageRect.x + activeCropRegion.x * imageRect.width;
+  const centerYPx = imageRect.y + activeCropRegion.y * imageRect.height;
+
+  return {
+    left: `${((centerXPx - cropWidthPx / 2) / containerWidth) * 100}%`,
+    top: `${((centerYPx - cropHeightPx / 2) / containerHeight) * 100}%`,
+    width: `${(cropWidthPx / containerWidth) * 100}%`,
+    height: `${(cropHeightPx / containerHeight) * 100}%`,
+  };
+}
+
 export function OverlaySection() {
   const {
     tier,
@@ -349,7 +436,6 @@ export function OverlaySection() {
     return resolveImagePreview(overlay.file, overlay.url, setImagePreview, setPreviewImageSize);
   }, [overlay.file, overlay.url]);
 
-  // Load image from URL
   const loadFromUrl = useCallback(async () => {
     if (!urlInput.trim()) {
       setUrlError(t('overlay.pleaseEnterUrl'));
@@ -360,39 +446,15 @@ export function OverlaySection() {
     setUrlError(null);
 
     try {
-      // Fetch the image (requires CORS or same-origin)
-      const response = await fetch(urlInput, { mode: 'cors' });
-      if (!response.ok) {
-        throw new Error(`Failed to load: ${response.status}`);
-      }
-
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.startsWith('image/')) {
-        throw new Error('URL does not point to an image');
-      }
-
-      const blob = await response.blob();
-
-      // Extract filename from URL
-      const urlParts = urlInput.split('/');
-      const filename = urlParts[urlParts.length - 1].split('?')[0] || 'image';
-
-      // Create a File object from the blob
-      const file = new File([blob], filename, { type: blob.type });
-
-      // Store the URL for sharing purposes
+      const file = await fetchImageFromUrl(urlInput);
       setOverlayUrl(urlInput);
       setOverlayFile(file);
-      setOverlayEnabled(true); // Explicitly enable overlay
+      setOverlayEnabled(true);
       setShowUrlInput(false);
       void autoEnableSquareCropForNonSquareInput(file);
     } catch (err) {
       log.error('Failed to load image from URL', { error: err });
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
-        setUrlError('Cannot load: CORS blocked or invalid URL');
-      } else {
-        setUrlError(err instanceof Error ? err.message : 'Failed to load image');
-      }
+      setUrlError(classifyUrlLoadError(err));
     } finally {
       setIsLoadingUrl(false);
     }
@@ -405,43 +467,11 @@ export function OverlaySection() {
     t,
   ]);
 
-  // Camera capture for quick overlay (native only)
   const handleCameraCapture = useCallback(async () => {
     setCameraError(null);
     setCameraLoading(true);
-
     try {
-      const permissions = await Camera.checkPermissions();
-      if (permissions.camera === 'denied') {
-        const requested = await Camera.requestPermissions();
-        if (requested.camera === 'denied') {
-          setCameraError(t('camera.permissionDenied'));
-          return;
-        }
-      }
-
-      const image = await Camera.getPhoto({
-        quality: 70,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-      });
-
-      if (!image.webPath) {
-        throw new Error('No camera image path available');
-      }
-
-      const response = await fetch(image.webPath);
-      if (!response.ok) {
-        throw new Error(`Camera image fetch failed: ${response.status}`);
-      }
-      let blob = await response.blob();
-
-      blob = await downscaleCameraBlob(blob, 1920);
-
-      const mimeType = blob.type || 'image/jpeg';
-      const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
-      const file = new File([blob], `camera-${Date.now()}.${ext}`, { type: mimeType });
+      const file = await acquireCameraImage();
       setOverlayUrl('');
       setOverlayFile(file);
       setOverlayEnabled(true);
@@ -621,41 +651,11 @@ export function OverlaySection() {
     [overlay.cropEnabled, overlay.cropRegion, mapPointerToImageSpace, getCropHalfExtents]
   );
 
-  const cropOverlayStyle = (() => {
-    if (!previewImageSize || previewImageSize.width <= 0 || previewImageSize.height <= 0) {
-      return {
-        left: `${(activeCropRegion.x - activeCropRegion.size / 2) * 100}%`,
-        top: `${(activeCropRegion.y - activeCropRegion.size / 2) * 100}%`,
-        width: `${activeCropRegion.size * 100}%`,
-        height: `${activeCropRegion.size * 100}%`,
-      };
-    }
-
-    const containerWidth = Math.max(1, previewContainerRef.current?.clientWidth ?? 1);
-    const containerHeight = Math.max(
-      1,
-      previewContainerRef.current?.clientHeight ?? containerWidth
-    );
-    const imageRect = getContainedImageRect(
-      containerWidth,
-      containerHeight,
-      previewImageSize.width,
-      previewImageSize.height
-    );
-    const minEdge = Math.min(previewImageSize.width, previewImageSize.height);
-    const cropSizePx = Math.max(1, minEdge * activeCropRegion.size);
-    const cropWidthPx = (cropSizePx / previewImageSize.width) * imageRect.width;
-    const cropHeightPx = (cropSizePx / previewImageSize.height) * imageRect.height;
-    const centerXPx = imageRect.x + activeCropRegion.x * imageRect.width;
-    const centerYPx = imageRect.y + activeCropRegion.y * imageRect.height;
-
-    return {
-      left: `${((centerXPx - cropWidthPx / 2) / containerWidth) * 100}%`,
-      top: `${((centerYPx - cropHeightPx / 2) / containerHeight) * 100}%`,
-      width: `${(cropWidthPx / containerWidth) * 100}%`,
-      height: `${(cropHeightPx / containerHeight) * 100}%`,
-    };
-  })();
+  const cropOverlayStyle = computeCropOverlayStyle(
+    activeCropRegion,
+    previewImageSize,
+    previewContainerRef.current
+  );
 
   // Handle crop region drag (mouse)
   const handleCropDrag = useCallback(

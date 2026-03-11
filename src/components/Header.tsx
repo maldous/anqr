@@ -962,6 +962,40 @@ function HeaderMobileFooter({
   );
 }
 
+async function changeTierWithAdGate(
+  newTier: Tier,
+  setTier: (t: Tier) => void,
+  checkPremiumAccess: () => boolean,
+  activatePremiumAccess: () => void,
+  setLoadingAd: (v: boolean) => void
+): Promise<void> {
+  if (newTier !== 'professional' || !Capacitor.isNativePlatform()) {
+    setTier(newTier);
+    return;
+  }
+  if (checkPremiumAccess()) {
+    setTier(newTier);
+    return;
+  }
+  setLoadingAd(true);
+  try {
+    await prepareInterstitial('generation');
+    await showInterstitial('generation');
+    trackEvent('premium_interstitial_shown', { tier: 'professional' });
+    activatePremiumAccess();
+    trackEvent('premium_activated', { tier: 'professional', source: 'interstitial' });
+    setTier('professional');
+    prepareInterstitial('generation');
+  } catch (error) {
+    log.error('Failed to show interstitial ad', { error });
+    activatePremiumAccess();
+    trackEvent('premium_activated', { tier: 'professional', source: 'fallback' });
+    setTier('professional');
+  } finally {
+    setLoadingAd(false);
+  }
+}
+
 export function Header({
   onToggleSidebar,
   onExport,
@@ -1065,37 +1099,14 @@ export function Header({
     }
   }, []);
 
-  // Handle tier change - Professional requires watching ad on native
-  const handleTierChange = async (newTier: Tier) => {
-    if (newTier !== 'professional' || !Capacitor.isNativePlatform()) {
-      setTier(newTier);
-      return;
-    }
-    if (checkPremiumAccess()) {
-      setTier(newTier);
-      return;
-    }
-    await unlockProfessionalViaNativeAd();
-  };
-
-  const unlockProfessionalViaNativeAd = async () => {
-    setLoadingAd(true);
-    try {
-      await prepareInterstitial('generation');
-      await showInterstitial('generation');
-      trackEvent('premium_interstitial_shown', { tier: 'professional' });
-      activatePremiumAccess();
-      trackEvent('premium_activated', { tier: 'professional', source: 'interstitial' });
-      setTier('professional');
-      prepareInterstitial('generation');
-    } catch (error) {
-      log.error('Failed to show interstitial ad', { error });
-      activatePremiumAccess();
-      trackEvent('premium_activated', { tier: 'professional', source: 'fallback' });
-      setTier('professional');
-    } finally {
-      setLoadingAd(false);
-    }
+  const handleTierChange = (newTier: Tier) => {
+    void changeTierWithAdGate(
+      newTier,
+      setTier,
+      checkPremiumAccess,
+      activatePremiumAccess,
+      setLoadingAd
+    );
   };
 
   const toggleDarkMode = () => {
