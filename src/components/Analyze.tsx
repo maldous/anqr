@@ -2801,6 +2801,36 @@ function formatRsErrorCorrection(errorsCorrected: number | null) {
   return <span className="text-green-600 dark:text-green-400">No errors detected</span>;
 }
 
+interface AnalyzeCapacityGridProps {
+  result: QRAnalysisResult;
+}
+
+function AnalyzeCapacityGrid({ result }: AnalyzeCapacityGridProps) {
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      {result.version !== null && result.eccLevel && (
+        <CollapsibleSection title="Capacity by Mode" icon={<BarChart3 className="w-4 h-4" />}>
+          <CapacityByModeTable
+            version={result.version}
+            eccLevel={result.eccLevel}
+            currentBytes={result.payloadBytes?.length}
+          />
+        </CollapsibleSection>
+      )}
+
+      {result.payload && (
+        <CollapsibleSection title="Encoding Efficiency" icon={<BarChart3 className="w-4 h-4" />}>
+          <EncodingEfficiency
+            payload={result.payload}
+            payloadBytes={result.payloadBytes}
+            encodingMode={result.encodingMode}
+          />
+        </CollapsibleSection>
+      )}
+    </div>
+  );
+}
+
 interface AnalyzeVisualGridProps {
   result: QRAnalysisResult;
   combinedTimings: Record<string, number | null | undefined>;
@@ -3076,6 +3106,549 @@ function AnalyzeDataGrid({ result }: AnalyzeDataGridProps) {
   );
 }
 
+function TimingsSection({
+  combinedTimings,
+  t,
+}: {
+  combinedTimings: Record<string, number | null | undefined>;
+  t: ReturnType<typeof useTranslation>['t'];
+}) {
+  if (!hasAnyTimingData(combinedTimings)) return null;
+  return (
+    <CollapsibleSection
+      title={t('analyze.processingTimings', 'Processing Timings')}
+      icon={<Timer className="w-4 h-4" />}
+      testId="analyze-section-processing-timings"
+    >
+      <div className="space-y-2">
+        <DetailRow
+          label="Decode Time"
+          value={formatMilliseconds(combinedTimings.decodeMs)}
+          icon={<ScanLine className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Total Analysis Time"
+          value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
+          icon={<BarChart3 className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Encode Time"
+          value={formatMilliseconds(combinedTimings.encodeMs)}
+          icon={<Code2 className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Render Time"
+          value={formatMilliseconds(combinedTimings.renderMs)}
+          icon={<Palette className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Export Time"
+          value={formatMilliseconds(combinedTimings.exportMs)}
+          icon={<Download className="w-3.5 h-3.5" />}
+        />
+        {combinedTimings.decodeMs !== null &&
+          combinedTimings.decodeMs !== undefined &&
+          combinedTimings.totalAnalysisMs !== null &&
+          combinedTimings.totalAnalysisMs !== undefined && (
+            <DetailRow
+              label="Non-Decode Overhead"
+              value={formatMilliseconds(
+                Math.max(
+                  0,
+                  (combinedTimings.totalAnalysisMs as number) - (combinedTimings.decodeMs as number)
+                )
+              )}
+              icon={<Settings className="w-3.5 h-3.5" />}
+            />
+          )}
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+function ColorsWcagSection({
+  detectedColors,
+  dominantColors,
+}: {
+  detectedColors: NonNullable<QRAnalysisResult['detectedColors']>;
+  dominantColors: QRAnalysisResult['dominantColors'];
+}) {
+  return (
+    <CollapsibleSection
+      title="Colors & WCAG Compliance"
+      icon={<Palette className="w-4 h-4" />}
+      badge={<WCAGBadge ratio={detectedColors.contrastRatio} size="sm" />}
+    >
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <ColorSwatch color={detectedColors.foreground} label="Foreground" />
+          <div className="flex flex-col items-center">
+            <ArrowRight className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">contrast</span>
+          </div>
+          <ColorSwatch color={detectedColors.background} label="Background" />
+        </div>
+
+        {dominantColors && dominantColors.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Dominant Palette
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {dominantColors.map((entry, idx) => (
+                <div key={`${entry.color}-${idx}`} className="p-2 rounded-md bg-muted/50">
+                  <ColorSwatch color={entry.color} label={`#${idx + 1} • ${entry.percentage}%`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">WCAG Compliance</span>
+            <WCAGBadge ratio={detectedColors.contrastRatio} size="md" />
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className={`p-2 rounded ${wcagComplianceClass(detectedColors.contrastRatio, 3)}`}>
+              <div className="font-bold">AA-Large</div>
+              <div className="text-[10px]">≥3:1</div>
+            </div>
+            <div
+              className={`p-2 rounded ${wcagComplianceClass(detectedColors.contrastRatio, 4.5)}`}
+            >
+              <div className="font-bold">AA</div>
+              <div className="text-[10px]">≥4.5:1</div>
+            </div>
+            <div className={`p-2 rounded ${wcagComplianceClass(detectedColors.contrastRatio, 7)}`}>
+              <div className="font-bold">AAA</div>
+              <div className="text-[10px]">≥7:1</div>
+            </div>
+          </div>
+        </div>
+
+        <DetailRow
+          label="Contrast Ratio"
+          value={`${detectedColors.contrastRatio.toFixed(2)}:1`}
+          icon={<Eye className="w-3.5 h-3.5" />}
+        />
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+function SpatialAnalysisSection({
+  estimatedModulePx,
+  geometry,
+  quietZone,
+  t,
+}: {
+  estimatedModulePx: number | null;
+  geometry: QRAnalysisResult['geometry'];
+  quietZone: QRAnalysisResult['quietZone'];
+  t: ReturnType<typeof useTranslation>['t'];
+}) {
+  return (
+    <CollapsibleSection
+      title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
+      icon={<Ruler className="w-4 h-4" />}
+      testId="analyze-section-spatial-analysis"
+    >
+      <div className="space-y-2">
+        {estimatedModulePx !== null && (
+          <DetailRow
+            label="Module Size"
+            value={`~${estimatedModulePx} px`}
+            icon={<Square className="w-3.5 h-3.5" />}
+          />
+        )}
+        {estimatedModulePx !== null && (
+          <DetailRow
+            label="Scan Module Size"
+            value={
+              <StatusBadge
+                status={estimatedModulePx >= 3}
+                trueLabel="Scan-safe"
+                falseLabel="Too small"
+              />
+            }
+            icon={<ScanLine className="w-3.5 h-3.5" />}
+          />
+        )}
+        {geometry && (
+          <>
+            <DetailRow
+              label="Rotation"
+              value={`${geometry.estimatedRotationDeg.toFixed(1)}°`}
+              icon={<Ruler className="w-3.5 h-3.5" />}
+            />
+            <DetailRow
+              label="Bounding Box"
+              value={`${Math.round(geometry.boundingBox.width)} × ${Math.round(geometry.boundingBox.height)} px`}
+              icon={<Grid3x3 className="w-3.5 h-3.5" />}
+            />
+          </>
+        )}
+        {quietZone && (
+          <>
+            <DetailRow
+              label={t('safety.quietZone', 'Quiet Zone')}
+              value={
+                <StatusBadge
+                  status={quietZone.adequate}
+                  trueLabel="Adequate"
+                  falseLabel="Insufficient"
+                />
+              }
+              icon={<Square className="w-3.5 h-3.5" />}
+            />
+            <div className="grid grid-cols-4 gap-1 text-center mt-2">
+              <div className="p-2 rounded bg-muted/50">
+                <div className="text-sm font-mono">{quietZone.top}</div>
+                <div className="text-[10px] text-muted-foreground">Top</div>
+              </div>
+              <div className="p-2 rounded bg-muted/50">
+                <div className="text-sm font-mono">{quietZone.right}</div>
+                <div className="text-[10px] text-muted-foreground">Right</div>
+              </div>
+              <div className="p-2 rounded bg-muted/50">
+                <div className="text-sm font-mono">{quietZone.bottom}</div>
+                <div className="text-[10px] text-muted-foreground">Bottom</div>
+              </div>
+              <div className="p-2 rounded bg-muted/50">
+                <div className="text-sm font-mono">{quietZone.left}</div>
+                <div className="text-[10px] text-muted-foreground">Left</div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+function DecoderMetadataPanel({
+  decoderMetadata,
+}: {
+  decoderMetadata: NonNullable<QRAnalysisResult['decoderMetadata']>;
+}) {
+  return (
+    <CollapsibleSection
+      title="Decoder Metadata"
+      icon={<Database className="w-4 h-4" />}
+      testId="analyze-section-decoder-metadata"
+      defaultOpen={true}
+      badge={
+        <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
+          Authoritative
+        </span>
+      }
+    >
+      <div className="space-y-2">
+        <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
+          Raw decoder output - authoritative source for reproduction.
+        </div>
+        <DetailRow
+          label="Version"
+          value={formatDecoderVersion(decoderMetadata.version)}
+          icon={<Hash className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Mask Pattern"
+          value={formatDecoderMaskPattern(decoderMetadata.maskPattern)}
+          icon={<Layers className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="ECC Level"
+          value={
+            decoderMetadata.eccLevel ?? <span className="text-amber-500">— (not detected)</span>
+          }
+          icon={<Shield className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Errors Corrected"
+          value={formatDecoderErrors(decoderMetadata.errorsCorrected)}
+          icon={<Shield className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Erasures"
+          value={formatDecoderErasures(decoderMetadata.erasures)}
+          icon={<Shield className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Raw Bits"
+          value={formatDecoderNumBits(decoderMetadata.numBits)}
+          icon={<Binary className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Orientation"
+          value={formatDecoderOrientation(decoderMetadata.orientation)}
+          icon={<Settings className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Structured Append"
+          value={
+            decoderMetadata.hasStructuredAppend
+              ? `Seq ${decoderMetadata.structuredAppendSequence}, Parity ${decoderMetadata.structuredAppendParity}`
+              : 'No'
+          }
+          icon={<Layers className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Byte Segments"
+          value={
+            decoderMetadata.byteSegmentCount > 0
+              ? `${decoderMetadata.byteSegmentCount} segment(s), ${decoderMetadata.totalByteLength} bytes`
+              : 'None'
+          }
+          icon={<Database className="w-3.5 h-3.5" />}
+        />
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+function FormatImagePanel({
+  result,
+  t,
+}: {
+  result: QRAnalysisResult;
+  t: ReturnType<typeof useTranslation>['t'];
+}) {
+  return (
+    <div className="space-y-4">
+      <CollapsibleSection
+        title={t('analyze.formatInformation', 'Format Information')}
+        icon={<Info className="w-4 h-4" />}
+      >
+        <div className="space-y-2">
+          <DetailRow
+            label="Module Count"
+            value={`${result.moduleCount} × ${result.moduleCount}`}
+            icon={<Grid3x3 className="w-3.5 h-3.5" />}
+          />
+          {result.version !== null && (
+            <DetailRow
+              label="Data Modules"
+              value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
+              icon={<Database className="w-3.5 h-3.5" />}
+            />
+          )}
+          {result.eccLevel && (
+            <DetailRow
+              label="ECC Description"
+              value={ECC_DESCRIPTIONS[result.eccLevel].description}
+              icon={<Info className="w-3.5 h-3.5" />}
+            />
+          )}
+        </div>
+      </CollapsibleSection>
+
+      {result.imageProperties && (
+        <CollapsibleSection
+          title={t('analyze.imageProperties', 'Image Properties')}
+          icon={<FileImage className="w-4 h-4" />}
+        >
+          <div className="space-y-2">
+            <DetailRow
+              label="Image Size"
+              value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
+              icon={<ImageIcon className="w-3.5 h-3.5" />}
+            />
+            <DetailRow
+              label="Aspect Ratio"
+              value={
+                result.imageProperties.aspectRatio === 1
+                  ? '1:1 (Square)'
+                  : `${result.imageProperties.aspectRatio}:1`
+              }
+              icon={<Ratio className="w-3.5 h-3.5" />}
+            />
+            {result.imageProperties.estimatedQrSizePx > 0 && (
+              <DetailRow
+                label="QR Code Size"
+                value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
+                icon={<QrCode className="w-3.5 h-3.5" />}
+              />
+            )}
+            {result.imageProperties.estimatedQrSizePx > 0 && result.imageProperties.width > 0 && (
+              <DetailRow
+                label="QR Coverage"
+                value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
+                icon={<Grid3x3 className="w-3.5 h-3.5" />}
+              />
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+    </div>
+  );
+}
+
+function DataCapacityPanel({
+  dataCapacity,
+}: {
+  dataCapacity: NonNullable<QRAnalysisResult['dataCapacity']>;
+}) {
+  return (
+    <CollapsibleSection
+      title="Data Capacity"
+      icon={<Database className="w-4 h-4" />}
+      badge={
+        dataCapacity.overflow ? (
+          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            Detection mismatch
+          </span>
+        ) : (
+          <span
+            className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${capacityBadgeClass(
+              dataCapacity.percentage
+            )}`}
+          >
+            {dataCapacity.percentage}% used
+          </span>
+        )
+      }
+    >
+      {dataCapacity.overflow ? (
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              Payload ({dataCapacity.used} bytes) exceeds detected capacity ({dataCapacity.total}{' '}
+              bytes). Version or ECC detection may be inaccurate.
+            </span>
+          </div>
+          <DetailRow
+            label="Payload Size"
+            value={`${dataCapacity.used} bytes`}
+            icon={<Database className="w-3.5 h-3.5" />}
+          />
+          <DetailRow
+            label="Detected Capacity"
+            value={`${dataCapacity.total} bytes`}
+            icon={<Database className="w-3.5 h-3.5" />}
+          />
+        </div>
+      ) : (
+        <ProgressBar
+          value={dataCapacity.used}
+          max={dataCapacity.total}
+          label="Byte Mode Capacity"
+        />
+      )}
+    </CollapsibleSection>
+  );
+}
+
+function QrStructurePanel({
+  version,
+  moduleCount,
+  eccLevel,
+  maskPattern,
+}: {
+  version: number | null;
+  moduleCount: number;
+  eccLevel: ECCLevel | null;
+  maskPattern: number | null;
+}) {
+  return (
+    <CollapsibleSection
+      title="QR Structure"
+      icon={<Grid3x3 className="w-4 h-4" />}
+      testId="analyze-section-qr-structure"
+    >
+      <div className="space-y-2">
+        <DetailRow
+          label="Version"
+          value={version === null ? '—' : `${version} (${moduleCount}×${moduleCount} modules)`}
+          icon={<Hash className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Error Correction"
+          value={
+            eccLevel ? (
+              <div className="text-right">
+                <div>Level {eccLevel}</div>
+                <div className="text-xs text-muted-foreground">
+                  {ECC_DESCRIPTIONS[eccLevel].recovery} recovery
+                </div>
+              </div>
+            ) : (
+              '—'
+            )
+          }
+          icon={<Shield className="w-3.5 h-3.5" />}
+        />
+        <DetailRow
+          label="Mask Pattern"
+          value={
+            maskPattern === null ? (
+              '—'
+            ) : (
+              <div className="text-right">
+                <div>Pattern {maskPattern}</div>
+                <div className="text-xs text-muted-foreground font-mono">
+                  {MASK_DESCRIPTIONS[maskPattern]}
+                </div>
+              </div>
+            )
+          }
+          icon={<Layers className="w-3.5 h-3.5" />}
+        />
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+function EncodingPanel({
+  encodingMode,
+  payloadBytes,
+  errorsCorrected,
+}: {
+  encodingMode: string | null;
+  payloadBytes: Uint8Array | undefined;
+  errorsCorrected: number | null;
+}) {
+  return (
+    <CollapsibleSection
+      title="Encoding"
+      icon={<Binary className="w-4 h-4" />}
+      testId="analyze-section-encoding"
+      badge={
+        errorsCorrected !== null && errorsCorrected > 0 ? (
+          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+            <Shield className="w-3 h-3" />
+            {errorsCorrected} error
+            {errorsCorrected === 1 ? '' : 's'} corrected
+          </span>
+        ) : null
+      }
+    >
+      <div className="space-y-2">
+        <DetailRow
+          label="Mode"
+          value={<span className="capitalize">{encodingMode || 'Unknown'}</span>}
+          icon={<Type className="w-3.5 h-3.5" />}
+        />
+        {payloadBytes && (
+          <DetailRow
+            label="Raw Bytes"
+            value={`${payloadBytes.length} bytes`}
+            icon={<Database className="w-3.5 h-3.5" />}
+          />
+        )}
+        <DetailRow
+          label="RS Error Correction"
+          value={formatRsErrorCorrection(errorsCorrected)}
+          icon={<Shield className="w-3.5 h-3.5" />}
+        />
+      </div>
+    </CollapsibleSection>
+  );
+}
+
 function AnalyzeResultDetails({
   result,
   originalImageUrl,
@@ -3187,142 +3760,20 @@ function AnalyzeResultDetails({
             </CollapsibleSection>
           )}
 
-          <CollapsibleSection
-            title="QR Structure"
-            icon={<Grid3x3 className="w-4 h-4" />}
-            testId="analyze-section-qr-structure"
-          >
-            <div className="space-y-2">
-              <DetailRow
-                label="Version"
-                value={
-                  result.version === null
-                    ? '—'
-                    : `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
-                }
-                icon={<Hash className="w-3.5 h-3.5" />}
-              />
-              <DetailRow
-                label="Error Correction"
-                value={
-                  result.eccLevel ? (
-                    <div className="text-right">
-                      <div>Level {result.eccLevel}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
-                      </div>
-                    </div>
-                  ) : (
-                    '—'
-                  )
-                }
-                icon={<Shield className="w-3.5 h-3.5" />}
-              />
-              <DetailRow
-                label="Mask Pattern"
-                value={
-                  result.maskPattern === null ? (
-                    '—'
-                  ) : (
-                    <div className="text-right">
-                      <div>Pattern {result.maskPattern}</div>
-                      <div className="text-xs text-muted-foreground font-mono">
-                        {MASK_DESCRIPTIONS[result.maskPattern]}
-                      </div>
-                    </div>
-                  )
-                }
-                icon={<Layers className="w-3.5 h-3.5" />}
-              />
-            </div>
-          </CollapsibleSection>
+          <QrStructurePanel
+            version={result.version}
+            moduleCount={result.moduleCount}
+            eccLevel={result.eccLevel}
+            maskPattern={result.maskPattern}
+          />
 
-          <CollapsibleSection
-            title="Encoding"
-            icon={<Binary className="w-4 h-4" />}
-            testId="analyze-section-encoding"
-            badge={
-              result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
-                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                  <Shield className="w-3 h-3" />
-                  {result.errorsCorrected} error
-                  {result.errorsCorrected === 1 ? '' : 's'} corrected
-                </span>
-              ) : null
-            }
-          >
-            <div className="space-y-2">
-              <DetailRow
-                label="Mode"
-                value={<span className="capitalize">{result.encodingMode || 'Unknown'}</span>}
-                icon={<Type className="w-3.5 h-3.5" />}
-              />
-              {result.payloadBytes && (
-                <DetailRow
-                  label="Raw Bytes"
-                  value={`${result.payloadBytes.length} bytes`}
-                  icon={<Database className="w-3.5 h-3.5" />}
-                />
-              )}
-              <DetailRow
-                label="RS Error Correction"
-                value={formatRsErrorCorrection(result.errorsCorrected)}
-                icon={<Shield className="w-3.5 h-3.5" />}
-              />
-            </div>
-          </CollapsibleSection>
+          <EncodingPanel
+            encodingMode={result.encodingMode}
+            payloadBytes={result.payloadBytes}
+            errorsCorrected={result.errorsCorrected}
+          />
 
-          {result.dataCapacity && (
-            <CollapsibleSection
-              title="Data Capacity"
-              icon={<Database className="w-4 h-4" />}
-              badge={
-                result.dataCapacity.overflow ? (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Detection mismatch
-                  </span>
-                ) : (
-                  <span
-                    className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${capacityBadgeClass(
-                      result.dataCapacity.percentage
-                    )}`}
-                  >
-                    {result.dataCapacity.percentage}% used
-                  </span>
-                )
-              }
-            >
-              {result.dataCapacity.overflow ? (
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>
-                      Payload ({result.dataCapacity.used} bytes) exceeds detected capacity (
-                      {result.dataCapacity.total} bytes). Version or ECC detection may be
-                      inaccurate.
-                    </span>
-                  </div>
-                  <DetailRow
-                    label="Payload Size"
-                    value={`${result.dataCapacity.used} bytes`}
-                    icon={<Database className="w-3.5 h-3.5" />}
-                  />
-                  <DetailRow
-                    label="Detected Capacity"
-                    value={`${result.dataCapacity.total} bytes`}
-                    icon={<Database className="w-3.5 h-3.5" />}
-                  />
-                </div>
-              ) : (
-                <ProgressBar
-                  value={result.dataCapacity.used}
-                  max={result.dataCapacity.total}
-                  label="Byte Mode Capacity"
-                />
-              )}
-            </CollapsibleSection>
-          )}
+          {result.dataCapacity && <DataCapacityPanel dataCapacity={result.dataCapacity} />}
 
           {result.structuralAnalysis && (
             <CollapsibleSection
@@ -3368,181 +3819,81 @@ function AnalyzeResultDetails({
           )}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {result.version !== null && result.eccLevel && (
-            <CollapsibleSection title="Capacity by Mode" icon={<BarChart3 className="w-4 h-4" />}>
-              <CapacityByModeTable
-                version={result.version}
-                eccLevel={result.eccLevel}
-                currentBytes={result.payloadBytes?.length}
-              />
-            </CollapsibleSection>
-          )}
-
-          {result.payload && (
-            <CollapsibleSection
-              title="Encoding Efficiency"
-              icon={<BarChart3 className="w-4 h-4" />}
-            >
-              <EncodingEfficiency
-                payload={result.payload}
-                payloadBytes={result.payloadBytes}
-                encodingMode={result.encodingMode}
-              />
-            </CollapsibleSection>
-          )}
-        </div>
+        <AnalyzeCapacityGrid result={result} />
 
         <div className="grid md:grid-cols-2 gap-4">
           {result.decoderMetadata && (
+            <DecoderMetadataPanel decoderMetadata={result.decoderMetadata} />
+          )}
+
+          <FormatImagePanel result={result} t={t} />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <TimingsSection combinedTimings={combinedTimings} t={t} />
+
+          {result.detectedColors && (
+            <ColorsWcagSection
+              detectedColors={result.detectedColors}
+              dominantColors={result.dominantColors}
+            />
+          )}
+
+          <SpatialAnalysisSection
+            estimatedModulePx={result.estimatedModulePx}
+            geometry={result.geometry}
+            quietZone={result.quietZone}
+            t={t}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-1 gap-4">
+          {result.payloadBytes && result.payloadBytes.length > 0 && (
             <CollapsibleSection
-              title="Decoder Metadata"
-              icon={<Database className="w-4 h-4" />}
-              testId="analyze-section-decoder-metadata"
-              defaultOpen={true}
+              title="Binary Data (Hex Dump)"
+              icon={<Binary className="w-4 h-4" />}
               badge={
-                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-                  Authoritative
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                  {result.payloadBytes.length} bytes
                 </span>
               }
             >
-              <div className="space-y-2">
-                <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
-                  Raw decoder output - authoritative source for reproduction.
-                </div>
-                <DetailRow
-                  label="Version"
-                  value={formatDecoderVersion(result.decoderMetadata.version)}
-                  icon={<Hash className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Mask Pattern"
-                  value={formatDecoderMaskPattern(result.decoderMetadata.maskPattern)}
-                  icon={<Layers className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="ECC Level"
-                  value={
-                    result.decoderMetadata.eccLevel ?? (
-                      <span className="text-amber-500">— (not detected)</span>
-                    )
-                  }
-                  icon={<Shield className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Errors Corrected"
-                  value={formatDecoderErrors(result.decoderMetadata.errorsCorrected)}
-                  icon={<Shield className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Erasures"
-                  value={formatDecoderErasures(result.decoderMetadata.erasures)}
-                  icon={<Shield className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Raw Bits"
-                  value={formatDecoderNumBits(result.decoderMetadata.numBits)}
-                  icon={<Binary className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Orientation"
-                  value={formatDecoderOrientation(result.decoderMetadata.orientation)}
-                  icon={<Settings className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Structured Append"
-                  value={
-                    result.decoderMetadata.hasStructuredAppend
-                      ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
-                      : 'No'
-                  }
-                  icon={<Layers className="w-3.5 h-3.5" />}
-                />
-                <DetailRow
-                  label="Byte Segments"
-                  value={
-                    result.decoderMetadata.byteSegmentCount > 0
-                      ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
-                      : 'None'
-                  }
-                  icon={<Database className="w-3.5 h-3.5" />}
-                />
-              </div>
+              <HexDumpView bytes={result.payloadBytes} maxRows={8} />
             </CollapsibleSection>
           )}
 
-          <div className="space-y-4">
+          {result.moduleMatrix && result.moduleMatrix.length > 0 && (
             <CollapsibleSection
-              title={t('analyze.formatInformation', 'Format Information')}
-              icon={<Info className="w-4 h-4" />}
+              title="Module Matrix"
+              icon={<Grid3x3 className="w-4 h-4" />}
+              testId="analyze-section-module-matrix"
+              badge={
+                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                  {result.moduleMatrix.length}×{result.moduleMatrix.length}
+                </span>
+              }
             >
-              <div className="space-y-2">
-                <DetailRow
-                  label="Module Count"
-                  value={`${result.moduleCount} × ${result.moduleCount}`}
-                  icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                />
-                {result.version !== null && (
-                  <DetailRow
-                    label="Data Modules"
-                    value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
-                    icon={<Database className="w-3.5 h-3.5" />}
-                  />
-                )}
-                {result.eccLevel && (
-                  <DetailRow
-                    label="ECC Description"
-                    value={ECC_DESCRIPTIONS[result.eccLevel].description}
-                    icon={<Info className="w-3.5 h-3.5" />}
-                  />
-                )}
-              </div>
+              <ModuleMatrixView
+                matrix={result.moduleMatrix}
+                version={result.version}
+                fgColor={result.detectedColors?.foreground}
+                bgColor={result.detectedColors?.background}
+              />
             </CollapsibleSection>
+          )}
 
-            {result.imageProperties && (
-              <CollapsibleSection
-                title={t('analyze.imageProperties', 'Image Properties')}
-                icon={<FileImage className="w-4 h-4" />}
-              >
-                <div className="space-y-2">
-                  <DetailRow
-                    label="Image Size"
-                    value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
-                    icon={<ImageIcon className="w-3.5 h-3.5" />}
-                  />
-                  <DetailRow
-                    label="Aspect Ratio"
-                    value={
-                      result.imageProperties.aspectRatio === 1
-                        ? '1:1 (Square)'
-                        : `${result.imageProperties.aspectRatio}:1`
-                    }
-                    icon={<Ratio className="w-3.5 h-3.5" />}
-                  />
-                  {result.imageProperties.estimatedQrSizePx > 0 && (
-                    <DetailRow
-                      label="QR Code Size"
-                      value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
-                      icon={<QrCode className="w-3.5 h-3.5" />}
-                    />
-                  )}
-                  {result.imageProperties.estimatedQrSizePx > 0 &&
-                    result.imageProperties.width > 0 && (
-                      <DetailRow
-                        label="QR Coverage"
-                        value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
-                        icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                      />
-                    )}
-                </div>
-              </CollapsibleSection>
-            )}
-          </div>
+          {result.debugLog && (
+            <CollapsibleSection
+              title="Debug Log"
+              icon={<Settings className="w-4 h-4" />}
+              defaultOpen={false}
+            >
+              <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
+                {result.debugLog}
+              </pre>
+            </CollapsibleSection>
+          )}
         </div>
-
-        <AnalyzeVisualGrid result={result} combinedTimings={combinedTimings} t={t} />
-
-        <AnalyzeDataGrid result={result} />
       </div>
 
       <Button
