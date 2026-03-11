@@ -256,7 +256,18 @@
     "gstatic",
     "pagead",
     "noto",
-    "autoblocking"
+    "autoblocking",
+    "Alnum",
+    "bctx",
+    "BNED",
+    "cctx",
+    "dctx",
+    "ICAL",
+    "pgctx",
+    "rctx",
+    "sgctx",
+    "smctx",
+    "spctx"
   ],
   "overrides": [
     {
