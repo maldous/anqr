@@ -647,6 +647,895 @@ export function resolveOverlayPreservationOptions(params: {
   };
 }
 
+async function applyWatermarkToCanvas<
+  T extends {
+    enabled: boolean;
+    kind: string;
+    text: string;
+    image: File | null;
+    position: string;
+    opacity: number;
+    blend: string;
+  },
+>(
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+  watermarkConfig: T
+): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  if (!watermarkConfig.enabled) return sourceCanvas;
+  let watermarkImage: HTMLImageElement | HTMLCanvasElement | null = null;
+  if (
+    (watermarkConfig.kind === 'image' || watermarkConfig.kind === 'pattern') &&
+    watermarkConfig.image
+  ) {
+    watermarkImage = await loadFileAsCanvas(watermarkConfig.image);
+  }
+  const watermarked = await applyWatermark(
+    sourceCanvas as HTMLCanvasElement,
+    {
+      kind: watermarkConfig.kind,
+      text: watermarkConfig.text,
+      image: watermarkImage ?? undefined,
+      position: watermarkConfig.position as WatermarkPosition,
+      opacity: watermarkConfig.opacity,
+      blend: watermarkConfig.blend,
+    } as Parameters<typeof applyWatermark>[1]
+  );
+  return watermarked.canvas;
+}
+
+function buildEccFallbackSequence(
+  currentEcc: string,
+  typeNumber: number
+): readonly ('H' | 'Q' | 'M' | 'L')[] {
+  const allEccLevels = ['H', 'Q', 'M', 'L'] as const;
+  const eccIndex = allEccLevels.indexOf(currentEcc as (typeof allEccLevels)[number]);
+  const startIndex = typeNumber === 0 ? Math.max(0, eccIndex + 1) : Math.max(0, eccIndex);
+  const eccToTry = allEccLevels.slice(startIndex);
+  if (eccToTry.length === 0) {
+    return ['L'] as const;
+  }
+  return eccToTry;
+}
+
+async function tryEccFallbackGeneration(params: {
+  effectiveConfig: Record<string, unknown>;
+  eccToTry: readonly ('H' | 'Q' | 'M' | 'L')[];
+  runGeneratorWithStatus: (
+    cfg: QRGeneratorConfig,
+    overlaySource: HTMLCanvasElement | OffscreenCanvas | null
+  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
+  yieldForResponsiveness: () => Promise<boolean>;
+  overlayEnabled: boolean;
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;
+  currentEcc: string;
+}): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; succeeded: boolean }> {
+  let result: HTMLCanvasElement | OffscreenCanvas | null = null;
+  for (const ecc of params.eccToTry) {
+    const fallbackConfig = {
+      ...params.effectiveConfig,
+      typeNumber: 0,
+      errorCorrection: ecc,
+    };
+    try {
+      log.debug('Trying ECC level', { ecc });
+      if (await params.yieldForResponsiveness()) return { result: null, succeeded: false };
+      result = await params.runGeneratorWithStatus(
+        fallbackConfig as QRGeneratorConfig,
+        params.overlayEnabled ? params.overlayCanvas : null
+      );
+      log.debug('ECC fallback succeeded', { ecc });
+      if (ecc === params.currentEcc) {
+        log.info('QR generated with auto-version retry');
+      } else {
+        log.info('QR generated with fallback ECC', { ecc, previousEcc: params.currentEcc });
+      }
+      return { result, succeeded: true };
+    } catch (error_) {
+      log.debug('ECC fallback failed', {
+        ecc,
+        error: error_ instanceof Error ? error_.message : error_,
+      });
+    }
+  }
+  return { result: null, succeeded: false };
+}
+
+function localizeQArtProgressStage(
+  stage: string,
+  translateQArtStage: (s: string) => string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (...args: any[]) => string
+): string {
+  let localizedStage = translateQArtStage(stage);
+  const maskMatch = /^Mask (\d+): (.+)$/.exec(stage);
+  if (maskMatch) {
+    const translatedInner = translateQArtStage(maskMatch[2]);
+    localizedStage = t('preview.busy.qrArt.maskStage', {
+      defaultValue: 'Mask {{mask}}: {{stage}}...',
+      mask: Number(maskMatch[1]),
+      stage: translatedInner.replace(/\.\.\.$/, ''),
+    });
+  }
+  const attemptMaskMatch = /^Attempt (\d+)\/(\d+): Mask (\d+): (.+)$/.exec(stage);
+  if (attemptMaskMatch) {
+    const translatedInner = translateQArtStage(attemptMaskMatch[4]);
+    localizedStage = t('preview.busy.qrArt.attemptMaskStage', {
+      defaultValue: 'Attempt {{current}}/{{total}}: Mask {{mask}}: {{stage}}...',
+      current: Number(attemptMaskMatch[1]),
+      total: Number(attemptMaskMatch[2]),
+      mask: Number(attemptMaskMatch[3]),
+      stage: translatedInner.replace(/\.\.\.$/, ''),
+    });
+  } else {
+    const attemptMatch = /^Attempt (\d+)\/(\d+): (.+)$/.exec(stage);
+    if (attemptMatch) {
+      const translatedInner = translateQArtStage(attemptMatch[3]);
+      localizedStage = t('preview.busy.qrArt.attemptStage', {
+        defaultValue: 'Attempt {{current}}/{{total}}: {{stage}}...',
+        current: Number(attemptMatch[1]),
+        total: Number(attemptMatch[2]),
+        stage: translatedInner.replace(/\.\.\.$/, ''),
+      });
+    }
+  }
+  return localizedStage;
+}
+
+function createScaledExportCanvas(
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+  widthPx: number,
+  heightPx: number,
+  crispEdges: boolean
+): HTMLCanvasElement {
+  if (widthPx === sourceCanvas.width && heightPx === sourceCanvas.height) {
+    return sourceCanvas as HTMLCanvasElement;
+  }
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = widthPx;
+  exportCanvas.height = heightPx;
+  const exportCtx = exportCanvas.getContext('2d');
+  if (exportCtx) {
+    exportCtx.imageSmoothingEnabled = !crispEdges;
+    exportCtx.imageSmoothingQuality = 'high';
+    exportCtx.drawImage(sourceCanvas, 0, 0, widthPx, heightPx);
+  }
+  return exportCanvas;
+}
+
+function buildExportConfig<
+  O extends {
+    format: string;
+    widthPx: number;
+    heightPx: number;
+    quality: number;
+    filename: string;
+    dpi: number;
+    includeQuietZone: boolean;
+    bgOverride: string;
+    gifPaletteSize: number;
+    gifQuantizer: string;
+    gifDither: string;
+    gifTransparentColor: string;
+    gifDisposal: string;
+    svgTrueVector: boolean;
+    svgShapePrecision: number | string;
+    svgEmbedRasterOverlay: boolean;
+  },
+  M extends {
+    title: string;
+    author: string;
+    copyright: string;
+    license: string;
+    description: string;
+    creationTime: boolean;
+    customKv: Array<{ k: string; v: string }>;
+  },
+>(outputState: O, metadataState: M): Record<string, unknown> {
+  return {
+    outputFormat: outputState.format,
+    outputWidth: outputState.widthPx,
+    outputHeight: outputState.heightPx,
+    outputQuality: outputState.quality,
+    filename: outputState.filename,
+    dpi: outputState.dpi,
+    includeQuietZone: outputState.includeQuietZone,
+    bgOverride: outputState.bgOverride,
+    gifPaletteSize: outputState.gifPaletteSize,
+    gifQuantizer: outputState.gifQuantizer,
+    gifDither: outputState.gifDither,
+    gifTransparentColor: outputState.gifTransparentColor,
+    gifDisposal: outputState.gifDisposal,
+    svgTrueVector: outputState.svgTrueVector,
+    svgShapePrecision: outputState.svgShapePrecision,
+    svgEmbedRasterOverlay: outputState.svgEmbedRasterOverlay,
+    metadata: {
+      title: metadataState.title || undefined,
+      author: metadataState.author || undefined,
+      copyright: metadataState.copyright || undefined,
+      license: metadataState.license || undefined,
+      description: metadataState.description || undefined,
+      creationTime: metadataState.creationTime,
+      customKv: metadataState.customKv.filter((kv) => kv.k && kv.v),
+    },
+  };
+}
+
+function buildPngMetadata(metadataState: {
+  title: string;
+  author: string;
+  copyright: string;
+  description: string;
+  creationTime: boolean;
+}): Record<string, string | undefined> | undefined {
+  if (
+    !metadataState.title &&
+    !metadataState.author &&
+    !metadataState.copyright &&
+    !metadataState.description
+  ) {
+    return undefined;
+  }
+  return {
+    title: metadataState.title || undefined,
+    author: metadataState.author || undefined,
+    copyright: metadataState.copyright || undefined,
+    description: metadataState.description || undefined,
+    creationTime: metadataState.creationTime ? new Date().toISOString() : undefined,
+    software: 'ANQR - https://anqr.link',
+  };
+}
+
+async function downloadSvgFormat(params: {
+  exporter: ExporterModule;
+  exportCanvas: HTMLCanvasElement;
+  exportConfig: Record<string, unknown>;
+  svgTrueVector: boolean;
+  qrMatrix: boolean[][] | null;
+  qrPackedMatrixRef: { packed: Uint8Array; moduleCount: number } | null;
+  outputWidthPx: number;
+  outputFilename: string;
+  quietZoneModules: number;
+  borderModulesExtra: number;
+  renderState: Record<string, unknown>;
+  metadataState: Record<string, unknown>;
+}): Promise<void> {
+  if (!params.svgTrueVector) {
+    await params.exporter.downloadSvg(params.exportCanvas, params.exportConfig);
+    return;
+  }
+  let vectorMatrix = params.qrMatrix;
+  if (!vectorMatrix && params.qrPackedMatrixRef) {
+    const { packed, moduleCount } = params.qrPackedMatrixRef;
+    vectorMatrix = expandPackedQArtMatrix(packed, moduleCount);
+  }
+  if (!vectorMatrix) {
+    log.warn(
+      'Vector SVG export requested but QR matrix is unavailable. ' +
+        'Falling back to raster SVG. This can happen with special render modes.'
+    );
+    await params.exporter.downloadSvg(params.exportCanvas, params.exportConfig);
+    return;
+  }
+  const moduleCount = vectorMatrix.length;
+  const totalMargin = params.quietZoneModules + params.borderModulesExtra;
+  const svgModuleSize = Math.floor(params.outputWidthPx / (moduleCount + totalMargin * 2)) || 10;
+  const rs = params.renderState as Record<string, unknown>;
+  const ms = params.metadataState as Record<string, unknown>;
+  const svgMetadata =
+    ms.title || ms.author || ms.copyright || ms.description
+      ? {
+          title: (ms.title as string) || undefined,
+          author: (ms.author as string) || undefined,
+          copyright: (ms.copyright as string) || undefined,
+          description: (ms.description as string) || undefined,
+          creationTime: ms.creationTime as boolean,
+          software: 'ANQR - https://anqr.link',
+        }
+      : undefined;
+  params.exporter.downloadVectorSvg(vectorMatrix, {
+    moduleSize: svgModuleSize,
+    margin: totalMargin,
+    fgColor: rs.fgColor as string,
+    bgColor: (rs.bgTransparent ? 'transparent' : rs.bgColor) as string,
+    filename: params.outputFilename,
+    moduleStyle: rs.moduleStyle as string,
+    cornerRadius: rs.cornerRadius as number,
+    finderStyle: rs.finderStyle as string,
+    eyeOuterStyle: rs.eyeOuterStyle as string,
+    eyeInnerStyle: rs.eyeInnerStyle as string,
+    alignmentStyle: rs.alignmentStyle as string,
+    timingStyle: rs.timingStyle as string,
+    gradient: rs.gradient,
+    metadata: svgMetadata,
+  } as Parameters<typeof params.exporter.downloadVectorSvg>[1]);
+}
+
+async function downloadAnimatedGifFormat(params: {
+  exporter: ExporterModule;
+  cachedAnimationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
+  exportConfig: Record<string, unknown>;
+  outputWidthPx: number;
+  outputHeightPx: number;
+  crispEdges: boolean;
+  animationSpeedMs: number;
+  animationLoop: boolean;
+  effectiveFrames: AnimationFrame[];
+  gifUseFrameDelays: boolean;
+  gifMaxFps: number;
+}): Promise<void> {
+  const scaledFrames = params.cachedAnimationFrames.map((frame) => {
+    const frameCanvas = frame as HTMLCanvasElement;
+    if (
+      frameCanvas.width === params.outputWidthPx &&
+      frameCanvas.height === params.outputHeightPx
+    ) {
+      return frameCanvas;
+    }
+    const scaledCanvas = document.createElement('canvas');
+    scaledCanvas.width = params.outputWidthPx;
+    scaledCanvas.height = params.outputHeightPx;
+    const scaledCtx = scaledCanvas.getContext('2d');
+    if (scaledCtx) {
+      scaledCtx.imageSmoothingEnabled = !params.crispEdges;
+      scaledCtx.imageSmoothingQuality = 'high';
+      scaledCtx.drawImage(frameCanvas, 0, 0, params.outputWidthPx, params.outputHeightPx);
+    }
+    return scaledCanvas;
+  });
+  let frameDelays: number[] | undefined;
+  if (params.gifUseFrameDelays && params.effectiveFrames.length > 0) {
+    const minDelayMs = params.gifMaxFps > 0 ? Math.floor(1000 / params.gifMaxFps) : 0;
+    frameDelays = params.effectiveFrames.map((f) =>
+      Math.max(f.delay || params.animationSpeedMs, minDelayMs)
+    );
+  } else if (params.cachedAnimationFrames.length > 1 && params.effectiveFrames.length === 0) {
+    frameDelays = params.cachedAnimationFrames.map(() => params.animationSpeedMs);
+  }
+  log.debug('download GIF: delays computed', {
+    effectiveFramesLen: params.effectiveFrames.length,
+    animationFramesLen: params.cachedAnimationFrames.length,
+    scaledFramesLen: scaledFrames.length,
+    frameDelaysLen: frameDelays?.length,
+    minDelay: frameDelays ? Math.min(...frameDelays) : undefined,
+    maxDelay: frameDelays ? Math.max(...frameDelays) : undefined,
+    totalMs: frameDelays?.reduce((s, d) => s + d, 0),
+    gifUseFrameDelays: params.gifUseFrameDelays,
+    gifMaxFps: params.gifMaxFps,
+    animSpeedMs: params.animationSpeedMs,
+  });
+  await params.exporter.downloadGif(
+    scaledFrames,
+    {
+      ...params.exportConfig,
+      animationSpeed: params.animationSpeedMs,
+      loopAnimation: params.animationLoop,
+    },
+    frameDelays
+  );
+}
+
+type PatternEffect = {
+  pattern: AnimationPattern;
+  seed: number;
+  waveAxis: 'x' | 'y' | 'xy';
+};
+
+function buildPatternEffectLists(animationState: {
+  pattern: string;
+  pattern2: string;
+  seed: number;
+  waveAxis: 'x' | 'y' | 'xy';
+  waveAxis2: 'x' | 'y' | 'xy';
+  target: string;
+  target2: string;
+}): { modulePatternEffects: PatternEffect[]; resultPatternEffects: PatternEffect[] } {
+  const modulePatternEffects: PatternEffect[] = [];
+  const resultPatternEffects: PatternEffect[] = [];
+  if (animationState.pattern !== 'none') {
+    const primaryEffect: PatternEffect = {
+      pattern: animationState.pattern as AnimationPattern,
+      seed: animationState.seed,
+      waveAxis: animationState.waveAxis,
+    };
+    if (animationState.target === 'modules' || animationState.target === 'both') {
+      modulePatternEffects.push(primaryEffect);
+    }
+    if (animationState.target === 'result' || animationState.target === 'both') {
+      resultPatternEffects.push(primaryEffect);
+    }
+  }
+  if (animationState.pattern2 !== 'none') {
+    const secondaryEffect: PatternEffect = {
+      pattern: animationState.pattern2 as AnimationPattern,
+      seed: animationState.seed + 911,
+      waveAxis: animationState.waveAxis2,
+    };
+    if (animationState.target2 === 'modules' || animationState.target2 === 'both') {
+      modulePatternEffects.push(secondaryEffect);
+    }
+    if (animationState.target2 === 'result' || animationState.target2 === 'both') {
+      resultPatternEffects.push(secondaryEffect);
+    }
+  }
+  return { modulePatternEffects, resultPatternEffects };
+}
+
+function computePatternDrivenJitterValue(
+  frameIndex: number,
+  totalFrames: number,
+  baseJitterPx: number,
+  modulePatternEffects: PatternEffect[]
+): number {
+  let jitter = baseJitterPx;
+  for (const effect of modulePatternEffects) {
+    const progress = frameIndex / Math.max(1, totalFrames - 1);
+    const phase = Math.sin(progress * Math.PI * 2 + effect.seed * 0.013);
+    const intensity = (phase + 1) / 2;
+    switch (effect.pattern) {
+      case 'pulse':
+        jitter += 0.3 + intensity * 0.7;
+        break;
+      case 'wave':
+        jitter += 0.6 + intensity * 0.65;
+        break;
+      case 'scanline':
+        jitter += intensity * 0.8;
+        break;
+      case 'shimmer':
+        jitter += (Math.sin((frameIndex + effect.seed * 3) * 1.6) + 1) * 0.35;
+        break;
+      case 'drift':
+        jitter += 0.4 + intensity * 0.75;
+        break;
+      default:
+        break;
+    }
+  }
+  return Math.min(2.4, Math.max(0, Number(jitter.toFixed(3))));
+}
+
+function createScratchCanvasPool(): {
+  getPatternScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement;
+  getTemporalScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement;
+} {
+  let patternScratchA: HTMLCanvasElement | null = null;
+  let patternScratchB: HTMLCanvasElement | null = null;
+  let temporalScratchA: HTMLCanvasElement | null = null;
+  let temporalScratchB: HTMLCanvasElement | null = null;
+
+  const getScratch = (
+    slot: 0 | 1,
+    width: number,
+    height: number,
+    getA: () => HTMLCanvasElement | null,
+    setA: (c: HTMLCanvasElement) => void,
+    getB: () => HTMLCanvasElement | null,
+    setB: (c: HTMLCanvasElement) => void
+  ): HTMLCanvasElement => {
+    const current = slot === 0 ? getA() : getB();
+    if (!current) {
+      const created = document.createElement('canvas');
+      created.width = width;
+      created.height = height;
+      if (slot === 0) setA(created);
+      else setB(created);
+      return created;
+    }
+    if (current.width !== width) current.width = width;
+    if (current.height !== height) current.height = height;
+    return current;
+  };
+
+  return {
+    getPatternScratch: (slot, width, height) =>
+      getScratch(
+        slot,
+        width,
+        height,
+        () => patternScratchA,
+        (c) => {
+          patternScratchA = c;
+        },
+        () => patternScratchB,
+        (c) => {
+          patternScratchB = c;
+        }
+      ),
+    getTemporalScratch: (slot, width, height) =>
+      getScratch(
+        slot,
+        width,
+        height,
+        () => temporalScratchA,
+        (c) => {
+          temporalScratchA = c;
+        },
+        () => temporalScratchB,
+        (c) => {
+          temporalScratchB = c;
+        }
+      ),
+  };
+}
+
+function cloneCanvasSimple(
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas
+): HTMLCanvasElement | OffscreenCanvas {
+  const cloned = document.createElement('canvas');
+  cloned.width = sourceCanvas.width;
+  cloned.height = sourceCanvas.height;
+  const clonedCtx = cloned.getContext('2d');
+  if (clonedCtx) {
+    clonedCtx.drawImage(sourceCanvas, 0, 0);
+  }
+  return cloned;
+}
+
+function applyPatternStackToCanvas(
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+  effects: PatternEffect[],
+  frameIndex: number,
+  totalFrames: number,
+  persistentOutput: boolean,
+  getPatternScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement
+): HTMLCanvasElement | OffscreenCanvas {
+  if (effects.length === 0) return sourceCanvas;
+  let out = sourceCanvas;
+  for (let effectIdx = 0; effectIdx < effects.length; effectIdx++) {
+    const effect = effects[effectIdx];
+    const targetCanvas = getPatternScratch((effectIdx % 2) as 0 | 1, out.width, out.height);
+    out = applyAnimationPattern(
+      out,
+      frameIndex,
+      totalFrames,
+      effect.pattern,
+      {
+        seed: effect.seed,
+        waveAxis: effect.waveAxis,
+      },
+      targetCanvas
+    );
+  }
+  return persistentOutput ? cloneCanvasSimple(out) : out;
+}
+
+async function generateBaseAnimationFrameSet(params: {
+  hasPattern: boolean;
+  hasJitter: boolean;
+  previewScanConfigBase: QRGeneratorConfig;
+  frameCount: number;
+  speedMs: number;
+  isRunCancelled: () => boolean;
+  yieldCtrl: YieldController;
+  computeJitter: (frameIndex: number, totalFrames: number) => number;
+  applyResultPersistent: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number,
+    tf: number
+  ) => HTMLCanvasElement | OffscreenCanvas;
+}): Promise<AnimationFrame[] | null> {
+  const {
+    hasPattern,
+    hasJitter,
+    previewScanConfigBase,
+    frameCount,
+    speedMs,
+    isRunCancelled,
+    yieldCtrl,
+    computeJitter,
+    applyResultPersistent,
+  } = params;
+
+  if (hasPattern && !hasJitter) {
+    const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
+    if (!baseQR || isRunCancelled()) return null;
+    return Array.from({ length: frameCount }, (_, i) => ({
+      canvas: applyResultPersistent(baseQR, i, frameCount),
+      delay: speedMs,
+      disposalType: 0,
+    }));
+  }
+
+  if (hasPattern && hasJitter) {
+    const combinedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
+    for (let i = 0; i < frameCount; i++) {
+      if (isRunCancelled()) return null;
+      if (await yieldCtrl.yieldIfNeeded()) {
+        if (isRunCancelled()) return null;
+      }
+      const frameConfig = {
+        ...previewScanConfigBase,
+        frameIndex: i,
+        moduleJitterPx: computeJitter(i, frameCount),
+      };
+      const jitteredQR = await qrGenerator.generate(frameConfig, null);
+      if (!jitteredQR) continue;
+      combinedFrames.push(applyResultPersistent(jitteredQR, i, frameCount));
+    }
+    return combinedFrames.map((canvas) => ({ canvas, delay: speedMs, disposalType: 0 }));
+  }
+
+  if (hasJitter) {
+    const jitteredFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
+    for (let i = 0; i < frameCount; i++) {
+      if (isRunCancelled()) return null;
+      if (await yieldCtrl.yieldIfNeeded()) {
+        if (isRunCancelled()) return null;
+      }
+      const frameConfig = {
+        ...previewScanConfigBase,
+        frameIndex: i,
+        moduleJitterPx: computeJitter(i, frameCount),
+      };
+      const qrFrame = await qrGenerator.generate(frameConfig, null);
+      if (qrFrame) {
+        jitteredFrames.push(applyResultPersistent(qrFrame, i, frameCount));
+      }
+    }
+    return jitteredFrames.map((canvas) => ({ canvas, delay: speedMs, disposalType: 0 }));
+  }
+
+  const staticBaseQR = await qrGenerator.generate(previewScanConfigBase, null);
+  if (!staticBaseQR || isRunCancelled()) return null;
+  return Array.from({ length: frameCount }, () => ({
+    canvas: staticBaseQR,
+    delay: speedMs,
+    disposalType: 0,
+  }));
+}
+
+async function renderFrameForBaseAnimation(params: {
+  hasPattern: boolean;
+  hasJitter: boolean;
+  frame: AnimationFrame;
+  frameIdx: number;
+  previewScanConfigBase: QRGeneratorConfig;
+  useTemporalDither: boolean;
+  temporalMode: TemporalDitherMode;
+  animationSeed: number;
+}): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+  if (params.hasPattern || params.hasJitter) {
+    return params.frame.canvas;
+  }
+  const frameConfig = {
+    ...params.previewScanConfigBase,
+    frameIndex: params.frameIdx,
+    temporalOffset: params.useTemporalDither
+      ? calculateTemporalOffset(params.frameIdx, params.temporalMode, params.animationSeed)
+      : 0,
+  };
+  return await qrGenerator.generate(frameConfig, null);
+}
+
+async function renderFrameWithCompositor(params: {
+  gifCompositor: GifCompositor;
+  effectiveFrameIndices: number[];
+  frameIdx: number;
+  applyGeometricTransforms: (c: HTMLCanvasElement | OffscreenCanvas) => HTMLCanvasElement;
+  useTemporalDither: boolean;
+  temporalMode: TemporalDitherMode;
+  animationSeed: number;
+  getTemporalScratch: (slot: 0 | 1, w: number, h: number) => HTMLCanvasElement;
+  previewScanConfigBase: QRGeneratorConfig;
+  isArtworkMode: boolean;
+  generateArtworkFrame: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number
+  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
+}): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+  const actualFrameIdx = params.effectiveFrameIndices[params.frameIdx];
+  const prevActualFrameIdx =
+    params.frameIdx > 0 ? params.effectiveFrameIndices[params.frameIdx - 1] : -1;
+  for (let i = prevActualFrameIdx + 1; i <= actualFrameIdx; i++) {
+    if (i > 0) params.gifCompositor.dispose(i - 1);
+    params.gifCompositor.apply(i);
+  }
+  const processedOverlay = params.applyGeometricTransforms(params.gifCompositor.canvas);
+  let overlayToUse: HTMLCanvasElement | OffscreenCanvas = processedOverlay;
+  if (params.useTemporalDither) {
+    const temporalOffset = calculateTemporalOffset(
+      params.frameIdx,
+      params.temporalMode,
+      params.animationSeed
+    );
+    overlayToUse = applyTemporalNoiseToCanvas(
+      processedOverlay,
+      temporalOffset,
+      0.008,
+      params.getTemporalScratch(
+        (params.frameIdx % 2) as 0 | 1,
+        processedOverlay.width,
+        processedOverlay.height
+      )
+    );
+  }
+  const frameConfig = {
+    ...params.previewScanConfigBase,
+    frameIndex: params.frameIdx,
+    temporalOffset: params.useTemporalDither
+      ? calculateTemporalOffset(params.frameIdx, params.temporalMode, params.animationSeed)
+      : 0,
+  };
+  return params.isArtworkMode
+    ? await params.generateArtworkFrame(overlayToUse, params.frameIdx)
+    : await qrGenerator.generate(frameConfig, overlayToUse);
+}
+
+async function renderFrameWithLegacyPath(params: {
+  frame: AnimationFrame;
+  frameIdx: number;
+  framesToProcessLength: number;
+  applyGeometricTransforms: (c: HTMLCanvasElement | OffscreenCanvas) => HTMLCanvasElement;
+  modulePatternEffects: PatternEffect[];
+  applyModulePatternEphemeral: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number,
+    tf: number
+  ) => HTMLCanvasElement | OffscreenCanvas;
+  useTemporalDither: boolean;
+  temporalMode: TemporalDitherMode;
+  animationSeed: number;
+  getTemporalScratch: (slot: 0 | 1, w: number, h: number) => HTMLCanvasElement;
+  hasJitter: boolean;
+  computeJitter: (fi: number, tf: number) => number;
+  moduleJitterPx: number;
+  previewScanConfigBase: QRGeneratorConfig;
+  isArtworkMode: boolean;
+  generateArtworkFrame: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number
+  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
+}): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+  let processedOverlay: HTMLCanvasElement | OffscreenCanvas = params.applyGeometricTransforms(
+    params.frame.canvas
+  );
+  if (params.modulePatternEffects.length > 0) {
+    processedOverlay = params.applyModulePatternEphemeral(
+      processedOverlay,
+      params.frameIdx,
+      params.framesToProcessLength
+    );
+  }
+  if (params.useTemporalDither) {
+    const temporalOffset = calculateTemporalOffset(
+      params.frameIdx,
+      params.temporalMode,
+      params.animationSeed
+    );
+    processedOverlay = applyTemporalNoiseToCanvas(
+      processedOverlay,
+      temporalOffset,
+      0.008,
+      params.getTemporalScratch(
+        (params.frameIdx % 2) as 0 | 1,
+        processedOverlay.width,
+        processedOverlay.height
+      )
+    );
+  }
+  const frameConfig = {
+    ...params.previewScanConfigBase,
+    frameIndex: params.frameIdx,
+    moduleJitterPx: params.hasJitter
+      ? params.computeJitter(params.frameIdx, params.framesToProcessLength)
+      : params.moduleJitterPx,
+    temporalOffset: params.useTemporalDither
+      ? calculateTemporalOffset(params.frameIdx, params.temporalMode, params.animationSeed)
+      : 0,
+  };
+  return params.isArtworkMode
+    ? await params.generateArtworkFrame(processedOverlay, params.frameIdx)
+    : await qrGenerator.generate(frameConfig, processedOverlay);
+}
+
+async function applyFramePostProcessing<
+  W extends {
+    enabled: boolean;
+    kind: string;
+    text: string;
+    image: File | null;
+    position: string;
+    opacity: number;
+    blend: string;
+  },
+>(params: {
+  result: HTMLCanvasElement | OffscreenCanvas;
+  shouldGenerateBaseAnimation: boolean;
+  resultPatternEffects: PatternEffect[];
+  applyResultEphemeral: (
+    c: HTMLCanvasElement | OffscreenCanvas,
+    fi: number,
+    tf: number
+  ) => HTMLCanvasElement | OffscreenCanvas;
+  frameIdx: number;
+  framesToProcessLength: number;
+  hasColorCycle: boolean;
+  watermarkConfig: W;
+  watermarkImage: HTMLImageElement | HTMLCanvasElement | null;
+}): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  let finalResult: HTMLCanvasElement | OffscreenCanvas = params.result;
+  if (!params.shouldGenerateBaseAnimation && params.resultPatternEffects.length > 0) {
+    finalResult = params.applyResultEphemeral(
+      finalResult,
+      params.frameIdx,
+      params.framesToProcessLength
+    );
+  }
+  if (params.hasColorCycle) {
+    const colorCycleTarget = cloneCanvasSimple(finalResult);
+    finalResult = applyColorCycle(
+      finalResult,
+      params.frameIdx,
+      params.framesToProcessLength,
+      colorCycleTarget
+    );
+  }
+  let previewFrame: HTMLCanvasElement | OffscreenCanvas = finalResult;
+  if (params.watermarkConfig.enabled) {
+    previewFrame = await applyWatermarkToCanvas(finalResult, params.watermarkConfig);
+  }
+  return previewFrame;
+}
+
+async function applyInterpolationToFrames(
+  frames: (HTMLCanvasElement | OffscreenCanvas)[],
+  interpolateMode: string
+): Promise<(HTMLCanvasElement | OffscreenCanvas)[]> {
+  if (interpolateMode === 'none' || frames.length <= 1) return frames;
+  const interpolatedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
+  const interpolationSteps = 2;
+  for (let i = 0; i < frames.length - 1; i++) {
+    interpolatedFrames.push(frames[i]);
+    for (let step = 1; step <= interpolationSteps; step++) {
+      const t = step / (interpolationSteps + 1);
+      const interpolated = interpolateFrames(
+        frames[i],
+        frames[i + 1],
+        t,
+        interpolateMode as 'none' | 'crossfade' | 'morph'
+      );
+      interpolatedFrames.push(interpolated);
+    }
+  }
+  interpolatedFrames.push(frames[frames.length - 1]);
+  return interpolatedFrames;
+}
+
+async function ensureDecodableFirstFrameHelper(
+  frames: (HTMLCanvasElement | OffscreenCanvas)[],
+  expectedContent: string | undefined
+): Promise<void> {
+  if (frames.length <= 1) return;
+  if (!expectedContent) return;
+  const firstFrameValidation = await validateInWorker(frames[0], expectedContent, 1);
+  if (firstFrameValidation.valid) return;
+  const candidates: number[] = [];
+  const pushCandidate = (index: number) => {
+    if (!Number.isFinite(index)) return;
+    const normalized = Math.max(1, Math.min(frames.length - 1, Math.floor(index)));
+    if (!candidates.includes(normalized)) {
+      candidates.push(normalized);
+    }
+  };
+  pushCandidate(Math.floor(frames.length * 0.25));
+  pushCandidate(Math.floor(frames.length * 0.5));
+  pushCandidate(Math.floor(frames.length * 0.75));
+  pushCandidate(frames.length - 1);
+  for (const frameIdx of candidates) {
+    const validation = await validateInWorker(frames[frameIdx], expectedContent, 1);
+    if (!validation.valid) continue;
+    frames[0] = cloneCanvasFrame(frames[frameIdx], null);
+    log.info('animation cache: promoted decodable start frame', {
+      sourceFrame: frameIdx,
+      frameCount: frames.length,
+    });
+    return;
+  }
+  log.warn('animation cache: no decodable frame found for start frame promotion', {
+    frameCount: frames.length,
+  });
+}
+
 interface UseQRGeneratorResult {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvas: HTMLCanvasElement | OffscreenCanvas | null;
@@ -1922,38 +2811,11 @@ function useQRGenerator(): UseQRGeneratorResult {
             lockVersionToMinimum: debouncedConfig.typeNumber === 0,
             performanceProfile: 'quality' as const,
             onProgress: (stage: string, percent: number) => {
-              let localizedStage = translateQArtStage(stage);
-              const maskMatch = /^Mask (\d+): (.+)$/.exec(stage);
-              if (maskMatch) {
-                const translatedInner = translateQArtStage(maskMatch[2]);
-                localizedStage = t('preview.busy.qrArt.maskStage', {
-                  defaultValue: 'Mask {{mask}}: {{stage}}...',
-                  mask: Number(maskMatch[1]),
-                  stage: translatedInner.replace(/\.\.\.$/, ''),
-                });
-              }
-              const attemptMaskMatch = /^Attempt (\d+)\/(\d+): Mask (\d+): (.+)$/.exec(stage);
-              if (attemptMaskMatch) {
-                const translatedInner = translateQArtStage(attemptMaskMatch[4]);
-                localizedStage = t('preview.busy.qrArt.attemptMaskStage', {
-                  defaultValue: 'Attempt {{current}}/{{total}}: Mask {{mask}}: {{stage}}...',
-                  current: Number(attemptMaskMatch[1]),
-                  total: Number(attemptMaskMatch[2]),
-                  mask: Number(attemptMaskMatch[3]),
-                  stage: translatedInner.replace(/\.\.\.$/, ''),
-                });
-              } else {
-                const attemptMatch = /^Attempt (\d+)\/(\d+): (.+)$/.exec(stage);
-                if (attemptMatch) {
-                  const translatedInner = translateQArtStage(attemptMatch[3]);
-                  localizedStage = t('preview.busy.qrArt.attemptStage', {
-                    defaultValue: 'Attempt {{current}}/{{total}}: {{stage}}...',
-                    current: Number(attemptMatch[1]),
-                    total: Number(attemptMatch[2]),
-                    stage: translatedInner.replace(/\.\.\.$/, ''),
-                  });
-                }
-              }
+              const localizedStage = localizeQArtProgressStage(
+                stage,
+                translateQArtStage,
+                t as unknown as (...args: any[]) => string
+              );
               updateGenerationProgress(localizedStage, 18 + percent * 0.64);
               log.debug('QR-Art progress', { stage: localizedStage, percent: `${percent}%` });
             },
@@ -2125,23 +2987,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         // If full QR-Art succeeded with good match, use that canvas directly
         if (useFullQArt && fullQArtCanvas) {
           if (isStaleRequest()) return;
-          // Apply watermark if enabled
-          let resultCanvas: HTMLCanvasElement | OffscreenCanvas = fullQArtCanvas;
-          if (watermark.enabled) {
-            let watermarkImage: HTMLImageElement | HTMLCanvasElement | null = null;
-            if ((watermark.kind === 'image' || watermark.kind === 'pattern') && watermark.image) {
-              watermarkImage = await loadFileAsCanvas(watermark.image);
-            }
-            const watermarked = await applyWatermark(fullQArtCanvas, {
-              kind: watermark.kind,
-              text: watermark.text,
-              image: watermarkImage ?? undefined,
-              position: watermark.position as WatermarkPosition,
-              opacity: watermark.opacity,
-              blend: watermark.blend,
-            });
-            resultCanvas = watermarked.canvas;
-          }
+          const resultCanvas = await applyWatermarkToCanvas(fullQArtCanvas, watermark);
 
           if (isStaleRequest()) return;
           setCanvas(resultCanvas);
@@ -2236,60 +3082,26 @@ function useQRGenerator(): UseQRGeneratorResult {
           isOverflow: msg.includes('code length overflow'),
         });
         if (msg.includes('code length overflow')) {
-          // Try with lower ECC levels - more data capacity
-          // Order: progressively lower ECC levels for more data capacity
           const currentEcc = effectiveConfig.errorCorrection || 'H';
-          const allEccLevels = ['H', 'Q', 'M', 'L'] as const;
-          const eccIndex = allEccLevels.indexOf(currentEcc as (typeof allEccLevels)[number]);
-          // If original call used auto-version (typeNumber: 0), skip the current ECC level
-          // since we already tried it. Otherwise, include current ECC with auto-version.
-          const startIndex =
-            debouncedConfig.typeNumber === 0
-              ? Math.max(0, eccIndex + 1) // Skip current ECC, start with next lower
-              : Math.max(0, eccIndex); // Include current ECC (wasn't tried with auto-version)
-          const eccToTry = allEccLevels.slice(startIndex);
-
-          // Safety: ensure we have at least one ECC level to try
-          // If startIndex pushed us past all levels, try 'L' as last resort
-          if (eccToTry.length === 0) {
-            eccToTry.push('L');
-          }
-
-          let succeeded = false;
+          const eccToTry = buildEccFallbackSequence(currentEcc, debouncedConfig.typeNumber);
 
           log.debug('Trying ECC fallback sequence', { eccToTry, currentEcc });
-          for (const ecc of eccToTry) {
-            if (succeeded) break;
-            const fallbackConfig = {
-              ...effectiveConfig,
-              typeNumber: 0, // Always use auto-version for retry
-              errorCorrection: ecc,
-            };
-            try {
-              log.debug('Trying ECC level', { ecc });
-              if (await yieldForResponsiveness()) return;
-              result = await runGeneratorWithStatus(
-                fallbackConfig,
-                overlay.enabled ? overlayCanvas : null
-              );
-              if (isStaleRequest()) return;
-              usedFallback = true;
-              succeeded = true;
-              log.debug('ECC fallback succeeded', { ecc });
-              if (ecc === currentEcc) {
-                log.info('QR generated with auto-version retry');
-              } else {
-                log.info('QR generated with fallback ECC', { ecc, previousEcc: currentEcc });
-              }
-            } catch (error_) {
-              log.debug('ECC fallback failed', {
-                ecc,
-                error: error_ instanceof Error ? error_.message : error_,
-              });
-            }
+          const fallbackResult = await tryEccFallbackGeneration({
+            effectiveConfig,
+            eccToTry,
+            runGeneratorWithStatus,
+            yieldForResponsiveness,
+            overlayEnabled: overlay.enabled,
+            overlayCanvas,
+            currentEcc,
+          });
+          if (fallbackResult.succeeded) {
+            result = fallbackResult.result;
+            if (isStaleRequest()) return;
+            usedFallback = true;
           }
 
-          if (!succeeded) {
+          if (!fallbackResult.succeeded) {
             // All attempts failed - content is too long even for max capacity
             log.debug('All ECC levels failed', {
               contentLength: effectiveConfig.content?.length,
@@ -2326,25 +3138,8 @@ function useQRGenerator(): UseQRGeneratorResult {
         log.debug('QR generated using fallback settings due to content length');
       }
 
-      // Apply watermark if enabled
-      if (watermark.enabled && result) {
-        let watermarkImage: HTMLImageElement | HTMLCanvasElement | null = null;
-
-        if ((watermark.kind === 'image' || watermark.kind === 'pattern') && watermark.image) {
-          // Load watermark image (used for both image and pattern types)
-          watermarkImage = await loadFileAsCanvas(watermark.image);
-        }
-
-        const watermarked = await applyWatermark(result as HTMLCanvasElement, {
-          kind: watermark.kind,
-          text: watermark.text,
-          image: watermarkImage ?? undefined,
-          position: watermark.position as WatermarkPosition,
-          opacity: watermark.opacity,
-          blend: watermark.blend,
-        });
-
-        result = watermarked.canvas;
+      if (result) {
+        result = await applyWatermarkToCanvas(result, watermark);
       }
 
       if (isStaleRequest()) return;
@@ -2832,188 +3627,46 @@ function useQRGenerator(): UseQRGeneratorResult {
       scheduleTrackEvent('export', { format: output.format });
       const exporter = await loadExporterModule();
 
-      // Scale canvas to output dimensions if different
-      // Cast to HTMLCanvasElement for export - safe because we're in browser context
-      let exportCanvas: HTMLCanvasElement = canvas as HTMLCanvasElement;
-      if (output.widthPx !== canvas.width || output.heightPx !== canvas.height) {
-        exportCanvas = document.createElement('canvas');
-        exportCanvas.width = output.widthPx;
-        exportCanvas.height = output.heightPx;
-        const exportCtx = exportCanvas.getContext('2d');
-        if (exportCtx) {
-          // Use high-quality scaling
-          exportCtx.imageSmoothingEnabled = !render.crispEdges;
-          exportCtx.imageSmoothingQuality = 'high';
-          exportCtx.drawImage(canvas, 0, 0, output.widthPx, output.heightPx);
-        }
-      }
+      const exportCanvas = createScaledExportCanvas(
+        canvas,
+        output.widthPx,
+        output.heightPx,
+        render.crispEdges
+      );
 
-      const exportConfig = {
-        outputFormat: output.format,
-        outputWidth: output.widthPx,
-        outputHeight: output.heightPx,
-        outputQuality: output.quality,
-        filename: output.filename,
-        dpi: output.dpi,
-        // Output options
-        includeQuietZone: output.includeQuietZone,
-        bgOverride: output.bgOverride,
-        // GIF options
-        gifPaletteSize: output.gifPaletteSize,
-        gifQuantizer: output.gifQuantizer,
-        gifDither: output.gifDither,
-        gifTransparentColor: output.gifTransparentColor,
-        gifDisposal: output.gifDisposal,
-        // SVG options
-        svgTrueVector: output.svgTrueVector,
-        svgShapePrecision: output.svgShapePrecision,
-        svgEmbedRasterOverlay: output.svgEmbedRasterOverlay,
-        // Metadata
-        metadata: {
-          title: metadata.title || undefined,
-          author: metadata.author || undefined,
-          copyright: metadata.copyright || undefined,
-          license: metadata.license || undefined,
-          description: metadata.description || undefined,
-          creationTime: metadata.creationTime,
-          customKv: metadata.customKv.filter((kv) => kv.k && kv.v),
-        },
-      };
-
-      // Build PNG metadata object for embedding
-      const pngMetadata =
-        metadata.title || metadata.author || metadata.copyright || metadata.description
-          ? {
-              title: metadata.title || undefined,
-              author: metadata.author || undefined,
-              copyright: metadata.copyright || undefined,
-              description: metadata.description || undefined,
-              creationTime: metadata.creationTime ? new Date().toISOString() : undefined,
-              software: 'ANQR - https://anqr.link',
-            }
-          : undefined;
+      const exportConfig = buildExportConfig(output, metadata);
+      const pngMetadata = buildPngMetadata(metadata);
 
       if (output.format === 'svg') {
-        // Use true vector SVG export if enabled and matrix is available
-        if (output.svgTrueVector) {
-          let vectorMatrix = qrMatrix;
-          if (!vectorMatrix && qrPackedMatrixRef.current) {
-            const { packed, moduleCount } = qrPackedMatrixRef.current;
-            vectorMatrix = expandPackedQArtMatrix(packed, moduleCount);
-          }
-
-          if (!vectorMatrix) {
-            log.warn(
-              'Vector SVG export requested but QR matrix is unavailable. ' +
-                'Falling back to raster SVG. This can happen with special render modes.'
-            );
-            await exporter.downloadSvg(exportCanvas, exportConfig);
-            return;
-          }
-          // Calculate module size to match desired output dimensions
-          const moduleCount = vectorMatrix.length;
-          // Use the same margin calculation as generate() in qr-generator.js
-          // config.margin = safetyAdjustedConfig.quietZone + qr.borderModulesExtra
-          const totalMargin = qr.quietZoneModules + qr.borderModulesExtra;
-          // SVG viewBox size = (moduleCount + 2*margin) * moduleSize
-          const svgModuleSize = Math.floor(output.widthPx / (moduleCount + totalMargin * 2)) || 10;
-
-          // True vector SVG - uses styled path elements
-          exporter.downloadVectorSvg(vectorMatrix, {
-            moduleSize: svgModuleSize,
-            margin: totalMargin,
-            fgColor: render.fgColor,
-            bgColor: render.bgTransparent ? 'transparent' : render.bgColor,
-            filename: output.filename,
-            // Pass styling options for vector SVG
-            moduleStyle: render.moduleStyle,
-            cornerRadius: render.cornerRadius,
-            finderStyle: render.finderStyle,
-            eyeOuterStyle: render.eyeOuterStyle,
-            eyeInnerStyle: render.eyeInnerStyle,
-            alignmentStyle: render.alignmentStyle,
-            timingStyle: render.timingStyle,
-            gradient: render.gradient,
-            // Pass metadata for SVG embedding
-            metadata:
-              metadata.title || metadata.author || metadata.copyright || metadata.description
-                ? {
-                    title: metadata.title || undefined,
-                    author: metadata.author || undefined,
-                    copyright: metadata.copyright || undefined,
-                    description: metadata.description || undefined,
-                    creationTime: metadata.creationTime,
-                    software: 'ANQR - https://anqr.link',
-                  }
-                : undefined,
-          });
-        } else {
-          // Raster SVG (embedded PNG) - preserves all styling including dithering
-          await exporter.downloadSvg(exportCanvas, exportConfig);
-        }
-      } else if (output.format === 'gif' && animationFrameCount > 1) {
-        const cachedAnimationFrames = animationFramesRef.current;
-        // Scale animation frames to output dimensions
-        // Use canvas pool for temporary scaled frames to reduce GC pressure
-        const scaledFrames = cachedAnimationFrames.map((frame) => {
-          const frameCanvas = frame as HTMLCanvasElement;
-          if (frameCanvas.width === output.widthPx && frameCanvas.height === output.heightPx) {
-            return frameCanvas;
-          }
-          const scaledCanvas = document.createElement('canvas');
-          scaledCanvas.width = output.widthPx;
-          scaledCanvas.height = output.heightPx;
-          const scaledCtx = scaledCanvas.getContext('2d');
-          if (scaledCtx) {
-            scaledCtx.imageSmoothingEnabled = !render.crispEdges;
-            scaledCtx.imageSmoothingQuality = 'high';
-            scaledCtx.drawImage(frameCanvas, 0, 0, output.widthPx, output.heightPx);
-          }
-          return scaledCanvas;
+        await downloadSvgFormat({
+          exporter,
+          exportCanvas,
+          exportConfig,
+          svgTrueVector: output.svgTrueVector,
+          qrMatrix,
+          qrPackedMatrixRef: qrPackedMatrixRef.current,
+          outputWidthPx: output.widthPx,
+          outputFilename: output.filename,
+          quietZoneModules: qr.quietZoneModules,
+          borderModulesExtra: qr.borderModulesExtra,
+          renderState: render,
+          metadataState: metadata,
         });
-
-        // Calculate frame delays - use original GIF delays if enabled, otherwise use animation speed
-        let frameDelays: number[] | undefined;
-        if (overlay.gifUseFrameDelays && effectiveFrames.length > 0) {
-          // Use original frame delays from source GIF, capped by maxFps
-          const minDelayMs = overlay.gifMaxFps > 0 ? Math.floor(1000 / overlay.gifMaxFps) : 0;
-          frameDelays = effectiveFrames.map((f) =>
-            Math.max(f.delay || animation.speedMs, minDelayMs)
-          );
-        } else if (animationFrameCount > 1 && effectiveFrames.length === 0) {
-          // For base QR animations (no overlay), use uniform animation speed
-          frameDelays = cachedAnimationFrames.map(() => animation.speedMs);
-        }
-
-        log.debug('download GIF: delays computed', {
-          effectiveFramesLen: effectiveFrames.length,
-          animationFramesLen: animationFrameCount,
-          scaledFramesLen: scaledFrames.length,
-          frameDelaysLen: frameDelays?.length,
-          minDelay: frameDelays ? Math.min(...frameDelays) : undefined,
-          maxDelay: frameDelays ? Math.max(...frameDelays) : undefined,
-          totalMs: frameDelays?.reduce((s, d) => s + d, 0),
+      } else if (output.format === 'gif' && animationFrameCount > 1) {
+        await downloadAnimatedGifFormat({
+          exporter,
+          cachedAnimationFrames: animationFramesRef.current,
+          exportConfig,
+          outputWidthPx: output.widthPx,
+          outputHeightPx: output.heightPx,
+          crispEdges: render.crispEdges,
+          animationSpeedMs: animation.speedMs,
+          animationLoop: animation.loop,
+          effectiveFrames,
           gifUseFrameDelays: overlay.gifUseFrameDelays,
           gifMaxFps: overlay.gifMaxFps,
-          animSpeedMs: animation.speedMs,
         });
-
-        // Export animated GIF with all frames
-        await exporter.downloadGif(
-          scaledFrames,
-          {
-            ...exportConfig,
-            animationSpeed: animation.speedMs,
-            loopAnimation: animation.loop,
-          },
-          frameDelays
-        );
-
-        // Note: We intentionally don't release scaled canvases back to the pool here
-        // because downloadGif is async and may still be using the canvas data.
-        // The canvases will be garbage collected naturally after export completes.
       } else if (output.format === 'gif') {
-        // Single frame GIF
         await exporter.downloadGif([exportCanvas], exportConfig);
       } else {
         await exporter.downloadImage(exportCanvas, exportConfig, pngMetadata, output.dpi);
@@ -3061,48 +3714,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     const isRunCancelled = (): boolean =>
       isCancelled || animationQArtAbortController.signal.aborted;
 
-    // ==========================================
-    // ANIMATION EFFECT FLAGS - only true when actually enabled
-    // ==========================================
+    const { modulePatternEffects, resultPatternEffects } = buildPatternEffectLists(animation);
     const hasColorCycle = animation.colorCycle === true;
-    const primaryPatternEnabled = animation.pattern !== 'none';
-    const secondaryPatternEnabled = animation.pattern2 !== 'none';
-    const modulePatternEffects: Array<{
-      pattern: AnimationPattern;
-      seed: number;
-      waveAxis: 'x' | 'y' | 'xy';
-    }> = [];
-    const resultPatternEffects: Array<{
-      pattern: AnimationPattern;
-      seed: number;
-      waveAxis: 'x' | 'y' | 'xy';
-    }> = [];
-    if (primaryPatternEnabled) {
-      const primaryEffect = {
-        pattern: animation.pattern as AnimationPattern,
-        seed: animation.seed,
-        waveAxis: animation.waveAxis,
-      };
-      if (animation.target === 'modules' || animation.target === 'both') {
-        modulePatternEffects.push(primaryEffect);
-      }
-      if (animation.target === 'result' || animation.target === 'both') {
-        resultPatternEffects.push(primaryEffect);
-      }
-    }
-    if (secondaryPatternEnabled) {
-      const secondaryEffect = {
-        pattern: animation.pattern2 as AnimationPattern,
-        seed: animation.seed + 911,
-        waveAxis: animation.waveAxis2,
-      };
-      if (animation.target2 === 'modules' || animation.target2 === 'both') {
-        modulePatternEffects.push(secondaryEffect);
-      }
-      if (animation.target2 === 'result' || animation.target2 === 'both') {
-        resultPatternEffects.push(secondaryEffect);
-      }
-    }
     const hasPattern = modulePatternEffects.length > 0 || resultPatternEffects.length > 0;
     const hasTemporalDither = animation.temporalDither !== 'off';
     const hasInterpolation = animation.interpolate !== 'none';
@@ -3120,149 +3733,54 @@ function useQRGenerator(): UseQRGeneratorResult {
     const shouldGenerateStaticOverlayAnimation =
       hasAnyAnimationEffect && overlay.enabled && effectiveFrames.length === 1;
 
-    const computePatternDrivenJitter = (frameIndex: number, totalFrames: number): number => {
-      let jitter = animation.moduleJitterPx;
-      for (const effect of modulePatternEffects) {
-        const progress = frameIndex / Math.max(1, totalFrames - 1);
-        const phase = Math.sin(progress * Math.PI * 2 + effect.seed * 0.013);
-        const intensity = (phase + 1) / 2;
-        switch (effect.pattern) {
-          case 'pulse':
-            jitter += 0.3 + intensity * 0.7;
-            break;
-          case 'wave':
-            jitter += 0.6 + intensity * 0.65;
-            break;
-          case 'scanline':
-            jitter += intensity * 0.8;
-            break;
-          case 'shimmer':
-            jitter += (Math.sin((frameIndex + effect.seed * 3) * 1.6) + 1) * 0.35;
-            break;
-          case 'drift':
-            jitter += 0.4 + intensity * 0.75;
-            break;
-          default:
-            break;
-        }
-      }
-      return Math.min(2.4, Math.max(0, Number(jitter.toFixed(3))));
-    };
+    const computePatternDrivenJitter = (frameIndex: number, totalFrames: number): number =>
+      computePatternDrivenJitterValue(
+        frameIndex,
+        totalFrames,
+        animation.moduleJitterPx,
+        modulePatternEffects
+      );
 
-    let patternScratchA: HTMLCanvasElement | null = null;
-    let patternScratchB: HTMLCanvasElement | null = null;
-    let temporalScratchA: HTMLCanvasElement | null = null;
-    let temporalScratchB: HTMLCanvasElement | null = null;
-    const getPatternScratchCanvas = (
-      slot: 0 | 1,
-      width: number,
-      height: number
-    ): HTMLCanvasElement => {
-      const current = slot === 0 ? patternScratchA : patternScratchB;
-      if (!current) {
-        const created = document.createElement('canvas');
-        created.width = width;
-        created.height = height;
-        if (slot === 0) {
-          patternScratchA = created;
-        } else {
-          patternScratchB = created;
-        }
-        return created;
-      }
-      if (current.width !== width) current.width = width;
-      if (current.height !== height) current.height = height;
-      return current;
-    };
-    const getTemporalScratchCanvas = (
-      slot: 0 | 1,
-      width: number,
-      height: number
-    ): HTMLCanvasElement => {
-      const current = slot === 0 ? temporalScratchA : temporalScratchB;
-      if (!current) {
-        const created = document.createElement('canvas');
-        created.width = width;
-        created.height = height;
-        if (slot === 0) {
-          temporalScratchA = created;
-        } else {
-          temporalScratchB = created;
-        }
-        return created;
-      }
-      if (current.width !== width) current.width = width;
-      if (current.height !== height) current.height = height;
-      return current;
-    };
-
-    const cloneCanvas = (
-      sourceCanvas: HTMLCanvasElement | OffscreenCanvas
-    ): HTMLCanvasElement | OffscreenCanvas => {
-      const cloned = document.createElement('canvas');
-      cloned.width = sourceCanvas.width;
-      cloned.height = sourceCanvas.height;
-      const clonedCtx = cloned.getContext('2d');
-      if (clonedCtx) {
-        clonedCtx.drawImage(sourceCanvas, 0, 0);
-      }
-      return cloned;
-    };
-
-    const applyPatternStack = (
-      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-      effects: Array<{
-        pattern: AnimationPattern;
-        seed: number;
-        waveAxis: 'x' | 'y' | 'xy';
-      }>,
-      frameIndex: number,
-      totalFrames: number,
-      persistentOutput = false
-    ): HTMLCanvasElement | OffscreenCanvas => {
-      if (effects.length === 0) return sourceCanvas;
-
-      let out = sourceCanvas;
-      for (let effectIdx = 0; effectIdx < effects.length; effectIdx++) {
-        const effect = effects[effectIdx];
-        const targetCanvas = getPatternScratchCanvas(
-          (effectIdx % 2) as 0 | 1,
-          out.width,
-          out.height
-        );
-        out = applyAnimationPattern(
-          out,
-          frameIndex,
-          totalFrames,
-          effect.pattern,
-          {
-            seed: effect.seed,
-            waveAxis: effect.waveAxis,
-          },
-          targetCanvas
-        );
-      }
-
-      return persistentOutput ? cloneCanvas(out) : out;
-    };
+    const scratchPool = createScratchCanvasPool();
     const applyResultPatternStackPersistent = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
       totalFrames: number
     ): HTMLCanvasElement | OffscreenCanvas =>
-      applyPatternStack(sourceCanvas, resultPatternEffects, frameIndex, totalFrames, true);
+      applyPatternStackToCanvas(
+        sourceCanvas,
+        resultPatternEffects,
+        frameIndex,
+        totalFrames,
+        true,
+        scratchPool.getPatternScratch
+      );
     const applyResultPatternStackEphemeral = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
       totalFrames: number
     ): HTMLCanvasElement | OffscreenCanvas =>
-      applyPatternStack(sourceCanvas, resultPatternEffects, frameIndex, totalFrames, false);
+      applyPatternStackToCanvas(
+        sourceCanvas,
+        resultPatternEffects,
+        frameIndex,
+        totalFrames,
+        false,
+        scratchPool.getPatternScratch
+      );
     const applyModulePatternStackEphemeral = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
       totalFrames: number
     ): HTMLCanvasElement | OffscreenCanvas =>
-      applyPatternStack(sourceCanvas, modulePatternEffects, frameIndex, totalFrames, false);
+      applyPatternStackToCanvas(
+        sourceCanvas,
+        modulePatternEffects,
+        frameIndex,
+        totalFrames,
+        false,
+        scratchPool.getPatternScratch
+      );
 
     // Early return only if no animation is needed
     // For multi-frame overlays (animated GIFs), we need to generate frames regardless of other animation effects
@@ -3291,46 +3809,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       let frames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
 
       const persistFrameCanvas = (frameCanvas: HTMLCanvasElement | OffscreenCanvas): void => {
-        // Snapshot on insert. Scratch/compositor canvases are reused and mutated per-frame.
-        frames.push(cloneCanvas(frameCanvas));
-      };
-
-      const ensureDecodableFirstFrame = async (): Promise<void> => {
-        if (frames.length <= 1) return;
-        const expectedContent = debouncedConfig.content;
-        if (!expectedContent) return;
-
-        const firstFrameValidation = await validateInWorker(frames[0], expectedContent, 1);
-        if (firstFrameValidation.valid) return;
-
-        const candidates: number[] = [];
-        const pushCandidate = (index: number) => {
-          if (!Number.isFinite(index)) return;
-          const normalized = Math.max(1, Math.min(frames.length - 1, Math.floor(index)));
-          if (!candidates.includes(normalized)) {
-            candidates.push(normalized);
-          }
-        };
-
-        pushCandidate(Math.floor(frames.length * 0.25));
-        pushCandidate(Math.floor(frames.length * 0.5));
-        pushCandidate(Math.floor(frames.length * 0.75));
-        pushCandidate(frames.length - 1);
-
-        for (const frameIdx of candidates) {
-          const validation = await validateInWorker(frames[frameIdx], expectedContent, 1);
-          if (!validation.valid) continue;
-          frames[0] = cloneCanvasFrame(frames[frameIdx], null);
-          log.info('animation cache: promoted decodable start frame', {
-            sourceFrame: frameIdx,
-            frameCount: frames.length,
-          });
-          return;
-        }
-
-        log.warn('animation cache: no decodable frame found for start frame promotion', {
-          frameCount: frames.length,
-        });
+        frames.push(cloneCanvasSimple(frameCanvas));
       };
 
       // Create yield controller for time-based yielding
@@ -3378,86 +3857,21 @@ function useQRGenerator(): UseQRGeneratorResult {
           : {}),
       };
 
-      // Generate animation frames for base QR (no overlay)
       if (shouldGenerateBaseAnimation) {
         const frameCount = 24;
-
-        // Check if we need per-frame QR generation (for moduleJitter)
-        const needsPerFrameQR = hasJitter;
-
-        if (hasPattern && !needsPerFrameQR) {
-          // Generate base QR once, then apply result-targeted pattern stack
-          const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
-          if (!baseQR || isRunCancelled()) return;
-          framesToProcess = Array.from({ length: frameCount }, (_, i) => ({
-            canvas: applyResultPatternStackPersistent(baseQR, i, frameCount),
-            delay: animation.speedMs,
-            disposalType: 0,
-          }));
-        } else if (hasPattern && needsPerFrameQR) {
-          // Generate QR per frame for module-targeted effects, then layer result-targeted patterns
-          const combinedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
-          for (let i = 0; i < frameCount; i++) {
-            if (isRunCancelled()) return;
-            // Time-based yielding for smoother UI
-            if (await yieldCtrl.yieldIfNeeded()) {
-              if (isRunCancelled()) return;
-            }
-
-            const frameConfig = {
-              ...previewScanConfigBase,
-              frameIndex: i,
-              moduleJitterPx: computePatternDrivenJitter(i, frameCount),
-            };
-            const jitteredQR = await qrGenerator.generate(frameConfig, null);
-            if (!jitteredQR) continue;
-            combinedFrames.push(applyResultPatternStackPersistent(jitteredQR, i, frameCount));
-          }
-
-          framesToProcess = combinedFrames.map((canvas) => ({
-            canvas,
-            delay: animation.speedMs,
-            disposalType: 0,
-          }));
-        } else if (hasJitter) {
-          // Module-only animation (jitter and module-targeted patterns)
-          const jitteredFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
-          for (let i = 0; i < frameCount; i++) {
-            if (isRunCancelled()) return;
-
-            // Time-based yielding for smoother UI
-            if (await yieldCtrl.yieldIfNeeded()) {
-              if (isRunCancelled()) return;
-            }
-
-            const frameConfig = {
-              ...previewScanConfigBase,
-              frameIndex: i,
-              moduleJitterPx: computePatternDrivenJitter(i, frameCount),
-            };
-            const qrFrame = await qrGenerator.generate(frameConfig, null);
-            if (qrFrame) {
-              jitteredFrames.push(applyResultPatternStackPersistent(qrFrame, i, frameCount));
-            }
-          }
-
-          framesToProcess = jitteredFrames.map((canvas) => ({
-            canvas,
-            delay: animation.speedMs,
-            disposalType: 0,
-          }));
-        } else {
-          // For colorCycle/temporalDither without pattern or jitter
-          // Generate base QR once, then create placeholder frames for post-processing
-          const staticBaseQR = await qrGenerator.generate(previewScanConfigBase, null);
-          if (!staticBaseQR || isRunCancelled()) return;
-
-          framesToProcess = Array.from({ length: frameCount }, () => ({
-            canvas: staticBaseQR,
-            delay: animation.speedMs,
-            disposalType: 0,
-          }));
-        }
+        const baseFrameResult = await generateBaseAnimationFrameSet({
+          hasPattern,
+          hasJitter,
+          previewScanConfigBase,
+          frameCount,
+          speedMs: animation.speedMs,
+          isRunCancelled,
+          yieldCtrl,
+          computeJitter: computePatternDrivenJitter,
+          applyResultPersistent: applyResultPatternStackPersistent,
+        });
+        if (!baseFrameResult || isRunCancelled()) return;
+        framesToProcess = baseFrameResult;
       }
       // Generate animation frames from static overlay with effects
       else if (shouldGenerateStaticOverlayAnimation && effectiveFrames.length === 1) {
@@ -3810,170 +4224,69 @@ function useQRGenerator(): UseQRGeneratorResult {
           let result: HTMLCanvasElement | OffscreenCanvas | null = null;
 
           if (shouldGenerateBaseAnimation) {
-            // For base QR animation, the frame.canvas is either:
-            // - A pattern-processed frame (if pattern enabled)
-            // - The base QR itself (for colorCycle/temporalDither only)
-            if (hasPattern || hasJitter) {
-              // Pattern and/or jitter already applied during frame generation, just use the frame directly
-              result = frame.canvas;
-            } else {
-              // Re-render QR with different frameIndex for temporal effects
-              const frameConfig = {
-                ...previewScanConfigBase,
-                frameIndex: frameIdx,
-                temporalOffset: useTemporalDither
-                  ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
-                  : 0,
-              };
-              result = await qrGenerator.generate(frameConfig, null);
-            }
+            result = await renderFrameForBaseAnimation({
+              hasPattern,
+              hasJitter,
+              frame,
+              frameIdx,
+              previewScanConfigBase,
+              useTemporalDither,
+              temporalMode,
+              animationSeed: animation.seed,
+            });
           } else if (useCompositor && gifCompositor) {
-            // OPTIMAL PATH: Use GIF compositor for overlay animation
-            // This avoids per-frame canvas allocation - compositor.canvas is reused
-            const actualFrameIdx = effectiveFrameIndices[frameIdx];
-            const prevActualFrameIdx = frameIdx > 0 ? effectiveFrameIndices[frameIdx - 1] : -1;
-
-            // CRITICAL: GIF frames are delta patches that build on each other.
-            // We cannot skip intermediate frames - we must apply ALL frames from
-            // the previous target frame to the current target frame.
-            // e.g., if effectiveFrameIndices = [0, 5, 10] and we want frame 5,
-            // we need to apply frames 1, 2, 3, 4, 5 (not just jump from 0 to 5)
-            for (let i = prevActualFrameIdx + 1; i <= actualFrameIdx; i++) {
-              if (i > 0) {
-                gifCompositor.dispose(i - 1);
-              }
-              gifCompositor.apply(i);
-            }
-
-            // Apply geometric transforms only (color adjustments at moduleCount resolution)
-            const processedOverlay = applyGeometricTransforms(gifCompositor.canvas);
-
-            // Apply temporal dithering if enabled (reduced strength for preview)
-            let overlayToUse: HTMLCanvasElement | OffscreenCanvas = processedOverlay;
-            if (useTemporalDither) {
-              const temporalOffset = calculateTemporalOffset(
-                frameIdx,
-                temporalMode,
-                animation.seed
-              );
-              // applyTemporalNoiseToCanvas accepts union type and returns union type
-              overlayToUse = applyTemporalNoiseToCanvas(
-                processedOverlay,
-                temporalOffset,
-                0.008,
-                getTemporalScratchCanvas(
-                  (frameIdx % 2) as 0 | 1,
-                  processedOverlay.width,
-                  processedOverlay.height
-                )
-              );
-            }
-
-            const frameConfig = {
-              ...previewScanConfigBase,
-              frameIndex: frameIdx,
-              temporalOffset: useTemporalDither
-                ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
-                : 0,
-            };
-            result = isArtworkMode
-              ? await generateArtworkFrame(overlayToUse, frameIdx)
-              : await qrGenerator.generate(frameConfig, overlayToUse);
+            result = await renderFrameWithCompositor({
+              gifCompositor,
+              effectiveFrameIndices,
+              frameIdx,
+              applyGeometricTransforms,
+              useTemporalDither,
+              temporalMode,
+              animationSeed: animation.seed,
+              getTemporalScratch: scratchPool.getTemporalScratch,
+              previewScanConfigBase,
+              isArtworkMode,
+              generateArtworkFrame,
+            });
           } else {
-            // Legacy path for WebP or pattern animation
-            // NOTE: Color adjustments (brightness/contrast/etc) are now done at moduleCount
-            // resolution inside qr-generator.js - we only apply geometric transforms here
-            let processedOverlay: HTMLCanvasElement | OffscreenCanvas = applyGeometricTransforms(
-              frame.canvas
-            );
-            if (modulePatternEffects.length > 0) {
-              processedOverlay = applyModulePatternStackEphemeral(
-                processedOverlay,
-                frameIdx,
-                framesToProcess.length
-              );
-            }
-
-            // Apply temporal dithering offset to the overlay image
-            // This varies the input slightly per frame for smoother perceived quality
-            // NOTE: Use reduced strength (0.008) during preview generation for speed
-            // Full strength (0.015) is applied during export
-            if (useTemporalDither) {
-              const temporalOffset = calculateTemporalOffset(
-                frameIdx,
-                temporalMode,
-                animation.seed
-              );
-              // applyTemporalNoiseToCanvas accepts union type and returns union type
-              processedOverlay = applyTemporalNoiseToCanvas(
-                processedOverlay,
-                temporalOffset,
-                0.008,
-                getTemporalScratchCanvas(
-                  (frameIdx % 2) as 0 | 1,
-                  processedOverlay.width,
-                  processedOverlay.height
-                )
-              );
-            }
-
-            // Pass frame index for temporal dithering (also used in qr-generator for dither pattern offset)
-            const frameConfig = {
-              ...previewScanConfigBase,
-              frameIndex: frameIdx,
-              moduleJitterPx: hasJitter
-                ? computePatternDrivenJitter(frameIdx, framesToProcess.length)
-                : animation.moduleJitterPx,
-              temporalOffset: useTemporalDither
-                ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
-                : 0,
-            };
-            result = isArtworkMode
-              ? await generateArtworkFrame(processedOverlay, frameIdx)
-              : await qrGenerator.generate(frameConfig, processedOverlay);
+            result = await renderFrameWithLegacyPath({
+              frame,
+              frameIdx,
+              framesToProcessLength: framesToProcess.length,
+              applyGeometricTransforms,
+              modulePatternEffects,
+              applyModulePatternEphemeral: applyModulePatternStackEphemeral,
+              useTemporalDither,
+              temporalMode,
+              animationSeed: animation.seed,
+              getTemporalScratch: scratchPool.getTemporalScratch,
+              hasJitter,
+              computeJitter: computePatternDrivenJitter,
+              moduleJitterPx: animation.moduleJitterPx,
+              previewScanConfigBase,
+              isArtworkMode,
+              generateArtworkFrame,
+            });
           }
 
           if (isRunCancelled()) return;
 
           if (result) {
-            let finalResult: HTMLCanvasElement | OffscreenCanvas = result;
-            if (!shouldGenerateBaseAnimation && resultPatternEffects.length > 0) {
-              finalResult = applyResultPatternStackEphemeral(
-                finalResult,
-                frameIdx,
-                framesToProcess.length
-              );
-            }
-
-            // Apply color cycle as post-processing - ONLY if actually enabled
-            if (hasColorCycle) {
-              const colorCycleTarget = cloneCanvas(finalResult);
-              finalResult = applyColorCycle(
-                finalResult,
-                frameIdx,
-                framesToProcess.length,
-                colorCycleTarget
-              );
-            }
-
-            let previewFrame: HTMLCanvasElement | OffscreenCanvas = finalResult;
-            // Apply watermark if enabled
-            if (watermark.enabled) {
-              const watermarked = await applyWatermark(finalResult as HTMLCanvasElement, {
-                kind: watermark.kind,
-                text: watermark.text,
-                image: watermarkImage ?? undefined,
-                position: watermark.position as WatermarkPosition,
-                opacity: watermark.opacity,
-                blend: watermark.blend,
-              });
-              previewFrame = watermarked.canvas;
-            }
+            const previewFrame = await applyFramePostProcessing({
+              result,
+              shouldGenerateBaseAnimation,
+              resultPatternEffects,
+              applyResultEphemeral: applyResultPatternStackEphemeral,
+              frameIdx,
+              framesToProcessLength: framesToProcess.length,
+              hasColorCycle,
+              watermarkConfig: watermark,
+              watermarkImage,
+            });
 
             persistFrameCanvas(previewFrame);
             if (isRunCancelled()) return;
 
-            // Stream latest rendered frame while cache builds to avoid frozen-feel on long runs.
             const latestStoredFrame = frames[frames.length - 1] ?? previewFrame;
             setCanvas(latestStoredFrame);
             if (canvasRef.current) {
@@ -3985,32 +4298,12 @@ function useQRGenerator(): UseQRGeneratorResult {
         }
       }
 
-      // Apply interpolation - ONLY if actually enabled
-      // Note: interpolateFrames works on pairs of frames, so we interpolate between consecutive frames
       if (hasInterpolation && frames.length > 1) {
         updateGenerationProgress(
           t('preview.busy.smoothingAnimationFrames', 'Smoothing the animation frames...'),
           92
         );
-        const interpolatedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
-        const interpolationSteps = 2; // Number of intermediate frames to generate
-        for (let i = 0; i < frames.length - 1; i++) {
-          interpolatedFrames.push(frames[i]);
-          // Generate intermediate frames between frames[i] and frames[i+1]
-          for (let step = 1; step <= interpolationSteps; step++) {
-            const t = step / (interpolationSteps + 1);
-            const interpolated = interpolateFrames(
-              frames[i],
-              frames[i + 1],
-              t,
-              animation.interpolate as 'none' | 'crossfade' | 'morph'
-            );
-            interpolatedFrames.push(interpolated);
-          }
-        }
-        // Add the last frame
-        interpolatedFrames.push(frames[frames.length - 1]);
-        frames = interpolatedFrames;
+        frames = await applyInterpolationToFrames(frames, animation.interpolate);
       }
 
       if (frames.length > 1 && debouncedConfig.content) {
@@ -4021,7 +4314,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           ),
           96
         );
-        await ensureDecodableFirstFrame();
+        await ensureDecodableFirstFrameHelper(frames, debouncedConfig.content);
       }
 
       // Only update state if not cancelled

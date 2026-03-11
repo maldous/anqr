@@ -54,7 +54,7 @@ import {
   isValidUrlWithScheme,
 } from '@/modules/payload-generators';
 import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
-import { type PayloadKind, useQRStore } from '@/store/qr-store';
+import { type PayloadKind, type QRState, useQRStore } from '@/store/qr-store';
 
 const log = createLogger('PAYLOAD');
 
@@ -612,53 +612,7 @@ function PlusCodeDisplay({
   );
 }
 
-export function PayloadSection() {
-  const {
-    tier,
-    payload,
-    qr,
-    getPayloadText,
-    setPayloadKind,
-    setPayloadText,
-    setPayloadUrl,
-    setPayloadTel,
-    setPayloadEmail,
-    setPayloadSms,
-    setPayloadGeo,
-    setPayloadWifi,
-    setPayloadVCard,
-    setPayloadMeCard,
-    setPayloadEvent,
-    setPayloadCrypto,
-    setPayloadOtpAuth,
-    setPayloadValidation,
-    setPayloadBizCard,
-    setPayloadMessaging,
-    setPayloadSocialProfile,
-    setPayloadAppLink,
-    setPayloadGS1,
-    setPayloadCalendarSub,
-    setPayloadEventRsvp,
-    setPayloadSwissQRBill,
-    setPayloadLightning,
-    setPayloadEthereum,
-    setPayloadQRIS,
-    setPayloadDuitNow,
-    setPayloadBharatQR,
-    setPayloadVietQR,
-    setPayloadQRPh,
-    setPayloadTWQR,
-    setPayloadHKQR,
-    setPayloadJPQR,
-    setPayloadAusPayNet,
-    setPayloadPayPalMe,
-    setPayloadCashApp,
-    setPayloadEMVGeneric,
-  } = useQRStore();
-  const { t } = useTranslation();
-  const [showStartupHighlight, setShowStartupHighlight] = useState(false);
-
-  // Payment form states
+function usePaymentFormStates() {
   const [epcSepaForm, setEpcSepaForm] = useState<EPCSepaForm>({
     name: '',
     iban: '',
@@ -694,7 +648,6 @@ export function PayloadSection() {
     amount: '',
   });
 
-  // New payment form states
   const [swissQrBillForm, setSwissQrBillForm] = useState<SwissQRBillForm>({
     creditorIBAN: '',
     creditorName: '',
@@ -803,7 +756,6 @@ export function PayloadSection() {
     terminalLabel: '',
   });
 
-  // Short link form state
   const [shortLinkForm, setShortLinkForm] = useState<ShortLinkForm>({
     longUrl: '',
     shortUrl: '',
@@ -811,21 +763,139 @@ export function PayloadSection() {
     error: '',
   });
 
-  // Show startup highlight only once on initial mount
-  useEffect(() => {
-    const hasSeenHighlight = sessionStorage.getItem('anqr-seen-highlight');
-    if (!hasSeenHighlight) {
-      setShowStartupHighlight(true);
-      sessionStorage.setItem('anqr-seen-highlight', 'true');
-      // Remove highlight after 3 seconds
-      const timer = setTimeout(() => setShowStartupHighlight(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  return {
+    epcSepaForm,
+    setEpcSepaForm,
+    upiForm,
+    setUpiForm,
+    payNowForm,
+    setPayNowForm,
+    promptPayForm,
+    setPromptPayForm,
+    pixForm,
+    setPixForm,
+    swissQrBillForm,
+    setSwissQrBillForm,
+    lightningForm,
+    setLightningForm,
+    ethereumForm,
+    setEthereumForm,
+    qrisForm,
+    setQrisForm,
+    duitnowForm,
+    setDuitnowForm,
+    bharatqrForm,
+    setBharatqrForm,
+    vietqrForm,
+    setVietqrForm,
+    qrphForm,
+    setQrphForm,
+    twqrForm,
+    setTwqrForm,
+    hkqrForm,
+    setHkqrForm,
+    jpqrForm,
+    setJpqrForm,
+    auspaynetForm,
+    setAuspaynetForm,
+    paypalMeForm,
+    setPaypalMeForm,
+    cashappForm,
+    setCashappForm,
+    emvGenericForm,
+    setEmvGenericForm,
+    shortLinkForm,
+    setShortLinkForm,
+  };
+}
 
-  // Generate EPC/SEPA payload when form changes
+function usePaymentFormSync(
+  payloadKind: PayloadKind,
+  forms: {
+    epcSepaForm: EPCSepaForm;
+    upiForm: UPIForm;
+    payNowForm: PayNowForm;
+    promptPayForm: PromptPayForm;
+    pixForm: PIXForm;
+    swissQrBillForm: SwissQRBillForm;
+    lightningForm: LightningForm;
+    ethereumForm: EthereumForm;
+    qrisForm: QRISForm;
+    duitnowForm: DuitNowForm;
+    bharatqrForm: BharatQRForm;
+    vietqrForm: VietQRForm;
+    qrphForm: QRPhForm;
+    twqrForm: TWQRForm;
+    hkqrForm: HKQRForm;
+    jpqrForm: JPQRForm;
+    auspaynetForm: AusPayNetForm;
+    paypalMeForm: PayPalMeForm;
+    cashappForm: CashAppForm;
+    emvGenericForm: EMVGenericForm;
+  },
+  setters: {
+    setPayloadText: QRState['setPayloadText'];
+    setPayloadSwissQRBill: QRState['setPayloadSwissQRBill'];
+    setPayloadLightning: QRState['setPayloadLightning'];
+    setPayloadEthereum: QRState['setPayloadEthereum'];
+    setPayloadQRIS: QRState['setPayloadQRIS'];
+    setPayloadDuitNow: QRState['setPayloadDuitNow'];
+    setPayloadBharatQR: QRState['setPayloadBharatQR'];
+    setPayloadVietQR: QRState['setPayloadVietQR'];
+    setPayloadQRPh: QRState['setPayloadQRPh'];
+    setPayloadTWQR: QRState['setPayloadTWQR'];
+    setPayloadHKQR: QRState['setPayloadHKQR'];
+    setPayloadJPQR: QRState['setPayloadJPQR'];
+    setPayloadAusPayNet: QRState['setPayloadAusPayNet'];
+    setPayloadPayPalMe: QRState['setPayloadPayPalMe'];
+    setPayloadCashApp: QRState['setPayloadCashApp'];
+    setPayloadEMVGeneric: QRState['setPayloadEMVGeneric'];
+  }
+) {
+  const {
+    epcSepaForm,
+    upiForm,
+    payNowForm,
+    promptPayForm,
+    pixForm,
+    swissQrBillForm,
+    lightningForm,
+    ethereumForm,
+    qrisForm,
+    duitnowForm,
+    bharatqrForm,
+    vietqrForm,
+    qrphForm,
+    twqrForm,
+    hkqrForm,
+    jpqrForm,
+    auspaynetForm,
+    paypalMeForm,
+    cashappForm,
+    emvGenericForm,
+  } = forms;
+
+  const {
+    setPayloadText,
+    setPayloadSwissQRBill,
+    setPayloadLightning,
+    setPayloadEthereum,
+    setPayloadQRIS,
+    setPayloadDuitNow,
+    setPayloadBharatQR,
+    setPayloadVietQR,
+    setPayloadQRPh,
+    setPayloadTWQR,
+    setPayloadHKQR,
+    setPayloadJPQR,
+    setPayloadAusPayNet,
+    setPayloadPayPalMe,
+    setPayloadCashApp,
+    setPayloadEMVGeneric,
+  } = setters;
+
   useEffect(() => {
-    if (payload.kind === 'epc_sepa' && epcSepaForm.name && epcSepaForm.iban) {
+    if (payloadKind === 'epc_sepa' && epcSepaForm.name && epcSepaForm.iban) {
       const generated = generateEPCSepa({
         name: epcSepaForm.name,
         iban: epcSepaForm.iban,
@@ -835,11 +905,10 @@ export function PayloadSection() {
       });
       setPayloadText(generated);
     }
-  }, [payload.kind, epcSepaForm, setPayloadText]);
+  }, [payloadKind, epcSepaForm, setPayloadText]);
 
-  // Generate UPI payload when form changes
   useEffect(() => {
-    if (payload.kind === 'upi' && upiForm.vpa) {
+    if (payloadKind === 'upi' && upiForm.vpa) {
       const generated = generateUPI({
         pa: upiForm.vpa,
         pn: upiForm.payeeName || undefined,
@@ -848,11 +917,10 @@ export function PayloadSection() {
       });
       setPayloadText(generated);
     }
-  }, [payload.kind, upiForm, setPayloadText]);
+  }, [payloadKind, upiForm, setPayloadText]);
 
-  // Generate PayNow payload when form changes
   useEffect(() => {
-    if (payload.kind === 'paynow' && payNowForm.value) {
+    if (payloadKind === 'paynow' && payNowForm.value) {
       const generated = generatePayNow({
         type: payNowForm.type,
         value: payNowForm.value,
@@ -862,11 +930,10 @@ export function PayloadSection() {
       });
       setPayloadText(generated);
     }
-  }, [payload.kind, payNowForm, setPayloadText]);
+  }, [payloadKind, payNowForm, setPayloadText]);
 
-  // Generate PromptPay payload when form changes
   useEffect(() => {
-    if (payload.kind === 'promptpay' && promptPayForm.value) {
+    if (payloadKind === 'promptpay' && promptPayForm.value) {
       const generated = generatePromptPay({
         type: promptPayForm.type,
         value: promptPayForm.value,
@@ -874,11 +941,10 @@ export function PayloadSection() {
       });
       setPayloadText(generated);
     }
-  }, [payload.kind, promptPayForm, setPayloadText]);
+  }, [payloadKind, promptPayForm, setPayloadText]);
 
-  // Generate PIX payload when form changes
   useEffect(() => {
-    if (payload.kind === 'pix' && pixForm.key) {
+    if (payloadKind === 'pix' && pixForm.key) {
       const generated = generatePIX({
         key: pixForm.key,
         name: pixForm.name || undefined,
@@ -887,11 +953,10 @@ export function PayloadSection() {
       });
       setPayloadText(generated);
     }
-  }, [payload.kind, pixForm, setPayloadText]);
+  }, [payloadKind, pixForm, setPayloadText]);
 
-  // Swiss QR-bill - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'swiss_qr_bill') return;
+    if (payloadKind !== 'swiss_qr_bill') return;
     setPayloadSwissQRBill({
       creditorIBAN: swissQrBillForm.creditorIBAN,
       creditorAddressType: 'K',
@@ -903,143 +968,128 @@ export function PayloadSection() {
       referenceType: swissQrBillForm.referenceType,
       reference: swissQrBillForm.reference || undefined,
     });
-  }, [payload.kind, swissQrBillForm, setPayloadSwissQRBill]);
+  }, [payloadKind, swissQrBillForm, setPayloadSwissQRBill]);
 
-  // Lightning - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'lightning') return;
+    if (payloadKind !== 'lightning') return;
     setPayloadLightning({ invoice: lightningForm.invoice });
-  }, [payload.kind, lightningForm, setPayloadLightning]);
+  }, [payloadKind, lightningForm, setPayloadLightning]);
 
-  // Ethereum EIP-681 - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'ethereum_eip681') return;
+    if (payloadKind !== 'ethereum_eip681') return;
     setPayloadEthereum({
       targetAddress: ethereumForm.targetAddress,
       chainId: ethereumForm.chainId ? Number.parseInt(ethereumForm.chainId, 10) : undefined,
       value: ethereumForm.value || undefined,
       gas: ethereumForm.gas ? Number.parseInt(ethereumForm.gas, 10) : undefined,
     });
-  }, [payload.kind, ethereumForm, setPayloadEthereum]);
+  }, [payloadKind, ethereumForm, setPayloadEthereum]);
 
-  // QRIS - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'qris') return;
+    if (payloadKind !== 'qris') return;
     setPayloadQRIS({
       merchantId: qrisForm.merchantId,
       merchantName: qrisForm.merchantName,
       merchantCity: qrisForm.merchantCity,
       amount: qrisForm.amount ? Number.parseFloat(qrisForm.amount) : undefined,
     });
-  }, [payload.kind, qrisForm, setPayloadQRIS]);
+  }, [payloadKind, qrisForm, setPayloadQRIS]);
 
-  // DuitNow - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'duitnow') return;
+    if (payloadKind !== 'duitnow') return;
     setPayloadDuitNow({
       proxyType: duitnowForm.proxyType,
       proxyValue: duitnowForm.proxyValue,
       merchantName: duitnowForm.merchantName,
       amount: duitnowForm.amount ? Number.parseFloat(duitnowForm.amount) : undefined,
     });
-  }, [payload.kind, duitnowForm, setPayloadDuitNow]);
+  }, [payloadKind, duitnowForm, setPayloadDuitNow]);
 
-  // BharatQR - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'bharatqr') return;
+    if (payloadKind !== 'bharatqr') return;
     setPayloadBharatQR({
       merchantVPA: bharatqrForm.merchantVPA || undefined,
       merchantName: bharatqrForm.merchantName,
       merchantCity: bharatqrForm.merchantCity,
       amount: bharatqrForm.amount ? Number.parseFloat(bharatqrForm.amount) : undefined,
     });
-  }, [payload.kind, bharatqrForm, setPayloadBharatQR]);
+  }, [payloadKind, bharatqrForm, setPayloadBharatQR]);
 
-  // VietQR - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'vietqr') return;
+    if (payloadKind !== 'vietqr') return;
     setPayloadVietQR({
       bankBin: vietqrForm.bankBin,
       accountNumber: vietqrForm.accountNumber,
       accountName: vietqrForm.accountName || undefined,
       amount: vietqrForm.amount ? Number.parseFloat(vietqrForm.amount) : undefined,
     });
-  }, [payload.kind, vietqrForm, setPayloadVietQR]);
+  }, [payloadKind, vietqrForm, setPayloadVietQR]);
 
-  // QR Ph - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'qrph') return;
+    if (payloadKind !== 'qrph') return;
     setPayloadQRPh({
       accountNumber: qrphForm.accountNumber,
       merchantName: qrphForm.merchantName,
       merchantCity: qrphForm.merchantCity,
       amount: qrphForm.amount ? Number.parseFloat(qrphForm.amount) : undefined,
     });
-  }, [payload.kind, qrphForm, setPayloadQRPh]);
+  }, [payloadKind, qrphForm, setPayloadQRPh]);
 
-  // TWQR - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'twqr') return;
+    if (payloadKind !== 'twqr') return;
     setPayloadTWQR({
       merchantId: twqrForm.merchantId,
       merchantName: twqrForm.merchantName,
       amount: twqrForm.amount ? Number.parseFloat(twqrForm.amount) : undefined,
     });
-  }, [payload.kind, twqrForm, setPayloadTWQR]);
+  }, [payloadKind, twqrForm, setPayloadTWQR]);
 
-  // HKQR - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'hkqr') return;
+    if (payloadKind !== 'hkqr') return;
     setPayloadHKQR({
       fpsId: hkqrForm.fpsId || undefined,
       merchantName: hkqrForm.merchantName,
       amount: hkqrForm.amount ? Number.parseFloat(hkqrForm.amount) : undefined,
     });
-  }, [payload.kind, hkqrForm, setPayloadHKQR]);
+  }, [payloadKind, hkqrForm, setPayloadHKQR]);
 
-  // JPQR - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'jpqr') return;
+    if (payloadKind !== 'jpqr') return;
     setPayloadJPQR({
       storeId: jpqrForm.storeId,
       merchantName: jpqrForm.merchantName,
       amount: jpqrForm.amount ? Number.parseFloat(jpqrForm.amount) : undefined,
     });
-  }, [payload.kind, jpqrForm, setPayloadJPQR]);
+  }, [payloadKind, jpqrForm, setPayloadJPQR]);
 
-  // AusPayNet - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'auspaynet') return;
-    // Update the store's auspaynet helper object
+    if (payloadKind !== 'auspaynet') return;
     setPayloadAusPayNet({
       payId: auspaynetForm.payId || undefined,
       payIdType: auspaynetForm.payIdType,
       merchantName: auspaynetForm.merchantName,
       amount: auspaynetForm.amount ? Number.parseFloat(auspaynetForm.amount) : undefined,
     });
-  }, [payload.kind, auspaynetForm, setPayloadAusPayNet]);
+  }, [payloadKind, auspaynetForm, setPayloadAusPayNet]);
 
-  // PayPal.Me - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'paypal_me') return;
+    if (payloadKind !== 'paypal_me') return;
     setPayloadPayPalMe({
       username: paypalMeForm.username,
       amount: paypalMeForm.amount ? Number.parseFloat(paypalMeForm.amount) : undefined,
     });
-  }, [payload.kind, paypalMeForm, setPayloadPayPalMe]);
+  }, [payloadKind, paypalMeForm, setPayloadPayPalMe]);
 
-  // Cash App - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'cashapp') return;
+    if (payloadKind !== 'cashapp') return;
     setPayloadCashApp({
       cashtag: cashappForm.cashtag,
       amount: cashappForm.amount ? Number.parseFloat(cashappForm.amount) : undefined,
     });
-  }, [payload.kind, cashappForm, setPayloadCashApp]);
+  }, [payloadKind, cashappForm, setPayloadCashApp]);
 
-  // EMV Generic - update store helper so getPayloadText() works correctly
   useEffect(() => {
-    if (payload.kind !== 'emv_generic') return;
+    if (payloadKind !== 'emv_generic') return;
     setPayloadEMVGeneric({
       merchantName: emvGenericForm.merchantName,
       merchantCity: emvGenericForm.merchantCity,
@@ -1057,7 +1107,153 @@ export function PayloadSection() {
       storeLabel: emvGenericForm.storeLabel || undefined,
       terminalLabel: emvGenericForm.terminalLabel || undefined,
     });
-  }, [payload.kind, emvGenericForm, setPayloadEMVGeneric]);
+  }, [payloadKind, emvGenericForm, setPayloadEMVGeneric]);
+}
+
+export function PayloadSection() {
+  const {
+    tier,
+    payload,
+    qr,
+    getPayloadText,
+    setPayloadKind,
+    setPayloadText,
+    setPayloadUrl,
+    setPayloadTel,
+    setPayloadEmail,
+    setPayloadSms,
+    setPayloadGeo,
+    setPayloadWifi,
+    setPayloadVCard,
+    setPayloadMeCard,
+    setPayloadEvent,
+    setPayloadCrypto,
+    setPayloadOtpAuth,
+    setPayloadValidation,
+    setPayloadBizCard,
+    setPayloadMessaging,
+    setPayloadSocialProfile,
+    setPayloadAppLink,
+    setPayloadGS1,
+    setPayloadCalendarSub,
+    setPayloadEventRsvp,
+    setPayloadSwissQRBill,
+    setPayloadLightning,
+    setPayloadEthereum,
+    setPayloadQRIS,
+    setPayloadDuitNow,
+    setPayloadBharatQR,
+    setPayloadVietQR,
+    setPayloadQRPh,
+    setPayloadTWQR,
+    setPayloadHKQR,
+    setPayloadJPQR,
+    setPayloadAusPayNet,
+    setPayloadPayPalMe,
+    setPayloadCashApp,
+    setPayloadEMVGeneric,
+  } = useQRStore();
+  const { t } = useTranslation();
+  const [showStartupHighlight, setShowStartupHighlight] = useState(false);
+
+  const {
+    epcSepaForm,
+    setEpcSepaForm,
+    upiForm,
+    setUpiForm,
+    payNowForm,
+    setPayNowForm,
+    promptPayForm,
+    setPromptPayForm,
+    pixForm,
+    setPixForm,
+    swissQrBillForm,
+    setSwissQrBillForm,
+    lightningForm,
+    setLightningForm,
+    ethereumForm,
+    setEthereumForm,
+    qrisForm,
+    setQrisForm,
+    duitnowForm,
+    setDuitnowForm,
+    bharatqrForm,
+    setBharatqrForm,
+    vietqrForm,
+    setVietqrForm,
+    qrphForm,
+    setQrphForm,
+    twqrForm,
+    setTwqrForm,
+    hkqrForm,
+    setHkqrForm,
+    jpqrForm,
+    setJpqrForm,
+    auspaynetForm,
+    setAuspaynetForm,
+    paypalMeForm,
+    setPaypalMeForm,
+    cashappForm,
+    setCashappForm,
+    emvGenericForm,
+    setEmvGenericForm,
+    shortLinkForm,
+    setShortLinkForm,
+  } = usePaymentFormStates();
+
+  useEffect(() => {
+    const hasSeenHighlight = sessionStorage.getItem('anqr-seen-highlight');
+    if (!hasSeenHighlight) {
+      setShowStartupHighlight(true);
+      sessionStorage.setItem('anqr-seen-highlight', 'true');
+      const timer = setTimeout(() => setShowStartupHighlight(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  usePaymentFormSync(
+    payload.kind,
+    {
+      epcSepaForm,
+      upiForm,
+      payNowForm,
+      promptPayForm,
+      pixForm,
+      swissQrBillForm,
+      lightningForm,
+      ethereumForm,
+      qrisForm,
+      duitnowForm,
+      bharatqrForm,
+      vietqrForm,
+      qrphForm,
+      twqrForm,
+      hkqrForm,
+      jpqrForm,
+      auspaynetForm,
+      paypalMeForm,
+      cashappForm,
+      emvGenericForm,
+    },
+    {
+      setPayloadText,
+      setPayloadSwissQRBill,
+      setPayloadLightning,
+      setPayloadEthereum,
+      setPayloadQRIS,
+      setPayloadDuitNow,
+      setPayloadBharatQR,
+      setPayloadVietQR,
+      setPayloadQRPh,
+      setPayloadTWQR,
+      setPayloadHKQR,
+      setPayloadJPQR,
+      setPayloadAusPayNet,
+      setPayloadPayPalMe,
+      setPayloadCashApp,
+      setPayloadEMVGeneric,
+    }
+  );
 
   return (
     <div className="space-y-4">

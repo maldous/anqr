@@ -1067,6 +1067,750 @@ function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEff
   );
 }
 
+type ValidEncoderMode = 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'auto';
+
+interface ReproductionParams {
+  ecc: ECCLevel;
+  isGeneratorSource: boolean;
+  versionToUse: number | null;
+  maskToUse: number | undefined;
+  modeToUse: ValidEncoderMode | undefined;
+}
+
+function resolveReproductionParams(
+  result: QRAnalysisResult,
+  analysisSource: string | null,
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
+  qrState: {
+    version: number;
+    maskPattern: 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    encodingMode: string;
+  }
+): ReproductionParams {
+  const ecc: ECCLevel = result.eccLevel || 'M';
+  const isGeneratorSource = analysisSource === 'generator' && !!generatedCanvas;
+
+  log.debug('STEP 1 - Detected params', {
+    detectedVersion: result.version,
+    detectedMaskPattern: result.maskPattern,
+    detectedEcc: result.eccLevel,
+    detectedEncodingMode: result.encodingMode,
+    payloadLength: result.payload?.length ?? 0,
+    payloadBytesLength: result.payloadBytes?.length ?? 0,
+    payloadPreview: result.payload?.slice(0, 50),
+    isGeneratorSource,
+    storeVersion: qrState.version,
+    storeMaskPattern: qrState.maskPattern,
+    storeEncodingMode: qrState.encodingMode,
+  });
+
+  const versionToUse = isGeneratorSource ? (result.version ?? qrState.version) : result.version;
+
+  const maskToUse =
+    typeof result.maskPattern === 'number' && result.maskPattern >= 0 && result.maskPattern <= 7
+      ? result.maskPattern
+      : typeof qrState.maskPattern === 'number' && qrState.maskPattern >= 0
+        ? qrState.maskPattern
+        : undefined;
+
+  const modeToUse = (() => {
+    const m = isGeneratorSource ? qrState.encodingMode : result.encodingMode;
+    if (m === 'numeric' || m === 'alphanumeric' || m === 'byte' || m === 'kanji' || m === 'auto')
+      return m as ValidEncoderMode;
+    return undefined;
+  })();
+
+  return { ecc, isGeneratorSource, versionToUse, maskToUse, modeToUse };
+}
+
+function buildEncoderInput(
+  result: QRAnalysisResult,
+  modeToUse: ValidEncoderMode | undefined
+): { kind: 'bytes' | 'string'; data: string } {
+  const bytes = result.payloadBytes;
+  const wantsByte = modeToUse === 'byte' || result.encodingMode === 'byte';
+  if (bytes?.length && wantsByte) {
+    let s = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      const part = bytes.slice(i, i + chunk);
+      s += String.fromCodePoint(...Array.from(part));
+    }
+    return { kind: 'bytes' as const, data: s };
+  }
+  return { kind: 'string' as const, data: result.payload! };
+}
+
+function resolveEffectiveMode(
+  encoderInputKind: 'bytes' | 'string',
+  resultEncodingMode: string | null,
+  modeToUse: ValidEncoderMode | undefined
+): ValidEncoderMode | undefined {
+  if (encoderInputKind === 'bytes') {
+    if (resultEncodingMode === 'byte') return 'byte';
+    return undefined;
+  }
+  return modeToUse;
+}
+
+function resolveFinalVersion(
+  resultVersion: number | null,
+  versionToUse: number | null
+): number | null {
+  if (typeof resultVersion === 'number' && resultVersion >= 1 && resultVersion <= 40)
+    return resultVersion;
+  if (typeof versionToUse === 'number' && versionToUse >= 1 && versionToUse <= 40)
+    return versionToUse;
+  return null;
+}
+
+function buildMaskPatternOption(
+  maskToUse: number | undefined
+): { maskPattern: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 } | Record<string, never> {
+  if (typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7)
+    return { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 };
+  return {};
+}
+
+function tryCreateQRDirect(
+  data: string,
+  ecc: ECCLevel,
+  version: number,
+  effectiveMode: ValidEncoderMode | undefined,
+  maskToUse: number | undefined
+): ReturnType<typeof createQRInstance> | null {
+  try {
+    const qr = createQRInstance(data, ecc, version, {
+      ...(effectiveMode ? { mode: effectiveMode } : {}),
+      ...buildMaskPatternOption(maskToUse),
+    });
+    log.debug('STEP 3b - createQRInstance SUCCESS');
+    return qr;
+  } catch (err) {
+    log.warn('STEP 3b - createQRInstance FAILED', {
+      error: err instanceof Error ? err.message : String(err),
+      requestedVersion: version,
+      ecc,
+      dataLength: data.length,
+      mode: effectiveMode,
+      maskPattern: maskToUse,
+    });
+    throw err;
+  }
+}
+
+function tryMixedModeAtVersion(
+  data: string,
+  ecc: ECCLevel,
+  version: number,
+  maskToUse: number | undefined
+): ReturnType<typeof createQRInstance> | null {
+  const segments = optimizeSegments(data);
+  const hasMixedModeOptimization =
+    segments.length > 1 || (segments.length === 1 && segments[0].mode !== 'byte');
+
+  if (!hasMixedModeOptimization) return null;
+
+  log.debug('STEP 3c - Trying MIXED MODE encoding at original version', {
+    segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
+    originalVersion: version,
+  });
+
+  try {
+    const qr = createQRInstance(data, ecc, version, {
+      mode: 'mixed',
+      ...buildMaskPatternOption(maskToUse),
+    });
+    log.debug('STEP 3c - MIXED MODE SUCCESS at original version!', {
+      version,
+      segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
+    });
+    return qr;
+  } catch (mixedModeError) {
+    log.debug('STEP 3c - Mixed mode failed, trying higher versions...', {
+      error: mixedModeError instanceof Error ? mixedModeError.message : String(mixedModeError),
+    });
+    return null;
+  }
+}
+
+function tryHigherVersions(
+  data: string,
+  ecc: ECCLevel,
+  startVersion: number,
+  maskToUse: number | undefined
+): { qr: ReturnType<typeof createQRInstance>; version: number } {
+  log.debug('STEP 3c - Trying higher versions due to overflow...');
+  for (let tryVersion = startVersion + 1; tryVersion <= 40; tryVersion++) {
+    try {
+      const qr = createQRInstance(data, ecc, tryVersion, {
+        mode: 'mixed',
+        ...buildMaskPatternOption(maskToUse),
+      });
+      log.debug('STEP 3c - VERSION UPGRADE: Successfully encoded at version', {
+        originalVersion: startVersion,
+        newVersion: tryVersion,
+        versionIncrease: tryVersion - startVersion,
+        ecc,
+        maskPattern: maskToUse,
+        usedMixedMode: true,
+      });
+      return { qr, version: tryVersion };
+    } catch {
+      // Try next version
+    }
+  }
+  throw new Error(`Data too large: cannot fit in any QR version (1-40) with ECC ${ecc}`);
+}
+
+function createQRWithFallback(
+  data: string,
+  ecc: ECCLevel,
+  version: number,
+  effectiveMode: ValidEncoderMode | undefined,
+  maskToUse: number | undefined
+): { qr: ReturnType<typeof createQRInstance>; actualVersionUsed: number } {
+  try {
+    const qr = tryCreateQRDirect(data, ecc, version, effectiveMode, maskToUse);
+    return { qr: qr!, actualVersionUsed: version };
+  } catch (encoderError) {
+    const errorMessage =
+      encoderError instanceof Error ? encoderError.message : String(encoderError);
+    if (!errorMessage.includes('overflow')) throw encoderError;
+
+    const mixedQr = tryMixedModeAtVersion(data, ecc, version, maskToUse);
+    if (mixedQr) return { qr: mixedQr, actualVersionUsed: version };
+
+    const upgraded = tryHigherVersions(data, ecc, version, maskToUse);
+    return { qr: upgraded.qr, actualVersionUsed: upgraded.version };
+  }
+}
+
+function computeMarginModules(
+  isGeneratorSource: boolean,
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
+  moduleCount: number,
+  renderStateModulePx: number,
+  quietZoneTop: number | undefined
+): number {
+  if (isGeneratorSource && generatedCanvas) {
+    const modulePxFromStore = Math.max(1, Math.floor(renderStateModulePx || 1));
+    const totalModules = Math.round(generatedCanvas.width / modulePxFromStore);
+    const inferred = Math.max(0, Math.floor((totalModules - moduleCount) / 2));
+    log.debug('STEP 5 - Margin calculation (generator)', {
+      renderStateModulePx,
+      modulePxFromStore,
+      canvasWidth: generatedCanvas.width,
+      totalModulesInferred: totalModules,
+      qrModuleCount: moduleCount,
+      inferredMargin: inferred,
+      calculation: `floor((${totalModules} - ${moduleCount}) / 2) = ${inferred}`,
+    });
+    return inferred;
+  }
+  const margin = Math.max(4, quietZoneTop ?? 4);
+  log.debug('STEP 5 - Margin calculation (external)', { quietZoneTop, margin });
+  return margin;
+}
+
+function computeCanvasSizing(
+  isGeneratorSource: boolean,
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
+  moduleCount: number,
+  marginModules: number,
+  renderStateModulePx: number
+): { modulePx: number; size: number } {
+  if (isGeneratorSource && generatedCanvas) {
+    const size = generatedCanvas.width;
+    const totalModulesWithMargin = moduleCount + marginModules * 2;
+    const modulePx = Math.max(1, Math.floor(size / totalModulesWithMargin));
+    log.debug('STEP 6 - Canvas sizing (generator)', {
+      canvasSize: size,
+      moduleCount,
+      marginModules,
+      totalModulesWithMargin,
+      calculatedModulePx: modulePx,
+      renderStateModulePx,
+      totalPixelsNeeded: totalModulesWithMargin * modulePx,
+      willFit: totalModulesWithMargin * modulePx <= size,
+    });
+    return { modulePx, size };
+  }
+  const targetSize = 300;
+  const totalModules = moduleCount + marginModules * 2;
+  const modulePx = Math.max(3, Math.floor(targetSize / totalModules));
+  const size = totalModules * modulePx;
+  log.debug('STEP 6 - Canvas sizing (external)', {
+    targetSize,
+    moduleCount,
+    marginModules,
+    totalModules,
+    calculatedModulePx: modulePx,
+    calculatedSize: size,
+  });
+  return { modulePx, size };
+}
+
+function renderQRToCanvas(
+  ctx: CanvasRenderingContext2D,
+  qr: ReturnType<typeof createQRInstance>,
+  moduleCount: number,
+  marginModules: number,
+  modulePx: number,
+  size: number,
+  fg: string,
+  bg: string
+): number {
+  const renderStartMs = nowMs();
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = fg;
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!qr.isDark(row, col)) continue;
+      const x = (marginModules + col) * modulePx;
+      const y = (marginModules + row) * modulePx;
+      ctx.fillRect(x, y, modulePx, modulePx);
+    }
+  }
+  return Math.round((nowMs() - renderStartMs) * 100) / 100;
+}
+
+function resolveColors(
+  isGeneratorSource: boolean,
+  renderState: { fgColor: string; bgColor: string; bgTransparent: boolean },
+  detectedColors: { foreground: string; background: string } | null
+): { fg: string; bg: string } {
+  const fg = isGeneratorSource ? renderState.fgColor : detectedColors?.foreground || '#000000';
+  const bg = isGeneratorSource
+    ? renderState.bgTransparent
+      ? '#ffffff'
+      : renderState.bgColor
+    : detectedColors?.background || '#ffffff';
+  return { fg, bg };
+}
+
+function runMatrixDiagnostics(
+  qr: ReturnType<typeof createQRInstance>,
+  result: QRAnalysisResult,
+  moduleCount: number,
+  isGeneratorSource: boolean,
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
+  marginModules: number,
+  modulePx: number
+): {
+  regenVsDecoded: {
+    rows: number;
+    cols: number;
+    diffCount: number;
+    diffPct: number;
+    firstDiff: { row: number; col: number; a: boolean; b: boolean } | null;
+  } | null;
+  regenVsOriginal: {
+    rows: number;
+    cols: number;
+    diffCount: number;
+    diffPct: number;
+    firstDiff: { row: number; col: number; a: boolean; b: boolean } | null;
+  } | null;
+  bestShift: { dr: number; dc: number; diffCount: number; diffPct: number } | null;
+} {
+  const buildRegenMatrix = (): boolean[][] => {
+    const m: boolean[][] = new Array(moduleCount);
+    for (let r = 0; r < moduleCount; r += 1) {
+      const row: boolean[] = new Array(moduleCount);
+      for (let c = 0; c < moduleCount; c += 1) row[c] = qr.isDark(r, c);
+      m[r] = row;
+    }
+    return m;
+  };
+
+  const diffMatrices = (a: boolean[][], b: boolean[][]) => {
+    const rows = Math.min(a.length, b.length);
+    const cols = rows ? Math.min(a[0].length, b[0].length) : 0;
+    let diffCount = 0;
+    let firstDiff: { row: number; col: number; a: boolean; b: boolean } | null = null;
+    for (let r = 0; r < rows; r += 1) {
+      for (let c = 0; c < cols; c += 1) {
+        if (a[r][c] === b[r][c]) continue;
+        diffCount += 1;
+        firstDiff ??= { row: r, col: c, a: a[r][c], b: b[r][c] };
+      }
+    }
+    const total = rows * cols;
+    return { rows, cols, diffCount, diffPct: total ? diffCount / total : 0, firstDiff };
+  };
+
+  const sampleOriginalMatrix = (): boolean[][] | null => {
+    if (!(isGeneratorSource && generatedCanvas)) return null;
+    const gctx =
+      (generatedCanvas.getContext('2d', {
+        willReadFrequently: true,
+        desynchronized: true,
+      } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+      (generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+    if (!gctx) return null;
+    const canvasWidth = generatedCanvas.width;
+    const canvasHeight = generatedCanvas.height;
+    if (canvasWidth <= 0 || canvasHeight <= 0) return null;
+    const pixels = gctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+    const m: boolean[][] = new Array(moduleCount);
+    for (let r = 0; r < moduleCount; r += 1) {
+      const row: boolean[] = new Array(moduleCount);
+      for (let c = 0; c < moduleCount; c += 1) {
+        const x = Math.max(
+          0,
+          Math.min(canvasWidth - 1, Math.floor((marginModules + c + 0.5) * modulePx))
+        );
+        const y = Math.max(
+          0,
+          Math.min(canvasHeight - 1, Math.floor((marginModules + r + 0.5) * modulePx))
+        );
+        const pixelIndex = (y * canvasWidth + x) * 4;
+        const lum = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
+        const dark = pixels[pixelIndex + 3] > 16 && lum < 128;
+        row[c] = dark;
+      }
+      m[r] = row;
+    }
+    return m;
+  };
+
+  const regenMatrix = buildRegenMatrix();
+  const regenVsDecoded = result.moduleMatrix
+    ? diffMatrices(result.moduleMatrix, regenMatrix)
+    : null;
+  const originalMatrix = sampleOriginalMatrix();
+  const regenVsOriginal = originalMatrix ? diffMatrices(originalMatrix, regenMatrix) : null;
+  const bestShift = originalMatrix
+    ? findBestMatrixShift(originalMatrix, regenMatrix, moduleCount)
+    : null;
+  return { regenVsDecoded, regenVsOriginal, bestShift };
+}
+
+function drawCanvasError(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  bgColor: string,
+  textColor: string,
+  lines: string[]
+): void {
+  canvas.width = 200;
+  canvas.height = 200;
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, 200, 200);
+  ctx.fillStyle = textColor;
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  lines.forEach((line, i) => ctx.fillText(line, 100, 80 + i * 20));
+}
+
+interface ReproduceQRCodeParams {
+  result: QRAnalysisResult;
+  canvas: HTMLCanvasElement;
+  analysisSource: string | null;
+  generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined;
+  qrState: {
+    version: number;
+    maskPattern: 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    encodingMode: string;
+    borderModulesExtra?: number;
+  };
+  renderState: { fgColor: string; bgColor: string; bgTransparent: boolean; modulePx: number };
+}
+
+function reproduceQRCode(params: ReproduceQRCodeParams): {
+  encodeMs: number | null;
+  renderMs: number | null;
+  actualVersionUsed: number | null;
+} {
+  const { result, canvas, analysisSource, generatedCanvas, qrState, renderState } = params;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return { encodeMs: null, renderMs: null, actualVersionUsed: null };
+
+  const { ecc, isGeneratorSource, versionToUse, maskToUse, modeToUse } = resolveReproductionParams(
+    result,
+    analysisSource,
+    generatedCanvas,
+    qrState
+  );
+
+  const encoderInput = buildEncoderInput(result, modeToUse);
+
+  const encoderInputPreview =
+    encoderInput.kind === 'bytes'
+      ? `[bytes] len=${encoderInput.data.length}, first32codes=[${encoderInput.data
+          .slice(0, 32)
+          .split('')
+          .map((c) => c.codePointAt(0)!)
+          .join(',')}]`
+      : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
+  log.debug('STEP 2 - Encoder input', {
+    kind: encoderInput.kind,
+    dataLength: encoderInput.data.length,
+    preview: encoderInputPreview,
+    modeToUse,
+    wantsByte: modeToUse === 'byte' || result.encodingMode === 'byte',
+    hasPayloadBytes: !!result.payloadBytes?.length,
+  });
+
+  const versionToUseFinal = resolveFinalVersion(result.version, versionToUse);
+
+  if (versionToUseFinal === null) {
+    log.error('CANNOT REPRODUCE: Version not detected by decoder');
+    drawCanvasError(canvas, ctx, '#fff3cd', '#856404', [
+      'Cannot reproduce:',
+      'Version not detected',
+      'by decoder',
+    ]);
+    return { encodeMs: null, renderMs: null, actualVersionUsed: null };
+  }
+
+  const prevStringToBytes = getStringToBytes();
+  const needsIdentityBytes = encoderInput.kind === 'bytes';
+
+  if (needsIdentityBytes) {
+    setStringToBytes((s: string) => {
+      const out: number[] = new Array(s.length);
+      for (let i = 0; i < s.length; i += 1) out[i] = s.codePointAt(i)! & 0xff;
+      return out;
+    });
+  }
+
+  const effectiveMode = resolveEffectiveMode(encoderInput.kind, result.encodingMode, modeToUse);
+
+  log.debug('STEP 3 - createQRInstance params', {
+    dataLength: encoderInput.data.length,
+    ecc,
+    version: versionToUseFinal,
+    mode: effectiveMode ?? 'auto (undefined)',
+    maskPattern:
+      typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
+        ? maskToUse
+        : 'auto (undefined)',
+    needsIdentityBytes,
+  });
+
+  let qrResult: { qr: ReturnType<typeof createQRInstance>; actualVersionUsed: number };
+  const encodeStartMs = nowMs();
+  try {
+    qrResult = createQRWithFallback(
+      encoderInput.data,
+      ecc,
+      versionToUseFinal,
+      effectiveMode,
+      maskToUse
+    );
+  } finally {
+    if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
+  }
+
+  const { qr, actualVersionUsed } = qrResult;
+  const encodeMs = Math.round((nowMs() - encodeStartMs) * 100) / 100;
+
+  const moduleCount = qr.getModuleCount();
+  const actualVersion = (moduleCount - 17) / 4;
+
+  log.debug('STEP 4 - QR instance result', {
+    moduleCount,
+    actualVersion,
+    requestedVersion: versionToUseFinal,
+    actualVersionUsed,
+    versionMatch: actualVersion === (result.version ?? actualVersion),
+  });
+
+  if (result.version && actualVersion !== result.version) {
+    log.warn('VERSION MISMATCH!', {
+      detectedVersion: result.version,
+      detectedModuleCount: result.moduleCount,
+      producedVersion: actualVersion,
+      producedModuleCount: moduleCount,
+      expectedModuleCount: result.version * 4 + 17,
+      diff: actualVersion - result.version,
+    });
+  }
+
+  const marginModules = computeMarginModules(
+    isGeneratorSource,
+    generatedCanvas,
+    moduleCount,
+    renderState.modulePx,
+    result.quietZone?.top
+  );
+
+  const { modulePx, size } = computeCanvasSizing(
+    isGeneratorSource,
+    generatedCanvas,
+    moduleCount,
+    marginModules,
+    renderState.modulePx
+  );
+
+  canvas.width = size;
+  canvas.height = size;
+
+  log.debug('STEP 7 - Final render summary', {
+    canvasSize: `${size}x${size}`,
+    modulePx,
+    moduleCount,
+    actualVersion,
+    detectedVersion: result.version,
+    versionMismatch: result.version && actualVersion !== result.version,
+    marginModules,
+    totalPixelsUsed: (moduleCount + marginModules * 2) * modulePx,
+    isGeneratorSource,
+  });
+
+  if (result.version && actualVersion !== result.version) {
+    log.warn('FINAL WARNING: Version mismatch will cause visual discrepancy!', {
+      expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
+      produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
+      sizeDiff: moduleCount - (result.version * 4 + 17),
+    });
+  }
+
+  const { fg, bg } = resolveColors(isGeneratorSource, renderState, result.detectedColors ?? null);
+  const renderMs = renderQRToCanvas(ctx, qr, moduleCount, marginModules, modulePx, size, fg, bg);
+
+  let diagnostics: ReturnType<typeof runMatrixDiagnostics> = {
+    regenVsDecoded: null,
+    regenVsOriginal: null,
+    bestShift: null,
+  };
+  if (ENABLE_ANALYZE_MATRIX_DIAGNOSTICS) {
+    diagnostics = runMatrixDiagnostics(
+      qr,
+      result,
+      moduleCount,
+      isGeneratorSource,
+      generatedCanvas,
+      marginModules,
+      modulePx
+    );
+  }
+
+  const payloadBytesHead = (() => {
+    const bytes = result.payloadBytes;
+    if (!bytes?.length) return null;
+    return Array.from(bytes.slice(0, 16))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join(' ');
+  })();
+
+  const reproductionMismatch = actualVersion !== result.version;
+
+  log.debug('Generated QR code', {
+    strategy: isGeneratorSource ? 'exact' : 'detected_only',
+    reproductionMismatch,
+    encoderInputKind: encoderInput.kind,
+    payloadPreview: (result.payload ?? '').slice(0, 80),
+    payloadBytesLen: result.payloadBytes?.length ?? null,
+    payloadBytesHead,
+    ecc,
+    detectedVersion: result.version,
+    usedVersion: versionToUseFinal,
+    detectedMaskPattern: result.maskPattern,
+    usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
+    usedMode: effectiveMode ?? null,
+    actualVersion,
+    moduleCount,
+    marginModules,
+    borderModulesExtra: isGeneratorSource ? qrState.borderModulesExtra || 0 : null,
+    modulePx,
+    canvasSize: size,
+    matrix: diagnostics,
+  });
+  if (diagnostics.regenVsOriginal && diagnostics.regenVsOriginal.diffCount > 0) {
+    log.warn('Matrix mismatch (original vs regenerated)', {
+      ecc,
+      version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
+      mask: {
+        detected: result.maskPattern,
+        used: typeof maskToUse === 'number' ? maskToUse : null,
+      },
+      mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
+      encoderInputKind: encoderInput.kind,
+      payloadBytesLen: result.payloadBytes?.length ?? null,
+      payloadBytesHead,
+      regenVsDecoded: diagnostics.regenVsDecoded,
+      regenVsOriginal: diagnostics.regenVsOriginal,
+      bestShift: diagnostics.bestShift,
+    });
+  }
+
+  return { encodeMs, renderMs, actualVersionUsed };
+}
+
+interface ImportToGeneratorSetters {
+  setPayloadText: (v: string) => void;
+  setPayloadKind: (v: 'url' | 'plain_text') => void;
+  setPayloadUrl: (v: { href: string }) => void;
+  setQrEcc: (v: 'L' | 'M' | 'Q' | 'H') => void;
+  setQrVersion: (v: number) => void;
+  setQrMaskPattern: (v: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
+  setQrEncodingMode: (v: 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji') => void;
+  setRenderFgColor: (v: string) => void;
+  setRenderBgColor: (v: string) => void;
+}
+
+function importAnalysisToGenerator(
+  result: QRAnalysisResult,
+  actualUsedVersion: number | null,
+  setters: ImportToGeneratorSetters,
+  onNavigate: ((page: 'editor' | 'gallery' | 'analyze') => void) | undefined
+): void {
+  if (!(result.success && result.payload)) return;
+
+  if (result.payload.startsWith('http://') || result.payload.startsWith('https://')) {
+    setters.setPayloadKind('url');
+    setters.setPayloadUrl({ href: result.payload });
+  } else {
+    setters.setPayloadKind('plain_text');
+  }
+  setters.setPayloadText(result.payload);
+
+  if (result.eccLevel) {
+    setters.setQrEcc(result.eccLevel as 'L' | 'M' | 'Q' | 'H');
+  }
+  const versionToImport = actualUsedVersion ?? result.version;
+  if (versionToImport !== null && versionToImport >= 1 && versionToImport <= 40) {
+    setters.setQrVersion(versionToImport);
+  }
+  if (result.maskPattern !== null && result.maskPattern >= 0 && result.maskPattern <= 7) {
+    setters.setQrMaskPattern(result.maskPattern as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7);
+  }
+  if (result.encodingMode && result.encodingMode !== 'unknown' && result.encodingMode !== 'mixed') {
+    const modeMap: Record<string, 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji'> = {
+      numeric: 'numeric',
+      alphanumeric: 'alphanumeric',
+      byte: 'byte',
+      kanji: 'kanji',
+    };
+    if (modeMap[result.encodingMode]) {
+      setters.setQrEncodingMode(modeMap[result.encodingMode]);
+    }
+  }
+
+  if (result.detectedColors) {
+    setters.setRenderFgColor(result.detectedColors.foreground);
+    setters.setRenderBgColor(result.detectedColors.background);
+  }
+
+  setTimeout(() => {
+    if (onNavigate) {
+      onNavigate('editor');
+    } else {
+      window.location.hash = '';
+      window.location.search = '';
+      if (window.location.pathname === '/' || window.location.pathname === '') {
+        window.location.reload();
+      } else {
+        window.location.href = '/';
+      }
+    }
+  }, 500);
+}
+
 export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
@@ -1090,11 +1834,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   }>({});
   const reproducedCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Store getters (for exact reproduction of the self-generated QR)
   const qrState = useQRStore((s) => s.qr);
   const renderState = useQRStore((s) => s.render);
 
-  // Store setters
   const setPayloadText = useQRStore((s) => s.setPayloadText);
   const setPayloadKind = useQRStore((s) => s.setPayloadKind);
   const setPayloadUrl = useQRStore((s) => s.setPayloadUrl);
@@ -1113,604 +1855,30 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     [result?.timing, uiTimings]
   );
 
-  // Render reproduced QR by generating a fresh, clean QR code from extracted settings
   useEffect(() => {
     if (!(result?.success && result.payload && reproducedCanvasRef.current)) return;
 
     const canvas = reproducedCanvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
     try {
-      let encodeMs: number | null = null;
-      let renderMs: number | null = null;
-      const ecc: ECCLevel = result.eccLevel || 'M';
-
-      // Strategy:
-      // - For self-generated QRs (Analyze -> Current QR), reproduce EXACTLY using the live generator settings.
-      //   This must be pixel-identical for the default generated QR.
-      // - For external images, prefer exact (version/mask/mode) if detected, else fall back to auto.
-      const isGeneratorSource = analysisSource === 'generator' && !!generatedCanvas;
-
-      // STEP 1: Log detected params
-      log.debug('STEP 1 - Detected params', {
-        detectedVersion: result.version,
-        detectedMaskPattern: result.maskPattern,
-        detectedEcc: result.eccLevel,
-        detectedEncodingMode: result.encodingMode,
-        payloadLength: result.payload?.length ?? 0,
-        payloadBytesLength: result.payloadBytes?.length ?? 0,
-        payloadPreview: result.payload?.slice(0, 50),
-        isGeneratorSource,
-        storeVersion: qrState.version,
-        storeMaskPattern: qrState.maskPattern,
-        storeEncodingMode: qrState.encodingMode,
+      const reproResult = reproduceQRCode({
+        result,
+        canvas,
+        analysisSource,
+        generatedCanvas,
+        qrState,
+        renderState,
       });
-
-      // Version must come from decoder - not estimated
-      // For generator source, prefer detected version, fall back to store version only if detected is valid
-      const versionToUse = isGeneratorSource ? (result.version ?? qrState.version) : result.version;
-
-      // Prefer detected mask when available (even for generator), because it is the actual chosen mask.
-      const maskToUse =
-        typeof result.maskPattern === 'number' && result.maskPattern >= 0 && result.maskPattern <= 7
-          ? result.maskPattern
-          : typeof qrState.maskPattern === 'number'
-            ? qrState.maskPattern
-            : undefined;
-
-      // Prefer detected encoding mode when available (it is a property of the encoded data), else use generator mode.
-      // Note: analyzer returns 'mixed'/'unknown' sometimes, those are not valid encoder modes, so only pass valid.
-      const modeToUse = (() => {
-        const m = isGeneratorSource ? qrState.encodingMode : result.encodingMode;
-        if (
-          m === 'numeric' ||
-          m === 'alphanumeric' ||
-          m === 'byte' ||
-          m === 'kanji' ||
-          m === 'auto'
-        )
-          return m;
-        return undefined;
-      })();
-
-      const encoderInput = (() => {
-        // Prefer raw payload bytes when available for byte mode. This is required for exact reproduction.
-        const bytes = result.payloadBytes;
-        const wantsByte = modeToUse === 'byte' || result.encodingMode === 'byte';
-        if (bytes?.length && wantsByte) {
-          // Build a binary string where each charCode is one byte 0..255.
-          let s = '';
-          const chunk = 0x8000;
-          for (let i = 0; i < bytes.length; i += chunk) {
-            const part = bytes.slice(i, i + chunk);
-            s += String.fromCodePoint(...Array.from(part));
-          }
-          return { kind: 'bytes' as const, data: s };
-        }
-        return { kind: 'string' as const, data: result.payload };
-      })();
-
-      // STEP 2: Log encoder input construction
-      const encoderInputPreview =
-        encoderInput.kind === 'bytes'
-          ? `[bytes] len=${encoderInput.data.length}, first32codes=[${encoderInput.data
-              .slice(0, 32)
-              .split('')
-              .map((c) => c.codePointAt(0)!)
-              .join(',')}]`
-          : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
-      log.debug('STEP 2 - Encoder input', {
-        kind: encoderInput.kind,
-        dataLength: encoderInput.data.length,
-        preview: encoderInputPreview,
-        modeToUse,
-        wantsByte: modeToUse === 'byte' || result.encodingMode === 'byte',
-        hasPayloadBytes: !!result.payloadBytes?.length,
-      });
-
-      // Version must come from decoder metadata - not auto (0)
-      // If decoder didn't detect the version, reproduction cannot be accurate
-      const versionToUseFinal =
-        typeof result.version === 'number' && result.version >= 1 && result.version <= 40
-          ? result.version
-          : typeof versionToUse === 'number' && versionToUse >= 1 && versionToUse <= 40
-            ? versionToUse
-            : null;
-
-      // If version is not available from decoder, we cannot reproduce accurately
-      if (versionToUseFinal === null) {
-        log.error('CANNOT REPRODUCE: Version not detected by decoder');
-        // Clear canvas and show error
-        canvas.width = 200;
-        canvas.height = 200;
-        ctx.fillStyle = '#fff3cd';
-        ctx.fillRect(0, 0, 200, 200);
-        ctx.fillStyle = '#856404';
-        ctx.font = '12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Cannot reproduce:', 100, 80);
-        ctx.fillText('Version not detected', 100, 100);
-        ctx.fillText('by decoder', 100, 120);
-        return;
-      }
-
-      // If the app globally changed stringToBytes (UTF-8, Shift-JIS, etc.), force identity mapping for binary strings.
-      const prevStringToBytes = getStringToBytes();
-      const needsIdentityBytes = encoderInput.kind === 'bytes';
-
-      if (needsIdentityBytes) {
-        setStringToBytes((s: string) => {
-          const out: number[] = new Array(s.length);
-          for (let i = 0; i < s.length; i += 1) out[i] = s.codePointAt(i)! & 0xff;
-          return out;
-        });
-      }
-
-      // For reproduction:
-      // - If we have raw bytes AND the original was pure byte mode, force byte mode
-      // - If the original was 'mixed' (e.g., byte + numeric), use 'auto' to let encoder optimize
-      // - Otherwise use the detected mode
-      const effectiveMode = (() => {
-        if (encoderInput.kind === 'bytes') {
-          // Only force byte mode if original was pure byte mode
-          // For 'mixed' mode, let encoder auto-optimize (it may use byte+numeric segments)
-          if (result.encodingMode === 'byte') return 'byte';
-          // For mixed or unknown, use auto to let encoder choose optimal encoding
-          return undefined;
-        }
-        return modeToUse;
-      })();
-
-      // STEP 3: Log createQRInstance call params
-      const createQRParams = {
-        dataLength: encoderInput.data.length,
-        ecc,
-        version: versionToUseFinal,
-        mode: effectiveMode ?? 'auto (undefined)',
-        maskPattern:
-          typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
-            ? maskToUse
-            : 'auto (undefined)',
-        needsIdentityBytes,
-      };
-      log.debug('STEP 3 - createQRInstance params', createQRParams);
-
-      let qr: ReturnType<typeof createQRInstance> | null = null;
-      let actualVersionUsed = versionToUseFinal;
-      const encodeStartMs = nowMs();
-      try {
-        // NEVER use auto version (0) - always use the detected version from decoder
-        qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
-          ...(effectiveMode ? { mode: effectiveMode } : {}),
-          ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
-            ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
-            : {}),
-        });
-        log.debug('STEP 3b - createQRInstance SUCCESS');
-      } catch (encoderError) {
-        const errorMessage =
-          encoderError instanceof Error ? encoderError.message : String(encoderError);
-        log.warn('STEP 3b - createQRInstance FAILED', {
-          error: errorMessage,
-          requestedVersion: versionToUseFinal,
-          ecc,
-          dataLength: encoderInput.data.length,
-          mode: effectiveMode,
-          maskPattern: maskToUse,
-        });
-
-        // For overflow errors, try mixed mode encoding first, then higher versions
-        if (errorMessage.includes('overflow')) {
-          // First, try mixed mode encoding at the original version
-          // This is crucial for QArt codes that use numeric URL fragments
-          const segments = optimizeSegments(encoderInput.data);
-          const hasMixedModeOptimization =
-            segments.length > 1 || (segments.length === 1 && segments[0].mode !== 'byte');
-
-          if (hasMixedModeOptimization) {
-            log.debug('STEP 3c - Trying MIXED MODE encoding at original version', {
-              segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
-              originalVersion: versionToUseFinal,
-            });
-
-            try {
-              qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
-                mode: 'mixed',
-                ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
-                  ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
-                  : {}),
-              });
-              log.debug('STEP 3c - MIXED MODE SUCCESS at original version!', {
-                version: versionToUseFinal,
-                segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
-              });
-              // Successfully encoded with mixed mode at original version
-            } catch (mixedModeError) {
-              log.debug('STEP 3c - Mixed mode failed, trying higher versions...', {
-                error:
-                  mixedModeError instanceof Error ? mixedModeError.message : String(mixedModeError),
-              });
-              qr = null; // Reset to try higher versions
-            }
-          }
-
-          // If mixed mode didn't work (or wasn't applicable), try higher versions
-          if (!qr) {
-            log.debug('STEP 3c - Trying higher versions due to overflow...');
-            let foundVersion: number | null = null;
-
-            for (let tryVersion = versionToUseFinal + 1; tryVersion <= 40; tryVersion++) {
-              try {
-                // Try with mixed mode first at higher version
-                qr = createQRInstance(encoderInput.data, ecc, tryVersion, {
-                  mode: 'mixed',
-                  ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
-                    ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
-                    : {}),
-                });
-                foundVersion = tryVersion;
-                log.debug('STEP 3c - VERSION UPGRADE: Successfully encoded at version', {
-                  originalVersion: versionToUseFinal,
-                  newVersion: tryVersion,
-                  versionIncrease: tryVersion - versionToUseFinal,
-                  ecc,
-                  maskPattern: maskToUse,
-                  usedMixedMode: true,
-                });
-                break;
-              } catch {
-                // Try next version
-              }
-            }
-
-            if (foundVersion === null) {
-              throw new Error(
-                `Data too large: cannot fit in any QR version (1-40) with ECC ${ecc}`
-              );
-            } else {
-              actualVersionUsed = foundVersion;
-            }
-          }
-        } else {
-          throw encoderError; // Re-throw for other errors
-        }
-      } finally {
-        if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
-      }
-
-      // At this point qr must be non-null
-      if (!qr) {
-        throw new Error('QR instance is null - this should not happen');
-      }
-      encodeMs = Math.round((nowMs() - encodeStartMs) * 100) / 100;
-
-      // Store the actual version used for import to generator
-      setActualUsedVersion(actualVersionUsed);
-
-      const moduleCount = qr.getModuleCount();
-      const actualVersion = (moduleCount - 17) / 4;
-
-      // STEP 4: Log QR instance result
-      log.debug('STEP 4 - QR instance result', {
-        moduleCount,
-        actualVersion,
-        requestedVersion: versionToUseFinal,
-        actualVersionUsed,
-        versionMatch: actualVersion === (result.version ?? actualVersion),
-      });
-
-      // STEP 4b: Warn if version mismatch
-      if (result.version && actualVersion !== result.version) {
-        log.warn('VERSION MISMATCH!', {
-          detectedVersion: result.version,
-          detectedModuleCount: result.moduleCount,
-          producedVersion: actualVersion,
-          producedModuleCount: moduleCount,
-          expectedModuleCount: result.version * 4 + 17,
-          diff: actualVersion - result.version,
-        });
-      }
-
-      // Margin handling
-      // For the self-generated QR, infer the exact margin from the actual generator canvas.
-      // This avoids off-by-one errors (quiet zone vs border modules) and matches safety-adjusted quiet zones.
-      const marginModules = (() => {
-        if (isGeneratorSource && generatedCanvas) {
-          const modulePxFromStore = Math.max(1, Math.floor(renderState.modulePx || 1));
-          const totalModules = Math.round(generatedCanvas.width / modulePxFromStore);
-          const inferred = Math.max(0, Math.floor((totalModules - moduleCount) / 2));
-
-          // STEP 5: Log margin calculation (generator source)
-          log.debug('STEP 5 - Margin calculation (generator)', {
-            renderStateModulePx: renderState.modulePx,
-            modulePxFromStore,
-            canvasWidth: generatedCanvas.width,
-            totalModulesInferred: totalModules,
-            qrModuleCount: moduleCount,
-            inferredMargin: inferred,
-            calculation: `floor((${totalModules} - ${moduleCount}) / 2) = ${inferred}`,
-          });
-
-          return inferred;
-        }
-
-        // STEP 5: Log margin calculation (external source)
-        const margin = Math.max(4, result.quietZone?.top ?? 4);
-        log.debug('STEP 5 - Margin calculation (external)', {
-          quietZoneTop: result.quietZone?.top,
-          margin,
-        });
-
-        return margin;
-      })();
-
-      // Canvas sizing
-      // - Generator: match the exact canvas size (pixel-identical display)
-      // - External: render at a readable size (~300px)
-      let modulePx: number;
-      let size: number;
-      if (isGeneratorSource && generatedCanvas) {
-        // Calculate modulePx that actually fits the QR in the canvas
-        // (renderState.modulePx is the configured setting, but the actual rendered
-        // module size may differ due to canvas sizing / quiet zone adjustments)
-        size = generatedCanvas.width;
-        const totalModulesWithMargin = moduleCount + marginModules * 2;
-        modulePx = Math.max(1, Math.floor(size / totalModulesWithMargin));
-
-        // STEP 6: Log canvas sizing (generator)
-        log.debug('STEP 6 - Canvas sizing (generator)', {
-          canvasSize: size,
-          moduleCount,
-          marginModules,
-          totalModulesWithMargin,
-          calculatedModulePx: modulePx,
-          renderStateModulePx: renderState.modulePx,
-          totalPixelsNeeded: totalModulesWithMargin * modulePx,
-          willFit: totalModulesWithMargin * modulePx <= size,
-        });
-      } else {
-        const targetSize = 300;
-        const totalModules = moduleCount + marginModules * 2;
-        modulePx = Math.max(3, Math.floor(targetSize / totalModules));
-        size = totalModules * modulePx;
-
-        // STEP 6: Log canvas sizing (external)
-        log.debug('STEP 6 - Canvas sizing (external)', {
-          targetSize,
-          moduleCount,
-          marginModules,
-          totalModules,
-          calculatedModulePx: modulePx,
-          calculatedSize: size,
-        });
-      }
-
-      canvas.width = size;
-      canvas.height = size;
-
-      // STEP 7: Final summary before drawing
-      log.debug('STEP 7 - Final render summary', {
-        canvasSize: `${size}x${size}`,
-        modulePx,
-        moduleCount,
-        actualVersion,
-        detectedVersion: result.version,
-        versionMismatch: result.version && actualVersion !== result.version,
-        marginModules,
-        totalPixelsUsed: (moduleCount + marginModules * 2) * modulePx,
-        isGeneratorSource,
-      });
-
-      if (result.version && actualVersion !== result.version) {
-        log.warn('FINAL WARNING: Version mismatch will cause visual discrepancy!', {
-          expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
-          produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
-          sizeDiff: moduleCount - (result.version * 4 + 17),
-        });
-      }
-
-      // Colors
-      // Generator: use live render colors.
-      // External: use detected colors, fall back to black/white.
-      const fg = isGeneratorSource
-        ? renderState.fgColor
-        : result.detectedColors?.foreground || '#000000';
-      const bg = isGeneratorSource
-        ? renderState.bgTransparent
-          ? '#ffffff'
-          : renderState.bgColor
-        : result.detectedColors?.background || '#ffffff';
-
-      // Draw background
-      const renderStartMs = nowMs();
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, size, size);
-
-      // Draw modules
-      ctx.fillStyle = fg;
-      for (let row = 0; row < moduleCount; row++) {
-        for (let col = 0; col < moduleCount; col++) {
-          if (!qr.isDark(row, col)) continue;
-          const x = (marginModules + col) * modulePx;
-          const y = (marginModules + row) * modulePx;
-          ctx.fillRect(x, y, modulePx, modulePx);
-        }
-      }
-      renderMs = Math.round((nowMs() - renderStartMs) * 100) / 100;
-
-      // --- Optional diagnostics: matrix comparisons to pinpoint mismatch source ---
-      let regenVsDecoded: {
-        rows: number;
-        cols: number;
-        diffCount: number;
-        diffPct: number;
-        firstDiff: { row: number; col: number; a: boolean; b: boolean } | null;
-      } | null = null;
-      let regenVsOriginal: {
-        rows: number;
-        cols: number;
-        diffCount: number;
-        diffPct: number;
-        firstDiff: { row: number; col: number; a: boolean; b: boolean } | null;
-      } | null = null;
-      let bestShift: { dr: number; dc: number; diffCount: number; diffPct: number } | null = null;
-
-      if (ENABLE_ANALYZE_MATRIX_DIAGNOSTICS) {
-        const buildRegenMatrix = (): boolean[][] => {
-          const m: boolean[][] = new Array(moduleCount);
-          for (let r = 0; r < moduleCount; r += 1) {
-            const row: boolean[] = new Array(moduleCount);
-            for (let c = 0; c < moduleCount; c += 1) row[c] = qr.isDark(r, c);
-            m[r] = row;
-          }
-          return m;
-        };
-
-        const diffMatrices = (a: boolean[][], b: boolean[][]) => {
-          const rows = Math.min(a.length, b.length);
-          const cols = rows ? Math.min(a[0].length, b[0].length) : 0;
-          let diffCount = 0;
-          let firstDiff: { row: number; col: number; a: boolean; b: boolean } | null = null;
-          for (let r = 0; r < rows; r += 1) {
-            for (let c = 0; c < cols; c += 1) {
-              if (a[r][c] === b[r][c]) continue;
-              diffCount += 1;
-              firstDiff ??= { row: r, col: c, a: a[r][c], b: b[r][c] };
-            }
-          }
-          const total = rows * cols;
-          return { rows, cols, diffCount, diffPct: total ? diffCount / total : 0, firstDiff };
-        };
-
-        const sampleOriginalMatrix = (): boolean[][] | null => {
-          if (!(isGeneratorSource && generatedCanvas)) return null;
-          const gctx =
-            (generatedCanvas.getContext('2d', {
-              willReadFrequently: true,
-              desynchronized: true,
-            } as
-              | CanvasRenderingContext2DSettings
-              | undefined) as CanvasRenderingContext2D | null) ??
-            (generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null);
-          if (!gctx) return null;
-
-          const canvasWidth = generatedCanvas.width;
-          const canvasHeight = generatedCanvas.height;
-          if (canvasWidth <= 0 || canvasHeight <= 0) return null;
-          const pixels = gctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
-
-          const m: boolean[][] = new Array(moduleCount);
-          for (let r = 0; r < moduleCount; r += 1) {
-            const row: boolean[] = new Array(moduleCount);
-            for (let c = 0; c < moduleCount; c += 1) {
-              const x = Math.max(
-                0,
-                Math.min(canvasWidth - 1, Math.floor((marginModules + c + 0.5) * modulePx))
-              );
-              const y = Math.max(
-                0,
-                Math.min(canvasHeight - 1, Math.floor((marginModules + r + 0.5) * modulePx))
-              );
-              const pixelIndex = (y * canvasWidth + x) * 4;
-              const lum =
-                (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
-              const dark = pixels[pixelIndex + 3] > 16 && lum < 128;
-              row[c] = dark;
-            }
-            m[r] = row;
-          }
-          return m;
-        };
-
-        const regenMatrix = buildRegenMatrix();
-        regenVsDecoded = result.moduleMatrix
-          ? diffMatrices(result.moduleMatrix, regenMatrix)
-          : null;
-
-        const originalMatrix = sampleOriginalMatrix();
-        regenVsOriginal = originalMatrix ? diffMatrices(originalMatrix, regenMatrix) : null;
-
-        bestShift = originalMatrix
-          ? findBestMatrixShift(originalMatrix, regenMatrix, moduleCount)
-          : null;
-      }
-
-      const payloadBytesHead = (() => {
-        const bytes = result.payloadBytes;
-        if (!bytes?.length) return null;
-        return Array.from(bytes.slice(0, 16))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join(' ');
-      })();
-
-      // Track if reproduction matches original - should always match now since we don't allow fallbacks
-      const reproductionMismatch = actualVersion !== result.version;
-
-      log.debug('Generated QR code', {
-        strategy: isGeneratorSource ? 'exact' : 'detected_only',
-        reproductionMismatch,
-        encoderInputKind: encoderInput.kind,
-        payloadPreview: (result.payload ?? '').slice(0, 80),
-        payloadBytesLen: result.payloadBytes?.length ?? null,
-        payloadBytesHead,
-        ecc,
-        detectedVersion: result.version,
-        usedVersion: versionToUseFinal,
-        detectedMaskPattern: result.maskPattern,
-        usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
-        usedMode: effectiveMode ?? null,
-        actualVersion,
-        moduleCount,
-        marginModules,
-        borderModulesExtra: isGeneratorSource ? qrState.borderModulesExtra || 0 : null,
-        modulePx,
-        canvasSize: size,
-        matrix: {
-          regenVsDecoded,
-          regenVsOriginal,
-          bestShift,
-        },
-      });
-      if (regenVsOriginal && regenVsOriginal.diffCount > 0) {
-        log.warn('Matrix mismatch (original vs regenerated)', {
-          ecc,
-          version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
-          mask: {
-            detected: result.maskPattern,
-            used: typeof maskToUse === 'number' ? maskToUse : null,
-          },
-          mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
-          encoderInputKind: encoderInput.kind,
-          payloadBytesLen: result.payloadBytes?.length ?? null,
-          payloadBytesHead,
-          regenVsDecoded,
-          regenVsOriginal,
-          bestShift,
-        });
-      }
-
+      setActualUsedVersion(reproResult.actualVersionUsed);
       setUiTimings((prev) => ({
         ...prev,
-        encodeMs,
-        renderMs,
+        encodeMs: reproResult.encodeMs,
+        renderMs: reproResult.renderMs,
       }));
     } catch (err) {
-      setUiTimings((prev) => ({
-        ...prev,
-        encodeMs: null,
-        renderMs: null,
-      }));
+      setUiTimings((prev) => ({ ...prev, encodeMs: null, renderMs: null }));
       log.error('Failed to generate QR code', { error: err });
-      // Clear canvas and show error state
-      canvas.width = 200;
-      canvas.height = 200;
-      ctx.fillStyle = '#f5f5f5';
-      ctx.fillRect(0, 0, 200, 200);
-      ctx.fillStyle = '#999';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Generation failed', 100, 100);
+      const ctx = canvas.getContext('2d');
+      if (ctx) drawCanvasError(canvas, ctx, '#f5f5f5', '#999', ['Generation failed']);
     }
   }, [result, analysisSource, generatedCanvas, qrState, renderState]);
 
@@ -1900,72 +2068,25 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     }
   }, [t]);
 
-  // Import to Generator
   const handleImportToGenerator = useCallback(() => {
     if (!(result?.success && result.payload)) return;
-
-    // Set payload
-    if (result.payload.startsWith('http://') || result.payload.startsWith('https://')) {
-      setPayloadKind('url');
-      setPayloadUrl({ href: result.payload });
-    } else {
-      setPayloadKind('plain_text');
-    }
-    setPayloadText(result.payload);
-
-    // Set QR encoding parameters for EXACT replication
-    if (result.eccLevel) {
-      setQrEcc(result.eccLevel as 'L' | 'M' | 'Q' | 'H');
-    }
-    // Use actualUsedVersion if available (may be upgraded from detected version due to data overflow)
-    const versionToImport = actualUsedVersion ?? result.version;
-    if (versionToImport !== null && versionToImport >= 1 && versionToImport <= 40) {
-      setQrVersion(versionToImport);
-    }
-    if (result.maskPattern !== null && result.maskPattern >= 0 && result.maskPattern <= 7) {
-      setQrMaskPattern(result.maskPattern as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7);
-    }
-    if (
-      result.encodingMode &&
-      result.encodingMode !== 'unknown' &&
-      result.encodingMode !== 'mixed'
-    ) {
-      const modeMap: Record<string, 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji'> = {
-        numeric: 'numeric',
-        alphanumeric: 'alphanumeric',
-        byte: 'byte',
-        kanji: 'kanji',
-      };
-      if (modeMap[result.encodingMode]) {
-        setQrEncodingMode(modeMap[result.encodingMode]);
-      }
-    }
-
-    // Set colors if detected
-    if (result.detectedColors) {
-      setRenderFgColor(result.detectedColors.foreground);
-      setRenderBgColor(result.detectedColors.background);
-    }
-
+    importAnalysisToGenerator(
+      result,
+      actualUsedVersion,
+      {
+        setPayloadText,
+        setPayloadKind,
+        setPayloadUrl,
+        setQrEcc,
+        setQrVersion,
+        setQrMaskPattern,
+        setQrEncodingMode,
+        setRenderFgColor,
+        setRenderBgColor,
+      },
+      onNavigate
+    );
     setImported(true);
-
-    // Navigate to editor after a short delay
-    setTimeout(() => {
-      if (onNavigate) {
-        onNavigate('editor');
-      } else {
-        // Fallback: navigate using window location
-        // Clear hash/query to go to main editor
-        window.location.hash = '';
-        window.location.search = '';
-        // If we're still on the same page, force a reload to the editor
-        if (window.location.pathname === '/' || window.location.pathname === '') {
-          window.location.reload();
-        } else {
-          window.location.href = '/';
-        }
-      }
-    }, 500);
   }, [
     result,
     actualUsedVersion,
