@@ -4,7 +4,6 @@
  * Notes: Load file as canvas element.
  */
 
-import { createElement } from 'react';
 
 
 export async function loadFileAsCanvas(file: File): Promise<HTMLCanvasElement> {

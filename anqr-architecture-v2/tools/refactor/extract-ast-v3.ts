@@ -155,11 +155,11 @@ function isCustomHookName(name: string | null): boolean {
 }
 
 function isProviderName(name: string | null): boolean {
-  return !!name && /Provider$/.test(name);
+  return !!name && name.endsWith('Provider');
 }
 
 function isContextName(name: string | null): boolean {
-  return !!name && /Context$/.test(name);
+  return !!name && name.endsWith('Context');
 }
 
 function isHandlerLikeName(name: string | null): boolean {
@@ -276,9 +276,9 @@ function getImportKindTags(moduleSpecifier: string, resolvedFile: string | null)
 function getFileRuntimeTags(file: string, imports: Array<{ kindTags: ImportKindTag[] }>, hasJsx: boolean): string[] {
   const tags = new Set<string>();
 
-  if (hasJsx || /\.tsx$/.test(file)) tags.add("react");
+  if (hasJsx || file.endsWith('.tsx')) tags.add("react");
   if (/worker/i.test(file)) tags.add("worker");
-  if (/netlify/i.test(file) || /^netlify\//.test(file)) tags.add("netlify");
+  if (/netlify/i.test(file) || file.startsWith('netlify/')) tags.add("netlify");
   if (/\.spec\.|\.test\./.test(file) || /__tests__/.test(file)) tags.add("test");
   if (/src\/i18n\/|src\/content\/i18n\//.test(file)) tags.add("i18n");
   if (/generated/.test(file)) tags.add("generated");
@@ -612,8 +612,8 @@ function main(): void {
       isNetlifyFile: /netlify/i.test(filePath),
       isGeneratedLike:
         /generated/.test(filePath) ||
-        /^src\/i18n\/static\//.test(filePath) ||
-        /^src\/content\/generated\//.test(filePath),
+        filePath.startsWith('src/i18n/static/') ||
+        filePath.startsWith('src/content/generated/'),
       imports: importRows,
       exports,
       symbolIds: symbolIdsForFile,
@@ -675,8 +675,8 @@ function main(): void {
   writeJsonl(path.join(OUT_DIR, "react-classification.jsonl"), reactRows);
   fs.writeFileSync(path.join(OUT_DIR, "summary.json"), JSON.stringify(summary, null, 2), "utf8");
 
-  console.log(`Wrote inventory to ${rel(OUT_DIR)}`);
-  console.log(summary);
+  
+  
 }
 
 main();

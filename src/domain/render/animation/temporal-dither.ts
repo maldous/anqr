@@ -12,7 +12,7 @@ import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
   type TemporalDitherMode,
-} from '../../../modules/dither-algorithms/index';
+} from '../../../modules/dither-algorithms';
 
 /**
  * Apply temporal dithering for animation frames

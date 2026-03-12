@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { buildEccFallbackSequence } from '@/features/generator/application/safety/safety-fn-eccfallback';
 import { tryEccFallbackGeneration } from '@/features/generator/application/safety/safety-fn-tryeccfallback';
 

@@ -4,7 +4,7 @@
  */
 
 // Re-export from browser-io (canonical source)
-export { canvasToBlob, downloadUrl, saveFileNative } from '../../platform/browser/io/index';
+export { canvasToBlob, downloadUrl, saveFileNative } from '../../platform/browser/io';
 
 /**
  * Escape XML special characters */

@@ -4,7 +4,7 @@
  * Notes: Convert canvas list to AnimationFrame array.
  */
 
-import type { AnimationFrame } from '@/modules/animation/types';
+import type { AnimationFrame } from '@/modules/animation';
 
 
 export function canvasListToAnimationFrames(

@@ -1,4 +1,4 @@
-import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../../../modules/animation/index';
+import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../../../modules/animation';
 import { withGifEncodeLock } from '../animation/gif-lock';
 import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
 import { log } from './log';

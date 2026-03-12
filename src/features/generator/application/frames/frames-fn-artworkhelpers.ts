@@ -4,7 +4,7 @@
  * Notes: Create helper functions for artwork frame processing.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { cloneCanvasFrame } from '@/features/generator/application/frames/frames-fn-cloneframe';
 import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';

@@ -5,8 +5,8 @@
  */
 
 import { applyTemporalNoiseToCanvas, calculateTemporalOffset, type TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame } from '@/modules/animation/types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { AnimationFrame } from '@/modules/animation';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 

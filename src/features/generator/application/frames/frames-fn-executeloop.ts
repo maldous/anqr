@@ -5,11 +5,11 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { GifCompositor } from '@/modules/animation/types';
+import type { GifCompositor } from '@/modules/animation';
 import type { TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame } from '@/modules/animation/types';
+import type { AnimationFrame } from '@/modules/animation';
 import { canvasHashCache } from '@/modules/qr-generator/cache';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { processAndPostProcessFrame } from '@/features/generator/application/frames/frames-fn-processframe';
 import { createScratchCanvasPool } from '@/features/generator/application/frames/frames-fn-scratchpool';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';

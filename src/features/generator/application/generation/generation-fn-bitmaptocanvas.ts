@@ -4,7 +4,6 @@
  * Notes: Convert ImageBitmap to HTMLCanvasElement.
  */
 
-import { createElement } from 'react';
 
 
 export function imageBitmapToCanvas(

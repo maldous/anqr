@@ -35,9 +35,9 @@ function patchI18nIndex(): void {
 
   if (text !== original) {
     fs.writeFileSync(filePath, text, 'utf8');
-    console.log('Patched src/i18n/index.ts');
+    
   } else {
-    console.log('No changes needed in src/i18n/index.ts');
+    
   }
 }
 
@@ -49,13 +49,13 @@ function ensureAppI18nShim(): void {
     '',
   ].join('\n');
   writeIfChanged(shimPath, shim);
-  console.log('Ensured src/app/i18n/index.ts compatibility shim');
+  
 }
 
 function main(): void {
   patchI18nIndex();
   ensureAppI18nShim();
-  console.log('Done. Next: npm run typecheck');
+  
 }
 
 main();

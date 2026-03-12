@@ -1,4 +1,4 @@
-import { getAlignmentPatternCenters } from '../../../modules/qr-spec/index';
+import { getAlignmentPatternCenters } from '../../../modules/qr-spec';
 
 /**
  * Helper: Get alignment pattern positions for a given moduleCount

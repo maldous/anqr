@@ -1,4 +1,4 @@
-import { decodeQR } from '../../../modules/qr-decoder/index';
+import { decodeQR } from '../../../modules/qr-decoder';
 import type { ScanResult } from './scanner.types';
 
 /**

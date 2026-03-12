@@ -4,7 +4,7 @@
  * Notes: ECC level type alias.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 
 
 export type EccLevel = QRGeneratorConfig['errorCorrection'];

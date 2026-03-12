@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
-import { getAlignmentPatternCenters } from '../../../modules/qr-spec/index';
+import { getAlignmentPatternCenters } from '../../../modules/qr-spec';
 import { decodeDataCodewordsDetailed, RS_BLOCKS, readCodewords } from './decode';
 import { calculateLocation, extractModuleMatrix } from './extract';
 import { getECCLevelChar, readFormatInfo, unmaskMatrix } from './format';

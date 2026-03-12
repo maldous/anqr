@@ -4,11 +4,11 @@
  * Adds QR-generator specific caching layer for performance
  */
 
-import { getAlignmentPatternCenters } from '../../../modules/qr-spec/index';
+import { getAlignmentPatternCenters } from '../../../modules/qr-spec';
 import { alignmentCache } from '../../../modules/qr-generator/cache';
 
 // Re-export from qr-spec (canonical source)
-export { isFormatInfo, isVersionInfo } from '../../../modules/qr-spec/index';
+export { isFormatInfo, isVersionInfo } from '../../../modules/qr-spec';
 
 /**
  * Cached version of getAlignmentPositions that returns {row, col} objects

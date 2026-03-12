@@ -4,9 +4,9 @@
  * Notes: Render frame using GIF compositor.
  */
 
-import type { GifCompositor } from '@/modules/animation/types';
+import type { GifCompositor } from '@/modules/animation';
 import { applyTemporalNoiseToCanvas, calculateTemporalOffset, type TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
 

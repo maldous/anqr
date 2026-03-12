@@ -13,8 +13,8 @@ module.exports = {
         "^src/content/generated",
         "^src/content/i18n/static",
         "^src/i18n/static",
-        "\.spec\.",
-        "\.test\.",
+        ".spec.",
+        ".test.",
       ],
     },
     enhancedResolveOptions: {
@@ -113,14 +113,14 @@ module.exports = {
       severity: "warn",
       comment: "temporary rule while migrating away from legacy modules folder.",
       from: { path: "^src/" },
-      to: { path: "^src/modules/index\.ts$" },
+      to: { path: "^src/modules/index.ts$" },
     },
     {
       name: "no-root-core-folder-dependency",
       severity: "warn",
       comment: "temporary rule while removing generic core bucket.",
       from: { path: "^src/" },
-      to: { path: "^src/modules/core/index\.ts$" },
+      to: { path: "^src/modules/core/index.ts$" },
     },
   ],
 };

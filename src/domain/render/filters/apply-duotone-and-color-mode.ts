@@ -1,5 +1,5 @@
 import { parseColor } from '../color/color';
-import type { ColorMode, FilterOptions } from '../../../modules/overlay/index';
+import type { ColorMode, FilterOptions } from '../../../modules/overlay';
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
 
 export function applyDuotoneAndColorMode(config: QRGeneratorConfig, filterOptions: FilterOptions): void {

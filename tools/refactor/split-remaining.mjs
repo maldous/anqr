@@ -24,7 +24,7 @@ let totalSplit = 0;
 
 for (const filePath of FILES) {
   if (!fs.existsSync(filePath)) {
-    console.log(`SKIP (not found): ${filePath}`);
+    
     continue;
   }
 
@@ -72,7 +72,7 @@ for (const filePath of FILES) {
   }
   
   if (typeExports.length === 0) {
-    console.log(`SKIP (no type exports): ${filePath}`);
+    
     continue;
   }
   
@@ -88,7 +88,7 @@ for (const filePath of FILES) {
   
   // Only split if there's at least 1 value export AND at least 1 type export
   if (valueExportCount === 0) {
-    console.log(`SKIP (types-only): ${filePath}`);
+    
     continue;
   }
   
@@ -107,7 +107,7 @@ for (const filePath of FILES) {
     const missingTypes = typeExports.filter(t => !existingTypes.includes(`export ${t.kind} ${t.name}`));
     if (missingTypes.length > 0) {
       fs.writeFileSync(typesPath, existingTypes.trimEnd() + '\n\n' + missingTypes.map(t => t.block).join('\n\n') + '\n');
-      console.log(`  Appended ${missingTypes.length} types to existing ${typesPath}`);
+      
     }
   } else {
     // Check if any type exports have imports they depend on
@@ -143,7 +143,7 @@ for (const filePath of FILES) {
     
     const typesContent = (neededImports.length > 0 ? neededImports.join('\n') + '\n\n' : '') + typeBlocks + '\n';
     fs.writeFileSync(typesPath, typesContent);
-    console.log(`  Created ${typesPath} with ${typeExports.length} types`);
+    
   }
   
   // Remove type declarations from original file and add import from .types.ts
@@ -190,8 +190,8 @@ for (const filePath of FILES) {
   const cleaned = newLines.join('\n').replace(/\n{3,}/g, '\n\n');
   fs.writeFileSync(filePath, cleaned);
   
-  console.log(`SPLIT: ${filePath} -> extracted ${typeExports.length} types, ${valueExportCount} value exports remain`);
+  
   totalSplit++;
 }
 
-console.log(`\nTotal files split: ${totalSplit}`);
+

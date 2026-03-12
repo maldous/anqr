@@ -35,7 +35,7 @@ function parseArgs(): CliOptions {
 // ---------------------------------------------------------------------------
 function collectErrorFiles(): Set<string> {
   const ROOT = process.cwd();
-  console.log('Running npx tsc --noEmit to collect errors...');
+  
 
   let tscOutput = '';
   try {
@@ -45,7 +45,7 @@ function collectErrorFiles(): Set<string> {
       stdio: ['pipe', 'pipe', 'pipe'],
       maxBuffer: 50 * 1024 * 1024,
     });
-    console.log('No TypeScript errors found!');
+    
     return new Set();
   } catch (err: unknown) {
     const execErr = err as { stdout?: string; stderr?: string };
@@ -67,7 +67,7 @@ function collectErrorFiles(): Set<string> {
     errorFiles.add(normalized);
   }
 
-  console.log(`Found errors in ${errorFiles.size} files.\n`);
+  
   return errorFiles;
 }
 
@@ -604,15 +604,13 @@ async function main(): Promise<void> {
   const options = parseArgs();
   const ROOT = process.cwd();
 
-  console.log(
-    `merge-back-errored-splits${options.dryRun ? ' (DRY RUN)' : ''}`
-  );
-  console.log('='.repeat(60));
+  
+  
 
   // Step 1: Collect error files
   const errorFiles = collectErrorFiles();
   if (errorFiles.size === 0) {
-    console.log('No TypeScript errors found. Nothing to merge back.');
+    
     return;
   }
 
@@ -620,7 +618,7 @@ async function main(): Promise<void> {
   const srcDir = path.join(ROOT, 'src');
   const allTsFiles = findAllTsFiles(srcDir);
 
-  console.log(`Scanning ${allTsFiles.length} .ts/.tsx files for barrel patterns...`);
+  
 
   interface BarrelInfo {
     filePath: string;
@@ -659,7 +657,7 @@ async function main(): Promise<void> {
     });
   }
 
-  console.log(`Found ${barrels.length} barrel files.\n`);
+  
 
   // Step 2b: Determine which barrels need merging
   interface MergeCandidate {
@@ -683,12 +681,10 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(
-    `${mergeCandidates.length} barrels have errored split files and need merging back.\n`
-  );
+  
 
   if (mergeCandidates.length === 0) {
-    console.log('Nothing to merge back.');
+    
     return;
   }
 
@@ -702,10 +698,8 @@ async function main(): Promise<void> {
       path.relative(ROOT, f).replace(/\\/g, '/')
     );
 
-    console.log(`\n--- ${relBarrelPath} ---`);
-    console.log(
-      `  Errored split files (${erroredSplitFiles.length}): ${erroredRels.join(', ')}`
-    );
+    
+    
 
     // Collect all the module specifiers that point to split files within the
     // same directory (these are the ones created by the split script)
@@ -790,33 +784,29 @@ async function main(): Promise<void> {
     }
 
     if (options.dryRun) {
-      console.log(`  WOULD REWRITE ${relBarrelPath} (${mergedImports.length} imports, ${bodies.length} body sections)`);
-      console.log(`  WOULD DELETE ${filesToDelete.length} split files:`);
+      
+      
       for (const f of filesToDelete) {
-        console.log(`    - ${path.relative(ROOT, f).replace(/\\/g, '/')}`);
+        
       }
-      console.log(`  Preview of merged content (first 20 lines):`);
+      
       const previewLines = mergedContent.split('\n').slice(0, 20);
       for (const line of previewLines) {
-        console.log(`    | ${line}`);
+        
       }
       if (mergedContent.split('\n').length > 20) {
-        console.log(
-          `    ... (${mergedContent.split('\n').length - 20} more lines)`
-        );
+        
       }
     } else {
       // Write the merged content to the barrel file
       fs.writeFileSync(barrel.filePath, mergedContent, 'utf8');
-      console.log(`  REWROTE ${relBarrelPath}`);
+      
 
       // Delete split files
       for (const f of filesToDelete) {
         if (fs.existsSync(f)) {
           fs.unlinkSync(f);
-          console.log(
-            `  DELETED ${path.relative(ROOT, f).replace(/\\/g, '/')}`
-          );
+          
           filesDeleted++;
         }
       }
@@ -826,23 +816,21 @@ async function main(): Promise<void> {
   }
 
   // Summary
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(
-    `SUMMARY${options.dryRun ? ' (DRY RUN — no files were written)' : ''}`
-  );
-  console.log('='.repeat(60));
-  console.log(`  Total barrels scanned:     ${barrels.length}`);
-  console.log(`  Barrels merged back:       ${barrelsRewritten}`);
-  console.log(`  Barrels left as-is:        ${barrels.length - barrelsRewritten}`);
+  
+  
+  
+  
+  
+  
   if (!options.dryRun) {
-    console.log(`  Split files deleted:       ${filesDeleted}`);
+    
   }
 
   if (!options.dryRun) {
-    console.log(`\nNext steps:`);
-    console.log(`  1. npx tsc --noEmit   (check for remaining type errors)`);
-    console.log(`  2. Review merged files for correctness`);
-    console.log(`  3. Run your test suite`);
+    
+    
+    
+    
   }
 }
 
@@ -879,6 +867,6 @@ function findAllTsFiles(dir: string): string[] {
 }
 
 main().catch((err) => {
-  console.error(err);
+  
   process.exit(1);
 });

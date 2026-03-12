@@ -361,7 +361,7 @@ export function saveLogs(filename?: string): void {
   const logs = getStructuredLogs();
 
   if (logs.length === 0) {
-    console.log('No logs to save. Buffer is empty.');
+    
     return;
   }
 
@@ -380,7 +380,7 @@ export function saveLogs(filename?: string): void {
   a.remove();
   URL.revokeObjectURL(url);
 
-  console.log(`Saved ${logs.length} log entries to ${name}`);
+  
 }
 
 /**
@@ -395,9 +395,7 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   const logs = filterLogs(scope);
 
   if (logs.length === 0) {
-    console.log(
-      `No logs found for scope '${scope}'. Buffer has ${structuredLogBuffer.length} total entries.`
-    );
+    
     return;
   }
 
@@ -416,9 +414,7 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   a.remove();
   URL.revokeObjectURL(url);
 
-  console.log(
-    `Saved ${logs.length} '${scope}' log entries to ${name} (${structuredLogBuffer.length} total in buffer)`
-  );
+  
 }
 
 /**

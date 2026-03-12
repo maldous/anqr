@@ -1,4 +1,4 @@
-import { getMaskFunction as getMaskFunctionFromSpec } from '../../../modules/qr-spec/index';
+import { getMaskFunction as getMaskFunctionFromSpec } from '../../../modules/qr-spec';
 
 /**
  * Get mask function for a mask pattern

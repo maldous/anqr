@@ -4,7 +4,7 @@
  * Notes: Build pattern effect lists from animation state.
  */
 
-import type { AnimationPattern } from '@/modules/animation/types';
+import type { AnimationPattern } from '@/modules/animation';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
 

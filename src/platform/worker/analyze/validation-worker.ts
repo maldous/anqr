@@ -7,7 +7,7 @@
  *   Worker → Main: { id, result: ValidationResult }
  */
 
-import { decodeQR } from '../../../modules/qr-decoder/index';
+import { decodeQR } from '../../../modules/qr-decoder';
 
 interface ValidateRequest {
   id: number;

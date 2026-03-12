@@ -6,8 +6,7 @@
 
 import { createLogger } from '@/infra/logging/logger';
 import type { ExporterModule } from '@/features/generator/application/export/export-shared-types';
-import type { AnimationFrame } from '@/modules/animation/types';
-import { createElement } from 'react';
+import type { AnimationFrame } from '@/modules/animation';
 
 const log = createLogger('QR');
 

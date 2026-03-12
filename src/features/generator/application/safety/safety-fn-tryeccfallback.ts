@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 
 const log = createLogger('QR');
 

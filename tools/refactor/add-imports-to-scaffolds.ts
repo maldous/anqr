@@ -42,7 +42,7 @@ function parseArgs(): Args {
     else if (argv[i] === '--dry-run') { dryRun = true; }
   }
   if (!manifestPath || !sourcePath) {
-    console.error('Usage: tsx tools/refactor/add-imports-to-scaffolds.ts --manifest <path> --source <path> [--dry-run]');
+    
     process.exit(1);
   }
   return { manifestPath, sourcePath, dryRun };
@@ -357,8 +357,8 @@ async function main(): Promise<void> {
   const internalMap = buildInternalSymbolMap(manifest);
   const externalMap = buildExternalSymbolMap(sourceContent);
 
-  console.log(`Internal symbols: ${internalMap.size}`);
-  console.log(`External symbols: ${externalMap.size}`);
+  
+  
 
   const allKnownSymbols = new Set([...internalMap.keys(), ...externalMap.keys()]);
 
@@ -369,7 +369,7 @@ async function main(): Promise<void> {
   for (const group of manifest.groups) {
     const targetPath = group.targetFile;
     if (!fs.existsSync(targetPath)) {
-      console.warn(`SKIP (missing): ${targetPath}`);
+      
       continue;
     }
 
@@ -377,7 +377,7 @@ async function main(): Promise<void> {
 
     // Skip files that already have imports
     if (content.includes('\nimport ')) {
-      console.log(`SKIP (has imports): ${targetPath}`);
+      
       filesProcessed++;
       continue;
     }
@@ -389,7 +389,7 @@ async function main(): Promise<void> {
     const referenced = findReferencedSymbols(content, allKnownSymbols, fileOwnSymbols);
 
     if (referenced.size === 0) {
-      console.log(`OK (no imports needed): ${path.basename(targetPath)}`);
+      
       filesProcessed++;
       continue;
     }
@@ -398,7 +398,7 @@ async function main(): Promise<void> {
     const importLines = generateImports(targetPath, referenced, internalMap, externalMap);
 
     if (importLines.length === 0) {
-      console.log(`OK (no resolvable imports): ${path.basename(targetPath)}`);
+      
       filesProcessed++;
       continue;
     }
@@ -407,14 +407,14 @@ async function main(): Promise<void> {
     const newContent = insertImports(content, importLines);
 
     if (args.dryRun) {
-      console.log(`\nDRY-RUN: ${path.basename(targetPath)}`);
-      console.log(`  Would add ${importLines.length} import line(s):`);
+      
+      
       for (const line of importLines) {
-        console.log(`    ${line}`);
+        
       }
     } else {
       fs.writeFileSync(targetPath, newContent);
-      console.log(`WROTE: ${path.basename(targetPath)} (+${importLines.length} imports for: ${[...referenced].join(', ')})`);
+      
     }
 
     filesProcessed++;
@@ -422,16 +422,16 @@ async function main(): Promise<void> {
     totalImportLines += importLines.length;
   }
 
-  console.log(`\n--- Summary ---`);
-  console.log(`Files processed: ${filesProcessed}`);
-  console.log(`Files with imports added: ${filesWithImports}`);
-  console.log(`Total import lines added: ${totalImportLines}`);
+  
+  
+  
+  
   if (args.dryRun) {
-    console.log(`(Dry run — no files were modified)`);
+    
   }
 }
 
 main().catch((err) => {
-  console.error(err);
+  
   process.exit(1);
 });

@@ -5,7 +5,7 @@
  */
 
 import type { FullQArtPipelineResult } from '@/features/generator/application/qart/qart-shared-types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { imageBitmapToCanvas } from '@/features/generator/application/generation/generation-fn-bitmaptocanvas';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 

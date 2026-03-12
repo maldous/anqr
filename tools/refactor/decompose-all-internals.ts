@@ -424,11 +424,11 @@ function processInternalFile(
   // Collect exports
   const decls = collectExports(sf);
   if (decls.length === 0) {
-    console.log(`=== Skipping: ${relPath} (0 exports) ===`);
+    
     return { filesCreated: 0, exportCount: 0 };
   }
 
-  console.log(`=== Processing: ${relPath} (${decls.length} exports) ===`);
+  
 
   // Parse imports from the original file
   const parsedImports = parseImportDeclarations(sf);
@@ -472,7 +472,7 @@ function processInternalFile(
 
     // If the file already exists (from a previous run), skip it
     if (fs.existsSync(targetPath)) {
-      console.log(`  → ${fileName} SKIPPED (already exists)`);
+      
       continue;
     }
 
@@ -545,11 +545,11 @@ function processInternalFile(
     const lineCount = countLines(fileContent);
 
     if (dryRun) {
-      console.log(`  → ${fileName} (${lineCount} lines)`);
+      
     } else {
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(targetPath, fileContent, 'utf8');
-      console.log(`  → ${fileName} (${lineCount} lines)`);
+      
     }
     filesCreated++;
   }
@@ -578,14 +578,10 @@ function processInternalFile(
   const barrelContent = barrelLines.join('\n') + '\n';
 
   if (dryRun) {
-    console.log(
-      `  → ${path.basename(filePath)} rewritten as barrel (${decls.length} re-exports)`,
-    );
+    
   } else {
     fs.writeFileSync(filePath, barrelContent, 'utf8');
-    console.log(
-      `  → ${path.basename(filePath)} rewritten as barrel (${decls.length} re-exports)`,
-    );
+    
   }
 
   return { filesCreated, exportCount: decls.length };
@@ -605,8 +601,8 @@ async function main(): Promise<void> {
   const options = parseArgs();
   const ROOT = process.cwd();
 
-  console.log(`decompose-all-internals${options.dryRun ? ' (DRY RUN)' : ''}`);
-  console.log('');
+  
+  
 
   // Create a standalone ts-morph project (no tsconfig needed for parsing)
   const project = new Project({
@@ -624,7 +620,7 @@ async function main(): Promise<void> {
   if (options.singleFile) {
     const resolved = path.resolve(ROOT, options.singleFile);
     if (!fs.existsSync(resolved)) {
-      console.error(`File not found: ${options.singleFile}`);
+      
       process.exit(1);
     }
     internalFiles = [resolved];
@@ -634,7 +630,7 @@ async function main(): Promise<void> {
     internalFiles = [...tsFiles, ...tsxFiles].sort();
   }
 
-  console.log(`Found ${internalFiles.length} _internal file(s) to process.\n`);
+  
 
   let totalFilesCreated = 0;
   let totalInternalsProcessed = 0;
@@ -645,19 +641,17 @@ async function main(): Promise<void> {
       totalFilesCreated += result.filesCreated;
       totalInternalsProcessed++;
     }
-    console.log('');
+    
   }
 
-  console.log('='.repeat(60));
-  console.log(
-    `Total: ${totalFilesCreated} files created from ${totalInternalsProcessed} _internal files`,
-  );
+  
+  
   if (options.dryRun) {
-    console.log('(DRY RUN — no files were written)');
+    
   }
 }
 
 main().catch((err) => {
-  console.error(err);
+  
   process.exit(1);
 });

@@ -4,8 +4,8 @@
  * Notes: Compute which base animation frames to process.
  */
 
-import type { AnimationFrame } from '@/modules/animation/types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { AnimationFrame } from '@/modules/animation';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { generateBaseAnimationFrameSet } from '@/features/generator/application/frames/frames-fn-baseanimation';
 import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
 

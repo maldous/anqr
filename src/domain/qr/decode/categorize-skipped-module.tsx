@@ -4,7 +4,7 @@ import {
   isFormatInfo,
   isTimingPattern,
   isVersionInfo,
-} from '../../../modules/qr-spec/index';
+} from '../../../modules/qr-spec';
 import { isSeparatorModule } from './is-separator-module';
 
 export function categorizeSkippedModule(

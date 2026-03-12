@@ -1,4 +1,4 @@
-import { quantizeGifPalette } from '../../../modules/animation/index';
+import { quantizeGifPalette } from '../../../modules/animation';
 import { renderFrameToScaledCtx } from './render-frame-to-scaled-ctx';
 import type { ScaledCtx } from './scaled-ctx';
 

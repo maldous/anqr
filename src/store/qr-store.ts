@@ -14,7 +14,7 @@
  */
 import { create } from 'zustand';
 // Import gradient types from core types (canonical source)
-import type { GradientStop, GradientType } from '@/modules/core/types';
+import type { GradientStop, GradientType } from '@/modules/core';
 // Import payload generator types and functions from payload-generators module
 import {
   type CryptoHelper,
@@ -67,7 +67,7 @@ export type {
   WifiAuth,
   WifiHelper,
 } from '@/modules/payload-generators';
-export type { GradientStop, GradientType } from '@/modules/core/types';
+export type { GradientStop, GradientType } from '@/modules/core';
 
 // Tier levels
 export type Tier = 'basic' | 'advanced' | 'professional';
@@ -240,7 +240,7 @@ export type SafetyMode = 'off' | 'balanced' | 'strict';
 // WiFi auth types - imported from payload-generators and re-exported above
 // VCard version - imported from payload-generators and re-exported above
 
-// Gradient types are now imported from @/modules/core/types and re-exported above.
+// Gradient types are now imported from @/modules/core and re-exported above.
 
 // Crop region
 export interface CropRegion {

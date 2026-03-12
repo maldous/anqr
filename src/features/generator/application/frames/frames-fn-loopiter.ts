@@ -4,10 +4,10 @@
  * Notes: Process one iteration of animation frame loop.
  */
 
-import type { GifCompositor } from '@/modules/animation/types';
+import type { GifCompositor } from '@/modules/animation';
 import type { TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame } from '@/modules/animation/types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { AnimationFrame } from '@/modules/animation';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { renderFrameForBaseAnimation } from '@/features/generator/application/frames/frames-fn-renderbase';
 import { renderFrameWithCompositor } from '@/features/generator/application/frames/frames-fn-rendercompositor';
 import { renderFrameWithLegacyPath } from '@/features/generator/application/frames/frames-fn-renderlegacy';

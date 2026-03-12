@@ -4,7 +4,7 @@
  * Notes: Pattern effect type for animation.
  */
 
-import type { AnimationPattern } from '@/modules/animation/types';
+import type { AnimationPattern } from '@/modules/animation';
 
 
 export type PatternEffect = {

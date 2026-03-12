@@ -166,7 +166,7 @@ async function main(): Promise<void> {
     }));
 
   if (!moveRows.length) {
-    console.log('No move actions found in manifest.');
+    
     return;
   }
 
@@ -176,7 +176,7 @@ async function main(): Promise<void> {
 
   const tripleSlashFixes = new Map<string, TripleSlashRef[]>();
 
-  console.log(`Loaded ${moveRows.length} move actions from ${normalize(path.relative(ROOT, manifestAbs))}`);
+  
 
   for (const move of moveRows) {
     assertExists(move.sourceAbs);
@@ -193,7 +193,7 @@ async function main(): Promise<void> {
     }
 
     if (options.dryRun) {
-      console.log(`[dry-run] move ${move.source} -> ${move.target}`);
+      
       continue;
     }
 
@@ -202,7 +202,7 @@ async function main(): Promise<void> {
 
   if (options.dryRun) {
     writeReport(moveRows, options);
-    console.log('Dry run complete. No files were changed.');
+    
     return;
   }
 
@@ -224,15 +224,15 @@ async function main(): Promise<void> {
   }
 
   writeReport(moveRows, options);
-  console.log('Move pass complete.');
-  console.log(`Compatibility shims: ${options.shims ? 'enabled' : 'disabled'}`);
-  console.log('Next steps:');
-  console.log('  npm run typecheck');
-  console.log('  npm run depcruise');
-  console.log('  npm run extract:ast');
+  
+  
+  
+  
+  
+  
 }
 
 main().catch((error) => {
-  console.error(error);
+  
   process.exit(1);
 });

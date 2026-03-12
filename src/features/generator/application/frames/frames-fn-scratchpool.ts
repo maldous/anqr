@@ -4,7 +4,6 @@
  * Notes: Create reusable scratch canvas pool.
  */
 
-import { createElement } from 'react';
 
 
 export function createScratchCanvasPool(): {

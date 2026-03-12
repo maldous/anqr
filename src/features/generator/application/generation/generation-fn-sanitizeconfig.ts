@@ -4,7 +4,7 @@
  * Notes: Sanitize QR generator config to plain object.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { clonePlainSerializable } from '@/features/generator/application/generation/generation-fn-cloneserializable';
 
 

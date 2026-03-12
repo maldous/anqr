@@ -17,7 +17,9 @@ export {
   MemoCache,
   overlayDataCache,
   qrMatrixCache,
+  registerCacheCleanup,
 } from './cache';
+export type { QRCodeObject, QRMatrixCacheEntry, OverlayDataMatrix } from './cache';
 // Re-export CanvasFactory from canvas-factory
 export type { CanvasFactory } from '../../platform/browser/canvas/canvas-factory';
 // Canvas factory

@@ -4,7 +4,6 @@
  * Notes: Simple canvas clone without extra processing.
  */
 
-import { createElement } from 'react';
 
 
 export function cloneCanvasSimple(

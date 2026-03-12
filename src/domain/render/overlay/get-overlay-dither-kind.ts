@@ -1,4 +1,4 @@
-import type { DitherKind } from '../../../modules/dither-algorithms/index';
+import type { DitherKind } from '../../../modules/dither-algorithms';
 import type { OverlayDitherOptions } from './processor.types';
 
 // ============================================

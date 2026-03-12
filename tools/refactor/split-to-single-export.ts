@@ -493,8 +493,8 @@ async function main(): Promise<void> {
   const options = parseArgs();
   const ROOT = process.cwd();
 
-  console.log(`split-to-single-export${options.dryRun ? ' (DRY RUN)' : ''}`);
-  console.log('Loading project...');
+  
+  
 
   const project = new Project({
     tsConfigFilePath: path.join(ROOT, 'tsconfig.json'),
@@ -513,7 +513,7 @@ async function main(): Promise<void> {
     return true;
   });
 
-  console.log(`Found ${sourceFiles.length} qualifying source files to scan.\n`);
+  
 
   let filesProcessed = 0;
   let filesSkipped = 0;
@@ -665,7 +665,7 @@ async function main(): Promise<void> {
       otherTargets.push({ decl, filePath: desiredPath, fileName });
     }
 
-    console.log(`\n--- ${relPath} (${types.length} types, ${others.length} values, ${neededStmts.length} internal helpers) ---`);
+    
 
     // -----------------------------------------------------------------------
     // Write _internal.ts file for non-exported helpers
@@ -689,11 +689,11 @@ async function main(): Promise<void> {
 
       const relInternalPath = path.relative(ROOT, internalFilePath).replace(/\\/g, '/');
       if (options.dryRun) {
-        console.log(`  CREATE ${relInternalPath}  (${neededStmts.length} internal helpers)`);
+        
       } else {
         fs.mkdirSync(path.dirname(internalFilePath), { recursive: true });
         fs.writeFileSync(internalFilePath, content, 'utf8');
-        console.log(`  CREATED ${relInternalPath}`);
+        
       }
       createdFiles.push(relInternalPath);
       filesCreated++;
@@ -741,11 +741,11 @@ async function main(): Promise<void> {
 
       const relTypesPath = path.relative(ROOT, typesFilePath).replace(/\\/g, '/');
       if (options.dryRun) {
-        console.log(`  CREATE ${relTypesPath}  (${types.length} type exports)`);
+        
       } else {
         fs.mkdirSync(path.dirname(typesFilePath), { recursive: true });
         fs.writeFileSync(typesFilePath, content, 'utf8');
-        console.log(`  CREATED ${relTypesPath}`);
+        
       }
       createdFiles.push(relTypesPath);
       filesCreated++;
@@ -810,11 +810,11 @@ async function main(): Promise<void> {
 
       const relTargetPath = path.relative(ROOT, targetPath).replace(/\\/g, '/');
       if (options.dryRun) {
-        console.log(`  CREATE ${relTargetPath}  (export: ${decl.name})`);
+        
       } else {
         fs.mkdirSync(path.dirname(targetPath), { recursive: true });
         fs.writeFileSync(targetPath, content, 'utf8');
-        console.log(`  CREATED ${relTargetPath}`);
+        
       }
       createdFiles.push(relTargetPath);
       filesCreated++;
@@ -842,17 +842,17 @@ async function main(): Promise<void> {
     );
 
     if (options.dryRun) {
-      console.log(`  MODIFY ${relPath}  → barrel re-export`);
-      console.log(`    Barrel content preview:`);
+      
+      
       for (const line of barrelContent.split('\n').slice(0, 10)) {
-        console.log(`      ${line}`);
+        
       }
       if (barrelContent.split('\n').length > 10) {
-        console.log(`      ... (${barrelContent.split('\n').length - 10} more lines)`);
+        
       }
     } else {
       fs.writeFileSync(filePath, barrelContent, 'utf8');
-      console.log(`  MODIFIED ${relPath} → barrel`);
+      
     }
     modifiedFiles.push(relPath);
     filesModified++;
@@ -862,37 +862,37 @@ async function main(): Promise<void> {
   // -----------------------------------------------------------------------
   // Summary
   // -----------------------------------------------------------------------
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`SUMMARY${options.dryRun ? ' (DRY RUN — no files were written)' : ''}`);
-  console.log(`${'='.repeat(60)}`);
-  console.log(`  Source files scanned:  ${sourceFiles.length}`);
-  console.log(`  Files skipped (≤1 export or special): ${filesSkipped}`);
-  console.log(`  Files split:           ${filesProcessed}`);
-  console.log(`  New files created:     ${filesCreated}`);
-  console.log(`  Original files → barrels: ${filesModified}`);
+  
+  
+  
+  
+  
+  
+  
+  
 
   if (createdFiles.length > 0 && createdFiles.length <= 50) {
-    console.log(`\n  Created files:`);
+    
     for (const f of createdFiles) {
-      console.log(`    + ${f}`);
+      
     }
   }
   if (modifiedFiles.length > 0 && modifiedFiles.length <= 50) {
-    console.log(`\n  Modified (barrel) files:`);
+    
     for (const f of modifiedFiles) {
-      console.log(`    ~ ${f}`);
+      
     }
   }
 
   if (!options.dryRun) {
-    console.log(`\nNext steps:`);
-    console.log(`  1. npx tsc --noEmit   (check for type errors)`);
-    console.log(`  2. Review generated files for correctness`);
-    console.log(`  3. Run your test suite`);
+    
+    
+    
+    
   }
 }
 
 main().catch((err) => {
-  console.error(err);
+  
   process.exit(1);
 });

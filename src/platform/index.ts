@@ -19,5 +19,5 @@ export {
   getGenerationCount,
   resetGenerationCount,
   trackGenerationAndShowAd,
-} from '../modules/platform/index';
-export type { InterstitialType, RewardedType } from '../modules/platform/index';
+} from '../modules/platform';
+export type { InterstitialType, RewardedType } from '../modules/platform';

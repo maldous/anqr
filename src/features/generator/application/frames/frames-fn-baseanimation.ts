@@ -4,8 +4,8 @@
  * Notes: Generate base animation frame set.
  */
 
-import type { AnimationFrame } from '@/modules/animation/types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { AnimationFrame } from '@/modules/animation';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { canvasListToAnimationFrames } from '@/features/generator/application/frames/frames-fn-canvastoframes';
 import { generateJitteredFrameLoop } from '@/features/generator/application/frames/frames-fn-jitteredloop';
 import { generatePatternOnlyFrames } from '@/features/generator/application/frames/frames-fn-patternonly';

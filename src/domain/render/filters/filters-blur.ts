@@ -7,4 +7,4 @@ import { createLogger } from '../../../infra/logging/logger';
 
 const _log = createLogger('GENERATE');
 
-export { blur as applyBoxBlur } from '../../../modules/overlay/index';
+export { blur as applyBoxBlur } from '../../../modules/overlay';

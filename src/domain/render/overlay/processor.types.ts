@@ -1,4 +1,4 @@
-import type { DiffusionKernel, DitherKind, OrderedMatrix } from '../../../modules/dither-algorithms/index';
+import type { DiffusionKernel, DitherKind, OrderedMatrix } from '../../../modules/dither-algorithms';
 import { type FilterOptions } from './overlay-filters';
 
 // ============================================

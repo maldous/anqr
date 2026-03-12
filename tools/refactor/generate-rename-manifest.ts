@@ -164,7 +164,7 @@ const outPath = path.join(ROOT, 'manifests', 'rename-to-arch-doc-naming.json');
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(rows, null, 2) + '\n', 'utf8');
 
-console.log(`Generated ${rows.length} rename entries → ${path.relative(ROOT, outPath)}`);
+
 
 // Summary
 const byReason = new Map<string, number>();
@@ -172,5 +172,5 @@ for (const r of rows) {
   byReason.set(r.reason, (byReason.get(r.reason) ?? 0) + 1);
 }
 for (const [reason, count] of byReason) {
-  console.log(`  ${count} × ${reason}`);
+  
 }

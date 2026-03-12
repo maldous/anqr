@@ -1,4 +1,4 @@
-import { getVersionFromModuleCount, isStructuralModule } from '../../../modules/qr-spec/index';
+import { getVersionFromModuleCount, isStructuralModule } from '../../../modules/qr-spec';
 import { getMaskFunction } from './get-mask-function';
 
 /**

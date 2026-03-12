@@ -25,4 +25,4 @@ export { applyCanvasBlendMode } from './apply-canvas-blend-mode';
 export { processOverlay } from './process-overlay';
 
 // Re-export types from dither-algorithms for convenience
-export type { DiffusionKernel, DitherKind, OrderedMatrix } from '../../../modules/dither-algorithms/index';
+export type { DiffusionKernel, DitherKind, OrderedMatrix } from '../../../modules/dither-algorithms';

@@ -11,7 +11,7 @@ import {
   isFormatInfo as isFormatInfoSpec,
   isTimingPattern as isTimingPatternSpec,
   isVersionInfo as isVersionInfoSpec,
-} from '../../../modules/qr-spec/index';
+} from '../../../modules/qr-spec';
 import type { CanvasFactory } from '../../../platform/browser/canvas/canvas-factory';
 import {
   createGradientFill,

@@ -3,7 +3,7 @@
  */
 
 import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from '../../../infra/logging/logger';
-import { decodeQR } from '../../../modules/qr-decoder/index';
+import { decodeQR } from '../../../modules/qr-decoder';
 import { detectContentType, extractDominantColors } from './analyzer-content';
 import type { ContentType, DecoderMetadata, ECCLevel, ErrorType, QRAnalysisResult } from '../../../modules/qr-analyzer/types';
 

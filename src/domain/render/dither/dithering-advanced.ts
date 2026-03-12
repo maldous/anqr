@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
-import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/index';
+import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms';
 import type { QRCodeObject } from '../../../modules/qr-generator/cache';
 import { getOverlayBrightness } from '../overlay/overlay-data-packed';
 import { curveIntensity } from '../generator/pixel-matrix-utils';

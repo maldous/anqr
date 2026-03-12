@@ -4,10 +4,10 @@
  * Notes: Process and post-process a single animation frame.
  */
 
-import type { GifCompositor } from '@/modules/animation/types';
+import type { GifCompositor } from '@/modules/animation';
 import type { TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame } from '@/modules/animation/types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator/types';
+import type { AnimationFrame } from '@/modules/animation';
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { processAnimationFrameLoopIteration } from '@/features/generator/application/frames/frames-fn-loopiter';
 import { applyFramePostProcessing } from '@/features/generator/application/frames/frames-fn-postprocess';
 import { createScratchCanvasPool } from '@/features/generator/application/frames/frames-fn-scratchpool';

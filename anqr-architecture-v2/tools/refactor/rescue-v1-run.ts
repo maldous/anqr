@@ -159,7 +159,7 @@ function reverseWrongIndexPrefixRewrites(project: Project, moveRows: MoveRow[], 
     }
 
     if (dryRun && textChanged) {
-      console.log(`[dry-run] reverse incorrect prefix rewrites in ${normalize(path.relative(ROOT, sf.getFilePath()))}`);
+      
     }
   }
 }
@@ -189,7 +189,7 @@ async function main(): Promise<void> {
   for (const row of revertRows) {
     if (!fs.existsSync(row.targetAbs)) continue;
     if (options.dryRun) {
-      console.log(`[dry-run] revert ${row.target} -> ${row.source}`);
+      
       continue;
     }
     ensureParentDir(row.sourceAbs);
@@ -212,25 +212,25 @@ async function main(): Promise<void> {
     if (!fs.existsSync(row.targetAbs)) continue;
     if (fs.existsSync(row.sourceAbs)) continue;
     if (options.dryRun) {
-      console.log(`[dry-run] create shim ${row.source} -> ${row.target}`);
+      
       continue;
     }
     createCompatibilityShim(project, row.sourceAbs, row.targetAbs);
   }
 
   if (!options.dryRun) {
-    console.log('Rescue complete.');
+    
   } else {
-    console.log('Dry run complete. No files were changed.');
+    
   }
 
-  console.log('Next steps:');
-  console.log('  npm run typecheck');
-  console.log('  npm run depcruise');
-  console.log('  npm run extract:ast');
+  
+  
+  
+  
 }
 
 main().catch((error) => {
-  console.error(error);
+  
   process.exit(1);
 });

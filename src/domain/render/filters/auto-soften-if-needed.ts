@@ -1,4 +1,4 @@
-import { applyFilters } from '../../../modules/overlay/index';
+import { applyFilters } from '../../../modules/overlay';
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
 import { detectBimodalBW } from './detect-bimodal-bw';
 import { softenBWImage } from './soften-bw-image';

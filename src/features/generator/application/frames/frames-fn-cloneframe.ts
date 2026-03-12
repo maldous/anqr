@@ -4,7 +4,6 @@
  * Notes: Clone canvas to new canvas element.
  */
 
-import { createElement } from 'react';
 
 
 export function cloneCanvasFrame(

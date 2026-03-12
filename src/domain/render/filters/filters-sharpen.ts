@@ -7,4 +7,4 @@ import { createLogger } from '../../../infra/logging/logger';
 
 const _log = createLogger('GENERATE');
 
-export { sharpen as applySharpen } from '../../../modules/overlay/index';
+export { sharpen as applySharpen } from '../../../modules/overlay';

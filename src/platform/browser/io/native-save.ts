@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
-import { saveBase64ToDocuments, showNativeToast } from '../../../modules/platform/index';
+import { saveBase64ToDocuments, showNativeToast } from '../../../modules/platform';
 
 const _log = createLogger('DOWNLOAD');
 

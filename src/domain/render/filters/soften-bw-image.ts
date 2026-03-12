@@ -1,4 +1,4 @@
-import { copyImageData, gamma, gaussianBlur } from '../../../modules/overlay/index';
+import { copyImageData, gamma, gaussianBlur } from '../../../modules/overlay';
 import { log } from './log';
 
 /**

@@ -5,4 +5,4 @@ export { extractModuleMatrix } from './extract-module-matrix';
 export {
   getModuleCountForVersion as getModuleCountFromVersion,
   getVersionFromModuleCount,
-} from '../../../modules/qr-spec/index';
+} from '../../../modules/qr-spec';
