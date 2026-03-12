@@ -5,7 +5,7 @@ import {
   generateDeterministicSuffix,
   hashStringToSeed,
 } from './rs-basis';
-import { log } from './log-2';
+import { log } from './log';
 
 export function handleAutoSuffix(
   data: string,

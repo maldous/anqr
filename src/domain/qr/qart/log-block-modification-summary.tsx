@@ -1,4 +1,4 @@
-import { log } from './log-2';
+import { log } from './log';
 import { countDataDiffs } from './count-data-diffs';
 import { countChangedBytes } from './count-changed-bytes';
 

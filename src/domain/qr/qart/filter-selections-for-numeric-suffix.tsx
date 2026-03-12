@@ -1,7 +1,7 @@
 import { QRMode } from '../encode/types';
 import { getLengthInBits } from '../encode/utils';
 import type { FlattenedSelection } from './scan-fallback';
-import { log } from './log-2';
+import { log } from './log';
 import { getNumericBitsCount } from './get-numeric-bits-count';
 import { greedyRemoveInvalidSelections } from './greedy-remove-invalid-selections';
 import { buildNumericGroupMaps } from './build-numeric-group-maps';

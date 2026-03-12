@@ -2,7 +2,7 @@ import { qrBitBuffer } from '../encode/bit-buffer';
 import { getRSBlocks } from '../encode/rs-blocks';
 import { getLengthInBits } from '../encode/utils';
 import type { ECCLevel } from './bit-mapping';
-import { log } from './log-2';
+import { log } from './log';
 import { eccToNumericForEncoder } from './ecc-to-numeric-for-encoder';
 import { writeSegmentsToBuffer } from './write-segments-to-buffer';
 import { computeTwoIntervalSafeRanges } from './compute-two-interval-safe-ranges';

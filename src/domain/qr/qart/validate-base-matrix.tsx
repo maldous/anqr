@@ -1,6 +1,6 @@
 import type { EliminationResult } from './elimination';
 import { type ECCLevel, type FormatVerificationResult, verifyMatrixFormatInfo } from './validation';
-import { log } from './log-3';
+import { log } from './log';
 import { validateByteExactPrefix } from './validate-byte-exact-prefix';
 import { logBaseValidationFailure } from './log-base-validation-failure';
 import type { BaseMatrixResult } from './base-matrix-result';

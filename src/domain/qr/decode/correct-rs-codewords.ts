@@ -1,7 +1,7 @@
 import { buildRSBlockConfigs } from './build-rs-block-configs';
 import { correctAllBlocks } from './correct-all-blocks';
 import { deinterleaveByBlock } from './deinterleave-by-block';
-import { qrDecoderLog } from './qr-decoder-log-4';
+import { qrDecoderLog } from './qr-decoder-log';
 
 /**
  * Correct errors in all RS blocks of a QR code

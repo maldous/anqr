@@ -2,7 +2,7 @@ import type { ECCLevel } from './bit-mapping';
 import type { SemanticValidationResult } from './validation';
 import { stringToBytes } from './string-to-bytes';
 import { toHex } from './to-hex';
-import { log } from './log-2';
+import { log } from './log';
 import type { ScanResult } from './scan-result';
 
 export function evaluateSemanticGateResult(

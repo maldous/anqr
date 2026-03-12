@@ -1,5 +1,5 @@
 import type { ECCLevel } from './bit-mapping';
-import { log } from './log-2';
+import { log } from './log';
 import { encodeDataToBytes } from './encode-data-to-bytes';
 import { verifyBaseMatrixScan } from './verify-base-matrix-scan';
 import type { EncoderDerivedLayout } from './generate.types';

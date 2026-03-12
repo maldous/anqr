@@ -1,7 +1,7 @@
 import { BALANCED_MASK_EARLY_EXIT_THRESHOLD } from './balanced-mask-early-exit-threshold';
 import { BALANCED_MASK_STALL_WINDOW } from './balanced-mask-stall-window';
 import { BALANCED_MASK_STALL_DELTA } from './balanced-mask-stall-delta';
-import { log } from './log-2';
+import { log } from './log';
 import type { FullQArtResult } from './generate.types';
 
 export function checkBalancedMaskEarlyExit(

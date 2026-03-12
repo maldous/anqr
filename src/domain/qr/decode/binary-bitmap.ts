@@ -1,6 +1,6 @@
 import type { BitArray, BitMatrix } from './bit-matrix';
 import { IllegalArgumentException } from './exceptions';
-import { Binarizer } from './binarizer-2';
+import { Binarizer } from './abstract-binarizer';
 
 /**
  * Binary bitmap combining luminance source and binarizer

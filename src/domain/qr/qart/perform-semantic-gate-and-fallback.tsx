@@ -2,7 +2,7 @@ import type { ECCLevel } from './bit-mapping';
 import type { BlockSelectionResult, EliminationResult } from './elimination';
 import { extractFormatInfo } from './validation';
 import { performSemanticValidation } from './perform-semantic-validation';
-import { log } from './log-2';
+import { log } from './log';
 import { validateTimingPatterns } from './validate-timing-patterns';
 import { validateFinderPatterns } from './validate-finder-patterns';
 import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';

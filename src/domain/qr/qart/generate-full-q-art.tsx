@@ -1,7 +1,7 @@
 import { MIN_QART_VERSION } from './rs-basis';
 import type { FullQArtConfig, FullQArtResult } from './generate.types';
 import { generateFullQArtCore } from './generate-full-q-art-core';
-import { log } from './log-2';
+import { log } from './log';
 import { resolvePerformanceSettings } from './resolve-performance-settings';
 import { resolveQArtSuffixConfig } from './resolve-q-art-suffix-config';
 

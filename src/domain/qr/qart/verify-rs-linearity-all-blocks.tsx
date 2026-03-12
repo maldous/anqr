@@ -1,6 +1,6 @@
 import { computeECC } from './rs-basis';
 import { arraysEqual } from './arrays-equal';
-import { log } from './log-2';
+import { log } from './log';
 
 export function verifyRSLinearityAllBlocks(
   modifiedBlockData: Uint8Array[],

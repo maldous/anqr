@@ -1,4 +1,4 @@
-import { log } from './log-4';
+import { log } from './log';
 
 /**
  * Validate that selected vectors only affect allowed bits

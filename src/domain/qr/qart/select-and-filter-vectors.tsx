@@ -8,7 +8,7 @@ import {
 import { buildFullBasis } from './rs-basis';
 import { flattenAndOrderSelectionsLimited } from './scan-fallback';
 import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
-import { log } from './log-2';
+import { log } from './log';
 import { buildBlockSelectionsFromFlattened } from './build-block-selections-from-flattened';
 import { filterSelectionsForNumericSuffix } from './filter-selections-for-numeric-suffix';
 import { logSelectionTiming } from './log-selection-timing';

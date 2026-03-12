@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { eccNumericToLevel, extractMaskFromMatrix } from './validation';
-import { log } from './log-2';
+import { log } from './log';
 
 export function extractActualMaskPattern(
   qr: { isDark: (row: number, col: number) => boolean },

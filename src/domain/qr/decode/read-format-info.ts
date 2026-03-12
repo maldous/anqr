@@ -3,7 +3,7 @@ import { ECC_LEVEL_MAP } from '../../../modules/qr-decoder/types';
 import { findBestFormatMatch } from './find-best-format-match';
 import { hammingDistance } from './hamming-distance';
 import { initFormatTable } from './init-format-table';
-import { qrDecoderLog } from './qr-decoder-log-2';
+import { qrDecoderLog } from './qr-decoder-log';
 import { readFormatBitsCopy1 } from './read-format-bits-copy1';
 import { readFormatBitsCopy2 } from './read-format-bits-copy2';
 

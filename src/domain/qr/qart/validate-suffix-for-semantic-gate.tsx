@@ -1,6 +1,6 @@
 import { type SemanticValidationResult, validateNumericSuffix, validateSuffixCharset } from './validation';
 import { semanticFailure } from './semantic-failure';
-import { log } from './log-2';
+import { log } from './log';
 
 export function validateSuffixForSemanticGate(
   decoded: string,

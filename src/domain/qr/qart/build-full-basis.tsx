@@ -2,7 +2,7 @@ import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 import { type BitRange, mapAllowedRangesToBlocks } from './semantic-layout';
 import type { RSBasis, RSBasisVector } from './rs-basis.types';
 import { basisCache } from './basis-cache';
-import { log } from './log-2';
+import { log } from './log';
 import { updateBasisCacheLru } from './update-basis-cache-lru';
 import { buildBlockBasis } from './build-block-basis';
 

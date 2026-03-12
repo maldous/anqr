@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { type BitRange, mapAllowedRangesToBlocks } from './semantic-layout';
-import { log } from './log-2';
+import { log } from './log';
 import { verifyProtectedBytes } from './verify-protected-bytes';
 import { estimateBlockECCDamage } from './estimate-block-ecc-damage';
 import { verifyRSLinearityAllBlocks } from './verify-rs-linearity-all-blocks';

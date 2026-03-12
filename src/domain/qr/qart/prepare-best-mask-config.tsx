@@ -1,5 +1,5 @@
 import { calculateOptimalVersionAndSuffix } from './rs-basis';
-import { log } from './log-2';
+import { log } from './log';
 import { resolveSharedSuffix } from './resolve-shared-suffix';
 import type { FullQArtConfig } from './generate.types';
 

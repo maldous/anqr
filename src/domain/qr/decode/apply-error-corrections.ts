@@ -1,4 +1,4 @@
-import { qrDecoderLog } from './qr-decoder-log-4';
+import { qrDecoderLog } from './qr-decoder-log';
 import { GF_LOG } from './gf-log';
 import { gfAdd } from './gf-add';
 

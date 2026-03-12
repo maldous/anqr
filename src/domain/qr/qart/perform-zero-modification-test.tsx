@@ -1,5 +1,5 @@
 import type { ECCLevel } from './bit-mapping';
-import { log } from './log-2';
+import { log } from './log';
 import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
 import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
 

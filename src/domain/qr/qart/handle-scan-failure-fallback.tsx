@@ -2,7 +2,7 @@ import type { ECCLevel } from './bit-mapping';
 import type { BlockSelectionResult, EliminationResult } from './elimination';
 import { binarySearchMaxVectors, flattenAndOrderSelections } from './scan-fallback';
 import { performSemanticValidation } from './perform-semantic-validation';
-import { log } from './log-2';
+import { log } from './log';
 import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
 import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
 import type { ScanResult } from './scan-result';

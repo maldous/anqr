@@ -1,5 +1,5 @@
 import { MIN_QART_VERSION } from './rs-basis';
-import { log } from './log-2';
+import { log } from './log';
 
 export function resolveQArtVersion(
   forceVersion: number | undefined,

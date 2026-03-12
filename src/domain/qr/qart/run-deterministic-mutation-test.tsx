@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { validateOriginalDataPreserved } from './validate-original-data-preserved';
-import { log } from './log-2';
+import { log } from './log';
 import { computeLinearBitPosition } from './compute-linear-bit-position';
 import { classifyIntervalStatus } from './classify-interval-status';
 import { applyTestVectorAndScan } from './apply-test-vector-and-scan';

@@ -1,4 +1,4 @@
-import { log } from './log-2';
+import { log } from './log';
 
 export function logSelectionTiming(
   timingEnabled: boolean,

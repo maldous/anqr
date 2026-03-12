@@ -4,7 +4,7 @@ import { findErrorLocations } from './find-error-locations';
 import { findErrorMagnitudes } from './find-error-magnitudes';
 import { isSyndromeZero } from './is-syndrome-zero';
 import { polyDegree } from './poly-degree';
-import { qrDecoderLog } from './qr-decoder-log-4';
+import { qrDecoderLog } from './qr-decoder-log';
 import { runEuclideanAlgorithm } from './run-euclidean-algorithm';
 
 // ============================================

@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { calculateVersionForSlack } from './semantic-layout';
-import { log } from './log-2';
+import { log } from './log';
 import { resolveQArtVersion } from './resolve-q-art-version';
 import { handleUserProvidedSuffix } from './handle-user-provided-suffix';
 import { handleAutoSuffix } from './handle-auto-suffix';

@@ -1,4 +1,4 @@
-import { log } from './log-2';
+import { log } from './log';
 import { checkBlockByteViolations } from './check-block-byte-violations';
 
 export function verifyProtectedBytes(

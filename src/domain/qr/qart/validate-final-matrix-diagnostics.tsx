@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { extractFormatInfo, verifyMatrixFormatInfo } from './validation';
-import { log } from './log-2';
+import { log } from './log';
 import { validateTimingPatterns } from './validate-timing-patterns';
 import { validateFinderPatterns } from './validate-finder-patterns';
 import { analyzeMatrixDiff } from './analyze-matrix-diff';

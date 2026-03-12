@@ -1,5 +1,5 @@
 import type { FinderPattern } from './types';
-import { qrDecoderLog } from './qr-decoder-log-3';
+import { qrDecoderLog } from './qr-decoder-log';
 
 /**
  * Given top-left and two other patterns, determine which is top-right vs bottom-left

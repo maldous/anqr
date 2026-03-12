@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { buildFullBasis } from './rs-basis';
-import { log } from './log-2';
+import { log } from './log';
 import { validateBasisVectorSafety } from './validate-basis-vector-safety';
 import { runDeterministicMutationTest } from './run-deterministic-mutation-test';
 import { buildQArtFailResult } from './build-q-art-fail-result';

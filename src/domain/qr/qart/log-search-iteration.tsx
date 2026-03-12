@@ -1,5 +1,5 @@
 import type { FormatVerificationResult } from './validation';
-import { log } from './log-3';
+import { log } from './log';
 import type { BinarySearchValidationResult } from './binary-search-validation-result';
 
 export function logSearchIteration(

@@ -1,7 +1,7 @@
 import { preprocessImageData } from '../filters/filters-preprocess';
 import type { CreateCanvasFn, QRGeneratorConfig } from '../../../modules/qr-generator/types';
 import { hasPreprocessingOptions } from './has-preprocessing-options';
-import { log } from './log-3';
+import { log } from './log';
 
 /**
  * Preprocess overlay with filters

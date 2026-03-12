@@ -1,6 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
 import { verifyMatrixFormatInfo } from './validation';
-import { log } from './log-2';
+import { log } from './log';
 
 export function logFormatVerificationDiagnostic(
   matrix: boolean[][],

@@ -1,7 +1,7 @@
 import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 import type { BitRange } from './semantic-layout.types';
 import { findBlockForLinearByte } from './find-block-for-linear-byte';
-import { log } from './log-4';
+import { log } from './log';
 import { logBlockMappingResults } from './log-block-mapping-results';
 
 /**

@@ -1,6 +1,6 @@
 import type { FinderPattern } from './types';
 import { pointDistance } from './utils';
-import { qrDecoderLog } from './qr-decoder-log-3';
+import { qrDecoderLog } from './qr-decoder-log';
 import { orderFinderPatterns } from './order-finder-patterns';
 import type { ScoredTriplet } from './scored-triplet';
 

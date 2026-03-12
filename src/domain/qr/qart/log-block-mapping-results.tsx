@@ -1,5 +1,5 @@
 import type { BitRange } from './semantic-layout.types';
-import { log } from './log-4';
+import { log } from './log';
 
 export function logBlockMappingResults(
   blockAllowedBits: Map<number, Set<number>>,

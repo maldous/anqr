@@ -1,5 +1,5 @@
 import { type RSBlockInfo } from './bit-mapping';
-import { log } from './log-2';
+import { log } from './log';
 import { simulateInterleavingProtection } from './simulate-interleaving-protection';
 
 /**

@@ -1,7 +1,7 @@
 import { buildBitPixelMap, getDataPixelIndices } from './bit-mapping';
 import { applyAllSelectedVectors, countMatchingPixels } from './elimination';
 import { mapImageToTargetsSupersampled } from './image-utils';
-import { log } from './log-2';
+import { log } from './log';
 import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
 import { generateBaseQR } from './generate-base-qr';
 import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';

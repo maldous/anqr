@@ -6,7 +6,7 @@ import type {
   QRGeneratorConfig,
   RGBWithMeta,
 } from '../../../modules/qr-generator/types';
-import { log } from './log-2';
+import { log } from './log';
 import { parseGridSize } from './parse-grid-size';
 import { parseHexColor } from './parse-hex-color';
 import { processSubpixelCell } from './process-subpixel-cell';

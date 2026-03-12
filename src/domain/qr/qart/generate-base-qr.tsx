@@ -1,7 +1,7 @@
 import type { ECCLevel } from './bit-mapping';
 import { computeECC } from './rs-basis';
 import { arraysEqual } from './arrays-equal';
-import { log } from './log-2';
+import { log } from './log';
 import { createQREncoderForGenerate } from './create-qr-encoder-for-generate';
 import { extractActualMaskPattern } from './extract-actual-mask-pattern';
 import { logFormatVerificationDiagnostic } from './log-format-verification-diagnostic';

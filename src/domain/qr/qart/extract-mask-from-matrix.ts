@@ -1,6 +1,6 @@
 import { readFormatInfoFromDecoder } from './read-format-info-from-decoder';
 import { extractFormatInfo } from './extract-format-info';
-import { log } from './log-3';
+import { log } from './log';
 
 /**
  * Extract the actual mask pattern from a QR matrix by reading the format info bits.

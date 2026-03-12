@@ -1,5 +1,5 @@
 import { validateOriginalDataPreserved } from './validate-original-data-preserved';
-import { log } from './log-2';
+import { log } from './log';
 import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
 
 export function verifyBaseMatrixScan(

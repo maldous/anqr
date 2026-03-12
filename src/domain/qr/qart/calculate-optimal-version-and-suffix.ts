@@ -4,7 +4,7 @@ import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 import type { OptimalVersionAndSuffix } from './rs-basis.types';
 import { MIN_QART_VERSION } from './min-qart-version';
 import { evaluateVersionCapacity } from './evaluate-version-capacity';
-import { log } from './log-2';
+import { log } from './log';
 
 /**
  * Calculate the optimal QR version and suffix length to achieve a target control percentage.

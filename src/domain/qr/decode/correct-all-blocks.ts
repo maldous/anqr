@@ -1,4 +1,4 @@
-import { qrDecoderLog } from './qr-decoder-log-4';
+import { qrDecoderLog } from './qr-decoder-log';
 import { correctRSBlock } from './correct-rs-block';
 
 /**

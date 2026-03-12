@@ -1,5 +1,5 @@
 import type { ECCLevel } from './bit-mapping';
-import { log } from './log-2';
+import { log } from './log';
 import { createQREncoderForGenerate } from './create-qr-encoder-for-generate';
 
 export function logMatrixMismatchDiagnostic(

@@ -2,7 +2,7 @@ import type { EliminationResult } from './elimination';
 import { type ECCLevel } from './validation';
 import type { FlattenedSelection, BinarySearchResult } from './scan-fallback.types';
 import { createRejectionHistogram } from './create-rejection-histogram';
-import { log } from './log-3';
+import { log } from './log';
 import { logSearchIteration } from './log-search-iteration';
 import { trackRejection } from './track-rejection';
 import { validateBaseMatrix } from './validate-base-matrix';

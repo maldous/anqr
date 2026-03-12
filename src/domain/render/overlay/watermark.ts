@@ -11,4 +11,20 @@ export { renderTextWatermark } from './render-text-watermark';
 export { renderPatternWatermark } from './render-pattern-watermark';
 export { applyWatermark } from './apply-watermark';
 export { applyWatermarkCenterLogo } from './apply-watermark-center-logo';
-export { Watermark } from './watermark-2';
+
+import { applyWatermark } from './apply-watermark';
+import { applyWatermarkCenterLogo } from './apply-watermark-center-logo';
+import { renderTextWatermark } from './render-text-watermark';
+import { renderPatternWatermark } from './render-pattern-watermark';
+import { calculateWatermarkPositions } from './calculate-watermark-positions';
+import { applyWatermarkBlendMode } from './apply-watermark-blend-mode';
+
+// Namespace export
+export const Watermark = {
+  applyWatermark,
+  applyWatermarkCenterLogo,
+  renderTextWatermark,
+  renderPatternWatermark,
+  calculateWatermarkPositions,
+  applyWatermarkBlendMode,
+};

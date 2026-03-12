@@ -1,4 +1,4 @@
-import { qrDecoderLog } from './qr-decoder-log-3';
+import { qrDecoderLog } from './qr-decoder-log';
 import { computeFinderContrast } from './compute-finder-contrast';
 import { scoreFinderCenter } from './score-finder-center';
 import { searchGrid } from './search-grid';

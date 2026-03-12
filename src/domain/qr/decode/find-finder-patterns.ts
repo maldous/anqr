@@ -1,6 +1,6 @@
 import type { FinderPattern, FinderPatternResult } from '../../../modules/qr-decoder/types';
 import { grayAt } from './gray-at';
-import { qrDecoderLog } from './qr-decoder-log-3';
+import { qrDecoderLog } from './qr-decoder-log';
 import { refineFinderPatternCenter } from './refine-finder-pattern-center';
 import { scanRow } from './scan-row';
 import { verifyVertical } from './verify-vertical';

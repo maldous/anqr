@@ -1,4 +1,4 @@
-import { qrDecoderLog } from './qr-decoder-log-4';
+import { qrDecoderLog } from './qr-decoder-log';
 import { gfMul } from './gf-mul';
 import { gfInv } from './gf-inv';
 import { polyEval } from './poly-eval';
