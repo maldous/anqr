@@ -31,6 +31,7 @@ This v2 package corrects those defects.
 Use `file-move-manifest.safe.json` for the first pass.
 
 This pass:
+
 - moves only direct-move files that are safe at this stage
 - preserves old paths by generating compatibility shims
 - does **not** globally rewrite consumers to new aliases

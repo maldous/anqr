@@ -1,7 +1,9 @@
 import type { QArtPerformanceSettings } from './q-art-performance-settings';
 import type { QArtPerformanceProfile } from './generate.types';
 
-export function resolvePerformanceSettings(profile: QArtPerformanceProfile): QArtPerformanceSettings {
+export function resolvePerformanceSettings(
+  profile: QArtPerformanceProfile
+): QArtPerformanceSettings {
   if (profile === 'quality') {
     return {
       supersampleLevel: 3,

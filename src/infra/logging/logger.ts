@@ -361,7 +361,6 @@ export function saveLogs(filename?: string): void {
   const logs = getStructuredLogs();
 
   if (logs.length === 0) {
-    
     return;
   }
 
@@ -379,8 +378,6 @@ export function saveLogs(filename?: string): void {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-
-  
 }
 
 /**
@@ -395,7 +392,6 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   const logs = filterLogs(scope);
 
   if (logs.length === 0) {
-    
     return;
   }
 
@@ -413,8 +409,6 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-
-  
 }
 
 /**

@@ -1,6 +1,5 @@
 import { qrBitBuffer } from '../encode/bit-buffer';
 import { getRSBlocks } from '../encode/rs-blocks';
-import { getLengthInBits } from '../encode/utils';
 import type { ECCLevel } from './bit-mapping';
 import { log } from './log';
 import { eccToNumericForEncoder } from './ecc-to-numeric-for-encoder';

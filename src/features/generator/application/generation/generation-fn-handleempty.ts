@@ -6,7 +6,6 @@
 
 import { clearDisplayCanvas } from '@/features/generator/application/generation/generation-fn-cleardisplay';
 
-
 export function handleEmptyContent(params: {
   trimmedContent: string;
   isStaleRequest: () => boolean;
@@ -27,4 +26,3 @@ export function handleEmptyContent(params: {
   clearDisplayCanvas(params.canvasRef.current);
   return { handled: true };
 }
-

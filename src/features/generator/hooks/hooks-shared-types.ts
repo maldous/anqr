@@ -5,5 +5,4 @@
 
 import { UseQRGeneratorResult } from '@/features/generator/hooks/hooks-interface-result';
 
-
 export type { UseQRGeneratorResult } from '@/hooks/useQRGenerator';

@@ -1,4 +1,4 @@
-import type { HSL, RGB } from '../../../modules/core/types';
+import type { HSL } from '../../../modules/core/types';
 
 /** Convert RGB to HSL */
 export function rgbToHsl(r: number, g: number, b: number): HSL {

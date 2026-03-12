@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildSafetyIntensityParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildSafetyIntensityParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.maxOverlayIntensityL !== undefined && config.maxOverlayIntensityL !== 100)
     params.set('maxIntL', config.maxOverlayIntensityL.toString());
   if (config.maxOverlayIntensityM !== undefined && config.maxOverlayIntensityM !== 100)

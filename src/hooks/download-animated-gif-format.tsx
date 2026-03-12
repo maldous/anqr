@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import type { AnimationFrame } from '../domain/render/animation';
 import { log } from './log';
 import type { ExporterModule } from './exporter-module';

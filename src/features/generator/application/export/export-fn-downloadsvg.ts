@@ -10,7 +10,6 @@ import { expandPackedQArtMatrix } from '@/features/generator/application/generat
 
 const log = createLogger('QR');
 
-
 export async function downloadSvgFormat(params: {
   exporter: ExporterModule;
   exportCanvas: HTMLCanvasElement;
@@ -75,4 +74,3 @@ export async function downloadSvgFormat(params: {
     metadata: svgMetadata,
   } as Parameters<typeof params.exporter.downloadVectorSvg>[1]);
 }
-

@@ -1,10 +1,6 @@
 import { qrcode } from '../encode';
 import { createQRInstanceWithSegments, type MaskPattern } from '../encode/encoder-api';
 import type { ECCLevel } from './bit-mapping';
-import { eccNumericToLevel } from './validation';
-import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
-
-// Note: eccNumericToLevel is defined and exported above
 
 /**
  * Generate a QR matrix from the encoder and extract per-block data

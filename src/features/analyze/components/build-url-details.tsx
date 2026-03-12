@@ -9,7 +9,6 @@ import {
   Ruler,
   Settings,
   Shield,
-  Type,
 } from 'lucide-react';
 import { parseUrlPayload } from './payload-parsers';
 import { buildUrlSocialEntries } from './build-url-social-entries';

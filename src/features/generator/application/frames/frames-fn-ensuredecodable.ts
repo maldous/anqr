@@ -10,7 +10,6 @@ import { cloneCanvasFrame } from '@/features/generator/application/frames/frames
 
 const log = createLogger('QR');
 
-
 export async function ensureDecodableFirstFrameHelper(
   frames: (HTMLCanvasElement | OffscreenCanvas)[],
   expectedContent: string | undefined
@@ -45,4 +44,3 @@ export async function ensureDecodableFirstFrameHelper(
     frameCount: frames.length,
   });
 }
-

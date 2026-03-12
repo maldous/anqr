@@ -808,7 +808,10 @@ export {
   type RejectionHistogram,
   unflattenSelections,
 } from '../../domain/qr/qart/scan-fallback';
-export { generateQArtInWorker, terminateQArtWorker } from '../../platform/worker/qart/worker-client';
+export {
+  generateQArtInWorker,
+  terminateQArtWorker,
+} from '../../platform/worker/qart/worker-client';
 
 // ============================================
 // EXPORTS

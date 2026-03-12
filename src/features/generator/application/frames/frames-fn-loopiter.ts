@@ -14,7 +14,6 @@ import { renderFrameWithLegacyPath } from '@/features/generator/application/fram
 import { createScratchCanvasPool } from '@/features/generator/application/frames/frames-fn-scratchpool';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
-
 export async function processAnimationFrameLoopIteration(params: {
   frameIdx: number;
   frame: AnimationFrame;
@@ -91,4 +90,3 @@ export async function processAnimationFrameLoopIteration(params: {
     generateArtworkFrame: params.generateArtworkFrame,
   });
 }
-

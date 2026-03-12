@@ -1,4 +1,3 @@
-import { hashStringToSeed } from './hash-string-to-seed';
 import { mulberry32 } from './mulberry32';
 
 /**

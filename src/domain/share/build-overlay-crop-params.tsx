@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildOverlayCropParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildOverlayCropParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.cropEnabled) params.set('cropEn', '1');
   if (config.cropX !== undefined && config.cropX !== 0.5)
     params.set('cropX', config.cropX.toString());

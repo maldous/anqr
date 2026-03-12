@@ -1,10 +1,11 @@
-import { createElement } from 'react';
 import type { QRGeneratorConfig } from '../domain/render/generator';
 import { readCanvasImageData } from './read-canvas-image-data';
 import { sanitizeQArtRenderConfig } from './sanitize-q-art-render-config';
 import type { ArtworkFrameState } from './artwork-frame-state';
 
-export function createArtworkFrameState(debouncedConfig: Record<string, unknown>): ArtworkFrameState {
+export function createArtworkFrameState(
+  debouncedConfig: Record<string, unknown>
+): ArtworkFrameState {
   const artworkFrameImageDataCache = new WeakMap<
     HTMLCanvasElement | OffscreenCanvas,
     { frameIdx: number; width: number; height: number; imageData: ImageData }

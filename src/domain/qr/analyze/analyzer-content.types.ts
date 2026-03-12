@@ -1,5 +1,3 @@
-import { averageColor } from './average-color';
-
 // Types
 export interface ImageProperties {
   width: number;

@@ -9,7 +9,6 @@ import { cloneCanvasSimple } from '@/features/generator/application/frames/frame
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
 
-
 export async function applyFramePostProcessing<
   W extends {
     enabled: boolean;
@@ -58,4 +57,3 @@ export async function applyFramePostProcessing<
   }
   return previewFrame;
 }
-

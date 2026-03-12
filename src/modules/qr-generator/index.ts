@@ -23,7 +23,10 @@ export type { QRCodeObject, QRMatrixCacheEntry, OverlayDataMatrix } from './cach
 // Re-export CanvasFactory from canvas-factory
 export type { CanvasFactory } from '../../platform/browser/canvas/canvas-factory';
 // Canvas factory
-export { CanvasPool, defaultBrowserCanvasFactory } from '../../platform/browser/canvas/canvas-factory';
+export {
+  CanvasPool,
+  defaultBrowserCanvasFactory,
+} from '../../platform/browser/canvas/canvas-factory';
 // Color utilities
 export {
   applyPaletteColor,
@@ -59,7 +62,12 @@ export {
 // ECC awareness
 export { getEccWeight, isEccSafeToModify } from '../../domain/qr/spec/ecc';
 // Image filters (re-exported from overlay module)
-export { applyBoxBlur, applyCannyEdge, applySharpen, applySobelEdge } from '../../domain/render/filters/filters';
+export {
+  applyBoxBlur,
+  applyCannyEdge,
+  applySharpen,
+  applySobelEdge,
+} from '../../domain/render/filters/filters';
 // QR-specific preprocessing
 export {
   preprocessImageData,
@@ -77,7 +85,11 @@ export {
   preprocessOverlay,
 } from '../../domain/render/overlay/overlay';
 // Pattern helpers
-export { getAlignmentPositionsCached, isFormatInfo, isVersionInfo } from '../../domain/render/generator/pattern-helpers';
+export {
+  getAlignmentPositionsCached,
+  isFormatInfo,
+  isVersionInfo,
+} from '../../domain/render/generator/pattern-helpers';
 // Pixel matrix generation
 export {
   generatePixelDecisionMatrix,
@@ -91,7 +103,11 @@ export { QRGenerator } from './qr-generator-class';
 export { clearFunctionalMapCache, renderModules } from '../../domain/render/generator/render-loop';
 export type { OverlayModeResult } from '../../domain/render/generator/render-modes';
 // Overlay mode rendering
-export { applyQROverlayMode, computeDarkFactor, computeLightBlend } from '../../domain/render/generator/render-modes';
+export {
+  applyQROverlayMode,
+  computeDarkFactor,
+  computeLightBlend,
+} from '../../domain/render/generator/render-modes';
 // Scaled QR rendering
 export { generateScaledQR } from '../../domain/render/generator/scaled-render';
 // Types from local types.ts

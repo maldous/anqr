@@ -6,7 +6,6 @@
 
 import { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
 
-
 export interface SafetyAdjustmentResult {
   modulePx: number;
   quietZone: number;
@@ -14,4 +13,3 @@ export interface SafetyAdjustmentResult {
   ecc: EccLevel;
   warnings: string[];
 }
-

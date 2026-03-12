@@ -4,8 +4,7 @@
  * Notes: Terminate QArt worker if loaded.
  */
 
-import { getQartModulePromise, setQartModulePromise, loadQArtModule } from '@/features/generator/application/qart/qart-shared-state';
-
+import { getQartModulePromise } from '@/features/generator/application/qart/qart-shared-state';
 
 export function terminateQArtWorkerIfLoaded(): void {
   const qartPromise = getQartModulePromise();
@@ -18,4 +17,3 @@ export function terminateQArtWorkerIfLoaded(): void {
       // Ignore termination errors during teardown.
     });
 }
-

@@ -14,4 +14,3 @@ export function yieldToMainThread(timeout = 50): Promise<void> {
     }
   });
 }
-

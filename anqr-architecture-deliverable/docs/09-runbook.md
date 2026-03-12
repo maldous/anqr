@@ -14,6 +14,7 @@ This runbook is designed to be executable without additional clarification.
 Add the packages from `tools/refactor/package-json.snippet.json`.
 
 Recommended dev dependencies:
+
 - `ts-morph`
 - `typescript`
 - `tsx`
@@ -75,6 +76,7 @@ mkdir -p src/content/{{gallery,i18n,generated}}
 ## 7. Run deterministic direct moves
 
 ### Dry run
+
 ```bash
 npm run refactor:move -- --manifest manifests/file-move-manifest.json --dry-run
 ```
@@ -82,11 +84,13 @@ npm run refactor:move -- --manifest manifests/file-move-manifest.json --dry-run
 Review the output.
 
 ### Real run
+
 ```bash
 npm run refactor:move -- --manifest manifests/file-move-manifest.json
 ```
 
 ### Verify
+
 ```bash
 npm run typecheck
 npm run depcruise
@@ -98,6 +102,7 @@ Commit the direct moves.
 ## 8. Remove broad barrels
 
 Delete only after references are gone:
+
 - `src/modules/index.ts`
 - `src/modules/core/index.ts`
 - other barrel files marked as `delete` or `split`
@@ -107,6 +112,7 @@ Run verification again.
 ## 9. Split the critical files in order
 
 ### Order
+
 1. `src/App.tsx`
 2. `src/hooks/useQRGenerator.ts`
 3. `src/components/Analyze.tsx`
@@ -114,7 +120,9 @@ Run verification again.
 5. `src/modules/qr-generator/qr-generator-class.ts`
 
 ### Method
+
 For each file:
+
 1. open the matching manifest in `manifests/symbol-splits/`
 2. create the destination files listed
 3. move helpers/constants/models first
@@ -129,6 +137,7 @@ Do not split more than one critical file in a single commit.
 ## 10. Decompose `src/modules/qr-generator/**`
 
 After the five critical splits:
+
 1. move direct `qr-generator` files already classified as `move`
 2. split `api.ts`, `index.ts`, `types.ts`, `utils.ts`, `cache.ts`, and `qr-generator-class.ts`
 3. consolidate duplicate color and dithering responsibilities
@@ -137,6 +146,7 @@ After the five critical splits:
 ## 11. Normalise type ownership
 
 Move:
+
 - QR-specific enums to `src/domain/qr/**`
 - render and output enums to `src/domain/render/**`
 - payload helper types and serializers to `src/domain/payload/**`
@@ -147,6 +157,7 @@ Keep only state models and store logic under `src/state/**`.
 ## 12. Enable strict enforcement
 
 Once the move and split work is stable:
+
 1. promote dependency-cruiser violations from warning to error
 2. enable eslint boundaries in the default lint command
 3. add architecture checks to CI required status checks

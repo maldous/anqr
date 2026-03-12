@@ -12,7 +12,6 @@ import { loadFileAsCanvas } from '@/features/generator/application/input/input-f
 
 const log = createLogger('QR');
 
-
 export function loadAnimatedWebPOverlayFile(
   file: File,
   gifDisposalHandling: 'respect' | 'simplify' | undefined,
@@ -56,4 +55,3 @@ export function loadAnimatedWebPOverlayFile(
       setIsLoadingOverlay(false);
     });
 }
-

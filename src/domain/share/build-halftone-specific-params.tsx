@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildHalftoneSpecificParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildHalftoneSpecificParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.halftoneCell && config.halftoneCell !== 'per_module')
     params.set('htCell', config.halftoneCell);
   if (config.halftoneDotShape && config.halftoneDotShape !== 'circle')

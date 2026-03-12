@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function applyFitTransform(
   workingCanvas: HTMLCanvasElement,
   fitMode: string

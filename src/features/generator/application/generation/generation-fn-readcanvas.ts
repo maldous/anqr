@@ -22,4 +22,3 @@ export function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas)
   }
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
-

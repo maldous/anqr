@@ -1,6 +1,10 @@
 import { rgbToGray } from '../../../modules/dither-algorithms/utils';
 
-export function computeSobelEdgeMap(imageData: Float32Array[], width: number, height: number): number[][] {
+export function computeSobelEdgeMap(
+  imageData: Float32Array[],
+  width: number,
+  height: number
+): number[][] {
   const edgeMap: number[][] = [];
   for (let y = 0; y < height; y++) {
     edgeMap.push(new Array(width).fill(0));

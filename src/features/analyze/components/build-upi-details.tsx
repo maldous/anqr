@@ -1,11 +1,4 @@
-import {
-  CreditCard,
-  FileText,
-  Hash,
-  MessageSquare,
-  Settings,
-  Smartphone,
-} from 'lucide-react';
+import { CreditCard, FileText, Hash, MessageSquare, Settings, Smartphone } from 'lucide-react';
 import { parseUpiPayload } from './payload-parsers';
 import type { DetailEntry } from './detail-entry';
 

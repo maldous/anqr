@@ -49,7 +49,11 @@ export {
   generateVietQR,
 } from '../../domain/payload/payments';
 // Social/Messaging generators
-export { generateAppDeepLink, generateMessagingLink, generateSocialProfile } from '../../domain/payload/social';
+export {
+  generateAppDeepLink,
+  generateMessagingLink,
+  generateSocialProfile,
+} from '../../domain/payload/social';
 // Types and constants (canonical source - store imports from here)
 export * from './types';
 export { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from './types';

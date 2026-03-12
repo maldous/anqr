@@ -1,10 +1,4 @@
-import {
-  FileText,
-  Globe,
-  MapPin,
-  Settings,
-  Type,
-} from 'lucide-react';
+import { FileText, Globe, MapPin, Settings } from 'lucide-react';
 import { parseCalendarPayload } from './payload-parsers';
 import type { DetailEntry } from './detail-entry';
 

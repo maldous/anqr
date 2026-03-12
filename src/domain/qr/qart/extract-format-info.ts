@@ -1,5 +1,3 @@
-import { readFormatInfoFromDecoder } from './read-format-info-from-decoder';
-
 /**
  * Extract format info bits from a QR matrix
  * Format info is stored in two places for redundancy

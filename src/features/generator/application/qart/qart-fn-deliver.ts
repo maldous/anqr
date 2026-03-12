@@ -10,7 +10,6 @@ import { QArtPerfSnapshot } from '@/features/generator/application/generation/ge
 import { recordQArtPerfTimings } from '@/features/generator/application/qart/qart-fn-perf';
 import { updateQrMatrixFromResult } from '@/features/generator/application/qart/qart-fn-updatematrix';
 
-
 export async function deliverQArtResult(params: {
   fullQArtCanvas: HTMLCanvasElement;
   watermark: {
@@ -98,4 +97,3 @@ export async function deliverQArtResult(params: {
   params.clearGenerationProgress();
   return { handled: true };
 }
-

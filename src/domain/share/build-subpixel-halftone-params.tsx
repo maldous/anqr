@@ -1,7 +1,10 @@
 import type { ShareConfig } from './types';
 import { buildHalftoneSpecificParams } from './build-halftone-specific-params';
 
-export function buildSubpixelHalftoneParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildSubpixelHalftoneParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.subpixelGridSize && config.subpixelGridSize !== '3x3')
     params.set('spGrid', config.subpixelGridSize);
   if (config.subpixelCenterRule && config.subpixelCenterRule !== 'strict')

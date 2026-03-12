@@ -8,7 +8,6 @@ import { drawToDisplayCanvas } from '@/features/generator/application/generation
 import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function finalizeGeneratedCanvas(params: {
   result: HTMLCanvasElement | OffscreenCanvas | null;
   watermark: {
@@ -64,4 +63,3 @@ export async function finalizeGeneratedCanvas(params: {
     params.runValidationIfNeeded(result, params.effectiveConfig.content as string);
   }
 }
-

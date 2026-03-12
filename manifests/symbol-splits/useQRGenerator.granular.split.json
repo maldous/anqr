@@ -9,7 +9,14 @@
     },
     {
       "targetFile": "src/features/generator/application/generation/generation-const-config.ts",
-      "symbols": ["_PREVIEW_TARGET_FPS", "YIELD_INTERVAL_MS", "CONFIG_DEBOUNCE_MS", "CONFIG_SETTLE_DEBOUNCE_MS", "QART_PERF_OVERLAY_ELEMENT_ID", "ENABLE_QART_PERF_OVERLAY"],
+      "symbols": [
+        "_PREVIEW_TARGET_FPS",
+        "YIELD_INTERVAL_MS",
+        "CONFIG_DEBOUNCE_MS",
+        "CONFIG_SETTLE_DEBOUNCE_MS",
+        "QART_PERF_OVERLAY_ELEMENT_ID",
+        "ENABLE_QART_PERF_OVERLAY"
+      ],
       "notes": "Generation-related constants."
     },
     {

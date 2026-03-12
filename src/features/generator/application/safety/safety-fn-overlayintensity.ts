@@ -6,7 +6,6 @@
 
 import { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
 
-
 export function adjustOverlayIntensity(params: {
   safetyMode: string;
   overlayEnabled: boolean;
@@ -50,4 +49,3 @@ export function adjustOverlayIntensity(params: {
 
   return { intensity: adjusted, warnings };
 }
-

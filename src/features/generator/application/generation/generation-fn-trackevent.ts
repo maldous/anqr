@@ -6,7 +6,6 @@
 
 import { trackEvent } from '@/infra/telemetry/zaraz';
 
-
 export function scheduleTrackEvent(
   eventName: string,
   payload?: Record<string, string | number | boolean>
@@ -20,4 +19,3 @@ export function scheduleTrackEvent(
   }
   setTimeout(run, 0);
 }
-

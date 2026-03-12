@@ -10,4 +10,3 @@ export function checkOverflowContentChanged(
 ): boolean {
   return lastOverflowContent !== null && lastOverflowContent !== currentContent;
 }
-

@@ -6,7 +6,6 @@
 
 import { dispatchRenderCompleteEvent } from '@/features/generator/application/generation/generation-fn-dispatchevent';
 
-
 export function cleanupGenerateState(params: {
   activeQArtRequestAbortRef: { current: AbortController | null };
   qartAbortController: AbortController;
@@ -28,4 +27,3 @@ export function cleanupGenerateState(params: {
     }
   }
 }
-

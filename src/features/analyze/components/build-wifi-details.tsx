@@ -1,13 +1,4 @@
-import {
-  Eye,
-  FileText,
-  Info,
-  Lock,
-  Settings,
-  Shield,
-  Type,
-  Wifi,
-} from 'lucide-react';
+import { Eye, FileText, Info, Lock, Settings, Shield, Wifi } from 'lucide-react';
 import { parseWifiPayload } from './payload-parsers';
 import { buildWifiSecurityBadge } from './build-wifi-security-badge';
 import type { DetailEntry } from './detail-entry';

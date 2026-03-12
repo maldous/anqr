@@ -105,20 +105,62 @@ const pascalCaseFiles = [
   ['src/app/shell/AppShell.tsx', 'src/app/shell/app-shell.tsx'],
   ['src/app/shell/ErrorBoundary.tsx', 'src/app/shell/error-boundary.tsx'],
   ['src/features/analyze/components/content-type-renderers.tsx', null], // already kebab
-  ['src/features/gallery/components/GalleryScreen.tsx', 'src/features/gallery/components/gallery-screen.tsx'],
-  ['src/features/generator/components/Preview.tsx', 'src/features/generator/components/preview.tsx'],
-  ['src/features/generator/components/Sidebar.tsx', 'src/features/generator/components/sidebar.tsx'],
-  ['src/features/generator/components/sections/AnimationSection.tsx', 'src/features/generator/components/sections/animation-section.tsx'],
-  ['src/features/generator/components/sections/MetadataSection.tsx', 'src/features/generator/components/sections/metadata-section.tsx'],
-  ['src/features/generator/components/sections/OutputSection.tsx', 'src/features/generator/components/sections/output-section.tsx'],
-  ['src/features/generator/components/sections/OverlaySection.tsx', 'src/features/generator/components/sections/overlay-section.tsx'],
-  ['src/features/generator/components/sections/PayloadSection.tsx', 'src/features/generator/components/sections/payload-section.tsx'],
-  ['src/features/generator/components/sections/RenderSection.tsx', 'src/features/generator/components/sections/render-section.tsx'],
-  ['src/features/generator/components/sections/SafetySection.tsx', 'src/features/generator/components/sections/safety-section.tsx'],
-  ['src/features/generator/components/sections/ShareSection.tsx', 'src/features/generator/components/sections/share-section.tsx'],
-  ['src/features/generator/components/sections/WatermarkSection.tsx', 'src/features/generator/components/sections/watermark-section.tsx'],
-  ['src/features/onboarding/components/WelcomeModal.tsx', 'src/features/onboarding/components/welcome-modal.tsx'],
-  ['src/platform/ads/components/AdPlaceholder.tsx', 'src/platform/ads/components/ad-placeholder.tsx'],
+  [
+    'src/features/gallery/components/GalleryScreen.tsx',
+    'src/features/gallery/components/gallery-screen.tsx',
+  ],
+  [
+    'src/features/generator/components/Preview.tsx',
+    'src/features/generator/components/preview.tsx',
+  ],
+  [
+    'src/features/generator/components/Sidebar.tsx',
+    'src/features/generator/components/sidebar.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/AnimationSection.tsx',
+    'src/features/generator/components/sections/animation-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/MetadataSection.tsx',
+    'src/features/generator/components/sections/metadata-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/OutputSection.tsx',
+    'src/features/generator/components/sections/output-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/OverlaySection.tsx',
+    'src/features/generator/components/sections/overlay-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/PayloadSection.tsx',
+    'src/features/generator/components/sections/payload-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/RenderSection.tsx',
+    'src/features/generator/components/sections/render-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/SafetySection.tsx',
+    'src/features/generator/components/sections/safety-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/ShareSection.tsx',
+    'src/features/generator/components/sections/share-section.tsx',
+  ],
+  [
+    'src/features/generator/components/sections/WatermarkSection.tsx',
+    'src/features/generator/components/sections/watermark-section.tsx',
+  ],
+  [
+    'src/features/onboarding/components/WelcomeModal.tsx',
+    'src/features/onboarding/components/welcome-modal.tsx',
+  ],
+  [
+    'src/platform/ads/components/AdPlaceholder.tsx',
+    'src/platform/ads/components/ad-placeholder.tsx',
+  ],
   ['src/platform/ads/components/AdUnit.tsx', 'src/platform/ads/components/ad-unit.tsx'],
   ['src/ui/composites/BusyOverlay.tsx', 'src/ui/composites/busy-overlay.tsx'],
   ['src/ui/composites/MobileDivider.tsx', 'src/ui/composites/mobile-divider.tsx'],
@@ -139,17 +181,32 @@ const suffixRenames = [
   ['src/domain/qr/decode/decoder-adapter.ts', 'src/domain/qr/decode/decoder.adapter.ts'],
   // Client files
   ['src/platform/worker/qart/worker-client.ts', 'src/platform/worker/qart/qart.client.ts'],
-  ['src/platform/worker/analyze/validation-worker-client.ts', 'src/platform/worker/analyze/analyze.client.ts'],
+  [
+    'src/platform/worker/analyze/validation-worker-client.ts',
+    'src/platform/worker/analyze/analyze.client.ts',
+  ],
   // Protocol/types
-  ['src/platform/worker/qart/worker-protocol.ts', 'src/platform/worker/qart/qart-protocol.types.ts'],
+  [
+    'src/platform/worker/qart/worker-protocol.ts',
+    'src/platform/worker/qart/qart-protocol.types.ts',
+  ],
   ['src/platform/worker/qart/worker.ts', 'src/platform/worker/qart/qart.worker.ts'],
-  ['src/platform/worker/analyze/validation-worker.ts', 'src/platform/worker/analyze/analyze.worker.ts'],
+  [
+    'src/platform/worker/analyze/validation-worker.ts',
+    'src/platform/worker/analyze/analyze.worker.ts',
+  ],
   // Adapter files in platform
   ['src/platform/browser/clipboard/api.ts', 'src/platform/browser/clipboard/clipboard.adapter.ts'],
   ['src/platform/browser/io/api.ts', 'src/platform/browser/io/io.adapter.ts'],
   ['src/platform/native/ads/admob.ts', 'src/platform/native/ads/admob.adapter.ts'],
-  ['src/platform/native/media-store/media-store.ts', 'src/platform/native/media-store/media-store.adapter.ts'],
-  ['src/platform/native/notifications/native-toast.ts', 'src/platform/native/notifications/native-toast.adapter.ts'],
+  [
+    'src/platform/native/media-store/media-store.ts',
+    'src/platform/native/media-store/media-store.adapter.ts',
+  ],
+  [
+    'src/platform/native/notifications/native-toast.ts',
+    'src/platform/native/notifications/native-toast.adapter.ts',
+  ],
 ] as const;
 
 for (const [source, target] of suffixRenames) {
@@ -164,13 +221,10 @@ const outPath = path.join(ROOT, 'manifests', 'rename-to-arch-doc-naming.json');
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(rows, null, 2) + '\n', 'utf8');
 
-
-
 // Summary
 const byReason = new Map<string, number>();
 for (const r of rows) {
   byReason.set(r.reason, (byReason.get(r.reason) ?? 0) + 1);
 }
 for (const [reason, count] of byReason) {
-  
 }

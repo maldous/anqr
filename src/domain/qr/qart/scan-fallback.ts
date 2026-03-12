@@ -1,4 +1,8 @@
-export type { RejectionHistogram, FlattenedSelection, BinarySearchResult } from './scan-fallback.types';
+export type {
+  RejectionHistogram,
+  FlattenedSelection,
+  BinarySearchResult,
+} from './scan-fallback.types';
 export { flattenAndOrderSelections } from './flatten-and-order-selections';
 export { flattenAndOrderSelectionsLimited } from './flatten-and-order-selections-limited';
 export { unflattenSelections } from './unflatten-selections';

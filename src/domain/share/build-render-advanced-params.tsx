@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildRenderAdvancedParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildRenderAdvancedParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.dotRotation !== undefined && config.dotRotation !== 0)
     params.set('dotRot', config.dotRotation.toString());
   if (config.crispEdges === false) params.set('crisp', '0');

@@ -1,4 +1,8 @@
-import { type AnimationFrame, createGifCompositor, type GifCompositor } from '../domain/render/animation';
+import {
+  type AnimationFrame,
+  createGifCompositor,
+  type GifCompositor,
+} from '../domain/render/animation';
 import { log } from './log';
 import { loadFileAsCanvas } from './load-file-as-canvas';
 

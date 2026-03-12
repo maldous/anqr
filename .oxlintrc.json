@@ -72,6 +72,12 @@
         "src/modules/**/*.ts",
         "src/i18n/**/*.ts",
         "src/App.tsx",
+        "src/app/**/*.ts",
+        "src/app/**/*.tsx",
+        "src/domain/**/*.ts",
+        "src/domain/**/*.tsx",
+        "src/features/**/*.ts",
+        "src/features/**/*.tsx",
         "src/components/**/*.tsx",
         "src/hooks/**/*.ts",
         "netlify/**/*.ts",
@@ -79,6 +85,7 @@
         "scripts/**/*.js",
         "scripts/**/*.mjs",
         "scripts/**/*.ts",
+        "config/**/*.mjs",
         "playwright.config.ts",
         "vite.config.ts",
         "vitest.config.ts",
@@ -92,7 +99,13 @@
       }
     },
     {
-      "files": ["src/hooks/**/*.ts", "tests/**/*.ts"],
+      "files": [
+        "src/hooks/**/*.ts",
+        "src/hooks/**/*.tsx",
+        "src/ui/hooks/**/*.ts",
+        "src/ui/hooks/**/*.tsx",
+        "tests/**/*.ts"
+      ],
       "rules": {
         "unicorn/filename-case": "off"
       }
@@ -103,6 +116,7 @@
         "tailwind.config.js",
         "commitlint.config.cjs",
         ".dependency-cruiser.cjs",
+        "config/**/*.cjs",
         "scripts/**/*.js",
         "scripts/**/*.mjs",
         "scripts/**/*.cjs"
@@ -156,5 +170,16 @@
       }
     }
   ],
-  "ignorePatterns": ["dist", "build", "coverage", "node_modules", ".dist", ".build", ".out"]
+  "ignorePatterns": [
+    "dist",
+    "build",
+    "coverage",
+    "node_modules",
+    ".dist",
+    ".build",
+    ".out",
+    "anqr-architecture-deliverable",
+    "anqr-architecture-v2",
+    "anqr-v3-i18n-fix"
+  ]
 }

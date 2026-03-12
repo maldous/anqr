@@ -10,7 +10,6 @@ import { safeMeasure } from '@/features/generator/application/generation/generat
 
 const log = createLogger('QR');
 
-
 export function recordQArtPerfTimings(params: {
   qartRequestMarked: boolean;
   qartPerfMarkPrefix: string;
@@ -43,4 +42,3 @@ export function recordQArtPerfTimings(params: {
   });
   return { renderMs, previewMs };
 }
-

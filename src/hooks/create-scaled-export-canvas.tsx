@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function createScaledExportCanvas(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   widthPx: number,

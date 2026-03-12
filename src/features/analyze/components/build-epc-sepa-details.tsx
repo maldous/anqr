@@ -1,11 +1,4 @@
-import {
-  CreditCard,
-  FileText,
-  Hash,
-  Info,
-  Settings,
-  Type,
-} from 'lucide-react';
+import { CreditCard, FileText, Hash, Settings } from 'lucide-react';
 import { parseEpcSepaPayload } from './payload-parsers';
 import { CopyButton } from './copy-button';
 import type { DetailEntry } from './detail-entry';

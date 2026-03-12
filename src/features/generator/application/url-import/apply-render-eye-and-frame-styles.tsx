@@ -2,7 +2,10 @@ import type { ShareConfig } from '@/modules/share-links';
 import { useQRStore } from '@/store/qr-store';
 import type { StoreState } from '@/features/generator/model/mobile-split';
 
-export function applyRenderEyeAndFrameStyles(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyRenderEyeAndFrameStyles(
+  params: Partial<ShareConfig>,
+  store: StoreState
+): void {
   if (params.eyeOuterStyle)
     useQRStore.setState((s) => ({
       render: {

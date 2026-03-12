@@ -10,7 +10,6 @@ import { validateInWorker } from '@/modules/qr-analyzer';
 
 const log = createLogger('QR');
 
-
 export function setupValidationRunner(params: {
   requestId: number;
   animationFrameCount: number;
@@ -59,4 +58,3 @@ export function setupValidationRunner(params: {
     }, validationDelay);
   };
 }
-

@@ -3,7 +3,10 @@ import { BitStream } from './bit-stream';
 /**
  * Decode Kanji mode and preserve raw bytes (Shift-JIS).
  */
-export function decodeKanjiDetailed(bits: BitStream, count: number): { text: string; bytes: number[] } {
+export function decodeKanjiDetailed(
+  bits: BitStream,
+  count: number
+): { text: string; bytes: number[] } {
   const bytes: number[] = [];
 
   for (let i = 0; i < count; i++) {

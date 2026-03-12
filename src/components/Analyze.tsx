@@ -2621,7 +2621,11 @@ function AnalyzeResultsHeader({
                 ? t('analyze.noQrDetected', 'No QR Code Found')
                 : t('analyze.failed', 'Analysis Failed')}
             </p>
-            <p className="text-sm opacity-90 whitespace-pre-wrap">{result.errorType === 'no_qr_detected' ? t('analyze.noCodeDetectedInImage', 'No QR code detected in image') : result.error}</p>
+            <p className="text-sm opacity-90 whitespace-pre-wrap">
+              {result.errorType === 'no_qr_detected'
+                ? t('analyze.noCodeDetectedInImage', 'No QR code detected in image')
+                : result.error}
+            </p>
           </div>
         </div>
       )}

@@ -4,18 +4,12 @@
   "groups": [
     {
       "targetFile": "src/features/analyze/components/AnalyzeScreen.tsx",
-      "symbols": [
-        "Analyze"
-      ],
+      "symbols": ["Analyze"],
       "notes": "Final screen composition only."
     },
     {
       "targetFile": "src/features/analyze/model/descriptions.ts",
-      "symbols": [
-        "CONTENT_TYPE_ICONS",
-        "ECC_DESCRIPTIONS",
-        "MASK_DESCRIPTIONS"
-      ],
+      "symbols": ["CONTENT_TYPE_ICONS", "ECC_DESCRIPTIONS", "MASK_DESCRIPTIONS"],
       "notes": "Static descriptions and icon mapping."
     },
     {

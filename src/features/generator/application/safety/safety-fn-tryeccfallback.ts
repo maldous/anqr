@@ -9,7 +9,6 @@ import type { QRGeneratorConfig } from '@/modules/qr-generator';
 
 const log = createLogger('QR');
 
-
 export async function tryEccFallbackGeneration(params: {
   effectiveConfig: Record<string, unknown>;
   eccToTry: readonly ('H' | 'Q' | 'M' | 'L')[];
@@ -52,4 +51,3 @@ export async function tryEccFallbackGeneration(params: {
   }
   return { result: null, succeeded: false };
 }
-

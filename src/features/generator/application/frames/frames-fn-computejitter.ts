@@ -6,7 +6,6 @@
 
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
-
 export function computePatternDrivenJitterValue(
   frameIndex: number,
   totalFrames: number,
@@ -40,4 +39,3 @@ export function computePatternDrivenJitterValue(
   }
   return Math.min(2.4, Math.max(0, Number(jitter.toFixed(3))));
 }
-

@@ -11,7 +11,6 @@ import { loadFileAsCanvas } from '@/features/generator/application/input/input-f
 
 const log = createLogger('QR');
 
-
 export function loadStaticOverlayFile(
   file: File,
   setGifFrames: (f: AnimationFrame[]) => void,
@@ -32,4 +31,3 @@ export function loadStaticOverlayFile(
       setIsLoadingOverlay(false);
     });
 }
-

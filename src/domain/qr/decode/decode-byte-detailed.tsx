@@ -8,7 +8,10 @@ import { BitStream } from './bit-stream';
  * - If decoding yields replacement characters (U+FFFD), fall back to ISO-8859-1 (latin1).
  * This matches how many QR generators treat byte mode when no ECI is present.
  */
-export function decodeByteDetailed(bits: BitStream, count: number): { text: string; bytes: number[] } {
+export function decodeByteDetailed(
+  bits: BitStream,
+  count: number
+): { text: string; bytes: number[] } {
   const bytes: number[] = [];
 
   for (let i = 0; i < count; i++) {

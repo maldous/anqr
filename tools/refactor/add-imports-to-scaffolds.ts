@@ -37,12 +37,15 @@ function parseArgs(): Args {
   let sourcePath = '';
   let dryRun = false;
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--manifest' && argv[i + 1]) { manifestPath = argv[++i]; }
-    else if (argv[i] === '--source' && argv[i + 1]) { sourcePath = argv[++i]; }
-    else if (argv[i] === '--dry-run') { dryRun = true; }
+    if (argv[i] === '--manifest' && argv[i + 1]) {
+      manifestPath = argv[++i];
+    } else if (argv[i] === '--source' && argv[i + 1]) {
+      sourcePath = argv[++i];
+    } else if (argv[i] === '--dry-run') {
+      dryRun = true;
+    }
   }
   if (!manifestPath || !sourcePath) {
-    
     process.exit(1);
   }
   return { manifestPath, sourcePath, dryRun };
@@ -93,8 +96,15 @@ function buildExternalSymbolMap(sourceContent: string): Map<string, ExternalImpo
     const trimmed = line.trim();
 
     // Stop at first non-import, non-blank, non-comment line
-    if (!inImport && trimmed && !trimmed.startsWith('import ') && !trimmed.startsWith('//') &&
-        !trimmed.startsWith('/*') && !trimmed.startsWith('*') && !trimmed.startsWith('*/')) {
+    if (
+      !inImport &&
+      trimmed &&
+      !trimmed.startsWith('import ') &&
+      !trimmed.startsWith('//') &&
+      !trimmed.startsWith('/*') &&
+      !trimmed.startsWith('*') &&
+      !trimmed.startsWith('*/')
+    ) {
       break;
     }
 
@@ -131,7 +141,10 @@ function processImportLine(line: string, map: Map<string, ExternalImport>): void
   const braceMatch = line.match(/\{([^}]+)\}/);
   if (!braceMatch) return;
 
-  const symbols = braceMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+  const symbols = braceMatch[1]
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   for (const sym of symbols) {
     // Handle "type Foo" within a value import
     const typePrefix = sym.startsWith('type ');
@@ -175,7 +188,10 @@ function findReferencedSymbols(
   }
 
   // Also strip any existing import lines
-  bodyContent = bodyContent.split('\n').filter(l => !l.trim().startsWith('import ')).join('\n');
+  bodyContent = bodyContent
+    .split('\n')
+    .filter((l) => !l.trim().startsWith('import '))
+    .join('\n');
 
   for (const symbol of allKnownSymbols) {
     if (fileOwnSymbols.has(symbol)) continue; // Skip self-defined symbols
@@ -221,7 +237,10 @@ function generateImports(
   externalMap: Map<string, ExternalImport>
 ): string[] {
   // Group imports by module
-  const importGroups = new Map<string, { symbols: string[]; isTypeOnly: boolean; isRelative: boolean }>();
+  const importGroups = new Map<
+    string,
+    { symbols: string[]; isTypeOnly: boolean; isRelative: boolean }
+  >();
 
   for (const symbol of referencedSymbols) {
     // Check internal first (other scaffold files)
@@ -281,10 +300,7 @@ function generateImports(
       }
       if (typeSymbols.length > 0 && valueSymbols.length > 0) {
         // Mixed: use inline type annotations
-        const parts = [
-          ...typeSymbols.map(s => `type ${s}`),
-          ...valueSymbols,
-        ].sort();
+        const parts = [...typeSymbols.map((s) => `type ${s}`), ...valueSymbols].sort();
         lines.push(`import { ${parts.join(', ')} } from '${modulePath}';`);
         continue;
       }
@@ -357,9 +373,6 @@ async function main(): Promise<void> {
   const internalMap = buildInternalSymbolMap(manifest);
   const externalMap = buildExternalSymbolMap(sourceContent);
 
-  
-  
-
   const allKnownSymbols = new Set([...internalMap.keys(), ...externalMap.keys()]);
 
   let filesProcessed = 0;
@@ -369,7 +382,6 @@ async function main(): Promise<void> {
   for (const group of manifest.groups) {
     const targetPath = group.targetFile;
     if (!fs.existsSync(targetPath)) {
-      
       continue;
     }
 
@@ -377,7 +389,6 @@ async function main(): Promise<void> {
 
     // Skip files that already have imports
     if (content.includes('\nimport ')) {
-      
       filesProcessed++;
       continue;
     }
@@ -389,7 +400,6 @@ async function main(): Promise<void> {
     const referenced = findReferencedSymbols(content, allKnownSymbols, fileOwnSymbols);
 
     if (referenced.size === 0) {
-      
       filesProcessed++;
       continue;
     }
@@ -398,7 +408,6 @@ async function main(): Promise<void> {
     const importLines = generateImports(targetPath, referenced, internalMap, externalMap);
 
     if (importLines.length === 0) {
-      
       filesProcessed++;
       continue;
     }
@@ -407,14 +416,10 @@ async function main(): Promise<void> {
     const newContent = insertImports(content, importLines);
 
     if (args.dryRun) {
-      
-      
       for (const line of importLines) {
-        
       }
     } else {
       fs.writeFileSync(targetPath, newContent);
-      
     }
 
     filesProcessed++;
@@ -422,16 +427,10 @@ async function main(): Promise<void> {
     totalImportLines += importLines.length;
   }
 
-  
-  
-  
-  
   if (args.dryRun) {
-    
   }
 }
 
 main().catch((err) => {
-  
   process.exit(1);
 });

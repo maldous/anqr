@@ -16,6 +16,7 @@ This is the right target because the inventory shows that the current structure 
 ## Evidence
 
 ### Global inventory
+
 - 1043 files
 - 5056 symbols
 - 1578 file dependencies
@@ -23,6 +24,7 @@ This is the right target because the inventory shows that the current structure 
 - 224 files with top-level side effects
 
 ### Working architecture set, excluding `src/i18n/static/**`
+
 - 257 files
 - 3130 symbols
 - 749 internal file dependencies
@@ -34,11 +36,13 @@ This is the right target because the inventory shows that the current structure 
 ## Diagnosis
 
 ### Structural strengths
+
 - File-level import graph is acyclic at the working-set level.
 - The codebase is large enough to need automation, but still small enough to refactor safely with explicit manifests and rules.
 - There are already identifiable capability clusters: QR encode/spec, decode/analyze, QArt, rendering, animation, payload generation, share links, platform adapters, UI primitives.
 
 ### Structural problems
+
 1. **Overloaded technical buckets**
    - `src/modules/qr-generator` is not a single coherent module.
    - `src/modules/core` is too generic to be an ownership boundary.
@@ -64,6 +68,7 @@ This is the right target because the inventory shows that the current structure 
 ## Hotspots
 
 ### Highest fan-in files
+
 - `src/lib/logger.ts` — 196 internal importers
 - `src/modules/qr-generator/types.ts` — 27 internal importers
 - `src/components/ui/dynamic-testid.ts` — 22 internal importers
@@ -76,6 +81,7 @@ This is the right target because the inventory shows that the current structure 
 - `src/lib/search-context.tsx` — 11 internal importers
 
 ### Largest current clusters
+
 - `src/modules/qr-generator` — 42 files
 - `src/modules/qr-decoder` — 26 files
 - `src/modules/animation` — 18 files
@@ -88,6 +94,7 @@ This is the right target because the inventory shows that the current structure 
 - `src/components/sections` — 10 files
 
 ### Most symbol-dense files
+
 - `src/hooks/useQRGenerator.ts` — 118 top-level symbols
 - `src/modules/qr-art/generate.ts` — 116 top-level symbols
 - `src/components/Analyze.tsx` — 107 top-level symbols

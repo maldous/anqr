@@ -81,10 +81,7 @@ export class GenericGFPoly {
     const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
     arraycopy(largerCoefficients, 0, sumDiff, 0, lengthDiff);
     for (let i = lengthDiff; i < largerCoefficients.length; i++) {
-      sumDiff[i] = gfAddOrSubtract(
-        smallerCoefficients[i - lengthDiff],
-        largerCoefficients[i]
-      );
+      sumDiff[i] = gfAddOrSubtract(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
     }
     return new GenericGFPoly(this.field, sumDiff);
   }

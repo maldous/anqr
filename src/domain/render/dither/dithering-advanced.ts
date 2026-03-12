@@ -8,7 +8,11 @@ import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-
 import type { QRCodeObject } from '../../../modules/qr-generator/cache';
 import { getOverlayBrightness } from '../overlay/overlay-data-packed';
 import { curveIntensity } from '../generator/pixel-matrix-utils';
-import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type {
+  CreateCanvasFn,
+  OverlayData,
+  QRGeneratorConfig,
+} from '../../../modules/qr-generator/types';
 
 const _log = createLogger('GENERATE');
 

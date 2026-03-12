@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function cloneCanvasFrame(
   source: HTMLCanvasElement | OffscreenCanvas,
   targetCanvas?: HTMLCanvasElement | null

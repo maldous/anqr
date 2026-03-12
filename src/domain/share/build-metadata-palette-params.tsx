@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildMetadataPaletteParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildMetadataPaletteParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.metaTitle) params.set('metaTitle', config.metaTitle);
   if (config.metaAuthor) params.set('metaAuthor', config.metaAuthor);
   if (config.metaCopyright) params.set('metaCopy', config.metaCopyright);

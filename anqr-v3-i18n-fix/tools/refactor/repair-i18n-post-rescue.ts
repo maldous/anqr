@@ -35,27 +35,21 @@ function patchI18nIndex(): void {
 
   if (text !== original) {
     fs.writeFileSync(filePath, text, 'utf8');
-    
   } else {
-    
   }
 }
 
 function ensureAppI18nShim(): void {
   const shimPath = abs('src/app/i18n/index.ts');
-  const shim = [
-    "export * from '../../i18n';",
-    "export { default } from '../../i18n';",
-    '',
-  ].join('\n');
+  const shim = ["export * from '../../i18n';", "export { default } from '../../i18n';", ''].join(
+    '\n'
+  );
   writeIfChanged(shimPath, shim);
-  
 }
 
 function main(): void {
   patchI18nIndex();
   ensureAppI18nShim();
-  
 }
 
 main();

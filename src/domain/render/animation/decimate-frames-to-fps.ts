@@ -1,5 +1,4 @@
-import type { AnimationFrame, GifCompositor } from '../../../modules/animation/types';
-import { decimateCompositorFrames } from './decimate-compositor-frames';
+import type { AnimationFrame } from '../../../modules/animation/types';
 import { calculateSourceFps } from './calculate-source-fps';
 
 /**

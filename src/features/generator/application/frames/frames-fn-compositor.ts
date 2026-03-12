@@ -6,7 +6,6 @@
 
 import type { GifCompositor } from '@/modules/animation';
 
-
 export function updateCompositorToFrame(
   gifCompositor: GifCompositor,
   frameIdx: number,
@@ -25,4 +24,3 @@ export function updateCompositorToFrame(
     }
   }
 }
-

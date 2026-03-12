@@ -14,7 +14,6 @@ import { runArtworkMainThreadFallback } from '@/features/generator/application/s
 
 const log = createLogger('QR');
 
-
 export async function handleArtworkMainThreadFallbackForFrame(params: {
   qartModule: QArtModule;
   qartConfig: Record<string, unknown>;
@@ -56,4 +55,3 @@ export async function handleArtworkMainThreadFallbackForFrame(params: {
   params.rememberSuccessfulFrame(rendered, qartResult.matchPercentage);
   return rendered;
 }
-

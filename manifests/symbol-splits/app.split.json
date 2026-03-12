@@ -4,29 +4,17 @@
   "groups": [
     {
       "targetFile": "src/app/shell/AppShell.tsx",
-      "symbols": [
-        "App",
-        "AppContent",
-        "LazyLoadFallback"
-      ],
+      "symbols": ["App", "AppContent", "LazyLoadFallback"],
       "notes": "Final shell composition only."
     },
     {
       "targetFile": "src/app/routing/page-resolution.ts",
-      "symbols": [
-        "PageView",
-        "ModuleStyleOption",
-        "getPageFromLocation"
-      ],
+      "symbols": ["PageView", "ModuleStyleOption", "getPageFromLocation"],
       "notes": "Routing and page resolution helpers."
     },
     {
       "targetFile": "src/app/seo/head-links.ts",
-      "symbols": [
-        "updateHreflangLinks",
-        "updateCanonicalUrl",
-        "GradientUpdate"
-      ],
+      "symbols": ["updateHreflangLinks", "updateCanonicalUrl", "GradientUpdate"],
       "notes": "Head and document decoration concerns."
     },
     {
@@ -42,16 +30,12 @@
     },
     {
       "targetFile": "src/features/generator/application/url-import/apply-payload-params.ts",
-      "symbols": [
-        "applyTierAndPayloadParams"
-      ],
+      "symbols": ["applyTierAndPayloadParams"],
       "notes": "Payload and tier import from share URL."
     },
     {
       "targetFile": "src/features/generator/application/url-import/apply-encoding-params.ts",
-      "symbols": [
-        "applyQrEncodingParams"
-      ],
+      "symbols": ["applyQrEncodingParams"],
       "notes": "QR encoding settings import."
     },
     {

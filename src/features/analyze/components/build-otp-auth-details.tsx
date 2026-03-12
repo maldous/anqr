@@ -1,11 +1,4 @@
-import {
-  FileText,
-  Hash,
-  Lock,
-  Settings,
-  Shield,
-  Type,
-} from 'lucide-react';
+import { FileText, Hash, Lock, Settings, Shield } from 'lucide-react';
 import { parseOtpAuthPayload } from './payload-parsers';
 import { appendOtpTimingEntries } from './append-otp-timing-entries';
 import type { DetailEntry } from './detail-entry';

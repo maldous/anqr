@@ -35,7 +35,6 @@ function parseArgs(): CliOptions {
 // ---------------------------------------------------------------------------
 function collectErrorFiles(): Set<string> {
   const ROOT = process.cwd();
-  
 
   let tscOutput = '';
   try {
@@ -45,7 +44,7 @@ function collectErrorFiles(): Set<string> {
       stdio: ['pipe', 'pipe', 'pipe'],
       maxBuffer: 50 * 1024 * 1024,
     });
-    
+
     return new Set();
   } catch (err: unknown) {
     const execErr = err as { stdout?: string; stderr?: string };
@@ -60,14 +59,11 @@ function collectErrorFiles(): Set<string> {
   while ((match = errorLineRegex.exec(tscOutput)) !== null) {
     const filePath = match[1].trim();
     // Normalize to absolute path
-    const absPath = path.isAbsolute(filePath)
-      ? filePath
-      : path.resolve(ROOT, filePath);
+    const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(ROOT, filePath);
     const normalized = absPath.replace(/\\/g, '/');
     errorFiles.add(normalized);
   }
 
-  
   return errorFiles;
 }
 
@@ -91,7 +87,7 @@ interface BarrelReExport {
  * (export { X } from './y' and/or export type { X } from './y')
  */
 function parseBarrelFile(content: string): BarrelReExport[] | null {
-  const lines = content.split('\n').filter(l => l.trim().length > 0);
+  const lines = content.split('\n').filter((l) => l.trim().length > 0);
   if (lines.length === 0) return null;
 
   const reExports: BarrelReExport[] = [];
@@ -118,8 +114,8 @@ function parseBarrelFile(content: string): BarrelReExport[] | null {
     const moduleSpecifier = m[3];
     const names = namesStr
       .split(',')
-      .map(n => n.trim())
-      .filter(n => n.length > 0);
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0);
 
     reExports.push({
       names,
@@ -153,10 +149,7 @@ function parseBarrelFile(content: string): BarrelReExport[] | null {
 // ---------------------------------------------------------------------------
 // Step 2b: Resolve re-export paths to actual files on disk
 // ---------------------------------------------------------------------------
-function resolveModuleSpecifier(
-  barrelFilePath: string,
-  moduleSpecifier: string,
-): string | null {
+function resolveModuleSpecifier(barrelFilePath: string, moduleSpecifier: string): string | null {
   const barrelDir = path.dirname(barrelFilePath);
   const basePath = path.resolve(barrelDir, moduleSpecifier);
 
@@ -255,9 +248,7 @@ function parseImportStatement(line: string): ImportStatement | null {
   }
 
   // Default + named: import Foo, { bar } from 'baz'
-  const defaultAndNamedMatch = trimmed.match(
-    /import\s+(?:type\s+)?(\w+)\s*,\s*\{([^}]*)\}\s*from/
-  );
+  const defaultAndNamedMatch = trimmed.match(/import\s+(?:type\s+)?(\w+)\s*,\s*\{([^}]*)\}\s*from/);
   if (defaultAndNamedMatch) {
     const defaultName = defaultAndNamedMatch[1];
     const namedImports = parseNamedImports(defaultAndNamedMatch[2], isTopLevelTypeOnly);
@@ -308,13 +299,13 @@ function parseImportStatement(line: string): ImportStatement | null {
 
 function parseNamedImports(
   raw: string,
-  parentIsTypeOnly: boolean,
+  parentIsTypeOnly: boolean
 ): Array<{ name: string; alias?: string; isTypeOnly: boolean }> {
   return raw
     .split(',')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
-    .map(s => {
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((s) => {
       const isType = s.startsWith('type ');
       const cleaned = s.replace(/^type\s+/, '');
       const parts = cleaned.split(/\s+as\s+/);
@@ -344,9 +335,7 @@ function parseSplitFile(filePath: string): ParsedSplitFile {
         pendingImport += '\n' + line;
         if (/from\s+['"]/.test(line)) {
           // End of multi-line import
-          const parsed = parseImportStatement(
-            pendingImport.replace(/\n/g, ' ')
-          );
+          const parsed = parseImportStatement(pendingImport.replace(/\n/g, ' '));
           if (parsed) {
             parsed.raw = pendingImport;
             imports.push(parsed);
@@ -364,10 +353,7 @@ function parseSplitFile(filePath: string): ParsedSplitFile {
       // Check if this starts an import
       if (trimmed.startsWith('import ')) {
         // Check if it's complete (has 'from' and ends with ;)
-        if (
-          (trimmed.includes("from '") || trimmed.includes('from "')) &&
-          trimmed.endsWith(';')
-        ) {
+        if ((trimmed.includes("from '") || trimmed.includes('from "')) && trimmed.endsWith(';')) {
           const parsed = parseImportStatement(trimmed);
           if (parsed) imports.push(parsed);
         } else if (trimmed.includes("from '") || trimmed.includes('from "')) {
@@ -409,10 +395,10 @@ function parseTypesFile(filePath: string): ParsedSplitFile {
 function mergeImports(
   allImports: ImportStatement[],
   barrelDir: string,
-  excludeSpecifiers: Set<string>,
+  excludeSpecifiers: Set<string>
 ): string[] {
   // Filter out imports that reference the split files themselves (cross-references)
-  const filtered = allImports.filter(imp => {
+  const filtered = allImports.filter((imp) => {
     if (imp.isSideEffect) return true;
     // Resolve the module specifier relative to each file — but since all split
     // files are in the same directory as the barrel, we just check the specifier
@@ -524,15 +510,10 @@ function mergeImports(
       const allTypeOnly = defTypeOnly && !namedEntry.hasValueImport;
       const typeKw = allTypeOnly ? 'type ' : '';
 
-      const namedParts = buildNamedImportParts(
-        namedEntry.names,
-        allTypeOnly,
-      );
+      const namedParts = buildNamedImportParts(namedEntry.names, allTypeOnly);
 
       if (namedParts.length <= 3) {
-        outputLines.push(
-          `import ${typeKw}${name}, { ${namedParts.join(', ')} } from '${spec}';`
-        );
+        outputLines.push(`import ${typeKw}${name}, { ${namedParts.join(', ')} } from '${spec}';`);
       } else {
         outputLines.push(
           `import ${typeKw}${name}, {\n  ${namedParts.join(',\n  ')},\n} from '${spec}';`
@@ -551,20 +532,16 @@ function mergeImports(
     if (entry.names.size === 0) continue;
 
     // Determine if the whole import should be `import type`
-    const allNamesAreTypeOnly = [...entry.names.values()].every(n => n.isTypeOnly);
+    const allNamesAreTypeOnly = [...entry.names.values()].every((n) => n.isTypeOnly);
     const useImportType = allNamesAreTypeOnly;
 
     const typeKw = useImportType ? 'type ' : '';
     const namedParts = buildNamedImportParts(entry.names, useImportType);
 
     if (namedParts.length <= 3) {
-      outputLines.push(
-        `import ${typeKw}{ ${namedParts.join(', ')} } from '${spec}';`
-      );
+      outputLines.push(`import ${typeKw}{ ${namedParts.join(', ')} } from '${spec}';`);
     } else {
-      outputLines.push(
-        `import ${typeKw}{\n  ${namedParts.join(',\n  ')},\n} from '${spec}';`
-      );
+      outputLines.push(`import ${typeKw}{\n  ${namedParts.join(',\n  ')},\n} from '${spec}';`);
     }
   }
 
@@ -573,7 +550,7 @@ function mergeImports(
 
 function buildNamedImportParts(
   names: Map<string, { name: string; alias?: string; isTypeOnly: boolean }>,
-  parentIsTypeOnly: boolean,
+  parentIsTypeOnly: boolean
 ): string[] {
   const parts: string[] = [];
   for (const [, { name, alias, isTypeOnly }] of names) {
@@ -604,21 +581,15 @@ async function main(): Promise<void> {
   const options = parseArgs();
   const ROOT = process.cwd();
 
-  
-  
-
   // Step 1: Collect error files
   const errorFiles = collectErrorFiles();
   if (errorFiles.size === 0) {
-    
     return;
   }
 
   // Step 2: Find all barrel files under src/
   const srcDir = path.join(ROOT, 'src');
   const allTsFiles = findAllTsFiles(srcDir);
-
-  
 
   interface BarrelInfo {
     filePath: string;
@@ -657,8 +628,6 @@ async function main(): Promise<void> {
     });
   }
 
-  
-
   // Step 2b: Determine which barrels need merging
   interface MergeCandidate {
     barrel: BarrelInfo;
@@ -681,10 +650,7 @@ async function main(): Promise<void> {
     }
   }
 
-  
-
   if (mergeCandidates.length === 0) {
-    
     return;
   }
 
@@ -694,12 +660,7 @@ async function main(): Promise<void> {
 
   for (const { barrel, erroredSplitFiles } of mergeCandidates) {
     const relBarrelPath = path.relative(ROOT, barrel.filePath).replace(/\\/g, '/');
-    const erroredRels = erroredSplitFiles.map(f =>
-      path.relative(ROOT, f).replace(/\\/g, '/')
-    );
-
-    
-    
+    const erroredRels = erroredSplitFiles.map((f) => path.relative(ROOT, f).replace(/\\/g, '/'));
 
     // Collect all the module specifiers that point to split files within the
     // same directory (these are the ones created by the split script)
@@ -746,10 +707,7 @@ async function main(): Promise<void> {
       excludeSpecifiers.add(typesSpec);
     }
     // Also exclude specifiers that reference the barrel's own basename-based patterns
-    const barrelBasename = path.basename(
-      barrel.filePath,
-      path.extname(barrel.filePath)
-    );
+    const barrelBasename = path.basename(barrel.filePath, path.extname(barrel.filePath));
     // Companion .types file specifier
     excludeSpecifiers.add(`./${barrelBasename}.types`);
 
@@ -784,29 +742,23 @@ async function main(): Promise<void> {
     }
 
     if (options.dryRun) {
-      
-      
       for (const f of filesToDelete) {
-        
       }
-      
+
       const previewLines = mergedContent.split('\n').slice(0, 20);
       for (const line of previewLines) {
-        
       }
       if (mergedContent.split('\n').length > 20) {
-        
       }
     } else {
       // Write the merged content to the barrel file
       fs.writeFileSync(barrel.filePath, mergedContent, 'utf8');
-      
 
       // Delete split files
       for (const f of filesToDelete) {
         if (fs.existsSync(f)) {
           fs.unlinkSync(f);
-          
+
           filesDeleted++;
         }
       }
@@ -816,21 +768,11 @@ async function main(): Promise<void> {
   }
 
   // Summary
-  
-  
-  
-  
-  
-  
+
   if (!options.dryRun) {
-    
   }
 
   if (!options.dryRun) {
-    
-    
-    
-    
   }
 }
 
@@ -867,6 +809,5 @@ function findAllTsFiles(dir: string): string[] {
 }
 
 main().catch((err) => {
-  
   process.exit(1);
 });

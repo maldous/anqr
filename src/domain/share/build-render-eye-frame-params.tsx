@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildRenderEyeFrameParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildRenderEyeFrameParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.eyeOuterStyle && config.eyeOuterStyle !== 'square')
     params.set('eyeOuter', config.eyeOuterStyle);
   if (config.eyeInnerStyle && config.eyeInnerStyle !== 'square')

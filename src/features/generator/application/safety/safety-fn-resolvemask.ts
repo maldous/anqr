@@ -13,4 +13,3 @@ export function resolveArtworkMaskPattern(
   if (artworkLockedMask >= 0) return artworkLockedMask;
   return configMaskPattern;
 }
-

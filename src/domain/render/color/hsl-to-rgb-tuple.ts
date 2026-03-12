@@ -1,4 +1,3 @@
-import type { HSL, RGB } from '../../../modules/core/types';
 import { hslToRgb } from './hsl-to-rgb';
 
 /**

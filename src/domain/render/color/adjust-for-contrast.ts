@@ -1,9 +1,4 @@
-import {
-  getContrastRatio,
-  hslToRgb,
-  parseColor,
-  rgbToHsl,
-} from './color';
+import { getContrastRatio, hslToRgb, parseColor, rgbToHsl } from './color';
 
 /**
  * Adjust foreground color to meet minimum contrast ratio

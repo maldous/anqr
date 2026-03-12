@@ -2,7 +2,6 @@ import { alignmentCache } from './alignment-cache';
 import { overlayDataCache } from './overlay-data-cache';
 import { qrMatrixCache } from './qr-matrix-cache';
 import { _registeredCleanups } from './registered-cleanups';
-import { canvasHashCache } from './canvas-hash-cache';
 
 export function clearQRCaches(): void {
   alignmentCache.clear();

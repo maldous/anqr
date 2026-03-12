@@ -16,7 +16,6 @@ import { runQArtWorkerGeneration } from '@/features/generator/application/qart/q
 
 const log = createLogger('QR');
 
-
 export async function executeQArtWorkerPipeline(params: {
   qartModule: QArtModule;
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas;
@@ -185,4 +184,3 @@ export async function executeQArtWorkerPipeline(params: {
 
   return mkResult(false);
 }
-

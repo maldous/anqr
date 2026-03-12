@@ -7,7 +7,6 @@
 import { applyWatermark, type WatermarkPosition } from '@/domain/render/overlay/watermark';
 import { loadFileAsCanvas } from '@/features/generator/application/input/input-fn-loadfilecanvas';
 
-
 export async function applyWatermarkToCanvas<
   T extends {
     enabled: boolean;
@@ -43,4 +42,3 @@ export async function applyWatermarkToCanvas<
   );
   return watermarked.canvas;
 }
-

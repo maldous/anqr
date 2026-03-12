@@ -16,4 +16,3 @@ export function safeMeasure(name: string, startMark: string, endMark: string): n
     return null;
   }
 }
-

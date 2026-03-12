@@ -33,9 +33,9 @@ function parseArgs(): CliOptions {
 // ---------------------------------------------------------------------------
 function toKebab(name: string): string {
   return name
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')   // camelCase boundary
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2') // camelCase boundary
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2') // consecutive caps
-    .replace(/_/g, '-')                          // underscores
+    .replace(/_/g, '-') // underscores
     .toLowerCase();
 }
 
@@ -78,10 +78,10 @@ type DeclKind = 'type' | 'interface' | 'function' | 'class' | 'const' | 'let' | 
 interface ExportedDecl {
   kind: DeclKind;
   name: string;
-  fullText: string;        // including leading trivia / JSDoc
+  fullText: string; // including leading trivia / JSDoc
   referencedNames: Set<string>;
   isDefault: boolean;
-  isTypeOnly: boolean;     // type alias or interface
+  isTypeOnly: boolean; // type alias or interface
 }
 
 // ---------------------------------------------------------------------------
@@ -109,8 +109,15 @@ function containsJsx(text: string): boolean {
 // ---------------------------------------------------------------------------
 // Collect non-exported statements (module-scoped helpers)
 // ---------------------------------------------------------------------------
-function collectNonExportedStatements(sf: SourceFile): { name: string; fullText: string; definedNames: Set<string>; referencedNames: Set<string> }[] {
-  const stmts: { name: string; fullText: string; definedNames: Set<string>; referencedNames: Set<string> }[] = [];
+function collectNonExportedStatements(
+  sf: SourceFile
+): { name: string; fullText: string; definedNames: Set<string>; referencedNames: Set<string> }[] {
+  const stmts: {
+    name: string;
+    fullText: string;
+    definedNames: Set<string>;
+    referencedNames: Set<string>;
+  }[] = [];
   for (const stmt of sf.getStatements()) {
     // Skip imports
     if (Node.isImportDeclaration(stmt)) continue;
@@ -118,7 +125,8 @@ function collectNonExportedStatements(sf: SourceFile): { name: string; fullText:
     if (Node.isExportDeclaration(stmt)) continue;
     if (Node.isExportAssignment(stmt)) continue;
     // Skip if the statement is exported
-    if ('isExported' in stmt && typeof stmt.isExported === 'function' && stmt.isExported()) continue;
+    if ('isExported' in stmt && typeof stmt.isExported === 'function' && stmt.isExported())
+      continue;
 
     const fullText = stmt.getFullText();
     const definedNames = new Set<string>();
@@ -143,7 +151,12 @@ function collectNonExportedStatements(sf: SourceFile): { name: string; fullText:
       definedNames.add(stmt.getName());
     }
 
-    stmts.push({ name: [...definedNames][0] || '_unnamed_' + stmts.length, fullText, definedNames, referencedNames });
+    stmts.push({
+      name: [...definedNames][0] || '_unnamed_' + stmts.length,
+      fullText,
+      definedNames,
+      referencedNames,
+    });
   }
   return stmts;
 }
@@ -330,10 +343,7 @@ function collectReExports(sf: SourceFile): string[] {
 // ---------------------------------------------------------------------------
 // Filter imports to only those used in a given set of texts
 // ---------------------------------------------------------------------------
-function filterImports(
-  originalImports: string[],
-  usedIdentifiers: Set<string>,
-): string[] {
+function filterImports(originalImports: string[], usedIdentifiers: Set<string>): string[] {
   const result: string[] = [];
 
   for (const importLine of originalImports) {
@@ -346,7 +356,10 @@ function filterImports(
     // Extract named imports from { ... }
     const braceMatch = importLine.match(/\{([^}]+)\}/);
     if (braceMatch) {
-      const symbols = braceMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+      const symbols = braceMatch[1]
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       const kept: string[] = [];
       for (const sym of symbols) {
         // Handle "type Foo", "Foo as Bar"
@@ -446,14 +459,14 @@ function generateBarrel(
   otherExports: { name: string; fileName: string; isDefault: boolean }[],
   typesFileName: string | null,
   existingReExports: string[],
-  originalDir: string,
+  originalDir: string
 ): string {
   const lines: string[] = [];
 
   // Re-export types
   if (typesFileName && typeExports.length > 0) {
     const rel = './' + stripExtension(typesFileName);
-    const typeNames = typeExports.map(t => t.name);
+    const typeNames = typeExports.map((t) => t.name);
     if (typeNames.length <= 3) {
       lines.push(`export type { ${typeNames.join(', ')} } from '${rel}';`);
     } else {
@@ -493,15 +506,12 @@ async function main(): Promise<void> {
   const options = parseArgs();
   const ROOT = process.cwd();
 
-  
-  
-
   const project = new Project({
     tsConfigFilePath: path.join(ROOT, 'tsconfig.json'),
     skipAddingFilesFromTsConfig: false,
   });
 
-  const sourceFiles = project.getSourceFiles().filter(sf => {
+  const sourceFiles = project.getSourceFiles().filter((sf) => {
     const filePath = sf.getFilePath().replace(/\\/g, '/');
     // Must be under src/
     if (!filePath.includes('/src/')) return false;
@@ -512,8 +522,6 @@ async function main(): Promise<void> {
     if (isExempt(relPath)) return false;
     return true;
   });
-
-  
 
   let filesProcessed = 0;
   let filesSkipped = 0;
@@ -526,8 +534,8 @@ async function main(): Promise<void> {
     const filePath = sf.getFilePath();
     const relPath = path.relative(ROOT, filePath).replace(/\\/g, '/');
     const dir = path.dirname(filePath);
-    const ext = path.extname(filePath);                  // .ts or .tsx
-    const basename = path.basename(filePath, ext);        // e.g. "utils"
+    const ext = path.extname(filePath); // .ts or .tsx
+    const basename = path.basename(filePath, ext); // e.g. "utils"
 
     // Collect all exported declarations
     const allDecls = collectExports(sf);
@@ -537,8 +545,8 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const types = allDecls.filter(d => d.isTypeOnly);
-    const others = allDecls.filter(d => !d.isTypeOnly);
+    const types = allDecls.filter((d) => d.isTypeOnly);
+    const others = allDecls.filter((d) => !d.isTypeOnly);
 
     // Special case: if 1 non-type export + only type exports → don't fully split
     // Just extract types to .types.ts and keep original with 1 export
@@ -560,7 +568,7 @@ async function main(): Promise<void> {
     const originalImports = getOriginalImportTexts(sf);
 
     // Build the list of all symbol names from this file
-    const allSymbolNames = new Set(allDecls.map(d => d.name));
+    const allSymbolNames = new Set(allDecls.map((d) => d.name));
 
     // -----------------------------------------------------------------
     // Collect non-exported helper statements
@@ -593,7 +601,7 @@ async function main(): Promise<void> {
     while (changed) {
       changed = false;
       for (const stmt of nonExportedStmts) {
-        const isNeeded = [...stmt.definedNames].some(n => referencedNonExported.has(n));
+        const isNeeded = [...stmt.definedNames].some((n) => referencedNonExported.has(n));
         if (!isNeeded) continue;
         for (const ref of stmt.referencedNames) {
           if (nonExportedNames.has(ref) && !referencedNonExported.has(ref)) {
@@ -605,9 +613,9 @@ async function main(): Promise<void> {
     }
 
     // Filter to only the statements that define referenced names (or have no name but are needed)
-    const neededStmts = nonExportedStmts.filter(s =>
-      [...s.definedNames].some(n => referencedNonExported.has(n)) ||
-      s.definedNames.size === 0 // Include unnamed statements (like standalone calls)
+    const neededStmts = nonExportedStmts.filter(
+      (s) =>
+        [...s.definedNames].some((n) => referencedNonExported.has(n)) || s.definedNames.size === 0 // Include unnamed statements (like standalone calls)
     );
 
     // Build symbol → target file map
@@ -617,7 +625,7 @@ async function main(): Promise<void> {
 
     if (types.length > 0) {
       // Types files with JSX references need .tsx
-      const typesHaveJsx = types.some(t => containsJsx(t.fullText));
+      const typesHaveJsx = types.some((t) => containsJsx(t.fullText));
       const typesExt = typesHaveJsx ? '.tsx' : '.ts';
       typesFileName = `${basename}.types${typesExt}`;
       typesFilePath = safeFilePath(path.join(dir, typesFileName));
@@ -632,7 +640,7 @@ async function main(): Promise<void> {
     let internalFileName: string | null = null;
     if (neededStmts.length > 0) {
       // Detect if any helper contains JSX — use .tsx extension if so
-      const helpersHaveJsx = neededStmts.some(s => containsJsx(s.fullText));
+      const helpersHaveJsx = neededStmts.some((s) => containsJsx(s.fullText));
       const internalExt = helpersHaveJsx ? '.tsx' : '.ts';
       internalFileName = `${basename}._internal${internalExt}`;
       internalFilePath = safeFilePath(path.join(dir, internalFileName));
@@ -665,8 +673,6 @@ async function main(): Promise<void> {
       otherTargets.push({ decl, filePath: desiredPath, fileName });
     }
 
-    
-
     // -----------------------------------------------------------------------
     // Write _internal.ts file for non-exported helpers
     // -----------------------------------------------------------------------
@@ -681,7 +687,7 @@ async function main(): Promise<void> {
       const neededImports = filterImports(originalImports, allHelperIds);
 
       // Build content: imports + re-exported helpers
-      const helperTexts = neededStmts.map(s => makeExportable(s.fullText).trim());
+      const helperTexts = neededStmts.map((s) => makeExportable(s.fullText).trim());
       const parts: string[] = [];
       if (neededImports.length > 0) parts.push(neededImports.join('\n'));
       const importSection = parts.length > 0 ? parts.join('\n') + '\n\n' : '';
@@ -689,11 +695,9 @@ async function main(): Promise<void> {
 
       const relInternalPath = path.relative(ROOT, internalFilePath).replace(/\\/g, '/');
       if (options.dryRun) {
-        
       } else {
         fs.mkdirSync(path.dirname(internalFilePath), { recursive: true });
         fs.writeFileSync(internalFilePath, content, 'utf8');
-        
       }
       createdFiles.push(relInternalPath);
       filesCreated++;
@@ -732,7 +736,7 @@ async function main(): Promise<void> {
         crossRefLines.push(`import { ${symbols.join(', ')} } from '${rel}';`);
       }
 
-      const typeTexts = types.map(t => t.fullText.trim());
+      const typeTexts = types.map((t) => t.fullText.trim());
       const parts: string[] = [];
       if (neededImports.length > 0) parts.push(neededImports.join('\n'));
       if (crossRefLines.length > 0) parts.push(crossRefLines.join('\n'));
@@ -741,11 +745,9 @@ async function main(): Promise<void> {
 
       const relTypesPath = path.relative(ROOT, typesFilePath).replace(/\\/g, '/');
       if (options.dryRun) {
-        
       } else {
         fs.mkdirSync(path.dirname(typesFilePath), { recursive: true });
         fs.writeFileSync(typesFilePath, content, 'utf8');
-        
       }
       createdFiles.push(relTypesPath);
       filesCreated++;
@@ -767,8 +769,11 @@ async function main(): Promise<void> {
         if (refName === decl.name) continue;
         const refTargetFile = symbolToFile.get(refName);
         if (refTargetFile && refTargetFile !== targetPath) {
-          const isType = types.some(t => t.name === refName);
-          const existing = crossRefImports.get(refTargetFile) || { symbols: [], isTypeOnly: isType };
+          const isType = types.some((t) => t.name === refName);
+          const existing = crossRefImports.get(refTargetFile) || {
+            symbols: [],
+            isTypeOnly: isType,
+          };
           if (!existing.symbols.includes(refName)) existing.symbols.push(refName);
           // If any symbol is non-type, the import should be a value import
           if (!isType) existing.isTypeOnly = false;
@@ -785,7 +790,10 @@ async function main(): Promise<void> {
           }
         }
         if (internalSymbols.length > 0) {
-          const existing = crossRefImports.get(internalFilePath) || { symbols: [], isTypeOnly: false };
+          const existing = crossRefImports.get(internalFilePath) || {
+            symbols: [],
+            isTypeOnly: false,
+          };
           for (const s of internalSymbols) {
             if (!existing.symbols.includes(s)) existing.symbols.push(s);
           }
@@ -810,11 +818,9 @@ async function main(): Promise<void> {
 
       const relTargetPath = path.relative(ROOT, targetPath).replace(/\\/g, '/');
       if (options.dryRun) {
-        
       } else {
         fs.mkdirSync(path.dirname(targetPath), { recursive: true });
         fs.writeFileSync(targetPath, content, 'utf8');
-        
       }
       createdFiles.push(relTargetPath);
       filesCreated++;
@@ -823,11 +829,11 @@ async function main(): Promise<void> {
     // -----------------------------------------------------------------------
     // Replace original file with barrel
     // -----------------------------------------------------------------------
-    const typeExportsForBarrel = types.map(t => ({
+    const typeExportsForBarrel = types.map((t) => ({
       name: t.name,
       isDefault: t.isDefault,
     }));
-    const otherExportsForBarrel = otherTargets.map(o => ({
+    const otherExportsForBarrel = otherTargets.map((o) => ({
       name: o.decl.name,
       fileName: o.fileName,
       isDefault: o.decl.isDefault,
@@ -838,21 +844,16 @@ async function main(): Promise<void> {
       otherExportsForBarrel,
       typesFileName,
       existingReExports,
-      dir,
+      dir
     );
 
     if (options.dryRun) {
-      
-      
       for (const line of barrelContent.split('\n').slice(0, 10)) {
-        
       }
       if (barrelContent.split('\n').length > 10) {
-        
       }
     } else {
       fs.writeFileSync(filePath, barrelContent, 'utf8');
-      
     }
     modifiedFiles.push(relPath);
     filesModified++;
@@ -862,37 +863,20 @@ async function main(): Promise<void> {
   // -----------------------------------------------------------------------
   // Summary
   // -----------------------------------------------------------------------
-  
-  
-  
-  
-  
-  
-  
-  
 
   if (createdFiles.length > 0 && createdFiles.length <= 50) {
-    
     for (const f of createdFiles) {
-      
     }
   }
   if (modifiedFiles.length > 0 && modifiedFiles.length <= 50) {
-    
     for (const f of modifiedFiles) {
-      
     }
   }
 
   if (!options.dryRun) {
-    
-    
-    
-    
   }
 }
 
 main().catch((err) => {
-  
   process.exit(1);
 });

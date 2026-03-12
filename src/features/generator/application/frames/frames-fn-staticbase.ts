@@ -8,7 +8,6 @@ import type { AnimationFrame } from '@/modules/animation';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function generateStaticBaseFrames(params: {
   previewScanConfigBase: QRGeneratorConfig;
   frameCount: number;
@@ -23,4 +22,3 @@ export async function generateStaticBaseFrames(params: {
     disposalType: 0,
   }));
 }
-

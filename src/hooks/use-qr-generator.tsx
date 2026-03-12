@@ -1,11 +1,4 @@
-import {
-  createElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   type AnimationFrame,
@@ -17,7 +10,7 @@ import { isTemporalDitherActive, type TemporalDitherMode } from '@/modules/dithe
 import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, terminateValidationWorker } from '@/modules/qr-analyzer';
-import { INTRINSICALLY_SCALED_OVERLAY_MODES, QRGenerator, type QRGeneratorConfig } from '@/modules/qr-generator';
+import { INTRINSICALLY_SCALED_OVERLAY_MODES, type QRGeneratorConfig } from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 import type { UseQRGeneratorResult } from './useQRGenerator.types';
 import { applyCropTransform } from './apply-crop-transform';

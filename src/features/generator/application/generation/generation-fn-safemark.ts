@@ -12,4 +12,3 @@ export function safeMark(name: string): void {
     // Ignore performance API failures
   }
 }
-

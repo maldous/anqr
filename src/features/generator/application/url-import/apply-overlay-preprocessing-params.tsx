@@ -1,7 +1,10 @@
 import type { ShareConfig } from '@/modules/share-links';
 import type { StoreState } from '@/features/generator/model/mobile-split';
 
-export function applyOverlayPreprocessingParams(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyOverlayPreprocessingParams(
+  params: Partial<ShareConfig>,
+  store: StoreState
+): void {
   if (params.colorMode) store.setOverlayColorMode(params.colorMode as 'color' | 'grayscale' | 'bw');
   if (params.brightness !== undefined) store.setOverlayBrightness(params.brightness);
   if (params.contrast !== undefined) store.setOverlayContrast(params.contrast);

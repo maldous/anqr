@@ -113,9 +113,11 @@ src/
 ## Layer responsibilities
 
 ### `app/`
+
 Owns bootstrap, shell composition, routing, static pages, global providers, and runtime initialisation.
 
 Allowed to know:
+
 - `features`
 - `ui`
 - `state`
@@ -124,26 +126,32 @@ Allowed to know:
 - `content`
 
 Must not become:
+
 - a second feature layer
 - a domain logic sink
 
 ### `ui/`
+
 Owns generic visual primitives and purely presentational composites.
 
 Allowed to know:
+
 - other `ui` modules
 - narrow styling helpers
 
 Must not know:
+
 - QR domain concepts
 - browser/native adapters
 - state stores
 - feature-specific orchestration
 
 ### `features/`
+
 Own user-facing workflows and orchestration.
 
 Examples:
+
 - generator configuration workflow
 - analysis workflow
 - gallery browsing
@@ -152,6 +160,7 @@ Examples:
 - monetization UX
 
 Allowed to know:
+
 - `ui`
 - `state`
 - `domain`
@@ -160,28 +169,35 @@ Allowed to know:
 - `content`
 
 Must not know:
+
 - implementation details of other features
 
 ### `state/`
+
 Own shared application state, selectors, reducers/stores, and workflow state models.
 
 Allowed to know:
+
 - `domain`
 - `infra`
 
 Must not know:
+
 - `ui`
 - `app`
 - `platform`
 
 ### `domain/`
+
 Own QR rules, rendering algorithms, payload generation, analysis, QArt, and share semantics.
 
 Allowed to know:
+
 - other domain submodules where explicitly allowed
 - `infra` for narrow abstractions such as logging interfaces if absolutely needed
 
 Must not know:
+
 - React
 - browser APIs
 - native APIs
@@ -189,19 +205,24 @@ Must not know:
 - application pages/components
 
 ### `platform/`
+
 Own concrete adapters to browser, native shell, worker runtime, and other environment boundaries.
 
 Allowed to know:
+
 - `domain`
 - `infra`
 
 Must not know:
+
 - `ui`
 - `features`
 - `app`
 
 ### `infra/`
+
 Own technical services that are not domain logic:
+
 - logging
 - telemetry
 - diagnostics
@@ -209,11 +230,14 @@ Own technical services that are not domain logic:
 - general low-level helpers that remain cross-cutting after decomposition
 
 Must not become:
+
 - a second domain layer
 - a place for business logic
 
 ### `content/`
+
 Own static/generated resources:
+
 - gallery manifests
 - generated showcase files
 - i18n static assets
@@ -223,6 +247,7 @@ Executable code should not live here unless it is a tiny loader/index.
 ## Directory naming standards
 
 ### Allowed names
+
 Prefer names that express ownership and capability:
 
 - `generator`
@@ -235,6 +260,7 @@ Prefer names that express ownership and capability:
 - `logging`
 
 ### Disallowed generic names
+
 Avoid introducing or preserving new generic sinks:
 
 - `core`
@@ -245,6 +271,7 @@ Avoid introducing or preserving new generic sinks:
 - `types`
 
 These names are only acceptable if they are inside a bounded context and narrow in scope, for example:
+
 - `src/domain/qr/encode/types.ts`
 - `src/domain/render/dither/utils.ts`
 
@@ -253,10 +280,12 @@ These names are only acceptable if they are inside a bounded context and narrow 
 Each bounded context may expose **one narrow entry point** at its root if needed.
 
 Examples:
+
 - `src/domain/qr/encode/index.ts`
 - `src/platform/browser/clipboard/index.ts`
 
 Do not recreate:
+
 - root-level `src/modules/index.ts`
 - cross-context public barrels
 - shared `api.ts` files that aggregate unrelated concerns
@@ -286,6 +315,7 @@ For broader flow tests, use a dedicated top-level `tests/` directory.
 ## Ownership principle
 
 Every file must have a single primary owner:
+
 - app
 - ui
 - one feature

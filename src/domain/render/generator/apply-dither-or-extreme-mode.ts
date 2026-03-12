@@ -6,7 +6,10 @@ import type { OverlayModeContext } from './overlay-mode-context';
 import type { OverlayModeResult } from './render-modes.types';
 import { computeDarkFactor } from './compute-dark-factor';
 
-export function applyDitherOrExtremeMode(context: OverlayModeContext, result: OverlayModeResult): void {
+export function applyDitherOrExtremeMode(
+  context: OverlayModeContext,
+  result: OverlayModeResult
+): void {
   const { overlayData, row, col, config, effectiveIntensity, isDark } = context;
   const ditherColor = getOverlayColorPacked(overlayData, row, col);
   if (!ditherColor) return;

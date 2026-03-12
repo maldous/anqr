@@ -5,12 +5,14 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { QArtModule, QArtWorkerResult } from '@/features/generator/application/qart/qart-shared-types';
+import type {
+  QArtModule,
+  QArtWorkerResult,
+} from '@/features/generator/application/qart/qart-shared-types';
 import { handleArtworkMainThreadFallbackForFrame } from '@/features/generator/application/frames/frames-fn-artworkfallback';
 import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 
 const log = createLogger('QR');
-
 
 export async function invokeArtworkWorkerForFrame(params: {
   qartModule: QArtModule;
@@ -77,4 +79,3 @@ export async function invokeArtworkWorkerForFrame(params: {
     return { fallbackCanvas };
   }
 }
-

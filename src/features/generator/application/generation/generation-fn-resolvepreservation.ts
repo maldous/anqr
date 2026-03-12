@@ -6,7 +6,6 @@
 
 import { ResolvedPreservationOptions } from '@/features/generator/application/generation/generation-type-preservation';
 
-
 export function resolveOverlayPreservationOptions(params: {
   overlayEnabled: boolean;
   overlayMode: string | undefined;
@@ -47,4 +46,3 @@ export function resolveOverlayPreservationOptions(params: {
       : params.protectVersionInfo,
   };
 }
-

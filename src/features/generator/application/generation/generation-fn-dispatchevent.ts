@@ -11,4 +11,3 @@ export function dispatchRenderCompleteEvent(success: boolean, errorMessage?: str
     })
   );
 }
-

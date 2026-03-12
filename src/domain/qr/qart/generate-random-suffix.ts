@@ -1,5 +1,3 @@
-import { generateDeterministicSuffix } from './generate-deterministic-suffix';
-
 /**
  * Generate a random URL-safe suffix
  *

@@ -1,4 +1,3 @@
-import { threshold } from './threshold';
 import { sobelEdge } from './sobel-edge';
 import { copyImageData } from './copy-image-data';
 

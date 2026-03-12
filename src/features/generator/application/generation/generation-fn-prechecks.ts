@@ -9,7 +9,6 @@ import { checkOverflowContentChanged } from '@/features/generator/application/ge
 
 const log = createLogger('QR');
 
-
 export function handleGeneratePreChecks(params: {
   lastOverflowContentRef: { current: string | null };
   isOverflowBlockedRef: { current: boolean };
@@ -32,4 +31,3 @@ export function handleGeneratePreChecks(params: {
   }
   return { shouldAbort: false };
 }
-

@@ -1,4 +1,4 @@
-import { type FilterOptions, gamma } from '../../../modules/overlay';
+import type { FilterOptions } from '../../../modules/overlay';
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
 
 /**

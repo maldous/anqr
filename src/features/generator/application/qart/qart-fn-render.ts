@@ -9,7 +9,6 @@ import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { imageBitmapToCanvas } from '@/features/generator/application/generation/generation-fn-bitmaptocanvas';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function renderQArtResultToCanvas(params: {
   fullQArtResult: FullQArtPipelineResult;
   workerRenderedBitmap: ImageBitmap | null;
@@ -55,4 +54,3 @@ export async function renderQArtResultToCanvas(params: {
   )) as HTMLCanvasElement;
   return { canvas, usedBitmapRender: false };
 }
-

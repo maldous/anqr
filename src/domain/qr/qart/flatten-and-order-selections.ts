@@ -1,4 +1,8 @@
-import type { BlockEliminationResult, BlockSelectionResult, EliminationResult } from './elimination';
+import type {
+  BlockEliminationResult,
+  BlockSelectionResult,
+  EliminationResult,
+} from './elimination';
 import type { FlattenedSelection } from './scan-fallback.types';
 
 /**

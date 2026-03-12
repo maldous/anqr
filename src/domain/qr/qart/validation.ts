@@ -1,4 +1,8 @@
-export type { RejectionReason, SemanticValidationResult, FormatVerificationResult } from './validation.types';
+export type {
+  RejectionReason,
+  SemanticValidationResult,
+  FormatVerificationResult,
+} from './validation.types';
 export { VALID_SUFFIX_CHARS } from './valid-suffix-chars';
 export { validateSuffixCharset } from './validate-suffix-charset';
 export { validateNumericSuffix } from './validate-numeric-suffix';

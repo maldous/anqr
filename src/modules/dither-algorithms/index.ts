@@ -20,13 +20,26 @@ export {
 // Main apply dither function
 export { applyDither } from '../../domain/render/dither/apply-dither';
 // Error diffusion
-export { distributeErrorWithKernel, errorDiffusion } from '../../domain/render/dither/error-diffusion';
+export {
+  distributeErrorWithKernel,
+  errorDiffusion,
+} from '../../domain/render/dither/error-diffusion';
 // Kernels
 export { DIFFUSION_KERNELS, type DiffusionKernelDef } from '../../domain/render/dither/kernels';
 // Matrices
-export { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from '../../domain/render/dither/matrices';
+export {
+  BAYER_2,
+  BAYER_4,
+  BAYER_8,
+  CLUSTERED_DOT,
+  VOID_CLUSTER,
+} from '../../domain/render/dither/matrices';
 // Noise-based dithering
-export { gaussianNoiseDither, triangularNoiseDither, whiteNoiseDither } from '../../domain/render/dither/noise';
+export {
+  gaussianNoiseDither,
+  triangularNoiseDither,
+  whiteNoiseDither,
+} from '../../domain/render/dither/noise';
 // Ordered dithering
 export { bayerDither, orderedDither } from '../../domain/render/dither/ordered';
 // Temporal dithering

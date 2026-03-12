@@ -2,10 +2,21 @@
  * QR Decoder - uses our own decoder (no external dependencies)
  */
 
-import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from '../../../infra/logging/logger';
+import {
+  createLogger,
+  disableLogBuffer,
+  enableLogBuffer,
+  flushLogBuffer,
+} from '../../../infra/logging/logger';
 import { decodeQR } from '../../../modules/qr-decoder';
 import { detectContentType, extractDominantColors } from './analyzer-content';
-import type { ContentType, DecoderMetadata, ECCLevel, ErrorType, QRAnalysisResult } from '../../../modules/qr-analyzer/types';
+import type {
+  ContentType,
+  DecoderMetadata,
+  ECCLevel,
+  ErrorType,
+  QRAnalysisResult,
+} from '../../../modules/qr-analyzer/types';
 
 const qrAnalyzerLog = createLogger('ANALYZER');
 
@@ -225,11 +236,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     if (!(code?.success && code.data)) {
       qrAnalyzerLog.debug('decode: No QR code detected by our decoder');
-      return buildDecodeFailure(
-        'No QR code detected in image',
-        'no_qr_detected',
-        decodeStartMs
-      );
+      return buildDecodeFailure('No QR code detected in image', 'no_qr_detected', decodeStartMs);
     }
 
     // Extract location info from our decoder

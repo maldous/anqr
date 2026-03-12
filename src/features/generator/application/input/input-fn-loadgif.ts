@@ -12,7 +12,6 @@ import { loadFileAsCanvas } from '@/features/generator/application/input/input-f
 
 const log = createLogger('QR');
 
-
 export function loadGifOverlayFile(
   file: File,
   setGifCompositor: (c: GifCompositor | null) => void,
@@ -53,4 +52,3 @@ export function loadGifOverlayFile(
       setIsLoadingOverlay(false);
     });
 }
-

@@ -1,5 +1,3 @@
-import type { DiffusionKernel } from '../../../modules/dither-algorithms/types';
-
 export interface DiffusionKernelDef {
   matrix: number[][];
   divisor: number;

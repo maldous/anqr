@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function cloneCanvasSimple(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas
 ): HTMLCanvasElement | OffscreenCanvas {

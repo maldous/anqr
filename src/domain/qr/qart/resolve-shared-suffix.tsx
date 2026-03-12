@@ -1,4 +1,8 @@
-import { generateDeterministicNumericSuffix, generateDeterministicSuffix, hashStringToSeed } from './rs-basis';
+import {
+  generateDeterministicNumericSuffix,
+  generateDeterministicSuffix,
+  hashStringToSeed,
+} from './rs-basis';
 import type { FullQArtConfig } from './generate.types';
 
 /**

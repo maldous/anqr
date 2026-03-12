@@ -7,6 +7,7 @@ The companion machine-readable manifests are in `manifests/symbol-splits/`.
 ## 5.1 `src/App.tsx`
 
 ### Current responsibilities
+
 - shell composition
 - lazy page loading
 - page resolution
@@ -32,11 +33,13 @@ src/features/generator/model/mobile-split.ts
 ```
 
 ### Rule
+
 `AppShell` may compose pages and dispatch URL import services, but it must not permanently own parameter-application logic.
 
 ## 5.2 `src/hooks/useQRGenerator.ts`
 
 ### Current responsibilities
+
 - React hook and provider
 - QArt worker orchestration
 - export configuration
@@ -62,11 +65,13 @@ src/domain/render/animation/pattern-effects.ts
 ```
 
 ### Rule
+
 The hook remains a thin controller around application services. It must not remain the home of rendering, export, animation, worker, and safety logic.
 
 ## 5.3 `src/components/Analyze.tsx`
 
 ### Current responsibilities
+
 - page/screen composition
 - analysis input handling
 - reproduction logic
@@ -92,11 +97,13 @@ src/features/analyze/model/formatters.ts
 ```
 
 ### Rule
+
 UI widgets and application orchestration must not remain in one screen file.
 
 ## 5.4 `src/store/qr-store.ts`
 
 ### Current responsibilities
+
 - state store
 - product taxonomy
 - enums for QR/render/animation/output
@@ -116,11 +123,13 @@ src/features/monetization/model/tier.ts
 ```
 
 ### Rule
+
 State owns state shape and state transitions only. Domain enums, payload helper definitions, and serializers move to their owning contexts.
 
 ## 5.5 `src/modules/qr-generator/qr-generator-class.ts`
 
 ### Current responsibilities
+
 - QR generation orchestration
 - scan-gate loops
 - decode rescue passes
@@ -143,11 +152,13 @@ src/domain/render/generator/robustness.ts
 ```
 
 ### Rule
+
 Keep `QRGenerator` as the façade and move loops, rescue logic, and metrics into explicit collaborators.
 
 ## 5.6 `src/modules/qr-generator/types.ts`
 
 ### Current responsibilities
+
 - generator config
 - canvas types
 - overlay types
@@ -164,14 +175,17 @@ src/domain/qr/model/qr-instance.ts
 ```
 
 ### Rule
+
 Do not create another single type gravity well.
 
 ## 5.7 `src/lib/utils.ts`
 
 ### Current responsibilities
+
 - currently only `cn`, but the file name invites future dumping
 
 ### Target decomposition
+
 Rename by actual responsibility. If it remains only `cn`, move it to:
 
 ```text
@@ -185,11 +199,13 @@ src/infra/utilities/classnames.ts
 ```
 
 ### Rule
+
 The file must not continue as `utils.ts`.
 
 ## 5.8 `src/components/Header.tsx`
 
 ### Current responsibilities
+
 - navigation
 - page selection
 - gallery filter behaviour
@@ -209,11 +225,13 @@ src/features/monetization/application/change-tier-with-ad-gate.ts
 ```
 
 ### Rule
+
 Header UI stays in the shell. Business logic for share, tiering, and generator state leaves the component.
 
 ## Split execution pattern
 
 For each split:
+
 1. create destination files
 2. move pure helpers and constants first
 3. move types and models second

@@ -2,7 +2,6 @@ import { QRMode } from '../../../modules/qr-encoder/types';
 import { getLengthInBits } from '../encode/utils';
 import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 import type { OptimalVersionAndSuffix } from './rs-basis.types';
-import { MIN_QART_VERSION } from './min-qart-version';
 import { evaluateVersionCapacity } from './evaluate-version-capacity';
 import { log } from './log';
 

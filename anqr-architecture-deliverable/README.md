@@ -28,6 +28,7 @@ This package is the architecture baseline and migration kit for refactoring ANQR
 This package is based on the extracted inventory you supplied.
 
 Global inventory:
+
 - files: 1043
 - symbols: 5056
 - file dependencies: 1578
@@ -35,6 +36,7 @@ Global inventory:
 - side-effect files: 224
 
 Working architecture set, excluding `src/i18n/static/**`:
+
 - files: 257
 - symbols: 3130
 - internal file dependencies: 749

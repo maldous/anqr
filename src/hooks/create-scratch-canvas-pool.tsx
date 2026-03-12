@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function createScratchCanvasPool(): {
   getPatternScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement;
   getTemporalScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement;

@@ -5,10 +5,12 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { QArtModule, QArtWorkerResult } from '@/features/generator/application/qart/qart-shared-types';
+import type {
+  QArtModule,
+  QArtWorkerResult,
+} from '@/features/generator/application/qart/qart-shared-types';
 
 const log = createLogger('QR');
-
 
 export async function rescueOutlierArtworkFrame(params: {
   qartModule: QArtModule;
@@ -63,4 +65,3 @@ export async function rescueOutlierArtworkFrame(params: {
   }
   return params.originalResult;
 }
-

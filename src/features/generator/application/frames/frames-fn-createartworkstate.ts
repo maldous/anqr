@@ -9,8 +9,9 @@ import { ArtworkFrameState } from '@/features/generator/application/frames/frame
 import { readCanvasImageData } from '@/features/generator/application/generation/generation-fn-readcanvas';
 import { sanitizeQArtRenderConfig } from '@/features/generator/application/generation/generation-fn-sanitizeconfig';
 
-
-export function createArtworkFrameState(debouncedConfig: Record<string, unknown>): ArtworkFrameState {
+export function createArtworkFrameState(
+  debouncedConfig: Record<string, unknown>
+): ArtworkFrameState {
   const artworkFrameImageDataCache = new WeakMap<
     HTMLCanvasElement | OffscreenCanvas,
     { frameIdx: number; width: number; height: number; imageData: ImageData }
@@ -99,4 +100,3 @@ export function createArtworkFrameState(debouncedConfig: Record<string, unknown>
     },
   };
 }
-

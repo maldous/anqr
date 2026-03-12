@@ -1,5 +1,4 @@
 import { decodeGif } from '../../domain/render/animation/gif-codec';
-import { createGifCompositor } from '../../domain/render/animation/gif-compositor';
 import type { AnimationFrame } from './types';
 import { asClampedRgbaView } from './as-clamped-rgba-view';
 import { log } from './log';

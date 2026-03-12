@@ -7,7 +7,6 @@
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function runGeneratorWithSlowStatus(params: {
   cfg: QRGeneratorConfig;
   overlaySource: HTMLCanvasElement | OffscreenCanvas | null;
@@ -35,4 +34,3 @@ export async function runGeneratorWithSlowStatus(params: {
     }
   }
 }
-

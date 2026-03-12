@@ -17,7 +17,6 @@ import { resolveArtworkMaskPattern } from '@/features/generator/application/safe
 
 const log = createLogger('QR');
 
-
 export async function generateArtworkFrameStandalone(params: {
   frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas;
   frameIdx: number;
@@ -129,4 +128,3 @@ export async function generateArtworkFrameStandalone(params: {
   }
   return await fallbackGenerate();
 }
-

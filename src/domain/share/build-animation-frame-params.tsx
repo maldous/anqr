@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildAnimationFrameParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildAnimationFrameParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.startFrame !== undefined && config.startFrame !== 0)
     params.set('startF', config.startFrame.toString());
   if (config.maxFrames !== undefined && config.maxFrames !== 0)

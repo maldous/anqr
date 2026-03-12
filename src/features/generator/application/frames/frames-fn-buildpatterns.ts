@@ -7,7 +7,6 @@
 import type { AnimationPattern } from '@/modules/animation';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
-
 export function buildPatternEffectLists(animationState: {
   pattern: string;
   pattern2: string;
@@ -47,4 +46,3 @@ export function buildPatternEffectLists(animationState: {
   }
   return { modulePatternEffects, resultPatternEffects };
 }
-

@@ -3,17 +3,6 @@ import { copyImageData } from './copy-image-data';
 import { applyPixelEffectFilters } from './apply-pixel-effect-filters';
 import { applyTonalFilters } from './apply-tonal-filters';
 import { log } from './log';
-import { brightness } from './brightness';
-import { contrast } from './contrast';
-import { saturation } from './saturation';
-import { gamma } from './gamma';
-import { invert } from './invert';
-import { grayscale } from './grayscale';
-import { threshold } from './threshold';
-import { posterize } from './posterize';
-import { sharpen } from './sharpen';
-import { blur } from './blur';
-import { duotone } from './duotone';
 
 export function applyFilters(imageData: ImageData, options: FilterOptions): ImageData {
   let result = copyImageData(imageData);

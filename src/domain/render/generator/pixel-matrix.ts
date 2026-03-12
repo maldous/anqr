@@ -11,7 +11,11 @@ import { generateDitherModeMatrix } from './pixel-matrix-dither';
 import { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-dithered';
 import { generateStandardMatrix } from './pixel-matrix-standard';
 import { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from './pixel-matrix-utils';
-import type { PixelDecisionResult, QRCodeInstance, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type {
+  PixelDecisionResult,
+  QRCodeInstance,
+  QRGeneratorConfig,
+} from '../../../modules/qr-generator/types';
 
 export { generateDitherModeMatrix, normalizeColors } from './pixel-matrix-dither';
 export { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-dithered';

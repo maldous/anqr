@@ -1,4 +1,3 @@
-import { saveBase64ToDocuments } from './save-base64-to-documents';
 import type { MediaStoreWriterPlugin } from './media-store.types';
 import { getMediaStoreWriter } from './get-media-store-writer';
 

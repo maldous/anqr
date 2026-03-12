@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function applyCropTransform(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   cropRegion: { x: number; y: number; size: number }

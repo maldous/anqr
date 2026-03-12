@@ -4,8 +4,6 @@
  * Notes: Simple canvas clone without extra processing.
  */
 
-
-
 export function cloneCanvasSimple(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas
 ): HTMLCanvasElement | OffscreenCanvas {
@@ -18,4 +16,3 @@ export function cloneCanvasSimple(
   }
   return cloned;
 }
-

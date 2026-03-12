@@ -8,7 +8,6 @@ import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function generateJitteredFrameLoop(params: {
   previewScanConfigBase: QRGeneratorConfig;
   frameCount: number;
@@ -39,4 +38,3 @@ export async function generateJitteredFrameLoop(params: {
   }
   return collected;
 }
-

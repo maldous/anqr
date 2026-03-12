@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildDitherNoiseParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildDitherNoiseParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.orderedMatrix && config.orderedMatrix !== 'bayer4')
     params.set('matrix', config.orderedMatrix);
   if (config.blueNoiseTileSize !== undefined && config.blueNoiseTileSize !== 64)

@@ -1,5 +1,9 @@
 import type { ECCLevel } from './bit-mapping';
-import { eccNumericToLevel, extractMaskFromMatrix, type SemanticValidationResult } from './validation';
+import {
+  eccNumericToLevel,
+  extractMaskFromMatrix,
+  type SemanticValidationResult,
+} from './validation';
 import { semanticFailure } from './semantic-failure';
 import { validateDecodedPrefix } from './validate-decoded-prefix';
 import { validateSuffixForSemanticGate } from './validate-suffix-for-semantic-gate';

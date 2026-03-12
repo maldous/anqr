@@ -6,7 +6,6 @@
 
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export function updateQrMatrixFromResult(params: {
   usedWorkerBitmapRender: boolean;
   workerPackedMatrix: Uint8Array | null;
@@ -34,4 +33,3 @@ export function updateQrMatrixFromResult(params: {
     params.setQrMatrix(matrixData.matrix);
   }
 }
-

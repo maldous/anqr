@@ -70,7 +70,10 @@ export {
   validateQRCodeRobust,
 } from '../../domain/qr/analyze/scanner';
 // Worker-based validation (off main thread)
-export { terminateValidationWorker, validateInWorker } from '../../platform/worker/analyze/validation-worker-client';
+export {
+  terminateValidationWorker,
+  validateInWorker,
+} from '../../platform/worker/analyze/validation-worker-client';
 
 // Telemetry and statistics
 export {
@@ -86,7 +89,11 @@ export {
   type ScanStats,
 } from '../../domain/qr/analyze/telemetry-logging';
 
-export { type AnalysisStats, aggregateStats, calculateAnalysisStats } from '../../domain/qr/analyze/telemetry-stats';
+export {
+  type AnalysisStats,
+  aggregateStats,
+  calculateAnalysisStats,
+} from '../../domain/qr/analyze/telemetry-stats';
 // Types (canonical source)
 export type {
   ContentType,

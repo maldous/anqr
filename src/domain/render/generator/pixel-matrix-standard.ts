@@ -7,7 +7,11 @@ import { createLogger } from '../../../infra/logging/logger';
 import type { QRCodeObject } from '../../../modules/qr-generator/cache';
 import { getOverlayData } from '../overlay/overlay-data';
 import { normalizeColors } from './pixel-matrix-dither';
-import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type {
+  CreateCanvasFn,
+  PixelDecisionMatrix,
+  QRGeneratorConfig,
+} from '../../../modules/qr-generator/types';
 
 const _log = createLogger('GENERATE');
 

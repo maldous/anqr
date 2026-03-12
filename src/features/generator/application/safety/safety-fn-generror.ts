@@ -10,7 +10,6 @@ import { handleOverflowError } from '@/features/generator/application/safety/saf
 
 const log = createLogger('QR');
 
-
 export async function handleGenerationError(params: {
   error: unknown;
   effectiveConfig: Record<string, unknown>;
@@ -64,4 +63,3 @@ export async function handleGenerationError(params: {
   }
   return { result: null, aborted: true };
 }
-

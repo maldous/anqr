@@ -23,4 +23,3 @@ export function expandPackedQArtMatrix(packed: Uint8Array, moduleCount: number):
   }
   return matrix;
 }
-

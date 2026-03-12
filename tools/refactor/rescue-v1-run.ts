@@ -21,10 +21,7 @@ type MoveRow = {
 };
 
 const ROOT = process.cwd();
-const REVERT_MOVES = new Set([
-  'src/i18n/index.ts',
-  'src/modules/animation/parsing.ts',
-]);
+const REVERT_MOVES = new Set(['src/i18n/index.ts', 'src/modules/animation/parsing.ts']);
 
 function normalize(p: string): string {
   return p.replace(/\\/g, '/');
@@ -94,7 +91,11 @@ function createCompatibilityShim(project: Project, sourceAbs: string, targetAbs:
   fs.writeFileSync(sourceAbs, lines.join('\n'), 'utf8');
 }
 
-function reverseWrongIndexPrefixRewrites(project: Project, moveRows: MoveRow[], dryRun: boolean): void {
+function reverseWrongIndexPrefixRewrites(
+  project: Project,
+  moveRows: MoveRow[],
+  dryRun: boolean
+): void {
   const mappings = moveRows
     .map((row) => ({
       oldAliases: toAliasCandidatesForIndex(row.sourceAbs),
@@ -159,7 +160,6 @@ function reverseWrongIndexPrefixRewrites(project: Project, moveRows: MoveRow[], 
     }
 
     if (dryRun && textChanged) {
-      
     }
   }
 }
@@ -174,7 +174,6 @@ function patchRevertedI18nFile(dryRun: boolean): void {
   text = text.replace(/(['"])\.\/locales\/en-GB\1/g, '$1./locales/en-GB.json$1');
   if (text !== original) {
     if (dryRun) {
-      
     } else {
       fs.writeFileSync(filePath, text, 'utf8');
     }
@@ -206,7 +205,6 @@ async function main(): Promise<void> {
   for (const row of revertRows) {
     if (!fs.existsSync(row.targetAbs)) continue;
     if (options.dryRun) {
-      
       continue;
     }
     ensureParentDir(row.sourceAbs);
@@ -227,7 +225,6 @@ async function main(): Promise<void> {
     if (!fs.existsSync(row.targetAbs)) continue;
     if (fs.existsSync(row.sourceAbs)) continue;
     if (options.dryRun) {
-      
       continue;
     }
     createCompatibilityShim(project, row.sourceAbs, row.targetAbs);
@@ -237,20 +234,12 @@ async function main(): Promise<void> {
   for (const row of revertRows) {
     if (!fs.existsSync(row.sourceAbs)) continue;
     if (options.dryRun) {
-      
       continue;
     }
     createCompatibilityShim(project, row.targetAbs, row.sourceAbs);
   }
-
-  
-  
-  
-  
-  
 }
 
 main().catch((error) => {
-  
   process.exit(1);
 });

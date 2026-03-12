@@ -16,7 +16,11 @@ import {
 import { decodeQR } from '../qr-decoder';
 import { verifyQRStructure } from '../qr-spec';
 import { qrMatrixCache } from './cache';
-import { type CanvasFactory, CanvasPool, defaultBrowserCanvasFactory } from '../../platform/browser/canvas/canvas-factory';
+import {
+  type CanvasFactory,
+  CanvasPool,
+  defaultBrowserCanvasFactory,
+} from '../../platform/browser/canvas/canvas-factory';
 import {
   createGradientFill,
   drawAlignmentPattern,
@@ -32,7 +36,11 @@ import {
   preprocessOverlay,
 } from '../../domain/render/overlay/overlay';
 import { getAlignmentPositionsCached } from '../../domain/render/generator/pattern-helpers';
-import { curveIntensity, getScaleFactor, prepareUnifiedOverlayData } from '../../domain/render/generator/pixel-matrix';
+import {
+  curveIntensity,
+  getScaleFactor,
+  prepareUnifiedOverlayData,
+} from '../../domain/render/generator/pixel-matrix';
 import { renderModules } from '../../domain/render/generator/render-loop';
 import { generateScaledQR } from '../../domain/render/generator/scaled-render';
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from './types';

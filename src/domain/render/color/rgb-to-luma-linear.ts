@@ -1,4 +1,3 @@
-import type { RGB } from '../../../modules/core/types';
 import { srgbToLinear01 } from './srgb-to-linear01';
 
 /** Convert sRGB RGB to linear-light relative luminance in 0..1 */

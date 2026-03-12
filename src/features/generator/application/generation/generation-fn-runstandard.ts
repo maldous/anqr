@@ -10,7 +10,6 @@ import { handleGenerationError } from '@/features/generator/application/safety/s
 
 const log = createLogger('QR');
 
-
 export async function runStandardGeneration(params: {
   effectiveConfig: Record<string, unknown>;
   debouncedConfig: Record<string, unknown>;
@@ -72,4 +71,3 @@ export async function runStandardGeneration(params: {
     });
   }
 }
-

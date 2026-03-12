@@ -13,7 +13,11 @@ import { ChecksumException, FormatException, NotFoundException } from './excepti
 import { BinaryBitmap, type LuminanceSource, RGBALuminanceSource } from './luminance';
 import { Reader } from './reader';
 import { DecodeHintType, type Result, ResultMetadataType } from './result-types';
-import type { DecodeResult, DecoderMetadata, ECCLevelChar } from '../../../modules/qr-decoder/types';
+import type {
+  DecodeResult,
+  DecoderMetadata,
+  ECCLevelChar,
+} from '../../../modules/qr-decoder/types';
 
 /**
  * Create luminance source from ImageData with transparency handling

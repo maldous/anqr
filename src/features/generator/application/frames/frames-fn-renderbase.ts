@@ -9,7 +9,6 @@ import type { AnimationFrame } from '@/modules/animation';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function renderFrameForBaseAnimation(params: {
   hasPattern: boolean;
   hasJitter: boolean;
@@ -32,4 +31,3 @@ export async function renderFrameForBaseAnimation(params: {
   };
   return await qrGenerator.generate(frameConfig, null);
 }
-

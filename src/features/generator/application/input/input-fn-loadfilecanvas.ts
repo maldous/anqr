@@ -4,8 +4,6 @@
  * Notes: Load file as canvas element.
  */
 
-
-
 export async function loadFileAsCanvas(file: File): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -33,4 +31,3 @@ export async function loadFileAsCanvas(file: File): Promise<HTMLCanvasElement> {
     reader.readAsDataURL(file);
   });
 }
-

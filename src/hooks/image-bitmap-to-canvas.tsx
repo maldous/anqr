@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 export function imageBitmapToCanvas(
   bitmap: ImageBitmap,
   targetCanvas?: HTMLCanvasElement

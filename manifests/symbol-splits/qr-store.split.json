@@ -4,36 +4,22 @@
   "groups": [
     {
       "targetFile": "src/state/model/qr-state.ts",
-      "symbols": [
-        "QRState",
-        "PayloadData"
-      ],
+      "symbols": ["QRState", "PayloadData"],
       "notes": "Pure state shape."
     },
     {
       "targetFile": "src/state/stores/qr-generator.store.ts",
-      "symbols": [
-        "useQRStore"
-      ],
+      "symbols": ["useQRStore"],
       "notes": "Store hook or state store only."
     },
     {
       "targetFile": "src/features/monetization/model/tier.ts",
-      "symbols": [
-        "Tier",
-        "PremiumAccess",
-        "PREMIUM_DURATION_MS"
-      ],
+      "symbols": ["Tier", "PremiumAccess", "PREMIUM_DURATION_MS"],
       "notes": "Monetization/tier model."
     },
     {
       "targetFile": "src/domain/qr/model/encoding.ts",
-      "symbols": [
-        "ECCLevel",
-        "EncodingMode",
-        "MaskPattern",
-        "CharacterEncoding"
-      ],
+      "symbols": ["ECCLevel", "EncodingMode", "MaskPattern", "CharacterEncoding"],
       "notes": "QR encoding concepts."
     },
     {
@@ -95,9 +81,7 @@
     },
     {
       "targetFile": "src/domain/payload/model/payload-kind.ts",
-      "symbols": [
-        "PayloadKind"
-      ],
+      "symbols": ["PayloadKind"],
       "notes": "Payload taxonomy."
     },
     {

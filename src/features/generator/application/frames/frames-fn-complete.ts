@@ -9,7 +9,6 @@ import { drawToDisplayCanvas } from '@/features/generator/application/generation
 
 const log = createLogger('QR');
 
-
 export function completeAnimationGeneration(params: {
   frames: (HTMLCanvasElement | OffscreenCanvas)[];
   isRunCancelled: () => boolean;
@@ -43,4 +42,3 @@ export function completeAnimationGeneration(params: {
     }
   }
 }
-

@@ -1,4 +1,8 @@
-import { type SemanticValidationResult, validateNumericSuffix, validateSuffixCharset } from './validation';
+import {
+  type SemanticValidationResult,
+  validateNumericSuffix,
+  validateSuffixCharset,
+} from './validation';
 import { semanticFailure } from './semantic-failure';
 import { log } from './log';
 

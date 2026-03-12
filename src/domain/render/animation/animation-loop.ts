@@ -5,7 +5,11 @@
 
 import { createLogger } from '../../../infra/logging/logger';
 import { advanceAnimation, createAnimationState } from '../../../modules/animation/state';
-import type { AnimationFrame, AnimationOptions, AnimationState } from '../../../modules/animation/types';
+import type {
+  AnimationFrame,
+  AnimationOptions,
+  AnimationState,
+} from '../../../modules/animation/types';
 
 const _log = createLogger('ANIMATION');
 

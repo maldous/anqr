@@ -1,10 +1,4 @@
-export type {
-  RGB,
-  RGBA,
-  HSL,
-  ColorMode,
-  FilterOptions,
-} from './overlay-filters.types';
+export type { RGB, RGBA, HSL, ColorMode, FilterOptions } from './overlay-filters.types';
 export { copyImageData } from './copy-image-data';
 export { brightness } from './brightness';
 export { contrast } from './contrast';

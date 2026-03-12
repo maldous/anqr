@@ -5,4 +5,3 @@
  */
 
 export { loadQArtModule } from '@/features/generator/application/qart/qart-shared-state';
-

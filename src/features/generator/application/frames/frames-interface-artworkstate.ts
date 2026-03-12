@@ -17,4 +17,3 @@ export interface ArtworkFrameState {
   setLastSuccessfulFrame: (f: HTMLCanvasElement | null) => void;
   setLastSuccessfulMatchPercentage: (v: number) => void;
 }
-

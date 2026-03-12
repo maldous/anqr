@@ -7,7 +7,6 @@
 import type { QArtWorkerResult } from '@/features/generator/application/qart/qart-shared-types';
 import { imageBitmapToCanvas } from '@/features/generator/application/generation/generation-fn-bitmaptocanvas';
 
-
 export function renderArtworkWorkerBitmap(params: {
   workerResult: QArtWorkerResult;
   getScratchCanvas: (slot: 0 | 1, w: number, h: number) => HTMLCanvasElement;
@@ -27,4 +26,3 @@ export function renderArtworkWorkerBitmap(params: {
   }
   return rendered;
 }
-

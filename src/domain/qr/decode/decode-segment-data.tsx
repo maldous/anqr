@@ -12,7 +12,11 @@ import { decodeKanjiDetailed } from './decode-kanji-detailed';
 import { BitStream } from './bit-stream';
 import type { SegmentDecodeResult } from './segment-decode-result';
 
-export function decodeSegmentData(bits: BitStream, mode: number, charCount: number): SegmentDecodeResult {
+export function decodeSegmentData(
+  bits: BitStream,
+  mode: number,
+  charCount: number
+): SegmentDecodeResult {
   switch (mode) {
     case MODE_NUMERIC: {
       const text = decodeNumeric(bits, charCount);

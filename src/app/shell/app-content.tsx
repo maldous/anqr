@@ -1,11 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BusyOverlay } from '@/ui/composites/BusyOverlay';
 import { Header } from '@/components/Header';

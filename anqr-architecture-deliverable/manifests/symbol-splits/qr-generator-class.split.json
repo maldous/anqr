@@ -4,17 +4,12 @@
   "groups": [
     {
       "targetFile": "src/domain/render/generator/QRGenerator.ts",
-      "symbols": [
-        "QRGenerator"
-      ],
+      "symbols": ["QRGenerator"],
       "notes": "Public fa\u00e7ade only."
     },
     {
       "targetFile": "src/domain/render/generator/matrix-wrappers.ts",
-      "symbols": [
-        "MatrixWrapper",
-        "PackedMatrixWrapper"
-      ],
+      "symbols": ["MatrixWrapper", "PackedMatrixWrapper"],
       "notes": "Matrix helper wrappers."
     },
     {

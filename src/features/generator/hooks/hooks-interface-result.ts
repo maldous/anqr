@@ -6,7 +6,6 @@
 
 import type { ValidationResult } from '@/domain/qr/analyze/scanner';
 
-
 export interface UseQRGeneratorResult {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvas: HTMLCanvasElement | OffscreenCanvas | null;
@@ -38,4 +37,3 @@ export interface UseQRGeneratorResult {
   animationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
   animationFramesRevision: number;
 }
-

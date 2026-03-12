@@ -16,25 +16,28 @@ Use two forms of policy:
 ## Allowed dependency matrix
 
 ### Legend
+
 - ✅ allowed
 - 🚫 forbidden
 - ⚠ allowed only through narrow public APIs / reviewed exceptions
 
-| From \ To | app | ui | features | state | domain | platform | infra | content |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| app | ✅ | ✅ | ✅ | ✅ | 🚫 | ✅ | ✅ | ✅ |
-| ui | 🚫 | ✅ | 🚫 | 🚫 | 🚫 | 🚫 | ⚠ | 🚫 |
-| features | 🚫 | ✅ | 🚫 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| state | 🚫 | 🚫 | 🚫 | ✅ | ✅ | 🚫 | ✅ | 🚫 |
-| domain | 🚫 | 🚫 | 🚫 | 🚫 | ✅ | 🚫 | ⚠ | 🚫 |
-| platform | 🚫 | 🚫 | 🚫 | 🚫 | ✅ | ✅ | ✅ | 🚫 |
-| infra | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | ✅ | 🚫 |
-| content | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | ✅ |
+| From \ To | app |  ui | features | state | domain | platform | infra | content |
+| --------- | --: | --: | -------: | ----: | -----: | -------: | ----: | ------: |
+| app       |  ✅ |  ✅ |       ✅ |    ✅ |     🚫 |       ✅ |    ✅ |      ✅ |
+| ui        |  🚫 |  ✅ |       🚫 |    🚫 |     🚫 |       🚫 |     ⚠ |      🚫 |
+| features  |  🚫 |  ✅ |       🚫 |    ✅ |     ✅ |       ✅ |    ✅ |      ✅ |
+| state     |  🚫 |  🚫 |       🚫 |    ✅ |     ✅ |       🚫 |    ✅ |      🚫 |
+| domain    |  🚫 |  🚫 |       🚫 |    🚫 |     ✅ |       🚫 |     ⚠ |      🚫 |
+| platform  |  🚫 |  🚫 |       🚫 |    🚫 |     ✅ |       ✅ |    ✅ |      🚫 |
+| infra     |  🚫 |  🚫 |       🚫 |    🚫 |     🚫 |       🚫 |    ✅ |      🚫 |
+| content   |  🚫 |  🚫 |       🚫 |    🚫 |     🚫 |       🚫 |    🚫 |      ✅ |
 
 ## Additional semantic rules
 
 ### Rule 1: domain is framework-agnostic
+
 `src/domain/**` must not import:
+
 - `react`
 - `react-dom`
 - `@capacitor/*`
@@ -42,7 +45,9 @@ Use two forms of policy:
 - app/feature/ui modules
 
 ### Rule 2: platform owns environment APIs
+
 Only `src/platform/**` may directly import or use:
+
 - `navigator.*`
 - `window.*`
 - `document.*`
@@ -51,9 +56,11 @@ Only `src/platform/**` may directly import or use:
 - dedicated worker entrypoints
 
 ### Rule 3: features orchestrate; they do not implement algorithms
+
 `src/features/**` may call domain services but must not become the permanent home of QR algorithms, payload encoders, matrix math, dithering kernels, or decoder internals.
 
 ### Rule 4: ui is deliberately dumb
+
 `src/ui/**` must remain presentational and generic.
 No QR math.
 No payload serialization.
@@ -61,16 +68,19 @@ No storage.
 No platform adapters.
 
 ### Rule 5: content is excluded from architecture analysis
+
 Treat `src/content/**`, especially generated and static localisation content, as resources.
 Keep them out of dependency fitness calculations unless they contain executable logic.
 
 ### Rule 6: only narrow public entrypoints
+
 No top-level shared barrel that aggregates unrelated modules.
 Any `index.ts` is a bounded-context entrypoint only.
 
 ## Exception process
 
 Boundary exceptions must be:
+
 - rare
 - documented in code with a comment
 - listed in `docs/08-risk-register.md` or an ADR
@@ -100,6 +110,7 @@ CI should report, but not necessarily fail initially, on:
 ## Approved top-level side-effect locations
 
 Allow side effects only in:
+
 - `src/app/boot/**`
 - `src/app/i18n/**`
 - explicitly documented platform bootstrap files

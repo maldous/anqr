@@ -8,7 +8,6 @@ import { adjustOverlayIntensity } from '@/features/generator/application/safety/
 import { SafetyAdjustmentResult } from '@/features/generator/application/safety/safety-interface-adjustmentresult';
 import { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
 
-
 export function computeSafetyAdjustments(params: {
   safetyMode: string;
   minModulePx: number;
@@ -75,4 +74,3 @@ export function computeSafetyAdjustments(params: {
     warnings,
   };
 }
-

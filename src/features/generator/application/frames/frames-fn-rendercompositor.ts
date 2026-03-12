@@ -5,10 +5,13 @@
  */
 
 import type { GifCompositor } from '@/modules/animation';
-import { applyTemporalNoiseToCanvas, calculateTemporalOffset, type TemporalDitherMode } from '@/domain/render/dither/temporal';
+import {
+  applyTemporalNoiseToCanvas,
+  calculateTemporalOffset,
+  type TemporalDitherMode,
+} from '@/domain/render/dither/temporal';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
-
 
 export async function renderFrameWithCompositor(params: {
   gifCompositor: GifCompositor;
@@ -63,4 +66,3 @@ export async function renderFrameWithCompositor(params: {
     ? await params.generateArtworkFrame(overlayToUse, params.frameIdx)
     : await qrGenerator.generate(frameConfig, overlayToUse);
 }
-

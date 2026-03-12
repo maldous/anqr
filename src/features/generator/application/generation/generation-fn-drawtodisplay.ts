@@ -33,4 +33,3 @@ export function drawToDisplayCanvas(
   ctx.drawImage(source as CanvasImageSource, 0, 0, cssWidth, cssHeight);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
-

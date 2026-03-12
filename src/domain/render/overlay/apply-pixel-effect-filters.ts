@@ -1,5 +1,4 @@
 import type { FilterOptions } from './overlay-filters.types';
-import { brightness } from './brightness';
 import { invert } from './invert';
 import { grayscale } from './grayscale';
 import { threshold } from './threshold';

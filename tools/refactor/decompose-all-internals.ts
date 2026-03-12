@@ -267,10 +267,7 @@ function parseImportDeclarations(sf: SourceFile): ParsedImport[] {
  * Given the parsed imports from the original file and the set of identifiers
  * used in a declaration, produce the import lines needed for the extracted file.
  */
-function filterImportsForDecl(
-  parsedImports: ParsedImport[],
-  usedIds: Set<string>,
-): string[] {
+function filterImportsForDecl(parsedImports: ParsedImport[], usedIds: Set<string>): string[] {
   const lines: string[] = [];
 
   for (const imp of parsedImports) {
@@ -364,7 +361,7 @@ function collisionFreeFileName(
   dir: string,
   baseName: string,
   ext: string,
-  existingNames: Set<string>,
+  existingNames: Set<string>
 ): string {
   let candidate = `${baseName}${ext}`;
   if (!existingNames.has(candidate) && !fs.existsSync(path.join(dir, candidate))) {
@@ -402,11 +399,7 @@ interface ProcessResult {
   exportCount: number;
 }
 
-function processInternalFile(
-  filePath: string,
-  project: Project,
-  dryRun: boolean,
-): ProcessResult {
+function processInternalFile(filePath: string, project: Project, dryRun: boolean): ProcessResult {
   const ROOT = process.cwd();
   const relPath = path.relative(ROOT, filePath).replace(/\\/g, '/');
   const dir = path.dirname(filePath);
@@ -424,11 +417,8 @@ function processInternalFile(
   // Collect exports
   const decls = collectExports(sf);
   if (decls.length === 0) {
-    
     return { filesCreated: 0, exportCount: 0 };
   }
-
-  
 
   // Parse imports from the original file
   const parsedImports = parseImportDeclarations(sf);
@@ -472,7 +462,6 @@ function processInternalFile(
 
     // If the file already exists (from a previous run), skip it
     if (fs.existsSync(targetPath)) {
-      
       continue;
     }
 
@@ -529,7 +518,7 @@ function processInternalFile(
         siblingImportLines.push(`import ${typeKw}{ ${names.join(', ')} } from '${relImport}';`);
       } else {
         siblingImportLines.push(
-          `import ${typeKw}{\n  ${names.join(',\n  ')},\n} from '${relImport}';`,
+          `import ${typeKw}{\n  ${names.join(',\n  ')},\n} from '${relImport}';`
         );
       }
     }
@@ -545,11 +534,9 @@ function processInternalFile(
     const lineCount = countLines(fileContent);
 
     if (dryRun) {
-      
     } else {
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(targetPath, fileContent, 'utf8');
-      
     }
     filesCreated++;
   }
@@ -578,10 +565,8 @@ function processInternalFile(
   const barrelContent = barrelLines.join('\n') + '\n';
 
   if (dryRun) {
-    
   } else {
     fs.writeFileSync(filePath, barrelContent, 'utf8');
-    
   }
 
   return { filesCreated, exportCount: decls.length };
@@ -601,9 +586,6 @@ async function main(): Promise<void> {
   const options = parseArgs();
   const ROOT = process.cwd();
 
-  
-  
-
   // Create a standalone ts-morph project (no tsconfig needed for parsing)
   const project = new Project({
     useInMemoryFileSystem: false,
@@ -620,7 +602,6 @@ async function main(): Promise<void> {
   if (options.singleFile) {
     const resolved = path.resolve(ROOT, options.singleFile);
     if (!fs.existsSync(resolved)) {
-      
       process.exit(1);
     }
     internalFiles = [resolved];
@@ -629,8 +610,6 @@ async function main(): Promise<void> {
     const tsxFiles = glob.sync('src/**/*._internal.tsx', { cwd: ROOT, absolute: true });
     internalFiles = [...tsFiles, ...tsxFiles].sort();
   }
-
-  
 
   let totalFilesCreated = 0;
   let totalInternalsProcessed = 0;
@@ -641,17 +620,12 @@ async function main(): Promise<void> {
       totalFilesCreated += result.filesCreated;
       totalInternalsProcessed++;
     }
-    
   }
 
-  
-  
   if (options.dryRun) {
-    
   }
 }
 
 main().catch((err) => {
-  
   process.exit(1);
 });

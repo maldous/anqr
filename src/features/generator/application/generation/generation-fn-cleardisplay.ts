@@ -11,4 +11,3 @@ export function clearDisplayCanvas(canvasEl: HTMLCanvasElement | null): void {
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
   }
 }
-

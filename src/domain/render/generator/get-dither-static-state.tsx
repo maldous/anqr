@@ -1,7 +1,6 @@
 import { createRNG, getOrderedMatrix } from '../dither';
 import { DIFFUSION_KERNELS } from '../dither/kernels';
 import type { DiffusionKernel, OrderedMatrix } from '../dither/types';
-import { log } from './log';
 import { MAX_DITHER_STATIC_STATES } from './max-dither-static-states';
 import { ditherStaticStateCache } from './dither-static-state-cache';
 import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';

@@ -12,7 +12,6 @@ import { generatePatternOnlyFrames } from '@/features/generator/application/fram
 import { generateStaticBaseFrames } from '@/features/generator/application/frames/frames-fn-staticbase';
 import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
 
-
 export async function generateBaseAnimationFrameSet(params: {
   hasPattern: boolean;
   hasJitter: boolean;
@@ -46,4 +45,3 @@ export async function generateBaseAnimationFrameSet(params: {
 
   return generateStaticBaseFrames(params);
 }
-

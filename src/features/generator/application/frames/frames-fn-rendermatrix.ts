@@ -8,7 +8,6 @@ import type { QArtWorkerResult } from '@/features/generator/application/qart/qar
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export async function renderArtworkWorkerMatrix(params: {
   workerResult: QArtWorkerResult;
   debouncedConfig: Record<string, unknown>;
@@ -25,4 +24,3 @@ export async function renderArtworkWorkerMatrix(params: {
     qrArtConfig
   );
 }
-

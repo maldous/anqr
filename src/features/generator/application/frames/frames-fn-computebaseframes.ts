@@ -9,7 +9,6 @@ import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { generateBaseAnimationFrameSet } from '@/features/generator/application/frames/frames-fn-baseanimation';
 import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
 
-
 export function computeBaseAnimationFramesToProcess(params: {
   shouldGenerateBaseAnimation: boolean;
   shouldGenerateStaticOverlayAnimation: boolean;
@@ -59,4 +58,3 @@ export function computeBaseAnimationFramesToProcess(params: {
     return { framesToProcess: params.effectiveFrames };
   })();
 }
-

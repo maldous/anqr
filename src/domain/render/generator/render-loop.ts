@@ -10,12 +10,21 @@
  */
 
 import { registerCacheCleanup } from '../../../modules/qr-generator/cache';
-import { applyPaletteColor, applyPerModuleColor, ensureContrast } from '../../../modules/qr-generator/color';
+import {
+  applyPaletteColor,
+  applyPerModuleColor,
+  ensureContrast,
+} from '../../../modules/qr-generator/color';
 import { drawHalftoneModule, drawModule, drawTimingModule } from './drawing';
 import { getOverlayBrightness, getOverlayColorPacked } from '../overlay/overlay-data-packed';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { applyQROverlayMode } from './render-modes';
-import type { OverlayData, QRCodeInstance, QRGeneratorConfig, RenderModulesOptions } from '../../../modules/qr-generator/types';
+import type {
+  OverlayData,
+  QRCodeInstance,
+  QRGeneratorConfig,
+  RenderModulesOptions,
+} from '../../../modules/qr-generator/types';
 import { validateColor } from '../../../modules/qr-generator/utils';
 
 type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;

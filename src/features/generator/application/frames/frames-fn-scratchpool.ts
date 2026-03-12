@@ -4,8 +4,6 @@
  * Notes: Create reusable scratch canvas pool.
  */
 
-
-
 export function createScratchCanvasPool(): {
   getPatternScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement;
   getTemporalScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement;
@@ -69,4 +67,3 @@ export function createScratchCanvasPool(): {
       ),
   };
 }
-

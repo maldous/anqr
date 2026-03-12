@@ -9,7 +9,6 @@ import { cloneCanvasFrame } from '@/features/generator/application/frames/frames
 import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
-
 export function makeArtworkFrameHelpers(params: {
   artworkState: ArtworkFrameState;
   previewScanConfigBase: QRGeneratorConfig;
@@ -46,4 +45,3 @@ export function makeArtworkFrameHelpers(params: {
     );
   return { reuseLastSuccessfulFrame, rememberSuccessfulFrame, fallbackGenerate };
 }
-

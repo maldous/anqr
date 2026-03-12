@@ -8,6 +8,7 @@ import { createLogger } from '@/infra/logging/logger';
 import type { GifCompositor } from '@/modules/animation';
 import type { TemporalDitherMode } from '@/domain/render/dither/temporal';
 import type { AnimationFrame } from '@/modules/animation';
+// eslint-disable-next-line no-restricted-imports -- Sub-path import required to avoid circular dependency through barrel
 import { canvasHashCache } from '@/modules/qr-generator/cache';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { processAndPostProcessFrame } from '@/features/generator/application/frames/frames-fn-processframe';
@@ -16,7 +17,6 @@ import { PatternEffect } from '@/features/generator/application/frames/frames-ty
 import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
 
 const log = createLogger('QR');
-
 
 export async function executeFrameGenerationLoop<
   W extends {
@@ -130,4 +130,3 @@ export async function executeFrameGenerationLoop<
     }
   }
 }
-

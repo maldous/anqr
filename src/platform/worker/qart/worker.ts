@@ -1,5 +1,9 @@
 import { generateFullQArt, generateFullQArtOptimal } from '../../../domain/qr/qart/generate';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../../modules/qr-generator';
+import {
+  QRGenerator,
+  type CanvasFactory,
+  type QRGeneratorConfig,
+} from '../../../modules/qr-generator';
 import type {
   QArtWorkerGenerateRequest,
   QArtWorkerMessage,

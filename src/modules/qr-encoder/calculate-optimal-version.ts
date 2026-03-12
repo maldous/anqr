@@ -1,4 +1,3 @@
-import { optimizeSegments } from './optimize-segments';
 import type { ECCLevel } from './encoder-api.types';
 import { createQRInstance } from './create-qr-instance';
 

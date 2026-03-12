@@ -8,7 +8,6 @@ import { applyAnimationPattern } from '@/domain/render/animation/apply-animation
 import { cloneCanvasSimple } from '@/features/generator/application/frames/frames-fn-clonesimple';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
-
 export function applyPatternStackToCanvas(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   effects: PatternEffect[],
@@ -36,4 +35,3 @@ export function applyPatternStackToCanvas(
   }
   return persistentOutput ? cloneCanvasSimple(out) : out;
 }
-

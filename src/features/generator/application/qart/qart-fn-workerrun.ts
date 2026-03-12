@@ -13,7 +13,6 @@ import { sanitizeQArtRenderConfig } from '@/features/generator/application/gener
 
 const log = createLogger('QR');
 
-
 export async function runQArtWorkerGeneration(params: {
   qartModule: QArtModule;
   qartConfig: {
@@ -84,7 +83,10 @@ export async function runQArtWorkerGeneration(params: {
       matchingPixels: workerResult.matchingPixels,
       totalControllable: workerResult.totalControllable,
       matchPercentage: workerResult.matchPercentage,
-      encodedData: typeof workerResult.encodedData === 'string' ? new TextEncoder().encode(workerResult.encodedData) : workerResult.encodedData ?? new Uint8Array(0),
+      encodedData:
+        typeof workerResult.encodedData === 'string'
+          ? new TextEncoder().encode(workerResult.encodedData)
+          : (workerResult.encodedData ?? new Uint8Array(0)),
     };
     return { result, source: 'worker', packedMatrix, bitmap };
   } catch (error_) {
@@ -104,7 +106,11 @@ export async function runQArtWorkerGeneration(params: {
           targetImage: params.overlayCanvas,
           maskPattern: params.debouncedConfig.maskPattern as number,
         });
-    return { result: mainResult as unknown as FullQArtPipelineResult, source: 'main', packedMatrix: null, bitmap: null };
+    return {
+      result: mainResult as unknown as FullQArtPipelineResult,
+      source: 'main',
+      packedMatrix: null,
+      bitmap: null,
+    };
   }
 }
-

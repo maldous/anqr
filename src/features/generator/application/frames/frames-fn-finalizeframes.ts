@@ -7,7 +7,6 @@
 import { ensureDecodableFirstFrameHelper } from '@/features/generator/application/frames/frames-fn-ensuredecodable';
 import { applyInterpolationToFrames } from '@/features/generator/application/frames/frames-fn-interpolation';
 
-
 export async function finalizeAnimationFrames(params: {
   frames: (HTMLCanvasElement | OffscreenCanvas)[];
   hasInterpolation: boolean;
@@ -38,4 +37,3 @@ export async function finalizeAnimationFrames(params: {
   }
   return frames;
 }
-

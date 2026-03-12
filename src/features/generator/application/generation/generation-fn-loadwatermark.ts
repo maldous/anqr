@@ -9,7 +9,6 @@ import { loadFileAsCanvas } from '@/features/generator/application/input/input-f
 
 const log = createLogger('QR');
 
-
 export async function loadWatermarkForAnimation(watermark: {
   enabled: boolean;
   kind: string;
@@ -28,4 +27,3 @@ export async function loadWatermarkForAnimation(watermark: {
   }
   return null;
 }
-

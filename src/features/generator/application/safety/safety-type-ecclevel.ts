@@ -6,6 +6,4 @@
 
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 
-
 export type EccLevel = QRGeneratorConfig['errorCorrection'];
-

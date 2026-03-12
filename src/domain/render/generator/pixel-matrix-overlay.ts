@@ -9,7 +9,12 @@ import { applyDitherToMatrix } from '../dither/dithering-matrix';
 import { getOverlayData } from '../overlay/overlay-data';
 import { generateHalftoneDitheredOverlayData } from './pixel-matrix-dithered';
 import { getEffectiveIntensity } from './pixel-matrix-utils';
-import type { CreateCanvasFn, OverlayData, QRCodeInstance, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type {
+  CreateCanvasFn,
+  OverlayData,
+  QRCodeInstance,
+  QRGeneratorConfig,
+} from '../../../modules/qr-generator/types';
 
 const _log = createLogger('GENERATE');
 

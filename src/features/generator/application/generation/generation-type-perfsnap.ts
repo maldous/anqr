@@ -12,4 +12,3 @@ export type QArtPerfSnapshot = {
   version: number;
   maskPattern: number;
 };
-

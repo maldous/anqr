@@ -5,23 +5,28 @@
 Run all of these after each migration pass and before each commit.
 
 ### 1. Typecheck
+
 ```bash
 npm run typecheck
 ```
 
 ### 2. Architecture policy
+
 ```bash
 npm run depcruise
 ```
 
 ### 3. AST inventory refresh
+
 ```bash
 npm run extract:ast
 ```
 
 ### 4. Tests
+
 Run the existing unit/integration/E2E suites that already exist in the repository.
 At minimum, rerun tests that exercise:
+
 - generator
 - analyze
 - export
@@ -29,7 +34,9 @@ At minimum, rerun tests that exercise:
 - share URL import/export
 
 ### 5. Manual smoke checks
+
 Required smoke checks:
+
 - open the app
 - generate a normal QR
 - generate with overlay
@@ -43,17 +50,20 @@ Required smoke checks:
 ## Acceptance criteria by migration phase
 
 ### After direct moves
+
 - `tsc --noEmit` passes
 - no new circular imports
 - application starts and renders shell
 - lazy-loaded screens still resolve
 
 ### After App split
+
 - page resolution unchanged
 - canonical and hreflang handling unchanged
 - URL parameter import still works
 
 ### After useQRGenerator split
+
 - standard generation works
 - QArt generation still works
 - animation generation still works
@@ -61,17 +71,20 @@ Required smoke checks:
 - export still works
 
 ### After Analyze split
+
 - analyze page accepts file, URL, and camera paths
 - result summary renders
 - reproduction path works
 - export analysis JSON works
 
 ### After qr-store split
+
 - state hydration unchanged
 - payload serialization unchanged
 - share links and URL import/export unchanged
 
 ### After QRGenerator split
+
 - scan-gate and rescue behaviour unchanged
 - decode robustness unchanged
 - overlay complexity behaviour unchanged
@@ -90,6 +103,7 @@ Track these after each phase:
 ## Regression budget
 
 Do not accept a pass if it:
+
 - increases cycles above zero
 - adds new generic sinks
 - increases hotspot concentration into a new gravity well

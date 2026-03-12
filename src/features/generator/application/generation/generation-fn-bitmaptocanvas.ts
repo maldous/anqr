@@ -4,8 +4,6 @@
  * Notes: Convert ImageBitmap to HTMLCanvasElement.
  */
 
-
-
 export function imageBitmapToCanvas(
   bitmap: ImageBitmap,
   targetCanvas?: HTMLCanvasElement
@@ -21,4 +19,3 @@ export function imageBitmapToCanvas(
   ctx.drawImage(bitmap, 0, 0);
   return canvas;
 }
-

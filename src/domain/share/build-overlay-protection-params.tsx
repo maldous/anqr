@@ -1,6 +1,9 @@
 import type { ShareConfig } from './types';
 
-export function buildOverlayProtectionParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+export function buildOverlayProtectionParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.preserveFinders === false) params.set('keepFinders', '0');
   if (config.preserveTiming) params.set('keepTiming', '1');
   if (config.preserveAlignment) params.set('keepAlign', '1');

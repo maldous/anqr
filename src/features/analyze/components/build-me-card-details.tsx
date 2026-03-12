@@ -1,10 +1,4 @@
-import {
-  FileText,
-  Globe,
-  Mail,
-  MapPin,
-  Phone,
-} from 'lucide-react';
+import { FileText, Globe, Mail, MapPin, Phone } from 'lucide-react';
 import { parseMeCardPayload } from './payload-parsers';
 import type { DetailEntry } from './detail-entry';
 

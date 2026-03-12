@@ -80,7 +80,11 @@ function toPosixRelative(fromDir: string, toFile: string): string {
   return withoutExt.startsWith('.') ? withoutExt : `./${withoutExt}`;
 }
 
-function getTripleSlashRefs(fileText: string, sourceAbs: string, targetAbs: string): TripleSlashRef[] {
+function getTripleSlashRefs(
+  fileText: string,
+  sourceAbs: string,
+  targetAbs: string
+): TripleSlashRef[] {
   const refs: TripleSlashRef[] = [];
   const regex = /\/\/\/\s*<reference\s+path=["']([^"']+)["']\s*\/>/g;
   let match: RegExpExecArray | null;
@@ -144,9 +148,9 @@ function writeReport(rows: MoveRow[], options: CliOptions): void {
         moved: rows.map((r) => ({ source: r.source, target: r.target })),
       },
       null,
-      2,
+      2
     ),
-    'utf8',
+    'utf8'
   );
 }
 
@@ -166,7 +170,6 @@ async function main(): Promise<void> {
     }));
 
   if (!moveRows.length) {
-    
     return;
   }
 
@@ -175,8 +178,6 @@ async function main(): Promise<void> {
   });
 
   const tripleSlashFixes = new Map<string, TripleSlashRef[]>();
-
-  
 
   for (const move of moveRows) {
     assertExists(move.sourceAbs);
@@ -193,7 +194,6 @@ async function main(): Promise<void> {
     }
 
     if (options.dryRun) {
-      
       continue;
     }
 
@@ -202,7 +202,7 @@ async function main(): Promise<void> {
 
   if (options.dryRun) {
     writeReport(moveRows, options);
-    
+
     return;
   }
 
@@ -224,15 +224,8 @@ async function main(): Promise<void> {
   }
 
   writeReport(moveRows, options);
-  
-  
-  
-  
-  
-  
 }
 
 main().catch((error) => {
-  
   process.exit(1);
 });

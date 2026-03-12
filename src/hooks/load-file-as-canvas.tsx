@@ -1,5 +1,3 @@
-import { createElement } from 'react';
-
 /**
  * Load a File as a canvas element
  */

@@ -6,7 +6,6 @@
 
 import { interpolateFrames } from '@/domain/render/animation/interpolate-frames';
 
-
 export async function applyInterpolationToFrames(
   frames: (HTMLCanvasElement | OffscreenCanvas)[],
   interpolateMode: string
@@ -30,4 +29,3 @@ export async function applyInterpolationToFrames(
   interpolatedFrames.push(frames[frames.length - 1]);
   return interpolatedFrames;
 }
-

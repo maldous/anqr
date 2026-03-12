@@ -47,7 +47,7 @@ export function initRemoteDiagnostics(): void {
       disable: disableDiagnostics,
       status: () => {
         const s = getDiagnosticsStatus();
-        
+
         return s;
       },
       // Log saving functions
@@ -62,41 +62,38 @@ export function initRemoteDiagnostics(): void {
       },
       getLogs: () => {
         const logs = getStructuredLogs();
-        
+
         return logs;
       },
       getQartLogs: () => {
         const logs = filterLogs('QART');
-        
+
         return logs;
       },
       getLogsByScope: (scope: string) => {
         const logs = filterLogs(scope);
-        
+
         return logs;
       },
       getLogsByScopes: (scopes: string[]) => {
         const logs = filterLogsByScopes(scopes);
-        
+
         return logs;
       },
       getErrors: () => {
         const logs = filterLogsByLevel(['error', 'warn']);
-        
+
         return logs;
       },
       clearLogs: () => {
         clearStructuredLogs();
-        
       },
       logCount: () => {
         const count = getStructuredLogCount();
-        
+
         return count;
       },
-      help: () => {
-        
-      },
+      help: () => {},
     };
   }
 }

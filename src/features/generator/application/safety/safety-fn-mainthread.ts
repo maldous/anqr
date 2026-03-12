@@ -7,7 +7,6 @@
 import type { QArtModule } from '@/features/generator/application/qart/qart-shared-types';
 import type { QArtResult } from '@/modules/qr-art';
 
-
 export async function runArtworkMainThreadFallback(params: {
   qartModule: QArtModule;
   qartConfig: Record<string, unknown>;
@@ -28,4 +27,3 @@ export async function runArtworkMainThreadFallback(params: {
           params.artworkLockedMask >= 0 ? params.artworkLockedMask : params.configMaskPattern,
       } as Parameters<QArtModule['generateFullQArt']>[0]);
 }
-

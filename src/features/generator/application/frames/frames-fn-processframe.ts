@@ -14,7 +14,6 @@ import { createScratchCanvasPool } from '@/features/generator/application/frames
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 import { drawToDisplayCanvas } from '@/features/generator/application/generation/generation-fn-drawtodisplay';
 
-
 export async function processAndPostProcessFrame<
   W extends {
     enabled: boolean;
@@ -118,4 +117,3 @@ export async function processAndPostProcessFrame<
     }
   }
 }
-

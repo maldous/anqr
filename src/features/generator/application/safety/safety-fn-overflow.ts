@@ -11,7 +11,6 @@ import { tryEccFallbackGeneration } from '@/features/generator/application/safet
 
 const log = createLogger('QR');
 
-
 export async function handleOverflowError(params: {
   effectiveConfig: Record<string, unknown>;
   debouncedConfigTypeNumber: number;
@@ -69,4 +68,3 @@ export async function handleOverflowError(params: {
   params.clearGenerationProgress();
   return { result: null, succeeded: false };
 }
-

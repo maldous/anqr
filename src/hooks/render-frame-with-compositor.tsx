@@ -1,5 +1,9 @@
 import type { GifCompositor } from '../domain/render/animation';
-import { applyTemporalNoiseToCanvas, calculateTemporalOffset, type TemporalDitherMode } from '../domain/render/dither';
+import {
+  applyTemporalNoiseToCanvas,
+  calculateTemporalOffset,
+  type TemporalDitherMode,
+} from '../domain/render/dither';
 import type { QRGeneratorConfig } from '../domain/render/generator';
 import { qrGenerator } from './qr-generator';
 

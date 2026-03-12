@@ -10,7 +10,6 @@ import type { AnimationFrame } from '@/modules/animation';
 
 const log = createLogger('QR');
 
-
 export async function downloadAnimatedGifFormat(params: {
   exporter: ExporterModule;
   cachedAnimationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
@@ -74,4 +73,3 @@ export async function downloadAnimatedGifFormat(params: {
     frameDelays
   );
 }
-

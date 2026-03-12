@@ -1,4 +1,3 @@
-import { clearQRCaches } from './clear-qr-caches';
 import { _registeredCleanups } from './registered-cleanups';
 
 /**
