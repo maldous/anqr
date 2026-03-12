@@ -180,6 +180,7 @@
     ".out",
     "anqr-architecture-deliverable",
     "anqr-architecture-v2",
-    "anqr-v3-i18n-fix"
+    "anqr-v3-i18n-fix",
+    "tools"
   ]
 }

@@ -58,7 +58,7 @@ function ensureWorker(): Worker | null {
   if (worker) return worker;
 
   try {
-    const w = new Worker(new URL('./qart-worker.ts', import.meta.url), { type: 'module' });
+    const w = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 
     w.onmessage = (event: MessageEvent<QArtWorkerMessage>) => {
       const message = event.data;

@@ -7,505 +7,505 @@
 - export-button
   source: src/components/Header.tsx
 - qr-preview
-  source: src/components/Preview.tsx
+  source: src/features/generator/components/Preview.tsx
 - sidebar
-  source: src/components/Sidebar.tsx
+  source: src/features/generator/components/Sidebar.tsx
 - sidebar-scroll
-  source: src/components/Sidebar.tsx
+  source: src/features/generator/components/Sidebar.tsx
 - welcome-get-started
-  source: src/components/WelcomeModal.tsx
+  source: src/features/onboarding/components/WelcomeModal.tsx
 
 3) Payload Section
 - payload-applink-fallback-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-applink-host-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-applink-package-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-applink-path-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-applink-platform-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-applink-scheme-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-applink-url-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-address-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-company-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-email-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-firstname-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-lastname-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-phone-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-bizcard-title-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-calsub-name-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-calsub-url-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-content-type-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-crypto-address-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-crypto-amount-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-crypto-label-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-crypto-type-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-email-body-textarea
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-email-subject-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-email-to-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-epc-amount-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-epc-bic-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-epc-iban-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-epc-name-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-epc-reference-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-event-description-textarea
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-event-end-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-event-location-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-event-start-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-event-summary-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-geo-lat-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-geo-lon-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-geo-query-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-gs1-batch-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-gs1-expiry-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-gs1-gtin-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-gs1-resolver-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-gs1-serial-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-max-len-guard-switch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-adr-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-bday-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-email-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-n-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-nickname-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-org-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-mecard-tel-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-messaging-identifier-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-messaging-message-textarea
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-messaging-platform-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-normalize-newlines-switch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-paynow-amount-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-paynow-reference-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-paynow-type-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-paynow-value-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-pix-amount-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-pix-city-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-pix-key-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-pix-name-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-promptpay-amount-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-promptpay-type-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-promptpay-value-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-rsvp-description-textarea
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-rsvp-end-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-rsvp-location-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-rsvp-start-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-rsvp-summary-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-rsvp-url-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-shortlink-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-shortlink-long-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-sms-body-textarea
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-sms-number-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-social-platform-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-social-username-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-tel-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-text-textarea
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-trim-switch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-upi-amount-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-upi-note-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-upi-payee-name-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-upi-vpa-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-url-force-https-switch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-url-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-validate-switch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-vcard-email-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-vcard-fn-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-vcard-org-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-vcard-tel-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-vcard-title-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-vcard-url-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-wifi-auth-select
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-wifi-hidden-switch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-wifi-password-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - payload-wifi-ssid-input
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 
 4) QR Encoding Section
 - qr-character-encoding-select
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-ecc-select
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-encoding-mode-select
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-mask-pattern-select
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-quiet-zone-enforce-switch
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-quiet-zone-slider
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-version-slider
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 
 5) Render Section
 - render-alignment-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-bg-color-picker
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-bg-color-text
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-corner-radius-slider
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-dot-rotation-slider
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-eye-inner-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-eye-outer-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-eye-scale-slider
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-fg-color-picker
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-fg-color-text
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-finder-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-frame-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-frame-text-input
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-gap-mode-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-gradient-type-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-module-gap-slider
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-module-size-slider
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-module-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-timing-style-select
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - render-transparent-bg-switch
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 
 6) Overlay Section
 - overlay-blend-preservation-mode-select
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-blend-preservations-switch
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-color-mode-content
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-color-mode-select
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-crop-slider
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-crop-switch
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-enabled-switch
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-finder-dither-strength-slider
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-from-url-button
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-gallery-button
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-intensity-slider
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-load-url-button
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-mode-content
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-mode-select
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-photo-button
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-preserve-finders-switch
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - overlay-upload
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 
 7) Animation Section
 - animation-bounce-switch
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-color-cycle-switch
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-frame-step-slider
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-interpolation-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-interpolation-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-loop-switch
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-max-frames-slider
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-module-jitter-slider
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-pattern-2-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-pattern-2-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-pattern-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-pattern-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-seed-input
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-speed-slider
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-start-frame-slider
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-target-2-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-target-2-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-target-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-target-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-temporal-dither-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-temporal-dither-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-wave-axis-2-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-wave-axis-2-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-wave-axis-content
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-wave-axis-trigger
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 
 8) Output Section
 - output-dpi-slider
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-filename-input
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-format-content
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-format-extra-content
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-format-extra-trigger
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-format-trigger
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-gif-dither-content
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-gif-dither-trigger
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-gif-palette-slider
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-gif-quantizer-content
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-gif-quantizer-trigger
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-height-input
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-include-quiet-zone-switch
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-quality-slider
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-svg-embed-raster-switch
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-svg-precision-content
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-svg-precision-trigger
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-svg-true-vector-switch
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - output-width-input
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 
 9) Watermark Section
 - watermark-blend-content
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-blend-trigger
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-clear-image-button
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-enabled-switch
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-kind-content
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-kind-trigger
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-opacity-slider
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-position-content
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-position-trigger
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-text-input
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-upload-button
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 
 10) Metadata Section
 - metadata-add-custom-button
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-author-input
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-copyright-input
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-creation-time-switch
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-description-textarea
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-license-input
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-title-input
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 
 11) Share Section
 - share-copy-embed-button
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-copy-link-button
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-copy-markdown-button
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-direct-link-input
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-direct-link-switch
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-embed-code-input
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-embed-html-switch
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-encode-more-params-switch
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-markdown-input
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-quick-copy-button
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-twitter-button
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 - share-whatsapp-button
-  source: src/components/sections/ShareSection.tsx
+  source: src/features/generator/components/sections/ShareSection.tsx
 
 12) Safety Section
 - safety-auto-pick-ecc-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-auto-pick-version-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-auto-reduce-intensity-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-contrast-check-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-ecc-aware-enabled-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-ecc-risk-budget-slider
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-ecc-weight-map-content
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-ecc-weight-map-trigger
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-lock-alignment-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-lock-finders-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-lock-format-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-lock-timing-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-lock-version-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-min-module-slider
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-min-quiet-zone-slider
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-mode-content
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-mode-trigger
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-show-heatmap-switch
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-simulate-blur-slider
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-simulate-noise-slider
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - safety-simulate-rotation-slider
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 
 13) Analyze Section
 - analyze-original-image
@@ -535,461 +535,461 @@
 
 15) Select Option IDs
 - select-item-option-0
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-1
-  source: src/components/sections/PayloadSection.tsx, src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx, src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-10
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-137
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-2
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-2x2
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-3
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-3x3
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-4
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-42161
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-43114
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-4x4
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-5
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-56
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-6
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-7
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-abn
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-adaptive-threshold
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-advanced
   source: src/components/Header.tsx
 - select-item-option-alphanumeric
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-android
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-animated-webp
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-army
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-artwork
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-atkinson
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-auto
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-balanced
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - select-item-option-basic
   source: src/components/Header.tsx
 - select-item-option-bayer2
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-bayer4
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-bayer8
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-behind
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-bitcoin
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-blend
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-block-heatmap
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - select-item-option-blue-noise
-  source: src/components/sections/AnimationSection.tsx, src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-blue-noise-error-diffusion
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-blue-noise-threshold
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-both
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-brightness
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-burkes
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-business
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-bw
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-by-brightness
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-by-cluster
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-by-overlay
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-by-position
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-byte
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-canny
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-ceil
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-center
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-ch
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-chf
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-circle
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-clustered-dot
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-color
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-column
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-conic
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-connected
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-contain
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-corners
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-cover
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-crossfade
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-custom
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-dashed
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-default
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-diagonal
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-diamond
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-distance-to-finders
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - select-item-option-dither
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-dithered
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-dots
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-drift
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-duotone
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-edge-aware
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-edges
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-email
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-empirical-scan-heatmap
-  source: src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/SafetySection.tsx
 - select-item-option-eps
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-equipment
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-error-diffusion
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-ethereum
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-eur
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-ewallet
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-extreme
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-facebook
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-fixed
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-flicker-safe
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-floor
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-floyd
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-floyd-steinberg
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-furniture
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-gamma
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-gapfill
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-gaussian-noise
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-gif
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-github
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-grayscale
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-h
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-halftone
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-halftone-center
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-halftone-dithered
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-hotp
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-id
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-image
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-inset
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-instagram
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-inventory
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-ios
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-iso-8859-1
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-it
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-jarvis-judice-ninke
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-kanji
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-l
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-li
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-line
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-linear
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-linkedin
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-litecoin
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-m
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-match-finder
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-match-module
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-median-cut
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-messenger
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-mobile
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-modules
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-morph
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-mosaic
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-multiply
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-n-n
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-negative-space
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-neuquant
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-non
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-none
-  source: src/components/sections/AnimationSection.tsx, src/components/sections/OutputSection.tsx, src/components/sections/OverlaySection.tsx, src/components/sections/PayloadSection.tsx, src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OutputSection.tsx, src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/PayloadSection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-nopass
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-normal
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-nric
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-numeric
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-octree
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-off
-  source: src/components/sections/AnimationSection.tsx, src/components/sections/OutputSection.tsx, src/components/sections/OverlaySection.tsx, src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OutputSection.tsx, src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/SafetySection.tsx
 - select-item-option-ordered
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-ordered-bayer
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-ordered-clustered
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-ordered-void-cluster
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-org
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-other
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-others
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-outline
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-overlay
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-passport
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-pattern
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-per-channel
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-per-module
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-percent
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-perceptual
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-pixel
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-pixelate
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-png
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-position
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-precise
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-professional
   source: src/components/Header.tsx
 - select-item-option-prompt
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-pulse
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-q
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-qrr
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-quiet-zone
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-radial
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-random
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-respect
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-result
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-round
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-rounded
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-rounded-frame
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-row
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-s-curve
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-scanline
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-scor
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-screen
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-screened-blue-noise
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-sha1
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-sha256
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-sha512
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-shift-jis
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-shimmer
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-sierra
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-sierra-2
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-sierra-lite
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-signal
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-simplify
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-sobel
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-solid
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-square
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-sticker
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-stretch
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-strict
-  source: src/components/sections/OverlaySection.tsx, src/components/sections/SafetySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/SafetySection.tsx
 - select-item-option-stroke
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-stucki
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-stylized
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-subpixel
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-subpixel-size
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-svg
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-tag
-  source: src/components/sections/RenderSection.tsx
+  source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-telegram
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-temporal-blue-noise
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-text
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-tiktok
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-totp
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-triangular-noise
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-true-dither
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-twitter
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-uen
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-universal
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-utf8
-  source: src/components/sections/qr-encoding-section.tsx
+  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-vehicle
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-viber
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-void-cluster
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-wave
-  source: src/components/sections/AnimationSection.tsx, src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-webp
-  source: src/components/sections/OutputSection.tsx
+  source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-wep
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-whatsapp
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-white-noise
-  source: src/components/sections/OverlaySection.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-wpa
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-wpa2
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-wpa3
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 - select-item-option-x
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-xy
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-y
-  source: src/components/sections/AnimationSection.tsx
+  source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-youtube
-  source: src/components/sections/PayloadSection.tsx
+  source: src/features/generator/components/sections/PayloadSection.tsx
 
 16) Coverage Usage Rules
 - This file is the complete explicit ID inventory for coverage and permutation auditing.
@@ -999,12 +999,12 @@
 17) Parameterized Dynamic ID Templates
 - These IDs are generated per item/index/state at runtime and must remain unique.
 - accordion-{param}
-  source: src/components/Sidebar.tsx
+  source: src/features/generator/components/Sidebar.tsx
 - metadata-custom-key-input-{param}
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-custom-kv-row-{param}
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-custom-remove-button-{param}
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx
 - metadata-custom-value-input-{param}
-  source: src/components/sections/MetadataSection.tsx
+  source: src/features/generator/components/sections/MetadataSection.tsx

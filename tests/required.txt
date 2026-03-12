@@ -14,7 +14,7 @@ ID: export-button
 
 ID: qr-preview
 - section: App Shell & Navigation
-- source: src/components/Preview.tsx
+- source: src/features/generator/components/Preview.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -24,7 +24,7 @@ ID: qr-preview
 
 ID: sidebar
 - section: App Shell & Navigation
-- source: src/components/Sidebar.tsx
+- source: src/features/generator/components/Sidebar.tsx
 - inferred-domain: app
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -33,7 +33,7 @@ ID: sidebar
 
 ID: sidebar-scroll
 - section: App Shell & Navigation
-- source: src/components/Sidebar.tsx
+- source: src/features/generator/components/Sidebar.tsx
 - inferred-domain: app
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-4-app.spec.ts [direct-id]
@@ -42,7 +42,7 @@ ID: sidebar-scroll
 
 ID: welcome-get-started
 - section: App Shell & Navigation
-- source: src/components/WelcomeModal.tsx
+- source: src/features/onboarding/components/WelcomeModal.tsx
 - inferred-domain: app
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-4-app.spec.ts [direct-id]
@@ -51,7 +51,7 @@ ID: welcome-get-started
 
 ID: payload-applink-fallback-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -62,7 +62,7 @@ ID: payload-applink-fallback-input
 
 ID: payload-applink-host-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -73,7 +73,7 @@ ID: payload-applink-host-input
 
 ID: payload-applink-package-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -84,7 +84,7 @@ ID: payload-applink-package-input
 
 ID: payload-applink-path-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -95,7 +95,7 @@ ID: payload-applink-path-input
 
 ID: payload-applink-platform-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -106,7 +106,7 @@ ID: payload-applink-platform-select
 
 ID: payload-applink-scheme-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -117,7 +117,7 @@ ID: payload-applink-scheme-input
 
 ID: payload-applink-url-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -128,7 +128,7 @@ ID: payload-applink-url-input
 
 ID: payload-bizcard-address-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -139,7 +139,7 @@ ID: payload-bizcard-address-input
 
 ID: payload-bizcard-company-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -150,7 +150,7 @@ ID: payload-bizcard-company-input
 
 ID: payload-bizcard-email-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -161,7 +161,7 @@ ID: payload-bizcard-email-input
 
 ID: payload-bizcard-firstname-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -172,7 +172,7 @@ ID: payload-bizcard-firstname-input
 
 ID: payload-bizcard-lastname-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -183,7 +183,7 @@ ID: payload-bizcard-lastname-input
 
 ID: payload-bizcard-phone-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -194,7 +194,7 @@ ID: payload-bizcard-phone-input
 
 ID: payload-bizcard-title-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -205,7 +205,7 @@ ID: payload-bizcard-title-input
 
 ID: payload-calsub-name-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -216,7 +216,7 @@ ID: payload-calsub-name-input
 
 ID: payload-calsub-url-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -227,7 +227,7 @@ ID: payload-calsub-url-input
 
 ID: payload-content-type-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -238,7 +238,7 @@ ID: payload-content-type-select
 
 ID: payload-crypto-address-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -249,7 +249,7 @@ ID: payload-crypto-address-input
 
 ID: payload-crypto-amount-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -260,7 +260,7 @@ ID: payload-crypto-amount-input
 
 ID: payload-crypto-label-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -271,7 +271,7 @@ ID: payload-crypto-label-input
 
 ID: payload-crypto-type-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -282,7 +282,7 @@ ID: payload-crypto-type-select
 
 ID: payload-email-body-textarea
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -293,7 +293,7 @@ ID: payload-email-body-textarea
 
 ID: payload-email-subject-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -304,7 +304,7 @@ ID: payload-email-subject-input
 
 ID: payload-email-to-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -315,7 +315,7 @@ ID: payload-email-to-input
 
 ID: payload-epc-amount-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -326,7 +326,7 @@ ID: payload-epc-amount-input
 
 ID: payload-epc-bic-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -337,7 +337,7 @@ ID: payload-epc-bic-input
 
 ID: payload-epc-iban-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -348,7 +348,7 @@ ID: payload-epc-iban-input
 
 ID: payload-epc-name-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -359,7 +359,7 @@ ID: payload-epc-name-input
 
 ID: payload-epc-reference-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -370,7 +370,7 @@ ID: payload-epc-reference-input
 
 ID: payload-event-description-textarea
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -381,7 +381,7 @@ ID: payload-event-description-textarea
 
 ID: payload-event-end-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -392,7 +392,7 @@ ID: payload-event-end-input
 
 ID: payload-event-location-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -403,7 +403,7 @@ ID: payload-event-location-input
 
 ID: payload-event-start-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -414,7 +414,7 @@ ID: payload-event-start-input
 
 ID: payload-event-summary-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -425,7 +425,7 @@ ID: payload-event-summary-input
 
 ID: payload-geo-lat-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -436,7 +436,7 @@ ID: payload-geo-lat-input
 
 ID: payload-geo-lon-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -447,7 +447,7 @@ ID: payload-geo-lon-input
 
 ID: payload-geo-query-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -458,7 +458,7 @@ ID: payload-geo-query-input
 
 ID: payload-gs1-batch-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -469,7 +469,7 @@ ID: payload-gs1-batch-input
 
 ID: payload-gs1-expiry-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -480,7 +480,7 @@ ID: payload-gs1-expiry-input
 
 ID: payload-gs1-gtin-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -491,7 +491,7 @@ ID: payload-gs1-gtin-input
 
 ID: payload-gs1-resolver-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -502,7 +502,7 @@ ID: payload-gs1-resolver-input
 
 ID: payload-gs1-serial-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -513,7 +513,7 @@ ID: payload-gs1-serial-input
 
 ID: payload-max-len-guard-switch
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -524,7 +524,7 @@ ID: payload-max-len-guard-switch
 
 ID: payload-mecard-adr-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -535,7 +535,7 @@ ID: payload-mecard-adr-input
 
 ID: payload-mecard-bday-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -546,7 +546,7 @@ ID: payload-mecard-bday-input
 
 ID: payload-mecard-email-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -557,7 +557,7 @@ ID: payload-mecard-email-input
 
 ID: payload-mecard-n-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -568,7 +568,7 @@ ID: payload-mecard-n-input
 
 ID: payload-mecard-nickname-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -579,7 +579,7 @@ ID: payload-mecard-nickname-input
 
 ID: payload-mecard-org-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -590,7 +590,7 @@ ID: payload-mecard-org-input
 
 ID: payload-mecard-tel-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -601,7 +601,7 @@ ID: payload-mecard-tel-input
 
 ID: payload-messaging-identifier-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -612,7 +612,7 @@ ID: payload-messaging-identifier-input
 
 ID: payload-messaging-message-textarea
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -623,7 +623,7 @@ ID: payload-messaging-message-textarea
 
 ID: payload-messaging-platform-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -634,7 +634,7 @@ ID: payload-messaging-platform-select
 
 ID: payload-normalize-newlines-switch
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -645,7 +645,7 @@ ID: payload-normalize-newlines-switch
 
 ID: payload-paynow-amount-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -656,7 +656,7 @@ ID: payload-paynow-amount-input
 
 ID: payload-paynow-reference-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -667,7 +667,7 @@ ID: payload-paynow-reference-input
 
 ID: payload-paynow-type-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -678,7 +678,7 @@ ID: payload-paynow-type-select
 
 ID: payload-paynow-value-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -689,7 +689,7 @@ ID: payload-paynow-value-input
 
 ID: payload-pix-amount-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -700,7 +700,7 @@ ID: payload-pix-amount-input
 
 ID: payload-pix-city-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -711,7 +711,7 @@ ID: payload-pix-city-input
 
 ID: payload-pix-key-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -722,7 +722,7 @@ ID: payload-pix-key-input
 
 ID: payload-pix-name-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -733,7 +733,7 @@ ID: payload-pix-name-input
 
 ID: payload-promptpay-amount-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -744,7 +744,7 @@ ID: payload-promptpay-amount-input
 
 ID: payload-promptpay-type-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -755,7 +755,7 @@ ID: payload-promptpay-type-select
 
 ID: payload-promptpay-value-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -766,7 +766,7 @@ ID: payload-promptpay-value-input
 
 ID: payload-rsvp-description-textarea
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -777,7 +777,7 @@ ID: payload-rsvp-description-textarea
 
 ID: payload-rsvp-end-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -788,7 +788,7 @@ ID: payload-rsvp-end-input
 
 ID: payload-rsvp-location-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -799,7 +799,7 @@ ID: payload-rsvp-location-input
 
 ID: payload-rsvp-start-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -810,7 +810,7 @@ ID: payload-rsvp-start-input
 
 ID: payload-rsvp-summary-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -821,7 +821,7 @@ ID: payload-rsvp-summary-input
 
 ID: payload-rsvp-url-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -832,7 +832,7 @@ ID: payload-rsvp-url-input
 
 ID: payload-shortlink-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -843,7 +843,7 @@ ID: payload-shortlink-input
 
 ID: payload-shortlink-long-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -854,7 +854,7 @@ ID: payload-shortlink-long-input
 
 ID: payload-sms-body-textarea
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -865,7 +865,7 @@ ID: payload-sms-body-textarea
 
 ID: payload-sms-number-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -876,7 +876,7 @@ ID: payload-sms-number-input
 
 ID: payload-social-platform-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -887,7 +887,7 @@ ID: payload-social-platform-select
 
 ID: payload-social-username-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -898,7 +898,7 @@ ID: payload-social-username-input
 
 ID: payload-tel-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -909,7 +909,7 @@ ID: payload-tel-input
 
 ID: payload-text-textarea
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -920,7 +920,7 @@ ID: payload-text-textarea
 
 ID: payload-trim-switch
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -931,7 +931,7 @@ ID: payload-trim-switch
 
 ID: payload-upi-amount-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -942,7 +942,7 @@ ID: payload-upi-amount-input
 
 ID: payload-upi-note-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -953,7 +953,7 @@ ID: payload-upi-note-input
 
 ID: payload-upi-payee-name-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -964,7 +964,7 @@ ID: payload-upi-payee-name-input
 
 ID: payload-upi-vpa-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -975,7 +975,7 @@ ID: payload-upi-vpa-input
 
 ID: payload-url-force-https-switch
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -986,7 +986,7 @@ ID: payload-url-force-https-switch
 
 ID: payload-url-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -997,7 +997,7 @@ ID: payload-url-input
 
 ID: payload-validate-switch
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1008,7 +1008,7 @@ ID: payload-validate-switch
 
 ID: payload-vcard-email-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1019,7 +1019,7 @@ ID: payload-vcard-email-input
 
 ID: payload-vcard-fn-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1030,7 +1030,7 @@ ID: payload-vcard-fn-input
 
 ID: payload-vcard-org-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1041,7 +1041,7 @@ ID: payload-vcard-org-input
 
 ID: payload-vcard-tel-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1052,7 +1052,7 @@ ID: payload-vcard-tel-input
 
 ID: payload-vcard-title-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1063,7 +1063,7 @@ ID: payload-vcard-title-input
 
 ID: payload-vcard-url-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1074,7 +1074,7 @@ ID: payload-vcard-url-input
 
 ID: payload-wifi-auth-select
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1085,7 +1085,7 @@ ID: payload-wifi-auth-select
 
 ID: payload-wifi-hidden-switch
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1096,7 +1096,7 @@ ID: payload-wifi-hidden-switch
 
 ID: payload-wifi-password-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1107,7 +1107,7 @@ ID: payload-wifi-password-input
 
 ID: payload-wifi-ssid-input
 - section: Payload Section
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
@@ -1118,7 +1118,7 @@ ID: payload-wifi-ssid-input
 
 ID: qr-character-encoding-select
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-5-qr.spec.ts [direct-id]
@@ -1128,7 +1128,7 @@ ID: qr-character-encoding-select
 
 ID: qr-ecc-select
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -1138,7 +1138,7 @@ ID: qr-ecc-select
 
 ID: qr-encoding-mode-select
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -1148,7 +1148,7 @@ ID: qr-encoding-mode-select
 
 ID: qr-mask-pattern-select
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-5-qr.spec.ts [direct-id]
@@ -1158,7 +1158,7 @@ ID: qr-mask-pattern-select
 
 ID: qr-quiet-zone-enforce-switch
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-5-qr.spec.ts [direct-id]
@@ -1168,7 +1168,7 @@ ID: qr-quiet-zone-enforce-switch
 
 ID: qr-quiet-zone-slider
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -1178,7 +1178,7 @@ ID: qr-quiet-zone-slider
 
 ID: qr-version-slider
 - section: QR Encoding Section
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
@@ -1188,7 +1188,7 @@ ID: qr-version-slider
 
 ID: render-alignment-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1199,7 +1199,7 @@ ID: render-alignment-style-select
 
 ID: render-bg-color-picker
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1210,7 +1210,7 @@ ID: render-bg-color-picker
 
 ID: render-bg-color-text
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1221,7 +1221,7 @@ ID: render-bg-color-text
 
 ID: render-corner-radius-slider
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1232,7 +1232,7 @@ ID: render-corner-radius-slider
 
 ID: render-dot-rotation-slider
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1243,7 +1243,7 @@ ID: render-dot-rotation-slider
 
 ID: render-eye-inner-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1254,7 +1254,7 @@ ID: render-eye-inner-style-select
 
 ID: render-eye-outer-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1265,7 +1265,7 @@ ID: render-eye-outer-style-select
 
 ID: render-eye-scale-slider
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1276,7 +1276,7 @@ ID: render-eye-scale-slider
 
 ID: render-fg-color-picker
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1287,7 +1287,7 @@ ID: render-fg-color-picker
 
 ID: render-fg-color-text
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1298,7 +1298,7 @@ ID: render-fg-color-text
 
 ID: render-finder-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1309,7 +1309,7 @@ ID: render-finder-style-select
 
 ID: render-frame-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1320,7 +1320,7 @@ ID: render-frame-style-select
 
 ID: render-frame-text-input
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1331,7 +1331,7 @@ ID: render-frame-text-input
 
 ID: render-gap-mode-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1342,7 +1342,7 @@ ID: render-gap-mode-select
 
 ID: render-gradient-type-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1353,7 +1353,7 @@ ID: render-gradient-type-select
 
 ID: render-module-gap-slider
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1364,7 +1364,7 @@ ID: render-module-gap-slider
 
 ID: render-module-size-slider
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1375,7 +1375,7 @@ ID: render-module-size-slider
 
 ID: render-module-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1386,7 +1386,7 @@ ID: render-module-style-select
 
 ID: render-timing-style-select
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1397,7 +1397,7 @@ ID: render-timing-style-select
 
 ID: render-transparent-bg-switch
 - section: Render Section
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
@@ -1408,7 +1408,7 @@ ID: render-transparent-bg-switch
 
 ID: overlay-blend-preservation-mode-select
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1419,7 +1419,7 @@ ID: overlay-blend-preservation-mode-select
 
 ID: overlay-blend-preservations-switch
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1430,7 +1430,7 @@ ID: overlay-blend-preservations-switch
 
 ID: overlay-color-mode-content
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1441,7 +1441,7 @@ ID: overlay-color-mode-content
 
 ID: overlay-color-mode-select
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1452,7 +1452,7 @@ ID: overlay-color-mode-select
 
 ID: overlay-crop-slider
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1463,7 +1463,7 @@ ID: overlay-crop-slider
 
 ID: overlay-crop-switch
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1474,7 +1474,7 @@ ID: overlay-crop-switch
 
 ID: overlay-enabled-switch
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/e2e-library-demo.spec.ts [direct-id]
@@ -1485,7 +1485,7 @@ ID: overlay-enabled-switch
 
 ID: overlay-finder-dither-strength-slider
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1496,7 +1496,7 @@ ID: overlay-finder-dither-strength-slider
 
 ID: overlay-from-url-button
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1507,7 +1507,7 @@ ID: overlay-from-url-button
 
 ID: overlay-gallery-button
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1518,7 +1518,7 @@ ID: overlay-gallery-button
 
 ID: overlay-intensity-slider
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/e2e-library-demo.spec.ts [direct-id]
@@ -1529,7 +1529,7 @@ ID: overlay-intensity-slider
 
 ID: overlay-load-url-button
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1540,7 +1540,7 @@ ID: overlay-load-url-button
 
 ID: overlay-mode-content
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1551,7 +1551,7 @@ ID: overlay-mode-content
 
 ID: overlay-mode-select
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1562,7 +1562,7 @@ ID: overlay-mode-select
 
 ID: overlay-photo-button
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1573,7 +1573,7 @@ ID: overlay-photo-button
 
 ID: overlay-preserve-finders-switch
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
@@ -1584,7 +1584,7 @@ ID: overlay-preserve-finders-switch
 
 ID: overlay-upload
 - section: Overlay Section
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1595,7 +1595,7 @@ ID: overlay-upload
 
 ID: animation-bounce-switch
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1607,7 +1607,7 @@ ID: animation-bounce-switch
 
 ID: animation-color-cycle-switch
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1619,7 +1619,7 @@ ID: animation-color-cycle-switch
 
 ID: animation-frame-step-slider
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1631,7 +1631,7 @@ ID: animation-frame-step-slider
 
 ID: animation-interpolation-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1643,7 +1643,7 @@ ID: animation-interpolation-content
 
 ID: animation-interpolation-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1655,7 +1655,7 @@ ID: animation-interpolation-trigger
 
 ID: animation-loop-switch
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1667,7 +1667,7 @@ ID: animation-loop-switch
 
 ID: animation-max-frames-slider
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1679,7 +1679,7 @@ ID: animation-max-frames-slider
 
 ID: animation-module-jitter-slider
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1691,7 +1691,7 @@ ID: animation-module-jitter-slider
 
 ID: animation-pattern-2-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1703,7 +1703,7 @@ ID: animation-pattern-2-content
 
 ID: animation-pattern-2-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1715,7 +1715,7 @@ ID: animation-pattern-2-trigger
 
 ID: animation-pattern-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1727,7 +1727,7 @@ ID: animation-pattern-content
 
 ID: animation-pattern-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1739,7 +1739,7 @@ ID: animation-pattern-trigger
 
 ID: animation-seed-input
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1751,7 +1751,7 @@ ID: animation-seed-input
 
 ID: animation-speed-slider
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1763,7 +1763,7 @@ ID: animation-speed-slider
 
 ID: animation-start-frame-slider
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1775,7 +1775,7 @@ ID: animation-start-frame-slider
 
 ID: animation-target-2-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1787,7 +1787,7 @@ ID: animation-target-2-content
 
 ID: animation-target-2-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1799,7 +1799,7 @@ ID: animation-target-2-trigger
 
 ID: animation-target-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1811,7 +1811,7 @@ ID: animation-target-content
 
 ID: animation-target-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1823,7 +1823,7 @@ ID: animation-target-trigger
 
 ID: animation-temporal-dither-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1835,7 +1835,7 @@ ID: animation-temporal-dither-content
 
 ID: animation-temporal-dither-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [direct-id]
@@ -1847,7 +1847,7 @@ ID: animation-temporal-dither-trigger
 
 ID: animation-wave-axis-2-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1859,7 +1859,7 @@ ID: animation-wave-axis-2-content
 
 ID: animation-wave-axis-2-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1871,7 +1871,7 @@ ID: animation-wave-axis-2-trigger
 
 ID: animation-wave-axis-content
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1883,7 +1883,7 @@ ID: animation-wave-axis-content
 
 ID: animation-wave-axis-trigger
 - section: Animation Section
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
@@ -1895,7 +1895,7 @@ ID: animation-wave-axis-trigger
 
 ID: output-dpi-slider
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -1905,7 +1905,7 @@ ID: output-dpi-slider
 
 ID: output-filename-input
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -1915,7 +1915,7 @@ ID: output-filename-input
 
 ID: output-format-content
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -1925,7 +1925,7 @@ ID: output-format-content
 
 ID: output-format-extra-content
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -1935,7 +1935,7 @@ ID: output-format-extra-content
 
 ID: output-format-extra-trigger
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -1945,7 +1945,7 @@ ID: output-format-extra-trigger
 
 ID: output-format-trigger
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -1955,7 +1955,7 @@ ID: output-format-trigger
 
 ID: output-gif-dither-content
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -1965,7 +1965,7 @@ ID: output-gif-dither-content
 
 ID: output-gif-dither-trigger
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -1975,7 +1975,7 @@ ID: output-gif-dither-trigger
 
 ID: output-gif-palette-slider
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -1985,7 +1985,7 @@ ID: output-gif-palette-slider
 
 ID: output-gif-quantizer-content
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -1995,7 +1995,7 @@ ID: output-gif-quantizer-content
 
 ID: output-gif-quantizer-trigger
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2005,7 +2005,7 @@ ID: output-gif-quantizer-trigger
 
 ID: output-height-input
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2015,7 +2015,7 @@ ID: output-height-input
 
 ID: output-include-quiet-zone-switch
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2025,7 +2025,7 @@ ID: output-include-quiet-zone-switch
 
 ID: output-quality-slider
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2035,7 +2035,7 @@ ID: output-quality-slider
 
 ID: output-svg-embed-raster-switch
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2045,7 +2045,7 @@ ID: output-svg-embed-raster-switch
 
 ID: output-svg-precision-content
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2055,7 +2055,7 @@ ID: output-svg-precision-content
 
 ID: output-svg-precision-trigger
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2065,7 +2065,7 @@ ID: output-svg-precision-trigger
 
 ID: output-svg-true-vector-switch
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2075,7 +2075,7 @@ ID: output-svg-true-vector-switch
 
 ID: output-width-input
 - section: Output Section
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/advanced/output.spec.ts [direct-id]
@@ -2085,7 +2085,7 @@ ID: output-width-input
 
 ID: watermark-blend-content
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2095,7 +2095,7 @@ ID: watermark-blend-content
 
 ID: watermark-blend-trigger
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2105,7 +2105,7 @@ ID: watermark-blend-trigger
 
 ID: watermark-clear-image-button
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2115,7 +2115,7 @@ ID: watermark-clear-image-button
 
 ID: watermark-enabled-switch
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2125,7 +2125,7 @@ ID: watermark-enabled-switch
 
 ID: watermark-kind-content
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2135,7 +2135,7 @@ ID: watermark-kind-content
 
 ID: watermark-kind-trigger
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2145,7 +2145,7 @@ ID: watermark-kind-trigger
 
 ID: watermark-opacity-slider
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2155,7 +2155,7 @@ ID: watermark-opacity-slider
 
 ID: watermark-position-content
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2165,7 +2165,7 @@ ID: watermark-position-content
 
 ID: watermark-position-trigger
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2175,7 +2175,7 @@ ID: watermark-position-trigger
 
 ID: watermark-text-input
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2185,7 +2185,7 @@ ID: watermark-text-input
 
 ID: watermark-upload-button
 - section: Watermark Section
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/watermark.spec.ts [direct-id]
@@ -2195,7 +2195,7 @@ ID: watermark-upload-button
 
 ID: metadata-add-custom-button
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2205,7 +2205,7 @@ ID: metadata-add-custom-button
 
 ID: metadata-author-input
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2215,7 +2215,7 @@ ID: metadata-author-input
 
 ID: metadata-copyright-input
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2225,7 +2225,7 @@ ID: metadata-copyright-input
 
 ID: metadata-creation-time-switch
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2235,7 +2235,7 @@ ID: metadata-creation-time-switch
 
 ID: metadata-description-textarea
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2245,7 +2245,7 @@ ID: metadata-description-textarea
 
 ID: metadata-license-input
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2255,7 +2255,7 @@ ID: metadata-license-input
 
 ID: metadata-title-input
 - section: Metadata Section
-- source: src/components/sections/MetadataSection.tsx
+- source: src/features/generator/components/sections/MetadataSection.tsx
 - inferred-domain: metadata
 - requirements:
   - T4 Persistence tests -> tests/professional/metadata.spec.ts [direct-id]
@@ -2265,7 +2265,7 @@ ID: metadata-title-input
 
 ID: share-copy-embed-button
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2274,7 +2274,7 @@ ID: share-copy-embed-button
 
 ID: share-copy-link-button
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2283,7 +2283,7 @@ ID: share-copy-link-button
 
 ID: share-copy-markdown-button
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2292,7 +2292,7 @@ ID: share-copy-markdown-button
 
 ID: share-direct-link-input
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2301,7 +2301,7 @@ ID: share-direct-link-input
 
 ID: share-direct-link-switch
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2310,7 +2310,7 @@ ID: share-direct-link-switch
 
 ID: share-embed-code-input
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2319,7 +2319,7 @@ ID: share-embed-code-input
 
 ID: share-embed-html-switch
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2328,7 +2328,7 @@ ID: share-embed-html-switch
 
 ID: share-encode-more-params-switch
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2337,7 +2337,7 @@ ID: share-encode-more-params-switch
 
 ID: share-markdown-input
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2346,7 +2346,7 @@ ID: share-markdown-input
 
 ID: share-quick-copy-button
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2355,7 +2355,7 @@ ID: share-quick-copy-button
 
 ID: share-twitter-button
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2364,7 +2364,7 @@ ID: share-twitter-button
 
 ID: share-whatsapp-button
 - section: Share Section
-- source: src/components/sections/ShareSection.tsx
+- source: src/features/generator/components/sections/ShareSection.tsx
 - inferred-domain: share
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/share.spec.ts [direct-id]
@@ -2373,7 +2373,7 @@ ID: share-whatsapp-button
 
 ID: safety-auto-pick-ecc-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2383,7 +2383,7 @@ ID: safety-auto-pick-ecc-switch
 
 ID: safety-auto-pick-version-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2393,7 +2393,7 @@ ID: safety-auto-pick-version-switch
 
 ID: safety-auto-reduce-intensity-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2403,7 +2403,7 @@ ID: safety-auto-reduce-intensity-switch
 
 ID: safety-contrast-check-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2413,7 +2413,7 @@ ID: safety-contrast-check-switch
 
 ID: safety-ecc-aware-enabled-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2423,7 +2423,7 @@ ID: safety-ecc-aware-enabled-switch
 
 ID: safety-ecc-risk-budget-slider
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2433,7 +2433,7 @@ ID: safety-ecc-risk-budget-slider
 
 ID: safety-ecc-weight-map-content
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2443,7 +2443,7 @@ ID: safety-ecc-weight-map-content
 
 ID: safety-ecc-weight-map-trigger
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2453,7 +2453,7 @@ ID: safety-ecc-weight-map-trigger
 
 ID: safety-lock-alignment-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2463,7 +2463,7 @@ ID: safety-lock-alignment-switch
 
 ID: safety-lock-finders-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2473,7 +2473,7 @@ ID: safety-lock-finders-switch
 
 ID: safety-lock-format-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2483,7 +2483,7 @@ ID: safety-lock-format-switch
 
 ID: safety-lock-timing-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2493,7 +2493,7 @@ ID: safety-lock-timing-switch
 
 ID: safety-lock-version-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2503,7 +2503,7 @@ ID: safety-lock-version-switch
 
 ID: safety-min-module-slider
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2513,7 +2513,7 @@ ID: safety-min-module-slider
 
 ID: safety-min-quiet-zone-slider
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2523,7 +2523,7 @@ ID: safety-min-quiet-zone-slider
 
 ID: safety-mode-content
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-3-output-share-safety.spec.ts [direct-id]
@@ -2533,7 +2533,7 @@ ID: safety-mode-content
 
 ID: safety-mode-trigger
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2543,7 +2543,7 @@ ID: safety-mode-trigger
 
 ID: safety-show-heatmap-switch
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2553,7 +2553,7 @@ ID: safety-show-heatmap-switch
 
 ID: safety-simulate-blur-slider
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2563,7 +2563,7 @@ ID: safety-simulate-blur-slider
 
 ID: safety-simulate-noise-slider
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2573,7 +2573,7 @@ ID: safety-simulate-noise-slider
 
 ID: safety-simulate-rotation-slider
 - section: Safety Section
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/professional/safety.spec.ts [direct-id]
@@ -2690,7 +2690,7 @@ ID: tier-tabs
 
 ID: select-item-option-0
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2700,7 +2700,7 @@ ID: select-item-option-0
 
 ID: select-item-option-1
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx, src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx, src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2711,7 +2711,7 @@ ID: select-item-option-1
 
 ID: select-item-option-10
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2722,7 +2722,7 @@ ID: select-item-option-10
 
 ID: select-item-option-137
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2733,7 +2733,7 @@ ID: select-item-option-137
 
 ID: select-item-option-2
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2743,7 +2743,7 @@ ID: select-item-option-2
 
 ID: select-item-option-2x2
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2754,7 +2754,7 @@ ID: select-item-option-2x2
 
 ID: select-item-option-3
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2764,7 +2764,7 @@ ID: select-item-option-3
 
 ID: select-item-option-3x3
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2775,7 +2775,7 @@ ID: select-item-option-3x3
 
 ID: select-item-option-4
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2785,7 +2785,7 @@ ID: select-item-option-4
 
 ID: select-item-option-42161
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2796,7 +2796,7 @@ ID: select-item-option-42161
 
 ID: select-item-option-43114
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2807,7 +2807,7 @@ ID: select-item-option-43114
 
 ID: select-item-option-4x4
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2818,7 +2818,7 @@ ID: select-item-option-4x4
 
 ID: select-item-option-5
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2828,7 +2828,7 @@ ID: select-item-option-5
 
 ID: select-item-option-56
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2839,7 +2839,7 @@ ID: select-item-option-56
 
 ID: select-item-option-6
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2849,7 +2849,7 @@ ID: select-item-option-6
 
 ID: select-item-option-7
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2859,7 +2859,7 @@ ID: select-item-option-7
 
 ID: select-item-option-abn
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2870,7 +2870,7 @@ ID: select-item-option-abn
 
 ID: select-item-option-adaptive-threshold
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2890,7 +2890,7 @@ ID: select-item-option-advanced
 
 ID: select-item-option-alphanumeric
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2900,7 +2900,7 @@ ID: select-item-option-alphanumeric
 
 ID: select-item-option-android
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2911,7 +2911,7 @@ ID: select-item-option-android
 
 ID: select-item-option-animated-webp
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2921,7 +2921,7 @@ ID: select-item-option-animated-webp
 
 ID: select-item-option-army
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2932,7 +2932,7 @@ ID: select-item-option-army
 
 ID: select-item-option-artwork
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2943,7 +2943,7 @@ ID: select-item-option-artwork
 
 ID: select-item-option-atkinson
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2954,7 +2954,7 @@ ID: select-item-option-atkinson
 
 ID: select-item-option-auto
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2964,7 +2964,7 @@ ID: select-item-option-auto
 
 ID: select-item-option-balanced
 - section: Select Option IDs
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2983,7 +2983,7 @@ ID: select-item-option-basic
 
 ID: select-item-option-bayer2
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -2994,7 +2994,7 @@ ID: select-item-option-bayer2
 
 ID: select-item-option-bayer4
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3005,7 +3005,7 @@ ID: select-item-option-bayer4
 
 ID: select-item-option-bayer8
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3016,7 +3016,7 @@ ID: select-item-option-bayer8
 
 ID: select-item-option-behind
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3026,7 +3026,7 @@ ID: select-item-option-behind
 
 ID: select-item-option-bitcoin
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3037,7 +3037,7 @@ ID: select-item-option-bitcoin
 
 ID: select-item-option-blend
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3048,7 +3048,7 @@ ID: select-item-option-blend
 
 ID: select-item-option-block-heatmap
 - section: Select Option IDs
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3058,7 +3058,7 @@ ID: select-item-option-block-heatmap
 
 ID: select-item-option-blue-noise
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx, src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3069,7 +3069,7 @@ ID: select-item-option-blue-noise
 
 ID: select-item-option-blue-noise-error-diffusion
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3080,7 +3080,7 @@ ID: select-item-option-blue-noise-error-diffusion
 
 ID: select-item-option-blue-noise-threshold
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3091,7 +3091,7 @@ ID: select-item-option-blue-noise-threshold
 
 ID: select-item-option-both
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3103,7 +3103,7 @@ ID: select-item-option-both
 
 ID: select-item-option-brightness
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3114,7 +3114,7 @@ ID: select-item-option-brightness
 
 ID: select-item-option-burkes
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3125,7 +3125,7 @@ ID: select-item-option-burkes
 
 ID: select-item-option-business
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3136,7 +3136,7 @@ ID: select-item-option-business
 
 ID: select-item-option-bw
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3147,7 +3147,7 @@ ID: select-item-option-bw
 
 ID: select-item-option-by-brightness
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3158,7 +3158,7 @@ ID: select-item-option-by-brightness
 
 ID: select-item-option-by-cluster
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3169,7 +3169,7 @@ ID: select-item-option-by-cluster
 
 ID: select-item-option-by-overlay
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3180,7 +3180,7 @@ ID: select-item-option-by-overlay
 
 ID: select-item-option-by-position
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3191,7 +3191,7 @@ ID: select-item-option-by-position
 
 ID: select-item-option-byte
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3201,7 +3201,7 @@ ID: select-item-option-byte
 
 ID: select-item-option-canny
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3212,7 +3212,7 @@ ID: select-item-option-canny
 
 ID: select-item-option-ceil
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3223,7 +3223,7 @@ ID: select-item-option-ceil
 
 ID: select-item-option-center
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3234,7 +3234,7 @@ ID: select-item-option-center
 
 ID: select-item-option-ch
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3245,7 +3245,7 @@ ID: select-item-option-ch
 
 ID: select-item-option-chf
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3256,7 +3256,7 @@ ID: select-item-option-chf
 
 ID: select-item-option-circle
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3267,7 +3267,7 @@ ID: select-item-option-circle
 
 ID: select-item-option-clustered-dot
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3278,7 +3278,7 @@ ID: select-item-option-clustered-dot
 
 ID: select-item-option-color
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3289,7 +3289,7 @@ ID: select-item-option-color
 
 ID: select-item-option-column
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3300,7 +3300,7 @@ ID: select-item-option-column
 
 ID: select-item-option-conic
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3311,7 +3311,7 @@ ID: select-item-option-conic
 
 ID: select-item-option-connected
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3322,7 +3322,7 @@ ID: select-item-option-connected
 
 ID: select-item-option-contain
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3333,7 +3333,7 @@ ID: select-item-option-contain
 
 ID: select-item-option-corners
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3343,7 +3343,7 @@ ID: select-item-option-corners
 
 ID: select-item-option-cover
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3354,7 +3354,7 @@ ID: select-item-option-cover
 
 ID: select-item-option-crossfade
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3366,7 +3366,7 @@ ID: select-item-option-crossfade
 
 ID: select-item-option-custom
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3377,7 +3377,7 @@ ID: select-item-option-custom
 
 ID: select-item-option-dashed
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3388,7 +3388,7 @@ ID: select-item-option-dashed
 
 ID: select-item-option-default
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3398,7 +3398,7 @@ ID: select-item-option-default
 
 ID: select-item-option-diagonal
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3409,7 +3409,7 @@ ID: select-item-option-diagonal
 
 ID: select-item-option-diamond
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3420,7 +3420,7 @@ ID: select-item-option-diamond
 
 ID: select-item-option-distance-to-finders
 - section: Select Option IDs
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3430,7 +3430,7 @@ ID: select-item-option-distance-to-finders
 
 ID: select-item-option-dither
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3441,7 +3441,7 @@ ID: select-item-option-dither
 
 ID: select-item-option-dithered
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3452,7 +3452,7 @@ ID: select-item-option-dithered
 
 ID: select-item-option-dots
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3463,7 +3463,7 @@ ID: select-item-option-dots
 
 ID: select-item-option-drift
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3475,7 +3475,7 @@ ID: select-item-option-drift
 
 ID: select-item-option-duotone
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3486,7 +3486,7 @@ ID: select-item-option-duotone
 
 ID: select-item-option-edge-aware
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3497,7 +3497,7 @@ ID: select-item-option-edge-aware
 
 ID: select-item-option-edges
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3507,7 +3507,7 @@ ID: select-item-option-edges
 
 ID: select-item-option-email
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3518,7 +3518,7 @@ ID: select-item-option-email
 
 ID: select-item-option-empirical-scan-heatmap
 - section: Select Option IDs
-- source: src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: safety
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3528,7 +3528,7 @@ ID: select-item-option-empirical-scan-heatmap
 
 ID: select-item-option-eps
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3538,7 +3538,7 @@ ID: select-item-option-eps
 
 ID: select-item-option-equipment
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3549,7 +3549,7 @@ ID: select-item-option-equipment
 
 ID: select-item-option-error-diffusion
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3560,7 +3560,7 @@ ID: select-item-option-error-diffusion
 
 ID: select-item-option-ethereum
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3571,7 +3571,7 @@ ID: select-item-option-ethereum
 
 ID: select-item-option-eur
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3582,7 +3582,7 @@ ID: select-item-option-eur
 
 ID: select-item-option-ewallet
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3593,7 +3593,7 @@ ID: select-item-option-ewallet
 
 ID: select-item-option-extreme
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3604,7 +3604,7 @@ ID: select-item-option-extreme
 
 ID: select-item-option-facebook
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3615,7 +3615,7 @@ ID: select-item-option-facebook
 
 ID: select-item-option-fixed
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3626,7 +3626,7 @@ ID: select-item-option-fixed
 
 ID: select-item-option-flicker-safe
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3638,7 +3638,7 @@ ID: select-item-option-flicker-safe
 
 ID: select-item-option-floor
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3649,7 +3649,7 @@ ID: select-item-option-floor
 
 ID: select-item-option-floyd
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3659,7 +3659,7 @@ ID: select-item-option-floyd
 
 ID: select-item-option-floyd-steinberg
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3670,7 +3670,7 @@ ID: select-item-option-floyd-steinberg
 
 ID: select-item-option-furniture
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3681,7 +3681,7 @@ ID: select-item-option-furniture
 
 ID: select-item-option-gamma
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3692,7 +3692,7 @@ ID: select-item-option-gamma
 
 ID: select-item-option-gapfill
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3703,7 +3703,7 @@ ID: select-item-option-gapfill
 
 ID: select-item-option-gaussian-noise
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3714,7 +3714,7 @@ ID: select-item-option-gaussian-noise
 
 ID: select-item-option-gif
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3724,7 +3724,7 @@ ID: select-item-option-gif
 
 ID: select-item-option-github
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3735,7 +3735,7 @@ ID: select-item-option-github
 
 ID: select-item-option-grayscale
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3746,7 +3746,7 @@ ID: select-item-option-grayscale
 
 ID: select-item-option-h
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3756,7 +3756,7 @@ ID: select-item-option-h
 
 ID: select-item-option-halftone
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3767,7 +3767,7 @@ ID: select-item-option-halftone
 
 ID: select-item-option-halftone-center
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3778,7 +3778,7 @@ ID: select-item-option-halftone-center
 
 ID: select-item-option-halftone-dithered
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3789,7 +3789,7 @@ ID: select-item-option-halftone-dithered
 
 ID: select-item-option-hotp
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3800,7 +3800,7 @@ ID: select-item-option-hotp
 
 ID: select-item-option-id
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3811,7 +3811,7 @@ ID: select-item-option-id
 
 ID: select-item-option-image
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3821,7 +3821,7 @@ ID: select-item-option-image
 
 ID: select-item-option-inset
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3832,7 +3832,7 @@ ID: select-item-option-inset
 
 ID: select-item-option-instagram
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3843,7 +3843,7 @@ ID: select-item-option-instagram
 
 ID: select-item-option-inventory
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3854,7 +3854,7 @@ ID: select-item-option-inventory
 
 ID: select-item-option-ios
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3865,7 +3865,7 @@ ID: select-item-option-ios
 
 ID: select-item-option-iso-8859-1
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3875,7 +3875,7 @@ ID: select-item-option-iso-8859-1
 
 ID: select-item-option-it
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3886,7 +3886,7 @@ ID: select-item-option-it
 
 ID: select-item-option-jarvis-judice-ninke
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3897,7 +3897,7 @@ ID: select-item-option-jarvis-judice-ninke
 
 ID: select-item-option-kanji
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3907,7 +3907,7 @@ ID: select-item-option-kanji
 
 ID: select-item-option-l
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3917,7 +3917,7 @@ ID: select-item-option-l
 
 ID: select-item-option-li
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3928,7 +3928,7 @@ ID: select-item-option-li
 
 ID: select-item-option-line
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3939,7 +3939,7 @@ ID: select-item-option-line
 
 ID: select-item-option-linear
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3950,7 +3950,7 @@ ID: select-item-option-linear
 
 ID: select-item-option-linkedin
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3961,7 +3961,7 @@ ID: select-item-option-linkedin
 
 ID: select-item-option-litecoin
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3972,7 +3972,7 @@ ID: select-item-option-litecoin
 
 ID: select-item-option-m
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3982,7 +3982,7 @@ ID: select-item-option-m
 
 ID: select-item-option-match-finder
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -3993,7 +3993,7 @@ ID: select-item-option-match-finder
 
 ID: select-item-option-match-module
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4004,7 +4004,7 @@ ID: select-item-option-match-module
 
 ID: select-item-option-median-cut
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4014,7 +4014,7 @@ ID: select-item-option-median-cut
 
 ID: select-item-option-messenger
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4025,7 +4025,7 @@ ID: select-item-option-messenger
 
 ID: select-item-option-mobile
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4036,7 +4036,7 @@ ID: select-item-option-mobile
 
 ID: select-item-option-modules
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4048,7 +4048,7 @@ ID: select-item-option-modules
 
 ID: select-item-option-morph
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4060,7 +4060,7 @@ ID: select-item-option-morph
 
 ID: select-item-option-mosaic
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4071,7 +4071,7 @@ ID: select-item-option-mosaic
 
 ID: select-item-option-multiply
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4081,7 +4081,7 @@ ID: select-item-option-multiply
 
 ID: select-item-option-n-n
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4092,7 +4092,7 @@ ID: select-item-option-n-n
 
 ID: select-item-option-negative-space
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4103,7 +4103,7 @@ ID: select-item-option-negative-space
 
 ID: select-item-option-neuquant
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4113,7 +4113,7 @@ ID: select-item-option-neuquant
 
 ID: select-item-option-non
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4124,7 +4124,7 @@ ID: select-item-option-non
 
 ID: select-item-option-none
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx, src/components/sections/OutputSection.tsx, src/components/sections/OverlaySection.tsx, src/components/sections/PayloadSection.tsx, src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OutputSection.tsx, src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/PayloadSection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4135,7 +4135,7 @@ ID: select-item-option-none
 
 ID: select-item-option-nopass
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4146,7 +4146,7 @@ ID: select-item-option-nopass
 
 ID: select-item-option-normal
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4156,7 +4156,7 @@ ID: select-item-option-normal
 
 ID: select-item-option-nric
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4167,7 +4167,7 @@ ID: select-item-option-nric
 
 ID: select-item-option-numeric
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4177,7 +4177,7 @@ ID: select-item-option-numeric
 
 ID: select-item-option-octree
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4187,7 +4187,7 @@ ID: select-item-option-octree
 
 ID: select-item-option-off
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx, src/components/sections/OutputSection.tsx, src/components/sections/OverlaySection.tsx, src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OutputSection.tsx, src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4198,7 +4198,7 @@ ID: select-item-option-off
 
 ID: select-item-option-ordered
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4208,7 +4208,7 @@ ID: select-item-option-ordered
 
 ID: select-item-option-ordered-bayer
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4219,7 +4219,7 @@ ID: select-item-option-ordered-bayer
 
 ID: select-item-option-ordered-clustered
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4230,7 +4230,7 @@ ID: select-item-option-ordered-clustered
 
 ID: select-item-option-ordered-void-cluster
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4241,7 +4241,7 @@ ID: select-item-option-ordered-void-cluster
 
 ID: select-item-option-org
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4252,7 +4252,7 @@ ID: select-item-option-org
 
 ID: select-item-option-other
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4263,7 +4263,7 @@ ID: select-item-option-other
 
 ID: select-item-option-others
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4274,7 +4274,7 @@ ID: select-item-option-others
 
 ID: select-item-option-outline
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4285,7 +4285,7 @@ ID: select-item-option-outline
 
 ID: select-item-option-overlay
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4296,7 +4296,7 @@ ID: select-item-option-overlay
 
 ID: select-item-option-passport
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4307,7 +4307,7 @@ ID: select-item-option-passport
 
 ID: select-item-option-pattern
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4317,7 +4317,7 @@ ID: select-item-option-pattern
 
 ID: select-item-option-per-channel
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4328,7 +4328,7 @@ ID: select-item-option-per-channel
 
 ID: select-item-option-per-module
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4339,7 +4339,7 @@ ID: select-item-option-per-module
 
 ID: select-item-option-percent
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4350,7 +4350,7 @@ ID: select-item-option-percent
 
 ID: select-item-option-perceptual
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4361,7 +4361,7 @@ ID: select-item-option-perceptual
 
 ID: select-item-option-pixel
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4371,7 +4371,7 @@ ID: select-item-option-pixel
 
 ID: select-item-option-pixelate
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4382,7 +4382,7 @@ ID: select-item-option-pixelate
 
 ID: select-item-option-png
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4392,7 +4392,7 @@ ID: select-item-option-png
 
 ID: select-item-option-position
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4403,7 +4403,7 @@ ID: select-item-option-position
 
 ID: select-item-option-precise
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4422,7 +4422,7 @@ ID: select-item-option-professional
 
 ID: select-item-option-prompt
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4433,7 +4433,7 @@ ID: select-item-option-prompt
 
 ID: select-item-option-pulse
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4445,7 +4445,7 @@ ID: select-item-option-pulse
 
 ID: select-item-option-q
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4455,7 +4455,7 @@ ID: select-item-option-q
 
 ID: select-item-option-qrr
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4466,7 +4466,7 @@ ID: select-item-option-qrr
 
 ID: select-item-option-quiet-zone
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4476,7 +4476,7 @@ ID: select-item-option-quiet-zone
 
 ID: select-item-option-radial
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4487,7 +4487,7 @@ ID: select-item-option-radial
 
 ID: select-item-option-random
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4498,7 +4498,7 @@ ID: select-item-option-random
 
 ID: select-item-option-respect
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4509,7 +4509,7 @@ ID: select-item-option-respect
 
 ID: select-item-option-result
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4521,7 +4521,7 @@ ID: select-item-option-result
 
 ID: select-item-option-round
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4532,7 +4532,7 @@ ID: select-item-option-round
 
 ID: select-item-option-rounded
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4543,7 +4543,7 @@ ID: select-item-option-rounded
 
 ID: select-item-option-rounded-frame
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4554,7 +4554,7 @@ ID: select-item-option-rounded-frame
 
 ID: select-item-option-row
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4565,7 +4565,7 @@ ID: select-item-option-row
 
 ID: select-item-option-s-curve
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4576,7 +4576,7 @@ ID: select-item-option-s-curve
 
 ID: select-item-option-scanline
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4588,7 +4588,7 @@ ID: select-item-option-scanline
 
 ID: select-item-option-scor
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4599,7 +4599,7 @@ ID: select-item-option-scor
 
 ID: select-item-option-screen
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4609,7 +4609,7 @@ ID: select-item-option-screen
 
 ID: select-item-option-screened-blue-noise
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4620,7 +4620,7 @@ ID: select-item-option-screened-blue-noise
 
 ID: select-item-option-sha1
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4631,7 +4631,7 @@ ID: select-item-option-sha1
 
 ID: select-item-option-sha256
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4642,7 +4642,7 @@ ID: select-item-option-sha256
 
 ID: select-item-option-sha512
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4653,7 +4653,7 @@ ID: select-item-option-sha512
 
 ID: select-item-option-shift-jis
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4663,7 +4663,7 @@ ID: select-item-option-shift-jis
 
 ID: select-item-option-shimmer
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4675,7 +4675,7 @@ ID: select-item-option-shimmer
 
 ID: select-item-option-sierra
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4686,7 +4686,7 @@ ID: select-item-option-sierra
 
 ID: select-item-option-sierra-2
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4697,7 +4697,7 @@ ID: select-item-option-sierra-2
 
 ID: select-item-option-sierra-lite
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4708,7 +4708,7 @@ ID: select-item-option-sierra-lite
 
 ID: select-item-option-signal
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4719,7 +4719,7 @@ ID: select-item-option-signal
 
 ID: select-item-option-simplify
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4730,7 +4730,7 @@ ID: select-item-option-simplify
 
 ID: select-item-option-sobel
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4741,7 +4741,7 @@ ID: select-item-option-sobel
 
 ID: select-item-option-solid
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4752,7 +4752,7 @@ ID: select-item-option-solid
 
 ID: select-item-option-square
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4763,7 +4763,7 @@ ID: select-item-option-square
 
 ID: select-item-option-sticker
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4774,7 +4774,7 @@ ID: select-item-option-sticker
 
 ID: select-item-option-stretch
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4785,7 +4785,7 @@ ID: select-item-option-stretch
 
 ID: select-item-option-strict
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx, src/components/sections/SafetySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/SafetySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4796,7 +4796,7 @@ ID: select-item-option-strict
 
 ID: select-item-option-stroke
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4807,7 +4807,7 @@ ID: select-item-option-stroke
 
 ID: select-item-option-stucki
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4818,7 +4818,7 @@ ID: select-item-option-stucki
 
 ID: select-item-option-stylized
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4829,7 +4829,7 @@ ID: select-item-option-stylized
 
 ID: select-item-option-subpixel
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4840,7 +4840,7 @@ ID: select-item-option-subpixel
 
 ID: select-item-option-subpixel-size
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4851,7 +4851,7 @@ ID: select-item-option-subpixel-size
 
 ID: select-item-option-svg
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4861,7 +4861,7 @@ ID: select-item-option-svg
 
 ID: select-item-option-tag
 - section: Select Option IDs
-- source: src/components/sections/RenderSection.tsx
+- source: src/features/generator/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4872,7 +4872,7 @@ ID: select-item-option-tag
 
 ID: select-item-option-telegram
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4883,7 +4883,7 @@ ID: select-item-option-telegram
 
 ID: select-item-option-temporal-blue-noise
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4894,7 +4894,7 @@ ID: select-item-option-temporal-blue-noise
 
 ID: select-item-option-text
 - section: Select Option IDs
-- source: src/components/sections/WatermarkSection.tsx
+- source: src/features/generator/components/sections/WatermarkSection.tsx
 - inferred-domain: watermark
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4904,7 +4904,7 @@ ID: select-item-option-text
 
 ID: select-item-option-tiktok
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4915,7 +4915,7 @@ ID: select-item-option-tiktok
 
 ID: select-item-option-totp
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4926,7 +4926,7 @@ ID: select-item-option-totp
 
 ID: select-item-option-triangular-noise
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4937,7 +4937,7 @@ ID: select-item-option-triangular-noise
 
 ID: select-item-option-true-dither
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4948,7 +4948,7 @@ ID: select-item-option-true-dither
 
 ID: select-item-option-twitter
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4959,7 +4959,7 @@ ID: select-item-option-twitter
 
 ID: select-item-option-uen
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4970,7 +4970,7 @@ ID: select-item-option-uen
 
 ID: select-item-option-universal
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4981,7 +4981,7 @@ ID: select-item-option-universal
 
 ID: select-item-option-utf8
 - section: Select Option IDs
-- source: src/components/sections/qr-encoding-section.tsx
+- source: src/features/generator/components/sections/qr-encoding-section.tsx
 - inferred-domain: qr
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -4991,7 +4991,7 @@ ID: select-item-option-utf8
 
 ID: select-item-option-vehicle
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5002,7 +5002,7 @@ ID: select-item-option-vehicle
 
 ID: select-item-option-viber
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5013,7 +5013,7 @@ ID: select-item-option-viber
 
 ID: select-item-option-void-cluster
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5024,7 +5024,7 @@ ID: select-item-option-void-cluster
 
 ID: select-item-option-wave
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx, src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx, src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5035,7 +5035,7 @@ ID: select-item-option-wave
 
 ID: select-item-option-webp
 - section: Select Option IDs
-- source: src/components/sections/OutputSection.tsx
+- source: src/features/generator/components/sections/OutputSection.tsx
 - inferred-domain: output
 - requirements:
   - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5045,7 +5045,7 @@ ID: select-item-option-webp
 
 ID: select-item-option-wep
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5056,7 +5056,7 @@ ID: select-item-option-wep
 
 ID: select-item-option-whatsapp
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5067,7 +5067,7 @@ ID: select-item-option-whatsapp
 
 ID: select-item-option-white-noise
 - section: Select Option IDs
-- source: src/components/sections/OverlaySection.tsx
+- source: src/features/generator/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5078,7 +5078,7 @@ ID: select-item-option-white-noise
 
 ID: select-item-option-wpa
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5089,7 +5089,7 @@ ID: select-item-option-wpa
 
 ID: select-item-option-wpa2
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5100,7 +5100,7 @@ ID: select-item-option-wpa2
 
 ID: select-item-option-wpa3
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5111,7 +5111,7 @@ ID: select-item-option-wpa3
 
 ID: select-item-option-x
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5123,7 +5123,7 @@ ID: select-item-option-x
 
 ID: select-item-option-xy
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5135,7 +5135,7 @@ ID: select-item-option-xy
 
 ID: select-item-option-y
 - section: Select Option IDs
-- source: src/components/sections/AnimationSection.tsx
+- source: src/features/generator/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
   - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
@@ -5147,7 +5147,7 @@ ID: select-item-option-y
 
 ID: select-item-option-youtube
 - section: Select Option IDs
-- source: src/components/sections/PayloadSection.tsx
+- source: src/features/generator/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
   - T2 Encoding/data correctness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]

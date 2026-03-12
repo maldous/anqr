@@ -146,7 +146,7 @@ export function AppContent() {
       globalThis.removeEventListener('popstate', handleLocationChange);
       globalThis.removeEventListener('hashchange', handleLocationChange);
     };
-  }, []);
+  }, [i18n]);
 
   // Handle Android back press (hardware button + swipe-back gesture)
   // OnBackPressedDispatcher in MainActivity.java intercepts all back presses
@@ -225,7 +225,7 @@ export function AppContent() {
         el.remove();
       }
     };
-  }, [showEditor, currentPage, t]);
+  }, [showEditor, currentPage, t, i18n.language]);
 
   // Load overlay image from URL
   // Takes store reference to avoid subscribing component to store changes
@@ -300,7 +300,7 @@ export function AppContent() {
     applyEccIntensityLimits(params);
 
     if (params.overlayUrl) loadOverlayFromUrl(params.overlayUrl, store);
-  }, [loadOverlayFromUrl]);
+  }, [loadOverlayFromUrl, i18n]);
 
   return (
     <TooltipProvider>
