@@ -12,7 +12,7 @@ vi.mock('../../src/lib/logger', () => ({
 }));
 
 const mockScanCanvas = vi.fn();
-vi.mock('../../src/modules/qr-analyzer/scanner', () => ({
+vi.mock('../../src/domain/qr/analyze/scanner', () => ({
   scanCanvas: (...args: unknown[]) => mockScanCanvas(...args),
 }));
 

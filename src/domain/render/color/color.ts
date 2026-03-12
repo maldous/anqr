@@ -4,6 +4,8 @@ export { parseRgbString } from './parse-rgb-string';
 export { parseHslString } from './parse-hsl-string';
 export { parseColor } from './parse-color';
 export { rgbToHex } from './rgb-to-hex';
+export { rgbaToHex } from './rgba-to-hex';
+export { rgbToString } from './rgb-to-string';
 export { rgbaToString } from './rgba-to-string';
 export { rgbToGray } from './rgb-to-gray';
 export { srgbToLinear01 } from './srgb-to-linear01';
@@ -15,10 +17,16 @@ export { hslToRgbTuple } from './hsl-to-rgb-tuple';
 export { rgbToHslTuple } from './rgb-to-hsl-tuple';
 export { blendRgb } from './blend-rgb';
 export { blendRgbLinear } from './blend-rgb-linear';
+export { alphaBlend } from './alpha-blend';
+export { multiplyBlend } from './multiply-blend';
+export { screenBlend } from './screen-blend';
+export { overlayBlend } from './overlay-blend';
 export { blendColors } from './blend-colors';
 export { blendColorsLinear } from './blend-colors-linear';
 export { getRelativeLuminance } from './get-relative-luminance';
 export { getContrastRatio } from './get-contrast-ratio';
+export { isDark } from './is-dark';
+export { getTextColor } from './get-text-color';
 
 // Re-export types for convenience
 export type { HSL, HSLA, RGB, RGBA } from '../../../modules/core/types';

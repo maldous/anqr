@@ -31,16 +31,16 @@ function extractUIKinds(sectionSource: string): Set<string> {
 function extractTextDrivenKinds(sectionSource: string): Set<string> {
   return new Set(
     [
-      ...sectionSource.matchAll(
-        /if \(payloadKind === '([^']+)'.*?\)\s*\{[\s\S]*?setPayloadText\(/g
-      ),
+      ...sectionSource.matchAll(/payloadKind === '([^']+)'[\s\S]*?setPayloadText\(generated\)/g),
     ].map((m) => m[1])
   );
 }
 
 describe('Payload matrix guard', () => {
   const storeSource = readRepoFile('src/store/qr-store.ts');
-  const sectionSource = readRepoFile('src/components/sections/PayloadSection.tsx');
+  const sectionSource = readRepoFile(
+    'src/features/generator/components/sections/PayloadSection.tsx'
+  );
   const payloadKinds = extractPayloadKinds(storeSource);
   const switchKinds = extractSwitchKinds(storeSource);
   const uiKinds = extractUIKinds(sectionSource);

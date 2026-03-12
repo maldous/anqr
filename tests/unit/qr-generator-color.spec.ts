@@ -12,7 +12,7 @@ vi.mock('../../src/lib/logger', () => ({
 
 describe('qr-generator color', () => {
   beforeEach(() => {
-    vi.doUnmock('../../src/modules/core');
+    vi.doUnmock('../../src/domain/render/color/color');
     vi.doUnmock('../../src/modules/qr-generator/utils');
     vi.resetModules();
   });
@@ -61,8 +61,8 @@ describe('qr-generator color', () => {
         .mockReturnValueOnce(10) // already sufficient
         .mockReturnValue(1), // then force fallback paths
     }));
-    vi.doMock('../../src/modules/core', async () => {
-      const actual = await vi.importActual<any>('../../src/modules/core');
+    vi.doMock('../../src/domain/render/color/color', async () => {
+      const actual = await vi.importActual<any>('../../src/domain/render/color/color');
       return {
         ...actual,
         getRelativeLuminance: vi.fn().mockReturnValueOnce(0.1).mockReturnValueOnce(0.9),
@@ -82,8 +82,8 @@ describe('qr-generator color', () => {
         throw new Error('boom');
       }),
     }));
-    vi.doMock('../../src/modules/core', async () => {
-      const actual = await vi.importActual<any>('../../src/modules/core');
+    vi.doMock('../../src/domain/render/color/color', async () => {
+      const actual = await vi.importActual<any>('../../src/domain/render/color/color');
       return {
         ...actual,
         parseColor: vi.fn(() => null),

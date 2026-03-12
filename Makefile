@@ -1252,8 +1252,20 @@ report\:i18n\:txt:
 # Order: fix → audits → typecheck → full vitest → test-id checks → i18n → Playwright E2E
 # Outputs E2E results to test-report.txt for text-based review
 test: _quality-gates
+	@echo ""
+	@echo "============================================"
+	@echo "Test Stage 1/3: Vitest unit suite"
+	@echo "============================================"
 	npm run test:unit
+	@echo ""
+	@echo "============================================"
+	@echo "Test Stage 2/3: i18n regression audit"
+	@echo "============================================"
 	npm run test:i18n
+	@echo ""
+	@echo "============================================"
+	@echo "Test Stage 3/3: Playwright tiers + API"
+	@echo "============================================"
 	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=api --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)

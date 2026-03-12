@@ -32,7 +32,7 @@ vi.mock('../../src/lib/logger', () => ({
 
 // --- overlay-transforms dependency mocks ---
 const mockPreprocessImageData = vi.fn((imageData: ImageData) => imageData);
-vi.mock('../../src/modules/qr-generator/filters-preprocess', () => ({
+vi.mock('../../src/domain/render/filters/filters-preprocess', () => ({
   preprocessImageData: (...args: unknown[]) => mockPreprocessImageData(...args),
 }));
 

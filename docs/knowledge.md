@@ -78,7 +78,7 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 | Layer      | Technology                                                                                                                       |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Framework  | React 19, TypeScript 5.9 (strict)                                                                                                |
-| Build      | Vite 8 (beta), ESM-only (`"type": "module"`)                                                                                     |
+| Build      | Vite 7.3, ESM-only (`"type": "module"`)                                                                                          |
 | Styling    | Tailwind CSS v4 (`@tailwindcss/postcss`)                                                                                         |
 | Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.)                                                                      |
 | State      | Zustand 5                                                                                                                        |
@@ -125,8 +125,9 @@ make issue:create:child # Show usage for child issue creation
 ### Testing
 
 ```bash
-npm run test:unit        # Vitest unit tests
+npm run test:unit        # Vitest unit tests (excludes heavyweight profiling specs)
 npm run test:unit:ci     # Same (CI alias)
+npm run test:unit:perf   # Opt-in QR generator benchmark/profile suite
 make test:basic          # Playwright basic tier
 make test                # Full quality gates + unit + E2E + API (uses netlify dev)
 make test:tiers          # All Playwright tiers + API (no permutations)

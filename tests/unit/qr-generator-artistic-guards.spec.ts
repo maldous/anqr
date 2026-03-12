@@ -6,7 +6,7 @@ const read = (p: string): string => fs.readFileSync(path.join(process.cwd(), p),
 
 describe('qr-generator artistic guards', () => {
   it('keeps dithered light-dot fog disabled and grain explicitly capped', () => {
-    const src = read('src/modules/qr-generator/scaled-render.ts');
+    const src = read('src/domain/render/generator/scaled-render.ts');
     expect(src).toContain('const shouldDrawLightPixel =');
     expect(src).toContain('!isDitheredMode');
     expect(src).toContain('needsExplicitLightModules');
@@ -30,7 +30,7 @@ describe('qr-generator artistic guards', () => {
   });
 
   it('removes center-lock writeback and module-local target quotas in dither correction', () => {
-    const src = read('src/modules/qr-generator/pixel-matrix-dithered.ts');
+    const src = read('src/domain/render/generator/enforce-module-constraints.tsx');
     expect(src).not.toContain('matrix[cy][cx]');
     expect(src).not.toContain('targetNeed');
     expect(src).toContain('totalViolationEnergy');

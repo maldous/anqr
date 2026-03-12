@@ -14,7 +14,7 @@ vi.mock('../../src/lib/logger', () => ({
   }),
 }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform } }));
-vi.mock('../../src/modules/browser-io/native-save', () => ({ saveFileNative }));
+vi.mock('../../src/platform/browser/io/native-save', () => ({ saveFileNative }));
 
 describe('browser-io download', () => {
   beforeEach(() => {

@@ -20,6 +20,14 @@
 7. Route true human-only work to `Pending` with unblock steps and test evidence requirements.
 8. Route catastrophic AI retry/escalation failures to `Todo` (not `Pending`) so they stay in the AI queue for future retry when model capacity improves.
 
+## Refactor Guardrails
+
+- Prefer very small modules with one clear responsibility; when splitting code, bias toward one AST-heavy construct per file so low-capacity models can reason about the file in isolation.
+- Do not re-densify code just to preserve pre-refactor file layouts. Update callers, tests, and docs to the new canonical module paths instead.
+- Keep benchmark and profiling suites out of the default correctness gate. `npm run test:unit` is for deterministic unit validation; opt-in profiling belongs in `npm run test:unit:perf`.
+- After structural refactors, restore green validation before chasing coverage percentages. Once the default suite is green, run coverage and add focused tests against the new smaller files.
+- Use canonical `docs/` updates to record new test entry points, changed module boundaries, and workflow expectations in the same cycle as the code changes.
+
 ## Review Readiness
 
 - Acceptance criteria complete.

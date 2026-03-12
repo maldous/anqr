@@ -20,7 +20,7 @@ vi.mock('../../src/modules/exporter/utils', async () => {
   const actual = await vi.importActual<any>('../../src/modules/exporter/utils');
   return { ...actual, downloadUrl };
 });
-vi.mock('../../src/modules/exporter/png-metadata', () => ({
+vi.mock('../../src/domain/render/export/png-metadata', () => ({
   embedPngMetadata,
   embedPngDpi,
 }));

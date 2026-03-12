@@ -14,9 +14,15 @@ function extractKeys(text: string): Set<string> {
 
 describe('share params parity (client vs netlify function)', () => {
   it('flags client/server key mismatches', () => {
-    const clientPath = path.resolve(__dirname, '../../src/modules/share-links/url-params.ts');
+    const clientPaths = [
+      '../../src/domain/share/parse-url-params-from-search-params.tsx',
+      '../../src/domain/share/parse-mask-param.tsx',
+      '../../src/domain/share/parse-blend-mode.tsx',
+    ].map((relativePath) => path.resolve(__dirname, relativePath));
     const serverPath = path.resolve(__dirname, '../../netlify/functions/qr.ts');
-    const clientText = fs.readFileSync(clientPath, 'utf8');
+    const clientText = clientPaths
+      .map((clientPath) => fs.readFileSync(clientPath, 'utf8'))
+      .join('\n');
     const serverText = fs.readFileSync(serverPath, 'utf8');
 
     const clientKeys = extractKeys(clientText);

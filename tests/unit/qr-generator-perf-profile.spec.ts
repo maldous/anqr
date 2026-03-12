@@ -10,7 +10,7 @@
  *  6. Functional map cache (same moduleCount+version across frames)
  *  7. Fast-preview mode (skipping gradient/halftone/jitter/palette)
  *
- * Run with: npx vitest run tests/unit/qr-generator-perf-profile.spec.ts
+ * Run with: npm run test:unit:perf
  */
 
 import { createCanvas } from '@napi-rs/canvas';

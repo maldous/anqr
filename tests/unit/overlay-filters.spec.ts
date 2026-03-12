@@ -4,6 +4,9 @@ const trace = vi.fn();
 vi.mock('../../src/lib/logger', () => ({
   createLogger: () => ({ trace, debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
+vi.mock('../../src/infra/logging/logger', () => ({
+  createLogger: () => ({ trace, debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+}));
 
 function mkImageData(px: number[], width = 2, height = 2): ImageData {
   return new (globalThis as any).ImageData(new Uint8ClampedArray(px), width, height);
