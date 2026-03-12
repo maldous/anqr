@@ -6,7 +6,7 @@
  * OPTIMIZATION: Only English is bundled. Other languages are lazy-loaded on demand.
  */
 
-import { createLogger } from '@/lib/logger';
+import { createLogger } from '@/infra/logging/logger';
 import type { PageDefinition, StaticPageType } from './types';
 
 // Re-export types for convenience

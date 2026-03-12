@@ -1,0 +1,164 @@
+{
+  "sourceFile": "src/hooks/useQRGenerator.ts",
+  "description": "Split hook/controller concerns from generation orchestration, worker adapters, export pipeline, and frame processing.",
+  "groups": [
+    {
+      "targetFile": "src/features/generator/hooks/useQRGenerator.ts",
+      "symbols": [
+        "UseQRGeneratorResult",
+        "useDebounce",
+        "useQRGenerator",
+        "QRGeneratorContext",
+        "QRGeneratorProvider",
+        "useQRGeneratorContext"
+      ],
+      "notes": "React hook and provider only."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/qart-worker-orchestrator.ts",
+      "symbols": [
+        "QArtModule",
+        "QArtResult",
+        "QArtWorkerResult",
+        "qartModulePromise",
+        "loadQArtModule",
+        "terminateQArtWorkerIfLoaded",
+        "runQArtWorkerGeneration",
+        "executeQArtWorkerPipeline",
+        "deliverQArtResult",
+        "runQArtGeneration",
+        "renderQArtResultToCanvas",
+        "recordQArtPerfTimings",
+        "updateQrMatrixFromResult"
+      ],
+      "notes": "Worker-based QArt orchestration."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/export-pipeline.ts",
+      "symbols": [
+        "ExporterModule",
+        "exporterModulePromise",
+        "loadExporterModule",
+        "createScaledExportCanvas",
+        "buildExportConfig",
+        "buildPngMetadata",
+        "downloadSvgFormat",
+        "downloadAnimatedGifFormat"
+      ],
+      "notes": "Export configuration and execution."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/frame-pipeline.ts",
+      "symbols": [
+        "updateCompositorToFrame",
+        "cloneCanvasFrame",
+        "drawToDisplayCanvas",
+        "PatternEffect",
+        "buildPatternEffectLists",
+        "computePatternDrivenJitterValue",
+        "createScratchCanvasPool",
+        "cloneCanvasSimple",
+        "applyPatternStackToCanvas",
+        "generateJitteredFrameLoop",
+        "canvasListToAnimationFrames",
+        "generatePatternOnlyFrames",
+        "generateStaticBaseFrames",
+        "generateBaseAnimationFrameSet",
+        "renderFrameForBaseAnimation",
+        "renderFrameWithCompositor",
+        "renderFrameWithLegacyPath",
+        "applyFramePostProcessing",
+        "applyInterpolationToFrames",
+        "ensureDecodableFirstFrameHelper",
+        "processAnimationFrameLoopIteration",
+        "finalizeAnimationFrames",
+        "ArtworkFrameState",
+        "createArtworkFrameState",
+        "computeBaseAnimationFramesToProcess",
+        "handleArtworkWorkerSuccess",
+        "handleArtworkMainThreadFallbackForFrame",
+        "isNoisyOutlierMatchCheck",
+        "makeArtworkFrameHelpers",
+        "invokeArtworkWorkerForFrame",
+        "generateArtworkFrameStandalone",
+        "processAndPostProcessFrame",
+        "executeFrameGenerationLoop",
+        "completeAnimationGeneration"
+      ],
+      "notes": "Animation and frame processing pipeline."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/safety-and-fallback.ts",
+      "symbols": [
+        "EccLevel",
+        "SafetyAdjustmentResult",
+        "adjustOverlayIntensity",
+        "computeSafetyAdjustments",
+        "buildEccFallbackSequence",
+        "tryEccFallbackGeneration",
+        "resolveArtworkMaskPattern",
+        "runArtworkMainThreadFallback",
+        "rescueOutlierArtworkFrame",
+        "runGeneratorWithSlowStatus",
+        "handleOverflowError",
+        "handleGenerationError"
+      ],
+      "notes": "Safety controls, ECC fallback, and generation fallback paths."
+    },
+    {
+      "targetFile": "src/features/generator/application/input/overlay-file-loaders.ts",
+      "symbols": [
+        "loadFileAsCanvas",
+        "loadGifOverlayFile",
+        "loadAnimatedWebPOverlayFile",
+        "loadStaticOverlayFile"
+      ],
+      "notes": "Overlay file loading and decoding entrypoints."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/shared-runtime.ts",
+      "symbols": [
+        "qrGenerator",
+        "log",
+        "_PREVIEW_TARGET_FPS",
+        "YIELD_INTERVAL_MS",
+        "CONFIG_DEBOUNCE_MS",
+        "CONFIG_SETTLE_DEBOUNCE_MS",
+        "QART_PERF_OVERLAY_ELEMENT_ID",
+        "ENABLE_QART_PERF_OVERLAY",
+        "getQArtSearchAttempts",
+        "yieldToMainThread",
+        "YieldController",
+        "QArtPerfSnapshot",
+        "GenerationProgressState",
+        "readCanvasImageData",
+        "expandPackedQArtMatrix",
+        "clonePlainSerializable",
+        "sanitizeQArtRenderConfig",
+        "applyCropTransform",
+        "applyFitTransform",
+        "applyRotateFlipTransform",
+        "scheduleTrackEvent",
+        "imageBitmapToCanvas",
+        "safeMark",
+        "safeMeasure",
+        "ResolvedPreservationOptions",
+        "resolveOverlayPreservationOptions",
+        "applyWatermarkToCanvas",
+        "localizeQArtProgressStage",
+        "checkOverflowContentChanged",
+        "clearDisplayCanvas",
+        "formatGenerationErrorMessage",
+        "dispatchRenderCompleteEvent",
+        "setupValidationRunner",
+        "runStandardGeneration",
+        "finalizeGeneratedCanvas",
+        "loadWatermarkForAnimation",
+        "handleEmptyContent",
+        "cleanupGenerateState",
+        "handleGeneratePreChecks"
+      ],
+      "notes": "Shared generation helpers. Further sub-splitting is expected after initial extraction."
+    }
+  ]
+}

@@ -3,14 +3,14 @@
  * Re-exports from split module files
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('PAYLOAD');
 
 // Calendar generators
-export { generateCalendarSubscription, generateEvent } from './calendar';
+export { generateCalendarSubscription, generateEvent } from '../../domain/payload/calendar';
 // Contact generators
-export { generateBizCard, generateMeCard, generateVCard } from './contacts';
+export { generateBizCard, generateMeCard, generateVCard } from '../../domain/payload/contacts';
 // Core generators
 export {
   generateEmail,
@@ -21,9 +21,9 @@ export {
   generateWifi,
 } from './core';
 // EMV QR Builder
-export { EMVQRBuilder, parseEMVQR, validateEMVQRCRC } from './emv';
+export { EMVQRBuilder, parseEMVQR, validateEMVQRCRC } from '../../domain/payload/emv';
 // Enterprise generators
-export { generateGS1DigitalLink, generateOTPAuth } from './enterprise';
+export { generateGS1DigitalLink, generateOTPAuth } from '../../domain/payload/enterprise';
 // Payment generators
 export {
   generateAusPayNet,
@@ -47,9 +47,9 @@ export {
   generateTWQR,
   generateUPI,
   generateVietQR,
-} from './payments';
+} from '../../domain/payload/payments';
 // Social/Messaging generators
-export { generateAppDeepLink, generateMessagingLink, generateSocialProfile } from './social';
+export { generateAppDeepLink, generateMessagingLink, generateSocialProfile } from '../../domain/payload/social';
 // Types and constants (canonical source - store imports from here)
 export * from './types';
 export { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from './types';

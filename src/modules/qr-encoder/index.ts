@@ -3,11 +3,11 @@
  * Our own QR code generator - zero external dependencies
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('ENCODER');
 
-export { qrcode } from './encoder';
+export { qrcode } from '../../domain/qr/encode/encoder';
 
 // Pattern functions - re-exported from qr-spec (canonical source)
 export {
@@ -23,8 +23,8 @@ export {
   isTimingPattern,
 } from '../qr-spec';
 // Low-level APIs (for advanced use)
-export { qrBitBuffer } from './bit-buffer';
-export { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
+export { qrBitBuffer } from '../../domain/qr/encode/bit-buffer';
+export { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from '../../domain/qr/encode/data-modes';
 // QR encoder functions
 export {
   calculateOptimalVersion,
@@ -42,11 +42,11 @@ export {
   type QRMatrix,
   type QROptions,
 } from './encoder-api';
-export { gexp, glog, QRMath, qrPolynomial } from './math';
-export { base64EncodeOutputStream, byteArrayOutputStream, createDataURL, gifImage } from './output';
-export { getRSBlocks, QRRSBlock } from './rs-blocks';
+export { gexp, glog, QRMath, qrPolynomial } from '../../domain/qr/encode/math';
+export { base64EncodeOutputStream, byteArrayOutputStream, createDataURL, gifImage } from '../../domain/qr/encode/output';
+export { getRSBlocks, QRRSBlock } from '../../domain/qr/encode/rs-blocks';
 // Shift-JIS encoding
-export { canEncodeAsShiftJIS, createShiftJISEncoder } from './shift-jis';
+export { canEncodeAsShiftJIS, createShiftJISEncoder } from '../../domain/qr/encode/shift-jis';
 // String encoding
 export {
   createStringToBytes,
@@ -55,7 +55,7 @@ export {
   setStringToBytes,
   stringToBytes,
   stringToBytesFn,
-} from './string-bytes';
+} from '../../domain/qr/encode/string-bytes';
 export type {
   QRBitBuffer,
   QRCodeInstance,
@@ -78,4 +78,4 @@ export {
   getMaskFunction,
   getPatternPosition,
   QRUtil,
-} from './utils';
+} from '../../domain/qr/encode/utils';

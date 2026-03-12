@@ -15,12 +15,12 @@
  * - Pure coordinate/number math only
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('SPEC');
 
 // BCH encoding
-export { getBCHTypeInfo, getBCHTypeNumber } from './bch';
+export { getBCHTypeInfo, getBCHTypeNumber } from '../../domain/qr/spec/bch';
 // Constants
 export {
   ALIGNMENT_POSITIONS,
@@ -30,9 +30,9 @@ export {
   getAlignmentPositions,
   getModuleCountForVersion,
   getVersionFromModuleCount,
-} from './constants';
+} from '../../domain/qr/spec/constants';
 // Mask functions
-export { getMaskFunction } from './masks';
+export { getMaskFunction } from '../../domain/qr/spec/masks';
 
 // Pattern detection
 export {
@@ -45,7 +45,7 @@ export {
   isStructuralModule,
   isTimingPattern,
   isVersionInfo,
-} from './qr-patterns';
+} from '../../domain/qr/spec/qr-patterns';
 // Types
 export type {
   ECCLevel,
@@ -67,4 +67,4 @@ export {
   QRMode,
 } from './types';
 // Lightweight verification
-export { verifyQRStructure } from './verify';
+export { verifyQRStructure } from '../../domain/qr/spec/verify';

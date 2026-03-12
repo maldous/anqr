@@ -1,0 +1,521 @@
+{
+  "sourceFile": "src/hooks/useQRGenerator.ts",
+  "description": "Granular decomposition of useQRGenerator.ts into individual AST-level files using {dir}-{ast}-{desc}.ts naming.",
+  "groups": [
+    {
+      "targetFile": "src/features/generator/application/generation/generation-const-singleton.ts",
+      "symbols": ["qrGenerator", "log"],
+      "notes": "QRGenerator instance and scoped logger."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-const-config.ts",
+      "symbols": ["_PREVIEW_TARGET_FPS", "YIELD_INTERVAL_MS", "CONFIG_DEBOUNCE_MS", "CONFIG_SETTLE_DEBOUNCE_MS", "QART_PERF_OVERLAY_ELEMENT_ID", "ENABLE_QART_PERF_OVERLAY"],
+      "notes": "Generation-related constants."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-yield.ts",
+      "symbols": ["yieldToMainThread"],
+      "notes": "Yield to main thread for UI responsiveness."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-qartattmpts.ts",
+      "symbols": ["getQArtSearchAttempts"],
+      "notes": "Compute QArt search attempts from iteration count."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-class-yieldcontroller.ts",
+      "symbols": ["YieldController"],
+      "notes": "Class that manages yield timing for long-running operations."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-type-perfsnap.ts",
+      "symbols": ["QArtPerfSnapshot"],
+      "notes": "Performance snapshot type for QArt generation."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-type-progress.ts",
+      "symbols": ["GenerationProgressState"],
+      "notes": "Progress state type for generation pipeline."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-readcanvas.ts",
+      "symbols": ["readCanvasImageData"],
+      "notes": "Read pixel data from canvas for QR-Art worker."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-expandmatrix.ts",
+      "symbols": ["expandPackedQArtMatrix"],
+      "notes": "Expand packed Uint8Array into boolean matrix."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-cloneserializable.ts",
+      "symbols": ["clonePlainSerializable"],
+      "notes": "Deep-clone plain serializable values."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-sanitizeconfig.ts",
+      "symbols": ["sanitizeQArtRenderConfig"],
+      "notes": "Sanitize QR generator config to plain object."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-crop.ts",
+      "symbols": ["applyCropTransform"],
+      "notes": "Apply crop region to overlay canvas."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-fit.ts",
+      "symbols": ["applyFitTransform"],
+      "notes": "Apply fit mode (cover/contain/stretch) to canvas."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-rotateflip.ts",
+      "symbols": ["applyRotateFlipTransform"],
+      "notes": "Apply rotation and flip transforms to canvas."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-trackevent.ts",
+      "symbols": ["scheduleTrackEvent"],
+      "notes": "Schedule telemetry event via idle callback."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-bitmaptocanvas.ts",
+      "symbols": ["imageBitmapToCanvas"],
+      "notes": "Convert ImageBitmap to HTMLCanvasElement."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-drawtodisplay.ts",
+      "symbols": ["drawToDisplayCanvas"],
+      "notes": "Draw source canvas to display canvas with DPR scaling."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-safemark.ts",
+      "symbols": ["safeMark"],
+      "notes": "Safe performance.mark wrapper."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-safemeasure.ts",
+      "symbols": ["safeMeasure"],
+      "notes": "Safe performance.measure wrapper."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-type-preservation.ts",
+      "symbols": ["ResolvedPreservationOptions"],
+      "notes": "Type for resolved overlay preservation options."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-resolvepreservation.ts",
+      "symbols": ["resolveOverlayPreservationOptions"],
+      "notes": "Resolve overlay preservation options from safety + user config."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-watermark.ts",
+      "symbols": ["applyWatermarkToCanvas"],
+      "notes": "Apply watermark overlay to generated canvas."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-localizeprogress.ts",
+      "symbols": ["localizeQArtProgressStage"],
+      "notes": "Localize QArt progress stage strings."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-checkoverflow.ts",
+      "symbols": ["checkOverflowContentChanged"],
+      "notes": "Check if content changed since last overflow."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-cleardisplay.ts",
+      "symbols": ["clearDisplayCanvas"],
+      "notes": "Clear the display canvas element."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-formaterror.ts",
+      "symbols": ["formatGenerationErrorMessage"],
+      "notes": "Format generation error for user display."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-dispatchevent.ts",
+      "symbols": ["dispatchRenderCompleteEvent"],
+      "notes": "Dispatch render-complete custom event."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-setupvalidation.ts",
+      "symbols": ["setupValidationRunner"],
+      "notes": "Setup post-generation validation runner."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-runstandard.ts",
+      "symbols": ["runStandardGeneration"],
+      "notes": "Run standard QR generation with error handling."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-finalize.ts",
+      "symbols": ["finalizeGeneratedCanvas"],
+      "notes": "Finalize generated canvas with watermark and validation."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-loadwatermark.ts",
+      "symbols": ["loadWatermarkForAnimation"],
+      "notes": "Load watermark image for animation frames."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-handleempty.ts",
+      "symbols": ["handleEmptyContent"],
+      "notes": "Handle empty content edge case."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-cleanup.ts",
+      "symbols": ["cleanupGenerateState"],
+      "notes": "Cleanup generation state after completion."
+    },
+    {
+      "targetFile": "src/features/generator/application/generation/generation-fn-prechecks.ts",
+      "symbols": ["handleGeneratePreChecks"],
+      "notes": "Pre-generation overflow and block checks."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-type-ecclevel.ts",
+      "symbols": ["EccLevel"],
+      "notes": "ECC level type alias."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-interface-adjustmentresult.ts",
+      "symbols": ["SafetyAdjustmentResult"],
+      "notes": "Safety adjustment result interface."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-overlayintensity.ts",
+      "symbols": ["adjustOverlayIntensity"],
+      "notes": "Adjust overlay intensity per safety mode."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-adjustments.ts",
+      "symbols": ["computeSafetyAdjustments"],
+      "notes": "Compute full safety adjustments for generation."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-eccfallback.ts",
+      "symbols": ["buildEccFallbackSequence"],
+      "notes": "Build ECC fallback sequence for overflow recovery."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-tryeccfallback.ts",
+      "symbols": ["tryEccFallbackGeneration"],
+      "notes": "Try generating with fallback ECC levels."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-resolvemask.ts",
+      "symbols": ["resolveArtworkMaskPattern"],
+      "notes": "Resolve artwork mask pattern from config."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-mainthread.ts",
+      "symbols": ["runArtworkMainThreadFallback"],
+      "notes": "Run QArt on main thread as worker fallback."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-rescueoutlier.ts",
+      "symbols": ["rescueOutlierArtworkFrame"],
+      "notes": "Rescue outlier artwork frame with quality retry."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-slowstatus.ts",
+      "symbols": ["runGeneratorWithSlowStatus"],
+      "notes": "Run generator with slow-render status feedback."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-overflow.ts",
+      "symbols": ["handleOverflowError"],
+      "notes": "Handle QR content overflow with ECC fallback."
+    },
+    {
+      "targetFile": "src/features/generator/application/safety/safety-fn-generror.ts",
+      "symbols": ["handleGenerationError"],
+      "notes": "Handle generation error with overflow detection."
+    },
+    {
+      "targetFile": "src/features/generator/application/export/export-fn-scaledcanvas.ts",
+      "symbols": ["createScaledExportCanvas"],
+      "notes": "Create scaled canvas for export."
+    },
+    {
+      "targetFile": "src/features/generator/application/export/export-fn-buildconfig.ts",
+      "symbols": ["buildExportConfig"],
+      "notes": "Build export configuration from store state."
+    },
+    {
+      "targetFile": "src/features/generator/application/export/export-fn-metadata.ts",
+      "symbols": ["buildPngMetadata"],
+      "notes": "Build PNG metadata for export."
+    },
+    {
+      "targetFile": "src/features/generator/application/export/export-fn-downloadsvg.ts",
+      "symbols": ["downloadSvgFormat"],
+      "notes": "Download QR code as SVG format."
+    },
+    {
+      "targetFile": "src/features/generator/application/export/export-fn-downloadgif.ts",
+      "symbols": ["downloadAnimatedGifFormat"],
+      "notes": "Download QR code as animated GIF."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-loadmodule.ts",
+      "symbols": ["loadQArtModule"],
+      "notes": "Lazy-load QArt module."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-terminate.ts",
+      "symbols": ["terminateQArtWorkerIfLoaded"],
+      "notes": "Terminate QArt worker if loaded."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-workerrun.ts",
+      "symbols": ["runQArtWorkerGeneration"],
+      "notes": "Run QArt generation via worker."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-render.ts",
+      "symbols": ["renderQArtResultToCanvas"],
+      "notes": "Render QArt result to canvas element."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-perf.ts",
+      "symbols": ["recordQArtPerfTimings"],
+      "notes": "Record QArt performance timings."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-updatematrix.ts",
+      "symbols": ["updateQrMatrixFromResult"],
+      "notes": "Update QR matrix state from QArt result."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-pipeline.ts",
+      "symbols": ["executeQArtWorkerPipeline"],
+      "notes": "Full QArt worker pipeline orchestration."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-deliver.ts",
+      "symbols": ["deliverQArtResult"],
+      "notes": "Deliver QArt result to display and state."
+    },
+    {
+      "targetFile": "src/features/generator/application/qart/qart-fn-generation.ts",
+      "symbols": ["runQArtGeneration"],
+      "notes": "Top-level QArt generation entry point."
+    },
+    {
+      "targetFile": "src/features/generator/application/input/input-fn-loadfilecanvas.ts",
+      "symbols": ["loadFileAsCanvas"],
+      "notes": "Load file as canvas element."
+    },
+    {
+      "targetFile": "src/features/generator/application/input/input-fn-loadgif.ts",
+      "symbols": ["loadGifOverlayFile"],
+      "notes": "Load GIF file for overlay."
+    },
+    {
+      "targetFile": "src/features/generator/application/input/input-fn-loadwebp.ts",
+      "symbols": ["loadAnimatedWebPOverlayFile"],
+      "notes": "Load animated WebP file for overlay."
+    },
+    {
+      "targetFile": "src/features/generator/application/input/input-fn-loadstatic.ts",
+      "symbols": ["loadStaticOverlayFile"],
+      "notes": "Load static image for overlay."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-compositor.ts",
+      "symbols": ["updateCompositorToFrame"],
+      "notes": "Advance GIF compositor to target frame."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-cloneframe.ts",
+      "symbols": ["cloneCanvasFrame"],
+      "notes": "Clone canvas to new canvas element."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-clonesimple.ts",
+      "symbols": ["cloneCanvasSimple"],
+      "notes": "Simple canvas clone without extra processing."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-type-patterneffect.ts",
+      "symbols": ["PatternEffect"],
+      "notes": "Pattern effect type for animation."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-buildpatterns.ts",
+      "symbols": ["buildPatternEffectLists"],
+      "notes": "Build pattern effect lists from animation state."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-computejitter.ts",
+      "symbols": ["computePatternDrivenJitterValue"],
+      "notes": "Compute jitter value from pattern effects."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-scratchpool.ts",
+      "symbols": ["createScratchCanvasPool"],
+      "notes": "Create reusable scratch canvas pool."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-applypattern.ts",
+      "symbols": ["applyPatternStackToCanvas"],
+      "notes": "Apply pattern effect stack to canvas."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-jitteredloop.ts",
+      "symbols": ["generateJitteredFrameLoop"],
+      "notes": "Generate jittered animation frame loop."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-canvastoframes.ts",
+      "symbols": ["canvasListToAnimationFrames"],
+      "notes": "Convert canvas list to AnimationFrame array."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-patternonly.ts",
+      "symbols": ["generatePatternOnlyFrames"],
+      "notes": "Generate pattern-only animation frames."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-staticbase.ts",
+      "symbols": ["generateStaticBaseFrames"],
+      "notes": "Generate static base frames for animation."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-baseanimation.ts",
+      "symbols": ["generateBaseAnimationFrameSet"],
+      "notes": "Generate base animation frame set."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-renderbase.ts",
+      "symbols": ["renderFrameForBaseAnimation"],
+      "notes": "Render single frame for base animation."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-rendercompositor.ts",
+      "symbols": ["renderFrameWithCompositor"],
+      "notes": "Render frame using GIF compositor."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-renderlegacy.ts",
+      "symbols": ["renderFrameWithLegacyPath"],
+      "notes": "Render frame via legacy rendering path."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-postprocess.ts",
+      "symbols": ["applyFramePostProcessing"],
+      "notes": "Apply post-processing to animation frame."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-interpolation.ts",
+      "symbols": ["applyInterpolationToFrames"],
+      "notes": "Apply interpolation between animation frames."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-ensuredecodable.ts",
+      "symbols": ["ensureDecodableFirstFrameHelper"],
+      "notes": "Ensure first animation frame is decodable."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-loopiter.ts",
+      "symbols": ["processAnimationFrameLoopIteration"],
+      "notes": "Process one iteration of animation frame loop."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-finalizeframes.ts",
+      "symbols": ["finalizeAnimationFrames"],
+      "notes": "Finalize animation frames with watermark and validation."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-interface-artworkstate.ts",
+      "symbols": ["ArtworkFrameState"],
+      "notes": "Artwork frame state interface."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-createartworkstate.ts",
+      "symbols": ["createArtworkFrameState"],
+      "notes": "Create initial artwork frame state."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-computebaseframes.ts",
+      "symbols": ["computeBaseAnimationFramesToProcess"],
+      "notes": "Compute which base animation frames to process."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-artworksuccess.ts",
+      "symbols": ["handleArtworkWorkerSuccess"],
+      "notes": "Handle successful artwork worker result."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-artworkfallback.ts",
+      "symbols": ["handleArtworkMainThreadFallbackForFrame"],
+      "notes": "Handle main thread fallback for artwork frame."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-outliercheck.ts",
+      "symbols": ["isNoisyOutlierMatchCheck"],
+      "notes": "Check if frame is a noisy outlier."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-artworkhelpers.ts",
+      "symbols": ["makeArtworkFrameHelpers"],
+      "notes": "Create helper functions for artwork frame processing."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-invokeworker.ts",
+      "symbols": ["invokeArtworkWorkerForFrame"],
+      "notes": "Invoke artwork worker for a single frame."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-artworkstandalone.ts",
+      "symbols": ["generateArtworkFrameStandalone"],
+      "notes": "Generate artwork frame in standalone mode."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-processframe.ts",
+      "symbols": ["processAndPostProcessFrame"],
+      "notes": "Process and post-process a single animation frame."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-executeloop.ts",
+      "symbols": ["executeFrameGenerationLoop"],
+      "notes": "Execute the main frame generation loop."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-complete.ts",
+      "symbols": ["completeAnimationGeneration"],
+      "notes": "Complete animation generation and dispatch events."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-renderbitmap.ts",
+      "symbols": ["renderArtworkWorkerBitmap"],
+      "notes": "Render artwork worker bitmap result."
+    },
+    {
+      "targetFile": "src/features/generator/application/frames/frames-fn-rendermatrix.ts",
+      "symbols": ["renderArtworkWorkerMatrix"],
+      "notes": "Render artwork worker matrix result."
+    },
+    {
+      "targetFile": "src/features/generator/hooks/hooks-fn-usedebounce.ts",
+      "symbols": ["useDebounce"],
+      "notes": "Generic value debounce hook."
+    },
+    {
+      "targetFile": "src/features/generator/hooks/hooks-fn-useqrgenerator.ts",
+      "symbols": ["useQRGenerator"],
+      "notes": "Main QR generator hook orchestrator."
+    },
+    {
+      "targetFile": "src/features/generator/hooks/hooks-fn-context.ts",
+      "symbols": ["QRGeneratorContext", "QRGeneratorProvider", "useQRGeneratorContext"],
+      "notes": "React context, provider, and consumer hook."
+    },
+    {
+      "targetFile": "src/features/generator/hooks/hooks-interface-result.ts",
+      "symbols": ["UseQRGeneratorResult"],
+      "notes": "Return type interface for useQRGenerator."
+    }
+  ]
+}

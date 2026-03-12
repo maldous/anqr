@@ -3,8 +3,8 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
-import { createLogger } from '../../lib/logger';
-import type { GradientConfig } from '../core';
+import { createLogger } from '../../infra/logging/logger';
+import type { GradientConfig } from '../core/types';
 import {
   calculateOptimalVersion,
   createShiftJISEncoder,
@@ -16,7 +16,7 @@ import {
 import { decodeQR } from '../qr-decoder';
 import { verifyQRStructure } from '../qr-spec';
 import { qrMatrixCache } from './cache';
-import { type CanvasFactory, CanvasPool, defaultBrowserCanvasFactory } from './canvas-factory';
+import { type CanvasFactory, CanvasPool, defaultBrowserCanvasFactory } from '../../platform/browser/canvas/canvas-factory';
 import {
   createGradientFill,
   drawAlignmentPattern,
@@ -24,17 +24,17 @@ import {
   drawFinderPatternComplete,
   drawFrame,
   drawFrameBackground,
-} from './drawing';
+} from '../../domain/render/generator/drawing';
 import {
   applyGeometricTransforms,
   hasGeometricTransforms,
   hasPreprocessingOptions,
   preprocessOverlay,
-} from './overlay';
-import { getAlignmentPositionsCached } from './pattern-helpers';
-import { curveIntensity, getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
-import { renderModules } from './render-loop';
-import { generateScaledQR } from './scaled-render';
+} from '../../domain/render/overlay/overlay';
+import { getAlignmentPositionsCached } from '../../domain/render/generator/pattern-helpers';
+import { curveIntensity, getScaleFactor, prepareUnifiedOverlayData } from '../../domain/render/generator/pixel-matrix';
+import { renderModules } from '../../domain/render/generator/render-loop';
+import { generateScaledQR } from '../../domain/render/generator/scaled-render';
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from './types';
 import { hashCanvasContent, validateColor } from './utils';
 

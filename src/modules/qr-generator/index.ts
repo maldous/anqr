@@ -3,12 +3,12 @@
  * Re-exports from split module files
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('GENERATE');
 
-// Re-export GradientConfig from core
-export type { GradientConfig } from '../core';
+// Re-export GradientConfig from core types
+export type { GradientConfig } from '../core/types';
 // Cache utilities
 export {
   alignmentCache,
@@ -19,9 +19,9 @@ export {
   qrMatrixCache,
 } from './cache';
 // Re-export CanvasFactory from canvas-factory
-export type { CanvasFactory } from './canvas-factory';
+export type { CanvasFactory } from '../../platform/browser/canvas/canvas-factory';
 // Canvas factory
-export { CanvasPool, defaultBrowserCanvasFactory } from './canvas-factory';
+export { CanvasPool, defaultBrowserCanvasFactory } from '../../platform/browser/canvas/canvas-factory';
 // Color utilities
 export {
   applyPaletteColor,
@@ -37,9 +37,9 @@ export {
   applyTrueDither,
   distributeError,
   getDiffusionKernel,
-} from './dithering';
+} from '../../domain/render/dither/dithering';
 // Backward-compatible alias for callers that imported blueNoiseCanvasFactory
-export { defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './canvas-factory';
+export { defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from '../../platform/browser/canvas/canvas-factory';
 // Drawing functions
 export {
   createGradientFill,
@@ -53,16 +53,16 @@ export {
   drawModule,
   drawTimingModule,
   roundRect,
-} from './drawing';
+} from '../../domain/render/generator/drawing';
 // ECC awareness
-export { getEccWeight, isEccSafeToModify } from './ecc';
+export { getEccWeight, isEccSafeToModify } from '../../domain/qr/spec/ecc';
 // Image filters (re-exported from overlay module)
-export { applyBoxBlur, applyCannyEdge, applySharpen, applySobelEdge } from './filters';
+export { applyBoxBlur, applyCannyEdge, applySharpen, applySobelEdge } from '../../domain/render/filters/filters';
 // QR-specific preprocessing
 export {
   preprocessImageData,
   preprocessImageData as applyFiltersManual,
-} from './filters-preprocess';
+} from '../../domain/render/filters/filters-preprocess';
 // Overlay processing
 export {
   applyGeometricTransforms,
@@ -73,25 +73,25 @@ export {
   hasPreprocessingOptions,
   loadImageDataRGB,
   preprocessOverlay,
-} from './overlay';
+} from '../../domain/render/overlay/overlay';
 // Pattern helpers
-export { getAlignmentPositionsCached, isFormatInfo, isVersionInfo } from './pattern-helpers';
+export { getAlignmentPositionsCached, isFormatInfo, isVersionInfo } from '../../domain/render/generator/pattern-helpers';
 // Pixel matrix generation
 export {
   generatePixelDecisionMatrix,
   getScaleFactor,
   prepareUnifiedOverlayData,
-} from './pixel-matrix';
-export { clearBaseMatrixCache } from './pixel-matrix-utils';
+} from '../../domain/render/generator/pixel-matrix';
+export { clearBaseMatrixCache } from '../../domain/render/generator/pixel-matrix-utils';
 // Main QRGenerator class
 export { QRGenerator } from './qr-generator-class';
 // Module render loop
-export { clearFunctionalMapCache, renderModules } from './render-loop';
-export type { OverlayModeResult } from './render-modes';
+export { clearFunctionalMapCache, renderModules } from '../../domain/render/generator/render-loop';
+export type { OverlayModeResult } from '../../domain/render/generator/render-modes';
 // Overlay mode rendering
-export { applyQROverlayMode, computeDarkFactor, computeLightBlend } from './render-modes';
+export { applyQROverlayMode, computeDarkFactor, computeLightBlend } from '../../domain/render/generator/render-modes';
 // Scaled QR rendering
-export { generateScaledQR } from './scaled-render';
+export { generateScaledQR } from '../../domain/render/generator/scaled-render';
 // Types from local types.ts
 export type {
   Canvas2DContext,

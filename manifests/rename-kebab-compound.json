@@ -1,0 +1,520 @@
+[
+  {
+    "source": "src/features/generator/application/generation/bitmaptocanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/bitmap-to-canvas.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/checkoverflow.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/check-overflow.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/cleardisplay.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/clear-display.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/cloneserializable.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/clone-serializable.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/dispatchevent.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/dispatch-event.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/drawtodisplay.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/draw-to-display.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/expandmatrix.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/expand-matrix.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/formaterror.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/format-error.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/handleempty.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/handle-empty.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/loadwatermark.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/load-watermark.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/localizeprogress.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/localize-progress.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/qartattmpts.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/qart-attempts.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/readcanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/read-canvas.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/resolvepreservation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/resolve-preservation.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/rotateflip.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/rotate-flip.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/runstandard.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/run-standard.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/safemark.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/safe-mark.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/safemeasure.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/safe-measure.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/sanitizeconfig.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/sanitize-config.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/setupvalidation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/setup-validation.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/trackevent.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/track-event.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/yieldcontroller.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/yield-controller.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/applypattern.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/apply-pattern.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/artworkfallback.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artwork-fallback.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/artworkhelpers.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artwork-helpers.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/artworkstandalone.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artwork-standalone.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/artworksuccess.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artwork-success.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/baseanimation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/base-animation.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/buildpatterns.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/build-patterns.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/canvastoframes.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/canvas-to-frames.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/cloneframe.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/clone-frame.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/clonesimple.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/clone-simple.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/computebaseframes.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/compute-base-frames.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/computejitter.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/compute-jitter.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/createartworkstate.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/create-artwork-state.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/ensuredecodable.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/ensure-decodable.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/executeloop.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/execute-loop.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/finalizeframes.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/finalize-frames.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/invokeworker.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/invoke-worker.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/jitteredloop.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/jittered-loop.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/loopiter.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/loop-iter.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/outliercheck.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/outlier-check.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/patternonly.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/pattern-only.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/postprocess.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/post-process.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/processframe.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/process-frame.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/renderbase.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/render-base.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/renderbitmap.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/render-bitmap.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/rendercompositor.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/render-compositor.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/renderlegacy.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/render-legacy.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/rendermatrix.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/render-matrix.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/scratchpool.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/scratch-pool.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/staticbase.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/static-base.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/loadmodule.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/load-module.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/updatematrix.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/update-matrix.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/workerrun.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/worker-run.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/eccfallback.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/ecc-fallback.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/generror.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/gen-error.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/mainthread.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/main-thread.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/overlayintensity.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/overlay-intensity.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/rescueoutlier.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/rescue-outlier.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/resolvemask.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/resolve-mask.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/slowstatus.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/slow-status.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/tryeccfallback.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/try-ecc-fallback.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/buildconfig.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/build-config.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/downloadgif.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/download-gif.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/downloadsvg.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/download-svg.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/scaledcanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/scaled-canvas.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/loadfilecanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/load-file-canvas.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/loadgif.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/load-gif.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/loadstatic.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/load-static.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/loadwebp.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/load-webp.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/url-import/animationsafety.ts",
+    "action": "move",
+    "target": "src/features/generator/application/url-import/animation-safety.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/hooks/usedebounce.ts",
+    "action": "move",
+    "target": "src/features/generator/hooks/use-debounce.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/hooks/useqrgenerator.ts",
+    "action": "move",
+    "target": "src/features/generator/hooks/use-qr-generator.ts",
+    "reason": "Kebab-case compound words",
+    "confidence": "high"
+  }
+]

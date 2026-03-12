@@ -1,0 +1,303 @@
+{
+  "manifest": "manifests/rename-kebab-compound.json",
+  "dryRun": false,
+  "shims": false,
+  "moved": [
+    {
+      "source": "src/features/generator/application/generation/bitmaptocanvas.ts",
+      "target": "src/features/generator/application/generation/bitmap-to-canvas.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/checkoverflow.ts",
+      "target": "src/features/generator/application/generation/check-overflow.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/cleardisplay.ts",
+      "target": "src/features/generator/application/generation/clear-display.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/cloneserializable.ts",
+      "target": "src/features/generator/application/generation/clone-serializable.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/dispatchevent.ts",
+      "target": "src/features/generator/application/generation/dispatch-event.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/drawtodisplay.ts",
+      "target": "src/features/generator/application/generation/draw-to-display.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/expandmatrix.ts",
+      "target": "src/features/generator/application/generation/expand-matrix.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/formaterror.ts",
+      "target": "src/features/generator/application/generation/format-error.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/handleempty.ts",
+      "target": "src/features/generator/application/generation/handle-empty.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/loadwatermark.ts",
+      "target": "src/features/generator/application/generation/load-watermark.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/localizeprogress.ts",
+      "target": "src/features/generator/application/generation/localize-progress.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/qartattmpts.ts",
+      "target": "src/features/generator/application/generation/qart-attempts.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/readcanvas.ts",
+      "target": "src/features/generator/application/generation/read-canvas.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/resolvepreservation.ts",
+      "target": "src/features/generator/application/generation/resolve-preservation.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/rotateflip.ts",
+      "target": "src/features/generator/application/generation/rotate-flip.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/runstandard.ts",
+      "target": "src/features/generator/application/generation/run-standard.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/safemark.ts",
+      "target": "src/features/generator/application/generation/safe-mark.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/safemeasure.ts",
+      "target": "src/features/generator/application/generation/safe-measure.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/sanitizeconfig.ts",
+      "target": "src/features/generator/application/generation/sanitize-config.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/setupvalidation.ts",
+      "target": "src/features/generator/application/generation/setup-validation.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/trackevent.ts",
+      "target": "src/features/generator/application/generation/track-event.ts"
+    },
+    {
+      "source": "src/features/generator/application/generation/yieldcontroller.ts",
+      "target": "src/features/generator/application/generation/yield-controller.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/applypattern.ts",
+      "target": "src/features/generator/application/frames/apply-pattern.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/artworkfallback.ts",
+      "target": "src/features/generator/application/frames/artwork-fallback.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/artworkhelpers.ts",
+      "target": "src/features/generator/application/frames/artwork-helpers.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/artworkstandalone.ts",
+      "target": "src/features/generator/application/frames/artwork-standalone.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/artworksuccess.ts",
+      "target": "src/features/generator/application/frames/artwork-success.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/baseanimation.ts",
+      "target": "src/features/generator/application/frames/base-animation.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/buildpatterns.ts",
+      "target": "src/features/generator/application/frames/build-patterns.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/canvastoframes.ts",
+      "target": "src/features/generator/application/frames/canvas-to-frames.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/cloneframe.ts",
+      "target": "src/features/generator/application/frames/clone-frame.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/clonesimple.ts",
+      "target": "src/features/generator/application/frames/clone-simple.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/computebaseframes.ts",
+      "target": "src/features/generator/application/frames/compute-base-frames.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/computejitter.ts",
+      "target": "src/features/generator/application/frames/compute-jitter.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/createartworkstate.ts",
+      "target": "src/features/generator/application/frames/create-artwork-state.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/ensuredecodable.ts",
+      "target": "src/features/generator/application/frames/ensure-decodable.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/executeloop.ts",
+      "target": "src/features/generator/application/frames/execute-loop.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/finalizeframes.ts",
+      "target": "src/features/generator/application/frames/finalize-frames.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/invokeworker.ts",
+      "target": "src/features/generator/application/frames/invoke-worker.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/jitteredloop.ts",
+      "target": "src/features/generator/application/frames/jittered-loop.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/loopiter.ts",
+      "target": "src/features/generator/application/frames/loop-iter.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/outliercheck.ts",
+      "target": "src/features/generator/application/frames/outlier-check.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/patternonly.ts",
+      "target": "src/features/generator/application/frames/pattern-only.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/postprocess.ts",
+      "target": "src/features/generator/application/frames/post-process.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/processframe.ts",
+      "target": "src/features/generator/application/frames/process-frame.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/renderbase.ts",
+      "target": "src/features/generator/application/frames/render-base.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/renderbitmap.ts",
+      "target": "src/features/generator/application/frames/render-bitmap.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/rendercompositor.ts",
+      "target": "src/features/generator/application/frames/render-compositor.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/renderlegacy.ts",
+      "target": "src/features/generator/application/frames/render-legacy.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/rendermatrix.ts",
+      "target": "src/features/generator/application/frames/render-matrix.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/scratchpool.ts",
+      "target": "src/features/generator/application/frames/scratch-pool.ts"
+    },
+    {
+      "source": "src/features/generator/application/frames/staticbase.ts",
+      "target": "src/features/generator/application/frames/static-base.ts"
+    },
+    {
+      "source": "src/features/generator/application/qart/loadmodule.ts",
+      "target": "src/features/generator/application/qart/load-module.ts"
+    },
+    {
+      "source": "src/features/generator/application/qart/updatematrix.ts",
+      "target": "src/features/generator/application/qart/update-matrix.ts"
+    },
+    {
+      "source": "src/features/generator/application/qart/workerrun.ts",
+      "target": "src/features/generator/application/qart/worker-run.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/eccfallback.ts",
+      "target": "src/features/generator/application/safety/ecc-fallback.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/generror.ts",
+      "target": "src/features/generator/application/safety/gen-error.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/mainthread.ts",
+      "target": "src/features/generator/application/safety/main-thread.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/overlayintensity.ts",
+      "target": "src/features/generator/application/safety/overlay-intensity.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/rescueoutlier.ts",
+      "target": "src/features/generator/application/safety/rescue-outlier.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/resolvemask.ts",
+      "target": "src/features/generator/application/safety/resolve-mask.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/slowstatus.ts",
+      "target": "src/features/generator/application/safety/slow-status.ts"
+    },
+    {
+      "source": "src/features/generator/application/safety/tryeccfallback.ts",
+      "target": "src/features/generator/application/safety/try-ecc-fallback.ts"
+    },
+    {
+      "source": "src/features/generator/application/export/buildconfig.ts",
+      "target": "src/features/generator/application/export/build-config.ts"
+    },
+    {
+      "source": "src/features/generator/application/export/downloadgif.ts",
+      "target": "src/features/generator/application/export/download-gif.ts"
+    },
+    {
+      "source": "src/features/generator/application/export/downloadsvg.ts",
+      "target": "src/features/generator/application/export/download-svg.ts"
+    },
+    {
+      "source": "src/features/generator/application/export/scaledcanvas.ts",
+      "target": "src/features/generator/application/export/scaled-canvas.ts"
+    },
+    {
+      "source": "src/features/generator/application/input/loadfilecanvas.ts",
+      "target": "src/features/generator/application/input/load-file-canvas.ts"
+    },
+    {
+      "source": "src/features/generator/application/input/loadgif.ts",
+      "target": "src/features/generator/application/input/load-gif.ts"
+    },
+    {
+      "source": "src/features/generator/application/input/loadstatic.ts",
+      "target": "src/features/generator/application/input/load-static.ts"
+    },
+    {
+      "source": "src/features/generator/application/input/loadwebp.ts",
+      "target": "src/features/generator/application/input/load-webp.ts"
+    },
+    {
+      "source": "src/features/generator/application/url-import/animationsafety.ts",
+      "target": "src/features/generator/application/url-import/animation-safety.ts"
+    },
+    {
+      "source": "src/features/generator/hooks/usedebounce.ts",
+      "target": "src/features/generator/hooks/use-debounce.ts"
+    },
+    {
+      "source": "src/features/generator/hooks/useqrgenerator.ts",
+      "target": "src/features/generator/hooks/use-qr-generator.ts"
+    }
+  ]
+}

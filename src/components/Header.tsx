@@ -35,23 +35,23 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { StaticPageType } from '@/components/StaticPage';
-import { Button } from '@/components/ui/button';
-import { DynamicTestId } from '@/components/ui/dynamic-testid';
+import type { StaticPageType } from '@/app/pages/StaticPage';
+import { Button } from '@/ui/primitives/button';
+import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type GalleryCategory, gallerySectionManifest } from '@/data/gallery-manifest';
-import { useBannerHeight } from '@/hooks/useBannerHeight';
-import { isRtlLanguage, languages, loadLocale } from '@/i18n';
-import { createLogger } from '@/lib/logger';
-import { trackEvent } from '@/lib/zaraz';
-import { copyToClipboard } from '@/modules/browser-clipboard';
+} from '@/ui/primitives/select';
+import { Tabs, TabsList, TabsTrigger } from '@/ui/primitives/tabs';
+import { type GalleryCategory, gallerySectionManifest } from '@/content/gallery/gallery-manifest';
+import { useBannerHeight } from '@/ui/hooks/useBannerHeight';
+import { isRtlLanguage, languages, loadLocale } from '@/app/i18n';
+import { createLogger } from '@/infra/logging/logger';
+import { trackEvent } from '@/infra/telemetry/zaraz';
+import { copyToClipboard } from '@/platform/browser/clipboard';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';

@@ -4,13 +4,13 @@
  * Canonical source for image filters used by overlay and qr-generator modules
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('OVERLAY');
 
-export type { CropRegion as CropHandlerRegion } from './crop-handler';
+export type { CropRegion as CropHandlerRegion } from '../../domain/render/overlay/crop-handler';
 // Crop Handler
-export { CropHandler, type CropHandlerOptions } from './crop-handler';
+export { CropHandler, type CropHandlerOptions } from '../../domain/render/overlay/crop-handler';
 // Overlay filters (canonical source - qr-generator imports from here)
 export {
   applyColorMode,
@@ -45,7 +45,7 @@ export {
   sharpen,
   sobelEdge,
   threshold,
-} from './overlay-filters';
+} from '../../domain/render/overlay/overlay-filters';
 // Processor
 export {
   applyCanvasBlendMode,
@@ -74,7 +74,7 @@ export {
   processOverlay,
   rotateOverlayCanvas,
   STORE_DEFAULT_DITHER,
-} from './processor';
+} from '../../domain/render/overlay/processor';
 // Watermark
 export {
   applyWatermark,
@@ -89,4 +89,4 @@ export {
   type WatermarkOptions,
   type WatermarkPosition,
   type WatermarkResult,
-} from './watermark';
+} from '../../domain/render/overlay/watermark';

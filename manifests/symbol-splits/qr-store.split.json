@@ -1,0 +1,135 @@
+{
+  "sourceFile": "src/store/qr-store.ts",
+  "description": "Split shared state from domain models, enums, helper contracts, and serializers.",
+  "groups": [
+    {
+      "targetFile": "src/state/model/qr-state.ts",
+      "symbols": [
+        "QRState",
+        "PayloadData"
+      ],
+      "notes": "Pure state shape."
+    },
+    {
+      "targetFile": "src/state/stores/qr-generator.store.ts",
+      "symbols": [
+        "useQRStore"
+      ],
+      "notes": "Store hook or state store only."
+    },
+    {
+      "targetFile": "src/features/monetization/model/tier.ts",
+      "symbols": [
+        "Tier",
+        "PremiumAccess",
+        "PREMIUM_DURATION_MS"
+      ],
+      "notes": "Monetization/tier model."
+    },
+    {
+      "targetFile": "src/domain/qr/model/encoding.ts",
+      "symbols": [
+        "ECCLevel",
+        "EncodingMode",
+        "MaskPattern",
+        "CharacterEncoding"
+      ],
+      "notes": "QR encoding concepts."
+    },
+    {
+      "targetFile": "src/domain/render/model/styles.ts",
+      "symbols": [
+        "ModuleStyle",
+        "FinderStyle",
+        "AlignmentStyle",
+        "TimingStyle",
+        "GapMode",
+        "FrameStyle",
+        "OverlayMode",
+        "ColorMode",
+        "FitMode",
+        "OverlayType",
+        "DitherKind",
+        "DiffusionKernel",
+        "OrderedMatrix",
+        "OutputFormat",
+        "GifQuantizer",
+        "GifDither",
+        "AnimationPatternType",
+        "AnimationTarget",
+        "AnimationWaveAxis",
+        "SafetyMode",
+        "CropRegion"
+      ],
+      "notes": "Render/output/animation style models."
+    },
+    {
+      "targetFile": "src/domain/payload/model/helpers.ts",
+      "symbols": [
+        "OtpAuthHelper",
+        "BizCardHelper",
+        "MessagingHelper",
+        "SocialProfileHelper",
+        "AppLinkHelper",
+        "GS1Helper",
+        "CloudLinkHelper",
+        "CalendarSubHelper",
+        "EventRsvpHelper",
+        "SwissQRBillHelper",
+        "LightningHelper",
+        "EthereumHelper",
+        "QRISHelper",
+        "DuitNowHelper",
+        "BharatQRHelper",
+        "VietQRHelper",
+        "QRPhHelper",
+        "TWQRHelper",
+        "HKQRHelper",
+        "JPQRHelper",
+        "AusPayNetHelper",
+        "PayPalMeHelper",
+        "CashAppHelper",
+        "EMVGenericHelper"
+      ],
+      "notes": "Payload helper contracts."
+    },
+    {
+      "targetFile": "src/domain/payload/model/payload-kind.ts",
+      "symbols": [
+        "PayloadKind"
+      ],
+      "notes": "Payload taxonomy."
+    },
+    {
+      "targetFile": "src/domain/payload/serializers/index.ts",
+      "symbols": [
+        "applyPayloadTransforms",
+        "serializeUrlWithUtm",
+        "serializeEmail",
+        "serializeSms",
+        "serializeWifi",
+        "serializeCrypto",
+        "serializeCalendarSubscription",
+        "serializeEventRsvp",
+        "serializeGS1DigitalLink",
+        "serializeAppLink",
+        "serializeSwissQRBill",
+        "serializeEthereumEIP681",
+        "serializeQRIS",
+        "serializeDuitNow",
+        "serializeBharatQR",
+        "serializeVietQR",
+        "serializeQRPh",
+        "serializeTWQR",
+        "serializeHKQR",
+        "serializeJPQR",
+        "serializeAusPayNet",
+        "serializePayPalMe",
+        "serializeCashApp",
+        "serializeEMVGeneric",
+        "PAYLOAD_SERIALIZERS"
+      ],
+      "notes": "Payload serialization pipeline."
+    }
+  ]
+}

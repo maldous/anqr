@@ -3,7 +3,7 @@
  * Provides QR code analysis, scanning, validation, and safety checking
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('ANALYZER');
 
@@ -13,7 +13,7 @@ export {
   analyzeQRFromCanvas,
   analyzeQRFromFile,
   analyzeQRFromUrl,
-} from './analyzer';
+} from '../../domain/qr/analyze/analyzer';
 // Content analysis utilities (from analyzer-content.ts)
 export {
   averageColor,
@@ -29,11 +29,11 @@ export {
   parseUrlDetails,
   rgbToHex,
   type UrlDetails,
-} from './analyzer-content';
+} from '../../domain/qr/analyze/analyzer-content';
 // Content detection (from content-detection.ts)
-export { detectContentType as detectContentTypeDetails } from './content-detection';
+export { detectContentType as detectContentTypeDetails } from '../../domain/qr/analyze/content-detection';
 // Main decoder
-export { decodeQRFromCanvas } from './decoder';
+export { decodeQRFromCanvas } from '../../domain/qr/analyze/decoder';
 export { type AnalysisExportData, buildAnalysisExportData } from './export';
 // Safety analyzer
 export {
@@ -55,7 +55,7 @@ export {
   validateModuleSize,
   validateOverlayIntensity,
   validateQuietZone,
-} from './safety';
+} from '../../domain/qr/analyze/safety';
 // Scanner
 export {
   type QRLocation,
@@ -68,25 +68,25 @@ export {
   validateFrames,
   validateQRCode,
   validateQRCodeRobust,
-} from './scanner';
+} from '../../domain/qr/analyze/scanner';
 // Worker-based validation (off main thread)
-export { terminateValidationWorker, validateInWorker } from './validation-worker-client';
+export { terminateValidationWorker, validateInWorker } from '../../platform/worker/analyze/validation-worker-client';
 
 // Telemetry and statistics
 export {
   type ContrastReport,
   calculateContrastStats,
   checkContrastCompliance,
-} from './telemetry-contrast';
+} from '../../domain/qr/analyze/telemetry-contrast';
 
 export {
   createScanLogger,
   type LogEntry,
   type ScanLogger,
   type ScanStats,
-} from './telemetry-logging';
+} from '../../domain/qr/analyze/telemetry-logging';
 
-export { type AnalysisStats, aggregateStats, calculateAnalysisStats } from './telemetry-stats';
+export { type AnalysisStats, aggregateStats, calculateAnalysisStats } from '../../domain/qr/analyze/telemetry-stats';
 // Types (canonical source)
 export type {
   ContentType,

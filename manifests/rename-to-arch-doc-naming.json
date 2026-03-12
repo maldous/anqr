@@ -1,0 +1,1010 @@
+[
+  {
+    "source": "src/features/generator/application/generation/generation-class-yieldcontroller.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/yieldcontroller.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-const-config.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/config.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-const-singleton.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/singleton.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-bitmaptocanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/bitmaptocanvas.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-checkoverflow.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/checkoverflow.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-cleanup.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/cleanup.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-cleardisplay.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/cleardisplay.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-cloneserializable.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/cloneserializable.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-crop.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/crop.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-dispatchevent.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/dispatchevent.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-drawtodisplay.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/drawtodisplay.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-expandmatrix.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/expandmatrix.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-finalize.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/finalize.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-fit.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/fit.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-formaterror.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/formaterror.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-handleempty.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/handleempty.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-loadwatermark.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/loadwatermark.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-localizeprogress.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/localizeprogress.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-prechecks.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/prechecks.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-qartattmpts.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/qartattmpts.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-readcanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/readcanvas.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-resolvepreservation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/resolvepreservation.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-rotateflip.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/rotateflip.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-runstandard.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/runstandard.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-safemark.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/safemark.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-safemeasure.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/safemeasure.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-sanitizeconfig.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/sanitizeconfig.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-setupvalidation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/setupvalidation.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-trackevent.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/trackevent.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-watermark.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/watermark.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-fn-yield.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/yield.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-type-perfsnap.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/perfsnap.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-type-preservation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/preservation.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/generation/generation-type-progress.ts",
+    "action": "move",
+    "target": "src/features/generator/application/generation/progress.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-applypattern.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/applypattern.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-artworkfallback.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artworkfallback.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-artworkhelpers.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artworkhelpers.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-artworkstandalone.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artworkstandalone.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-artworksuccess.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artworksuccess.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-baseanimation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/baseanimation.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-buildpatterns.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/buildpatterns.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-canvastoframes.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/canvastoframes.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-cloneframe.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/cloneframe.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-clonesimple.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/clonesimple.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-complete.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/complete.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-compositor.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/compositor.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-computebaseframes.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/computebaseframes.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-computejitter.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/computejitter.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-createartworkstate.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/createartworkstate.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-ensuredecodable.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/ensuredecodable.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-executeloop.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/executeloop.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-finalizeframes.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/finalizeframes.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-interpolation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/interpolation.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-invokeworker.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/invokeworker.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-jitteredloop.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/jitteredloop.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-loopiter.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/loopiter.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-outliercheck.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/outliercheck.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-patternonly.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/patternonly.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-postprocess.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/postprocess.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-processframe.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/processframe.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-renderbase.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/renderbase.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-renderbitmap.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/renderbitmap.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-rendercompositor.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/rendercompositor.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-renderlegacy.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/renderlegacy.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-rendermatrix.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/rendermatrix.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-scratchpool.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/scratchpool.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-fn-staticbase.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/staticbase.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-interface-artworkstate.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/artworkstate.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/frames/frames-type-patterneffect.ts",
+    "action": "move",
+    "target": "src/features/generator/application/frames/patterneffect.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-deliver.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/deliver.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-generation.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/generation.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-loadmodule.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/loadmodule.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-perf.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/perf.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-pipeline.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/pipeline.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-render.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/render.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-terminate.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/terminate.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-updatematrix.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/updatematrix.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-fn-workerrun.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/workerrun.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-type-module.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/module.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-type-result.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/result.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/qart/qart-type-workerresult.ts",
+    "action": "move",
+    "target": "src/features/generator/application/qart/workerresult.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-adjustments.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/adjustments.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-eccfallback.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/eccfallback.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-generror.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/generror.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-mainthread.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/mainthread.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-overflow.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/overflow.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-overlayintensity.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/overlayintensity.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-rescueoutlier.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/rescueoutlier.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-resolvemask.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/resolvemask.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-slowstatus.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/slowstatus.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-fn-tryeccfallback.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/tryeccfallback.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-interface-adjustmentresult.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/adjustmentresult.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/safety/safety-type-ecclevel.ts",
+    "action": "move",
+    "target": "src/features/generator/application/safety/ecclevel.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/export-fn-buildconfig.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/buildconfig.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/export-fn-downloadgif.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/downloadgif.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/export-fn-downloadsvg.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/downloadsvg.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/export-fn-metadata.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/metadata.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/export-fn-scaledcanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/scaledcanvas.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/export/export-type-module.ts",
+    "action": "move",
+    "target": "src/features/generator/application/export/module.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/input-fn-loadfilecanvas.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/loadfilecanvas.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/input-fn-loadgif.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/loadgif.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/input-fn-loadstatic.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/loadstatic.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/input/input-fn-loadwebp.ts",
+    "action": "move",
+    "target": "src/features/generator/application/input/loadwebp.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/url-import/urlimport-fn-animationsafety.ts",
+    "action": "move",
+    "target": "src/features/generator/application/url-import/animationsafety.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/url-import/urlimport-fn-encoding.ts",
+    "action": "move",
+    "target": "src/features/generator/application/url-import/encoding.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/url-import/urlimport-fn-overlay.ts",
+    "action": "move",
+    "target": "src/features/generator/application/url-import/overlay.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/url-import/urlimport-fn-payload.ts",
+    "action": "move",
+    "target": "src/features/generator/application/url-import/payload.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/application/url-import/urlimport-fn-render.ts",
+    "action": "move",
+    "target": "src/features/generator/application/url-import/render.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/hooks/hooks-fn-context.ts",
+    "action": "move",
+    "target": "src/features/generator/hooks/context.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/hooks/hooks-fn-usedebounce.ts",
+    "action": "move",
+    "target": "src/features/generator/hooks/usedebounce.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/hooks/hooks-fn-useqrgenerator.ts",
+    "action": "move",
+    "target": "src/features/generator/hooks/useqrgenerator.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/hooks/hooks-interface-result.ts",
+    "action": "move",
+    "target": "src/features/generator/hooks/result.types.ts",
+    "reason": "Arch doc naming: strip prefix, apply suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/app/pages/StaticPage.tsx",
+    "action": "move",
+    "target": "src/app/pages/static-page.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/app/shell/AppShell.tsx",
+    "action": "move",
+    "target": "src/app/shell/app-shell.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/app/shell/ErrorBoundary.tsx",
+    "action": "move",
+    "target": "src/app/shell/error-boundary.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/gallery/components/GalleryScreen.tsx",
+    "action": "move",
+    "target": "src/features/gallery/components/gallery-screen.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/Preview.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/preview.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/Sidebar.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sidebar.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/AnimationSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/animation-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/MetadataSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/metadata-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/OutputSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/output-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/OverlaySection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/overlay-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/PayloadSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/payload-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/RenderSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/render-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/SafetySection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/safety-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/ShareSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/share-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/generator/components/sections/WatermarkSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/watermark-section.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/features/onboarding/components/WelcomeModal.tsx",
+    "action": "move",
+    "target": "src/features/onboarding/components/welcome-modal.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/ads/components/AdPlaceholder.tsx",
+    "action": "move",
+    "target": "src/platform/ads/components/ad-placeholder.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/ads/components/AdUnit.tsx",
+    "action": "move",
+    "target": "src/platform/ads/components/ad-unit.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/ui/composites/BusyOverlay.tsx",
+    "action": "move",
+    "target": "src/ui/composites/busy-overlay.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/ui/composites/MobileDivider.tsx",
+    "action": "move",
+    "target": "src/ui/composites/mobile-divider.tsx",
+    "reason": "Arch doc naming: PascalCase to kebab-case",
+    "confidence": "high"
+  },
+  {
+    "source": "src/domain/qr/decode/result-types.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/result.types.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/domain/qr/decode/decoder-adapter.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/decoder.adapter.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/worker/qart/worker-client.ts",
+    "action": "move",
+    "target": "src/platform/worker/qart/qart.client.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/worker/analyze/validation-worker-client.ts",
+    "action": "move",
+    "target": "src/platform/worker/analyze/analyze.client.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/worker/qart/worker-protocol.ts",
+    "action": "move",
+    "target": "src/platform/worker/qart/qart-protocol.types.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/worker/qart/worker.ts",
+    "action": "move",
+    "target": "src/platform/worker/qart/qart.worker.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/worker/analyze/validation-worker.ts",
+    "action": "move",
+    "target": "src/platform/worker/analyze/analyze.worker.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/browser/clipboard/api.ts",
+    "action": "move",
+    "target": "src/platform/browser/clipboard/clipboard.adapter.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/browser/io/api.ts",
+    "action": "move",
+    "target": "src/platform/browser/io/io.adapter.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/native/ads/admob.ts",
+    "action": "move",
+    "target": "src/platform/native/ads/admob.adapter.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/native/media-store/media-store.ts",
+    "action": "move",
+    "target": "src/platform/native/media-store/media-store.adapter.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  },
+  {
+    "source": "src/platform/native/notifications/native-toast.ts",
+    "action": "move",
+    "target": "src/platform/native/notifications/native-toast.adapter.ts",
+    "reason": "Arch doc naming: apply role suffix",
+    "confidence": "high"
+  }
+]

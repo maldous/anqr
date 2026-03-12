@@ -2,7 +2,7 @@
  * QR Analyzer Types
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('ANALYZER');
 

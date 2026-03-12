@@ -1,4 +1,4 @@
-import { DynamicTestId } from '@/components/ui/dynamic-testid';
+import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 /**
  * Analyze Component
  * Premier QR Code analysis page - the most comprehensive QR analyzer available
@@ -60,11 +60,11 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AdUnit } from '@/components/AdUnit';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { createLogger } from '@/lib/logger';
-import { saveFileNative } from '@/modules/browser-io';
+import { AdUnit } from '@/platform/ads/components/AdUnit';
+import { Button } from '@/ui/primitives/button';
+import { Input } from '@/ui/primitives/input';
+import { createLogger } from '@/infra/logging/logger';
+import { saveFileNative } from '@/platform/browser/io';
 import {
   analyzeQRCode,
   analyzeQRFromFile,
@@ -87,7 +87,7 @@ import {
 } from '@/modules/qr-spec';
 import { useQRStore } from '@/store/qr-store';
 
-import { buildContentTypeDetails } from '@/components/analyze/content-type-renderers';
+import { buildContentTypeDetails } from '@/features/analyze/components/content-type-renderers';
 
 const log = createLogger('ANALYZE');
 const ENABLE_ANALYZE_MATRIX_DIAGNOSTICS =
@@ -2621,7 +2621,7 @@ function AnalyzeResultsHeader({
                 ? t('analyze.noQrDetected', 'No QR Code Found')
                 : t('analyze.failed', 'Analysis Failed')}
             </p>
-            <p className="text-sm opacity-90 whitespace-pre-wrap">{result.error}</p>
+            <p className="text-sm opacity-90 whitespace-pre-wrap">{result.errorType === 'no_qr_detected' ? t('analyze.noCodeDetectedInImage', 'No QR code detected in image') : result.error}</p>
           </div>
         </div>
       )}

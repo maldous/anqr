@@ -4,12 +4,12 @@
  */
 
 // Re-export from browser-io (canonical source)
-export { canvasToBlob, downloadUrl, saveFileNative } from '../browser-io';
+export { canvasToBlob, downloadUrl, saveFileNative } from '../../platform/browser/io/index';
 
 /**
  * Escape XML special characters */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('EXPORT');
 

@@ -19,7 +19,7 @@
  * - Linear algebra utilities for pixel control (future)
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 import { type ECCLevel, qrcode } from '../qr-encoder';
 
 const log = createLogger('QART');
@@ -515,8 +515,8 @@ export function getBaseUrl(url: string): string {
 }
 
 // Import and re-export mapImageToTargetsSupersampled from image-utils to avoid circular imports
-import { mapImageToTargetsSupersampled } from './image-utils';
-export { mapImageToTargetsSupersampled } from './image-utils';
+import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
+export { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
 
 /**
  * Evaluate how well a QR code matches the target image
@@ -749,7 +749,7 @@ export {
   indexToPixel,
   pixelToIndex,
   type RSBlockInfo,
-} from './bit-mapping';
+} from '../../domain/qr/qart/bit-mapping';
 export {
   applyAllSelectedVectors,
   applySelectedVectorsToBlock,
@@ -760,8 +760,8 @@ export {
   gaussJordanEliminate as performGaussJordanElimination,
   rankPixelsByImportance,
   selectBasisVectorsForTarget,
-} from './elimination';
-export { clearQArtBufferPool } from './buffer-pool';
+} from '../../domain/qr/qart/elimination';
+export { clearQArtBufferPool } from '../../domain/qr/qart/buffer-pool';
 export {
   eccNumericToLevel,
   // Format info utilities
@@ -783,7 +783,7 @@ export {
   // Suffix charset validation
   validateSuffixCharset,
   verifyMatrixFormatInfo,
-} from './generate';
+} from '../../domain/qr/qart/generate';
 export {
   basisToMatrix,
   buildBlockBasis,
@@ -801,14 +801,14 @@ export {
   type RSBasis,
   type RSBasisVector,
   xorBasisVectors,
-} from './rs-basis';
+} from '../../domain/qr/qart/rs-basis';
 export {
   binarySearchMaxVectors,
   flattenAndOrderSelections,
   type RejectionHistogram,
   unflattenSelections,
-} from './scan-fallback';
-export { generateQArtInWorker, terminateQArtWorker } from './qart-worker-client';
+} from '../../domain/qr/qart/scan-fallback';
+export { generateQArtInWorker, terminateQArtWorker } from '../../platform/worker/qart/worker-client';
 
 // ============================================
 // EXPORTS

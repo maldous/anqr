@@ -13,7 +13,7 @@
  * - Pure URL/string manipulation
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('SHARE');
 
@@ -24,9 +24,9 @@ export {
   generateIframeEmbed,
   generateImageEmbed,
   generateMarkdownEmbed,
-} from './embed';
+} from '../../domain/share/embed';
 // Social sharing
-export { getSocialShareUrls } from './social';
+export { getSocialShareUrls } from '../../domain/share/social';
 // Types
 export { type EmbedOptions, MAX_SHARE_URL_LENGTH, type ShareConfig } from './types';
 // URL parameter functions
@@ -37,4 +37,4 @@ export {
   parseUrlParams,
   parseUrlParamsFromSearchParams,
   updateBrowserUrl,
-} from './url-params';
+} from '../../domain/share/url-params';

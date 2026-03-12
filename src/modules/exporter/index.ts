@@ -3,14 +3,14 @@
  * File export functionality for PNG, GIF, SVG, and vector SVG
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('EXPORT');
 
 // GIF export
-export { downloadGif, exportGif } from './gif-export';
+export { downloadGif, exportGif } from '../../domain/render/export/gif-export';
 // Image export (PNG, WebP, JPEG)
-export { downloadImage, exportImage } from './image-export';
+export { downloadImage, exportImage } from '../../domain/render/export/image-export';
 // PNG metadata
 export {
   calculateCrc32,
@@ -18,9 +18,9 @@ export {
   createPngTextChunk,
   embedPngDpi,
   embedPngMetadata,
-} from './png-metadata';
+} from '../../domain/render/export/png-metadata';
 // SVG export (raster embedded)
-export { downloadSvg, exportSvg } from './svg-export';
+export { downloadSvg, exportSvg } from '../../domain/render/export/svg-export';
 // Types
 export type {
   ExportConfig,
@@ -39,4 +39,4 @@ export { getDefaultExportConfig } from './types';
 export { canvasToBlob, downloadUrl, escapeXml, saveFileNative } from './utils';
 
 // Vector SVG export (true vector)
-export { downloadVectorSvg, exportVectorSvg } from './vector-svg';
+export { downloadVectorSvg, exportVectorSvg } from '../../domain/render/export/vector-svg';

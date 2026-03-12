@@ -1,0 +1,16 @@
+/**
+ * Hints for the decode process
+ */
+export enum DecodeHintType {
+  OTHER = 0,
+  PURE_BARCODE = 1,
+  POSSIBLE_FORMATS = 2,
+  TRY_HARDER = 3,
+  CHARACTER_SET = 4,
+  ALLOWED_LENGTHS = 5,
+  ASSUME_CODE_39_CHECK_DIGIT = 6,
+  ASSUME_GS1 = 7,
+  RETURN_CODABAR_START_END = 8,
+  NEED_RESULT_POINT_CALLBACK = 9,
+  ALLOWED_EAN_EXTENSIONS = 10,
+}

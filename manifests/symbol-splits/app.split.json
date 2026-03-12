@@ -1,0 +1,93 @@
+{
+  "sourceFile": "src/App.tsx",
+  "description": "Split shell composition, routing, SEO/head updates, and URL-parameter application.",
+  "groups": [
+    {
+      "targetFile": "src/app/shell/AppShell.tsx",
+      "symbols": [
+        "App",
+        "AppContent",
+        "LazyLoadFallback"
+      ],
+      "notes": "Final shell composition only."
+    },
+    {
+      "targetFile": "src/app/routing/page-resolution.ts",
+      "symbols": [
+        "PageView",
+        "ModuleStyleOption",
+        "getPageFromLocation"
+      ],
+      "notes": "Routing and page resolution helpers."
+    },
+    {
+      "targetFile": "src/app/seo/head-links.ts",
+      "symbols": [
+        "updateHreflangLinks",
+        "updateCanonicalUrl",
+        "GradientUpdate"
+      ],
+      "notes": "Head and document decoration concerns."
+    },
+    {
+      "targetFile": "src/features/generator/model/mobile-split.ts",
+      "symbols": [
+        "MOBILE_SPLIT_STORAGE_KEY",
+        "DEFAULT_MOBILE_SPLIT",
+        "MIN_MOBILE_SPLIT",
+        "MAX_MOBILE_SPLIT",
+        "StoreState"
+      ],
+      "notes": "Generator feature model and local persistence constants."
+    },
+    {
+      "targetFile": "src/features/generator/application/url-import/apply-payload-params.ts",
+      "symbols": [
+        "applyTierAndPayloadParams"
+      ],
+      "notes": "Payload and tier import from share URL."
+    },
+    {
+      "targetFile": "src/features/generator/application/url-import/apply-encoding-params.ts",
+      "symbols": [
+        "applyQrEncodingParams"
+      ],
+      "notes": "QR encoding settings import."
+    },
+    {
+      "targetFile": "src/features/generator/application/url-import/apply-render-params.ts",
+      "symbols": [
+        "applyRenderBasicStyles",
+        "applyRenderEyeAndFrameStyles",
+        "applyRenderColorAndPaletteStyles",
+        "applyDitheringParams",
+        "applySubpixelAndHalftoneParams",
+        "applyEccIntensityLimits"
+      ],
+      "notes": "Render and style import helpers."
+    },
+    {
+      "targetFile": "src/features/generator/application/url-import/apply-overlay-params.ts",
+      "symbols": [
+        "applyOverlayTransformParams",
+        "applyOverlayAdvancedParams",
+        "applyOverlayPreprocessingParams",
+        "applyWatermarkParams"
+      ],
+      "notes": "Overlay and watermark import helpers."
+    },
+    {
+      "targetFile": "src/features/generator/application/url-import/apply-animation-output-and-safety-params.ts",
+      "symbols": [
+        "applyAnimationBasicParams",
+        "applyAnimationPatternParams",
+        "applyOutputBasicParams",
+        "applyOutputAdvancedParams",
+        "applySafetyParams",
+        "applyQaAndAutoParams",
+        "applyMetadataParams"
+      ],
+      "notes": "Animation, output, safety, QA, and metadata import helpers."
+    }
+  ]
+}

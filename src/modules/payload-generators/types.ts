@@ -5,7 +5,7 @@
  * The store imports from here, not the other way around.
  */
 
-import { createLogger } from '../../lib/logger';
+import { createLogger } from '../../infra/logging/logger';
 
 const _log = createLogger('PAYLOAD');
 
