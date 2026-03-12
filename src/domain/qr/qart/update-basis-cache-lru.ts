@@ -1,6 +1,6 @@
 import type { RSBasis } from './rs-basis.types';
 import { BASIS_CACHE_LIMIT } from './basis-cache-limit';
-import { basisCache } from './rs-basis._internal';
+import { basisCache } from './basis-cache';
 
 export function updateBasisCacheLru(key: string, basis: RSBasis): void {
   basisCache.delete(key);

@@ -1,5 +1,7 @@
 import { resetLogLevel } from '../logging/logger';
-import { log, readState, writeState } from './logger-remote._internal';
+import { log } from './log';
+import { readState } from './read-state';
+import { writeState } from './write-state';
 
 /**
  * Disable diagnostics mode and revert to default log level.

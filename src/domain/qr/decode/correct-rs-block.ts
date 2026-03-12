@@ -1,4 +1,11 @@
-import { qrDecoderLog, calculateSyndromePolynomial, isSyndromeZero, runEuclideanAlgorithm, polyDegree, findErrorLocations, findErrorMagnitudes, applyErrorCorrections } from './rs-decoder._internal';
+import { applyErrorCorrections } from './apply-error-corrections';
+import { calculateSyndromePolynomial } from './calculate-syndrome-polynomial';
+import { findErrorLocations } from './find-error-locations';
+import { findErrorMagnitudes } from './find-error-magnitudes';
+import { isSyndromeZero } from './is-syndrome-zero';
+import { polyDegree } from './poly-degree';
+import { qrDecoderLog } from './qr-decoder-log-4';
+import { runEuclideanAlgorithm } from './run-euclidean-algorithm';
 
 // ============================================
 // Main Correction Function

@@ -1,5 +1,5 @@
 import type { FormatVerificationResult } from './validation';
-import { applySubsetAndRegenerate } from './scan-fallback';
+import { applySubsetAndRegenerate } from './apply-subset-and-regenerate';
 
 /**
  * Use binary search to find the maximum number of vectors that produces

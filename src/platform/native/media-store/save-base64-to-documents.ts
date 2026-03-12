@@ -1,4 +1,4 @@
-import { getMediaStoreWriter } from './media-store._internal';
+import { getMediaStoreWriter } from './get-media-store-writer';
 
 /**
  * Save a base64-encoded file to the Documents folder

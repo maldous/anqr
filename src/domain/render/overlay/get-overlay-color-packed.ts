@@ -1,5 +1,6 @@
 import type { OverlayData } from '../../../modules/qr-generator/types';
-import { isPackedOverlayData, LegacyOverlayData } from './overlay-data-packed._internal';
+import { isPackedOverlayData } from './is-packed-overlay-data';
+import { LegacyOverlayData } from './legacy-overlay-data';
 import { packOverlayColor } from './pack-overlay-color';
 
 export function getOverlayColorPacked(

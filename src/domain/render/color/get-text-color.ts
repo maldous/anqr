@@ -1,5 +1,5 @@
 import { parseColor } from './parse-color';
-import { BLACK } from './color._internal';
+import { BLACK } from './black';
 import { getRelativeLuminance } from './get-relative-luminance';
 
 /** Get best text color (black or white) for given background */

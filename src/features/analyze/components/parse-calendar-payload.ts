@@ -1,4 +1,4 @@
-import { processCalendarLine } from './payload-parsers._internal';
+import { processCalendarLine } from './process-calendar-line';
 
 export function parseCalendarPayload(payload: string): Record<string, string | boolean | null> {
   const result: Record<string, string | boolean | null> = {

@@ -1,5 +1,10 @@
 import { type ShareConfig } from '../../modules/share-links/types';
-import { parseIntParam, parseMaskParam, prefixHash, parseGradientStopsParam, parseFloatParam, parseBlendMode } from './url-params._internal';
+import { parseBlendMode } from './parse-blend-mode';
+import { parseFloatParam } from './parse-float-param';
+import { parseGradientStopsParam } from './parse-gradient-stops-param';
+import { parseIntParam } from './parse-int-param';
+import { parseMaskParam } from './parse-mask-param';
+import { prefixHash } from './prefix-hash';
 
 /**
  * Server-safe URL parameter parsing

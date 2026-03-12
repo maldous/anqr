@@ -1,5 +1,9 @@
 import { setLogLevel } from '../logging/logger';
-import { log, DEFAULT_TTL_MINUTES, MAX_TTL_MINUTES, DiagnosticsState, writeState } from './logger-remote._internal';
+import { DEFAULT_TTL_MINUTES } from './default-ttl-minutes';
+import { DiagnosticsState } from './diagnostics-state';
+import { log } from './log';
+import { MAX_TTL_MINUTES } from './max-ttl-minutes';
+import { writeState } from './write-state';
 
 // ============================================================================
 // Public API

@@ -1,7 +1,7 @@
 import { qrcode } from '../../domain/qr/encode/encoder';
 import type { QRErrorCorrectionLevelChar } from './types';
 import type { DataSegment, ECCLevel, QROptions, QRInstance } from './encoder-api.types';
-import { toEncoderModeToken } from './encoder-api._internal';
+import { toEncoderModeToken } from './to-encoder-mode-token';
 
 /**
  * Create a QR code instance with multiple data segments (mixed mode encoding)

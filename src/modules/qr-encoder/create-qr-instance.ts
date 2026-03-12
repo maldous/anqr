@@ -3,7 +3,7 @@ import type { QRErrorCorrectionLevelChar } from './types';
 import type { ECCLevel, QROptions, QRInstance } from './encoder-api.types';
 import { optimizeSegments } from './optimize-segments';
 import { createQRInstanceWithSegments } from './create-qr-instance-with-segments';
-import { toEncoderModeToken } from './encoder-api._internal';
+import { toEncoderModeToken } from './to-encoder-mode-token';
 
 /**
  * Create a QR code instance

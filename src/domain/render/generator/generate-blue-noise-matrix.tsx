@@ -5,7 +5,19 @@ import type {
   QRCodeInstance,
   QRGeneratorConfig,
 } from '../../../modules/qr-generator/types';
-import { log, generateBWFirstMatrix, clamp01, readOverlayPixelsAtSize, createEmptyMatrix, getBlueNoiseTileCached, BlueNoisePixelCtx, processBlueNoisePixel, buildStrictConstraintConfig, enforceModuleConstraints, removeIsolatedSpeckles, bitsToMatrix, packedColorsToMatrix } from './pixel-matrix-dithered._internal';
+import { bitsToMatrix } from './bits-to-matrix';
+import { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
+import { buildStrictConstraintConfig } from './build-strict-constraint-config';
+import { clamp01 } from './clamp01';
+import { createEmptyMatrix } from './create-empty-matrix';
+import { enforceModuleConstraints } from './enforce-module-constraints';
+import { generateBWFirstMatrix } from './generate-bw-first-matrix';
+import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';
+import { log } from './log';
+import { packedColorsToMatrix } from './packed-colors-to-matrix';
+import { processBlueNoisePixel } from './process-blue-noise-pixel';
+import { readOverlayPixelsAtSize } from './read-overlay-pixels-at-size';
+import { removeIsolatedSpeckles } from './remove-isolated-speckles';
 
 /**
  * Generate blue noise pixel matrix

@@ -1,7 +1,11 @@
 import { distributeErrorWithKernel } from './error-diffusion';
 import { DIFFUSION_KERNELS } from './kernels';
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { PerceptualDitherOptions, copyImageToPixels, initDitherResults, getScanParams, quantizePerceptualPixel } from './advanced._internal';
+import { copyImageToPixels } from './copy-image-to-pixels';
+import { getScanParams } from './get-scan-params';
+import { initDitherResults } from './init-dither-results';
+import { PerceptualDitherOptions } from './perceptual-dither-options';
+import { quantizePerceptualPixel } from './quantize-perceptual-pixel';
 
 /** Perceptual dithering - uses perceptual luminance weighting */
 export function perceptualDither(

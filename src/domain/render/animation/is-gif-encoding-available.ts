@@ -1,4 +1,4 @@
-import { GIFENC } from './gif-codec._internal';
+import { GIFENC } from './gifenc';
 
 export function isGifEncodingAvailable(): boolean {
   return Boolean(GIFENC.GIFEncoder && GIFENC.quantize && GIFENC.applyPalette);

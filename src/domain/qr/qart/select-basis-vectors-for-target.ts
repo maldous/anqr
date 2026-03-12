@@ -1,5 +1,5 @@
 import type { EliminationResult, BlockSelectionResult } from './elimination.types';
-import { selectVectorsForBlock } from './elimination._internal';
+import { selectVectorsForBlock } from './select-vectors-for-block';
 
 /**
  * Select which basis vectors to apply to achieve the target pattern

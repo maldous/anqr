@@ -1,6 +1,6 @@
 import type { RGB } from '../../../modules/core/types';
 import { parseColor } from './parse-color';
-import { BLACK } from './color._internal';
+import { BLACK } from './black';
 import { rgbToGray } from './rgb-to-gray';
 
 /** Check if a color is considered "dark" */

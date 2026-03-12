@@ -1,4 +1,4 @@
-import { GIFENC } from './gif-codec._internal';
+import { GIFENC } from './gifenc';
 
 export function quantizeGifPalette(data: Uint8ClampedArray, colors: number): number[][] {
   if (!GIFENC.quantize) {

@@ -5,7 +5,7 @@ import { GenericGF, ReedSolomonDecoder } from './reed-solomon';
 import { DecoderResult } from './result-types';
 import { StringBuilder, StringEncoding, StringUtils } from './util';
 import { BitMatrixParser } from './bit-matrix-parser';
-import { BitSource } from './qr-data-decoder._internal';
+import { BitSource } from './bit-source';
 
 /**
  * Main QR code decoder

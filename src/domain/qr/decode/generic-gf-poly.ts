@@ -1,8 +1,7 @@
 import { IllegalArgumentException } from './exceptions';
 import { arraycopy } from './util';
 import { AbstractGenericGF } from './abstract-generic-gf';
-import { GenericGF } from './generic-gf';
-import { formatPolyTerm } from './reed-solomon._internal';
+import { formatPolyTerm } from './format-poly-term';
 
 /**
  * Polynomial over a Galois Field

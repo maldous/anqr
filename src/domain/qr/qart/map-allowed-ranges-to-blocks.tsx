@@ -1,6 +1,8 @@
 import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 import type { BitRange } from './semantic-layout.types';
-import { log, findBlockForLinearByte, logBlockMappingResults } from './semantic-layout._internal';
+import { findBlockForLinearByte } from './find-block-for-linear-byte';
+import { log } from './log-4';
+import { logBlockMappingResults } from './log-block-mapping-results';
 
 /**
  * Map allowed bit ranges from the LINEAR BUFFER to per-block allowed bits.

@@ -1,4 +1,4 @@
-import { ResolvedPreservationOptions } from './useQRGenerator._internal';
+import { ResolvedPreservationOptions } from './resolved-preservation-options';
 
 export function resolveOverlayPreservationOptions(params: {
   overlayEnabled: boolean;

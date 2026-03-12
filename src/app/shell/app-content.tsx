@@ -54,8 +54,12 @@ import {
   applyQaAndAutoParams,
   applySafetyParams,
 } from '@/features/generator/application/url-import/apply-animation-output-and-safety-params';
-import App from './app';
-import { CapacitorAppPlugin, log, WelcomeModal, Analyze, Gallery, StaticPage } from './AppShell._internal';
+import { Analyze } from './analyze';
+import { CapacitorAppPlugin } from './capacitor-app-plugin';
+import { Gallery } from './gallery';
+import { log } from './log';
+import { StaticPage } from './static-page';
+import { WelcomeModal } from './welcome-modal';
 import { LazyLoadFallback } from './lazy-load-fallback';
 
 export function AppContent() {

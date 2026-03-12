@@ -1,5 +1,5 @@
 import { copyImageData, gamma, gaussianBlur } from '../../../modules/overlay/index';
-import { log } from './filters-preprocess._internal';
+import { log } from './log';
 
 /**
  * Soften a high-contrast B&W image to create gradients for better dithering.

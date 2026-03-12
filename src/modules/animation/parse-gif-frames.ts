@@ -1,7 +1,8 @@
 import { decodeGif } from '../../domain/render/animation/gif-codec';
 import { createGifCompositor } from '../../domain/render/animation/gif-compositor';
 import type { AnimationFrame } from './types';
-import { log, asClampedRgbaView } from './parsing._internal';
+import { asClampedRgbaView } from './as-clamped-rgba-view';
+import { log } from './log';
 
 /**
  * Parse a GIF file and extract frames as canvas elements

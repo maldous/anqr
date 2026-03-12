@@ -1,6 +1,13 @@
 import { MODE_TERMINATOR } from '../../../modules/qr-decoder/types';
 import type { DecodedDataResult } from './decode.types';
-import { BitStream, DecodeLoopState, qrDecoderLog, getCharCountBits, pushInvalidSegment, decodeSegmentData, processDecodedSegment, resolveEncodingMode } from './decode._internal';
+import { BitStream } from './bit-stream';
+import { DecodeLoopState } from './decode-loop-state';
+import { decodeSegmentData } from './decode-segment-data';
+import { getCharCountBits } from './get-char-count-bits';
+import { processDecodedSegment } from './process-decoded-segment';
+import { pushInvalidSegment } from './push-invalid-segment';
+import { qrDecoderLog } from './qr-decoder-log';
+import { resolveEncodingMode } from './resolve-encoding-mode';
 
 export function decodeDataCodewordsDetailed(
   dataCodewords: number[],

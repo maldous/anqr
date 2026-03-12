@@ -1,6 +1,6 @@
 import type { ShareConfig } from '@/modules/share-links';
 import { useQRStore } from '@/store/qr-store';
-import { log } from './apply-render-params._internal';
+import { log } from './log-2';
 
 export function applyRenderColorAndPaletteStyles(params: Partial<ShareConfig>): void {
   if (params.perModuleColorMode)

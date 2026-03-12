@@ -1,6 +1,7 @@
 import type { DitherResult, RGB } from '../../../modules/dither-algorithms/types';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import { BlueNoiseOptions, quantizeBlueNoisePixel } from './advanced._internal';
+import { BlueNoiseOptions } from './blue-noise-options';
+import { quantizeBlueNoisePixel } from './quantize-blue-noise-pixel';
 
 /** Apply blue noise threshold dithering */
 export function blueNoiseDither(

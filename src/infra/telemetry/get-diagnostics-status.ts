@@ -1,5 +1,6 @@
 import { getLogLevel } from '../logging/logger';
-import { readState, isEnabled } from './logger-remote._internal';
+import { isEnabled } from './is-enabled';
+import { readState } from './read-state';
 
 /**
  * Get current diagnostics status.

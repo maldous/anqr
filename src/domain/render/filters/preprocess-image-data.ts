@@ -1,7 +1,10 @@
 import { applyFilters, copyImageData, gamma } from '../../../modules/overlay/index';
 import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { buildFilterOptionsFromConfig, log, autoSoftenIfNeeded, applyAdaptiveNormalizationIfNeeded } from './filters-preprocess._internal';
+import { applyAdaptiveNormalizationIfNeeded } from './apply-adaptive-normalization-if-needed';
+import { autoSoftenIfNeeded } from './auto-soften-if-needed';
+import { buildFilterOptionsFromConfig } from './build-filter-options-from-config';
+import { log } from './log';
 
 export function preprocessImageData(
   imageData: ImageData,

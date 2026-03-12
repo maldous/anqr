@@ -14,21 +14,8 @@ import { duotone } from './duotone';
 // TYPES
 // ============================================
 
-export interface RGB {
-  r: number;
-  g: number;
-  b: number;
-}
-
-export interface RGBA extends RGB {
-  a: number;
-}
-
-export interface HSL {
-  h: number;
-  s: number;
-  l: number;
-}
+import type { RGB, RGBA, HSL } from './overlay-color-types';
+export type { RGB, RGBA, HSL } from './overlay-color-types';
 
 export type ColorMode = 'bw' | 'grayscale' | 'color';
 

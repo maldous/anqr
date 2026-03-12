@@ -1,5 +1,7 @@
 import { canvasHashCache } from './cache';
-import { acquireHashCanvas, HASH_CANVAS_SIZE, log } from './utils._internal';
+import { acquireHashCanvas } from './acquire-hash-canvas';
+import { HASH_CANVAS_SIZE } from './hash-canvas-size';
+import { log } from './log';
 
 /**
  * Hash canvas content for cache key disambiguation

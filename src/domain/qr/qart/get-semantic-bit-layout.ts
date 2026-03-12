@@ -2,7 +2,7 @@ import { QRMode } from '../../../modules/qr-encoder/types';
 import { getLengthInBits } from '../encode/utils';
 import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 import type { SemanticBitLayout } from './semantic-layout.types';
-import { log } from './semantic-layout._internal';
+import { log } from './log-4';
 
 /**
  * Calculate the semantic bit layout for a QR code

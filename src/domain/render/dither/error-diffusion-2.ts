@@ -1,6 +1,10 @@
 import { DIFFUSION_KERNELS } from './kernels';
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { ErrorDiffusionOptions, copyImageToPixels, initDitherResults, getScanParams, quantizeErrorDiffusionPixel } from './error-diffusion._internal';
+import { copyImageToPixels } from './copy-image-to-pixels-2';
+import { ErrorDiffusionOptions } from './error-diffusion-options';
+import { getScanParams } from './get-scan-params-2';
+import { initDitherResults } from './init-dither-results-2';
+import { quantizeErrorDiffusionPixel } from './quantize-error-diffusion-pixel';
 import { distributeErrorWithKernel } from './distribute-error-with-kernel';
 
 /** Apply error diffusion dithering */

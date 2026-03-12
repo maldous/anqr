@@ -1,6 +1,18 @@
 import type { ApplyOverlayModeOptions } from '../../../modules/qr-generator/types';
 import type { OverlayModeResult } from './render-modes.types';
-import { OverlayModeContext, applyHalftoneMode, applyHalftoneDitheredMode, applyBlendMode, applyBrightnessMode, applyGapfillMode, applyPixelateMode, applyDuotoneMode, applyOutlineMode, applyWaveMode, applyMosaicMode, applyDitherOrExtremeMode, applyArtworkMode } from './render-modes._internal';
+import { applyArtworkMode } from './apply-artwork-mode';
+import { applyBlendMode } from './apply-blend-mode';
+import { applyBrightnessMode } from './apply-brightness-mode';
+import { applyDitherOrExtremeMode } from './apply-dither-or-extreme-mode';
+import { applyDuotoneMode } from './apply-duotone-mode';
+import { applyGapfillMode } from './apply-gapfill-mode';
+import { applyHalftoneDitheredMode } from './apply-halftone-dithered-mode';
+import { applyHalftoneMode } from './apply-halftone-mode';
+import { applyMosaicMode } from './apply-mosaic-mode';
+import { applyOutlineMode } from './apply-outline-mode';
+import { applyPixelateMode } from './apply-pixelate-mode';
+import { applyWaveMode } from './apply-wave-mode';
+import { OverlayModeContext } from './overlay-mode-context';
 
 /**
  * Apply overlay mode effects to a module

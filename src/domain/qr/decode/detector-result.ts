@@ -1,6 +1,5 @@
 import type { BitMatrix } from './bit-matrix';
 import { ResultPoint } from './result-types';
-import { Detector } from './detector';
 
 /**
  * Detector result containing bit matrix and detected points

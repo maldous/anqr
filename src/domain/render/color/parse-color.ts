@@ -3,7 +3,7 @@ import { parseHexAlpha } from './parse-hex-alpha';
 import { parseRgbString } from './parse-rgb-string';
 import { parseHslString } from './parse-hsl-string';
 import { hslToRgb } from './hsl-to-rgb';
-import { NAMED_COLORS } from './color._internal';
+import { NAMED_COLORS } from './named-colors';
 
 /** Parse any color string to RGBA, or null if unrecognizable */
 export function parseColor(color: string): RGBA | null {

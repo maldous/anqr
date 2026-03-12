@@ -4,8 +4,8 @@ import { log } from './log-3';
 import { validateByteExactPrefix } from './validate-byte-exact-prefix';
 import { logBaseValidationFailure } from './log-base-validation-failure';
 import type { BaseMatrixResult } from './base-matrix-result';
-import type { RejectionHistogram, FlattenedSelection } from './scan-fallback';
-import { applySubsetAndRegenerate } from './scan-fallback';
+import type { RejectionHistogram, FlattenedSelection } from './scan-fallback.types';
+import { applySubsetAndRegenerate } from './apply-subset-and-regenerate';
 
 export function validateBaseMatrix(
   flattened: FlattenedSelection[],

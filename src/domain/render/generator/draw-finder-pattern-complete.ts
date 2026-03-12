@@ -1,6 +1,6 @@
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
 import { validateColor } from '../../../modules/qr-generator/utils';
-import { drawFinderRing } from './drawing-patterns._internal';
+import { drawFinderRing } from './draw-finder-ring';
 
 /**
  * Draw a complete finder pattern at the specified position

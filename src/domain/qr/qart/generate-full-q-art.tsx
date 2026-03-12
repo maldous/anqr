@@ -1,6 +1,9 @@
 import { MIN_QART_VERSION } from './rs-basis';
 import type { FullQArtConfig, FullQArtResult } from './generate.types';
-import { resolvePerformanceSettings, resolveQArtSuffixConfig, log, generateFullQArtCore } from './generate._internal';
+import { generateFullQArtCore } from './generate-full-q-art-core';
+import { log } from './log-2';
+import { resolvePerformanceSettings } from './resolve-performance-settings';
+import { resolveQArtSuffixConfig } from './resolve-q-art-suffix-config';
 
 export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArtResult> {
   const {

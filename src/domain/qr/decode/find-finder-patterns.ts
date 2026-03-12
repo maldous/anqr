@@ -1,5 +1,9 @@
 import type { FinderPattern, FinderPatternResult } from '../../../modules/qr-decoder/types';
-import { qrDecoderLog, grayAt, scanRow, verifyVertical, refineFinderPatternCenter } from './locate._internal';
+import { grayAt } from './gray-at';
+import { qrDecoderLog } from './qr-decoder-log-3';
+import { refineFinderPatternCenter } from './refine-finder-pattern-center';
+import { scanRow } from './scan-row';
+import { verifyVertical } from './verify-vertical';
 
 /**
  * Find all finder patterns in the image

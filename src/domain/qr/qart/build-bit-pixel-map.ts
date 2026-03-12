@@ -1,6 +1,11 @@
 import { getMaskFunction } from '../spec/masks';
 import type { ECCLevel, BitPixelMapping } from './bit-mapping.types';
-import { bitPixelMapCache, updateLruCache, BIT_PIXEL_MAP_CACHE_LIMIT, buildInterleavingMap, recordDataBitMapping, log } from './bit-mapping._internal';
+import { bitPixelMapCache } from './bit-pixel-map-cache';
+import { BIT_PIXEL_MAP_CACHE_LIMIT } from './bit-pixel-map-cache-limit';
+import { buildInterleavingMap } from './build-interleaving-map';
+import { log } from './log';
+import { recordDataBitMapping } from './record-data-bit-mapping';
+import { updateLruCache } from './update-lru-cache';
 import { getModuleCount } from './get-module-count';
 import { getRSBlockInfo } from './get-rs-block-info';
 import { getTotalCodewords } from './get-total-codewords';

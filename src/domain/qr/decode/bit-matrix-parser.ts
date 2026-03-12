@@ -1,7 +1,7 @@
 import type { BitMatrix } from './bit-matrix';
 import { FormatException } from './exceptions';
 import { DataMask, FormatInformation, Version } from './qr-version';
-import { accumulateCodewordBit } from './qr-data-decoder._internal';
+import { accumulateCodewordBit } from './accumulate-codeword-bit';
 
 /**
  * Parses the QR code bit matrix into format and version info

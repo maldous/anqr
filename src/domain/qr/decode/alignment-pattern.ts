@@ -1,5 +1,5 @@
 import { ResultPoint } from './result-types';
-import { patternAboutEquals } from './pattern-finder._internal';
+import { patternAboutEquals } from './pattern-about-equals';
 
 /**
  * Alignment pattern (smaller squares in larger QR codes)

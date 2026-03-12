@@ -1,5 +1,5 @@
 import { parseColor } from './parse-color';
-import { BLACK } from './color._internal';
+import { BLACK } from './black';
 import { blendRgbLinear } from './blend-rgb-linear';
 import { rgbaToString } from './rgba-to-string';
 import { rgbToHex } from './rgb-to-hex';

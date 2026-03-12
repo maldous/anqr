@@ -1,7 +1,9 @@
 import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../../../modules/animation/index';
 import { withGifEncodeLock } from '../animation/gif-lock';
 import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
-import { log, sampleGlobalPalette, renderFrameToScaledCtx } from './gif-export._internal';
+import { log } from './log';
+import { renderFrameToScaledCtx } from './render-frame-to-scaled-ctx';
+import { sampleGlobalPalette } from './sample-global-palette';
 
 /**
  * Export animation frames as GIF

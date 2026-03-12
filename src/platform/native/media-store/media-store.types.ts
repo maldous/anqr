@@ -1,5 +1,3 @@
-import { saveBase64ToDocuments } from './save-base64-to-documents';
-
 export interface MediaStoreWriterPlugin {
   saveBase64ToDocuments?: (options: {
     filename: string;

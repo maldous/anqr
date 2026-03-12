@@ -1,5 +1,6 @@
 import type { InterpolationMode } from './animation-patterns.types';
-import { applyEasing, blendFramePixels } from './animation-patterns._internal';
+import { applyEasing } from './apply-easing';
+import { blendFramePixels } from './blend-frame-pixels';
 
 /**
  * Interpolate between frames with easing

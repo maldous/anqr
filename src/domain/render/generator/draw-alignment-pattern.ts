@@ -1,6 +1,6 @@
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
 import { validateColor } from '../../../modules/qr-generator/utils';
-import { drawAlignmentRing } from './drawing-patterns._internal';
+import { drawAlignmentRing } from './draw-alignment-ring';
 
 /**
  * Draw an alignment pattern at the specified center position

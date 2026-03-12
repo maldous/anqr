@@ -1,6 +1,6 @@
 import type { ShareConfig } from '@/modules/share-links';
 import { useQRStore } from '@/store/qr-store';
-import { log } from './apply-animation-output-and-safety-params._internal';
+import { log } from './log';
 
 export function applyMetadataParams(params: Partial<ShareConfig>): void {
   if (params.metaTitle)

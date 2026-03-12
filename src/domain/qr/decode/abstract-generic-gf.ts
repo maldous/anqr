@@ -1,5 +1,5 @@
 import { IllegalArgumentException } from './exceptions';
-import { GenericGFPoly } from './generic-gf-poly';
+import type { GenericGFPoly } from './generic-gf-poly';
 
 /**
  * Abstract base class for Galois Field operations

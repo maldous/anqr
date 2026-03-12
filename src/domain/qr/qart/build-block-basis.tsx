@@ -1,6 +1,7 @@
 import { type RSBlockInfo } from './bit-mapping';
 import type { RSBasisVector } from './rs-basis.types';
-import { createSingleBitBasisVector, log } from './rs-basis._internal';
+import { createSingleBitBasisVector } from './create-single-bit-basis-vector';
+import { log } from './log-2';
 
 /**
  * Build basis vectors for a single RS block

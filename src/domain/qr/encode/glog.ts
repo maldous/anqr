@@ -1,4 +1,4 @@
-import { LOG_TABLE } from './math._internal';
+import { LOG_TABLE } from './exp-table';
 
 /**
  * Galois field logarithm

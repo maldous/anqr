@@ -1,6 +1,6 @@
 import { embedPngDpi, embedPngMetadata } from './png-metadata';
 import type { ExportConfig, ExportResult, PngMetadata } from '../../../modules/exporter/types';
-import { log } from './image-export._internal';
+import { log } from './log-2';
 
 /**
  * Export canvas as PNG or WebP image

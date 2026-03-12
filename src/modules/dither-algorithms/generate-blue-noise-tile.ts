@@ -1,5 +1,7 @@
 import { createRNG } from '../../domain/render/primitives/math';
-import { getBlueNoiseCacheKey, blueNoiseTileCache, BLUE_NOISE_TILE_CACHE_MAX } from './utils._internal';
+import { blueNoiseTileCache } from './blue-noise-tile-cache';
+import { BLUE_NOISE_TILE_CACHE_MAX } from './blue-noise-tile-cache-max';
+import { getBlueNoiseCacheKey } from './get-blue-noise-cache-key';
 
 /** Generate blue noise tile using interleaved gradient noise */
 export function generateBlueNoiseTile(size: number, seed: number): Float32Array {

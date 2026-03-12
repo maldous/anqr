@@ -1,4 +1,4 @@
-import { basisCache } from './rs-basis._internal';
+import { basisCache } from './basis-cache';
 
 /**
  * Clear the basis cache

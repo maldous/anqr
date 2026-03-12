@@ -1,5 +1,19 @@
 import { type ShareConfig } from '../../modules/share-links/types';
-import { buildQRSettingsParams, buildColorParams, buildStyleParams, buildRenderParams, buildOverlayParams, buildPreprocessingParams, buildDitheringParams, buildSubpixelHalftoneParams, buildAnimationParams, buildOutputParams, buildSafetyParams, buildQAAutoTuneParams, buildWatermarkParams, buildServerAnimationParams, buildMetadataPaletteParams } from './url-params._internal';
+import { buildAnimationParams } from './build-animation-params';
+import { buildColorParams } from './build-color-params';
+import { buildDitheringParams } from './build-dithering-params';
+import { buildMetadataPaletteParams } from './build-metadata-palette-params';
+import { buildOutputParams } from './build-output-params';
+import { buildOverlayParams } from './build-overlay-params';
+import { buildPreprocessingParams } from './build-preprocessing-params';
+import { buildQAAutoTuneParams } from './build-qa-auto-tune-params';
+import { buildQRSettingsParams } from './build-qr-settings-params';
+import { buildRenderParams } from './build-render-params';
+import { buildSafetyParams } from './build-safety-params';
+import { buildServerAnimationParams } from './build-server-animation-params';
+import { buildStyleParams } from './build-style-params';
+import { buildSubpixelHalftoneParams } from './build-subpixel-halftone-params';
+import { buildWatermarkParams } from './build-watermark-params';
 
 /**
  * Build URL parameters from a config object

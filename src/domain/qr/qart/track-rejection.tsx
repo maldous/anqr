@@ -1,5 +1,5 @@
 import type { BinarySearchValidationResult } from './binary-search-validation-result';
-import type { RejectionHistogram } from './scan-fallback';
+import type { RejectionHistogram } from './scan-fallback.types';
 
 export function trackRejection(
   rejectionHistogram: RejectionHistogram,

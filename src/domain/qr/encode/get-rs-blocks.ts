@@ -1,5 +1,6 @@
 import type { RSBlock } from '../../../modules/qr-encoder/types';
-import { getRsBlockTable, createRSBlock } from './rs-blocks._internal';
+import { createRSBlock } from './create-rs-block';
+import { getRsBlockTable } from './get-rs-block-table';
 
 /**
  * Get Reed-Solomon blocks for a given version and ECC level

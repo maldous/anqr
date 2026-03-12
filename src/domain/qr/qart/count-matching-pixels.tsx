@@ -1,7 +1,8 @@
 import { type BitPixelMapping } from './bit-mapping';
 import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
 import type { EliminationResult, BlockSelectionResult, BlockEliminationResult } from './elimination.types';
-import { buildBlockBitToPixelTables, computeFlipParity } from './elimination._internal';
+import { buildBlockBitToPixelTables } from './build-block-bit-to-pixel-tables';
+import { computeFlipParity } from './compute-flip-parity';
 
 /**
  * Count how many pixels match the target after applying selected vectors

@@ -1,7 +1,12 @@
 import { distributeErrorWithKernel } from './error-diffusion';
 import { DIFFUSION_KERNELS } from './kernels';
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { EdgeAwareDitherOptions, computeSobelEdgeMap, copyImageToPixels, initDitherResults, getScanParams, quantizeEdgeAwarePixel } from './advanced._internal';
+import { computeSobelEdgeMap } from './compute-sobel-edge-map';
+import { copyImageToPixels } from './copy-image-to-pixels';
+import { EdgeAwareDitherOptions } from './edge-aware-dither-options';
+import { getScanParams } from './get-scan-params';
+import { initDitherResults } from './init-dither-results';
+import { quantizeEdgeAwarePixel } from './quantize-edge-aware-pixel';
 
 /** Edge-aware dithering - reduces error diffusion across edges */
 export function edgeAwareDither(

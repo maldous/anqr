@@ -1,6 +1,6 @@
 import { type ECCLevel } from './bit-mapping';
 import { getSemanticBitLayout } from './get-semantic-bit-layout';
-import { log } from './semantic-layout._internal';
+import { log } from './log-4';
 
 /**
  * Find the smallest QR version that can encode the data with at least

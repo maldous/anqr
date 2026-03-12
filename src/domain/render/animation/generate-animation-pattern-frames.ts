@@ -1,5 +1,5 @@
 import type { AnimationPattern } from './animation-patterns.types';
-import { applyPatternToImageData } from './animation-patterns._internal';
+import { applyPatternToImageData } from './apply-pattern-to-image-data';
 
 // ============================================
 // MAIN EXPORTS

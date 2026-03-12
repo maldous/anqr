@@ -1,4 +1,4 @@
-import { log } from './semantic-layout._internal';
+import { log } from './log-4';
 
 /**
  * Validate that selected vectors only affect allowed bits

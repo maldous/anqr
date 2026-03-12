@@ -3,7 +3,7 @@ import { isTimingPattern } from './is-timing-pattern';
 import { isAlignmentPattern } from './is-alignment-pattern';
 import { isFormatInfo } from './is-format-info';
 import { isVersionInfo } from './is-version-info';
-import { isQuietZoneSeparator } from './qr-patterns._internal';
+import { isQuietZoneSeparator } from './is-quiet-zone-separator';
 
 /**
  * Check if a module position is "locked" (structural, should not be modified by overlay)

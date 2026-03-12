@@ -2,7 +2,7 @@ import { overlayDataCache } from '../../../modules/qr-generator/cache';
 import { packOverlayColor } from './overlay-data-packed';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from '../../../modules/qr-generator/types';
 import { hashCanvasContent } from '../../../modules/qr-generator/utils';
-import { rgbToLumaSrgb } from './overlay-data._internal';
+import { rgbToLumaSrgb } from './rgb-to-luma-srgb';
 
 /**
  * Get overlay data (brightness and colors) from canvas

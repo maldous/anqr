@@ -1,6 +1,6 @@
 import { getRSBlocks } from '../encode/rs-blocks';
 import type { ECCLevel, RSBlockInfo } from './bit-mapping.types';
-import { eccToNumeric } from './bit-mapping._internal';
+import { eccToNumeric } from './ecc-to-numeric';
 
 /**
  * Get RS block information for a version and ECC level

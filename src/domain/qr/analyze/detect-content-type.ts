@@ -1,5 +1,6 @@
 import type { ContentType } from './analyzer-content.types';
-import { detectCryptoType, detectPaymentType } from './analyzer-content._internal';
+import { detectCryptoType } from './detect-crypto-type';
+import { detectPaymentType } from './detect-payment-type';
 
 /**
  * Detect content type from payload

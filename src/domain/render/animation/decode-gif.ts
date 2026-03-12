@@ -1,6 +1,6 @@
 import { decompressFrames, parseGIF } from 'gifuct-js';
 import type { DecodedGif, GifPatchFrame } from './gif-codec.types';
-import { log } from './gif-codec._internal';
+import { log } from './log';
 
 export function decodeGif(arrayBuffer: ArrayBuffer): DecodedGif {
   const parsed = parseGIF(arrayBuffer);

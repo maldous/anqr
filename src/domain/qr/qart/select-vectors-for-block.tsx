@@ -1,5 +1,5 @@
 import { indexToPixel } from './bit-mapping';
-import type { BlockEliminationResult } from './elimination';
+import type { BlockEliminationResult } from './elimination.types';
 
 /**
  * Select which basis vectors to apply to achieve the target pattern

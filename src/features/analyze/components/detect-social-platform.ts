@@ -1,4 +1,4 @@
-import { SOCIAL_PLATFORM_MATCHERS } from './content-type-renderers._internal';
+import { SOCIAL_PLATFORM_MATCHERS } from './social-platform-matchers';
 
 // ---------------------------------------------------------------------------
 // detectSocialPlatform

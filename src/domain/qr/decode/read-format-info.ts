@@ -1,6 +1,11 @@
 import type { FormatInfo } from '../../../modules/qr-decoder/types';
 import { ECC_LEVEL_MAP } from '../../../modules/qr-decoder/types';
-import { initFormatTable, readFormatBitsCopy1, readFormatBitsCopy2, qrDecoderLog, findBestFormatMatch, hammingDistance } from './format._internal';
+import { findBestFormatMatch } from './find-best-format-match';
+import { hammingDistance } from './hamming-distance';
+import { initFormatTable } from './init-format-table';
+import { qrDecoderLog } from './qr-decoder-log-2';
+import { readFormatBitsCopy1 } from './read-format-bits-copy1';
+import { readFormatBitsCopy2 } from './read-format-bits-copy2';
 
 /**
  * Read format info from the matrix

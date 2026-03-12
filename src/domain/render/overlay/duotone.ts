@@ -1,5 +1,5 @@
 import { rgbToGray } from '../color/color';
-import type { RGB } from './overlay-filters.types';
+import type { RGB } from './overlay-color-types';
 
 export function duotone(imageData: ImageData, lightColor: RGB, darkColor: RGB): ImageData {
   const data = imageData.data;

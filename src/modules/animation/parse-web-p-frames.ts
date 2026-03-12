@@ -1,5 +1,6 @@
 import type { AnimationFrame } from './types';
-import { parseWebPAsSingleFrame, log } from './parsing._internal';
+import { log } from './log';
+import { parseWebPAsSingleFrame } from './parse-web-p-as-single-frame';
 
 /**
  * Parse animated WebP using ImageDecoder API

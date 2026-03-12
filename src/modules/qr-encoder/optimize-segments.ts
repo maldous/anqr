@@ -1,5 +1,8 @@
 import type { DataSegment } from './encoder-api.types';
-import { scanNumericRun, scanAlphanumericRun, scanByteRunEnd, mergeAdjacentSegments } from './encoder-api._internal';
+import { mergeAdjacentSegments } from './merge-adjacent-segments';
+import { scanAlphanumericRun } from './scan-alphanumeric-run';
+import { scanByteRunEnd } from './scan-byte-run-end';
+import { scanNumericRun } from './scan-numeric-run';
 
 /**
  * Optimize a string into segments using the most efficient encoding modes.

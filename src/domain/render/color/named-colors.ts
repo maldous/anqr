@@ -1,4 +1,3 @@
-export { BLACK } from './black';
 export const NAMED_COLORS: Record<string, string> = {
   black: '#000000', white: '#ffffff', red: '#ff0000', green: '#008000',
   blue: '#0000ff', yellow: '#ffff00', cyan: '#00ffff', magenta: '#ff00ff',

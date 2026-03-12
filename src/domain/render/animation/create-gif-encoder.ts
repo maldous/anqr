@@ -1,4 +1,5 @@
-import { GifEncoderLike, GIFENC } from './gif-codec._internal';
+import { GifEncoderLike } from './gif-encoder-like';
+import { GIFENC } from './gifenc';
 
 export function createGifEncoder(): GifEncoderLike {
   if (!GIFENC.GIFEncoder) {

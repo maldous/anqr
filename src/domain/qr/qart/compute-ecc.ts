@@ -1,5 +1,5 @@
 import { qrPolynomial } from '../encode/math';
-import { getErrorCorrectPolynomial } from './rs-basis._internal';
+import { getErrorCorrectPolynomial } from './get-error-correct-polynomial';
 
 /**
  * Compute ECC bytes for a data block

@@ -1,4 +1,4 @@
-import { GIFENC } from './gif-codec._internal';
+import { GIFENC } from './gifenc';
 
 export function indexGifPixels(data: Uint8ClampedArray, palette: number[][]): Uint8Array {
   if (!GIFENC.applyPalette) {

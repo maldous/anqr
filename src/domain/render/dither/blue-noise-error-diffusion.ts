@@ -2,7 +2,11 @@ import { distributeErrorWithKernel } from './error-diffusion';
 import { DIFFUSION_KERNELS } from './kernels';
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import { BlueNoiseErrorDiffusionOptions, copyImageToPixels, initDitherResults, getScanParams, quantizeBNEDPixel } from './advanced._internal';
+import { BlueNoiseErrorDiffusionOptions } from './blue-noise-error-diffusion-options';
+import { copyImageToPixels } from './copy-image-to-pixels';
+import { getScanParams } from './get-scan-params';
+import { initDitherResults } from './init-dither-results';
+import { quantizeBNEDPixel } from './quantize-bned-pixel';
 
 /** Blue noise modulated error diffusion */
 export function blueNoiseErrorDiffusion(

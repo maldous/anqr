@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { AdSenseProps, AD_CLIENT } from './AdPlaceholder._internal';
+import { AD_CLIENT } from './ad-client';
+import { AdSenseProps } from './ad-sense-props';
 
 export function AdSense({
   slot,

@@ -1,5 +1,6 @@
 import { RS_BLOCKS } from './rs-blocks';
-import { qrDecoderLog, deinterleaveDataCodewords } from './decode._internal';
+import { deinterleaveDataCodewords } from './deinterleave-data-codewords';
+import { qrDecoderLog } from './qr-decoder-log';
 
 /**
  * Separate data and error correction codewords

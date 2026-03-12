@@ -1,5 +1,5 @@
 import { decodeGif } from '../../domain/render/animation/gif-codec';
-import { log } from './parsing._internal';
+import { log } from './log';
 
 /**
  * Get frame delays from a GIF

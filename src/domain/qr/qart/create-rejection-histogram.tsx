@@ -1,4 +1,4 @@
-import type { RejectionHistogram } from './scan-fallback';
+import type { RejectionHistogram } from './scan-fallback.types';
 /**
  * Create an empty rejection histogram
  */

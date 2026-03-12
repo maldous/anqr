@@ -1,5 +1,7 @@
 import type { Point, QRLocation } from '../../../modules/qr-decoder/types';
-import { qrDecoderLog, sampleSinglePixel, validateFinderRegion } from './extract._internal';
+import { qrDecoderLog } from './qr-decoder-log';
+import { sampleSinglePixel } from './sample-single-pixel';
+import { validateFinderRegion } from './validate-finder-region';
 
 /**
  * Extract the module matrix from the image

@@ -1,5 +1,7 @@
 import type { ContentTypeDetails } from '@/modules/qr-analyzer';
-import { DETAIL_BUILDERS, buildDefaultDetails, buildPlainTextDetails } from './content-type-renderers._internal';
+import { buildDefaultDetails } from './build-default-details';
+import { buildPlainTextDetails } from './build-plain-text-details';
+import { DETAIL_BUILDERS } from './detail-builders';
 
 // ---------------------------------------------------------------------------
 // buildContentTypeDetails

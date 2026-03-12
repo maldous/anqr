@@ -1,4 +1,4 @@
-import { LENGTH_BITS } from './utils._internal';
+import { LENGTH_BITS } from './length-bits';
 
 /**
  * Get character count indicator length in bits

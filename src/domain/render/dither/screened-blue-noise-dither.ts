@@ -1,6 +1,6 @@
 import type { DitherResult, RGB } from '../../../modules/dither-algorithms/types';
 import { generateBlueNoiseTile, rgbToGray, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import { ScreenedBlueNoiseOptions } from './advanced._internal';
+import { ScreenedBlueNoiseOptions } from './screened-blue-noise-options';
 
 /** Screened blue noise - combines halftone screening with blue noise */
 export function screenedBlueNoiseDither(

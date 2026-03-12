@@ -1,4 +1,4 @@
-import { processVCardLine } from './payload-parsers._internal';
+import { processVCardLine } from './process-v-card-line';
 
 export function parseVCardPayload(payload: string): Record<string, string | string[] | null> {
   const result: Record<string, string | string[] | null> = {

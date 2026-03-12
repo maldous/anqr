@@ -1,5 +1,6 @@
 import type { RSBasisVector } from './rs-basis';
-import { applyVectorSparseXOR, applyVectorDenseXOR } from './elimination._internal';
+import { applyVectorDenseXOR } from './apply-vector-dense-xor';
+import { applyVectorSparseXOR } from './apply-vector-sparse-xor';
 
 export function applySelectedVectorsToBlock(
   blockData: Uint8Array,

@@ -1,5 +1,5 @@
 import { ALIGNMENT_POSITIONS } from './constants';
-import { alignmentOverlapsFinderRegion } from './qr-patterns._internal';
+import { alignmentOverlapsFinderRegion } from './alignment-overlaps-finder-region';
 
 /**
  * Get alignment pattern center positions for a given version

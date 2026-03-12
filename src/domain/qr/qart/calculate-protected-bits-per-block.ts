@@ -1,5 +1,6 @@
 import { type RSBlockInfo } from './bit-mapping';
-import { simulateInterleavingProtection, log } from './rs-basis._internal';
+import { log } from './log-2';
+import { simulateInterleavingProtection } from './simulate-interleaving-protection';
 
 /**
  * Calculate how many protected bits belong to each RS block.

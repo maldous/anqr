@@ -7,7 +7,7 @@ import { attachNonZeroBytes } from './attach-non-zero-bytes';
 import { buildBlockAffectionMatrix } from './build-block-affection-matrix';
 import { findRowWithBitSet } from './find-row-with-bit-set';
 import { eliminatePixelFromOtherRows } from './eliminate-pixel-from-other-rows';
-import type { BlockEliminationResult } from './elimination';
+import type { BlockEliminationResult } from './elimination.types';
 
 /**
  * Perform Gauss-Jordan elimination for a SINGLE RS block

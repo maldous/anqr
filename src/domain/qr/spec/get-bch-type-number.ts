@@ -1,4 +1,5 @@
-import { getBCHDigit, G18 } from './bch._internal';
+import { G18 } from './g15';
+import { getBCHDigit } from './get-bch-digit';
 
 /**
  * Calculate BCH code for version information

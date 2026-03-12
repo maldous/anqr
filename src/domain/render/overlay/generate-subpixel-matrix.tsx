@@ -6,7 +6,11 @@ import type {
   QRGeneratorConfig,
   RGBWithMeta,
 } from '../../../modules/qr-generator/types';
-import { parseGridSize, parseHexColor, log, SubpixelCellCtx, processSubpixelCell } from './overlay-subpixel._internal';
+import { log } from './log-2';
+import { parseGridSize } from './parse-grid-size';
+import { parseHexColor } from './parse-hex-color';
+import { processSubpixelCell } from './process-subpixel-cell';
+import { SubpixelCellCtx } from './subpixel-cell-ctx';
 import { getSubpixelOverlayData } from './get-subpixel-overlay-data';
 
 /**

@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo } from 'react';
-import { SearchContext } from './search-context._internal';
+import { SearchContext } from './search-context-2';
 
 export function SearchProvider({
   children,

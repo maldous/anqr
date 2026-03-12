@@ -1,6 +1,6 @@
 import { getRelativeLuminance, parseColor } from '../../domain/render/color/color';
 import { getContrastRatio } from './utils';
-import { log } from './color._internal';
+import { log } from './log';
 
 /**
  * Ensure module color has sufficient contrast with background

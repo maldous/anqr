@@ -1,4 +1,5 @@
-import { getBCHDigit, G15, G15_MASK } from './bch._internal';
+import { G15, G15_MASK } from './g15';
+import { getBCHDigit } from './get-bch-digit';
 
 /**
  * Calculate BCH code for format information

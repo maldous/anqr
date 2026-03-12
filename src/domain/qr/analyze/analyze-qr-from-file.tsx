@@ -1,6 +1,7 @@
 import { decodeQRFromCanvas } from './decoder';
 import type { QRAnalysisResult } from '../../../modules/qr-analyzer/types';
-import { nowMs, withTotalAnalysisTiming } from './analyzer._internal';
+import { nowMs } from './now-ms';
+import { withTotalAnalysisTiming } from './with-total-analysis-timing';
 
 /**
  * Analyze a QR code from a File

@@ -1,6 +1,6 @@
 import type { RGB } from '../../../modules/core/types';
 import { parseColor } from './parse-color';
-import { BLACK } from './color._internal';
+import { BLACK } from './black';
 import { rgbToLumaLinear } from './rgb-to-luma-linear';
 
 // ============================================

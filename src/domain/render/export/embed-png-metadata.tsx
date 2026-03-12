@@ -1,5 +1,5 @@
 import type { PngMetadata } from '../../../modules/exporter/types';
-import { log } from './png-metadata._internal';
+import { log } from './log-3';
 import { createPngTextChunk } from './create-png-text-chunk';
 
 /**

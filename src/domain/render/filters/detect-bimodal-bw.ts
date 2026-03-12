@@ -8,7 +8,7 @@ import {
   MIN_PEAK_RATIO,
   MIN_PEAK_SEPARATION,
 } from '../dither/dithering-constants';
-import { log } from './filters-preprocess._internal';
+import { log } from './log';
 
 /**
  * Detect if an image is high-contrast B&W (bimodal histogram).

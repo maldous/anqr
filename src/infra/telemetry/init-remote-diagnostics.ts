@@ -9,7 +9,9 @@ import {
   saveLogs,
   setLogLevel,
 } from '../logging/logger';
-import { readState, writeState, log } from './logger-remote._internal';
+import { log } from './log';
+import { readState } from './read-state';
+import { writeState } from './write-state';
 import { enableDiagnostics } from './enable-diagnostics';
 import { disableDiagnostics } from './disable-diagnostics';
 import { getDiagnosticsStatus } from './get-diagnostics-status';

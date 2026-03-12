@@ -1,5 +1,5 @@
 import { hslToRgbTuple } from '../color/color';
-import { tintScanlinePixel } from './shared-patterns._internal';
+import { tintScanlinePixel } from './tint-scanline-pixel';
 
 /**
  * Apply scanline pattern effect to image data

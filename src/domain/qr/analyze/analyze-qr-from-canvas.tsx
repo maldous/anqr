@@ -1,5 +1,5 @@
 import type { QRAnalysisResult } from '../../../modules/qr-analyzer/types';
-import { analyzeQRSync } from './analyzer._internal';
+import { analyzeQRSync } from './analyze-qr-sync';
 
 /**
  * Analyze a QR code from a canvas element

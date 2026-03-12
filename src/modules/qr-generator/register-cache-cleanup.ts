@@ -1,5 +1,5 @@
 import { clearQRCaches } from './clear-qr-caches';
-import { _registeredCleanups } from './cache._internal';
+import { _registeredCleanups } from './registered-cleanups';
 
 /**
  * Register an additional cache-clearing callback.

@@ -1,6 +1,6 @@
 import type { UseQRGeneratorResult } from '@/features/generator/hooks/hooks-shared-types';
 import { useContext } from 'react';
-import { QRGeneratorContext } from './hooks-fn-context._internal';
+import { QRGeneratorContext } from './qr-generator-context';
 import { QRGeneratorProvider } from './qr-generator-provider';
 
 export function useQRGeneratorContext(): UseQRGeneratorResult {

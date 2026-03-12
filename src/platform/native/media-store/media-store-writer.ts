@@ -1,6 +1,6 @@
 import { saveBase64ToDocuments } from './save-base64-to-documents';
 import type { MediaStoreWriterPlugin } from './media-store.types';
-import { getMediaStoreWriter } from './media-store._internal';
+import { getMediaStoreWriter } from './get-media-store-writer';
 
 /**
  * @deprecated Use saveBase64ToDocuments instead. This export is kept for backward compatibility.

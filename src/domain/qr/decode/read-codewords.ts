@@ -1,5 +1,7 @@
 import { getVersionFromModuleCount } from '../../../modules/qr-spec/index';
-import { CodewordBuildState, qrDecoderLog, processCodewordModule } from './decode._internal';
+import { CodewordBuildState } from './codeword-build-state';
+import { processCodewordModule } from './process-codeword-module';
+import { qrDecoderLog } from './qr-decoder-log';
 
 /**
  * Read codewords from the matrix in the QR-specified zigzag order

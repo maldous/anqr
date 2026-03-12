@@ -1,5 +1,11 @@
 import type { ExportResult, VectorSvgConfig } from '../../../modules/exporter/types';
-import { generateGradientDef, generateFinderSvg, getAlignmentPositionsFromModuleCount, generateAlignmentSvg, buildSvgTimingPaths, buildSvgDataPaths, buildSvgMetadata } from './vector-svg._internal';
+import { buildSvgDataPaths } from './build-svg-data-paths';
+import { buildSvgMetadata } from './build-svg-metadata';
+import { buildSvgTimingPaths } from './build-svg-timing-paths';
+import { generateAlignmentSvg } from './generate-alignment-svg';
+import { generateFinderSvg } from './generate-finder-svg';
+import { generateGradientDef } from './generate-gradient-def';
+import { getAlignmentPositionsFromModuleCount } from './get-alignment-positions-from-module-count';
 
 /**
  * Export QR matrix as true vector SVG with full styling support

@@ -1,5 +1,5 @@
 import { applyVectorBitsToFlipParity } from './apply-vector-bits-to-flip-parity';
-import type { BlockSelectionResult, BlockEliminationResult } from './elimination';
+import type { BlockSelectionResult, BlockEliminationResult } from './elimination.types';
 
 export function computeFlipParity(
   blockSelections: BlockSelectionResult[],

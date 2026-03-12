@@ -1,7 +1,10 @@
 import { detectImageFormat, isAnimatedWebP } from '../../domain/render/animation/format-detection';
 import { createGifCompositor } from '../../domain/render/animation/gif-compositor';
 import type { AnimationFrame } from './types';
-import { log, extractGifFramesViaCompositor, parseWebPAsSingleFrame, parseStaticImageAsFrame } from './parsing._internal';
+import { extractGifFramesViaCompositor } from './extract-gif-frames-via-compositor';
+import { log } from './log';
+import { parseStaticImageAsFrame } from './parse-static-image-as-frame';
+import { parseWebPAsSingleFrame } from './parse-web-p-as-single-frame';
 import { parseWebPFrames } from './parse-web-p-frames';
 
 /**

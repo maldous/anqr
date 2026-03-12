@@ -4,7 +4,21 @@ import type {
   QRCodeInstance,
   QRGeneratorConfig,
 } from '../../../modules/qr-generator/types';
-import { log, generateBWFirstMatrix, buildDitherResolvedConfig, readOverlayPixelsAtSize, createEmptyMatrix, computeDitherThreshold, ErrorDiffusionPixelCtx, serpentineRowParams, processErrorDiffusionPixel, enforceModuleConstraints, removeIsolatedSpeckles, pixelIndex, computeQualityMetrics, bitsToMatrix, packedColorsToMatrix } from './pixel-matrix-dithered._internal';
+import { bitsToMatrix } from './bits-to-matrix';
+import { buildDitherResolvedConfig } from './build-dither-resolved-config';
+import { computeDitherThreshold } from './compute-dither-threshold';
+import { computeQualityMetrics } from './compute-quality-metrics';
+import { createEmptyMatrix } from './create-empty-matrix';
+import { enforceModuleConstraints } from './enforce-module-constraints';
+import { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
+import { generateBWFirstMatrix } from './generate-bw-first-matrix';
+import { log } from './log';
+import { packedColorsToMatrix } from './packed-colors-to-matrix';
+import { pixelIndex } from './pixel-index';
+import { processErrorDiffusionPixel } from './process-error-diffusion-pixel';
+import { readOverlayPixelsAtSize } from './read-overlay-pixels-at-size';
+import { removeIsolatedSpeckles } from './remove-isolated-speckles';
+import { serpentineRowParams } from './serpentine-row-params';
 
 /**
  * Generate dithered pixel matrix

@@ -5,7 +5,9 @@ import type {
   QRGeneratorConfig,
 } from '../../../modules/qr-generator/types';
 import { generateDitheredMatrix } from './generate-dithered-matrix';
-import { clamp01, aggregateModuleHalftoneData, log } from './pixel-matrix-dithered._internal';
+import { aggregateModuleHalftoneData } from './aggregate-module-halftone-data';
+import { clamp01 } from './clamp01';
+import { log } from './log';
 
 /**
  * Generate halftone-dithered overlay data.

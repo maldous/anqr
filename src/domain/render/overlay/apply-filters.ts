@@ -1,6 +1,8 @@
 import type { FilterOptions } from './overlay-filters.types';
 import { copyImageData } from './copy-image-data';
-import { log, applyTonalFilters, applyPixelEffectFilters } from './overlay-filters._internal';
+import { applyPixelEffectFilters } from './apply-pixel-effect-filters';
+import { applyTonalFilters } from './apply-tonal-filters';
+import { log } from './log';
 import { brightness } from './brightness';
 import { contrast } from './contrast';
 import { saturation } from './saturation';

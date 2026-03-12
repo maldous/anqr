@@ -2,7 +2,9 @@ import { type BitPixelMapping } from './bit-mapping';
 import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
 import type { RSBasisVector } from './rs-basis';
 import type { EliminationResult, BlockEliminationResult } from './elimination.types';
-import { eliminateBlock, shrinkAvailablePixelOrder, log } from './elimination._internal';
+import { eliminateBlock } from './eliminate-block';
+import { log } from './log';
+import { shrinkAvailablePixelOrder } from './shrink-available-pixel-order';
 
 /**
  * Perform Gauss-Jordan elimination on all RS blocks

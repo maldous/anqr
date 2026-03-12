@@ -1,6 +1,6 @@
 import type { FinderPattern, Point, QRLocation } from '../../../modules/qr-decoder/types';
 import { pointDistance } from '../../../modules/qr-decoder/utils';
-import { qrDecoderLog } from './extract._internal';
+import { qrDecoderLog } from './qr-decoder-log';
 
 /**
  * Calculate the QR code location from finder patterns

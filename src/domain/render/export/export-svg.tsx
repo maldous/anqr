@@ -1,6 +1,6 @@
 import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
 import { escapeXml } from '../../../modules/exporter/utils';
-import { canvasToPngDataUrl } from './svg-export._internal';
+import { canvasToPngDataUrl } from './canvas-to-png-data-url';
 
 /**
  * Export canvas as SVG (embedded raster)
