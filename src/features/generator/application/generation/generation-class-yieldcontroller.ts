@@ -6,6 +6,7 @@
 
 import { yieldToMainThread } from '@/features/generator/application/generation/generation-fn-yield';
 
+const YIELD_INTERVAL_MS = 16;
 
 export class YieldController {
   private lastYieldTime: number = 0;
