@@ -1,10 +1,10 @@
-import { AbstractGenericGF } from './abstract-generic-gf';
+import type { GFField } from './gf-field.types';
 import { formatPolyTermSign } from './format-poly-term-sign';
 import { formatPolyCoefficientValue } from './format-poly-coefficient-value';
 import { formatPolyDegreeLabel } from './format-poly-degree-label';
 
 export function formatPolyTerm(
-  field: AbstractGenericGF,
+  field: GFField,
   degree: number,
   coefficient: number,
   hasExistingTerms: boolean

@@ -1,16 +1,16 @@
 import { IllegalArgumentException } from './exceptions';
 import { arraycopy } from './util';
-import { AbstractGenericGF } from './abstract-generic-gf';
+import { gfAddOrSubtract, type GFField } from './gf-field.types';
 import { formatPolyTerm } from './format-poly-term';
 
 /**
  * Polynomial over a Galois Field
  */
 export class GenericGFPoly {
-  private readonly field: AbstractGenericGF;
+  private readonly field: GFField<GenericGFPoly>;
   private readonly coefficients: Int32Array;
 
-  constructor(field: AbstractGenericGF, coefficients: Int32Array) {
+  constructor(field: GFField<GenericGFPoly>, coefficients: Int32Array) {
     if (coefficients.length === 0) throw new IllegalArgumentException();
     this.field = field;
     const coefficientsLength = coefficients.length;
@@ -51,14 +51,14 @@ export class GenericGFPoly {
     if (a === 1) {
       result = 0;
       for (const coefficient of coefficients) {
-        result = AbstractGenericGF.addOrSubtract(result, coefficient);
+        result = gfAddOrSubtract(result, coefficient);
       }
       return result;
     }
     result = coefficients[0];
     const size = coefficients.length;
     for (let i = 1; i < size; i++) {
-      result = AbstractGenericGF.addOrSubtract(this.field.multiply(a, result), coefficients[i]);
+      result = gfAddOrSubtract(this.field.multiply(a, result), coefficients[i]);
     }
     return result;
   }
@@ -81,7 +81,7 @@ export class GenericGFPoly {
     const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
     arraycopy(largerCoefficients, 0, sumDiff, 0, lengthDiff);
     for (let i = lengthDiff; i < largerCoefficients.length; i++) {
-      sumDiff[i] = AbstractGenericGF.addOrSubtract(
+      sumDiff[i] = gfAddOrSubtract(
         smallerCoefficients[i - lengthDiff],
         largerCoefficients[i]
       );
@@ -102,7 +102,7 @@ export class GenericGFPoly {
     for (let i = 0; i < aLength; i++) {
       const aCoeff = aCoefficients[i];
       for (let j = 0; j < bLength; j++) {
-        product[i + j] = AbstractGenericGF.addOrSubtract(
+        product[i + j] = gfAddOrSubtract(
           product[i + j],
           this.field.multiply(aCoeff, bCoefficients[j])
         );

@@ -6,7 +6,7 @@ import { GenericGFPoly } from './generic-gf-poly';
 /**
  * Generic Galois Field implementation
  */
-export class GenericGF extends AbstractGenericGF {
+export class GenericGF extends AbstractGenericGF<GenericGFPoly> {
   static readonly AZTEC_DATA_12 = new GenericGF(0x1069, 4096, 1);
   static readonly AZTEC_DATA_10 = new GenericGF(0x409, 1024, 1);
   static readonly AZTEC_DATA_6 = new GenericGF(0x43, 64, 1);

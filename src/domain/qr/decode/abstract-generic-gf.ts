@@ -1,21 +1,21 @@
 import { IllegalArgumentException } from './exceptions';
-import type { GenericGFPoly } from './generic-gf-poly';
+import { gfAddOrSubtract, type GFField } from './gf-field.types';
 
 /**
  * Abstract base class for Galois Field operations
  */
-export abstract class AbstractGenericGF {
+export abstract class AbstractGenericGF<P = unknown> implements GFField<P> {
   protected expTable!: Int32Array;
   protected logTable!: Int32Array;
 
-  abstract getZero(): GenericGFPoly;
-  abstract getOne(): GenericGFPoly;
-  abstract buildMonomial(degree: number, coefficient: number): GenericGFPoly;
+  abstract getZero(): P;
+  abstract getOne(): P;
+  abstract buildMonomial(degree: number, coefficient: number): P;
   abstract inverse(a: number): number;
   abstract multiply(a: number, b: number): number;
   abstract getSize(): number;
   abstract getGeneratorBase(): number;
-  abstract equals(other: any): boolean;
+  abstract equals(other: unknown): boolean;
 
   exp(a: number): number {
     return this.expTable[a];
@@ -27,6 +27,6 @@ export abstract class AbstractGenericGF {
   }
 
   static addOrSubtract(a: number, b: number): number {
-    return a ^ b;
+    return gfAddOrSubtract(a, b);
   }
 }
