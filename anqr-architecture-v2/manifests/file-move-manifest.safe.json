@@ -1,0 +1,1787 @@
+[
+  {
+    "source": "src/App.tsx",
+    "action": "split",
+    "target": "src/app/shell/AppShell.tsx",
+    "reason": "App.tsx contains shell composition, routing, URL parameter application, render configuration, and page logic; it should be split by responsibility.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/AdPlaceholder.tsx",
+    "action": "move",
+    "target": "src/features/monetization/components/AdPlaceholder.tsx",
+    "reason": "Advertising belongs to monetization feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/AdUnit.tsx",
+    "action": "move",
+    "target": "src/features/monetization/components/AdUnit.tsx",
+    "reason": "Advertising belongs to monetization feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/Analyze.tsx",
+    "action": "split",
+    "target": "src/features/analyze/components/AnalyzeScreen.tsx",
+    "reason": "Analyze.tsx mixes view composition, formatting helpers, scan orchestration, reproduction logic, and analysis widgets; split into feature UI + application services.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/BusyOverlay.tsx",
+    "action": "move",
+    "target": "src/ui/composites/BusyOverlay.tsx",
+    "reason": "Reusable busy overlay UI composite.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ErrorBoundary.tsx",
+    "action": "move",
+    "target": "src/app/shell/ErrorBoundary.tsx",
+    "reason": "Top-level error boundary belongs to app shell.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/Gallery.tsx",
+    "action": "move",
+    "target": "src/features/gallery/components/GalleryScreen.tsx",
+    "reason": "Gallery is a feature-level screen.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/Header.tsx",
+    "action": "split",
+    "target": "src/app/shell/Header.tsx",
+    "reason": "Header appears to contain shell concerns plus feature hooks; confirm and split shell-only logic from feature actions.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/components/MobileDivider.tsx",
+    "action": "move",
+    "target": "src/ui/composites/MobileDivider.tsx",
+    "reason": "Generic responsive UI composite.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/components/Preview.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/Preview.tsx",
+    "reason": "Preview belongs to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/Sidebar.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/Sidebar.tsx",
+    "reason": "Sidebar is the main generator feature composition surface.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/components/StaticPage.tsx",
+    "action": "move",
+    "target": "src/app/pages/StaticPage.tsx",
+    "reason": "Static page rendering is an application page concern.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/WelcomeModal.tsx",
+    "action": "move",
+    "target": "src/features/onboarding/components/WelcomeModal.tsx",
+    "reason": "Welcome modal belongs to onboarding.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/analyze/content-type-renderers.tsx",
+    "action": "move",
+    "target": "src/features/analyze/components/content-type-renderers.tsx",
+    "reason": "Analysis-specific components belong to the analyze feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/analyze/payload-parsers.ts",
+    "action": "move",
+    "target": "src/features/analyze/components/payload-parsers.ts",
+    "reason": "Analysis-specific components belong to the analyze feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/AnimationSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/AnimationSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/MetadataSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/MetadataSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/OutputSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/OutputSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/OverlaySection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/OverlaySection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/PayloadSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/PayloadSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/RenderSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/RenderSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/SafetySection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/SafetySection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/ShareSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/ShareSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/WatermarkSection.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/WatermarkSection.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/sections/qr-encoding-section.tsx",
+    "action": "move",
+    "target": "src/features/generator/components/sections/qr-encoding-section.tsx",
+    "reason": "Generator configuration sections belong to the generator feature.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/accordion.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/accordion.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/button.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/button.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/calendar.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/calendar.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/date-time-picker.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/date-time-picker.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/dynamic-testid.ts",
+    "action": "move",
+    "target": "src/infra/testing/dynamic-testid.ts",
+    "reason": "Dynamic test id generation is a testing concern, not a UI primitive.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/help-link.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/help-link.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/input.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/input.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/label.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/label.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/select.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/select.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/slider.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/slider.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/switch.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/switch.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/tabs.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/tabs.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/textarea.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/textarea.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/components/ui/tooltip.tsx",
+    "action": "move",
+    "target": "src/ui/primitives/tooltip.tsx",
+    "reason": "Reusable UI primitives belong under ui/primitives.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/data/gallery-items.ts",
+    "action": "move",
+    "target": "src/content/gallery/gallery-items.ts",
+    "reason": "Gallery manifests and content data belong under content/gallery.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/data/gallery-manifest.ts",
+    "action": "move",
+    "target": "src/content/gallery/gallery-manifest.ts",
+    "reason": "Gallery manifests and content data belong under content/gallery.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/data/gallery-scan-scenarios.ts",
+    "action": "move",
+    "target": "src/content/gallery/gallery-scan-scenarios.ts",
+    "reason": "Gallery manifests and content data belong under content/gallery.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/data/gallery-showcase.generated.ts",
+    "action": "move",
+    "target": "src/content/generated/gallery-showcase.generated.ts",
+    "reason": "Generated gallery data belongs under content/generated.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/hooks/useBannerHeight.ts",
+    "action": "move",
+    "target": "src/ui/hooks/useBannerHeight.ts",
+    "reason": "Reusable UI hook.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/hooks/useQRGenerator.ts",
+    "action": "split",
+    "target": "src/features/generator/hooks/useQRGenerator.ts",
+    "reason": "This file contains generator orchestration, export, watermark, QArt, fallback logic, and rendering helpers; split into hook + application services.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/lib/auto-testid.ts",
+    "action": "move",
+    "target": "src/infra/testing/auto-testid.ts",
+    "reason": "Automatic test id generation belongs to testing infra.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/lib/logger-remote.ts",
+    "action": "move",
+    "target": "src/infra/telemetry/logger-remote.ts",
+    "reason": "Remote diagnostics and telemetry belong to infra.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/lib/logger.ts",
+    "action": "move",
+    "target": "src/infra/logging/logger.ts",
+    "reason": "Cross-cutting logging belongs to infra.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/lib/search-context.tsx",
+    "action": "move",
+    "target": "src/app/search/search-context.tsx",
+    "reason": "Search context is application-level context rather than generic library code.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/lib/utils.ts",
+    "action": "split",
+    "target": "src/infra/utilities/utils.ts",
+    "reason": "Generic utils file should be decomposed into owning modules; do not keep a god utility file.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/lib/zaraz.ts",
+    "action": "move",
+    "target": "src/infra/telemetry/zaraz.ts",
+    "reason": "Third-party telemetry adapter belongs to infra.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/main.tsx",
+    "action": "move",
+    "target": "src/app/boot/main.tsx",
+    "reason": "Application entry point belongs under app boot.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/animation-loop.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/animation-loop.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/animation-patterns.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/animation-patterns.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/api.ts",
+    "action": "split",
+    "target": "src/domain/render/animation/api.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/apply-animation-pattern.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/apply-animation-pattern.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/color-cycle.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/color-cycle.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/decimation.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/decimation.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/format-detection.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/format-detection.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/gif-codec.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/gif-codec.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/gif-compositor.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/gif-compositor.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/gif-lock.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/gif-lock.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/index.ts",
+    "action": "split",
+    "target": "src/domain/render/animation/index.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/interpolate-frames.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/interpolate-frames.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/playback-delay.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/playback-delay.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/shared-patterns.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/shared-patterns.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/state.ts",
+    "action": "split",
+    "target": "src/domain/render/animation/state.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/temporal-dither.ts",
+    "action": "move",
+    "target": "src/domain/render/animation/temporal-dither.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/animation/types.ts",
+    "action": "split",
+    "target": "src/domain/render/animation/types.ts",
+    "reason": "Animation belongs to domain/render/animation; state entry points should be narrowed.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-clipboard/api.ts",
+    "action": "move",
+    "target": "src/platform/browser/clipboard/api.ts",
+    "reason": "Browser clipboard access is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-clipboard/copy-image.ts",
+    "action": "move",
+    "target": "src/platform/browser/clipboard/copy-image.ts",
+    "reason": "Browser clipboard access is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-clipboard/copy-text.ts",
+    "action": "move",
+    "target": "src/platform/browser/clipboard/copy-text.ts",
+    "reason": "Browser clipboard access is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-clipboard/index.ts",
+    "action": "move",
+    "target": "src/platform/browser/clipboard/index.ts",
+    "reason": "Browser clipboard access is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-io/api.ts",
+    "action": "move",
+    "target": "src/platform/browser/io/api.ts",
+    "reason": "Browser IO is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-io/canvas-utils.ts",
+    "action": "move",
+    "target": "src/platform/browser/canvas/canvas-utils.ts",
+    "reason": "Browser IO is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-io/download.ts",
+    "action": "move",
+    "target": "src/platform/browser/io/download.ts",
+    "reason": "Browser IO is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-io/index.ts",
+    "action": "move",
+    "target": "src/platform/browser/io/index.ts",
+    "reason": "Browser IO is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/browser-io/native-save.ts",
+    "action": "move",
+    "target": "src/platform/browser/io/native-save.ts",
+    "reason": "Browser IO is a platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/api.ts",
+    "action": "delete",
+    "target": null,
+    "reason": "Broad core barrels should be removed and replaced with bounded-context public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/color.ts",
+    "action": "move",
+    "target": "src/domain/render/color/color.ts",
+    "reason": "Color, contrast, gradient, and harmony belong to render/color.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/contrast.ts",
+    "action": "move",
+    "target": "src/domain/render/color/contrast.ts",
+    "reason": "Color, contrast, gradient, and harmony belong to render/color.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/gradient.ts",
+    "action": "move",
+    "target": "src/domain/render/color/gradient.ts",
+    "reason": "Color, contrast, gradient, and harmony belong to render/color.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/harmony.ts",
+    "action": "move",
+    "target": "src/domain/render/color/harmony.ts",
+    "reason": "Color, contrast, gradient, and harmony belong to render/color.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/index.ts",
+    "action": "delete",
+    "target": null,
+    "reason": "Broad core barrels should be removed and replaced with bounded-context public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/core/math.ts",
+    "action": "move",
+    "target": "src/domain/render/primitives/math.ts",
+    "reason": "Low-level rendering math belongs to render primitives.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/core/types.ts",
+    "action": "split",
+    "target": "src/domain/render/primitives/types.ts",
+    "reason": "Generic core types should be split to owning bounded contexts.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/dither-algorithms/advanced.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/advanced.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/api.ts",
+    "action": "split",
+    "target": "src/domain/render/dither/api.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/apply-dither.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/apply-dither.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/error-diffusion.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/error-diffusion.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/index.ts",
+    "action": "split",
+    "target": "src/domain/render/dither/index.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/kernels.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/kernels.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/matrices.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/matrices.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/noise.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/noise.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/ordered.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/ordered.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/temporal.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/temporal.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/types.ts",
+    "action": "split",
+    "target": "src/domain/render/dither/types.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/dither-algorithms/utils.ts",
+    "action": "split",
+    "target": "src/domain/render/dither/utils.ts",
+    "reason": "Dithering algorithms belong to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/api.ts",
+    "action": "split",
+    "target": "src/domain/render/export/api.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/gif-export.ts",
+    "action": "move",
+    "target": "src/domain/render/export/gif-export.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/image-export.ts",
+    "action": "move",
+    "target": "src/domain/render/export/image-export.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/index.ts",
+    "action": "split",
+    "target": "src/domain/render/export/index.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/png-metadata.ts",
+    "action": "move",
+    "target": "src/domain/render/export/png-metadata.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/svg-export.ts",
+    "action": "move",
+    "target": "src/domain/render/export/svg-export.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/types.ts",
+    "action": "split",
+    "target": "src/domain/render/export/types.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/utils.ts",
+    "action": "split",
+    "target": "src/domain/render/export/utils.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/exporter/vector-svg.ts",
+    "action": "move",
+    "target": "src/domain/render/export/vector-svg.ts",
+    "reason": "Export pipeline belongs to domain/render/export.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/index.ts",
+    "action": "delete",
+    "target": null,
+    "reason": "Global barrel should be removed; each bounded context should expose a narrow public API instead.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/overlay/api.ts",
+    "action": "split",
+    "target": "src/domain/render/overlay/api.ts",
+    "reason": "Overlay processing and watermarking belong to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/overlay/crop-handler.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/crop-handler.ts",
+    "reason": "Overlay processing and watermarking belong to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/overlay/index.ts",
+    "action": "split",
+    "target": "src/domain/render/overlay/index.ts",
+    "reason": "Overlay processing and watermarking belong to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/overlay/overlay-filters.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/overlay-filters.ts",
+    "reason": "Overlay processing and watermarking belong to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/overlay/processor.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/processor.ts",
+    "reason": "Overlay processing and watermarking belong to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/overlay/watermark.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/watermark.ts",
+    "reason": "Overlay processing and watermarking belong to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/api.ts",
+    "action": "split",
+    "target": "src/domain/payload/api.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/payload-generators/calendar.ts",
+    "action": "move",
+    "target": "src/domain/payload/calendar.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/contacts.ts",
+    "action": "move",
+    "target": "src/domain/payload/contacts.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/core.ts",
+    "action": "split",
+    "target": "src/domain/payload/core.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/payload-generators/emv.ts",
+    "action": "move",
+    "target": "src/domain/payload/emv.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/enterprise.ts",
+    "action": "move",
+    "target": "src/domain/payload/enterprise.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/index.ts",
+    "action": "split",
+    "target": "src/domain/payload/index.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/payload-generators/payments.ts",
+    "action": "move",
+    "target": "src/domain/payload/payments.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/social.ts",
+    "action": "move",
+    "target": "src/domain/payload/social.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/payload-generators/types.ts",
+    "action": "split",
+    "target": "src/domain/payload/types.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/payload-generators/utils.ts",
+    "action": "split",
+    "target": "src/domain/payload/utils.ts",
+    "reason": "Payload generation and parsing belong to the payload domain. Aggregate entry points and shared types should be reduced to narrow public APIs.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/platform/admob.ts",
+    "action": "move",
+    "target": "src/platform/native/ads/admob.ts",
+    "reason": "AdMob is a native platform adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/platform/api.ts",
+    "action": "split",
+    "target": "src/platform/index.ts",
+    "reason": "Platform aggregate APIs should be replaced by narrow entry points per adapter.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/platform/index.ts",
+    "action": "split",
+    "target": "src/platform/index.ts",
+    "reason": "Platform aggregate APIs should be replaced by narrow entry points per adapter.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/platform/media-store.ts",
+    "action": "move",
+    "target": "src/platform/native/media-store/media-store.ts",
+    "reason": "Native media store access belongs to platform/native.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/platform/native-toast.ts",
+    "action": "move",
+    "target": "src/platform/native/notifications/native-toast.ts",
+    "reason": "Native toast is a native notification adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/platform/web-only-assets.ts",
+    "action": "move",
+    "target": "src/platform/browser/boot/web-only-assets.ts",
+    "reason": "Web bootstrap asset loading is a browser adapter.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/analyzer-content.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/analyzer-content.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/analyzer.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/analyzer.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/api.ts",
+    "action": "split",
+    "target": "src/domain/qr/analyze/api.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/content-detection.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/content-detection.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/decoder.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/decoder.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/export.ts",
+    "action": "split",
+    "target": "src/domain/qr/analyze/export.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/index.ts",
+    "action": "split",
+    "target": "src/domain/qr/analyze/index.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/safety.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/safety.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/scanner.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/scanner.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/telemetry-contrast.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/telemetry-contrast.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/telemetry-logging.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/telemetry-logging.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/telemetry-stats.ts",
+    "action": "move",
+    "target": "src/domain/qr/analyze/telemetry-stats.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/types.ts",
+    "action": "split",
+    "target": "src/domain/qr/analyze/types.ts",
+    "reason": "QR analysis belongs to domain/qr/analyze.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/validation-worker-client.ts",
+    "action": "move",
+    "target": "src/platform/worker/analyze/validation-worker-client.ts",
+    "reason": "Worker client belongs to platform/worker.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-analyzer/validation-worker.ts",
+    "action": "move",
+    "target": "src/platform/worker/analyze/validation-worker.ts",
+    "reason": "Worker implementation belongs to platform/worker.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/bit-mapping.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/bit-mapping.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/buffer-pool.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/buffer-pool.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/elimination.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/elimination.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/generate.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/generate.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/image-utils.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/image-utils.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/index.ts",
+    "action": "split",
+    "target": "src/domain/qr/qart/index.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/qart-worker-client.ts",
+    "action": "move",
+    "target": "src/platform/worker/qart/worker-client.ts",
+    "reason": "Worker client belongs to platform/worker.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/qart-worker-protocol.ts",
+    "action": "move",
+    "target": "src/platform/worker/qart/worker-protocol.ts",
+    "reason": "Worker protocol should sit with the worker boundary.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/qr-art/qart-worker.ts",
+    "action": "move",
+    "target": "src/platform/worker/qart/worker.ts",
+    "reason": "Worker implementation belongs to platform/worker.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/rs-basis.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/rs-basis.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/scan-fallback.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/scan-fallback.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/semantic-layout.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/semantic-layout.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-art/validation.ts",
+    "action": "move",
+    "target": "src/domain/qr/qart/validation.ts",
+    "reason": "QArt search, basis generation, and validation belong to domain/qr/qart.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/api.ts",
+    "action": "split",
+    "target": "src/domain/qr/decode/api.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/binarizer.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/binarizer.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/bit-matrix.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/bit-matrix.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/decode-canvas.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/decode-canvas.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/decode-qr.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/decode-qr.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/decode.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/decode.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/decoder-adapter.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/decoder-adapter.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/exceptions.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/exceptions.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/extract.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/extract.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/format.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/format.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/index.ts",
+    "action": "split",
+    "target": "src/domain/qr/decode/index.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/locate.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/locate.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/luminance.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/luminance.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/pattern-finder.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/pattern-finder.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/perspective.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/perspective.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/qr-data-decoder.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/qr-data-decoder.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/qr-detector.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/qr-detector.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/qr-version.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/qr-version.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/reader.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/reader.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/reed-solomon.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/reed-solomon.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/result-types.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/result-types.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/rs-decoder.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/rs-decoder.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/rs-rootability.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/rs-rootability.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/types.ts",
+    "action": "split",
+    "target": "src/domain/qr/decode/types.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/util.ts",
+    "action": "move",
+    "target": "src/domain/qr/decode/util.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-decoder/utils.ts",
+    "action": "split",
+    "target": "src/domain/qr/decode/utils.ts",
+    "reason": "QR decoding and detection belong to domain/qr/decode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/api.ts",
+    "action": "split",
+    "target": "src/domain/qr/encode/api.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/bit-buffer.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/bit-buffer.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/data-modes.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/data-modes.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/encoder-api.ts",
+    "action": "split",
+    "target": "src/domain/qr/encode/encoder-api.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/encoder.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/encoder.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/index.ts",
+    "action": "split",
+    "target": "src/domain/qr/encode/index.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/math.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/math.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/output.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/output.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/rs-blocks.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/rs-blocks.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/shift-jis.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/shift-jis.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/string-bytes.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/string-bytes.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/types.ts",
+    "action": "split",
+    "target": "src/domain/qr/encode/types.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-encoder/utils.ts",
+    "action": "move",
+    "target": "src/domain/qr/encode/utils.ts",
+    "reason": "QR encoding belongs to domain/qr/encode.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/api.ts",
+    "action": "split",
+    "target": "src/domain/render/generator/api.ts",
+    "reason": "The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/cache.ts",
+    "action": "split",
+    "target": "src/domain/render/generator/cache.ts",
+    "reason": "The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/canvas-factory.ts",
+    "action": "move",
+    "target": "src/platform/browser/canvas/canvas-factory.ts",
+    "reason": "Canvas factory is a browser platform concern.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/color.ts",
+    "action": "split",
+    "target": "src/domain/render/color/color.ts",
+    "reason": "Duplicate color responsibilities exist across core and qr-generator; consolidate under render/color.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering-advanced.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering-advanced.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering-constants.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering-constants.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering-error.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering-error.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering-kernels.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering-kernels.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering-matrix.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering-matrix.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering-true.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering-true.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/dithering.ts",
+    "action": "move",
+    "target": "src/domain/render/dither/dithering.ts",
+    "reason": "Dithering belongs to domain/render/dither.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/drawing-frames.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/drawing-frames.ts",
+    "reason": "Drawing pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/drawing-gradients.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/drawing-gradients.ts",
+    "reason": "Drawing pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/drawing-halftone.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/drawing-halftone.ts",
+    "reason": "Drawing pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/drawing-patterns.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/drawing-patterns.ts",
+    "reason": "Drawing pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/drawing-primitives.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/drawing-primitives.ts",
+    "reason": "Drawing pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/drawing.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/drawing.ts",
+    "reason": "Drawing pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/ecc.ts",
+    "action": "move",
+    "target": "src/domain/qr/spec/ecc.ts",
+    "reason": "ECC policies belong to the QR domain, not the renderer.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/qr-generator/filters-blur.ts",
+    "action": "move",
+    "target": "src/domain/render/filters/filters-blur.ts",
+    "reason": "Image preprocessing filters belong to domain/render/filters.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/filters-edge.ts",
+    "action": "move",
+    "target": "src/domain/render/filters/filters-edge.ts",
+    "reason": "Image preprocessing filters belong to domain/render/filters.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/filters-preprocess.ts",
+    "action": "move",
+    "target": "src/domain/render/filters/filters-preprocess.ts",
+    "reason": "Image preprocessing filters belong to domain/render/filters.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/filters-sharpen.ts",
+    "action": "move",
+    "target": "src/domain/render/filters/filters-sharpen.ts",
+    "reason": "Image preprocessing filters belong to domain/render/filters.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/filters.ts",
+    "action": "move",
+    "target": "src/domain/render/filters/filters.ts",
+    "reason": "Image preprocessing filters belong to domain/render/filters.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/index.ts",
+    "action": "split",
+    "target": "src/domain/render/generator/index.ts",
+    "reason": "The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/overlay-data-packed.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/overlay-data-packed.ts",
+    "reason": "Overlay composition belongs to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/overlay-data.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/overlay-data.ts",
+    "reason": "Overlay composition belongs to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/overlay-subpixel.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/overlay-subpixel.ts",
+    "reason": "Overlay composition belongs to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/overlay-transforms.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/overlay-transforms.ts",
+    "reason": "Overlay composition belongs to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/overlay.ts",
+    "action": "move",
+    "target": "src/domain/render/overlay/overlay.ts",
+    "reason": "Overlay composition belongs to domain/render/overlay.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/pattern-helpers.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pattern-helpers.ts",
+    "reason": "Pattern rendering helpers belong to the generator.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/qr-generator/pixel-matrix-dither.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pixel-matrix-dither.ts",
+    "reason": "Pixel matrix rendering belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/pixel-matrix-dithered.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pixel-matrix-dithered.ts",
+    "reason": "Pixel matrix rendering belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/pixel-matrix-overlay.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pixel-matrix-overlay.ts",
+    "reason": "Pixel matrix rendering belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/pixel-matrix-standard.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pixel-matrix-standard.ts",
+    "reason": "Pixel matrix rendering belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/pixel-matrix-utils.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pixel-matrix-utils.ts",
+    "reason": "Pixel matrix rendering belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/pixel-matrix.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/pixel-matrix.ts",
+    "reason": "Pixel matrix rendering belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/qr-generator-class.ts",
+    "action": "split",
+    "target": "src/domain/render/generator/QRGenerator.ts",
+    "reason": "The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/render-loop.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/render-loop.ts",
+    "reason": "Core rendering pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/render-modes.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/render-modes.ts",
+    "reason": "Core rendering pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/scaled-render.ts",
+    "action": "move",
+    "target": "src/domain/render/generator/scaled-render.ts",
+    "reason": "Core rendering pipeline belongs to domain/render/generator.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/types.ts",
+    "action": "split",
+    "target": "src/domain/render/generator/types.ts",
+    "reason": "The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-generator/utils.ts",
+    "action": "split",
+    "target": "src/domain/render/generator/utils.ts",
+    "reason": "The qr-generator bounded context is currently mixed. This file must be decomposed into render, overlay, dither, platform, and analysis responsibilities before landing.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/api.ts",
+    "action": "split",
+    "target": "src/domain/qr/spec/api.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/bch.ts",
+    "action": "move",
+    "target": "src/domain/qr/spec/bch.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/constants.ts",
+    "action": "move",
+    "target": "src/domain/qr/spec/constants.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/index.ts",
+    "action": "split",
+    "target": "src/domain/qr/spec/index.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/masks.ts",
+    "action": "move",
+    "target": "src/domain/qr/spec/masks.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/qr-patterns.ts",
+    "action": "move",
+    "target": "src/domain/qr/spec/qr-patterns.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/types.ts",
+    "action": "split",
+    "target": "src/domain/qr/spec/types.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/qr-spec/verify.ts",
+    "action": "move",
+    "target": "src/domain/qr/spec/verify.ts",
+    "reason": "QR specification constants and verification belong to domain/qr/spec.",
+    "confidence": "high"
+  },
+  {
+    "source": "src/modules/share-links/api.ts",
+    "action": "split",
+    "target": "src/domain/share/api.ts",
+    "reason": "Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/share-links/embed.ts",
+    "action": "move",
+    "target": "src/domain/share/embed.ts",
+    "reason": "Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/share-links/index.ts",
+    "action": "split",
+    "target": "src/domain/share/index.ts",
+    "reason": "Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/share-links/social.ts",
+    "action": "move",
+    "target": "src/domain/share/social.ts",
+    "reason": "Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/share-links/types.ts",
+    "action": "split",
+    "target": "src/domain/share/types.ts",
+    "reason": "Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/modules/share-links/url-params.ts",
+    "action": "move",
+    "target": "src/domain/share/url-params.ts",
+    "reason": "Share URL and embed logic belong to a share domain; broad barrels/types should be narrowed.",
+    "confidence": "medium"
+  },
+  {
+    "source": "src/store/qr-store.ts",
+    "action": "split",
+    "target": "src/state/qr-generator.store.ts",
+    "reason": "The store file is acting as both state model and product taxonomy/type hub; split store, enums, and helper models.",
+    "confidence": "high"
+  }
+]

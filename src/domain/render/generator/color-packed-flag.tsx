@@ -1,0 +1,1 @@
+export const COLOR_PACKED_FLAG = 0x01000000;

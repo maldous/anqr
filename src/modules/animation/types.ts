@@ -33,7 +33,8 @@ export interface AnimationOptions {
   effectBounds?: { x: number; y: number; width: number; height: number };
 }
 
-export type AnimationPattern = 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift';
+export type AnimationPattern = 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift'
+  | 'color_cycle';
 
 export interface AnimationState {
   frames: AnimationFrame[];

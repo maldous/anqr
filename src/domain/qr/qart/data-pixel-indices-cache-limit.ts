@@ -1,0 +1,1 @@
+export const DATA_PIXEL_INDICES_CACHE_LIMIT = 24;

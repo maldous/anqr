@@ -1,0 +1,1 @@
+export const CONFIG_SETTLE_DEBOUNCE_MS = 300;

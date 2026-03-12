@@ -1,0 +1,1 @@
+export const COLOR_PRESENT_FLAG = 0x01000000;

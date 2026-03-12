@@ -1,7 +1,3 @@
-export const BLUE_NOISE_TILE_CACHE_MAX = 64;
-
-export const blueNoiseTileCache = new Map<string, Float32Array>();
-
-export function getBlueNoiseCacheKey(size: number, seed: number): string {
-  return `${size}:${seed}`;
-}
+export { BLUE_NOISE_TILE_CACHE_MAX } from './blue-noise-tile-cache-max';
+export { blueNoiseTileCache } from './blue-noise-tile-cache';
+export { getBlueNoiseCacheKey } from './get-blue-noise-cache-key';

@@ -1,7 +1,2 @@
-import { createContext } from 'react';
-
-export interface SearchContextValue {
-  searchQuery: string;
-}
-
-export const SearchContext = createContext<SearchContextValue>({ searchQuery: '' });
+export type { SearchContextValue } from './search-context-value';
+export { SearchContext } from './search-context-2';
