@@ -5,16 +5,8 @@ export { blendColorsLinear as blendColorsLinear2 } from '../color/blend-colors-l
 export { parseColor } from '../color/parse-color';
 export {
   rgbToHex,
-  rgbaToHex,
-  rgbToString,
   rgbaToString,
   rgbToGray,
   getRelativeLuminance,
   getContrastRatio,
-  isDark,
-  getTextColor,
-  alphaBlend,
-  multiplyBlend,
-  screenBlend,
-  overlayBlend,
 } from '../color/color';
