@@ -1,51 +1,7 @@
 import { Capacitor } from '@capacitor/core';
-
-type IubendaWindow = Window & {
-  _iub?: Array<Record<string, unknown>> & { csConfiguration?: Record<string, unknown> };
-  __anqrWebAssetsLoaded?: boolean;
-};
-
-const addLink = (
-  id: string,
-  attrs: {
-    rel: string;
-    href: string;
-    as?: string;
-    crossOrigin?: string;
-  }
-): void => {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(id)) return;
-
-  const link = document.createElement('link');
-  link.id = id;
-  link.rel = attrs.rel;
-  link.href = attrs.href;
-  if (attrs.as) link.as = attrs.as;
-  if (attrs.crossOrigin) link.crossOrigin = attrs.crossOrigin;
-  document.head.appendChild(link);
-};
-
-const addScript = (
-  id: string,
-  src: string,
-  options: {
-    async?: boolean;
-    crossOrigin?: string;
-    charset?: string;
-  } = {}
-): void => {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(id)) return;
-
-  const script = document.createElement('script');
-  script.id = id;
-  script.src = src;
-  script.async = options.async ?? true;
-  if (options.crossOrigin) script.crossOrigin = options.crossOrigin;
-  if (options.charset) script.charset = options.charset; // NOSONAR: charset needed for third-party script compat
-  document.head.appendChild(script);
-};
+import { addLink } from './add-link';
+import { addScript } from './add-script';
+import type { IubendaWindow } from './iubenda-window';
 
 export const loadWebOnlyBootAssets = (): void => {
   if (typeof document === 'undefined') return;

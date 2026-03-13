@@ -11,63 +11,14 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
+import { isAlternatingCol } from './is-alternating-col';
+import { isAlternatingLine } from './is-alternating-line';
+import { isFinderCoreCorrect } from './is-finder-core-correct';
 
 const _log = createLogger('SPEC');
 
 export type { DarkModuleReader, QRVerifyResult } from './verify.types';
 import type { DarkModuleReader, QRVerifyResult } from './verify.types';
-
-const isFinderCoreCorrect = (
-  isDark: (r: number, c: number) => boolean,
-  baseRow: number,
-  baseCol: number
-): boolean => {
-  // Finder core is 7x7 with pattern:
-  // - outer border dark
-  // - inner border light
-  // - center 3x3 dark
-  for (let r = 0; r < 7; r++) {
-    for (let c = 0; c < 7; c++) {
-      const rr = baseRow + r;
-      const cc = baseCol + c;
-      const expectedDark =
-        r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4);
-      if (isDark(rr, cc) !== expectedDark) return false;
-    }
-  }
-  return true;
-};
-
-const isAlternatingLine = (
-  isDark: (r: number, c: number) => boolean,
-  row: number,
-  colStart: number,
-  colEnd: number
-): boolean => {
-  // Accept either phase, but require strict alternation.
-  let prev = isDark(row, colStart);
-  for (let c = colStart + 1; c <= colEnd; c++) {
-    const cur = isDark(row, c);
-    if (cur === prev) return false;
-    prev = cur;
-  }
-  return true;
-};
-
-const isAlternatingCol = (
-  isDark: (r: number, c: number) => boolean,
-  col: number,
-  rowStart: number,
-  rowEnd: number
-): boolean => {
-  let prev = isDark(rowStart, col);
-  for (let r = rowStart + 1; r <= rowEnd; r++) {
-    const cur = isDark(r, col);
-    if (cur === prev) return false;
-    prev = cur;
-  }
-  return true;
-};
 
 export function verifyQRStructure(qr: DarkModuleReader, explicitVersion?: number): QRVerifyResult {
   const issues: string[] = [];

@@ -4,70 +4,13 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
+import { createCanvasLike } from './create-canvas-like';
+import { resetCanvas2D } from './reset-canvas-2d';
+import { resolveEffectBounds } from './resolve-effect-bounds';
 
 const _log = createLogger('ANIMATION');
 
 import type { AnimationOptions, AnimationPattern } from '../../../modules/animation/types';
-
-const resetCanvas2D = (
-  canvas: HTMLCanvasElement | OffscreenCanvas
-): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null => {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  if ('setTransform' in ctx && typeof ctx.setTransform === 'function') {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 1;
-  if ('filter' in ctx) {
-    (ctx as CanvasRenderingContext2D).filter = 'none';
-  }
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  return ctx;
-};
-
-const createCanvasLike = (
-  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
-): HTMLCanvasElement | OffscreenCanvas => {
-  if (targetCanvas) {
-    if (targetCanvas.width !== sourceCanvas.width) targetCanvas.width = sourceCanvas.width;
-    if (targetCanvas.height !== sourceCanvas.height) targetCanvas.height = sourceCanvas.height;
-    return targetCanvas;
-  }
-
-  if (
-    typeof OffscreenCanvas !== 'undefined' &&
-    sourceCanvas instanceof OffscreenCanvas &&
-    typeof sourceCanvas.width === 'number'
-  ) {
-    return new OffscreenCanvas(sourceCanvas.width, sourceCanvas.height);
-  }
-
-  const result = document.createElement('canvas');
-  result.width = sourceCanvas.width;
-  result.height = sourceCanvas.height;
-  return result;
-};
-
-const resolveEffectBounds = (
-  canvas: HTMLCanvasElement | OffscreenCanvas,
-  options: Partial<AnimationOptions>
-): { x: number; y: number; width: number; height: number } => {
-  const raw = options.effectBounds;
-  if (!raw) {
-    return { x: 0, y: 0, width: canvas.width, height: canvas.height };
-  }
-
-  const x = Math.max(0, Math.min(canvas.width, Math.floor(raw.x)));
-  const y = Math.max(0, Math.min(canvas.height, Math.floor(raw.y)));
-  const width = Math.max(0, Math.min(canvas.width - x, Math.floor(raw.width)));
-  const height = Math.max(0, Math.min(canvas.height - y, Math.floor(raw.height)));
-  if (width === 0 || height === 0) {
-    return { x: 0, y: 0, width: canvas.width, height: canvas.height };
-  }
-  return { x, y, width, height };
-};
 
 /**
  * Apply animation pattern to a frame
