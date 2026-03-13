@@ -5,127 +5,15 @@
  * Honors AdMob rewarded ad requirement for professional tier on native platforms.
  */
 
-import { Capacitor } from '@capacitor/core';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createLogger } from '@/infra/logging/logger';
-import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { type Tier, useQRStore } from '@/store/qr-store';
-
-const log = createLogger('HELP');
-
-type HelpLinkProps = {
-  /** Path to navigate to, e.g., '/guide#section-5' or '/learn' */
-  href?: string;
-  /** Anchor within the guide page (shorthand for href='/guide#anchor') */
-  anchor?: string;
-  /** Tier required for the linked feature (overrides tab= in URL if provided) */
-  requiredTier?: Tier;
-  /** Tooltip text (defaults to 'Learn more') */
-  title?: string;
-  /** Additional CSS classes */
-  className?: string;
-};
-
-/** Extract tier from tab= query parameter in URL */
-const parseTierFromUrl = (href: string): Tier | undefined => {
-  const regex = /[?&]tab=(basic|advanced|professional)(?:&|#|$)/;
-  const match = regex.exec(href);
-  return match ? (match[1] as Tier) : undefined;
-};
-
-const requestProfessionalAccess = async (
-  activatePremiumAccess: () => void,
-  setLoadingAd: (loading: boolean) => void
-): Promise<boolean> => {
-  setLoadingAd(true);
-  try {
-    const reward = await showRewardedAd('premium');
-    if (!reward) {
-      setLoadingAd(false);
-      return false;
-    }
-    activatePremiumAccess();
-  } catch (error) {
-    log.error('Failed to show rewarded ad', { error });
-    setLoadingAd(false);
-    return false;
-  }
-  setLoadingAd(false);
-  prepareRewardedAd('premium');
-  return true;
-};
-
-const handleTierUpgrade = async (
-  effectiveTier: Tier,
-  currentTier: Tier,
-  setTier: (tier: Tier) => void,
-  checkPremiumAccess: () => boolean,
-  activatePremiumAccess: () => void,
-  setLoadingAd: (loading: boolean) => void
-): Promise<boolean> => {
-  const tierOrder: Tier[] = ['basic', 'advanced', 'professional'];
-  const currentIndex = tierOrder.indexOf(currentTier);
-  const requiredIndex = tierOrder.indexOf(effectiveTier);
-
-  if (requiredIndex <= currentIndex) return true;
-
-  if (effectiveTier === 'professional' && Capacitor.isNativePlatform()) {
-    if (!checkPremiumAccess()) {
-      const granted = await requestProfessionalAccess(activatePremiumAccess, setLoadingAd);
-      if (!granted) return false;
-    }
-  }
-
-  setTier(effectiveTier);
-  return true;
-};
-
-const buildNavigationUrl = (
-  resolvedHref: string,
-  language: string
-): { fullHref: string; hash: string } => {
-  let path = resolvedHref;
-  let hash = '';
-  let query = '';
-
-  const hashIndex = resolvedHref.indexOf('#');
-  if (hashIndex !== -1) {
-    hash = resolvedHref.substring(hashIndex);
-    path = resolvedHref.substring(0, hashIndex);
-  }
-
-  const queryIndex = path.indexOf('?');
-  if (queryIndex !== -1) {
-    query = path.substring(queryIndex);
-    path = path.substring(0, queryIndex);
-  }
-
-  if (!query.includes('lang=')) {
-    const separator = query ? '&' : '?';
-    query = `${query}${separator}lang=${language}`;
-  }
-
-  return { fullHref: `${path}${query}${hash}`, hash };
-};
-
-const performSPANavigation = (fullHref: string, hash: string): void => {
-  globalThis.history.pushState({}, '', fullHref);
-  globalThis.dispatchEvent(new PopStateEvent('popstate'));
-
-  if (hash) {
-    const anchorId = hash.substring(1);
-    setTimeout(() => {
-      const element = document.getElementById(anchorId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 150);
-  } else {
-    globalThis.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-};
+import { buildNavigationUrl } from './build-help-link-navigation-url';
+import { handleTierUpgrade } from './handle-help-link-tier-upgrade';
+import type { HelpLinkProps } from './help-link-props';
+import { parseTierFromUrl } from './parse-help-link-tier-from-url';
+import { performSPANavigation } from './perform-help-link-navigation';
 
 export function HelpLink({
   href,
