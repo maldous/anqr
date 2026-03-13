@@ -705,7 +705,7 @@ function redactSensitive(obj: unknown, depth = 0): unknown {
   // Pass through special types unchanged — safeSerializeContext handles them later
   if (obj instanceof Error) return obj;
   if (obj instanceof Set || obj instanceof Map) return obj;
-  if (Node !== undefined && obj instanceof Node) return obj;
+  if (typeof Node !== 'undefined' && obj instanceof Node) return obj;
   if (ArrayBuffer.isView(obj)) return obj;
 
   const result: Record<string, unknown> = {};

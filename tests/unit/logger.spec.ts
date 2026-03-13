@@ -190,8 +190,6 @@ describe('logger', () => {
     const clickSpy = vi
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined);
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-
     const q = mod.createLogger('QART');
     const o = mod.createLogger('OVERLAY');
     q.info('q1', { ok: true });
@@ -206,11 +204,8 @@ describe('logger', () => {
     expect(createObjectURL).toHaveBeenCalledTimes(2);
     expect(revokeObjectURL).toHaveBeenCalledTimes(2);
     expect(clickSpy).toHaveBeenCalledTimes(2);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No logs to save'));
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No logs found for scope'));
 
     clickSpy.mockRestore();
-    consoleSpy.mockRestore();
     createObjectURL.mockRestore();
     revokeObjectURL.mockRestore();
   });

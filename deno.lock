@@ -99,7 +99,7 @@
         "npm:typescript@^5.9.3",
         "npm:vite-plugin-compression@~0.5.1",
         "npm:vite-plugin-pwa@^1.2.0",
-        "npm:vite@^8.0.0-beta.15",
+        "npm:vite@^7.3.1",
         "npm:vitest@^4.0.18",
         "npm:webdriverio@^9.24.0",
         "npm:zustand@^5.0.11"

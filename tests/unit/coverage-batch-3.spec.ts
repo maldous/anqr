@@ -31,14 +31,14 @@ vi.mock('../../src/lib/logger', () => ({
 // --- decode-qr.ts dependency mocks (at module level) ---
 const mockFindFinderPatterns = vi.fn();
 const mockSelectFinderPatterns = vi.fn();
-vi.mock('../../src/modules/qr-decoder/locate', () => ({
+vi.mock('../../src/domain/qr/decode/locate', () => ({
   findFinderPatterns: (...args: unknown[]) => mockFindFinderPatterns(...args),
   selectFinderPatterns: (...args: unknown[]) => mockSelectFinderPatterns(...args),
 }));
 
 const mockCalculateLocation = vi.fn();
 const mockExtractModuleMatrix = vi.fn();
-vi.mock('../../src/modules/qr-decoder/extract', () => ({
+vi.mock('../../src/domain/qr/decode/extract', () => ({
   calculateLocation: (...args: unknown[]) => mockCalculateLocation(...args),
   extractModuleMatrix: (...args: unknown[]) => mockExtractModuleMatrix(...args),
   getModuleCountFromVersion: (v: number) => v * 4 + 17,
@@ -48,7 +48,7 @@ vi.mock('../../src/modules/qr-decoder/extract', () => ({
 const mockReadFormatInfo = vi.fn();
 const mockUnmaskMatrix = vi.fn();
 const mockGetECCLevelChar = vi.fn();
-vi.mock('../../src/modules/qr-decoder/format', () => ({
+vi.mock('../../src/domain/qr/decode/format', () => ({
   readFormatInfo: (...args: unknown[]) => mockReadFormatInfo(...args),
   unmaskMatrix: (...args: unknown[]) => mockUnmaskMatrix(...args),
   getECCLevelChar: (...args: unknown[]) => mockGetECCLevelChar(...args),
@@ -56,7 +56,7 @@ vi.mock('../../src/modules/qr-decoder/format', () => ({
 
 const mockReadCodewords = vi.fn();
 const mockDecodeDataCodewordsDetailed = vi.fn();
-vi.mock('../../src/modules/qr-decoder/decode', () => ({
+vi.mock('../../src/domain/qr/decode/decode', () => ({
   readCodewords: (...args: unknown[]) => mockReadCodewords(...args),
   decodeDataCodewordsDetailed: (...args: unknown[]) => mockDecodeDataCodewordsDetailed(...args),
   RS_BLOCKS: {
@@ -68,17 +68,18 @@ vi.mock('../../src/modules/qr-decoder/decode', () => ({
 }));
 
 const mockCorrectRSCodewords = vi.fn();
-vi.mock('../../src/modules/qr-decoder/rs-decoder', () => ({
+vi.mock('../../src/domain/qr/decode/rs-decoder', () => ({
   correctRSCodewords: (...args: unknown[]) => mockCorrectRSCodewords(...args),
 }));
 
 const mockRsRootabilityFor = vi.fn();
-vi.mock('../../src/modules/qr-decoder/rs-rootability', () => ({
+vi.mock('../../src/domain/qr/decode/rs-rootability', () => ({
   rsRootabilityFor: (...args: unknown[]) => mockRsRootabilityFor(...args),
 }));
 
 vi.mock('../../src/modules/qr-spec', () => ({
   getAlignmentPatternCenters: () => [],
+  getMaskFunction: () => (_row: number, _col: number) => false,
   getModuleCountForVersion: (v: number) => v * 4 + 17,
   getVersionFromModuleCount: (mc: number) => (mc - 17) / 4,
 }));
@@ -123,8 +124,8 @@ beforeEach(() => {
 describe('extract.ts — calculateLocation', () => {
   it('returns correct v1 QR (21 modules)', async () => {
     const { calculateLocation } = await vi.importActual<
-      typeof import('../../src/modules/qr-decoder/extract')
-    >('../../src/modules/qr-decoder/extract');
+      typeof import('../../src/domain/qr/decode/extract')
+    >('../../src/domain/qr/decode/extract');
 
     const topLeft = { center: { x: 35, y: 35 }, moduleSize: 10, count: 1 };
     const topRight = { center: { x: 175, y: 35 }, moduleSize: 10, count: 1 };
@@ -143,8 +144,8 @@ describe('extract.ts — calculateLocation', () => {
 
   it('returns correct v2 QR (25 modules)', async () => {
     const { calculateLocation } = await vi.importActual<
-      typeof import('../../src/modules/qr-decoder/extract')
-    >('../../src/modules/qr-decoder/extract');
+      typeof import('../../src/domain/qr/decode/extract')
+    >('../../src/domain/qr/decode/extract');
 
     // v2: distance = (25-7)*10 = 180
     const topLeft = { center: { x: 35, y: 35 }, moduleSize: 10, count: 1 };
@@ -157,8 +158,8 @@ describe('extract.ts — calculateLocation', () => {
 
   it('clamps to valid version range (min version 1)', async () => {
     const { calculateLocation } = await vi.importActual<
-      typeof import('../../src/modules/qr-decoder/extract')
-    >('../../src/modules/qr-decoder/extract');
+      typeof import('../../src/domain/qr/decode/extract')
+    >('../../src/domain/qr/decode/extract');
 
     // Very small distance → version < 1 → should clamp to 21
     const topLeft = { center: { x: 10, y: 10 }, moduleSize: 10, count: 1 };
@@ -173,8 +174,8 @@ describe('extract.ts — calculateLocation', () => {
 describe('extract.ts — extractModuleMatrix', () => {
   it('returns boolean[][] with correct dimensions', async () => {
     const { extractModuleMatrix } = await vi.importActual<
-      typeof import('../../src/modules/qr-decoder/extract')
-    >('../../src/modules/qr-decoder/extract');
+      typeof import('../../src/domain/qr/decode/extract')
+    >('../../src/domain/qr/decode/extract');
 
     const size = 210;
     const data = new Uint8ClampedArray(size * size * 4);
@@ -214,8 +215,8 @@ describe('extract.ts — extractModuleMatrix', () => {
 
   it('handles transparent pixels as white', async () => {
     const { extractModuleMatrix } = await vi.importActual<
-      typeof import('../../src/modules/qr-decoder/extract')
-    >('../../src/modules/qr-decoder/extract');
+      typeof import('../../src/domain/qr/decode/extract')
+    >('../../src/domain/qr/decode/extract');
 
     const size = 210;
     const data = new Uint8ClampedArray(size * size * 4); // all zeros (transparent)

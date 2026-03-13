@@ -33,11 +33,11 @@ vi.mock('../../src/modules/qr-decoder', () => ({ decodeQR: mockDecodeQRBarrel })
 
 // Mock decoder-adapter (used by decode-canvas.ts)
 const mockDecodeQRAdapter = vi.fn();
-vi.mock('../../src/modules/qr-decoder/decoder-adapter', () => ({ decodeQR: mockDecodeQRAdapter }));
+vi.mock('../../src/domain/qr/decode/decoder-adapter', () => ({ decodeQR: mockDecodeQRAdapter }));
 
 // Mock analyzer decoder (used by analyzer.ts)
 const mockDecodeQRFromCanvas = vi.fn();
-vi.mock('../../src/modules/qr-analyzer/decoder', () => ({
+vi.mock('../../src/domain/qr/analyze/decoder', () => ({
   decodeQRFromCanvas: mockDecodeQRFromCanvas,
 }));
 

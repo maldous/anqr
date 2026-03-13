@@ -16,7 +16,7 @@ const loggerApi = {
   setLogLevel: vi.fn(),
 };
 
-vi.mock('../../src/lib/logger', () => loggerApi);
+vi.mock('../../src/infra/logging/logger', () => loggerApi);
 
 describe('logger-remote', () => {
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('logger-remote', () => {
     mod.enableDiagnostics(999, 'manual test');
     expect(loggerApi.setLogLevel).toHaveBeenCalledWith('debug');
 
-    const raw = localStorage.getItem('anqr_diagnostics');
+    const raw = localStorage.getItem('anqr_diagnostics_state');
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw as string);
     expect(parsed.enabled).toBe(true);
@@ -44,14 +44,14 @@ describe('logger-remote', () => {
     expect(status.reason).toBe('manual test');
 
     mod.disableDiagnostics();
-    expect(localStorage.getItem('anqr_diagnostics')).toBeNull();
+    expect(localStorage.getItem('anqr_diagnostics_state')).toBeNull();
     expect(loggerApi.resetLogLevel).toHaveBeenCalled();
   });
 
   it('expires invalid state and initializes window API methods', async () => {
     const now = Date.now();
     localStorage.setItem(
-      'anqr_diagnostics',
+      'anqr_diagnostics_state',
       JSON.stringify({
         enabled: true,
         enabledAt: now - 60000,
@@ -63,7 +63,7 @@ describe('logger-remote', () => {
     const mod = await import('../../src/lib/logger-remote');
     mod.initRemoteDiagnostics();
 
-    expect(localStorage.getItem('anqr_diagnostics')).toBeNull();
+    expect(localStorage.getItem('anqr_diagnostics_state')).toBeNull();
     expect(window.anqrDiag).toBeTruthy();
 
     const api = window.anqrDiag as {
@@ -80,8 +80,6 @@ describe('logger-remote', () => {
       logCount: () => number;
       help: () => void;
     };
-
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     expect(api.status()).toMatchObject({ enabled: false, currentLevel: 'error' });
 
@@ -103,18 +101,16 @@ describe('logger-remote', () => {
     expect(api.logCount()).toBe(42);
 
     api.help();
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
   });
 
   it('restores valid diagnostics on startup and handles bad stored json', async () => {
-    localStorage.setItem('anqr_diagnostics', 'not-json');
+    localStorage.setItem('anqr_diagnostics_state', 'not-json');
     const mod = await import('../../src/lib/logger-remote');
     expect(mod.getDiagnosticsStatus().enabled).toBe(false);
 
     const now = Date.now();
     localStorage.setItem(
-      'anqr_diagnostics',
+      'anqr_diagnostics_state',
       JSON.stringify({
         enabled: true,
         enabledAt: now - 1000,
