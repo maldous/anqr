@@ -1,5 +1,5 @@
-import { getSharedHashCanvasState } from './shared-hash-canvas-state';
+import { sharedHashCanvasState } from './shared-hash-canvas-state';
 
 export function getSharedHashCanvas() {
-  return getSharedHashCanvasState();
+  return sharedHashCanvasState.current;
 }

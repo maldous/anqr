@@ -1,9 +1,5 @@
-let sharedHashCanvasInUse = false;
-
-export function getSharedHashCanvasInUseState() {
-  return sharedHashCanvasInUse;
-}
-
-export function setSharedHashCanvasInUseState(value: boolean) {
-  sharedHashCanvasInUse = value;
-}
+export const sharedHashCanvasInUseState: {
+  current: boolean;
+} = {
+  current: false,
+};

@@ -1,5 +1,5 @@
-import { getExporterModulePromiseState } from './exporter-module-promise-state';
+import { exporterModulePromiseState } from './exporter-module-promise-state';
 
 export function getExporterModulePromise() {
-  return getExporterModulePromiseState();
+  return exporterModulePromiseState.current;
 }
