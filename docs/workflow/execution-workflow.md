@@ -24,7 +24,7 @@
 
 - Prefer very small modules with one clear responsibility; when splitting code, bias toward one AST-heavy construct per file so low-capacity models can reason about the file in isolation.
 - Treat "one AST-heavy construct per file" as the default target, not a loose preference. In practice this means one exported component, one exported function, one exported type/interface, or one narrowly scoped constant map per file wherever compatibility allows.
-- Run an AST-density audit before and after large refactors. Files that show repeated `async`, `function`, `interface`, or similar declaration patterns must be treated as split candidates before the refactor is considered complete.
+- Run an AST-density audit before and after large refactors. Files that show repeated top-level AST-heavy constructs must be treated as split candidates before the refactor is considered complete.
 - Do not re-densify code just to preserve pre-refactor file layouts. Update callers, tests, and docs to the new canonical module paths instead.
 - Keep benchmark and profiling suites out of the default correctness gate. `npm run test:unit` is for deterministic unit validation; opt-in profiling belongs in `npm run test:unit:perf`.
 - After structural refactors, restore green validation before chasing coverage percentages. Once the default suite is green, run coverage and add focused tests against the new smaller files.
@@ -32,17 +32,18 @@
 
 ### AST-Density Audit
 
-Use a deterministic audit command to identify files that still bundle multiple top-level constructs:
+Use the parser-backed audit command to identify files that still bundle multiple top-level constructs:
 
 ```bash
-find src -type f | xargs grep "^" | egrep ":async|:function|:interface" | cut -f1 -d: | uniq -c | sed -e 's/^  *//g' | grep -v "^1 "
+npm run audit:ast
 ```
 
 Interpretation notes:
 
-- This is a coarse heuristic, not a parser, but it is useful as a red-flag report.
+- This audit counts top-level `function`, `class`, `interface`, `type`, `enum`, `module`, and heavy variable declarations such as arrow-function components or large object-literal maps.
 - Any file reported by this audit should be reviewed as unfinished structural refactor work.
 - High-count UI files, render pipeline files, and state/type hub files should be split first because they create the most reasoning load for low-capacity models.
+- Use `npm run audit:ast -- --json` when another tool or agent needs the raw node list.
 
 ## Review Readiness
 

@@ -37,6 +37,7 @@
     "test:i18n": "node scripts/check-i18n-regressions.js",
     "test:bundle:budget": "node scripts/check-bundle-budgets.mjs",
     "test:perf:budget": "npm run build && node scripts/check-performance-budgets.mjs",
+    "audit:ast": "node scripts/audit-ast-density.mjs",
     "report:payload:matrix": "node scripts/generate-payload-matrix.mjs",
     "validate:services": "node scripts/validate-third-party.mjs",
     "check:sentry": "node scripts/check-sentry-regression.mjs",

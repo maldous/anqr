@@ -178,7 +178,9 @@ make all          # Complete 16-step production pipeline
 
 - **Module system**: ESM-only. All source uses `import`/`export`.
 - **TypeScript**: Strict mode. Do not use `any` casts. Maintain ≥95% type-coverage.
-- **AST density**: Prefer one AST-heavy construct per file. Large files that bundle many interfaces, functions, or local component helpers are considered refactor debt even if they are currently passing tests.
+- **AST density**: Prefer one AST-heavy construct per file. Large files that bundle many interfaces, types, functions, local component helpers, classes, or top-level constant maps are considered refactor debt even if they are currently passing tests.
+- **AST audit command**: `npm run audit:ast`
+- **AST audit JSON**: `npm run audit:ast -- --json`
 - **Formatting**: oxfmt (not Prettier). Run `make fix` or `npx oxfmt --write .`.
 - **Linting**: oxlint (not ESLint). Config in `.oxlintrc.json`.
 - **Commits**: Conventional commits enforced by commitlint (`feat:`, `fix:`, `docs:`, `chore:`, etc.). Reference the relevant Linear issue where appropriate (e.g., `fix(ops): add provider failover (ANQ-194)`).
