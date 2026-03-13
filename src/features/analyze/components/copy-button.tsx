@@ -1,9 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Check, ClipboardCopy } from 'lucide-react';
-import { Button } from '../../../ui/primitives/button';
-import type { CopyButtonProps } from './copy-button-props';
+import { Button } from '@/ui/primitives/button';
 
-export function CopyButton({ text, label, className = '' }: Readonly<CopyButtonProps>) {
+type CopyButtonProps = {
+  text: string;
+  label?: string;
+  className?: string;
+};
+
+export const CopyButton = ({ text, label, className = '' }: Readonly<CopyButtonProps>) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -16,7 +21,7 @@ export function CopyButton({ text, label, className = '' }: Readonly<CopyButtonP
       textarea.value = text;
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand('copy'); // NOSONAR: intentional fallback for older browsers
+      document.execCommand('copy');
       textarea.remove();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -43,4 +48,4 @@ export function CopyButton({ text, label, className = '' }: Readonly<CopyButtonP
       )}
     </Button>
   );
-}
+};

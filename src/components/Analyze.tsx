@@ -74,6 +74,13 @@ import {
   type ECCLevel,
   type QRAnalysisResult,
 } from '@/modules/qr-analyzer';
+import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
+import { ColorSwatch } from '@/features/analyze/components/color-swatch';
+import { CopyButton } from '@/features/analyze/components/copy-button';
+import { DetailRow } from '@/features/analyze/components/detail-row';
+import { ProgressBar } from '@/features/analyze/components/progress-bar';
+import { StatusBadge } from '@/features/analyze/components/status-badge';
+import { WCAGBadge } from '@/features/analyze/components/wcag-badge';
 import {
   createQRInstance,
   getStringToBytes,
@@ -254,120 +261,6 @@ const MASK_DESCRIPTIONS: Record<number, string> = {
   7: '((i+j) mod 2 + (ij) mod 3) mod 2 = 0',
 };
 
-// Collapsible Section Component
-interface CollapsibleSectionProps {
-  title: string;
-  icon: React.ReactNode;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-  badge?: React.ReactNode;
-  testId?: string;
-}
-
-function CollapsibleSection({
-  title,
-  icon,
-  defaultOpen = true,
-  children,
-  badge,
-  testId,
-}: Readonly<CollapsibleSectionProps>) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="rounded-lg overflow-hidden" data-testid={testId}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-3 px-3 bg-muted/50 rounded-md shadow-sm hover:bg-muted transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">{icon}</div>
-          <span className="font-medium text-sm">{title}</span>
-          {badge}
-        </div>
-        <ChevronDown
-          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
-        />
-      </button>
-      {isOpen && (
-        <div className="px-3 pb-3 pt-3 mt-1 bg-card rounded-md shadow-sm border">{children}</div>
-      )}
-    </div>
-  );
-}
-
-// Detail Row Component
-interface DetailRowProps {
-  label: string;
-  value: React.ReactNode;
-  icon?: React.ReactNode;
-  className?: string;
-}
-
-function DetailRow({ label, value, icon, className = '' }: Readonly<DetailRowProps>) {
-  return (
-    <div className={`flex items-center justify-between py-1.5 ${className}`}>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <div className="text-sm font-medium">{value}</div>
-    </div>
-  );
-}
-
-// Color Swatch Component
-interface ColorSwatchProps {
-  color: string;
-  label: string;
-}
-
-function ColorSwatch({ color, label }: Readonly<ColorSwatchProps>) {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className="w-6 h-6 rounded border shadow-md"
-        style={{ backgroundColor: color }}
-        title={color}
-      />
-      <div className="text-xs">
-        <div className="font-medium">{label}</div>
-        <div className="text-muted-foreground font-mono">{color}</div>
-      </div>
-    </div>
-  );
-}
-
-// Progress Bar Component
-interface ProgressBarProps {
-  value: number;
-  max: number;
-  label?: string;
-}
-
-function ProgressBar({ value, max, label }: Readonly<ProgressBarProps>) {
-  const percentage = Math.min((value / max) * 100, 100);
-  const colorClass =
-    percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-green-500';
-
-  return (
-    <div className="space-y-1">
-      {label && <div className="text-xs text-muted-foreground">{label}</div>}
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`h-full ${colorClass} transition-all duration-300`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{value} used</span>
-        <span>{max} max</span>
-      </div>
-    </div>
-  );
-}
-
 function formatMilliseconds(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || Number.isNaN(ms)) return 'N/A';
   return `${ms.toFixed(2)} ms`;
@@ -377,117 +270,6 @@ function nowMs(): number {
   return typeof globalThis.performance?.now === 'function'
     ? globalThis.performance.now()
     : Date.now();
-}
-
-// Status Badge Component
-interface StatusBadgeProps {
-  status: boolean;
-  trueLabel: string;
-  falseLabel: string;
-}
-
-function StatusBadge({ status, trueLabel, falseLabel }: Readonly<StatusBadgeProps>) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-        status
-          ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-          : 'bg-red-500/10 text-red-700 dark:text-red-400'
-      }`}
-    >
-      {status ? <Check className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-      {status ? trueLabel : falseLabel}
-    </span>
-  );
-}
-
-// WCAG Compliance Badge Component
-interface WCAGBadgeProps {
-  ratio: number;
-  size?: 'sm' | 'md' | 'lg';
-}
-
-function WCAGBadge({ ratio, size = 'md' }: Readonly<WCAGBadgeProps>) {
-  const meetsAAA = ratio >= 7;
-  const meetsAA = ratio >= 4.5;
-  const meetsAALarge = ratio >= 3;
-
-  const sizeClasses = {
-    sm: 'text-[10px] px-1.5 py-0.5',
-    md: 'text-xs px-2 py-1',
-    lg: 'text-sm px-3 py-1.5',
-  };
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <span
-        className={`inline-flex items-center gap-1 rounded-md font-bold ${sizeClasses[size]} ${
-          meetsAAA
-            ? 'bg-green-500 text-white'
-            : meetsAA
-              ? 'bg-green-400 text-white'
-              : meetsAALarge
-                ? 'bg-amber-500 text-white'
-                : 'bg-red-500 text-white'
-        }`}
-      >
-        {meetsAAA ? 'AAA' : meetsAA ? 'AA' : meetsAALarge ? 'AA-L' : 'Fail'}
-      </span>
-      <span className={`text-muted-foreground ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>
-        {ratio.toFixed(1)}:1
-      </span>
-    </div>
-  );
-}
-
-// Copy Button Component
-interface CopyButtonProps {
-  text: string;
-  label?: string;
-  className?: string;
-}
-
-function CopyButton({ text, label, className = '' }: Readonly<CopyButtonProps>) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy'); // NOSONAR: intentional fallback for older browsers
-      textarea.remove();
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }, [text]);
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleCopy}
-      className={`h-7 gap-1.5 text-xs ${className}`}
-    >
-      {copied ? (
-        <>
-          <Check className="w-3 h-3 text-green-500" />
-          <span className="text-green-500">Copied!</span>
-        </>
-      ) : (
-        <>
-          <ClipboardCopy className="w-3 h-3" />
-          {label && <span>{label}</span>}
-        </>
-      )}
-    </Button>
-  );
 }
 
 // Hex Dump View Component
