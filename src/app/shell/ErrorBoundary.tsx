@@ -13,21 +13,21 @@ import { createLogger } from '@/infra/logging/logger';
 
 const log = createLogger('ERROR');
 
-interface Props {
+type Props = {
   children: ReactNode;
   fallback?: ReactNode;
-}
+};
 
-interface State {
+type State = {
   hasError: boolean;
   error: Error | null;
-}
+};
 
 // Functional component for the error UI (to use hooks)
-function ErrorFallbackUI({
+const ErrorFallbackUI = ({
   error,
   onRetry,
-}: Readonly<{ error: Error | null; onRetry: () => void }>) {
+}: Readonly<{ error: Error | null; onRetry: () => void }>) => {
   const { t } = useTranslation();
 
   return (
@@ -74,7 +74,7 @@ function ErrorFallbackUI({
       </div>
     </div>
   );
-}
+};
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {

@@ -9,9 +9,9 @@ const _log = createLogger('ANIMATION');
 
 import type { AnimationOptions, AnimationPattern } from '../../../modules/animation/types';
 
-function resetCanvas2D(
+const resetCanvas2D = (
   canvas: HTMLCanvasElement | OffscreenCanvas
-): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null {
+): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   if ('setTransform' in ctx && typeof ctx.setTransform === 'function') {
@@ -24,12 +24,12 @@ function resetCanvas2D(
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   return ctx;
-}
+};
 
-function createCanvasLike(
+const createCanvasLike = (
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   targetCanvas?: HTMLCanvasElement | OffscreenCanvas
-): HTMLCanvasElement | OffscreenCanvas {
+): HTMLCanvasElement | OffscreenCanvas => {
   if (targetCanvas) {
     if (targetCanvas.width !== sourceCanvas.width) targetCanvas.width = sourceCanvas.width;
     if (targetCanvas.height !== sourceCanvas.height) targetCanvas.height = sourceCanvas.height;
@@ -48,12 +48,12 @@ function createCanvasLike(
   result.width = sourceCanvas.width;
   result.height = sourceCanvas.height;
   return result;
-}
+};
 
-function resolveEffectBounds(
+const resolveEffectBounds = (
   canvas: HTMLCanvasElement | OffscreenCanvas,
   options: Partial<AnimationOptions>
-): { x: number; y: number; width: number; height: number } {
+): { x: number; y: number; width: number; height: number } => {
   const raw = options.effectBounds;
   if (!raw) {
     return { x: 0, y: 0, width: canvas.width, height: canvas.height };
@@ -67,7 +67,7 @@ function resolveEffectBounds(
     return { x: 0, y: 0, width: canvas.width, height: canvas.height };
   }
   return { x, y, width, height };
-}
+};
 
 /**
  * Apply animation pattern to a frame

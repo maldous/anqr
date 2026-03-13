@@ -2,21 +2,21 @@ import { Capacitor } from '@capacitor/core';
 
 type ToastDuration = 'short' | 'long';
 
-interface ToastPluginLike {
+type ToastPluginLike = {
   show?: (options: {
     text: string;
     duration?: ToastDuration;
     position?: 'top' | 'center' | 'bottom';
   }) => Promise<void>;
-}
+};
 
 const DOM_TOAST_ID = 'anqr-native-toast';
 
-function getToastDurationMs(duration: ToastDuration): number {
+const getToastDurationMs = (duration: ToastDuration): number => {
   return duration === 'long' ? 3200 : 1800;
-}
+};
 
-function showDomToast(message: string, duration: ToastDuration): void {
+const showDomToast = (message: string, duration: ToastDuration): void => {
   if (typeof document === 'undefined') return;
 
   let node = document.getElementById(DOM_TOAST_ID);
@@ -56,12 +56,12 @@ function showDomToast(message: string, duration: ToastDuration): void {
     },
     getToastDurationMs(duration)
   );
-}
+};
 
-export async function showNativeToast(
+export const showNativeToast = async (
   message: string,
   duration: ToastDuration = 'short'
-): Promise<void> {
+): Promise<void> => {
   const text = String(message || '').trim();
   if (!text) return;
 
@@ -80,4 +80,4 @@ export async function showNativeToast(
   }
 
   showDomToast(text, duration);
-}
+};

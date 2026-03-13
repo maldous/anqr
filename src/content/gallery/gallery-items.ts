@@ -10,37 +10,37 @@ import { generatedGallerySections } from '@/content/generated/gallery-showcase.g
 
 export type { GalleryCategory } from '@/content/gallery/gallery-manifest';
 
-export interface GalleryItem {
+export type GalleryItem = {
   id: string;
   title: string;
   description: string;
   category: GalleryCategory;
   params: Record<string, string | number | boolean>;
   isAnimated?: boolean;
-}
+};
 
-export interface GallerySection {
+export type GallerySection = {
   id: GalleryCategory;
   title: string;
   description: string;
   icon: string;
   items: GalleryItem[];
-}
+};
 
 // Generated source of truth.
 export const gallerySections: GallerySection[] =
   generatedGallerySections as unknown as GallerySection[];
 
-function hashFnv1a(input: string): string {
+const hashFnv1a = (input: string): string => {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i += 1) {
     hash ^= input.codePointAt(i)!;
     hash = Math.imul(hash, 0x01000193);
   }
   return (hash >>> 0).toString(36);
-}
+};
 
-function buildGalleryCacheKey(sections: GallerySection[]): string {
+const buildGalleryCacheKey = (sections: GallerySection[]): string => {
   const seed = sections
     .map(
       (section) =>
@@ -50,7 +50,7 @@ function buildGalleryCacheKey(sections: GallerySection[]): string {
     )
     .join('|');
   return hashFnv1a(seed);
-}
+};
 
 const GALLERY_CACHE_KEY = buildGalleryCacheKey(gallerySections);
 

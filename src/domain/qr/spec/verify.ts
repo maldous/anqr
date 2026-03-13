@@ -17,11 +17,11 @@ const _log = createLogger('SPEC');
 export type { DarkModuleReader, QRVerifyResult } from './verify.types';
 import type { DarkModuleReader, QRVerifyResult } from './verify.types';
 
-function isFinderCoreCorrect(
+const isFinderCoreCorrect = (
   isDark: (r: number, c: number) => boolean,
   baseRow: number,
   baseCol: number
-): boolean {
+): boolean => {
   // Finder core is 7x7 with pattern:
   // - outer border dark
   // - inner border light
@@ -36,14 +36,14 @@ function isFinderCoreCorrect(
     }
   }
   return true;
-}
+};
 
-function isAlternatingLine(
+const isAlternatingLine = (
   isDark: (r: number, c: number) => boolean,
   row: number,
   colStart: number,
   colEnd: number
-): boolean {
+): boolean => {
   // Accept either phase, but require strict alternation.
   let prev = isDark(row, colStart);
   for (let c = colStart + 1; c <= colEnd; c++) {
@@ -52,14 +52,14 @@ function isAlternatingLine(
     prev = cur;
   }
   return true;
-}
+};
 
-function isAlternatingCol(
+const isAlternatingCol = (
   isDark: (r: number, c: number) => boolean,
   col: number,
   rowStart: number,
   rowEnd: number
-): boolean {
+): boolean => {
   let prev = isDark(rowStart, col);
   for (let r = rowStart + 1; r <= rowEnd; r++) {
     const cur = isDark(r, col);
@@ -67,7 +67,7 @@ function isAlternatingCol(
     prev = cur;
   }
   return true;
-}
+};
 
 export function verifyQRStructure(qr: DarkModuleReader, explicitVersion?: number): QRVerifyResult {
   const issues: string[] = [];
