@@ -4,7 +4,6 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
-import { parseColor } from '../color/color';
 import {
   isAlignmentPattern as isAlignmentPatternSpec,
   isFinderPattern as isFinderPatternSpec,
@@ -24,69 +23,50 @@ import {
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
-import { curveIntensity } from './pixel-matrix-utils';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from '../../../modules/qr-generator/types';
+import { adjustLumaPreserveChroma } from './scaled-render-helpers/adjust-luma-preserve-chroma';
+import { buildScaledPreserveFlags } from './scaled-render-helpers/build-scaled-preserve-flags';
+import { classifyScaledOverlayMode } from './scaled-render-helpers/classify-scaled-overlay-mode';
+import { computeDitherBackdropParams } from './scaled-render-helpers/compute-dither-backdrop-params';
+import { computeDitherDotParams } from './scaled-render-helpers/compute-dither-dot-params';
+import { computeScaledLocalVariance } from './scaled-render-helpers/compute-scaled-local-variance';
+import { computeSubpixelToneParams } from './scaled-render-helpers/compute-subpixel-tone-params';
+import { getScaledPreservationBlendTarget } from './scaled-render-helpers/get-scaled-preservation-blend-target';
+import { isFinderRegionFlag } from './scaled-render-helpers/is-finder-region-flag';
+import { isScaledPatternBoostModule } from './scaled-render-helpers/is-scaled-pattern-boost-module';
+import {
+  PATTERN_ALIGNMENT,
+  PATTERN_FIXED_DARK,
+  PATTERN_FINDER,
+  PATTERN_FINDER_SEPARATOR,
+  PATTERN_FORMAT,
+  PATTERN_TIMING,
+  PATTERN_VERSION,
+} from './scaled-render-helpers/pattern-flag-constants';
+import { sampleScaledModuleOverlayColor } from './scaled-render-helpers/sample-scaled-module-overlay-color';
+import { shouldForceScaledBinaryModule } from './scaled-render-helpers/should-force-scaled-binary-module';
+import type {
+  BlendPreservationCtx,
+  ContrastBoostFlags,
+  DitherBackdropParams,
+  DitherDotParams,
+  PatternBoostCtx,
+  PixelColor,
+  PixelGridCtx,
+  ScaledOverlayModeInfo,
+  ScaledPreserveFlags,
+  ShapeMaskCtx,
+  StructuralPreservationCtx,
+  SubpixelToneParams,
+} from './scaled-render-types';
 import { validateColor } from '../../../modules/qr-generator/utils';
 
 const log = createLogger('GENERATE');
-const PATTERN_FINDER = 1;
-const PATTERN_FINDER_SEPARATOR = 2;
-const PATTERN_TIMING = 4;
-const PATTERN_ALIGNMENT = 8;
-const PATTERN_FORMAT = 16;
-const PATTERN_VERSION = 32;
-const PATTERN_FIXED_DARK = 64;
-
-function isFinderRegionFlag(flags: number): boolean {
-  return (flags & (PATTERN_FINDER | PATTERN_FINDER_SEPARATOR)) !== 0;
-}
-
 function hash01(x: number, y: number, s: number): number {
   const n = Math.sin(x * 12.9898 + y * 78.233 + s * 37.719) * 43758.5453;
   return n - Math.floor(n);
 }
-
-function adjustLumaPreserveChroma(
-  c: PixelColor,
-  targetLuma: number,
-  chromaScale: number
-): { r: number; g: number; b: number } {
-  const gray = (c.r + c.g + c.b) / 3;
-  let r = gray + (c.r - gray) * chromaScale;
-  let g = gray + (c.g - gray) * chromaScale;
-  let b = gray + (c.b - gray) * chromaScale;
-  const currentLuma = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  const delta = (targetLuma - currentLuma) * 255;
-  r = Math.max(0, Math.min(255, r + delta));
-  g = Math.max(0, Math.min(255, g + delta));
-  b = Math.max(0, Math.min(255, b + delta));
-  return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
-}
 const scaledFunctionalMapCache = new Map<string, Uint8Array>();
-
-interface BlendPreservationCtx {
-  ctx: CanvasRenderingContext2D;
-  size: number;
-  marginPx: number;
-  effectiveModuleSize: number;
-  subPixelSize: number;
-  scaledSize: number;
-  moduleCount: number;
-  finderStrengthN: number;
-  blendPreservationMode: 'dither' | 'overlay';
-  isDitheredMode: boolean;
-  qr: { isDark(row: number, col: number): boolean };
-  colors: (RGB | null)[][];
-  getBlendTarget: (
-    mRow: number,
-    mCol: number,
-    sRow: number,
-    sCol: number
-  ) => { r: number; g: number; b: number };
-  sampleModuleColor: (row: number, col: number) => RGB | null;
-  estimatePaperLuma: (sampled: RGB | null) => number;
-  blendChannelToward: (src: number, target: number, t: number) => number;
-}
 
 function computeInkCoverage(
   bctx: BlendPreservationCtx,
@@ -223,21 +203,6 @@ function getScaledFunctionalMap(moduleCount: number, version: number): Uint8Arra
   return map;
 }
 
-type PixelColor = RGB;
-interface ShapeMaskCtx {
-  ctx: CanvasRenderingContext2D;
-  size: number;
-  marginPx: number;
-  moduleCount: number;
-  effectiveModuleSize: number;
-  qr: QRCodeInstance;
-  config: QRGeneratorConfig;
-  effectiveBgColor: string;
-  getPatternFlags: (row: number, col: number) => number;
-  createCanvasFn: (w: number, h: number) => Promise<HTMLCanvasElement | OffscreenCanvas>;
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
-}
-
 function isStructuralPatternModule(flags: number): boolean {
   return (
     isFinderRegionFlag(flags) ||
@@ -338,29 +303,6 @@ async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
 
   ctx.globalCompositeOperation = 'source-over';
   if (releaseCanvasFn) releaseCanvasFn(maskCanvas);
-}
-
-interface StructuralPreservationCtx {
-  ctx: CanvasRenderingContext2D;
-  marginPx: number;
-  moduleCount: number;
-  effectiveModuleSize: number;
-  qr: QRCodeInstance;
-  config: QRGeneratorConfig;
-  version: number;
-  forceBinaryFunctionPatterns: boolean;
-  preserveFinders: boolean;
-  preserveTiming: boolean;
-  preserveAlignment: boolean;
-  protectFormat: boolean;
-  protectVersion: boolean;
-  effectiveFgColor: string;
-  effectiveBgColor: string;
-  useGradient: boolean;
-  gradientFill: string | CanvasGradient | null;
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;
-  getPatternFlags: (row: number, col: number) => number;
-  debug: boolean;
 }
 
 function resolveDarkFillStyle(
@@ -634,46 +576,6 @@ function drawPreservedStructuralPatterns(spctx: StructuralPreservationCtx): void
   preserveFormatVersionModules(spctx);
 }
 
-interface PixelGridCtx {
-  // Canvas & layout
-  ctx: CanvasRenderingContext2D;
-  marginPx: number;
-  subPixelSize: number;
-  scale: number;
-  scaledSize: number;
-  // Data
-  matrix: boolean[][];
-  colors: (PixelColor | null)[][];
-  // Mode flags
-  isDitheredMode: boolean;
-  needsBothDarkAndLightColors: boolean;
-  needsExplicitLightModules: boolean;
-  useColorRendering: boolean;
-  useGradient: boolean;
-  qrFirstMode: boolean;
-  debug: boolean;
-  // Colors
-  effectiveFgColor: string;
-  effectiveBgColor: string;
-  gradientFill: string | CanvasGradient | null;
-  // Subpixel tone rails
-  subpixelDarkTargetLuma: number;
-  subpixelDarkChroma: number;
-  subpixelLightTargetLuma: number;
-  subpixelLightChroma: number;
-  // Dither params
-  seed: number;
-  dotMinRadiusPx: number;
-  dotMaxRadiusPx: number;
-  lightGrainDensity: number;
-  lightGrainAlpha: number;
-  // Callbacks
-  quantizeRadius: (r: number) => number;
-  localVariance: (x: number, y: number) => number;
-  drawDitherDot: (x: number, y: number, radius: number, jitterN: number) => void;
-  shouldForceBinaryModule: (row: number, col: number) => boolean;
-}
-
 function renderDitheredLightPixel(
   pgctx: PixelGridCtx,
   x: number,
@@ -905,66 +807,6 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   }
 }
 
-interface ScaledPreserveFlags {
-  preserveFinders: boolean;
-  preserveTiming: boolean;
-  preserveAlignment: boolean;
-  protectFormat: boolean;
-  protectVersion: boolean;
-  preserveFixedDark: boolean;
-}
-
-function buildScaledPreserveFlags(config: QRGeneratorConfig): ScaledPreserveFlags {
-  const preserveFunctional = config.preserveFunctionalPatterns === true;
-  return {
-    preserveFinders: config.preserveFinders !== false,
-    preserveTiming: preserveFunctional
-      ? config.preserveTiming !== false
-      : config.preserveTiming === true,
-    preserveAlignment: preserveFunctional
-      ? config.preserveAlignment !== false
-      : config.preserveAlignment === true,
-    protectFormat: preserveFunctional
-      ? config.protectFormatInfo !== false
-      : config.protectFormatInfo === true,
-    protectVersion: preserveFunctional
-      ? config.protectVersionInfo !== false
-      : config.protectVersionInfo === true,
-    preserveFixedDark: preserveFunctional,
-  };
-}
-
-function shouldForceScaledBinaryModule(flags: number, pf: ScaledPreserveFlags): boolean {
-  if (flags === 0) return false;
-  if ((flags & PATTERN_FIXED_DARK) !== 0) return pf.preserveFixedDark;
-  if (isFinderRegionFlag(flags)) return pf.preserveFinders;
-  if ((flags & PATTERN_TIMING) !== 0) return pf.preserveTiming;
-  if ((flags & PATTERN_ALIGNMENT) !== 0) return pf.preserveAlignment;
-  if ((flags & PATTERN_FORMAT) !== 0) return pf.protectFormat;
-  if ((flags & PATTERN_VERSION) !== 0) return pf.protectVersion;
-  return false;
-}
-
-interface ContrastBoostFlags {
-  finderContrastBoost: boolean;
-  alignmentContrastBoost: boolean;
-  timingContrastBoost: boolean;
-  formatContrastBoost: boolean;
-  versionContrastBoost: boolean;
-  fixedDarkContrastBoost: boolean;
-}
-
-function isScaledPatternBoostModule(flags: number, bf: ContrastBoostFlags): boolean {
-  return (
-    (bf.finderContrastBoost && isFinderRegionFlag(flags)) ||
-    (bf.alignmentContrastBoost && (flags & PATTERN_ALIGNMENT) !== 0) ||
-    (bf.timingContrastBoost && (flags & PATTERN_TIMING) !== 0) ||
-    (bf.formatContrastBoost && (flags & PATTERN_FORMAT) !== 0) ||
-    (bf.versionContrastBoost && (flags & PATTERN_VERSION) !== 0) ||
-    (bf.fixedDarkContrastBoost && (flags & PATTERN_FIXED_DARK) !== 0)
-  );
-}
-
 function enforceScaledQuietZoneClean(
   ctx: CanvasRenderingContext2D,
   marginPx: number,
@@ -1012,104 +854,6 @@ function drawScaledStrictFunctionOverlay(
       ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
     }
   }
-}
-
-function computeScaledLocalVariance(colors: (PixelColor | null)[][], x: number, y: number): number {
-  const c = colors[y]?.[x] as PixelColor | undefined;
-  if (!c) return 0;
-  const luma = (p: PixelColor) => (0.299 * p.r + 0.587 * p.g + 0.114 * p.b) / 255;
-  const center = luma(c);
-  let sum = 0;
-  let n = 0;
-  const nb = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1],
-  ];
-  for (const [ox, oy] of nb) {
-    const p = colors[y + oy]?.[x + ox] as PixelColor | undefined;
-    if (!p) continue;
-    const d = luma(p) - center;
-    sum += d * d;
-    n++;
-  }
-  return n > 0 ? Math.min(1, Math.sqrt(sum / n) * 3) : 0;
-}
-
-function sampleScaledModuleOverlayColor(
-  colors: (PixelColor | null)[][],
-  scaledSize: number,
-  scale: number,
-  row: number,
-  col: number
-): PixelColor | null {
-  if (!colors?.length) return null;
-  const px = Math.max(0, Math.min(scaledSize - 1, Math.floor((col + 0.5) * scale)));
-  const py = Math.max(0, Math.min(scaledSize - 1, Math.floor((row + 0.5) * scale)));
-  return (colors[py]?.[px] as PixelColor | undefined) ?? null;
-}
-
-function getScaledPreservationBlendTarget(
-  qr: QRCodeInstance,
-  colors: (PixelColor | null)[][],
-  matrix: boolean[][],
-  scaledSize: number,
-  scale: number,
-  isDitheredMode: boolean,
-  moduleRow: number,
-  moduleCol: number,
-  scaledRow: number,
-  scaledCol: number
-): { r: number; g: number; b: number } {
-  const moduleDark = qr.isDark(moduleRow, moduleCol);
-  const sampled =
-    (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
-    sampleScaledModuleOverlayColor(colors, scaledSize, scale, moduleRow, moduleCol);
-  if (!sampled) {
-    return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
-  }
-  const pixelDark = matrix[scaledRow]?.[scaledCol] === true;
-  if (isDitheredMode) {
-    if (moduleDark) {
-      return pixelDark
-        ? adjustLumaPreserveChroma(sampled, 0.04, 1.65)
-        : adjustLumaPreserveChroma(sampled, 0.18, 1.3);
-    }
-    return pixelDark
-      ? adjustLumaPreserveChroma(sampled, 0.9, 0.9)
-      : adjustLumaPreserveChroma(sampled, 0.97, 0.8);
-  }
-  if (moduleDark) {
-    return pixelDark
-      ? adjustLumaPreserveChroma(sampled, 0.08, 1.28)
-      : adjustLumaPreserveChroma(sampled, 0.2, 1.14);
-  }
-  return pixelDark
-    ? adjustLumaPreserveChroma(sampled, 0.88, 0.95)
-    : adjustLumaPreserveChroma(sampled, 0.97, 0.84);
-}
-
-interface PatternBoostCtx {
-  ctx: CanvasRenderingContext2D;
-  size: number;
-  marginPx: number;
-  effectiveModuleSize: number;
-  subPixelSize: number;
-  scaledSize: number;
-  moduleCount: number;
-  scale: number;
-  finderStrengthN: number;
-  blendPreservations: boolean;
-  blendPreservationMode: 'dither' | 'overlay';
-  isDitheredMode: boolean;
-  bgLuma: number;
-  ditherPaperOverlayMix: number;
-  qr: QRCodeInstance;
-  colors: (PixelColor | null)[][];
-  matrix: boolean[][];
-  functionalMap: Uint8Array;
-  boostFlags: ContrastBoostFlags;
 }
 
 function drawScaledPatternContrastBoostOverlay(bctx: PatternBoostCtx): void {
@@ -1223,110 +967,6 @@ function drawScaledDitherBackdrop(
   ctx.restore();
   ctx.imageSmoothingEnabled = prevSmoothingEnabled;
   ctx.imageSmoothingQuality = prevSmoothingQuality;
-}
-
-interface ScaledOverlayModeInfo {
-  isDitheredMode: boolean;
-  forceBinaryFunctionPatterns: boolean;
-  isSubpixelMode: boolean;
-  needsBothDarkAndLightColors: boolean;
-}
-
-function classifyScaledOverlayMode(config: QRGeneratorConfig): ScaledOverlayModeInfo {
-  const isDitheredMode =
-    config.overlayMode === 'dithered' ||
-    config.overlayMode === 'blue_noise' ||
-    config.overlayMode === 'blue-noise';
-  const isSubpixelMode =
-    config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
-  return {
-    isDitheredMode,
-    forceBinaryFunctionPatterns: isDitheredMode,
-    isSubpixelMode,
-    needsBothDarkAndLightColors: isSubpixelMode,
-  };
-}
-
-interface SubpixelToneParams {
-  subpixelDarkTargetLuma: number;
-  subpixelLightTargetLuma: number;
-  subpixelDarkChroma: number;
-  subpixelLightChroma: number;
-}
-
-function computeSubpixelToneParams(config: QRGeneratorConfig): SubpixelToneParams {
-  const strength = curveIntensity(config.overlayIntensity ?? 100);
-  return {
-    subpixelDarkTargetLuma: 0.2 - strength * 0.1,
-    subpixelLightTargetLuma: 0.8 + strength * 0.15,
-    subpixelDarkChroma: 1.15 + strength * 0.35,
-    subpixelLightChroma: 0.92 - strength * 0.24,
-  };
-}
-
-interface DitherBackdropParams {
-  ditherBackdropAlpha: number;
-  ditherBackdropWash: number;
-  bgLuma: number;
-  ditherPaperOverlayMix: number;
-}
-
-function computeDitherBackdropParams(
-  config: QRGeneratorConfig,
-  effectiveBgColor: string,
-  isDitheredMode: boolean,
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
-  useColorRendering: boolean
-): DitherBackdropParams {
-  const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
-  const overlayTone = curveIntensity(config.overlayIntensity ?? 100);
-  const adaptiveBackdropWash = Math.max(0.06, Math.min(0.22, 0.06 + overlayTone * 0.14));
-  const ditherBackdropWash = Math.max(
-    0,
-    Math.min(1, config.ditherBackdropWash ?? adaptiveBackdropWash)
-  );
-  const bgRgb = parseColor(effectiveBgColor) ?? { r: 255, g: 255, b: 255, a: 1 };
-  const bgLuma = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
-  const ditherPaperOverlayMix =
-    isDitheredMode && overlayCanvas && useColorRendering
-      ? Math.max(0, Math.min(1, ditherBackdropAlpha * (1 - ditherBackdropWash)))
-      : 0;
-  return { ditherBackdropAlpha, ditherBackdropWash, bgLuma, ditherPaperOverlayMix };
-}
-
-interface DitherDotParams {
-  dotMinRadiusPx: number;
-  dotMaxRadiusPx: number;
-  lightGrainDensity: number;
-  lightGrainAlpha: number;
-  seed: number;
-}
-
-function computeDitherDotParams(config: QRGeneratorConfig, subPixelSize: number): DitherDotParams {
-  const defaultDotMin = subPixelSize * 0.14;
-  const defaultDotMax = subPixelSize * 0.62;
-  const dotMinRadiusPx = Math.max(
-    0.02,
-    Math.min(subPixelSize * 0.42, config.dotMinRadiusPx ?? defaultDotMin)
-  );
-  const dotMaxRadiusPx = Math.max(
-    dotMinRadiusPx + Math.max(0.01, subPixelSize * 0.08),
-    Math.min(subPixelSize * 0.78, config.dotMaxRadiusPx ?? defaultDotMax)
-  );
-  const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;
-  return {
-    dotMinRadiusPx,
-    dotMaxRadiusPx,
-    lightGrainDensity: Math.max(
-      0,
-      Math.min(0.025, (config.lightGrainDensity ?? 0.004) * qrFirstLightBoost)
-    ),
-    lightGrainAlpha: Math.max(
-      0,
-      Math.min(0.1, (config.lightGrainAlpha ?? 0.05) * (config.qrFirstMode ? 1.15 : 1))
-    ),
-    seed: config.seed ?? 1337,
-  };
 }
 
 /**
