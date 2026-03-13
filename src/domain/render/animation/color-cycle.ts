@@ -9,12 +9,6 @@ const _log = createLogger('ANIMATION');
 
 import { hslToRgb } from '../color/color';
 
-function clampToByte(value: number): number {
-  if (value <= 0) return 0;
-  if (value >= 255) return 255;
-  return Math.round(value);
-}
-
 /**
  * Apply color cycling effect to a frame
  */
@@ -24,6 +18,12 @@ export function applyColorCycle(
   totalFrames: number,
   targetCanvas?: HTMLCanvasElement | OffscreenCanvas
 ): HTMLCanvasElement | OffscreenCanvas {
+  const clampToByte = (value: number) => {
+    if (value <= 0) return 0;
+    if (value >= 255) return 255;
+    return Math.round(value);
+  };
+
   let result: HTMLCanvasElement | OffscreenCanvas;
   if (targetCanvas) {
     result = targetCanvas;

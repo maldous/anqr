@@ -2,6 +2,7 @@
  * Share Links Module - Types
  * Types for URL sharing and embed generation
  */
+export type { EmbedOptions } from './embed-options';
 
 import { createLogger } from '../../infra/logging/logger';
 
@@ -238,15 +239,4 @@ export interface ShareConfig {
 
   // Module size (for server-side generation)
   modulePx?: number;
-}
-
-/**
- * Options for embed code generation
- */
-export interface EmbedOptions {
-  width?: number;
-  height?: number;
-  responsive?: boolean;
-  showBorder?: boolean;
-  includeLink?: boolean;
 }

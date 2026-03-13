@@ -1,3 +1,5 @@
+import type { GalleryCategory } from './gallery-category';
+
 /**
  * Lightweight Gallery section manifest used by non-gallery routes/components.
  *
@@ -5,17 +7,7 @@
  * gallery categories without importing the full generated showcase payload.
  */
 
-export type GalleryCategory =
-  | 'plain'
-  | 'styles'
-  | 'colors'
-  | 'image-overlay'
-  | 'animation-overlay'
-  | 'blend-modes'
-  | 'color-modes'
-  | 'encoding'
-  | 'power-combos'
-  | 'qr-art';
+export type { GalleryCategory } from './gallery-category';
 
 export interface GallerySectionManifestItem {
   id: GalleryCategory;

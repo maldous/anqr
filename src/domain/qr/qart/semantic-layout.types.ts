@@ -1,14 +1,6 @@
 import { type ECCLevel } from './bit-mapping';
-
-/**
- * A range of bits (in the pre-interleaved data stream)
- */
-export interface BitRange {
-  /** Start bit index (inclusive, 0-indexed) */
-  startBit: number;
-  /** End bit index (exclusive) */
-  endBit: number;
-}
+import type { BitRange } from './bit-range';
+export type { BitRange } from './bit-range';
 
 /**
  * Exact bit positions for QR semantic boundaries

@@ -1,3 +1,5 @@
+export type { InterpolationMode } from './interpolation-mode';
+
 // ============================================
 // TYPES
 // ============================================
@@ -10,5 +12,3 @@ export type AnimationPattern =
   | 'shimmer'
   | 'drift'
   | 'color_cycle';
-
-export type InterpolationMode = 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out';

@@ -1,7 +1,2 @@
-let sharedHashCanvasInUse = false;
-export function getSharedHashCanvasInUse() {
-  return sharedHashCanvasInUse;
-}
-export function setSharedHashCanvasInUse(v: boolean) {
-  sharedHashCanvasInUse = v;
-}
+export { getSharedHashCanvasInUse } from './get-shared-hash-canvas-in-use';
+export { setSharedHashCanvasInUse } from './set-shared-hash-canvas-in-use';

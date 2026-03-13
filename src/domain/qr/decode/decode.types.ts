@@ -1,4 +1,6 @@
 import { type DecodedSegmentInfo } from '../../../modules/qr-decoder/types';
+import type { DecodedEncodingMode } from './decoded-encoding-mode';
+export type { DecodedEncodingMode } from './decoded-encoding-mode';
 
 /**
  * Decode the data codewords into text plus raw bytes.
@@ -8,14 +10,6 @@ import { type DecodedSegmentInfo } from '../../../modules/qr-decoder/types';
  * - Our generator can also emit raw byte payloads (low-byte stringToBytes).
  * - For analyzer reproduction, we must preserve the exact bytes, not a re-encoded UTF-8 string.
  */
-export type DecodedEncodingMode =
-  | 'numeric'
-  | 'alphanumeric'
-  | 'byte'
-  | 'kanji'
-  | 'mixed'
-  | 'unknown';
-
 export interface DecodedDataResult {
   text: string;
   bytes: Uint8Array;
