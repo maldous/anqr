@@ -1,17 +1,17 @@
 import type { TFunction } from 'i18next';
+import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import type { QRState } from '@/store/qr-store';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-interface BizcardEditorProps {
+type BizcardEditorProps = {
   payload: QRState['payload'];
   setPayloadBizCard: QRState['setPayloadBizCard'];
   t: TFunction;
-}
+};
 
-export function BizcardEditor({ payload, setPayloadBizCard, t }: Readonly<BizcardEditorProps>) {
+export const BizcardEditor = ({ payload, setPayloadBizCard, t }: Readonly<BizcardEditorProps>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -117,4 +117,4 @@ export function BizcardEditor({ payload, setPayloadBizCard, t }: Readonly<Bizcar
       <p className="text-xs text-muted-foreground">{t('hints.bizcardLegacy')}</p>
     </div>
   );
-}
+};

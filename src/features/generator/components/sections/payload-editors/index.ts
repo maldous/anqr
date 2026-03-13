@@ -1,6 +1,15 @@
 export { BizcardEditor } from './bizcard-editor';
+export { BluetoothEditor } from './bluetooth-editor';
+export { CalendarSubscriptionEditor } from './calendar-subscription-editor';
 export { EmailEditor } from './email-editor';
+export { EventEditor } from './event-editor';
+export { EventRsvpEditor } from './event-rsvp-editor';
 export { MecardEditor } from './mecard-editor';
+export { MessagingLinkEditor } from './messaging-link-editor';
+export { PlainTextEditor } from './plain-text-editor';
 export { SmsEditor } from './sms-editor';
+export { SocialProfileEditor } from './social-profile-editor';
+export { TelEditor } from './tel-editor';
+export { UrlEditor } from './url-editor';
 export { VcardEditor } from './vcard-editor';
 export { WifiEditor } from './wifi-editor';

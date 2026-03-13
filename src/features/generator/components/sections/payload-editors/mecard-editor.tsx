@@ -1,18 +1,18 @@
 import type { TFunction } from 'i18next';
+import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidEmail, isValidPhone } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-interface MecardEditorProps {
+type MecardEditorProps = {
   payload: QRState['payload'];
   setPayloadMeCard: QRState['setPayloadMeCard'];
   t: TFunction;
-}
+};
 
-export function MecardEditor({ payload, setPayloadMeCard, t }: Readonly<MecardEditorProps>) {
+export const MecardEditor = ({ payload, setPayloadMeCard, t }: Readonly<MecardEditorProps>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -134,4 +134,4 @@ export function MecardEditor({ payload, setPayloadMeCard, t }: Readonly<MecardEd
       </div>
     </div>
   );
-}
+};

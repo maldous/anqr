@@ -1,18 +1,18 @@
 import type { TFunction } from 'i18next';
+import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidEmail, isValidPhone, isValidUrl } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-interface VcardEditorProps {
+type VcardEditorProps = {
   payload: QRState['payload'];
   setPayloadVCard: QRState['setPayloadVCard'];
   t: TFunction;
-}
+};
 
-export function VcardEditor({ payload, setPayloadVCard, t }: Readonly<VcardEditorProps>) {
+export const VcardEditor = ({ payload, setPayloadVCard, t }: Readonly<VcardEditorProps>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -122,4 +122,4 @@ export function VcardEditor({ payload, setPayloadVCard, t }: Readonly<VcardEdito
       </div>
     </div>
   );
-}
+};

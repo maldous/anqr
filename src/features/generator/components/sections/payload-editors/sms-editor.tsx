@@ -1,19 +1,19 @@
 import type { TFunction } from 'i18next';
+import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidPhone } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Textarea } from '@/ui/primitives/textarea';
 
-interface SmsEditorProps {
+type SmsEditorProps = {
   payload: QRState['payload'];
   setPayloadSms: QRState['setPayloadSms'];
   t: TFunction;
-}
+};
 
-export function SmsEditor({ payload, setPayloadSms, t }: Readonly<SmsEditorProps>) {
+export const SmsEditor = ({ payload, setPayloadSms, t }: Readonly<SmsEditorProps>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -58,4 +58,4 @@ export function SmsEditor({ payload, setPayloadSms, t }: Readonly<SmsEditorProps
       </div>
     </div>
   );
-}
+};

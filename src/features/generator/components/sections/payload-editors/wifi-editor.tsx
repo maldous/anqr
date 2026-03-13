@@ -1,8 +1,8 @@
 import type { TFunction } from 'i18next';
+import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidSSID } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import {
@@ -14,13 +14,13 @@ import {
 } from '@/ui/primitives/select';
 import { Switch } from '@/ui/primitives/switch';
 
-interface WifiEditorProps {
+type WifiEditorProps = {
   payload: QRState['payload'];
   setPayloadWifi: QRState['setPayloadWifi'];
   t: TFunction;
-}
+};
 
-export function WifiEditor({ payload, setPayloadWifi, t }: Readonly<WifiEditorProps>) {
+export const WifiEditor = ({ payload, setPayloadWifi, t }: Readonly<WifiEditorProps>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -101,4 +101,4 @@ export function WifiEditor({ payload, setPayloadWifi, t }: Readonly<WifiEditorPr
       </div>
     </div>
   );
-}
+};
