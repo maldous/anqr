@@ -6,13 +6,15 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-type VcardEditorProps = {
+export const VcardEditor = ({
+  payload,
+  setPayloadVCard,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadVCard: QRState['setPayloadVCard'];
   t: TFunction;
-};
-
-export const VcardEditor = ({ payload, setPayloadVCard, t }: Readonly<VcardEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

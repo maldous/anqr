@@ -14,13 +14,15 @@ import {
 } from '@/ui/primitives/select';
 import { Switch } from '@/ui/primitives/switch';
 
-type WifiEditorProps = {
+export const WifiEditor = ({
+  payload,
+  setPayloadWifi,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadWifi: QRState['setPayloadWifi'];
   t: TFunction;
-};
-
-export const WifiEditor = ({ payload, setPayloadWifi, t }: Readonly<WifiEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

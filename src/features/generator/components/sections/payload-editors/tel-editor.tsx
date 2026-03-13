@@ -6,13 +6,15 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-type TelEditorProps = {
+export const TelEditor = ({
+  payload,
+  setPayloadTel,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadTel: QRState['setPayloadTel'];
   t: TFunction;
-};
-
-export const TelEditor = ({ payload, setPayloadTel, t }: Readonly<TelEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-2">
       <Label>

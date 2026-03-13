@@ -5,21 +5,19 @@ import type { QRState } from '@/store/qr-store';
 import { Label } from '@/ui/primitives/label';
 import { Textarea } from '@/ui/primitives/textarea';
 
-type PlainTextEditorProps = {
-  payload: QRState['payload'];
-  setPayloadText: QRState['setPayloadText'];
-  setShowStartupHighlight: (show: boolean) => void;
-  showStartupHighlight: boolean;
-  t: TFunction;
-};
-
 export const PlainTextEditor = ({
   payload,
   setPayloadText,
   setShowStartupHighlight,
   showStartupHighlight,
   t,
-}: Readonly<PlainTextEditorProps>) => {
+}: Readonly<{
+  payload: QRState['payload'];
+  setPayloadText: QRState['setPayloadText'];
+  setShowStartupHighlight: (show: boolean) => void;
+  showStartupHighlight: boolean;
+  t: TFunction;
+}>) => {
   return (
     <div className={`space-y-2 ${showStartupHighlight ? 'p-1 -m-1' : ''}`}>
       <Label>

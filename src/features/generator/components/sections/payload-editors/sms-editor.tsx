@@ -7,13 +7,15 @@ import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Textarea } from '@/ui/primitives/textarea';
 
-type SmsEditorProps = {
+export const SmsEditor = ({
+  payload,
+  setPayloadSms,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadSms: QRState['setPayloadSms'];
   t: TFunction;
-};
-
-export const SmsEditor = ({ payload, setPayloadSms, t }: Readonly<SmsEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

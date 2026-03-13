@@ -1,15 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-type CollapsibleSectionProps = {
-  title: string;
-  icon: React.ReactNode;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-  badge?: React.ReactNode;
-  testId?: string;
-};
-
 export const CollapsibleSection = ({
   title,
   icon,
@@ -17,7 +8,14 @@ export const CollapsibleSection = ({
   children,
   badge,
   testId,
-}: Readonly<CollapsibleSectionProps>) => {
+}: Readonly<{
+  title: string;
+  icon: React.ReactNode;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  badge?: React.ReactNode;
+  testId?: string;
+}>) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (

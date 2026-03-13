@@ -1,9 +1,10 @@
-type WCAGBadgeProps = {
+export const WCAGBadge = ({
+  ratio,
+  size = 'md',
+}: Readonly<{
   ratio: number;
   size?: 'sm' | 'md' | 'lg';
-};
-
-export const WCAGBadge = ({ ratio, size = 'md' }: Readonly<WCAGBadgeProps>) => {
+}>) => {
   const meetsAAA = ratio >= 7;
   const meetsAA = ratio >= 4.5;
   const meetsAALarge = ratio >= 3;

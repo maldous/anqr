@@ -28,11 +28,7 @@ import { languages } from '@/app/i18n';
 const WELCOME_VERSION = '2026.02.01';
 const STORAGE_KEY = 'anqr-welcome-seen';
 
-interface WelcomeModalProps {
-  readonly onClose?: () => void;
-}
-
-export function WelcomeModal({ onClose }: WelcomeModalProps) {
+export function WelcomeModal({ onClose }: { readonly onClose?: () => void }) {
   const { t, i18n } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);

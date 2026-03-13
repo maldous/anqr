@@ -8,17 +8,15 @@ import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Textarea } from '@/ui/primitives/textarea';
 
-type EventRsvpEditorProps = {
-  payload: QRState['payload'];
-  setPayloadEventRsvp: QRState['setPayloadEventRsvp'];
-  t: TFunction;
-};
-
 export const EventRsvpEditor = ({
   payload,
   setPayloadEventRsvp,
   t,
-}: Readonly<EventRsvpEditorProps>) => {
+}: Readonly<{
+  payload: QRState['payload'];
+  setPayloadEventRsvp: QRState['setPayloadEventRsvp'];
+  t: TFunction;
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

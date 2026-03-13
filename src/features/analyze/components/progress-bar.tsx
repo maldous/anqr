@@ -1,10 +1,12 @@
-type ProgressBarProps = {
+export const ProgressBar = ({
+  value,
+  max,
+  label,
+}: Readonly<{
   value: number;
   max: number;
   label?: string;
-};
-
-export const ProgressBar = ({ value, max, label }: Readonly<ProgressBarProps>) => {
+}>) => {
   const percentage = Math.min((value / max) * 100, 100);
   const colorClass =
     percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-green-500';

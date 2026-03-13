@@ -6,17 +6,15 @@ import {
   ECC_CAPACITIES_NUMERIC,
 } from '@/modules/qr-spec';
 
-type CapacityByModeTableProps = {
-  version: number;
-  eccLevel: ECCLevel;
-  currentBytes?: number;
-};
-
 export const CapacityByModeTable = ({
   version,
   eccLevel,
   currentBytes,
-}: Readonly<CapacityByModeTableProps>) => {
+}: Readonly<{
+  version: number;
+  eccLevel: ECCLevel;
+  currentBytes?: number;
+}>) => {
   const versionIndex = version - 1;
   const capacities = [
     {

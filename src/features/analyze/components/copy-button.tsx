@@ -2,13 +2,15 @@ import { useCallback, useState } from 'react';
 import { Check, ClipboardCopy } from 'lucide-react';
 import { Button } from '@/ui/primitives/button';
 
-type CopyButtonProps = {
+export const CopyButton = ({
+  text,
+  label,
+  className = '',
+}: Readonly<{
   text: string;
   label?: string;
   className?: string;
-};
-
-export const CopyButton = ({ text, label, className = '' }: Readonly<CopyButtonProps>) => {
+}>) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {

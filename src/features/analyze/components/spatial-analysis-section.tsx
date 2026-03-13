@@ -5,19 +5,17 @@ import { CollapsibleSection } from '@/features/analyze/components/collapsible-se
 import { DetailRow } from '@/features/analyze/components/detail-row';
 import { StatusBadge } from '@/features/analyze/components/status-badge';
 
-type SpatialAnalysisSectionProps = {
-  estimatedModulePx: number | null;
-  geometry: QRAnalysisResult['geometry'];
-  quietZone: QRAnalysisResult['quietZone'];
-  t: TFunction;
-};
-
 export const SpatialAnalysisSection = ({
   estimatedModulePx,
   geometry,
   quietZone,
   t,
-}: Readonly<SpatialAnalysisSectionProps>) => {
+}: Readonly<{
+  estimatedModulePx: number | null;
+  geometry: QRAnalysisResult['geometry'];
+  quietZone: QRAnalysisResult['quietZone'];
+  t: TFunction;
+}>) => {
   return (
     <CollapsibleSection
       title={t('analyze.spatialAnalysis', 'Spatial Analysis')}

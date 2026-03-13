@@ -7,13 +7,15 @@ import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Textarea } from '@/ui/primitives/textarea';
 
-type EventEditorProps = {
+export const EventEditor = ({
+  payload,
+  setPayloadEvent,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadEvent: QRState['setPayloadEvent'];
   t: TFunction;
-};
-
-export const EventEditor = ({ payload, setPayloadEvent, t }: Readonly<EventEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

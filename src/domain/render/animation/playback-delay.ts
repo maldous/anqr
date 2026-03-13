@@ -1,11 +1,5 @@
 import type { AnimationFrame } from '../../../modules/animation/types';
 
-interface ResolveAnimationFrameDelayOptions {
-  useSourceFrameDelays: boolean;
-  gifMaxFps: number;
-  fallbackDelayMs: number;
-}
-
 /**
  * Resolve frame delay for preview/export playback.
  * Keeps behavior consistent across app surfaces and share URLs.
@@ -13,7 +7,11 @@ interface ResolveAnimationFrameDelayOptions {
 export function resolveAnimationFrameDelay(
   frames: AnimationFrame[],
   frameIndex: number,
-  options: ResolveAnimationFrameDelayOptions
+  options: {
+    useSourceFrameDelays: boolean;
+    gifMaxFps: number;
+    fallbackDelayMs: number;
+  }
 ): number {
   const { useSourceFrameDelays, gifMaxFps, fallbackDelayMs } = options;
 

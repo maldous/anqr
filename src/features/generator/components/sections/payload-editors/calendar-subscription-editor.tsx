@@ -6,17 +6,15 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-type CalendarSubscriptionEditorProps = {
-  payload: QRState['payload'];
-  setPayloadCalendarSub: QRState['setPayloadCalendarSub'];
-  t: TFunction;
-};
-
 export const CalendarSubscriptionEditor = ({
   payload,
   setPayloadCalendarSub,
   t,
-}: Readonly<CalendarSubscriptionEditorProps>) => {
+}: Readonly<{
+  payload: QRState['payload'];
+  setPayloadCalendarSub: QRState['setPayloadCalendarSub'];
+  t: TFunction;
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

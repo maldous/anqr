@@ -1,12 +1,14 @@
 import { Check, XCircle } from 'lucide-react';
 
-type StatusBadgeProps = {
+export const StatusBadge = ({
+  status,
+  trueLabel,
+  falseLabel,
+}: Readonly<{
   status: boolean;
   trueLabel: string;
   falseLabel: string;
-};
-
-export const StatusBadge = ({ status, trueLabel, falseLabel }: Readonly<StatusBadgeProps>) => {
+}>) => {
   return (
     <span
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${

@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/ui/primitives/button';
 import { CopyButton } from '@/features/analyze/components/copy-button';
 
-type HexDumpViewProps = {
+export const HexDumpView = ({
+  bytes,
+  maxRows = 16,
+}: Readonly<{
   bytes: Uint8Array;
   maxRows?: number;
-};
-
-export const HexDumpView = ({ bytes, maxRows = 16 }: Readonly<HexDumpViewProps>) => {
+}>) => {
   const [expanded, setExpanded] = useState(false);
   const bytesPerRowDesktop = 16;
   const bytesPerRowMobile = 8;

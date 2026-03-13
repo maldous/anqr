@@ -1,9 +1,10 @@
-type ColorSwatchProps = {
+export const ColorSwatch = ({
+  color,
+  label,
+}: Readonly<{
   color: string;
   label: string;
-};
-
-export const ColorSwatch = ({ color, label }: Readonly<ColorSwatchProps>) => {
+}>) => {
   return (
     <div className="flex items-center gap-2">
       <div

@@ -3,15 +3,13 @@ import type { QRAnalysisResult } from './types';
 export type { AnalysisExportGeneratorSettings, AnalysisExportData } from './export.types';
 import type { AnalysisExportGeneratorSettings, AnalysisExportData } from './export.types';
 
-interface BuildExportOptions {
-  timestamp?: string;
-  source?: 'file' | 'url' | 'camera' | 'generator' | null;
-  actualUsedVersion?: number | null;
-}
-
 export function buildAnalysisExportData(
   result: QRAnalysisResult,
-  options: BuildExportOptions = {}
+  options: {
+    timestamp?: string;
+    source?: 'file' | 'url' | 'camera' | 'generator' | null;
+    actualUsedVersion?: number | null;
+  } = {}
 ): AnalysisExportData {
   const timestamp = options.timestamp ?? new Date().toISOString();
   const source = options.source ?? 'unknown';

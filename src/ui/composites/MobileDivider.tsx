@@ -1,12 +1,13 @@
 import { GripHorizontal } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-interface MobileDividerProps {
+export function MobileDivider({
+  onDrag,
+  onDragEnd,
+}: Readonly<{
   onDrag: (deltaY: number) => void;
   onDragEnd: () => void;
-}
-
-export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps>) {
+}>) {
   const [isDragging, setIsDragging] = useState(false);
   const lastY = useRef<number>(0);
   const dividerRef = useRef<HTMLButtonElement>(null);

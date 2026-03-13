@@ -7,14 +7,17 @@ import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Switch } from '@/ui/primitives/switch';
 
-type UrlEditorProps = {
+export const UrlEditor = ({
+  payload,
+  setPayloadUrl,
+  t,
+  tier,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadUrl: QRState['setPayloadUrl'];
   t: TFunction;
   tier: string;
-};
-
-export const UrlEditor = ({ payload, setPayloadUrl, t, tier }: Readonly<UrlEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

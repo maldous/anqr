@@ -2,19 +2,17 @@ import { useCallback, useRef, useState } from 'react';
 import { Check, ClipboardCopy, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/ui/primitives/button';
 
-type ModuleMatrixViewProps = {
-  matrix: boolean[][];
-  version: number | null;
-  fgColor?: string;
-  bgColor?: string;
-};
-
 export const ModuleMatrixView = ({
   matrix,
   version,
   fgColor = '#000000',
   bgColor = '#ffffff',
-}: Readonly<ModuleMatrixViewProps>) => {
+}: Readonly<{
+  matrix: boolean[][];
+  version: number | null;
+  fgColor?: string;
+  bgColor?: string;
+}>) => {
   const [zoom, setZoom] = useState(1);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

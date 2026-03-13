@@ -13,17 +13,15 @@ import {
   SelectValue,
 } from '@/ui/primitives/select';
 
-type SocialProfileEditorProps = {
-  payload: QRState['payload'];
-  setPayloadSocialProfile: QRState['setPayloadSocialProfile'];
-  t: TFunction;
-};
-
 export const SocialProfileEditor = ({
   payload,
   setPayloadSocialProfile,
   t,
-}: Readonly<SocialProfileEditorProps>) => {
+}: Readonly<{
+  payload: QRState['payload'];
+  setPayloadSocialProfile: QRState['setPayloadSocialProfile'];
+  t: TFunction;
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

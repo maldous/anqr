@@ -11,11 +11,11 @@ import {
   formatDecoderVersion,
 } from '@/features/analyze/lib/formatters';
 
-type DecoderMetadataPanelProps = {
+export const DecoderMetadataPanel = ({
+  decoderMetadata,
+}: Readonly<{
   decoderMetadata: NonNullable<QRAnalysisResult['decoderMetadata']>;
-};
-
-export const DecoderMetadataPanel = ({ decoderMetadata }: Readonly<DecoderMetadataPanelProps>) => {
+}>) => {
   return (
     <CollapsibleSection
       title="Decoder Metadata"

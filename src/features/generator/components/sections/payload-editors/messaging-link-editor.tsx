@@ -14,17 +14,15 @@ import {
 } from '@/ui/primitives/select';
 import { Textarea } from '@/ui/primitives/textarea';
 
-type MessagingLinkEditorProps = {
-  payload: QRState['payload'];
-  setPayloadMessaging: QRState['setPayloadMessaging'];
-  t: TFunction;
-};
-
 export const MessagingLinkEditor = ({
   payload,
   setPayloadMessaging,
   t,
-}: Readonly<MessagingLinkEditorProps>) => {
+}: Readonly<{
+  payload: QRState['payload'];
+  setPayloadMessaging: QRState['setPayloadMessaging'];
+  t: TFunction;
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

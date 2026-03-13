@@ -6,15 +6,13 @@ import { DetailRow } from '@/features/analyze/components/detail-row';
 import { WCAGBadge } from '@/features/analyze/components/wcag-badge';
 import { wcagComplianceClass } from '@/features/analyze/lib/formatters';
 
-type ColorsWcagSectionProps = {
-  detectedColors: NonNullable<QRAnalysisResult['detectedColors']>;
-  dominantColors: QRAnalysisResult['dominantColors'];
-};
-
 export const ColorsWcagSection = ({
   detectedColors,
   dominantColors,
-}: Readonly<ColorsWcagSectionProps>) => {
+}: Readonly<{
+  detectedColors: NonNullable<QRAnalysisResult['detectedColors']>;
+  dominantColors: QRAnalysisResult['dominantColors'];
+}>) => {
   return (
     <CollapsibleSection
       title="Colors & WCAG Compliance"

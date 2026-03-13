@@ -4,13 +4,15 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-type BluetoothEditorProps = {
+export const BluetoothEditor = ({
+  payload,
+  setPayloadText,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadText: QRState['setPayloadText'];
   t: TFunction;
-};
-
-export const BluetoothEditor = ({ payload, setPayloadText, t }: Readonly<BluetoothEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">

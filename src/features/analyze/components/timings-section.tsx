@@ -4,12 +4,13 @@ import { CollapsibleSection } from '@/features/analyze/components/collapsible-se
 import { DetailRow } from '@/features/analyze/components/detail-row';
 import { formatMilliseconds, hasAnyTimingData } from '@/features/analyze/lib/formatters';
 
-type TimingsSectionProps = {
+export const TimingsSection = ({
+  combinedTimings,
+  t,
+}: Readonly<{
   combinedTimings: Record<string, number | null | undefined>;
   t: TFunction;
-};
-
-export const TimingsSection = ({ combinedTimings, t }: Readonly<TimingsSectionProps>) => {
+}>) => {
   if (!hasAnyTimingData(combinedTimings)) return null;
   return (
     <CollapsibleSection

@@ -5,13 +5,15 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
-type BizcardEditorProps = {
+export const BizcardEditor = ({
+  payload,
+  setPayloadBizCard,
+  t,
+}: Readonly<{
   payload: QRState['payload'];
   setPayloadBizCard: QRState['setPayloadBizCard'];
   t: TFunction;
-};
-
-export const BizcardEditor = ({ payload, setPayloadBizCard, t }: Readonly<BizcardEditorProps>) => {
+}>) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
