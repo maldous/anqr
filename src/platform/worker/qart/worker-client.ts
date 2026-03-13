@@ -22,7 +22,7 @@ let workerFailed = false;
 let nextId = 0;
 const pending = new Map<number, PendingRequest>();
 
-function toWorkerPayload(input: QArtWorkerGenerateInput): QArtWorkerGeneratePayload {
+const toWorkerPayload = (input: QArtWorkerGenerateInput): QArtWorkerGeneratePayload => {
   // Copy pixels before transfer so callers can safely re-read/reuse source ImageData.
   const pixelsCopy = new Uint8ClampedArray(input.targetImage.data);
   return {
@@ -42,18 +42,18 @@ function toWorkerPayload(input: QArtWorkerGenerateInput): QArtWorkerGeneratePayl
     targetImageHeight: input.targetImage.height,
     targetImagePixels: pixelsCopy,
   };
-}
+};
 
-function failAllPending(error: Error): void {
+const failAllPending = (error: Error): void => {
   for (const [id, request] of pending.entries()) {
     pending.delete(id);
     clearTimeout(request.timeoutId);
     request.removeAbortListener?.();
     request.reject(error);
   }
-}
+};
 
-function ensureWorker(): Worker | null {
+const ensureWorker = (): Worker | null => {
   if (workerFailed) return null;
   if (worker) return worker;
 
@@ -96,7 +96,7 @@ function ensureWorker(): Worker | null {
     workerFailed = true;
     return null;
   }
-}
+};
 
 export async function generateQArtInWorker(
   payload: QArtWorkerGenerateInput,

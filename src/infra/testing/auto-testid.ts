@@ -16,7 +16,7 @@ const INTERACTIVE_SELECTOR = [
 
 let autoCounter = 0;
 
-function normalizeToken(value: string): string {
+const normalizeToken = (value: string): string => {
   const lower = value.trim().toLowerCase();
   let result = '';
   let prevDash = false;
@@ -32,9 +32,9 @@ function normalizeToken(value: string): string {
   }
   if (result.endsWith('-')) result = result.slice(0, -1);
   return result;
-}
+};
 
-function getElementToken(el: Element): string {
+const getElementToken = (el: Element): string => {
   const aria = el.getAttribute('aria-label');
   if (aria) return normalizeToken(aria);
   const title = el.getAttribute('title');
@@ -49,9 +49,9 @@ function getElementToken(el: Element): string {
   const normalized = normalizeToken(text).slice(0, 40);
   if (normalized) return normalized;
   return normalizeToken(el.tagName);
-}
+};
 
-function ensureElementTestId(el: Element): void {
+const ensureElementTestId = (el: Element): void => {
   if ((el as HTMLElement).dataset?.testid !== undefined) return;
 
   const keyAttr = 'data-auto-testid-key';
@@ -66,12 +66,12 @@ function ensureElementTestId(el: Element): void {
   const base = `auto-${tag}-${token || 'control'}`;
   const resolved = DynamicTestId.resolve(base, sourceKey);
   (el as HTMLElement).dataset.testid = resolved;
-}
+};
 
-function assignInTree(root: ParentNode): void {
+const assignInTree = (root: ParentNode): void => {
   const elements = root.querySelectorAll(INTERACTIVE_SELECTOR);
   for (const el of elements) ensureElementTestId(el);
-}
+};
 
 export function initAutoDynamicTestIds(): void {
   assignInTree(document);

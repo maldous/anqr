@@ -9,21 +9,21 @@
 
 import { decodeQR } from '../../../modules/qr-decoder';
 
-interface ValidateRequest {
+type ValidateRequest = {
   id: number;
   width: number;
   height: number;
   pixels: Uint8ClampedArray;
   expectedContent?: string;
   attempts: number;
-}
+};
 
-interface ValidationResult {
+type ValidationResult = {
   valid: boolean;
   data?: string;
   error?: string;
   confidence: 'high' | 'medium' | 'low';
-}
+};
 
 globalThis.onmessage = (e: MessageEvent<ValidateRequest>) => {
   const { id, width, height, pixels, expectedContent, attempts } = e.data;
@@ -37,11 +37,11 @@ globalThis.onmessage = (e: MessageEvent<ValidateRequest>) => {
   globalThis.postMessage({ id, result });
 };
 
-function validate(
+const validate = (
   imageData: ImageData,
   expectedContent: string | undefined,
   attempts: number
-): ValidationResult {
+): ValidationResult => {
   for (let i = 0; i < attempts; i++) {
     try {
       const decoded = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
@@ -67,4 +67,4 @@ function validate(
     error: 'Failed to validate after multiple attempts',
     confidence: 'low',
   };
-}
+};

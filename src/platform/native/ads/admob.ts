@@ -53,10 +53,10 @@ const PROD_AD_UNIT_IDS = {
 // Check if we're in test mode - strictly honor the Makefile env var
 const isTestMode = import.meta.env.VITE_ADMOB_TESTING === 'true';
 
-function pickProdAdUnitId(
+const pickProdAdUnitId = (
   type: 'banner' | 'interstitial' | 'rewarded' | 'rewardedInterstitial',
   candidate: string | undefined
-): string {
+): string => {
   const trimmed = (candidate ?? '').trim();
   if (trimmed) return trimmed;
 
@@ -64,15 +64,15 @@ function pickProdAdUnitId(
   // otherwise AdMob receives an empty ad ID and never shows.
   log.warn('Missing production ad unit ID; falling back to Google test ID', { type });
   return TEST_AD_UNIT_IDS[type];
-}
+};
 
 /**
  * Get the appropriate ad unit ID based on test mode and ad type
  */
-function getAdUnitId(
+const getAdUnitId = (
   type: 'banner' | 'interstitial' | 'rewarded' | 'rewardedInterstitial',
   context?: string
-): string {
+): string => {
   if (isTestMode) {
     // Test mode: use Google's test ad unit IDs
     return TEST_AD_UNIT_IDS[type];
@@ -102,7 +102,7 @@ function getAdUnitId(
     default:
       return TEST_AD_UNIT_IDS[type];
   }
-}
+};
 
 // Types for interstitial and rewarded ads
 // These are flexible string types to allow for different ad contexts
@@ -114,13 +114,13 @@ export type InterstitialType =
   | string;
 export type RewardedType = 'rewarded' | 'rewardedInterstitial' | 'premium' | string;
 
-function interstitialPrepareKey(type: InterstitialType): string {
+const interstitialPrepareKey = (type: InterstitialType): string => {
   return type === 'rewardedInterstitial' ? 'rewardedInterstitial' : `interstitial:${type}`;
-}
+};
 
-function rewardedPrepareKey(type: RewardedType): string {
+const rewardedPrepareKey = (type: RewardedType): string => {
   return type === 'rewardedInterstitial' ? 'rewardedInterstitial' : `rewarded:${type}`;
-}
+};
 
 /**
  * Initialize AdMob - call this early in app startup

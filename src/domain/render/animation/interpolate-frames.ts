@@ -13,10 +13,10 @@ let morphScratchImageData: ImageData | null = null;
 let morphScratchWidth = 0;
 let morphScratchHeight = 0;
 
-function createCanvasLike(
+const createCanvasLike = (
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   targetCanvas?: HTMLCanvasElement | OffscreenCanvas
-): HTMLCanvasElement | OffscreenCanvas {
+): HTMLCanvasElement | OffscreenCanvas => {
   if (targetCanvas) {
     if (targetCanvas.width !== sourceCanvas.width) targetCanvas.width = sourceCanvas.width;
     if (targetCanvas.height !== sourceCanvas.height) targetCanvas.height = sourceCanvas.height;
@@ -35,11 +35,11 @@ function createCanvasLike(
   result.width = sourceCanvas.width;
   result.height = sourceCanvas.height;
   return result;
-}
+};
 
-function resetCanvas2D(
+const resetCanvas2D = (
   canvas: HTMLCanvasElement | OffscreenCanvas
-): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null {
+): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   if ('setTransform' in ctx && typeof ctx.setTransform === 'function') {
@@ -52,33 +52,33 @@ function resetCanvas2D(
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   return ctx;
-}
+};
 
-function crossfadeIntoContext(
+const crossfadeIntoContext = (
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   frame1: HTMLCanvasElement | OffscreenCanvas,
   frame2: HTMLCanvasElement | OffscreenCanvas,
   t: number
-): void {
+): void => {
   ctx.globalAlpha = 1 - t;
   ctx.drawImage(frame1 as CanvasImageSource, 0, 0);
   ctx.globalAlpha = t;
   ctx.drawImage(frame2 as CanvasImageSource, 0, 0);
   ctx.globalAlpha = 1;
-}
+};
 
-function getMorphScratch(
+const getMorphScratch = (
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   width: number,
   height: number
-): ImageData {
+): ImageData => {
   if (!morphScratchImageData || morphScratchWidth !== width || morphScratchHeight !== height) {
     morphScratchImageData = ctx.createImageData(width, height);
     morphScratchWidth = width;
     morphScratchHeight = height;
   }
   return morphScratchImageData;
-}
+};
 
 /**
  * Interpolate between two frames
