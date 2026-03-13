@@ -24,6 +24,7 @@
 
 - Prefer very small modules with one clear responsibility; when splitting code, bias toward one AST-heavy construct per file so low-capacity models can reason about the file in isolation.
 - Treat "one AST-heavy construct per file" as the default target, not a loose preference. In practice this means one exported component, one exported function, one exported type/interface, or one narrowly scoped constant map per file wherever compatibility allows.
+- When a stable import path must remain, prefer turning the old file into a pure re-export barrel and moving the real construct into a dedicated file. A zero-node compatibility barrel is acceptable; a mixed barrel-plus-implementation file is not.
 - Run an AST-density audit before and after large refactors. Files that show repeated top-level AST-heavy constructs must be treated as split candidates before the refactor is considered complete.
 - Do not re-densify code just to preserve pre-refactor file layouts. Update callers, tests, and docs to the new canonical module paths instead.
 - Keep benchmark and profiling suites out of the default correctness gate. `npm run test:unit` is for deterministic unit validation; opt-in profiling belongs in `npm run test:unit:perf`.

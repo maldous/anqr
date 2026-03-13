@@ -5,69 +5,10 @@
 
 import { createLogger } from '../../../infra/logging/logger';
 import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { drawHalftoneDot } from './draw-halftone-dot';
+import { parseHalftoneCell } from './parse-halftone-cell';
 
 const _log = createLogger('GENERATE');
-
-/**
- * Parse halftone cell configuration to get grid size
- * @param cellConfig - 'per_module' or 'n×n' format like '2x2', '3x3', '4x4'
- * @returns grid size (1 for per_module, 2/3/4 for grid patterns)
- */
-const parseHalftoneCell = (cellConfig: number | string | undefined): number => {
-  if (cellConfig === undefined || cellConfig === 'per_module') return 1;
-  if (typeof cellConfig === 'number') return Math.max(1, Math.round(cellConfig));
-
-  // Parse 'n×n' or 'nxn' format
-  const match = /^(\d+)[x×](\d+)$/i.exec(String(cellConfig));
-  if (match) {
-    return Math.max(1, Number.parseInt(match[1], 10));
-  }
-
-  return 1; // Default to single dot per module
-};
-
-/**
- * Draw a single halftone dot with the specified shape
- */
-const drawHalftoneDot = (
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  dotSize: number,
-  shape: string | undefined,
-  row: number,
-  col: number
-): void => {
-  const halfSize = dotSize / 2;
-
-  switch (shape) {
-    case 'square':
-      // Draw a square centered at (cx, cy)
-      ctx.fillRect(cx - halfSize, cy - halfSize, dotSize, dotSize);
-      break;
-
-    case 'line': {
-      // Draw a line-based halftone (alternating 45° and -45° based on position)
-      ctx.save();
-      ctx.translate(cx, cy);
-      // Alternate rotation based on position for visual interest
-      const angle = (row + col) % 2 === 0 ? Math.PI / 4 : -Math.PI / 4;
-      ctx.rotate(angle);
-      // Draw an elongated rectangle (line)
-      const lineWidth = dotSize * 0.35;
-      const lineLength = dotSize * 1.2;
-      ctx.fillRect(-lineLength / 2, -lineWidth / 2, lineLength, lineWidth);
-      ctx.restore();
-      break;
-    }
-    default:
-      // Draw a circle (default behavior)
-      ctx.beginPath();
-      ctx.arc(cx, cy, halfSize, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-  }
-};
 
 /**
  * Draw a halftone-style module with size based on brightness

@@ -8,22 +8,8 @@
  */
 
 import { decodeQR } from '../../../modules/qr-decoder';
-
-type ValidateRequest = {
-  id: number;
-  width: number;
-  height: number;
-  pixels: Uint8ClampedArray;
-  expectedContent?: string;
-  attempts: number;
-};
-
-type ValidationResult = {
-  valid: boolean;
-  data?: string;
-  error?: string;
-  confidence: 'high' | 'medium' | 'low';
-};
+import type { ValidateRequest } from './validate-request';
+import type { ValidationResult } from './validation-worker-result';
 
 globalThis.onmessage = (e: MessageEvent<ValidateRequest>) => {
   const { id, width, height, pixels, expectedContent, attempts } = e.data;

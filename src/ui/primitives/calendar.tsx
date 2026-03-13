@@ -1,22 +1,17 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type * as React from 'react';
 import { DayPicker } from 'react-day-picker';
 
 import { cn } from '@/lib/utils';
+import { CalendarChevron } from './calendar-chevron';
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
-
-const CalendarChevron = ({ orientation }: { orientation?: 'left' | 'right' | 'up' | 'down' }) => {
-  return orientation === 'left' ? (
-    <ChevronLeft className="h-4 w-4" />
-  ) : (
-    <ChevronRight className="h-4 w-4" />
-  );
-};
-
-const Calendar = ({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) => {
+const Calendar = ({
+  className,
+  classNames,
+  showOutsideDays = true,
+  ...props
+}: React.ComponentProps<typeof DayPicker>) => {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}

@@ -4,12 +4,9 @@
  * when multiple encodes run concurrently.
  */
 
-type GifEncodeLockOptions = {
-  onWait?: (waitMs: number, queueDepth: number) => void;
-};
-
-let gifEncodeQueue: Promise<void> = Promise.resolve();
-let gifEncodeQueueDepth = 0;
+import type { GifEncodeLockOptions } from './gif-encode-lock-options';
+import { gifEncodeLockState } from './gif-lock-state';
+export { _getGifEncodeQueueDepth } from './get-gif-encode-queue-depth';
 
 export async function withGifEncodeLock<T>(
   fn: () => T | Promise<T>,
@@ -17,24 +14,20 @@ export async function withGifEncodeLock<T>(
 ): Promise<T> {
   let release: () => void = () => {};
   const queuedAt = Date.now();
-  gifEncodeQueueDepth += 1;
-  const waitTurn = gifEncodeQueue;
-  gifEncodeQueue = new Promise<void>((resolve) => {
+  gifEncodeLockState.depth += 1;
+  const waitTurn = gifEncodeLockState.queue;
+  gifEncodeLockState.queue = new Promise<void>((resolve) => {
     release = resolve;
   });
 
   await waitTurn;
   const waitMs = Date.now() - queuedAt;
-  options.onWait?.(waitMs, Math.max(0, gifEncodeQueueDepth - 1));
+  options.onWait?.(waitMs, Math.max(0, gifEncodeLockState.depth - 1));
 
   try {
     return await fn();
   } finally {
-    gifEncodeQueueDepth = Math.max(0, gifEncodeQueueDepth - 1);
+    gifEncodeLockState.depth = Math.max(0, gifEncodeLockState.depth - 1);
     release();
   }
-}
-
-function _getGifEncodeQueueDepth(): number {
-  return gifEncodeQueueDepth;
 }

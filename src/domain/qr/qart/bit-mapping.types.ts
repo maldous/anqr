@@ -1,3 +1,6 @@
+export type { RSBlockInfo } from './rs-block-info';
+export type { ECCLevel } from './qart-ecc-level';
+
 /**
  * Represents the mapping of a single bit to its pixel position
  */
@@ -25,15 +28,3 @@ export interface BitPixelMapping {
 /**
  * Information about the RS block structure for a version/ECC combo
  */
-export interface RSBlockInfo {
-  /** Index of this RS block */
-  blockIndex: number;
-  /** Number of data bytes in this block */
-  dataCount: number;
-  /** Number of ECC bytes in this block */
-  eccCount: number;
-  /** Total bytes (data + ECC) */
-  totalCount: number;
-}
-
-export type ECCLevel = 'L' | 'M' | 'Q' | 'H';

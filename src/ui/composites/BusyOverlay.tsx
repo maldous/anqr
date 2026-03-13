@@ -1,5 +1,6 @@
-import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BusySpinner } from './busy-overlay-spinner';
+import { clampProgress } from './clamp-progress';
 
 /**
  * BusyOverlay Component
@@ -8,48 +9,6 @@ import { useTranslation } from 'react-i18next';
  * Can be used as a fullscreen overlay or scoped to a relative container.
  */
 
-type BusyOverlayProps = {
-  /** Whether to show the overlay */
-  visible: boolean;
-  /** Optional stage description */
-  stage?: string;
-  /** Optional completion percentage (0-100) */
-  progress?: number | null;
-  /** Full viewport overlay when true, container-scoped when false */
-  fullScreen?: boolean;
-  /** Optional cancel action for in-progress work */
-  onCancel?: () => void;
-  /** Optional label for the cancel button */
-  cancelLabel?: string;
-};
-
-const clampProgress = (progress: number | null | undefined): number => {
-  if (typeof progress !== 'number' || !Number.isFinite(progress)) return 0;
-  return Math.max(0, Math.min(100, Math.round(progress)));
-};
-
-const BusySpinner = memo(() => {
-  return (
-    <>
-      <style>{`
-        @keyframes anqr-busy-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-      <div
-        className="h-4 w-4 flex-shrink-0 rounded-full border-2"
-        style={{
-          borderColor: 'rgba(255, 255, 255, 0.28)',
-          borderTopColor: '#ffffff',
-          animation: 'anqr-busy-spin 900ms linear infinite',
-        }}
-        aria-hidden="true"
-      />
-    </>
-  );
-});
-
 export const BusyOverlay = ({
   visible,
   stage,
@@ -57,7 +16,14 @@ export const BusyOverlay = ({
   fullScreen = true,
   onCancel,
   cancelLabel,
-}: Readonly<BusyOverlayProps>) => {
+}: Readonly<{
+  visible: boolean;
+  stage?: string;
+  progress?: number | null;
+  fullScreen?: boolean;
+  onCancel?: () => void;
+  cancelLabel?: string;
+}>) => {
   const { t } = useTranslation();
   if (!visible) return null;
   const resolvedStage = stage ?? t('preview.busy.workingOnIt', 'Working on it...');

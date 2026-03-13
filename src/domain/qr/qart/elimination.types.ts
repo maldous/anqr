@@ -1,4 +1,6 @@
 import type { RSBasisVector } from './rs-basis';
+export type { EliminationResult } from './elimination-result';
+export type { BlockSelectionResult } from './block-selection-result';
 
 /**
  * Result of Gauss-Jordan elimination for a single RS block
@@ -19,23 +21,3 @@ export interface BlockEliminationResult {
 /**
  * Result of Gauss-Jordan elimination across all blocks
  */
-export interface EliminationResult {
-  /** Per-block elimination results */
-  blockResults: BlockEliminationResult[];
-  /** Eliminated basis vectors (all blocks combined, in original order) */
-  vectors: RSBasisVector[];
-  /** Map from pixel index to { blockIndex, vectorIndex } */
-  pixelToVector: Map<number, { blockIndex: number; vectorIndex: number }>;
-  /** Total number of pixels we can control */
-  controllablePixels: number;
-  /** All pixels we control */
-  controlledPixels: number[];
-}
-
-/**
- * Selection result for a single RS block
- */
-export interface BlockSelectionResult {
-  blockIndex: number;
-  selectedVectorIndices: number[];
-}

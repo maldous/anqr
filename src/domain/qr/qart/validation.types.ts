@@ -1,4 +1,6 @@
 import type { ECCLevel } from './bit-mapping';
+export type { SemanticValidationResult } from './semantic-validation-result';
+export type { FormatVerificationResult } from './format-verification-result';
 
 /**
  * Rejection reason codes for candidate acceptance
@@ -22,44 +24,3 @@ export type RejectionReason =
 /**
  * Result of semantic validation
  */
-export interface SemanticValidationResult {
-  /** Whether validation passed */
-  valid: boolean;
-  /** Rejection reason if not valid */
-  reason?: RejectionReason;
-  /** Human-readable description */
-  description?: string;
-  /** Details about the failure */
-  details?: {
-    mismatchIndex?: number;
-    expectedByte?: number;
-    actualByte?: number;
-    expectedLength?: number;
-    actualLength?: number;
-    expectedEcc?: string;
-    actualEcc?: string;
-    expectedMask?: number;
-    actualMask?: number;
-    segmentCount?: number;
-  };
-}
-
-/**
- * Result of format info verification
- *
- * Exported for use in binary search fallback validation.
- */
-export interface FormatVerificationResult {
-  /** Whether verification passed (both ECC and mask match) */
-  valid: boolean;
-  /** Extracted ECC level from format info */
-  extractedEcc: ECCLevel;
-  /** Extracted mask from format info */
-  extractedMask: number;
-  /** Whether ECC matches expected */
-  eccMatch: boolean;
-  /** Whether mask matches expected */
-  maskMatch: boolean;
-  /** Rejection reason if not valid */
-  reason?: RejectionReason;
-}

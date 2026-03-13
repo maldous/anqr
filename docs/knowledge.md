@@ -181,6 +181,7 @@ make all          # Complete 16-step production pipeline
 - **AST density**: Prefer one AST-heavy construct per file. Large files that bundle many interfaces, types, functions, local component helpers, classes, or top-level constant maps are considered refactor debt even if they are currently passing tests.
 - **AST audit command**: `npm run audit:ast`
 - **AST audit JSON**: `npm run audit:ast -- --json`
+- **Compatibility pattern**: When existing import paths must stay stable, move the real implementation/type into its own file and leave the legacy path as a pure re-export barrel. The audit should report `0` for that compatibility file.
 - **Formatting**: oxfmt (not Prettier). Run `make fix` or `npx oxfmt --write .`.
 - **Linting**: oxlint (not ESLint). Config in `.oxlintrc.json`.
 - **Commits**: Conventional commits enforced by commitlint (`feat:`, `fix:`, `docs:`, `chore:`, etc.). Reference the relevant Linear issue where appropriate (e.g., `fix(ops): add provider failover (ANQ-194)`).

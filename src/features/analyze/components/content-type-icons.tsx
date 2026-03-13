@@ -1,0 +1,38 @@
+import {
+  CreditCard,
+  FileText,
+  Globe,
+  Lock,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Phone,
+  QrCode,
+  Smartphone,
+  Type,
+  Wallet,
+  Wifi,
+} from 'lucide-react';
+import type { ContentType } from '@/modules/qr-analyzer';
+
+export const CONTENT_TYPE_ICONS: Record<ContentType, React.ReactNode> = {
+  url: <Globe className="w-4 h-4" />,
+  wifi: <Wifi className="w-4 h-4" />,
+  vcard: <FileText className="w-4 h-4" />,
+  mecard: <FileText className="w-4 h-4" />,
+  email: <Mail className="w-4 h-4" />,
+  tel: <Phone className="w-4 h-4" />,
+  sms: <MessageSquare className="w-4 h-4" />,
+  geo: <MapPin className="w-4 h-4" />,
+  crypto_bitcoin: <Wallet className="w-4 h-4" />,
+  crypto_ethereum: <Wallet className="w-4 h-4" />,
+  crypto_other: <Wallet className="w-4 h-4" />,
+  epc_sepa: <CreditCard className="w-4 h-4" />,
+  upi: <Smartphone className="w-4 h-4" />,
+  emv_qr: <CreditCard className="w-4 h-4" />,
+  swiss_qr_bill: <CreditCard className="w-4 h-4" />,
+  calendar_event: <FileText className="w-4 h-4" />,
+  otp_auth: <Lock className="w-4 h-4" />,
+  plain_text: <Type className="w-4 h-4" />,
+  unknown: <QrCode className="w-4 h-4" />,
+};

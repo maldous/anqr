@@ -3,37 +3,12 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
+import { getOrCreatePatchImageData } from './get-or-create-patch-image-data';
 
 const log = createLogger('ANIMATION');
 
 import { decodeGif } from './gif-codec';
 import type { GifCompositor } from '../../../modules/animation/types';
-
-function asClampedRgbaView(pixels: Uint8Array): Uint8ClampedArray<ArrayBuffer> {
-  if (pixels instanceof Uint8ClampedArray) {
-    return pixels as Uint8ClampedArray<ArrayBuffer>;
-  }
-  return new Uint8ClampedArray(
-    pixels.buffer as ArrayBuffer,
-    pixels.byteOffset,
-    pixels.byteLength
-  ) as Uint8ClampedArray<ArrayBuffer>;
-}
-
-function getOrCreatePatchImageData(
-  patchImageDataCache: Array<ImageData | null>,
-  i: number,
-  patch: Uint8Array,
-  w: number,
-  h: number
-): ImageData {
-  let imageData = patchImageDataCache[i];
-  if (!imageData) {
-    imageData = new ImageData(asClampedRgbaView(patch), w, h);
-    patchImageDataCache[i] = imageData;
-  }
-  return imageData;
-}
 
 /**
  * Create a GIF compositor from an ArrayBuffer.

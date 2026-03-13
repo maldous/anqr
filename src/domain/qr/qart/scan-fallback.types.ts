@@ -1,4 +1,6 @@
 import type { RSBasisVector } from './rs-basis';
+export type { FlattenedSelection } from './flattened-selection';
+export type { BinarySearchResult } from './binary-search-result';
 
 /**
  * Rejection histogram for tracking why candidates were rejected.
@@ -19,29 +21,3 @@ export interface RejectionHistogram {
  * A flattened selection entry that combines block info with vector info
  * and includes importance for sorting
  */
-export interface FlattenedSelection {
-  /** RS block index */
-  blockIndex: number;
-  /** Vector index within the block */
-  vectorIndex: number;
-  /** Pixel importance (higher = more important for image quality) */
-  importance: number;
-  /** The actual vector (for reference) */
-  vector: RSBasisVector;
-}
-
-/**
- * Result of binary search for maximum scannable vectors
- */
-export interface BinarySearchResult {
-  /** Maximum number of vectors that produce a scannable QR */
-  maxCount: number;
-  /** The matrix produced with maxCount vectors */
-  matrix: boolean[][];
-  /** Modified block data with maxCount vectors applied */
-  modifiedBlockData: Uint8Array[];
-  /** Modified block ECC with maxCount vectors applied */
-  modifiedBlockEcc: Uint8Array[];
-  /** Number of binary search iterations performed */
-  iterations: number;
-}
