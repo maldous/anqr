@@ -13,7 +13,7 @@ const _log = createLogger('GENERATE');
  * @param cellConfig - 'per_module' or 'n×n' format like '2x2', '3x3', '4x4'
  * @returns grid size (1 for per_module, 2/3/4 for grid patterns)
  */
-function parseHalftoneCell(cellConfig: number | string | undefined): number {
+const parseHalftoneCell = (cellConfig: number | string | undefined): number => {
   if (cellConfig === undefined || cellConfig === 'per_module') return 1;
   if (typeof cellConfig === 'number') return Math.max(1, Math.round(cellConfig));
 
@@ -24,12 +24,12 @@ function parseHalftoneCell(cellConfig: number | string | undefined): number {
   }
 
   return 1; // Default to single dot per module
-}
+};
 
 /**
  * Draw a single halftone dot with the specified shape
  */
-function drawHalftoneDot(
+const drawHalftoneDot = (
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
@@ -37,7 +37,7 @@ function drawHalftoneDot(
   shape: string | undefined,
   row: number,
   col: number
-): void {
+): void => {
   const halfSize = dotSize / 2;
 
   switch (shape) {
@@ -67,7 +67,7 @@ function drawHalftoneDot(
       ctx.fill();
       break;
   }
-}
+};
 
 /**
  * Draw a halftone-style module with size based on brightness

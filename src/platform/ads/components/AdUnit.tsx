@@ -113,30 +113,30 @@ const SLOT_IDS: Partial<Record<SlotName, string>> = {
     import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS,
 };
 
-function isNumericSlot(value: string | undefined | null): value is string {
+const isNumericSlot = (value: string | undefined | null): value is string => {
   return !!value && /^\d+$/.test(value);
-}
+};
 
-function resolveSlotId(slot: string): string | null {
+const resolveSlotId = (slot: string): string | null => {
   // Allow callers to pass numeric ad-unit IDs directly.
   if (isNumericSlot(slot)) return slot;
 
   // Otherwise, map known slot names to configured IDs.
   const mapped = SLOT_IDS[slot as SlotName];
   return isNumericSlot(mapped) ? mapped : null;
-}
+};
 
 export type { AdUnitProps } from './AdUnit.types';
 import type { AdUnitProps } from './AdUnit.types';
 
-export function AdUnit({
+export const AdUnit = ({
   slot,
   width = '100%',
   height = 90,
   className = '',
   format = 'auto',
   responsive = true,
-}: Readonly<AdUnitProps>) {
+}: Readonly<AdUnitProps>) => {
   const slotId = resolveSlotId(slot);
 
   // Check if running in native app (Android/iOS via Capacitor)
@@ -183,4 +183,4 @@ export function AdUnit({
       height={height}
     />
   );
-}
+};

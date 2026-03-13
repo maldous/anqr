@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
+type ImportMetaEnv = {
   // Sentry release version for source map matching
   readonly VITE_SENTRY_RELEASE: string;
   // AdSense configuration
@@ -54,7 +54,7 @@ interface ImportMetaEnv {
   readonly VITE_ADMOB_REWARDED_PREMIUM: string;
   readonly VITE_ADMOB_REWARDED_EXPORT_HD: string;
   readonly VITE_ADMOB_TESTING: string;
-}
+};
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;

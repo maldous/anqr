@@ -5,7 +5,7 @@ type IubendaWindow = Window & {
   __anqrWebAssetsLoaded?: boolean;
 };
 
-function addLink(
+const addLink = (
   id: string,
   attrs: {
     rel: string;
@@ -13,7 +13,7 @@ function addLink(
     as?: string;
     crossOrigin?: string;
   }
-): void {
+): void => {
   if (typeof document === 'undefined') return;
   if (document.getElementById(id)) return;
 
@@ -24,9 +24,9 @@ function addLink(
   if (attrs.as) link.as = attrs.as;
   if (attrs.crossOrigin) link.crossOrigin = attrs.crossOrigin;
   document.head.appendChild(link);
-}
+};
 
-function addScript(
+const addScript = (
   id: string,
   src: string,
   options: {
@@ -34,7 +34,7 @@ function addScript(
     crossOrigin?: string;
     charset?: string;
   } = {}
-): void {
+): void => {
   if (typeof document === 'undefined') return;
   if (document.getElementById(id)) return;
 
@@ -45,9 +45,9 @@ function addScript(
   if (options.crossOrigin) script.crossOrigin = options.crossOrigin;
   if (options.charset) script.charset = options.charset; // NOSONAR: charset needed for third-party script compat
   document.head.appendChild(script);
-}
+};
 
-export function loadWebOnlyBootAssets(): void {
+export const loadWebOnlyBootAssets = (): void => {
   if (typeof document === 'undefined') return;
   if (Capacitor.isNativePlatform()) return;
 
@@ -111,4 +111,4 @@ export function loadWebOnlyBootAssets(): void {
     'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2270701384951162',
     { crossOrigin: 'anonymous' }
   );
-}
+};

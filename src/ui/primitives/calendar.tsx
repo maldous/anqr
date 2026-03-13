@@ -8,15 +8,15 @@ import { cn } from '@/lib/utils';
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-function CalendarChevron({ orientation }: { orientation?: 'left' | 'right' | 'up' | 'down' }) {
+const CalendarChevron = ({ orientation }: { orientation?: 'left' | 'right' | 'up' | 'down' }) => {
   return orientation === 'left' ? (
     <ChevronLeft className="h-4 w-4" />
   ) : (
     <ChevronRight className="h-4 w-4" />
   );
-}
+};
 
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+const Calendar = ({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) => {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -70,7 +70,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
       {...props}
     />
   );
-}
+};
 Calendar.displayName = 'Calendar';
 
 export { Calendar };

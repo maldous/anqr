@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
  * Can be used as a fullscreen overlay or scoped to a relative container.
  */
 
-interface BusyOverlayProps {
+type BusyOverlayProps = {
   /** Whether to show the overlay */
   visible: boolean;
   /** Optional stage description */
@@ -21,14 +21,14 @@ interface BusyOverlayProps {
   onCancel?: () => void;
   /** Optional label for the cancel button */
   cancelLabel?: string;
-}
+};
 
-function clampProgress(progress: number | null | undefined): number {
+const clampProgress = (progress: number | null | undefined): number => {
   if (typeof progress !== 'number' || !Number.isFinite(progress)) return 0;
   return Math.max(0, Math.min(100, Math.round(progress)));
-}
+};
 
-const BusySpinner = memo(function BusySpinner() {
+const BusySpinner = memo(() => {
   return (
     <>
       <style>{`
@@ -50,14 +50,14 @@ const BusySpinner = memo(function BusySpinner() {
   );
 });
 
-export function BusyOverlay({
+export const BusyOverlay = ({
   visible,
   stage,
   progress = null,
   fullScreen = true,
   onCancel,
   cancelLabel,
-}: Readonly<BusyOverlayProps>) {
+}: Readonly<BusyOverlayProps>) => {
   const { t } = useTranslation();
   if (!visible) return null;
   const resolvedStage = stage ?? t('preview.busy.workingOnIt', 'Working on it...');
@@ -121,4 +121,4 @@ export function BusyOverlay({
       </div>
     </div>
   );
-}
+};
