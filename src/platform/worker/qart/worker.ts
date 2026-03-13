@@ -27,12 +27,12 @@ const workerRenderer = new QRGenerator(workerCanvasFactory);
 let latestRequestId = 0;
 const cancelledRequestIds = new Set<number>();
 
-function clampPercent(value: number): number {
+const clampPercent = (value: number): number => {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(100, value));
-}
+};
 
-function packBooleanMatrix(matrix: boolean[][]): Uint8Array {
+const packBooleanMatrix = (matrix: boolean[][]): Uint8Array => {
   const moduleCount = matrix.length;
   const packed = new Uint8Array(moduleCount * moduleCount);
 
@@ -45,21 +45,21 @@ function packBooleanMatrix(matrix: boolean[][]): Uint8Array {
   }
 
   return packed;
-}
+};
 
-function canRenderInWorker(): boolean {
+const canRenderInWorker = (): boolean => {
   return typeof OffscreenCanvas !== 'undefined';
-}
+};
 
-function isCancelledOrStale(id: number): boolean {
+const isCancelledOrStale = (id: number): boolean => {
   return cancelledRequestIds.has(id) || latestRequestId !== id;
-}
+};
 
-async function tryWorkerSideRender(
+const tryWorkerSideRender = async (
   response: QArtWorkerResultPayload,
   renderConfig: unknown,
   moduleCount: number
-): Promise<void> {
+): Promise<void> => {
   if (!canRenderInWorker() || !response.matrix) return;
   try {
     const config: QRGeneratorConfig = {
@@ -82,9 +82,9 @@ async function tryWorkerSideRender(
   } catch {
     // Ignore worker-side render failures and let main-thread rendering handle it.
   }
-}
+};
 
-function buildWorkerTransferList(response: QArtWorkerResultPayload): Transferable[] {
+const buildWorkerTransferList = (response: QArtWorkerResultPayload): Transferable[] => {
   const transferList: Transferable[] = [];
   if (response.matrix) {
     transferList.push(response.matrix.buffer as ArrayBuffer);
@@ -93,9 +93,9 @@ function buildWorkerTransferList(response: QArtWorkerResultPayload): Transferabl
     transferList.push(response.bitmap);
   }
   return transferList;
-}
+};
 
-async function handleGenerate(message: QArtWorkerGenerateRequest): Promise<void> {
+const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void> => {
   const { id, payload } = message;
 
   latestRequestId = Math.max(latestRequestId, id);
@@ -211,7 +211,7 @@ async function handleGenerate(message: QArtWorkerGenerateRequest): Promise<void>
   } finally {
     cancelledRequestIds.delete(id);
   }
-}
+};
 
 workerContext.onmessage = (event: MessageEvent<QArtWorkerRequest>) => {
   const message = event.data;

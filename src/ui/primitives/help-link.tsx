@@ -15,7 +15,7 @@ import { type Tier, useQRStore } from '@/store/qr-store';
 
 const log = createLogger('HELP');
 
-interface HelpLinkProps {
+type HelpLinkProps = {
   /** Path to navigate to, e.g., '/guide#section-5' or '/learn' */
   href?: string;
   /** Anchor within the guide page (shorthand for href='/guide#anchor') */
@@ -26,19 +26,19 @@ interface HelpLinkProps {
   title?: string;
   /** Additional CSS classes */
   className?: string;
-}
+};
 
 /** Extract tier from tab= query parameter in URL */
-function parseTierFromUrl(href: string): Tier | undefined {
+const parseTierFromUrl = (href: string): Tier | undefined => {
   const regex = /[?&]tab=(basic|advanced|professional)(?:&|#|$)/;
   const match = regex.exec(href);
   return match ? (match[1] as Tier) : undefined;
-}
+};
 
-async function requestProfessionalAccess(
+const requestProfessionalAccess = async (
   activatePremiumAccess: () => void,
   setLoadingAd: (loading: boolean) => void
-): Promise<boolean> {
+): Promise<boolean> => {
   setLoadingAd(true);
   try {
     const reward = await showRewardedAd('premium');
@@ -55,16 +55,16 @@ async function requestProfessionalAccess(
   setLoadingAd(false);
   prepareRewardedAd('premium');
   return true;
-}
+};
 
-async function handleTierUpgrade(
+const handleTierUpgrade = async (
   effectiveTier: Tier,
   currentTier: Tier,
   setTier: (tier: Tier) => void,
   checkPremiumAccess: () => boolean,
   activatePremiumAccess: () => void,
   setLoadingAd: (loading: boolean) => void
-): Promise<boolean> {
+): Promise<boolean> => {
   const tierOrder: Tier[] = ['basic', 'advanced', 'professional'];
   const currentIndex = tierOrder.indexOf(currentTier);
   const requiredIndex = tierOrder.indexOf(effectiveTier);
@@ -80,12 +80,12 @@ async function handleTierUpgrade(
 
   setTier(effectiveTier);
   return true;
-}
+};
 
-function buildNavigationUrl(
+const buildNavigationUrl = (
   resolvedHref: string,
   language: string
-): { fullHref: string; hash: string } {
+): { fullHref: string; hash: string } => {
   let path = resolvedHref;
   let hash = '';
   let query = '';
@@ -108,9 +108,9 @@ function buildNavigationUrl(
   }
 
   return { fullHref: `${path}${query}${hash}`, hash };
-}
+};
 
-function performSPANavigation(fullHref: string, hash: string): void {
+const performSPANavigation = (fullHref: string, hash: string): void => {
   globalThis.history.pushState({}, '', fullHref);
   globalThis.dispatchEvent(new PopStateEvent('popstate'));
 
@@ -125,7 +125,7 @@ function performSPANavigation(fullHref: string, hash: string): void {
   } else {
     globalThis.scrollTo({ top: 0, behavior: 'smooth' });
   }
-}
+};
 
 export function HelpLink({
   href,
