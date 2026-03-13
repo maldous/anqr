@@ -55,6 +55,29 @@ import {
 } from '@/modules/payload-generators';
 import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
 import { type PayloadKind, type QRState, useQRStore } from '@/store/qr-store';
+import type {
+  AusPayNetForm,
+  BharatQRForm,
+  CashAppForm,
+  DuitNowForm,
+  EMVGenericForm,
+  EPCSepaForm,
+  EthereumForm,
+  HKQRForm,
+  JPQRForm,
+  LightningForm,
+  PayNowForm,
+  PayPalMeForm,
+  PIXForm,
+  PromptPayForm,
+  QRISForm,
+  QRPhForm,
+  ShortLinkForm,
+  SwissQRBillForm,
+  TWQRForm,
+  UPIForm,
+  VietQRForm,
+} from './payload-section-types';
 
 const log = createLogger('PAYLOAD');
 
@@ -372,159 +395,6 @@ const PAYLOAD_CATEGORY_KEYS = [
     ],
   },
 ];
-
-// Payment form state types
-interface EPCSepaForm {
-  name: string;
-  iban: string;
-  bic: string;
-  amount: string;
-  reference: string;
-}
-
-interface UPIForm {
-  vpa: string;
-  payeeName: string;
-  amount: string;
-  transactionNote: string;
-}
-
-interface PayNowForm {
-  type: 'mobile' | 'uen';
-  value: string;
-  amount: string;
-  reference: string;
-}
-
-interface PromptPayForm {
-  type: 'mobile' | 'id' | 'ewallet';
-  value: string;
-  amount: string;
-}
-
-interface PIXForm {
-  key: string;
-  name: string;
-  city: string;
-  amount: string;
-}
-
-// New payment form interfaces
-interface SwissQRBillForm {
-  creditorIBAN: string;
-  creditorName: string;
-  creditorCity: string;
-  creditorCountry: string;
-  referenceType: 'QRR' | 'SCOR' | 'NON';
-  reference: string;
-  amount: string;
-  currency: 'CHF' | 'EUR';
-}
-
-interface LightningForm {
-  invoice: string;
-}
-
-interface EthereumForm {
-  targetAddress: string;
-  chainId: string;
-  value: string;
-  gas: string;
-}
-
-interface QRISForm {
-  merchantId: string;
-  merchantName: string;
-  merchantCity: string;
-  amount: string;
-}
-
-interface DuitNowForm {
-  proxyType: 'NRIC' | 'MOBILE' | 'PASSPORT' | 'ARMY' | 'BUSINESS' | 'OTHERS';
-  proxyValue: string;
-  merchantName: string;
-  amount: string;
-}
-
-interface BharatQRForm {
-  merchantVPA: string;
-  merchantName: string;
-  merchantCity: string;
-  amount: string;
-}
-
-interface VietQRForm {
-  bankBin: string;
-  accountNumber: string;
-  accountName: string;
-  amount: string;
-}
-
-interface QRPhForm {
-  accountNumber: string;
-  merchantName: string;
-  merchantCity: string;
-  amount: string;
-}
-
-interface TWQRForm {
-  merchantId: string;
-  merchantName: string;
-  amount: string;
-}
-
-interface HKQRForm {
-  fpsId: string;
-  merchantName: string;
-  amount: string;
-}
-
-interface JPQRForm {
-  storeId: string;
-  merchantName: string;
-  amount: string;
-}
-
-interface AusPayNetForm {
-  payId: string;
-  payIdType: 'EMAIL' | 'MOBILE' | 'ABN' | 'ORG';
-  merchantName: string;
-  amount: string;
-}
-
-interface PayPalMeForm {
-  username: string;
-  amount: string;
-}
-
-interface CashAppForm {
-  cashtag: string;
-  amount: string;
-}
-
-interface EMVGenericForm {
-  merchantName: string;
-  merchantCity: string;
-  countryCode: string;
-  currencyCode: string;
-  amount: string;
-  mcc: string;
-  postalCode: string;
-  tipIndicator: 'none' | 'prompt' | 'fixed' | 'percent';
-  tipAmount: string;
-  tipPercent: string;
-  reference: string;
-  storeLabel: string;
-  terminalLabel: string;
-}
-
-// Short link form state
-interface ShortLinkForm {
-  longUrl: string;
-  shortUrl: string;
-  isLoading: boolean;
-  error: string;
-}
 
 // Plus Code Display component - uses proper import and useMemo
 // Always renders with fallback to raw coordinates if Plus Code generation fails

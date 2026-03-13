@@ -21,29 +21,6 @@ import {
   type EmailHelper,
   type EventHelper,
   type GeoHelper,
-  generateAppDeepLink,
-  generateAusPayNet,
-  generateBharatQR,
-  generateBizCard,
-  generateCashApp,
-  generateDuitNow,
-  generateEMVMPM,
-  generateEthereumEIP681,
-  generateEvent,
-  generateGS1DigitalLink,
-  generateHKQR,
-  generateJPQR,
-  generateLightning,
-  generateMeCard,
-  generateMessagingLink,
-  generatePayPalMe,
-  generateQRIS,
-  generateQRPh,
-  generateSocialProfile,
-  generateSwissQRBill,
-  generateTWQR,
-  generateVCard,
-  generateVietQR,
   type MeCardHelper,
   type SmsHelper,
   type TelHelper,
@@ -51,8 +28,118 @@ import {
   type VCardHelper,
   type WifiHelper,
 } from '@/modules/payload-generators';
+import type {
+  AlignmentStyle,
+  AnimationPatternType,
+  AnimationTarget,
+  AnimationWaveAxis,
+  AppLinkHelper,
+  AusPayNetHelper,
+  BharatQRHelper,
+  BizCardHelper,
+  CalendarSubHelper,
+  CashAppHelper,
+  CharacterEncoding,
+  CloudLinkHelper,
+  ColorMode,
+  CropRegion,
+  DiffusionKernel,
+  DitherKind,
+  DuitNowHelper,
+  ECCLevel,
+  EMVGenericHelper,
+  EncodingMode,
+  EthereumHelper,
+  EventRsvpHelper,
+  FinderStyle,
+  FitMode,
+  FrameStyle,
+  GapMode,
+  GifDither,
+  GifQuantizer,
+  GS1Helper,
+  HKQRHelper,
+  JPQRHelper,
+  LightningHelper,
+  MaskPattern,
+  MessagingHelper,
+  ModuleStyle,
+  OrderedMatrix,
+  OtpAuthHelper,
+  OutputFormat,
+  OverlayMode,
+  OverlayType,
+  PayloadKind,
+  PayPalMeHelper,
+  PremiumAccess,
+  QRISHelper,
+  QRPhHelper,
+  SafetyMode,
+  SocialProfileHelper,
+  SwissQRBillHelper,
+  Tier,
+  TimingStyle,
+  TWQRHelper,
+  VietQRHelper,
+} from './types';
+import { applyPayloadTransforms } from './payload-serializers/apply-payload-transforms';
+import { PAYLOAD_SERIALIZERS } from './payload-serializers';
 
 // Re-export types for backward compatibility
+export type {
+  AlignmentStyle,
+  AnimationPatternType,
+  AnimationTarget,
+  AnimationWaveAxis,
+  AppLinkHelper,
+  AusPayNetHelper,
+  BharatQRHelper,
+  BizCardHelper,
+  CalendarSubHelper,
+  CashAppHelper,
+  CharacterEncoding,
+  CloudLinkHelper,
+  ColorMode,
+  CropRegion,
+  DiffusionKernel,
+  DitherKind,
+  DuitNowHelper,
+  ECCLevel,
+  EMVGenericHelper,
+  EncodingMode,
+  EthereumHelper,
+  EventRsvpHelper,
+  FinderStyle,
+  FitMode,
+  FrameStyle,
+  GapMode,
+  GifDither,
+  GifQuantizer,
+  GS1Helper,
+  HKQRHelper,
+  JPQRHelper,
+  LightningHelper,
+  MaskPattern,
+  MessagingHelper,
+  ModuleStyle,
+  OrderedMatrix,
+  OtpAuthHelper,
+  OutputFormat,
+  OverlayMode,
+  OverlayType,
+  PayloadKind,
+  PayPalMeHelper,
+  PremiumAccess,
+  QRISHelper,
+  QRPhHelper,
+  SafetyMode,
+  SocialProfileHelper,
+  SwissQRBillHelper,
+  Tier,
+  TimingStyle,
+  TWQRHelper,
+  VietQRHelper,
+} from './types';
 export type {
   CryptoHelper,
   EmailHelper,
@@ -68,443 +155,6 @@ export type {
   WifiHelper,
 } from '@/modules/payload-generators';
 export type { GradientStop, GradientType } from '@/modules/core';
-
-// Tier levels
-export type Tier = 'basic' | 'advanced' | 'professional';
-
-// Premium access state (from watching rewarded ad)
-export interface PremiumAccess {
-  active: boolean;
-  expiresAt: number | null; // timestamp when access expires (24 hours from activation)
-}
-
-// Payload types - cleaned up list (removed closed/proprietary payment systems)
-export type PayloadKind =
-  // Core
-  | 'plain_text'
-  | 'url'
-  | 'tel'
-  | 'email'
-  | 'sms'
-  | 'geo'
-  // Contact/Identity
-  | 'vcard'
-  | 'mecard'
-  | 'bizcard'
-  // Network/Device
-  | 'wifi'
-  | 'app_link'
-  // Calendar/Productivity
-  | 'event'
-  | 'event_rsvp'
-  | 'calendar_subscription'
-  // Social/Communication
-  | 'social_profile'
-  | 'messaging_link'
-  // Payments (open specs only)
-  | 'epc_sepa'
-  | 'upi'
-  | 'paynow'
-  | 'promptpay'
-  | 'pix'
-  | 'crypto'
-  // Additional payment standards
-  | 'swiss_qr_bill'
-  | 'lightning'
-  | 'ethereum_eip681'
-  // EMV-based national payment schemes
-  | 'qris'
-  | 'duitnow'
-  | 'bharatqr'
-  | 'vietqr'
-  | 'qrph'
-  | 'twqr'
-  | 'hkqr'
-  | 'jpqr'
-  | 'auspaynet'
-  // Payment link services
-  | 'paypal_me'
-  | 'cashapp'
-  // Generic EMV
-  | 'emv_generic'
-  // Industrial/Enterprise
-  | 'gs1_digital_link'
-  // Marketing/Dynamic
-  | 'short_link'
-  | 'utm_link'
-  // Custom
-  | 'custom';
-
-// QR encoding types
-// Note: These align with @/modules/qr-spec types but include UI-specific extensions (e.g., 'auto')
-export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
-export type EncodingMode = 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji';
-export type MaskPattern = 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-
-// Character encoding (ECI - Extended Channel Interpretation)
-// Common ECI assignment numbers:
-// - 'default' = ISO-8859-1 (Latin-1) - QR default, no ECI header
-// - 'utf8' = UTF-8 (ECI 26) - Full Unicode support
-// - 'iso-8859-1' = ISO-8859-1 (ECI 1) - Western European
-// - 'shift-jis' = Shift-JIS (ECI 20) - Japanese
-// Common ECI assignment numbers:
-// - 'default' = ISO-8859-1 (Latin-1) - QR default, no ECI header
-// - 'utf8' = UTF-8 (ECI 26) - Full Unicode support
-// - 'iso-8859-1' = ISO-8859-1 (ECI 1) - Western European
-// - 'shift-jis' = Shift-JIS (ECI 20) - Japanese
-export type CharacterEncoding = 'default' | 'utf8' | 'iso-8859-1' | 'shift-jis';
-
-// Rendering
-export type ModuleStyle = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
-export type FinderStyle = 'square' | 'rounded' | 'circle';
-export type AlignmentStyle = 'match_finder' | 'square' | 'rounded' | 'circle';
-export type TimingStyle = 'match_module' | 'solid' | 'dashed';
-export type GapMode = 'none' | 'inset' | 'stroke' | 'negative_space';
-// GradientType is imported from @/modules/core and re-exported above
-export type FrameStyle = 'none' | 'rounded_frame' | 'sticker' | 'tag';
-
-// Overlay types
-// Note: These align with @/modules/overlay types
-export type OverlayMode =
-  | 'center'
-  | 'blend'
-  | 'halftone'
-  | 'halftone-dithered'
-  | 'mosaic'
-  | 'gapfill'
-  | 'brightness'
-  | 'duotone'
-  | 'subpixel'
-  | 'dithered'
-  | 'blue-noise'
-  | 'pixelate'
-  | 'outline'
-  | 'wave'
-  | 'subpixel-size'
-  | 'dither'
-  | 'extreme'
-  | 'artwork';
-export type ColorMode = 'color' | 'grayscale' | 'bw';
-export type FitMode = 'cover' | 'contain' | 'stretch';
-export type OverlayType = 'static' | 'gif' | 'apng' | 'webp_anim' | 'video';
-
-// Dither types
-// Note: These align with @/modules/dither-algorithms types
-export type DitherKind =
-  // Error diffusion
-  | 'error_diffusion'
-  // Ordered/threshold
-  | 'ordered_bayer'
-  | 'ordered_clustered'
-  | 'ordered_void_cluster'
-  | 'blue_noise_threshold'
-  | 'true_dither'
-  // Noise-based
-  | 'blue_noise'
-  | 'white_noise'
-  | 'gaussian_noise'
-  | 'triangular_noise'
-  // Hybrid/Advanced
-  | 'blue_noise_error_diffusion'
-  | 'screened_blue_noise'
-  | 'perceptual'
-  | 'edge_aware'
-  | 'adaptive_threshold'
-  | 'temporal_blue_noise';
-
-export type DiffusionKernel =
-  | 'floyd_steinberg'
-  | 'jarvis_judice_ninke'
-  | 'stucki'
-  | 'burkes'
-  | 'sierra'
-  | 'sierra_2'
-  | 'sierra_lite'
-  | 'atkinson';
-
-export type OrderedMatrix = 'bayer2' | 'bayer4' | 'bayer8' | 'clustered_dot' | 'void_cluster';
-
-// Output types
-// Note: These align with @/modules/exporter types
-export type OutputFormat = 'png' | 'webp' | 'gif' | 'svg';
-export type GifQuantizer = 'median_cut' | 'neuquant' | 'octree';
-export type GifDither = 'off' | 'floyd' | 'ordered';
-
-export type AnimationPatternType = 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift';
-export type AnimationTarget = 'result' | 'modules' | 'both';
-export type AnimationWaveAxis = 'x' | 'y' | 'xy';
-
-// Safety
-export type SafetyMode = 'off' | 'balanced' | 'strict';
-
-// WiFi auth types - imported from payload-generators and re-exported above
-// VCard version - imported from payload-generators and re-exported above
-
-// Gradient types are now imported from @/modules/core and re-exported above.
-
-// Crop region
-export interface CropRegion {
-  x: number;
-  y: number;
-  size: number;
-}
-
-// Helper types are now imported from @/modules/payload-generators and re-exported above.
-// This eliminates circular dependencies and establishes payload-generators as the canonical source.
-
-// OTP Auth helper
-export interface OtpAuthHelper {
-  issuer?: string;
-  account?: string;
-  secret?: string;
-  algorithm?: string;
-  digits?: number;
-  period?: number;
-  counter?: number;
-  type?: 'totp' | 'hotp';
-}
-
-// BizCard helper
-export interface BizCardHelper {
-  firstName?: string;
-  lastName?: string;
-  title?: string;
-  company?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-}
-
-// Messaging link helper
-export interface MessagingHelper {
-  platform: 'whatsapp' | 'telegram' | 'signal' | 'viber' | 'line' | 'messenger';
-  identifier: string;
-  message?: string;
-}
-
-// Social profile helper
-export interface SocialProfileHelper {
-  platform:
-    | 'linkedin'
-    | 'twitter'
-    | 'instagram'
-    | 'facebook'
-    | 'tiktok'
-    | 'youtube'
-    | 'github'
-    | 'other';
-  username: string;
-}
-
-// App deep link helper
-export interface AppLinkHelper {
-  platform: 'universal' | 'android' | 'ios' | 'custom';
-  scheme?: string;
-  host?: string;
-  path?: string;
-  package?: string;
-  fallbackUrl?: string;
-}
-
-// GS1 Digital Link helper
-export interface GS1Helper {
-  gtin: string;
-  serial?: string;
-  batch?: string;
-  expiry?: string;
-  resolver: string;
-}
-
-// Cloud storage link helper
-export interface CloudLinkHelper {
-  service: 'gdrive' | 'dropbox' | 'onedrive' | 'icloud' | 'box' | 'other';
-  url: string;
-}
-
-// Calendar subscription helper
-export interface CalendarSubHelper {
-  url: string;
-  calendarName?: string;
-}
-
-// Event RSVP helper
-export interface EventRsvpHelper {
-  summary?: string;
-  location?: string;
-  description?: string;
-  start?: string;
-  end?: string;
-  organizerEmail?: string;
-  rsvpUrl?: string;
-}
-
-// Swiss QR-bill helper (SIX payment standard)
-export interface SwissQRBillHelper {
-  creditorIBAN: string;
-  creditorName: string;
-  creditorAddressType: 'S' | 'K'; // S=Structured, K=Combined
-  creditorStreet?: string;
-  creditorBuildingNumber?: string;
-  creditorPostalCode?: string;
-  creditorCity?: string;
-  creditorCountry: string;
-  amount?: number;
-  currency: 'CHF' | 'EUR';
-  referenceType: 'QRR' | 'SCOR' | 'NON';
-  reference?: string;
-  unstructuredMessage?: string;
-  billInformation?: string;
-}
-
-// Lightning Network helper (BOLT11)
-export interface LightningHelper {
-  invoice: string; // BOLT11 encoded invoice string
-}
-
-// Ethereum EIP-681 helper
-export interface EthereumHelper {
-  targetAddress: string;
-  chainId?: number; // 1=Mainnet, 137=Polygon, etc.
-  value?: string; // Amount in wei
-  gas?: number;
-  gasLimit?: number;
-  gasPrice?: string;
-  tokenAddress?: string; // For ERC-20 transfers
-  tokenValue?: string; // For ERC-20 transfers (amount in token's smallest unit)
-  functionName?: string; // For contract calls
-}
-
-// QRIS (Indonesia) helper
-export interface QRISHelper {
-  merchantId: string;
-  nmid?: string; // National Merchant ID
-  merchantCriteria?: '00' | '01' | '02' | '03'; // UMI classification
-  merchantName: string;
-  merchantCity: string;
-  postalCode?: string;
-  amount?: number;
-  feeType?: 'FIXED' | 'PERCENT';
-  feeAmount?: number;
-  terminalLabel?: string;
-}
-
-// DuitNow (Malaysia) helper
-export interface DuitNowHelper {
-  proxyType: 'NRIC' | 'MOBILE' | 'PASSPORT' | 'ARMY' | 'BUSINESS' | 'OTHERS';
-  proxyValue: string;
-  merchantName: string;
-  merchantCity?: string;
-  amount?: number;
-  reference?: string;
-}
-
-// BharatQR (India) helper
-export interface BharatQRHelper {
-  merchantVPA?: string;
-  merchantPAN?: string;
-  merchantID?: string;
-  merchantName: string;
-  merchantCity: string;
-  mcc?: string;
-  amount?: number;
-  gstDetails?: string;
-  invoiceNumber?: string;
-  referenceNumber?: string;
-  terminalId?: string;
-}
-
-// VietQR (Vietnam) helper
-export interface VietQRHelper {
-  bankBin: string;
-  accountNumber: string;
-  accountName?: string;
-  serviceCode?: 'QRPUSH' | 'QRIBFTTA' | 'QRIBFTTC';
-  amount?: number;
-  description?: string;
-}
-
-// QR Ph (Philippines) helper
-export interface QRPhHelper {
-  accountNumber: string;
-  merchantName: string;
-  merchantCity: string;
-  amount?: number;
-  reference?: string;
-}
-
-// TWQR (Taiwan) helper
-export interface TWQRHelper {
-  merchantId: string;
-  merchantName: string;
-  merchantCity?: string;
-  taxId?: string;
-  amount?: number;
-}
-
-// HKQR (Hong Kong) helper
-export interface HKQRHelper {
-  fpsId?: string;
-  merchantName: string;
-  merchantCity?: string;
-  amount?: number;
-}
-
-// JPQR (Japan) helper
-export interface JPQRHelper {
-  storeId: string;
-  merchantName: string;
-  merchantCity?: string;
-  amount?: number;
-}
-
-// AusPayNet (Australia) helper
-// Per NPP spec: Need either PayID OR BSB+AccountNumber for routing
-// MerchantName is OPTIONAL - payer sees registered name from NPP lookup
-export interface AusPayNetHelper {
-  payId?: string;
-  payIdType?: 'EMAIL' | 'MOBILE' | 'ABN' | 'ORG';
-  bsb?: string;
-  accountNumber?: string;
-  merchantName?: string; // Optional - NPP lookup shows registered name to payer
-  merchantCity?: string;
-  amount?: number;
-  reference?: string;
-}
-
-// PayPal.Me helper
-export interface PayPalMeHelper {
-  username: string;
-  amount?: number;
-  currencyCode?: string;
-}
-
-// Cash App helper
-export interface CashAppHelper {
-  cashtag: string;
-  amount?: number;
-}
-
-// Generic EMV QR helper
-export interface EMVGenericHelper {
-  merchantId: string;
-  merchantName: string;
-  merchantCity: string;
-  countryCode: string;
-  currencyCode: string;
-  amount?: number;
-  isStatic?: boolean;
-  tipIndicator?: 'none' | 'prompt' | 'fixed' | 'percent';
-  tipAmount?: number;
-  tipPercent?: number;
-  storeLabel?: string;
-  customerLabel?: string;
-  terminalLabel?: string;
-  loyaltyNumber?: string;
-  reference?: string;
-  purposeOfTransaction?: string;
-  postalCode?: string;
-  mcc?: string;
-}
 
 // Main QR Store State
 export interface QRState {
@@ -933,403 +583,6 @@ export interface QRState {
   // Generate final payload text
   getPayloadText: () => string;
 }
-
-// ---------------------------------------------------------------------------
-// Payload serializer helpers (extracted from getPayloadText switch)
-// ---------------------------------------------------------------------------
-type PayloadData = QRState['payload'];
-
-function applyPayloadTransforms(text: string, payload: PayloadData): string {
-  let result = text;
-  if (payload.trim) {
-    result = result.trim();
-  }
-  if (payload.normalizeNewlines) {
-    result = result.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
-  }
-  return result;
-}
-
-function serializeUrlWithUtm(payload: PayloadData): string {
-  let url = payload.url.href;
-  if (payload.url.forceHttps && url.startsWith('http://')) {
-    url = url.replace('http://', 'https://');
-  }
-  const params = new URLSearchParams();
-  if (payload.url.utmSource) params.set('utm_source', payload.url.utmSource);
-  if (payload.url.utmMedium) params.set('utm_medium', payload.url.utmMedium);
-  if (payload.url.utmCampaign) params.set('utm_campaign', payload.url.utmCampaign);
-  if (payload.url.utmTerm) params.set('utm_term', payload.url.utmTerm);
-  if (payload.url.utmContent) params.set('utm_content', payload.url.utmContent);
-  const paramStr = params.toString();
-  if (!paramStr) return url;
-  return `${url}${url.includes('?') ? '&' : '?'}${paramStr}`;
-}
-
-function serializeEmail(payload: PayloadData): string {
-  const mailto = `mailto:${payload.email.to}`;
-  const params = new URLSearchParams();
-  if (payload.email.subject) params.set('subject', payload.email.subject);
-  if (payload.email.body) params.set('body', payload.email.body);
-  const paramStr = params.toString();
-  return paramStr ? `${mailto}?${paramStr}` : mailto;
-}
-
-function serializeSms(payload: PayloadData): string {
-  let sms = `sms:${payload.sms.number}`;
-  if (payload.sms.body) sms += `?body=${encodeURIComponent(payload.sms.body)}`;
-  return sms;
-}
-
-function serializeWifi(payload: PayloadData): string {
-  const w = payload.wifi;
-  let wifi = `WIFI:T:${w.auth};S:${w.ssid};`;
-  if (w.password) wifi += `P:${w.password};`;
-  if (w.hidden) wifi += 'H:true;';
-  wifi += ';';
-  return wifi;
-}
-
-function serializeCrypto(payload: PayloadData): string {
-  const c = payload.crypto;
-  const payment = `${c.type}:${c.address}`;
-  const params = new URLSearchParams();
-  if (c.amount) params.set('amount', c.amount.toString());
-  if (c.label) params.set('label', c.label);
-  const paramStr = params.toString();
-  return paramStr ? `${payment}?${paramStr}` : payment;
-}
-
-function serializeCalendarSubscription(payload: PayloadData): string {
-  const calSub = payload.calendarSub;
-  let url = calSub.url || payload.text;
-  if (url.startsWith('https://')) {
-    url = url.replace('https://', 'webcal://');
-  } else if (url.startsWith('http://')) {
-    url = url.replace('http://', 'webcal://');
-  } else if (url && !url.startsWith('webcal://')) {
-    url = `webcal://${url}`;
-  }
-  if (calSub.calendarName && url) {
-    url += url.includes('?') ? '&' : '?';
-    url += `name=${encodeURIComponent(calSub.calendarName)}`;
-  }
-  return url;
-}
-
-function serializeEventRsvp(payload: PayloadData): string {
-  const rsvp = payload.eventRsvp;
-  if (rsvp.summary || rsvp.start) {
-    return generateEvent({
-      summary: rsvp.summary,
-      location: rsvp.location,
-      description: rsvp.description
-        ? rsvp.rsvpUrl
-          ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}`
-          : rsvp.description
-        : rsvp.rsvpUrl
-          ? `RSVP: ${rsvp.rsvpUrl}`
-          : undefined,
-      start: rsvp.start,
-      end: rsvp.end,
-    });
-  }
-  const url = rsvp.rsvpUrl || payload.text;
-  if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
-    return `mailto:${url}?subject=RSVP`;
-  }
-  return url;
-}
-
-function serializeGS1DigitalLink(payload: PayloadData): string {
-  const gs1 = payload.gs1;
-  const gtin = gs1.gtin || payload.text;
-  if (gtin) {
-    return generateGS1DigitalLink({
-      gtin: gtin.replaceAll(/[^\d]/g, ''),
-      baseUrl: gs1.resolver ? `https://${gs1.resolver}` : undefined,
-      ser: gs1.serial || undefined,
-      lot: gs1.batch || undefined,
-      expiry: gs1.expiry?.replaceAll('-', '') || undefined,
-    });
-  }
-  return '';
-}
-
-function serializeAppLink(payload: PayloadData): string {
-  const app = payload.appLink;
-  if (app.platform === 'universal') {
-    let url =
-      app.scheme && app.host ? `${app.scheme}://${app.host}${app.path || ''}` : payload.text;
-    if (url && !url.includes('://')) {
-      url = `https://${url}`;
-    }
-    return url || '';
-  }
-  if (app.platform === 'custom') {
-    if (app.scheme && app.host) {
-      return `${app.scheme}://${app.host}${app.path || ''}`;
-    }
-    return payload.text;
-  }
-  return generateAppDeepLink(app.platform, {
-    scheme: app.scheme,
-    host: app.host,
-    path: app.path,
-    package: app.package,
-    fallbackUrl: app.fallbackUrl,
-  });
-}
-
-function serializeSwissQRBill(payload: PayloadData): string {
-  const sqb = payload.swissQRBill;
-  if (!(sqb.creditorIBAN && sqb.creditorName)) return '';
-  return generateSwissQRBill({
-    creditorIBAN: sqb.creditorIBAN,
-    creditorName: sqb.creditorName,
-    creditorAddressType: sqb.creditorAddressType,
-    creditorStreet: sqb.creditorStreet,
-    creditorBuildingNumber: sqb.creditorBuildingNumber,
-    creditorPostalCode: sqb.creditorPostalCode,
-    creditorCity: sqb.creditorCity,
-    creditorCountry: sqb.creditorCountry,
-    amount: sqb.amount,
-    currency: sqb.currency,
-    referenceType: sqb.referenceType,
-    reference: sqb.reference,
-    unstructuredMessage: sqb.unstructuredMessage,
-    billInformation: sqb.billInformation,
-  });
-}
-
-function serializeEthereumEIP681(payload: PayloadData): string {
-  const eth = payload.ethereum;
-  if (!eth.targetAddress) return '';
-  return generateEthereumEIP681({
-    targetAddress: eth.targetAddress,
-    chainId: eth.chainId,
-    value: eth.value,
-    gas: eth.gas,
-    gasLimit: eth.gasLimit,
-    gasPrice: eth.gasPrice,
-    tokenAddress: eth.tokenAddress,
-    tokenValue: eth.tokenValue,
-    functionName: eth.functionName,
-  });
-}
-
-function serializeQRIS(payload: PayloadData): string {
-  const q = payload.qris;
-  if (!q.merchantName) return '';
-  return generateQRIS({
-    merchantID: q.merchantId,
-    nmid: q.nmid,
-    merchantCriteria: q.merchantCriteria,
-    merchantName: q.merchantName,
-    merchantCity: q.merchantCity,
-    postalCode: q.postalCode,
-    amount: q.amount,
-    feeType: q.feeType,
-    feeAmount: q.feeAmount,
-    terminalLabel: q.terminalLabel,
-  });
-}
-
-function serializeDuitNow(payload: PayloadData): string {
-  const d = payload.duitnow;
-  if (!(d.proxyValue && d.merchantName)) return '';
-  return generateDuitNow({
-    proxyType: d.proxyType,
-    proxyValue: d.proxyValue,
-    merchantName: d.merchantName,
-    merchantCity: d.merchantCity,
-    amount: d.amount,
-    reference: d.reference,
-  });
-}
-
-function serializeBharatQR(payload: PayloadData): string {
-  const b = payload.bharatqr;
-  if (!b.merchantName) return '';
-  return generateBharatQR({
-    merchantVPA: b.merchantVPA,
-    merchantPAN: b.merchantPAN,
-    merchantID: b.merchantID,
-    merchantName: b.merchantName,
-    merchantCity: b.merchantCity,
-    mcc: b.mcc,
-    amount: b.amount,
-    gstDetails: b.gstDetails,
-    invoiceNumber: b.invoiceNumber,
-    referenceNumber: b.referenceNumber,
-    terminalId: b.terminalId,
-  });
-}
-
-function serializeVietQR(payload: PayloadData): string {
-  const v = payload.vietqr;
-  if (!(v.bankBin && v.accountNumber)) return '';
-  return generateVietQR({
-    bankBin: v.bankBin,
-    accountNumber: v.accountNumber,
-    accountName: v.accountName,
-    serviceCode: v.serviceCode,
-    amount: v.amount,
-    description: v.description,
-  });
-}
-
-function serializeQRPh(payload: PayloadData): string {
-  const p = payload.qrph;
-  if (!(p.accountNumber && p.merchantName)) return '';
-  return generateQRPh({
-    accountNumber: p.accountNumber,
-    merchantName: p.merchantName,
-    merchantCity: p.merchantCity,
-    amount: p.amount,
-    reference: p.reference,
-  });
-}
-
-function serializeTWQR(payload: PayloadData): string {
-  const t = payload.twqr;
-  if (!t.merchantName) return '';
-  return generateTWQR({
-    merchantId: t.merchantId,
-    merchantName: t.merchantName,
-    merchantCity: t.merchantCity,
-    taxId: t.taxId,
-    amount: t.amount,
-  });
-}
-
-function serializeHKQR(payload: PayloadData): string {
-  const h = payload.hkqr;
-  if (!(h.fpsId || h.merchantName)) return '';
-  return generateHKQR({
-    fpsId: h.fpsId || undefined,
-    merchantName: h.merchantName,
-    merchantCity: h.merchantCity || undefined,
-    amount: h.amount,
-    reference: undefined,
-  });
-}
-
-function serializeJPQR(payload: PayloadData): string {
-  const j = payload.jpqr;
-  if (!j.merchantName) return '';
-  return generateJPQR({
-    storeId: j.storeId,
-    merchantName: j.merchantName,
-    merchantCity: j.merchantCity,
-    amount: j.amount,
-  });
-}
-
-function serializeAusPayNet(payload: PayloadData): string {
-  const a = payload.auspaynet;
-  if (!(a.payId || (a.bsb && a.accountNumber))) return '';
-  return generateAusPayNet({
-    payId: a.payId,
-    payIdType: a.payIdType,
-    bsb: a.bsb,
-    accountNumber: a.accountNumber,
-    merchantName: a.merchantName,
-    merchantCity: a.merchantCity,
-    amount: a.amount,
-    reference: a.reference,
-  });
-}
-
-function serializePayPalMe(payload: PayloadData): string {
-  const pp = payload.paypalMe;
-  if (!pp.username) return '';
-  return generatePayPalMe({
-    username: pp.username,
-    amount: pp.amount,
-    currencyCode: pp.currencyCode,
-  });
-}
-
-function serializeCashApp(payload: PayloadData): string {
-  const ca = payload.cashapp;
-  if (!ca.cashtag) return '';
-  return generateCashApp({
-    cashtag: ca.cashtag,
-    amount: ca.amount,
-  });
-}
-
-function serializeEMVGeneric(payload: PayloadData): string {
-  const emv = payload.emvGeneric;
-  if (!(emv.merchantName && emv.countryCode && emv.currencyCode)) return '';
-  const tipIndicatorMap: Record<string, '01' | '02' | '03' | undefined> = {
-    prompt: '01',
-    fixed: '02',
-    percent: '03',
-    none: undefined,
-  };
-  return generateEMVMPM({
-    merchantName: emv.merchantName,
-    merchantCity: emv.merchantCity,
-    countryCode: emv.countryCode,
-    currencyCode: emv.currencyCode,
-    amount: emv.amount,
-    isStatic: emv.isStatic,
-    tipIndicator: emv.tipIndicator ? tipIndicatorMap[emv.tipIndicator] : undefined,
-    tipFixed: emv.tipAmount,
-    tipPercentage: emv.tipPercent,
-    storeLabel: emv.storeLabel,
-    customerLabel: emv.customerLabel,
-    terminalLabel: emv.terminalLabel,
-    loyaltyNumber: emv.loyaltyNumber,
-    referenceLabel: emv.reference,
-    purposeOfTransaction: emv.purposeOfTransaction,
-    postalCode: emv.postalCode,
-    mcc: emv.mcc,
-  });
-}
-
-const PAYLOAD_SERIALIZERS: Partial<Record<PayloadKind, (payload: PayloadData) => string>> = {
-  plain_text: (p) => applyPayloadTransforms(p.text, p),
-  url: serializeUrlWithUtm,
-  tel: (p) => `tel:${p.tel.number}`,
-  email: serializeEmail,
-  sms: serializeSms,
-  geo: (p) => `geo:${p.geo.lat},${p.geo.lon}`,
-  wifi: serializeWifi,
-  vcard: (p) => generateVCard(p.vcard),
-  mecard: (p) => generateMeCard(p.mecard),
-  event: (p) => generateEvent(p.event),
-  crypto: serializeCrypto,
-  bizcard: (p) => generateBizCard(p.bizcard),
-  calendar_subscription: serializeCalendarSubscription,
-  event_rsvp: serializeEventRsvp,
-  social_profile: (p) => generateSocialProfile(p.socialProfile.platform, p.socialProfile.username),
-  messaging_link: (p) =>
-    generateMessagingLink(p.messaging.platform, p.messaging.identifier, p.messaging.message),
-  gs1_digital_link: serializeGS1DigitalLink,
-  app_link: serializeAppLink,
-  utm_link: serializeUrlWithUtm,
-  short_link: (p) => p.text,
-  swiss_qr_bill: serializeSwissQRBill,
-  lightning: (p) =>
-    p.lightning.invoice ? generateLightning({ invoice: p.lightning.invoice }) : '',
-  ethereum_eip681: serializeEthereumEIP681,
-  qris: serializeQRIS,
-  duitnow: serializeDuitNow,
-  bharatqr: serializeBharatQR,
-  vietqr: serializeVietQR,
-  qrph: serializeQRPh,
-  twqr: serializeTWQR,
-  hkqr: serializeHKQR,
-  jpqr: serializeJPQR,
-  auspaynet: serializeAusPayNet,
-  paypal_me: serializePayPalMe,
-  cashapp: serializeCashApp,
-  emv_generic: serializeEMVGeneric,
-  custom: (p) => applyPayloadTransforms(p.text, p),
-};
 
 // Premium access duration: 24 hours in milliseconds
 const PREMIUM_DURATION_MS = 24 * 60 * 60 * 1000;

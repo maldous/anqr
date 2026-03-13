@@ -178,6 +178,7 @@ make all          # Complete 16-step production pipeline
 
 - **Module system**: ESM-only. All source uses `import`/`export`.
 - **TypeScript**: Strict mode. Do not use `any` casts. Maintain ≥95% type-coverage.
+- **AST density**: Prefer one AST-heavy construct per file. Large files that bundle many interfaces, functions, or local component helpers are considered refactor debt even if they are currently passing tests.
 - **Formatting**: oxfmt (not Prettier). Run `make fix` or `npx oxfmt --write .`.
 - **Linting**: oxlint (not ESLint). Config in `.oxlintrc.json`.
 - **Commits**: Conventional commits enforced by commitlint (`feat:`, `fix:`, `docs:`, `chore:`, etc.). Reference the relevant Linear issue where appropriate (e.g., `fix(ops): add provider failover (ANQ-194)`).
@@ -206,6 +207,7 @@ make all          # Complete 16-step production pipeline
 - **Symphony liveness**: The guardian verifies Symphony is running every 5 minutes via a deterministic systemd + dashboard check. This replaces the old AI-powered sentinel heartbeat — no AI credits consumed, cannot enter retry queues.
 - **Harness-driven issues**: The guardian reads the latest harness report and automatically creates `[HARNESS]` issues for FAIL/ERROR checks. It tracks state to avoid duplicates and marks issues resolved when checks pass.
 - **AI Hints**: When a Linear issue needs course-correction for AI agents (unclear instructions, legacy context, excessive comments, or stale state), add a comment starting with `AI Hint:` that gives the next agent concise, actionable guidance. Use AI Hints proactively when issues are at risk of blowing out or getting stuck. Periodically run a board sanity check to identify issues needing hints.
+- **AST audit command**: `find src -type f | xargs grep "^" | egrep ":async|:function|:interface" | cut -f1 -d: | uniq -c | sed -e 's/^  *//g' | grep -v "^1 "` is the current coarse audit for files that still need structural splitting.
 
 ## Key File Locations
 
