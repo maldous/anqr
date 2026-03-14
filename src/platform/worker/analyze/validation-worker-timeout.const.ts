@@ -1,0 +1,1 @@
+export const VALIDATION_WORKER_TIMEOUT_MS = 10_000;

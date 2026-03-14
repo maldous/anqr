@@ -1,0 +1,18 @@
+export const SENSITIVE_KEYS = new Set([
+  'password',
+  'token',
+  'secret',
+  'apikey',
+  'api_key',
+  'authorization',
+  'auth',
+  'credential',
+  'sessionid',
+  'session_id',
+  'accesstoken',
+  'access_token',
+  'refreshtoken',
+  'refresh_token',
+  'privatekey',
+  'private_key',
+]);

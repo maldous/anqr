@@ -7,54 +7,13 @@
 import { createLogger } from '../../../infra/logging/logger';
 import type { ValidationResult } from '../../../domain/qr/analyze/scanner';
 import { validateQRCodeRobust } from '../../../domain/qr/analyze/scanner';
-
-const log = createLogger('SCANNER');
-
-type CanvasLike = HTMLCanvasElement | OffscreenCanvas;
-type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-
-let worker: Worker | null = null;
-let workerFailed = false;
-let nextId = 0;
-const pending = new Map<number, (result: ValidationResult) => void>();
-
-function ensureWorker(): Worker | null {
-  if (workerFailed) return null;
-  if (worker) return worker;
-
-  try {
-    const w = new Worker(new URL('./validation-worker.ts', import.meta.url), { type: 'module' });
-
-    w.onmessage = (e: MessageEvent<{ id: number; result: ValidationResult }>) => {
-      const resolve = pending.get(e.data.id);
-      if (resolve) {
-        pending.delete(e.data.id);
-        resolve(e.data.result);
-      }
-    };
-
-    w.onerror = (e) => {
-      log.warn('Validation worker error, falling back to main thread', {
-        message: e.message,
-      });
-      workerFailed = true;
-      w.terminate();
-      worker = null;
-      // Resolve all pending with fallback-triggering failure
-      for (const [id, resolve] of pending) {
-        pending.delete(id);
-        resolve({ valid: false, error: 'Worker error', confidence: 'low' });
-      }
-    };
-
-    worker = w;
-    return w;
-  } catch (err) {
-    log.warn('Failed to create validation worker', { error: err });
-    workerFailed = true;
-    return null;
-  }
-}
+import type { CanvasContext } from './canvas-context.type';
+import type { CanvasLike } from './canvas-like.type';
+import { ensureWorker } from './ensure-validation-worker';
+export { terminateValidationWorker } from './terminate-validation-worker';
+import { validationWorkerState } from './validation-worker-state';
+import { VALIDATION_WORKER_TIMEOUT_MS } from './validation-worker-timeout.const';
+import { validationWorkerLog as log } from './validation-worker-log';
 
 /**
  * Validate a QR code canvas using a Web Worker (off main thread).
@@ -80,20 +39,20 @@ export function validateInWorker(
   }
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const id = ++nextId;
+  const id = ++validationWorkerState.nextId;
 
   return new Promise<ValidationResult>((resolve) => {
     // Timeout guard: if the worker doesn't respond within 10s, resolve with failure
     // and fall back gracefully instead of hanging forever.
     const timeout = setTimeout(() => {
-      if (pending.has(id)) {
-        pending.delete(id);
+      if (validationWorkerState.pending.has(id)) {
+        validationWorkerState.pending.delete(id);
         log.warn('Validation worker timed out');
         resolve({ valid: false, error: 'Worker timeout', confidence: 'low' });
       }
-    }, 10_000);
+    }, VALIDATION_WORKER_TIMEOUT_MS);
 
-    pending.set(id, (result) => {
+    validationWorkerState.pending.set(id, (result) => {
       clearTimeout(timeout);
       resolve(result);
     });
@@ -115,13 +74,3 @@ export function validateInWorker(
 /**
  * Terminate the validation worker and clean up resources.
  */
-export function terminateValidationWorker(): void {
-  if (worker) {
-    worker.terminate();
-    worker = null;
-  }
-  for (const [id, resolve] of pending) {
-    pending.delete(id);
-    resolve({ valid: false, error: 'Worker terminated', confidence: 'low' });
-  }
-}

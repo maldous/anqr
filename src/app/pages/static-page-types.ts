@@ -1,12 +1,2 @@
-import type { StaticPageType } from './StaticPage.types';
-
-export interface StaticPageProps {
-  page: StaticPageType;
-}
-
-export type TocGroup = {
-  key: string;
-  title: string;
-  id?: string;
-  items: { id: string; title: string }[];
-};
+export type { StaticPageProps } from './static-page-props.interface';
+export type { TocGroup } from './toc-group.type';

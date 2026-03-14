@@ -1,10 +1,6 @@
 import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-
-// Type for render state
-type RenderState = 'pending' | 'rendering' | 'idle';
-
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/platform/ads/components/AdUnit';
 import { BusyOverlay } from '@/ui/composites/BusyOverlay';
@@ -12,50 +8,8 @@ import { useQRGeneratorContext } from '@/hooks/useQRGenerator';
 import { getContrastRatio, parseColor } from '@/domain/render/color/color';
 import { meetsContrastAA, meetsContrastAAA } from '@/domain/render/color/contrast';
 import { useQRStore } from '@/store/qr-store';
-
-interface PreviewProps {
-  sidebarOpen?: boolean;
-  hidden?: boolean;
-}
-
-function computeRenderingState(
-  isPending: boolean,
-  isRendering: boolean,
-  isLoading: boolean,
-  isPreparingAnimation: boolean
-): RenderState {
-  if (isPending) return 'pending';
-  if (isRendering || isLoading || isPreparingAnimation) return 'rendering';
-  return 'idle';
-}
-
-function computeBusyStageLabel(
-  busyStage: string | null,
-  isPending: boolean,
-  isPreparingAnimation: boolean,
-  t: (key: string, defaultValue: string) => string
-): string {
-  if (busyStage) return busyStage;
-  if (isPending)
-    return t('preview.busy.waitingForThingsToSettle', 'Waiting for things to settle...');
-  if (isPreparingAnimation)
-    return t('preview.busy.gettingAnimationPreviewReady', 'Getting the animation preview ready...');
-  return t('preview.busy.generatingPreview', 'Generating your preview...');
-}
-
-function computeBusyPercent(
-  busyProgress: number | null,
-  isPending: boolean,
-  isPreparingAnimation: boolean,
-  isRendering: boolean,
-  isLoading: boolean
-): number | null {
-  if (typeof busyProgress === 'number') return busyProgress;
-  if (isPending) return 12;
-  if (isPreparingAnimation) return 24;
-  if (isRendering || isLoading) return 48;
-  return null;
-}
+import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from './preview-status';
+import type { PreviewProps, RenderState } from './preview-types';
 
 export function Preview({ sidebarOpen = true, hidden = false }: Readonly<PreviewProps>) {
   const { t } = useTranslation();

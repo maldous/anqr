@@ -4,7 +4,7 @@ import {
   isLevelEnabledForLogger,
   shouldCaptureStructured,
 } from './logger-config';
-import { sanitizeLogContext } from './logger-redaction';
+import { sanitizeLogContext } from './sanitize-log-context';
 import { captureErrorEvent, captureWarningBreadcrumb } from './logger-sentry';
 import { loggerState } from './logger-state';
 import type { LogContext, Logger, RuntimeLogLevel } from './logger-types';

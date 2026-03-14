@@ -1,105 +1,31 @@
 import { generateFullQArt, generateFullQArtOptimal } from '../../../domain/qr/qart/generate';
-import {
-  QRGenerator,
-  type CanvasFactory,
-  type QRGeneratorConfig,
-} from '../../../modules/qr-generator';
 import type {
   QArtWorkerGenerateRequest,
   QArtWorkerMessage,
   QArtWorkerRequest,
   QArtWorkerResultPayload,
 } from './worker-protocol';
+import { buildWorkerTransferList } from './build-worker-transfer-list';
+import { clampPercent } from './clamp-percent';
+import { packBooleanMatrix } from './pack-boolean-matrix';
+import { tryWorkerSideRender } from './try-worker-side-render';
+import type { WorkerContext } from './worker-context.type';
+import {
+  addCancelledRequestId,
+  clearCancelledRequestId,
+  isCancelledOrStale,
+  updateLatestRequestId,
+} from './worker-render-guards';
 
 const PROGRESS_THROTTLE_MS = 80;
 
-type WorkerContext = {
-  postMessage: (message: unknown, transfer?: Transferable[]) => void;
-  onmessage: ((event: MessageEvent<QArtWorkerRequest>) => void) | null;
-};
-
 const workerContext = globalThis as unknown as WorkerContext;
-const workerCanvasFactory: CanvasFactory = {
-  createCanvas: async (width: number, height: number) => new OffscreenCanvas(width, height),
-};
-const workerRenderer = new QRGenerator(workerCanvasFactory);
-
-let latestRequestId = 0;
-const cancelledRequestIds = new Set<number>();
-
-const clampPercent = (value: number): number => {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, value));
-};
-
-const packBooleanMatrix = (matrix: boolean[][]): Uint8Array => {
-  const moduleCount = matrix.length;
-  const packed = new Uint8Array(moduleCount * moduleCount);
-
-  let idx = 0;
-  for (let row = 0; row < moduleCount; row++) {
-    const rowData = matrix[row];
-    for (let col = 0; col < moduleCount; col++) {
-      packed[idx++] = rowData?.[col] ? 1 : 0;
-    }
-  }
-
-  return packed;
-};
-
-const canRenderInWorker = (): boolean => {
-  return typeof OffscreenCanvas !== 'undefined';
-};
-
-const isCancelledOrStale = (id: number): boolean => {
-  return cancelledRequestIds.has(id) || latestRequestId !== id;
-};
-
-const tryWorkerSideRender = async (
-  response: QArtWorkerResultPayload,
-  renderConfig: unknown,
-  moduleCount: number
-): Promise<void> => {
-  if (!canRenderInWorker() || !response.matrix) return;
-  try {
-    const config: QRGeneratorConfig = {
-      ...(renderConfig as unknown as QRGeneratorConfig),
-      typeNumber: response.version,
-      overlayMode: undefined,
-    };
-    const renderedCanvas = await workerRenderer.renderFromPackedMatrix(
-      response.matrix,
-      moduleCount,
-      config
-    );
-    if (
-      typeof OffscreenCanvas !== 'undefined' &&
-      renderedCanvas instanceof OffscreenCanvas &&
-      typeof renderedCanvas.transferToImageBitmap === 'function'
-    ) {
-      response.bitmap = renderedCanvas.transferToImageBitmap();
-    }
-  } catch {
-    // Ignore worker-side render failures and let main-thread rendering handle it.
-  }
-};
-
-const buildWorkerTransferList = (response: QArtWorkerResultPayload): Transferable[] => {
-  const transferList: Transferable[] = [];
-  if (response.matrix) {
-    transferList.push(response.matrix.buffer as ArrayBuffer);
-  }
-  if (response.bitmap) {
-    transferList.push(response.bitmap);
-  }
-  return transferList;
-};
 
 const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void> => {
   const { id, payload } = message;
 
-  latestRequestId = Math.max(latestRequestId, id);
-  cancelledRequestIds.delete(id);
+  updateLatestRequestId(id);
+  clearCancelledRequestId(id);
 
   let lastProgressAt = 0;
   let lastPercent = -1;
@@ -209,7 +135,7 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
     };
     workerContext.postMessage(resultMessage);
   } finally {
-    cancelledRequestIds.delete(id);
+    clearCancelledRequestId(id);
   }
 };
 
@@ -219,7 +145,7 @@ workerContext.onmessage = (event: MessageEvent<QArtWorkerRequest>) => {
   if (!message || typeof message !== 'object') return;
 
   if (message.type === 'cancel') {
-    cancelledRequestIds.add(message.id);
+    addCancelledRequestId(message.id);
     return;
   }
 

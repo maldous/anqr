@@ -1,25 +1,6 @@
-export interface StructuredLogEntry {
-  timestamp: string;
-  scope: string;
-  level: string;
-  message: string;
-  context?: unknown;
-}
-
-export type LogContext = Record<string, unknown>;
-
-export interface Logger {
-  trace(message: string, context?: LogContext): void;
-  debug(message: string, context?: LogContext): void;
-  info(message: string, context?: LogContext): void;
-  warn(message: string, context?: LogContext): void;
-  error(message: string, context?: LogContext): void;
-}
-
-export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent';
-export type RuntimeLogLevel = LogLevel;
-
-export interface BufferCaptureOptions {
-  captureStructured: boolean;
-  captureString: boolean;
-}
+export type { StructuredLogEntry } from './structured-log-entry';
+export type { LogContext } from './log-context';
+export type { Logger } from './logger.interface';
+export type { LogLevel } from './log-level';
+export type { RuntimeLogLevel } from './runtime-log-level';
+export type { BufferCaptureOptions } from './buffer-capture-options';

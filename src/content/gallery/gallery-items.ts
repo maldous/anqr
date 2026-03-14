@@ -5,104 +5,24 @@
  * scripts/publish-gallery-showcase.ts -> src/data/gallery-showcase.generated.ts
  */
 
-import type { GalleryCategory } from '@/content/gallery/gallery-manifest';
 import { generatedGallerySections } from '@/content/generated/gallery-showcase.generated';
+import { buildGalleryCacheKey } from './gallery-cache-key';
+import { buildGalleryRenderImageUrl } from './build-gallery-render-image-url';
+import { buildGalleryUrl } from './build-gallery-url';
+import { GALLERY_IMAGE_PATH } from './gallery-image-path.const';
+import { getGalleryBaseUrl } from './get-gallery-base-url';
+import { getGalleryImagePath as getGalleryImagePathBase } from './get-gallery-image-path';
+import type { GalleryItem, GallerySection } from './gallery-items.types';
 
-export type { GalleryCategory } from '@/content/gallery/gallery-manifest';
-
-export type GalleryItem = {
-  id: string;
-  title: string;
-  description: string;
-  category: GalleryCategory;
-  params: Record<string, string | number | boolean>;
-  isAnimated?: boolean;
-};
-
-export type GallerySection = {
-  id: GalleryCategory;
-  title: string;
-  description: string;
-  icon: string;
-  items: GalleryItem[];
-};
+export type { GalleryCategory, GalleryItem, GallerySection } from './gallery-items.types';
+export { buildGalleryRenderImageUrl, buildGalleryUrl, GALLERY_IMAGE_PATH, getGalleryBaseUrl };
 
 // Generated source of truth.
 export const gallerySections: GallerySection[] =
   generatedGallerySections as unknown as GallerySection[];
 
-const hashFnv1a = (input: string): string => {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.codePointAt(i)!;
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(36);
-};
-
-const buildGalleryCacheKey = (sections: GallerySection[]): string => {
-  const seed = sections
-    .map(
-      (section) =>
-        `${section.id}:${section.items
-          .map((item) => `${item.id}.${item.isAnimated ? 'gif' : 'png'}`)
-          .join(',')}`
-    )
-    .join('|');
-  return hashFnv1a(seed);
-};
-
 const GALLERY_CACHE_KEY = buildGalleryCacheKey(gallerySections);
 
-// Base URL for sample QR codes / hosted gallery assets.
-export function getGalleryBaseUrl(): string {
-  return 'https://anqr.link';
-}
-
-export const GALLERY_IMAGE_PATH = '/gallery';
-
-function buildGallerySearchParams(item: GalleryItem): URLSearchParams {
-  const baseUrl = getGalleryBaseUrl();
-  const params = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(item.params)) {
-    if (value === undefined || value === null) continue;
-    if ((key === 'fg' || key === 'bg') && typeof value === 'string') {
-      params.set(key, value.replace('#', ''));
-    } else if (key === 'img' && typeof value === 'string' && value.startsWith('/')) {
-      params.set(key, `${baseUrl}${value}`);
-    } else {
-      params.set(key, String(value));
-    }
-  }
-
-  return params;
-}
-
-export function buildGalleryUrl(item: GalleryItem): string {
-  const params = buildGallerySearchParams(item);
-  const query = params.toString();
-  return `/?${query}`;
-}
-
-export function buildGalleryRenderImageUrl(
-  item: GalleryItem,
-  formatOverride?: 'png' | 'gif'
-): string {
-  const baseUrl = getGalleryBaseUrl();
-  const params = buildGallerySearchParams(item);
-  params.set('format', formatOverride || (item.isAnimated ? 'gif' : 'png'));
-  params.set('_fullRender', '1');
-  return `${baseUrl}/api/qr?${params.toString()}`;
-}
-
 export function getGalleryImagePath(item: GalleryItem, formatOverride?: 'png' | 'gif'): string {
-  const ext = formatOverride || (item.isAnimated ? 'gif' : 'png');
-  const encodedId = encodeURIComponent(item.id);
-  const relativePath = `${GALLERY_IMAGE_PATH}/${encodedId}.${ext}`;
-  const remotePath = `${getGalleryBaseUrl()}${relativePath}`;
-
-  // Gallery images are always served from the deployed host. This keeps
-  // app/web behavior identical and avoids bundling gallery artifacts locally.
-  return `${remotePath}?v=${GALLERY_CACHE_KEY}`;
+  return getGalleryImagePathBase(item, GALLERY_CACHE_KEY, formatOverride);
 }

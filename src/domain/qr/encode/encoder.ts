@@ -4,14 +4,17 @@
  */
 
 import { createLogger } from '../../../infra/logging/logger';
+import { autoDetectTypeNumber } from './auto-detect-type-number';
 import { qrBitBuffer } from './bit-buffer';
+import { composeSvgAccessibilityAttr } from './compose-svg-accessibility-attr';
 import { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
-
-const _log = createLogger('ENCODER');
-
+import { computeBlockECData, interleaveCodewords } from './ec-codewords';
 import { qrPolynomial } from './math';
 import { createDataURL } from './output';
+import { padDataBuffer } from './pad-data-buffer';
+import { placeDataBitInModule } from './place-data-bit-in-module';
 import { getRSBlocks } from './rs-blocks';
+import type { SvgAccessibilityAttr } from './svg-accessibility-attr';
 import type {
   QRBitBuffer as QRBitBufferType,
   QRCodeInstance,
@@ -29,142 +32,7 @@ import {
   getPatternPosition,
 } from './utils';
 
-const PAD0 = 0xec;
-const PAD1 = 0x11;
-
-interface SvgAccessibilityAttr {
-  text: string | null;
-  id: string | null;
-}
-
-function composeSvgAccessibilityAttr(value: unknown, defaultId: string): SvgAccessibilityAttr {
-  let result: SvgAccessibilityAttr = { text: null, id: null };
-  if (typeof value === 'string') {
-    result = { text: value, id: value ? defaultId : null };
-  } else if (value && typeof value === 'object') {
-    result = value as SvgAccessibilityAttr;
-  }
-  result.text = result.text || null;
-  result.id = result.text ? result.id || defaultId : null;
-  return result;
-}
-
-function autoDetectTypeNumber(errorCorrectionLevel: number, dataList: QRDataSegment[]): number {
-  for (let typeNum = 1; typeNum < 40; typeNum++) {
-    const rsBlocks = getRSBlocks(typeNum, errorCorrectionLevel);
-    const buffer = qrBitBuffer();
-    for (let i = 0; i < dataList.length; i++) {
-      const data = dataList[i];
-      buffer.put(data.getMode(), 4);
-      buffer.put(data.getLength(), getLengthInBits(data.getMode(), typeNum));
-      data.write(buffer);
-    }
-    let totalDataCount = 0;
-    for (let i = 0; i < rsBlocks.length; i++) {
-      totalDataCount += rsBlocks[i].dataCount;
-    }
-    if (buffer.getLengthInBits() <= totalDataCount * 8) {
-      return typeNum;
-    }
-  }
-  return 40;
-}
-
-function placeDataBitInModule(
-  modules: (boolean | null)[][],
-  row: number,
-  col: number,
-  data: number[],
-  maskFunc: (r: number, c: number) => boolean,
-  state: { bitIndex: number; byteIndex: number }
-): void {
-  if (modules[row][col] != null) return;
-
-  let dark = false;
-  if (state.byteIndex < data.length) {
-    dark = ((data[state.byteIndex] >>> state.bitIndex) & 1) === 1;
-  }
-  if (maskFunc(row, col)) {
-    dark = !dark;
-  }
-  modules[row][col] = dark;
-  state.bitIndex -= 1;
-  if (state.bitIndex === -1) {
-    state.byteIndex += 1;
-    state.bitIndex = 7;
-  }
-}
-
-function padDataBuffer(buffer: QRBitBufferType, totalDataCount: number): void {
-  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-    buffer.put(0, 4);
-  }
-  while (buffer.getLengthInBits() % 8 !== 0) {
-    buffer.putBit(false);
-  }
-  while (true) {
-    if (buffer.getLengthInBits() >= totalDataCount * 8) break;
-    buffer.put(PAD0, 8);
-    if (buffer.getLengthInBits() >= totalDataCount * 8) break;
-    buffer.put(PAD1, 8);
-  }
-}
-
-function computeBlockECData(
-  buffer: QRBitBufferType,
-  rsBlock: { dataCount: number; totalCount: number },
-  offset: number
-): { dcdata: number[]; ecdata: number[]; newOffset: number } {
-  const dcCount = rsBlock.dataCount;
-  const ecCount = rsBlock.totalCount - dcCount;
-
-  const dcdata = new Array(dcCount);
-  for (let i = 0; i < dcCount; i += 1) {
-    dcdata[i] = 0xff & buffer.getBuffer()[i + offset];
-  }
-
-  const rsPoly = getErrorCorrectPolynomial(ecCount);
-  const rawPoly = qrPolynomial(dcdata, rsPoly.getLength() - 1);
-  const modPoly = rawPoly.mod(rsPoly);
-  const ecdata = new Array(rsPoly.getLength() - 1);
-  for (let i = 0; i < ecdata.length; i += 1) {
-    const modIndex = i + modPoly.getLength() - ecdata.length;
-    ecdata[i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;
-  }
-
-  return { dcdata, ecdata, newOffset: offset + dcCount };
-}
-
-function interleaveCodewords(
-  dcdata: number[][],
-  ecdata: number[][],
-  maxDcCount: number,
-  maxEcCount: number,
-  totalCodeCount: number
-): number[] {
-  const data = new Array<number>(totalCodeCount);
-  let index = 0;
-
-  for (let i = 0; i < maxDcCount; i += 1) {
-    for (let r = 0; r < dcdata.length; r += 1) {
-      if (i < dcdata[r].length) {
-        data[index] = dcdata[r][i];
-        index += 1;
-      }
-    }
-  }
-
-  for (let i = 0; i < maxEcCount; i += 1) {
-    for (let r = 0; r < ecdata.length; r += 1) {
-      if (i < ecdata[r].length) {
-        data[index] = ecdata[r][i];
-        index += 1;
-      }
-    }
-  }
-
-  return data;
-}
+const _log = createLogger('ENCODER');
 
 /**
  * Create a QR code instance

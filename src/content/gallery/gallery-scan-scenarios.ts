@@ -1,36 +1,9 @@
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-
-export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test' | 'santa' | 'dance';
-export type ScenarioFeatureGroup =
-  | 'overlay'
-  | 'preservation'
-  | 'render'
-  | 'encoding'
-  | 'animation'
-  | 'output'
-  | 'watermark'
-  | 'preprocessing'
-  | 'dithering'
-  | 'qr-art';
-
-export interface CanonicalFixture {
-  id: CanonicalFixtureId;
-  filePath: string;
-  publicPath: string;
-  isAnimated: boolean;
-}
-
-export interface GalleryScanScenario {
-  id: string;
-  title: string;
-  description: string;
-  featureGroup: ScenarioFeatureGroup;
-  heroPriority: number;
-  galleryEligible: boolean;
-  useOverlay: boolean;
-  generatorPatch: Partial<QRGeneratorConfig>;
-  galleryParams: Record<string, string | number | boolean>;
-}
+export type { CanonicalFixtureId } from './gallery-scan-scenario-types/canonical-fixture-id';
+export type { ScenarioFeatureGroup } from './gallery-scan-scenario-types/scenario-feature-group';
+export type { CanonicalFixture } from './gallery-scan-scenario-types/canonical-fixture';
+export type { GalleryScanScenario } from './gallery-scan-scenario-types/gallery-scan-scenario';
+import type { CanonicalFixture } from './gallery-scan-scenario-types/canonical-fixture';
+import type { GalleryScanScenario } from './gallery-scan-scenario-types/gallery-scan-scenario';
 
 export const CANONICAL_FIXTURES: readonly CanonicalFixture[] = [
   { id: 'tsunami', filePath: 'public/tsunami.jpg', publicPath: '/tsunami.jpg', isAnimated: false },

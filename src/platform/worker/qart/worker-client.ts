@@ -1,102 +1,13 @@
 import { createLogger } from '../../../infra/logging/logger';
-import type {
-  QArtWorkerGenerateInput,
-  QArtWorkerGeneratePayload,
-  QArtWorkerMessage,
-  QArtWorkerResultPayload,
-} from './worker-protocol';
-
-const log = createLogger('QART');
-const DEFAULT_TIMEOUT_MS = 90_000;
-
-type PendingRequest = {
-  resolve: (result: QArtWorkerResultPayload) => void;
-  reject: (error: Error) => void;
-  onProgress?: (stage: string, percent: number) => void;
-  timeoutId: ReturnType<typeof setTimeout>;
-  removeAbortListener?: () => void;
-};
-
-let worker: Worker | null = null;
-let workerFailed = false;
-let nextId = 0;
-const pending = new Map<number, PendingRequest>();
-
-const toWorkerPayload = (input: QArtWorkerGenerateInput): QArtWorkerGeneratePayload => {
-  // Copy pixels before transfer so callers can safely re-read/reuse source ImageData.
-  const pixelsCopy = new Uint8ClampedArray(input.targetImage.data);
-  return {
-    data: input.data,
-    ecc: input.ecc,
-    version: input.version,
-    maskPattern: input.maskPattern,
-    lockVersionToMinimum: input.lockVersionToMinimum,
-    strictSuffix: input.strictSuffix,
-    targetControlPercent: input.targetControlPercent,
-    searchAttempts: input.searchAttempts,
-    searchSeed: input.searchSeed,
-    performanceProfile: input.performanceProfile,
-    renderConfig: input.renderConfig,
-    renderInWorker: input.renderInWorker,
-    targetImageWidth: input.targetImage.width,
-    targetImageHeight: input.targetImage.height,
-    targetImagePixels: pixelsCopy,
-  };
-};
-
-const failAllPending = (error: Error): void => {
-  for (const [id, request] of pending.entries()) {
-    pending.delete(id);
-    clearTimeout(request.timeoutId);
-    request.removeAbortListener?.();
-    request.reject(error);
-  }
-};
-
-const ensureWorker = (): Worker | null => {
-  if (workerFailed) return null;
-  if (worker) return worker;
-
-  try {
-    const w = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-
-    w.onmessage = (event: MessageEvent<QArtWorkerMessage>) => {
-      const message = event.data;
-      if (!message || typeof message !== 'object') return;
-
-      if (message.type === 'progress') {
-        pending.get(message.id)?.onProgress?.(message.stage, message.percent);
-        return;
-      }
-
-      if (message.type === 'result') {
-        const request = pending.get(message.id);
-        if (!request) return;
-
-        pending.delete(message.id);
-        clearTimeout(request.timeoutId);
-        request.removeAbortListener?.();
-        request.resolve(message.result);
-      }
-    };
-
-    w.onerror = (event) => {
-      const error = new Error(event.message || 'QArt worker failed');
-      log.warn('QArt worker error, falling back to main thread', { message: error.message });
-      workerFailed = true;
-      w.terminate();
-      worker = null;
-      failAllPending(error);
-    };
-
-    worker = w;
-    return w;
-  } catch (err) {
-    log.warn('Failed to create QArt worker', { error: err });
-    workerFailed = true;
-    return null;
-  }
-};
+import type { QArtWorkerGenerateInput, QArtWorkerResultPayload } from './worker-protocol';
+import { ensureWorker } from './ensure-worker';
+import { failAllPending } from './fail-all-pending';
+import type { PendingRequest } from './pending-request.type';
+import { terminateQArtWorker as terminateQArtWorkerCore } from './terminate-worker';
+import { DEFAULT_TIMEOUT_MS } from './worker-timeout-ms.const';
+export { terminateQArtWorker } from './terminate-qart-worker';
+import { toWorkerPayload } from './to-worker-payload';
+import { workerClientState } from './worker-client-state';
 
 export async function generateQArtInWorker(
   payload: QArtWorkerGenerateInput,
@@ -111,15 +22,15 @@ export async function generateQArtInWorker(
     throw new Error('QArt worker unavailable');
   }
 
-  const id = ++nextId;
+  const id = ++workerClientState.nextId;
 
   return await new Promise<QArtWorkerResultPayload>((resolve, reject) => {
     const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const timeoutId = setTimeout(() => {
-      const request = pending.get(id);
+      const request = workerClientState.pending.get(id);
       if (!request) return;
 
-      pending.delete(id);
+      workerClientState.pending.delete(id);
       w.postMessage({ type: 'cancel', id });
       reject(new Error(`QArt worker timed out after ${timeoutMs}ms`));
     }, timeoutMs);
@@ -133,9 +44,9 @@ export async function generateQArtInWorker(
     }
 
     const onAbort = () => {
-      const request = pending.get(id);
+      const request = workerClientState.pending.get(id);
       if (!request) return;
-      pending.delete(id);
+      workerClientState.pending.delete(id);
       clearTimeout(request.timeoutId);
       request.removeAbortListener?.();
       w.postMessage({ type: 'cancel', id });
@@ -146,7 +57,7 @@ export async function generateQArtInWorker(
       signal.addEventListener('abort', onAbort, { once: true });
     }
 
-    pending.set(id, {
+    workerClientState.pending.set(id, {
       resolve,
       reject,
       timeoutId,
@@ -162,12 +73,4 @@ export async function generateQArtInWorker(
     const transferables: Transferable[] = [workerPayload.targetImagePixels.buffer as ArrayBuffer];
     w.postMessage({ type: 'generate', id, payload: workerPayload }, transferables);
   });
-}
-
-export function terminateQArtWorker(): void {
-  if (worker) {
-    worker.terminate();
-    worker = null;
-  }
-  failAllPending(new Error('QArt worker terminated'));
 }

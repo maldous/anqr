@@ -1,29 +1,10 @@
-import { MAX_CONTEXT_DEPTH } from './logger-state';
-import type { LogContext } from './logger-types';
-
-const SENSITIVE_KEYS = new Set([
-  'password',
-  'token',
-  'secret',
-  'apikey',
-  'api_key',
-  'authorization',
-  'auth',
-  'credential',
-  'sessionid',
-  'session_id',
-  'accesstoken',
-  'access_token',
-  'refreshtoken',
-  'refresh_token',
-  'privatekey',
-  'private_key',
-]);
-
-const REDACTED = '[REDACTED]';
+import { maxDepthRedaction } from './max-depth-redaction';
+import { REDACTED } from './redacted.const';
+import { SENSITIVE_KEYS } from './sensitive-keys.const';
 
 export function redactSensitive(obj: unknown, depth = 0): unknown {
-  if (depth > MAX_CONTEXT_DEPTH) return '[MAX_DEPTH]';
+  const maxDepth = maxDepthRedaction(depth);
+  if (maxDepth !== null) return maxDepth;
   if (obj === null || obj === undefined) return obj;
   if (typeof obj !== 'object') return obj;
 
@@ -43,8 +24,4 @@ export function redactSensitive(obj: unknown, depth = 0): unknown {
       : redactSensitive(value, depth + 1);
   }
   return result;
-}
-
-export function sanitizeLogContext(context?: LogContext): LogContext | undefined {
-  return context ? (redactSensitive(context) as LogContext) : undefined;
 }

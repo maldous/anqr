@@ -1,0 +1,1 @@
+export type RunLengthCanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
