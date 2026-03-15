@@ -51,15 +51,10 @@ packages/
     depcruise/
     build/
 
-tools/
-  harness/
-    email-ingest/
-    linear/
+scripts/
+  ops/
+    lib/
     symphony/
-    watchdog/
-    workflows/
-    model-eval/
-    reporting/
 
 docs/
   program/
@@ -79,5 +74,5 @@ tests/
 
 - `apps/*` are delivery targets
 - `packages/*` are the reusable architecture
-- `tools/harness/*` is the local operating engine
+- `scripts/ops/*` is the local operating engine (systemd timers, CLI scripts)
 - `docs/*` is canonical governance and doctrine

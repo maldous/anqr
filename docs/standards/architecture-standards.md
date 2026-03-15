@@ -95,26 +95,37 @@ The layer rules below govern `src/` during the transition period.
 
 Colocated `*.spec.ts` files remain preferred for package-level and feature-level unit tests.
 
-### tools/
+### scripts/ops/
 
 **Purpose:**
 
 - local operating engine — not deployed to production
+- all automation scripts executed by systemd timers or manually
 
-| Directory | Description |
+| Directory / File | Description |
 |---|---|
-| `tools/harness/email-ingest/` | email processing pipeline |
-| `tools/harness/linear/` | Linear API integration |
-| `tools/harness/symphony/` | orchestration engine |
-| `tools/harness/watchdog/` | health monitoring |
-| `tools/harness/workflows/` | automation workflows |
-| `tools/harness/model-eval/` | model evaluation harness |
-| `tools/harness/reporting/` | metrics and reporting |
+| `scripts/ops/symphony-runner.mjs` | execution orchestrator (picks issues, runs agent) |
+| `scripts/ops/symphony-agent.mjs` | tool-calling AI agent (Ollama) |
+| `scripts/ops/symphony-config.mjs` | centralized queue/execution config |
+| `scripts/ops/symphony-credit-gate.mjs` | provider cascade (credit gate) |
+| `scripts/ops/symphony-queue-control.mjs` | queue feeder, drain, enforcement |
+| `scripts/ops/symphony/WORKFLOW.md` | agent system prompt (versioned) |
+| `scripts/ops/linear-client.mjs` | Linear API helpers |
+| `scripts/ops/linear-guardian.mjs` | rule-based issue management |
+| `scripts/ops/harness-report.mjs` | deterministic health checks |
+| `scripts/ops/nightly-ops-pass.mjs` | nightly orchestration pipeline |
+| `scripts/ops/notify.mjs` | notification dispatch (stdout + email) |
+| `scripts/ops/lib/notify.mjs` | email helper (msmtp + rate limiting) |
+| `scripts/ops/email-ingest.mjs` | email-to-issue ingest (mbsync + notmuch) |
+| `scripts/ops/ollama-local-audit.mjs` | model health verification |
+| `scripts/ops/litellm-config.yaml` | local model aliases |
+| `scripts/ops/model-injector-proxy.py` | request normalization |
 
 **Rules:**
 
 - no production dependency constraints
 - must not be imported by `apps/`, `packages/`, or `src/`
+- systemd units in `services/systemd/` reference these scripts directly
 
 ### netlify/
 

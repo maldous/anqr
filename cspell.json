@@ -106,7 +106,8 @@
     "notmuch",
     "matthewaldous",
     "dedup",
-    "Aldous"
+    "Aldous",
+    "subcontext"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

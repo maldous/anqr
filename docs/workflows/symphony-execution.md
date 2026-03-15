@@ -188,7 +188,7 @@ The Symphony runner (`anqr-symphony-runner.timer`) is the execution agent that p
 
 Agent tools: `read_file`, `write_file`, `patch_file`, `run_command` (allowlisted), `list_directory`, `task_complete`.
 
-System prompt loaded from `tools/harness/symphony/WORKFLOW.md` (versioned in-repo, per OpenAI Symphony spec).
+System prompt loaded from `scripts/ops/symphony/WORKFLOW.md` (versioned in-repo, per OpenAI Symphony spec).
 
 ```bash
 npm run symphony:run          # execute one issue
@@ -337,7 +337,7 @@ The guardian is deterministic, not AI-driven:
 | `scripts/ops/symphony-runner.mjs` | Execution orchestrator (self-feeding) | ANQ-374, ANQ-376 |
 | `scripts/ops/symphony-agent.mjs` | Tool-calling AI agent | ANQ-374 |
 | `scripts/ops/symphony-credit-gate.mjs` | Provider cascade (credit gate) | ANQ-374 |
-| `tools/harness/symphony/WORKFLOW.md` | Agent system prompt (versioned) | ANQ-374 |
+| `scripts/ops/symphony/WORKFLOW.md` | Agent system prompt (versioned) | ANQ-374 |
 | `services/systemd/anqr-symphony-runner.service` | systemd runner service | ANQ-374 |
 | `services/systemd/anqr-symphony-runner.timer` | systemd runner timer (2min) | ANQ-374 |
 | `scripts/ops/lib/notify.mjs` | Email notification helper (msmtp + rate limiting) | ANQ-377 |
