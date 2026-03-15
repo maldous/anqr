@@ -14,6 +14,7 @@
  *   - run_command(command)           — run an allowlisted read-only command
  *   - list_directory(path)           — list directory contents
  *   - run_typecheck()               — run tsc --noEmit and return errors
+ *   - run_lint()                    — run oxlint and return errors
  *   - task_complete(summary)         — signal completion
  *
  * Limits:
@@ -125,8 +126,16 @@ const TOOL_DEFINITIONS = [
   {
     type: 'function',
     function: {
+      name: 'run_lint',
+      description: 'Run the linter (oxlint) to check for lint errors. Returns the linter output. Always run this after making changes and fix any errors before calling task_complete.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'task_complete',
-      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck first and fix any errors before calling this.',
+      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck and run_lint first and fix any errors before calling this.',
       parameters: {
         type: 'object',
         properties: {
@@ -260,10 +269,29 @@ function toolRunTypecheck(projectRoot) {
   }
 }
 
+function toolRunLint(projectRoot) {
+  try {
+    execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
+      cwd: projectRoot,
+      timeout: 60_000,
+      maxBuffer: 2 * 1024 * 1024,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    return 'Lint passed — no errors.';
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim();
+    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
+  }
+}
+
 function executeTool(projectRoot, toolCall) {
   const name = toolCall.function.name;
 
   if (name === 'run_typecheck') return toolRunTypecheck(projectRoot);
+  if (name === 'run_lint') return toolRunLint(projectRoot);
 
   let args;
   try {
@@ -351,10 +379,12 @@ function buildIssuePrompt(issue) {
     '3. Make the minimal necessary changes using write_file or patch_file',
     '4. Run run_typecheck to verify there are no type errors',
     '5. If there are type errors, fix them and run run_typecheck again',
-    '6. Call task_complete with a summary of what you changed',
+    '6. Run run_lint to verify there are no lint errors',
+    '7. If there are lint errors, fix them and run run_lint again',
+    '8. Call task_complete with a summary of what you changed',
     '',
     'Keep changes minimal. Do not modify files unnecessarily.',
-    'IMPORTANT: Always run run_typecheck before calling task_complete. Fix all type errors first.',
+    'IMPORTANT: Always run run_typecheck AND run_lint before calling task_complete. Fix all errors first.',
   );
 
   return lines.join('\n');
