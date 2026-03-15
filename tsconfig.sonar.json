@@ -4,5 +4,5 @@
     "allowJs": false,
     "noEmit": true
   },
-  "include": ["src", "src/types", "netlify", "vite.config.ts"]
+  "include": ["src", "src/types", "netlify", "scripts", "vite.config.ts"]
 }

@@ -24,16 +24,21 @@ concurrency:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
           - language: javascript-typescript
+            os: ubuntu-latest
             build-mode: manual
           - language: python
+            os: ubuntu-latest
             build-mode: none
+          - language: swift
+            os: macos-latest
+            build-mode: manual
 
     steps:
       - name: Checkout
@@ -65,6 +70,17 @@ jobs:
       - name: Build JavaScript/TypeScript
         if: matrix.language == 'javascript-typescript'
         run: npm run typecheck
+
+      - name: Build Swift iOS app
+        if: matrix.language == 'swift'
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4

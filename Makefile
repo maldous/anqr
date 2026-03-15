@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child issue\:cleanup\:comments board\:hygiene ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open android\:quality install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality quality\:stack web\:quality api\:quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child issue\:cleanup\:comments board\:hygiene ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots ios\:quality test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -33,6 +33,7 @@ help:
 	@echo ""
 	@echo "  7) Quality"
 	@echo "    make quality lint format fix check"
+	@echo "    make web:quality api:quality android:quality ios:quality quality:stack"
 	@echo ""
 	@echo "  8) Testing"
 	@echo "    make test test:full test:unit test:ui test:report"
@@ -64,6 +65,9 @@ help:
 	@echo " 13) Android"
 	@echo "    make android android:init android:sync android:build android:release"
 	@echo "    make android:upload android:run android:open android:keystore android:bump"
+	@echo ""
+	@echo " 13b) iPhone / iOS"
+	@echo "    make ios:quality ios:build ios:archive ios:beta ios:release"
 	@echo ""
 	@echo " 14) Reports / Misc Utilities"
 	@echo "    make report:payload:matrix report:i18n:txt sonar-report qr:art resources"
@@ -1139,6 +1143,14 @@ sonar:
 		echo "SKIP: SonarQube server unavailable at $(SONAR_HOST_URL); skipping non-blocking local analysis."; \
 	else \
 		$(MAKE) test:unit:coverage || echo "⚠️  Coverage generation failed — sonar will run without coverage data"; \
+		if [ -x android/gradlew ]; then \
+			if [ ! -f android/capacitor-cordova-android-plugins/cordova.variables.gradle ]; then \
+				echo "Restoring generated Android Capacitor files for Sonar..."; \
+				CAPACITOR_PLATFORM=android npm run build && npx cap sync android; \
+			fi; \
+			echo "Preparing Android Java classes for Sonar..."; \
+			(cd android && ./gradlew compileDebugJavaWithJavac compileDebugUnitTestJavaWithJavac) || echo "⚠️  Android Java compile failed — Sonar may not be able to analyze native Android sources"; \
+		fi; \
 		npx sonar-scanner; \
 	fi
 	@echo ""
@@ -1199,6 +1211,43 @@ _quality-gates:
 	$(MAKE) test:bundle:budget
 
 quality: _quality-gates
+
+web\:quality: _quality-gates
+
+api\:quality:
+	@echo "Running API quality checks..."
+	npx playwright test --project=api
+	@if [ -f openapi.yaml ] || [ -f openapi.yml ] || [ -f openapi.json ] || [ -f api/openapi.yaml ] || [ -f api/openapi.yml ] || [ -f api/openapi.json ]; then \
+		SPEC=$$(find . -maxdepth 2 -type f \( -name 'openapi.yaml' -o -name 'openapi.yml' -o -name 'openapi.json' \) | head -n 1); \
+		echo "Using OpenAPI spec: $$SPEC"; \
+		npx swagger-cli validate "$$SPEC"; \
+		npx @redocly/cli lint "$$SPEC"; \
+		npx @stoplight/spectral-cli lint "$$SPEC"; \
+	else \
+		echo "No OpenAPI spec found, skipping swagger/redocly/spectral/schemathesis checks"; \
+	fi
+
+android\:quality:
+	@echo "Running Android native quality checks..."
+	@if [ ! -f android/capacitor-cordova-android-plugins/cordova.variables.gradle ]; then \
+		echo "Restoring generated Android Capacitor files..."; \
+		CAPACITOR_PLATFORM=android npm run build && npx cap sync android; \
+	fi
+	cd android && ./gradlew compileDebugJavaWithJavac lintDebug
+	@if find android -type f -name '*.kt' | grep -q .; then \
+		detekt-cli --input android/app/src/main/java --build-upon-default-config; \
+		npx ktlint "android/**/*.kt"; \
+	else \
+		echo "No Kotlin sources detected, skipping detekt/ktlint"; \
+	fi
+	@if which semgrep >/dev/null 2>&1; then \
+		semgrep --config auto android/app/src/main/java --error --quiet || true; \
+	else \
+		echo "semgrep not installed, skipping"; \
+	fi
+	@echo "Android native quality checks complete."
+
+quality\:stack: web\:quality api\:quality android\:quality ios\:quality
 
 signoff:
 	npm run test:signoff
@@ -1497,6 +1546,31 @@ ios\:screenshots:
 		node scripts/generate-appstore-screenshots.mjs; \
 	fi
 	@echo "App Store screenshots generated in ios/App/fastlane/screenshots/en-US/"
+
+# Linux-safe iOS native quality checks (Swift source only; no Xcode required)
+ios\:quality:
+	@echo "Running iOS native quality checks..."
+	@if which swiftformat >/dev/null 2>&1; then \
+		swiftformat --lint ios/App/App ios/App/CapApp-SPM/Sources; \
+	else \
+		echo "swiftformat not installed, skipping"; \
+	fi
+	@if which swiftlint >/dev/null 2>&1; then \
+		if which swift >/dev/null 2>&1 || which sourcekit-lsp >/dev/null 2>&1; then \
+			swiftlint lint --strict ios/App/App; \
+			swiftlint lint --strict ios/App/CapApp-SPM/Sources; \
+		else \
+			echo "swiftlint installed but SourceKit is unavailable on PATH, skipping"; \
+		fi; \
+	else \
+		echo "swiftlint not installed, skipping"; \
+	fi
+	@if which semgrep >/dev/null 2>&1; then \
+		semgrep --config auto ios/App/App ios/App/CapApp-SPM/Sources --error --quiet || true; \
+	else \
+		echo "semgrep not installed, skipping"; \
+	fi
+	@echo "iOS native quality checks complete."
 
 # Full iOS production build (archive only — upload separately)
 ios: ios\:archive

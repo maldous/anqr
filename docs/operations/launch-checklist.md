@@ -14,6 +14,8 @@ This page tracks operational launch checks. Historical detail from earlier exhau
 
 ### Web + API
 
+- `make web:quality` — Web/frontend static quality gate
+- `make api:quality` — API endpoint checks plus OpenAPI lint/validation when a spec exists
 - `make all` — Full 16-step production pipeline
 - `make quality` — 19-check quality gate pipeline
 - `make test` — Quality gates + unit + Playwright E2E + API tests (uses `netlify dev`)
@@ -23,6 +25,7 @@ This page tracks operational launch checks. Historical detail from earlier exhau
 
 ### iOS (macOS only)
 
+- `make ios:quality` — Linux-safe Swift quality checks (`swiftformat --lint`, `swiftlint`, `semgrep`)
 - `make ios:build` — Build debug app for iOS Simulator
 - `make test:appium:ios` — Appium E2E tests (requires Xcode + Simulator)
 - `make ios:archive` — Signed release archive
@@ -30,6 +33,7 @@ This page tracks operational launch checks. Historical detail from earlier exhau
 
 ### Android (Linux only)
 
+- `make android:quality` — Android native compile/lint plus Semgrep, with Kotlin-only tools when Kotlin sources exist
 - `make android:build` — Build debug APK
 - `make test:appium:android` — Appium E2E tests (requires emulator/device)
 - `make android:release` — Release AAB for Play Store
