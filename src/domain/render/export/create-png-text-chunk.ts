@@ -1,4 +1,4 @@
-import { calculateCrc32 } from './calculate-crc32';
+import { createPngChunk } from './create-png-chunk';
 
 /**
  * Create a PNG iTXt chunk for metadata embedding (UTF-8 safe)
@@ -43,26 +43,5 @@ export function createPngTextChunk(keyword: string, text: string): Uint8Array {
   // UTF-8 text (no null terminator needed)
   chunkData.set(textBytes, offset);
 
-  // Create full chunk: length (4 bytes) + type (4 bytes) + data + CRC (4 bytes)
-  const chunkType = new TextEncoder().encode('iTXt');
-  const chunk = new Uint8Array(4 + 4 + chunkData.length + 4);
-
-  // Length (big-endian)
-  const dataView = new DataView(chunk.buffer);
-  dataView.setUint32(0, chunkData.length, false);
-
-  // Type
-  chunk.set(chunkType, 4);
-
-  // Data
-  chunk.set(chunkData, 8);
-
-  // CRC32 over type + data
-  const crcData = new Uint8Array(4 + chunkData.length);
-  crcData.set(chunkType, 0);
-  crcData.set(chunkData, 4);
-  const crc = calculateCrc32(crcData);
-  dataView.setUint32(8 + chunkData.length, crc, false);
-
-  return chunk;
+  return createPngChunk('iTXt', chunkData);
 }

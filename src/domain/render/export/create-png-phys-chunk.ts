@@ -1,4 +1,4 @@
-import { calculateCrc32 } from './calculate-crc32';
+import { createPngChunk } from './create-png-chunk';
 
 /**
  * Create PNG pHYs chunk for DPI embedding
@@ -18,23 +18,5 @@ export function createPngPhysChunk(dpi: number): Uint8Array {
   // Unit specifier: 1 = meter
   chunkData[8] = 1;
 
-  // Create full chunk with length, type, data, CRC
-  const chunkType = new TextEncoder().encode('pHYs');
-  const chunk = new Uint8Array(4 + 4 + 9 + 4);
-  const chunkView = new DataView(chunk.buffer);
-
-  // Length
-  chunkView.setUint32(0, 9, false);
-  // Type
-  chunk.set(chunkType, 4);
-  // Data
-  chunk.set(chunkData, 8);
-  // CRC
-  const crcData = new Uint8Array(4 + 9);
-  crcData.set(chunkType, 0);
-  crcData.set(chunkData, 4);
-  const crc = calculateCrc32(crcData);
-  chunkView.setUint32(17, crc, false);
-
-  return chunk;
+  return createPngChunk('pHYs', chunkData);
 }

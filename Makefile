@@ -1148,8 +1148,8 @@ sonar:
 				echo "Restoring generated Android Capacitor files for Sonar..."; \
 				CAPACITOR_PLATFORM=android npm run build && npx cap sync android; \
 			fi; \
-			echo "Preparing Android Java classes for Sonar..."; \
-			(cd android && ./gradlew compileDebugJavaWithJavac compileDebugUnitTestJavaWithJavac) || echo "⚠️  Android Java compile failed — Sonar may not be able to analyze native Android sources"; \
+			echo "Preparing Android Java classes, lint, and JaCoCo XML for Sonar..."; \
+			(cd android && ./gradlew clean :app:testDebugUnitTest :app:jacocoTestReport lintDebug compileDebugJavaWithJavac compileDebugUnitTestJavaWithJavac) || echo "⚠️  Android Sonar prep failed — Sonar may not be able to analyze native Android sources or import Android coverage"; \
 		fi; \
 		npx sonar-scanner; \
 	fi

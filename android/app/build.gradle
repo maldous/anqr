@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'jacoco'
 
 android {
     namespace = "link.anqr.app"
@@ -146,3 +147,44 @@ dependencies {
 apply plugin: 'com.google.gms.google-services'
 
 apply from: 'capacitor.build.gradle'
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+tasks.register("jacocoTestReport", JacocoReport) {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    def javaClasses = fileTree(
+        dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+        excludes: [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*'
+        ]
+    )
+    def kotlinClasses = fileTree(
+        dir: "$buildDir/tmp/kotlin-classes/debug",
+        excludes: [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*'
+        ]
+    )
+
+    classDirectories.setFrom(files(javaClasses, kotlinClasses))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(dir: buildDir, includes: [
+        "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+        "jacoco/testDebugUnitTest.exec",
+        "outputs/code_coverage/debugAndroidTest/connected/**/*.ec"
+    ]))
+}

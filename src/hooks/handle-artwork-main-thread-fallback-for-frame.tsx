@@ -33,12 +33,12 @@ export async function handleArtworkMainThreadFallbackForFrame(params: {
   }
 
   if (params.frameIdx === 0) {
-    params.artworkState.setLockedMask(qartResult.maskPattern);
-    params.artworkState.setLockedVersion(qartResult.version);
+    params.artworkState.setLockedMask(qartResult.maskPattern ?? 0);
+    params.artworkState.setLockedVersion(qartResult.version ?? 0);
   }
   const qrArtConfig = {
     ...params.debouncedConfig,
-    typeNumber: qartResult.version,
+    typeNumber: qartResult.version ?? 0,
     overlayMode: undefined,
   } as QRGeneratorConfig;
   const rendered = await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig);

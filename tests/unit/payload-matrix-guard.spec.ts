@@ -25,7 +25,13 @@ function extractSwitchKinds(serializersSource: string): Set<string> {
 }
 
 function extractUIKinds(categorySource: string): Set<string> {
-  return new Set([...categorySource.matchAll(/value: '([^']+)' as PayloadKind/g)].map((m) => m[1]));
+  const literalKinds = [...categorySource.matchAll(/value: '([^']+)' as PayloadKind/g)].map(
+    (m) => m[1]
+  );
+  const tupleKinds = [
+    ...categorySource.matchAll(/\[\s*'([^']+)'\s*,\s*'payload\.[^']+'\s*\]/g),
+  ].map((m) => m[1]);
+  return new Set([...literalKinds, ...tupleKinds]);
 }
 
 function extractTextDrivenKinds(hooksSource: string): Set<string> {

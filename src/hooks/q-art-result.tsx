@@ -1,3 +1,1 @@
-import type { QArtModule } from './q-art-module';
-
-export type QArtResult = Awaited<ReturnType<QArtModule['generateFullQArtOptimal']>>;
+export type { FullQArtPipelineResult as QArtResult } from '@/features/generator/application/qart/qart-shared-types';

@@ -28,6 +28,7 @@ public class MainActivity extends BridgeActivity {
   private static boolean sentryInitialized = false;
 
   private static final String TAG = "ANQR";
+  private static final String CHECK_AND_OPEN_METHOD = "checkAndOpen";
   
   // Track back gesture state to prevent duplicate handling
   private static final long BACK_GESTURE_DEBOUNCE_MS = 500;
@@ -302,16 +303,16 @@ public class MainActivity extends BridgeActivity {
       // Call checkAndOpen to show consent if needed
       try {
         // Try checkAndOpen(boolean, callback) first
-        cmpManagerClass.getMethod("checkAndOpen", boolean.class, Object.class)
+        cmpManagerClass.getMethod(CHECK_AND_OPEN_METHOD, boolean.class, Object.class)
             .invoke(cmpManager, false, null);
       } catch (NoSuchMethodException e) {
         try {
           // Try checkAndOpen(context, callback)
-          cmpManagerClass.getMethod("checkAndOpen", android.content.Context.class, Object.class)
+          cmpManagerClass.getMethod(CHECK_AND_OPEN_METHOD, android.content.Context.class, Object.class)
               .invoke(cmpManager, this, null);
         } catch (NoSuchMethodException e2) {
           // Try checkAndOpen() with no params
-          cmpManagerClass.getMethod("checkAndOpen").invoke(cmpManager);
+          cmpManagerClass.getMethod(CHECK_AND_OPEN_METHOD).invoke(cmpManager);
         }
       }
       
