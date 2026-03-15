@@ -99,7 +99,8 @@
     "qwen",
     "automatable",
     "oneshot",
-    "groq"
+    "groq",
+    "journalctl"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

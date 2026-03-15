@@ -74,8 +74,8 @@ Linear (Todo issues)
 | `max_concurrent_agents` | 1 | Ollama is single-slot |
 | `target_min` | 1 | Minimum queue depth |
 | `target_max` | 2 | Maximum queue depth |
-| `RUNNER_MAX_TURNS` | 25 | Max tool-calling rounds per issue |
-| `RUNNER_MAX_EXECUTION_MS` | 600,000 (10 min) | Hard wall-time timeout |
+| `RUNNER_MAX_TURNS` | 600 | Max tool-calling rounds per issue |
+| `RUNNER_MAX_EXECUTION_MS` | 3,600,000 (60 min) | Hard wall-time timeout |
 | `RUNNER_MAX_RETRIES` | 2 | Attempts before demotion to Backlog |
 | `RUNNER_AUTO_PUSH` | false | Git push disabled by default |
 

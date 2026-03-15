@@ -18,8 +18,8 @@ export const TARGET_MIN = 1;
 export const TARGET_MAX = 2;
 export const MAX_CONCURRENT_AGENTS = 1;
 
-export const STALE_THRESHOLD_MS = 30 * 60 * 1000;
-export const TASK_TIMEOUT_MS = 5 * 60 * 1000;
+export const STALE_THRESHOLD_MS = 90 * 60 * 1000;  // 90 min (1.5x max execution)
+export const TASK_TIMEOUT_MS = 65 * 60 * 1000;     // 65 min (just past max execution)
 
 export const TITLE_PREFIX = 'Harness';
 export const REQUIRED_LABEL_IDS = [LABELS.reliability];
@@ -34,8 +34,8 @@ export const QUEUE_STATES = {
 // Runner configuration (Symphony execution agent)
 // ---------------------------------------------------------------------------
 
-export const RUNNER_MAX_TURNS = 25;
-export const RUNNER_MAX_EXECUTION_MS = 600_000; // 10 min hard timeout
+export const RUNNER_MAX_TURNS = 600;
+export const RUNNER_MAX_EXECUTION_MS = 3_600_000; // 60 min hard timeout
 export const RUNNER_MAX_RETRIES = 2;
 export const RUNNER_COMMIT_PREFIX = 'fix(symphony)';
 export const RUNNER_OLLAMA_MODEL = 'qwen3.5:35b-a3b-32t';
