@@ -729,7 +729,7 @@ paid\:approval:
 # This is intentionally separate from the earlier build steps.
 deploy: paid\:approval
 	SENTRY_UPLOAD=true npm run build
-	netlify deploy --prod --site anqr.link --dir=dist
+	npx netlify deploy --prod --site anqr.link --dir=dist
 
 # Submit all canonical URLs to search engines via IndexNow protocol.
 # Notifies Bing, Yandex, Naver, DuckDuckGo, and all participating engines.

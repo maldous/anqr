@@ -76,7 +76,6 @@
         "npm:loglevel-plugin-prefix@~0.8.4",
         "npm:loglevel@^1.9.2",
         "npm:lucide-react@0.563",
-        "npm:netlify-cli@^24.2.0",
         "npm:open-location-code@^1.0.3",
         "npm:openapi-generator-cli@1",
         "npm:oxc-minify@0.114",

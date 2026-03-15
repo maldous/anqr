@@ -32,7 +32,7 @@ jobs:
         include:
           - language: javascript-typescript
             os: ubuntu-latest
-            build-mode: manual
+            build-mode: none
           - language: python
             os: ubuntu-latest
             build-mode: none
@@ -45,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node
-        if: matrix.language == 'javascript-typescript'
+        if: matrix.language == 'javascript-typescript' || matrix.language == 'swift'
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -64,7 +64,7 @@ jobs:
           build-mode: ${{ matrix.build-mode }}
 
       - name: Install JavaScript dependencies
-        if: matrix.language == 'javascript-typescript'
+        if: matrix.language == 'javascript-typescript' || matrix.language == 'swift'
         run: npm ci
 
       - name: Build JavaScript/TypeScript
@@ -74,6 +74,11 @@ jobs:
       - name: Build Swift iOS app
         if: matrix.language == 'swift'
         run: |
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App
+
           xcodebuild \
             -project ios/App/App.xcodeproj \
             -scheme App \

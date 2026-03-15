@@ -92,14 +92,13 @@ export default defineConfig({
   // alongside the Vite app — required for API and cross-platform parity tests.
   webServer: hasProductionBuild
     ? {
-        command:
-          'npx netlify dev --command "npx vite preview --port 3000 --strictPort" --target-port 3000',
+        command: 'bash scripts/start-playwright-webserver.sh preview',
         url: 'http://localhost:8888',
         reuseExistingServer: !isCI,
         timeout: 60_000,
       }
     : {
-        command: 'npx netlify dev',
+        command: 'bash scripts/start-playwright-webserver.sh',
         url: 'http://localhost:8888',
         reuseExistingServer: !isCI,
         timeout: 180_000,
