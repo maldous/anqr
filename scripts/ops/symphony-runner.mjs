@@ -273,30 +273,15 @@ async function executeIssue(issue, dryRun) {
     return;
   }
 
-  // Move to In Progress
+  // Move to In Progress + post starting comment (counts toward attempt tracking)
   if (!dryRun) {
     await updateIssue(issue.id, { stateId: STATES.inProgress });
     await addComment(
       issue.id,
-      `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\nProvider selection in progress...`,
+      `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\nSelecting provider...`,
     );
   }
   console.log(`[runner] Moved ${issue.identifier} to In Progress${dryRun ? ' (dry-run: skipped)' : ''}`);
-
-  // Email: issue starting
-  if (!dryRun) {
-    sendNotification({
-      subject: `Symphony starting: ${issue.identifier} — ${issue.title}`,
-      body: [
-        `Issue ${issue.identifier} moved to In Progress (Attempt ${attempt}/${RUNNER_MAX_RETRIES}).`,
-        '',
-        `Title: ${issue.title}`,
-        `Priority: P${issue.priority}`,
-        `URL: ${linearIssueUrl(issue.identifier)}`,
-      ].join('\n'),
-      severity: 'info',
-    });
-  }
 
   // Select provider via credit gate
   const provider = await selectProvider();
@@ -314,6 +299,26 @@ async function executeIssue(issue, dryRun) {
     return;
   }
   console.log(`[runner] Selected provider: ${provider.name} (${provider.model})`);
+
+  // Update starting comment with provider info + send email
+  if (!dryRun) {
+    await addComment(
+      issue.id,
+      `▶️ **Provider selected:** ${provider.name} (${provider.model})`,
+    );
+    sendNotification({
+      subject: `Symphony starting: ${issue.identifier} — ${issue.title}`,
+      body: [
+        `Issue ${issue.identifier} moved to In Progress (Attempt ${attempt}/${RUNNER_MAX_RETRIES}).`,
+        '',
+        `Title: ${issue.title}`,
+        `Priority: P${issue.priority}`,
+        `Provider: ${provider.name} (${provider.model})`,
+        `URL: ${linearIssueUrl(issue.identifier)}`,
+      ].join('\n'),
+      severity: 'info',
+    });
+  }
 
   if (dryRun) {
     console.log('[runner] DRY RUN — would execute agent, validate, and commit');
