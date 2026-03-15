@@ -181,25 +181,17 @@ export async function getQueueDepth() {
 
 export async function getIssueDetail(identifier) {
   const result = await query(
-    `query($filter: IssueFilter!) {
-      issues(filter: $filter, first: 1) {
-        nodes {
-          id identifier title description priority
-          state { name }
-          labels { nodes { id name } }
-          comments { nodes { id body createdAt } }
-          createdAt updatedAt
-        }
+    `query($id: String!) {
+      issue(id: $id) {
+        id identifier title description priority
+        state { name }
+        labels { nodes { id name } }
+        comments { nodes { id body createdAt } }
+        createdAt updatedAt
       }
     }`,
-    {
-      filter: {
-        team: { id: { eq: TEAM_ID } },
-        identifier: { eq: identifier },
-      },
-    },
+    { id: identifier },
   );
-  const nodes = result.issues.nodes;
-  return nodes.length > 0 ? nodes[0] : null;
+  return result.issue || null;
 }
 
