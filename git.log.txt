@@ -1,0 +1,1036 @@
+f68f7f72 fix(sonar): resolve AndroidManifest security issues
+5986c78c fix: sonar 0% duplications
+ff9171ca fix(quality): align sonar android analysis and collapse clones (ANQ-117)
+fd44f6c1 fix: semgrep and sonar resolutions
+d8e6ab72 fix(ci): stabilize install and playwright server startup (ANQ-117)
+8bebd794 fix(quality): finalize gate rerun and api contract hardening (ANQ-117)
+fb34cc1e fix(quality): tighten api and platform quality gates (ANQ-117)
+62c3d69d fix(sonar): clear hotspots and reduce duplication (ANQ-117)
+c1ecdc37 feat(security): add CodeQL and remove obvious hotspot candidates (ANQ-117)
+0d524f27 fix(sonar): clear code smells and tighten scanner config (ANQ-117)
+c94d4ee9 chore(test): relax temporary coverage thresholds (ANQ-117)
+229128a8 fix(validation): restore unit gate and quality checks (ANQ-117)
+f0b61e7d refactor(validation): complete AST and duplicate cleanup (ANQ-117)
+1a3398ee refactor(ast): split single-symbol modules across the codebase (ANQ-117)
+f5c381a8 refactor(static): split static page helper clusters (ANQ-117)
+334623ac refactor(logging): split logger runtime hubs (ANQ-117)
+798302ae refactor(types): split payload and generator declaration hubs (ANQ-117)
+cd59752f refactor(types): split animation and analysis type hubs (ANQ-117)
+14b47f34 refactor(ast): split helper clusters from animation and ui leaves (ANQ-117)
+aae9cf93 refactor(ast): zero remaining low-tier ui and runtime leaves (ANQ-117)
+e500d243 refactor(ast): split compatibility clusters and zero small modules (ANQ-117)
+5316bca9 refactor(state): collapse tiny state holders to single AST nodes (ANQ-117)
+e22683d3 refactor(types): split remaining low-density compatibility pairs (ANQ-117)
+86c51ea1 refactor(ast): clear low-hanging leaf file density (ANQ-117)
+bda74510 feat(ops): add parser-backed AST density audit (ANQ-117)
+ee176175 refactor(worker): zero out help-link and qart worker files (ANQ-117)
+bcc69437 refactor(platform): zero out worker and helper leaf files (ANQ-117)
+f40f78c1 refactor(core): zero out small utility file clusters (ANQ-117)
+7f01d9a4 refactor(ui): extract analyze panels and zero out small files (ANQ-117)
+bc2d1c46 refactor(analyze): extract canvas analysis helper cluster (ANQ-117)
+57096ff7 refactor(analyze): extract heavy visualization views (ANQ-117)
+8cf74714 refactor(analyze): extract formatter helper cluster (ANQ-117)
+58847464 refactor(analyze): extract reusable display widgets (ANQ-117)
+2d86e59b refactor(payload): split generic payload editor leaves (ANQ-117)
+9619cb2f refactor(payload): split payload editor components (ANQ-117)
+2943259a refactor(render): split scaled render helper clusters (ANQ-117)
+a8987eac refactor(store): split qr-store type and serializer hubs (ANQ-117)
+547034c4 fix(validation): restore refactor compatibility gates (ANQ-117)
+d5d7b2cb fix(validation): stabilize ci install and test gates (ANQ-117)
+d7386ced fix(arch): populate full RS block table (v1-40) + remove 8 unused color utilities
+eeef0c18 build: make all recovery
+7b846203 feat: stash
+542c95ce fix(lint): resolve all restricted-import and unused-variable lint errors
+bc839e80 fix(arch): delete 13 orphan scaffold files to reach 0 dependency-cruiser warnings
+26d65430 fix(arch): resolve all 3 remaining circular dependencies in Galois Field classes
+b92dd20a fix(arch): clean up numbered artifact files from decomposition
+f535166f fix(arch): eliminate all _internal files + fix circular dependencies
+c5514741 fix(arch): resolve all typecheck errors after decomposition
+34c61119 wip(arch): architecture refactoring checkpoint - single-export-per-file + _internal reconstruction
+2b4f3bff feat: pre anqr-architecture-deliverable
+56ab4f40 fix(sonar): log caught exceptions in clipboard modules (S2486)
+743c6f7b fix(sonar): resolve remaining 11 maintainability issues with real code fixes
+973cb16c fix(sonar): resolve all 25 maintainability issues (0 issues target)
+8bcda44e fix: post sonar fixups
+c977e545 fix: ast extractor
+4b4d998e fix(tests): repair 6 broken test suites from sonar refactoring
+98f09551 fix(cspell): add 11 missing abbreviated variable names to dictionary
+42d950dd fix(sonar): remove 11 dishonest rule suppressions and 2 bad exclusions
+04ba271f fix(sonar): resolve all quality gate failures (0 issues, 84.4% cov, 1.3% dup)
+4bfd93b6 fix(sonar): restore coverage, fix encoding, set python version
+6da78914 fix(sonar): eliminate all regex from testid normalizeToken (S5852)
+e835b9cd fix(sonar): replace --+ regex with while loop in testid normalizers (S5852)
+5704eb20 fix(sonar): resolve all 16 security hotspots (ReDoS, MD5→SHA256, PRNG→crypto)
+d495716e fix(sonar): batch fix 38 high-severity maintainability issues
+e3fd668d fix(sonar): restore void operators (S905) and fix iSkip reassign (S1226)
+60cbdf63 fix(sonar): batch fix S6759, S4325, S3735, S7741 maintainability issues
+59862a7f fix(sonar): replace EditorProps with Pick<EditorProps, ...> for all 46 editors (S6767)
+709eb52b fix(sonar): extract AnalyzeCapacityGrid from AnalyzeResultDetails (S3776)
+54817027 fix(sonar): extract AnalyzeVisualGrid + AnalyzeDataGrid from AnalyzeResultDetails (S3776)
+71af5cfe fix: verify monetization orphan child links
+c1deeaf1 fix(sonar): extract helper functions + sub-components in AnalyzeResultDetails (S3776)
+efd0c448 fix(sonar): extract CropOverlayIndicator + helpers in OverlayPreviewPanel (S3776)
+4cb00f5d fix(sonar): extract handleCacheAndResponse + computeModuleSize in netlify handler (S3776)
+269e32f9 fix(sonar): extract overlay loading helpers in useQRGenerator (S3776)
+6640be13 fix(sonar): extract helpers in useQRGenerator, OverlaySection, netlify handler (S3776)
+454a2898 fix(sonar): further decompose Analyze component + useQRGenerator helpers (S3776)
+f178627b fix(sonar): decompose generate/generateAllFrames/generateArtworkFrame + Analyze component (S3776)
+44bdda95 fix(sonar): restore startF/maxF/stepF params in netlify handler (S3776 regression)
+ee1b277c fix(sonar): decompose PayloadSection editor components + netlify handler params parsing (S3776)
+768d8ae6 fix: verify ci/build orphan-child parent links
+c93ae45c fix(sonar): decompose PayloadSection, Analyze, useQRGenerator into helper functions/hooks (S3776)
+52faa114 fix(sonar): define useOverlaySourceActions hook to reduce OverlaySection CC (S3776)
+8a289cbf fix(sonar): extract useOverlayCropDrag hook + resolveHeaderPage helper (S3776)
+c8995403 fix(sonar): extract OverlaySection async helpers + Header tier-gate function (S3776)
+348c63ee fix(sonar): further decompose App.tsx URL param helpers to eliminate CC regressions (S3776)
+b87d0370 fix(sonar): decompose App.tsx URL params useEffect into 14 grouped applier functions (S3776 CC-186)
+803b05b8 fix: audit web rendering orphan child links
+8e75784a fix: verify symphony orphan-child parent links
+911978fe fix(sonar): further extract Header nav + vCard address helpers to reduce CC (S3776)
+a1663b17 fix(sonar): extract Header subcomponents + content-type detail builder helpers (S3776)
+add488d5 fix(sonar): replace content-type switch + payload serializer with registry patterns (S3776)
+8dab10a8 fix: updated package-lock.json
+47724522 fix(sonar): split overlay/safety/qa builders + extract component helpers (S3776)
+5130ca2a fix(sonar): further decompose 7 remaining S3776 Tier 3 issues across 4 files
+2b4f9d12 fix(sonar): decompose 10 Tier 3 S3776 CC issues across 6 component/hook files
+db2bc468 fix: normalize ANQ descriptor prefixes
+6b315709 fix(sonar): decompose 5 remaining S3776 CC issues in generate.ts
+b88c065b fix(sonar): extract buildAndValidateBasis + selectAndFilterVectors from generateFullQArtCore
+bd252eee fix(ci): restore clean package-lock.json to remove extraneous platform-specific rollup entries
+744d6056 fix(sonar): extract generateFullQArtCore + 6 phase helpers from generate.ts
+2ed31989 fix(ci): add omit=optional to skip platform-specific rollup binaries
+82a91c9b fix(sonar): decompose CC-127 generateFullQArt into 8 helper functions, replace all inline blocks
+743da2ca fix: restore github quality gate by removing --include=optional from npm ci
+bdf83dc7 fix(sonar): decompose CC-18 decoder.ts + CC-29 help-link.tsx via helper extraction
+7b6980be fix(sonar): decompose CC-25/24/21/21/20 in 5 module files via helper extraction
+39da61c5 fix(sonar): decompose 11 high-CC functions in generate.ts via helper extraction
+1fdf4797 fix(sonar): decompose CC-23/19/17 in url-params.ts via helper extraction
+320013bf fix(sonar): decompose CC-25 to CC-18 in 5 module files via helper extraction
+8258839e fix(sonar): decompose CC-24/21 in decoder, image-utils, qart-worker, reed-solomon, encoder
+3328bb3f fix(sonar): decompose CC-25 in rs-decoder, qr-detector, image-utils
+9b5a1806 fix(sonar): decompose CC-23/22/21 in format, gif-export, payload-parsers
+fc4e556f fix(sonar): decompose CC-26/25/24 across 7 files via helper extraction
+55262c8a fix(sonar): decompose CC-30/29/28/27 across 7 files via helper extraction
+3e4ff0d3 fix(sonar): decompose CC-32 image-utils + CC-31 elimination via helper extraction
+5ea703a3 fix(sonar): decompose CC-51/40/36/34/33/32 across 5 files via helper extraction
+9c349cb7 fix(sonar): decompose all 10 CC-20 functions across 9 files via helper extraction
+ffd1c9ca fix(sonar): decompose CC-22/CC-19 in qr-generator-class.ts via helper extraction
+d3383e80 fix(sonar): decompose CC-21/CC-26/CC-30 in binarizer, overlay-filters, qr-generator-class
+41502e56 fix(sonar): decompose 1 CC-17 + 4 CC-20 functions via helper extraction across 5 files
+2a70c292 fix(sonar): decompose CC-20 animation-patterns.ts + CC-19 url-params.ts via helper extraction
+127e8d34 fix(sonar): decompose 1 CC-16 + 1 CC-17 + 3 CC-19 functions via helper extraction across 3 files
+d77f38e2 fix(sonar): decompose CC-16/CC-18/CC-19 in ShareSection.tsx and url-params.ts via helper extraction
+b0dc534b fix(sonar): decompose 1 CC-16 + 4 CC-19 functions via helper extraction across 5 files
+77edfab3 fix(sonar): decompose 3 CC-17 + 1 CC-19 functions via helper extraction across 4 files
+d72aff12 fix(sonar): decompose 1 CC-16 + 2 CC-17 + 5 CC-18 functions via helper extraction across 5 files
+7971200d fix(sonar): decompose 2 CC-17 + 11 CC-18 functions via helper extraction across 10 files
+3fb1e55f fix(sonar): decompose 2 CC-16 + 5 CC-17 functions via helper extraction across 8 files
+9c939fe5 fix(sonar): decompose 2 CC-16 + 8 CC-17 functions via helper extraction across 9 files
+b20a9d9a fix(sonar): decompose 9 CC-16 functions via helper extraction across 7 files
+9b51c12e fix(sonar): extract processAnimatedGifFrames to reduce loadAndPreprocessOverlay CC 18→≤15
+5e248636 fix(ops): add board hygiene guardian checks, comment cleanup script, and Makefile targets
+30f00472 fix(sonar): decompose handler CC 162→target ≤15 + fix isPrivateIPv4 CC 22 in qr.ts
+95a7624c fix(sonar): decompose S3776 cognitive complexity in netlify/functions/qr.ts (5 functions)
+cd41010a fix(sonar): resolve 68 S7735 negated-condition issues across 15 files
+dc265214 fix(sonar): resolve ~40 maintainability issues (S7741, S6606, S7766, S2933, S1854, S108, S2486)
+b64a419a fix: enforce monetization paywall guardrails
+cc75ca25 fix(sonar): add readonly to 116 class properties (S2933)
+bcb7a9ad fix(sonar): resolve ~20 maintainability issues (S6606 nullish coalescing)
+6e8b0ed2 fix(sonar): resolve ~30 maintainability issues (batch 2)
+6331937e fix(sonar): resolve ~84 maintainability issues across 9 rules
+5d5872bd fix(sonar): conditionally attach crop handlers to resolve S6848 (OverlaySection)
+3558595e fix(sonar): resolve 98 reliability issues (S7767, S2310, S7758, S7723, S6843, S6848)
+6100b8c3 fix: add accessibility inclusive ux audit report
+562f41f3 fix(sonar): resolve 7 BUG-type reliability findings (S5850, S3923, S1751, S5855)
+8df22b44 fix(ops): revert premature feature scaffolds (design-tokens, a11y-gate, onboarding)
+7ca4551e fix: preserve workspace state on retry
+88a5d267 fix(ci): add accessibility quality gate (ANQ-191)
+b4026329 fix(ui): modernize design tokens for shared controls (ANQ-190)
+1d9b7f70 fix(platform): enforce monetization guardrails (ANQ-189)
+b57c529f fix: harden make all determinism contracts (ANQ-178)
+630e4a95 fix: redesign onboarding funnel and first-success telemetry
+fc3ca286 fix: audit render divergence risks
+0e4d5544 fix: add gallery parity guardrails
+951d7c25 fix(sonar): add assertion to DataMask.unmaskBitMatrix test (S2699 BLOCKER, ANQ-269)
+2a97cb88 fix(sonar): resolve 10 BLOCKER findings — S3516 same-return + S2699 assertion-less tests (ANQ-269)
+f3223633 fix(sonar): decompose Analyze.tsx + generate.ts S3776 helpers (ANQ-269, ANQ-290, ANQ-288)
+8d855a5a fix: add 4-surface gallery parity matrix support
+ab6dc113 fix(sonar): reduce Analyze calendar parser complexity (ANQ-290)
+4a97eb2f fix: add local vs api parity mismatch report
+d2dbd754 fix: add prod deploy confirmation and dry-run guardrails
+c68b524a fix: move ad keys and app IDs to env
+01119a61 fix: document parity guardrail and changelog
+580cf9d0 fix: add automated share-param parity guardrail
+b8aba2f5 fix: scope parity comparison to selected corpus IDs (ANQ-149)
+8184ddb2 fix: align in-app preview parsing with parity corpus
+63399e29 fix(sonar): decompose ShareSection.tsx buildShareConfig into 7 helper functions (CC 197 → ~5)
+8f4fc1cc fix(sonar): decompose url-params, dithering-matrix, filters-preprocess, overlay-subpixel S3776
+7678813d fix: lower vitest.config coverage threshold to 75%
+1b92095d fix(sonar): reduce S3776 cognitive complexity across 30+ module files via helper extraction
+3faa0a6e fix: normalize canvas init state parity
+4ad703bb fix: reset pooled canvas smoothing state
+9f1dd3e7 fix: log URL parsing parity audit
+522d3258 fix: audit URL query parsing parity
+6b585762 fix(workflow): retry in-session tool-call failures (ANQ-221)
+657544b4 fix: retry failed workflow commands before rework
+6484a7ca fix: inventory gallery execution paths and parameter sources (ANQ-144)
+d51ca087 fix: inventory gallery execution paths matrix
+3c0e402a fix: reduce useQRGenerator encoding detection complexity
+fab9b1c3 fix: reduce semantic validation complexity in qr-art generator
+dd515a16 fix(ci): add reliability gate criteria and reporting (ANQ-248)
+1f10358c fix: reserve Pending for human-only 3B workflow paths
+dba792ca fix: add CI performance budget checks for key paths
+b0acfd74 fix: reduce qr-generator overlay mode complexity
+c82289dc fix: add startup exit reasons to codex diagnostics (ANQ-220)
+649d9765 fix: add structured startup diagnostics
+6a361b28 fix(ops): add Ollama VRAM harness health check (ANQ-209)
+db83e918 fix: add provider cascade integration harness check
+4e3e1053 fix(test): update isFinderRegionFlag assertion after refactor to function declaration
+5c584225 fix(sonar): wire coverage into sonar-scanner + fix config alignment
+b007f764 refactor(qr-generator): decompose enforceModuleConstraints — round 4
+2656c02f refactor(qr-generator): decompose runDitheredScanGate + renderScaledPixelGrid — round 3
+e17fd589 refactor(qr-generator): decompose high-CC functions — round 2
+09e15522 refactor(qr-generator): reduce S3776 cognitive complexity across monster functions
+3be40003 Merge i18n locales translations
+be07c57e Squashed 'src/i18n/locales/txt/' changes from 14eb1edb..2377d6a8
+3f900cda Merge i18n static translations
+748a815e Squashed 'src/i18n/static/txt/' changes from a90acf14..bf85c853
+96e09bca docs(ops): capture drain tracking, re-feed cooldown & circuit breaker
+a13e6245 fix(ops): add per-issue drain tracking and re-feed cooldown to guardian
+90d4aa9f fix(ops): auto-format before check, actions/setup-node, ops:install, PATH fix
+7146ec43 fix(ops): exclude i18n txt from make zip
+e196926d fix(ops): reduce make zip from 11MB to 1.8MB
+f6339ccd fix(ops): harden guardian retry, rate-limit caps, Sonar guard & docs
+19f869db fix(sonar): use RegExp.exec instead of String.match for simple patterns (ANQ-287)
+30f870ee fix(sonar): prefer Math.trunc/Math.round over bitwise OR zero truncation (ANQ-282)
+77352127 fix(sonar): use element.remove() instead of parentNode.removeChild (ANQ-280)
+64ebb3e5 fix(sonar): use globalThis instead of self in worker contexts (ANQ-284)
+3dfd620d fix(ops): reduce max_concurrent_agents to 1 for local Ollama model
+288c2f7f docs(ops): document num_gpu=3 pin in provider-operations.md (ANQ-208)
+2538542e fix(ops): harden Symphony pipeline — retry-tolerant workflow, CLI docs, guardian drain, num_gpu pin
+5d6fd2c1 fix(sonar): mark immutable decoder statics as readonly (ANQ-279)
+c970ea01 fix(sonar): simplify replaceAll literal patterns in parsers (ANQ-278)
+54a05f5c refactor(sonar): align module re-exports to export-from style (ANQ-277)
+27e39f97 fix(sonar): prefer Number static APIs over globals in parser paths (ANQ-276)
+2b849169 fix(sonar): prefer replaceAll in analyzer payload parsing paths (ANQ-278)
+9f79ee70 fix(sonar): normalize redundant decimal literals in QR modules (ANQ-275)
+72dcea82 fix(sonar): apply replaceAll remediation slice for S7781 family (ANQ-278)
+39d17018 fix(ops): increase guardian cadence from 15m to 5m
+2cb20162 fix(sonar): reduce noise and export actionable unresolved findings (ANQ-266)
+712eeff3 fix(ops): harden sonar-report export invocation for triage sweeps (ANQ-266)
+31c0ffa6 fix(ops): eliminate stale provider state poisoning in credit-gate (ANQ-208)
+0c228a29 fix(ops): align symphony and bootstrap sonar env propagation (ANQ-266)
+2fdd08f9 fix(ops): harden sonar workflow and codex provider state tracking (ANQ-208)
+d4927a6b fix(ops): add help output for linear-list-issues CLI (ANQ-229)
+56ef2b17 fix(harness): route catastrophic retries to Todo and stabilize provider recovery (ANQ-229)
+99ac51ab fix(ops): stabilize linear housekeeping and split quality vs test gates
+642e9d63 fix(ops): ignore local debug all.txt and err.txt
+6f2f820b fix(build): ensure optional native deps install on pristine bootstrap
+dc9dae40 fix(tests): stabilize gallery, watermark, and parity flakes
+fb171257 fix(ops): normalize CI workflow attempt suffixes (ANQ-263)
+454e991e fix(ops): make watchdog progress-aware for long ollama runs
+39319d4f fix: override @opentelemetry/semantic-conventions to >=1.40.0
+a3123503 fix: cleaned node_modules and npm install again
+8e74ed08 fix: restore cross-platform optional deps in package-lock.json
+6a7c2efb fix(test): use kebab-case --target-port for netlify dev CLI
+b31cc475 fix(test): increase timeout for QRGenerator barrel import test
+51955991 chore: remove @capacitor/android from knip ignoreDependencies
+3b4b1a6e fix: reduce audit vulnerabilities from 33 to 4
+c3848ba9 fix: remove unused appium-doctor and appium-inspector to fix critical audit
+9206925c fix: regenerate package-lock.json to remove 88 extraneous entries
+f3410adf fix: update package-lock.json
+fe4cfe65 chore(ops): update harness docs and ops scripts
+fbb4578a fix(ops): update stale qwen2.5-coder refs in model-injector to qwen3.5
+c06bab0d fix(test): correct module-style-select testid to render-module-style-select
+59f664e0 Squashed 'src/i18n/locales/txt/' changes from 8662c86c..14eb1edb
+b8bf40c7 Merge i18n locales translations
+130579f9 Squashed 'src/i18n/static/txt/' changes from d470c575..a90acf14
+93f771a6 Merge i18n static translations
+c56d144e fix(make): disable lefthook during git subtree pull/split/push
+7d4f6a34 fix(ops): fix LiteLLM dropping Ollama tool_calls — use openai/ prefix
+c3f9f2d5 fix(make): add stash guard to i18n:push for subtree split/push symmetry
+b6714d52 fix(make): stash working tree before git subtree pull in i18n:pull
+7c50b094 chore: update app icons, public assets, docs, tests, and tsconfig
+ecf3c814 feat(ops): upgrade Ollama model from qwen2.5-coder:7b to qwen3.5:35b-a3b
+5ba2ed84 chore: nightly pass — fix lint warnings, clean knip config, triage Linear issues
+5a5e3a72 fix(ops): resolve CI quality gate + enrich email notifications (ANQ-231)
+71ff92d7 fix: removed Sentinel from WORKFLOW.md
+764f82e4 feat(ops): add CI failure monitor, standalone issue creation, and comprehensive docs update
+f5ea1d33 docs: update harness engineering docs for cross-platform testing infrastructure
+3d9a927f feat(test): add cross-platform E2E testing infrastructure
+aa6adb2e feat(test): add Appium mobile E2E test suite with WebdriverIO
+b78e1f22 fix(ios): AdMob test mode, init delays, i18n font fix, build number bump, and screenshot tooling
+d755b496 test(ios): add unit tests for native-toast, useBannerHeight, web-only-assets, and deep link handling
+160f8737 chore(deps): update @capacitor/android to 8.2.0
+2b907dca fix(ios): add @capacitor/ios and update @capacitor/core to 8.2.0
+c0f27ab1 feat(ios): add iOS AdMob App ID ca-app-pub-2270701384951162~2718285064
+8ba9da09 fix(ios): add missing debug.xcconfig referenced by Xcode project
+7665b815 fix(ci): use nvm instead of setup-node for Node 25.8.0 support
+2e8a6e01 chore(ios): commit build number increment and age rating config
+9cf140f9 fix(ci): use .nvmrc for Node version instead of hardcoded v20
+9c69b477 fix(ios): add NSPhotoLibraryUsageDescription, ios/.gitignore, and whatsNew metadata upload
+15868d0e docs: document bootstrap and pristine Makefile targets
+6f939894 chore: add make bootstrap and make pristine targets
+8e03ba60 chore: update bootstrap.zip with new secrets and AuthKey
+65689ef2 fix(ios): improve App Store screenshots — add 6.9" device, light mode, more scenes
+598cfdaa feat(ios): generate App Store screenshots via Playwright at Apple-required dimensions
+1b03e76a fix(ios): replace upscaled app icon with native 1024x1024 render
+252965d1 fix(ios): bypass deliver first-version bug with direct Spaceship API metadata upload
+2f0557b1 feat(ios): add App Store metadata, deliver lane, and [HUMAN] launch issues
+34d24ed0 fix(ios): skip IAP precheck in release lane (not supported with API key auth)
+ad91ca28 chore(ios): add Gemfile.lock for Fastlane bundle
+ea06f4b0 fix(ios): add missing Xcode source files and fix Fastlane API key loading
+c7680911 fix(ios): use Fastlane API key auth for TestFlight/App Store uploads
+e30dfb0c feat(ios): restore Fastlane automation, API key auth, and iOS Makefile targets
+60ae01b8 fix(ios): added APPLE_APP_STORE_CONNECT_ISSUER_ID, APPLE_APP_STORE_CONNECT_KEY_ID, AuthKey_8YFT9FMAHW.p8
+fa220087 fix(ios): added APPLE_APP_STORE_CONNECT_ISSUER_ID, APPLE_APP_STORE_CONNECT_KEY_ID, AuthKey_8YFT9FMAHW.p8
+18516c57 chore(ios): add env.txt credentials and Xcode build artifacts
+49700e05 chore: miscellaneous file updates after cleanup session
+50629d56 fix: remove 6 unused variables/functions flagged by oxlint
+ab72f126 fix: exclude play.html from oxfmt via ignorePatterns
+cd6374f9 chore: clean up docs/ directory — remove orphans, move ops-autopilot
+9556a35c chore: clean up root directory — remove legacy stubs, move docs
+471e41bc chore: stop tracking gallery GIFs — host externally
+b34ecc47 feat: add scripts/bootstrap.sh to automate new-host setup
+dbb08adb chore: add encrypted bootstrap.zip with all credentials for new host setup
+e67a5b5b fix: Node 25 compatibility — disable experimental webstorage for vitest
+1a59fb2d chore: update Node.js version to 25.8.0
+15165596 feat(ops): add 6 mitigations to prevent Symphony job failures
+798033db feat(ops): add Linear CLI toolkit to replace raw GraphQL for 3B model
+03ddef85 fix(ops): configure retry backoff for Symphony orchestrator
+51dc0442 feat(ops): add create-child-issue CLI helper for AI agents
+70879f49 fix(security): move hardcoded Makefile secrets to env vars
+e23e58cd fix(ops): increase guardian checklist threshold from 1 to 4
+eaa51319 feat(ops): replace AI sentinel with deterministic guardian checks
+c4a0c47f fix(ops): enforce matthewaldous as project lead instead of Codex
+5f60e918 fix(ops): reduce Symphony feed targets and add retry queue health drain
+7d06b57c fix(ops): stop assigning automatable issues to Codex user
+a2953802 feat(ops): split assignee backfill and add project health updates
+3af2f7a4 feat(ops): auto-assign all Linear issues to Codex
+f1f795cb docs(ops): remove Linear posting references from ops timer descriptions (ANQ-39)
+ba9d06a6 refactor(ops): remove dead async from nightly-ops-pass main (ANQ-39)
+20befc74 fix(ops): remove Linear comment posting from nightly-ops-pass (ANQ-39)
+e2aa25d5 docs: add commit-reference, email-handling, and AI Hint conventions (ANQ-39, ANQ-207)
+f1c4d592 chore(ops): remove superseded litellm-model-injector.py
+fbd064ef fix(ops): skip github provider for /v1/responses + full audit cleanup
+3154114e docs(workflow): add permanent evidence policy for Done issues
+dbd3d585 docs(ops): comprehensive AI pipeline knowledge base and Linear issue hygiene
+19befe96 fix(ops): set OLLAMA_NUM_PARALLEL=1 for reliable 32K context on 4GB VRAM
+2001e8f6 fix(ops): upgrade GitHub Models to GPT-4.1-mini (1M context, FREE tier)
+6740b775 fix(ops): remove github-llama-8b provider (8K context causes 413 errors)
+f8242f90 feat(ops): add stuck-agent watchdog timer to prevent slot lockups
+7017d333 fix(ops): consolidate to single optimal local model (qwen2.5-coder:7b-32t)
+3af4c56c fix(ops): set 32K context on all Ollama models in LiteLLM config
+5a449ba6 fix(ops): add alexander.emmalyn.thomas@gmail.com to allowed senders
+89add6ae fix(ops): restrict email ingest to whitelisted senders only
+ba51850e feat(ops): in-session provider failover (ANQ-194)
+4fcadbd2 feat(ops): circuit breaker, email notifications, provider robustness
+2cc76f89 feat(ops): comprehensive HTTP error handling in model-injector proxy
+bbe1562a feat(ops): add FACE-BPH autonomous best practice harness framework
+140f433a feat(ops): add unlabeled issue audit with keyword-based label classification
+ab662b9e fix(ops): add Pending state to duplicate-check query for consistency
+39e49e55 fix(ops): grep both active + rotated log, add duplicate-check query
+a0dce95a feat(ops): add log review + self-healing to sentinel (ANQ-105)
+959b8a20 fix(ops): narrow streaming 400 keyword from validation to validation_failed
+57c6f7ec fix(ops): detect 400 Bad Request in model-injector proxy
+81d08c5c docs(linear): add common GraphQL mistakes section to Linear skill
+c2b47980 fix(ops): detect "high demand" service overload in model-injector stream
+a241d138 fix(ops): detect 500 Internal Server Error in model-injector proxy
+646d26ee fix(ops): handle all error classes — 413, 404, relaxed short-stream heuristic
+661ab7d6 fix(ops): immediate 429 cooldown + broader streaming rate-limit detection
+397a368d fix(ops): detect streaming 429s, extend failure window, fix cascade fallthrough
+fc1c66e9 fix(ops): address review nits — consistent variable names, update header comment
+cc1ee475 fix(ops): add rate-limit backoff awareness to credit-gate
+f8f024bb fix(ops): reduce concurrent agents from 2 to 1 (prevent rate-limit cascading)
+43e49288 docs(ops): update Gemini provider table to native gemini/ prefix
+ce181115 fix(ops): switch Gemini back to native gemini/ prefix (fix /v1/responses 404)
+50a8c7af docs(ops): note all probes use lightweight /v1/models listings
+01007e78 fix(ops): switch all remaining probes to lightweight /v1/models listings
+a4c00dc3 fix(ops): switch Mistral probe to lightweight /v1/models listing
+277c7ec7 fix(ops): route Gemini via OpenAI-compat endpoint (fix 74% failure rate)
+0c2ecc88 feat(ops): promote Mistral Codestral to 2nd cascade slot
+1d0aaef5 fix(ops): deprioritize Cerebras below SambaNova (8K context limit)
+5f46aa90 fix(ops): upgrade Gemini to 2.5-flash, add lite fallback, lightweight probe
+a8adb3f3 feat(ops): promote Mistral Codestral to 4th cascade slot
+f2894981 feat(ops): add free cloud providers to credit-gate cascade
+5aa511a2 fix: reset pooled canvas smoothing state
+132b64df Merge remote-tracking branch 'origin/master'
+9f3195ea fix: make sonar non-blocking when unavailable
+fc920bfe fix: inventory gallery execution paths
+a1d68a4a Merge remote-tracking branch 'origin/master'
+32690f25 fix: bump android version
+b6165b2c Merge remote-tracking branch 'origin/master'
+e0957f44 fix: validate make install
+55c6c512 feat(ops): harden agent harness, terminate sentinel loop, improve credit gate
+ed510a3c fix: regenerate sitemap
+3ec3e224 Merge branch 'master' of /home/user/src/anqr
+14a7e9ed fix: add orphan child hygiene report
+2609a537 fix: add 2026 ux strategy roadmap
+b30aaafb fix(ops): handle gzip-compressed request bodies in model-injector proxy
+ce5024e6 fix(ops): add SO_REUSEADDR/SO_REUSEPORT to model-injector to prevent port conflicts
+bd7b8551 feat(ops): add model-injector proxy to fix Codex CLI model=None bug
+dc540b71 fix(ops): handle gzip-compressed request bodies in model-injector proxy
+5b812c4b fix(ops): use /v1/models probe for injector reachability check
+9cfffd69 fix(ops): add model-injector proxy to work around Codex model=None bug
+4bafdf4e fix(ops): route all fallbacks through LiteLLM proxy for Responses API translation
+4caebc7d fix(ops): add qwen2.5-coder:3b to LiteLLM, prefer it as default local model
+b196c9e1 fix(ops): add terminal state guard and push step to simplified WORKFLOW.md
+a7d1dc08 fix(ops): drastically simplify WORKFLOW.md for 3B model capability
+128158c3 fix(ops): reorder fallbacks cloud-first, fix LiteLLM auth
+532321a6 feat(ops): add LiteLLM proxy for Ollama tool-call translation
+7927ea74 fix(ops): use llama3.1:8b-32k with 32K context for Codex compatibility
+b340b7f2 fix(ops): switch to llama3.1:8b — proper structured tool_calls support
+1811d5a1 fix(ops): switch back to 7B model — 3B cannot handle Codex base instructions
+887dd84e feat(ops): add minimal WORKFLOW-3B.md for qwen2.5-coder:3b context budget
+e6453291 feat(ops): add 3B-ready issue format, [NEEDS-PRECOMPUTE] pattern
+0f470211 fix(ops): simplify sentinel to 3-step heartbeat, auto-feed Symphony via guardian
+fd819d41 fix(ops): make In Progress transition the absolute first agent action
+3042292e fix(ops): switch default Ollama model to qwen2.5-coder:3b
+d245765d fix(ops): set max_concurrent_agents to 1 for Ollama GPU stability
+8dcee5f4 feat(ops): add sentinel dead man's switch to linear guardian
+cf71a7ba fix(ops): promote Ollama to preferred free fallback, add Symphony project feeding
+7b0ef152 docs(workflow): enforce Ollama sizing and project hygiene in sentinel pattern
+22f77b6e docs(workflow): add Ollama-sized issue requirements guardrail
+9d8f4807 docs(workflow): add guardrail for breaking down failing tasks
+c0c5ee2d fix(ops): reduce Ollama num_thread to 1 for single-threaded operation
+e0326944 docs(workflow): require labels on all new issue creation
+97d3af0c feat(ops): fully autonomous workflow — skip Human Review except for payment issues
+60b66a96 fix(ops): harden credit-gate, fix ollama audit, resolve lint/format blockers
+4d62d28f docs: remove legacy markdown stubs, update all references (ANQ-66)
+d8f7e0ae feat: starting unattended
+d834f9f2 fix(ops): add provider failure memory to credit-gate cascade
+7403c096 fix(ops): real generation test for OpenRouter probe in credit-gate
+133014f1 fix(ops): rewrite credit-gate to use exec instead of background process loop
+689249f4 fix(ops): real generation tests for provider probes + reorder fallbacks
+9417f4fb fix(ops): rewrite credit gate with resilient loop-run-fallback
+96ca980a fix(ops): use -c model= instead of --model in credit-gate to override config.toml
+25590bca fix(ops): tune Symphony for Linear API reliability
+7588ce88 fix(ops): add resilient Linear API client with retry/backoff
+4df75dba feat(ops): add self-replicating sentinel issue pattern for continuous progress review
+3c4f78f3 fix(ops): reduce max_concurrent_agents to 1 to avoid Linear API 400 rate limits
+3ee88947 test: raise dither scan-gate timeouts for CI stability
+caa00cd2 build: mark cross-platform netlify optional bins as optional
+a2e3a282 docs: migrate project knowledge into canonical docs tree (ANQ-7)
+6bb3643f fix(ops): correct Gemini API probe endpoint in credit-gate
+e9b4d78e feat(ops): full autonomous Symphony pipeline with dynamic costing
+896975f9 fix: performance and quality fixes caused by incorrect changes
+5ad56dcf fix(gallery): align local/browser parity and capture defaults
+9c94d10d Fix flaky overlay/animation Playwright tests
+9106e217 fix: language update
+61bc2a41 Fix QR-art frame caching and wire new i18n status keys
+582aa5fb perf: accelerate animated dither pipeline and frame effects
+ecaf5a46 perf: speed up animated GIF preview scan-gate retries
+9f9ce43a fix(overlay): stabilize color preprocessing and scan-gate rescue
+df1a7422 fix(overlay): apply power curve to intensity slider so 50% maps to ~6% effective
+f71aa050 fix(overlay): remove double intensity compression and tune defaults
+82370b92 fix(scan-gate): validate only frame 0 for animation decodability
+6ea91465 fix(scan-gate): restore decode validation for animated preview frames
+6dbd02d7 fix(analyze): resolve Analyze failing for animated QR codes
+90248a8c stabilize working state after reverting generator/analyze status-bar changes
+24453e5f Tune color overlay intensity defaults and compression for image/gif stability
+916428c4 Speed up color animation previews by skipping per-frame preview decode gates
+b717ed3d Improve overlay scan-gate stability with dynamic frame-aware tuning
+41212b69 perf(render): improve luminance sampling and qart target extraction
+a4c37f3e perf(qr-generator): pack overlay data and trim render/server hot-path churn
+5d747bb7 perf(animation): reduce decode fallback and patch copy overhead
+f8ddba71 perf(encoding): use async blob paths for canvas png serialization
+9c8cf684 perf(scaled-render): use cached functional flags in hot loops
+3e98c232 perf(animation): reuse scratch canvases for worker bitmap frames
+f03222e8 perf(canvas): expand read-optimized context hints across hot paths
+7e31214b perf(ui): defer offscreen section layout with content-visibility
+09c41596 perf(ui): defer export analytics to idle callback
+8689e654 perf(startup): lazy-load exporter module in download path
+4a51219f perf(qart): reuse preview canvas for worker bitmap output
+d83acf08 perf(animation): reuse last-success artwork frame canvas
+e0ea2682 perf(scan-gate): pool temporary canvases in decode retries
+b65cb565 perf(animation): apply color cycle in place
+322b6e5f perf(startup): lazy-load qr decoder in scan gate path
+2edf62e2 perf(animation): reuse temporal dither canvases across frames
+0a4a31fa perf(animation): reuse pattern frame image buffers
+21332c75 perf(editor): lazy-load sidebar sections on demand
+883ba41f perf(qart): optimize elimination hot paths with bitsets and typed lookups
+3ab7fb8f perf(animation): cache frame imageData across qart worker retries
+30e90dfa perf(preview): cap scaled render density by device class
+d3c6cfbd perf(preview): add adaptive fast-preview scale reduction
+cb121d41 perf(dither): precompute flat diffusion kernel offsets and weights
+9443d107 perf(encoder): use typed gf tables and modulo gexp normalization
+498d8ef9 perf(bundle): isolate qart, analyzer, and generated gallery chunks
+191d6370 perf(cleanup): terminate analyzer and qart workers on hook teardown
+5bd99da6 perf(render): trim hot-loop style churn and hash overhead
+d8889d9a perf(utils): reuse hash canvas to cut per-call allocation churn
+7469d960 perf(canvas): apply read-optimized 2d context hints on hot paths
+e5783291 perf(workers): switch validation and qart payloads to transferable pixel buffers
+57f0dd8f perf(qr-art): keep packed matrices hot and trim config clone cost
+b2734810 perf(startup): lazy-load qr-art core from editor paths
+0bdc70d5 perf(startup): keep gallery payload out of header bundle
+6df1f49b feat(qr-art): worker pipeline, frame stability, and busy overlay UX
+922f0ab0 perf(qart): cap elimination candidates
+9cafc56f perf(qart): add android supersampling profile
+45982eb8 feat(ui): improve busy overlay feedback during rendering
+d24163e9 feat(qart): offload artwork generation to worker
+aec86144 fix: 10
+4f97c74b fix: change trump to santa
+b6c64835 chore: vite8 + oxc
+6999a56c fix: release
+a21a7172 fix: 15
+0a158de4 fix: 15
+b114e168 fix: 14
+d0f76c1e fix: 14
+9c5ec352 fix: parallel gif
+5cb45887 fix: 11
+3189a280 fix: performance 2
+e7ee4f60 fix: performance
+75754a76 fix: 10
+cd6b0dc5 fix: 9
+54ba4b33 fix: 8
+2eb34b63 fix: remove legacy, gallery behaviour tests, ready for gallery generation local/browser/remote
+6fa54adc fix: remove netlify build artifacts from tracked history
+24277e94 fix: artwork
+afbad688 fix: 7
+a823a39a fix: 7
+8b0484e9 fix: 6
+02d384fa fix: 5
+3de403bb fix: 4
+4fc94fd6 fix: 3
+3a0183a4 fix: 2
+99840913 chore: 1
+fa8bfce0 chore: remove gallery artifacts from git
+fc34665f fix: thermal throttling
+dfa266c2 fix: e2e navigation
+ea9aa079 chore: flakey-tests
+5adfb391 fix: 5minute timeouts
+8396c27b chore: e2e testing
+212f8ed4 fix: e2e tests
+0b0da924 fix: e2e tests
+86b9db99 chore: fix failing tests, remove permutations from e2e
+479cef41 test: attempt 1
+c4de23b3 chore: remove LibreTranslate, add hook deps, fix lint-staged and commitlint, update pipeline
+382bc08b 1771150160
+d8acc30e 1771150145
+294831ca 1771150058
+c603e1ff 1771149070
+08139613 1771140423
+d00ec5ba 1771140567
+118cb2fb 1771140469
+a5ab2619 1771038703
+d1b4c01a 1771038703
+0775e3d2 1771038703
+1c9f1ff2 1771038703
+5d4b7522 1770983038
+81de3b51 1770991107
+80241894 1770991107
+76c58885 1770991107
+3bcd8884 1770991107
+1ecc565c 1770991107
+9e3e0db5 1770991107
+8ed16387 1770991107
+f38192c6 1770991107
+b26a5c29 1770991107
+db26881c 1770983158
+03e6cd08 1770983158
+acdec4fc 1770983158
+3c5e1e9a 1770983158
+9f592490 1770983158
+eb285c0e 1770532400
+b5fdccc0 1770532400
+6e00c800 1770532400
+b519ea20 1770539220
+733c7b33 1770539220
+0b616029 1770532400
+636f5954 1770529988
+0e6bcaf8 1770524915
+dcdedcae 1770524915
+4726d0ae 1770524915
+2aa55773 1770524915
+c4b013c2 1770524915
+ac8f9b3f 1770521712
+af69e2f6 1770521712
+02416395 1770436723
+86e90371 1770436723
+4b38a8ca 1770032033
+45ca985f 1770032033
+b148e23b 1770032033
+368a2e3c 1770032033
+aefaec49 1770032033
+9b953b1a 1770032033
+7b1c10b2 1770032033
+b7f11d31 1770032033
+5dcd0660 1770032033
+bc7e3a72 1770032033
+aa655db7 1770032033
+20e5d31c 1770032033
+505e29d4 1770032033
+2c83e1c6 1770032033
+95a1601e 1770032033
+c2d842b5 1770032033
+a7efddf3 1770032033
+3b8174fd 1770445676
+af122b32 1770445676
+12cfe0d1 1770445676
+815775e2 1770436723
+93aa1ae1 1770436723
+d1ead84b 1770436723
+86d2211f 1770429257
+db2efd37 1770434917
+89184913 1770434917
+548adca6 1770434917
+3e04deec 1770429257
+91c0481e 1770429257
+004d95e1 1770371594
+433f0a9a 1770371594
+3b562995 1770371594
+e35c937a 1770371594
+29c7d4b4 1770371594
+440bfe6f 1770371594
+17d39e33 1770296702
+a8f7a71c 1770273729
+471c5c10 1770273729
+c3cf005b 1770273729
+b2740915 1770273729
+c205ecd5 1770273729
+71a6cbfb 1770273729
+ccecc455 1770273729
+e24d17c5 1770273729
+0da3ea00 1770271646
+ac0d59b4 1770255977
+e36ba8a9 1770255977
+26e49fe4 1770253920
+68ada3d1 1770253920
+fc6520af 1770201549
+f3677f45 1770162740
+0ba8dd73 1770162740
+ab4a93dc 1770072970
+078d5a7f 1770037379
+c4af4a9e 1770037379
+e1119d66 1770037379
+b608b085 1770037379
+dc7d1ff3 1770032033
+c0f879aa 1769979620
+85a7a2b9 1769939879
+e6eb7e52 1769923305
+c9d1e046 1769923305
+a2e14944 1769923305
+f8fa7286 1769923305
+06d3eee8 1769923305
+1d716071 1769685848
+40238bc9 1769685848
+ddbe495e 1769685848
+42efd037 1769685848
+14dd9ee1 1769685848
+e3b8df18 1769685848
+86adf065 Jan 30, 2026
+2358faea 1769685848
+0102f987 1769685848
+f2c9804a 1769681050
+10d2fb4d 1769681050
+8e6c9645 1769574498
+6fb38d10 1769471895
+39405424 1769465739
+31ec7d8b 1769416431
+1726d7cf 1769416431
+9882458e 1769078968
+c5c0930c 1768994664
+552aa756 1768994664
+42f935d3 1768994664
+dad13779 1768994021
+b800113c 1768906244
+986f2c60 1768861579
+d0addebb 1768860887
+6e16999f 1768793036
+4bbf517f 1768793036
+9295c8df 1768780539
+f965b7b0 1768780539
+1eed061d 1768539259
+0de22bd5 docs: simplify API parameter labels to only use [CLIENT-ONLY]
+4158f467 feat: implement full server-side overlay filters (blur, sharpen, posterize, threshold, edge)
+534fb5cf docs: add comprehensive API parameter documentation to i18n
+a9711cbb docs: add [FULL]/[PARTIAL]/[CLIENT-ONLY] labels to all Netlify function parameters
+f0c94424 feat: implement full server-side overlay preprocessing for Netlify function
+43d84d50 refactor: align Netlify function with all share-links URL parameters
+a5d070cf refactor: align qr-store.ts and netlify/functions/qr.ts with module APIs
+3e07c41c docs: add README.md and api.ts for all 15 modules
+4349bd26 refactor: rename files to follow naming conventions
+c0f896f5 1768706557
+ecd590c8 fix: resolve biome linting errors for make fix
+916146d8 fix: resolve TypeScript errors from naming refactoring
+9ed71d2d refactor: major naming cleanup per naming rules
+5c8593ba refactor: remove deprecated detectContentTypeWrapper, use detectContentType directly
+855966d3 fix: update import path in content-detection.ts after file move
+06e9fae2 refactor: make internal files public - move up one directory level
+f7a79936 refactor: consolidate 6 duplicate log functions into shared logger
+0eebe448 refactor: deduplicate remaining functions
+e2d6d15b fix: resolve TypeScript errors from function renames
+b34bf6e5 refactor: remove backwards compatibility files
+e7811bfb refactor: deduplicate functions - rename to avoid conflicts
+0846bb9a refactor: consolidate core module - move internal/* to public files
+3c67b4b5 refactor: deduplicate generateBlueNoiseTile and getAlignmentPositions
+1307fdb0 refactor: deduplicate QR pattern functions - delegate to qr-spec
+bbe70c87 refactor: deduplicate functions - use canonical sources
+c84cb60d refactor: deduplicate functions - use canonical sources
+086e32f8 refactor: thin index.ts files and fix noConsole lint violations
+487436ea fix: RULES.txt compliance - remove deep imports and default exports
+4041cbf5 refactor: remove legacy namespace exports per RULES.txt
+407284b7 refactor: consolidate module responsibilities per RULES.txt
+5c5cfa56 refactor: module reorganization per RULES.txt compliance
+020075c0 refactor: RULES.txt compliance - delete facade files and fix imports
+7421d6f2 fix: resolve remaining TypeScript canvas type compatibility errors
+3245fab7 refactor: fix canvas type compatibility errors (Phase 5 continued)
+f1e39e35 refactor: Phase 5 - convert JavaScript files to TypeScript
+0e9dbcff refactor: Phase 5 - delete deprecated JavaScript facade files
+d1e892da refactor: Phase 4 - fix all TypeScript errors (0 errors)
+cc95e7ca refactor: Phase 4 WIP - module reorganization and TypeScript conversion
+1e7f13fb refactor: Phase 3 - delete deprecated facades and consolidate imports
+cbbff2ef refactor: Phase 2 - move root-level files to subdirectories
+c0e9ada5 refactor: Phase 1 - extract store types to module-local types.ts files
+e13e0c6a refactor: reorganize modules into subdirectories (WIP)
+5dffb8ec refactor: consolidate duplicate code into core/ and qr-spec/ modules
+83668b96 refactor: split qrcode.mjs into modular qr-encoder/ directory
+c2b3a4f1 feat: add top-right finder pattern validation to detect 180° rotation
+884c1e8e fix: improve finder pattern selection to prefer larger spans
+9cf86017 fix: correct format info reading direction and add matrix validation
+fe21d076 fix: correct cross product logic in QR decoder finder pattern ordering
+d9d71fb3 fix: add comprehensive telemetry to QR decoder and fix bounds checking
+f4089dff chore: remove jsQR dependency from package.json
+814879a7 feat: implement our own QR decoder to replace jsQR dependency
+220bb94a fix: use auto version for clean QR reproduction instead of unreliable detected version
+172f40c0 fix: generate clean QR code for reproduction instead of pixel-sampling
+07fc1228 fix: add comprehensive telemetry to QR analyzer for debugging reproduced QR issues
+680d88e8 fix: improve QR analyzer module matrix detection for accurate reproduction
+0c9e0a05 fix: remove broken qr-analyzer subdirectories with incomplete/truncated files
+a705aa00 Merge recovered-refactor: split large module files into smaller modules
+a6166dc0 refactor: split pixel-matrix.js (408 lines) into smaller modules
+490231f3 refactor: split dithering.js (460 lines) and overlay.js (446 lines) into smaller modules
+022d7492 refactor: split drawing.js (482 lines) and filters.js (508 lines) into smaller modules
+b0f53819 refactor: split QRGenerator.js (1258 lines) into smaller modules
+fb4e0382 refactor: split qr-generator.js (~3500 lines) into smaller modules
+eb427516 refactor: split exporter.ts and share-utils.ts into smaller modules
+6209fe7f fix: resolve TypeScript errors in payload-generators and Analyze.tsx
+aa4f0b8d 1768516527
+50d82a83 1768516527
+68e63dca 1768516527
+eedba4b1 1768471696
+dfa69ee2 1768471696
+18d83d5c 1768471696
+c37ee4c0 1768395710
+0f1e202b 1768395710
+4630d5de 1768395710
+73906255 1768395710
+e446712f 1768395710
+2c544cc5 1768391978
+56eade35 1768391978
+5c13fc5c 1768367740
+b28f1f49 1768359713
+6340ff21 1768274844
+02284477 1768274844
+a5e1ca0a 1768274844
+d30b8fc6 1768274844
+26012e56 1768274844
+0963e570 1768274844
+ae81a7c7 1768274844
+69618cc4 1768276149
+280dc963 1768252333
+3e41409b 1768215990
+2f1c89f7 1768205562
+b61a1d76 1768205562
+0749e3ee 1768179137
+ac43311b 1768180009
+966d4f0e 1768180009
+9508bc01 1768125293
+0bf1b44c 1768125293
+1f47b79d 1768125293
+f1d9fd82 1768125293
+a62eb36a 1768125293
+68cc4c0f 1768125293
+0362df48 Squashed 'src/i18n/locales/txt/' content from commit 8662c86
+ec48481b Add locales txt as subtree from anqr-i18n
+de38ec41 Squashed 'src/i18n/static/txt/' content from commit d470c57
+986911ba Add static txt as subtree from anqr-i18n
+d47d2808 Remove txt directories before adding as subtrees
+ce5f7bbd 1768032457
+739c0f05 1768026887
+010fc90e 1768032457
+19e736d2 1768032457
+37a45342 1768032457
+8c8f8238 1768032457
+e93003a3 1768032457
+6167dd22 1768032457
+3e49b207 1768032457
+b7c1661d 1768026887
+742c7651 1768032457
+9e16552c 1768032457
+90675eda 1768032457
+b7d276a0 1768032457
+3a4c7456 1768032457
+b57deb9e 1768032457
+3e989c01 1768032457
+b80aa9ff 1768026887
+c666341f 1768026887
+a304987a 1768026887
+3624970a 1768026887
+aa01ff69 1768026887
+2e84a1ec 1768026887
+e886b8ea 1768026887
+2bfe7298 1768026887
+8cf32de1 1768026887
+2ccb7b32 1768026887
+ff8f211d 1768026887
+a5dc08cb 1768026887
+a9be398c 1768026887
+48c72a96 1768026887
+a164a458 1768023108
+09b9319d 1767957207
+4e41c139 1767957019
+ca1119d9 1767957207
+2a10fb53 1767957207
+cc78b007 1767957207
+72238988 1767957207
+473ed5cf 1767957207
+53a745e9 1767957207
+b8de20c5 1767957207
+b835fe5d 1767957207
+9bfb865e 1767957207
+49835a7c 1767957207
+2980f301 1767957207
+45d589d2 1767957207
+cedabfd9 1767957207
+bd87a662 1767957207
+1384c9d7 1767957207
+a6bb77d4 1767957207
+4df61a16 1767957207
+9c79dd4a 1767957207
+6cc38e0d 1767957207
+0a6d6008 1767957207
+2cc48970 1767957207
+00a396b6 1767957207
+8e635cfc 1767957207
+ac180dd7 1767957207
+63e710f4 1767957207
+ad510c5a 1767957207
+c0152ddb 1767957207
+57fe523d 1767957019
+419bb889 1767957019
+cc65dda1 1767957019
+97a5afe0 1767957019
+1dc97f7f 1767957207
+2c2a19d2 1767957207
+81bf116e 1767957207
+ef63626a 1767958681
+f2084305 1767958681
+c68ec2d3 1767958681
+22744741 1767957207
+3f7c7bcf 1767957207
+853e0578 1767954758
+75dd5773 1767954758
+219a3845 1767954758
+ece0392e 1767952445
+27f3c80a Improve responsiveness for slow devices with better debouncing
+0f0bc0d5 Add debounce for QR version slider and fix busy overlay display
+ad607a25 Add camera button for quick overlay demo (Android only)
+d2e45f7f Redesign mobile hamburger menu with 3x3 grid layout
+6d97341b Optimize og-header.png (2.23MB → 0.31MB, 86% reduction)
+886ba059 Add og-header.png (4096x2304) rendered from og-image.html
+e041b280 Configure Android App Links for anqr.link deep linking
+68ae10fc Add Android App Links assetlinks.json for deep linking
+1b9ac089 Fix hardcoded English button labels in static page templates
+db0438dc Address code reviewer feedback for mobile divider
+ef246cec Add draggable divider for mobile layout resizing
+b6952943 Translate all languages in play.html (Google Play Store description)
+2a7f618e Fix language picker showing incomplete i18n keys
+f2ce6861 Add make help target with comprehensive documentation of all targets
+692f8454 Add Makefile targets for i18n:xlate and i18n:fill
+35505f8d Add support for all 87 Google Play languages
+be554c6a Move translate link near end of nav (before Contact) per code review
+8aee7123 Add /translate page with i18n support for community contributions
+4176a23b Update Makefile i18n:push to use force push approach
+4d672f81 Update i18n workflows to handle diverged branch histories
+cfb78de2 Clean up test sync comments from en-GB.txt files
+34b9bc77 Add i18n community translations section to knowledge.md
+4b01e36d Test i18n auto-sync workflow
+6515fcfe Disable daily schedule for pull-i18n until community activity
+b61b8b56 Add workflow to pull community i18n contributions
+6441cb73 Add GitHub Action to auto-sync i18n txt files to public repo
+bbe5d351 Add i18n subtree sync targets to Makefile
+c772a6fd 1767782004
+8ad929e3 1767579380
+d1ef4e97 1767579380
+a1740908 1767579380
+080bb298 1767576530
+a9cba7e4 1767576423
+5398904e 1767576423
+54cb1194 1767576423
+8342d008 1767576423
+2937c9b1 1767517097
+33917383 1767528290
+23a576cb 1767480875
+596c749c 1767521808
+e6a71979 1767506631
+73daf298 1767507251
+f95e2173 1767507251
+0c8fc8dc 1767480875
+807aec55 1767480875
+fde8616a 1767480875
+dc477dc0 1767480875
+e47837d5 1767480875
+15cf3f55 1767480875
+9d356f5a 1767480875
+9a016ab2 1767480875
+a9719712 1767480875
+046f1373 1767480875
+c75e469f 1767480875
+884bf2dc 1767480875
+77bec3bb 1767480875
+21931b57 1767337538
+7aac6e1c 1767337538
+33bf0141 1767337538
+204bda5e 1767337538
+fcd42358 1767337538
+90af2020 1767337538
+5ef06597 1767337538
+39d294ed 1767337538
+535b47b4 1767337538
+4706dcfa 1767322361
+8833922c 1767309381
+79429041 1767316734
+e7fee58d 1767316734
+73a50af3 1767309381
+cc81e74f 1767309381
+d1f1c147 1767306445
+ead725fc 1767306445
+bce47e04 1767306445
+88f8b3e1 1767269582
+09d5c67b 1767304566
+ae7b333b 1767269582
+3fbe7dab 1767269582
+52b99acb 1767269582
+0a1b274e 1767269582
+dacac679 1767269582
+3e68ea07 1767267288
+56aa922e 1767267288
+d97315b8 1767256086
+550cd21f 1767256086
+bbf8beb6 1767239129
+49f0344c 1767239129
+4eb13a32 1767239129
+04bfc85f 1767239129
+3c8a1042 1767234501
+8a6616fb 1767098248
+e680375f 1767098248
+6785ac90 1767098248
+22ba21be 1767098248
+54927064 1767098248
+c5ec5ad0 1767096739
+8c5afecb 1767096739
+383f6014 1767096739
+3d780d32 1767096739
+cc4922db 1767096739
+f667823b 1767083595
+cd3ccdef 1767083595
+bea47425 1767091468
+297ab3f3 1767083595
+8bb3718c 1767083595
+ba8fca59 1767083595
+2592d9e0 1767063769
+a5b6b4ad 1767063769
+bfd565d0 1767061904
+e71b2c43 1767061904
+d1a7897e 1767066092
+47da91df 1766885033
+a8bc3080 1766885033
+15fd77c3 1766898820
+6f7f8e58 1766898820
+e0abb1de 1766898820
+a533d583 1766898820
+b21ccb25 1766898820
+8a04f378 1766898820
+7cd01041 1766898820
+9d56f00e 1766898820
+8e57a4bf 1766898820
+41b0a421 1766898820
+41760814 1766840775
+a56147f3 1766840775
+12ae1256 1766885033
+f6c74f8c 1766840775
+77a35a04 1766840775
+e7473140 1766840775
+8ebdc593 1766840775
+8708218c 1766840775
+c1e08ec0 1766840775
+5b0ae152 1766840775
+2b4f57b4 1766753687
+ed28f162 1766752349
+327bfc1a 1766788735
+6f37895d 1766788735
+b45abce8 1766788735
+d5813c4f 1766788735
+1890ea6e 1766788735
+42f1bf9e 1766788735
+7cd733c4 1766788735
+83729fca 1766788735
+1025d7bb 1766788735
+d618ee23 1766788735
+7924c554 1766788735
+2a24c594 1766753687
+341d1edd 1766753687
+4a2a8e8f 1766753687
+3766d576 1766753687
+fedcca94 1766753687
+e57bd29a 1766753687
+7772ba91 1766753687
+91fdfe0f 1766752349
+a5c8f325 1766752349
+ae07b265 1766752349
+a19a46e9 1766753687
+d40db8ed 1766381775
+b0b383b0 1766468530
+87e6231e 1766468530
+f8a30e96 1766468530
+8f6c3c4a 1766468530
+bcf021e0 1766381775
+501f527f 1766468530
+3ae52e14 1766468530
+ad95b2f5 1766468530
+c2261954 1766381775
+1a29132e 1766468530
+bc9d3321 1766468530
+5e078a0c 1766556906
+6cf3904e 1766583830
+074e5225 1766583830
+c82ba040 1766468068
+1320a607 1766468068
+31cb4598 1766468068
+2bb812cd 1766468068
+b253f9b3 1766556906
+8730cafc 1766556906
+dadc24cc 1766468068
+62581f04 feat: Complete ANQR React UI with comprehensive QR generator settings
+ea306eaf 1766468530
+094e72db 1766550986
+e5c90f05 1766550940
+17c75c5e 1766502388
+1e34313a 1766500558
+0d6fc2df 1766468530
+22453d1d 1766468530
+30c041b7 1766498786
+11c76e3a 1766468530
+f49b085b 1766495962
+7cbbcea8 1766494213
+aa0439ee 1766493901
+97a1d054 1766493440
+4df826a2 1766493422
+b85b5a3a 1766474559
+11078054 1766474472
+d10daa85 1766474191
+c5672267 1766473281
+e32d4773 1766470415
+50ba48b3 1766470309
+435edad7 1766470190
+8da29410 1766405230
+488a8be3 1766465342
+3a2d4d5f 1766462671
+2623288b 1766459992
+2d55760c 1766458621
+6926399e 1766457902
+7a53d6d0 1766457554
+30bf0661 1766456306
+b79375cf 1766402392
+9a13220c 1766454995
