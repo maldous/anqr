@@ -37,31 +37,15 @@ describe('browser-clipboard', () => {
     (globalThis as any).ClipboardItem = MockClipboardItem;
   });
 
-  it('copies text via clipboard API and falls back to execCommand', async () => {
+  it('copies text via clipboard API and returns false on rejection', async () => {
     const mod = await import('../../src/modules/browser-clipboard/copy-text');
 
     await expect(mod.copyToClipboard('abc')).resolves.toBe(true);
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('abc');
 
     (navigator.clipboard.writeText as any).mockRejectedValueOnce(new Error('denied'));
-    const execSpy = vi.spyOn(document as any, 'execCommand').mockReturnValue(true);
-
-    await expect(mod.copyToClipboard('fallback')).resolves.toBe(true);
-    expect(execSpy).toHaveBeenCalledWith('copy');
-    expect(document.querySelector('textarea')).toBeNull();
-
-    execSpy.mockRestore();
-  });
-
-  it('returns false when text fallback also fails', async () => {
-    const mod = await import('../../src/modules/browser-clipboard/copy-text');
-    (navigator.clipboard.writeText as any).mockRejectedValueOnce(new Error('denied'));
-    const execSpy = vi.spyOn(document as any, 'execCommand').mockImplementation(() => {
-      throw new Error('copy failed');
-    });
-
-    await expect(mod.copyToClipboard('x')).resolves.toBe(false);
-    execSpy.mockRestore();
+    await expect(mod.copyToClipboard('fallback')).resolves.toBe(false);
+    expect(document.execCommand).not.toHaveBeenCalled();
   });
 
   it('copies image to clipboard and handles null blob/errors', async () => {

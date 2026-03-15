@@ -2,7 +2,7 @@ export { getDefaultExportConfig } from './default-export-config';
 export type { ExportConfig } from './export-config';
 export type { ExportResult } from './export-result';
 export type { OutputFormat } from './output-format';
-export type { PngMetadata } from './png-metadata';
+export type { PngMetadata } from './png-metadata.type';
 export type { VectorAlignmentStyle } from './vector-alignment-style';
 export type { VectorFinderStyle } from './vector-finder-style';
 export type { VectorGradient } from './vector-gradient';

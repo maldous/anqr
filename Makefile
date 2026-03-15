@@ -1175,12 +1175,14 @@ sonar\:issues\:reliability:
 # Permutation tests run exhaustive setting combinations (very long!)
 
 # Shared static quality gate pipeline used by both 'quality' and 'test'.
-# 17 checks: oxlint+oxfmt → tsc → lockfile → licenses → type-coverage → duplication →
-#   spelling → inventories → test-ids → depcruise → audit →
-#   osv-scanner → semgrep → knip → bundle-budget
+# 19 checks: oxlint+oxfmt → tsc → ast-audit → madge → lockfile → licenses →
+#   type-coverage → duplication → PMD CPD → spelling → inventories → test-ids →
+#   depcruise → audit → osv-scanner → semgrep → knip → bundle-budget
 _quality-gates:
 	$(MAKE) fix
 	npm run typecheck
+	npm run audit:ast
+	npx madge --circular --extensions ts,tsx src
 	npx lockfile-lint
 	npx license-checker --failOn 'AGPL-1.0-only;AGPL-1.0-or-later;AGPL-3.0-only;AGPL-3.0-or-later;GPL-2.0-only;GPL-3.0-only;GPL-3.0-or-later' --production
 	npx type-coverage --at-least 95 --strict --ignore-catch

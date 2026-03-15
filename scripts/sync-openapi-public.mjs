@@ -10,4 +10,6 @@ const targetPath = path.join(targetDir, 'openapi.yaml');
 
 await fs.mkdir(targetDir, { recursive: true });
 await fs.copyFile(sourcePath, targetPath);
-console.log(`[sync-openapi-public] synced ${path.relative(repoRoot, sourcePath)} -> ${path.relative(repoRoot, targetPath)}`);
+console.log(
+  `[sync-openapi-public] synced ${path.relative(repoRoot, sourcePath)} -> ${path.relative(repoRoot, targetPath)}`
+);

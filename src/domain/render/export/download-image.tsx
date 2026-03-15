@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
-import type { ExportConfig, PngMetadata } from '../../../modules/exporter/types';
+import type { ExportConfig } from '../../../modules/exporter/types';
+import type { PngMetadata } from '../../../modules/exporter/png-metadata.type';
 import { downloadUrl } from '../../../modules/exporter/utils';
 import { exportImage } from './export-image';
 

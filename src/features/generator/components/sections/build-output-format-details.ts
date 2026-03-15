@@ -1,13 +1,4 @@
-type OutputLike = {
-  format: string;
-  gifPaletteSize: number;
-  gifQuantizer: string;
-  gifDither: string;
-  gifTransparentColor?: string | null;
-  svgTrueVector?: boolean;
-  svgShapePrecision: string;
-  svgEmbedRasterOverlay: boolean;
-};
+import type { OutputLike } from './output-like.type';
 
 export function buildOutputFormatDetails(output: OutputLike) {
   const isGif = output.format === 'gif';

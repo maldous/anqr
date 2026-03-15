@@ -1,10 +1,5 @@
-export type TextTokenMatch =
-  | { kind: 'url'; start: number; end: number; value: string }
-  | { kind: 'wiki'; start: number; end: number; href: string; label: string };
-
-function isUrlBoundaryChar(char: string | undefined): boolean {
-  return !char || /\s/.test(char);
-}
+import { isUrlBoundaryChar } from './is-url-boundary-char';
+import type { TextTokenMatch } from './text-token-match';
 
 export function findNextTextToken(text: string, startIndex: number): TextTokenMatch | null {
   const urlIndex = text.indexOf('http', startIndex);

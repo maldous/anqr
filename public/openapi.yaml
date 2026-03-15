@@ -264,9 +264,9 @@ paths:
                 type: string
               examples:
                 missingData:
-                  value: "Missing required parameter: data"
+                  value: 'Missing required parameter: data'
                 invalidEcc:
-                  value: "Invalid ec parameter"
+                  value: 'Invalid ec parameter'
         '403':
           description: Forbidden due to remote resource restrictions
           content:
@@ -363,6 +363,7 @@ components:
         type: string
         minLength: 1
         maxLength: 4096
+        default: https://anqr.link
     FormatParam:
       name: format
       in: query
@@ -513,173 +514,1342 @@ components:
         type: string
         enum: ['0', '1']
         default: '0'
-    StrictOverlayParam: { name: _strictOverlay, in: query, required: false, description: Internal strict overlay validation flag, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    AlignParam: { name: align, in: query, required: false, description: Alignment pattern style, schema: { $ref: '#/components/schemas/AlignmentStyle' } }
-    AnimFramesParam: { name: animFrames, in: query, required: false, description: Number of animation frames, schema: { $ref: '#/components/schemas/AnimFrames' } }
-    AnimPattern2Param: { name: animPattern2, in: query, required: false, description: Secondary animation pattern, schema: { $ref: '#/components/schemas/AnimationPattern' } }
-    AnimSeedParam: { name: animSeed, in: query, required: false, description: Primary animation seed, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    AnimSeed2Param: { name: animSeed2, in: query, required: false, description: Secondary animation seed, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    AnimSpeedParam: { name: animSpeed, in: query, required: false, description: Animation frame delay in milliseconds, schema: { $ref: '#/components/schemas/AnimSpeed' } }
-    AnimTargetParam: { name: animTarget, in: query, required: false, description: Primary animation target, schema: { $ref: '#/components/schemas/AnimationTarget' } }
-    AnimTarget2Param: { name: animTarget2, in: query, required: false, description: Secondary animation target, schema: { $ref: '#/components/schemas/AnimationTarget' } }
-    AnimWaveAxisParam: { name: animWaveAxis, in: query, required: false, description: Primary wave axis, schema: { $ref: '#/components/schemas/AnimationWaveAxisInput' } }
-    AnimWaveAxis2Param: { name: animWaveAxis2, in: query, required: false, description: Secondary wave axis, schema: { $ref: '#/components/schemas/AnimationWaveAxisInput' } }
-    AutoEccParam: { name: autoEcc, in: query, required: false, description: Auto-pick error correction level, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    AutoReduceParam: { name: autoReduce, in: query, required: false, description: Auto-reduce intensity until scannable, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    AutoVerParam: { name: autoVer, in: query, required: false, description: Auto-pick QR version, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    BgOverParam: { name: bgOver, in: query, required: false, description: Background override hex color, schema: { $ref: '#/components/schemas/HexColor6' } }
-    BlendPresParam: { name: blendPres, in: query, required: false, description: Blend preservation toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    BlendPresModeParam: { name: blendPresMode, in: query, required: false, description: Blend preservation mode, schema: { enum: [overlay, dither] } }
-    BlurParam: { name: blur, in: query, required: false, description: Overlay blur radius in pixels, schema: { $ref: '#/components/schemas/NonNegativeIntegerString' } }
-    BnSeedParam: { name: bnSeed, in: query, required: false, description: Blue noise seed, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    BnTileParam: { name: bnTile, in: query, required: false, description: Blue noise tile size, schema: { $ref: '#/components/schemas/PositiveIntegerString' } }
-    BorderParam: { name: border, in: query, required: false, description: Additional border modules, schema: { type: string, pattern: '^(0|[1-9]|10)$' } }
-    BounceParam: { name: bounce, in: query, required: false, description: Bounce primary animation, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    Bounce2Param: { name: bounce2, in: query, required: false, description: Bounce secondary animation, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    BrightnessParam: { name: brightness, in: query, required: false, description: Overlay brightness adjustment, schema: { $ref: '#/components/schemas/SignedPercentString' } }
-    CGuardParam: { name: cGuard, in: query, required: false, description: Per-module contrast guard toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    CharsetParam: { name: charset, in: query, required: false, description: Character set hint, schema: { enum: [default, utf8, shift-jis] } }
-    ColorCycleParam: { name: colorCycle, in: query, required: false, description: Primary color cycle toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    ColorCycle2Param: { name: colorCycle2, in: query, required: false, description: Secondary color cycle toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    ColorDitherParam: { name: colorDither, in: query, required: false, description: Color dithering mode, schema: { enum: [none, per_channel, perceptual] } }
-    ColorModeParam: { name: colorMode, in: query, required: false, description: Overlay color mode, schema: { $ref: '#/components/schemas/ColorMode' } }
-    ContrastParam: { name: contrast, in: query, required: false, description: Overlay contrast adjustment, schema: { $ref: '#/components/schemas/SignedPercentString' } }
-    CrispParam: { name: crisp, in: query, required: false, description: Crisp pixel-edge rendering toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    CropEnParam: { name: cropEn, in: query, required: false, description: Enable overlay cropping, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    CropSizeParam: { name: cropSize, in: query, required: false, description: Crop size fraction, schema: { $ref: '#/components/schemas/FractionString' } }
-    CropXParam: { name: cropX, in: query, required: false, description: Crop center X, schema: { $ref: '#/components/schemas/FractionString' } }
-    CropYParam: { name: cropY, in: query, required: false, description: Crop center Y, schema: { $ref: '#/components/schemas/FractionString' } }
-    DiffusionKernelParam: { name: diffusionKernel, in: query, required: false, description: Error-diffusion kernel, schema: { enum: [floyd_steinberg, jarvis_judice_ninke, stucki] } }
-    DitherKindParam: { name: ditherKind, in: query, required: false, description: Dither algorithm, schema: { $ref: '#/components/schemas/DitherKind' } }
-    DitherStrengthParam: { name: ditherStrength, in: query, required: false, description: Dither strength percentage, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    DotRotParam: { name: dotRot, in: query, required: false, description: Dot rotation in degrees, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    DpiParam: { name: dpi, in: query, required: false, description: Output DPI, schema: { type: string, pattern: '^([1-9][0-9]{0,2}|1[01][0-9]{2}|1200)$' } }
-    Duo1Param: { name: duo1, in: query, required: false, description: Halftone duotone dark color, schema: { $ref: '#/components/schemas/HexColor6' } }
-    Duo2Param: { name: duo2, in: query, required: false, description: Halftone duotone light color, schema: { $ref: '#/components/schemas/HexColor6' } }
-    EasingParam: { name: easing, in: query, required: false, description: Primary animation easing, schema: { $ref: '#/components/schemas/AnimationEasing' } }
-    Easing2Param: { name: easing2, in: query, required: false, description: Secondary animation easing, schema: { $ref: '#/components/schemas/AnimationEasing' } }
-    EccAwareParam: { name: eccAware, in: query, required: false, description: ECC-aware overlay mode toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    EccMapParam: { name: eccMap, in: query, required: false, description: ECC weight map, schema: { enum: [distance_to_finders, block_heatmap, empirical_scan_heatmap] } }
-    EccRiskParam: { name: eccRisk, in: query, required: false, description: ECC risk budget, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    EdgeParam: { name: edge, in: query, required: false, description: Overlay edge detection mode, schema: { enum: [off, sobel, canny] } }
-    EyeInnerParam: { name: eyeInner, in: query, required: false, description: Finder inner eye style, schema: { $ref: '#/components/schemas/FinderStyle' } }
-    EyeOuterParam: { name: eyeOuter, in: query, required: false, description: Finder outer eye style, schema: { $ref: '#/components/schemas/FinderStyle' } }
-    EyeScaleParam: { name: eyeScale, in: query, required: false, description: Finder eye scale percentage, schema: { type: string, pattern: '^(50|[5-9][0-9]|1[0-4][0-9]|150)$' } }
-    FinderParam: { name: finder, in: query, required: false, description: Finder style, schema: { $ref: '#/components/schemas/FinderStyle' } }
-    FinderDitherParam: { name: finderDither, in: query, required: false, description: Finder dithering strength, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    FitParam: { name: fit, in: query, required: false, description: Overlay fit mode, schema: { enum: [cover, contain, stretch] } }
-    FlipXParam: { name: flipX, in: query, required: false, description: Flip overlay horizontally, schema: { type: string, enum: ['0', '1'] } }
-    FlipYParam: { name: flipY, in: query, required: false, description: Flip overlay vertically, schema: { type: string, enum: ['0', '1'] } }
-    FmtExtraParam: { name: fmtExtra, in: query, required: false, description: Additional output variant, schema: { $ref: '#/components/schemas/FormatExtra' } }
-    FnameParam: { name: fname, in: query, required: false, description: Output filename stem, schema: { type: string } }
-    FrameParam: { name: frame, in: query, required: false, description: Frame style, schema: { $ref: '#/components/schemas/FrameStyle' } }
-    FrameTextParam: { name: frameText, in: query, required: false, description: Frame text, schema: { type: string } }
-    GammaParam: { name: gamma, in: query, required: false, description: Overlay gamma adjustment, schema: { $ref: '#/components/schemas/GammaString' } }
-    GapParam: { name: gap, in: query, required: false, description: Module gap percentage, schema: { type: string, pattern: '^([0-9]|[1-4][0-9]|50)$' } }
-    GapModeParam: { name: gapMode, in: query, required: false, description: Gap rendering mode, schema: { $ref: '#/components/schemas/GapMode' } }
-    GifColorsParam: { name: gifColors, in: query, required: false, description: GIF palette size, schema: { $ref: '#/components/schemas/GifColors' } }
-    GifDelaysParam: { name: gifDelays, in: query, required: false, description: Use native GIF frame delays, schema: { type: string, enum: ['0', '1'] } }
-    GifDispParam: { name: gifDisp, in: query, required: false, description: GIF disposal code or named mode, schema: { $ref: '#/components/schemas/GifDisposal' } }
-    GifDispHParam: { name: gifDispH, in: query, required: false, description: GIF disposal handling mode, schema: { enum: [respect, simplify] } }
-    GifDithParam: { name: gifDith, in: query, required: false, description: GIF dithering mode, schema: { enum: [none, floyd_steinberg, atkinson] } }
-    GifMaxFpsParam: { name: gifMaxFps, in: query, required: false, description: GIF maximum frames per second, schema: { $ref: '#/components/schemas/PositiveIntegerString' } }
-    GifPalParam: { name: gifPal, in: query, required: false, description: GIF palette alias for gifColors, schema: { $ref: '#/components/schemas/GifColors' } }
-    GifQuantParam: { name: gifQuant, in: query, required: false, description: GIF quantizer selection, schema: { enum: [wu, neuquant, rgbquant] } }
-    GifTransParam: { name: gifTrans, in: query, required: false, description: GIF transparent color hex, schema: { $ref: '#/components/schemas/HexColor6' } }
-    GradParam: { name: grad, in: query, required: false, description: Gradient type, schema: { $ref: '#/components/schemas/GradientType' } }
-    GradAngleParam: { name: gradAngle, in: query, required: false, description: Gradient angle, schema: { $ref: '#/components/schemas/AngleString' } }
-    GradStopsParam: { name: gradStops, in: query, required: false, description: Gradient stop list, schema: { $ref: '#/components/schemas/GradientStops' } }
-    HalftoneCellParam: { name: htCell, in: query, required: false, description: Halftone cell mode, schema: { $ref: '#/components/schemas/HalftoneCellMode' } }
-    HalftoneCurveParam: { name: htCurve, in: query, required: false, description: Halftone brightness curve, schema: { $ref: '#/components/schemas/HalftoneCurve' } }
-    HalftoneDotParam: { name: htDot, in: query, required: false, description: Halftone dot shape, schema: { $ref: '#/components/schemas/HalftoneDotShape' } }
-    HueParam: { name: hue, in: query, required: false, description: Overlay hue rotation, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    IncludeQuietZoneParam: { name: inclQz, in: query, required: false, description: Include quiet zone in output, schema: { type: string, enum: ['0', '1'] } }
-    IntensityParam: { name: intensity, in: query, required: false, description: Overlay intensity, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    InterpParam: { name: interp, in: query, required: false, description: Animation interpolation mode, schema: { $ref: '#/components/schemas/AnimationInterpolation' } }
-    InvertParam: { name: invert, in: query, required: false, description: Invert overlay colors, schema: { type: string, enum: ['0', '1'] } }
-    JitterParam: { name: jitter, in: query, required: false, description: Animation module jitter, schema: { $ref: '#/components/schemas/NonNegativeIntegerString' } }
-    JpegQParam: { name: jpegQ, in: query, required: false, description: JPEG quality fallback control, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    KeepAlignParam: { name: keepAlign, in: query, required: false, description: Preserve alignment patterns, schema: { type: string, enum: ['0', '1'] } }
-    KeepFindersParam: { name: keepFinders, in: query, required: false, description: Preserve finder patterns, schema: { type: string, enum: ['0', '1'] } }
-    KeepTimingParam: { name: keepTiming, in: query, required: false, description: Preserve timing patterns, schema: { type: string, enum: ['0', '1'] } }
-    LangParam: { name: lang, in: query, required: false, description: Localization hint for generated text, schema: { $ref: '#/components/schemas/LanguageTag' } }
-    LockAParam: { name: lockA, in: query, required: false, description: Lock alignment patterns, schema: { type: string, enum: ['0', '1'] } }
-    LockFParam: { name: lockF, in: query, required: false, description: Lock finder patterns, schema: { type: string, enum: ['0', '1'] } }
-    LockFmtParam: { name: lockFmt, in: query, required: false, description: Lock format information, schema: { type: string, enum: ['0', '1'] } }
-    LockTParam: { name: lockT, in: query, required: false, description: Lock timing patterns, schema: { type: string, enum: ['0', '1'] } }
-    LockVParam: { name: lockV, in: query, required: false, description: Lock version information, schema: { type: string, enum: ['0', '1'] } }
-    LogoSizeParam: { name: logoSize, in: query, required: false, description: Center logo size percentage, schema: { type: string, pattern: '^(5|[6-9]|[1-4][0-9]|50)$' } }
-    LoopParam: { name: loop, in: query, required: false, description: Loop animation, schema: { type: string, enum: ['0', '1'] } }
-    MarginParam: { name: margin, in: query, required: false, description: Quiet zone margin in modules, schema: { type: string, pattern: '^([0-9]|1[0-9]|20)$' } }
-    MaskParam: { name: mask, in: query, required: false, description: Mask pattern or auto, schema: { $ref: '#/components/schemas/MaskPatternInput' } }
-    MatrixParam: { name: matrix, in: query, required: false, description: Ordered dither matrix, schema: { $ref: '#/components/schemas/OrderedMatrix' } }
-    MaxFParam: { name: maxF, in: query, required: false, description: Maximum animation frames, schema: { $ref: '#/components/schemas/NonNegativeIntegerString' } }
-    MaxIntHParam: { name: maxIntH, in: query, required: false, description: Max overlay intensity for ECC H, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxIntLParam: { name: maxIntL, in: query, required: false, description: Max overlay intensity for ECC L, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxIntMParam: { name: maxIntM, in: query, required: false, description: Max overlay intensity for ECC M, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxIntQParam: { name: maxIntQ, in: query, required: false, description: Max overlay intensity for ECC Q, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxOverlayIntensityHParam: { name: maxOverlayIntensityH, in: query, required: false, description: Alias for maxIntH, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxOverlayIntensityLParam: { name: maxOverlayIntensityL, in: query, required: false, description: Alias for maxIntL, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxOverlayIntensityMParam: { name: maxOverlayIntensityM, in: query, required: false, description: Alias for maxIntM, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MaxOverlayIntensityQParam: { name: maxOverlayIntensityQ, in: query, required: false, description: Alias for maxIntQ, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    MetaAuthorParam: { name: metaAuthor, in: query, required: false, description: PNG metadata author, schema: { type: string } }
-    MetaCopyParam: { name: metaCopy, in: query, required: false, description: PNG metadata copyright, schema: { type: string } }
-    MetaDescParam: { name: metaDesc, in: query, required: false, description: PNG metadata description, schema: { type: string } }
-    MetaKvParam: { name: metaKv, in: query, required: false, description: Custom metadata key-value data, schema: { type: string } }
-    MetaLicParam: { name: metaLic, in: query, required: false, description: PNG metadata license, schema: { type: string } }
-    MetaTimeParam: { name: metaTime, in: query, required: false, description: Include creation time in metadata, schema: { type: string, enum: ['0', '1'] } }
-    MetaTitleParam: { name: metaTitle, in: query, required: false, description: PNG metadata title, schema: { type: string } }
-    MinContrastParam: { name: minContrast, in: query, required: false, description: Minimum contrast ratio, schema: { $ref: '#/components/schemas/ContrastRatioString' } }
-    ModColorParam: { name: modColor, in: query, required: false, description: Per-module color mode, schema: { $ref: '#/components/schemas/PerModuleColorMode' } }
-    ModulePxParam: { name: modulePx, in: query, required: false, description: Module size in pixels, schema: { $ref: '#/components/schemas/PositiveIntegerString' } }
-    OvFramePickParam: { name: ovFramePick, in: query, required: false, description: Overlay frame selection strategy, schema: { $ref: '#/components/schemas/OverlayFramePick' } }
-    OvTypeParam: { name: ovType, in: query, required: false, description: Overlay source type, schema: { $ref: '#/components/schemas/OverlayType' } }
-    PaletteParam: { name: palette, in: query, required: false, description: Palette colors list, schema: { $ref: '#/components/schemas/HexColorPalette' } }
-    PaletteModeParam: { name: paletteMode, in: query, required: false, description: Palette assignment mode, schema: { $ref: '#/components/schemas/PaletteMode' } }
-    PosterizeParam: { name: posterize, in: query, required: false, description: Overlay posterization level, schema: { type: string, pattern: '^([2-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-6])$' } }
-    ProtectFmtParam: { name: protectFmt, in: query, required: false, description: Protect QR format bits, schema: { type: string, enum: ['0', '1'] } }
-    ProtectVerParam: { name: protectVer, in: query, required: false, description: Protect QR version bits, schema: { type: string, enum: ['0', '1'] } }
-    QaBlurParam: { name: qaBlur, in: query, required: false, description: Client-only QA blur simulation, schema: { $ref: '#/components/schemas/NonNegativeIntegerString' } }
-    QaContrastParam: { name: qaContrast, in: query, required: false, description: Client-only QA contrast simulation, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    QaHeatmapParam: { name: qaHeatmap, in: query, required: false, description: Client-only QA heatmap toggle, schema: { $ref: '#/components/schemas/BinaryFlag' } }
-    QaNoiseParam: { name: qaNoise, in: query, required: false, description: Client-only QA noise simulation, schema: { $ref: '#/components/schemas/NonNegativeIntegerString' } }
-    QaRotParam: { name: qaRot, in: query, required: false, description: Client-only QA rotation simulation, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    QzEnforceParam: { name: qzEnforce, in: query, required: false, description: Enforce minimum quiet zone, schema: { type: string, enum: ['0', '1'] } }
-    RadiusParam: { name: radius, in: query, required: false, description: Module corner radius percentage, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    ReverseParam: { name: reverse, in: query, required: false, description: Reverse primary animation, schema: { type: string, enum: ['0', '1'] } }
-    Reverse2Param: { name: reverse2, in: query, required: false, description: Reverse secondary animation, schema: { type: string, enum: ['0', '1'] } }
-    RotParam: { name: rot, in: query, required: false, description: Overlay rotation degrees, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    SafeMinPxParam: { name: safeMinPx, in: query, required: false, description: Minimum safe module pixel size, schema: { $ref: '#/components/schemas/PositiveIntegerString' } }
-    SafeMinQzParam: { name: safeMinQz, in: query, required: false, description: Minimum safe quiet zone modules, schema: { $ref: '#/components/schemas/PositiveIntegerString' } }
-    SafeModeParam: { name: safeMode, in: query, required: false, description: Safety mode, schema: { $ref: '#/components/schemas/SafetyMode' } }
-    SaturationParam: { name: saturation, in: query, required: false, description: Overlay saturation adjustment, schema: { $ref: '#/components/schemas/SignedPercentString' } }
-    SeedParam: { name: seed, in: query, required: false, description: Shared render seed, schema: { $ref: '#/components/schemas/AnyIntegerString' } }
-    SerpentineParam: { name: serpentine, in: query, required: false, description: Serpentine dithering toggle, schema: { type: string, enum: ['0', '1'] } }
-    SharpenParam: { name: sharpen, in: query, required: false, description: Overlay sharpen amount, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    SnapParam: { name: snap, in: query, required: false, description: Pixel snapping mode, schema: { $ref: '#/components/schemas/PixelSnapMode' } }
-    SpCenterParam: { name: spCenter, in: query, required: false, description: Subpixel center rule, schema: { $ref: '#/components/schemas/SubpixelCenterRule' } }
-    SpFinderParam: { name: spFinder, in: query, required: false, description: Subpixel finder override, schema: { $ref: '#/components/schemas/SubpixelFinderOverride' } }
-    SpGridParam: { name: spGrid, in: query, required: false, description: Subpixel grid size, schema: { $ref: '#/components/schemas/SubpixelGridSize' } }
-    SpGridNumParam: { name: spGridNum, in: query, required: false, description: Numeric subpixel grid size alias, schema: { enum: ['2', '3', '4'] } }
-    SpNeutralParam: { name: spNeutral, in: query, required: false, description: Subpixel neutral color, schema: { $ref: '#/components/schemas/HexColor6' } }
-    SpeedParam: { name: speed, in: query, required: false, description: Alias for animSpeed, schema: { $ref: '#/components/schemas/AnimSpeed' } }
-    StartFParam: { name: startF, in: query, required: false, description: Animation start frame, schema: { $ref: '#/components/schemas/NonNegativeIntegerString' } }
-    StepFParam: { name: stepF, in: query, required: false, description: Animation frame step, schema: { $ref: '#/components/schemas/PositiveIntegerString' } }
-    SubpixelParam: { name: subpixel, in: query, required: false, description: Legacy subpixel toggle, schema: { type: string, enum: ['0', '1'] } }
-    SvgEmbedParam: { name: svgEmbed, in: query, required: false, description: Embed raster overlay in SVG, schema: { type: string, enum: ['0', '1'] } }
-    SvgPrecParam: { name: svgPrec, in: query, required: false, description: SVG shape precision mode, schema: { $ref: '#/components/schemas/SvgPrecision' } }
-    SvgVecParam: { name: svgVec, in: query, required: false, description: Force true-vector SVG export path, schema: { type: string, enum: ['0', '1'] } }
-    TempDitherParam: { name: tempDither, in: query, required: false, description: Temporal dithering mode, schema: { $ref: '#/components/schemas/AnimationTemporalDitherMode' } }
-    ThresholdParam: { name: threshold, in: query, required: false, description: Overlay threshold level, schema: { type: string, pattern: '^([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$' } }
-    TimingParam: { name: timing, in: query, required: false, description: Timing pattern style, schema: { $ref: '#/components/schemas/TimingStyle' } }
-    WebpQParam: { name: webpQ, in: query, required: false, description: WebP quality, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    WmBlendParam: { name: wmBlend, in: query, required: false, description: Watermark blend mode, schema: { $ref: '#/components/schemas/WatermarkBlend' } }
-    WmEnParam: { name: wmEn, in: query, required: false, description: Enable watermark, schema: { type: string, enum: ['0', '1'] } }
-    WmImgParam: { name: wmImg, in: query, required: false, description: Watermark image URL, schema: { type: string, format: uri } }
-    WmKindParam: { name: wmKind, in: query, required: false, description: Watermark kind, schema: { $ref: '#/components/schemas/WatermarkKind' } }
-    WmOpacityParam: { name: wmOpacity, in: query, required: false, description: Watermark opacity percentage, schema: { $ref: '#/components/schemas/Percent0To100String' } }
-    WmPosParam: { name: wmPos, in: query, required: false, description: Watermark position, schema: { $ref: '#/components/schemas/WatermarkPosition' } }
-    WmTextParam: { name: wmText, in: query, required: false, description: Watermark text, schema: { type: string } }
+    StrictOverlayParam:
+      {
+        name: _strictOverlay,
+        in: query,
+        required: false,
+        description: Internal strict overlay validation flag,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    AlignParam:
+      {
+        name: align,
+        in: query,
+        required: false,
+        description: Alignment pattern style,
+        schema: { $ref: '#/components/schemas/AlignmentStyle' },
+      }
+    AnimFramesParam:
+      {
+        name: animFrames,
+        in: query,
+        required: false,
+        description: Number of animation frames,
+        schema: { $ref: '#/components/schemas/AnimFrames' },
+      }
+    AnimPattern2Param:
+      {
+        name: animPattern2,
+        in: query,
+        required: false,
+        description: Secondary animation pattern,
+        schema: { $ref: '#/components/schemas/AnimationPattern' },
+      }
+    AnimSeedParam:
+      {
+        name: animSeed,
+        in: query,
+        required: false,
+        description: Primary animation seed,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    AnimSeed2Param:
+      {
+        name: animSeed2,
+        in: query,
+        required: false,
+        description: Secondary animation seed,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    AnimSpeedParam:
+      {
+        name: animSpeed,
+        in: query,
+        required: false,
+        description: Animation frame delay in milliseconds,
+        schema: { $ref: '#/components/schemas/AnimSpeed' },
+      }
+    AnimTargetParam:
+      {
+        name: animTarget,
+        in: query,
+        required: false,
+        description: Primary animation target,
+        schema: { $ref: '#/components/schemas/AnimationTarget' },
+      }
+    AnimTarget2Param:
+      {
+        name: animTarget2,
+        in: query,
+        required: false,
+        description: Secondary animation target,
+        schema: { $ref: '#/components/schemas/AnimationTarget' },
+      }
+    AnimWaveAxisParam:
+      {
+        name: animWaveAxis,
+        in: query,
+        required: false,
+        description: Primary wave axis,
+        schema: { $ref: '#/components/schemas/AnimationWaveAxisInput' },
+      }
+    AnimWaveAxis2Param:
+      {
+        name: animWaveAxis2,
+        in: query,
+        required: false,
+        description: Secondary wave axis,
+        schema: { $ref: '#/components/schemas/AnimationWaveAxisInput' },
+      }
+    AutoEccParam:
+      {
+        name: autoEcc,
+        in: query,
+        required: false,
+        description: Auto-pick error correction level,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    AutoReduceParam:
+      {
+        name: autoReduce,
+        in: query,
+        required: false,
+        description: Auto-reduce intensity until scannable,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    AutoVerParam:
+      {
+        name: autoVer,
+        in: query,
+        required: false,
+        description: Auto-pick QR version,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    BgOverParam:
+      {
+        name: bgOver,
+        in: query,
+        required: false,
+        description: Background override hex color,
+        schema: { $ref: '#/components/schemas/HexColor6' },
+      }
+    BlendPresParam:
+      {
+        name: blendPres,
+        in: query,
+        required: false,
+        description: Blend preservation toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    BlendPresModeParam:
+      {
+        name: blendPresMode,
+        in: query,
+        required: false,
+        description: Blend preservation mode,
+        schema: { enum: [overlay, dither] },
+      }
+    BlurParam:
+      {
+        name: blur,
+        in: query,
+        required: false,
+        description: Overlay blur radius in pixels,
+        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+      }
+    BnSeedParam:
+      {
+        name: bnSeed,
+        in: query,
+        required: false,
+        description: Blue noise seed,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    BnTileParam:
+      {
+        name: bnTile,
+        in: query,
+        required: false,
+        description: Blue noise tile size,
+        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+      }
+    BorderParam:
+      {
+        name: border,
+        in: query,
+        required: false,
+        description: Additional border modules,
+        schema: { type: string, pattern: '^(0|[1-9]|10)$' },
+      }
+    BounceParam:
+      {
+        name: bounce,
+        in: query,
+        required: false,
+        description: Bounce primary animation,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    Bounce2Param:
+      {
+        name: bounce2,
+        in: query,
+        required: false,
+        description: Bounce secondary animation,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    BrightnessParam:
+      {
+        name: brightness,
+        in: query,
+        required: false,
+        description: Overlay brightness adjustment,
+        schema: { $ref: '#/components/schemas/SignedPercentString' },
+      }
+    CGuardParam:
+      {
+        name: cGuard,
+        in: query,
+        required: false,
+        description: Per-module contrast guard toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    CharsetParam:
+      {
+        name: charset,
+        in: query,
+        required: false,
+        description: Character set hint,
+        schema: { enum: [default, utf8, shift-jis] },
+      }
+    ColorCycleParam:
+      {
+        name: colorCycle,
+        in: query,
+        required: false,
+        description: Primary color cycle toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    ColorCycle2Param:
+      {
+        name: colorCycle2,
+        in: query,
+        required: false,
+        description: Secondary color cycle toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    ColorDitherParam:
+      {
+        name: colorDither,
+        in: query,
+        required: false,
+        description: Color dithering mode,
+        schema: { enum: [none, per_channel, perceptual] },
+      }
+    ColorModeParam:
+      {
+        name: colorMode,
+        in: query,
+        required: false,
+        description: Overlay color mode,
+        schema: { $ref: '#/components/schemas/ColorMode' },
+      }
+    ContrastParam:
+      {
+        name: contrast,
+        in: query,
+        required: false,
+        description: Overlay contrast adjustment,
+        schema: { $ref: '#/components/schemas/SignedPercentString' },
+      }
+    CrispParam:
+      {
+        name: crisp,
+        in: query,
+        required: false,
+        description: Crisp pixel-edge rendering toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    CropEnParam:
+      {
+        name: cropEn,
+        in: query,
+        required: false,
+        description: Enable overlay cropping,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    CropSizeParam:
+      {
+        name: cropSize,
+        in: query,
+        required: false,
+        description: Crop size fraction,
+        schema: { $ref: '#/components/schemas/FractionString' },
+      }
+    CropXParam:
+      {
+        name: cropX,
+        in: query,
+        required: false,
+        description: Crop center X,
+        schema: { $ref: '#/components/schemas/FractionString' },
+      }
+    CropYParam:
+      {
+        name: cropY,
+        in: query,
+        required: false,
+        description: Crop center Y,
+        schema: { $ref: '#/components/schemas/FractionString' },
+      }
+    DiffusionKernelParam:
+      {
+        name: diffusionKernel,
+        in: query,
+        required: false,
+        description: Error-diffusion kernel,
+        schema: { enum: [floyd_steinberg, jarvis_judice_ninke, stucki] },
+      }
+    DitherKindParam:
+      {
+        name: ditherKind,
+        in: query,
+        required: false,
+        description: Dither algorithm,
+        schema: { $ref: '#/components/schemas/DitherKind' },
+      }
+    DitherStrengthParam:
+      {
+        name: ditherStrength,
+        in: query,
+        required: false,
+        description: Dither strength percentage,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    DotRotParam:
+      {
+        name: dotRot,
+        in: query,
+        required: false,
+        description: Dot rotation in degrees,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    DpiParam:
+      {
+        name: dpi,
+        in: query,
+        required: false,
+        description: Output DPI,
+        schema: { type: string, pattern: '^([1-9][0-9]{0,2}|1[01][0-9]{2}|1200)$' },
+      }
+    Duo1Param:
+      {
+        name: duo1,
+        in: query,
+        required: false,
+        description: Halftone duotone dark color,
+        schema: { $ref: '#/components/schemas/HexColor6' },
+      }
+    Duo2Param:
+      {
+        name: duo2,
+        in: query,
+        required: false,
+        description: Halftone duotone light color,
+        schema: { $ref: '#/components/schemas/HexColor6' },
+      }
+    EasingParam:
+      {
+        name: easing,
+        in: query,
+        required: false,
+        description: Primary animation easing,
+        schema: { $ref: '#/components/schemas/AnimationEasing' },
+      }
+    Easing2Param:
+      {
+        name: easing2,
+        in: query,
+        required: false,
+        description: Secondary animation easing,
+        schema: { $ref: '#/components/schemas/AnimationEasing' },
+      }
+    EccAwareParam:
+      {
+        name: eccAware,
+        in: query,
+        required: false,
+        description: ECC-aware overlay mode toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    EccMapParam:
+      {
+        name: eccMap,
+        in: query,
+        required: false,
+        description: ECC weight map,
+        schema: { enum: [distance_to_finders, block_heatmap, empirical_scan_heatmap] },
+      }
+    EccRiskParam:
+      {
+        name: eccRisk,
+        in: query,
+        required: false,
+        description: ECC risk budget,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    EdgeParam:
+      {
+        name: edge,
+        in: query,
+        required: false,
+        description: Overlay edge detection mode,
+        schema: { enum: [off, sobel, canny] },
+      }
+    EyeInnerParam:
+      {
+        name: eyeInner,
+        in: query,
+        required: false,
+        description: Finder inner eye style,
+        schema: { $ref: '#/components/schemas/FinderStyle' },
+      }
+    EyeOuterParam:
+      {
+        name: eyeOuter,
+        in: query,
+        required: false,
+        description: Finder outer eye style,
+        schema: { $ref: '#/components/schemas/FinderStyle' },
+      }
+    EyeScaleParam:
+      {
+        name: eyeScale,
+        in: query,
+        required: false,
+        description: Finder eye scale percentage,
+        schema: { type: string, pattern: '^(50|[5-9][0-9]|1[0-4][0-9]|150)$' },
+      }
+    FinderParam:
+      {
+        name: finder,
+        in: query,
+        required: false,
+        description: Finder style,
+        schema: { $ref: '#/components/schemas/FinderStyle' },
+      }
+    FinderDitherParam:
+      {
+        name: finderDither,
+        in: query,
+        required: false,
+        description: Finder dithering strength,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    FitParam:
+      {
+        name: fit,
+        in: query,
+        required: false,
+        description: Overlay fit mode,
+        schema: { enum: [cover, contain, stretch] },
+      }
+    FlipXParam:
+      {
+        name: flipX,
+        in: query,
+        required: false,
+        description: Flip overlay horizontally,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    FlipYParam:
+      {
+        name: flipY,
+        in: query,
+        required: false,
+        description: Flip overlay vertically,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    FmtExtraParam:
+      {
+        name: fmtExtra,
+        in: query,
+        required: false,
+        description: Additional output variant,
+        schema: { $ref: '#/components/schemas/FormatExtra' },
+      }
+    FnameParam:
+      {
+        name: fname,
+        in: query,
+        required: false,
+        description: Output filename stem,
+        schema: { type: string },
+      }
+    FrameParam:
+      {
+        name: frame,
+        in: query,
+        required: false,
+        description: Frame style,
+        schema: { $ref: '#/components/schemas/FrameStyle' },
+      }
+    FrameTextParam:
+      {
+        name: frameText,
+        in: query,
+        required: false,
+        description: Frame text,
+        schema: { type: string },
+      }
+    GammaParam:
+      {
+        name: gamma,
+        in: query,
+        required: false,
+        description: Overlay gamma adjustment,
+        schema: { $ref: '#/components/schemas/GammaString' },
+      }
+    GapParam:
+      {
+        name: gap,
+        in: query,
+        required: false,
+        description: Module gap percentage,
+        schema: { type: string, pattern: '^([0-9]|[1-4][0-9]|50)$' },
+      }
+    GapModeParam:
+      {
+        name: gapMode,
+        in: query,
+        required: false,
+        description: Gap rendering mode,
+        schema: { $ref: '#/components/schemas/GapMode' },
+      }
+    GifColorsParam:
+      {
+        name: gifColors,
+        in: query,
+        required: false,
+        description: GIF palette size,
+        schema: { $ref: '#/components/schemas/GifColors' },
+      }
+    GifDelaysParam:
+      {
+        name: gifDelays,
+        in: query,
+        required: false,
+        description: Use native GIF frame delays,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    GifDispParam:
+      {
+        name: gifDisp,
+        in: query,
+        required: false,
+        description: GIF disposal code or named mode,
+        schema: { $ref: '#/components/schemas/GifDisposal' },
+      }
+    GifDispHParam:
+      {
+        name: gifDispH,
+        in: query,
+        required: false,
+        description: GIF disposal handling mode,
+        schema: { enum: [respect, simplify] },
+      }
+    GifDithParam:
+      {
+        name: gifDith,
+        in: query,
+        required: false,
+        description: GIF dithering mode,
+        schema: { enum: [none, floyd_steinberg, atkinson] },
+      }
+    GifMaxFpsParam:
+      {
+        name: gifMaxFps,
+        in: query,
+        required: false,
+        description: GIF maximum frames per second,
+        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+      }
+    GifPalParam:
+      {
+        name: gifPal,
+        in: query,
+        required: false,
+        description: GIF palette alias for gifColors,
+        schema: { $ref: '#/components/schemas/GifColors' },
+      }
+    GifQuantParam:
+      {
+        name: gifQuant,
+        in: query,
+        required: false,
+        description: GIF quantizer selection,
+        schema: { enum: [wu, neuquant, rgbquant] },
+      }
+    GifTransParam:
+      {
+        name: gifTrans,
+        in: query,
+        required: false,
+        description: GIF transparent color hex,
+        schema: { $ref: '#/components/schemas/HexColor6' },
+      }
+    GradParam:
+      {
+        name: grad,
+        in: query,
+        required: false,
+        description: Gradient type,
+        schema: { $ref: '#/components/schemas/GradientType' },
+      }
+    GradAngleParam:
+      {
+        name: gradAngle,
+        in: query,
+        required: false,
+        description: Gradient angle,
+        schema: { $ref: '#/components/schemas/AngleString' },
+      }
+    GradStopsParam:
+      {
+        name: gradStops,
+        in: query,
+        required: false,
+        description: Gradient stop list,
+        schema: { $ref: '#/components/schemas/GradientStops' },
+      }
+    HalftoneCellParam:
+      {
+        name: htCell,
+        in: query,
+        required: false,
+        description: Halftone cell mode,
+        schema: { $ref: '#/components/schemas/HalftoneCellMode' },
+      }
+    HalftoneCurveParam:
+      {
+        name: htCurve,
+        in: query,
+        required: false,
+        description: Halftone brightness curve,
+        schema: { $ref: '#/components/schemas/HalftoneCurve' },
+      }
+    HalftoneDotParam:
+      {
+        name: htDot,
+        in: query,
+        required: false,
+        description: Halftone dot shape,
+        schema: { $ref: '#/components/schemas/HalftoneDotShape' },
+      }
+    HueParam:
+      {
+        name: hue,
+        in: query,
+        required: false,
+        description: Overlay hue rotation,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    IncludeQuietZoneParam:
+      {
+        name: inclQz,
+        in: query,
+        required: false,
+        description: Include quiet zone in output,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    IntensityParam:
+      {
+        name: intensity,
+        in: query,
+        required: false,
+        description: Overlay intensity,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    InterpParam:
+      {
+        name: interp,
+        in: query,
+        required: false,
+        description: Animation interpolation mode,
+        schema: { $ref: '#/components/schemas/AnimationInterpolation' },
+      }
+    InvertParam:
+      {
+        name: invert,
+        in: query,
+        required: false,
+        description: Invert overlay colors,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    JitterParam:
+      {
+        name: jitter,
+        in: query,
+        required: false,
+        description: Animation module jitter,
+        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+      }
+    JpegQParam:
+      {
+        name: jpegQ,
+        in: query,
+        required: false,
+        description: JPEG quality fallback control,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    KeepAlignParam:
+      {
+        name: keepAlign,
+        in: query,
+        required: false,
+        description: Preserve alignment patterns,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    KeepFindersParam:
+      {
+        name: keepFinders,
+        in: query,
+        required: false,
+        description: Preserve finder patterns,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    KeepTimingParam:
+      {
+        name: keepTiming,
+        in: query,
+        required: false,
+        description: Preserve timing patterns,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    LangParam:
+      {
+        name: lang,
+        in: query,
+        required: false,
+        description: Localization hint for generated text,
+        schema: { $ref: '#/components/schemas/LanguageTag' },
+      }
+    LockAParam:
+      {
+        name: lockA,
+        in: query,
+        required: false,
+        description: Lock alignment patterns,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    LockFParam:
+      {
+        name: lockF,
+        in: query,
+        required: false,
+        description: Lock finder patterns,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    LockFmtParam:
+      {
+        name: lockFmt,
+        in: query,
+        required: false,
+        description: Lock format information,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    LockTParam:
+      {
+        name: lockT,
+        in: query,
+        required: false,
+        description: Lock timing patterns,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    LockVParam:
+      {
+        name: lockV,
+        in: query,
+        required: false,
+        description: Lock version information,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    LogoSizeParam:
+      {
+        name: logoSize,
+        in: query,
+        required: false,
+        description: Center logo size percentage,
+        schema: { type: string, pattern: '^(5|[6-9]|[1-4][0-9]|50)$' },
+      }
+    LoopParam:
+      {
+        name: loop,
+        in: query,
+        required: false,
+        description: Loop animation,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    MarginParam:
+      {
+        name: margin,
+        in: query,
+        required: false,
+        description: Quiet zone margin in modules,
+        schema: { type: string, pattern: '^([0-9]|1[0-9]|20)$' },
+      }
+    MaskParam:
+      {
+        name: mask,
+        in: query,
+        required: false,
+        description: Mask pattern or auto,
+        schema: { $ref: '#/components/schemas/MaskPatternInput' },
+      }
+    MatrixParam:
+      {
+        name: matrix,
+        in: query,
+        required: false,
+        description: Ordered dither matrix,
+        schema: { $ref: '#/components/schemas/OrderedMatrix' },
+      }
+    MaxFParam:
+      {
+        name: maxF,
+        in: query,
+        required: false,
+        description: Maximum animation frames,
+        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+      }
+    MaxIntHParam:
+      {
+        name: maxIntH,
+        in: query,
+        required: false,
+        description: Max overlay intensity for ECC H,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxIntLParam:
+      {
+        name: maxIntL,
+        in: query,
+        required: false,
+        description: Max overlay intensity for ECC L,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxIntMParam:
+      {
+        name: maxIntM,
+        in: query,
+        required: false,
+        description: Max overlay intensity for ECC M,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxIntQParam:
+      {
+        name: maxIntQ,
+        in: query,
+        required: false,
+        description: Max overlay intensity for ECC Q,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxOverlayIntensityHParam:
+      {
+        name: maxOverlayIntensityH,
+        in: query,
+        required: false,
+        description: Alias for maxIntH,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxOverlayIntensityLParam:
+      {
+        name: maxOverlayIntensityL,
+        in: query,
+        required: false,
+        description: Alias for maxIntL,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxOverlayIntensityMParam:
+      {
+        name: maxOverlayIntensityM,
+        in: query,
+        required: false,
+        description: Alias for maxIntM,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MaxOverlayIntensityQParam:
+      {
+        name: maxOverlayIntensityQ,
+        in: query,
+        required: false,
+        description: Alias for maxIntQ,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    MetaAuthorParam:
+      {
+        name: metaAuthor,
+        in: query,
+        required: false,
+        description: PNG metadata author,
+        schema: { type: string },
+      }
+    MetaCopyParam:
+      {
+        name: metaCopy,
+        in: query,
+        required: false,
+        description: PNG metadata copyright,
+        schema: { type: string },
+      }
+    MetaDescParam:
+      {
+        name: metaDesc,
+        in: query,
+        required: false,
+        description: PNG metadata description,
+        schema: { type: string },
+      }
+    MetaKvParam:
+      {
+        name: metaKv,
+        in: query,
+        required: false,
+        description: Custom metadata key-value data,
+        schema: { type: string },
+      }
+    MetaLicParam:
+      {
+        name: metaLic,
+        in: query,
+        required: false,
+        description: PNG metadata license,
+        schema: { type: string },
+      }
+    MetaTimeParam:
+      {
+        name: metaTime,
+        in: query,
+        required: false,
+        description: Include creation time in metadata,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    MetaTitleParam:
+      {
+        name: metaTitle,
+        in: query,
+        required: false,
+        description: PNG metadata title,
+        schema: { type: string },
+      }
+    MinContrastParam:
+      {
+        name: minContrast,
+        in: query,
+        required: false,
+        description: Minimum contrast ratio,
+        schema: { $ref: '#/components/schemas/ContrastRatioString' },
+      }
+    ModColorParam:
+      {
+        name: modColor,
+        in: query,
+        required: false,
+        description: Per-module color mode,
+        schema: { $ref: '#/components/schemas/PerModuleColorMode' },
+      }
+    ModulePxParam:
+      {
+        name: modulePx,
+        in: query,
+        required: false,
+        description: Module size in pixels,
+        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+      }
+    OvFramePickParam:
+      {
+        name: ovFramePick,
+        in: query,
+        required: false,
+        description: Overlay frame selection strategy,
+        schema: { $ref: '#/components/schemas/OverlayFramePick' },
+      }
+    OvTypeParam:
+      {
+        name: ovType,
+        in: query,
+        required: false,
+        description: Overlay source type,
+        schema: { $ref: '#/components/schemas/OverlayType' },
+      }
+    PaletteParam:
+      {
+        name: palette,
+        in: query,
+        required: false,
+        description: Palette colors list,
+        schema: { $ref: '#/components/schemas/HexColorPalette' },
+      }
+    PaletteModeParam:
+      {
+        name: paletteMode,
+        in: query,
+        required: false,
+        description: Palette assignment mode,
+        schema: { $ref: '#/components/schemas/PaletteMode' },
+      }
+    PosterizeParam:
+      {
+        name: posterize,
+        in: query,
+        required: false,
+        description: Overlay posterization level,
+        schema: { type: string, pattern: '^([2-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-6])$' },
+      }
+    ProtectFmtParam:
+      {
+        name: protectFmt,
+        in: query,
+        required: false,
+        description: Protect QR format bits,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    ProtectVerParam:
+      {
+        name: protectVer,
+        in: query,
+        required: false,
+        description: Protect QR version bits,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    QaBlurParam:
+      {
+        name: qaBlur,
+        in: query,
+        required: false,
+        description: Client-only QA blur simulation,
+        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+      }
+    QaContrastParam:
+      {
+        name: qaContrast,
+        in: query,
+        required: false,
+        description: Client-only QA contrast simulation,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    QaHeatmapParam:
+      {
+        name: qaHeatmap,
+        in: query,
+        required: false,
+        description: Client-only QA heatmap toggle,
+        schema: { $ref: '#/components/schemas/BinaryFlag' },
+      }
+    QaNoiseParam:
+      {
+        name: qaNoise,
+        in: query,
+        required: false,
+        description: Client-only QA noise simulation,
+        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+      }
+    QaRotParam:
+      {
+        name: qaRot,
+        in: query,
+        required: false,
+        description: Client-only QA rotation simulation,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    QzEnforceParam:
+      {
+        name: qzEnforce,
+        in: query,
+        required: false,
+        description: Enforce minimum quiet zone,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    RadiusParam:
+      {
+        name: radius,
+        in: query,
+        required: false,
+        description: Module corner radius percentage,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    ReverseParam:
+      {
+        name: reverse,
+        in: query,
+        required: false,
+        description: Reverse primary animation,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    Reverse2Param:
+      {
+        name: reverse2,
+        in: query,
+        required: false,
+        description: Reverse secondary animation,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    RotParam:
+      {
+        name: rot,
+        in: query,
+        required: false,
+        description: Overlay rotation degrees,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    SafeMinPxParam:
+      {
+        name: safeMinPx,
+        in: query,
+        required: false,
+        description: Minimum safe module pixel size,
+        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+      }
+    SafeMinQzParam:
+      {
+        name: safeMinQz,
+        in: query,
+        required: false,
+        description: Minimum safe quiet zone modules,
+        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+      }
+    SafeModeParam:
+      {
+        name: safeMode,
+        in: query,
+        required: false,
+        description: Safety mode,
+        schema: { $ref: '#/components/schemas/SafetyMode' },
+      }
+    SaturationParam:
+      {
+        name: saturation,
+        in: query,
+        required: false,
+        description: Overlay saturation adjustment,
+        schema: { $ref: '#/components/schemas/SignedPercentString' },
+      }
+    SeedParam:
+      {
+        name: seed,
+        in: query,
+        required: false,
+        description: Shared render seed,
+        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+      }
+    SerpentineParam:
+      {
+        name: serpentine,
+        in: query,
+        required: false,
+        description: Serpentine dithering toggle,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    SharpenParam:
+      {
+        name: sharpen,
+        in: query,
+        required: false,
+        description: Overlay sharpen amount,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    SnapParam:
+      {
+        name: snap,
+        in: query,
+        required: false,
+        description: Pixel snapping mode,
+        schema: { $ref: '#/components/schemas/PixelSnapMode' },
+      }
+    SpCenterParam:
+      {
+        name: spCenter,
+        in: query,
+        required: false,
+        description: Subpixel center rule,
+        schema: { $ref: '#/components/schemas/SubpixelCenterRule' },
+      }
+    SpFinderParam:
+      {
+        name: spFinder,
+        in: query,
+        required: false,
+        description: Subpixel finder override,
+        schema: { $ref: '#/components/schemas/SubpixelFinderOverride' },
+      }
+    SpGridParam:
+      {
+        name: spGrid,
+        in: query,
+        required: false,
+        description: Subpixel grid size,
+        schema: { $ref: '#/components/schemas/SubpixelGridSize' },
+      }
+    SpGridNumParam:
+      {
+        name: spGridNum,
+        in: query,
+        required: false,
+        description: Numeric subpixel grid size alias,
+        schema: { enum: ['2', '3', '4'] },
+      }
+    SpNeutralParam:
+      {
+        name: spNeutral,
+        in: query,
+        required: false,
+        description: Subpixel neutral color,
+        schema: { $ref: '#/components/schemas/HexColor6' },
+      }
+    SpeedParam:
+      {
+        name: speed,
+        in: query,
+        required: false,
+        description: Alias for animSpeed,
+        schema: { $ref: '#/components/schemas/AnimSpeed' },
+      }
+    StartFParam:
+      {
+        name: startF,
+        in: query,
+        required: false,
+        description: Animation start frame,
+        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+      }
+    StepFParam:
+      {
+        name: stepF,
+        in: query,
+        required: false,
+        description: Animation frame step,
+        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+      }
+    SubpixelParam:
+      {
+        name: subpixel,
+        in: query,
+        required: false,
+        description: Legacy subpixel toggle,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    SvgEmbedParam:
+      {
+        name: svgEmbed,
+        in: query,
+        required: false,
+        description: Embed raster overlay in SVG,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    SvgPrecParam:
+      {
+        name: svgPrec,
+        in: query,
+        required: false,
+        description: SVG shape precision mode,
+        schema: { $ref: '#/components/schemas/SvgPrecision' },
+      }
+    SvgVecParam:
+      {
+        name: svgVec,
+        in: query,
+        required: false,
+        description: Force true-vector SVG export path,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    TempDitherParam:
+      {
+        name: tempDither,
+        in: query,
+        required: false,
+        description: Temporal dithering mode,
+        schema: { $ref: '#/components/schemas/AnimationTemporalDitherMode' },
+      }
+    ThresholdParam:
+      {
+        name: threshold,
+        in: query,
+        required: false,
+        description: Overlay threshold level,
+        schema: { type: string, pattern: '^([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$' },
+      }
+    TimingParam:
+      {
+        name: timing,
+        in: query,
+        required: false,
+        description: Timing pattern style,
+        schema: { $ref: '#/components/schemas/TimingStyle' },
+      }
+    WebpQParam:
+      {
+        name: webpQ,
+        in: query,
+        required: false,
+        description: WebP quality,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    WmBlendParam:
+      {
+        name: wmBlend,
+        in: query,
+        required: false,
+        description: Watermark blend mode,
+        schema: { $ref: '#/components/schemas/WatermarkBlend' },
+      }
+    WmEnParam:
+      {
+        name: wmEn,
+        in: query,
+        required: false,
+        description: Enable watermark,
+        schema: { type: string, enum: ['0', '1'] },
+      }
+    WmImgParam:
+      {
+        name: wmImg,
+        in: query,
+        required: false,
+        description: Watermark image URL,
+        schema: { type: string, format: uri },
+      }
+    WmKindParam:
+      {
+        name: wmKind,
+        in: query,
+        required: false,
+        description: Watermark kind,
+        schema: { $ref: '#/components/schemas/WatermarkKind' },
+      }
+    WmOpacityParam:
+      {
+        name: wmOpacity,
+        in: query,
+        required: false,
+        description: Watermark opacity percentage,
+        schema: { $ref: '#/components/schemas/Percent0To100String' },
+      }
+    WmPosParam:
+      {
+        name: wmPos,
+        in: query,
+        required: false,
+        description: Watermark position,
+        schema: { $ref: '#/components/schemas/WatermarkPosition' },
+      }
+    WmTextParam:
+      {
+        name: wmText,
+        in: query,
+        required: false,
+        description: Watermark text,
+        schema: { type: string },
+      }
   schemas:
     BinaryFlag:
       type: string

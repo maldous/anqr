@@ -1,9 +1,5 @@
 import type { QRCodeInstance } from './types';
 
-function ignoreWrapperArgs(...args: unknown[]): number {
-  return args.length;
-}
-
 export abstract class BaseMatrixWrapper implements QRCodeInstance {
   protected readonly moduleCount: number;
 
@@ -12,11 +8,11 @@ export abstract class BaseMatrixWrapper implements QRCodeInstance {
   }
 
   addData(_data: string, _mode?: string): void {
-    ignoreWrapperArgs(_data, _mode);
+    void [_data, _mode];
   }
 
   make(_maskPattern?: number): void {
-    ignoreWrapperArgs(_maskPattern);
+    void _maskPattern;
   }
 
   getModuleCount(): number {
