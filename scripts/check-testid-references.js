@@ -58,6 +58,13 @@ function collectSourceIds() {
         const id = match[1] || match[2];
         if (id) ids.add(id);
       }
+
+      const propRegex =
+        /\b(?:testId|triggerTestId|pickerTestId|textTestId)\s*=\s*(?:"([^"]+)"|'([^']+)')/g;
+      while ((match = propRegex.exec(text)) !== null) {
+        const id = match[1] || match[2];
+        if (id) ids.add(id);
+      }
     }
   }
   return ids;

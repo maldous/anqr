@@ -1,5 +1,5 @@
 1) Canonical Managed data-testid Inventory
-- Total managed IDs: 466
+- Total managed IDs: 382
 - Source: auto-generated from DynamicTestId + literal fallback scan of `src/**` and `index.html`
 - Rule: when adding/removing IDs, regenerate this file with `node scripts/generate-test-ids.js`
 
@@ -30,20 +30,6 @@
   source: src/features/generator/components/sections/payload-editors/app-link-editor.tsx
 - payload-applink-url-input
   source: src/features/generator/components/sections/payload-editors/app-link-editor.tsx
-- payload-bizcard-address-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
-- payload-bizcard-company-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
-- payload-bizcard-email-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
-- payload-bizcard-firstname-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
-- payload-bizcard-lastname-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
-- payload-bizcard-phone-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
-- payload-bizcard-title-input
-  source: src/features/generator/components/sections/payload-editors/bizcard-editor.tsx
 - payload-calsub-name-input
   source: src/features/generator/components/sections/payload-editors/calendar-subscription-editor.tsx
 - payload-calsub-url-input
@@ -62,8 +48,6 @@
   source: src/features/generator/components/sections/payload-editors/email-editor.tsx
 - payload-email-subject-input
   source: src/features/generator/components/sections/payload-editors/email-editor.tsx
-- payload-email-to-input
-  source: src/features/generator/components/sections/payload-editors/email-editor.tsx
 - payload-epc-amount-input
   source: src/features/generator/components/sections/payload-editors/epc-sepa-editor.tsx
 - payload-epc-bic-input
@@ -74,16 +58,6 @@
   source: src/features/generator/components/sections/payload-editors/epc-sepa-editor.tsx
 - payload-epc-reference-input
   source: src/features/generator/components/sections/payload-editors/epc-sepa-editor.tsx
-- payload-event-description-textarea
-  source: src/features/generator/components/sections/payload-editors/event-editor.tsx
-- payload-event-end-input
-  source: src/features/generator/components/sections/payload-editors/event-editor.tsx
-- payload-event-location-input
-  source: src/features/generator/components/sections/payload-editors/event-editor.tsx
-- payload-event-start-input
-  source: src/features/generator/components/sections/payload-editors/event-editor.tsx
-- payload-event-summary-input
-  source: src/features/generator/components/sections/payload-editors/event-editor.tsx
 - payload-geo-lat-input
   source: src/features/generator/components/sections/payload-editors/geo-editor.tsx
 - payload-geo-lon-input
@@ -100,60 +74,24 @@
   source: src/features/generator/components/sections/payload-editors/gs1-digital-link-editor.tsx
 - payload-gs1-serial-input
   source: src/features/generator/components/sections/payload-editors/gs1-digital-link-editor.tsx
-- payload-mecard-adr-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
-- payload-mecard-bday-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
-- payload-mecard-email-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
-- payload-mecard-n-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
-- payload-mecard-nickname-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
-- payload-mecard-org-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
-- payload-mecard-tel-input
-  source: src/features/generator/components/sections/payload-editors/mecard-editor.tsx
 - payload-messaging-identifier-input
   source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - payload-messaging-message-textarea
   source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
-- payload-messaging-platform-select
-  source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - payload-normalize-newlines-switch
   source: src/features/generator/components/sections/payload-editors/validation-options-editor.tsx
-- payload-paynow-amount-input
-  source: src/features/generator/components/sections/payload-editors/paynow-editor.tsx
 - payload-paynow-reference-input
   source: src/features/generator/components/sections/payload-editors/paynow-editor.tsx
 - payload-paynow-type-select
-  source: src/features/generator/components/sections/payload-editors/paynow-editor.tsx
-- payload-paynow-value-input
   source: src/features/generator/components/sections/payload-editors/paynow-editor.tsx
 - payload-pix-amount-input
   source: src/features/generator/components/sections/payload-editors/pix-editor.tsx
 - payload-pix-city-input
   source: src/features/generator/components/sections/payload-editors/pix-editor.tsx
-- payload-pix-key-input
-  source: src/features/generator/components/sections/payload-editors/pix-editor.tsx
 - payload-pix-name-input
   source: src/features/generator/components/sections/payload-editors/pix-editor.tsx
-- payload-promptpay-amount-input
-  source: src/features/generator/components/sections/payload-editors/promptpay-editor.tsx
 - payload-promptpay-type-select
   source: src/features/generator/components/sections/payload-editors/promptpay-editor.tsx
-- payload-promptpay-value-input
-  source: src/features/generator/components/sections/payload-editors/promptpay-editor.tsx
-- payload-rsvp-description-textarea
-  source: src/features/generator/components/sections/payload-editors/event-rsvp-editor.tsx
-- payload-rsvp-end-input
-  source: src/features/generator/components/sections/payload-editors/event-rsvp-editor.tsx
-- payload-rsvp-location-input
-  source: src/features/generator/components/sections/payload-editors/event-rsvp-editor.tsx
-- payload-rsvp-start-input
-  source: src/features/generator/components/sections/payload-editors/event-rsvp-editor.tsx
-- payload-rsvp-summary-input
-  source: src/features/generator/components/sections/payload-editors/event-rsvp-editor.tsx
 - payload-rsvp-url-input
   source: src/features/generator/components/sections/payload-editors/event-rsvp-editor.tsx
 - payload-shortlink-input
@@ -164,12 +102,8 @@
   source: src/features/generator/components/sections/payload-editors/sms-editor.tsx
 - payload-sms-number-input
   source: src/features/generator/components/sections/payload-editors/sms-editor.tsx
-- payload-social-platform-select
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - payload-social-username-input
   source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
-- payload-tel-input
-  source: src/features/generator/components/sections/payload-editors/tel-editor.tsx
 - payload-text-textarea
   source: src/features/generator/components/sections/payload-editors/plain-text-editor.tsx
 - payload-trim-switch
@@ -188,16 +122,6 @@
   source: src/features/generator/components/sections/payload-editors/url-editor.tsx
 - payload-validate-switch
   source: src/features/generator/components/sections/payload-editors/validation-options-editor.tsx
-- payload-vcard-email-input
-  source: src/features/generator/components/sections/payload-editors/vcard-editor.tsx
-- payload-vcard-fn-input
-  source: src/features/generator/components/sections/payload-editors/vcard-editor.tsx
-- payload-vcard-org-input
-  source: src/features/generator/components/sections/payload-editors/vcard-editor.tsx
-- payload-vcard-tel-input
-  source: src/features/generator/components/sections/payload-editors/vcard-editor.tsx
-- payload-vcard-title-input
-  source: src/features/generator/components/sections/payload-editors/vcard-editor.tsx
 - payload-vcard-url-input
   source: src/features/generator/components/sections/payload-editors/vcard-editor.tsx
 - payload-wifi-auth-select
@@ -210,13 +134,7 @@
   source: src/features/generator/components/sections/payload-editors/wifi-editor.tsx
 
 4) QR Encoding Section
-- qr-character-encoding-select
-  source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-ecc-select
-  source: src/features/generator/components/sections/qr-encoding-section.tsx
-- qr-encoding-mode-select
-  source: src/features/generator/components/sections/qr-encoding-section.tsx
-- qr-mask-pattern-select
   source: src/features/generator/components/sections/qr-encoding-section.tsx
 - qr-quiet-zone-enforce-switch
   source: src/features/generator/components/sections/qr-encoding-section.tsx
@@ -226,43 +144,17 @@
   source: src/features/generator/components/sections/qr-encoding-section.tsx
 
 5) Render Section
-- render-alignment-style-select
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-bg-color-picker
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-bg-color-text
-  source: src/features/generator/components/sections/RenderSection.tsx
 - render-corner-radius-slider
   source: src/features/generator/components/sections/RenderSection.tsx
 - render-dot-rotation-slider
   source: src/features/generator/components/sections/RenderSection.tsx
-- render-eye-inner-style-select
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-eye-outer-style-select
-  source: src/features/generator/components/sections/RenderSection.tsx
 - render-eye-scale-slider
   source: src/features/generator/components/sections/RenderSection.tsx
-- render-fg-color-picker
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-fg-color-text
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-finder-style-select
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-frame-style-select
-  source: src/features/generator/components/sections/RenderSection.tsx
 - render-frame-text-input
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-gap-mode-select
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-gradient-type-select
   source: src/features/generator/components/sections/RenderSection.tsx
 - render-module-gap-slider
   source: src/features/generator/components/sections/RenderSection.tsx
 - render-module-size-slider
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-module-style-select
-  source: src/features/generator/components/sections/RenderSection.tsx
-- render-timing-style-select
   source: src/features/generator/components/sections/RenderSection.tsx
 - render-transparent-bg-switch
   source: src/features/generator/components/sections/RenderSection.tsx
@@ -310,19 +202,11 @@
   source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-frame-step-slider
   source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-interpolation-content
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-interpolation-trigger
-  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-loop-switch
   source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-max-frames-slider
   source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-module-jitter-slider
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-pattern-2-content
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-pattern-2-trigger
   source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-pattern-content
   source: src/features/generator/components/sections/AnimationSection.tsx
@@ -334,25 +218,9 @@
   source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-start-frame-slider
   source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-target-2-content
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-target-2-trigger
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-target-content
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-target-trigger
-  source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-temporal-dither-content
   source: src/features/generator/components/sections/AnimationSection.tsx
 - animation-temporal-dither-trigger
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-wave-axis-2-content
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-wave-axis-2-trigger
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-wave-axis-content
-  source: src/features/generator/components/sections/AnimationSection.tsx
-- animation-wave-axis-trigger
   source: src/features/generator/components/sections/AnimationSection.tsx
 
 8) Output Section
@@ -396,23 +264,11 @@
   source: src/features/generator/components/sections/OutputSection.tsx
 
 9) Watermark Section
-- watermark-blend-content
-  source: src/features/generator/components/sections/WatermarkSection.tsx
-- watermark-blend-trigger
-  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-clear-image-button
   source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-enabled-switch
   source: src/features/generator/components/sections/WatermarkSection.tsx
-- watermark-kind-content
-  source: src/features/generator/components/sections/WatermarkSection.tsx
-- watermark-kind-trigger
-  source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-opacity-slider
-  source: src/features/generator/components/sections/WatermarkSection.tsx
-- watermark-position-content
-  source: src/features/generator/components/sections/WatermarkSection.tsx
-- watermark-position-trigger
   source: src/features/generator/components/sections/WatermarkSection.tsx
 - watermark-text-input
   source: src/features/generator/components/sections/WatermarkSection.tsx
@@ -692,8 +548,6 @@
   source: src/features/generator/components/sections/payload-editors/swiss-qr-bill-editor.tsx
 - select-item-option-ewallet
   source: src/features/generator/components/sections/payload-editors/promptpay-editor.tsx
-- select-item-option-facebook
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - select-item-option-fixed
   source: src/features/generator/components/sections/payload-editors/emv-generic-editor.tsx
 - select-item-option-flicker-safe
@@ -712,8 +566,6 @@
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-gif
   source: src/features/generator/components/sections/OutputSection.tsx
-- select-item-option-github
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - select-item-option-grayscale
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-h
@@ -728,8 +580,6 @@
   source: src/features/generator/components/sections/WatermarkSection.tsx
 - select-item-option-inset
   source: src/features/generator/components/sections/RenderSection.tsx
-- select-item-option-instagram
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - select-item-option-inventory
   source: src/features/generator/components/sections/payload-editors/removed-inventory-editor.tsx
 - select-item-option-ios
@@ -747,11 +597,9 @@
 - select-item-option-li
   source: src/features/generator/components/sections/payload-editors/swiss-qr-bill-editor.tsx
 - select-item-option-line
-  source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
+  source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-linear
   source: src/features/generator/components/sections/OverlaySection.tsx, src/features/generator/components/sections/RenderSection.tsx
-- select-item-option-linkedin
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - select-item-option-litecoin
   source: src/features/generator/components/sections/payload-editors/crypto-editor.tsx
 - select-item-option-m
@@ -762,8 +610,6 @@
   source: src/features/generator/components/sections/RenderSection.tsx
 - select-item-option-median-cut
   source: src/features/generator/components/sections/OutputSection.tsx
-- select-item-option-messenger
-  source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - select-item-option-mobile
   source: src/features/generator/components/sections/payload-editors/auspaynet-editor.tsx, src/features/generator/components/sections/payload-editors/duitnow-editor.tsx, src/features/generator/components/sections/payload-editors/paynow-editor.tsx, src/features/generator/components/sections/payload-editors/promptpay-editor.tsx
 - select-item-option-modules
@@ -805,7 +651,7 @@
 - select-item-option-org
   source: src/features/generator/components/sections/payload-editors/auspaynet-editor.tsx
 - select-item-option-other
-  source: src/features/generator/components/sections/payload-editors/removed-inventory-editor.tsx, src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
+  source: src/features/generator/components/sections/payload-editors/removed-inventory-editor.tsx
 - select-item-option-others
   source: src/features/generator/components/sections/payload-editors/duitnow-editor.tsx
 - select-item-option-overlay
@@ -884,8 +730,6 @@
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-sierra-lite
   source: src/features/generator/components/sections/OverlaySection.tsx
-- select-item-option-signal
-  source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - select-item-option-simplify
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-sobel
@@ -910,22 +754,16 @@
   source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-tag
   source: src/features/generator/components/sections/RenderSection.tsx
-- select-item-option-telegram
-  source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - select-item-option-temporal-blue-noise
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-text
   source: src/features/generator/components/sections/WatermarkSection.tsx
-- select-item-option-tiktok
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - select-item-option-totp
   source: src/features/generator/components/sections/payload-editors/removed-otpauth-editor.tsx
 - select-item-option-triangular-noise
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-true-dither
   source: src/features/generator/components/sections/OverlaySection.tsx
-- select-item-option-twitter
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 - select-item-option-uen
   source: src/features/generator/components/sections/payload-editors/paynow-editor.tsx
 - select-item-option-universal
@@ -934,8 +772,6 @@
   source: src/features/generator/components/sections/qr-encoding-section.tsx
 - select-item-option-vehicle
   source: src/features/generator/components/sections/payload-editors/removed-inventory-editor.tsx
-- select-item-option-viber
-  source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - select-item-option-void-cluster
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-wave
@@ -944,8 +780,6 @@
   source: src/features/generator/components/sections/OutputSection.tsx
 - select-item-option-wep
   source: src/features/generator/components/sections/payload-editors/wifi-editor.tsx
-- select-item-option-whatsapp
-  source: src/features/generator/components/sections/payload-editors/messaging-link-editor.tsx
 - select-item-option-white-noise
   source: src/features/generator/components/sections/OverlaySection.tsx
 - select-item-option-wpa
@@ -960,8 +794,6 @@
   source: src/features/generator/components/sections/AnimationSection.tsx
 - select-item-option-y
   source: src/features/generator/components/sections/AnimationSection.tsx
-- select-item-option-youtube
-  source: src/features/generator/components/sections/payload-editors/social-profile-editor.tsx
 
 16) Coverage Usage Rules
 - This file is the complete explicit ID inventory for coverage and permutation auditing.

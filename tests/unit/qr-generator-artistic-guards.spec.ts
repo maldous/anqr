@@ -6,27 +6,49 @@ const read = (p: string): string => fs.readFileSync(path.join(process.cwd(), p),
 
 describe('qr-generator artistic guards', () => {
   it('keeps dithered light-dot fog disabled and grain explicitly capped', () => {
-    const src = read('src/domain/render/generator/scaled-render.ts');
-    expect(src).toContain('const shouldDrawLightPixel =');
-    expect(src).toContain('!isDitheredMode');
-    expect(src).toContain('needsExplicitLightModules');
-    expect(src).toContain('const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;');
-    expect(src).toContain('(config.lightGrainDensity ?? 0.004) * qrFirstLightBoost');
-    expect(src).toContain('(config.lightGrainAlpha ?? 0.05)');
-    expect(src).toContain('if (isDitheredMode) {');
-    expect(src).toContain('const grainChance = Math.max(');
-    expect(src).toContain('const shouldForceBinaryModule = (row: number, col: number): boolean =>');
-    expect(src).toContain('shouldForceScaledBinaryModule(getPatternFlags(row, col), pf)');
-    expect(src).toContain('const getPatternFlags = (row: number, col: number): number =>');
-    expect(src).toContain('function isFinderRegionFlag(flags: number): boolean {');
-    expect(src).toContain('function shouldForceScaledBinaryModule(');
-    expect(src).toContain('if (isFinderRegionFlag(flags)) return pf.preserveFinders;');
-    expect(src).toContain('if ((flags & PATTERN_TIMING) !== 0) return pf.preserveTiming;');
-    expect(src).toContain('if ((flags & PATTERN_ALIGNMENT) !== 0) return pf.preserveAlignment;');
-    expect(src).toContain('if ((flags & PATTERN_FORMAT) !== 0) return pf.protectFormat;');
-    expect(src).toContain('if ((flags & PATTERN_VERSION) !== 0) return pf.protectVersion;');
-    expect(src).toContain('preserveFixedDark:');
-    expect(src).toContain('if ((flags & PATTERN_FIXED_DARK) !== 0) return pf.preserveFixedDark;');
+    const scaledRender = read('src/domain/render/generator/scaled-render.ts');
+    const pixelGrid = read(
+      'src/domain/render/generator/scaled-render-helpers/scaled-pixel-grid.ts'
+    );
+    const ditherDots = read(
+      'src/domain/render/generator/scaled-render-helpers/compute-dither-dot-params.ts'
+    );
+    const forceBinary = read(
+      'src/domain/render/generator/scaled-render-helpers/should-force-scaled-binary-module.ts'
+    );
+    const finderFlags = read(
+      'src/domain/render/generator/scaled-render-helpers/is-finder-region-flag.ts'
+    );
+
+    expect(pixelGrid).toContain('const shouldDrawLightPixel =');
+    expect(pixelGrid).toContain('!isDitheredMode');
+    expect(pixelGrid).toContain('needsExplicitLightModules');
+    expect(ditherDots).toContain('const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;');
+    expect(ditherDots).toContain('(config.lightGrainDensity ?? 0.004) * qrFirstLightBoost');
+    expect(ditherDots).toContain('(config.lightGrainAlpha ?? 0.05)');
+    expect(scaledRender).toContain('if (isDitheredMode && overlayCanvas && useColorRendering) {');
+    expect(scaledRender).toContain('const getPatternFlags = (row: number, col: number): number =>');
+    expect(scaledRender).toContain('shouldForceScaledBinaryModule(getPatternFlags(row, col), pf)');
+    expect(forceBinary).toContain('export function shouldForceScaledBinaryModule(');
+    expect(finderFlags).toContain('export function isFinderRegionFlag(flags: number): boolean {');
+    expect(forceBinary).toContain(
+      'if (isFinderRegionFlag(flags)) return preserveFlags.preserveFinders;'
+    );
+    expect(forceBinary).toContain(
+      'if ((flags & PATTERN_TIMING) !== 0) return preserveFlags.preserveTiming;'
+    );
+    expect(forceBinary).toContain(
+      'if ((flags & PATTERN_ALIGNMENT) !== 0) return preserveFlags.preserveAlignment;'
+    );
+    expect(forceBinary).toContain(
+      'if ((flags & PATTERN_FORMAT) !== 0) return preserveFlags.protectFormat;'
+    );
+    expect(forceBinary).toContain(
+      'if ((flags & PATTERN_VERSION) !== 0) return preserveFlags.protectVersion;'
+    );
+    expect(forceBinary).toContain(
+      'if ((flags & PATTERN_FIXED_DARK) !== 0) return preserveFlags.preserveFixedDark;'
+    );
   });
 
   it('removes center-lock writeback and module-local target quotas in dither correction', () => {
@@ -38,17 +60,20 @@ describe('qr-generator artistic guards', () => {
   });
 
   it('enforces final-raster decode gate with png roundtrip and single primary decoder', () => {
-    const src = read('src/modules/qr-generator/qr-generator-class.ts');
-    expect(src).toContain("toDataURL('image/png')");
-    expect(src).toContain('if (!(await runDecode(finalRaster)))');
-    expect(src).not.toContain('decodeQRLegacy');
-    expect(src).not.toContain('decodeFromCanvas');
+    const evalScenarios = read('src/modules/qr-generator/evaluate-decode-scenarios.ts');
+    const imageSource = read('src/modules/qr-generator/resolve-image-source.ts');
+    const qrGenerator = read('src/modules/qr-generator/qr-generator-class.ts');
+    expect(imageSource).toContain("toDataURL('image/png')");
+    expect(evalScenarios).toContain('if (!(await runDecode(finalRaster)))');
+    expect(qrGenerator).not.toContain('decodeQRLegacy');
+    expect(qrGenerator).not.toContain('decodeFromCanvas');
   });
 
   it('locks render policy across dither correction attempts', () => {
-    const src = read('src/modules/qr-generator/qr-generator-class.ts');
-    expect(src).toContain('const fixedVisualPolicy');
-    expect(src).toContain('...fixedVisualPolicy');
-    expect(src).toContain('renderScalePerModule: config.renderScalePerModule');
+    const qrGenerator = read('src/modules/qr-generator/qr-generator-class.ts');
+    const fixedVisualPolicy = read('src/modules/qr-generator/build-fixed-visual-policy.ts');
+    expect(qrGenerator).toContain('const fixedVisualPolicy');
+    expect(qrGenerator).toContain('...fixedVisualPolicy');
+    expect(fixedVisualPolicy).toContain('renderScalePerModule: config.renderScalePerModule');
   });
 });

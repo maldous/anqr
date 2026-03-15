@@ -8,6 +8,25 @@ import type { DiffusionKernel } from '../../../modules/qr-generator/types';
 
 const _log = createLogger('GENERATE');
 
+const BURKES_OFFSETS = [
+  { dx: 1, dy: 0, weight: 8 },
+  { dx: 2, dy: 0, weight: 4 },
+  { dx: -2, dy: 1, weight: 2 },
+  { dx: -1, dy: 1, weight: 4 },
+  { dx: 0, dy: 1, weight: 8 },
+  { dx: 1, dy: 1, weight: 4 },
+  { dx: 2, dy: 1, weight: 2 },
+] as const;
+
+const STUCKI_OFFSETS = [
+  ...BURKES_OFFSETS,
+  { dx: -2, dy: 2, weight: 1 },
+  { dx: -1, dy: 2, weight: 2 },
+  { dx: 0, dy: 2, weight: 4 },
+  { dx: 1, dy: 2, weight: 2 },
+  { dx: 2, dy: 2, weight: 1 },
+] as const;
+
 /**
  * Get diffusion kernel by name
  */
@@ -40,20 +59,7 @@ export function getDiffusionKernel(name: string): DiffusionKernel {
       divisor: 48,
     },
     stucki: {
-      offsets: [
-        { dx: 1, dy: 0, weight: 8 },
-        { dx: 2, dy: 0, weight: 4 },
-        { dx: -2, dy: 1, weight: 2 },
-        { dx: -1, dy: 1, weight: 4 },
-        { dx: 0, dy: 1, weight: 8 },
-        { dx: 1, dy: 1, weight: 4 },
-        { dx: 2, dy: 1, weight: 2 },
-        { dx: -2, dy: 2, weight: 1 },
-        { dx: -1, dy: 2, weight: 2 },
-        { dx: 0, dy: 2, weight: 4 },
-        { dx: 1, dy: 2, weight: 2 },
-        { dx: 2, dy: 2, weight: 1 },
-      ],
+      offsets: [...STUCKI_OFFSETS],
       divisor: 42,
     },
     atkinson: {
@@ -68,15 +74,7 @@ export function getDiffusionKernel(name: string): DiffusionKernel {
       divisor: 8,
     },
     burkes: {
-      offsets: [
-        { dx: 1, dy: 0, weight: 8 },
-        { dx: 2, dy: 0, weight: 4 },
-        { dx: -2, dy: 1, weight: 2 },
-        { dx: -1, dy: 1, weight: 4 },
-        { dx: 0, dy: 1, weight: 8 },
-        { dx: 1, dy: 1, weight: 4 },
-        { dx: 2, dy: 1, weight: 2 },
-      ],
+      offsets: [...BURKES_OFFSETS],
       divisor: 32,
     },
     sierra: {

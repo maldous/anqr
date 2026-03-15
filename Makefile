@@ -493,6 +493,9 @@ check:
 	npx oxfmt .
 	npx oxfmt --check .
 
+quality\:pmd:
+	npm run quality:pmd
+
 # ============================================
 # PWA Icons Generation
 # ============================================
@@ -1170,6 +1173,7 @@ _quality-gates:
 	npx license-checker --failOn 'AGPL-1.0-only;AGPL-1.0-or-later;AGPL-3.0-only;AGPL-3.0-or-later;GPL-2.0-only;GPL-3.0-only;GPL-3.0-or-later' --production
 	npx type-coverage --at-least 95 --strict --ignore-catch
 	npx jscpd src
+	npm run quality:pmd
 	npx cspell 'src/**/*.{ts,tsx}' '!src/i18n/**' --no-progress
 	npm run test:ids
 	npm run test:required

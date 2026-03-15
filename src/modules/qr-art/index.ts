@@ -95,6 +95,24 @@ import { generateQArt } from './generate-qart';
 // Import and re-export mapImageToTargetsSupersampled from image-utils to avoid circular imports
 import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
 export { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
+export { evaluateQRMatch, searchBestFragment } from './fragment-search';
+export { gfAdd, gfInv, gfMul } from './gf-utils';
+export {
+  getModuleCount,
+  isAlignmentPattern,
+  isFinderPattern,
+  isTimingPattern,
+  mapImageToTargets,
+} from './pixel-mapping';
+export {
+  analyzeUrlEfficiency,
+  canUseFragmentSearch,
+  generateQArtUrl,
+  getBaseUrl,
+} from './url-utils';
+export { buildRSBasis } from './build-rs-basis';
+export { gaussJordanEliminate } from './gauss-jordan-eliminate';
+export { generateQArt } from './generate-qart';
 
 // ============================================
 // FULL QART ALGORITHM IMPORTS

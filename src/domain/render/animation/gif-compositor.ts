@@ -4,6 +4,7 @@
 
 import { createLogger } from '../../../infra/logging/logger';
 import { getOrCreatePatchImageData } from './get-or-create-patch-image-data';
+import { getGifFrameStats } from './gif-frame-stats';
 
 const log = createLogger('ANIMATION');
 
@@ -17,9 +18,7 @@ import type { GifCompositor } from '../../../modules/animation/types';
 export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const { width, height, frames } = decodeGif(arrayBuffer);
 
-  const uniqueDelays = [...new Set(frames.map((f) => f.delay))].sort((a, b) => a - b);
-  const uniqueDisposals = [...new Set(frames.map((f) => f.disposalType))].sort((a, b) => a - b);
-  const totalDurationMs = frames.reduce((sum, f) => sum + f.delay, 0);
+  const { uniqueDelays, uniqueDisposals, totalDurationMs } = getGifFrameStats(frames);
   const hasDeltaPatches = frames.some(
     (f) =>
       f.dims.left !== 0 || f.dims.top !== 0 || f.dims.width !== width || f.dims.height !== height

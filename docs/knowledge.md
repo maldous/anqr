@@ -85,7 +85,7 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 | i18n       | i18next + react-i18next (40+ locales, static guides)                                                                             |
 | Testing    | Vitest 4 (unit), Playwright 1.58 (E2E web + API), Appium 3 + WebdriverIO 9 (E2E iOS/Android), pixelmatch + pngjs (visual parity) |
 | Linting    | oxlint + oxfmt (OXC-powered, not ESLint)                                                                                         |
-| Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser                          |
+| Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, PMD CPD, type-coverage, dependency-cruiser                 |
 | Hosting    | Netlify (web + functions), Google Play Store (Android), Apple App Store (iOS)                                                    |
 | Monitoring | Sentry (React + Node SDKs)                                                                                                       |
 
@@ -112,6 +112,7 @@ npm run typecheck # tsc --noEmit
 make fix          # oxlint --fix + oxfmt --write
 make lint         # oxlint only (no write)
 make check        # oxlint + oxfmt --check (CI mode)
+make quality:pmd  # PMD CPD over implementation layers (TypeScript, 100-token threshold)
 make quality      # Full 19-check quality gate pipeline
 make harness      # Full 22-domain harness report (FACE-BPH)
 make harness:quick # Quick 4-check smoke test

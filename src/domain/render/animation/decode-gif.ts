@@ -1,5 +1,6 @@
 import { decompressFrames, parseGIF } from 'gifuct-js';
 import type { DecodedGif, GifPatchFrame } from './gif-codec.types';
+import { getGifFrameStats } from './gif-frame-stats';
 import { log } from './log';
 
 export function decodeGif(arrayBuffer: ArrayBuffer): DecodedGif {
@@ -7,9 +8,7 @@ export function decodeGif(arrayBuffer: ArrayBuffer): DecodedGif {
   const frames = decompressFrames(parsed, true) as unknown as GifPatchFrame[];
   const { width, height } = parsed.lsd;
 
-  const uniqueDelays = [...new Set(frames.map((f) => f.delay))].sort((a, b) => a - b);
-  const uniqueDisposals = [...new Set(frames.map((f) => f.disposalType))].sort((a, b) => a - b);
-  const totalDurationMs = frames.reduce((sum, f) => sum + f.delay, 0);
+  const { uniqueDelays, uniqueDisposals, totalDurationMs } = getGifFrameStats(frames);
 
   log.debug('decodeGif: decoded', {
     width,
