@@ -14,7 +14,7 @@
     "dev": "vite",
     "build": "node scripts/sync-openapi-public.mjs && tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "NODE_OPTIONS='--max-old-space-size=2048' tsc --noEmit",
     "test": "playwright test",
     "test:basic": "playwright test --project=basic",
     "test:advanced": "playwright test --project=advanced",
