@@ -181,7 +181,9 @@ function runValidation() {
     execSync('npx tsc --noEmit', { cwd: ROOT, timeout: 60_000, stdio: 'pipe' });
     results.push({ check: 'typecheck', pass: true, detail: '' });
   } catch (err) {
-    const output = (err.stdout || '').toString().slice(0, 2000);
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
     results.push({ check: 'typecheck', pass: false, detail: output });
   }
 
@@ -193,7 +195,9 @@ function runValidation() {
     );
     results.push({ check: 'test-unit', pass: true, detail: '' });
   } catch (err) {
-    const output = (err.stdout || '').toString().slice(0, 2000);
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
     results.push({ check: 'test-unit', pass: false, detail: output });
   }
 
