@@ -29,6 +29,9 @@ Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
 # Secrets and overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
+# Provider API tokens (GROQ_TOKEN, GEMINI_TOKEN, OPENAI_API_KEY, etc.)
+EnvironmentFile=-%h/.config/symphony/anqr.env
+
 ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/symphony-runner.mjs --once
 
 # Logging to journal
