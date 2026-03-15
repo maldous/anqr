@@ -93,7 +93,13 @@
     "scannability",
     "sobel",
     "steinberg",
-    "updatematrix"
+    "updatematrix",
+    "ollama",
+    "litellm",
+    "qwen",
+    "automatable",
+    "oneshot",
+    "groq"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
