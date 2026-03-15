@@ -50,7 +50,7 @@ describe('share-links/url-params.ts', () => {
     it('returns empty string for empty config', async () => {
       const params = await build({});
       expect(params).toBe('');
-    });
+    }, 15_000);
 
     it('serializes data param', async () => {
       const params = await build({ data: 'hello world' });

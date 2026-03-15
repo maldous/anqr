@@ -2482,6 +2482,34 @@ function isPathWithinRoot(candidatePath: string, rootPath: string): boolean {
   return resolvedCandidate.startsWith(`${resolvedRoot}${path.sep}`);
 }
 
+async function resolveValidatedLocalOverlayPath(fileUrl: URL): Promise<string | null> {
+  if (fileUrl.protocol !== 'file:') {
+    return null;
+  }
+
+  let overlayPath: string;
+  try {
+    overlayPath = fileURLToPath(fileUrl);
+  } catch {
+    return null;
+  }
+
+  const localOverlayRoot = process.env.ANQR_LOCAL_OVERLAY_ROOT
+    ? path.resolve(process.env.ANQR_LOCAL_OVERLAY_ROOT)
+    : path.resolve(process.cwd(), 'public');
+
+  if (!isPathWithinRoot(overlayPath, localOverlayRoot)) {
+    return null;
+  }
+
+  try {
+    const stats = await fs.stat(overlayPath);
+    return stats.isFile() ? overlayPath : null;
+  } catch {
+    return null;
+  }
+}
+
 async function decodeOverlayBuffer(buffer: Buffer): Promise<FetchedImage | null> {
   if (buffer.byteLength <= 0 || buffer.byteLength > MAX_OVERLAY_BYTES) {
     return null;
@@ -2529,18 +2557,8 @@ async function readLocalOverlayFile(fileUrl: URL): Promise<FetchedImage | null> 
     return null;
   }
 
-  let overlayPath: string;
-  try {
-    overlayPath = fileURLToPath(fileUrl);
-  } catch {
-    return null;
-  }
-
-  const localOverlayRoot = process.env.ANQR_LOCAL_OVERLAY_ROOT
-    ? path.resolve(process.env.ANQR_LOCAL_OVERLAY_ROOT)
-    : path.resolve(process.cwd(), 'public');
-
-  if (!isPathWithinRoot(overlayPath, localOverlayRoot)) {
+  const overlayPath = await resolveValidatedLocalOverlayPath(fileUrl);
+  if (!overlayPath) {
     return null;
   }
 

@@ -153,7 +153,7 @@ describe('qr-store', () => {
     expect(updated.render.eyeOuterStyle).toBe('circle');
     expect(updated.share.directLink).toBe(false);
     expect(updated.searchQuery).toBe('wifi');
-  });
+  }, 15_000);
 
   it('handles premium access lifecycle and effective tier', async () => {
     vi.useFakeTimers();

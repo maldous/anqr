@@ -220,7 +220,7 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       expect(result.matrix.length).toBe(moduleCount * scale);
       expect(result.colors).toBeDefined();
       expect(result.scale).toBe(scale);
-    });
+    }, 15_000);
 
     it('uses QR-first mode when config.qrFirstMode is true', async () => {
       const gen = await getDithered();

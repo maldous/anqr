@@ -145,6 +145,11 @@ _PROVIDER_FALLBACK_CHAIN: list[tuple[str, str]] = [
     ("qwen3.5-35b-a3b-32t", "litellm-ollama"),
 ]
 
+_ALLOWED_PROVIDER_NAMES: set[str] = {
+    *set(_MODEL_PROVIDER_MAP.values()),
+    *(provider for _, provider in _PROVIDER_FALLBACK_CHAIN),
+}
+
 
 def _model_to_provider(model: str) -> str:
     """Map a LiteLLM model alias to a credit-gate provider name."""
@@ -170,6 +175,13 @@ def _model_to_provider(model: str) -> str:
         return "litellm-ollama"
     if model.startswith("llama3.1"):
         return "litellm-ollama"
+    return ""
+
+
+def _sanitize_provider_name(provider: str) -> str:
+    """Return a provider name safe for filesystem-backed cooldown state."""
+    if provider in _ALLOWED_PROVIDER_NAMES:
+        return provider
     return ""
 
 
@@ -203,7 +215,10 @@ def _record_ratelimit(provider: str, retry_after_secs: int = 0) -> None:
 
 def _write_cooldown(provider: str, expiry: int) -> None:
     """Atomically write a cooldown expiry file for the credit-gate to read."""
-    rl_file = os.path.join(STATE_DIR, f"ratelimit-{provider}")
+    safe_provider = _sanitize_provider_name(provider)
+    if not safe_provider:
+        return
+    rl_file = os.path.join(STATE_DIR, f"ratelimit-{safe_provider}")
     tmp = f"{rl_file}.{os.getpid()}-{threading.get_ident()}"
     try:
         os.makedirs(STATE_DIR, mode=0o700, exist_ok=True)
@@ -216,9 +231,10 @@ def _write_cooldown(provider: str, expiry: int) -> None:
 
 def _is_provider_cooled_down(provider: str) -> bool:
     """Check if a provider has an active cooldown file (expiry in the future)."""
-    if not provider:
+    safe_provider = _sanitize_provider_name(provider)
+    if not safe_provider:
         return False
-    rl_file = os.path.join(STATE_DIR, f"ratelimit-{provider}")
+    rl_file = os.path.join(STATE_DIR, f"ratelimit-{safe_provider}")
     try:
         with open(rl_file) as f:
             expiry = int(f.read().strip())
