@@ -126,7 +126,7 @@ async function main() {
   runStep('guardian', `node scripts/ops/linear-guardian.mjs${dryRunFlag}`);
 
   // Step 4: Notify (dispatch summary)
-  runStep('notify', `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`);
+  runStep('notify', `node scripts/ops/notify.mjs --channel=stdout${dryRunFlag}`);
 
   // Step 5: Archive report
   console.log(`\n${'='.repeat(60)}`);

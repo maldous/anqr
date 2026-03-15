@@ -222,7 +222,7 @@ The nightly pipeline (`scripts/ops/nightly-ops-pass.mjs`) runs all operations in
 1. harness-report (full)     → reports/latest.json
 2. symphony-queue-control    → feed, drain, enforce
 3. linear-guardian           → create/update issues from failures
-4. notify                    → stdout summary + Linear comment
+4. notify                    → stdout summary (journal only)
 5. archive                   → reports/archive/report-YYYY-MM-DD_HH-MM-SS.json
 ```
 
@@ -271,8 +271,8 @@ Legacy lesson: PATH under systemd differs from interactive shells. The service u
 | Channel | Flag | Behavior |
 |---|---|---|
 | `stdout` | `--channel=stdout` | Always available, captured by systemd journal |
-| `linear` | `--channel=linear` | Posts summary comment on ANQ-364 (requires LINEAR_API_KEY) |
-| `all` | `--channel=all` | Both stdout and Linear |
+
+Nightly reports are written to `reports/latest.json` and archived to `reports/archive/`. They are **not** posted to Linear issues — issue comments grow unboundedly and become unreadable.
 
 ## Guardian Rules
 
