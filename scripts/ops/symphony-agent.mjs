@@ -13,6 +13,7 @@
  *   - patch_file(path, search, replace) — targeted str_replace
  *   - run_command(command)           — run an allowlisted read-only command
  *   - list_directory(path)           — list directory contents
+ *   - run_typecheck()               — run tsc --noEmit and return errors
  *   - task_complete(summary)         — signal completion
  *
  * Limits:
@@ -116,8 +117,16 @@ const TOOL_DEFINITIONS = [
   {
     type: 'function',
     function: {
+      name: 'run_typecheck',
+      description: 'Run the TypeScript compiler (tsc --noEmit) to check for type errors. Returns the compiler output. Always run this after making changes and fix any errors before calling task_complete.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'task_complete',
-      description: 'Signal that you have finished implementing the changes. Call this when all required changes are made.',
+      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck first and fix any errors before calling this.',
       parameters: {
         type: 'object',
         properties: {
@@ -232,8 +241,30 @@ function toolListDirectory(projectRoot, args) {
   return [...dirs.sort(), ...files.sort()].join('\n') || '(empty directory)';
 }
 
+function toolRunTypecheck(projectRoot) {
+  try {
+    execSync('npx tsc --noEmit', {
+      cwd: projectRoot,
+      timeout: 120_000,
+      maxBuffer: 2 * 1024 * 1024,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=2048' },
+    });
+    return 'Typecheck passed — no errors.';
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim();
+    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
+  }
+}
+
 function executeTool(projectRoot, toolCall) {
   const name = toolCall.function.name;
+
+  if (name === 'run_typecheck') return toolRunTypecheck(projectRoot);
+
   let args;
   try {
     args = JSON.parse(toolCall.function.arguments);
@@ -318,10 +349,12 @@ function buildIssuePrompt(issue) {
     '1. Read relevant files to understand the current state',
     '2. Plan your changes',
     '3. Make the minimal necessary changes using write_file or patch_file',
-    '4. Verify your changes by reading the modified files',
-    '5. Call task_complete with a summary of what you changed',
+    '4. Run run_typecheck to verify there are no type errors',
+    '5. If there are type errors, fix them and run run_typecheck again',
+    '6. Call task_complete with a summary of what you changed',
     '',
     'Keep changes minimal. Do not modify files unnecessarily.',
+    'IMPORTANT: Always run run_typecheck before calling task_complete. Fix all type errors first.',
   );
 
   return lines.join('\n');
