@@ -57,7 +57,7 @@ import { sendNotification, linearIssueUrl } from './lib/notify.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
-const WORKFLOW_PATH = resolve(ROOT, 'tools/harness/symphony/WORKFLOW.md');
+const WORKFLOW_PATH = resolve(ROOT, 'scripts/ops/symphony/WORKFLOW.md');
 
 const uid = process.getuid?.() ?? 1000;
 const STATE_DIR = `/run/user/${uid}/symphony-runner`;
