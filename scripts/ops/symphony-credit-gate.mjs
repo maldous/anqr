@@ -4,18 +4,27 @@
 /**
  * symphony-credit-gate.mjs — Provider cascade for Symphony agent
  *
- * Ports the credit-gate concept from master's codex-credit-gate.sh into JS.
- * Probes providers in priority order, skips recently-failed providers,
- * and returns the first available provider configuration.
+ * Probes providers in priority order (matching legacy codex-credit-gate.sh),
+ * skips recently-failed providers, and returns the first available provider.
  *
- * Currently Ollama-local only. Adding cloud providers is a matter of
- * appending entries to the PROVIDERS array with probe functions and
- * environment variable checks for API keys.
+ * Cascade order (best-to-worst):
+ *   1. Groq            — free cloud, fast, llama-3.3-70b-versatile
+ *   2. Mistral         — free experimental tier, devstral-small-2507
+ *   3. Gemini          — free cloud tier, gemini-2.5-flash
+ *   4. Gemini Lite     — separate quota, gemini-2.5-flash-lite
+ *   5. OpenRouter FREE — free :free models, llama-3.3-70b-instruct
+ *   6. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
+ *   7. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
+ *   8. GitHub Models   — free, gpt-4.1-mini
+ *   9. Ollama local    — local fallback, qwen3.5:35b-a3b-32t
+ *
+ * All probes use lightweight /v1/models listings (not generation requests)
+ * to preserve free-tier quotas.
  *
  * Legacy lessons encoded:
- *   - Always probe before selecting (lightweight /v1/models check)
+ *   - Always probe before selecting
  *   - Track failures with a time window (skip broken providers for 360s)
- *   - Ollama must be the default, not an afterthought
+ *   - Ollama is the last-resort local fallback
  *   - State files live in /run/user/ for crash recovery
  */
 
@@ -31,48 +40,139 @@ const uid = process.getuid?.() ?? 1000;
 const STATE_DIR = `/run/user/${uid}/symphony-runner`;
 const FAILURE_STATE_FILE = resolve(STATE_DIR, 'provider-failures.json');
 
-// ---------------------------------------------------------------------------
-// Provider definitions
-// ---------------------------------------------------------------------------
-
-const PROVIDERS = [
-  {
-    name: 'ollama-local',
-    model: RUNNER_OLLAMA_MODEL,
-    baseUrl: RUNNER_OLLAMA_BASE_URL,
-    probe: probeOllama,
-  },
-  // Future: cloud providers via LiteLLM proxy
-  // {
-  //   name: 'groq',
-  //   model: 'groq-llama-70b',
-  //   baseUrl: 'http://localhost:4011/v1',
-  //   probe: () => probeLiteLLM('groq-llama-70b'),
-  //   requiresEnv: 'GROQ_API_KEY',
-  // },
-];
+const PROBE_TIMEOUT_MS = 5_000;
 
 // ---------------------------------------------------------------------------
-// Provider probes
+// Probe helpers
 // ---------------------------------------------------------------------------
+
+async function probeWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch {
+    clearTimeout(timer);
+    return null;
+  }
+}
+
+async function probeOpenAIModels(baseUrl, model, apiKey) {
+  const res = await probeWithTimeout(`${baseUrl}/models`, {
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  });
+  if (!res || !res.ok) return false;
+  const text = await res.text();
+  return text.includes(model);
+}
+
+async function probeGeminiModels(apiKey, model) {
+  const res = await probeWithTimeout(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+  );
+  if (!res || !res.ok) return false;
+  const text = await res.text();
+  return text.includes(model);
+}
+
+async function probeGitHubModels(apiKey, model) {
+  const res = await probeWithTimeout('https://models.github.ai/catalog/models', {
+    headers: {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': `Bearer ${apiKey}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+  });
+  if (!res || !res.ok) return false;
+  const text = await res.text();
+  return text.includes(model);
+}
 
 async function probeOllama() {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5_000);
+  const res = await probeWithTimeout(
+    `${RUNNER_OLLAMA_BASE_URL.replace('/v1', '')}/api/tags`,
+  );
+  if (!res || !res.ok) return false;
   try {
-    const res = await fetch(`${RUNNER_OLLAMA_BASE_URL.replace('/v1', '')}/api/tags`, {
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) return false;
     const data = await res.json();
     const models = (data.models || []).map((m) => m.name);
     return models.includes(RUNNER_OLLAMA_MODEL);
   } catch {
-    clearTimeout(timer);
     return false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Provider definitions — cascade order matches legacy codex-credit-gate.sh
+// ---------------------------------------------------------------------------
+
+const PROVIDERS = [
+  {
+    name: 'groq',
+    model: 'llama-3.3-70b-versatile',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    envVar: 'GROQ_TOKEN',
+    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+  },
+  {
+    name: 'mistral',
+    model: 'devstral-small-2507',
+    baseUrl: 'https://api.mistral.ai/v1',
+    envVar: 'MISTRAL_TOKEN',
+    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+  },
+  {
+    name: 'gemini',
+    model: 'gemini-2.5-flash',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    envVar: 'GEMINI_TOKEN',
+    probe(apiKey) { return probeGeminiModels(apiKey, this.model); },
+  },
+  {
+    name: 'gemini-lite',
+    model: 'gemini-2.5-flash-lite',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    envVar: 'GEMINI_TOKEN',
+    probe(apiKey) { return probeGeminiModels(apiKey, this.model); },
+  },
+  {
+    name: 'openrouter-free',
+    model: 'meta-llama/llama-3.3-70b-instruct:free',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    envVar: 'OPENROUTER_TOKEN',
+    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+  },
+  {
+    name: 'sambanova',
+    model: 'Meta-Llama-3.3-70B-Instruct',
+    baseUrl: 'https://api.sambanova.ai/v1',
+    envVar: 'SAMBANOVA_TOKEN',
+    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+  },
+  {
+    name: 'cerebras',
+    model: 'llama3.1-8b',
+    baseUrl: 'https://api.cerebras.ai/v1',
+    envVar: 'CEREBRAS_TOKEN',
+    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+  },
+  {
+    name: 'github-models',
+    model: 'gpt-4.1-mini',
+    baseUrl: 'https://models.github.ai/inference/v1',
+    envVar: 'GITHUB_MODELS_TOKEN',
+    probe(apiKey) { return probeGitHubModels(apiKey, this.model); },
+  },
+  {
+    name: 'ollama-local',
+    model: RUNNER_OLLAMA_MODEL,
+    baseUrl: RUNNER_OLLAMA_BASE_URL,
+    envVar: null,
+    probe() { return probeOllama(); },
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Failure memory
@@ -125,8 +225,10 @@ export async function selectProvider() {
   ensureStateDir();
 
   for (const provider of PROVIDERS) {
-    if (provider.requiresEnv && !process.env[provider.requiresEnv]) {
-      console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.requiresEnv})`);
+    const apiKey = provider.envVar ? process.env[provider.envVar] : null;
+
+    if (provider.envVar && !apiKey) {
+      console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
       continue;
     }
 
@@ -136,7 +238,7 @@ export async function selectProvider() {
     }
 
     console.log(`[credit-gate] ${provider.name}: probing...`);
-    const available = await provider.probe();
+    const available = await provider.probe(apiKey);
 
     if (available) {
       console.log(`[credit-gate] ${provider.name}: available ✅`);
@@ -145,6 +247,7 @@ export async function selectProvider() {
         name: provider.name,
         model: provider.model,
         baseUrl: provider.baseUrl,
+        apiKey: apiKey || null,
       };
     }
 

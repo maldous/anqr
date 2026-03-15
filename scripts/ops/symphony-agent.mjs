@@ -259,9 +259,13 @@ async function callLLM(provider, messages) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (provider.apiKey) {
+      headers['Authorization'] = `Bearer ${provider.apiKey}`;
+    }
     const res = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         model: provider.model,
         messages,
