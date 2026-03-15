@@ -1,0 +1,26 @@
+# anqr-email-ingest.service — Email ingest (mbsync + notmuch → Linear issues)
+#
+# Syncs mail via mbsync, searches for unprocessed emails from allowed senders,
+# creates Linear issues from them, and tags them as processed.
+#
+# Runs every 5 minutes via anqr-email-ingest.timer.
+#
+# Allowed senders: matthew.aldous@gmail.com, alexander.emmalyn.thomas@gmail.com
+# Issues created with [EMAIL] prefix and assigned to matthewaldous.
+
+[Unit]
+Description=ANQR Email Ingest (mbsync + notmuch → Linear issues)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=/home/user/.nvm/versions/node/v22.18.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/user
+Environment=NODE_PATH=/home/user/.nvm/versions/node/v22.18.0/lib/node_modules
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+WorkingDirectory=/home/user/src/anqr
+ExecStart=/home/user/.nvm/versions/node/v22.18.0/bin/node scripts/ops/email-ingest.mjs
+TimeoutStartSec=180
+StandardOutput=journal
+StandardError=journal

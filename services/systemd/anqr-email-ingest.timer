@@ -1,0 +1,15 @@
+# anqr-email-ingest.timer — Email ingest every 5 minutes
+#
+# Triggers anqr-email-ingest.service to sync mail and create Linear issues
+# from emails sent by allowed senders.
+
+[Unit]
+Description=ANQR Email Ingest Timer (every 5 minutes)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

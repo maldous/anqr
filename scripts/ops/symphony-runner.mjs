@@ -52,6 +52,7 @@ import {
 import { feedQueue, getQueueSnapshot } from './symphony-queue-control.mjs';
 import { selectProvider, recordProviderFailure } from './symphony-credit-gate.mjs';
 import { runAgent } from './symphony-agent.mjs';
+import { sendNotification, linearIssueUrl } from './lib/notify.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
@@ -282,6 +283,21 @@ async function executeIssue(issue, dryRun) {
   }
   console.log(`[runner] Moved ${issue.identifier} to In Progress${dryRun ? ' (dry-run: skipped)' : ''}`);
 
+  // Email: issue starting
+  if (!dryRun) {
+    sendNotification({
+      subject: `Symphony starting: ${issue.identifier} — ${issue.title}`,
+      body: [
+        `Issue ${issue.identifier} moved to In Progress (Attempt ${attempt}/${RUNNER_MAX_RETRIES}).`,
+        '',
+        `Title: ${issue.title}`,
+        `Priority: P${issue.priority}`,
+        `URL: ${linearIssueUrl(issue.identifier)}`,
+      ].join('\n'),
+      severity: 'info',
+    });
+  }
+
   // Select provider via credit gate
   const provider = await selectProvider();
   if (!provider) {
@@ -289,6 +305,11 @@ async function executeIssue(issue, dryRun) {
     if (!dryRun) {
       await updateIssue(issue.id, { stateId: STATES.todo });
       await addComment(issue.id, '❌ **No LLM provider available** — all providers exhausted or failed. Will retry on next cycle.');
+      sendNotification({
+        subject: `Symphony error: no provider for ${issue.identifier}`,
+        body: `All LLM providers exhausted or failed for ${issue.identifier}: ${issue.title}\n\n${linearIssueUrl(issue.identifier)}`,
+        severity: 'warn',
+      });
     }
     return;
   }
@@ -323,6 +344,11 @@ async function executeIssue(issue, dryRun) {
     gitRevert();
     await updateIssue(issue.id, { stateId: STATES.todo });
     await addComment(issue.id, `❌ **Agent execution error**\n\n\`\`\`\n${err.message}\n\`\`\`\n\nReverted. Will retry on next cycle.`);
+    sendNotification({
+      subject: `Symphony agent error: ${issue.identifier}`,
+      body: `Agent execution failed for ${issue.identifier}: ${issue.title}\n\nError: ${err.message}\n\nReverted and left in Todo.\n${linearIssueUrl(issue.identifier)}`,
+      severity: 'critical',
+    });
     return;
   }
 
@@ -358,6 +384,11 @@ async function executeIssue(issue, dryRun) {
       gitRevert();
       await updateIssue(issue.id, { stateId: STATES.todo });
       await addComment(issue.id, '❌ **Git commit failed** after successful validation. Reverted. Will retry.');
+      sendNotification({
+        subject: `Symphony commit failed: ${issue.identifier}`,
+        body: `Git commit failed after successful validation for ${issue.identifier}: ${issue.title}\n\nReverted.\n${linearIssueUrl(issue.identifier)}`,
+        severity: 'warn',
+      });
       return;
     }
 
@@ -406,6 +437,23 @@ async function executeIssue(issue, dryRun) {
 
     const targetState = attempt >= RUNNER_MAX_RETRIES ? STATES.backlog : STATES.todo;
     const targetLabel = attempt >= RUNNER_MAX_RETRIES ? 'Backlog (needs decomposition)' : 'Todo (will retry)';
+
+    sendNotification({
+      subject: `Symphony validation failed: ${issue.identifier}`,
+      body: [
+        `Validation failed for ${issue.identifier}: ${issue.title} (Attempt ${attempt}/${RUNNER_MAX_RETRIES})`,
+        '',
+        `Provider: ${provider.name} (${provider.model})`,
+        `Turns: ${agentResult.turns}, Tool calls: ${agentResult.toolCalls}`,
+        `Files changed: ${changedFiles.length}`,
+        '',
+        ...validation.results.filter((r) => !r.pass).map((r) => `❌ ${r.check}: ${r.detail.split('\n')[0]}`),
+        '',
+        `Changes reverted. Moved to ${targetLabel}.`,
+        linearIssueUrl(issue.identifier),
+      ].join('\n'),
+      severity: 'warn',
+    });
 
     await updateIssue(issue.id, { stateId: targetState });
     await addComment(

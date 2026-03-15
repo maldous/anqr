@@ -27,7 +27,7 @@ Symphony is the autonomous engineering harness for ANQR. It operates as a govern
          │ execution artifacts
          ▼
 ┌─────────────────┐
-│  notify          │  summary dispatch (email, Linear, stdout)
+│  notify          │  summary dispatch (email + stdout)
 └─────────────────┘
 ```
 
@@ -214,6 +214,24 @@ Both feeds are idempotent — `feedQueue` checks depth before acting, so overlap
 npm run queue:continuous   # same as queue:all, for systemd
 ```
 
+### Email Ingest (every 5 min)
+
+The email ingest (`anqr-email-ingest.timer`) syncs mail via mbsync, searches for unprocessed emails, and creates Linear issues:
+
+- Syncs Gmail via mbsync → indexes with notmuch
+- Searches for unprocessed emails from/to email@anqr.link
+- Allowed senders: `matthew.aldous@gmail.com`, `alexander.emmalyn.thomas@gmail.com`
+- Creates `[EMAIL]` prefixed issues assigned to matthewaldous
+- Tags processed emails to prevent re-ingestion
+- Sends confirmation email after creating issues
+
+Requires: mbsync, notmuch, msmtp (all installed via system packages).
+
+```bash
+node scripts/ops/email-ingest.mjs           # process emails
+node scripts/ops/email-ingest.mjs --dry-run  # preview
+```
+
 ### Nightly Pipeline (02:00 daily)
 
 The nightly pipeline (`scripts/ops/nightly-ops-pass.mjs`) runs all operations in sequence:
@@ -222,7 +240,7 @@ The nightly pipeline (`scripts/ops/nightly-ops-pass.mjs`) runs all operations in
 1. harness-report (full)     → reports/latest.json
 2. symphony-queue-control    → feed, drain, enforce
 3. linear-guardian           → create/update issues from failures
-4. notify                    → stdout summary (journal only)
+4. notify                    → stdout summary + email notification
 5. archive                   → reports/archive/report-YYYY-MM-DD_HH-MM-SS.json
 ```
 
@@ -236,6 +254,8 @@ cp services/systemd/anqr-queue-feeder.service ~/.config/systemd/user/
 cp services/systemd/anqr-queue-feeder.timer ~/.config/systemd/user/
 cp services/systemd/anqr-symphony-runner.service ~/.config/systemd/user/
 cp services/systemd/anqr-symphony-runner.timer ~/.config/systemd/user/
+cp services/systemd/anqr-email-ingest.service ~/.config/systemd/user/
+cp services/systemd/anqr-email-ingest.timer ~/.config/systemd/user/
 cp services/systemd/anqr-ops.env ~/.config/systemd/user/
 
 # Edit env file with real LINEAR_API_KEY
@@ -246,6 +266,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now anqr-nightly.timer
 systemctl --user enable --now anqr-queue-feeder.timer
 systemctl --user enable --now anqr-symphony-runner.timer
+systemctl --user enable --now anqr-email-ingest.timer
 
 # Verify
 systemctl --user list-timers
@@ -271,8 +292,17 @@ Legacy lesson: PATH under systemd differs from interactive shells. The service u
 | Channel | Flag | Behavior |
 |---|---|---|
 | `stdout` | `--channel=stdout` | Always available, captured by systemd journal |
+| `email` | `--channel=email` | Send via msmtp to matthew.aldous@gmail.com |
+| `all` | `--channel=all` | Both stdout and email (default for nightly) |
 
-Nightly reports are written to `reports/latest.json` and archived to `reports/archive/`. They are **not** posted to Linear issues — issue comments grow unboundedly and become unreadable.
+Nightly reports are sent via email and archived to `reports/archive/`. They are **not** posted to Linear issues — issue comments grow unboundedly and become unreadable.
+
+The Symphony runner also sends email notifications when:
+- An issue moves to In Progress (agent starting)
+- Agent execution errors occur
+- Validation fails
+
+Email delivery uses msmtp with rate limiting (10/hour, 30/day) and deduplication (1-hour window). See `scripts/ops/lib/notify.mjs`.
 
 ## Guardian Rules
 
@@ -310,4 +340,8 @@ The guardian is deterministic, not AI-driven:
 | `tools/harness/symphony/WORKFLOW.md` | Agent system prompt (versioned) | ANQ-374 |
 | `services/systemd/anqr-symphony-runner.service` | systemd runner service | ANQ-374 |
 | `services/systemd/anqr-symphony-runner.timer` | systemd runner timer (2min) | ANQ-374 |
+| `scripts/ops/lib/notify.mjs` | Email notification helper (msmtp + rate limiting) | ANQ-377 |
+| `scripts/ops/email-ingest.mjs` | Email ingest (mbsync + notmuch → Linear issues) | ANQ-377 |
+| `services/systemd/anqr-email-ingest.service` | systemd email ingest service | ANQ-377 |
+| `services/systemd/anqr-email-ingest.timer` | systemd email ingest timer (5min) | ANQ-377 |
 | `services/systemd/anqr-ops.env` | Environment template for secrets | ANQ-367 (Phase 6) |

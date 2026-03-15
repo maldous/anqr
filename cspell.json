@@ -100,7 +100,13 @@
     "automatable",
     "oneshot",
     "groq",
-    "journalctl"
+    "journalctl",
+    "msmtp",
+    "mbsync",
+    "notmuch",
+    "matthewaldous",
+    "dedup",
+    "Aldous"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
