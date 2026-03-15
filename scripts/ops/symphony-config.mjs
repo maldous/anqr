@@ -44,3 +44,4 @@ export const RUNNER_MAX_OUTPUT_TOKENS = 4096;
 export const RUNNER_PROVIDER_FAILURE_WINDOW_SECS = 360;
 export const RUNNER_AUTO_PUSH = false;
 export const RUNNER_STUCK_THRESHOLD_MS = 15 * 60 * 1000; // 15 min — if In Progress with no update, assume runner was killed
+export const RUNNER_TURN_BUDGET_WARNING = 5; // inject wrap-up warning when this many turns remain

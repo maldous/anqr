@@ -35,6 +35,7 @@ import {
   RUNNER_MAX_TURNS,
   RUNNER_MAX_EXECUTION_MS,
   RUNNER_MAX_OUTPUT_TOKENS,
+  RUNNER_TURN_BUDGET_WARNING,
 } from './symphony-config.mjs';
 
 // ---------------------------------------------------------------------------
@@ -520,6 +521,15 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
         timedOut: false,
         error: null,
       };
+    }
+
+    const turnsRemaining = maxTurns - (turn + 1);
+    if (turnsRemaining === RUNNER_TURN_BUDGET_WARNING) {
+      console.log(`[agent] Turn budget warning: ${turnsRemaining} turns remaining`);
+      messages.push({
+        role: 'user',
+        content: `⚠️ TURN BUDGET WARNING: You have only ${turnsRemaining} turns remaining out of ${maxTurns}. Stop making new changes immediately. Run run_typecheck and run_lint to verify your work, fix any errors, then call task_complete. Do not start any new modifications.`,
+      });
     }
   }
 
