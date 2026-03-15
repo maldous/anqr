@@ -1,5 +1,3 @@
-import { DARK_DESIRE_MAX } from './dark-desire-max';
-
 // ============================================
 // QR SCANNABILITY DESIRE RANGES
 // ============================================

@@ -74,46 +74,6 @@
  *     QART, CORE, COLOR, GRADIENT
  */
 
-import {
-  clearStructuredLogs,
-  disableLogBuffer,
-  enableLogBuffer,
-  filterLogs,
-  filterLogsByLevel,
-  filterLogsByScopes,
-  flushLogBuffer,
-  getBufferSize,
-  getStructuredLogCount,
-  getStructuredLogs,
-  saveFilteredLogs,
-  saveLogs,
-} from './logger-buffer-api';
-import { SCOPE_PREFIXES } from './logger-scope-prefixes';
-import type { ScopePrefix } from './logger-scope-prefixes';
-import { createLogger } from './create-logger';
-import { getLogLevel } from './get-log-level';
-import { resetLogLevel } from './reset-log-level';
-import { setLogLevel } from './set-log-level';
-import type { LogContext, Logger, LogLevel, StructuredLogEntry } from './logger-types';
-
-// ============================================================================
-// Standard Scope Prefixes - canonical list for all modules
-// ============================================================================
-
-/**
- * Standard logging scope prefixes organized by category.
- * Use these when creating loggers to ensure consistency across the codebase.
- *
- * When adding logging to a new module, find the appropriate category and
- * use the corresponding prefix. If a new prefix is needed, add it here first.
- */
-export { SCOPE_PREFIXES };
-export type { ScopePrefix };
-
-// ============================================================================
-// Log Buffer Configuration
-// ============================================================================
-
 export {
   clearStructuredLogs,
   disableLogBuffer,
@@ -127,18 +87,26 @@ export {
   getStructuredLogs,
   saveFilteredLogs,
   saveLogs,
-};
+} from './logger-buffer-api';
+export { SCOPE_PREFIXES } from './logger-scope-prefixes';
+export type { ScopePrefix } from './logger-scope-prefixes';
+export { createLogger } from './create-logger';
+export { getLogLevel } from './get-log-level';
+export { resetLogLevel } from './reset-log-level';
+export { setLogLevel } from './set-log-level';
+export type { LogContext, Logger, LogLevel, StructuredLogEntry } from './logger-types';
 
 // ============================================================================
-// Configuration
+// Standard Scope Prefixes - canonical list for all modules
 // ============================================================================
 
-export type { LogContext, Logger, LogLevel, StructuredLogEntry };
-
-// ============================================================================
-// Logger factory
-// ============================================================================
-
+/**
+ * Standard logging scope prefixes organized by category.
+ * Use these when creating loggers to ensure consistency across the codebase.
+ *
+ * When adding logging to a new module, find the appropriate category and
+ * use the corresponding prefix. If a new prefix is needed, add it here first.
+ */
 /**
  * Create a scoped logger with uppercase prefix.
  *
@@ -149,26 +117,7 @@ export type { LogContext, Logger, LogLevel, StructuredLogEntry };
  * const log = createLogger('OVERLAY');
  * log.debug('Processing started', { imageSize: 1024 });
  */
-export { createLogger };
-
-// ============================================================================
-// Level management (for remote diagnostics)
-// ============================================================================
-
 /**
  * Set the global log level for all loggers.
  * Used by remote diagnostics to enable verbose logging.
  */
-export { setLogLevel };
-
-/**
- * Get the current log level.
- */
-export { getLogLevel };
-
-/**
- * Reset log level to default.
- * Development: 'debug' (maximum visibility)
- * Production: 'error' (minimum noise)
- */
-export { resetLogLevel };

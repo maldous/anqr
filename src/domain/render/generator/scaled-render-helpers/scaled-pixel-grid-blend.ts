@@ -1,8 +1,6 @@
 import type { BlendPreservationCtx } from '../scaled-render-types';
 import { blendModulePixels } from './blend-module-pixels';
-import { createBlendPreservationContext } from './create-blend-preservation-context';
-
-export { createBlendPreservationContext };
+export { createBlendPreservationContext } from './create-blend-preservation-context';
 
 export function blendPreservationPass(
   bctx: BlendPreservationCtx,

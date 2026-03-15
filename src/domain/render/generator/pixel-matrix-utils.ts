@@ -4,11 +4,8 @@ import type { RGBWithMeta } from '../../../modules/qr-generator/types';
 import { baseMatrixCacheState } from './base-matrix-cache-state';
 import { buildBaseMatrix } from './build-base-matrix';
 import { clearBaseMatrixCache } from './clear-base-matrix-cache';
-import { curveIntensity } from './curve-overlay-intensity';
-import { getEffectiveIntensity } from './get-effective-overlay-intensity';
-import { getScaleFactor } from './resolve-render-scale';
 
-export { clearBaseMatrixCache };
+export { clearBaseMatrixCache } from './clear-base-matrix-cache';
 export { getScaleFactor } from './resolve-render-scale';
 export { curveIntensity } from './curve-overlay-intensity';
 export { getEffectiveIntensity } from './get-effective-overlay-intensity';

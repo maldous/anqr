@@ -1,4 +1,3 @@
-import type { QRVerifyResult } from './qr-verify-result';
 export type { QRVerifyResult } from './qr-verify-result';
 
 export interface DarkModuleReader {

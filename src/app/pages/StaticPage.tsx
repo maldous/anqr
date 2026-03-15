@@ -13,10 +13,8 @@ import { StaticPageArticle } from './static-page-article';
 import { StaticPageContentHeader } from './static-page-content-header';
 import { TableOfContents } from './static-page-shell-parts';
 import { buildToc } from './static-page-toc';
-import type { StaticPageProps } from './static-page-types';
-
 export type { StaticPageType } from './StaticPage.types';
-import type { StaticPageType } from './StaticPage.types';
+import type { StaticPageProps } from './static-page-types';
 
 export function StaticPage({ page }: Readonly<StaticPageProps>) {
   const { t, i18n } = useTranslation();

@@ -12,10 +12,9 @@ import { log } from './log';
 import { buildBlockSelectionsFromFlattened } from './build-block-selections-from-flattened';
 import { filterSelectionsForNumericSuffix } from './filter-selections-for-numeric-suffix';
 import { logSelectionTiming } from './log-selection-timing';
+import type { EncoderDerivedLayout, QArtPerformanceProfile } from './generate.types';
 import type { QArtPerformanceSettings } from './q-art-performance-settings';
 import type { VectorSelectionResult } from './vector-selection-result';
-import type { QArtPerformanceProfile } from './generate.types';
-import type { EncoderDerivedLayout } from './generate.types';
 
 export function selectAndFilterVectors(
   basis: ReturnType<typeof buildFullBasis>,

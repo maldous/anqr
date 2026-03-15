@@ -6,8 +6,7 @@
 
 import { createLogger } from '@/infra/logging/logger';
 import { createGifCompositor } from '@/domain/render/animation/gif-compositor';
-import type { GifCompositor } from '@/modules/animation';
-import type { AnimationFrame } from '@/modules/animation';
+import type { AnimationFrame, GifCompositor } from '@/modules/animation';
 import { handleOverlayLoadFallback } from '@/features/generator/application/input/input-fn-handleloadfallback';
 
 const log = createLogger('QR');

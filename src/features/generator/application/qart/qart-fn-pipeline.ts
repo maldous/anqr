@@ -5,8 +5,10 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { QArtModule } from '@/features/generator/application/qart/qart-shared-types';
-import type { FullQArtPipelineResult } from '@/features/generator/application/qart/qart-shared-types';
+import type {
+  FullQArtPipelineResult,
+  QArtModule,
+} from '@/features/generator/application/qart/qart-shared-types';
 import { localizeQArtProgressStage } from '@/features/generator/application/generation/generation-fn-localizeprogress';
 import { getQArtSearchAttempts } from '@/features/generator/application/generation/generation-fn-qartattmpts';
 import { safeMark } from '@/features/generator/application/generation/generation-fn-safemark';

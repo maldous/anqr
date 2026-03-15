@@ -4,7 +4,6 @@
  * Extracts and displays every possible detail from uploaded/captured QR codes
  */
 
-import {} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/platform/ads/components/AdUnit';

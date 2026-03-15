@@ -1,12 +1,6 @@
 import { createQRInstance } from '@/modules/qr-encoder';
-import { computeCanvasSizing } from './compute-canvas-sizing';
-import { computeMarginModules } from './compute-margin-modules';
-import { drawCanvasError } from './draw-canvas-error';
-import { logReproductionResult } from './log-reproduction-result';
 import { nowMs } from './now-ms';
 import { renderQRModules } from './render-qr-modules';
-import { resolveColors } from './resolve-reproduction-colors';
-import { runMatrixDiagnostics } from './run-matrix-diagnostics';
 export { computeMarginModules } from './compute-margin-modules';
 export { computeCanvasSizing } from './compute-canvas-sizing';
 
@@ -29,7 +23,6 @@ export function renderQRToCanvas(
 }
 
 export { resolveColors } from './resolve-reproduction-colors';
-
 export { drawCanvasError } from './draw-canvas-error';
 export { logReproductionResult } from './log-reproduction-result';
 export { runMatrixDiagnostics } from './run-matrix-diagnostics';

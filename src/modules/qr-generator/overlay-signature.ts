@@ -1,9 +1,7 @@
 import { hashCanvasContent } from './utils';
-import { buildFixedVisualPolicy } from './build-fixed-visual-policy';
-import { buildOverlayFamilyKey } from './build-overlay-family-key';
-import { buildScanCacheKey } from './build-scan-cache-key';
-
-export { buildFixedVisualPolicy, buildOverlayFamilyKey, buildScanCacheKey };
+export { buildFixedVisualPolicy } from './build-fixed-visual-policy';
+export { buildOverlayFamilyKey } from './build-overlay-family-key';
+export { buildScanCacheKey } from './build-scan-cache-key';
 
 export async function computeOverlaySignature(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,

@@ -1,5 +1,5 @@
-import { clearFunctionalMapCache } from './clear-functional-map-cache';
-import {
+export { clearFunctionalMapCache } from './clear-functional-map-cache';
+export {
   PATTERN_ALIGNMENT,
   PATTERN_FINDER,
   PATTERN_FIXED_DARK,
@@ -7,19 +7,6 @@ import {
   PATTERN_TIMING,
   PATTERN_VERSION,
 } from './functional-pattern-flags.const';
-import { getCachedFunctionalMap } from './get-cached-functional-map';
-import { canUseFastPath } from './can-use-fast-path';
-import { renderModulesFastPath } from './render-modules-fast-path';
-
-export {
-  canUseFastPath,
-  clearFunctionalMapCache,
-  getCachedFunctionalMap,
-  PATTERN_ALIGNMENT,
-  PATTERN_FINDER,
-  PATTERN_FIXED_DARK,
-  PATTERN_FORMAT,
-  PATTERN_TIMING,
-  PATTERN_VERSION,
-  renderModulesFastPath,
-};
+export { getCachedFunctionalMap } from './get-cached-functional-map';
+export { canUseFastPath } from './can-use-fast-path';
+export { renderModulesFastPath } from './render-modules-fast-path';

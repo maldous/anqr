@@ -1,19 +1,13 @@
 import { createLogger } from '../../../../infra/logging/logger';
-import { drawScaledDitherBackdrop } from './draw-scaled-dither-backdrop';
-import { drawScaledPatternContrastBoostOverlay } from './draw-scaled-pattern-contrast-boost-overlay';
-import { drawScaledStrictFunctionOverlay } from './draw-scaled-strict-function-overlay';
 import { dispatchPixelRender } from './dispatch-pixel-render';
-import { enforceScaledQuietZoneClean } from './enforce-scaled-quiet-zone-clean';
 import type { PixelGridCtx } from '../scaled-render-types';
 
 const log = createLogger('GENERATE');
 
-export {
-  drawScaledDitherBackdrop,
-  drawScaledPatternContrastBoostOverlay,
-  drawScaledStrictFunctionOverlay,
-  enforceScaledQuietZoneClean,
-};
+export { drawScaledDitherBackdrop } from './draw-scaled-dither-backdrop';
+export { drawScaledPatternContrastBoostOverlay } from './draw-scaled-pattern-contrast-boost-overlay';
+export { drawScaledStrictFunctionOverlay } from './draw-scaled-strict-function-overlay';
+export { enforceScaledQuietZoneClean } from './enforce-scaled-quiet-zone-clean';
 
 export function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   const {

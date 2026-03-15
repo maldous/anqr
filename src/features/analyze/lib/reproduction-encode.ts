@@ -1,9 +1,5 @@
 import type { QRAnalysisResult } from '@/modules/qr-analyzer';
 import type { ReproductionParams, ReproductionQrState } from './reproduction-types';
-import { buildEncoderInput } from './build-encoder-input';
-import { createQRWithFallback } from './create-qr-with-fallback';
-import { resolveEffectiveMode } from './resolve-effective-mode';
-import { resolveFinalVersion } from './resolve-final-version';
 import { resolveMode } from './resolve-mode';
 
 export function resolveReproductionParams(

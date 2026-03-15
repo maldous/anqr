@@ -7,15 +7,14 @@
 
 import { generatedGallerySections } from '@/content/generated/gallery-showcase.generated';
 import { buildGalleryCacheKey } from './gallery-cache-key';
-import { buildGalleryRenderImageUrl } from './build-gallery-render-image-url';
-import { buildGalleryUrl } from './build-gallery-url';
-import { GALLERY_IMAGE_PATH } from './gallery-image-path.const';
-import { getGalleryBaseUrl } from './get-gallery-base-url';
 import { getGalleryImagePath as getGalleryImagePathBase } from './get-gallery-image-path';
 import type { GalleryItem, GallerySection } from './gallery-items.types';
 
 export type { GalleryCategory, GalleryItem, GallerySection } from './gallery-items.types';
-export { buildGalleryRenderImageUrl, buildGalleryUrl, GALLERY_IMAGE_PATH, getGalleryBaseUrl };
+export { buildGalleryRenderImageUrl } from './build-gallery-render-image-url';
+export { buildGalleryUrl } from './build-gallery-url';
+export { GALLERY_IMAGE_PATH } from './gallery-image-path.const';
+export { getGalleryBaseUrl } from './get-gallery-base-url';
 
 // Generated source of truth.
 export const gallerySections: GallerySection[] =

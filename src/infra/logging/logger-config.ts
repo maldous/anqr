@@ -1,8 +1,9 @@
-import { defaultLevel } from './logger-default-level';
-import { isLevelEnabledForLogger } from './logger-console-check';
 import { getLoglevelInstance } from './logger-loglevel-instance';
-import { shouldCaptureStructured } from './logger-structured-capture';
+import { defaultLevel } from './logger-default-level';
 
 getLoglevelInstance().setLevel(defaultLevel);
 
-export { defaultLevel, getLoglevelInstance, isLevelEnabledForLogger, shouldCaptureStructured };
+export { defaultLevel } from './logger-default-level';
+export { isLevelEnabledForLogger } from './logger-console-check';
+export { getLoglevelInstance } from './logger-loglevel-instance';
+export { shouldCaptureStructured } from './logger-structured-capture';

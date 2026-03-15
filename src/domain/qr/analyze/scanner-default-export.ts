@@ -1,3 +1,1 @@
-import { QRScanner } from './qr-scanner';
-
-export default QRScanner;
+export { QRScanner as default } from './qr-scanner';

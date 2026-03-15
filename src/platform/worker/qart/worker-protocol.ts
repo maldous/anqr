@@ -1,4 +1,3 @@
-import type { QArtWorkerPerformanceProfile } from './worker-performance-profile';
 export type { QArtWorkerBasePayload } from './worker-base-payload';
 export type { QArtWorkerGenerateInput } from './worker-generate-input';
 export type { QArtWorkerGeneratePayload } from './worker-generate-payload';

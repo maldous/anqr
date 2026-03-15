@@ -27,20 +27,9 @@ export const ModuleMatrixView = ({
 
   const handleCopyAsText = useCallback(async () => {
     const asciiArt = generateAsciiArt();
-    try {
-      await navigator.clipboard.writeText(asciiArt);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = asciiArt;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      textarea.remove();
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    await navigator.clipboard.writeText(asciiArt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }, [generateAsciiArt]);
 
   return (

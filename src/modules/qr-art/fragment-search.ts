@@ -1,5 +1,4 @@
 import { createSeededRandom } from './create-seeded-random';
-import { evaluateQRMatch } from './evaluate-qr-match';
 import { fragmentSearchLog as log } from './fragment-search-log';
 import { generateRandomFragment } from './generate-random-fragment';
 import { tryFragmentCandidate } from './try-fragment-candidate';

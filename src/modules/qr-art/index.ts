@@ -18,8 +18,11 @@
  * - Reed-Solomon basis block generation (future)
  * - Linear algebra utilities for pixel control (future)
  */
+import { buildRSBasis } from './build-rs-basis';
 import { evaluateQRMatch, searchBestFragment } from './fragment-search';
 import { gfAdd, gfInv, gfMul } from './gf-utils';
+import { gaussJordanEliminate } from './gauss-jordan-eliminate';
+import { generateQArt } from './generate-qart';
 import {
   getModuleCount,
   isAlignmentPattern,
@@ -33,17 +36,7 @@ import {
   generateQArtUrl,
   getBaseUrl,
 } from './url-utils';
-import type {
-  FragmentSearchConfig,
-  FragmentSearchResult,
-  QArtConfig,
-  QArtPixel,
-  QArtResult,
-  RSBasisBlock,
-} from './types';
-import { buildRSBasis } from './build-rs-basis';
-import { gaussJordanEliminate } from './gauss-jordan-eliminate';
-import { generateQArt } from './generate-qart';
+import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
 
 // ============================================
 // TYPES
@@ -93,7 +86,6 @@ import { generateQArt } from './generate-qart';
  * Check if a URL can use fragment search (must be a valid URL)
  */
 // Import and re-export mapImageToTargetsSupersampled from image-utils to avoid circular imports
-import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
 export { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
 export { evaluateQRMatch, searchBestFragment } from './fragment-search';
 export { gfAdd, gfInv, gfMul } from './gf-utils';

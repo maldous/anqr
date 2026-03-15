@@ -12,17 +12,15 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 import { createLogger } from '@/infra/logging/logger';
 import { BROWSER_TO_GOOGLE_PLAY } from './browser-language-map';
-import type { LanguageCode } from './language-code';
-import { isRtlLanguage } from './is-rtl-language';
 import { languages } from './languages';
 import { loadFontForLanguage } from './load-font-for-language';
 import { LOCALE_ALIASES } from './locale-aliases';
 import { resources } from './resources';
 
 const log = createLogger('I18N');
-export { languages };
-export type { LanguageCode };
-export { isRtlLanguage };
+export { languages } from './languages';
+export type { LanguageCode } from './language-code';
+export { isRtlLanguage } from './is-rtl-language';
 
 // List of supported language codes for detection
 const supportedLngs: string[] = languages.map((l) => l.code);

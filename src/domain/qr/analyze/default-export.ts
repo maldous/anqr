@@ -1,3 +1,1 @@
-import { SafetyAnalyzer } from './safety-analyzer';
-
-export default SafetyAnalyzer;
+export { SafetyAnalyzer as default } from './safety-analyzer';

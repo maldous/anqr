@@ -1,5 +1,4 @@
 import type { LogContext } from './logger-types';
-import { captureErrorEvent } from './capture-error-event';
 import { initSentryModule } from './init-sentry-module';
 import { sentryModuleState } from './sentry-module-state';
 
