@@ -270,7 +270,9 @@ async function callLLM(provider, messages) {
         model: provider.model,
         messages,
         tools: TOOL_DEFINITIONS,
-        max_tokens: RUNNER_MAX_OUTPUT_TOKENS,
+        ...(provider.useMaxCompletionTokens
+          ? { max_completion_tokens: RUNNER_MAX_OUTPUT_TOKENS }
+          : { max_tokens: RUNNER_MAX_OUTPUT_TOKENS }),
         stream: false,
         temperature: 0.2,
       }),

@@ -115,6 +115,7 @@ const PROVIDERS = [
     model: 'gpt-5.4',
     baseUrl: 'https://api.openai.com/v1',
     envVar: 'OPENAI_API_KEY',
+    useMaxCompletionTokens: true,
     probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
   },
   {
@@ -256,6 +257,7 @@ export async function selectProvider() {
         model: provider.model,
         baseUrl: provider.baseUrl,
         apiKey: apiKey || null,
+        useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
       };
     }
 
