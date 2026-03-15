@@ -53,6 +53,7 @@ import { CapacitorAppPlugin } from './capacitor-app-plugin';
 import { Gallery } from './gallery';
 import { log } from './log';
 import { StaticPage } from './static-page';
+import { trimRoutePath } from '@/app/routing/trim-route-path';
 import { WelcomeModal } from './welcome-modal';
 import { LazyLoadFallback } from './lazy-load-fallback';
 
@@ -112,8 +113,7 @@ export function AppContent() {
     const nextSearch = page === 'editor' ? globalThis.location.search : '';
 
     // Avoid unnecessary history entries.
-    // NOSONAR - This regex is safe: /\/+$/ has no backtracking risk (simple trailing slash removal)
-    const current = globalThis.location.pathname.replace(/\/+$/, '') || '/';
+    const current = trimRoutePath(globalThis.location.pathname);
     if (current === nextPath && globalThis.location.search === nextSearch) {
       setCurrentPage(page);
       return;

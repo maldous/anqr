@@ -1,12 +1,13 @@
 import type { StaticPageType } from '@/app/pages/StaticPage';
+import { trimHashPrefix } from './trim-hash-prefix';
+import { trimRoutePath } from './trim-route-path';
 
 export type { PageView, ModuleStyleOption } from './page-resolution.types';
 import type { PageView } from './page-resolution.types';
 
 export function getPageFromLocation(): PageView {
-  // NOSONAR - This regex is safe: /\/+$/ has no backtracking risk (simple trailing slash removal)
-  const path = globalThis.location.pathname.replace(/\/+$/, '') || '/';
-  const hash = globalThis.location.hash.replace(/^#/, '');
+  const path = trimRoutePath(globalThis.location.pathname);
+  const hash = trimHashPrefix(globalThis.location.hash);
 
   // Prefer clean paths when present.
   if (path === '/analyze') return 'analyze';

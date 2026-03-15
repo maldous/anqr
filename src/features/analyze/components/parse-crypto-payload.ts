@@ -1,6 +1,8 @@
 // ---------------------------------------------------------------------------
 // 8. Crypto address parser
 // ---------------------------------------------------------------------------
+import { CRYPTO_NETWORK_CONFIG } from './crypto-network-config';
+
 export function parseCryptoPayload(payload: string): Record<string, string | null> {
   const result: Record<string, string | null> = {
     network: null,
@@ -17,31 +19,13 @@ export function parseCryptoPayload(payload: string): Record<string, string | nul
   let network = 'Unknown';
   let address = payload;
   let queryString = '';
-
-  if (lowerPayload.startsWith('bitcoin:')) {
-    network = 'Bitcoin';
-    result.networkColor = 'orange';
-    const content = payload.slice(8);
+  const networkConfig = CRYPTO_NETWORK_CONFIG.find(({ prefix }) => lowerPayload.startsWith(prefix));
+  if (networkConfig) {
+    network = networkConfig.name;
+    result.networkColor = networkConfig.color;
+    const content = payload.slice(networkConfig.prefix.length);
     [address, queryString] = content.split('?');
-    result.explorerUrl = `https://www.blockchain.com/btc/address/${address}`;
-  } else if (lowerPayload.startsWith('ethereum:')) {
-    network = 'Ethereum';
-    result.networkColor = 'purple';
-    const content = payload.slice(9);
-    [address, queryString] = content.split('?');
-    result.explorerUrl = `https://etherscan.io/address/${address}`;
-  } else if (lowerPayload.startsWith('litecoin:')) {
-    network = 'Litecoin';
-    result.networkColor = 'gray';
-    const content = payload.slice(9);
-    [address, queryString] = content.split('?');
-    result.explorerUrl = `https://blockchair.com/litecoin/address/${address}`;
-  } else if (lowerPayload.startsWith('dogecoin:')) {
-    network = 'Dogecoin';
-    result.networkColor = 'yellow';
-    const content = payload.slice(9);
-    [address, queryString] = content.split('?');
-    result.explorerUrl = `https://dogechain.info/address/${address}`;
+    result.explorerUrl = `${networkConfig.explorerBaseUrl}${address}`;
   }
 
   result.network = network;
