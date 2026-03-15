@@ -1,0 +1,32 @@
+export default {
+  extends: ['@commitlint/config-conventional'],
+  rules: {
+    'scope-enum': [
+      2,
+      'always',
+      [
+        'bootstrap',
+        'domain',
+        'application',
+        'ui',
+        'platform',
+        'observability',
+        'analytics',
+        'testing',
+        'config',
+        'harness',
+        'docs',
+        'ci',
+        'release',
+        'web',
+        'api',
+        'mobile',
+        'android',
+        'ios',
+        'deps',
+      ],
+    ],
+    'body-max-line-length': [1, 'always', 200],
+    'footer-max-line-length': [1, 'always', 200],
+  },
+};

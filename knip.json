@@ -1,0 +1,40 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.tsx",
+    "scripts/**/*.{js,mjs,ts}",
+    "tools/**/*.ts",
+    "netlify/functions/**/*.{ts,mts}",
+    "netlify/edge-functions/**/*.{ts,mts}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "apps/**/*.{ts,tsx}"
+  ],
+  "ignore": [
+    "**/*.generated.*",
+    "**/*.d.ts"
+  ],
+  "ignoreDependencies": [
+    "@capacitor/android",
+    "@capacitor/ios",
+    "@capacitor/cli",
+    "autoprefixer",
+    "lefthook",
+    "appium",
+    "appium-uiautomator2-driver",
+    "appium-xcuitest-driver"
+  ],
+  "paths": {
+    "@/*": ["./src/*"]
+  },
+  "vitest": {
+    "config": ["vitest.config.ts"],
+    "entry": ["tests/unit/**/*.{spec,test}.ts"]
+  },
+  "playwright": {
+    "config": ["playwright.config.ts"],
+    "entry": ["tests/e2e/**/*.spec.ts"]
+  }
+}
