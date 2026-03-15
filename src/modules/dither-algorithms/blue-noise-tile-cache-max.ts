@@ -1,0 +1,1 @@
+export const BLUE_NOISE_TILE_CACHE_MAX = 64;

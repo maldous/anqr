@@ -1,0 +1,35 @@
+ANQR is the ultimate QR code generator — powerful, private, and beautifully designed. Create professional QR codes for URLs, Wi-Fi networks, vCards, cryptocurrency wallets, event tickets, and 25+ payload types.
+
+KEY FEATURES
+
+• 25+ Payload Types — URLs, text, Wi-Fi, vCards, email, phone, SMS, geo locations, calendar events, cryptocurrency addresses, EPC/SEPA payments, and more.
+
+• Advanced Styling — Gradients, custom colors, rounded corners, eye shapes, and module patterns to match your brand.
+
+• Logo & Image Overlays — Add your logo or any image with multiple overlay modes: center, dither, outline, subpixel, and gapfill.
+
+• Animation — Create animated QR codes with dithered transitions, perfect for digital displays and social media.
+
+• Safety & Scan Verification — Built-in scan analysis checks your QR code for readability before you print or share.
+
+• High Error Correction — Choose from L, M, Q, or H error correction levels to ensure your codes survive damage.
+
+• Multiple Export Formats — Save as PNG, SVG, or PDF at any resolution for print-ready output.
+
+• Share Links — Generate shareable URLs that let anyone view or regenerate your QR code.
+
+• Privacy-First — QR codes are generated locally on your device. No account required. No data stored.
+
+• 60+ Languages — Fully localized interface with support for over 60 languages.
+
+PERFECT FOR
+
+• Business cards & marketing materials
+• Restaurant menus & Wi-Fi sharing
+• Event tickets & registration
+• Product packaging & labels
+• Social media profiles
+• Cryptocurrency payments
+• Digital signage & presentations
+
+ANQR is free to use with ads. All core features are available without any subscription or in-app purchase.

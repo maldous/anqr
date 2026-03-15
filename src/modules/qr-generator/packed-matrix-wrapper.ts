@@ -1,0 +1,15 @@
+import { BaseMatrixWrapper } from './base-matrix-wrapper';
+
+export class PackedMatrixWrapper extends BaseMatrixWrapper {
+  private readonly packed: Uint8Array;
+
+  constructor(packed: Uint8Array, moduleCount: number) {
+    super(moduleCount);
+    this.packed = packed;
+  }
+
+  isDark(row: number, col: number): boolean {
+    if (row < 0 || col < 0 || row >= this.moduleCount || col >= this.moduleCount) return false;
+    return this.packed[row * this.moduleCount + col] === 1;
+  }
+}

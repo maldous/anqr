@@ -1,0 +1,1 @@
+export const BALANCED_MASK_STALL_DELTA = 0.35;

@@ -1,0 +1,33 @@
+import type { useTranslation } from 'react-i18next';
+import type { QRState } from '@/store/qr-store';
+import type { PaymentFormStates } from './payment-form-states.type';
+
+export type EditorProps = PaymentFormStates & {
+  payload: QRState['payload'];
+  tier: string;
+  t: ReturnType<typeof useTranslation>['t'];
+  showStartupHighlight: boolean;
+  setShowStartupHighlight: (v: boolean) => void;
+  setPayloadText: QRState['setPayloadText'];
+  setPayloadUrl: QRState['setPayloadUrl'];
+  setPayloadTel: QRState['setPayloadTel'];
+  setPayloadEmail: QRState['setPayloadEmail'];
+  setPayloadSms: QRState['setPayloadSms'];
+  setPayloadGeo: QRState['setPayloadGeo'];
+  setPayloadWifi: QRState['setPayloadWifi'];
+  setPayloadVCard: QRState['setPayloadVCard'];
+  setPayloadMeCard: QRState['setPayloadMeCard'];
+  setPayloadEvent: QRState['setPayloadEvent'];
+  setPayloadCrypto: QRState['setPayloadCrypto'];
+  setPayloadOtpAuth: QRState['setPayloadOtpAuth'];
+  setPayloadBizCard: QRState['setPayloadBizCard'];
+  setPayloadMessaging: QRState['setPayloadMessaging'];
+  setPayloadSocialProfile: QRState['setPayloadSocialProfile'];
+  setPayloadAppLink: QRState['setPayloadAppLink'];
+  setPayloadGS1: QRState['setPayloadGS1'];
+  setPayloadCalendarSub: QRState['setPayloadCalendarSub'];
+  setPayloadEventRsvp: QRState['setPayloadEventRsvp'];
+  setPayloadValidation: QRState['setPayloadValidation'];
+  getPayloadText: QRState['getPayloadText'];
+  qr: QRState['qr'];
+};

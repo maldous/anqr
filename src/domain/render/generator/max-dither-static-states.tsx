@@ -1,0 +1,1 @@
+export const MAX_DITHER_STATIC_STATES = 24;

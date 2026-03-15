@@ -1,0 +1,1 @@
+export const BIT_PIXEL_MAP_CACHE_LIMIT = 48;

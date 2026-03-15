@@ -1,0 +1,1 @@
+export const MAX_SHARED_READBACK_CANVASES = 4;
