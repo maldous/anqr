@@ -1,4 +1,3 @@
-import type { RSBasisVector } from './rs-basis';
 export type { FlattenedSelection } from './flattened-selection';
 export type { BinarySearchResult } from './binary-search-result';
 

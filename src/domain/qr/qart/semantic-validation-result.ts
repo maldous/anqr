@@ -1,4 +1,4 @@
-import type { RejectionReason } from './validation.types';
+import type { RejectionReason } from './rejection-reason';
 
 export interface SemanticValidationResult {
   /** Whether validation passed */

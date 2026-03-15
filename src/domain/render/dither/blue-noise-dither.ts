@@ -1,6 +1,7 @@
-import type { DitherResult, RGB } from '../../../modules/dither-algorithms/types';
+import type { DitherResult } from '../../../modules/dither-algorithms/types';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
 import { BlueNoiseOptions } from './blue-noise-options';
+import { buildRowWiseDitherResult } from './build-row-wise-dither-result';
 import { quantizeBlueNoisePixel } from './quantize-blue-noise-pixel';
 
 /** Apply blue noise threshold dithering */
@@ -18,14 +19,9 @@ export function blueNoiseDither(
   const tile = generateBlueNoiseTile(tileSize, seed);
   const strengthFactor = strength / 100;
 
-  const resultMatrix: boolean[][] = [];
-  const resultColors: RGB[][] = [];
-
-  for (let y = 0; y < height; y++) {
-    const matrixRow: boolean[] = [];
-    const colorRow: RGB[] = [];
-
-    for (let x = 0; x < width; x++) {
+  return buildRowWiseDitherResult({
+    height,
+    resolvePixel: (x, y) => {
       const threshold = sampleBlueNoise(x, y, tile, tileSize);
       const idx = x * 3;
       const px = quantizeBlueNoisePixel(
@@ -37,13 +33,8 @@ export function blueNoiseDither(
         colorMode,
         levels
       );
-      matrixRow.push(px.isDark);
-      colorRow.push(px.color);
-    }
-
-    resultMatrix.push(matrixRow);
-    resultColors.push(colorRow);
-  }
-
-  return { matrix: resultMatrix, colors: resultColors };
+      return { color: px.color, isDark: px.isDark };
+    },
+    width,
+  });
 }

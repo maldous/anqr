@@ -1,4 +1,3 @@
-import type { OverlayData } from './types';
 import type { QRCodeObject } from './qr-code-object';
 export type { QRCodeObject } from './qr-code-object';
 export type { OverlayDataMatrix } from './overlay-data-matrix';

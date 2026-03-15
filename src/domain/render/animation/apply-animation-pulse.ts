@@ -1,3 +1,4 @@
+import { forEachOpaquePixel } from './for-each-opaque-pixel';
 import { hslToRgbTuple } from '../color/color';
 
 // ============================================
@@ -14,24 +15,17 @@ export function applyAnimationPulse(data: Uint8ClampedArray, progress: number, s
   const hue = (seed * 31) % 360;
   const pulseColor = hslToRgbTuple(hue, 70, 50);
 
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] === 0) continue;
-    const r = data[i],
-      g = data[i + 1],
-      b = data[i + 2];
-    const brightness = (r + g + b) / 3;
-    const isDark = brightness < 128;
-
+  forEachOpaquePixel(data, (index, r, g, b, isDark) => {
     if (isDark) {
       const tintAmount = intensity * (0.5 + pulsePhase * 0.5);
-      data[i] = Math.min(255, r + pulseColor[0] * tintAmount);
-      data[i + 1] = Math.min(255, g + pulseColor[1] * tintAmount);
-      data[i + 2] = Math.min(255, b + pulseColor[2] * tintAmount);
+      data[index] = Math.min(255, r + pulseColor[0] * tintAmount);
+      data[index + 1] = Math.min(255, g + pulseColor[1] * tintAmount);
+      data[index + 2] = Math.min(255, b + pulseColor[2] * tintAmount);
     } else {
       const bf = 1 - intensity * 0.1 * (1 + pulsePhase);
-      data[i] = Math.max(0, Math.round(r * bf));
-      data[i + 1] = Math.max(0, Math.round(g * bf));
-      data[i + 2] = Math.max(0, Math.round(b * bf));
+      data[index] = Math.max(0, Math.round(r * bf));
+      data[index + 1] = Math.max(0, Math.round(g * bf));
+      data[index + 2] = Math.max(0, Math.round(b * bf));
     }
-  }
+  });
 }

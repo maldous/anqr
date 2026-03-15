@@ -1,10 +1,6 @@
-import { pixelIndex } from './pixel-index';
 import { packColor } from './pack-color';
-import { luma01 } from './luma01';
-import { shapeOverlayDarkness } from './shape-overlay-darkness';
-import { shouldLockModule } from './should-lock-module';
-import { isFixedDarkModule } from './is-fixed-dark-module';
 import { computeBiasedDarkness } from './compute-biased-darkness';
+import { pixelSamplePrelude } from './pixel-sample-prelude';
 import { resolveDarkCandidate } from './resolve-dark-candidate';
 import type { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
 
@@ -18,26 +14,8 @@ export function processErrorDiffusionPixel(
   desire: Float32Array,
   errors: Float32Array
 ): void {
-  const sampleIdx = pixelIndex(x, y, ctx.scaledSize);
-  const idx = sampleIdx * 4;
-  const r = ctx.data[idx];
-  const g = ctx.data[idx + 1];
-  const b = ctx.data[idx + 2];
-
-  const moduleRow = Math.floor(y / ctx.scale);
-  const moduleCol = Math.floor(x / ctx.scale);
-  const qrIsDark = ctx.qr.isDark(moduleRow, moduleCol);
-  const moduleLocked = shouldLockModule(
-    moduleRow,
-    moduleCol,
-    ctx.moduleCount,
-    ctx.version,
-    ctx.config
-  );
-  const fixedDarkUnlocked =
-    !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, ctx.moduleCount);
-
-  const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
+  const { b, fixedDarkUnlocked, g, moduleLocked, overlayDark, qrIsDark, r, sampleIdx } =
+    pixelSamplePrelude(ctx, x, y);
   const biasedOverlayDark = computeBiasedDarkness(
     overlayDark,
     x,

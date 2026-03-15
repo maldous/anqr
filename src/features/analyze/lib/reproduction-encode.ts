@@ -1,11 +1,6 @@
-import type { ECCLevel, QRAnalysisResult } from '@/modules/qr-analyzer';
-import type {
-  ReproductionParams,
-  ReproductionQrState,
-  ValidEncoderMode,
-} from './reproduction-types';
+import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+import type { ReproductionParams, ReproductionQrState } from './reproduction-types';
 import { buildEncoderInput } from './build-encoder-input';
-import { buildMaskPatternOption } from './build-mask-pattern-option';
 import { createQRWithFallback } from './create-qr-with-fallback';
 import { resolveEffectiveMode } from './resolve-effective-mode';
 import { resolveFinalVersion } from './resolve-final-version';

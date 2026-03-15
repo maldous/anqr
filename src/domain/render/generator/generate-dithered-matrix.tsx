@@ -8,16 +8,14 @@ import { bitsToMatrix } from './bits-to-matrix';
 import { buildDitherResolvedConfig } from './build-dither-resolved-config';
 import { computeDitherThreshold } from './compute-dither-threshold';
 import { computeQualityMetrics } from './compute-quality-metrics';
-import { createEmptyMatrix } from './create-empty-matrix';
 import { enforceModuleConstraints } from './enforce-module-constraints';
 import { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
-import { generateBWFirstMatrix } from './generate-bw-first-matrix';
 import { log } from './log';
 import { packedColorsToMatrix } from './packed-colors-to-matrix';
 import { pixelIndex } from './pixel-index';
 import { processErrorDiffusionPixel } from './process-error-diffusion-pixel';
-import { readOverlayPixelsAtSize } from './read-overlay-pixels-at-size';
 import { removeIsolatedSpeckles } from './remove-isolated-speckles';
+import { resolvePreparedMatrixInput } from './resolve-prepared-matrix-input';
 import { serpentineRowParams } from './serpentine-row-params';
 
 /**
@@ -35,38 +33,23 @@ export async function generateDitheredMatrix(
   createCanvasFn: CreateCanvasFn,
   releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionMatrix> {
-  const scaledSize = moduleCount * scale;
-
-  // QR-FIRST MODE: for high-contrast B&W images, guarantee scannability
-  if (config.qrFirstMode) {
-    log.debug('QR-first mode enabled via config - using QR-first matrix');
-    return generateBWFirstMatrix(
-      qr,
-      config,
-      overlayCanvas,
-      moduleCount,
-      scale,
-      effectiveIntensity,
-      createCanvasFn,
-      releaseCanvasFn
-    );
+  const prepared = await resolvePreparedMatrixInput({
+    config,
+    createCanvasFn,
+    effectiveIntensity,
+    modeLabel: 'dithered',
+    moduleCount,
+    overlayCanvas,
+    qr,
+    releaseCanvasFn,
+    scale,
+  });
+  if (prepared.matrix) {
+    return prepared.matrix;
   }
+  const { data, matrixBits, packedColors, pixelCount, scaledSize } = prepared.matrixInput;
 
   const dc = buildDitherResolvedConfig(config, moduleCount, effectiveIntensity, scaledSize);
-
-  const data = await readOverlayPixelsAtSize(
-    overlayCanvas,
-    scaledSize,
-    createCanvasFn,
-    releaseCanvasFn
-  );
-  if (!data) {
-    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
-  }
-
-  const pixelCount = scaledSize * scaledSize;
-  const matrixBits = new Uint8Array(pixelCount);
-  const packedColors = new Uint32Array(pixelCount);
   const desire = new Float32Array(pixelCount);
   const errors = new Float32Array(pixelCount);
   desire.fill(0.5);

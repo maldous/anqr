@@ -1,4 +1,4 @@
-import type { DitherAttemptPatch } from './qr-generator-scan-gate';
+import type { DitherAttemptPatch } from './dither-attempt-patch.type';
 import type { ScanGateCallbacks } from './scan-gate-callbacks.interface';
 import type { ScanGateLoopState } from './scan-gate-loop-state.interface';
 import type { ScanGateMainLoopResult } from './scan-gate-main-loop-result.interface';

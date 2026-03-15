@@ -18,7 +18,6 @@
  * - Reed-Solomon basis block generation (future)
  * - Linear algebra utilities for pixel control (future)
  */
-import type { ECCLevel } from '../qr-encoder';
 import { evaluateQRMatch, searchBestFragment } from './fragment-search';
 import { gfAdd, gfInv, gfMul } from './gf-utils';
 import {

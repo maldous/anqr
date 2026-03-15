@@ -1,3 +1,5 @@
+import { resolveEffectTargetCanvas } from '../resolve-effect-target-canvas';
+
 /**
  * Apply temporal dither offset to a canvas by modifying pixel values slightly
  * This provides temporal dithering for modes that don't support native offset passing
@@ -12,29 +14,7 @@ export function applyTemporalNoiseToCanvas(
     return canvas;
   }
 
-  let result: HTMLCanvasElement | OffscreenCanvas;
-  if (targetCanvas) {
-    result = targetCanvas;
-    if (result.width !== canvas.width) result.width = canvas.width;
-    if (result.height !== canvas.height) result.height = canvas.height;
-  } else {
-    result = document.createElement('canvas');
-    result.width = canvas.width;
-    result.height = canvas.height;
-  }
-
-  const ctx =
-    (result.getContext('2d', {
-      willReadFrequently: true,
-      desynchronized: true,
-    } as CanvasRenderingContext2DSettings | undefined) as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null) ??
-    (result.getContext('2d') as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null);
+  const { ctx, result } = resolveEffectTargetCanvas(canvas, targetCanvas);
   if (!ctx) {
     return canvas as HTMLCanvasElement;
   }

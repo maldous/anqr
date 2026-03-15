@@ -1,4 +1,4 @@
-import type { BlendPreservationCtx, PatternBoostCtx, PixelColor } from '../scaled-render-types';
+import type { BlendPreservationCtx } from '../scaled-render-types';
 import { blendModulePixels } from './blend-module-pixels';
 import { createBlendPreservationContext } from './create-blend-preservation-context';
 

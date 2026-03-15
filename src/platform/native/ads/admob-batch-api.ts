@@ -1,7 +1,5 @@
-import { type InterstitialType } from './admob-config';
-import { trackGenerationAndShowAdInternal } from './admob-generation';
 import { admobRuntime } from './admob-runtime-state';
-import { prepareInterstitial, showInterstitial } from './admob-interstitial-api';
+import { prepareInterstitial } from './admob-interstitial-api';
 import { prepareRewardedAd } from './admob-rewarded-api';
 export { trackGenerationAndShowAd } from './track-generation-and-show-ad';
 

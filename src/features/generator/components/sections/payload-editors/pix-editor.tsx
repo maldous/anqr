@@ -1,11 +1,11 @@
 import type { TFunction } from 'i18next';
 import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { isValidPhone } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import type { PIXForm } from '../payload-section-types';
+import { ValidatedTextField } from './validated-text-field';
 
 export const PixEditor = ({
   payload,
@@ -19,27 +19,17 @@ export const PixEditor = ({
   t: TFunction;
 }>) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.pixKey')}</HighlightedLabel>
-      </Label>
-      <Input
-        value={pixForm.key}
-        onChange={(e) => setPixForm((prev) => ({ ...prev, key: e.target.value }))}
-        placeholder="CPF, CNPJ, Email, Phone, or Random Key"
-        data-testid={DynamicTestId.resolve('payload-pix-key-input', 'payload-pix-key-input')}
-        className={
-          payload.validate && pixForm.key && pixForm.key.length < 3
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate && pixForm.key && pixForm.key.length < 3 && (
-        <p className="text-xs text-destructive">
-          {t('validation.invalidPixKey', 'Enter a valid PIX key (at least 3 characters)')}
-        </p>
+    <ValidatedTextField
+      label={t('payload.pixKey')}
+      placeholder="CPF, CNPJ, Email, Phone, or Random Key"
+      value={pixForm.key}
+      onChange={(value) => setPixForm((prev) => ({ ...prev, key: value }))}
+      invalid={payload.validate && pixForm.key !== '' && pixForm.key.length < 3}
+      invalidMessage={t(
+        'validation.invalidPixKey',
+        'Enter a valid PIX key (at least 3 characters)'
       )}
-    </div>
+    />
     <div className="space-y-2">
       <Label>
         <HighlightedLabel>{t('payload.merchantName')}</HighlightedLabel>

@@ -1,5 +1,5 @@
 import type { QRAnalysisResult } from './types';
-import type { AnalysisExportGeneratorSettings } from './export.types';
+import type { AnalysisExportGeneratorSettings } from './analysis-export-generator-settings';
 
 export interface AnalysisExportData {
   version: '1.1';

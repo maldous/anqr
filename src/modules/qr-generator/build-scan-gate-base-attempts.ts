@@ -1,5 +1,6 @@
 import { clampN } from './qr-generator-helpers';
-import type { DitherAttemptPatch, ScanGateCtx } from './qr-generator-scan-gate';
+import type { DitherAttemptPatch } from './dither-attempt-patch.type';
+import type { ScanGateCtx } from './scan-gate-ctx.interface';
 import { resolveScanGateIntensity } from './resolve-scan-gate-intensity';
 
 export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[] {

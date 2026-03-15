@@ -8,7 +8,7 @@ import { createLogger } from '@/infra/logging/logger';
 import { createGifCompositor } from '@/domain/render/animation/gif-compositor';
 import type { GifCompositor } from '@/modules/animation';
 import type { AnimationFrame } from '@/modules/animation';
-import { loadFileAsCanvas } from '@/features/generator/application/input/input-fn-loadfilecanvas';
+import { handleOverlayLoadFallback } from '@/features/generator/application/input/input-fn-handleloadfallback';
 
 const log = createLogger('QR');
 
@@ -34,16 +34,12 @@ export function loadGifOverlayFile(
       } catch (err) {
         log.error('Failed to create GIF compositor', { error: err });
         setGifCompositor(null);
-        loadFileAsCanvas(file)
-          .then((canvas) => {
-            setRawOverlayCanvas(canvas);
-            setGifFrames([{ canvas, delay: 100, disposalType: 0 }]);
-            setIsLoadingOverlay(false);
-          })
-          .catch(() => {
-            setRawOverlayCanvas(null);
-            setIsLoadingOverlay(false);
-          });
+        void handleOverlayLoadFallback(
+          file,
+          setRawOverlayCanvas,
+          setGifFrames,
+          setIsLoadingOverlay
+        );
       }
     })
     .catch((err) => {

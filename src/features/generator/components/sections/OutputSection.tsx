@@ -1,19 +1,19 @@
 import { useTranslation } from 'react-i18next';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HelpLink } from '@/ui/primitives/help-link';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { type GifDither, type GifQuantizer, type OutputFormat, useQRStore } from '@/store/qr-store';
 import {
+  DynamicTestId,
+  HelpLink,
+  HighlightedLabel,
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/primitives/select';
-import { Slider } from '@/ui/primitives/slider';
-import { Switch } from '@/ui/primitives/switch';
-import { HighlightedLabel } from '@/app/search/search-context';
-import { type GifDither, type GifQuantizer, type OutputFormat, useQRStore } from '@/store/qr-store';
+  Slider,
+  Switch,
+} from './section-ui';
 
 export function OutputSection() {
   const {

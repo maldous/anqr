@@ -1,5 +1,5 @@
 import type { ECCLevel } from './bit-mapping';
-import type { RejectionReason } from './validation.types';
+import type { RejectionReason } from './rejection-reason';
 
 export interface FormatVerificationResult {
   /** Whether verification passed (both ECC and mask match) */

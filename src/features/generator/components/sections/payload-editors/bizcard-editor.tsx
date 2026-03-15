@@ -1,9 +1,6 @@
 import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/app/search/search-context';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import type { QRState } from '@/store/qr-store';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { LabeledInputField } from './labeled-input-field';
 
 export const BizcardEditor = ({
   payload,
@@ -16,106 +13,56 @@ export const BizcardEditor = ({
 }>) => {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.firstName')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.bizcard.firstName || ''}
-          onChange={(e) => setPayloadBizCard({ firstName: e.target.value })}
-          placeholder="John"
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-firstname-input',
-            'payload-bizcard-firstname-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.lastName')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.bizcard.lastName || ''}
-          onChange={(e) => setPayloadBizCard({ lastName: e.target.value })}
-          placeholder="Doe"
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-lastname-input',
-            'payload-bizcard-lastname-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.company')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.bizcard.company || ''}
-          onChange={(e) => setPayloadBizCard({ company: e.target.value })}
-          placeholder="Company Inc."
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-company-input',
-            'payload-bizcard-company-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.title')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.bizcard.title || ''}
-          onChange={(e) => setPayloadBizCard({ title: e.target.value })}
-          placeholder="Manager"
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-title-input',
-            'payload-bizcard-title-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.phone')}</HighlightedLabel>
-        </Label>
-        <Input
-          type="tel"
-          value={payload.bizcard.phone || ''}
-          onChange={(e) => setPayloadBizCard({ phone: e.target.value })}
-          placeholder="+1234567890"
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-phone-input',
-            'payload-bizcard-phone-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.email')}</HighlightedLabel>
-        </Label>
-        <Input
-          type="email"
-          value={payload.bizcard.email || ''}
-          onChange={(e) => setPayloadBizCard({ email: e.target.value })}
-          placeholder="name@example.com"
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-email-input',
-            'payload-bizcard-email-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.address')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.bizcard.address || ''}
-          onChange={(e) => setPayloadBizCard({ address: e.target.value })}
-          placeholder="123 Main St, City"
-          data-testid={DynamicTestId.resolve(
-            'payload-bizcard-address-input',
-            'payload-bizcard-address-input'
-          )}
-        />
-      </div>
+      <LabeledInputField
+        label={t('payload.firstName')}
+        value={payload.bizcard.firstName || ''}
+        onChange={(value) => setPayloadBizCard({ firstName: value })}
+        placeholder="John"
+        dataTestId="payload-bizcard-firstname-input"
+      />
+      <LabeledInputField
+        label={t('payload.lastName')}
+        value={payload.bizcard.lastName || ''}
+        onChange={(value) => setPayloadBizCard({ lastName: value })}
+        placeholder="Doe"
+        dataTestId="payload-bizcard-lastname-input"
+      />
+      <LabeledInputField
+        label={t('payload.company')}
+        value={payload.bizcard.company || ''}
+        onChange={(value) => setPayloadBizCard({ company: value })}
+        placeholder="Company Inc."
+        dataTestId="payload-bizcard-company-input"
+      />
+      <LabeledInputField
+        label={t('payload.title')}
+        value={payload.bizcard.title || ''}
+        onChange={(value) => setPayloadBizCard({ title: value })}
+        placeholder="Manager"
+        dataTestId="payload-bizcard-title-input"
+      />
+      <LabeledInputField
+        label={t('payload.phone')}
+        value={payload.bizcard.phone || ''}
+        onChange={(value) => setPayloadBizCard({ phone: value })}
+        placeholder="+1234567890"
+        type="tel"
+        dataTestId="payload-bizcard-phone-input"
+      />
+      <LabeledInputField
+        label={t('payload.email')}
+        value={payload.bizcard.email || ''}
+        onChange={(value) => setPayloadBizCard({ email: value })}
+        placeholder="name@example.com"
+        dataTestId="payload-bizcard-email-input"
+      />
+      <LabeledInputField
+        label={t('payload.address')}
+        value={payload.bizcard.address || ''}
+        onChange={(value) => setPayloadBizCard({ address: value })}
+        placeholder="123 Main St, City"
+        dataTestId="payload-bizcard-address-input"
+      />
       <p className="text-xs text-muted-foreground">{t('hints.bizcardLegacy')}</p>
     </div>
   );

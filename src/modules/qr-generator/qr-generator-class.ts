@@ -6,13 +6,10 @@
 import type { GradientConfig } from '../core/types';
 import {
   calculateOptimalVersion,
-  createShiftJISEncoder,
   getCompatibleMode,
   qrcode,
   resetStringToBytes,
-  setStringToBytes,
 } from '../qr-encoder';
-import { decodeQR } from '../qr-decoder';
 import { verifyQRStructure } from '../qr-spec';
 import { qrMatrixCache } from './cache';
 import {
@@ -54,12 +51,9 @@ import {
   clearQuietZone,
   computeOverlayComplexity,
   computeOverlaySignature,
-  computeScanGateRasterMetrics,
   configureStringEncoding,
   decodeCanvasData,
   ditherPatchSignature,
-  roundtripToFinalRaster,
-  simulateScenarioDecode,
 } from './qr-generator-helpers';
 import {
   type DitherAttemptPatch,

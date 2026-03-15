@@ -4,6 +4,7 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import type { BharatQRForm } from '../payload-section-types';
+import { CityAmountFields } from './city-amount-fields';
 
 export const BharatqrEditor = ({
   bharatqrForm,
@@ -45,27 +46,16 @@ export const BharatqrEditor = ({
         onChange={(e) => setBharatqrForm({ ...bharatqrForm, merchantName: e.target.value })}
       />
     </div>
-    <div className="grid grid-cols-2 gap-2">
-      <div className="space-y-2">
-        <Label>
-          {t('payload.city')} {t('common.optional')}
-        </Label>
-        <Input
-          placeholder={t('placeholders.mumbaiPlaceholder')}
-          value={bharatqrForm.merchantCity}
-          onChange={(e) => setBharatqrForm({ ...bharatqrForm, merchantCity: e.target.value })}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('payload.amountInr')}</Label>
-        <Input
-          type="number"
-          placeholder="0.00"
-          value={bharatqrForm.amount}
-          onChange={(e) => setBharatqrForm({ ...bharatqrForm, amount: e.target.value })}
-        />
-      </div>
-    </div>
+    <CityAmountFields
+      cityLabel={`${t('payload.city')} ${t('common.optional')}`}
+      cityPlaceholder={t('placeholders.mumbaiPlaceholder')}
+      cityValue={bharatqrForm.merchantCity}
+      onCityChange={(value) => setBharatqrForm({ ...bharatqrForm, merchantCity: value })}
+      amountLabel={t('payload.amountInr')}
+      amountPlaceholder="0.00"
+      amountValue={bharatqrForm.amount}
+      onAmountChange={(value) => setBharatqrForm({ ...bharatqrForm, amount: value })}
+    />
     <p className="text-xs text-muted-foreground">{t('placeholders.bharatqrHint')}</p>
   </div>
 );

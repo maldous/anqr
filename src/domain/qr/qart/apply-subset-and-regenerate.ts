@@ -1,5 +1,6 @@
 import type { EliminationResult } from './elimination';
 import { applySelectedVectorsToBlock } from './elimination';
+import type { RegenerateQrFn } from './regenerate-qr-fn.type';
 import type { FlattenedSelection } from './scan-fallback.types';
 import { unflattenSelections } from './unflatten-selections';
 
@@ -15,12 +16,7 @@ export function applySubsetAndRegenerate(
   blockDataCounts: number[],
   blockEccCounts: number[],
   eliminationResult: EliminationResult,
-  regenerateQRFn: (
-    blockData: Uint8Array[],
-    blockEcc: Uint8Array[],
-    blockDataCounts: number[],
-    blockEccCounts: number[]
-  ) => boolean[][]
+  regenerateQRFn: RegenerateQrFn
 ): {
   matrix: boolean[][];
   modifiedBlockData: Uint8Array[];

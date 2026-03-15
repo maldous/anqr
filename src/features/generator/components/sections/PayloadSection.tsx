@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DateTimePicker } from '@/ui/primitives/date-time-picker';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { HelpLink } from '@/ui/primitives/help-link';
-import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import {
   Select,
@@ -14,46 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/primitives/select';
-import { Switch } from '@/ui/primitives/switch';
-import { Textarea } from '@/ui/primitives/textarea';
 import i18n from '@/app/i18n';
-import { createLogger } from '@/infra/logging/logger';
 import { HighlightedLabel } from '@/app/search/search-context';
-
-import {
-  generateEPCSepa,
-  generateMessagingLink,
-  generatePayNow,
-  generatePIX,
-  generatePromptPay,
-  generateSocialProfile,
-  generateUPI,
-  isNonEmpty,
-  isValidABN,
-  isValidAccountNumber,
-  isValidBankBin,
-  isValidCashtag,
-  isValidCryptoAddress,
-  isValidEmail,
-  isValidEthereumAddress,
-  isValidFpsId,
-  isValidGTIN,
-  isValidIBAN,
-  isValidLatitude,
-  isValidLightningInvoice,
-  isValidLongitude,
-  isValidMerchantId,
-  isValidPayPalUsername,
-  isValidPhone,
-  isValidProxyValue,
-  isValidSSID,
-  isValidStoreId,
-  isValidUpiVpa,
-  isValidUrl,
-  isValidUrlWithScheme,
-} from '@/modules/payload-generators';
-import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
-import { type PayloadKind, type QRState, useQRStore } from '@/store/qr-store';
+import { type PayloadKind, useQRStore } from '@/store/qr-store';
 import {
   AppLinkEditor,
   AuspaynetEditor,
@@ -102,36 +63,10 @@ import {
   WifiEditor,
   UpiEditor,
 } from './payload-editors';
-import type {
-  AusPayNetForm,
-  BharatQRForm,
-  CashAppForm,
-  DuitNowForm,
-  EMVGenericForm,
-  EPCSepaForm,
-  EthereumForm,
-  HKQRForm,
-  JPQRForm,
-  LightningForm,
-  PayNowForm,
-  PayPalMeForm,
-  PIXForm,
-  PromptPayForm,
-  QRISForm,
-  QRPhForm,
-  ShortLinkForm,
-  SwissQRBillForm,
-  TWQRForm,
-  UPIForm,
-  VietQRForm,
-} from './payload-section-types';
 import { getAvailablePayments } from './payload-payment-config';
 import { PAYLOAD_CATEGORY_KEYS } from './payload-category-keys';
 import type { EditorProps } from './payload-editor-props';
-import { PlusCodeDisplay } from './payload-plus-code-display';
 import { usePaymentFormStates, usePaymentFormSync } from './payload-payment-form-hooks';
-
-const log = createLogger('PAYLOAD');
 export function PayloadSection() {
   const {
     tier,
@@ -178,50 +113,29 @@ export function PayloadSection() {
   const { t } = useTranslation();
   const [showStartupHighlight, setShowStartupHighlight] = useState(false);
 
+  const paymentForms = usePaymentFormStates();
   const {
     epcSepaForm,
-    setEpcSepaForm,
     upiForm,
-    setUpiForm,
     payNowForm,
-    setPayNowForm,
     promptPayForm,
-    setPromptPayForm,
     pixForm,
-    setPixForm,
     swissQrBillForm,
-    setSwissQrBillForm,
     lightningForm,
-    setLightningForm,
     ethereumForm,
-    setEthereumForm,
     qrisForm,
-    setQrisForm,
     duitnowForm,
-    setDuitnowForm,
     bharatqrForm,
-    setBharatqrForm,
     vietqrForm,
-    setVietqrForm,
     qrphForm,
-    setQrphForm,
     twqrForm,
-    setTwqrForm,
     hkqrForm,
-    setHkqrForm,
     jpqrForm,
-    setJpqrForm,
     auspaynetForm,
-    setAuspaynetForm,
     paypalMeForm,
-    setPaypalMeForm,
     cashappForm,
-    setCashappForm,
     emvGenericForm,
-    setEmvGenericForm,
-    shortLinkForm,
-    setShortLinkForm,
-  } = usePaymentFormStates();
+  } = paymentForms;
 
   useEffect(() => {
     const hasSeenHighlight = sessionStorage.getItem('anqr-seen-highlight');
@@ -278,6 +192,7 @@ export function PayloadSection() {
   );
 
   const editorProps: EditorProps = {
+    ...paymentForms,
     payload,
     tier,
     t,
@@ -305,48 +220,6 @@ export function PayloadSection() {
     setPayloadValidation,
     getPayloadText,
     qr,
-    epcSepaForm,
-    setEpcSepaForm,
-    upiForm,
-    setUpiForm,
-    payNowForm,
-    setPayNowForm,
-    promptPayForm,
-    setPromptPayForm,
-    pixForm,
-    setPixForm,
-    swissQrBillForm,
-    setSwissQrBillForm,
-    lightningForm,
-    setLightningForm,
-    ethereumForm,
-    setEthereumForm,
-    qrisForm,
-    setQrisForm,
-    duitnowForm,
-    setDuitnowForm,
-    bharatqrForm,
-    setBharatqrForm,
-    vietqrForm,
-    setVietqrForm,
-    qrphForm,
-    setQrphForm,
-    twqrForm,
-    setTwqrForm,
-    hkqrForm,
-    setHkqrForm,
-    jpqrForm,
-    setJpqrForm,
-    auspaynetForm,
-    setAuspaynetForm,
-    paypalMeForm,
-    setPaypalMeForm,
-    cashappForm,
-    setCashappForm,
-    emvGenericForm,
-    setEmvGenericForm,
-    shortLinkForm,
-    setShortLinkForm,
   };
 
   return (

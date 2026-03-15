@@ -1,5 +1,3 @@
-import type { CropRegion } from './crop-region.type';
-import type { MappedPoint } from './mapped-point.type';
 export { computeResizedCropRegion } from './compute-resized-crop-region';
 import type { OverlayPreservations } from './overlay-preservations.type';
 

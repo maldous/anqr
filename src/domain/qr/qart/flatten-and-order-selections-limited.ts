@@ -1,8 +1,5 @@
-import type {
-  BlockEliminationResult,
-  BlockSelectionResult,
-  EliminationResult,
-} from './elimination';
+import type { BlockSelectionResult, EliminationResult } from './elimination';
+import { forEachFlattenedSelection } from './for-each-flattened-selection';
 import type { FlattenedSelection } from './scan-fallback.types';
 import { flattenAndOrderSelections } from './flatten-and-order-selections';
 
@@ -66,33 +63,7 @@ export function flattenAndOrderSelectionsLimited(
     }
   };
 
-  const blockResultMap = new Map<number, BlockEliminationResult>();
-  for (const br of eliminationResult.blockResults) {
-    blockResultMap.set(br.blockIndex, br);
-  }
-
-  for (const selection of blockSelections) {
-    const { blockIndex, selectedVectorIndices } = selection;
-
-    const blockResult = blockResultMap.get(blockIndex);
-    if (!blockResult) continue;
-
-    for (const vectorIndex of selectedVectorIndices) {
-      const vector = blockResult.vectors[vectorIndex];
-      if (!vector || vector.pivotPixel < 0) continue;
-
-      const row = Math.floor(vector.pivotPixel / moduleCount);
-      const col = vector.pivotPixel % moduleCount;
-      const pixelImportance = importance[row]?.[col] ?? 0;
-
-      maybePush({
-        blockIndex,
-        vectorIndex,
-        importance: pixelImportance,
-        vector,
-      });
-    }
-  }
+  forEachFlattenedSelection(blockSelections, eliminationResult, importance, moduleCount, maybePush);
 
   heap.sort((a, b) => b.importance - a.importance);
   return heap;

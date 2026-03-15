@@ -40,7 +40,7 @@ export function ShareSection() {
   // Build shareable URL from current config
   const shareableUrl = useMemo(() => {
     const config = {
-      ...buildShareConfig(
+      ...buildShareConfig({
         getPayloadText,
         qr,
         render,
@@ -51,8 +51,8 @@ export function ShareSection() {
         qa,
         auto,
         watermark,
-        metadata
-      ),
+        metadata,
+      }),
       lang: i18n.language,
     };
     return getShareableUrl(config);

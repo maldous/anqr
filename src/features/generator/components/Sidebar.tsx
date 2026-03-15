@@ -26,11 +26,7 @@ import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { HighlightedLabel, SearchProvider } from '@/app/search/search-context';
 import { useQRStore } from '@/store/qr-store';
 import { SectionLoadFallback } from './sidebar-section-load-fallback';
-import {
-  DEFAULT_OPEN_SECTIONS,
-  OPEN_SECTIONS_STORAGE_KEY,
-  loadStoredOpenSections,
-} from './sidebar-open-sections';
+import { OPEN_SECTIONS_STORAGE_KEY, loadStoredOpenSections } from './sidebar-open-sections';
 import { getAvailableKeywords } from './sidebar-keywords';
 import type { SidebarProps } from './sidebar-types';
 

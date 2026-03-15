@@ -1,9 +1,8 @@
 import type { TFunction } from 'i18next';
 import { isNonEmpty, isValidMerchantId } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
 import type { TWQRForm } from '../payload-section-types';
+import { ValidatedTextField } from './validated-text-field';
 
 export const TwqrEditor = ({
   payload,
@@ -17,53 +16,33 @@ export const TwqrEditor = ({
   twqrForm: TWQRForm;
 }>) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>{t('placeholders.merchantId')}</Label>
-      <Input
-        placeholder={t('placeholders.twMerchantIdPlaceholder')}
-        value={twqrForm.merchantId}
-        onChange={(e) => setTwqrForm({ ...twqrForm, merchantId: e.target.value })}
-        className={
-          payload.validate && twqrForm.merchantId && !isValidMerchantId(twqrForm.merchantId)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate && twqrForm.merchantId && !isValidMerchantId(twqrForm.merchantId) && (
-        <p className="text-xs text-destructive">
-          {t('validation.invalidMerchantId', 'Enter a valid merchant ID')}
-        </p>
-      )}
-    </div>
-    <div className="space-y-2">
-      <Label>{t('payload.merchantName')}</Label>
-      <Input
-        placeholder={t('placeholders.twMerchantNamePlaceholder')}
-        value={twqrForm.merchantName}
-        onChange={(e) => setTwqrForm({ ...twqrForm, merchantName: e.target.value })}
-        className={
-          payload.validate && !isNonEmpty(twqrForm.merchantName)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate && !isNonEmpty(twqrForm.merchantName) && (
-        <p className="text-xs text-destructive">
-          {t('validation.requiredField', 'This field is required')}
-        </p>
-      )}
-    </div>
-    <div className="space-y-2">
-      <Label>
-        {t('payload.amount')} (TWD) {t('common.optional')}
-      </Label>
-      <Input
-        type="number"
-        placeholder="0"
-        value={twqrForm.amount}
-        onChange={(e) => setTwqrForm({ ...twqrForm, amount: e.target.value })}
-      />
-    </div>
+    <ValidatedTextField
+      label={t('placeholders.merchantId')}
+      placeholder={t('placeholders.twMerchantIdPlaceholder')}
+      value={twqrForm.merchantId}
+      onChange={(value) => setTwqrForm({ ...twqrForm, merchantId: value })}
+      invalid={
+        payload.validate && twqrForm.merchantId !== '' && !isValidMerchantId(twqrForm.merchantId)
+      }
+      invalidMessage={t('validation.invalidMerchantId', 'Enter a valid merchant ID')}
+    />
+    <ValidatedTextField
+      label={t('payload.merchantName')}
+      placeholder={t('placeholders.twMerchantNamePlaceholder')}
+      value={twqrForm.merchantName}
+      onChange={(value) => setTwqrForm({ ...twqrForm, merchantName: value })}
+      invalid={payload.validate && !isNonEmpty(twqrForm.merchantName)}
+      invalidMessage={t('validation.requiredField', 'This field is required')}
+    />
+    <ValidatedTextField
+      label={`${t('payload.amount')} (TWD) ${t('common.optional')}`}
+      placeholder="0"
+      value={twqrForm.amount}
+      onChange={(value) => setTwqrForm({ ...twqrForm, amount: value })}
+      invalid={false}
+      invalidMessage=""
+      type="number"
+    />
     <p className="text-xs text-muted-foreground">{t('placeholders.twqrHint')}</p>
   </div>
 );

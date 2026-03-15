@@ -6,27 +6,13 @@
 import type { CanvasFactory } from '../../../platform/browser/canvas/canvas-factory';
 import { createGradientFill, drawFrame, drawFrameBackground } from './drawing';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
-import type { QRCodeInstance, QRGeneratorConfig, RGB } from '../../../modules/qr-generator/types';
-import { adjustLumaPreserveChroma } from './scaled-render-helpers/adjust-luma-preserve-chroma';
+import type { QRCodeInstance, QRGeneratorConfig } from '../../../modules/qr-generator/types';
 import { buildScaledPreserveFlags } from './scaled-render-helpers/build-scaled-preserve-flags';
 import { classifyScaledOverlayMode } from './scaled-render-helpers/classify-scaled-overlay-mode';
 import { computeDitherBackdropParams } from './scaled-render-helpers/compute-dither-backdrop-params';
 import { computeDitherDotParams } from './scaled-render-helpers/compute-dither-dot-params';
 import { computeScaledLocalVariance } from './scaled-render-helpers/compute-scaled-local-variance';
 import { computeSubpixelToneParams } from './scaled-render-helpers/compute-subpixel-tone-params';
-import { getScaledPreservationBlendTarget } from './scaled-render-helpers/get-scaled-preservation-blend-target';
-import { isFinderRegionFlag } from './scaled-render-helpers/is-finder-region-flag';
-import { isScaledPatternBoostModule } from './scaled-render-helpers/is-scaled-pattern-boost-module';
-import {
-  PATTERN_ALIGNMENT,
-  PATTERN_FIXED_DARK,
-  PATTERN_FINDER,
-  PATTERN_FINDER_SEPARATOR,
-  PATTERN_FORMAT,
-  PATTERN_TIMING,
-  PATTERN_VERSION,
-} from './scaled-render-helpers/pattern-flag-constants';
-import { sampleScaledModuleOverlayColor } from './scaled-render-helpers/sample-scaled-module-overlay-color';
 import { shouldForceScaledBinaryModule } from './scaled-render-helpers/should-force-scaled-binary-module';
 import {
   drawScaledDitherBackdrop,
@@ -40,20 +26,7 @@ import {
   drawPreservedStructuralPatterns,
   getScaledFunctionalMap,
 } from './scaled-render-helpers/scaled-structure';
-import type {
-  BlendPreservationCtx,
-  ContrastBoostFlags,
-  DitherBackdropParams,
-  DitherDotParams,
-  PatternBoostCtx,
-  PixelColor,
-  PixelGridCtx,
-  ScaledOverlayModeInfo,
-  ScaledPreserveFlags,
-  ShapeMaskCtx,
-  StructuralPreservationCtx,
-  SubpixelToneParams,
-} from './scaled-render-types';
+import type { ContrastBoostFlags } from './scaled-render-types';
 import { validateColor } from '../../../modules/qr-generator/utils';
 import { hash01 } from './hash01';
 import { scaledRenderLog as log } from './scaled-render-log';

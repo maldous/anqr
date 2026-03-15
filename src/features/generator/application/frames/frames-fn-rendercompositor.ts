@@ -5,13 +5,10 @@
  */
 
 import type { GifCompositor } from '@/modules/animation';
-import {
-  applyTemporalNoiseToCanvas,
-  calculateTemporalOffset,
-  type TemporalDitherMode,
-} from '@/domain/render/dither/temporal';
+import { type TemporalDitherMode } from '@/domain/render/dither/temporal';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import { applyFrameTemporalNoise } from './apply-frame-temporal-noise';
+import { renderGeneratedFrame } from './render-generated-frame';
 
 export async function renderFrameWithCompositor(params: {
   gifCompositor: GifCompositor;
@@ -38,31 +35,22 @@ export async function renderFrameWithCompositor(params: {
   }
   const processedOverlay = params.applyGeometricTransforms(params.gifCompositor.canvas);
   let overlayToUse: HTMLCanvasElement | OffscreenCanvas = processedOverlay;
+  let temporalOffset = 0;
   if (params.useTemporalDither) {
-    const temporalOffset = calculateTemporalOffset(
-      params.frameIdx,
-      params.temporalMode,
-      params.animationSeed
-    );
-    overlayToUse = applyTemporalNoiseToCanvas(
-      processedOverlay,
-      temporalOffset,
-      0.008,
-      params.getTemporalScratch(
-        (params.frameIdx % 2) as 0 | 1,
-        processedOverlay.width,
-        processedOverlay.height
-      )
-    );
+    ({ frame: overlayToUse, temporalOffset } = applyFrameTemporalNoise({
+      animationSeed: params.animationSeed,
+      frame: processedOverlay,
+      frameIdx: params.frameIdx,
+      getTemporalScratch: params.getTemporalScratch,
+      temporalMode: params.temporalMode,
+    }));
   }
-  const frameConfig = {
-    ...params.previewScanConfigBase,
-    frameIndex: params.frameIdx,
-    temporalOffset: params.useTemporalDither
-      ? calculateTemporalOffset(params.frameIdx, params.temporalMode, params.animationSeed)
-      : 0,
-  };
-  return params.isArtworkMode
-    ? await params.generateArtworkFrame(overlayToUse, params.frameIdx)
-    : await qrGenerator.generate(frameConfig, overlayToUse);
+  return renderGeneratedFrame({
+    frame: overlayToUse,
+    frameIdx: params.frameIdx,
+    generateArtworkFrame: params.generateArtworkFrame,
+    isArtworkMode: params.isArtworkMode,
+    previewScanConfigBase: params.previewScanConfigBase,
+    temporalOffset,
+  });
 }

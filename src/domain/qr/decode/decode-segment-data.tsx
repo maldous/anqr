@@ -10,6 +10,7 @@ import { decodeAlphanumeric } from './decode-alphanumeric';
 import { decodeByteDetailed } from './decode-byte-detailed';
 import { decodeKanjiDetailed } from './decode-kanji-detailed';
 import { BitStream } from './bit-stream';
+import { buildTextSegmentResult } from './build-text-segment-result';
 import type { SegmentDecodeResult } from './segment-decode-result';
 
 export function decodeSegmentData(
@@ -19,34 +20,20 @@ export function decodeSegmentData(
 ): SegmentDecodeResult {
   switch (mode) {
     case MODE_NUMERIC: {
-      const text = decodeNumeric(bits, charCount);
-      if (text.length !== charCount) {
-        qrDecoderLog.debug('decode: Numeric segment truncated - decode invalid', {
-          expected: charCount,
-          got: text.length,
-        });
-      }
-      const outBytes: number[] = [];
-      for (let i = 0; i < text.length; i++) outBytes.push(text.codePointAt(i)! & 0xff);
-      return { text, rawBytes: [], outBytes, modeTag: 'numeric', valid: text.length === charCount };
+      return buildTextSegmentResult({
+        charCount,
+        logLabel: 'Numeric',
+        modeTag: 'numeric',
+        text: decodeNumeric(bits, charCount),
+      });
     }
     case MODE_ALPHANUMERIC: {
-      const text = decodeAlphanumeric(bits, charCount);
-      if (text.length !== charCount) {
-        qrDecoderLog.debug('decode: Alphanumeric segment truncated - decode invalid', {
-          expected: charCount,
-          got: text.length,
-        });
-      }
-      const outBytes: number[] = [];
-      for (let i = 0; i < text.length; i++) outBytes.push(text.codePointAt(i)! & 0xff);
-      return {
-        text,
-        rawBytes: [],
-        outBytes,
+      return buildTextSegmentResult({
+        charCount,
+        logLabel: 'Alphanumeric',
         modeTag: 'alphanumeric',
-        valid: text.length === charCount,
-      };
+        text: decodeAlphanumeric(bits, charCount),
+      });
     }
     case MODE_BYTE: {
       const r = decodeByteDetailed(bits, charCount);

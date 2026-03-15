@@ -2,8 +2,8 @@
 // TYPES
 // ============================================
 
-import type { RGB, RGBA, HSL } from './overlay-color-types';
-export type { RGB, RGBA, HSL } from './overlay-color-types';
 export type { FilterOptions } from './filter-options';
-
-export type ColorMode = 'bw' | 'grayscale' | 'color';
+export type { ColorMode } from './color-mode';
+export type { HSL } from './hsl';
+export type { RGB } from './rgb';
+export type { RGBA } from './rgba';

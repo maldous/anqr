@@ -1,3 +1,1 @@
-import type { QRState } from '../qr-store';
-
-export type PayloadData = QRState['payload'];
+export type { PayloadData } from '../types/payload-data';

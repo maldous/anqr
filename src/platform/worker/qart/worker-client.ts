@@ -1,9 +1,5 @@
-import { createLogger } from '../../../infra/logging/logger';
 import type { QArtWorkerGenerateInput, QArtWorkerResultPayload } from './worker-protocol';
 import { ensureWorker } from './ensure-worker';
-import { failAllPending } from './fail-all-pending';
-import type { PendingRequest } from './pending-request.type';
-import { terminateQArtWorker as terminateQArtWorkerCore } from './terminate-worker';
 import { DEFAULT_TIMEOUT_MS } from './worker-timeout-ms.const';
 export { terminateQArtWorker } from './terminate-qart-worker';
 import { toWorkerPayload } from './to-worker-payload';

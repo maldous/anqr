@@ -52,7 +52,8 @@ const isFunctionLikeInitializer = (initializer) =>
   initializer?.getKind() === SyntaxKind.ArrowFunction ||
   initializer?.getKind() === SyntaxKind.FunctionExpression;
 
-const isClassLikeInitializer = (initializer) => initializer?.getKind() === SyntaxKind.ClassExpression;
+const isClassLikeInitializer = (initializer) =>
+  initializer?.getKind() === SyntaxKind.ClassExpression;
 
 const isObjectLikeInitializer = (initializer) =>
   initializer?.getKind() === SyntaxKind.ObjectLiteralExpression;

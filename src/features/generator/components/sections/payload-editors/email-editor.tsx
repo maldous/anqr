@@ -6,6 +6,7 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Textarea } from '@/ui/primitives/textarea';
+import { ValidatedLabeledInputField } from './validated-labeled-input-field';
 
 export const EmailEditor = ({
   payload,
@@ -18,28 +19,20 @@ export const EmailEditor = ({
 }>) => {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.email')}</HighlightedLabel>
-        </Label>
-        <Input
-          type="email"
-          value={payload.email.to}
-          onChange={(e) => setPayloadEmail({ to: e.target.value })}
-          placeholder="name@anqr.link"
-          data-testid={DynamicTestId.resolve('payload-email-to-input', 'payload-email-to-input')}
-          className={
-            payload.validate && payload.email.to && !isValidEmail(payload.email.to)
-              ? 'border-destructive focus-visible:ring-destructive'
-              : ''
-          }
-        />
-        {payload.validate && payload.email.to && !isValidEmail(payload.email.to) && (
-          <p className="text-xs text-destructive">
-            {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
-          </p>
+      <ValidatedLabeledInputField
+        label={t('payload.email')}
+        value={payload.email.to}
+        onChange={(value) => setPayloadEmail({ to: value })}
+        placeholder="name@anqr.link"
+        validate={payload.validate}
+        invalidMessage={t(
+          'validation.invalidEmail',
+          'Enter a valid email address (must contain @)'
         )}
-      </div>
+        dataTestId="payload-email-to-input"
+        type="email"
+        isValid={isValidEmail}
+      />
       <div className="space-y-2">
         <Label>
           <HighlightedLabel>{t('payload.subject')}</HighlightedLabel>

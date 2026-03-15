@@ -1,12 +1,10 @@
-import { distributeErrorWithKernel } from './error-diffusion';
 import { DIFFUSION_KERNELS } from './kernels';
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
 import { BlueNoiseErrorDiffusionOptions } from './blue-noise-error-diffusion-options';
 import { copyImageToPixels } from './copy-image-to-pixels';
-import { getScanParams } from './get-scan-params';
-import { initDitherResults } from './init-dither-results';
 import { quantizeBNEDPixel } from './quantize-bned-pixel';
+import { runDiffusionDither } from './run-diffusion-dither';
 
 /** Blue noise modulated error diffusion */
 export function blueNoiseErrorDiffusion(
@@ -28,31 +26,17 @@ export function blueNoiseErrorDiffusion(
   const tile = generateBlueNoiseTile(tileSize, seed);
 
   const pixels = copyImageToPixels(imageData, width, height);
-  const { resultMatrix, resultColors } = initDitherResults(width, height);
-
-  for (let y = 0; y < height; y++) {
-    const { startX, endX, deltaX, leftToRight } = getScanParams(y, width, serpentine);
-
-    for (let x = startX; deltaX > 0 ? x < endX : x > endX; x += deltaX) {
+  return runDiffusionDither({
+    height,
+    kernel,
+    leftPixelAt: (x, y) => pixels[y][x],
+    pixels,
+    quantize: (pixel, x, y) => {
       const blueNoiseVal = sampleBlueNoise(x, y, tile, tileSize);
       const thresholdMod = (blueNoiseVal - 0.5) * 0.3 * strengthFactor;
-      const q = quantizeBNEDPixel(pixels[y][x], colorMode, step, strengthFactor, thresholdMod);
-      resultMatrix[y][x] = q.isDark;
-      resultColors[y][x] = q.color;
-      distributeErrorWithKernel({
-        pixels,
-        x,
-        y,
-        width,
-        height,
-        errorR: q.errorR,
-        errorG: q.errorG,
-        errorB: q.errorB,
-        kernel,
-        leftToRight,
-      });
-    }
-  }
-
-  return { matrix: resultMatrix, colors: resultColors };
+      return quantizeBNEDPixel(pixel, colorMode, step, strengthFactor, thresholdMod);
+    },
+    serpentine,
+    width,
+  });
 }

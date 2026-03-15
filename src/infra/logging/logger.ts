@@ -75,7 +75,6 @@
  */
 
 import {
-  captureToBuffer,
   clearStructuredLogs,
   disableLogBuffer,
   enableLogBuffer,
@@ -92,7 +91,6 @@ import {
 import { SCOPE_PREFIXES } from './logger-scope-prefixes';
 import type { ScopePrefix } from './logger-scope-prefixes';
 import { createLogger } from './create-logger';
-import { defaultLevel, getLoglevelInstance } from './logger-config';
 import { getLogLevel } from './get-log-level';
 import { resetLogLevel } from './reset-log-level';
 import { setLogLevel } from './set-log-level';

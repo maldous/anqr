@@ -1,4 +1,5 @@
 import { EMVQRBuilder } from './emv';
+import { finalizeEmvPayment } from './finalize-emv-payment';
 import type { PayNowParams } from '../../modules/payload-generators/types';
 import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
 
@@ -26,24 +27,12 @@ export function generatePayNow(params: PayNowParams): string {
   }
 
   builder.addMerchantAccountInfo(26, PAYMENT_SCHEME_GUI.PAYNOW, maiData);
-  builder.setTransactionCurrency(ISO_CURRENCY.SGD);
-
-  if (params.amount !== undefined && params.amount > 0) {
-    builder.setTransactionAmount(params.amount);
-  }
-
-  builder.setCountryCode('SG');
-
-  if (params.merchantName) {
-    builder.setMerchantName(params.merchantName);
-  }
-  if (params.merchantCity) {
-    builder.setMerchantCity(params.merchantCity);
-  }
-
-  if (params.reference) {
-    builder.setAdditionalData({ referenceLabel: params.reference });
-  }
-
-  return builder.build();
+  return finalizeEmvPayment(builder, {
+    amount: params.amount,
+    countryCode: 'SG',
+    currency: ISO_CURRENCY.SGD,
+    merchantCity: params.merchantCity,
+    merchantName: params.merchantName,
+    reference: params.reference,
+  });
 }

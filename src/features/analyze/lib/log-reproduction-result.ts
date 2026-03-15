@@ -1,6 +1,6 @@
 import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+import type { MatrixDiagnostics } from './matrix-diagnostics.type';
 import type { ValidEncoderMode } from './reproduction-types';
-import type { runMatrixDiagnostics } from './reproduction-canvas';
 
 export function logReproductionResult(params: {
   result: QRAnalysisResult;
@@ -16,7 +16,7 @@ export function logReproductionResult(params: {
   marginModules: number;
   modulePx: number;
   size: number;
-  diagnostics: ReturnType<typeof runMatrixDiagnostics>;
+  diagnostics: MatrixDiagnostics;
   qrState: { borderModulesExtra?: number };
   log: { debug: (msg: string, data?: any) => void; warn: (msg: string, data?: any) => void };
 }) {

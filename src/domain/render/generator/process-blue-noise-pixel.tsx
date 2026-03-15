@@ -1,12 +1,8 @@
 import { sampleBlueNoise } from '../dither';
-import { pixelIndex } from './pixel-index';
 import { packColor } from './pack-color';
-import { luma01 } from './luma01';
 import { clamp01 } from './clamp01';
-import { shapeOverlayDarkness } from './shape-overlay-darkness';
 import { moduleCenterWeight } from './module-center-weight';
-import { shouldLockModule } from './should-lock-module';
-import { isFixedDarkModule } from './is-fixed-dark-module';
+import { pixelSamplePrelude } from './pixel-sample-prelude';
 import { writeLockedModulePixel } from './write-locked-module-pixel';
 import type { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
 
@@ -18,31 +14,13 @@ export function processBlueNoisePixel(
   packedColors: Uint32Array,
   desire: Float32Array
 ): void {
-  const sampleIdx = pixelIndex(x, y, ctx.scaledSize);
-  const idx = sampleIdx * 4;
-  const r = ctx.data[idx];
-  const g = ctx.data[idx + 1];
-  const b = ctx.data[idx + 2];
-
-  const moduleRow = Math.floor(y / ctx.scale);
-  const moduleCol = Math.floor(x / ctx.scale);
-  const qrIsDark = ctx.qr.isDark(moduleRow, moduleCol);
-  const moduleLocked = shouldLockModule(
-    moduleRow,
-    moduleCol,
-    ctx.moduleCount,
-    ctx.version,
-    ctx.config
-  );
-  const fixedDarkUnlocked =
-    !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, ctx.moduleCount);
+  const { b, fixedDarkUnlocked, g, moduleLocked, overlayDark, qrIsDark, r, sampleIdx } =
+    pixelSamplePrelude(ctx, x, y);
 
   if (moduleLocked) {
     writeLockedModulePixel(ctx, sampleIdx, qrIsDark, r, g, b, matrixBits, packedColors, desire);
     return;
   }
-
-  const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
   // ART-FIRST: base decision solely on artwork luminance + global noise field.
   const centerW = moduleCenterWeight(x, y, ctx.scale);
   const polarityBoost = ctx.scanGateActive ? 1.18 : 1;

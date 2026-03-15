@@ -6,7 +6,6 @@
 
 import type { GifEncodeLockOptions } from './gif-encode-lock-options';
 import { gifEncodeLockState } from './gif-lock-state';
-export { _getGifEncodeQueueDepth } from './get-gif-encode-queue-depth';
 
 export async function withGifEncodeLock<T>(
   fn: () => T | Promise<T>,

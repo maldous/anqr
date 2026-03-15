@@ -1,11 +1,7 @@
-import { type ECCLevel, qrcode } from '../qr-encoder';
-import { getModuleCount } from './pixel-mapping';
 import { createSeededRandom } from './create-seeded-random';
 import { evaluateQRMatch } from './evaluate-qr-match';
 import { fragmentSearchLog as log } from './fragment-search-log';
 import { generateRandomFragment } from './generate-random-fragment';
-import { getAlignmentPositionsForVersion } from './get-alignment-positions-for-version';
-import { isEvalStructuralModule } from './is-eval-structural-module';
 import { tryFragmentCandidate } from './try-fragment-candidate';
 import type { FragmentSearchConfig, FragmentSearchResult, FragmentSearchState } from './types';
 export { evaluateQRMatch } from './evaluate-qr-match';
@@ -75,5 +71,3 @@ export async function searchBestFragment(
 
   return result;
 }
-
-export const qArtFragmentModuleCount = getModuleCount;

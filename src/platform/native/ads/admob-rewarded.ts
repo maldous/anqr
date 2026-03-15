@@ -1,4 +1,3 @@
-import { createLogger } from '../../../infra/logging/logger';
 import { getAdUnitId, isTestMode, rewardedPrepareKey, type RewardedType } from './admob-config';
 import { rewardedLog as log } from './rewarded-log';
 export { showRewardedAdInternal } from './show-rewarded-ad-internal';

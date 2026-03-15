@@ -8,7 +8,7 @@ import { createLogger } from '@/infra/logging/logger';
 import type { GifCompositor } from '@/modules/animation';
 import { parseAnimatedImage } from '@/modules/animation';
 import type { AnimationFrame } from '@/modules/animation';
-import { loadFileAsCanvas } from '@/features/generator/application/input/input-fn-loadfilecanvas';
+import { handleOverlayLoadFallback } from '@/features/generator/application/input/input-fn-handleloadfallback';
 
 const log = createLogger('QR');
 
@@ -37,16 +37,12 @@ export function loadAnimatedWebPOverlayFile(
         }
       } catch (err) {
         log.error('Failed to parse animated WebP', { error: err });
-        loadFileAsCanvas(file)
-          .then((canvas) => {
-            setRawOverlayCanvas(canvas);
-            setGifFrames([{ canvas, delay: 100, disposalType: 0 }]);
-            setIsLoadingOverlay(false);
-          })
-          .catch(() => {
-            setRawOverlayCanvas(null);
-            setIsLoadingOverlay(false);
-          });
+        void handleOverlayLoadFallback(
+          file,
+          setRawOverlayCanvas,
+          setGifFrames,
+          setIsLoadingOverlay
+        );
       }
     })
     .catch((err) => {

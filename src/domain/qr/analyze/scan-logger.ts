@@ -1,4 +1,4 @@
-import type { LogEntry } from './telemetry-logging.types';
+import type { LogEntry } from './log-entry';
 import type { ScanStats } from './scan-stats';
 
 export interface ScanLogger {

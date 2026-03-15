@@ -1,4 +1,3 @@
-import { buildFunctionalMap } from './build-functional-map';
 import { clearFunctionalMapCache } from './clear-functional-map-cache';
 import {
   PATTERN_ALIGNMENT,

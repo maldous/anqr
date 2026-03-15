@@ -4,6 +4,7 @@ import type { FlattenedSelection, BinarySearchResult } from './scan-fallback.typ
 import { createRejectionHistogram } from './create-rejection-histogram';
 import { log } from './log';
 import { logSearchIteration } from './log-search-iteration';
+import type { RegenerateQrFn } from './regenerate-qr-fn.type';
 import { trackRejection } from './track-rejection';
 import { validateBaseMatrix } from './validate-base-matrix';
 import { validateCandidate } from './validate-candidate';
@@ -16,12 +17,7 @@ export function binarySearchMaxVectors(
   blockDataCounts: number[],
   blockEccCounts: number[],
   eliminationResult: EliminationResult,
-  regenerateQRFn: (
-    blockData: Uint8Array[],
-    blockEcc: Uint8Array[],
-    blockDataCounts: number[],
-    blockEccCounts: number[]
-  ) => boolean[][],
+  regenerateQRFn: RegenerateQrFn,
   scanQRFn: (matrix: boolean[][]) => { success: boolean; data?: string },
   expectedData: string,
   expectedEcc?: ECCLevel,

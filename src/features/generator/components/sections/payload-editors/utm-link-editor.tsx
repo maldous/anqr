@@ -1,8 +1,8 @@
 import { HighlightedLabel } from '@/app/search/search-context';
-import { isValidUrl } from '@/modules/payload-generators';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import type { EditorProps } from '../payload-editor-props';
+import { ValidatedUrlField } from './validated-url-field';
 
 export function UtmLinkEditor({
   payload,
@@ -11,27 +11,17 @@ export function UtmLinkEditor({
 }: Readonly<Pick<EditorProps, 'payload' | 'setPayloadUrl' | 't'>>) {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.baseUrl')}</HighlightedLabel>
-        </Label>
-        <Input
-          type="url"
-          value={payload.url.href}
-          onChange={(e) => setPayloadUrl({ href: e.target.value })}
-          placeholder="https://anqr.link/landing"
-          className={
-            payload.validate && payload.url.href && !isValidUrl(payload.url.href)
-              ? 'border-destructive focus-visible:ring-destructive'
-              : ''
-          }
-        />
-        {payload.validate && payload.url.href && !isValidUrl(payload.url.href) && (
-          <p className="text-xs text-destructive">
-            {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
-          </p>
+      <ValidatedUrlField
+        label={t('payload.baseUrl')}
+        value={payload.url.href}
+        onChange={(value) => setPayloadUrl({ href: value })}
+        placeholder="https://anqr.link/landing"
+        validate={payload.validate}
+        invalidMessage={t(
+          'validation.invalidUrl',
+          'Enter a valid URL (must start with http:// or https://)'
         )}
-      </div>
+      />
       <div className="space-y-2">
         <Label>
           <HighlightedLabel>{t('payload.campaignSource')}</HighlightedLabel>

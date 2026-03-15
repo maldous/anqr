@@ -1,20 +1,11 @@
-import type { QRCodeInstance } from './types';
+import { BaseMatrixWrapper } from './base-matrix-wrapper';
 
-export class PackedMatrixWrapper implements QRCodeInstance {
+export class PackedMatrixWrapper extends BaseMatrixWrapper {
   private readonly packed: Uint8Array;
-  private readonly moduleCount: number;
 
   constructor(packed: Uint8Array, moduleCount: number) {
+    super(moduleCount);
     this.packed = packed;
-    this.moduleCount = moduleCount;
-  }
-
-  addData(_data: string, _mode?: string): void {}
-
-  make(_maskPattern?: number): void {}
-
-  getModuleCount(): number {
-    return this.moduleCount;
   }
 
   isDark(row: number, col: number): boolean {

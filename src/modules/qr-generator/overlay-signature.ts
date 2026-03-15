@@ -1,5 +1,4 @@
 import { hashCanvasContent } from './utils';
-import type { QRGeneratorConfig } from './types';
 import { buildFixedVisualPolicy } from './build-fixed-visual-policy';
 import { buildOverlayFamilyKey } from './build-overlay-family-key';
 import { buildScanCacheKey } from './build-scan-cache-key';

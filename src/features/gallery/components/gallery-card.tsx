@@ -4,7 +4,6 @@ import {
   buildGalleryRenderImageUrl,
   buildGalleryUrl,
   getGalleryImagePath,
-  type GalleryItem,
 } from '@/content/gallery/gallery-items';
 import type { GalleryCardProps } from './gallery-card.props';
 

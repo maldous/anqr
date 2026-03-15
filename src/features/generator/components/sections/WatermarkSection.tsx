@@ -2,21 +2,18 @@ import { Upload, X } from 'lucide-react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/ui/primitives/button';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HelpLink } from '@/ui/primitives/help-link';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/primitives/select';
-import { Slider } from '@/ui/primitives/slider';
-import { Switch } from '@/ui/primitives/switch';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { useQRStore } from '@/store/qr-store';
+import { LabeledTestIdSelectField } from './labeled-testid-select-field';
+import {
+  DynamicTestId,
+  HelpLink,
+  HighlightedLabel,
+  Input,
+  Label,
+  SelectItem,
+  Slider,
+  Switch,
+} from './section-ui';
 
 export function WatermarkSection() {
   const {
@@ -60,34 +57,17 @@ export function WatermarkSection() {
       {watermark.enabled && (
         <>
           {/* Kind */}
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('watermark.type')}</HighlightedLabel>
-            </Label>
-            <Select
-              value={watermark.kind}
-              onValueChange={(v) => setWatermarkKind(v as typeof watermark.kind)}
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'watermark-kind-trigger',
-                  'watermark-kind-trigger'
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent
-                data-testid={DynamicTestId.resolve(
-                  'watermark-kind-content',
-                  'watermark-kind-content'
-                )}
-              >
-                <SelectItem value="text">{t('watermark.text')}</SelectItem>
-                <SelectItem value="image">{t('watermark.image')}</SelectItem>
-                <SelectItem value="pattern">{t('watermark.pattern')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledTestIdSelectField
+            contentTestId="watermark-kind-content"
+            label={t('watermark.type')}
+            onValueChange={(v) => setWatermarkKind(v as typeof watermark.kind)}
+            triggerTestId="watermark-kind-trigger"
+            value={watermark.kind}
+          >
+            <SelectItem value="text">{t('watermark.text')}</SelectItem>
+            <SelectItem value="image">{t('watermark.image')}</SelectItem>
+            <SelectItem value="pattern">{t('watermark.pattern')}</SelectItem>
+          </LabeledTestIdSelectField>
 
           {/* Text */}
           {watermark.kind === 'text' && (
@@ -153,36 +133,19 @@ export function WatermarkSection() {
           )}
 
           {/* Position */}
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('watermark.position')}</HighlightedLabel>
-            </Label>
-            <Select
-              value={watermark.position}
-              onValueChange={(v) => setWatermarkPosition(v as typeof watermark.position)}
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'watermark-position-trigger',
-                  'watermark-position-trigger'
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent
-                data-testid={DynamicTestId.resolve(
-                  'watermark-position-content',
-                  'watermark-position-content'
-                )}
-              >
-                <SelectItem value="center">{t('watermark.center')}</SelectItem>
-                <SelectItem value="corners">{t('watermark.corners')}</SelectItem>
-                <SelectItem value="edges">{t('watermark.edges')}</SelectItem>
-                <SelectItem value="behind">{t('watermark.behindQr')}</SelectItem>
-                <SelectItem value="quiet_zone">{t('watermark.quietZone')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledTestIdSelectField
+            contentTestId="watermark-position-content"
+            label={t('watermark.position')}
+            onValueChange={(v) => setWatermarkPosition(v as typeof watermark.position)}
+            triggerTestId="watermark-position-trigger"
+            value={watermark.position}
+          >
+            <SelectItem value="center">{t('watermark.center')}</SelectItem>
+            <SelectItem value="corners">{t('watermark.corners')}</SelectItem>
+            <SelectItem value="edges">{t('watermark.edges')}</SelectItem>
+            <SelectItem value="behind">{t('watermark.behindQr')}</SelectItem>
+            <SelectItem value="quiet_zone">{t('watermark.quietZone')}</SelectItem>
+          </LabeledTestIdSelectField>
 
           {/* Opacity */}
           <div className="space-y-2">
@@ -208,39 +171,22 @@ export function WatermarkSection() {
           </div>
 
           {/* Blend Mode */}
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('watermark.blendMode')}</HighlightedLabel>
-            </Label>
-            <Select
-              value={watermark.blend}
-              onValueChange={(v) =>
-                useQRStore.setState((s) => ({
-                  watermark: { ...s.watermark, blend: v as typeof watermark.blend },
-                }))
-              }
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'watermark-blend-trigger',
-                  'watermark-blend-trigger'
-                )}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent
-                data-testid={DynamicTestId.resolve(
-                  'watermark-blend-content',
-                  'watermark-blend-content'
-                )}
-              >
-                <SelectItem value="normal">{t('watermark.normal')}</SelectItem>
-                <SelectItem value="multiply">{t('watermark.multiply')}</SelectItem>
-                <SelectItem value="screen">{t('watermark.screen')}</SelectItem>
-                <SelectItem value="overlay">{t('watermark.overlay')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledTestIdSelectField
+            contentTestId="watermark-blend-content"
+            label={t('watermark.blendMode')}
+            onValueChange={(v) =>
+              useQRStore.setState((s) => ({
+                watermark: { ...s.watermark, blend: v as typeof watermark.blend },
+              }))
+            }
+            triggerTestId="watermark-blend-trigger"
+            value={watermark.blend}
+          >
+            <SelectItem value="normal">{t('watermark.normal')}</SelectItem>
+            <SelectItem value="multiply">{t('watermark.multiply')}</SelectItem>
+            <SelectItem value="screen">{t('watermark.screen')}</SelectItem>
+            <SelectItem value="overlay">{t('watermark.overlay')}</SelectItem>
+          </LabeledTestIdSelectField>
         </>
       )}
     </div>

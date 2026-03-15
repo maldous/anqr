@@ -12,7 +12,6 @@
 import { registerCacheCleanup } from '../../../modules/qr-generator/cache';
 import { buildRenderCellCtx } from './build-render-cell-ctx';
 import { computeModuleGap } from './compute-module-gap';
-import type { CanvasContext } from './canvas-context.interface';
 import { processRenderCell } from './process-render-cell';
 import {
   canUseFastPath,
@@ -20,11 +19,7 @@ import {
   getCachedFunctionalMap,
   renderModulesFastPath,
 } from './render-loop-fast-path';
-import type {
-  QRCodeInstance,
-  QRGeneratorConfig,
-  RenderModulesOptions,
-} from '../../../modules/qr-generator/types';
+import type { RenderModulesOptions } from '../../../modules/qr-generator/types';
 import type { ModuleDrawContext } from './module-draw-context.interface';
 import type { RenderCellCtx } from './render-cell-ctx.interface';
 import type { RenderCellState } from './render-cell-state.interface';

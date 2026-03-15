@@ -11,10 +11,9 @@ import { pixelIndex } from './pixel-index';
 import { packColor } from './pack-color';
 import { bitsToMatrix } from './bits-to-matrix';
 import { packedColorsToMatrix } from './packed-colors-to-matrix';
-import { readOverlayPixelsAtSize } from './read-overlay-pixels-at-size';
 import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';
 import { computeFinalShade } from './compute-final-shade';
-import { createEmptyMatrix } from './create-empty-matrix';
+import { resolveMatrixInput } from './resolve-matrix-input';
 import type { RGBi } from './rg-bi';
 
 export async function generateBWFirstMatrix(
@@ -27,22 +26,19 @@ export async function generateBWFirstMatrix(
   createCanvasFn: CreateCanvasFn,
   releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionMatrix> {
-  const scaledSize = moduleCount * scale;
-  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
-
-  const data = await readOverlayPixelsAtSize(
-    overlayCanvas,
-    scaledSize,
+  const matrixInput = await resolveMatrixInput({
     createCanvasFn,
-    releaseCanvasFn
-  );
-  if (!data) {
-    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+    effectiveIntensity,
+    moduleCount,
+    overlayCanvas,
+    releaseCanvasFn,
+    scale,
+  });
+  if ('emptyMatrix' in matrixInput) {
+    return matrixInput.emptyMatrix;
   }
-
-  const pixelCount = scaledSize * scaledSize;
-  const matrixBits = new Uint8Array(pixelCount);
-  const packedColors = new Uint32Array(pixelCount);
+  const { data, matrixBits, packedColors, scaledSize } = matrixInput;
+  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
   const clampByte = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
   const mapShadeWithSourceColor = (
     srcR: number,

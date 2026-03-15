@@ -1,7 +1,8 @@
-import { List, X } from 'lucide-react';
+import { List } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { renderTocContent } from './render-toc-content';
 import type { TocGroup } from './static-page-types';
+import { TableOfContentsPanelHeader } from './table-of-contents-panel-header';
 import type { TableOfContentsProps } from './table-of-contents.props';
 
 export function TableOfContents({
@@ -84,20 +85,11 @@ export function TableOfContents({
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <List className="h-4 w-4" />
-              ANQR
-            </h3>
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              title={t('accessibility.closeSidebar')}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <TableOfContentsPanelHeader
+            className="flex items-center justify-between p-4 border-b"
+            onClose={() => setMobileOpen(false)}
+            title={t('accessibility.closeSidebar')}
+          />
           <div className="p-4 overflow-y-auto h-[calc(100%-60px)] scrollbar-hide">{tocContent}</div>
         </div>
       </div>
@@ -108,20 +100,11 @@ export function TableOfContents({
         }`}
       >
         <div className="sticky top-0 h-screen overflow-y-auto py-6 px-4 scrollbar-hide">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <List className="h-4 w-4" />
-              ANQR
-            </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              title={t('accessibility.closeSidebar')}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <TableOfContentsPanelHeader
+            className="flex items-center justify-between mb-4"
+            onClose={onClose}
+            title={t('accessibility.closeSidebar')}
+          />
           {tocContent}
         </div>
       </aside>

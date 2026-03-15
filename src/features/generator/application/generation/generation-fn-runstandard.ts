@@ -6,32 +6,19 @@
 
 import { createLogger } from '@/infra/logging/logger';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
+import { buildOverflowHandlingParams } from '@/features/generator/application/safety/build-overflow-handling-params';
 import { handleGenerationError } from '@/features/generator/application/safety/safety-fn-generror';
+import type { SafetyRunnerParams } from '@/features/generator/application/safety/safety-runner-params';
 
 const log = createLogger('QR');
 
-export async function runStandardGeneration(params: {
-  effectiveConfig: Record<string, unknown>;
-  debouncedConfig: Record<string, unknown>;
-  overlayEnabled: boolean;
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;
-  isStaleRequest: () => boolean;
-  yieldForResponsiveness: () => Promise<boolean>;
-  updateGenerationProgress: (stage: string, percent: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: (...args: any[]) => any;
-  runGeneratorWithStatus: (
-    cfg: QRGeneratorConfig,
-    overlaySource: HTMLCanvasElement | OffscreenCanvas | null
-  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
-  lastOverflowContentRef: { current: string | null };
-  isOverflowBlockedRef: { current: boolean };
-  setHasOverflowError: (v: boolean) => void;
-  setError: (v: string | null) => void;
-  setIsRendering: (v: boolean) => void;
-  setIsLoading: (v: boolean) => void;
-  clearGenerationProgress: () => void;
-}): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; aborted: boolean }> {
+export async function runStandardGeneration(
+  params: SafetyRunnerParams & {
+    debouncedConfig: Record<string, unknown>;
+    isStaleRequest: () => boolean;
+    updateGenerationProgress: (stage: string, percent: number) => void;
+  }
+): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; aborted: boolean }> {
   try {
     log.debug('Attempting QR generation', {
       contentLength: (params.effectiveConfig.content as string)?.length,
@@ -52,22 +39,10 @@ export async function runStandardGeneration(params: {
     return { result, aborted: false };
   } catch (error_) {
     return handleGenerationError({
-      error: error_,
-      effectiveConfig: params.effectiveConfig,
+      ...buildOverflowHandlingParams(params),
       debouncedConfig: params.debouncedConfig,
-      overlayEnabled: params.overlayEnabled,
-      overlayCanvas: params.overlayCanvas,
+      error: error_,
       isStaleRequest: params.isStaleRequest,
-      yieldForResponsiveness: params.yieldForResponsiveness,
-      runGeneratorWithStatus: params.runGeneratorWithStatus,
-      lastOverflowContentRef: params.lastOverflowContentRef,
-      isOverflowBlockedRef: params.isOverflowBlockedRef,
-      setHasOverflowError: params.setHasOverflowError,
-      setError: params.setError,
-      setIsRendering: params.setIsRendering,
-      setIsLoading: params.setIsLoading,
-      clearGenerationProgress: params.clearGenerationProgress,
-      t: params.t,
     });
   }
 }

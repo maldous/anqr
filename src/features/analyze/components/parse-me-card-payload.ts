@@ -1,3 +1,5 @@
+import { parsePrefixedPayload } from './parse-prefixed-payload';
+
 // ---------------------------------------------------------------------------
 // 3. MeCard parser – parses MECARD:N:Last,First;...;;
 // ---------------------------------------------------------------------------
@@ -13,17 +15,10 @@ export function parseMeCardPayload(payload: string): Record<string, string | nul
     note: null,
   };
 
-  if (!payload.toUpperCase().startsWith('MECARD:')) return result;
+  const parsed = parsePrefixedPayload(payload, 'MECARD:');
+  if (!parsed) return result;
 
-  const content = payload.slice(7).replace(/;;\s*$/, '');
-  const parts = content.split(';');
-
-  for (const part of parts) {
-    const colonIdx = part.indexOf(':');
-    if (colonIdx === -1) continue;
-    const key = part.slice(0, colonIdx).toUpperCase();
-    const value = part.slice(colonIdx + 1);
-
+  for (const [key, value] of Object.entries(parsed)) {
     switch (key) {
       case 'N':
         result.name = value.replaceAll(',', ' ');

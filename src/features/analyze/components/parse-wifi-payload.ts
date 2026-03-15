@@ -1,3 +1,5 @@
+import { parsePrefixedPayload } from './parse-prefixed-payload';
+
 /**
  * Pure payload parser functions extracted from the Analyze component.
  *
@@ -20,18 +22,10 @@ export function parseWifiPayload(payload: string): Record<string, string | null>
     phase2: null,
   };
 
-  if (!payload.toUpperCase().startsWith('WIFI:')) return result;
+  const parsed = parsePrefixedPayload(payload, 'WIFI:');
+  if (!parsed) return result;
 
-  // Remove WIFI: prefix and trailing ;;
-  const content = payload.slice(5).replace(/;;\s*$/, '');
-  const parts = content.split(';');
-
-  for (const part of parts) {
-    const colonIdx = part.indexOf(':');
-    if (colonIdx === -1) continue;
-    const key = part.slice(0, colonIdx).toUpperCase();
-    const value = part.slice(colonIdx + 1);
-
+  for (const [key, value] of Object.entries(parsed)) {
     switch (key) {
       case 'S':
         result.ssid = value;

@@ -9,13 +9,10 @@ import {
   PanelLeft,
   Play,
   Share2,
-  Settings2,
-  Sliders,
   Sun,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { StaticPageType } from '@/app/pages/StaticPage';
 import { Button } from '@/ui/primitives/button';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import {
@@ -29,7 +26,6 @@ import { Tabs, TabsList, TabsTrigger } from '@/ui/primitives/tabs';
 import { type GalleryCategory } from '@/content/gallery/gallery-manifest';
 import { useBannerHeight } from '@/ui/hooks/useBannerHeight';
 import { isRtlLanguage, languages, loadLocale } from '@/app/i18n';
-import { createLogger } from '@/infra/logging/logger';
 import { trackEvent } from '@/infra/telemetry/zaraz';
 import { copyToClipboard } from '@/platform/browser/clipboard';
 import { buildHeaderShareConfig } from '@/components/header/build-header-share-config';
@@ -38,7 +34,6 @@ import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';
 import { resolveHeaderPage, type HeaderPage } from '@/components/header/header-resolve-page';
 import { changeTierWithAdGate } from '@/components/header/header-tier-gate';
-import { NAV_LINKS } from '@/components/header/nav-links';
 import { getInitialDarkMode } from '@/components/header/header-dark-mode';
 import { setupScrollObservers } from '@/components/header/header-scroll-observers';
 import { HeaderLanguageMenu } from '@/components/header/header-language-menu';
@@ -46,8 +41,6 @@ import { HeaderMobileNav } from '@/components/header/header-mobile-nav';
 import { HeaderDesktopNav } from '@/components/header/header-desktop-nav';
 import { HeaderGalleryFilter } from '@/components/header/header-gallery-filter';
 import { HeaderMobileFooter } from '@/components/header/header-mobile-footer';
-
-const log = createLogger('HEADER');
 
 export function Header({
   onToggleSidebar,
@@ -178,9 +171,9 @@ export function Header({
   };
 
   const handleShare = async () => {
-    const shareConfig = buildHeaderShareConfig(
+    const shareConfig = buildHeaderShareConfig({
       getPayloadText,
-      i18n.language,
+      lang: i18n.language,
       qr,
       render,
       overlay,
@@ -190,8 +183,8 @@ export function Header({
       qa,
       auto,
       watermark,
-      metadata
-    );
+      metadata,
+    });
     const url = getShareableUrl(shareConfig);
     const success = await copyToClipboard(url);
     if (success) {

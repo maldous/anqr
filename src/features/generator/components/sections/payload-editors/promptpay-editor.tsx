@@ -3,7 +3,6 @@ import { HighlightedLabel } from '@/app/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidPhone } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
-import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import {
   Select,
@@ -13,6 +12,8 @@ import {
   SelectValue,
 } from '@/ui/primitives/select';
 import type { PromptPayForm } from '../payload-section-types';
+import { OptionalAmountField } from './optional-amount-field';
+import { ValidatedLabeledInputField } from './validated-labeled-input-field';
 
 export const PromptpayEditor = ({
   payload,
@@ -51,52 +52,27 @@ export const PromptpayEditor = ({
         </SelectContent>
       </Select>
     </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.promptPayId')}</HighlightedLabel>
-      </Label>
-      <Input
-        value={promptPayForm.value}
-        onChange={(e) => setPromptPayForm((prev) => ({ ...prev, value: e.target.value }))}
-        placeholder="0812345678"
-        data-testid={DynamicTestId.resolve(
-          'payload-promptpay-value-input',
-          'payload-promptpay-value-input'
-        )}
-        className={
-          payload.validate &&
-          promptPayForm.value &&
-          promptPayForm.type === 'mobile' &&
-          !isValidPhone(promptPayForm.value)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate &&
-        promptPayForm.value &&
-        promptPayForm.type === 'mobile' &&
-        !isValidPhone(promptPayForm.value) && (
-          <p className="text-xs text-destructive">
-            {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
-          </p>
-        )}
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.amountThb')}</HighlightedLabel>
-      </Label>
-      <Input
-        type="number"
-        step="0.01"
-        value={promptPayForm.amount}
-        onChange={(e) => setPromptPayForm((prev) => ({ ...prev, amount: e.target.value }))}
-        placeholder="100.00"
-        data-testid={DynamicTestId.resolve(
-          'payload-promptpay-amount-input',
-          'payload-promptpay-amount-input'
-        )}
-      />
-    </div>
+    <ValidatedLabeledInputField
+      label={t('payload.promptPayId')}
+      value={promptPayForm.value}
+      onChange={(value) => setPromptPayForm((prev) => ({ ...prev, value }))}
+      placeholder="0812345678"
+      validate={payload.validate && promptPayForm.type === 'mobile'}
+      invalidMessage={t(
+        'validation.invalidPhone',
+        'Enter a valid phone number (at least 3 digits)'
+      )}
+      dataTestId="payload-promptpay-value-input"
+      type="tel"
+      isValid={isValidPhone}
+    />
+    <OptionalAmountField
+      label={t('payload.amountThb')}
+      value={promptPayForm.amount}
+      onChange={(value) => setPromptPayForm((prev) => ({ ...prev, amount: value }))}
+      placeholder="100.00"
+      step="0.01"
+    />
     <p className="text-xs text-muted-foreground">{t('hints.promptpayNote')}</p>
   </div>
 );

@@ -1,12 +1,10 @@
 import { registerCacheCleanup } from '../../../modules/qr-generator/cache';
 import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import type { QRGeneratorConfig, RGBWithMeta } from '../../../modules/qr-generator/types';
+import type { RGBWithMeta } from '../../../modules/qr-generator/types';
 import { baseMatrixCacheState } from './base-matrix-cache-state';
 import { buildBaseMatrix } from './build-base-matrix';
 import { clearBaseMatrixCache } from './clear-base-matrix-cache';
 import { curveIntensity } from './curve-overlay-intensity';
-import { DEFAULT_ECC_LIMITS } from './default-ecc-limits.const';
-import { DEVICE_RENDER_SCALE_CAP } from './device-render-scale-cap.const';
 import { getEffectiveIntensity } from './get-effective-overlay-intensity';
 import { getScaleFactor } from './resolve-render-scale';
 

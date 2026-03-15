@@ -1,4 +1,4 @@
-import { roundRect } from './drawing-primitives';
+import { drawStyledRing } from './draw-styled-ring';
 
 /**
  * Draw an alignment ring with the specified style
@@ -10,20 +10,5 @@ export function drawAlignmentRing(
   size: number,
   style: string
 ): void {
-  switch (style) {
-    case 'rounded': {
-      const radius = size * 0.15;
-      roundRect(ctx, x, y, size, size, radius);
-      break;
-    }
-    case 'circle': {
-      ctx.beginPath();
-      ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    default:
-      ctx.fillRect(x, y, size, size);
-      break;
-  }
+  drawStyledRing(ctx, x, y, size, style, 0.15);
 }

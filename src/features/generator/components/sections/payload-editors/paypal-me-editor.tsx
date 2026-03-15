@@ -1,7 +1,7 @@
 import { isValidPayPalUsername } from '@/modules/payload-generators';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
 import type { EditorProps } from '../payload-editor-props';
+import { OptionalAmountField } from './optional-amount-field';
+import { ValidatedHandleField } from './validated-handle-field';
 
 export function PaypalMeEditor({
   payload,
@@ -11,43 +11,28 @@ export function PaypalMeEditor({
 }: Readonly<Pick<EditorProps, 'payload' | 'paypalMeForm' | 'setPaypalMeForm' | 't'>>) {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>{t('placeholders.paypalMeUsername')}</Label>
-        <Input
-          placeholder={t('placeholders.yourname')}
-          value={paypalMeForm.username}
-          onChange={(e) => setPaypalMeForm({ ...paypalMeForm, username: e.target.value })}
-          className={
-            payload.validate &&
-            paypalMeForm.username &&
-            !isValidPayPalUsername(paypalMeForm.username)
-              ? 'border-destructive focus-visible:ring-destructive'
-              : ''
-          }
-        />
-        {payload.validate &&
-          paypalMeForm.username &&
-          !isValidPayPalUsername(paypalMeForm.username) && (
-            <p className="text-xs text-destructive">
-              {t(
-                'validation.invalidPayPalUsername',
-                'Enter a valid PayPal.Me username (4-20 alphanumeric characters)'
-              )}
-            </p>
-          )}
-        <p className="text-xs text-muted-foreground">{t('placeholders.paypalMeHint')}</p>
-      </div>
-      <div className="space-y-2">
-        <Label>
-          {t('payload.amount')} {t('common.optional')}
-        </Label>
-        <Input
-          type="number"
-          placeholder="0.00"
-          value={paypalMeForm.amount}
-          onChange={(e) => setPaypalMeForm({ ...paypalMeForm, amount: e.target.value })}
-        />
-      </div>
+      <ValidatedHandleField
+        label={t('placeholders.paypalMeUsername')}
+        placeholder={t('placeholders.yourname')}
+        value={paypalMeForm.username}
+        onChange={(value) => setPaypalMeForm({ ...paypalMeForm, username: value })}
+        invalid={
+          payload.validate &&
+          paypalMeForm.username !== '' &&
+          !isValidPayPalUsername(paypalMeForm.username)
+        }
+        invalidMessage={t(
+          'validation.invalidPayPalUsername',
+          'Enter a valid PayPal.Me username (4-20 alphanumeric characters)'
+        )}
+        hint={t('placeholders.paypalMeHint')}
+      />
+      <OptionalAmountField
+        label={`${t('payload.amount')} ${t('common.optional')}`}
+        value={paypalMeForm.amount}
+        onChange={(value) => setPaypalMeForm({ ...paypalMeForm, amount: value })}
+        placeholder="0.00"
+      />
     </div>
   );
 }

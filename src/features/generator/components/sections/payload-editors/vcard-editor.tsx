@@ -1,8 +1,10 @@
 import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/app/search/search-context';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidEmail, isValidPhone, isValidUrl } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
+import { LabeledInputField } from './labeled-input-field';
+import { ValidatedLabeledInputField } from './validated-labeled-input-field';
+import { HighlightedLabel } from '@/app/search/search-context';
+import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 
@@ -17,89 +19,55 @@ export const VcardEditor = ({
 }>) => {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.fullName')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.vcard.fn || ''}
-          onChange={(e) => setPayloadVCard({ fn: e.target.value })}
-          placeholder="John Doe"
-          data-testid={DynamicTestId.resolve('payload-vcard-fn-input', 'payload-vcard-fn-input')}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.organization')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.vcard.org || ''}
-          onChange={(e) => setPayloadVCard({ org: e.target.value })}
-          placeholder="Company Inc."
-          data-testid={DynamicTestId.resolve('payload-vcard-org-input', 'payload-vcard-org-input')}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.title')}</HighlightedLabel>
-        </Label>
-        <Input
-          value={payload.vcard.title || ''}
-          onChange={(e) => setPayloadVCard({ title: e.target.value })}
-          placeholder="Software Engineer"
-          data-testid={DynamicTestId.resolve(
-            'payload-vcard-title-input',
-            'payload-vcard-title-input'
-          )}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.phone')}</HighlightedLabel>
-        </Label>
-        <Input
-          type="tel"
-          value={payload.vcard.tel?.[0] || ''}
-          onChange={(e) => setPayloadVCard({ tel: [e.target.value] })}
-          placeholder="+1234567890"
-          data-testid={DynamicTestId.resolve('payload-vcard-tel-input', 'payload-vcard-tel-input')}
-          className={
-            payload.validate && payload.vcard.tel?.[0] && !isValidPhone(payload.vcard.tel[0])
-              ? 'border-destructive focus-visible:ring-destructive'
-              : ''
-          }
-        />
-        {payload.validate && payload.vcard.tel?.[0] && !isValidPhone(payload.vcard.tel[0]) && (
-          <p className="text-xs text-destructive">
-            {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
-          </p>
+      <LabeledInputField
+        label={t('payload.fullName')}
+        value={payload.vcard.fn || ''}
+        onChange={(value) => setPayloadVCard({ fn: value })}
+        placeholder="John Doe"
+        dataTestId="payload-vcard-fn-input"
+      />
+      <LabeledInputField
+        label={t('payload.organization')}
+        value={payload.vcard.org || ''}
+        onChange={(value) => setPayloadVCard({ org: value })}
+        placeholder="Company Inc."
+        dataTestId="payload-vcard-org-input"
+      />
+      <LabeledInputField
+        label={t('payload.title')}
+        value={payload.vcard.title || ''}
+        onChange={(value) => setPayloadVCard({ title: value })}
+        placeholder="Software Engineer"
+        dataTestId="payload-vcard-title-input"
+      />
+      <ValidatedLabeledInputField
+        label={t('payload.phone')}
+        value={payload.vcard.tel?.[0] || ''}
+        onChange={(value) => setPayloadVCard({ tel: [value] })}
+        placeholder="+1234567890"
+        validate={payload.validate}
+        invalidMessage={t(
+          'validation.invalidPhone',
+          'Enter a valid phone number (at least 3 digits)'
         )}
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.email')}</HighlightedLabel>
-        </Label>
-        <Input
-          type="email"
-          value={payload.vcard.email?.[0] || ''}
-          onChange={(e) => setPayloadVCard({ email: [e.target.value] })}
-          placeholder="name@anqr.link"
-          data-testid={DynamicTestId.resolve(
-            'payload-vcard-email-input',
-            'payload-vcard-email-input'
-          )}
-          className={
-            payload.validate && payload.vcard.email?.[0] && !isValidEmail(payload.vcard.email[0])
-              ? 'border-destructive focus-visible:ring-destructive'
-              : ''
-          }
-        />
-        {payload.validate && payload.vcard.email?.[0] && !isValidEmail(payload.vcard.email[0]) && (
-          <p className="text-xs text-destructive">
-            {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
-          </p>
+        dataTestId="payload-vcard-tel-input"
+        type="tel"
+        isValid={isValidPhone}
+      />
+      <ValidatedLabeledInputField
+        label={t('payload.email')}
+        value={payload.vcard.email?.[0] || ''}
+        onChange={(value) => setPayloadVCard({ email: [value] })}
+        placeholder="name@anqr.link"
+        validate={payload.validate}
+        invalidMessage={t(
+          'validation.invalidEmail',
+          'Enter a valid email address (must contain @)'
         )}
-      </div>
+        dataTestId="payload-vcard-email-input"
+        type="email"
+        isValid={isValidEmail}
+      />
       <div className="space-y-2">
         <Label>
           <HighlightedLabel>{t('payload.website')}</HighlightedLabel>

@@ -9,9 +9,6 @@ import {
   decodeCanvasData,
   ditherPatchSignature,
 } from './qr-generator-decode-helpers';
-import { configureStringEncoding as configureStringEncodingStandalone } from './configure-string-encoding';
-import { resolveImageSource as resolveImageSourceStandalone } from './resolve-image-source';
-import { roundtripToFinalRaster as roundtripToFinalRasterStandalone } from './roundtrip-to-final-raster';
 import { computeOverlayComplexity as computeOverlayComplexityStandalone } from './compute-overlay-complexity';
 import { computeScanGateRasterMetrics as computeScanGateRasterMetricsStandalone } from './compute-scan-gate-raster-metrics';
 import { simulateScenarioDecode as simulateScenarioDecodeStandalone } from './simulate-scenario-decode';

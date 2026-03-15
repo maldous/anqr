@@ -24,7 +24,6 @@ import type {
   PromptPayForm,
   QRISForm,
   QRPhForm,
-  ShortLinkForm,
   SwissQRBillForm,
   TWQRForm,
   UPIForm,

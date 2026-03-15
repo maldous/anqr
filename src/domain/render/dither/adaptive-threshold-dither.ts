@@ -1,5 +1,6 @@
-import type { ColorMode, DitherResult, RGB } from '../../../modules/dither-algorithms/types';
+import type { ColorMode, DitherResult } from '../../../modules/dither-algorithms/types';
 import { rgbToGray } from '../../../modules/dither-algorithms/utils';
+import { buildBinaryDitherResult } from './build-binary-dither-result';
 
 /** Adaptive threshold dithering - uses local mean for threshold */
 export function adaptiveThresholdDither(
@@ -11,9 +12,6 @@ export function adaptiveThresholdDither(
 ): DitherResult {
   const strengthFactor = strength / 100;
   const blockSize = 8;
-
-  const resultMatrix: boolean[][] = [];
-  const resultColors: RGB[][] = [];
 
   // Compute integral image
   const integral: number[][] = [];
@@ -43,17 +41,10 @@ export function adaptiveThresholdDither(
     return d - b - c + a;
   };
 
-  for (let y = 0; y < height; y++) {
-    const matrixRow: boolean[] = [];
-    const colorRow: RGB[] = [];
-
-    for (let x = 0; x < width; x++) {
-      const idx = x * 3;
-      const r = imageData[y][idx];
-      const g = imageData[y][idx + 1];
-      const b = imageData[y][idx + 2];
-      const gray = rgbToGray(r, g, b);
-
+  return buildBinaryDitherResult({
+    height,
+    imageData,
+    resolveThreshold: (x, y) => {
       const halfBlock = Math.floor(blockSize / 2);
       const x1 = x - halfBlock;
       const y1 = y - halfBlock;
@@ -63,17 +54,8 @@ export function adaptiveThresholdDither(
         (Math.min(x2, width - 1) - Math.max(x1, 0) + 1) *
         (Math.min(y2, height - 1) - Math.max(y1, 0) + 1);
       const localMean = getSum(x1, y1, x2, y2) / area;
-
-      const threshold = localMean * (1 - 0.2 * strengthFactor);
-      const isDark = gray < threshold;
-
-      matrixRow.push(isDark);
-      colorRow.push(isDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 });
-    }
-
-    resultMatrix.push(matrixRow);
-    resultColors.push(colorRow);
-  }
-
-  return { matrix: resultMatrix, colors: resultColors };
+      return localMean * (1 - 0.2 * strengthFactor);
+    },
+    width,
+  });
 }

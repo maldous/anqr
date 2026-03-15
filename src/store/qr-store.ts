@@ -82,6 +82,7 @@ import type {
   TWQRHelper,
   VietQRHelper,
 } from './types';
+import type { PayloadData } from './types/payload-data';
 import { applyPayloadTransforms } from './payload-serializers/apply-payload-transforms';
 import { PAYLOAD_SERIALIZERS } from './payload-serializers';
 
@@ -169,52 +170,7 @@ export interface QRState {
   getEffectiveTier: () => Tier; // Returns 'professional' if premium active, else current tier
 
   // === PAYLOAD ===
-  payload: {
-    kind: PayloadKind;
-    text: string;
-    // Helpers
-    url: UrlHelper;
-    tel: TelHelper;
-    email: EmailHelper;
-    sms: SmsHelper;
-    geo: GeoHelper;
-    wifi: WifiHelper;
-    vcard: VCardHelper;
-    mecard: MeCardHelper;
-    event: EventHelper;
-    crypto: CryptoHelper;
-    otpauth: OtpAuthHelper;
-    // Additional content type helpers
-    bizcard: BizCardHelper;
-    messaging: MessagingHelper;
-    socialProfile: SocialProfileHelper;
-    appLink: AppLinkHelper;
-    gs1: GS1Helper;
-    cloudLink: CloudLinkHelper;
-    calendarSub: CalendarSubHelper;
-    eventRsvp: EventRsvpHelper;
-    // Payment helpers
-    swissQRBill: SwissQRBillHelper;
-    lightning: LightningHelper;
-    ethereum: EthereumHelper;
-    qris: QRISHelper;
-    duitnow: DuitNowHelper;
-    bharatqr: BharatQRHelper;
-    vietqr: VietQRHelper;
-    qrph: QRPhHelper;
-    twqr: TWQRHelper;
-    hkqr: HKQRHelper;
-    jpqr: JPQRHelper;
-    auspaynet: AusPayNetHelper;
-    paypalMe: PayPalMeHelper;
-    cashapp: CashAppHelper;
-    emvGeneric: EMVGenericHelper;
-    // Validation
-    validate: boolean;
-    normalizeNewlines: boolean;
-    trim: boolean;
-    maxLenGuard: boolean;
-  };
+  payload: PayloadData;
   setPayloadKind: (kind: PayloadKind) => void;
   setPayloadText: (text: string) => void;
   setPayloadUrl: (url: Partial<UrlHelper>) => void;

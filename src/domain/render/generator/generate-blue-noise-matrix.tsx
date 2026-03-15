@@ -9,15 +9,13 @@ import { bitsToMatrix } from './bits-to-matrix';
 import { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
 import { buildStrictConstraintConfig } from './build-strict-constraint-config';
 import { clamp01 } from './clamp01';
-import { createEmptyMatrix } from './create-empty-matrix';
 import { enforceModuleConstraints } from './enforce-module-constraints';
-import { generateBWFirstMatrix } from './generate-bw-first-matrix';
 import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';
 import { log } from './log';
 import { packedColorsToMatrix } from './packed-colors-to-matrix';
 import { processBlueNoisePixel } from './process-blue-noise-pixel';
-import { readOverlayPixelsAtSize } from './read-overlay-pixels-at-size';
 import { removeIsolatedSpeckles } from './remove-isolated-speckles';
+import { resolvePreparedMatrixInput } from './resolve-prepared-matrix-input';
 
 /**
  * Generate blue noise pixel matrix
@@ -34,40 +32,25 @@ export async function generateBlueNoiseMatrix(
   createCanvasFn: CreateCanvasFn,
   releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionMatrix> {
-  const scaledSize = moduleCount * scale;
-
-  // QR-FIRST MODE: for high-contrast B&W images, guarantee scannability
-  if (config.qrFirstMode) {
-    log.debug('QR-first mode enabled via config in blue-noise mode - using QR-first matrix');
-    return generateBWFirstMatrix(
-      qr,
-      config,
-      overlayCanvas,
-      moduleCount,
-      scale,
-      effectiveIntensity,
-      createCanvasFn,
-      releaseCanvasFn
-    );
+  const prepared = await resolvePreparedMatrixInput({
+    config,
+    createCanvasFn,
+    effectiveIntensity,
+    modeLabel: 'blue-noise',
+    moduleCount,
+    overlayCanvas,
+    qr,
+    releaseCanvasFn,
+    scale,
+  });
+  if (prepared.matrix) {
+    return prepared.matrix;
   }
+  const { data, matrixBits, packedColors, pixelCount, scaledSize } = prepared.matrixInput;
 
   const rawIntensity = effectiveIntensity;
   const intensity = clamp01(rawIntensity);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
-
-  const data = await readOverlayPixelsAtSize(
-    overlayCanvas,
-    scaledSize,
-    createCanvasFn,
-    releaseCanvasFn
-  );
-  if (!data) {
-    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
-  }
-
-  const pixelCount = scaledSize * scaledSize;
-  const matrixBits = new Uint8Array(pixelCount);
-  const packedColors = new Uint32Array(pixelCount);
   const desire = new Float32Array(pixelCount);
   desire.fill(0.5);
 

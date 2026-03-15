@@ -1,18 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HelpLink } from '@/ui/primitives/help-link';
-import { Label } from '@/ui/primitives/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/primitives/select';
-import { Slider } from '@/ui/primitives/slider';
-import { Switch } from '@/ui/primitives/switch';
-import { HighlightedLabel } from '@/app/search/search-context';
 import { calculateOptimalVersion } from '@/modules/qr-encoder';
 import {
   type CharacterEncoding,
@@ -21,6 +8,20 @@ import {
   type MaskPattern,
   useQRStore,
 } from '@/store/qr-store';
+import { LabeledHelpSelectField } from './labeled-help-select-field';
+import {
+  DynamicTestId,
+  HelpLink,
+  HighlightedLabel,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Slider,
+  Switch,
+} from './section-ui';
 
 // Short debounce for version slider to batch rapid changes while sliding
 // The main useQRGenerator debounce (300ms) handles the expensive computation
@@ -200,102 +201,61 @@ export function QREncodingSection() {
       {(tier === 'advanced' || tier === 'professional') && (
         <>
           {/* Encoding Mode */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1">
-              <Label>
-                <HighlightedLabel>{t('qr.encodingMode')}</HighlightedLabel>
-              </Label>
-              <HelpLink anchor="section-6" />
-            </div>
-            <Select
-              value={qr.encodingMode}
-              onValueChange={(v) => setQrEncodingMode(v as EncodingMode)}
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'qr-encoding-mode-select',
-                  'qr-encoding-mode-select'
-                )}
-                title={t('hints.encodingMode')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">{t('qr.autoOptimal')}</SelectItem>
-                <SelectItem value="numeric">{t('qr.numericOnly')}</SelectItem>
-                <SelectItem value="alphanumeric">{t('qr.alphanumeric')}</SelectItem>
-                <SelectItem value="byte">{t('qr.byteUtf8')}</SelectItem>
-                <SelectItem value="kanji">{t('qr.kanji')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledHelpSelectField
+            anchor="section-6"
+            label={t('qr.encodingMode')}
+            onValueChange={(v) => setQrEncodingMode(v as EncodingMode)}
+            testId="qr-encoding-mode-select"
+            title={t('hints.encodingMode')}
+            value={qr.encodingMode}
+          >
+            <SelectItem value="auto">{t('qr.autoOptimal')}</SelectItem>
+            <SelectItem value="numeric">{t('qr.numericOnly')}</SelectItem>
+            <SelectItem value="alphanumeric">{t('qr.alphanumeric')}</SelectItem>
+            <SelectItem value="byte">{t('qr.byteUtf8')}</SelectItem>
+            <SelectItem value="kanji">{t('qr.kanji')}</SelectItem>
+          </LabeledHelpSelectField>
 
           {/* Character Encoding */}
           <div className="space-y-2">
-            <div className="flex items-center gap-1">
-              <Label>
-                <HighlightedLabel>{t('qr.characterEncoding')}</HighlightedLabel>
-              </Label>
-              <HelpLink anchor="section-6" />
-            </div>
-            <Select
-              value={qr.characterEncoding}
+            <LabeledHelpSelectField
+              anchor="section-6"
+              label={t('qr.characterEncoding')}
               onValueChange={(v) => setQrCharacterEncoding(v as CharacterEncoding)}
+              testId="qr-character-encoding-select"
+              title={t('hints.characterEncoding')}
+              value={qr.characterEncoding}
             >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'qr-character-encoding-select',
-                  'qr-character-encoding-select'
-                )}
-                title={t('hints.characterEncoding')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">{t('qr.latin1Default')}</SelectItem>
-                <SelectItem value="utf8">{t('qr.utf8Unicode')}</SelectItem>
-                <SelectItem value="iso-8859-1">{t('qr.iso88591')}</SelectItem>
-                <SelectItem value="shift-jis">{t('qr.shiftJis')}</SelectItem>
-              </SelectContent>
-            </Select>
+              <SelectItem value="default">{t('qr.latin1Default')}</SelectItem>
+              <SelectItem value="utf8">{t('qr.utf8Unicode')}</SelectItem>
+              <SelectItem value="iso-8859-1">{t('qr.iso88591')}</SelectItem>
+              <SelectItem value="shift-jis">{t('qr.shiftJis')}</SelectItem>
+            </LabeledHelpSelectField>
             <p className="text-xs text-muted-foreground">{t('hints.characterEncodingNote')}</p>
           </div>
 
           {/* Mask Pattern */}
           <div className="space-y-2">
-            <div className="flex items-center gap-1">
-              <Label>
-                <HighlightedLabel>{t('qr.mask')}</HighlightedLabel>
-              </Label>
-              <HelpLink anchor="section-6" />
-            </div>
-            <Select
-              value={String(qr.maskPattern)}
+            <LabeledHelpSelectField
+              anchor="section-6"
+              label={t('qr.mask')}
               onValueChange={(v) =>
                 setQrMaskPattern(v === 'auto' ? 'auto' : (Number.parseInt(v, 10) as MaskPattern))
               }
+              testId="qr-mask-pattern-select"
+              title={t('hints.maskPattern')}
+              value={String(qr.maskPattern)}
             >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'qr-mask-pattern-select',
-                  'qr-mask-pattern-select'
-                )}
-                title={t('hints.maskPattern')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">{t('qr.autoOptimal')}</SelectItem>
-                <SelectItem value="0">{t('qr.maskPattern0')}</SelectItem>
-                <SelectItem value="1">{t('qr.maskPattern1')}</SelectItem>
-                <SelectItem value="2">{t('qr.maskPattern2')}</SelectItem>
-                <SelectItem value="3">{t('qr.maskPattern3')}</SelectItem>
-                <SelectItem value="4">{t('qr.maskPattern4')}</SelectItem>
-                <SelectItem value="5">{t('qr.maskPattern5')}</SelectItem>
-                <SelectItem value="6">{t('qr.maskPattern6')}</SelectItem>
-                <SelectItem value="7">{t('qr.maskPattern7')}</SelectItem>
-              </SelectContent>
-            </Select>
+              <SelectItem value="auto">{t('qr.autoOptimal')}</SelectItem>
+              <SelectItem value="0">{t('qr.maskPattern0')}</SelectItem>
+              <SelectItem value="1">{t('qr.maskPattern1')}</SelectItem>
+              <SelectItem value="2">{t('qr.maskPattern2')}</SelectItem>
+              <SelectItem value="3">{t('qr.maskPattern3')}</SelectItem>
+              <SelectItem value="4">{t('qr.maskPattern4')}</SelectItem>
+              <SelectItem value="5">{t('qr.maskPattern5')}</SelectItem>
+              <SelectItem value="6">{t('qr.maskPattern6')}</SelectItem>
+              <SelectItem value="7">{t('qr.maskPattern7')}</SelectItem>
+            </LabeledHelpSelectField>
             <p className="text-xs text-muted-foreground">{t('hints.maskPatternNote')}</p>
           </div>
 

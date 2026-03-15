@@ -21,7 +21,7 @@ import type {
   TWQRForm,
   UPIForm,
   VietQRForm,
-} from './payload-section-types';
+} from './payment-form-types';
 
 export function usePaymentFormStates() {
   const [epcSepaForm, setEpcSepaForm] = useState<EPCSepaForm>({

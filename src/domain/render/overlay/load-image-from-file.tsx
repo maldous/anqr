@@ -1,6 +1,7 @@
 // ============================================
 // IMAGE LOADING
 // ============================================
+import { drawImageToCanvas } from './draw-image-to-canvas';
 
 export function loadImageFromFile(file: File): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
@@ -8,16 +9,11 @@ export function loadImageFromFile(file: File): Promise<HTMLCanvasElement> {
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Could not get 2D context'));
-          return;
+        try {
+          resolve(drawImageToCanvas(img));
+        } catch (error) {
+          reject(error);
         }
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas);
       };
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = reader.result as string;

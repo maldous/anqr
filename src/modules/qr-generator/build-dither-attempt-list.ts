@@ -1,4 +1,4 @@
-import type { DitherAttemptPatch } from './qr-generator-scan-gate';
+import type { DitherAttemptPatch } from './dither-attempt-patch.type';
 
 export function buildDitherAttemptList(
   baseAttempts: DitherAttemptPatch[],

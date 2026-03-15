@@ -1,16 +1,5 @@
-import { Capacitor } from '@capacitor/core';
-import {
-  Camera as CameraIcon,
-  Image as ImageIcon,
-  Link,
-  Loader2,
-  Move,
-  Upload,
-  X,
-} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/ui/primitives/button';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { HelpLink } from '@/ui/primitives/help-link';
 import { Input } from '@/ui/primitives/input';
@@ -30,7 +19,6 @@ import { OverlayPreviewPanel } from './overlay-preview-panel';
 import { OverlaySourcePicker } from './overlay-source-picker';
 import { computeCropOverlayStyle, resolveImagePreview } from './overlay-image-utils';
 import { isAllPreservationsEnabled } from './overlay-crop-utils';
-import type { OverlaySourceActionsDeps } from './overlay-source-actions-types';
 import { useOverlayCropDrag } from './use-overlay-crop-drag';
 import { useOverlaySourceActions } from './use-overlay-source-actions';
 import {
@@ -42,7 +30,6 @@ import {
   type OverlayMode,
   useQRStore,
 } from '@/store/qr-store';
-import { overlayLog as log } from './overlay-log';
 
 export function OverlaySection() {
   const {

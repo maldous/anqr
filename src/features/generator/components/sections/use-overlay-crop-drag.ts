@@ -125,14 +125,10 @@ export function useOverlayCropDrag(
   );
 
   const handleCropDrag = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!(isDragging && previewContainerRef.current)) return;
-      e.preventDefault();
-
-      const mapped = mapPointerToImageSpace(e.clientX, e.clientY);
-      if (!mapped) return;
-
+    (clientX: number, clientY: number) => {
       const currentRegion = draftCropRegion ?? overlay.cropRegion;
+      const mapped = mapPointerToImageSpace(clientX, clientY);
+      if (!mapped) return;
 
       if (dragMode === 'resize') {
         const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
@@ -146,15 +142,22 @@ export function useOverlayCropDrag(
       setDraftCropRegion({ ...currentRegion, x: clampedX, y: clampedY });
     },
     [
-      isDragging,
       dragMode,
       previewImageSize,
       mapPointerToImageSpace,
       getCropHalfExtents,
       draftCropRegion,
       overlay.cropRegion,
-      previewContainerRef,
     ]
+  );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!(isDragging && previewContainerRef.current)) return;
+      e.preventDefault();
+      handleCropDrag(e.clientX, e.clientY);
+    },
+    [isDragging, previewContainerRef, handleCropDrag]
   );
 
   const handleTouchStart = useCallback(
@@ -173,32 +176,9 @@ export function useOverlayCropDrag(
       e.preventDefault();
 
       const touch = e.touches[0];
-      const mapped = mapPointerToImageSpace(touch.clientX, touch.clientY);
-      if (!mapped) return;
-
-      const currentRegion = draftCropRegion ?? overlay.cropRegion;
-      if (dragMode === 'resize') {
-        const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
-        setDraftCropRegion({ ...currentRegion, size: newSize });
-        return;
-      }
-
-      const { halfX, halfY } = getCropHalfExtents(currentRegion.size);
-      const clampedX = Math.max(halfX, Math.min(1 - halfX, mapped.x));
-      const clampedY = Math.max(halfY, Math.min(1 - halfY, mapped.y));
-
-      setDraftCropRegion({ ...currentRegion, x: clampedX, y: clampedY });
+      handleCropDrag(touch.clientX, touch.clientY);
     },
-    [
-      isDragging,
-      dragMode,
-      previewImageSize,
-      mapPointerToImageSpace,
-      getCropHalfExtents,
-      draftCropRegion,
-      overlay.cropRegion,
-      previewContainerRef,
-    ]
+    [isDragging, previewContainerRef, handleCropDrag]
   );
 
   const finishDrag = useCallback(() => {
@@ -219,7 +199,7 @@ export function useOverlayCropDrag(
     activeCropRegion,
     getCropHalfExtents,
     beginDragAtPoint,
-    handleCropDrag,
+    handleCropDrag: handleMouseMove,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

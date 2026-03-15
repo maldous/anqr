@@ -5,32 +5,18 @@
  */
 
 import { createLogger } from '@/infra/logging/logger';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { buildEccFallbackSequence } from '@/features/generator/application/safety/safety-fn-eccfallback';
 import { tryEccFallbackGeneration } from '@/features/generator/application/safety/safety-fn-tryeccfallback';
+import type { OverflowResult } from './overflow-result';
+import type { SafetyRunnerParams } from './safety-runner-params';
 
 const log = createLogger('QR');
 
-export async function handleOverflowError(params: {
-  effectiveConfig: Record<string, unknown>;
-  debouncedConfigTypeNumber: number;
-  runGeneratorWithStatus: (
-    cfg: QRGeneratorConfig,
-    overlaySource: HTMLCanvasElement | OffscreenCanvas | null
-  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
-  yieldForResponsiveness: () => Promise<boolean>;
-  overlayEnabled: boolean;
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;
-  lastOverflowContentRef: { current: string | null };
-  isOverflowBlockedRef: { current: boolean };
-  setHasOverflowError: (v: boolean) => void;
-  setError: (v: string | null) => void;
-  setIsRendering: (v: boolean) => void;
-  setIsLoading: (v: boolean) => void;
-  clearGenerationProgress: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: (...args: any[]) => any;
-}): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; succeeded: boolean }> {
+export async function handleOverflowError(
+  params: SafetyRunnerParams & {
+    debouncedConfigTypeNumber: number;
+  }
+): Promise<OverflowResult> {
   const currentEcc = (params.effectiveConfig.errorCorrection as string) || 'H';
   const eccToTry = buildEccFallbackSequence(currentEcc, params.debouncedConfigTypeNumber);
 

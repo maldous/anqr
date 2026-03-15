@@ -1,18 +1,12 @@
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
 import { createQRInstance } from '@/modules/qr-encoder';
 import { computeCanvasSizing } from './compute-canvas-sizing';
 import { computeMarginModules } from './compute-margin-modules';
 import { drawCanvasError } from './draw-canvas-error';
-import { buildOriginalMatrix } from './build-original-matrix';
-import { buildRegenMatrix } from './build-regen-matrix';
-import { findBestMatrixShift } from './canvas-analysis-helpers';
-import { diffMatrices } from './diff-matrices';
 import { logReproductionResult } from './log-reproduction-result';
 import { nowMs } from './now-ms';
 import { renderQRModules } from './render-qr-modules';
 import { resolveColors } from './resolve-reproduction-colors';
 import { runMatrixDiagnostics } from './run-matrix-diagnostics';
-import type { ValidEncoderMode } from './reproduction-types';
 export { computeMarginModules } from './compute-margin-modules';
 export { computeCanvasSizing } from './compute-canvas-sizing';
 

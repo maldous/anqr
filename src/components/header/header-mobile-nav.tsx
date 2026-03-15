@@ -1,4 +1,6 @@
+import { HeaderMobileNavCompactLink } from './header-mobile-nav-compact-link';
 import { useTranslation } from 'react-i18next';
+import { HeaderMobileNavLinkBody } from './header-mobile-nav-link-body';
 import type { HeaderPage } from './header-resolve-page';
 import { NAV_LINKS } from './nav-links';
 
@@ -48,8 +50,10 @@ export function HeaderMobileNav({
                 title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <IconComponent className="w-5 h-5" aria-hidden="true" />
-                <span className="text-sm">{t(link.labelKey, link.defaultLabel)}</span>
+                <HeaderMobileNavLinkBody
+                  IconComponent={IconComponent}
+                  label={t(link.labelKey, link.defaultLabel)}
+                />
               </a>
             );
           })}
@@ -60,28 +64,26 @@ export function HeaderMobileNav({
             const isActive = link.page === resolvedPage;
             if (link.external) {
               return (
-                <a
+                <HeaderMobileNavCompactLink
                   key={link.labelKey}
+                  external
                   href={link.href}
-                  className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
-                  title={t(link.labelKey, link.defaultLabel)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  IconComponent={IconComponent}
+                  iubendaEmbed={link.iubendaEmbed}
+                  isActive={false}
+                  label={t(link.labelKey, link.defaultLabel)}
                   onClick={() => onClose()}
-                  aria-label={`${t(link.labelKey, link.defaultLabel)} (opens in new tab)`}
-                >
-                  <IconComponent className="w-5 h-5" aria-hidden="true" />
-                  <span className="text-[11px] leading-tight text-center">
-                    {t(link.labelKey, link.defaultLabel)}
-                  </span>
-                </a>
+                  pageTitle={t(link.labelKey, link.defaultLabel)}
+                />
               );
             }
             return (
-              <a
+              <HeaderMobileNavCompactLink
                 key={link.labelKey}
                 href={link.href}
-                className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm ${isActive ? 'text-foreground bg-muted font-medium' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                IconComponent={IconComponent}
+                isActive={isActive}
+                label={t(link.labelKey, link.defaultLabel)}
                 onClick={(e) => {
                   if (onNavigate) {
                     e.preventDefault();
@@ -89,14 +91,8 @@ export function HeaderMobileNav({
                   }
                   onClose();
                 }}
-                title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <IconComponent className="w-5 h-5" aria-hidden="true" />
-                <span className="text-[11px] leading-tight text-center">
-                  {t(link.labelKey, link.defaultLabel)}
-                </span>
-              </a>
+                pageTitle={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+              />
             );
           })}
         </div>

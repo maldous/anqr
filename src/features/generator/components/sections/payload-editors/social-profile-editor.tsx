@@ -5,13 +5,7 @@ import { generateSocialProfile } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/primitives/select';
+import { PlatformSelectField } from './platform-select-field';
 
 export const SocialProfileEditor = ({
   payload,
@@ -24,36 +18,24 @@ export const SocialProfileEditor = ({
 }>) => {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.platform')}</HighlightedLabel>
-        </Label>
-        <Select
-          value={payload.socialProfile.platform}
-          onValueChange={(value) =>
-            setPayloadSocialProfile({ platform: value as typeof payload.socialProfile.platform })
-          }
-        >
-          <SelectTrigger
-            data-testid={DynamicTestId.resolve(
-              'payload-social-platform-select',
-              'payload-social-platform-select'
-            )}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="linkedin">{t('payload.linkedin')}</SelectItem>
-            <SelectItem value="twitter">X (Twitter)</SelectItem>
-            <SelectItem value="instagram">{t('payload.instagram')}</SelectItem>
-            <SelectItem value="facebook">{t('payload.facebook')}</SelectItem>
-            <SelectItem value="tiktok">{t('payload.tiktok')}</SelectItem>
-            <SelectItem value="youtube">{t('payload.youtube')}</SelectItem>
-            <SelectItem value="github">{t('payload.github')}</SelectItem>
-            <SelectItem value="other">{t('payload.other')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <PlatformSelectField
+        label={t('payload.platform')}
+        value={payload.socialProfile.platform}
+        onValueChange={(value) =>
+          setPayloadSocialProfile({ platform: value as typeof payload.socialProfile.platform })
+        }
+        dataTestId="payload-social-platform-select"
+        options={[
+          { value: 'linkedin', label: t('payload.linkedin') },
+          { value: 'twitter', label: 'X (Twitter)' },
+          { value: 'instagram', label: t('payload.instagram') },
+          { value: 'facebook', label: t('payload.facebook') },
+          { value: 'tiktok', label: t('payload.tiktok') },
+          { value: 'youtube', label: t('payload.youtube') },
+          { value: 'github', label: t('payload.github') },
+          { value: 'other', label: t('payload.other') },
+        ]}
+      />
       <div className="space-y-2">
         <Label>
           <HighlightedLabel>{t('payload.username')}</HighlightedLabel>

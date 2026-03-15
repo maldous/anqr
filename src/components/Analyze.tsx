@@ -1,104 +1,20 @@
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 /**
  * Analyze Component
  * Premier QR Code analysis page - the most comprehensive QR analyzer available
  * Extracts and displays every possible detail from uploaded/captured QR codes
  */
 
-import {
-  AlertCircle,
-  AlertTriangle,
-  ArrowRight,
-  BarChart3,
-  Binary,
-  Camera as CameraIcon,
-  Check,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  ClipboardCopy,
-  Code2,
-  CreditCard,
-  Database,
-  Download,
-  Eye,
-  FileImage,
-  FileText,
-  Fingerprint,
-  Globe,
-  Grid3x3,
-  Hash,
-  Image as ImageIcon,
-  Info,
-  Layers,
-  Link,
-  Loader2,
-  Lock,
-  Mail,
-  MapPin,
-  MessageSquare,
-  Palette,
-  Phone,
-  QrCode,
-  Ratio,
-  Ruler,
-  ScanLine,
-  Settings,
-  Shield,
-  Smartphone,
-  Square,
-  Timer,
-  Type,
-  Upload,
-  Wallet,
-  Wifi,
-  XCircle,
-} from 'lucide-react';
+import {} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/platform/ads/components/AdUnit';
-import { Button } from '@/ui/primitives/button';
-import { Input } from '@/ui/primitives/input';
-import { analyzeQRCode, type ContentType, type QRAnalysisResult } from '@/modules/qr-analyzer';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { CapacityByModeTable } from '@/features/analyze/components/capacity-by-mode-table';
-import { ColorsWcagSection } from '@/features/analyze/components/colors-wcag-section';
-import { ColorSwatch } from '@/features/analyze/components/color-swatch';
-import { CopyButton } from '@/features/analyze/components/copy-button';
+import { type QRAnalysisResult } from '@/modules/qr-analyzer';
 import { AnalyzeErrorDisplay } from '@/features/analyze/components/analyze-error-display';
 import { AnalyzeHero } from '@/features/analyze/components/analyze-hero';
 import { AnalyzeInputCards } from '@/features/analyze/components/analyze-input-cards';
 import { AnalyzeResultDetails } from '@/features/analyze/components/analyze-result-details';
 import { AnalyzeResultsHeader } from '@/features/analyze/components/analyze-results-header';
 import { AnalyzeWarnings } from '@/features/analyze/components/analyze-warnings';
-import { DecoderMetadataPanel } from '@/features/analyze/components/decoder-metadata-panel';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { ECC_DESCRIPTIONS } from '@/features/analyze/components/ecc-descriptions';
-import { EncodingEfficiency } from '@/features/analyze/components/encoding-efficiency';
-import { HexDumpView } from '@/features/analyze/components/hex-dump-view';
-import { MASK_DESCRIPTIONS } from '@/features/analyze/components/mask-descriptions';
-import { ModuleMatrixView } from '@/features/analyze/components/module-matrix-view';
-import { ProgressBar } from '@/features/analyze/components/progress-bar';
-import { SpatialAnalysisSection } from '@/features/analyze/components/spatial-analysis-section';
-import { StatusBadge } from '@/features/analyze/components/status-badge';
-import { SummaryBar } from '@/features/analyze/components/summary-bar';
-import { TimingsSection } from '@/features/analyze/components/timings-section';
-import { WCAGBadge } from '@/features/analyze/components/wcag-badge';
-import { cloneCanvasLike } from '@/features/analyze/lib/canvas-analysis-helpers';
-import {
-  capacityBadgeClass,
-  formatDecoderErrors,
-  formatDecoderErasures,
-  formatDecoderMaskPattern,
-  formatDecoderNumBits,
-  formatDecoderOrientation,
-  formatDecoderVersion,
-  formatMilliseconds,
-  formatRsErrorCorrection,
-  hasAnyTimingData,
-  wcagComplianceClass,
-} from '@/features/analyze/lib/formatters';
-import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
 import { useQRStore } from '@/store/qr-store';
 import {
   analyzeGeneratorCanvasRobustImpl,
@@ -109,9 +25,6 @@ import {
   useAnalysisInputHandlers,
 } from '@/features/analyze/lib/analyze-runtime';
 import { useReproductionEffect } from '@/features/analyze/lib/reproduction-hook';
-
-import { buildContentTypeDetails } from '@/features/analyze/components/content-type-renderers';
-import { CONTENT_TYPE_ICONS } from '@/features/analyze/components/content-type-icons';
 
 export function Analyze({
   onNavigate,

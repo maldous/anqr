@@ -1,6 +1,7 @@
 import { embedPngDpi, embedPngMetadata } from './png-metadata';
 import type { ExportConfig, ExportResult, PngMetadata } from '../../../modules/exporter/types';
 import { log } from './log';
+import { resolveExportConfig } from './resolve-export-config';
 
 /**
  * Export canvas as PNG or WebP image
@@ -11,22 +12,11 @@ export async function exportImage(
   pngMetadata?: PngMetadata,
   dpi?: number
 ): Promise<ExportResult> {
-  const opts: ExportConfig = {
-    outputFormat: config.outputFormat ?? 'png',
-    outputWidth: config.outputWidth ?? canvas.width,
-    outputHeight: config.outputHeight ?? canvas.height,
-    outputQuality: config.outputQuality ?? 0.9,
-    filename: config.filename ?? 'anqr-qrcode',
-    animationSpeed: config.animationSpeed ?? 100,
-    loopAnimation: config.loopAnimation ?? true,
-    transparentBackground: config.transparentBackground ?? false,
-    dpi: config.dpi ?? 72,
-    includeMetadata: config.includeMetadata ?? false,
-    includeQuietZone: config.includeQuietZone ?? true,
-    bgOverride: config.bgOverride ?? '',
-    gifDisposal: config.gifDisposal ?? 'keep',
-    metadata: config.metadata,
-  };
+  const opts = resolveExportConfig(config, {
+    width: canvas.width,
+    height: canvas.height,
+    format: config.outputFormat ?? 'png',
+  });
 
   const mimeTypes: Record<string, string> = {
     webp: 'image/webp',

@@ -3,11 +3,9 @@
  * Main QR code decoding logic
  */
 
-import { getECCLevelChar } from './format';
 import { invertImageData } from './invert-image-data';
 import { tryDecode } from './try-decode-qr';
 import type { DecodeResult } from '../../../modules/qr-decoder/types';
-import { qrDecoderLog } from './decoder-log';
 
 /**
  * Decode a QR code from ImageData

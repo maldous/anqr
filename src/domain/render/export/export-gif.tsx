@@ -3,6 +3,7 @@ import { withGifEncodeLock } from '../animation/gif-lock';
 import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
 import { log } from './log';
 import { renderFrameToScaledCtx } from './render-frame-to-scaled-ctx';
+import { resolveExportConfig } from './resolve-export-config';
 import { sampleGlobalPalette } from './sample-global-palette';
 
 /**
@@ -15,22 +16,11 @@ export async function exportGif(
   frameDelays?: number[], // Optional per-frame delays in ms
   frameDisposals?: number[] // Optional per-frame disposal codes (0-3)
 ): Promise<ExportResult> {
-  const opts: ExportConfig = {
-    outputFormat: 'gif',
-    outputWidth: config.outputWidth ?? frames[0]?.width ?? 400,
-    outputHeight: config.outputHeight ?? frames[0]?.height ?? 400,
-    outputQuality: config.outputQuality ?? 0.9,
-    filename: config.filename ?? 'anqr-qrcode',
-    animationSpeed: config.animationSpeed ?? 100,
-    loopAnimation: config.loopAnimation ?? true,
-    transparentBackground: config.transparentBackground ?? false,
-    dpi: config.dpi ?? 72,
-    includeMetadata: config.includeMetadata ?? false,
-    includeQuietZone: config.includeQuietZone ?? true,
-    bgOverride: config.bgOverride ?? '',
-    gifDisposal: config.gifDisposal ?? 'keep',
-    metadata: config.metadata,
-  };
+  const opts = resolveExportConfig(config, {
+    width: frames[0]?.width ?? 400,
+    height: frames[0]?.height ?? 400,
+    format: 'gif',
+  });
 
   const width = opts.outputWidth;
   const height = opts.outputHeight;

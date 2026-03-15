@@ -515,8 +515,9 @@ export default defineConfig({
           if (id.includes('/modules/qrcode.mjs')) {
             return 'app-qr-lib';
           }
-          // Media pipeline: image processing + export I/O (merged to avoid circular chunks)
-          // overlay, dither-algorithms, animation, exporter, browser-io, platform, @capacitor
+          // QR runtime: generator, analyzer, and media are tightly coupled after the
+          // AST split work, so they must stay in one manual chunk to avoid
+          // rollup circular manual-chunk warnings.
           if (
             id.includes('/modules/overlay') ||
             id.includes('/modules/dither') ||
@@ -526,15 +527,16 @@ export default defineConfig({
             id.includes('/modules/browser-io') ||
             id.includes('node_modules/@capacitor')
           ) {
-            return 'app-media-pipeline';
+            return 'app-qr-runtime';
           }
           // Keep QR-Art logic isolated from core editor runtime.
           if (id.includes('/modules/qr-art')) {
             return 'app-qr-art';
           }
-          // Keep analyzer/decoder tooling isolated from generation core.
+          // Analyzer, decoder, and generator now share helper surfaces and should
+          // stay in the same runtime chunk.
           if (id.includes('/modules/qr-analyzer') || id.includes('/modules/qr-decoder')) {
-            return 'app-qr-analyzer';
+            return 'app-qr-runtime';
           }
           if (
             id.includes('/modules/renderer') ||
@@ -543,7 +545,7 @@ export default defineConfig({
             id.includes('/modules/qr-encoder') ||
             id.includes('/modules/qr-spec')
           ) {
-            return 'app-qr-core';
+            return 'app-qr-runtime';
           }
           // Gallery data
           if (id.includes('/data/gallery-showcase.generated')) {

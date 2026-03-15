@@ -4,46 +4,14 @@
  * Notes: Process one iteration of animation frame loop.
  */
 
-import type { GifCompositor } from '@/modules/animation';
-import type { TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame } from '@/modules/animation';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { renderFrameForBaseAnimation } from '@/features/generator/application/frames/frames-fn-renderbase';
 import { renderFrameWithCompositor } from '@/features/generator/application/frames/frames-fn-rendercompositor';
 import { renderFrameWithLegacyPath } from '@/features/generator/application/frames/frames-fn-renderlegacy';
-import { createScratchCanvasPool } from '@/features/generator/application/frames/frames-fn-scratchpool';
-import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import type { FrameRenderContext } from './frame-render-context.type';
 
-export async function processAnimationFrameLoopIteration(params: {
-  frameIdx: number;
-  frame: AnimationFrame;
-  framesToProcessLength: number;
-  shouldGenerateBaseAnimation: boolean;
-  hasPattern: boolean;
-  hasJitter: boolean;
-  previewScanConfigBase: QRGeneratorConfig;
-  useTemporalDither: boolean;
-  temporalMode: TemporalDitherMode;
-  animationSeed: number;
-  useCompositor: boolean;
-  gifCompositor: GifCompositor | null;
-  effectiveFrameIndices: number[];
-  applyGeometricTransforms: (c: HTMLCanvasElement | OffscreenCanvas) => HTMLCanvasElement;
-  scratchPool: ReturnType<typeof createScratchCanvasPool>;
-  isArtworkMode: boolean;
-  generateArtworkFrame: (
-    c: HTMLCanvasElement | OffscreenCanvas,
-    fi: number
-  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
-  modulePatternEffects: PatternEffect[];
-  applyModulePatternEphemeral: (
-    c: HTMLCanvasElement | OffscreenCanvas,
-    fi: number,
-    tf: number
-  ) => HTMLCanvasElement | OffscreenCanvas;
-  computeJitter: (fi: number, tf: number) => number;
-  moduleJitterPx: number;
-}): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+export async function processAnimationFrameLoopIteration(
+  params: FrameRenderContext
+): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
   if (params.shouldGenerateBaseAnimation) {
     return await renderFrameForBaseAnimation({
       hasPattern: params.hasPattern,

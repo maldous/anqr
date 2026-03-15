@@ -5,14 +5,8 @@ import { generateMessagingLink, isValidPhone } from '@/modules/payload-generator
 import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/primitives/select';
 import { Textarea } from '@/ui/primitives/textarea';
+import { PlatformSelectField } from './platform-select-field';
 
 export const MessagingLinkEditor = ({
   payload,
@@ -25,34 +19,22 @@ export const MessagingLinkEditor = ({
 }>) => {
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.platform')}</HighlightedLabel>
-        </Label>
-        <Select
-          value={payload.messaging.platform}
-          onValueChange={(value) =>
-            setPayloadMessaging({ platform: value as typeof payload.messaging.platform })
-          }
-        >
-          <SelectTrigger
-            data-testid={DynamicTestId.resolve(
-              'payload-messaging-platform-select',
-              'payload-messaging-platform-select'
-            )}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="whatsapp">{t('payload.whatsapp')}</SelectItem>
-            <SelectItem value="telegram">{t('payload.telegram')}</SelectItem>
-            <SelectItem value="signal">{t('payload.signal')}</SelectItem>
-            <SelectItem value="messenger">{t('payload.messenger')}</SelectItem>
-            <SelectItem value="line">LINE</SelectItem>
-            <SelectItem value="viber">{t('payload.viber')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <PlatformSelectField
+        label={t('payload.platform')}
+        value={payload.messaging.platform}
+        onValueChange={(value) =>
+          setPayloadMessaging({ platform: value as typeof payload.messaging.platform })
+        }
+        dataTestId="payload-messaging-platform-select"
+        options={[
+          { value: 'whatsapp', label: t('payload.whatsapp') },
+          { value: 'telegram', label: t('payload.telegram') },
+          { value: 'signal', label: t('payload.signal') },
+          { value: 'messenger', label: t('payload.messenger') },
+          { value: 'line', label: 'LINE' },
+          { value: 'viber', label: t('payload.viber') },
+        ]}
+      />
       <div className="space-y-2">
         <Label>
           <HighlightedLabel>{t('payload.phoneUsername')}</HighlightedLabel>

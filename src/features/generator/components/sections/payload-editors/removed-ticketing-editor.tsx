@@ -1,72 +1,32 @@
-import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/app/search/search-context';
-import type { QRState } from '@/store/qr-store';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { DetailsGridField } from './details-grid-field';
+import { LabeledInputField } from './labeled-input-field';
+import { PayloadFormShell } from './payload-form-shell';
+import type { PayloadTextEditorProps } from './payload-text-editor-props';
+import { TrailingUrlField } from './trailing-url-field';
 
 export const RemovedTicketingEditor = ({
   payload,
   setPayloadText,
   t,
-}: Readonly<{
-  payload: QRState['payload'];
-  setPayloadText: QRState['setPayloadText'];
-  t: TFunction;
-}>) => (
-  <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.ticketId')}</HighlightedLabel>
-      </Label>
-      <Input
-        value={payload.text}
-        onChange={(e) => setPayloadText(e.target.value)}
-        placeholder="TKT-2024-001234"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.eventName')}</HighlightedLabel>
-      </Label>
-      <Input placeholder="Concert 2024" />
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.venue')}</HighlightedLabel>
-      </Label>
-      <Input placeholder="Stadium Arena" />
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.dateTime')}</HighlightedLabel>
-      </Label>
-      <Input type="datetime-local" />
-    </div>
-    <div className="grid grid-cols-2 gap-2">
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.sectionZone')}</HighlightedLabel>
-        </Label>
-        <Input placeholder="Section A" />
-      </div>
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('payload.seat')}</HighlightedLabel>
-        </Label>
-        <Input placeholder="Row 5, Seat 12" />
-      </div>
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.attendeeName')}</HighlightedLabel>
-      </Label>
-      <Input placeholder="John Doe" />
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.validationUrl')}</HighlightedLabel>
-      </Label>
-      <Input type="url" placeholder="https://tickets.anqr.link/validate/" />
-    </div>
-  </div>
+}: Readonly<PayloadTextEditorProps>) => (
+  <PayloadFormShell>
+    <LabeledInputField
+      label={t('payload.ticketId')}
+      value={payload.text}
+      onChange={setPayloadText}
+      placeholder="TKT-2024-001234"
+    />
+    <LabeledInputField label={t('payload.eventName')} placeholder="Concert 2024" />
+    <LabeledInputField label={t('payload.venue')} placeholder="Stadium Arena" />
+    <LabeledInputField label={t('payload.dateTime')} placeholder="" type="datetime-local" />
+    <DetailsGridField>
+      <LabeledInputField label={t('payload.sectionZone')} placeholder="Section A" />
+      <LabeledInputField label={t('payload.seat')} placeholder="Row 5, Seat 12" />
+    </DetailsGridField>
+    <LabeledInputField label={t('payload.attendeeName')} placeholder="John Doe" />
+    <TrailingUrlField
+      label={t('payload.validationUrl')}
+      placeholder="https://tickets.anqr.link/validate/"
+    />
+  </PayloadFormShell>
 );

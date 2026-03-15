@@ -4,6 +4,7 @@ import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import type { JPQRForm } from '../payload-section-types';
+import { ValidatedTextField } from './validated-text-field';
 
 export const JpqrEditor = ({
   jpqrForm,
@@ -17,42 +18,22 @@ export const JpqrEditor = ({
   t: TFunction;
 }>) => (
   <div className="space-y-4">
-    <div className="space-y-2">
-      <Label>{t('placeholders.storeId')}</Label>
-      <Input
-        placeholder={t('placeholders.jpStoreIdPlaceholder')}
-        value={jpqrForm.storeId}
-        onChange={(e) => setJpqrForm({ ...jpqrForm, storeId: e.target.value })}
-        className={
-          payload.validate && jpqrForm.storeId && !isValidStoreId(jpqrForm.storeId)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate && jpqrForm.storeId && !isValidStoreId(jpqrForm.storeId) && (
-        <p className="text-xs text-destructive">
-          {t('validation.invalidStoreId', 'Enter a valid store ID')}
-        </p>
-      )}
-    </div>
-    <div className="space-y-2">
-      <Label>{t('payload.merchantName')}</Label>
-      <Input
-        placeholder={t('placeholders.jpMerchantNamePlaceholder')}
-        value={jpqrForm.merchantName}
-        onChange={(e) => setJpqrForm({ ...jpqrForm, merchantName: e.target.value })}
-        className={
-          payload.validate && !isNonEmpty(jpqrForm.merchantName)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate && !isNonEmpty(jpqrForm.merchantName) && (
-        <p className="text-xs text-destructive">
-          {t('validation.requiredField', 'This field is required')}
-        </p>
-      )}
-    </div>
+    <ValidatedTextField
+      label={t('placeholders.storeId')}
+      placeholder={t('placeholders.jpStoreIdPlaceholder')}
+      value={jpqrForm.storeId}
+      onChange={(value) => setJpqrForm({ ...jpqrForm, storeId: value })}
+      invalid={payload.validate && jpqrForm.storeId !== '' && !isValidStoreId(jpqrForm.storeId)}
+      invalidMessage={t('validation.invalidStoreId', 'Enter a valid store ID')}
+    />
+    <ValidatedTextField
+      label={t('payload.merchantName')}
+      placeholder={t('placeholders.jpMerchantNamePlaceholder')}
+      value={jpqrForm.merchantName}
+      onChange={(value) => setJpqrForm({ ...jpqrForm, merchantName: value })}
+      invalid={payload.validate && !isNonEmpty(jpqrForm.merchantName)}
+      invalidMessage={t('validation.requiredField', 'This field is required')}
+    />
     <div className="space-y-2">
       <Label>
         {t('payload.amount')} (JPY) {t('common.optional')}

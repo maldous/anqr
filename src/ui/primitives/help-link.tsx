@@ -8,7 +8,7 @@
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type Tier, useQRStore } from '@/store/qr-store';
+import { useQRStore } from '@/store/qr-store';
 import { buildNavigationUrl } from './build-help-link-navigation-url';
 import { handleTierUpgrade } from './handle-help-link-tier-upgrade';
 import type { HelpLinkProps } from './help-link-props';

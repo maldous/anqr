@@ -13,11 +13,7 @@ import { detectContentType, extractDominantColors } from './analyzer-content';
 import { analyzeColors } from './analyze-colors';
 import { analyzeQuietZone } from './analyze-quiet-zone';
 import { buildModuleMatrix } from './build-module-matrix';
-import {
-  detectEncodingMode,
-  getAlignmentPatternCount,
-  stringToLatin1Bytes,
-} from './decoder-primitives';
+import { detectEncodingMode, stringToLatin1Bytes } from './decoder-primitives';
 import type { QRLocationCorners } from './decoder-types';
 import { validateFinderPatterns } from './validate-finder-patterns';
 import {
@@ -30,7 +26,7 @@ import {
   extractVersionInfo,
   formatContentTypeLabel,
 } from './decoder-helpers';
-import type { ContentType, QRAnalysisResult } from '../../../modules/qr-analyzer/types';
+import type { QRAnalysisResult } from '../../../modules/qr-analyzer/types';
 
 const qrAnalyzerLog = createLogger('ANALYZER');
 

@@ -4,15 +4,12 @@
  * Notes: Render frame via legacy rendering path.
  */
 
-import {
-  applyTemporalNoiseToCanvas,
-  calculateTemporalOffset,
-  type TemporalDitherMode,
-} from '@/domain/render/dither/temporal';
+import { type TemporalDitherMode } from '@/domain/render/dither/temporal';
 import type { AnimationFrame } from '@/modules/animation';
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import { applyFrameTemporalNoise } from './apply-frame-temporal-noise';
+import { renderGeneratedFrame } from './render-generated-frame';
 
 export async function renderFrameWithLegacyPath(params: {
   frame: AnimationFrame;
@@ -49,34 +46,25 @@ export async function renderFrameWithLegacyPath(params: {
       params.framesToProcessLength
     );
   }
+  let temporalOffset = 0;
   if (params.useTemporalDither) {
-    const temporalOffset = calculateTemporalOffset(
-      params.frameIdx,
-      params.temporalMode,
-      params.animationSeed
-    );
-    processedOverlay = applyTemporalNoiseToCanvas(
-      processedOverlay,
-      temporalOffset,
-      0.008,
-      params.getTemporalScratch(
-        (params.frameIdx % 2) as 0 | 1,
-        processedOverlay.width,
-        processedOverlay.height
-      )
-    );
+    ({ frame: processedOverlay, temporalOffset } = applyFrameTemporalNoise({
+      animationSeed: params.animationSeed,
+      frame: processedOverlay,
+      frameIdx: params.frameIdx,
+      getTemporalScratch: params.getTemporalScratch,
+      temporalMode: params.temporalMode,
+    }));
   }
-  const frameConfig = {
-    ...params.previewScanConfigBase,
-    frameIndex: params.frameIdx,
+  return renderGeneratedFrame({
+    frame: processedOverlay,
+    frameIdx: params.frameIdx,
+    generateArtworkFrame: params.generateArtworkFrame,
+    isArtworkMode: params.isArtworkMode,
     moduleJitterPx: params.hasJitter
       ? params.computeJitter(params.frameIdx, params.framesToProcessLength)
       : params.moduleJitterPx,
-    temporalOffset: params.useTemporalDither
-      ? calculateTemporalOffset(params.frameIdx, params.temporalMode, params.animationSeed)
-      : 0,
-  };
-  return params.isArtworkMode
-    ? await params.generateArtworkFrame(processedOverlay, params.frameIdx)
-    : await qrGenerator.generate(frameConfig, processedOverlay);
+    previewScanConfigBase: params.previewScanConfigBase,
+    temporalOffset,
+  });
 }

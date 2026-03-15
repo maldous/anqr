@@ -4,7 +4,6 @@
  * Falls back to main-thread validation if the Worker fails to initialize.
  */
 
-import { createLogger } from '../../../infra/logging/logger';
 import type { ValidationResult } from '../../../domain/qr/analyze/scanner';
 import { validateQRCodeRobust } from '../../../domain/qr/analyze/scanner';
 import type { CanvasContext } from './canvas-context.type';

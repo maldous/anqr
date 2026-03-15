@@ -1,4 +1,5 @@
 import { EMVQRBuilder } from './emv';
+import { finalizeEmvPayment } from './finalize-emv-payment';
 import type { HKQRParams } from '../../modules/payload-generators/types';
 import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
 
@@ -22,23 +23,12 @@ export function generateHKQR(params: HKQRParams): string {
   }
 
   builder.addMerchantAccountInfo(26, PAYMENT_SCHEME_GUI.HKFPS, maiData);
-
-  builder.setTransactionCurrency(ISO_CURRENCY.HKD);
-
-  if (params.amount !== undefined && params.amount > 0) {
-    builder.setTransactionAmount(params.amount);
-  }
-
-  builder.setCountryCode('HK');
-  builder.setMerchantName(params.merchantName);
-
-  if (params.merchantCity) {
-    builder.setMerchantCity(params.merchantCity);
-  }
-
-  if (params.reference) {
-    builder.setAdditionalData({ referenceLabel: params.reference });
-  }
-
-  return builder.build();
+  return finalizeEmvPayment(builder, {
+    amount: params.amount,
+    countryCode: 'HK',
+    currency: ISO_CURRENCY.HKD,
+    merchantCity: params.merchantCity,
+    merchantName: params.merchantName,
+    reference: params.reference,
+  });
 }

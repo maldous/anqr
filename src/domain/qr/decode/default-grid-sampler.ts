@@ -2,32 +2,34 @@ import { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 import { GridSampler } from './grid-sampler';
 import { PerspectiveTransform } from './perspective-transform';
+import type { SampleGridArgs } from './sample-grid-args.type';
 
 /**
  * Default grid sampler implementation
  */
 export class DefaultGridSampler extends GridSampler {
-  sampleGrid(
-    image: BitMatrix,
-    dimensionX: number,
-    dimensionY: number,
-    p1ToX: number,
-    p1ToY: number,
-    p2ToX: number,
-    p2ToY: number,
-    p3ToX: number,
-    p3ToY: number,
-    p4ToX: number,
-    p4ToY: number,
-    p1FromX: number,
-    p1FromY: number,
-    p2FromX: number,
-    p2FromY: number,
-    p3FromX: number,
-    p3FromY: number,
-    p4FromX: number,
-    p4FromY: number
-  ): BitMatrix {
+  sampleGrid(...args: SampleGridArgs): BitMatrix {
+    const [
+      image,
+      dimensionX,
+      dimensionY,
+      p1ToX,
+      p1ToY,
+      p2ToX,
+      p2ToY,
+      p3ToX,
+      p3ToY,
+      p4ToX,
+      p4ToY,
+      p1FromX,
+      p1FromY,
+      p2FromX,
+      p2FromY,
+      p3FromX,
+      p3FromY,
+      p4FromX,
+      p4FromY,
+    ] = args;
     const transform = PerspectiveTransform.quadrilateralToQuadrilateral(
       p1ToX,
       p1ToY,

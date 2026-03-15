@@ -1,6 +1,7 @@
 import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
 import { escapeXml } from '../../../modules/exporter/utils';
 import { canvasToPngDataUrl } from './canvas-to-png-data-url';
+import { resolveExportConfig } from './resolve-export-config';
 
 /**
  * Export canvas as SVG (embedded raster)
@@ -9,22 +10,11 @@ export async function exportSvg(
   canvas: HTMLCanvasElement,
   config: Partial<ExportConfig> = {}
 ): Promise<ExportResult> {
-  const opts: ExportConfig = {
-    outputFormat: 'svg',
-    outputWidth: config.outputWidth ?? canvas.width,
-    outputHeight: config.outputHeight ?? canvas.height,
-    outputQuality: config.outputQuality ?? 0.9,
-    filename: config.filename ?? 'anqr-qrcode',
-    animationSpeed: config.animationSpeed ?? 100,
-    loopAnimation: config.loopAnimation ?? true,
-    transparentBackground: config.transparentBackground ?? false,
-    dpi: config.dpi ?? 72,
-    includeMetadata: config.includeMetadata ?? false,
-    includeQuietZone: config.includeQuietZone ?? true,
-    bgOverride: config.bgOverride ?? '',
-    gifDisposal: config.gifDisposal ?? 'keep',
-    metadata: config.metadata,
-  };
+  const opts = resolveExportConfig(config, {
+    width: canvas.width,
+    height: canvas.height,
+    format: 'svg',
+  });
 
   const dataUrl = await canvasToPngDataUrl(canvas);
 

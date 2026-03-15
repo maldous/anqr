@@ -2,20 +2,7 @@ import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/ui/primitives/button';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HelpLink } from '@/ui/primitives/help-link';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/primitives/select';
-import { Slider } from '@/ui/primitives/slider';
-import { Switch } from '@/ui/primitives/switch';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HexColorField } from '@/features/generator/components/sections/hex-color-field';
 import {
   type AlignmentStyle,
   type FinderStyle,
@@ -26,6 +13,21 @@ import {
   type TimingStyle,
   useQRStore,
 } from '@/store/qr-store';
+import { LabeledHelpSelectField } from './labeled-help-select-field';
+import {
+  DynamicTestId,
+  HelpLink,
+  HighlightedLabel,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Slider,
+  Switch,
+} from './section-ui';
 
 export function RenderSection() {
   const {
@@ -107,117 +109,61 @@ export function RenderSection() {
       </div>
 
       {/* Module Style */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1">
-          <Label>
-            <HighlightedLabel>{t('render.shape')}</HighlightedLabel>
-          </Label>
-          <HelpLink anchor="section-8" />
-        </div>
-        <Select
-          value={render.moduleStyle}
-          onValueChange={(v) => setRenderModuleStyle(v as ModuleStyle)}
-        >
-          <SelectTrigger
-            data-testid={DynamicTestId.resolve(
-              'render-module-style-select',
-              'render-module-style-select'
-            )}
-            title={t('hints.moduleStyle')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="square">{t('render.square')}</SelectItem>
-            <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
-            <SelectItem value="dots">{t('render.dots')}</SelectItem>
-            <SelectItem value="diamond">{t('render.diamond')}</SelectItem>
-            <SelectItem value="connected">{t('render.connected')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <LabeledHelpSelectField
+        anchor="section-8"
+        label={t('render.shape')}
+        onValueChange={(v) => setRenderModuleStyle(v as ModuleStyle)}
+        testId="render-module-style-select"
+        title={t('hints.moduleStyle')}
+        value={render.moduleStyle}
+      >
+        <SelectItem value="square">{t('render.square')}</SelectItem>
+        <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
+        <SelectItem value="dots">{t('render.dots')}</SelectItem>
+        <SelectItem value="diamond">{t('render.diamond')}</SelectItem>
+        <SelectItem value="connected">{t('render.connected')}</SelectItem>
+      </LabeledHelpSelectField>
 
       {/* Finder Style */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1">
-          <Label>
-            <HighlightedLabel>{t('render.finderStyle')}</HighlightedLabel>
-          </Label>
-          <HelpLink anchor="section-9" />
-        </div>
-        <Select
-          value={render.finderStyle}
-          onValueChange={(v) => setRenderFinderStyle(v as FinderStyle)}
-        >
-          <SelectTrigger
-            data-testid={DynamicTestId.resolve(
-              'render-finder-style-select',
-              'render-finder-style-select'
-            )}
-            title={t('hints.finderStyle')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="square">{t('render.square')}</SelectItem>
-            <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
-            <SelectItem value="circle">{t('render.circle')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <LabeledHelpSelectField
+        anchor="section-9"
+        label={t('render.finderStyle')}
+        onValueChange={(v) => setRenderFinderStyle(v as FinderStyle)}
+        testId="render-finder-style-select"
+        title={t('hints.finderStyle')}
+        value={render.finderStyle}
+      >
+        <SelectItem value="square">{t('render.square')}</SelectItem>
+        <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
+        <SelectItem value="circle">{t('render.circle')}</SelectItem>
+      </LabeledHelpSelectField>
 
       {/* Alignment Pattern Style */}
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('render.alignmentStyle')}</HighlightedLabel>
-        </Label>
-        <Select
-          value={render.alignmentStyle}
-          onValueChange={(v) => setRenderAlignmentStyle(v as AlignmentStyle)}
-        >
-          <SelectTrigger
-            data-testid={DynamicTestId.resolve(
-              'render-alignment-style-select',
-              'render-alignment-style-select'
-            )}
-            title={t('hints.alignmentStyle')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="match_finder">{t('render.matchFinder')}</SelectItem>
-            <SelectItem value="square">{t('render.square')}</SelectItem>
-            <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
-            <SelectItem value="circle">{t('render.circle')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <LabeledHelpSelectField
+        label={t('render.alignmentStyle')}
+        onValueChange={(v) => setRenderAlignmentStyle(v as AlignmentStyle)}
+        testId="render-alignment-style-select"
+        title={t('hints.alignmentStyle')}
+        value={render.alignmentStyle}
+      >
+        <SelectItem value="match_finder">{t('render.matchFinder')}</SelectItem>
+        <SelectItem value="square">{t('render.square')}</SelectItem>
+        <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
+        <SelectItem value="circle">{t('render.circle')}</SelectItem>
+      </LabeledHelpSelectField>
 
       {/* Timing Pattern Style */}
-      <div className="space-y-2">
-        <Label>
-          <HighlightedLabel>{t('render.timingStyle')}</HighlightedLabel>
-        </Label>
-        <Select
-          value={render.timingStyle}
-          onValueChange={(v) => setRenderTimingStyle(v as TimingStyle)}
-        >
-          <SelectTrigger
-            data-testid={DynamicTestId.resolve(
-              'render-timing-style-select',
-              'render-timing-style-select'
-            )}
-            title={t('hints.timingStyle')}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="match_module">{t('render.matchModule')}</SelectItem>
-            <SelectItem value="solid">{t('render.solid')}</SelectItem>
-            <SelectItem value="dashed">{t('render.dashed')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <LabeledHelpSelectField
+        label={t('render.timingStyle')}
+        onValueChange={(v) => setRenderTimingStyle(v as TimingStyle)}
+        testId="render-timing-style-select"
+        title={t('hints.timingStyle')}
+        value={render.timingStyle}
+      >
+        <SelectItem value="match_module">{t('render.matchModule')}</SelectItem>
+        <SelectItem value="solid">{t('render.solid')}</SelectItem>
+        <SelectItem value="dashed">{t('render.dashed')}</SelectItem>
+      </LabeledHelpSelectField>
 
       {/* Colors */}
       <div className="space-y-2">
@@ -228,58 +174,24 @@ export function RenderSection() {
           <HelpLink anchor="section-11" />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">
-              <HighlightedLabel>{t('render.foreground')}</HighlightedLabel>
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                data-testid={DynamicTestId.resolve(
-                  'render-fg-color-picker',
-                  'render-fg-color-picker'
-                )}
-                type="color"
-                value={render.fgColor}
-                onChange={(e) => setRenderFgColor(e.target.value)}
-                className="w-10 h-10 p-1 cursor-pointer"
-                title={t('hints.pickFgColor')}
-              />
-              <Input
-                data-testid={DynamicTestId.resolve('render-fg-color-text', 'render-fg-color-text')}
-                type="text"
-                value={render.fgColor}
-                onChange={(e) => setRenderFgColor(e.target.value)}
-                className="flex-1"
-                title={t('hints.fgColorHex')}
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">
-              <HighlightedLabel>{t('render.background')}</HighlightedLabel>
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                data-testid={DynamicTestId.resolve(
-                  'render-bg-color-picker',
-                  'render-bg-color-picker'
-                )}
-                type="color"
-                value={render.bgColor}
-                onChange={(e) => setRenderBgColor(e.target.value)}
-                className="w-10 h-10 p-1 cursor-pointer"
-                title={t('hints.pickBgColor')}
-              />
-              <Input
-                data-testid={DynamicTestId.resolve('render-bg-color-text', 'render-bg-color-text')}
-                type="text"
-                value={render.bgColor}
-                onChange={(e) => setRenderBgColor(e.target.value)}
-                className="flex-1"
-                title={t('hints.bgColorHex')}
-              />
-            </div>
-          </div>
+          <HexColorField
+            label={t('render.foreground')}
+            onChange={setRenderFgColor}
+            pickerTestId="render-fg-color-picker"
+            pickerTitle={t('hints.pickFgColor')}
+            textTestId="render-fg-color-text"
+            textTitle={t('hints.fgColorHex')}
+            value={render.fgColor}
+          />
+          <HexColorField
+            label={t('render.background')}
+            onChange={setRenderBgColor}
+            pickerTestId="render-bg-color-picker"
+            pickerTitle={t('hints.pickBgColor')}
+            textTestId="render-bg-color-text"
+            textTitle={t('hints.bgColorHex')}
+            value={render.bgColor}
+          />
         </div>
       </div>
 
@@ -303,28 +215,18 @@ export function RenderSection() {
       {(tier === 'advanced' || tier === 'professional') && (
         <>
           {/* Gap Mode */}
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('render.gapMode')}</HighlightedLabel>
-            </Label>
-            <Select value={render.gapMode} onValueChange={(v) => setRenderGapMode(v as GapMode)}>
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'render-gap-mode-select',
-                  'render-gap-mode-select'
-                )}
-                title={t('hints.gapMode')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('render.none')}</SelectItem>
-                <SelectItem value="inset">{t('render.inset')}</SelectItem>
-                <SelectItem value="stroke">{t('render.stroke')}</SelectItem>
-                <SelectItem value="negative_space">{t('render.negativeSpace')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledHelpSelectField
+            label={t('render.gapMode')}
+            onValueChange={(v) => setRenderGapMode(v as GapMode)}
+            testId="render-gap-mode-select"
+            title={t('hints.gapMode')}
+            value={render.gapMode}
+          >
+            <SelectItem value="none">{t('render.none')}</SelectItem>
+            <SelectItem value="inset">{t('render.inset')}</SelectItem>
+            <SelectItem value="stroke">{t('render.stroke')}</SelectItem>
+            <SelectItem value="negative_space">{t('render.negativeSpace')}</SelectItem>
+          </LabeledHelpSelectField>
 
           {/* Corner Radius */}
           <div className="space-y-2">
@@ -351,123 +253,67 @@ export function RenderSection() {
           </div>
 
           {/* Gradient */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1">
-              <Label>
-                <HighlightedLabel>{t('render.gradient')}</HighlightedLabel>
-              </Label>
-              <HelpLink anchor="section-11" />
-            </div>
-            <Select
-              value={render.gradient.type}
-              onValueChange={(v) => setRenderGradient({ type: v as GradientType })}
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'render-gradient-type-select',
-                  'render-gradient-type-select'
-                )}
-                title={t('hints.gradient')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('render.none')}</SelectItem>
-                <SelectItem value="linear">{t('render.linear')}</SelectItem>
-                <SelectItem value="radial">{t('render.radial')}</SelectItem>
-                <SelectItem value="conic">{t('render.conic')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledHelpSelectField
+            anchor="section-11"
+            label={t('render.gradient')}
+            onValueChange={(v) => setRenderGradient({ type: v as GradientType })}
+            testId="render-gradient-type-select"
+            title={t('hints.gradient')}
+            value={render.gradient.type}
+          >
+            <SelectItem value="none">{t('render.none')}</SelectItem>
+            <SelectItem value="linear">{t('render.linear')}</SelectItem>
+            <SelectItem value="radial">{t('render.radial')}</SelectItem>
+            <SelectItem value="conic">{t('render.conic')}</SelectItem>
+          </LabeledHelpSelectField>
 
           {/* Eye Styles */}
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('render.eyeOuterStyle')}</HighlightedLabel>
-            </Label>
-            <Select
-              value={render.eyeOuterStyle}
-              onValueChange={(v) =>
-                useQRStore.setState((s) => ({
-                  render: { ...s.render, eyeOuterStyle: v as FinderStyle },
-                }))
-              }
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'render-eye-outer-style-select',
-                  'render-eye-outer-style-select'
-                )}
-                title={t('hints.eyeOuterStyle')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="square">{t('render.square')}</SelectItem>
-                <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
-                <SelectItem value="circle">{t('render.circle')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledHelpSelectField
+            label={t('render.eyeOuterStyle')}
+            onValueChange={(v) =>
+              useQRStore.setState((s) => ({
+                render: { ...s.render, eyeOuterStyle: v as FinderStyle },
+              }))
+            }
+            testId="render-eye-outer-style-select"
+            title={t('hints.eyeOuterStyle')}
+            value={render.eyeOuterStyle}
+          >
+            <SelectItem value="square">{t('render.square')}</SelectItem>
+            <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
+            <SelectItem value="circle">{t('render.circle')}</SelectItem>
+          </LabeledHelpSelectField>
 
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('render.eyeInnerStyle')}</HighlightedLabel>
-            </Label>
-            <Select
-              value={render.eyeInnerStyle}
-              onValueChange={(v) =>
-                useQRStore.setState((s) => ({
-                  render: { ...s.render, eyeInnerStyle: v as FinderStyle },
-                }))
-              }
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'render-eye-inner-style-select',
-                  'render-eye-inner-style-select'
-                )}
-                title={t('hints.eyeInnerStyle')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="square">{t('render.square')}</SelectItem>
-                <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
-                <SelectItem value="circle">{t('render.circle')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledHelpSelectField
+            label={t('render.eyeInnerStyle')}
+            onValueChange={(v) =>
+              useQRStore.setState((s) => ({
+                render: { ...s.render, eyeInnerStyle: v as FinderStyle },
+              }))
+            }
+            testId="render-eye-inner-style-select"
+            title={t('hints.eyeInnerStyle')}
+            value={render.eyeInnerStyle}
+          >
+            <SelectItem value="square">{t('render.square')}</SelectItem>
+            <SelectItem value="rounded">{t('render.rounded')}</SelectItem>
+            <SelectItem value="circle">{t('render.circle')}</SelectItem>
+          </LabeledHelpSelectField>
 
           {/* Frame */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-1">
-              <Label>
-                <HighlightedLabel>{t('render.frameStyle')}</HighlightedLabel>
-              </Label>
-              <HelpLink anchor="section-32" />
-            </div>
-            <Select
-              value={render.frameStyle}
-              onValueChange={(v) => setRenderFrameStyle(v as FrameStyle)}
-            >
-              <SelectTrigger
-                data-testid={DynamicTestId.resolve(
-                  'render-frame-style-select',
-                  'render-frame-style-select'
-                )}
-                title={t('hints.frameStyle')}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('render.none')}</SelectItem>
-                <SelectItem value="rounded_frame">{t('render.roundedFrame')}</SelectItem>
-                <SelectItem value="sticker">{t('render.sticker')}</SelectItem>
-                <SelectItem value="tag">{t('render.tag')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <LabeledHelpSelectField
+            anchor="section-32"
+            label={t('render.frameStyle')}
+            onValueChange={(v) => setRenderFrameStyle(v as FrameStyle)}
+            testId="render-frame-style-select"
+            title={t('hints.frameStyle')}
+            value={render.frameStyle}
+          >
+            <SelectItem value="none">{t('render.none')}</SelectItem>
+            <SelectItem value="rounded_frame">{t('render.roundedFrame')}</SelectItem>
+            <SelectItem value="sticker">{t('render.sticker')}</SelectItem>
+            <SelectItem value="tag">{t('render.tag')}</SelectItem>
+          </LabeledHelpSelectField>
 
           {render.frameStyle !== 'none' && (
             <div className="space-y-2">

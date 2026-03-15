@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/ui/primitives/select';
 import type { PayNowForm } from '../payload-section-types';
+import { OptionalAmountField } from './optional-amount-field';
+import { ValidatedLabeledInputField } from './validated-labeled-input-field';
 
 export const PaynowEditor = ({
   payNowForm,
@@ -48,52 +50,27 @@ export const PaynowEditor = ({
         </SelectContent>
       </Select>
     </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.uenMobile')}</HighlightedLabel>
-      </Label>
-      <Input
-        value={payNowForm.value}
-        onChange={(e) => setPayNowForm((prev) => ({ ...prev, value: e.target.value }))}
-        placeholder="201234567X or +65..."
-        data-testid={DynamicTestId.resolve(
-          'payload-paynow-value-input',
-          'payload-paynow-value-input'
-        )}
-        className={
-          payload.validate &&
-          payNowForm.value &&
-          payNowForm.type === 'mobile' &&
-          !isValidPhone(payNowForm.value)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
-        }
-      />
-      {payload.validate &&
-        payNowForm.value &&
-        payNowForm.type === 'mobile' &&
-        !isValidPhone(payNowForm.value) && (
-          <p className="text-xs text-destructive">
-            {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
-          </p>
-        )}
-    </div>
-    <div className="space-y-2">
-      <Label>
-        <HighlightedLabel>{t('payload.amountSgd')}</HighlightedLabel>
-      </Label>
-      <Input
-        type="number"
-        step="0.01"
-        value={payNowForm.amount}
-        onChange={(e) => setPayNowForm((prev) => ({ ...prev, amount: e.target.value }))}
-        placeholder="50.00"
-        data-testid={DynamicTestId.resolve(
-          'payload-paynow-amount-input',
-          'payload-paynow-amount-input'
-        )}
-      />
-    </div>
+    <ValidatedLabeledInputField
+      label={t('payload.uenMobile')}
+      value={payNowForm.value}
+      onChange={(value) => setPayNowForm((prev) => ({ ...prev, value }))}
+      placeholder="201234567X or +65..."
+      validate={payload.validate && payNowForm.type === 'mobile'}
+      invalidMessage={t(
+        'validation.invalidPhone',
+        'Enter a valid phone number (at least 3 digits)'
+      )}
+      dataTestId="payload-paynow-value-input"
+      type="tel"
+      isValid={isValidPhone}
+    />
+    <OptionalAmountField
+      label={t('payload.amountSgd')}
+      value={payNowForm.amount}
+      onChange={(value) => setPayNowForm((prev) => ({ ...prev, amount: value }))}
+      placeholder="50.00"
+      step="0.01"
+    />
     <div className="space-y-2">
       <Label>
         <HighlightedLabel>{t('payload.referenceOptional')}</HighlightedLabel>

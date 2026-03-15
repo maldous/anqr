@@ -1,4 +1,5 @@
 import { EMVQRBuilder } from './emv';
+import { finalizeEmvPayment } from './finalize-emv-payment';
 import type { AusPayNetParams } from '../../modules/payload-generators/types';
 import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
 
@@ -21,26 +22,12 @@ export function generateAusPayNet(params: AusPayNetParams): string {
   }
 
   builder.addMerchantAccountInfo(26, PAYMENT_SCHEME_GUI.AUSPAYNET, maiData);
-
-  builder.setTransactionCurrency(ISO_CURRENCY.AUD);
-
-  if (params.amount !== undefined && params.amount > 0) {
-    builder.setTransactionAmount(params.amount);
-  }
-
-  builder.setCountryCode('AU');
-
-  if (params.merchantName) {
-    builder.setMerchantName(params.merchantName);
-  }
-
-  if (params.merchantCity) {
-    builder.setMerchantCity(params.merchantCity);
-  }
-
-  if (params.reference) {
-    builder.setAdditionalData({ referenceLabel: params.reference });
-  }
-
-  return builder.build();
+  return finalizeEmvPayment(builder, {
+    amount: params.amount,
+    countryCode: 'AU',
+    currency: ISO_CURRENCY.AUD,
+    merchantCity: params.merchantCity,
+    merchantName: params.merchantName,
+    reference: params.reference,
+  });
 }

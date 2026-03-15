@@ -1,35 +1,9 @@
-import { buildHeaderAnimation } from './build-header-animation';
-import { buildHeaderColors } from './build-header-colors';
-import { buildHeaderOutput } from './build-header-output';
-import { buildHeaderOverlay } from './build-header-overlay';
-import { buildHeaderQrSettings } from './build-header-qr-settings';
-import { buildHeaderSafetyQaAuto } from './build-header-safety-qa-auto';
-import { buildHeaderStyles } from './build-header-styles';
-import type { StoreState } from './store-state.type';
+import { buildShareBaseConfig } from '@/features/generator/components/sections/build-share-base-config';
+import type { BuildShareConfigInput } from '@/features/generator/components/sections/build-share-config-input.type';
 
-export function buildHeaderShareConfig(
-  getPayloadText: () => string,
-  lang: string,
-  qr: StoreState['qr'],
-  render: StoreState['render'],
-  overlay: StoreState['overlay'],
-  animation: StoreState['animation'],
-  output: StoreState['output'],
-  safety: StoreState['safety'],
-  qa: StoreState['qa'],
-  auto: StoreState['auto'],
-  watermark: StoreState['watermark'],
-  metadata: StoreState['metadata']
-) {
+export function buildHeaderShareConfig(params: Readonly<BuildShareConfigInput & { lang: string }>) {
   return {
-    data: getPayloadText(),
-    lang,
-    ...buildHeaderQrSettings(qr, render),
-    ...buildHeaderColors(render),
-    ...buildHeaderStyles(render),
-    ...buildHeaderOverlay(overlay),
-    ...buildHeaderAnimation(animation),
-    ...buildHeaderOutput(output),
-    ...buildHeaderSafetyQaAuto(safety, qa, auto, watermark, metadata),
+    lang: params.lang,
+    ...buildShareBaseConfig(params),
   };
 }

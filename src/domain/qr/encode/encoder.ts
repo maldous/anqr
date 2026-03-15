@@ -9,12 +9,10 @@ import { qrBitBuffer } from './bit-buffer';
 import { composeSvgAccessibilityAttr } from './compose-svg-accessibility-attr';
 import { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
 import { computeBlockECData, interleaveCodewords } from './ec-codewords';
-import { qrPolynomial } from './math';
 import { createDataURL } from './output';
 import { padDataBuffer } from './pad-data-buffer';
 import { placeDataBitInModule } from './place-data-bit-in-module';
 import { getRSBlocks } from './rs-blocks';
-import type { SvgAccessibilityAttr } from './svg-accessibility-attr';
 import type {
   QRBitBuffer as QRBitBufferType,
   QRCodeInstance,
@@ -25,7 +23,6 @@ import { QRErrorCorrectionLevel } from '../../../modules/qr-encoder/types';
 import {
   getBCHTypeInfo,
   getBCHTypeNumber,
-  getErrorCorrectPolynomial,
   getLengthInBits,
   getLostPoint,
   getMaskFunction,

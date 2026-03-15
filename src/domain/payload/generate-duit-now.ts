@@ -1,4 +1,5 @@
 import { EMVQRBuilder } from './emv';
+import { finalizeEmvPayment } from './finalize-emv-payment';
 import type { DuitNowParams } from '../../modules/payload-generators/types';
 import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
 
@@ -25,23 +26,12 @@ export function generateDuitNow(params: DuitNowParams): string {
   ];
 
   builder.addMerchantAccountInfo(26, PAYMENT_SCHEME_GUI.DUITNOW, maiData);
-
-  builder.setTransactionCurrency(ISO_CURRENCY.MYR);
-
-  if (params.amount !== undefined && params.amount > 0) {
-    builder.setTransactionAmount(params.amount);
-  }
-
-  builder.setCountryCode('MY');
-  builder.setMerchantName(params.merchantName);
-
-  if (params.merchantCity) {
-    builder.setMerchantCity(params.merchantCity);
-  }
-
-  if (params.reference) {
-    builder.setAdditionalData({ referenceLabel: params.reference });
-  }
-
-  return builder.build();
+  return finalizeEmvPayment(builder, {
+    amount: params.amount,
+    countryCode: 'MY',
+    currency: ISO_CURRENCY.MYR,
+    merchantCity: params.merchantCity,
+    merchantName: params.merchantName,
+    reference: params.reference,
+  });
 }

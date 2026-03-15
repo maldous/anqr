@@ -1,4 +1,4 @@
-import type { RGB } from './overlay-color-types';
+import type { RGB } from './rgb';
 
 export interface RGBA extends RGB {
   a: number;
