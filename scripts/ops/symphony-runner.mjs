@@ -173,19 +173,27 @@ function gitPush() {
 // Validation pipeline
 // ---------------------------------------------------------------------------
 
-function runValidation() {
-  const results = [];
+const TSC_CMD = 'npx tsc --noEmit';
+const TSC_EXEC_OPTIONS = { cwd: ROOT, timeout: 120_000, stdio: 'pipe', env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=2048' } };
 
-  // Typecheck
+function runTypecheck() {
   try {
-    execSync('npx tsc --noEmit', { cwd: ROOT, timeout: 60_000, stdio: 'pipe' });
-    results.push({ check: 'typecheck', pass: true, detail: '' });
+    execSync(TSC_CMD, TSC_EXEC_OPTIONS);
+    return { pass: true, detail: '' };
   } catch (err) {
     const stdout = (err.stdout || '').toString();
     const stderr = (err.stderr || '').toString();
     const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
-    results.push({ check: 'typecheck', pass: false, detail: output });
+    return { pass: false, detail: output };
   }
+}
+
+function runValidation() {
+  const results = [];
+
+  // Typecheck
+  const tc = runTypecheck();
+  results.push({ check: 'typecheck', ...tc });
 
   // Unit tests
   try {
@@ -329,6 +337,47 @@ async function executeIssue(issue, dryRun) {
       );
     }
     return;
+  }
+
+  // Early typecheck gate — fail fast before burning agent tokens or an attempt
+  if (!dryRun) {
+    // Skip if a recent pre-flight failure comment exists (avoid spamming every timer fire)
+    const recentComments = detail.comments?.nodes || [];
+    const hasRecentGateFailure = recentComments.some((c) => {
+      if (!c.body.includes('⛔ **Pre-flight typecheck failed**')) return false;
+      const commentAge = Date.now() - new Date(c.createdAt).getTime();
+      return commentAge < 60 * 60 * 1000; // 60 min window
+    });
+
+    if (hasRecentGateFailure) {
+      console.log('[runner] Recent pre-flight failure exists — skipping until 60min cooldown expires');
+      return;
+    }
+
+    console.log('[runner] Running pre-flight typecheck...');
+    const baseline = runTypecheck();
+    if (!baseline.pass) {
+      console.error('[runner] Baseline typecheck failed — skipping agent execution');
+      await addComment(
+        issue.id,
+        [
+          `⛔ **Pre-flight typecheck failed** — codebase does not typecheck before agent execution. Skipping to avoid wasting tokens.`,
+          '',
+          '```',
+          baseline.detail.slice(0, 1500),
+          '```',
+          '',
+          'Fix the baseline type errors first. This does not count as an attempt.',
+        ].join('\n'),
+      );
+      sendNotification({
+        subject: `Symphony skipped: ${issue.identifier} — baseline typecheck failed`,
+        body: `Pre-flight typecheck failed for ${issue.identifier}. Agent execution skipped (attempt not consumed).\n\n${baseline.detail.slice(0, 500)}\n\n${linearIssueUrl(issue.identifier)}`,
+        severity: 'warn',
+      });
+      return;
+    }
+    console.log('[runner] Pre-flight typecheck passed ✅');
   }
 
   // Move to In Progress + post starting comment (counts toward attempt tracking)

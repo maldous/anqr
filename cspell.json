@@ -111,7 +111,8 @@
     "sambanova",
     "cerebras",
     "openrouter",
-    "subcontext"
+    "subcontext",
+    "cooldown"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
