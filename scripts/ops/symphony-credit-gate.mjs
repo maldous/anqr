@@ -8,15 +8,16 @@
  * skips recently-failed providers, and returns the first available provider.
  *
  * Cascade order (best-to-worst):
- *   1. Groq            — free cloud, fast, llama-3.3-70b-versatile
- *   2. Mistral         — free experimental tier, devstral-small-2507
- *   3. Gemini          — free cloud tier, gemini-2.5-flash
- *   4. Gemini Lite     — separate quota, gemini-2.5-flash-lite
- *   5. OpenRouter FREE — free :free models, llama-3.3-70b-instruct
- *   6. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
- *   7. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
- *   8. GitHub Models   — free, gpt-4.1-mini
- *   9. Ollama local    — local fallback, qwen3.5:35b-a3b-32t
+ *   1. Codex (OpenAI)  — cloud, gpt-5.3-codex (when credits available)
+ *   2. Groq            — free cloud, fast, llama-3.3-70b-versatile
+ *   3. Mistral         — free experimental tier, devstral-small-2507
+ *   4. Gemini          — free cloud tier, gemini-2.5-flash
+ *   5. Gemini Lite     — separate quota, gemini-2.5-flash-lite
+ *   6. OpenRouter FREE — free :free models, llama-3.3-70b-instruct
+ *   7. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
+ *   8. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
+ *   9. GitHub Models   — free, gpt-4.1-mini
+ *  10. Ollama local    — local fallback, qwen3.5:35b-a3b-32t
  *
  * All probes use lightweight /v1/models listings (not generation requests)
  * to preserve free-tier quotas.
@@ -109,6 +110,13 @@ async function probeOllama() {
 // ---------------------------------------------------------------------------
 
 const PROVIDERS = [
+  {
+    name: 'codex',
+    model: 'gpt-5.3-codex',
+    baseUrl: 'https://api.openai.com/v1',
+    envVar: 'OPENAI_API_KEY',
+    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+  },
   {
     name: 'groq',
     model: 'llama-3.3-70b-versatile',
