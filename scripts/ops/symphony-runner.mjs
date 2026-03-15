@@ -39,6 +39,7 @@ import {
   listIssuesByState,
   updateIssue,
   addComment,
+  updateComment,
   getIssueDetail,
   STATES,
 } from './linear-client.mjs';
@@ -274,12 +275,14 @@ async function executeIssue(issue, dryRun) {
   }
 
   // Move to In Progress + post starting comment (counts toward attempt tracking)
+  let startingCommentId = null;
   if (!dryRun) {
     await updateIssue(issue.id, { stateId: STATES.inProgress });
-    await addComment(
+    const startComment = await addComment(
       issue.id,
       `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\nSelecting provider...`,
     );
+    startingCommentId = startComment.id;
   }
   console.log(`[runner] Moved ${issue.identifier} to In Progress${dryRun ? ' (dry-run: skipped)' : ''}`);
 
@@ -300,12 +303,14 @@ async function executeIssue(issue, dryRun) {
   }
   console.log(`[runner] Selected provider: ${provider.name} (${provider.model})`);
 
-  // Update starting comment with provider info + send email
+  // Update starting comment in-place with provider info + send email
   if (!dryRun) {
-    await addComment(
-      issue.id,
-      `▶️ **Provider selected:** ${provider.name} (${provider.model})`,
-    );
+    if (startingCommentId) {
+      await updateComment(
+        startingCommentId,
+        `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\n**Provider:** ${provider.name} (${provider.model})`,
+      );
+    }
     sendNotification({
       subject: `Symphony starting: ${issue.identifier} — ${issue.title}`,
       body: [

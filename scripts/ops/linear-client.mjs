@@ -13,6 +13,7 @@
  *   findOpenIssuesByTitle(fragment) — duplicate search
  *   listIssuesByState(stateNames)   — list issues by workflow state
  *   addComment(issueId, body)       — add comment to issue
+ *   updateComment(commentId, body)  — edit existing comment
  *   applyLabels(issueId, labelIds)  — set labels on issue
  *   getQueueDepth()                 — count open automatable issues
  */
@@ -166,6 +167,22 @@ export async function addComment(issueId, body) {
     throw new Error(`Failed to add comment to ${issueId}`);
   }
   return result.commentCreate.comment;
+}
+
+export async function updateComment(commentId, body) {
+  const result = await query(
+    `mutation($id: String!, $input: CommentUpdateInput!) {
+      commentUpdate(id: $id, input: $input) {
+        success
+        comment { id body }
+      }
+    }`,
+    { id: commentId, input: { body } },
+  );
+  if (!result.commentUpdate.success) {
+    throw new Error(`Failed to update comment ${commentId}`);
+  }
+  return result.commentUpdate.comment;
 }
 
 export async function applyLabels(issueId, labelIds) {
