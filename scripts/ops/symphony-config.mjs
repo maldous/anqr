@@ -43,3 +43,4 @@ export const RUNNER_OLLAMA_BASE_URL = 'http://localhost:11434/v1';
 export const RUNNER_MAX_OUTPUT_TOKENS = 4096;
 export const RUNNER_PROVIDER_FAILURE_WINDOW_SECS = 360;
 export const RUNNER_AUTO_PUSH = false;
+export const RUNNER_STUCK_THRESHOLD_MS = 15 * 60 * 1000; // 15 min — if In Progress with no update, assume runner was killed

@@ -47,6 +47,7 @@ import {
   RUNNER_MAX_RETRIES,
   RUNNER_COMMIT_PREFIX,
   RUNNER_AUTO_PUSH,
+  RUNNER_STUCK_THRESHOLD_MS,
   QUEUE_STATES,
   TARGET_MIN,
 } from './symphony-config.mjs';
@@ -207,6 +208,58 @@ function runValidation() {
 function countPreviousAttempts(issue) {
   const comments = issue.comments?.nodes || [];
   return comments.filter((c) => c.body.includes('🤖 Symphony agent starting')).length;
+}
+
+// ---------------------------------------------------------------------------
+// Stuck-in-progress recovery
+// ---------------------------------------------------------------------------
+
+async function recoverStuckIssues() {
+  const inProgress = await listIssuesByState(QUEUE_STATES.activeStates);
+  if (inProgress.length === 0) return;
+
+  const now = Date.now();
+  let recovered = 0;
+
+  for (const issue of inProgress) {
+    const updatedMs = new Date(issue.updatedAt).getTime();
+    const staleMs = now - updatedMs;
+
+    if (staleMs < RUNNER_STUCK_THRESHOLD_MS) {
+      console.log(`[runner] ${issue.identifier} in progress — updated ${Math.round(staleMs / 60_000)}min ago, not stuck`);
+      continue;
+    }
+
+    // Only recover issues the runner put In Progress (not human-managed ones)
+    const detail = await getIssueDetail(issue.id);
+    const comments = detail?.comments?.nodes || [];
+    const ownedByRunner = comments.some((c) => c.body.includes('🤖 Symphony agent starting'));
+    if (!ownedByRunner) {
+      console.log(`[runner] ${issue.identifier} in progress but not runner-owned — skipping`);
+      continue;
+    }
+
+    const staleMin = Math.round(staleMs / 60_000);
+    console.log(`[runner] ${issue.identifier} stuck in progress (${staleMin}min stale) — recovering to Todo`);
+
+    await addComment(
+      issue.id,
+      `⚠️ **Stuck-in-progress recovery** — issue was In Progress for ${staleMin}min with no activity. Previous runner likely killed mid-execution. Moving back to Todo for retry.`,
+    );
+    await updateIssue(issue.id, { stateId: STATES.todo });
+
+    sendNotification({
+      subject: `Symphony recovered stuck issue: ${issue.identifier}`,
+      body: `${issue.identifier} was stuck In Progress for ${staleMin}min with no update. Moved back to Todo.\n\n${linearIssueUrl(issue.identifier)}`,
+      severity: 'warn',
+    });
+
+    recovered++;
+  }
+
+  if (recovered > 0) {
+    console.log(`[runner] Recovered ${recovered} stuck issue(s)`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -537,6 +590,9 @@ async function main() {
       console.log('[runner] Run "git stash" or commit changes first');
       process.exit(0);
     }
+
+    // Recover any issues stuck in In Progress from a killed runner
+    await recoverStuckIssues();
 
     // Pick issue
     const issue = await pickIssue();
