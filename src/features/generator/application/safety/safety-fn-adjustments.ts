@@ -5,8 +5,8 @@
  */
 
 import { adjustOverlayIntensity } from '@/features/generator/application/safety/safety-fn-overlayintensity';
-import { SafetyAdjustmentResult } from '@/features/generator/application/safety/safety-interface-adjustmentresult';
-import { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
+import type { SafetyAdjustmentResult } from '@/features/generator/application/safety/safety-interface-adjustmentresult';
+import type { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
 
 export function computeSafetyAdjustments(params: {
   safetyMode: string;

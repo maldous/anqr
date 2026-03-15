@@ -10,7 +10,7 @@ import type {
   FullQArtPipelineResult,
   QArtModule,
 } from '@/features/generator/application/qart/qart-shared-types';
-import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
+import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 import { runArtworkMainThreadFallback } from '@/features/generator/application/safety/safety-fn-mainthread';
 

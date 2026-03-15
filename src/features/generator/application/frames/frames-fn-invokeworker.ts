@@ -10,7 +10,7 @@ import type {
   QArtWorkerResult,
 } from '@/features/generator/application/qart/qart-shared-types';
 import { handleArtworkMainThreadFallbackForFrame } from '@/features/generator/application/frames/frames-fn-artworkfallback';
-import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
+import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 
 const log = createLogger('QR');
 

@@ -9,7 +9,7 @@ import { buildDitherResolvedConfig } from './build-dither-resolved-config';
 import { computeDitherThreshold } from './compute-dither-threshold';
 import { computeQualityMetrics } from './compute-quality-metrics';
 import { enforceModuleConstraints } from './enforce-module-constraints';
-import { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
+import type { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
 import { log } from './log';
 import { packedColorsToMatrix } from './packed-colors-to-matrix';
 import { pixelIndex } from './pixel-index';

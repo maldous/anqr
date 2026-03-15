@@ -1,6 +1,6 @@
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
 import { resolveDiffusionDitherOptions } from './diffusion-dither-options';
-import { PerceptualDitherOptions } from './perceptual-dither-options';
+import type { PerceptualDitherOptions } from './perceptual-dither-options';
 import { quantizePerceptualPixel } from './quantize-perceptual-pixel';
 import { runKernelDither } from './run-kernel-dither';
 

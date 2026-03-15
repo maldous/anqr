@@ -12,7 +12,7 @@ import { applyMosaicMode } from './apply-mosaic-mode';
 import { applyOutlineMode } from './apply-outline-mode';
 import { applyPixelateMode } from './apply-pixelate-mode';
 import { applyWaveMode } from './apply-wave-mode';
-import { OverlayModeContext } from './overlay-mode-context';
+import type { OverlayModeContext } from './overlay-mode-context';
 
 /**
  * Apply overlay mode effects to a module

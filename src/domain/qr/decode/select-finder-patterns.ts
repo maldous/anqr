@@ -1,7 +1,7 @@
 import type { FinderPattern } from '../../../modules/qr-decoder/types';
 import { evaluateCandidateTriplet } from './evaluate-candidate-triplet';
 import { qrDecoderLog } from './qr-decoder-log';
-import { ScoredTriplet } from './scored-triplet';
+import type { ScoredTriplet } from './scored-triplet';
 
 /**
  * Select the 3 finder patterns that form the QR code corners

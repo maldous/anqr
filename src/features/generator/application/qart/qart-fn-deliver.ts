@@ -6,7 +6,7 @@
 
 import { drawToDisplayCanvas } from '@/features/generator/application/generation/generation-fn-drawtodisplay';
 import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
-import { QArtPerfSnapshot } from '@/features/generator/application/generation/generation-type-perfsnap';
+import type { QArtPerfSnapshot } from '@/features/generator/application/generation/generation-type-perfsnap';
 import { recordQArtPerfTimings } from '@/features/generator/application/qart/qart-fn-perf';
 import { updateQrMatrixFromResult } from '@/features/generator/application/qart/qart-fn-updatematrix';
 

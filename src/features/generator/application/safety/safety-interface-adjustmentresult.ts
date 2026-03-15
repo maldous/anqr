@@ -4,7 +4,7 @@
  * Notes: Safety adjustment result interface.
  */
 
-import { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
+import type { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
 
 export interface SafetyAdjustmentResult {
   modulePx: number;

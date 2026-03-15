@@ -1,7 +1,7 @@
 import { MODE_TERMINATOR } from '../../../modules/qr-decoder/types';
 import type { DecodedDataResult } from './decode.types';
 import { BitStream } from './bit-stream';
-import { DecodeLoopState } from './decode-loop-state';
+import type { DecodeLoopState } from './decode-loop-state';
 import { decodeSegmentData } from './decode-segment-data';
 import { getCharCountBits } from './get-char-count-bits';
 import { processDecodedSegment } from './process-decoded-segment';

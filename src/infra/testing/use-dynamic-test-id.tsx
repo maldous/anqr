@@ -1,6 +1,6 @@
 import React from 'react';
 import { baseFromProps } from './base-from-props';
-import { TestIdProps } from './test-id-props';
+import type { TestIdProps } from './test-id-props';
 import { DynamicTestId } from './dynamic-test-id';
 
 export function useDynamicTestId(props: TestIdProps, fallbackPrefix: string): string {

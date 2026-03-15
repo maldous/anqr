@@ -1,4 +1,4 @@
-import { AdPlaceholderProps } from './ad-placeholder-props';
+import type { AdPlaceholderProps } from './ad-placeholder-props';
 
 export function AdPlaceholder({
   slot,

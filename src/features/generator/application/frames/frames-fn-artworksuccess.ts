@@ -11,7 +11,7 @@ import type {
 } from '@/features/generator/application/qart/qart-shared-types';
 import { renderArtworkWorkerBitmap } from '@/features/generator/application/frames/frames-fn-renderbitmap';
 import { renderArtworkWorkerMatrix } from '@/features/generator/application/frames/frames-fn-rendermatrix';
-import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
+import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 import { rescueOutlierArtworkFrame } from '@/features/generator/application/safety/safety-fn-rescueoutlier';
 
 const log = createLogger('QR');

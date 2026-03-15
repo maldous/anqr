@@ -10,7 +10,7 @@ import { log } from './log';
 import { parseGridSize } from './parse-grid-size';
 import { parseHexColor } from './parse-hex-color';
 import { processSubpixelCell } from './process-subpixel-cell';
-import { SubpixelCellCtx } from './subpixel-cell-ctx';
+import type { SubpixelCellCtx } from './subpixel-cell-ctx';
 import { getSubpixelOverlayData } from './get-subpixel-overlay-data';
 
 /**

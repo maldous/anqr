@@ -1,7 +1,7 @@
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
 import { computeSobelEdgeMap } from './compute-sobel-edge-map';
 import { resolveDiffusionDitherOptions } from './diffusion-dither-options';
-import { EdgeAwareDitherOptions } from './edge-aware-dither-options';
+import type { EdgeAwareDitherOptions } from './edge-aware-dither-options';
 import { quantizeEdgeAwarePixel } from './quantize-edge-aware-pixel';
 import { runKernelDither } from './run-kernel-dither';
 

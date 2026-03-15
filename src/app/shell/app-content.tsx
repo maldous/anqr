@@ -49,7 +49,7 @@ import {
   applySafetyParams,
 } from '@/features/generator/application/url-import/apply-animation-output-and-safety-params';
 import { Analyze } from './analyze';
-import { CapacitorAppPlugin } from './capacitor-app-plugin';
+import type { CapacitorAppPlugin } from './capacitor-app-plugin';
 import { Gallery } from './gallery';
 import { log } from './log';
 import { StaticPage } from './static-page';

@@ -4,7 +4,7 @@
  * Notes: Compute jitter value from pattern effects.
  */
 
-import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
 export function computePatternDrivenJitterValue(
   frameIndex: number,

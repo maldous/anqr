@@ -6,7 +6,7 @@
 
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 import { cloneCanvasFrame } from '@/features/generator/application/frames/frames-fn-cloneframe';
-import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
+import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
 
 export function makeArtworkFrameHelpers(params: {

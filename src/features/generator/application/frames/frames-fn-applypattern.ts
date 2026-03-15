@@ -6,7 +6,7 @@
 
 import { applyAnimationPattern } from '@/domain/render/animation/apply-animation-pattern';
 import { cloneCanvasSimple } from '@/features/generator/application/frames/frames-fn-clonesimple';
-import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
 export function applyPatternStackToCanvas(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,

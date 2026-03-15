@@ -1,6 +1,6 @@
 import type { OverlayData } from '../../../modules/qr-generator/types';
 import { isPackedOverlayData } from './is-packed-overlay-data';
-import { LegacyOverlayData } from './legacy-overlay-data';
+import type { LegacyOverlayData } from './legacy-overlay-data';
 
 export function getOverlayBrightness(
   overlayData: OverlayData | null | undefined,

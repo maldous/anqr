@@ -6,7 +6,7 @@
 
 import { applyColorCycle } from '@/domain/render/animation/color-cycle';
 import { cloneCanvasSimple } from '@/features/generator/application/frames/frames-fn-clonesimple';
-import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
 
 export async function applyFramePostProcessing<

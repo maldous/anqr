@@ -6,7 +6,7 @@ import type {
   QRGeneratorConfig,
 } from '../../../modules/qr-generator/types';
 import { bitsToMatrix } from './bits-to-matrix';
-import { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
+import type { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
 import { buildStrictConstraintConfig } from './build-strict-constraint-config';
 import { clamp01 } from './clamp01';
 import { enforceModuleConstraints } from './enforce-module-constraints';

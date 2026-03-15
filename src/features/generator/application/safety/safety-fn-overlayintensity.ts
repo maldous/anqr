@@ -4,7 +4,7 @@
  * Notes: Adjust overlay intensity per safety mode.
  */
 
-import { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
+import type { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
 
 export function adjustOverlayIntensity(params: {
   safetyMode: string;

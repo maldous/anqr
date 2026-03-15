@@ -1,4 +1,4 @@
-import { GifEncoderLike } from './gif-encoder-like';
+import type { GifEncoderLike } from './gif-encoder-like';
 import { GIFENC } from './gifenc';
 
 export function createGifEncoder(): GifEncoderLike {

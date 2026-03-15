@@ -1,5 +1,5 @@
 import { getVersionFromModuleCount } from '../../../modules/qr-spec';
-import { CodewordBuildState } from './codeword-build-state';
+import type { CodewordBuildState } from './codeword-build-state';
 import { processCodewordModule } from './process-codeword-module';
 import { qrDecoderLog } from './qr-decoder-log';
 

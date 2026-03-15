@@ -1,6 +1,6 @@
 import type { DitherResult } from '../../../modules/dither-algorithms/types';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import { ScreenedBlueNoiseOptions } from './screened-blue-noise-options';
+import type { ScreenedBlueNoiseOptions } from './screened-blue-noise-options';
 import { buildBinaryDitherResult } from './build-binary-dither-result';
 
 /** Screened blue noise - combines halftone screening with blue noise */

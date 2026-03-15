@@ -24,6 +24,7 @@ export default {
         'android',
         'ios',
         'deps',
+        'architecture',
       ],
     ],
     'body-max-line-length': [1, 'always', 200],

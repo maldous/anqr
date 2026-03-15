@@ -4,7 +4,7 @@
  * Notes: Resolve overlay preservation options from safety + user config.
  */
 
-import { ResolvedPreservationOptions } from '@/features/generator/application/generation/generation-type-preservation';
+import type { ResolvedPreservationOptions } from '@/features/generator/application/generation/generation-type-preservation';
 
 export function resolveOverlayPreservationOptions(params: {
   overlayEnabled: boolean;

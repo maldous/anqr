@@ -1,6 +1,6 @@
 import { setLogLevel } from '../logging/logger';
 import { DEFAULT_TTL_MINUTES } from './default-ttl-minutes';
-import { DiagnosticsState } from './diagnostics-state';
+import type { DiagnosticsState } from './diagnostics-state';
 import { log } from './log';
 import { MAX_TTL_MINUTES } from './max-ttl-minutes';
 import { writeState } from './write-state';

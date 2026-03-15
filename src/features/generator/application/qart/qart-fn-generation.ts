@@ -6,7 +6,7 @@
 
 import { createLogger } from '@/infra/logging/logger';
 import { loadQArtModule } from '@/features/generator/application/qart/qart-shared-state';
-import { QArtPerfSnapshot } from '@/features/generator/application/generation/generation-type-perfsnap';
+import type { QArtPerfSnapshot } from '@/features/generator/application/generation/generation-type-perfsnap';
 import { deliverQArtResult } from '@/features/generator/application/qart/qart-fn-deliver';
 import { executeQArtWorkerPipeline } from '@/features/generator/application/qart/qart-fn-pipeline';
 

@@ -5,7 +5,7 @@
  */
 
 import type { AnimationPattern } from '@/modules/animation';
-import { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
 
 export function buildPatternEffectLists(animationState: {
   pattern: string;

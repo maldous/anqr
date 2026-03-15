@@ -11,7 +11,7 @@ import { makeArtworkFrameHelpers } from '@/features/generator/application/frames
 import { handleArtworkWorkerSuccess } from '@/features/generator/application/frames/frames-fn-artworksuccess';
 import { invokeArtworkWorkerForFrame } from '@/features/generator/application/frames/frames-fn-invokeworker';
 import { isNoisyOutlierMatchCheck } from '@/features/generator/application/frames/frames-fn-outliercheck';
-import { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
+import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
 import { getQArtSearchAttempts } from '@/features/generator/application/generation/generation-fn-qartattmpts';
 import { resolveArtworkMaskPattern } from '@/features/generator/application/safety/safety-fn-resolvemask';
 
