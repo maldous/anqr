@@ -18,8 +18,8 @@ export const TARGET_MIN = 1;
 export const TARGET_MAX = 2;
 export const MAX_CONCURRENT_AGENTS = 1;
 
-export const STALE_THRESHOLD_MS = 90 * 60 * 1000;  // 90 min (1.5x max execution)
-export const TASK_TIMEOUT_MS = 65 * 60 * 1000;     // 65 min (just past max execution)
+export const STALE_THRESHOLD_MS = 180 * 60 * 1000; // 180 min (1.5x max execution)
+export const TASK_TIMEOUT_MS = 125 * 60 * 1000;    // 125 min (just past max execution)
 
 export const TITLE_PREFIX = 'Harness';
 export const REQUIRED_LABEL_IDS = [LABELS.reliability];
@@ -35,7 +35,7 @@ export const QUEUE_STATES = {
 // ---------------------------------------------------------------------------
 
 export const RUNNER_MAX_TURNS = 600;
-export const RUNNER_MAX_EXECUTION_MS = 3_600_000; // 60 min hard timeout
+export const RUNNER_MAX_EXECUTION_MS = 7_200_000; // 120 min hard timeout — local Ollama averages ~1.5 min/turn
 export const RUNNER_MAX_RETRIES = 2;
 export const RUNNER_COMMIT_PREFIX = 'fix(symphony)';
 export const RUNNER_OLLAMA_MODEL = 'qwen3.5:35b-a3b-32t';

@@ -36,8 +36,8 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=anqr-symphony-runner
 
-# Safety limits — 62 min timeout (runner has 60 min internal limit)
-TimeoutStartSec=3720
+# Safety limits — 125 min timeout (runner has 120 min internal limit)
+TimeoutStartSec=7500
 MemoryMax=1G
 
 [Install]

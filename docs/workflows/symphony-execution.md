@@ -22,7 +22,7 @@ Symphony is the autonomous engineering harness for ANQR. It operates as a govern
          ▼
 ┌─────────────────┐
 │  Symphony runner │  bounded AI execution (Ollama)
-│                  │  single agent, single thread, <5min per task
+│                  │  single agent, single thread, up to 120 min per task
 └────────┬────────┘
          │ execution artifacts
          ▼
@@ -75,7 +75,7 @@ Linear (Todo issues)
 | `target_min` | 1 | Minimum queue depth |
 | `target_max` | 2 | Maximum queue depth |
 | `RUNNER_MAX_TURNS` | 600 | Max tool-calling rounds per issue |
-| `RUNNER_MAX_EXECUTION_MS` | 3,600,000 (60 min) | Hard wall-time timeout |
+| `RUNNER_MAX_EXECUTION_MS` | 7,200,000 (120 min) | Hard wall-time timeout |
 | `RUNNER_MAX_RETRIES` | 2 | Attempts before demotion to Backlog |
 | `RUNNER_AUTO_PUSH` | false | Git push disabled by default |
 
@@ -85,7 +85,7 @@ All Symphony-automatable issues must be Ollama-sized:
 
 - 1–2 files changed
 - 1–3 acceptance criteria
-- Single run, under ~5 minutes
+- Single run, bounded by runner timeout
 - Split failing work into subtasks
 - Mark non-automatable work `[HUMAN]`
 
@@ -97,7 +97,7 @@ When breaking down work for Symphony execution:
 
 - Issue touches >2 files
 - Issue has >3 acceptance criteria
-- Estimated execution time exceeds 5 minutes
+- Estimated execution time exceeds runner limits
 - Issue requires multi-step reasoning across unrelated modules
 - Previous attempt failed or timed out
 
@@ -121,7 +121,7 @@ These must be marked `[HUMAN]` and excluded from the automation queue.
 ### Failure handling
 
 - If a task fails on first attempt, split into smaller subtasks
-- If a task times out (>5min), mark as needs-decomposition
+- If a task times out, mark as needs-decomposition
 - If a task produces lint/typecheck/test failures, revert and re-slice
 - Never retry the same failing task more than twice
 
@@ -155,8 +155,8 @@ All parameters are centralized in `scripts/ops/symphony-config.mjs`:
 TARGET_MIN = 1
 TARGET_MAX = 2
 MAX_CONCURRENT_AGENTS = 1
-STALE_THRESHOLD_MS = 30 * 60 * 1000   // 30 min
-TASK_TIMEOUT_MS = 5 * 60 * 1000       // 5 min
+STALE_THRESHOLD_MS = 180 * 60 * 1000  // 180 min
+TASK_TIMEOUT_MS = 125 * 60 * 1000     // 125 min
 ```
 
 ### Usage
@@ -205,7 +205,7 @@ The queue feeder (`anqr-queue-feeder.timer`) runs `queue:all` every 15 minutes a
   - Backup feed if runner self-feed missed (crash, timeout, etc.)
   - Drains overflow when `queueDepth > target_max`
   - Enforces max concurrent agents
-  - Detects stuck (>5min) and stale (>30min) work
+  - Detects stuck (>125min) and stale (>180min) work
   - Skips `[HUMAN]`-prefixed issues
 
 Both feeds are idempotent — `feedQueue` checks depth before acting, so overlapping runs are safe.

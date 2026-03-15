@@ -133,7 +133,7 @@ const ALLOWED_COMMANDS = new Set([
   'rg', 'grep', 'cat', 'ls', 'find', 'head', 'tail', 'wc', 'tree', 'file', 'echo', 'pwd',
 ]);
 
-const REQUEST_TIMEOUT_MS = 300_000; // 5 min — local Ollama is slow
+const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom for large-context turns
 
 // ---------------------------------------------------------------------------
 // Tool implementations
