@@ -2672,6 +2672,7 @@
 ├── env.txt
 ├── err.txt
 ├── feedback.txt
+├── git.log.txt
 ├── index.html
 ├── ios
 │   ├── App
@@ -133722,6 +133723,7 @@
 │   ├── check-sentry-regression.mjs
 │   ├── check-testid-references.js
 │   ├── compare-gallery-artifacts.mjs
+│   ├── export-linear-issues.mjs
 │   ├── extract-core-function.mjs
 │   ├── extract-phase-helpers.mjs
 │   ├── generate-android-icons.mjs
@@ -138482,4 +138484,4 @@
 ├── WORKFLOW-3B.md
 └── WORKFLOW.md
 
-14616 directories, 123867 files
+14616 directories, 123869 files
