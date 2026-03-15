@@ -197,10 +197,10 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
 
     const imageData = ctx.createImageData(canvas.width, canvas.height);
     const data = imageData.data;
+    const randomBytes = crypto.getRandomValues(new Uint8Array(data.length / 4));
 
-    // Generate random noise (Math.random is safe here - purely visual effect, not security-sensitive)
     for (let i = 0; i < data.length; i += 4) {
-      const noise = Math.random() * 255; // NOSONAR - visual noise only
+      const noise = randomBytes[i / 4];
       data[i] = noise; // R
       data[i + 1] = noise; // G
       data[i + 2] = noise; // B

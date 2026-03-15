@@ -15,22 +15,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    log.debug('Clipboard API failed, using execCommand fallback', { error });
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-
-    try {
-      document.execCommand('copy'); // NOSONAR: deprecated but necessary for older browser fallback
-      return true;
-    } catch (fallbackError) {
-      log.debug('execCommand copy fallback also failed', { error: fallbackError });
-      return false;
-    } finally {
-      textarea.remove();
-    }
+    log.debug('Clipboard API failed', { error });
+    return false;
   }
 }
