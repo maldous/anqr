@@ -195,6 +195,19 @@ function runValidation() {
   const tc = runTypecheck();
   results.push({ check: 'typecheck', ...tc });
 
+  // Lint
+  try {
+    execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
+      cwd: ROOT, timeout: 60_000, stdio: 'pipe',
+    });
+    results.push({ check: 'lint', pass: true, detail: '' });
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
+    results.push({ check: 'lint', pass: false, detail: output });
+  }
+
   // Unit tests
   try {
     execSync(
