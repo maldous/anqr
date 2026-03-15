@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 /**
  * symphony-credit-gate.mjs — Provider cascade for Symphony agent

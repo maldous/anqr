@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 /**
  * symphony-runner.mjs — Symphony execution orchestrator

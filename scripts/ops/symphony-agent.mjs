@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 /**
  * symphony-agent.mjs — Tool-calling AI agent for Symphony

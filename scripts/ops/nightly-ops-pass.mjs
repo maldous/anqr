@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 /**
  * nightly-ops-pass.mjs — Nightly operations orchestration
