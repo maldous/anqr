@@ -250,7 +250,7 @@ function showStatus() {
 // ---------------------------------------------------------------------------
 
 async function executeIssue(issue, dryRun) {
-  const detail = await getIssueDetail(issue.identifier);
+  const detail = await getIssueDetail(issue.id);
   if (!detail) {
     console.error(`[runner] Could not fetch detail for ${issue.identifier}`);
     return;
