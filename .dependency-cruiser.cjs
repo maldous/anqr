@@ -167,7 +167,30 @@ module.exports = {
       to: { path: '^src/features/' },
     },
 
-    // ── UI → domain direction guard (src/) ───────────────────────────
+    // ── State layer isolation (src/) ──────────────────────────────────
+    {
+      name: 'src-state-no-ui',
+      severity: 'error',
+      comment: 'state/ must not import ui/ or components/ (dependency-rules.md: state forbidden from ui).',
+      from: { path: '^src/state/' },
+      to: { path: '^src/(ui|components)/' },
+    },
+    {
+      name: 'src-state-no-app',
+      severity: 'error',
+      comment: 'state/ must not import app/ (dependency-rules.md: state forbidden from app).',
+      from: { path: '^src/state/' },
+      to: { path: '^src/app/' },
+    },
+    {
+      name: 'src-state-no-platform',
+      severity: 'error',
+      comment: 'state/ must not import platform/ (dependency-rules.md: state forbidden from platform).',
+      from: { path: '^src/state/' },
+      to: { path: '^src/platform/' },
+    },
+
+    // ── UI layer isolation (src/) ────────────────────────────────────
     {
       name: 'src-ui-no-domain',
       severity: 'error',
@@ -176,6 +199,72 @@ module.exports = {
         'UI stays presentation-only; go through features/ for domain access.',
       from: { path: '^src/(ui|components)/' },
       to: { path: '^src/domain/' },
+    },
+    {
+      name: 'src-ui-no-state',
+      severity: 'error',
+      comment: 'ui/ and components/ must not import state/ (dependency-rules.md: ui forbidden from state).',
+      from: { path: '^src/(ui|components)/' },
+      to: { path: '^src/state/' },
+    },
+    {
+      name: 'src-ui-no-store',
+      severity: 'warn',
+      comment:
+        'ui/ and components/ must not import store/ (broad bucket for state stores). ' +
+        'Inherited: 8 violations (Tier type + useQRStore from store/qr-store).',
+      from: { path: '^src/(ui|components)/' },
+      to: { path: '^src/store/' },
+    },
+    {
+      name: 'src-ui-no-features',
+      severity: 'warn',
+      comment:
+        'ui/ and components/ must not import features/ (wrong direction — features orchestrate ui, not the reverse). ' +
+        'Inherited: ~30 violations (re-export shims in components/ pointing to features/).',
+      from: { path: '^src/(ui|components)/' },
+      to: { path: '^src/features/' },
+    },
+    {
+      name: 'src-ui-no-platform',
+      severity: 'warn',
+      comment:
+        'ui/ and components/ must not import platform/ directly (dependency-rules.md: ui forbidden from browser/native adapters). ' +
+        'Inherited: 4 violations (clipboard, ads).',
+      from: { path: '^src/(ui|components)/' },
+      to: { path: '^src/platform/' },
+    },
+    {
+      name: 'src-ui-no-app',
+      severity: 'warn',
+      comment:
+        'ui/ and components/ must not import app/ (wrong direction — app composes ui, not the reverse). ' +
+        'Inherited: 5 violations (i18n, pages, shell).',
+      from: { path: '^src/(ui|components)/' },
+      to: { path: '^src/app/' },
+    },
+
+    // ── Platform layer isolation (src/) ──────────────────────────────
+    {
+      name: 'src-platform-no-ui',
+      severity: 'error',
+      comment: 'platform/ must not import ui/ or components/ (dependency-rules.md: platform forbidden from ui).',
+      from: { path: '^src/platform/' },
+      to: { path: '^src/(ui|components)/' },
+    },
+    {
+      name: 'src-platform-no-features',
+      severity: 'error',
+      comment: 'platform/ must not import features/ (dependency-rules.md: platform forbidden from features).',
+      from: { path: '^src/platform/' },
+      to: { path: '^src/features/' },
+    },
+    {
+      name: 'src-platform-no-app',
+      severity: 'error',
+      comment: 'platform/ must not import app/ (dependency-rules.md: platform forbidden from app).',
+      from: { path: '^src/platform/' },
+      to: { path: '^src/app/' },
     },
 
     // ── Application layer isolation (src/) ───────────────────────────

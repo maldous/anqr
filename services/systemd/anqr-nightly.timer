@@ -1,0 +1,24 @@
+# anqr-nightly.timer — Schedule nightly operations
+#
+# Fires at 02:00 local time daily.
+# Persistent=true ensures a missed run (e.g. machine was off) is caught up.
+#
+# Install:
+#   cp services/systemd/anqr-nightly.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-nightly.timer
+#
+# Check status:
+#   systemctl --user list-timers
+#   journalctl --user -u anqr-nightly.service --since today
+
+[Unit]
+Description=ANQR Symphony nightly operations timer
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

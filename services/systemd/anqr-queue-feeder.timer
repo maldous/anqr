@@ -1,0 +1,27 @@
+# anqr-queue-feeder.timer — Queue maintenance + backup feed schedule
+#
+# Fires every 15 minutes for queue maintenance (drain, enforce,
+# stuck detection) and backup feeding. Primary feeding is handled
+# by the Symphony runner after each issue completion.
+# Persistent=true catches missed runs if the machine was off.
+#
+# Install:
+#   cp services/systemd/anqr-queue-feeder.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-queue-feeder.timer
+#
+# Check status:
+#   systemctl --user list-timers
+#   journalctl --user -u anqr-queue-feeder.service --since today
+
+[Unit]
+Description=ANQR Symphony queue maintenance timer (every 15min)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

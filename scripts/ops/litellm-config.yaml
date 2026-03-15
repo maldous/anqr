@@ -1,0 +1,24 @@
+# litellm-config.yaml — Local-only LiteLLM alias configuration
+#
+# Defines model aliases for the local Ollama execution path.
+# Do NOT add cloud provider cascades here on day one.
+# Multi-provider routing is a later concern.
+#
+# Routing chain:
+#   Ollama → LiteLLM alias → model injector → Symphony runner
+#
+# Legacy lessons:
+#   - Ollama must be the default route, not an afterthought
+#   - max_concurrent_agents: 1
+#   - num_thread: 1 (protect against GPU contention)
+
+model_list:
+  - model_name: "symphony-local"
+    litellm_params:
+      model: "ollama/qwen3.5:35b-a3b-32t"
+      api_base: "http://localhost:11434"
+      max_tokens: 4096
+      num_thread: 1
+
+general_settings:
+  max_parallel_requests: 1

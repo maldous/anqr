@@ -1,0 +1,322 @@
+#!/usr/bin/env node
+
+/**
+ * harness-report.mjs — Deterministic harness checks
+ *
+ * Runs local, deterministic checks against the repo and runtime environment.
+ * Produces a structured JSON report to reports/latest.json.
+ *
+ * Profiles:
+ *   quick       — fast sanity checks (<30s): repo-structure, typecheck, lint
+ *   continuous  — background polling checks: repo-structure, ollama-health, litellm-routing
+ *   full        — comprehensive audit: all 8 checks
+ *
+ * Exit code:
+ *   0 = all checks passed
+ *   1 = one or more checks failed
+ *
+ * Usage:
+ *   node scripts/ops/harness-report.mjs quick
+ *   node scripts/ops/harness-report.mjs full
+ */
+
+import { execSync } from 'node:child_process';
+import { existsSync, statSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { resolve, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const ROOT = resolve(__dirname, '..', '..');
+
+const OLLAMA_BASE = process.env.OLLAMA_API_BASE || 'http://localhost:11434';
+const PINNED_MODEL = 'qwen3.5:35b-a3b-32t';
+const PING_TIMEOUT_MS = 5_000;
+const DOCS_FRESHNESS_DAYS = 30;
+
+const PROFILES = {
+  quick: ['repo-structure', 'typecheck', 'lint'],
+  continuous: ['repo-structure', 'ollama-health', 'litellm-routing'],
+  full: [
+    'repo-structure',
+    'typecheck',
+    'lint',
+    'test-unit',
+    'depcruise',
+    'docs-freshness',
+    'ollama-health',
+    'litellm-routing',
+  ],
+};
+
+const REQUIRED_DIRS = [
+  'src',
+  'docs',
+  'scripts/ops',
+  'reports',
+];
+
+const REQUIRED_FILES = [
+  'tsconfig.json',
+  'package.json',
+  'vite.config.ts',
+  '.dependency-cruiser.cjs',
+  'oxlint.json',
+];
+
+const ALLOWED_ROOT_DIRS = new Set([
+  'apps', 'packages', 'src', 'tests', 'tools', 'netlify',
+  'android', 'ios', 'docs', 'scripts', 'services', 'reports',
+  'node_modules', '.git', 'dist', 'coverage', 'public',
+  'test-results', 'playwright-report',
+]);
+
+// ---------------------------------------------------------------------------
+// Check implementations
+// ---------------------------------------------------------------------------
+
+function checkRepoStructure() {
+  const issues = [];
+
+  for (const dir of REQUIRED_DIRS) {
+    const full = resolve(ROOT, dir);
+    if (!existsSync(full)) {
+      issues.push(`missing required directory: ${dir}/`);
+    }
+  }
+
+  for (const file of REQUIRED_FILES) {
+    const full = resolve(ROOT, file);
+    if (!existsSync(full)) {
+      issues.push(`missing required file: ${file}`);
+    }
+  }
+
+  const topLevel = readdirSync(ROOT, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+  const unexpected = topLevel.filter((d) => !ALLOWED_ROOT_DIRS.has(d) && !d.startsWith('.'));
+  if (unexpected.length > 0) {
+    issues.push(`unexpected root directories: ${unexpected.join(', ')}`);
+  }
+
+  return {
+    pass: issues.length === 0,
+    detail: issues.length === 0
+      ? `All required dirs/files present, no unexpected root directories`
+      : issues.join('; '),
+  };
+}
+
+function checkNpmScript(scriptName, label) {
+  try {
+    execSync(`npm run ${scriptName}`, {
+      cwd: ROOT,
+      stdio: 'pipe',
+      timeout: 120_000,
+      env: { ...process.env, FORCE_COLOR: '0' },
+    });
+    return { pass: true, detail: `${label} passed` };
+  } catch (err) {
+    const stderr = err.stderr ? err.stderr.toString().trim() : '';
+    const stdout = err.stdout ? err.stdout.toString().trim() : '';
+    const output = stderr || stdout;
+    const lines = output.split('\n');
+    const summary = lines.length > 5
+      ? lines.slice(0, 3).join('\n') + `\n... (${lines.length - 3} more lines)`
+      : output;
+    return { pass: false, detail: `${label} failed: ${summary || `exit code ${err.status}`}` };
+  }
+}
+
+function checkTypecheck() {
+  return checkNpmScript('typecheck', 'tsc --noEmit');
+}
+
+function checkLint() {
+  return checkNpmScript('lint', 'oxlint');
+}
+
+function checkTestUnit() {
+  return checkNpmScript('test:unit', 'vitest');
+}
+
+function checkDepcruise() {
+  return checkNpmScript('depcruise', 'dependency-cruiser');
+}
+
+function checkDocsFreshness() {
+  const docsDir = resolve(ROOT, 'docs');
+  if (!existsSync(docsDir)) {
+    return { pass: false, detail: 'docs/ directory missing' };
+  }
+
+  const staleFiles = [];
+  const cutoff = Date.now() - DOCS_FRESHNESS_DAYS * 24 * 60 * 60 * 1000;
+
+  function walk(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.name.endsWith('.md')) {
+        const mtime = statSync(full).mtimeMs;
+        if (mtime < cutoff) {
+          const rel = full.slice(ROOT.length + 1);
+          const daysAgo = Math.floor((Date.now() - mtime) / (24 * 60 * 60 * 1000));
+          staleFiles.push(`${rel} (${daysAgo}d)`);
+        }
+      }
+    }
+  }
+
+  walk(docsDir);
+
+  if (staleFiles.length === 0) {
+    return { pass: true, detail: `All docs modified within ${DOCS_FRESHNESS_DAYS} days` };
+  }
+
+  const shown = staleFiles.slice(0, 5);
+  const suffix = staleFiles.length > 5 ? ` ... and ${staleFiles.length - 5} more` : '';
+  return {
+    pass: false,
+    detail: `${staleFiles.length} stale docs (>${DOCS_FRESHNESS_DAYS}d): ${shown.join(', ')}${suffix}`,
+  };
+}
+
+async function checkOllamaHealth() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
+    const res = await fetch(`${OLLAMA_BASE}/api/version`, { signal: controller.signal });
+    clearTimeout(timer);
+    const data = await res.json();
+
+    const tagsController = new AbortController();
+    const tagsTimer = setTimeout(() => tagsController.abort(), PING_TIMEOUT_MS);
+    const tagsRes = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: tagsController.signal });
+    clearTimeout(tagsTimer);
+    const tagsData = await tagsRes.json();
+    const models = (tagsData.models || []).map((m) => m.name);
+    const found = models.includes(PINNED_MODEL);
+
+    if (found) {
+      return { pass: true, detail: `Ollama v${data.version} running, ${PINNED_MODEL} available` };
+    }
+    return { pass: false, detail: `Ollama v${data.version} running but ${PINNED_MODEL} not found. Available: ${models.join(', ') || 'none'}` };
+  } catch (err) {
+    return { pass: false, detail: `Ollama unreachable at ${OLLAMA_BASE}: ${err.message}` };
+  }
+}
+
+function checkLitellmRouting() {
+  const configPath = resolve(ROOT, 'scripts/ops/litellm-config.yaml');
+  if (!existsSync(configPath)) {
+    return { pass: false, detail: 'litellm-config.yaml missing' };
+  }
+
+  const content = readFileSync(configPath, 'utf-8');
+
+  if (!content.includes('symphony-local')) {
+    return { pass: false, detail: 'litellm-config.yaml missing symphony-local alias' };
+  }
+
+  if (!content.includes(PINNED_MODEL)) {
+    return { pass: false, detail: `litellm-config.yaml does not reference pinned model ${PINNED_MODEL}` };
+  }
+
+  const proxyPath = resolve(ROOT, 'scripts/ops/model-injector-proxy.py');
+  if (!existsSync(proxyPath)) {
+    return { pass: false, detail: 'model-injector-proxy.py missing' };
+  }
+
+  return { pass: true, detail: 'LiteLLM config valid, symphony-local alias present, injector proxy exists' };
+}
+
+// ---------------------------------------------------------------------------
+// Check registry
+// ---------------------------------------------------------------------------
+
+const CHECKS = {
+  'repo-structure': { fn: checkRepoStructure, async: false },
+  'typecheck': { fn: checkTypecheck, async: false },
+  'lint': { fn: checkLint, async: false },
+  'test-unit': { fn: checkTestUnit, async: false },
+  'depcruise': { fn: checkDepcruise, async: false },
+  'docs-freshness': { fn: checkDocsFreshness, async: false },
+  'ollama-health': { fn: checkOllamaHealth, async: true },
+  'litellm-routing': { fn: checkLitellmRouting, async: false },
+};
+
+// ---------------------------------------------------------------------------
+// Runner
+// ---------------------------------------------------------------------------
+
+async function runCheck(name) {
+  const check = CHECKS[name];
+  if (!check) {
+    return { name, pass: false, detail: `Unknown check: ${name}`, duration_ms: 0 };
+  }
+
+  const start = Date.now();
+  const result = check.async ? await check.fn() : check.fn();
+  const duration_ms = Date.now() - start;
+
+  return {
+    name,
+    pass: result.pass,
+    detail: result.detail,
+    duration_ms,
+  };
+}
+
+async function main() {
+  const profile = process.argv[2] || 'quick';
+
+  if (!PROFILES[profile]) {
+    console.error(`Unknown profile: ${profile}`);
+    console.error(`Available profiles: ${Object.keys(PROFILES).join(', ')}`);
+    process.exit(2);
+  }
+
+  const checkNames = PROFILES[profile];
+  console.log(`[harness-report] profile=${profile} checks=${checkNames.length}\n`);
+
+  const results = [];
+  for (const name of checkNames) {
+    const result = await runCheck(name);
+    const icon = result.pass ? '✅' : '❌';
+    const timing = result.duration_ms > 1000
+      ? `${(result.duration_ms / 1000).toFixed(1)}s`
+      : `${result.duration_ms}ms`;
+    console.log(`${icon} ${result.name} (${timing}): ${result.detail}`);
+    results.push(result);
+  }
+
+  const passed = results.filter((r) => r.pass).length;
+  const failed = results.filter((r) => !r.pass).length;
+  const total = results.length;
+  const total_duration_ms = results.reduce((sum, r) => sum + r.duration_ms, 0);
+
+  const report = {
+    profile,
+    timestamp: new Date().toISOString(),
+    total_duration_ms,
+    summary: { passed, failed, total },
+    checks: results,
+  };
+
+  const reportsDir = resolve(ROOT, 'reports');
+  if (!existsSync(reportsDir)) {
+    mkdirSync(reportsDir, { recursive: true });
+  }
+
+  const reportPath = resolve(reportsDir, 'latest.json');
+  writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
+
+  console.log(`\n[harness-report] ${passed}/${total} passed, ${failed} failed (${(total_duration_ms / 1000).toFixed(1)}s)`);
+  console.log(`[harness-report] report written to reports/latest.json`);
+
+  process.exit(failed > 0 ? 1 : 0);
+}
+
+main();

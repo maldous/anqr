@@ -1,0 +1,3 @@
+# Ignore local env overrides with real secrets
+# The anqr-ops.env in this directory is a TEMPLATE — safe to commit
+# Real secrets go in ~/.config/systemd/user/anqr-ops.env
