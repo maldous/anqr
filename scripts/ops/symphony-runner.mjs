@@ -188,6 +188,20 @@ function runTypecheck() {
   }
 }
 
+function runLint() {
+  try {
+    execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
+      cwd: ROOT, timeout: 60_000, stdio: 'pipe',
+    });
+    return { pass: true, detail: '' };
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
+    return { pass: false, detail: output };
+  }
+}
+
 function runValidation() {
   const results = [];
 
@@ -196,17 +210,8 @@ function runValidation() {
   results.push({ check: 'typecheck', ...tc });
 
   // Lint
-  try {
-    execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
-      cwd: ROOT, timeout: 60_000, stdio: 'pipe',
-    });
-    results.push({ check: 'lint', pass: true, detail: '' });
-  } catch (err) {
-    const stdout = (err.stdout || '').toString();
-    const stderr = (err.stderr || '').toString();
-    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
-    results.push({ check: 'lint', pass: false, detail: output });
-  }
+  const lint = runLint();
+  results.push({ check: 'lint', ...lint });
 
   // Unit tests
   try {
@@ -357,7 +362,7 @@ async function executeIssue(issue, dryRun) {
     // Skip if a recent pre-flight failure comment exists (avoid spamming every timer fire)
     const recentComments = detail.comments?.nodes || [];
     const hasRecentGateFailure = recentComments.some((c) => {
-      if (!c.body.includes('⛔ **Pre-flight typecheck failed**')) return false;
+      if (!c.body.includes('⛔ **Pre-flight')) return false;
       const commentAge = Date.now() - new Date(c.createdAt).getTime();
       return commentAge < 60 * 60 * 1000; // 60 min window
     });
@@ -391,6 +396,31 @@ async function executeIssue(issue, dryRun) {
       return;
     }
     console.log('[runner] Pre-flight typecheck passed ✅');
+
+    console.log('[runner] Running pre-flight lint...');
+    const baselineLint = runLint();
+    if (!baselineLint.pass) {
+      console.error('[runner] Baseline lint failed — skipping agent execution');
+      await addComment(
+        issue.id,
+        [
+          `⛔ **Pre-flight lint failed** — codebase has lint errors before agent execution. Skipping to avoid wasting tokens.`,
+          '',
+          '```',
+          baselineLint.detail.slice(0, 1500),
+          '```',
+          '',
+          'Fix the baseline lint errors first. This does not count as an attempt.',
+        ].join('\n'),
+      );
+      sendNotification({
+        subject: `Symphony skipped: ${issue.identifier} — baseline lint failed`,
+        body: `Pre-flight lint failed for ${issue.identifier}. Agent execution skipped (attempt not consumed).\n\n${baselineLint.detail.slice(0, 500)}\n\n${linearIssueUrl(issue.identifier)}`,
+        severity: 'warn',
+      });
+      return;
+    }
+    console.log('[runner] Pre-flight lint passed ✅');
   }
 
   // Move to In Progress + post starting comment (counts toward attempt tracking)
