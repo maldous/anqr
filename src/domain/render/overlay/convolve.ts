@@ -1,3 +1,8 @@
+import { clamp } from '../primitives/clamp';
+import { accumulateKernelRgb } from './accumulate-kernel-rgb';
+import { clampImageCoordinate } from './clamp-image-coordinate';
+import { edgePixelIndex } from './edge-pixel-index';
+
 // ============================================
 // CONVOLUTION FILTERS
 // ============================================
@@ -14,27 +19,21 @@ export function convolve(imageData: ImageData, kernel: number[][], divisor?: num
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let r = 0,
-        g = 0,
-        b = 0;
+      const accum = { r: 0, g: 0, b: 0 };
 
       for (let ky = 0; ky < kSize; ky++) {
         for (let kx = 0; kx < kSize; kx++) {
-          const px = Math.max(0, Math.min(width - 1, x + kx - kHalf));
-          const py = Math.max(0, Math.min(height - 1, y + ky - kHalf));
-          const idx = (py * width + px) * 4;
+          const px = clampImageCoordinate(x + kx - kHalf, width - 1);
+          const py = clampImageCoordinate(y + ky - kHalf, height - 1);
           const weight = kernel[ky][kx];
-
-          r += data[idx] * weight;
-          g += data[idx + 1] * weight;
-          b += data[idx + 2] * weight;
+          accumulateKernelRgb(data, width, px, py, weight, accum);
         }
       }
 
-      const idx = (y * width + x) * 4;
-      result[idx] = Math.max(0, Math.min(255, Math.round(r / div)));
-      result[idx + 1] = Math.max(0, Math.min(255, Math.round(g / div)));
-      result[idx + 2] = Math.max(0, Math.min(255, Math.round(b / div)));
+      const idx = edgePixelIndex(width, x, y);
+      result[idx] = clamp(accum.r / div);
+      result[idx + 1] = clamp(accum.g / div);
+      result[idx + 2] = clamp(accum.b / div);
     }
   }
 

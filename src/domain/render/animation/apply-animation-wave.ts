@@ -1,3 +1,5 @@
+import { clampToByte } from './clamp-to-byte';
+import { forEachOpaquePixel } from './for-each-opaque-pixel';
 import { hslToRgbTuple } from '../color/color';
 
 /**
@@ -20,26 +22,22 @@ export function applyAnimationWave(
     const rowHue = (((baseHue + wavePhase * 30) % 360) + 360) % 360;
     const waveColor = hslToRgbTuple(rowHue, 70, 50);
 
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      if (data[i + 3] === 0) continue;
-      const r = data[i],
-        g = data[i + 1],
-        b = data[i + 2];
-      const brightness = (r + g + b) / 3;
-      const isDark = brightness < 128;
-
-      if (isDark) {
-        const tintAmount = waveIntensity * 0.6;
-        data[i] = Math.min(255, r + waveColor[0] * tintAmount);
-        data[i + 1] = Math.min(255, g + waveColor[1] * tintAmount);
-        data[i + 2] = Math.min(255, b + waveColor[2] * tintAmount);
-      } else {
-        const darkenAmount = waveIntensity * 0.15;
-        data[i] = Math.round(r * (1 - darkenAmount));
-        data[i + 1] = Math.round(g * (1 - darkenAmount));
-        data[i + 2] = Math.round(b * (1 - darkenAmount));
+    forEachOpaquePixel(
+      data.subarray(y * width * 4, (y + 1) * width * 4),
+      (index, r, g, b, isDark) => {
+        const i = y * width * 4 + index;
+        if (isDark) {
+          const tintAmount = waveIntensity * 0.6;
+          data[i] = clampToByte(r + waveColor[0] * tintAmount);
+          data[i + 1] = clampToByte(g + waveColor[1] * tintAmount);
+          data[i + 2] = clampToByte(b + waveColor[2] * tintAmount);
+        } else {
+          const darkenAmount = waveIntensity * 0.15;
+          data[i] = clampToByte(r * (1 - darkenAmount));
+          data[i + 1] = clampToByte(g * (1 - darkenAmount));
+          data[i + 2] = clampToByte(b * (1 - darkenAmount));
+        }
       }
-    }
+    );
   }
 }

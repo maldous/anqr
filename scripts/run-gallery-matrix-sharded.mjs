@@ -4,11 +4,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { GALLERY_SCAN_SCENARIOS } from '../src/data/gallery-scan-scenarios.ts';
 
 const repoRoot = process.cwd();
 const reportsDir = path.join(repoRoot, 'reports');
 const artifactsDir = path.join(reportsDir, 'gallery-artifacts');
-const scenarioSourcePath = path.join(repoRoot, 'src/data/gallery-scan-scenarios.ts');
 const MATRIX_SPEC = 'tests/unit/gallery-scan-matrix.spec.ts';
 
 function parseBool(raw, fallback) {
@@ -26,23 +26,7 @@ function parsePositiveInt(raw) {
 }
 
 async function readScenarioIds() {
-  const src = await fs.readFile(scenarioSourcePath, 'utf8');
-  const start = src.indexOf('export const GALLERY_SCAN_SCENARIOS');
-  if (start < 0) {
-    throw new Error('Unable to locate GALLERY_SCAN_SCENARIOS export');
-  }
-  const end = src.indexOf('\n];', start);
-  if (end < 0) {
-    throw new Error('Unable to locate end of GALLERY_SCAN_SCENARIOS array');
-  }
-  const body = src.slice(start, end);
-  const ids = [];
-  const re = /\bid:\s*'([^']+)'/g;
-  let match;
-  while ((match = re.exec(body)) !== null) {
-    ids.push(match[1]);
-  }
-  const unique = [...new Set(ids)];
+  const unique = [...new Set(GALLERY_SCAN_SCENARIOS.map((scenario) => scenario.id))];
   if (unique.length === 0) {
     throw new Error('No scenario ids discovered from gallery-scan-scenarios.ts');
   }

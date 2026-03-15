@@ -24,14 +24,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { decodeQR } from '../src/modules/qr-decoder/index.ts';
+import {
+  CANONICAL_FIXTURES,
+  GALLERY_SCAN_SCENARIOS,
+} from '../src/data/gallery-scan-scenarios.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const REPORTS_DIR = path.join(ROOT, 'reports');
 const ARTIFACTS_DIR = path.join(REPORTS_DIR, 'gallery-artifacts');
 const TIER_A_DIR = path.join(ARTIFACTS_DIR, 'tier-a');
-const SCENARIOS_PATH = path.join(ROOT, 'src/data/gallery-scan-scenarios.ts');
-
 const API_BASE = process.env.GALLERY_API_URL || 'https://anqr.link/api/qr';
 const ASSET_BASE = process.env.GALLERY_ASSET_URL || 'https://anqr.link';
 const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY || '6', 10));
@@ -42,95 +44,6 @@ const MAX_RETRIES = 2;
 const POLL_INTERVAL_MS = 10_000;
 const MAX_POLLS = 90;
 const IS_LOCAL = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
-
-// ============================================
-// Source file parsing
-// ============================================
-
-function parseFixtures(src) {
-  const start = src.indexOf('export const CANONICAL_FIXTURES');
-  const end = src.indexOf('];', start);
-  const body = src.slice(start, end + 2);
-
-  const fixtures = [];
-  const re =
-    /\{\s*id:\s*'([^']+)',\s*filePath:\s*'([^']+)',\s*publicPath:\s*'([^']+)',\s*isAnimated:\s*(true|false)\s*\}/g;
-  let m;
-  while ((m = re.exec(body)) !== null) {
-    fixtures.push({
-      id: m[1],
-      filePath: m[2],
-      publicPath: m[3],
-      isAnimated: m[4] === 'true',
-    });
-  }
-  return fixtures;
-}
-
-function parseScenarios(src) {
-  const start = src.indexOf('export const GALLERY_SCAN_SCENARIOS');
-  const body = src.slice(start);
-
-  // Locate every id: '...' inside the array
-  const idRe = /\bid:\s*'([^']+)'/g;
-  const ids = [];
-  let m;
-  while ((m = idRe.exec(body)) !== null) {
-    ids.push({ id: m[1], pos: m.index });
-  }
-
-  const scenarios = [];
-  for (let i = 0; i < ids.length; i++) {
-    const blockStart = ids[i].pos;
-    const blockEnd = i < ids.length - 1 ? ids[i + 1].pos : body.length;
-    const block = body.slice(blockStart, blockEnd);
-
-    const id = ids[i].id;
-    const title = block.match(/title:\s*'([^']*)'/)?.[1] || id;
-    const description = block.match(/description:\s*'([^']*)'/)?.[1] || '';
-    const featureGroup = block.match(/featureGroup:\s*'([^']*)'/)?.[1] || 'unknown';
-    const heroPriority = Number.parseInt(block.match(/heroPriority:\s*(\d+)/)?.[1] || '0', 10);
-    const galleryEligible = block.includes('galleryEligible: true');
-    const useOverlay = block.includes('useOverlay: true');
-
-    // Extract galleryParams object literal and parse it as JSON-like content.
-    const paramsMatch = block.match(/galleryParams:\s*(\{[\s\S]*?\})/);
-    let galleryParams = {};
-    if (paramsMatch) {
-      try {
-        galleryParams = parseGalleryParamsLiteral(paramsMatch[1]);
-      } catch {
-        console.warn(`  ⚠ Could not parse galleryParams for ${id}`);
-      }
-    }
-
-    scenarios.push({
-      id,
-      title,
-      description,
-      featureGroup,
-      heroPriority,
-      galleryEligible,
-      useOverlay,
-      galleryParams,
-    });
-  }
-  return scenarios;
-}
-
-function parseGalleryParamsLiteral(literal) {
-  const normalized = literal
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/([{,]\s*)([A-Za-z_$][A-Za-z0-9_$]*)\s*:/g, '$1"$2":')
-    .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, value) => {
-      const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-      return `"${escaped}"`;
-    })
-    .replace(/,\s*}/g, '}')
-    .trim();
-
-  return JSON.parse(normalized);
-}
 
 // ============================================
 // Scan verification
@@ -358,10 +271,8 @@ async function main() {
   console.log(`Concurrency: ${CONCURRENCY}`);
   console.log(`Image size:  ${IMAGE_SIZE}px\n`);
 
-  // Parse scenarios and fixtures from source
-  const src = await fs.readFile(SCENARIOS_PATH, 'utf8');
-  let scenarios = parseScenarios(src);
-  let fixtures = parseFixtures(src);
+  let scenarios = [...GALLERY_SCAN_SCENARIOS];
+  let fixtures = [...CANONICAL_FIXTURES];
 
   // Apply optional filters
   const scenarioFilter = process.env.SCAN_MATRIX_SCENARIOS;

@@ -32,6 +32,7 @@ import java.io.OutputStream;
   }
 )
 public class MediaStoreWriterPlugin extends Plugin {
+  private static final String MEDIASTORE_EXTERNAL_PRIMARY = "external_primary";
 
   @PluginMethod
   public void saveToDocuments(PluginCall call) {
@@ -97,7 +98,7 @@ public class MediaStoreWriterPlugin extends Plugin {
     values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOCUMENTS + File.separator + subdir);
     values.put(MediaStore.MediaColumns.IS_PENDING, 1);
 
-    Uri collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+    Uri collection = MediaStore.Files.getContentUri(MEDIASTORE_EXTERNAL_PRIMARY);
     Uri item = resolver.insert(collection, values);
     if (item == null) {
       throw new IllegalStateException("MediaStore insert returned null");

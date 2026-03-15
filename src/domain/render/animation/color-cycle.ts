@@ -5,6 +5,7 @@
 
 import { createLogger } from '../../../infra/logging/logger';
 import { resolveEffectTargetCanvas } from '../resolve-effect-target-canvas';
+import { clampToByte } from './clamp-to-byte';
 
 const _log = createLogger('ANIMATION');
 
@@ -19,12 +20,6 @@ export function applyColorCycle(
   totalFrames: number,
   targetCanvas?: HTMLCanvasElement | OffscreenCanvas
 ): HTMLCanvasElement | OffscreenCanvas {
-  const clampToByte = (value: number) => {
-    if (value <= 0) return 0;
-    if (value >= 255) return 255;
-    return Math.round(value);
-  };
-
   const { ctx, result } = resolveEffectTargetCanvas(canvas, targetCanvas);
   if (!ctx) return canvas;
 

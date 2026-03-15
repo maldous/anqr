@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+
+    <!-- Advertising ID permission for AdSense -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
@@ -67,15 +74,5 @@
         <meta-data
             android:name="io.sentry.auto-init"
             android:value="false"/>
-        
-
-
     </application>
-
-    <!-- Permissions -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
-    
-    <!-- Advertising ID permission for AdSense -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 </manifest>

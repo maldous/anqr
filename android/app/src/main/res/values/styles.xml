@@ -11,14 +11,6 @@
         <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:background">@null</item>
-        <!-- Opt out of Android 15 edge-to-edge enforcement to fix AdMob interstitial close button visibility -->
-        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
-    </style>
-
     <!--
       Theme for AdMob's full-screen AdActivity.
 

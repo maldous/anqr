@@ -31,7 +31,16 @@ function extractUIKinds(categorySource: string): Set<string> {
   const tupleKinds = [
     ...categorySource.matchAll(/\[\s*'([^']+)'\s*,\s*'payload\.[^']+'\s*\]/g),
   ].map((m) => m[1]);
-  return new Set([...literalKinds, ...tupleKinds]);
+  const importedKinds = [...categorySource.matchAll(/from '(\.\/payload-category-[^']+)'/g)]
+    .flatMap((match) => {
+      const importPath = `src/features/generator/components/sections/${match[1].slice(2)}.ts`;
+      const importedSource = readRepoFile(importPath);
+      return [...importedSource.matchAll(/\[\s*'([^']+)'\s*,\s*'payload\.[^']+'\s*\]/g)].map(
+        (tupleMatch) => tupleMatch[1]
+      );
+    })
+    .filter(Boolean);
+  return new Set([...literalKinds, ...tupleKinds, ...importedKinds]);
 }
 
 function extractTextDrivenKinds(hooksSource: string): Set<string> {

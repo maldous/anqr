@@ -2,6 +2,4 @@
 <resources>
     <string name="app_name">ANQR</string>
     <string name="title_activity_main">ANQR</string>
-    <string name="package_name">link.anqr.app</string>
-    <string name="custom_url_scheme">link.anqr.app</string>
 </resources>
