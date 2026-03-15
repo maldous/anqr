@@ -8,7 +8,7 @@
  * skips recently-failed providers, and returns the first available provider.
  *
  * Cascade order (best-to-worst):
- *   1. Codex (OpenAI)  — cloud, gpt-5.3-codex (when credits available)
+ *   1. Codex (OpenAI)  — cloud, gpt-5.4 (when credits available)
  *   2. Groq            — free cloud, fast, llama-3.3-70b-versatile
  *   3. Mistral         — free experimental tier, devstral-small-2507
  *   4. Gemini          — free cloud tier, gemini-2.5-flash
@@ -112,7 +112,7 @@ async function probeOllama() {
 const PROVIDERS = [
   {
     name: 'codex',
-    model: 'gpt-5.3-codex',
+    model: 'gpt-5.4',
     baseUrl: 'https://api.openai.com/v1',
     envVar: 'OPENAI_API_KEY',
     probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
