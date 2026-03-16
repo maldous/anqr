@@ -8,11 +8,9 @@ export abstract class BaseMatrixWrapper implements QRCodeInstance {
   }
 
   addData(_data: string, _mode?: string): void {
-    void [_data, _mode];
   }
 
   make(_maskPattern?: number): void {
-    void _maskPattern;
   }
 
   getModuleCount(): number {
