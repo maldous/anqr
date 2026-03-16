@@ -152,7 +152,7 @@ export function useOverlayCropDrag(
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (e: React.MouseEvent) => {
       if (!(isDragging && previewContainerRef.current)) return;
       e.preventDefault();
       handleCropDrag(e.clientX, e.clientY);
@@ -161,7 +161,7 @@ export function useOverlayCropDrag(
   );
 
   const handleTouchStart = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
+    (e: React.TouchEvent) => {
       if (!overlay.cropEnabled || e.touches.length === 0) return;
       e.preventDefault();
       const touch = e.touches[0];
@@ -171,7 +171,7 @@ export function useOverlayCropDrag(
   );
 
   const handleTouchMove = useCallback(
-    (e: React.TouchEvent<HTMLDivElement>) => {
+    (e: React.TouchEvent) => {
       if (!(isDragging && previewContainerRef.current) || e.touches.length === 0) return;
       e.preventDefault();
 

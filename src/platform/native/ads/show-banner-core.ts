@@ -6,7 +6,7 @@ export async function showBannerAd(
   deps: ShowBannerDeps,
   position: ShowBannerPosition = 'bottom'
 ): Promise<boolean> {
-  if (!(deps.adMobAvailable && deps.AdMob)) {
+  if (!(deps.adMobAvailable && deps.AdMob && deps.BannerAdSize && deps.BannerAdPosition)) {
     return false;
   }
 

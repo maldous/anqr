@@ -16,7 +16,7 @@ export class StringUtils {
     return StringEncoding.decode(bytes, encoding);
   }
 
-  static guessEncoding(bytes: Uint8Array, _hints?: Map<number, any>): string {
+  static guessEncoding(bytes: Uint8Array, _hints?: Map<number, unknown>): string {
     // Check for BOM
     if (bytes.length > 2 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
       return CharacterSetECI.UTF8.getName();

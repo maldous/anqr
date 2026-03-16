@@ -18,7 +18,7 @@ export class ResultPoint {
     return this.y;
   }
 
-  equals(other: any): boolean {
+  equals(other: unknown): boolean {
     if (other instanceof ResultPoint) {
       return this.x === other.x && this.y === other.y;
     }

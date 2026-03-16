@@ -266,7 +266,7 @@ export class BitMatrix {
     return this.rowSize;
   }
 
-  equals(o: any): boolean {
+  equals(o: unknown): boolean {
     if (!(o instanceof BitMatrix)) return false;
     return (
       this.width === o.width &&

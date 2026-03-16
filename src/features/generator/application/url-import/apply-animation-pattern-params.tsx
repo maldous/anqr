@@ -1,30 +1,30 @@
 import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import { useQRStore, type AnimationPatternType, type AnimationTarget, type AnimationWaveAxis } from '@/store/qr-store';
 
 export function applyAnimationPatternParams(params: Partial<ShareConfig>): void {
   if (params.pattern)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, pattern: params.pattern as any },
+      animation: { ...s.animation, pattern: params.pattern as AnimationPatternType },
     }));
   if (params.target)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, target: params.target as any },
+      animation: { ...s.animation, target: params.target as AnimationTarget },
     }));
   if (params.waveAxis)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, waveAxis: params.waveAxis as any },
+      animation: { ...s.animation, waveAxis: params.waveAxis as AnimationWaveAxis },
     }));
   if (params.pattern2)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, pattern2: params.pattern2 as any },
+      animation: { ...s.animation, pattern2: params.pattern2 as AnimationPatternType },
     }));
   if (params.target2)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, target2: params.target2 as any },
+      animation: { ...s.animation, target2: params.target2 as AnimationTarget },
     }));
   if (params.waveAxis2)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, waveAxis2: params.waveAxis2 as any },
+      animation: { ...s.animation, waveAxis2: params.waveAxis2 as AnimationWaveAxis },
     }));
   if (params.moduleJitter !== undefined)
     useQRStore.setState((s) => ({

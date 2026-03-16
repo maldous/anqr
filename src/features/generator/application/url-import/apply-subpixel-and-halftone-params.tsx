@@ -4,11 +4,11 @@ import { useQRStore } from '@/store/qr-store';
 export function applySubpixelAndHalftoneParams(params: Partial<ShareConfig>): void {
   if (params.subpixelGridSize)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, subpixelGridSize: params.subpixelGridSize as any },
+      overlay: { ...s.overlay, subpixelGridSize: params.subpixelGridSize as '2x2' | '3x3' | '4x4' },
     }));
   if (params.subpixelCenterRule)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, subpixelCenterRule: params.subpixelCenterRule as any },
+      overlay: { ...s.overlay, subpixelCenterRule: params.subpixelCenterRule as 'strict' | 'halftone_center' },
     }));
   if (params.subpixelNeutralColor)
     useQRStore.setState((s) => ({
@@ -16,19 +16,19 @@ export function applySubpixelAndHalftoneParams(params: Partial<ShareConfig>): vo
     }));
   if (params.subpixelFinderOverride)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, subpixelFinderOverride: params.subpixelFinderOverride as any },
+      overlay: { ...s.overlay, subpixelFinderOverride: params.subpixelFinderOverride as 'solid' | 'stylized' },
     }));
   if (params.halftoneCell)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, halftoneCell: params.halftoneCell as any },
+      overlay: { ...s.overlay, halftoneCell: params.halftoneCell as 'per_module' | 'n×n' },
     }));
   if (params.halftoneDotShape)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, halftoneDotShape: params.halftoneDotShape as any },
+      overlay: { ...s.overlay, halftoneDotShape: params.halftoneDotShape as 'circle' | 'square' | 'line' },
     }));
   if (params.brightnessCurve)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, brightnessCurve: params.brightnessCurve as any },
+      overlay: { ...s.overlay, brightnessCurve: params.brightnessCurve as 'linear' | 's-curve' | 'gamma' },
     }));
   if (params.duotoneColor1) {
     const color1 = params.duotoneColor1;

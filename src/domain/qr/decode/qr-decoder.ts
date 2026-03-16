@@ -17,7 +17,7 @@ export class QRDecoder {
     this.rsDecoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
   }
 
-  decode(bits: BitMatrix, hints?: Map<number, any>): DecoderResult {
+  decode(bits: BitMatrix, hints?: Map<number, unknown>): DecoderResult {
     const parser = new BitMatrixParser(bits);
     let fe: Error | null = null;
     let ce: Error | null = null;
@@ -45,7 +45,7 @@ export class QRDecoder {
     throw ce;
   }
 
-  private decodeBitMatrix(parser: BitMatrixParser, hints?: Map<number, any>): DecoderResult {
+  private decodeBitMatrix(parser: BitMatrixParser, hints?: Map<number, unknown>): DecoderResult {
     const version = parser.readVersion();
     const formatInfo = parser.readFormatInformation();
     const ecLevel = formatInfo.getErrorCorrectionLevel();
@@ -166,7 +166,7 @@ export class QRDecoder {
     bytes: Uint8Array,
     version: Version,
     ecLevel: ErrorCorrectionLevel,
-    hints?: Map<number, any>
+    hints?: Map<number, unknown>
   ): DecoderResult {
     const bits = new BitSource(bytes);
     const result = new StringBuilder();
@@ -226,7 +226,7 @@ export class QRDecoder {
     count: number,
     fc1InEffect: boolean,
     byteSegments: Uint8Array[],
-    hints?: Map<number, any>
+    hints?: Map<number, unknown>
   ): void {
     switch (mode) {
       case Mode.NUMERIC:
@@ -327,7 +327,7 @@ export class QRDecoder {
     result: StringBuilder,
     count: number,
     byteSegments: Uint8Array[],
-    hints?: Map<number, any>
+    hints?: Map<number, unknown>
   ): void {
     if (8 * count > bits.available()) throw new FormatException();
     const readBytes = new Uint8Array(count);
@@ -337,7 +337,7 @@ export class QRDecoder {
     let encoding: string;
     if (hints?.has(4)) {
       // CHARACTER_SET hint
-      encoding = hints.get(4);
+      encoding = hints.get(4) as string;
     } else {
       encoding = StringUtils.guessEncoding(readBytes, hints);
     }

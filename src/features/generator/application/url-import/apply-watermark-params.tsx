@@ -6,13 +6,13 @@ export function applyWatermarkParams(params: Partial<ShareConfig>): void {
     useQRStore.setState((s) => ({ watermark: { ...s.watermark, enabled: true } }));
   if (params.watermarkKind)
     useQRStore.setState((s) => ({
-      watermark: { ...s.watermark, kind: params.watermarkKind as any },
+      watermark: { ...s.watermark, kind: params.watermarkKind as typeof s.watermark.kind },
     }));
   if (params.watermarkText)
     useQRStore.setState((s) => ({ watermark: { ...s.watermark, text: params.watermarkText! } }));
   if (params.watermarkPosition)
     useQRStore.setState((s) => ({
-      watermark: { ...s.watermark, position: params.watermarkPosition as any },
+      watermark: { ...s.watermark, position: params.watermarkPosition as typeof s.watermark.position },
     }));
   if (params.watermarkOpacity !== undefined)
     useQRStore.setState((s) => ({
@@ -20,6 +20,6 @@ export function applyWatermarkParams(params: Partial<ShareConfig>): void {
     }));
   if (params.watermarkBlend)
     useQRStore.setState((s) => ({
-      watermark: { ...s.watermark, blend: params.watermarkBlend as any },
+      watermark: { ...s.watermark, blend: params.watermarkBlend as typeof s.watermark.blend },
     }));
 }

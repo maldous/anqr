@@ -1,4 +1,5 @@
 import { Camera as CameraIcon, Image as ImageIcon, Link, Loader2, Upload } from 'lucide-react';
+import type { useOverlaySourceActions } from './use-overlay-source-actions';
 import { Capacitor } from '@capacitor/core';
 import type React from 'react';
 import { Button } from '@/ui/primitives/button';
@@ -37,7 +38,7 @@ export function OverlaySourcePicker({
   setUrlInput: (v: string) => void;
   urlError: string | null;
   setUrlError: (v: string | null) => void;
-  sourceActions: any;
+  sourceActions: ReturnType<typeof useOverlaySourceActions>;
   t: (key: string, options?: Record<string, unknown>) => string;
 }>) {
   return (

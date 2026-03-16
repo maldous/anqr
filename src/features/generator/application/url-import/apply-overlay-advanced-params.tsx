@@ -10,13 +10,13 @@ export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
     }));
   if (params.eccAwareWeightMap)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, eccAwareWeightMap: params.eccAwareWeightMap as any },
+      overlay: { ...s.overlay, eccAwareWeightMap: params.eccAwareWeightMap as typeof s.overlay.eccAwareWeightMap },
     }));
   if (params.overlayType)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, type: params.overlayType as any } }));
+    useQRStore.setState((s) => ({ overlay: { ...s.overlay, type: params.overlayType as typeof s.overlay.type } }));
   if (params.overlayFramePick)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, framePick: params.overlayFramePick as any },
+      overlay: { ...s.overlay, framePick: params.overlayFramePick as typeof s.overlay.framePick },
     }));
   if (params.cropEnabled)
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, cropEnabled: true } }));
@@ -38,6 +38,6 @@ export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifMaxFps: params.gifMaxFps! } }));
   if (params.gifDisposalHandling)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, gifDisposalHandling: params.gifDisposalHandling as any },
+      overlay: { ...s.overlay, gifDisposalHandling: params.gifDisposalHandling as typeof s.overlay.gifDisposalHandling },
     }));
 }

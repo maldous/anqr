@@ -117,7 +117,7 @@ export class FormatInformation {
     return (this.errorCorrectionLevel.getValue() << 3) | this.dataMask;
   }
 
-  equals(o: any): boolean {
+  equals(o: unknown): boolean {
     if (!(o instanceof FormatInformation)) return false;
     return this.errorCorrectionLevel.equals(o.errorCorrectionLevel) && this.dataMask === o.dataMask;
   }

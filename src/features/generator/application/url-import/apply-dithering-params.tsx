@@ -1,10 +1,10 @@
 import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import { useQRStore, type DitherKind, type DiffusionKernel, type OrderedMatrix } from '@/store/qr-store';
 import type { StoreState } from '@/features/generator/model/mobile-split';
 
 export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreState): void {
-  if (params.ditherKind) store.setOverlayDitherKind(params.ditherKind as any);
-  if (params.diffusionKernel) store.setOverlayDiffusionKernel(params.diffusionKernel as any);
+  if (params.ditherKind) store.setOverlayDitherKind(params.ditherKind as DitherKind);
+  if (params.diffusionKernel) store.setOverlayDiffusionKernel(params.diffusionKernel as DiffusionKernel);
   if (params.ditherStrength !== undefined) store.setOverlayDitherStrength(params.ditherStrength);
   if (params.finderDitherStrength !== undefined)
     useQRStore.setState((s) => ({
@@ -25,7 +25,7 @@ export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreS
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, ditherSerpentine: true } }));
   if (params.orderedMatrix)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, orderedMatrix: params.orderedMatrix as any },
+      overlay: { ...s.overlay, orderedMatrix: params.orderedMatrix as OrderedMatrix },
     }));
   if (params.blueNoiseTileSize !== undefined)
     useQRStore.setState((s) => ({
@@ -37,6 +37,6 @@ export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreS
     }));
   if (params.colorDither)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, colorDither: params.colorDither as any },
+      overlay: { ...s.overlay, colorDither: params.colorDither as 'none' | 'per_channel' | 'perceptual' },
     }));
 }

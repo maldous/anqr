@@ -9,8 +9,9 @@ export function captureWarningBreadcrumb(
   message: string,
   safeContext?: LogContext
 ): void {
-  if (!sentryModuleState.module) return;
-  sentryModuleState.module.addBreadcrumb({
+  const sentry = sentryModuleState.module;
+  if (!sentry) return;
+  sentry.addBreadcrumb({
     category: scope,
     message,
     level: 'warning',

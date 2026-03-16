@@ -38,6 +38,6 @@ export function applyRenderColorAndPaletteStyles(params: Partial<ShareConfig>): 
   }
   if (params.paletteMode)
     useQRStore.setState((s) => ({
-      render: { ...s.render, paletteMode: params.paletteMode as any },
+      render: { ...s.render, paletteMode: params.paletteMode as 'position' | 'brightness' | 'diagonal' | 'radial' | 'random' | 'row' | 'column' },
     }));
 }

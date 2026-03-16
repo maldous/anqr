@@ -7,7 +7,7 @@ import { BarcodeFormat } from './barcode-format';
  * Encapsulates the result of decoding a barcode
  */
 export class Result {
-  private resultMetadata: Map<ResultMetadataType, any> | null = null;
+  private resultMetadata: Map<ResultMetadataType, unknown> | null = null;
 
   constructor(
     private readonly text: string,
@@ -45,16 +45,16 @@ export class Result {
     return this.format;
   }
 
-  getResultMetadata(): Map<ResultMetadataType, any> | null {
+  getResultMetadata(): Map<ResultMetadataType, unknown> | null {
     return this.resultMetadata;
   }
 
-  putMetadata(type: ResultMetadataType, value: any): void {
+  putMetadata(type: ResultMetadataType, value: unknown): void {
     this.resultMetadata ??= new Map();
     this.resultMetadata.set(type, value);
   }
 
-  putAllMetadata(metadata: Map<ResultMetadataType, any> | null): void {
+  putAllMetadata(metadata: Map<ResultMetadataType, unknown> | null): void {
     if (metadata !== null) {
       if (this.resultMetadata === null) {
         this.resultMetadata = metadata;

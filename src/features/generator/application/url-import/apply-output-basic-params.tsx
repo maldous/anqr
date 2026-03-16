@@ -12,5 +12,5 @@ export function applyOutputBasicParams(params: Partial<ShareConfig>, store: Stor
   if (params.gifQuantizer)
     store.setOutputGifQuantizer(params.gifQuantizer as 'median_cut' | 'neuquant' | 'octree');
   if (params.gifDither)
-    useQRStore.setState((s) => ({ output: { ...s.output, gifDither: params.gifDither as any } }));
+    useQRStore.setState((s) => ({ output: { ...s.output, gifDither: params.gifDither as typeof s.output.gifDither } }));
 }

@@ -22,7 +22,7 @@ export class Reader {
   /**
    * Decode a QR code from a BinaryBitmap
    */
-  decode(image: BinaryBitmap, hints?: Map<DecodeHintType, any>): Result {
+  decode(image: BinaryBitmap, hints?: Map<DecodeHintType, unknown>): Result {
     let decoderResult: DecoderResult;
     let points: ResultPoint[];
 

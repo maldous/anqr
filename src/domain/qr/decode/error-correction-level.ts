@@ -32,7 +32,7 @@ export class ErrorCorrectionLevel {
     return this.stringValue;
   }
 
-  equals(o: any): boolean {
+  equals(o: unknown): boolean {
     if (!(o instanceof ErrorCorrectionLevel)) return false;
     return this.value === o.value;
   }

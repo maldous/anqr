@@ -5,7 +5,7 @@ export class DecoderResult {
   private numBits: number;
   private errorsCorrected: number | null = null;
   private erasures: number | null = null;
-  private other: any = null;
+  private other: unknown = null;
   private structuredAppendParity: number = -1;
   private structuredAppendSequenceNumber: number = -1;
   private symbologyModifier: number = 0;
@@ -62,11 +62,11 @@ export class DecoderResult {
     this.erasures = erasures;
   }
 
-  getOther(): any {
+  getOther(): unknown {
     return this.other;
   }
 
-  setOther(other: any): void {
+  setOther(other: unknown): void {
     this.other = other;
   }
 

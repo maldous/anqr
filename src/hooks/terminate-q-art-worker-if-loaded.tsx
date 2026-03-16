@@ -4,7 +4,7 @@ export function terminateQArtWorkerIfLoaded(): void {
   const qartPromise = getQartModulePromise();
   if (!qartPromise) return;
   void qartPromise
-    .then((qartModule: any) => {
+    .then((qartModule) => {
       qartModule.terminateQArtWorker();
     })
     .catch(() => {

@@ -8,7 +8,7 @@ const qrDecoderLog = createLogger('DECODER');
 export function tryGlobalBinarizerStrategies(
   imageData: ImageData,
   inversionAttempts: string,
-  hints: Map<DecodeHintType, any>
+  hints: Map<DecodeHintType, unknown>
 ): DecodeResult | null {
   if (inversionAttempts !== 'onlyInvert') {
     qrDecoderLog.trace('strategy: Trying Normal + GlobalHistogramBinarizer');

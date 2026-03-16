@@ -1,14 +1,14 @@
 /**
  * Copy array elements (like System.arraycopy in Java)
  */
-export function arraycopy(
-  src: any,
+export function arraycopy<T = number>(
+  src: ArrayLike<T>,
   srcPos: number,
-  dest: any,
+  dest: { [index: number]: T },
   destPos: number,
   length: number
 ): void {
-  if (src === dest && srcPos < destPos) {
+  if ((src as unknown) === (dest as unknown) && srcPos < destPos) {
     // Copy backwards to avoid overwriting
     destPos += length - 1;
     srcPos += length - 1;

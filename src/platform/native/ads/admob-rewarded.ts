@@ -4,11 +4,12 @@ export { showRewardedAdInternal } from './show-rewarded-ad-internal';
 
 export async function prepareRewardedAdInternal(
   adMobAvailable: boolean,
-  AdMob: any,
+  AdMob: unknown,
   preparedRewardedKeys: Set<string>,
   type: RewardedType = 'rewarded'
 ): Promise<boolean> {
   if (!(adMobAvailable && AdMob)) return false;
+  const adMob = AdMob as { prepareRewardedInterstitialAd(o: { adId: string }): Promise<void>; prepareRewardedAd(o: { adId: string }): Promise<void> };
   try {
     const key = rewardedPrepareKey(type);
     const context =
@@ -17,8 +18,8 @@ export async function prepareRewardedAdInternal(
       type === 'rewardedInterstitial'
         ? getAdUnitId('rewardedInterstitial')
         : getAdUnitId('rewarded', context);
-    if (type === 'rewardedInterstitial') await AdMob.prepareRewardedInterstitialAd({ adId });
-    else await AdMob.prepareRewardedAd({ adId });
+    if (type === 'rewardedInterstitial') await adMob.prepareRewardedInterstitialAd({ adId });
+    else await adMob.prepareRewardedAd({ adId });
     preparedRewardedKeys.add(key);
     log.info('Rewarded ad prepared', { type, mode: isTestMode ? 'TEST' : 'PROD' });
     return true;

@@ -21,7 +21,7 @@ export function decodeQR(
   const { inversionAttempts = 'attemptBoth' } = options;
 
   // Strategy 1: Normal with TRY_HARDER (always enabled)
-  const tryHarderHints = new Map<DecodeHintType, any>();
+  const tryHarderHints = new Map<DecodeHintType, unknown>();
   tryHarderHints.set(DecodeHintType.TRY_HARDER, true);
 
   if (inversionAttempts !== 'onlyInvert') {
@@ -38,7 +38,7 @@ export function decodeQR(
   }
 
   // Strategy 3: Try with PURE_BARCODE hint (assumes clean image)
-  const pureHints = new Map<DecodeHintType, any>();
+  const pureHints = new Map<DecodeHintType, unknown>();
   pureHints.set(DecodeHintType.TRY_HARDER, true);
   pureHints.set(DecodeHintType.PURE_BARCODE, true);
 

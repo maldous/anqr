@@ -1,9 +1,9 @@
 import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import { useQRStore, type OverlayMode } from '@/store/qr-store';
 import type { StoreState } from '@/features/generator/model/mobile-split';
 
 export function applyOverlayTransformParams(params: Partial<ShareConfig>, store: StoreState): void {
-  if (params.mode) store.setOverlayMode(params.mode as any);
+  if (params.mode) store.setOverlayMode(params.mode as OverlayMode);
   if (params.intensity !== undefined) store.setOverlayIntensity(params.intensity);
   if (params.fit) store.setOverlayFit(params.fit as 'cover' | 'contain' | 'stretch');
   if (params.rotate !== undefined) store.setOverlayRotate(params.rotate);

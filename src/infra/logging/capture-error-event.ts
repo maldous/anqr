@@ -7,26 +7,21 @@ export function captureErrorEvent(
   safeContext: LogContext | undefined,
   originalContext?: LogContext
 ): void {
-  if (!sentryModuleState.module) return;
+  const sentry = sentryModuleState.module;
+  if (!sentry) return;
 
-  sentryModuleState.module.withScope(
-    (sentryScope: {
-      setTag: (k: string, v: string) => void;
-      setExtra: (k: string, v: unknown) => void;
-      setExtras: (e: Record<string, unknown>) => void;
-    }) => {
-      sentryScope.setTag('logger.scope', scope);
-      if (safeContext) {
-        sentryScope.setExtras(safeContext);
-      }
-
-      const errorObj = originalContext?.error;
-      if (errorObj instanceof Error) {
-        sentryScope.setExtra('originalMessage', message);
-        sentryModuleState.module.captureException(errorObj);
-      } else {
-        sentryModuleState.module.captureMessage(`[${scope}] ${message}`, 'error');
-      }
+  sentry.withScope((sentryScope) => {
+    sentryScope.setTag('logger.scope', scope);
+    if (safeContext) {
+      sentryScope.setExtras(safeContext);
     }
-  );
+
+    const errorObj = originalContext?.error;
+    if (errorObj instanceof Error) {
+      sentryScope.setExtra('originalMessage', message);
+      sentry.captureException(errorObj);
+    } else {
+      sentry.captureMessage(`[${scope}] ${message}`, 'error');
+    }
+  });
 }

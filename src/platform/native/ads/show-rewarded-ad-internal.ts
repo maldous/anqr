@@ -1,14 +1,20 @@
 import { rewardedPrepareKey, type RewardedType } from './admob-config';
 import { rewardedLog as log } from './rewarded-log';
 
+type AdMobRewardedApi = {
+  showRewardedAd(): Promise<{ amount?: number; type?: string }>;
+  showRewardedInterstitialAd(): Promise<{ amount?: number; type?: string }>;
+};
+
 export async function showRewardedAdInternal(
   adMobAvailable: boolean,
-  AdMob: any,
+  AdMob: unknown,
   preparedRewardedKeys: Set<string>,
   prepareRewardedAd: (type: RewardedType) => Promise<boolean>,
   type: RewardedType = 'rewarded'
 ): Promise<{ rewarded: boolean; amount?: number; type?: string }> {
   if (!(adMobAvailable && AdMob)) return { rewarded: false };
+  const adMob = AdMob as AdMobRewardedApi;
   const key = rewardedPrepareKey(type);
   try {
     if (!preparedRewardedKeys.has(key)) {
@@ -20,8 +26,8 @@ export async function showRewardedAdInternal(
     }
     const result =
       type === 'rewardedInterstitial'
-        ? await AdMob.showRewardedInterstitialAd()
-        : await AdMob.showRewardedAd();
+        ? await adMob.showRewardedInterstitialAd()
+        : await adMob.showRewardedAd();
     preparedRewardedKeys.delete(key);
     void prepareRewardedAd(type);
     log.info('Rewarded ad shown', { type, reward: result });

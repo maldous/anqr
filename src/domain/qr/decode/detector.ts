@@ -19,8 +19,8 @@ export class Detector {
 
   constructor(private readonly image: BitMatrix) {}
 
-  detect(hints?: Map<number, any>): DetectorResult {
-    this.resultPointCallback = hints?.get(9); // DecodeHintType.NEED_RESULT_POINT_CALLBACK
+  detect(hints?: Map<number, unknown>): DetectorResult {
+    this.resultPointCallback = hints?.get(9) as ((point: ResultPoint) => void) | undefined; // DecodeHintType.NEED_RESULT_POINT_CALLBACK
 
     const finder = new FinderPatternFinder(this.image, this.resultPointCallback);
     const info = finder.find(hints);

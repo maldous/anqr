@@ -33,7 +33,7 @@ export function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
       if (result && result.data !== null) {
         // Extract segment info for structural validation
         const segments: DecodedSegmentInfo[] =
-          result.segments?.map((s: any) => ({
+          result.segments?.map((s) => ({
             index: s.index,
             mode: s.mode,
             modeName: s.modeName,

@@ -81,7 +81,7 @@ export class Mode {
     return this.bits;
   }
 
-  equals(o: any): boolean {
+  equals(o: unknown): boolean {
     if (!(o instanceof Mode)) return false;
     return this.value === o.value;
   }

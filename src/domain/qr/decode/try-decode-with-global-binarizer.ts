@@ -14,7 +14,7 @@ const qrDecoderLog = createLogger('DECODER');
 export function tryDecodeWithGlobalBinarizer(
   imageData: ImageData,
   invert: boolean,
-  hints?: Map<DecodeHintType, any>
+  hints?: Map<DecodeHintType, unknown>
 ): DecodeResult | null {
   try {
     const source = createLuminanceSource(invert ? invertImageData(imageData) : imageData);

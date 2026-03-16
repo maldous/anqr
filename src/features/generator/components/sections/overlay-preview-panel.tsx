@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import type { useOverlayCropDrag } from './use-overlay-crop-drag';
 import type React from 'react';
 import { Button } from '@/ui/primitives/button';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
@@ -27,7 +28,7 @@ export function OverlayPreviewPanel({
   overlay: ReturnType<typeof useQRStore.getState>['overlay'];
   imagePreview: string | null;
   previewContainerRef: React.RefObject<HTMLDivElement | null>;
-  cropDrag: any;
+  cropDrag: ReturnType<typeof useOverlayCropDrag>;
   cropOverlayStyle: CropOverlayStyle;
   setPreviewImageSize: (v: PreviewImageSize | null) => void;
   setOverlayCrop: ReturnType<typeof useQRStore.getState>['setOverlayCrop'];

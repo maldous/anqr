@@ -102,7 +102,7 @@ export async function executeQArtWorkerPipeline(params: {
         const localizedStage = localizeQArtProgressStage(
           stage,
           params.translateQArtStage,
-          params.t as unknown as (...args: any[]) => string
+          params.t as unknown as (...args: unknown[]) => string
         );
         params.updateGenerationProgress(localizedStage, 18 + percent * 0.64);
         log.debug('QR-Art progress', { stage: localizedStage, percent: `${percent}%` });

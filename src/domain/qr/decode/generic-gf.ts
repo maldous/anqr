@@ -85,7 +85,7 @@ export class GenericGF extends AbstractGenericGF<GenericGFPoly> {
     return `GF(0x${Integer.toHexString(this.primitive)},${this.size})`;
   }
 
-  equals(o: any): boolean {
+  equals(o: unknown): boolean {
     return o === this;
   }
 }

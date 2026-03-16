@@ -15,12 +15,12 @@ export function applyOutputAdvancedParams(params: Partial<ShareConfig>): void {
     }));
   if (params.svgShapePrecision)
     useQRStore.setState((s) => ({
-      output: { ...s.output, svgShapePrecision: params.svgShapePrecision as any },
+      output: { ...s.output, svgShapePrecision: params.svgShapePrecision as 'pixel' | 'precise' },
     }));
   if (params.svgEmbedRasterOverlay === false)
     useQRStore.setState((s) => ({ output: { ...s.output, svgEmbedRasterOverlay: false } }));
   if (params.formatExtra)
     useQRStore.setState((s) => ({
-      output: { ...s.output, formatExtra: params.formatExtra as any },
+      output: { ...s.output, formatExtra: params.formatExtra as 'none' | 'eps' | 'animated_webp' },
     }));
 }

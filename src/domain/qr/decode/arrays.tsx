@@ -8,7 +8,7 @@ export class Arrays {
   /**
    * Fill array with a value
    */
-  static fill(a: Int32Array | Uint8Array | any[], val: number): void {
+  static fill(a: Int32Array | Uint8Array | number[], val: number): void {
     for (let i = 0; i < a.length; i++) {
       a[i] = val;
     }
@@ -51,7 +51,7 @@ export class Arrays {
   /**
    * Check array equality
    */
-  static equals(first: any, second: any): boolean {
+  static equals(first: ArrayLike<unknown> | null, second: ArrayLike<unknown> | null): boolean {
     if (!(first && second)) return false;
     if (!(first.length && second.length)) return false;
     if (first.length !== second.length) return false;
@@ -64,7 +64,7 @@ export class Arrays {
   /**
    * Compute hash code for array
    */
-  static hashCode(a: any): number {
+  static hashCode(a: Iterable<number> | null): number {
     if (a === null) return 0;
     let result = 1;
     for (const element of a) {

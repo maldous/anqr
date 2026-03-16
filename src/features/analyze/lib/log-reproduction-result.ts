@@ -18,7 +18,7 @@ export function logReproductionResult(params: {
   size: number;
   diagnostics: MatrixDiagnostics;
   qrState: { borderModulesExtra?: number };
-  log: { debug: (msg: string, data?: any) => void; warn: (msg: string, data?: any) => void };
+  log: { debug: (msg: string, data?: Record<string, unknown>) => void; warn: (msg: string, data?: Record<string, unknown>) => void };
 }) {
   const {
     result,

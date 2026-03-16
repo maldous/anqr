@@ -12,7 +12,7 @@ import { qrDecoderLog } from './decoder-log';
 export function tryDecode(
   imageData: ImageData,
   invert: boolean,
-  hints?: Map<DecodeHintType, any>
+  hints?: Map<DecodeHintType, unknown>
 ): DecodeResult | null {
   const hintDesc = hints
     ? Array.from(hints.keys())

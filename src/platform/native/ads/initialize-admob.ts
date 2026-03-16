@@ -10,17 +10,19 @@ export async function initializeAdMob(): Promise<boolean> {
 
   try {
     const admobModule = await import('@capacitor-community/admob');
-    admobRuntime.AdMob = admobModule.AdMob;
-    admobRuntime.BannerAdSize = admobModule.BannerAdSize;
-    admobRuntime.BannerAdPosition = admobModule.BannerAdPosition;
-    admobRuntime.BannerAdPluginEvents = admobModule.BannerAdPluginEvents;
-    await admobRuntime.AdMob.initialize({
+    const adMob = admobModule.AdMob;
+    const bannerEvents = admobModule.BannerAdPluginEvents;
+    admobRuntime.AdMob = adMob as unknown as typeof admobRuntime.AdMob;
+    admobRuntime.BannerAdSize = admobModule.BannerAdSize as unknown as typeof admobRuntime.BannerAdSize;
+    admobRuntime.BannerAdPosition = admobModule.BannerAdPosition as unknown as typeof admobRuntime.BannerAdPosition;
+    admobRuntime.BannerAdPluginEvents = bannerEvents as unknown as typeof admobRuntime.BannerAdPluginEvents;
+    await adMob.initialize({
       requestTrackingAuthorization: true,
       testingDevices: [],
       initializeForTesting: isTestMode,
-    });
-    admobRuntime.AdMob.addListener(
-      admobRuntime.BannerAdPluginEvents.SizeChanged,
+    } as Parameters<typeof adMob.initialize>[0]);
+    adMob.addListener(
+      bannerEvents.SizeChanged,
       (info: { height: number }) => updateBannerHeight(info.height)
     );
     admobRuntime.available = true;

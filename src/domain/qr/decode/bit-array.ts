@@ -209,7 +209,7 @@ export class BitArray {
     return new Int32Array(Math.floor((size + 31) / 32));
   }
 
-  equals(o: any): boolean {
+  equals(o: unknown): boolean {
     if (!(o instanceof BitArray)) return false;
     return this.size === o.size && Arrays.equals(this.bits, o.bits);
   }

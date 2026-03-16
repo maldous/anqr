@@ -1,9 +1,9 @@
 import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import { useQRStore, type SafetyMode } from '@/store/qr-store';
 
 export function applySafetyParams(params: Partial<ShareConfig>): void {
   if (params.safetyMode)
-    useQRStore.setState((s) => ({ safety: { ...s.safety, mode: params.safetyMode as any } }));
+    useQRStore.setState((s) => ({ safety: { ...s.safety, mode: params.safetyMode as SafetyMode } }));
   if (params.safetyMinModulePx !== undefined)
     useQRStore.setState((s) => ({
       safety: { ...s.safety, minModulePx: params.safetyMinModulePx! },

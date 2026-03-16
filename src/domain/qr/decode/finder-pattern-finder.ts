@@ -21,7 +21,7 @@ export class FinderPatternFinder {
     private readonly resultPointCallback?: (point: ResultPoint) => void
   ) {}
 
-  find(hints?: Map<number, any>): FinderPatternInfo {
+  find(hints?: Map<number, unknown>): FinderPatternInfo {
     const tryHarder = hints?.get(3) === true; // DecodeHintType.TRY_HARDER
     const image = this.image;
     const maxI = image.getHeight();

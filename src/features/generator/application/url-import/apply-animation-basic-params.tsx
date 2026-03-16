@@ -11,10 +11,10 @@ export function applyAnimationBasicParams(params: Partial<ShareConfig>, store: S
   if (params.frameStep !== undefined) store.setAnimationFrameStep(params.frameStep);
   if (params.interpolate)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, interpolate: params.interpolate as any },
+      animation: { ...s.animation, interpolate: params.interpolate as typeof s.animation.interpolate },
     }));
   if (params.temporalDither)
     useQRStore.setState((s) => ({
-      animation: { ...s.animation, temporalDither: params.temporalDither as any },
+      animation: { ...s.animation, temporalDither: params.temporalDither as typeof s.animation.temporalDither },
     }));
 }
