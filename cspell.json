@@ -15,6 +15,7 @@
     "src/i18n/**"
   ],
   "words": [
+    "creds",
     "anqr",
     "depcruise",
     "commitlint",
