@@ -7,11 +7,9 @@ export abstract class BaseMatrixWrapper implements QRCodeInstance {
     this.moduleCount = moduleCount;
   }
 
-  addData(_data: string, _mode?: string): void {
-  }
+  abstract addData(data: string, mode?: string): void;
 
-  make(_maskPattern?: number): void {
-  }
+  abstract make(maskPattern?: number): void;
 
   getModuleCount(): number {
     return this.moduleCount;

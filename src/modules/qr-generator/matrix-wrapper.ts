@@ -8,6 +8,10 @@ export class MatrixWrapper extends BaseMatrixWrapper {
     this.matrix = matrix;
   }
 
+  addData(_data: string, _mode?: string): void {}
+
+  make(_maskPattern?: number): void {}
+
   isDark(row: number, col: number): boolean {
     return this.matrix[row]?.[col] ?? false;
   }
