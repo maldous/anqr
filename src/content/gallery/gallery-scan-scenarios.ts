@@ -1,10 +1,7 @@
 export type { CanonicalFixtureId } from './gallery-scan-scenario-types/canonical-fixture-id';
 export type { ScenarioFeatureGroup } from './gallery-scan-scenario-types/scenario-feature-group';
-export type { CanonicalFixture } from './gallery-scan-scenario-types/canonical-fixture';
 export type { GalleryScanScenario } from './gallery-scan-scenario-types/gallery-scan-scenario';
-import type { CanonicalFixture } from './gallery-scan-scenario-types/canonical-fixture';
 import type { GalleryScanScenario } from './gallery-scan-scenario-types/gallery-scan-scenario';
-import { CANONICAL_FIXTURES } from './canonical-fixtures.const';
 import { GALLERY_SCAN_SCENARIOS_OVERLAY } from './gallery-scan-scenarios-overlay';
 import { GALLERY_SCAN_SCENARIOS_PRESERVATION } from './gallery-scan-scenarios-preservation';
 
