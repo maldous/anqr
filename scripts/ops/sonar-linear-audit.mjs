@@ -8,6 +8,9 @@
  * and quality measures. If ANY findings exist, creates (or updates) a
  * critical-priority Linear issue and exits with code 1 (blocking).
  *
+ * When clean (no findings), resolves any existing open [Sonar] Linear issues
+ * by marking them Done with a resolution comment.
+ *
  * Designed to run in the nightly pipeline after sonar-scanner + sonar-export.
  *
  * Required env:
@@ -25,8 +28,10 @@
 
 import {
   createIssue,
+  updateIssue,
   findOpenIssuesByTitle,
   addComment,
+  STATES,
 } from './linear-client.mjs';
 import { sendNotification, linearIssueUrl } from './lib/notify.mjs';
 
@@ -83,6 +88,32 @@ async function main() {
 
   if (totalIssues === 0 && totalHotspots === 0) {
     console.log('[sonar-audit] Clean — no issues or hotspots');
+
+    // Resolve any existing open [Sonar] Linear issues
+    const openSonar = await findOpenIssuesByTitle('[Sonar]');
+    for (const issue of openSonar) {
+      console.log(`[sonar-audit] Resolving ${issue.identifier} — findings cleared`);
+      await addComment(
+        issue.id,
+        [
+          `✅ **Nightly sonar audit — clean** — ${new Date().toISOString().slice(0, 10)}`,
+          '',
+          'All previously reported issues and hotspots have been resolved.',
+          'Marking this issue as Done.',
+        ].join('\n'),
+      );
+      await updateIssue(issue.id, { stateId: STATES.done });
+      sendNotification({
+        subject: `[ANQR] [Sonar] Findings resolved — ${issue.identifier} closed`,
+        body: `All SonarQube findings cleared. ${issue.identifier} marked Done.`,
+        severity: 'info',
+      });
+    }
+
+    if (openSonar.length > 0) {
+      console.log(`[sonar-audit] Resolved ${openSonar.length} sonar issue(s)`);
+    }
+
     process.exit(0);
   }
 
