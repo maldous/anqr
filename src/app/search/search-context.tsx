@@ -1,1 +1,1 @@
-export type {} from './search-context-value';
+export type { SearchContextValue } from './search-context-value';
