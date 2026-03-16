@@ -1,0 +1,1 @@
+export const MAX_SERVER_IMAGE_SIZE = 2048;

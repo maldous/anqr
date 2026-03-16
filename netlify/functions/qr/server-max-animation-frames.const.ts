@@ -1,0 +1,1 @@
+export const SERVER_MAX_ANIMATION_FRAMES = 64;

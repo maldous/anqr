@@ -1,0 +1,1 @@
+export const OVERLAY_HOST_LOOKUP_TTL_MS = 60_000;
