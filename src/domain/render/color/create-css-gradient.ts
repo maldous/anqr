@@ -1,4 +1,4 @@
-import type { GradientConfig } from "./gradient.types";
+import type { GradientConfig } from "./gradient-config";
 
 /**
  * Create CSS gradient string from config

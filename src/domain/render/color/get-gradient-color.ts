@@ -1,6 +1,6 @@
 import { parseColor } from "./color";
 import type { RGB } from "../../../modules/core/types";
-import type { GradientConfig } from "./gradient.types";
+import type { GradientConfig } from "./gradient-config";
 
 // ============================================
 // GRADIENT FUNCTIONS
