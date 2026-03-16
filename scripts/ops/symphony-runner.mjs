@@ -41,6 +41,7 @@ import {
   addComment,
   updateComment,
   getIssueDetail,
+  findOpenIssuesByTitle,
   STATES,
 } from './linear-client.mjs';
 import {
@@ -497,6 +498,21 @@ async function pickIssue() {
   const automatable = todoIssues.filter(isAutomatable);
 
   if (automatable.length === 0) return null;
+
+  // Hard gate: if actionable [Sonar] issues exist, only work on those
+  // Exclude Backlog to avoid deadlock when sonar issues hit max retries
+  const allSonar = await findOpenIssuesByTitle('[Sonar]');
+  const openSonar = allSonar.filter((i) => i.state?.name !== 'Backlog');
+  if (openSonar.length > 0) {
+    const sonarTodo = automatable.filter((i) => i.title.includes('[Sonar]'));
+    if (sonarTodo.length > 0) {
+      console.log(`[runner] Sonar gate: ${openSonar.length} open [Sonar] issue(s) — prioritizing sonar work`);
+      sonarTodo.sort((a, b) => a.priority - b.priority);
+      return sonarTodo[0];
+    }
+    console.log(`[runner] Sonar gate: ${openSonar.length} open [Sonar] issue(s) but none in Todo — skipping until resolved`);
+    return null;
+  }
 
   automatable.sort((a, b) => a.priority - b.priority);
   return automatable[0];
