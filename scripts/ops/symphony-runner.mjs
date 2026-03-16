@@ -41,8 +41,6 @@ import {
   addComment,
   updateComment,
   getIssueDetail,
-  createIssue,
-  findOpenIssuesByTitle,
   STATES,
 } from './linear-client.mjs';
 import {
@@ -56,6 +54,7 @@ import { feedQueue, getQueueSnapshot } from './symphony-queue-control.mjs';
 import { selectProvider, recordProviderFailure } from './symphony-credit-gate.mjs';
 import { runAgent } from './symphony-agent.mjs';
 import { sendNotification, linearIssueUrl } from './lib/notify.mjs';
+import { fetchAllSonarIssues, syncSonarToLinear } from './lib/sonar-linear-sync.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(__dirname, '..', '..');
@@ -361,12 +360,13 @@ function runValidation(changedFiles) {
 }
 
 // ---------------------------------------------------------------------------
-// Sonar post-commit (non-blocking)
+// Sonar post-commit (non-blocking) — one Linear issue per finding
 // ---------------------------------------------------------------------------
 
 async function runSonarPostCommit(issueIdentifier) {
   const SONAR_TOKEN = process.env.SONAR_TOKEN;
   const SONAR_HOST = process.env.SONAR_HOST_URL || 'http://localhost:9000';
+  const PROJECT_KEY = 'anqr';
 
   if (!SONAR_TOKEN) {
     console.log('[runner] SONAR_TOKEN not set — skipping sonar scan');
@@ -383,79 +383,41 @@ async function runSonarPostCommit(issueIdentifier) {
     // Wait for analysis to be processed by the server
     await new Promise((r) => setTimeout(r, 10_000));
 
-    const authHeader = `Basic ${Buffer.from(SONAR_TOKEN + ':').toString('base64')}`;
-    const headers = { Authorization: authHeader };
+    const issues = await fetchAllSonarIssues(SONAR_TOKEN, SONAR_HOST, PROJECT_KEY);
 
-    const fetchWithTimeout = (url) => {
-      const ac = new AbortController();
-      const t = setTimeout(() => ac.abort(), 30_000);
-      return fetch(url, { headers, signal: ac.signal }).finally(() => clearTimeout(t));
-    };
-
-    const issuesRes = await fetchWithTimeout(
-      `${SONAR_HOST}/api/issues/search?componentKeys=anqr&resolved=false&ps=1`,
-    );
-    const issuesData = await issuesRes.json();
-    const totalIssues = issuesData.total || 0;
-
-    const hotRes = await fetchWithTimeout(
-      `${SONAR_HOST}/api/hotspots/search?projectKey=anqr&ps=1`,
-    );
-    const hotData = await hotRes.json();
-    const totalHotspots = hotData.paging?.total || 0;
-
-    const measRes = await fetchWithTimeout(
-      `${SONAR_HOST}/api/measures/component?component=anqr&metricKeys=duplicated_lines_density,coverage`,
-    );
-    const measData = await measRes.json();
-    const measures = measData.component?.measures || [];
-
-    if (totalIssues === 0 && totalHotspots === 0) {
-      console.log('[runner] Sonar scan clean — no issues or hotspots');
+    if (issues.length === 0) {
+      console.log('[runner] Sonar scan clean — no issues');
       return;
     }
 
-    const existing = await findOpenIssuesByTitle('[Sonar]');
-    if (existing.length > 0) {
-      console.log(`[runner] Existing sonar issue: ${existing[0].identifier} — updating`);
-      await addComment(
-        existing[0].id,
-        [
-          `🔍 **Sonar scan update** (after ${issueIdentifier})`,
-          '',
-          `Issues: ${totalIssues}, Hotspots: ${totalHotspots}`,
-          ...measures.map((m) => `${m.metric}: ${m.value}`),
-        ].join('\n'),
+    console.log(`[runner] Sonar found ${issues.length} issue(s) — syncing to Linear...`);
+
+    const { created, skipped } = await syncSonarToLinear({
+      sonarIssues: issues,
+      projectKey: PROJECT_KEY,
+      sonarHost: SONAR_HOST,
+      priority: 2,
+      resolveStale: false,
+    });
+
+    console.log(`[runner] Sonar sync: created ${created.length}, existing ${skipped.length}`);
+
+    if (created.length > 0) {
+      const lines = created.map(
+        (c) => `  ${c.linear.identifier}: ${c.sonar.message} (${c.sonar.component.split('/').pop()}:${c.sonar.line})`,
       );
-      return;
+      sendNotification({
+        subject: `Sonar: ${created.length} new issue(s) after ${issueIdentifier}`,
+        body: [
+          `SonarQube scan after ${issueIdentifier} found new issues:`,
+          '',
+          ...lines,
+          '',
+          `Dashboard: ${SONAR_HOST}/dashboard?id=${PROJECT_KEY}`,
+        ].join('\n'),
+        severity: 'warn',
+      });
     }
-
-    const description = [
-      'SonarQube analysis detected findings that need attention.',
-      '',
-      `**Issues:** ${totalIssues}`,
-      `**Security Hotspots:** ${totalHotspots}`,
-      ...measures.map((m) => `**${m.metric}:** ${m.value}`),
-      '',
-      `View full dashboard: ${SONAR_HOST}/dashboard?id=anqr`,
-      '',
-      `Triggered after successful commit of ${issueIdentifier}.`,
-      '',
-      'Run `bash scripts/sonar-export.sh` for a detailed JSON report.',
-    ].join('\n');
-
-    const created = await createIssue({
-      title: '[Sonar] Quality gate findings detected',
-      description,
-      priority: 1,
-    });
-
-    console.log(`[runner] Created sonar issue: ${created.identifier}`);
-    sendNotification({
-      subject: `[ANQR] [Sonar] Quality findings detected — ${created.identifier}`,
-      body: `SonarQube found ${totalIssues} issues and ${totalHotspots} hotspots.\n\nLinear: ${linearIssueUrl(created.identifier)}\nDashboard: ${SONAR_HOST}/dashboard?id=anqr`,
-      severity: 'critical',
-    });
   } catch (err) {
     console.warn(`[runner] Sonar post-commit scan failed (non-fatal): ${err.message}`);
   }
