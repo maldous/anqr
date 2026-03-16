@@ -47,7 +47,6 @@ import {
 } from './linear-client.mjs';
 import {
   RUNNER_MAX_RETRIES,
-  RUNNER_COMMIT_PREFIX,
   RUNNER_AUTO_PUSH,
   RUNNER_STUCK_THRESHOLD_MS,
   QUEUE_STATES,
@@ -149,11 +148,82 @@ function gitRevert() {
   }
 }
 
-function gitCommit(issueIdentifier, issueTitle, summary) {
+// ---------------------------------------------------------------------------
+// Commit message formatting (must pass commitlint)
+// ---------------------------------------------------------------------------
+
+const SCOPE_RULES = [
+  { pattern: /^src\/domain\//, scope: 'domain' },
+  { pattern: /^src\/platform\//, scope: 'platform' },
+  { pattern: /^src\/(ui|components)\//, scope: 'ui' },
+  { pattern: /^src\/features\//, scope: 'application' },
+  { pattern: /^src\/infra\/(logging|monitoring|sentry)/, scope: 'observability' },
+  { pattern: /^src\/infra\/analytics/, scope: 'analytics' },
+  { pattern: /^(tests\/|src\/.*\.spec\.|src\/.*\.test\.)/, scope: 'testing' },
+  { pattern: /^scripts\/ops\//, scope: 'harness' },
+  { pattern: /^docs\//, scope: 'docs' },
+  { pattern: /^\.github\/|^ci\//, scope: 'ci' },
+  { pattern: /^android\//, scope: 'android' },
+  { pattern: /^ios\//, scope: 'ios' },
+  { pattern: /^src\/(hooks|state|store|i18n)\//, scope: 'application' },
+  { pattern: /^src\/lib\//, scope: 'architecture' },
+];
+
+const HEADER_MAX_LENGTH = 100;
+
+function inferCommitScope(changedFiles) {
+  const counts = {};
+  for (const file of changedFiles) {
+    for (const rule of SCOPE_RULES) {
+      if (rule.pattern.test(file)) {
+        counts[rule.scope] = (counts[rule.scope] || 0) + 1;
+        break;
+      }
+    }
+  }
+  let best = 'architecture';
+  let bestCount = 0;
+  for (const [scope, count] of Object.entries(counts)) {
+    if (count > bestCount) {
+      best = scope;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+function sanitizeCommitSubject(title) {
+  let subject = title.trim();
+  subject = subject.replace(/\.+$/, '');
+  if (subject.length > 0) {
+    subject = subject[0].toLowerCase() + subject.slice(1);
+  }
+  return subject;
+}
+
+function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   try {
     execSync('git add -A', { cwd: ROOT, stdio: 'pipe' });
-    const msg = `${RUNNER_COMMIT_PREFIX}: ${issueTitle} (${issueIdentifier})\n\n${summary}`;
-    execSync(`git commit -m ${JSON.stringify(msg)}`, { cwd: ROOT, stdio: 'pipe' });
+
+    const scope = inferCommitScope(changedFiles);
+    const subject = sanitizeCommitSubject(issueTitle);
+    const prefix = `fix(${scope}): `;
+    const maxSubjectLen = HEADER_MAX_LENGTH - prefix.length;
+    const truncatedSubject = subject.length > maxSubjectLen
+      ? subject.slice(0, maxSubjectLen - 1) + '\u2026'
+      : subject;
+    const header = `${prefix}${truncatedSubject}`;
+    const body = `${issueIdentifier}\n\n${summary}`;
+    const msg = `${header}\n\n${body}`;
+
+    // Write to temp file — git commit -m with JSON.stringify loses newlines
+    const tmpFile = resolve(ROOT, '.git', 'SYMPHONY_COMMIT_MSG');
+    writeFileSync(tmpFile, msg, 'utf-8');
+    try {
+      execSync(`git commit -F ${JSON.stringify(tmpFile)}`, { cwd: ROOT, stdio: 'pipe' });
+    } finally {
+      try { unlinkSync(tmpFile); } catch { /* best effort */ }
+    }
     return true;
   } catch (err) {
     console.error(`[runner] Git commit failed: ${err.message}`);
@@ -773,7 +843,7 @@ async function executeIssue(issue, dryRun) {
     console.log('[runner] Validation passed ✅');
 
     const diffStat = gitDiffStat();
-    const committed = gitCommit(issue.identifier, issue.title, agentResult.summary);
+    const committed = gitCommit(issue.identifier, issue.title, agentResult.summary, changedFiles);
 
     if (!committed) {
       console.error('[runner] Commit failed — reverting');

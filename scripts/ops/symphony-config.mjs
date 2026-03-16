@@ -37,7 +37,6 @@ export const QUEUE_STATES = {
 export const RUNNER_MAX_TURNS = 600;
 export const RUNNER_MAX_EXECUTION_MS = 7_200_000; // 120 min hard timeout — local Ollama averages ~1.5 min/turn
 export const RUNNER_MAX_RETRIES = 2;
-export const RUNNER_COMMIT_PREFIX = 'fix(symphony)';
 export const RUNNER_OLLAMA_MODEL = 'qwen3.5:35b-a3b-32t';
 export const RUNNER_OLLAMA_BASE_URL = 'http://localhost:11434/v1';
 export const RUNNER_MAX_OUTPUT_TOKENS = 4096;
