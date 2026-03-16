@@ -25,11 +25,11 @@ Document environments, secret sources, and remediation needs.
 - others : not used
 
 ### Redaction review
-- Tracked secrets found: confimed
-- Files/locations: confimed
-- Remediation performed: confimed
-- Rotations required: confimed
-- Owners: confimed
+- Tracked secrets found: confirmed
+- Files/locations: confirmed
+- Remediation performed: confirmed
+- Rotations required: confirmed
+- Owners: confirmed
 
 ### Rules
 - no secrets in git: confirmed
