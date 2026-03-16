@@ -12,10 +12,10 @@ export function expandPackedQArtMatrix(packed: Uint8Array, moduleCount: number):
     );
   }
 
-  const matrix: boolean[][] = new Array(moduleCount);
+  const matrix: boolean[][] = Array.from({ length: moduleCount });
   let idx = 0;
   for (let row = 0; row < moduleCount; row++) {
-    const rowData = new Array<boolean>(moduleCount);
+    const rowData = Array.from<boolean>({ length: moduleCount });
     for (let col = 0; col < moduleCount; col++) {
       rowData[col] = packed[idx++] === 1;
     }

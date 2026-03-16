@@ -35,7 +35,7 @@ export function rankPixelsByImportance(
 
   if (candidateCount === 0) return [];
 
-  const rankOrder = new Array<number>(candidateCount);
+  const rankOrder = Array.from<number>({ length: candidateCount });
   for (let i = 0; i < candidateCount; i++) {
     rankOrder[i] = i;
   }
@@ -43,7 +43,7 @@ export function rankPixelsByImportance(
   // Sort by importance (descending), preserving row-major tie order.
   rankOrder.sort((a, b) => candidateScores[b] - candidateScores[a]);
 
-  const rankedPixels = new Array<number>(candidateCount);
+  const rankedPixels = Array.from<number>({ length: candidateCount });
   for (let i = 0; i < candidateCount; i++) {
     rankedPixels[i] = candidateIndices[rankOrder[i]];
   }

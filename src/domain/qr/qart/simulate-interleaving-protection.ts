@@ -9,7 +9,7 @@ export function simulateInterleavingProtection(
   numBlocks: number,
   protectedByteCount: number
 ): number[] {
-  const maxProtectedByteInBlock: number[] = new Array(numBlocks).fill(-1);
+  const maxProtectedByteInBlock: number[] = Array.from({ length: numBlocks }, () => -1);
   const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));
   let interleavedByteIndex = 0;
 

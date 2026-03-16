@@ -11,7 +11,7 @@ export function greedyRemoveInvalidSelections(
 ): boolean[] {
   const invalid = new Uint8Array(groupCount);
   let invalidCount = markInvalidGroups(currentValues, groupMax, groupCount, invalid);
-  const keep = new Array<boolean>(selections.length).fill(true);
+  const keep = Array.from({ length: selections.length }, () => true);
 
   while (invalidCount > 0) {
     let removed = false;

@@ -16,7 +16,7 @@ export function qrPolynomial(num: number[], shift: number): QRPolynomial {
     while (offset < num.length && num[offset] === 0) {
       offset += 1;
     }
-    const result = new Array<number>(num.length - offset + shift);
+    const result = Array.from<number>({ length: num.length - offset + shift });
     for (let i = 0; i < num.length - offset; i += 1) {
       result[i] = num[i + offset];
     }
@@ -28,7 +28,7 @@ export function qrPolynomial(num: number[], shift: number): QRPolynomial {
     getLength: () => _num.length,
 
     multiply: (e: QRPolynomial): QRPolynomial => {
-      const result = new Array<number>(_this.getLength() + e.getLength() - 1);
+      const result = Array.from<number>({ length: _this.getLength() + e.getLength() - 1 });
       for (let i = 0; i < result.length; i++) {
         result[i] = 0;
       }
@@ -49,7 +49,7 @@ export function qrPolynomial(num: number[], shift: number): QRPolynomial {
 
       const ratio = glog(_this.getAt(0)) - glog(e.getAt(0));
 
-      const result = new Array<number>(_this.getLength());
+      const result = Array.from<number>({ length: _this.getLength() });
       for (let i = 0; i < _this.getLength(); i += 1) {
         result[i] = _this.getAt(i);
       }

@@ -62,7 +62,7 @@ export function reproduceQRCode(params: {
   const needsIdentityBytes = encoderInput.kind === 'bytes';
   if (needsIdentityBytes) {
     setStringToBytes((s: string) => {
-      const out: number[] = new Array(s.length);
+      const out: number[] = Array.from({ length: s.length });
       for (let i = 0; i < s.length; i += 1) out[i] = s.codePointAt(i)! & 0xff;
       return out;
     });

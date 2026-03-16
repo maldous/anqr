@@ -12,7 +12,7 @@ export function buildBlockBitToPixelTables(
     }
   }
 
-  const tables: Array<Int32Array | undefined> = new Array(blockMaxBitKeys.length);
+  const tables: Array<Int32Array | undefined> = Array.from({ length: blockMaxBitKeys.length });
   for (let blockIndex = 0; blockIndex < blockMaxBitKeys.length; blockIndex++) {
     const maxBitKey = blockMaxBitKeys[blockIndex];
     if (maxBitKey === undefined) continue;

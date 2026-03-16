@@ -26,7 +26,7 @@ export function regenerateQRFromModifiedData(
   // Create module array initialized to null (will be filled in)
   const modules: (boolean | null)[][] = [];
   for (let row = 0; row < moduleCount; row++) {
-    modules[row] = new Array(moduleCount).fill(null);
+    modules[row] = Array.from({ length: moduleCount }, () => null as boolean | null);
   }
 
   // 1. Draw finder patterns (7x7 at three corners)

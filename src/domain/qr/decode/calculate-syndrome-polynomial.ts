@@ -27,7 +27,7 @@ import { POLY_ZERO } from './poly-zero';
  */
 export function calculateSyndromePolynomial(codeword: number[], numEcc: number): number[] {
   // Treat codeword as polynomial coefficients (high-to-low)
-  const syndromeCoeffs = new Array(numEcc).fill(0);
+  const syndromeCoeffs = Array.from({ length: numEcc }, () => 0);
   let noError = true;
 
   // For QR codes, generatorBase = 0, so we evaluate at α^0, α^1, ..., α^{numEcc-1}

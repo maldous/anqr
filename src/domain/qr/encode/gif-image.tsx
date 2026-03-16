@@ -4,7 +4,7 @@ import { byteArrayOutputStream } from './byte-array-output-stream';
  * GIF image generator (black & white)
  */
 export function gifImage(width: number, height: number) {
-  const _data = new Array<number>(width * height);
+  const _data = Array.from<number>({ length: width * height });
 
   const lzwTable = () => {
     const _map: Record<string, number> = {};

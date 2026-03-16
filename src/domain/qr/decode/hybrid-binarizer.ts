@@ -194,7 +194,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
   ): Int32Array[] {
     const maxYOffset = height - HybridBinarizer.BLOCK_SIZE;
     const maxXOffset = width - HybridBinarizer.BLOCK_SIZE;
-    const blackPoints: Int32Array[] = new Array(subHeight);
+    const blackPoints: Int32Array[] = Array.from({ length: subHeight });
 
     for (let y = 0; y < subHeight; y++) {
       blackPoints[y] = new Int32Array(subWidth);

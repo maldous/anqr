@@ -33,7 +33,7 @@ export function calculateProtectedBitsPerBlock(
   protectedBitCount: number
 ): number[] {
   const numBlocks = rsBlockInfo.length;
-  const protectedBitsPerBlock = new Array(numBlocks).fill(0);
+  const protectedBitsPerBlock = Array.from({ length: numBlocks }, () => 0);
 
   if (protectedBitCount === 0 || numBlocks === 0) {
     return protectedBitsPerBlock;

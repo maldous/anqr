@@ -16,7 +16,7 @@ export function adaptiveThresholdDither(
   // Compute integral image
   const integral: number[][] = [];
   for (let y = 0; y < height; y++) {
-    integral.push(new Array(width).fill(0));
+    integral.push(Array.from({ length: width }, () => 0));
   }
 
   for (let y = 0; y < height; y++) {

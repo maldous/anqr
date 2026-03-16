@@ -25,7 +25,7 @@ import { polyEval } from './poly-eval';
  */
 export function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[] {
   const numErrors = errorLocators.length;
-  const result: number[] = new Array(numErrors);
+  const result: number[] = Array.from({ length: numErrors });
 
   qrDecoderLog.trace('rs-decoder: Forney calculating magnitudes (direct product)', {
     numErrors,

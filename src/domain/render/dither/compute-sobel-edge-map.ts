@@ -7,7 +7,7 @@ export function computeSobelEdgeMap(
 ): number[][] {
   const edgeMap: number[][] = [];
   for (let y = 0; y < height; y++) {
-    edgeMap.push(new Array(width).fill(0));
+    edgeMap.push(Array.from({ length: width }, () => 0));
   }
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {

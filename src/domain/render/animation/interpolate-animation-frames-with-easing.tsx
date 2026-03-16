@@ -18,7 +18,7 @@ export function interpolateAnimationFramesWithEasing(
   const result: HTMLCanvasElement[] = [];
   const width = frames[0].width;
   const height = frames[0].height;
-  const framePixels = new Array<Uint8ClampedArray | null>(frames.length);
+  const framePixels = Array.from<Uint8ClampedArray | null>({ length: frames.length });
   for (let i = 0; i < frames.length; i++) {
     const frameCtx =
       (frames[i]?.getContext('2d', {

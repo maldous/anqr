@@ -87,7 +87,7 @@ export class QRDecoder {
       totalBlocks += ecBlock.getCount();
     }
 
-    const result: { codewords: Int32Array; numDataCodewords: number }[] = new Array(totalBlocks);
+    const result: { codewords: Int32Array; numDataCodewords: number }[] = Array.from({ length: totalBlocks });
     let numResultBlocks = 0;
     for (const ecBlock of ecBlockArray) {
       for (let i = 0; i < ecBlock.getCount(); i++) {

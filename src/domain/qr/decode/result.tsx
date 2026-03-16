@@ -69,7 +69,7 @@ export class Result {
     if (oldPoints === null) {
       this.resultPoints = newPoints;
     } else if (newPoints !== null && newPoints.length > 0) {
-      const allPoints = new Array<ResultPoint>(oldPoints.length + newPoints.length);
+      const allPoints = Array.from<ResultPoint>({ length: oldPoints.length + newPoints.length });
       arraycopy(oldPoints, 0, allPoints, 0, oldPoints.length);
       arraycopy(newPoints, 0, allPoints, oldPoints.length, newPoints.length);
       this.resultPoints = allPoints;

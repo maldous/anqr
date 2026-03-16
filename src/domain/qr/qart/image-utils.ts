@@ -24,8 +24,8 @@ export function mapImageToTargetsSupersampled(
   options?: MapImageToTargetsOptions
 ): { targets: boolean[][]; importance: number[][] } {
   const emptyResult = {
-    targets: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(false)),
-    importance: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0)),
+    targets: Array.from({ length: moduleCount }, () => Array.from({ length: moduleCount }, () => false)),
+    importance: Array.from({ length: moduleCount }, () => Array.from({ length: moduleCount }, () => 0)),
   };
 
   const imageData = resolveImageData(image);

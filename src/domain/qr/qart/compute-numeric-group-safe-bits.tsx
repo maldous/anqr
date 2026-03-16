@@ -8,7 +8,7 @@ export function computeNumericGroupSafeBits(
   buffer: { getAt: (index: number) => boolean }
 ): boolean[] {
   const numericDataBits = getNumericBitsCount(suffixLength);
-  const safeBits: boolean[] = new Array(numericDataBits).fill(false);
+  const safeBits: boolean[] = Array.from({ length: numericDataBits }, () => false);
 
   let bitCursor = numericDataStart;
   let remaining = suffixLength;

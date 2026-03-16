@@ -7,8 +7,8 @@ export function initDitherResults(
   const resultMatrix: boolean[][] = [];
   const resultColors: RGB[][] = [];
   for (let y = 0; y < height; y++) {
-    resultMatrix.push(new Array(width).fill(false));
-    resultColors.push(new Array(width).fill({ r: 255, g: 255, b: 255 }));
+    resultMatrix.push(Array.from({ length: width }, () => false));
+    resultColors.push(Array.from({ length: width }, (): RGB => ({ r: 255, g: 255, b: 255 })));
   }
   return { resultMatrix, resultColors };
 }

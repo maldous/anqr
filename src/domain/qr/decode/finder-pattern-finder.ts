@@ -503,7 +503,7 @@ export class FinderPatternFinder {
     this.possibleCenters.sort((a, b) => a.getEstimatedModuleSize() - b.getEstimatedModuleSize());
 
     let distortion = Number.MAX_VALUE;
-    const bestPatterns: FinderPattern[] = new Array(3);
+    const bestPatterns: FinderPattern[] = Array.from({ length: 3 });
 
     for (let i = 0; i < startSize - 2; i++) {
       const fpi = this.possibleCenters[i];

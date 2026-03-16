@@ -11,7 +11,7 @@ export function computeBlockECData(
   const dcCount = rsBlock.dataCount;
   const ecCount = rsBlock.totalCount - dcCount;
 
-  const dcdata = new Array(dcCount);
+  const dcdata = Array.from<number>({ length: dcCount });
   for (let i = 0; i < dcCount; i += 1) {
     dcdata[i] = 0xff & buffer.getBuffer()[i + offset];
   }
@@ -19,7 +19,7 @@ export function computeBlockECData(
   const rsPoly = getErrorCorrectPolynomial(ecCount);
   const rawPoly = qrPolynomial(dcdata, rsPoly.getLength() - 1);
   const modPoly = rawPoly.mod(rsPoly);
-  const ecdata = new Array(rsPoly.getLength() - 1);
+  const ecdata = Array.from<number>({ length: rsPoly.getLength() - 1 });
   for (let i = 0; i < ecdata.length; i += 1) {
     const modIndex = i + modPoly.getLength() - ecdata.length;
     ecdata[i] = modIndex >= 0 ? modPoly.getAt(modIndex) : 0;

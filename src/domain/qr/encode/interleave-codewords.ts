@@ -5,7 +5,7 @@ export function interleaveCodewords(
   maxEcCount: number,
   totalCodeCount: number
 ): number[] {
-  const data = new Array<number>(totalCodeCount);
+  const data = Array.from<number>({ length: totalCodeCount });
   let index = 0;
 
   for (let i = 0; i < maxDcCount; i += 1) {

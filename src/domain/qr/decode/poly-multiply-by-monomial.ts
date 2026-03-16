@@ -6,7 +6,7 @@ import { gfMul } from './gf-mul';
  */
 export function polyMultiplyByMonomial(poly: number[], degree: number, coeff: number): number[] {
   if (coeff === 0) return [0];
-  const result = new Array(poly.length + degree).fill(0);
+  const result = Array.from({ length: poly.length + degree }, () => 0);
   for (let i = 0; i < poly.length; i++) {
     result[i] = gfMul(poly[i], coeff);
   }

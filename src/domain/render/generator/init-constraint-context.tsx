@@ -31,26 +31,19 @@ export function initConstraintContext(
   const artPenaltyWeight = strictScanGate ? 1.7 : 2.4;
   const edgeBandPenalty = strictScanGate ? 0.44 : 0.14;
   const centerPixelBonus = strictScanGate ? 0.07 : 0.01;
-  const occupancies: number[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(0)
-  );
-  const centerOcc: number[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(0)
-  );
-  const darkMinMap: number[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(baseDarkMin)
-  );
-  const lightMaxMap: number[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(baseLightMax)
-  );
+  const fillRow = (v: number): number[] => Array.from({ length: moduleCount }, () => v);
+  const occupancies: number[][] = Array.from({ length: moduleCount }, () => fillRow(0));
+  const centerOcc: number[][] = Array.from({ length: moduleCount }, () => fillRow(0));
+  const darkMinMap: number[][] = Array.from({ length: moduleCount }, () => fillRow(baseDarkMin));
+  const lightMaxMap: number[][] = Array.from({ length: moduleCount }, () => fillRow(baseLightMax));
   const darkCenterMinMap: number[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(Math.min(0.64, baseDarkMin + 0.18))
+    fillRow(Math.min(0.64, baseDarkMin + 0.18))
   );
   const lightCenterMaxMap: number[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(Math.max(0.36, baseLightMax - 0.18))
+    fillRow(Math.max(0.36, baseLightMax - 0.18))
   );
   const locked: boolean[][] = Array.from({ length: moduleCount }, () =>
-    new Array(moduleCount).fill(false)
+    Array.from({ length: moduleCount }, () => false)
   );
   const decoupleFinderOptimization =
     config.preserveFinders === false && config.blendPreservations !== true;

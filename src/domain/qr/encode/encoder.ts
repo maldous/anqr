@@ -50,9 +50,9 @@ export function qrcode(
   const makeImpl = (test: boolean, maskPattern: number): void => {
     _moduleCount = _typeNumber * 4 + 17;
     _modules = ((): (boolean | null)[][] => {
-      const modules: (boolean | null)[][] = new Array(_moduleCount);
+      const modules: (boolean | null)[][] = Array.from({ length: _moduleCount });
       for (let row = 0; row < _moduleCount; row += 1) {
-        modules[row] = new Array(_moduleCount);
+        modules[row] = Array.from({ length: _moduleCount });
         for (let col = 0; col < _moduleCount; col += 1) {
           modules[row][col] = null;
         }
@@ -232,8 +232,8 @@ export function qrcode(
     let offset = 0;
     let maxDcCount = 0;
     let maxEcCount = 0;
-    const dcdata: number[][] = new Array(rsBlocks.length);
-    const ecdata: number[][] = new Array(rsBlocks.length);
+    const dcdata: number[][] = Array.from({ length: rsBlocks.length });
+    const ecdata: number[][] = Array.from({ length: rsBlocks.length });
 
     for (let r = 0; r < rsBlocks.length; r += 1) {
       const result = computeBlockECData(buffer, rsBlocks[r], offset);
@@ -363,7 +363,7 @@ export function qrcode(
     }
 
     if (size % 2 && marginVal > 0) {
-      return ascii.substring(0, ascii.length - size - 1) + new Array(size + 1).join('▀');
+      return ascii.substring(0, ascii.length - size - 1) + '▀'.repeat(size);
     }
 
     return ascii.substring(0, ascii.length - 1);
@@ -587,8 +587,8 @@ export function qrcode(
       const min = marginVal;
       const max = size - marginVal;
 
-      const white = new Array(cs + 1).join('██');
-      const black = new Array(cs + 1).join('  ');
+      const white = '██'.repeat(cs);
+      const black = '  '.repeat(cs);
 
       let ascii = '';
       for (let y = 0; y < size; y += 1) {

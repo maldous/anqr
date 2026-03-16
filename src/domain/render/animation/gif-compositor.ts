@@ -70,9 +70,9 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
     patchCanvas.getContext('2d');
-  const patchImageDataCache: Array<ImageData | null> = new Array(frames.length).fill(null);
-  const patchBitmapCache: Array<ImageBitmap | null> = new Array(frames.length).fill(null);
-  const patchBitmapPromiseCache: Array<Promise<void> | null> = new Array(frames.length).fill(null);
+  const patchImageDataCache: Array<ImageData | null> = Array.from({ length: frames.length }, () => null);
+  const patchBitmapCache: Array<ImageBitmap | null> = Array.from({ length: frames.length }, () => null);
+  const patchBitmapPromiseCache: Array<Promise<void> | null> = Array.from({ length: frames.length }, () => null);
   const canCreateBitmap = typeof createImageBitmap === 'function';
 
   let restoreData: { x: number; y: number; w: number; h: number; data: ImageData } | null = null;

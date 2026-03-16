@@ -54,9 +54,9 @@ export function eliminateBlock(
   }));
 
   // Track which pixel each row pivots on (-1 if no pivot yet)
-  const rowPivot: number[] = new Array(numVectors).fill(-1);
+  const rowPivot: number[] = Array.from({ length: numVectors }, () => -1);
   // Track which row controls each pixel (-1 if none)
-  const pixelToRow: number[] = new Array(totalPixels).fill(-1);
+  const pixelToRow: number[] = Array.from({ length: totalPixels }, () => -1);
 
   let pivotRow = 0;
 
