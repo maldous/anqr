@@ -132,6 +132,7 @@ These must be marked `[HUMAN]` and excluded from the automation queue.
 | `[CHILD]` | Auto-created child of a parent issue |
 | `[HUMAN]` | Requires human/manual action, excluded from automation |
 | `[LOCAL-SLICE]` | Ollama-sized slice of larger work |
+| `[Sonar]` | SonarQube finding — one issue per finding, auto-created by sonar-linear-sync |
 
 ## Queue Control
 
@@ -169,6 +170,104 @@ npm run queue:all         # full pass (check + feed + drain + enforce)
 npm run queue:all:dry-run # preview without changes
 ```
 
+## SonarQube Integration
+
+SonarQube static analysis is integrated into both the nightly pipeline and the Symphony runner, with findings tracked as individual Linear issues.
+
+### Architecture
+
+```
+┌─────────────────┐
+│  sonar-scanner   │  runs against local SonarQube instance
+│                  │  JVM: -Xms128m -Xmx256m
+└────────┬────────┘
+         │ findings uploaded to SonarQube server
+         ▼
+┌─────────────────┐
+│  sonar-linear-   │  shared sync module
+│  sync.mjs        │  one Linear issue per SonarQube finding
+└────────┬────────┘
+         │ create / dedup / promote / requeue / resolve
+         ▼
+┌─────────────────┐
+│  Linear issues   │  [Sonar] prefixed, priority-gated
+│                  │  must be resolved before other work
+└─────────────────┘
+```
+
+### Per-Finding Issue Sync
+
+The shared module `scripts/ops/lib/sonar-linear-sync.mjs` provides `syncSonarToLinear()` which:
+
+1. **Fetches** all open SonarQube issues (paginated, via `/api/issues/search`)
+2. **Fetches** all open `[Sonar]` Linear issues (via GraphQL)
+3. **Deduplicates** using `<!-- sonar-key:UUID -->` markers embedded in each Linear issue description — matches SonarQube issue keys to existing Linear issues
+4. **Creates** new Linear issues for unmatched findings (one issue per finding)
+5. **Promotes** existing issues to higher priority if requested (e.g. P2→P1)
+6. **Requeues** non-Todo issues back to Todo (nightly only)
+7. **Resolves** stale Linear issues whose SonarQube findings have disappeared
+8. **Resolves** legacy aggregate `[Sonar]` issues (migration from old single-issue pattern)
+
+Each Linear issue title follows the format: `[Sonar] <message> (<file>:<line>)`
+
+Each Linear issue description contains:
+- `<!-- sonar-key:UUID -->` marker (for dedup)
+- Rule, severity, type, file, line, effort
+- Link to SonarQube issue detail
+
+### Nightly Audit (blocking)
+
+The nightly sonar audit (`scripts/ops/sonar-linear-audit.mjs`) runs after sonar-scanner in the nightly pipeline:
+
+| Parameter | Value | Reason |
+|---|---|---|
+| `priority` | 1 (Urgent) | Sonar findings must be resolved before other work |
+| `resolveStale` | true | Close Linear issues whose findings disappeared |
+| `requeueToTodo` | true | Move stuck issues (Backlog, In Progress, etc.) back to Todo |
+| Exit code | 0 = clean, 1 = findings, 2 = config error | Blocking gate in nightly pipeline |
+
+The nightly audit also **promotes** existing issues: if the runner created an issue at P2 (High) during the day, the nightly promotes it to P1 (Urgent) with an explanatory comment.
+
+Notifications include counts for: created, promoted, requeued, resolved.
+
+### Runner Post-Commit Scan (non-blocking)
+
+After each successful commit, the Symphony runner runs sonar-scanner and syncs findings:
+
+| Parameter | Value | Reason |
+|---|---|---|
+| `priority` | 2 (High) | New findings discovered during the day |
+| `resolveStale` | true | Close collateral issues (fixing one finding may resolve another) |
+| `requeueToTodo` | false | Requeue is nightly-only behavior |
+
+The post-commit scan is non-blocking — failures are logged but don't affect the current issue's completion. Notifications are sent when collateral issues are resolved.
+
+### Runner Hard Gate
+
+The runner's `pickIssue()` function enforces a hard gate: **open `[Sonar]` issues must be resolved before any other work**.
+
+1. Query Linear for all open `[Sonar]` issues
+2. Filter out Backlog state (prevents deadlock when max-retry demotion sends issues there)
+3. If actionable sonar issues exist (Todo, In Progress, In Review, etc.):
+   - Only pick `[Sonar]` issues from the Todo queue
+   - If no `[Sonar]` issues are in Todo, skip the cycle entirely (blocks all work)
+4. If no actionable sonar issues exist, proceed with normal issue selection
+
+This ensures the runner prioritizes code quality fixes before feature work.
+
+### Memory Configuration
+
+Sonar-scanner spawns both a JVM process and an internal Node.js process for JS/TS analysis. Memory must be carefully managed within the systemd cgroup:
+
+| Component | Cap | Set by |
+|---|---|---|
+| systemd cgroup | 4 GB | `MemoryMax=4G` in service unit |
+| Node.js (runner) | 512 MB | `NODE_OPTIONS=--max-old-space-size=512` in service env |
+| Java (sonar-scanner) | 256 MB | `SONAR_SCANNER_OPTS="-Xms128m -Xmx256m"` in execSync env |
+| Node.js (sonar internal) | unlimited | `NODE_OPTIONS=""` in execSync env (clears inherited cap) |
+
+The `NODE_OPTIONS=""` override is critical: without it, sonar-scanner's internal Node.js inherits the 512MB cap from the service environment and OOM-kills during JS/TS analysis.
+
 ## Scheduled Operations
 
 ### Symphony Runner (continuous, every 2 min)
@@ -176,15 +275,16 @@ npm run queue:all:dry-run # preview without changes
 The Symphony runner (`anqr-symphony-runner.timer`) is the execution agent that picks up Todo issues and implements them:
 
 1. Acquires PID lock (prevents overlapping runs)
-2. Polls Linear for highest-priority automatable Todo issue
-3. Moves issue to In Progress + comments start marker
-4. Credit gate selects best available provider (Ollama-first)
-5. Runs tool-calling agent loop against the provider
-6. Agent reads files, makes changes, calls task_complete
-7. Validates: typecheck (`tsc --noEmit`) + unit tests (`vitest run`)
-8. **Pass**: git commit + mark Done + post evidence to Linear
-9. **Fail**: git revert + comment failure detail + leave in Todo (or Backlog after max retries)
-10. **Self-feed**: calls `feedQueue()` to immediately replenish the queue (zero idle gap)
+2. **Sonar gate**: checks for open `[Sonar]` issues — if any exist, only picks sonar work
+3. Polls Linear for highest-priority automatable Todo issue
+4. Moves issue to In Progress + comments start marker
+5. Credit gate selects best available provider (Ollama-first)
+6. Runs tool-calling agent loop against the provider
+7. Agent reads files, makes changes, calls task_complete
+8. Validates: typecheck (`tsc --noEmit`) + unit tests (`vitest run`)
+9. **Pass**: git commit + mark Done + post evidence to Linear + post-commit sonar scan (non-blocking)
+10. **Fail**: git revert + comment failure detail + leave in Todo (or Backlog after max retries)
+11. **Self-feed**: calls `feedQueue()` to immediately replenish the queue (zero idle gap)
 
 Agent tools: `read_file`, `write_file`, `patch_file`, `run_command` (allowlisted), `list_directory`, `task_complete`.
 
@@ -240,9 +340,13 @@ The nightly pipeline (`scripts/ops/nightly-ops-pass.mjs`) runs all operations in
 1. harness-report (full)     → reports/latest.json
 2. symphony-queue-control    → feed, drain, enforce
 3. linear-guardian           → create/update issues from failures
-4. notify                    → stdout summary + email notification
-5. archive                   → reports/archive/report-YYYY-MM-DD_HH-MM-SS.json
+4. sonar-scanner             → upload findings to SonarQube server
+5. sonar-linear-audit        → sync findings to Linear (create/promote/requeue/resolve)
+6. notify                    → stdout summary + email notification
+7. archive                   → reports/archive/report-YYYY-MM-DD_HH-MM-SS.json
 ```
+
+Steps 4–5 are the SonarQube integration gate. If sonar-linear-audit exits with code 1 (findings exist), the nightly is considered failing — all findings must be resolved.
 
 ### systemd Setup
 
@@ -286,6 +390,9 @@ Legacy lesson: PATH under systemd differs from interactive shells. The service u
 | `NODE_PATH` | nvm lib/node_modules | global module resolution |
 | `OLLAMA_API_BASE` | `http://localhost:11434` | Ollama default |
 | `LINEAR_API_KEY` | from `anqr-ops.env` | secrets kept outside repo |
+| `NODE_OPTIONS` | `--max-old-space-size=512` | caps Node.js heap within cgroup budget |
+| `SONAR_TOKEN` | from `anqr-ops.env` | SonarQube authentication |
+| `SONAR_HOST_URL` | `http://localhost:9000` | local SonarQube instance |
 
 ### Notification Channels
 
@@ -345,3 +452,5 @@ The guardian is deterministic, not AI-driven:
 | `services/systemd/anqr-email-ingest.service` | systemd email ingest service | ANQ-377 |
 | `services/systemd/anqr-email-ingest.timer` | systemd email ingest timer (5min) | ANQ-377 |
 | `services/systemd/anqr-ops.env` | Environment template for secrets | ANQ-367 (Phase 6) |
+| `scripts/ops/lib/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (shared module) | ANQ-378 |
+| `scripts/ops/sonar-linear-audit.mjs` | Nightly sonar audit (blocking, P1, resolve/promote/requeue) | ANQ-378 |
