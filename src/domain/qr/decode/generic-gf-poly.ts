@@ -137,8 +137,7 @@ export class GenericGFPoly {
     if (other.isZero()) throw new IllegalArgumentException('Divide by 0');
 
     let quotient: GenericGFPoly = this.field.getZero();
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- polynomial division requires capturing `this` before mutation
-    let remainder: GenericGFPoly = this;
+    let remainder = new GenericGFPoly(this.field, this.coefficients);
     const denominatorLeadingTerm = other.getCoefficient(other.getDegree());
     const inverseDenominatorLeadingTerm = this.field.inverse(denominatorLeadingTerm);
 
