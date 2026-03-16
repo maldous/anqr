@@ -9,7 +9,7 @@ export class MatrixWrapper extends BaseMatrixWrapper {
   }
 
   addData(_data: string, _mode?: string): void {
-    return undefined;
+    throw new Error('MatrixWrapper.addData is not supported');
   }
 
   make(_maskPattern?: number): void {
