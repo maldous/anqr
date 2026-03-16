@@ -130,7 +130,7 @@ async function main() {
   // Step 3: Sonar scanner analysis + report export
   // Sonar scanner can take 10+ minutes on a full codebase — use extended timeout
   if (process.env.SONAR_TOKEN) {
-    runStep('sonar-scan', "SONAR_SCANNER_OPTS='-Xmx1024m' sonar-scanner", 600_000);
+    runStep('sonar-scan', "SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner", 600_000);
     runStep('sonar-export', 'bash scripts/sonar-export.sh');
 
     // Step 4: Sonar Linear audit (blocking — creates/updates critical Linear issues)
