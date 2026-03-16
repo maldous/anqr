@@ -46,7 +46,7 @@ ast-density:
 	npm run audit:ast
 
 sonar:
-	sonar-scanner
+	SONAR_SCANNER_OPTS='-Xmx256m' sonar-scanner
 
 sonar-audit: sonar
 	npm run sonar:audit
