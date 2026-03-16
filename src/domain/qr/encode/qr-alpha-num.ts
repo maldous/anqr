@@ -9,9 +9,9 @@ export function qrAlphaNum(data: string): QRDataSegment {
   const _data = data;
 
   const getCode = (c: string): number => {
-    if ('0' <= c && c <= '9') {
+    if (c >= '0' && c <= '9') {
       return c.codePointAt(0)! - '0'.codePointAt(0)!;
-    } else if ('A' <= c && c <= 'Z') {
+    } else if (c >= 'A' && c <= 'Z') {
       return c.codePointAt(0)! - 'A'.codePointAt(0)! + 10;
     } else {
       switch (c) {

@@ -78,15 +78,15 @@ export function qrcode(
 
   const setupPositionProbePattern = (row: number, col: number): void => {
     for (let r = -1; r <= 7; r += 1) {
-      if (row + r <= -1 || _moduleCount <= row + r) continue;
+      if (row + r <= -1 || row + r >= _moduleCount) continue;
 
       for (let c = -1; c <= 7; c += 1) {
-        if (col + c <= -1 || _moduleCount <= col + c) continue;
+        if (col + c <= -1 || col + c >= _moduleCount) continue;
 
         if (
-          (0 <= r && r <= 6 && (c === 0 || c === 6)) ||
-          (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
-          (2 <= r && r <= 4 && 2 <= c && c <= 4)
+          (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+          (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+          (r >= 2 && r <= 4 && c >= 2 && c <= 4)
         ) {
           _modules![row + r][col + c] = true;
         } else {

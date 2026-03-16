@@ -9,9 +9,9 @@ export function drawFinderPattern(
     for (let c = -1; c <= 7; c++) {
       if (centerCol + c < 0 || centerCol + c >= moduleCount) continue;
       if (
-        (0 <= r && r <= 6 && (c === 0 || c === 6)) ||
-        (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
-        (2 <= r && r <= 4 && 2 <= c && c <= 4)
+        (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+        (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+        (r >= 2 && r <= 4 && c >= 2 && c <= 4)
       ) {
         modules[centerRow + r][centerCol + c] = true;
       } else {
