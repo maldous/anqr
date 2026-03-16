@@ -1,0 +1,16 @@
+# robots.txt for ANQR - Advanced QR Code Generator
+# https://anqr.link
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://anqr.link/sitemap.xml
+
+# Allow Google AdSense
+User-agent: Mediapartners-Google
+Allow: /
+
+# Allow all crawlers for ads.txt
+User-agent: *
+Allow: /ads.txt

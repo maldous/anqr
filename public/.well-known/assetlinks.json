@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "link.anqr.app",
+      "sha256_cert_fingerprints": [
+        "04:AF:3D:2C:62:28:C0:BE:47:DC:E5:78:30:B8:E0:BF:EC:50:2D:69:8F:9E:21:E4:32:D4:7B:E7:4D:B8:81:26"
+      ]
+    }
+  }
+]

@@ -1,0 +1,4 @@
+# ads.txt file for ANQR
+# https://anqr.link
+
+google.com, pub-2270701384951162, DIRECT, f08c47fec0942fa0

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23000'/><rect x='20' y='20' width='20' height='20' fill='%23fff'/><rect x='60' y='20' width='20' height='20' fill='%23fff'/><rect x='20' y='60' width='20' height='20' fill='%23fff'/><rect x='40' y='40' width='20' height='20' fill='%23fff'/></svg>"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ANQR - QR Code Generator</title>
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="ANQR is a fast, privacy-friendly QR code generator for URLs, text, vCards, Wi-Fi, and more. Create scan-ready QR codes with high error correction, styling, and export options."
+    />
+    <meta
+      name="keywords"
+      content="QR code generator, QR code maker, custom QR codes, QR code with logo, QR code with image, QR code dithering, QR code gradient, QR code overlay"
+    />
+    <meta name="author" content="ANQR" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="application-name" content="ANQR" />
+    <meta name="google-adsense-account" content="ca-pub-2270701384951162" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ANQR" />
+    <meta property="og:url" content="https://anqr.link/" />
+    <meta property="og:title" content="ANQR - QR Code Generator" />
+    <meta
+      property="og:description"
+      content="Fast, privacy-friendly QR code generator with high error correction, styling, and export options."
+    />
+    <meta property="og:image" content="https://anqr.link/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://anqr.link/" />
+    <meta name="twitter:title" content="ANQR - QR Code Generator" />
+    <meta
+      name="twitter:description"
+      content="Fast, privacy-friendly QR code generator with high error correction, styling, and export options."
+    />
+    <meta name="twitter:image" content="https://anqr.link/og-image.png" />
+
+    <!-- Structured data (SEO) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "ANQR",
+        "url": "https://anqr.link/",
+        "description": "ANQR is a fast, privacy-friendly QR code generator for URLs, text, vCards, Wi-Fi, and more.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://anqr.link/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "ANQR",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "url": "https://anqr.link/",
+        "description": "Create scan-ready QR codes with styling, overlays, and export options.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <!-- Canonical URL - dynamically updated by React based on current page/language -->
+    <link rel="canonical" href="https://anqr.link/" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+
+    <!-- Hreflang tags for SEO (all supported languages) -->
+    <!-- These are replaced dynamically by React for SPA navigation -->
+    <link rel="alternate" hreflang="x-default" href="https://anqr.link/" />
+    <!-- English variants -->
+    <link rel="alternate" hreflang="en" href="https://anqr.link/" />
+    <link rel="alternate" hreflang="en-us" href="https://anqr.link/?lang=en-US" />
+    <link rel="alternate" hreflang="en-au" href="https://anqr.link/?lang=en-AU" />
+    <link rel="alternate" hreflang="en-ca" href="https://anqr.link/?lang=en-CA" />
+    <link rel="alternate" hreflang="en-in" href="https://anqr.link/?lang=en-IN" />
+    <link rel="alternate" hreflang="en-sg" href="https://anqr.link/?lang=en-SG" />
+    <link rel="alternate" hreflang="en-za" href="https://anqr.link/?lang=en-ZA" />
+    <!-- A-Z languages -->
+    <link rel="alternate" hreflang="af" href="https://anqr.link/?lang=af" />
+    <link rel="alternate" hreflang="am" href="https://anqr.link/?lang=am" />
+    <link rel="alternate" hreflang="ar" href="https://anqr.link/?lang=ar" />
+    <link rel="alternate" hreflang="az-az" href="https://anqr.link/?lang=az-AZ" />
+    <link rel="alternate" hreflang="be" href="https://anqr.link/?lang=be" />
+    <link rel="alternate" hreflang="bg" href="https://anqr.link/?lang=bg" />
+    <link rel="alternate" hreflang="bn-bd" href="https://anqr.link/?lang=bn-BD" />
+    <link rel="alternate" hreflang="ca" href="https://anqr.link/?lang=ca" />
+    <link rel="alternate" hreflang="cs-cz" href="https://anqr.link/?lang=cs-CZ" />
+    <link rel="alternate" hreflang="da-dk" href="https://anqr.link/?lang=da-DK" />
+    <link rel="alternate" hreflang="de-de" href="https://anqr.link/?lang=de-DE" />
+    <link rel="alternate" hreflang="el-gr" href="https://anqr.link/?lang=el-GR" />
+    <link rel="alternate" hreflang="es-es" href="https://anqr.link/?lang=es-ES" />
+    <link rel="alternate" hreflang="es-419" href="https://anqr.link/?lang=es-419" />
+    <link rel="alternate" hreflang="es-us" href="https://anqr.link/?lang=es-US" />
+    <link rel="alternate" hreflang="et" href="https://anqr.link/?lang=et" />
+    <link rel="alternate" hreflang="eu-es" href="https://anqr.link/?lang=eu-ES" />
+    <link rel="alternate" hreflang="fa" href="https://anqr.link/?lang=fa" />
+    <link rel="alternate" hreflang="fa-ae" href="https://anqr.link/?lang=fa-AE" />
+    <link rel="alternate" hreflang="fa-af" href="https://anqr.link/?lang=fa-AF" />
+    <link rel="alternate" hreflang="fa-ir" href="https://anqr.link/?lang=fa-IR" />
+    <link rel="alternate" hreflang="fi-fi" href="https://anqr.link/?lang=fi-FI" />
+    <link rel="alternate" hreflang="fil" href="https://anqr.link/?lang=fil" />
+    <link rel="alternate" hreflang="fr-ca" href="https://anqr.link/?lang=fr-CA" />
+    <link rel="alternate" hreflang="fr-fr" href="https://anqr.link/?lang=fr-FR" />
+    <link rel="alternate" hreflang="gl-es" href="https://anqr.link/?lang=gl-ES" />
+    <link rel="alternate" hreflang="gu" href="https://anqr.link/?lang=gu" />
+    <link rel="alternate" hreflang="hi-in" href="https://anqr.link/?lang=hi-IN" />
+    <link rel="alternate" hreflang="hr" href="https://anqr.link/?lang=hr" />
+    <link rel="alternate" hreflang="hu-hu" href="https://anqr.link/?lang=hu-HU" />
+    <link rel="alternate" hreflang="hy-am" href="https://anqr.link/?lang=hy-AM" />
+    <link rel="alternate" hreflang="id" href="https://anqr.link/?lang=id" />
+    <link rel="alternate" hreflang="is-is" href="https://anqr.link/?lang=is-IS" />
+    <link rel="alternate" hreflang="it-it" href="https://anqr.link/?lang=it-IT" />
+    <link rel="alternate" hreflang="iw-il" href="https://anqr.link/?lang=iw-IL" />
+    <link rel="alternate" hreflang="ja-jp" href="https://anqr.link/?lang=ja-JP" />
+    <link rel="alternate" hreflang="ka-ge" href="https://anqr.link/?lang=ka-GE" />
+    <link rel="alternate" hreflang="kk" href="https://anqr.link/?lang=kk" />
+    <link rel="alternate" hreflang="km-kh" href="https://anqr.link/?lang=km-KH" />
+    <link rel="alternate" hreflang="kn-in" href="https://anqr.link/?lang=kn-IN" />
+    <link rel="alternate" hreflang="ko-kr" href="https://anqr.link/?lang=ko-KR" />
+    <link rel="alternate" hreflang="ky-kg" href="https://anqr.link/?lang=ky-KG" />
+    <link rel="alternate" hreflang="lo-la" href="https://anqr.link/?lang=lo-LA" />
+    <link rel="alternate" hreflang="lt" href="https://anqr.link/?lang=lt" />
+    <link rel="alternate" hreflang="lv" href="https://anqr.link/?lang=lv" />
+    <link rel="alternate" hreflang="mk-mk" href="https://anqr.link/?lang=mk-MK" />
+    <link rel="alternate" hreflang="ml-in" href="https://anqr.link/?lang=ml-IN" />
+    <link rel="alternate" hreflang="mn-mn" href="https://anqr.link/?lang=mn-MN" />
+    <link rel="alternate" hreflang="mr-in" href="https://anqr.link/?lang=mr-IN" />
+    <link rel="alternate" hreflang="ms" href="https://anqr.link/?lang=ms" />
+    <link rel="alternate" hreflang="ms-my" href="https://anqr.link/?lang=ms-MY" />
+    <link rel="alternate" hreflang="my-mm" href="https://anqr.link/?lang=my-MM" />
+    <link rel="alternate" hreflang="ne-np" href="https://anqr.link/?lang=ne-NP" />
+    <link rel="alternate" hreflang="nl-nl" href="https://anqr.link/?lang=nl-NL" />
+    <link rel="alternate" hreflang="no-no" href="https://anqr.link/?lang=no-NO" />
+    <link rel="alternate" hreflang="pa" href="https://anqr.link/?lang=pa" />
+    <link rel="alternate" hreflang="pl-pl" href="https://anqr.link/?lang=pl-PL" />
+    <link rel="alternate" hreflang="pt-br" href="https://anqr.link/?lang=pt-BR" />
+    <link rel="alternate" hreflang="pt-pt" href="https://anqr.link/?lang=pt-PT" />
+    <link rel="alternate" hreflang="rm" href="https://anqr.link/?lang=rm" />
+    <link rel="alternate" hreflang="ro" href="https://anqr.link/?lang=ro" />
+    <link rel="alternate" hreflang="ru-ru" href="https://anqr.link/?lang=ru-RU" />
+    <link rel="alternate" hreflang="si-lk" href="https://anqr.link/?lang=si-LK" />
+    <link rel="alternate" hreflang="sk" href="https://anqr.link/?lang=sk" />
+    <link rel="alternate" hreflang="sl" href="https://anqr.link/?lang=sl" />
+    <link rel="alternate" hreflang="sq" href="https://anqr.link/?lang=sq" />
+    <link rel="alternate" hreflang="sr" href="https://anqr.link/?lang=sr" />
+    <link rel="alternate" hreflang="sv-se" href="https://anqr.link/?lang=sv-SE" />
+    <link rel="alternate" hreflang="sw" href="https://anqr.link/?lang=sw" />
+    <link rel="alternate" hreflang="ta-in" href="https://anqr.link/?lang=ta-IN" />
+    <link rel="alternate" hreflang="te-in" href="https://anqr.link/?lang=te-IN" />
+    <link rel="alternate" hreflang="th" href="https://anqr.link/?lang=th" />
+    <link rel="alternate" hreflang="tr-tr" href="https://anqr.link/?lang=tr-TR" />
+    <link rel="alternate" hreflang="uk" href="https://anqr.link/?lang=uk" />
+    <link rel="alternate" hreflang="ur" href="https://anqr.link/?lang=ur" />
+    <link rel="alternate" hreflang="vi" href="https://anqr.link/?lang=vi" />
+    <link rel="alternate" hreflang="zh-cn" href="https://anqr.link/?lang=zh-CN" />
+    <link rel="alternate" hreflang="zh-hk" href="https://anqr.link/?lang=zh-HK" />
+    <link rel="alternate" hreflang="zh-tw" href="https://anqr.link/?lang=zh-TW" />
+    <link rel="alternate" hreflang="zu" href="https://anqr.link/?lang=zu" />
+
+    <!-- Web-only third-party scripts/fonts are loaded at runtime via src/modules/platform/web-only-assets.ts -->
+    <!-- Google Analytics 4 is handled by Cloudflare Zaraz - no direct gtag.js needed -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
