@@ -6,10 +6,13 @@
  *
  * Orchestrates the full nightly pipeline:
  *   1. Run harness-report.mjs (full profile)
- *   2. Run symphony-queue-control.mjs (--all)
- *   3. Run linear-guardian.mjs
- *   4. Run notify.mjs
- *   5. Archive report to reports/ with timestamp
+ *   2. AST density audit (detailed standalone output)
+ *   3. Sonar scanner analysis + report export
+ *   4. Sonar Linear audit (blocking — creates critical issues)
+ *   5. Run symphony-queue-control.mjs (--all)
+ *   6. Run linear-guardian.mjs
+ *   7. Run notify.mjs
+ *   8. Archive report to reports/ with timestamp
  *
  * Designed to run under systemd timer (see services/systemd/).
  *
@@ -41,7 +44,7 @@ const dryRunFlag = dryRun ? ' --dry-run' : '';
 
 const steps = [];
 
-function runStep(name, command) {
+function runStep(name, command, timeout = 300_000) {
   const start = Date.now();
   console.log(`\n${'='.repeat(60)}`);
   console.log(`[nightly] Step: ${name}`);
@@ -53,7 +56,7 @@ function runStep(name, command) {
     execSync(command, {
       cwd: ROOT,
       stdio: 'inherit',
-      timeout: 300_000,
+      timeout,
       env: { ...process.env, FORCE_COLOR: '0' },
     });
   } catch (err) {
@@ -119,16 +122,37 @@ async function main() {
   // Exit code 1 is expected if checks fail — continue regardless
   runStep('harness-report', 'node scripts/ops/harness-report.mjs full');
 
-  // Step 2: Queue control (feed, drain, enforce)
+  // Step 2: AST density audit (standalone — detailed output for nightly log)
+  // The script exits 0 even with violations (output on stdout), so pipe through
+  // a check that fails if any output is produced.
+  runStep('ast-density', 'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'');
+
+  // Step 3: Sonar scanner analysis + report export
+  // Sonar scanner can take 10+ minutes on a full codebase — use extended timeout
+  if (process.env.SONAR_TOKEN) {
+    runStep('sonar-scan', 'sonar-scanner', 600_000);
+    runStep('sonar-export', 'bash scripts/sonar-export.sh');
+
+    // Step 4: Sonar Linear audit (blocking — creates/updates critical Linear issues)
+    if (!dryRun) {
+      runStep('sonar-linear-audit', 'node scripts/ops/sonar-linear-audit.mjs');
+    } else {
+      console.log('\n[nightly] (DRY RUN) Skipping sonar-linear-audit — would create/update Linear issues');
+    }
+  } else {
+    console.log('\n[nightly] SONAR_TOKEN not set — skipping sonar steps');
+  }
+
+  // Step 5: Queue control (feed, drain, enforce)
   runStep('queue-control', `node scripts/ops/symphony-queue-control.mjs --all${dryRunFlag}`);
 
-  // Step 3: Guardian (process harness failures)
+  // Step 6: Guardian (process harness failures)
   runStep('guardian', `node scripts/ops/linear-guardian.mjs${dryRunFlag}`);
 
-  // Step 4: Notify (dispatch summary)
+  // Step 7: Notify (dispatch summary)
   runStep('notify', `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`);
 
-  // Step 5: Archive report
+  // Step 8: Archive report
   console.log(`\n${'='.repeat(60)}`);
   console.log('[nightly] Step: archive-report');
   console.log('='.repeat(60));
