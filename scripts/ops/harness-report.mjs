@@ -10,7 +10,7 @@
  * Profiles:
  *   quick       — fast sanity checks (<30s): repo-structure, typecheck, lint
  *   continuous  — background polling checks: repo-structure, ollama-health, litellm-routing
- *   full        — comprehensive audit: all 8 checks
+ *   full        — comprehensive audit: all 9 checks
  *
  * Exit code:
  *   0 = all checks passed
@@ -35,7 +35,7 @@ const PING_TIMEOUT_MS = 5_000;
 const DOCS_FRESHNESS_DAYS = 30;
 
 const PROFILES = {
-  quick: ['repo-structure', 'typecheck', 'lint'],
+  quick: ['repo-structure', 'typecheck', 'lint', 'cspell-coverage', 'ast-density'],
   continuous: ['repo-structure', 'ollama-health', 'litellm-routing'],
   full: [
     'repo-structure',
@@ -43,9 +43,12 @@ const PROFILES = {
     'lint',
     'test-unit',
     'depcruise',
+    'cspell-coverage',
+    'ast-density',
     'docs-freshness',
     'ollama-health',
     'litellm-routing',
+    'sonar-audit',
   ],
 };
 
@@ -209,6 +212,117 @@ async function checkOllamaHealth() {
   }
 }
 
+function checkAstDensity() {
+  try {
+    const output = execSync('node scripts/audit-ast-density.mjs --threshold 1', {
+      cwd: ROOT, timeout: 120_000, stdio: 'pipe', encoding: 'utf-8',
+      env: { ...process.env, FORCE_COLOR: '0' },
+    });
+    if (output.trim().length === 0) {
+      return { pass: true, detail: 'All files within density threshold (≤1 top-level declaration)' };
+    }
+    const lines = output.trim().split('\n');
+    const fileSummary = lines
+      .slice(0, 5)
+      .map((l) => l.trim().split(/\s+/)[1])
+      .join(', ');
+    const suffix = lines.length > 5 ? ` ... and ${lines.length - 5} more` : '';
+    return {
+      pass: false,
+      detail: `${lines.length} files exceed density threshold: ${fileSummary}${suffix}`,
+    };
+  } catch (err) {
+    const stderr = (err.stderr || '').toString().trim();
+    return { pass: false, detail: `AST density audit error: ${stderr.slice(0, 500)}` };
+  }
+}
+
+async function checkSonarAudit() {
+  const SONAR_TOKEN = process.env.SONAR_TOKEN;
+  const SONAR_HOST = process.env.SONAR_HOST_URL || 'http://localhost:9000';
+
+  if (!SONAR_TOKEN) {
+    return { pass: true, detail: 'SONAR_TOKEN not set — skipped' };
+  }
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
+    const authHeader = `Basic ${Buffer.from(SONAR_TOKEN + ':').toString('base64')}`;
+    const headers = { Authorization: authHeader };
+
+    const statusRes = await fetch(`${SONAR_HOST}/api/system/status`, {
+      signal: controller.signal, headers,
+    });
+    clearTimeout(timer);
+    const status = await statusRes.json();
+    if (status.status !== 'UP') {
+      return { pass: true, detail: `SonarQube status: ${status.status} — skipped` };
+    }
+
+    const issuesRes = await fetch(
+      `${SONAR_HOST}/api/issues/search?componentKeys=anqr&resolved=false&ps=1`,
+      { headers },
+    );
+    const issuesData = await issuesRes.json();
+    const totalIssues = issuesData.total || 0;
+
+    const hotRes = await fetch(
+      `${SONAR_HOST}/api/hotspots/search?projectKey=anqr&ps=1`,
+      { headers },
+    );
+    const hotData = await hotRes.json();
+    const totalHotspots = hotData.paging?.total || 0;
+
+    const measRes = await fetch(
+      `${SONAR_HOST}/api/measures/component?component=anqr&metricKeys=bugs,vulnerabilities,code_smells,duplicated_lines_density,coverage`,
+      { headers },
+    );
+    const measData = await measRes.json();
+    const measures = (measData.component?.measures || [])
+      .map((m) => `${m.metric}=${m.value}`)
+      .join(', ');
+
+    const detail = `Issues: ${totalIssues}, Hotspots: ${totalHotspots}${measures ? ` | ${measures}` : ''}`;
+    return { pass: true, detail };
+  } catch (err) {
+    return { pass: true, detail: `SonarQube unreachable: ${err.message}` };
+  }
+}
+
+function checkCspellCoverage() {
+  // cspell writes its summary to stderr — merge with 2>&1 so we can always parse it
+  const cmd = 'npx cspell --no-progress "src/**/*.{ts,tsx}" "scripts/**/*.{mjs,js}" "docs/**/*.md" 2>&1';
+  try {
+    const output = execSync(cmd, {
+      cwd: ROOT, timeout: 120_000, stdio: 'pipe', encoding: 'utf-8',
+      env: { ...process.env, FORCE_COLOR: '0' },
+    });
+    const summaryMatch = output.match(/Files checked:\s*(\d+)/);
+    const filesChecked = summaryMatch ? summaryMatch[1] : '?';
+    return { pass: true, detail: `${filesChecked} files checked, 0 spelling issues` };
+  } catch (err) {
+    const output = (err.stdout || '').toString();
+
+    const summaryMatch = output.match(/Files checked:\s*(\d+).*Issues found:\s*(\d+)\s*in\s*(\d+)/);
+    const filesChecked = summaryMatch ? summaryMatch[1] : '?';
+    const issueCount = summaryMatch ? summaryMatch[2] : '?';
+    const fileCount = summaryMatch ? summaryMatch[3] : '?';
+
+    const wordMatches = [...output.matchAll(/Unknown word \(([^)]+)\)/g)];
+    const uniqueWords = [...new Set(wordMatches.map((m) => m[1]))].sort();
+
+    const wordSummary = uniqueWords.length <= 10
+      ? uniqueWords.join(', ')
+      : uniqueWords.slice(0, 10).join(', ') + ` ... and ${uniqueWords.length - 10} more`;
+
+    return {
+      pass: false,
+      detail: `${issueCount} issues in ${fileCount}/${filesChecked} files. Unknown words: ${wordSummary}`,
+    };
+  }
+}
+
 function checkLitellmRouting() {
   const configPath = resolve(ROOT, 'scripts/ops/litellm-config.yaml');
   if (!existsSync(configPath)) {
@@ -246,6 +360,9 @@ const CHECKS = {
   'docs-freshness': { fn: checkDocsFreshness, async: false },
   'ollama-health': { fn: checkOllamaHealth, async: true },
   'litellm-routing': { fn: checkLitellmRouting, async: false },
+  'cspell-coverage': { fn: checkCspellCoverage, async: false },
+  'ast-density': { fn: checkAstDensity, async: false },
+  'sonar-audit': { fn: checkSonarAudit, async: true },
 };
 
 // ---------------------------------------------------------------------------

@@ -41,6 +41,8 @@ import {
   addComment,
   updateComment,
   getIssueDetail,
+  createIssue,
+  findOpenIssuesByTitle,
   STATES,
 } from './linear-client.mjs';
 import {
@@ -208,6 +210,29 @@ function runLint() {
   }
 }
 
+function runAstDensity(changedFiles) {
+  const TS_EXTENSIONS = /\.(ts|tsx)$/;
+  const eligible = changedFiles.filter((f) => TS_EXTENSIONS.test(f));
+  if (eligible.length === 0) {
+    return { pass: true, detail: '' };
+  }
+  try {
+    const quoted = eligible.map((f) => `"${f}"`).join(' ');
+    const output = execSync(`node scripts/audit-ast-density.mjs --threshold 1 ${quoted}`, {
+      cwd: ROOT, timeout: 120_000, stdio: 'pipe', encoding: 'utf-8',
+    });
+    if (output.trim().length > 0) {
+      return { pass: false, detail: output.trim().slice(0, 2000) };
+    }
+    return { pass: true, detail: '' };
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
+    return { pass: false, detail: output };
+  }
+}
+
 function runCspell(changedFiles) {
   const CSPELL_EXTENSIONS = /\.(ts|tsx|js|mjs|md|json)$/;
   const eligible = changedFiles.filter((f) => CSPELL_EXTENSIONS.test(f));
@@ -243,6 +268,10 @@ function runValidation(changedFiles) {
   const cspell = runCspell(changedFiles);
   results.push({ check: 'cspell', ...cspell });
 
+  // AST density (on changed files only)
+  const astDensity = runAstDensity(changedFiles);
+  results.push({ check: 'ast-density', ...astDensity });
+
   // Unit tests
   try {
     execSync(
@@ -259,6 +288,107 @@ function runValidation(changedFiles) {
 
   const passed = results.every((r) => r.pass);
   return { passed, results };
+}
+
+// ---------------------------------------------------------------------------
+// Sonar post-commit (non-blocking)
+// ---------------------------------------------------------------------------
+
+async function runSonarPostCommit(issueIdentifier) {
+  const SONAR_TOKEN = process.env.SONAR_TOKEN;
+  const SONAR_HOST = process.env.SONAR_HOST_URL || 'http://localhost:9000';
+
+  if (!SONAR_TOKEN) {
+    console.log('[runner] SONAR_TOKEN not set — skipping sonar scan');
+    return;
+  }
+
+  try {
+    console.log('[runner] Running post-commit sonar scan (non-blocking)...');
+    execSync('sonar-scanner', {
+      cwd: ROOT, timeout: 300_000, stdio: 'pipe',
+      env: { ...process.env, SONAR_TOKEN },
+    });
+
+    // Wait for analysis to be processed by the server
+    await new Promise((r) => setTimeout(r, 10_000));
+
+    const authHeader = `Basic ${Buffer.from(SONAR_TOKEN + ':').toString('base64')}`;
+    const headers = { Authorization: authHeader };
+
+    const fetchWithTimeout = (url) => {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), 30_000);
+      return fetch(url, { headers, signal: ac.signal }).finally(() => clearTimeout(t));
+    };
+
+    const issuesRes = await fetchWithTimeout(
+      `${SONAR_HOST}/api/issues/search?componentKeys=anqr&resolved=false&ps=1`,
+    );
+    const issuesData = await issuesRes.json();
+    const totalIssues = issuesData.total || 0;
+
+    const hotRes = await fetchWithTimeout(
+      `${SONAR_HOST}/api/hotspots/search?projectKey=anqr&ps=1`,
+    );
+    const hotData = await hotRes.json();
+    const totalHotspots = hotData.paging?.total || 0;
+
+    const measRes = await fetchWithTimeout(
+      `${SONAR_HOST}/api/measures/component?component=anqr&metricKeys=duplicated_lines_density,coverage`,
+    );
+    const measData = await measRes.json();
+    const measures = measData.component?.measures || [];
+
+    if (totalIssues === 0 && totalHotspots === 0) {
+      console.log('[runner] Sonar scan clean — no issues or hotspots');
+      return;
+    }
+
+    const existing = await findOpenIssuesByTitle('[Sonar]');
+    if (existing.length > 0) {
+      console.log(`[runner] Existing sonar issue: ${existing[0].identifier} — updating`);
+      await addComment(
+        existing[0].id,
+        [
+          `🔍 **Sonar scan update** (after ${issueIdentifier})`,
+          '',
+          `Issues: ${totalIssues}, Hotspots: ${totalHotspots}`,
+          ...measures.map((m) => `${m.metric}: ${m.value}`),
+        ].join('\n'),
+      );
+      return;
+    }
+
+    const description = [
+      'SonarQube analysis detected findings that need attention.',
+      '',
+      `**Issues:** ${totalIssues}`,
+      `**Security Hotspots:** ${totalHotspots}`,
+      ...measures.map((m) => `**${m.metric}:** ${m.value}`),
+      '',
+      `View full dashboard: ${SONAR_HOST}/dashboard?id=anqr`,
+      '',
+      `Triggered after successful commit of ${issueIdentifier}.`,
+      '',
+      'Run `bash scripts/sonar-export.sh` for a detailed JSON report.',
+    ].join('\n');
+
+    const created = await createIssue({
+      title: '[Sonar] Quality gate findings detected',
+      description,
+      priority: 1,
+    });
+
+    console.log(`[runner] Created sonar issue: ${created.identifier}`);
+    sendNotification({
+      subject: `[ANQR] [Sonar] Quality findings detected — ${created.identifier}`,
+      body: `SonarQube found ${totalIssues} issues and ${totalHotspots} hotspots.\n\nLinear: ${linearIssueUrl(created.identifier)}\nDashboard: ${SONAR_HOST}/dashboard?id=anqr`,
+      severity: 'critical',
+    });
+  } catch (err) {
+    console.warn(`[runner] Sonar post-commit scan failed (non-fatal): ${err.message}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -480,6 +610,54 @@ async function executeIssue(issue, dryRun) {
       });
       return;
     }
+
+    console.log('[runner] Running pre-flight AST density...');
+    try {
+      const astOutput = execSync('node scripts/audit-ast-density.mjs --threshold 1', {
+        cwd: ROOT, timeout: 120_000, stdio: 'pipe', encoding: 'utf-8',
+      });
+      if (astOutput.trim().length > 0) {
+        console.error('[runner] Baseline AST density failed — skipping agent execution');
+        await addComment(
+          issue.id,
+          [
+            `⛔ **Pre-flight AST density failed** — source files exceed density threshold before agent execution. Skipping to avoid wasting tokens.`,
+            '',
+            '```',
+            astOutput.trim().slice(0, 1500),
+            '```',
+            '',
+            'Split dense files so each has ≤1 top-level declaration. This does not count as an attempt.',
+          ].join('\n'),
+        );
+        sendNotification({
+          subject: `Symphony skipped: ${issue.identifier} — baseline AST density failed`,
+          body: `Pre-flight AST density failed for ${issue.identifier}. Agent execution skipped (attempt not consumed).\n\n${astOutput.trim().slice(0, 500)}\n\n${linearIssueUrl(issue.identifier)}`,
+          severity: 'warn',
+        });
+        return;
+      }
+      console.log('[runner] Pre-flight AST density passed ✅');
+    } catch (astErr) {
+      const astErrOut = ((astErr.stdout || '') + '\n' + (astErr.stderr || '')).toString().trim();
+      console.error('[runner] Pre-flight AST density error — skipping agent execution');
+      await addComment(
+        issue.id,
+        [
+          `⛔ **Pre-flight AST density error** — audit script failed. Skipping to avoid wasting tokens.`,
+          '',
+          '```',
+          astErrOut.slice(0, 1500),
+          '```',
+        ].join('\n'),
+      );
+      sendNotification({
+        subject: `Symphony skipped: ${issue.identifier} — AST density error`,
+        body: `Pre-flight AST density error for ${issue.identifier}.\n\n${astErrOut.slice(0, 500)}\n\n${linearIssueUrl(issue.identifier)}`,
+        severity: 'warn',
+      });
+      return;
+    }
   }
 
   // Move to In Progress + post starting comment (counts toward attempt tracking)
@@ -640,6 +818,10 @@ async function executeIssue(issue, dryRun) {
     ];
 
     await addComment(issue.id, evidence.join('\n'));
+
+    // Non-blocking: run sonar scan and create Linear issues for findings
+    await runSonarPostCommit(issue.identifier);
+
     console.log(`[runner] ${issue.identifier} → Done ✅`);
   } else {
     // Reject: revert + comment

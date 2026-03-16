@@ -16,6 +16,7 @@
  *   - run_typecheck()               — run tsc --noEmit and return errors
  *   - run_lint()                    — run oxlint and return errors/warnings
  *   - run_cspell()                  — run cspell spell checker and return errors
+ *   - run_ast_density()             — run AST density audit and return violations
  *   - task_complete(summary)         — signal completion
  *
  * Limits:
@@ -144,8 +145,16 @@ const TOOL_DEFINITIONS = [
   {
     type: 'function',
     function: {
+      name: 'run_ast_density',
+      description: 'Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'task_complete',
-      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, and run_cspell first and fix any errors or warnings before calling this.',
+      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, run_cspell, and run_ast_density first and fix any errors or warnings before calling this.',
       parameters: {
         type: 'object',
         properties: {
@@ -279,6 +288,27 @@ function toolRunTypecheck(projectRoot) {
   }
 }
 
+function toolRunAstDensity(projectRoot) {
+  try {
+    const output = execSync('node scripts/audit-ast-density.mjs --threshold 1', {
+      cwd: projectRoot,
+      timeout: 120_000,
+      maxBuffer: 2 * 1024 * 1024,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    if (output.trim().length === 0) {
+      return 'AST density passed — all files have ≤1 top-level declaration.';
+    }
+    return `AST density violations (files with >1 top-level declaration):\n${output}`;
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim();
+    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
+  }
+}
+
 function toolRunCspell(projectRoot) {
   try {
     execSync('npx cspell --no-progress "src/**/*.{ts,tsx}" "scripts/**/*.{mjs,js}" "docs/**/*.md"', {
@@ -327,6 +357,7 @@ function executeTool(projectRoot, toolCall) {
   if (name === 'run_typecheck') return toolRunTypecheck(projectRoot);
   if (name === 'run_lint') return toolRunLint(projectRoot);
   if (name === 'run_cspell') return toolRunCspell(projectRoot);
+  if (name === 'run_ast_density') return toolRunAstDensity(projectRoot);
 
   let args;
   try {
@@ -418,10 +449,12 @@ function buildIssuePrompt(issue) {
     '7. If there are lint errors or warnings, fix them and run run_lint again',
     '8. Run run_cspell to verify there are no spelling errors',
     '9. If there are spelling errors, fix them or add domain-specific words to the "words" array in cspell.json',
-    '10. Call task_complete with a summary of what you changed',
+    '10. Run run_ast_density to verify no file has more than 1 top-level declaration',
+    '11. If there are density violations, split the file so each has at most 1 top-level declaration',
+    '12. Call task_complete with a summary of what you changed',
     '',
     'Keep changes minimal. Do not modify files unnecessarily.',
-    'IMPORTANT: Always run run_typecheck, run_lint, AND run_cspell before calling task_complete. Fix all errors and warnings first.',
+    'IMPORTANT: Always run run_typecheck, run_lint, run_cspell, AND run_ast_density before calling task_complete. Fix all errors and warnings first.',
   );
 
   return lines.join('\n');
