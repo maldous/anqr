@@ -4,8 +4,10 @@
  * Notes: Run QArt on main thread as worker fallback.
  */
 
-import type { QArtModule } from '@/features/generator/application/qart/qart-shared-types';
-import type { FullQArtPipelineResult } from '@/features/generator/application/qart/qart-shared-types';
+import type {
+  FullQArtPipelineResult,
+  QArtModule,
+} from '@/features/generator/application/qart/qart-shared-types';
 import { toFullQArtPipelineResult } from './to-full-qart-pipeline-result';
 
 export async function runArtworkMainThreadFallback(params: {
