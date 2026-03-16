@@ -1,4 +1,4 @@
-import type { StoreState } from "./share-config-store-state.type";
+import type { StoreState } from "./share-config-store.types";
 
 export function buildShareQaFields(qa: StoreState["qa"]) {
   return {

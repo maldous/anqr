@@ -1,5 +1,5 @@
 import { arraycopy, currentTimeMillis } from "./util";
-import { ResultMetadataType } from "./result-metadata-type";
+import { ResultMetadataType } from "./result-metadata.types";
 import { ResultPoint } from "./result-point";
 import { BarcodeFormat } from "./barcode-format";
 

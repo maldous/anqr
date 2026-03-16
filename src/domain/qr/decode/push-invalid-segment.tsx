@@ -1,5 +1,5 @@
 import { modeToName } from "./mode-to-name";
-import type { DecodeLoopState } from "./decode-loop-state";
+import type { DecodeLoopState } from "./decode-loop.types";
 
 export function pushInvalidSegment(
   state: DecodeLoopState,

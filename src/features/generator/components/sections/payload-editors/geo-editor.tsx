@@ -4,7 +4,7 @@ import { isValidLatitude, isValidLongitude } from "@/modules/payload-generators"
 import { Input } from "@/ui/primitives/input";
 import { Label } from "@/ui/primitives/label";
 import { PlusCodeDisplay } from "../payload-plus-code-display";
-import type { EditorProps } from "../payload-editor-props";
+import type { EditorProps } from "../payload-editor.types";
 import { runLookup } from "../run-geo-lookup";
 
 export function GeoEditor({

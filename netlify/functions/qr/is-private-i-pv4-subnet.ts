@@ -1,4 +1,4 @@
-import { isPrivateIPv4Class192 } from "./is-private-i-pv4-class192.ts";
+import { isPrivateIPv4Class192 } from "./is-private-i-pv4-class192";
 
 export function isPrivateIPv4Subnet(a: number, b: number, c: number): boolean {
   if (a === 172 && b >= 16 && b <= 31) return true;

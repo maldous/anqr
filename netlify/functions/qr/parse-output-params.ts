@@ -1,10 +1,10 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { DEFAULT_OUTPUT_FORMAT } from "./default-output-format.const.ts";
-import { OutputFormat } from "./output-format.types.ts";
-import { WatermarkKind } from "./watermark-kind.types.ts";
-import { WatermarkPosition } from "./watermark-position.types.ts";
-import { WatermarkBlend } from "./watermark-blend.types.ts";
-import { parseGifDisposalCode } from "./parse-gif-disposal-code.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { DEFAULT_OUTPUT_FORMAT } from "./default-output-format.const";
+import { OutputFormat } from "./output-format.types";
+import { WatermarkKind } from "./watermark-kind.types";
+import { WatermarkPosition } from "./watermark-position.types";
+import { WatermarkBlend } from "./watermark-blend.types";
+import { parseGifDisposalCode } from "./parse-gif-disposal-code";
 
 export function parseOutputParams(
   params: URLSearchParams,

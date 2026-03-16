@@ -1,1 +1,1 @@
-export { tryEccFallbackGeneration } from "@/features/generator/application/safety/safety-fn-tryeccfallback";
+export { tryEccFallbackGeneration } from "@/features/generator/application/safety/try-ecc-fallback-generation.service";

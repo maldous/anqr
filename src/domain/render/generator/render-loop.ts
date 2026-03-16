@@ -20,9 +20,9 @@ import {
   renderModulesFastPath,
 } from "./render-loop-fast-path";
 import type { RenderModulesOptions } from "../../../modules/qr-generator/types";
-import type { ModuleDrawContext } from "./module-draw-context.interface";
-import type { RenderCellCtx } from "./render-cell-ctx.interface";
-import type { RenderCellState } from "./render-cell-state.interface";
+import type { ModuleDrawContext } from "./module-draw-context.types";
+import type { RenderCellCtx } from "./render-cell-ctx.types";
+import type { RenderCellState } from "./render-cell.types";
 import { validateColor } from "../../../modules/qr-generator/utils";
 export { clearFunctionalMapCache } from "./render-loop-fast-path";
 

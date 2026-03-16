@@ -3,7 +3,7 @@ import { ContactEmailLink, ContactRedditLink } from "./static-page-shell-parts";
 import { StaticPageArticleFooter } from "./static-page-article-footer";
 import { StaticPageSection } from "./static-page-section";
 import type { TocGroup } from "./static-page-types";
-import type { StaticPageType } from "./StaticPage.types";
+import type { StaticPageType } from "./static-page-types.types";
 
 export function StaticPageArticle({
   def,

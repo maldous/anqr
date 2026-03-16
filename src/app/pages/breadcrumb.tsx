@@ -1,4 +1,4 @@
-import type { BreadcrumbProps } from "./breadcrumb.props";
+import type { BreadcrumbProps } from "./breadcrumb.types";
 
 export function Breadcrumb({ items, lang }: BreadcrumbProps) {
   if (!items || items.length === 0) return null;

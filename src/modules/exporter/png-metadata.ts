@@ -5,4 +5,4 @@ export {
   embedPngDpi,
   embedPngMetadata,
 } from "../../domain/render/export/png-metadata";
-export type { PngMetadata } from "./png-metadata.type";
+export type { PngMetadata } from "./png-metadata.types";

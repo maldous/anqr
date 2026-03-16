@@ -1,9 +1,9 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types.ts";
-import { applyAnimationEffectsToCanvasServer } from "./apply-animation-effects-to-canvas-server.ts";
-import { calculateTemporalOffsetServer } from "./calculate-temporal-offset-server.ts";
-import { applyTemporalNoiseToCanvasServer } from "./apply-temporal-noise-to-canvas-server.ts";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import { applyAnimationEffectsToCanvasServer } from "./apply-animation-effects-to-canvas-server";
+import { calculateTemporalOffsetServer } from "./calculate-temporal-offset-server";
+import { applyTemporalNoiseToCanvasServer } from "./apply-temporal-noise-to-canvas-server";
 
 export function applyResultEffectsForFrameHelper(
   sourceCanvas: Canvas,

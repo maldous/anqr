@@ -1,4 +1,4 @@
-import type { StoreState } from "./share-config-store-state.type";
+import type { StoreState } from "./share-config-store.types";
 import { buildShareOverlayAdjustmentFields } from "./build-share-overlay-adjustment-fields";
 import { buildShareOverlayDitherFields } from "./build-share-overlay-dither-fields";
 import { buildShareOverlayDuotoneFields } from "./build-share-overlay-duotone-fields";

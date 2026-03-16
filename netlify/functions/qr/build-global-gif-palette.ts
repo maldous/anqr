@@ -1,5 +1,5 @@
 import { quantizeGifPalette } from "../../src/modules/animation";
-import { ensureGifPaletteAnchors } from "./ensure-gif-palette-anchors.ts";
+import { ensureGifPaletteAnchors } from "./ensure-gif-palette-anchors";
 
 export function buildGlobalGifPalette(
   frameDataProvider: (frameIndex: number) => Uint8ClampedArray,

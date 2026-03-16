@@ -1,7 +1,7 @@
 import { qrDecoderLog } from "./qr-decoder-log";
 import { modeToName } from "./mode-to-name";
 import type { SegmentDecodeResult } from "./segment-decode-result";
-import type { DecodeLoopState } from "./decode-loop-state";
+import type { DecodeLoopState } from "./decode-loop.types";
 
 export function processDecodedSegment(
   state: DecodeLoopState,

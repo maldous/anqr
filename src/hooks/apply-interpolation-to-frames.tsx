@@ -1,1 +1,1 @@
-export { applyInterpolationToFrames } from "@/features/generator/application/frames/frames-fn-interpolation";
+export { applyInterpolationToFrames } from "@/features/generator/application/frames/apply-interpolation-to-frames.service";

@@ -1,8 +1,8 @@
 import { type Canvas, createCanvas } from "@napi-rs/canvas";
 import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
-import { AnimationWaveAxis } from "./animation-wave-axis.types.ts";
-import { computeAnimationProgress } from "./compute-animation-progress.ts";
-import { applyAnimationEffectToImageDataServer } from "./apply-animation-effect-to-image-data-server.ts";
+import { AnimationWaveAxis } from "./animation-wave-axis.types";
+import { computeAnimationProgress } from "./compute-animation-progress";
+import { applyAnimationEffectToImageDataServer } from "./apply-animation-effect-to-image-data-server";
 
 export function generatePatternFramesServer(
   sourceCanvas: Canvas,

@@ -1,11 +1,11 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { FetchedImage } from "./fetched-image.types.ts";
-import { ServerAnimationFrame } from "./server-animation-frame.types.ts";
-import { parseGifFramesServer } from "./parse-gif-frames-server.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
-import { SERVER_MAX_ANIMATION_FRAMES } from "./server-max-animation-frames.const.ts";
-import { decimateFramesToMaxCount } from "./decimate-frames-to-max-count.ts";
-import { decimateFramesToMaxFps } from "./decimate-frames-to-max-fps.ts";
+import { FetchedImage } from "./fetched-image.types";
+import { ServerAnimationFrame } from "./server-animation-frame.types";
+import { parseGifFramesServer } from "./parse-gif-frames-server";
+import { qrFnLog } from "./qr-fn-log";
+import { SERVER_MAX_ANIMATION_FRAMES } from "./server-max-animation-frames.const";
+import { decimateFramesToMaxCount } from "./decimate-frames-to-max-count";
+import { decimateFramesToMaxFps } from "./decimate-frames-to-max-fps";
 
 export function processAnimatedGifFrames(
   fetchedImage: FetchedImage,

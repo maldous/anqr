@@ -1,7 +1,7 @@
 import { applyAnimationWave } from "../../src/modules/animation";
-import { AnimationWaveAxis } from "./animation-wave-axis.types.ts";
-import { hslToRgbTupleServer } from "./hsl-to-rgb-tuple-server.ts";
-import { tintWavePixel } from "./tint-wave-pixel.ts";
+import { AnimationWaveAxis } from "./animation-wave-axis.types";
+import { hslToRgbTupleServer } from "./hsl-to-rgb-tuple-server";
+import { tintWavePixel } from "./tint-wave-pixel";
 
 export function applyAnimationWaveWithAxisServer(
   data: Uint8ClampedArray,

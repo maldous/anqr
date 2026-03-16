@@ -1,8 +1,8 @@
 import { type Canvas } from "@napi-rs/canvas";
 import { QRGenerator } from "../../src/modules/qr-generator";
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { ArtworkState } from "./artwork-state.types.ts";
-import { generateArtworkFrame } from "./generate-artwork-frame.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { ArtworkState } from "./artwork-state.types";
+import { generateArtworkFrame } from "./generate-artwork-frame";
 
 export async function renderInitialQRCode(
   p: ParsedHandlerParams,

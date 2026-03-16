@@ -1,6 +1,6 @@
 import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
-import { AnimationTarget } from "./animation-target.types.ts";
-import { AnimationWaveAxis } from "./animation-wave-axis.types.ts";
+import { AnimationTarget } from "./animation-target.types";
+import { AnimationWaveAxis } from "./animation-wave-axis.types";
 
 export type AnimationEffectConfig = {
   pattern: AnimationPattern;

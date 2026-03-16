@@ -1,12 +1,12 @@
 import { Capacitor } from "@capacitor/core";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BusyOverlay } from "@/ui/composites/BusyOverlay";
-import { Header } from "@/components/Header";
-import { MobileDivider } from "@/ui/composites/MobileDivider";
-import { Preview } from "@/features/generator/components/Preview";
-import { Sidebar } from "@/features/generator/components/Sidebar";
-import type { StaticPageType } from "@/app/pages/StaticPage";
+import { BusyOverlay } from "@/ui/composites/busy-overlay";
+import { Header } from "@/components/header";
+import { MobileDivider } from "@/ui/composites/mobile-divider";
+import { Preview } from "@/features/generator/components/preview";
+import { Sidebar } from "@/features/generator/components/sidebar";
+import type { StaticPageType } from "@/app/pages/static-page";
 import { TooltipProvider } from "@/ui/primitives/tooltip";
 import type { GalleryCategory } from "@/content/gallery/gallery-manifest";
 import { useBannerHeight } from "@/ui/hooks/useBannerHeight";

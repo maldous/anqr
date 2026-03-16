@@ -1,6 +1,6 @@
 import { type Canvas, createCanvas } from "@napi-rs/canvas";
-import { WatermarkOptions } from "./watermark-options.types.ts";
-import { drawWatermarkLayerServer } from "./draw-watermark-layer-server.ts";
+import { WatermarkOptions } from "./watermark-options.types";
+import { drawWatermarkLayerServer } from "./draw-watermark-layer-server";
 
 export function applyWatermarkServer(source: Canvas, options: WatermarkOptions): Canvas {
   if (!options.enabled || (options.kind === "text" && !options.text)) {

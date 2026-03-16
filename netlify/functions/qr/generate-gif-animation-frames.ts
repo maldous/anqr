@@ -1,15 +1,15 @@
 import { type Canvas } from "@napi-rs/canvas";
 import { QRGenerator } from "../../src/modules/qr-generator";
 import { type AnimationEasing } from "../../src/modules/animation";
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { ServerAnimationFrame } from "./server-animation-frame.types.ts";
-import { ArtworkState } from "./artwork-state.types.ts";
-import { WatermarkOptions } from "./watermark-options.types.ts";
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { buildAnimationEffectArrays } from "./build-animation-effect-arrays.ts";
-import { renderAnimatedOverlayLoop } from "./render-animated-overlay-loop.ts";
-import { generatePatternFramesServer } from "./generate-pattern-frames-server.ts";
-import { renderPatternAnimationLoop } from "./render-pattern-animation-loop.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { ServerAnimationFrame } from "./server-animation-frame.types";
+import { ArtworkState } from "./artwork-state.types";
+import { WatermarkOptions } from "./watermark-options.types";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { buildAnimationEffectArrays } from "./build-animation-effect-arrays";
+import { renderAnimatedOverlayLoop } from "./render-animated-overlay-loop";
+import { generatePatternFramesServer } from "./generate-pattern-frames-server";
+import { renderPatternAnimationLoop } from "./render-pattern-animation-loop";
 
 export async function generateGifAnimationFrames(
   p: ParsedHandlerParams,

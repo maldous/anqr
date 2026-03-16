@@ -1,4 +1,4 @@
-import type { StaticPageType } from "@/app/pages/StaticPage";
+import type { StaticPageType } from "@/app/pages/static-page";
 import { trimHashPrefix } from "./trim-hash-prefix";
 import { trimRoutePath } from "./trim-route-path";
 

@@ -1,8 +1,8 @@
-import { getBlobStoreOrNull } from "./get-blob-store-or-null.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
-import { CORS_HEADERS } from "./cors-headers.const.ts";
-import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error.ts";
-import { markBlobStoreDisabled } from "./mark-blob-store-disabled.ts";
+import { getBlobStoreOrNull } from "./get-blob-store-or-null";
+import { qrFnLog } from "./qr-fn-log";
+import { CORS_HEADERS } from "./cors-headers.const";
+import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error";
+import { markBlobStoreDisabled } from "./mark-blob-store-disabled";
 
 export async function lookupBlobCache(
   cacheKey: string,

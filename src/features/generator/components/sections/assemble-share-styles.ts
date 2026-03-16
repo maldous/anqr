@@ -1,4 +1,4 @@
-import type { StoreState } from "./share-config-store-state.type";
+import type { StoreState } from "./share-config-store.types";
 import { falseIfFalse, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
 import { buildShareStylesContrastFields } from "./build-share-styles-contrast-fields";
 

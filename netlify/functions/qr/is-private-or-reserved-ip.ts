@@ -1,5 +1,5 @@
-import { isPrivateIPv4 } from "./is-private-i-pv4.ts";
-import { isReservedIPv6 } from "./is-reserved-i-pv6.ts";
+import { isPrivateIPv4 } from "./is-private-i-pv4";
+import { isReservedIPv6 } from "./is-reserved-i-pv6";
 
 export function isPrivateOrReservedIP(ip: string): boolean {
   if (ip === "localhost" || ip === "127.0.0.1" || ip === "::1") {

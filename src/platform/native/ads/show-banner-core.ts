@@ -1,6 +1,6 @@
 import { getAdUnitId } from "./admob-config";
-import { setCurrentBannerPosition } from "./admob-banner-state";
-import type { ShowBannerDeps, ShowBannerPosition } from "./show-banner-deps.type";
+import { setCurrentBannerPosition } from "./admob-banner.types";
+import type { ShowBannerDeps, ShowBannerPosition } from "./show-banner-deps.types";
 
 export async function showBannerAd(
   deps: ShowBannerDeps,

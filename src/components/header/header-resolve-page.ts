@@ -1,5 +1,5 @@
-import type { HeaderPage } from "./header-page.type";
-export type { HeaderPage } from "./header-page.type";
+import type { HeaderPage } from "./header-page.types";
+export type { HeaderPage } from "./header-page.types";
 
 export function resolveHeaderPage(
   activePage: HeaderPage | undefined,

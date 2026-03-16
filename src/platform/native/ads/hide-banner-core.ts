@@ -1,5 +1,5 @@
-import { setCurrentBannerPosition, updateBannerHeight } from "./admob-banner-state";
-import type { HideBannerDeps } from "./hide-banner-deps.type";
+import { setCurrentBannerPosition, updateBannerHeight } from "./admob-banner.types";
+import type { HideBannerDeps } from "./hide-banner-deps.types";
 
 export async function hideBannerAd(deps: HideBannerDeps): Promise<void> {
   if (!(deps.adMobAvailable && deps.AdMob)) {

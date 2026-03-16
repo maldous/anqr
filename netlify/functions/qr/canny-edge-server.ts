@@ -1,4 +1,4 @@
-import { sobelEdgeServer } from "./sobel-edge-server.ts";
+import { sobelEdgeServer } from "./sobel-edge-server";
 
 export function cannyEdgeServer(
   data: Uint8ClampedArray,

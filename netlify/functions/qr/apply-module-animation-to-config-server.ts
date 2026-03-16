@@ -1,5 +1,5 @@
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { computeAnimationProgress } from "./compute-animation-progress.ts";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { computeAnimationProgress } from "./compute-animation-progress";
 
 export function applyModuleAnimationToConfigServer(
   baseConfig: Record<string, unknown>,

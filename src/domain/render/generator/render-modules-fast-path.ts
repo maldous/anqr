@@ -1,5 +1,5 @@
 import { renderRunLengthPass } from "./render-run-length-pass";
-import type { FastPathCanvasContext } from "./fast-path-canvas-context.type";
+import type { FastPathCanvasContext } from "./fast-path-canvas-context.types";
 import type { QRCodeInstance } from "../../../modules/qr-generator/types";
 
 export function renderModulesFastPath(

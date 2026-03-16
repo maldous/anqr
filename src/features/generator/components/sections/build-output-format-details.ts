@@ -1,4 +1,4 @@
-import type { OutputLike } from "./output-like.type";
+import type { OutputLike } from "./output-like.types";
 
 export function buildOutputFormatDetails(output: OutputLike) {
   const isGif = output.format === "gif";

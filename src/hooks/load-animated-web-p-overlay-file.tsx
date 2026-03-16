@@ -1,1 +1,1 @@
-export { loadAnimatedWebPOverlayFile } from "@/features/generator/application/input/input-fn-loadwebp";
+export { loadAnimatedWebPOverlayFile } from "@/features/generator/application/input/load-animated-web-p-overlay-file.service";

@@ -1,2 +1,2 @@
-export type { StaticPageProps } from "./static-page-props.interface";
-export type { TocGroup } from "./toc-group.type";
+export type { StaticPageProps } from "./static-page.types";
+export type { TocGroup } from "./toc-group.types";

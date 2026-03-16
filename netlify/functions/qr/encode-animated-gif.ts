@@ -4,9 +4,9 @@ import {
   indexGifPixels,
   isGifEncodingAvailable,
 } from "../../src/modules/animation";
-import { parseGifBackgroundColor } from "./parse-gif-background-color.ts";
-import { prepareGifFramePixels } from "./prepare-gif-frame-pixels.ts";
-import { buildGlobalGifPalette } from "./build-global-gif-palette.ts";
+import { parseGifBackgroundColor } from "./parse-gif-background-color";
+import { prepareGifFramePixels } from "./prepare-gif-frame-pixels";
+import { buildGlobalGifPalette } from "./build-global-gif-palette";
 
 export function encodeAnimatedGif(
   frames: Canvas[],

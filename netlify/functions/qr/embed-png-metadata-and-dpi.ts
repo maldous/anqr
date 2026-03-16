@@ -1,6 +1,6 @@
-import { PngMetadata } from "./png-metadata.types.ts";
-import { createPngPhysChunk } from "./create-png-phys-chunk.ts";
-import { createPngTextChunk } from "./create-png-text-chunk.ts";
+import { PngMetadata } from "./png-metadata.types";
+import { createPngPhysChunk } from "./create-png-phys-chunk";
+import { createPngTextChunk } from "./create-png-text-chunk";
 
 export function embedPngMetadataAndDpi(
   pngBuffer: Buffer,

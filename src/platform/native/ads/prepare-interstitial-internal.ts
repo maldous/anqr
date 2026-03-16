@@ -4,7 +4,7 @@ import {
   isTestMode,
   type InterstitialType,
 } from "./admob-config";
-import type { InterstitialDeps } from "./interstitial-deps.type";
+import type { InterstitialDeps } from "./interstitial-deps.types";
 
 export async function prepareInterstitialInternal(
   deps: InterstitialDeps,

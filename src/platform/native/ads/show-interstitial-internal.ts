@@ -1,4 +1,4 @@
-import type { InterstitialDeps } from "./interstitial-deps.type";
+import type { InterstitialDeps } from "./interstitial-deps.types";
 import { interstitialPrepareKey, type InterstitialType } from "./admob-config";
 import { interstitialLog as log } from "./interstitial-log";
 import { prepareInterstitialInternal } from "./prepare-interstitial-internal";

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { createLogger } from "@/infra/logging/logger";
 import { HighlightedLabel } from "@/features/generator/search/search-context";
 import { Label } from "@/ui/primitives/label";
-import type { PlusCodeDisplayProps } from "./plus-code-display.props";
+import type { PlusCodeDisplayProps } from "./plus-code-display.types";
 
 const log = createLogger("PAYLOAD");
 

@@ -1,4 +1,4 @@
-import { applyHueSaturationToPixel } from "./apply-hue-saturation-to-pixel.ts";
+import { applyHueSaturationToPixel } from "./apply-hue-saturation-to-pixel";
 
 export function adjustPixelColor(
   r: number,

@@ -5,8 +5,8 @@ import {
   applyAnimationScanline,
   applyAnimationShimmer,
 } from "../../src/modules/animation";
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { applyAnimationWaveWithAxisServer } from "./apply-animation-wave-with-axis-server.ts";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { applyAnimationWaveWithAxisServer } from "./apply-animation-wave-with-axis-server";
 
 export function applyAnimationEffectToImageDataServer(
   frameData: Uint8ClampedArray,

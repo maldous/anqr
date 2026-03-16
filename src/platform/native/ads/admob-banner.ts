@@ -2,7 +2,7 @@ export {
   getBannerHeight,
   getCurrentBannerPosition,
   onBannerHeightChange,
-} from "./admob-banner-state";
+} from "./admob-banner.types";
 export { showBannerAd } from "./show-banner-wrapper";
 export { showTopBanner } from "./show-top-banner-wrapper";
 export { showBottomBanner } from "./show-bottom-banner-wrapper";

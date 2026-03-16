@@ -1,4 +1,4 @@
-import type { DiagnosticsState } from "./diagnostics-state";
+import type { DiagnosticsState } from "./diagnostics.types";
 import { STORAGE_KEY } from "./storage-key";
 
 /**

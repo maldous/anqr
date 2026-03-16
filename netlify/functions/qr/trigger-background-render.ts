@@ -1,9 +1,9 @@
-import { getBlobStoreOrNull } from "./get-blob-store-or-null.ts";
-import { SENTINEL_PREFIX } from "./sentinel-prefix.const.ts";
-import { SENTINEL_TTL_MS } from "./sentinel-ttl-ms.const.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
-import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error.ts";
-import { markBlobStoreDisabled } from "./mark-blob-store-disabled.ts";
+import { getBlobStoreOrNull } from "./get-blob-store-or-null";
+import { SENTINEL_PREFIX } from "./sentinel-prefix.const";
+import { SENTINEL_TTL_MS } from "./sentinel-ttl-ms.const";
+import { qrFnLog } from "./qr-fn-log";
+import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error";
+import { markBlobStoreDisabled } from "./mark-blob-store-disabled";
 
 export async function triggerBackgroundRender(cacheKey: string, requestUrl: string): Promise<void> {
   let shouldTrigger = true;

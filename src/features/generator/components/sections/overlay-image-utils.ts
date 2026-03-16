@@ -1,4 +1,4 @@
-export type { ContainedImageRect } from "./contained-image-rect.type";
+export type { ContainedImageRect } from "./contained-image-rect.types";
 export { acquireCameraImage } from "./acquire-camera-image";
 export { classifyCameraError } from "./classify-camera-error";
 export { classifyUrlLoadError } from "./classify-url-load-error";

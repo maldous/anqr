@@ -1,11 +1,11 @@
 import type { CanvasPool } from "../../platform/browser/canvas/canvas-factory";
 import { evaluateDecodeScenarios } from "./evaluate-decode-scenarios";
 import { processEvaluatedAttempt } from "./process-evaluated-attempt";
-import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
-import type { ScanGateCallbacks } from "./scan-gate-callbacks.interface";
-import type { ScanGateCtx } from "./scan-gate-ctx.interface";
-import type { ScanGateLoopState } from "./scan-gate-loop-state.interface";
-import type { ScanGateMainLoopResult } from "./scan-gate-main-loop-result.interface";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
+import type { ScanGateCallbacks } from "./scan-gate-callbacks.types";
+import type { ScanGateCtx } from "./scan-gate-ctx.types";
+import type { ScanGateLoopState } from "./scan-gate-loop.types";
+import type { ScanGateMainLoopResult } from "./scan-gate-main-loop-result.types";
 
 export async function runScanGateMainLoop(
   pool: CanvasPool,

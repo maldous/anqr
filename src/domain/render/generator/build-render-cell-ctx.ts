@@ -1,6 +1,6 @@
 import type { RenderModulesOptions } from "../../../modules/qr-generator/types";
-import type { ModuleDrawContext } from "./module-draw-context.interface";
-import type { RenderCellCtx } from "./render-cell-ctx.interface";
+import type { ModuleDrawContext } from "./module-draw-context.types";
+import type { RenderCellCtx } from "./render-cell-ctx.types";
 
 export function buildRenderCellCtx(
   options: RenderModulesOptions,

@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import type React from "react";
 import type { useTranslation } from "react-i18next";
-import type { AnalysisSourceType } from "./analysis-source-type";
+import type { AnalysisSourceType } from "./analysis-source.types";
 import { CameraCardButton } from "./camera-card-button";
 import { FileUploadCard } from "./file-upload-card";
 import { GeneratorCardActive } from "./generator-card-active";

@@ -1,18 +1,18 @@
 import { type Canvas } from "@napi-rs/canvas";
 import { QRGenerator } from "../../src/modules/qr-generator";
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { AnimationInterpolation } from "./animation-interpolation.types.ts";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types.ts";
-import { ArtworkState } from "./artwork-state.types.ts";
-import { ECCLevel } from "./ecc-level.types.ts";
-import { WatermarkOptions } from "./watermark-options.types.ts";
-import { applyAnimationEffectsToCanvasServer } from "./apply-animation-effects-to-canvas-server.ts";
-import { applyFrameInterpolation } from "./apply-frame-interpolation.ts";
-import { applyModuleAnimationToConfigServer } from "./apply-module-animation-to-config-server.ts";
-import { renderQRFrameWithFallback } from "./render-qr-frame-with-fallback.ts";
-import { generateArtworkFrame } from "./generate-artwork-frame.ts";
-import { applyResultEffectsForFrameHelper } from "./apply-result-effects-for-frame-helper.ts";
-import { scaleAndWatermarkFrame } from "./scale-and-watermark-frame.ts";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { AnimationInterpolation } from "./animation-interpolation.types";
+import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import { ArtworkState } from "./artwork-state.types";
+import { ECCLevel } from "./ecc-level.types";
+import { WatermarkOptions } from "./watermark-options.types";
+import { applyAnimationEffectsToCanvasServer } from "./apply-animation-effects-to-canvas-server";
+import { applyFrameInterpolation } from "./apply-frame-interpolation";
+import { applyModuleAnimationToConfigServer } from "./apply-module-animation-to-config-server";
+import { renderQRFrameWithFallback } from "./render-qr-frame-with-fallback";
+import { generateArtworkFrame } from "./generate-artwork-frame";
+import { applyResultEffectsForFrameHelper } from "./apply-result-effects-for-frame-helper";
+import { scaleAndWatermarkFrame } from "./scale-and-watermark-frame";
 
 export async function renderPatternAnimationLoop(
   overlayCanvas: Canvas | null,

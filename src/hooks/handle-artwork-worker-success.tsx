@@ -1,1 +1,1 @@
-export { handleArtworkWorkerSuccess } from "@/features/generator/application/frames/frames-fn-artworksuccess";
+export { handleArtworkWorkerSuccess } from "@/features/generator/application/frames/handle-artwork-worker-success.service";

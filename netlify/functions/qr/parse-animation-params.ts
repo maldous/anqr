@@ -1,9 +1,9 @@
 import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { parseAnimationTarget } from "./parse-animation-target.ts";
-import { parseAnimationWaveAxis } from "./parse-animation-wave-axis.ts";
-import { AnimationInterpolation } from "./animation-interpolation.types.ts";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { parseAnimationTarget } from "./parse-animation-target";
+import { parseAnimationWaveAxis } from "./parse-animation-wave-axis";
+import { AnimationInterpolation } from "./animation-interpolation.types";
+import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 
 export function parseAnimationParams(
   params: URLSearchParams,

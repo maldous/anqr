@@ -1,4 +1,4 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
 
 export function buildQRGeneratorConfig(
   p: ParsedHandlerParams,

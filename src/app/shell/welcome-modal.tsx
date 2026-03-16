@@ -1,5 +1,5 @@
 import { lazy } from "react";
 
 export const WelcomeModal = lazy(() =>
-  import("@/components/WelcomeModal").then((m) => ({ default: m.WelcomeModal })),
+  import("@/components/welcome-modal").then((m) => ({ default: m.WelcomeModal })),
 );

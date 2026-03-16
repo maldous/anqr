@@ -21,7 +21,7 @@
  * The GAP between these intervals (terminator + pad-to-byte) is PROTECTED and NEVER modified.
  * This prevents the decoder from seeing fake mode indicators when terminator bits flip.
  */
-export type { EncoderDerivedLayout } from "./encoder-derived-layout.interface";
+export type { EncoderDerivedLayout } from "./encoder-derived-layout.types";
 
 /**
  * Configuration for full QR-Art generation
@@ -39,10 +39,10 @@ export type { EncoderDerivedLayout } from "./encoder-derived-layout.interface";
  *
  * This ensures the BASE URL is always preserved, while maximizing QR-Art control.
  */
-export type { QArtPerformanceProfile } from "./qart-performance-profile.type";
-export type { FullQArtConfig } from "./full-qart-config.interface";
+export type { QArtPerformanceProfile } from "./qart-performance-profile.types";
+export type { FullQArtConfig } from "./full-qart-config.types";
 
 /**
  * Result of full QR-Art generation
  */
-export type { FullQArtResult } from "./full-qart-result.interface";
+export type { FullQArtResult } from "./full-qart-result.types";

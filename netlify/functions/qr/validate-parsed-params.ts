@@ -1,6 +1,6 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { CORS_HEADERS } from "./cors-headers.const.ts";
-import { MAX_DATA_LENGTH } from "./max-data-length.const.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { CORS_HEADERS } from "./cors-headers.const";
+import { MAX_DATA_LENGTH } from "./max-data-length.const";
 
 export function validateParsedParams(p: ParsedHandlerParams): Response | null {
   if (!p.data) {

@@ -1,1 +1,1 @@
-export { generateBaseAnimationFrameSet } from "@/features/generator/application/frames/frames-fn-baseanimation";
+export { generateBaseAnimationFrameSet } from "@/features/generator/application/frames/generate-base-animation-frame-set.service";

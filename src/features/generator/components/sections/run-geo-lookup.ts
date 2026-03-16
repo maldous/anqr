@@ -1,4 +1,4 @@
-import type { EditorProps } from "./payload-editor-props";
+import type { EditorProps } from "./payload-editor.types";
 
 export function runLookup(query: string, setPayloadGeo: EditorProps["setPayloadGeo"]) {
   if (!query) return;

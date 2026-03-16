@@ -3,8 +3,8 @@ import { PROD_AD_UNIT_IDS } from "./prod-ad-unit-ids";
 import { TEST_AD_UNIT_IDS } from "./test-ad-unit-ids";
 
 export const isTestMode = import.meta.env.VITE_ADMOB_TESTING === "true";
-export type { InterstitialType } from "./interstitial-type";
-export type { RewardedType } from "./rewarded-type";
+export type { InterstitialType } from "./interstitial.types";
+export type { RewardedType } from "./rewarded.types";
 
 export function getAdUnitId(
   type: "banner" | "interstitial" | "rewarded" | "rewardedInterstitial",

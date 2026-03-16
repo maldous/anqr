@@ -1,6 +1,6 @@
-import { OG_IMAGE_SIZE } from "./og-image-size.const.ts";
-import { OG_PASSTHROUGH_PARAMS } from "./og-passthrough-params.const.ts";
-import { BASE_URL } from "./base-url.const.ts";
+import { OG_IMAGE_SIZE } from "./og-image-size.const";
+import { OG_PASSTHROUGH_PARAMS } from "./og-passthrough-params.const";
+import { BASE_URL } from "./base-url.const";
 
 export function buildOgImageUrl(searchParams: URLSearchParams): string {
   const imageParams = new URLSearchParams();

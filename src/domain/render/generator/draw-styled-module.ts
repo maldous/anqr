@@ -1,6 +1,6 @@
 import { drawHalftoneModule, drawModule, drawTimingModule } from "./drawing";
 import { drawHalftoneDitheredBackground } from "./draw-halftone-background";
-import type { ModuleDrawContext } from "./module-draw-context.interface";
+import type { ModuleDrawContext } from "./module-draw-context.types";
 
 export function drawStyledModule(
   dctx: ModuleDrawContext,

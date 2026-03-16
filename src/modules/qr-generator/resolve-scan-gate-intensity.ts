@@ -1,5 +1,5 @@
 import { clampN } from "./qr-generator-helpers";
-import type { ScanGateCtx } from "./scan-gate-ctx.interface";
+import type { ScanGateCtx } from "./scan-gate-ctx.types";
 
 export function resolveScanGateIntensity(
   ctx: ScanGateCtx,

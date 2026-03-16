@@ -1,5 +1,5 @@
-import { AdUnit } from "@/platform/ads/components/AdUnit";
-import type { StaticPageType } from "./StaticPage.types";
+import { AdUnit } from "@/platform/ads/components/ad-unit";
+import type { StaticPageType } from "./static-page-types.types";
 
 export function StaticPageArticleFooter({
   page,

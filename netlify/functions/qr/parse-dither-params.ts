@@ -1,6 +1,6 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { DEFAULT_SERVER_DITHER } from "./default-server-dither.const.ts";
-import { DitherKind } from "./dither-kind.types.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { DEFAULT_SERVER_DITHER } from "./default-server-dither.const";
+import { DitherKind } from "./dither-kind.types";
 
 export function parseDitherParams(
   params: URLSearchParams,

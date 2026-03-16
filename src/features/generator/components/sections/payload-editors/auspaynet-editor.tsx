@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/primitives/select";
-import type { EditorProps } from "../payload-editor-props";
+import type { EditorProps } from "../payload-editor.types";
 import type { AusPayNetForm } from "../payload-section-types";
 
 export function AuspaynetEditor({

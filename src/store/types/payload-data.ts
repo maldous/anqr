@@ -24,7 +24,7 @@ import type {
   SwissQRBillHelper,
   TWQRHelper,
   VietQRHelper,
-} from "../types";
+} from "./";
 import type {
   CryptoHelper,
   EmailHelper,

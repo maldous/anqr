@@ -1,6 +1,6 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { WatermarkOptions } from "./watermark-options.types.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { WatermarkOptions } from "./watermark-options.types";
 
 export function buildWatermarkOpts(
   p: ParsedHandlerParams,

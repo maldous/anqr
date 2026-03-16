@@ -1,4 +1,4 @@
-import type { BinaryComponent } from "./binary-component.type";
+import type { BinaryComponent } from "./binary-component.types";
 import { enqueueNeighbors } from "./enqueue-neighbors";
 
 export function collectComponent(

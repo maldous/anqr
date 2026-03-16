@@ -10,9 +10,9 @@ import { Switch } from "@/ui/primitives/switch";
 import type { useQRStore } from "@/store/qr-store";
 import { buildCropInteractionProps } from "./build-crop-interaction-props";
 import { CropOverlayIndicator } from "./crop-overlay-indicator";
-import type { CropOverlayStyle } from "./crop-overlay-style.type";
+import type { CropOverlayStyle } from "./crop-overlay-style.types";
 import { handlePreviewImageLoad } from "./handle-preview-image-load";
-import type { PreviewImageSize } from "./preview-image-size.type";
+import type { PreviewImageSize } from "./preview-image-size.types";
 
 export function OverlayPreviewPanel({
   overlay,

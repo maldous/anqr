@@ -1,4 +1,4 @@
-import { calculateCrc32 } from "./calculate-crc32.ts";
+import { calculateCrc32 } from "./calculate-crc32";
 
 export function createPngTextChunk(keyword: string, text: string): Uint8Array {
   const keywordBytes = new TextEncoder().encode(keyword);

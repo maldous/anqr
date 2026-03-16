@@ -1,1 +1,1 @@
-export { handleOverflowError } from "@/features/generator/application/safety/safety-fn-overflow";
+export { handleOverflowError } from "@/features/generator/application/safety/handle-overflow-error.service";

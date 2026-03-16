@@ -1,1 +1,1 @@
-export { computePatternDrivenJitterValue } from "@/features/generator/application/frames/frames-fn-computejitter";
+export { computePatternDrivenJitterValue } from "@/features/generator/application/frames/compute-pattern-driven-jitter-value.service";

@@ -1,5 +1,5 @@
 export { computeResizedCropRegion } from "./compute-resized-crop-region";
-import type { OverlayPreservations } from "./overlay-preservations.type";
+import type { OverlayPreservations } from "./overlay-preservations.types";
 
 export function isAllPreservationsEnabled(overlay: OverlayPreservations): boolean {
   return (

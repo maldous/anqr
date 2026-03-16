@@ -1,10 +1,10 @@
 import { decodeGif } from "../../src/modules/animation";
 import { createCanvas } from "@napi-rs/canvas";
-import { FetchedImage } from "./fetched-image.types.ts";
-import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const.ts";
-import { isGifBuffer } from "./is-gif-buffer.ts";
-import { nodeCanvasFactory } from "./node-canvas-factory.const.ts";
-import { MAX_OVERLAY_PIXELS } from "./max-overlay-pixels.const.ts";
+import { FetchedImage } from "./fetched-image.types";
+import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const";
+import { isGifBuffer } from "./is-gif-buffer";
+import { nodeCanvasFactory } from "./node-canvas-factory.const";
+import { MAX_OVERLAY_PIXELS } from "./max-overlay-pixels.const";
 
 export async function decodeOverlayBuffer(buffer: Buffer): Promise<FetchedImage | null> {
   if (buffer.byteLength <= 0 || buffer.byteLength > MAX_OVERLAY_BYTES) {

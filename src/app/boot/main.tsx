@@ -2,10 +2,10 @@ import { Capacitor } from "@capacitor/core";
 import * as Sentry from "@sentry/react";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import App from "@/app/shell/AppShell";
+import App from "@/app/shell/app-shell.types";
 import "@/index.css";
 import "@/app/i18n"; // Initialize i18n
-import { ErrorBoundary } from "@/app/shell/ErrorBoundary";
+import { ErrorBoundary } from "@/app/shell/error-boundary";
 import { initAutoDynamicTestIds } from "@/infra/testing/auto-testid";
 import { createLogger } from "@/infra/logging/logger";
 import { initRemoteDiagnostics } from "@/infra/telemetry/logger-remote";

@@ -3,12 +3,12 @@ import type { DecoderMetadata } from "../qr-decoder/types";
 import type { DetectedColors } from "./detected-colors";
 import type { DominantColorInfo } from "./dominant-color-info";
 import type { ECCLevel } from "./ecc-level";
-import type { ErrorType } from "./error-type";
+import type { ErrorType } from "./error.types";
 import type { GeometryDiagnostics } from "./geometry-diagnostics";
 import type { ImageProperties } from "./image-properties";
 import type { QuietZoneInfo } from "./quiet-zone-info";
 import type { StructuralAnalysis } from "./structural-analysis";
-import type { ContentTypeDetails } from "./content-type-details";
+import type { ContentTypeDetails } from "./content-details.types";
 import type { TimingDiagnostics } from "./timing-diagnostics";
 
 export interface QRAnalysisResult {

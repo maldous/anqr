@@ -1,4 +1,4 @@
-import type { RenderCellCtx } from "./render-cell-ctx.interface";
+import type { RenderCellCtx } from "./render-cell-ctx.types";
 
 export function shouldApplyOverlayToModule(
   rctx: RenderCellCtx,

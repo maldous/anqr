@@ -27,7 +27,7 @@ import { SpatialAnalysisSection } from "@/features/analyze/components/spatial-an
 import { StatusBadge } from "@/features/analyze/components/status-badge";
 import { SummaryBar } from "@/features/analyze/components/summary-bar";
 import { TimingsSection } from "@/features/analyze/components/timings-section";
-import { buildContentTypeDetails } from "@/features/analyze/components/content-type-renderers";
+import { buildContentTypeDetails } from "@/features/analyze/components/content-renderers.types";
 import type { QRAnalysisResult } from "@/modules/qr-analyzer";
 
 export function AnalyzeResultDetails({

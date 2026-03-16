@@ -62,12 +62,12 @@ import {
   buildScanGateFinderRescuePatches,
   isAggressiveScanPatch,
 } from "./qr-generator-scan-gate-patches";
-import type { DitherPatchCacheEntry } from "./dither-patch-cache-entry.type";
+import type { DitherPatchCacheEntry } from "./dither-patch-cache-entry.types";
 import { generatorLog as log } from "./generator-log";
 import { buildEffectiveConfig } from "./build-effective-config";
 import { drawStructuralPatterns } from "./draw-structural-patterns";
 import { findOldestCacheKey } from "./find-oldest-cache-key";
-import type { OverlayComplexityCacheEntry } from "./overlay-complexity-cache-entry.type";
+import type { OverlayComplexityCacheEntry } from "./overlay-complexity-cache-entry.types";
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { CORS_HEADERS } from "./cors-headers.const.ts";
+import { CORS_HEADERS } from "./cors-headers.const";
 
 export function buildFinalResponse(
   outputBuffer: Buffer,

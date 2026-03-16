@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { isPathWithinRoot } from "./is-path-within-root.ts";
+import { isPathWithinRoot } from "./is-path-within-root";
 
 export async function resolveValidatedLocalOverlayPath(fileUrl: URL): Promise<string | null> {
   if (fileUrl.protocol !== "file:") {

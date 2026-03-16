@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { renderTocContent } from "./render-toc-content";
 import type { TocGroup } from "./static-page-types";
 import { TableOfContentsPanelHeader } from "./table-of-contents-panel-header";
-import type { TableOfContentsProps } from "./table-of-contents.props";
+import type { TableOfContentsProps } from "./table-of-contents.types";
 
 export function TableOfContents({
   groups,

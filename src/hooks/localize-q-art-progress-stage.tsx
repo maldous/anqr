@@ -1,1 +1,1 @@
-export { localizeQArtProgressStage } from "@/features/generator/application/generation/generation-fn-localizeprogress";
+export { localizeQArtProgressStage } from "@/features/generator/application/generation/localize-q-art-progress-stage.service";

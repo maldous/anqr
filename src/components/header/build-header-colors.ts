@@ -1,4 +1,4 @@
-import type { StoreState } from "./store-state.type";
+import type { StoreState } from "./store.types";
 
 export function buildHeaderColors(render: StoreState["render"]) {
   return {

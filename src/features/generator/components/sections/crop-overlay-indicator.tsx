@@ -1,5 +1,5 @@
 import { Move } from "lucide-react";
-import type { CropOverlayStyle } from "./crop-overlay-style.type";
+import type { CropOverlayStyle } from "./crop-overlay-style.types";
 
 export function CropOverlayIndicator({
   cropOverlayStyle,

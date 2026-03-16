@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useQRStore } from "@/store/qr-store";
 import { buildNavigationUrl } from "./build-help-link-navigation-url";
 import { handleTierUpgrade } from "./handle-help-link-tier-upgrade";
-import type { HelpLinkProps } from "./help-link-props";
+import type { HelpLinkProps } from "./help-link.types";
 import { parseTierFromUrl } from "./parse-help-link-tier-from-url";
 import { performSPANavigation } from "./perform-help-link-navigation";
 

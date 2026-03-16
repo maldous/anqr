@@ -1,5 +1,5 @@
 import type { PageSection } from "@/i18n/static";
-import type { StaticPageType } from "./StaticPage.types";
+import type { StaticPageType } from "./static-page-types.types";
 import type { TocGroup } from "./static-page-types";
 import { buildExamplesToc } from "./build-examples-toc";
 import { buildGuideToc } from "./build-guide-toc";

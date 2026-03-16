@@ -10,8 +10,8 @@ export {
   MODE_TERMINATOR,
 } from "./mode-indicators";
 export { QRErrorCorrectionLevel } from "./qr-error-correction-level";
-export type { QRErrorCorrectionLevelType } from "./qr-error-correction-level-type";
+export type { QRErrorCorrectionLevelType } from "./qr-error-correction-level.types";
 export { QRMaskPattern } from "./qr-mask-pattern";
-export type { QRMaskPatternType } from "./qr-mask-pattern-type";
+export type { QRMaskPatternType } from "./qr-mask-pattern.types";
 export { QRMode } from "./qr-mode";
-export type { QRModeType } from "./qr-mode-type";
+export type { QRModeType } from "./qr-mode.types";

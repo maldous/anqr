@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
-import { FetchedImage } from "./fetched-image.types.ts";
-import { resolveValidatedLocalOverlayPath } from "./resolve-validated-local-overlay-path.ts";
-import { decodeOverlayBuffer } from "./decode-overlay-buffer.ts";
+import { FetchedImage } from "./fetched-image.types";
+import { resolveValidatedLocalOverlayPath } from "./resolve-validated-local-overlay-path";
+import { decodeOverlayBuffer } from "./decode-overlay-buffer";
 
 export async function readLocalOverlayFile(fileUrl: URL): Promise<FetchedImage | null> {
   if (!process.env.NETLIFY_DEV) {

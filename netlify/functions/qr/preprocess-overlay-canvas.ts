@@ -1,9 +1,9 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { OverlayFilterOptions } from "./overlay-filter-options.types.ts";
-import { cropOverlayServer } from "./crop-overlay-server.ts";
-import { rotateOverlayServer } from "./rotate-overlay-server.ts";
-import { flipOverlayServer } from "./flip-overlay-server.ts";
-import { applyOverlayFiltersServer } from "./apply-overlay-filters-server.ts";
+import { OverlayFilterOptions } from "./overlay-filter-options.types";
+import { cropOverlayServer } from "./crop-overlay-server";
+import { rotateOverlayServer } from "./rotate-overlay-server";
+import { flipOverlayServer } from "./flip-overlay-server";
+import { applyOverlayFiltersServer } from "./apply-overlay-filters-server";
 
 export function preprocessOverlayCanvas(
   canvas: Canvas,

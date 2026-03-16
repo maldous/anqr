@@ -1,7 +1,7 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { MAX_SERVER_IMAGE_SIZE } from "./max-server-image-size.const.ts";
-import { ECCLevel } from "./ecc-level.types.ts";
-import { parseMaskPattern } from "./parse-mask-pattern.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { MAX_SERVER_IMAGE_SIZE } from "./max-server-image-size.const";
+import { ECCLevel } from "./ecc-level.types";
+import { parseMaskPattern } from "./parse-mask-pattern";
 
 export function parseCoreQRParams(
   params: URLSearchParams,

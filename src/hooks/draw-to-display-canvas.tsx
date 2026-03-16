@@ -1,1 +1,1 @@
-export { drawToDisplayCanvas } from "@/features/generator/application/generation/generation-fn-drawtodisplay";
+export { drawToDisplayCanvas } from "@/features/generator/application/generation/draw-to-display-canvas.service";

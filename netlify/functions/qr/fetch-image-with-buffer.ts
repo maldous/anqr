@@ -1,8 +1,8 @@
-import { FetchedImage } from "./fetched-image.types.ts";
-import { validateAndFetchOverlay } from "./validate-and-fetch-overlay.ts";
-import { streamResponseBody } from "./stream-response-body.ts";
-import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const.ts";
-import { decodeOverlayBuffer } from "./decode-overlay-buffer.ts";
+import { FetchedImage } from "./fetched-image.types";
+import { validateAndFetchOverlay } from "./validate-and-fetch-overlay";
+import { streamResponseBody } from "./stream-response-body";
+import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const";
+import { decodeOverlayBuffer } from "./decode-overlay-buffer";
 
 export async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
   try {

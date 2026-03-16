@@ -1,5 +1,5 @@
 import { showBannerAd as showBannerAdInternal } from "./admob-banner";
-import type { BannerPosition } from "./banner-position.type";
+import type { BannerPosition } from "./banner-position.types";
 import { getBannerDeps } from "./admob-runtime";
 
 export async function showBannerAd(position: BannerPosition = "bottom"): Promise<boolean> {

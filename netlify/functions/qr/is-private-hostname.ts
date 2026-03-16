@@ -1,9 +1,9 @@
 import { lookup as dnsLookup } from "node:dns/promises";
-import { isPrivateOrReservedIP } from "./is-private-or-reserved-ip.ts";
-import { IS_TEST_RUNTIME } from "./is-test-runtime.const.ts";
-import { overlayHostnameSafetyCache } from "./overlay-hostname-safety-cache.const.ts";
-import { OVERLAY_HOST_LOOKUP_TTL_MS } from "./overlay-host-lookup-ttl-ms.const.ts";
-import { OVERLAY_HOST_LOOKUP_NEGATIVE_TTL_MS } from "./overlay-host-lookup-negative-ttl-ms.const.ts";
+import { isPrivateOrReservedIP } from "./is-private-or-reserved-ip";
+import { IS_TEST_RUNTIME } from "./is-test-runtime.const";
+import { overlayHostnameSafetyCache } from "./overlay-hostname-safety-cache.const";
+import { OVERLAY_HOST_LOOKUP_TTL_MS } from "./overlay-host-lookup-ttl-ms.const";
+import { OVERLAY_HOST_LOOKUP_NEGATIVE_TTL_MS } from "./overlay-host-lookup-negative-ttl-ms.const";
 
 export async function _isPrivateHostname(hostname: string): Promise<boolean> {
   let normalizedHostname = String(hostname || "")

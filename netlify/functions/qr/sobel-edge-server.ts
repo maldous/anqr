@@ -1,4 +1,4 @@
-import { rgbToGrayServer } from "./rgb-to-gray-server.ts";
+import { rgbToGrayServer } from "./rgb-to-gray-server";
 
 export function sobelEdgeServer(
   data: Uint8ClampedArray,

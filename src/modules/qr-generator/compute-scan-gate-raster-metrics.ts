@@ -1,5 +1,5 @@
 import type { QRGeneratorConfig } from "./types";
-import type { ScanGateRasterMetrics } from "./scan-gate-raster-metrics.type";
+import type { ScanGateRasterMetrics } from "./scan-gate-raster-metrics.types";
 
 export function computeScanGateRasterMetrics(
   src: HTMLCanvasElement | OffscreenCanvas,

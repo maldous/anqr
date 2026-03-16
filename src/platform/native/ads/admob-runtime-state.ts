@@ -1,4 +1,4 @@
-import type { AdMobPlugin } from "./admob-plugin.type";
+import type { AdMobPlugin } from "./admob-plugin.types";
 
 export const admobRuntime = {
   AdMob: null as AdMobPlugin | null,

@@ -1,5 +1,5 @@
 import { withGifEncodeLock as withSharedGifEncodeLock } from "../../src/modules/animation/gif-lock";
-import { qrFnLog } from "./qr-fn-log.ts";
+import { qrFnLog } from "./qr-fn-log";
 
 export async function withGifEncodeLock<T>(fn: () => T | Promise<T>): Promise<T> {
   return withSharedGifEncodeLock(fn, {

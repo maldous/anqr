@@ -1,13 +1,13 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { OutputFormat } from "./output-format.types.ts";
-import { ServerAnimationFrame } from "./server-animation-frame.types.ts";
-import { PngMetadata } from "./png-metadata.types.ts";
-import { withGifEncodeLock } from "./with-gif-encode-lock.ts";
-import { encodeAnimatedGifWithDelays } from "./encode-animated-gif-with-delays.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
-import { encodeAnimatedGif } from "./encode-animated-gif.ts";
-import { encodeGif } from "./encode-gif.ts";
-import { embedPngMetadataAndDpi } from "./embed-png-metadata-and-dpi.ts";
+import { OutputFormat } from "./output-format.types";
+import { ServerAnimationFrame } from "./server-animation-frame.types";
+import { PngMetadata } from "./png-metadata.types";
+import { withGifEncodeLock } from "./with-gif-encode-lock";
+import { encodeAnimatedGifWithDelays } from "./encode-animated-gif-with-delays";
+import { qrFnLog } from "./qr-fn-log";
+import { encodeAnimatedGif } from "./encode-animated-gif";
+import { encodeGif } from "./encode-gif";
+import { embedPngMetadataAndDpi } from "./embed-png-metadata-and-dpi";
 
 export async function encodeOutputImage(
   outputFormat: OutputFormat,

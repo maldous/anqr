@@ -3,7 +3,7 @@ import { HighlightedLabel } from "@/features/generator/search/search-context";
 import { isValidUpiVpa } from "@/modules/payload-generators";
 import { Input } from "@/ui/primitives/input";
 import { Label } from "@/ui/primitives/label";
-import type { EditorProps } from "../payload-editor-props";
+import type { EditorProps } from "../payload-editor.types";
 
 export function UpiEditor({
   payload,

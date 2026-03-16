@@ -1,8 +1,8 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
-import { writeBlobCache } from "./write-blob-cache.ts";
-import { triggerBackgroundRender } from "./trigger-background-render.ts";
-import { buildFinalResponse } from "./build-final-response.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { qrFnLog } from "./qr-fn-log";
+import { writeBlobCache } from "./write-blob-cache";
+import { triggerBackgroundRender } from "./trigger-background-render";
+import { buildFinalResponse } from "./build-final-response";
 
 export async function handleCacheAndResponse(
   p: ParsedHandlerParams,

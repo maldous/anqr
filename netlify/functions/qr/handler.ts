@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/node";
-import { CORS_HEADERS } from "./cors-headers.const.ts";
-import { parseHandlerParams } from "./parse-handler-params.ts";
-import { validateParsedParams } from "./validate-parsed-params.ts";
-import { shouldSerializeAnimatedRender } from "./should-serialize-animated-render.ts";
-import { acquireAnimatedRenderLock } from "./acquire-animated-render-lock.ts";
-import { processQRRequest } from "./process-qr-request.ts";
+import { CORS_HEADERS } from "./cors-headers.const";
+import { parseHandlerParams } from "./parse-handler-params";
+import { validateParsedParams } from "./validate-parsed-params";
+import { shouldSerializeAnimatedRender } from "./should-serialize-animated-render";
+import { acquireAnimatedRenderLock } from "./acquire-animated-render-lock";
+import { processQRRequest } from "./process-qr-request";
 
 export async function handler(request: Request) {
   if (request.method === "OPTIONS") {

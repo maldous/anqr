@@ -1,7 +1,7 @@
-import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
-import type { ScanGateCallbacks } from "./scan-gate-callbacks.interface";
-import type { ScanGateLoopState } from "./scan-gate-loop-state.interface";
-import type { ScanGateMainLoopResult } from "./scan-gate-main-loop-result.interface";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
+import type { ScanGateCallbacks } from "./scan-gate-callbacks.types";
+import type { ScanGateLoopState } from "./scan-gate-loop.types";
+import type { ScanGateMainLoopResult } from "./scan-gate-main-loop-result.types";
 
 export function processEvaluatedAttempt(
   evaluated: {

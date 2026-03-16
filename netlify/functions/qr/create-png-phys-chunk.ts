@@ -1,4 +1,4 @@
-import { calculateCrc32 } from "./calculate-crc32.ts";
+import { calculateCrc32 } from "./calculate-crc32";
 
 export function createPngPhysChunk(dpi: number): Uint8Array {
   const pixelsPerMeter = Math.round(dpi / 0.0254);

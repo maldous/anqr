@@ -1,5 +1,5 @@
 import { lazy } from "react";
 
 export const StaticPage = lazy(() =>
-  import("@/components/StaticPage").then((m) => ({ default: m.StaticPage })),
+  import("@/components/static-page").then((m) => ({ default: m.StaticPage })),
 );

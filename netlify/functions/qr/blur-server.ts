@@ -1,4 +1,4 @@
-import { convolveServer } from "./convolve-server.ts";
+import { convolveServer } from "./convolve-server";
 
 export function blurServer(
   data: Uint8ClampedArray,

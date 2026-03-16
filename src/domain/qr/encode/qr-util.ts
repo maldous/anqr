@@ -1,5 +1,5 @@
-import { getBCHTypeInfo } from "./get-bch-type-info";
-import { getBCHTypeNumber } from "./get-bch-type-number";
+import { getBCHTypeInfo } from "./get-bch-info.types";
+import { getBCHTypeNumber } from "./get-bch-number.types";
 import { getPatternPosition } from "./get-pattern-position";
 import { getMaskFunction } from "./get-mask-function";
 import { getErrorCorrectPolynomial } from "./get-error-correct-polynomial";

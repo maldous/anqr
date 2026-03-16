@@ -9,7 +9,7 @@ import { buildWorkerTransferList } from "./build-worker-transfer-list";
 import { clampPercent } from "./clamp-percent";
 import { packBooleanMatrix } from "./pack-boolean-matrix";
 import { tryWorkerSideRender } from "./try-worker-side-render";
-import type { WorkerContext } from "./worker-context.type";
+import type { WorkerContext } from "./worker-context.types";
 import {
   addCancelledRequestId,
   clearCancelledRequestId,

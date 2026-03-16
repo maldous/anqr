@@ -1,5 +1,5 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { parseGradientStops } from "./parse-gradient-stops.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { parseGradientStops } from "./parse-gradient-stops";
 
 export function parseStylingParams(
   params: URLSearchParams,

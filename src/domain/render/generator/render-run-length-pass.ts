@@ -1,6 +1,6 @@
 import type { QRCodeInstance } from "../../../modules/qr-generator/types";
 import { isRunLengthCellMatch } from "./is-run-length-cell-match";
-import type { RunLengthCanvasContext } from "./run-length-canvas-context.type";
+import type { RunLengthCanvasContext } from "./run-length-canvas-context.types";
 
 export function renderRunLengthPass(
   ctx: RunLengthCanvasContext,

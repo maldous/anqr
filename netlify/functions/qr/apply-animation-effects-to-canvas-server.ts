@@ -1,7 +1,7 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { hasAnimationEffect } from "./has-animation-effect.ts";
-import { applyPatternToFrameServer } from "./apply-pattern-to-frame-server.ts";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { hasAnimationEffect } from "./has-animation-effect";
+import { applyPatternToFrameServer } from "./apply-pattern-to-frame-server";
 
 export function applyAnimationEffectsToCanvasServer(
   sourceCanvas: Canvas,

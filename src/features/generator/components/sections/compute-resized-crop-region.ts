@@ -1,5 +1,5 @@
-import type { CropRegion } from "./crop-region.type";
-import type { MappedPoint } from "./mapped-point.type";
+import type { CropRegion } from "./crop-region.types";
+import type { MappedPoint } from "./mapped-point.types";
 
 export function computeResizedCropRegion(
   mapped: MappedPoint,

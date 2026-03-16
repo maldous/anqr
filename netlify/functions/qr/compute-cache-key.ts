@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { NON_CACHE_PARAMS } from "./non-cache-params.const.ts";
+import { NON_CACHE_PARAMS } from "./non-cache-params.const";
 
 export function computeCacheKey(params: URLSearchParams): string {
   const entries = [...params.entries()]

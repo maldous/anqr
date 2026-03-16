@@ -1,5 +1,5 @@
 import { showBannerAd as showBannerAdCore } from "./show-banner-core";
-import type { ShowBannerDeps } from "./show-banner-deps.type";
+import type { ShowBannerDeps } from "./show-banner-deps.types";
 
 export async function showBannerAd(
   deps: ShowBannerDeps,

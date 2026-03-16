@@ -6,8 +6,8 @@
 
 import type { ValidationResult } from "../../../domain/qr/analyze/scanner";
 import { validateQRCodeRobust } from "../../../domain/qr/analyze/scanner";
-import type { CanvasContext } from "./canvas-context.type";
-import type { CanvasLike } from "./canvas-like.type";
+import type { CanvasContext } from "./canvas-context.types";
+import type { CanvasLike } from "./canvas-like.types";
 import { ensureWorker } from "./ensure-validation-worker";
 export { terminateValidationWorker } from "./terminate-validation-worker";
 import { validationWorkerState } from "./validation-worker-state";

@@ -1,6 +1,6 @@
 import { type Canvas, createCanvas } from "@napi-rs/canvas";
-import { adjustPixelColor } from "./adjust-pixel-color.ts";
-import { applyPostProcessFilters } from "./apply-post-process-filters.ts";
+import { adjustPixelColor } from "./adjust-pixel-color";
+import { applyPostProcessFilters } from "./apply-post-process-filters";
 
 export function applyOverlayFiltersServer(
   source: Canvas,

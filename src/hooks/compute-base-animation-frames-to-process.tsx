@@ -1,1 +1,1 @@
-export { computeBaseAnimationFramesToProcess } from "@/features/generator/application/frames/frames-fn-computebaseframes";
+export { computeBaseAnimationFramesToProcess } from "@/features/generator/application/frames/compute-base-animation-frames-to-process.service";

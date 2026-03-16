@@ -1,6 +1,6 @@
 import { isStructuralModule } from "../../../modules/qr-spec";
 import { categorizeSkippedModule } from "./categorize-skipped-module";
-import type { CodewordBuildState } from "./codeword-build-state";
+import type { CodewordBuildState } from "./codeword-build.types";
 
 export function processCodewordModule(
   matrix: boolean[][],

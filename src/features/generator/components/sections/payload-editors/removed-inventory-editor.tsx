@@ -9,7 +9,7 @@ import {
 import { Label } from "@/ui/primitives/label";
 import { LabeledInputField } from "./labeled-input-field";
 import { PayloadFormShell } from "./payload-form-shell";
-import type { PayloadTextEditorProps } from "./payload-text-editor-props";
+import type { PayloadTextEditorProps } from "./payload-text-editor.types";
 import { TrailingUrlField } from "./trailing-url-field";
 
 export const RemovedInventoryEditor = ({

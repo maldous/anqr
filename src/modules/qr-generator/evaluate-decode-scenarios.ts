@@ -1,7 +1,7 @@
 import type { CanvasPool } from "../../platform/browser/canvas/canvas-factory";
 import { computeScanGateRasterMetrics, roundtripToFinalRaster } from "./qr-generator-helpers";
 import { runRobustnessScenarios } from "./run-robustness-scenarios";
-import type { ScanGateCtx } from "./scan-gate-ctx.interface";
+import type { ScanGateCtx } from "./scan-gate-ctx.types";
 
 export async function evaluateDecodeScenarios(
   ctx: ScanGateCtx,

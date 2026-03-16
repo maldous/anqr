@@ -1,8 +1,8 @@
 import qrHandler from "./qr";
 import * as Sentry from "@sentry/node";
-import { computeCacheKey } from "./compute-cache-key.ts";
-import { getBlobStore } from "./get-blob-store.ts";
-import { SENTINEL_PREFIX } from "./sentinel-prefix.const.ts";
+import { computeCacheKey } from "./compute-cache-key";
+import { getBlobStore } from "./get-blob-store";
+import { SENTINEL_PREFIX } from "./sentinel-prefix.const";
 
 export async function handler(request: Request) {
   const _t0 = Date.now();

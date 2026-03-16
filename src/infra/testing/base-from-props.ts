@@ -1,5 +1,5 @@
 import { normalizeToken } from "./normalize-token";
-import type { TestIdProps } from "./test-id-props";
+import type { TestIdProps } from "./test-id.types";
 
 export function baseFromProps(props: TestIdProps, fallbackPrefix: string, reactId: string): string {
   if (props["data-testid"]) return props["data-testid"];

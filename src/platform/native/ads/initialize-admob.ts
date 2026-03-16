@@ -1,6 +1,6 @@
 import { createLogger } from "../../../infra/logging/logger";
 import { isTestMode } from "./admob-config";
-import { updateBannerHeight } from "./admob-banner-state";
+import { updateBannerHeight } from "./admob-banner.types";
 import { admobRuntime } from "./admob-runtime-state";
 
 const log = createLogger("ADMOB");

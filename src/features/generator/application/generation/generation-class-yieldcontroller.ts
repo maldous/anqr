@@ -4,7 +4,7 @@
  * Notes: Class that manages yield timing for long-running operations.
  */
 
-import { yieldToMainThread } from "@/features/generator/application/generation/generation-fn-yield";
+import { yieldToMainThread } from "@/features/generator/application/generation/yield-to-main-thread.service";
 
 const YIELD_INTERVAL_MS = 16;
 

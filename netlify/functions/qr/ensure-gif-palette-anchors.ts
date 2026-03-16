@@ -1,4 +1,4 @@
-import { hasPaletteColor } from "./has-palette-color.ts";
+import { hasPaletteColor } from "./has-palette-color";
 
 export function ensureGifPaletteAnchors(palette: number[][], maxSize: number): number[][] {
   const out = [...palette];

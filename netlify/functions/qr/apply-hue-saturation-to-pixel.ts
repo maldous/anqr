@@ -1,4 +1,4 @@
-import { hue2rgbServer } from "./hue2rgb-server.ts";
+import { hue2rgbServer } from "./hue2rgb-server";
 
 export function applyHueSaturationToPixel(
   r: number,

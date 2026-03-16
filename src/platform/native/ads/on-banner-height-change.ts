@@ -1,5 +1,5 @@
 import { bannerHeightCallbacks, currentBannerHeight } from "./banner-state-store";
-import type { BannerHeightCallback } from "./banner-height-callback.type";
+import type { BannerHeightCallback } from "./banner-height-callback.types";
 
 export function onBannerHeightChange(callback: BannerHeightCallback): () => void {
   bannerHeightCallbacks.value.push(callback);

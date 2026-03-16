@@ -1,4 +1,4 @@
-import type { ContainedImageRect } from "./contained-image-rect.type";
+import type { ContainedImageRect } from "./contained-image-rect.types";
 
 export function getContainedImageRect(
   containerWidth: number,

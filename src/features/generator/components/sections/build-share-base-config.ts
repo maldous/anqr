@@ -1,4 +1,4 @@
-import type { BuildShareConfigInput } from "./build-share-config-input.type";
+import type { BuildShareConfigInput } from "./build-share-config-input.types";
 import { buildShareAnimation } from "./build-share-animation";
 import { buildShareColors } from "./build-share-colors";
 import { buildShareOutput } from "./build-share-output";

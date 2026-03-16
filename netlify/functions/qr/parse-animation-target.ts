@@ -1,4 +1,4 @@
-import { AnimationTarget } from "./animation-target.types.ts";
+import { AnimationTarget } from "./animation-target.types";
 
 export function parseAnimationTarget(
   value: string | null | undefined,

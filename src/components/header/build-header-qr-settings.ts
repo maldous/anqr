@@ -1,4 +1,4 @@
-import type { StoreState } from "./store-state.type";
+import type { StoreState } from "./store.types";
 
 export function buildHeaderQrSettings(qr: StoreState["qr"], render: StoreState["render"]) {
   return {

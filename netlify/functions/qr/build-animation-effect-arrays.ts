@@ -1,6 +1,6 @@
-import { AnimationEffectConfig } from "./animation-effect-config.types.ts";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types.ts";
-import { hasAnimationEffect } from "./has-animation-effect.ts";
+import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import { hasAnimationEffect } from "./has-animation-effect";
 
 export function buildAnimationEffectArrays(
   primaryEffect: AnimationEffectConfig,

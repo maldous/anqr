@@ -1,26 +1,26 @@
 import { QRGenerator } from "../../src/modules/qr-generator";
 import { calculateOptimalVersion } from "../../src/modules/qr-encoder/encoder-api";
 import { type Canvas } from "@napi-rs/canvas";
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { computeCacheKey } from "./compute-cache-key.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
-import { lookupBlobCache } from "./lookup-blob-cache.ts";
-import { nodeCanvasFactory } from "./node-canvas-factory.const.ts";
-import { computeModuleSize } from "./compute-module-size.ts";
-import { buildQRGeneratorConfig } from "./build-qr-generator-config.ts";
-import { buildFilterOptionsFromParams } from "./build-filter-options-from-params.ts";
-import { loadAndPreprocessOverlay } from "./load-and-preprocess-overlay.ts";
-import { ArtworkState } from "./artwork-state.types.ts";
-import { renderInitialQRCode } from "./render-initial-qr-code.ts";
-import { loadWatermarkImage } from "./load-watermark-image.ts";
-import { buildWatermarkOpts } from "./build-watermark-opts.ts";
-import { applyWatermarkServer } from "./apply-watermark-server.ts";
-import { scaleToOutputDimensions } from "./scale-to-output-dimensions.ts";
-import { buildPngMetadata } from "./build-png-metadata.ts";
-import { ServerAnimationFrame } from "./server-animation-frame.types.ts";
-import { generateGifAnimationFrames } from "./generate-gif-animation-frames.ts";
-import { encodeOutputImage } from "./encode-output-image.ts";
-import { handleCacheAndResponse } from "./handle-cache-and-response.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { computeCacheKey } from "./compute-cache-key";
+import { qrFnLog } from "./qr-fn-log";
+import { lookupBlobCache } from "./lookup-blob-cache";
+import { nodeCanvasFactory } from "./node-canvas-factory.const";
+import { computeModuleSize } from "./compute-module-size";
+import { buildQRGeneratorConfig } from "./build-qr-generator-config";
+import { buildFilterOptionsFromParams } from "./build-filter-options-from-params";
+import { loadAndPreprocessOverlay } from "./load-and-preprocess-overlay";
+import { ArtworkState } from "./artwork-state.types";
+import { renderInitialQRCode } from "./render-initial-qr-code";
+import { loadWatermarkImage } from "./load-watermark-image";
+import { buildWatermarkOpts } from "./build-watermark-opts";
+import { applyWatermarkServer } from "./apply-watermark-server";
+import { scaleToOutputDimensions } from "./scale-to-output-dimensions";
+import { buildPngMetadata } from "./build-png-metadata";
+import { ServerAnimationFrame } from "./server-animation-frame.types";
+import { generateGifAnimationFrames } from "./generate-gif-animation-frames";
+import { encodeOutputImage } from "./encode-output-image";
+import { handleCacheAndResponse } from "./handle-cache-and-response";
 
 export async function processQRRequest(
   p: ParsedHandlerParams,

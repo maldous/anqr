@@ -1,1 +1,1 @@
-export { deliverQArtResult } from "@/features/generator/application/qart/qart-fn-deliver";
+export { deliverQArtResult } from "@/features/generator/application/qart/deliver-q-art-result.service";

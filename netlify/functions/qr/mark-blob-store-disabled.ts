@@ -1,9 +1,9 @@
 import {
   blobStoreDisabledLogged,
   setBlobStoreDisabledLogged,
-} from "./blob-store-disabled-logged.const.ts";
-import { setBlobStoreDisabled } from "./blob-store-disabled.const.ts";
-import { qrFnLog } from "./qr-fn-log.ts";
+} from "./blob-store-disabled-logged.const";
+import { setBlobStoreDisabled } from "./blob-store-disabled.const";
+import { qrFnLog } from "./qr-fn-log";
 
 export function markBlobStoreDisabled(reason: string): void {
   setBlobStoreDisabled(true);

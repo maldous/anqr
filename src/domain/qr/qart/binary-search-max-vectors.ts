@@ -4,7 +4,7 @@ import type { FlattenedSelection, BinarySearchResult } from "./scan-fallback.typ
 import { createRejectionHistogram } from "./create-rejection-histogram";
 import { log } from "./log";
 import { logSearchIteration } from "./log-search-iteration";
-import type { RegenerateQrFn } from "./regenerate-qr-fn.type";
+import type { RegenerateQrFn } from "./regenerate-qr-fn.types";
 import { trackRejection } from "./track-rejection";
 import { validateBaseMatrix } from "./validate-base-matrix";
 import { validateCandidate } from "./validate-candidate";

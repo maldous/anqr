@@ -1,6 +1,6 @@
-import { MAX_OVERLAY_REDIRECTS } from "./max-overlay-redirects.const.ts";
-import { _isPrivateHostname } from "./is-private-hostname.ts";
-import { isRedirectStatus } from "./is-redirect-status.ts";
+import { MAX_OVERLAY_REDIRECTS } from "./max-overlay-redirects.const";
+import { _isPrivateHostname } from "./is-private-hostname";
+import { isRedirectStatus } from "./is-redirect-status";
 
 export async function fetchOverlayWithValidatedRedirects(
   initialUrl: URL,

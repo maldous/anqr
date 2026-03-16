@@ -1,4 +1,4 @@
-import type { StoreState } from "./share-config-store-state.type";
+import type { StoreState } from "./share-config-store.types";
 import { buildShareAnimationPatternFields } from "./build-share-animation-pattern-fields";
 import { falseIfFalse, trueIfTrue, undefinedIfEqual } from "./share-config-field-helpers";
 

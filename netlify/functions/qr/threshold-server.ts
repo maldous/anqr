@@ -1,4 +1,4 @@
-import { rgbToGrayServer } from "./rgb-to-gray-server.ts";
+import { rgbToGrayServer } from "./rgb-to-gray-server";
 
 export function thresholdServer(data: Uint8ClampedArray, level: number): Uint8ClampedArray {
   const result = new Uint8ClampedArray(data);

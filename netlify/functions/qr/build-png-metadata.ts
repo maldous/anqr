@@ -1,4 +1,4 @@
-import { PngMetadata } from "./png-metadata.types.ts";
+import { PngMetadata } from "./png-metadata.types";
 
 export function buildPngMetadata(
   metaTitle: string | undefined,

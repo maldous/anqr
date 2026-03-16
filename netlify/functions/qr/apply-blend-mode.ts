@@ -1,5 +1,5 @@
 import { type SKRSContext2D } from "@napi-rs/canvas";
-import { WatermarkBlend } from "./watermark-blend.types.ts";
+import { WatermarkBlend } from "./watermark-blend.types";
 
 export function applyBlendMode(ctx: SKRSContext2D, blend: WatermarkBlend): void {
   switch (blend) {

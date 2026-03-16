@@ -1,1 +1,1 @@
-export { updateQrMatrixFromResult } from "@/features/generator/application/qart/qart-fn-updatematrix";
+export { updateQrMatrixFromResult } from "@/features/generator/application/qart/update-qr-matrix-from-result.service";

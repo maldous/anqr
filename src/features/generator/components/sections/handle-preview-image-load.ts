@@ -1,5 +1,5 @@
 import type React from "react";
-import type { PreviewImageSize } from "./preview-image-size.type";
+import type { PreviewImageSize } from "./preview-image-size.types";
 
 export function handlePreviewImageLoad(
   e: React.SyntheticEvent<HTMLImageElement>,

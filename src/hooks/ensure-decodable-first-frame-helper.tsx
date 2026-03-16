@@ -1,1 +1,1 @@
-export { ensureDecodableFirstFrameHelper } from "@/features/generator/application/frames/frames-fn-ensuredecodable";
+export { ensureDecodableFirstFrameHelper } from "@/features/generator/application/frames/ensure-decodable-first-frame-helper.service";

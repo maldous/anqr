@@ -1,4 +1,4 @@
-import type { StoreState } from "./store-state.type";
+import type { StoreState } from "./store.types";
 import { buildOutputFormatDetails } from "@/features/generator/components/sections/build-output-format-details";
 import { buildSharedOutputFields } from "@/features/generator/components/sections/build-shared-output-fields";
 

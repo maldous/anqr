@@ -10,4 +10,4 @@ export {
   hasGeometricTransforms,
   hasPreprocessingOptions,
   preprocessOverlay,
-} from "./overlay.ts";
+} from "./overlay";

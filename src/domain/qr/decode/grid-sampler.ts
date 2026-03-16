@@ -1,7 +1,7 @@
 import { BitMatrix } from "./bit-matrix";
 import { NotFoundException } from "./exceptions";
 import { PerspectiveTransform } from "./perspective-transform";
-import type { SampleGridArgs } from "./sample-grid-args.type";
+import type { SampleGridArgs } from "./sample-grid-args.types";
 
 /**
  * Abstract grid sampler

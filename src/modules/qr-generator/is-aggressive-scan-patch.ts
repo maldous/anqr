@@ -1,5 +1,5 @@
-import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
-import type { ScanGateCtx } from "./scan-gate-ctx.interface";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
+import type { ScanGateCtx } from "./scan-gate-ctx.types";
 
 export function isAggressiveScanPatch(
   ctx: ScanGateCtx,

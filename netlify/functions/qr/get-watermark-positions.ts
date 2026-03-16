@@ -1,4 +1,4 @@
-import { WatermarkPosition } from "./watermark-position.types.ts";
+import { WatermarkPosition } from "./watermark-position.types";
 
 export function getWatermarkPositions(
   position: WatermarkPosition,

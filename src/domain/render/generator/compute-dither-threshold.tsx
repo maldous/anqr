@@ -1,7 +1,7 @@
 import { generateBlueNoiseTile, sampleBlueNoise } from "../dither";
 import { clamp01 } from "./clamp01";
 import type { DitherThresholdPattern } from "./dither-threshold-pattern";
-import type { DitherStaticState } from "./dither-static-state";
+import type { DitherStaticState } from "./dither-static.types";
 
 export function computeDitherThreshold(
   x: number,

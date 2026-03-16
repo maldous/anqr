@@ -1,11 +1,11 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types.ts";
-import { parseCoreQRParams } from "./parse-core-qr-params.ts";
-import { parseStylingParams } from "./parse-styling-params.ts";
-import { parseProtectionParams } from "./parse-protection-params.ts";
-import { parseOverlayParams } from "./parse-overlay-params.ts";
-import { parseDitherParams } from "./parse-dither-params.ts";
-import { parseOutputParams } from "./parse-output-params.ts";
-import { parseAnimationParams } from "./parse-animation-params.ts";
+import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { parseCoreQRParams } from "./parse-core-qr-params";
+import { parseStylingParams } from "./parse-styling-params";
+import { parseProtectionParams } from "./parse-protection-params";
+import { parseOverlayParams } from "./parse-overlay-params";
+import { parseDitherParams } from "./parse-dither-params";
+import { parseOutputParams } from "./parse-output-params";
+import { parseAnimationParams } from "./parse-animation-params";
 
 export function parseHandlerParams(params: URLSearchParams, request: Request): ParsedHandlerParams {
   return {

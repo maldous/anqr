@@ -1,6 +1,6 @@
 import type { EliminationResult } from "./elimination";
 import { applySelectedVectorsToBlock } from "./elimination";
-import type { RegenerateQrFn } from "./regenerate-qr-fn.type";
+import type { RegenerateQrFn } from "./regenerate-qr-fn.types";
 import type { FlattenedSelection } from "./scan-fallback.types";
 import { unflattenSelections } from "./unflatten-selections";
 

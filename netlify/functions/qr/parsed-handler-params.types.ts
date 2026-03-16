@@ -1,14 +1,14 @@
 import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
-import { ECCLevel } from "./ecc-level.types.ts";
-import { DitherKind } from "./dither-kind.types.ts";
-import { OutputFormat } from "./output-format.types.ts";
-import { WatermarkKind } from "./watermark-kind.types.ts";
-import { WatermarkPosition } from "./watermark-position.types.ts";
-import { WatermarkBlend } from "./watermark-blend.types.ts";
-import { AnimationTarget } from "./animation-target.types.ts";
-import { AnimationWaveAxis } from "./animation-wave-axis.types.ts";
-import { AnimationInterpolation } from "./animation-interpolation.types.ts";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types.ts";
+import { ECCLevel } from "./ecc-level.types";
+import { DitherKind } from "./dither-kind.types";
+import { OutputFormat } from "./output-format.types";
+import { WatermarkKind } from "./watermark-kind.types";
+import { WatermarkPosition } from "./watermark-position.types";
+import { WatermarkBlend } from "./watermark-blend.types";
+import { AnimationTarget } from "./animation-target.types";
+import { AnimationWaveAxis } from "./animation-wave-axis.types";
+import { AnimationInterpolation } from "./animation-interpolation.types";
+import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 
 export interface ParsedHandlerParams {
   data: string;

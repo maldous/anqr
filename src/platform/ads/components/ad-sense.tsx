@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { AD_CLIENT } from "./ad-client";
-import type { AdSenseProps } from "./ad-sense-props";
+import type { AdSenseProps } from "./ad-sense.types";
 
 export function AdSense({
   slot,

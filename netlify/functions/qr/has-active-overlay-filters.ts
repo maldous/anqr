@@ -1,4 +1,4 @@
-import { OverlayFilterOptions } from "./overlay-filter-options.types.ts";
+import { OverlayFilterOptions } from "./overlay-filter-options.types";
 
 export function hasActiveOverlayFilters(f: OverlayFilterOptions): boolean {
   return (

@@ -1,4 +1,4 @@
-import { animatedRenderQueue, setAnimatedRenderQueue } from "./animated-render-queue.const.ts";
+import { animatedRenderQueue, setAnimatedRenderQueue } from "./animated-render-queue.const";
 
 export async function acquireAnimatedRenderLock(): Promise<() => void> {
   let release: (() => void) | null = null;

@@ -1,8 +1,8 @@
 import { type Canvas, type SKRSContext2D } from "@napi-rs/canvas";
-import { WatermarkOptions } from "./watermark-options.types.ts";
-import { createTextWatermark } from "./create-text-watermark.ts";
-import { applyBlendMode } from "./apply-blend-mode.ts";
-import { getWatermarkPositions } from "./get-watermark-positions.ts";
+import { WatermarkOptions } from "./watermark-options.types";
+import { createTextWatermark } from "./create-text-watermark";
+import { applyBlendMode } from "./apply-blend-mode";
+import { getWatermarkPositions } from "./get-watermark-positions";
 
 export function drawWatermarkLayerServer(
   ctx: SKRSContext2D,

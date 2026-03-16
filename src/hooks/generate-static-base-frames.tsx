@@ -1,1 +1,1 @@
-export { generateStaticBaseFrames } from "@/features/generator/application/frames/frames-fn-staticbase";
+export { generateStaticBaseFrames } from "@/features/generator/application/frames/generate-static-base-frames.service";

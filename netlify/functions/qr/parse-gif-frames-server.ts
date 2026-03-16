@@ -1,8 +1,8 @@
 import { decodeGif } from "../../src/modules/animation";
 import { createCanvas } from "@napi-rs/canvas";
-import { ServerAnimationFrame } from "./server-animation-frame.types.ts";
-import { MAX_GIF_FRAMES } from "./max-gif-frames.const.ts";
-import { MAX_GIF_DURATION_MS } from "./max-gif-duration-ms.const.ts";
+import { ServerAnimationFrame } from "./server-animation-frame.types";
+import { MAX_GIF_FRAMES } from "./max-gif-frames.const";
+import { MAX_GIF_DURATION_MS } from "./max-gif-duration-ms.const";
 
 export function parseGifFramesServer(
   arrayBuffer: ArrayBuffer,

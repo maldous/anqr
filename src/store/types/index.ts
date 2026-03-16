@@ -1,5 +1,5 @@
 export type { AlignmentStyle } from "./alignment-style";
-export type { AnimationPatternType } from "./animation-pattern-type";
+export type { AnimationPatternType } from "./animation-pattern.types";
 export type { AnimationTarget } from "./animation-target";
 export type { AnimationWaveAxis } from "./animation-wave-axis";
 export type { AppLinkHelper } from "./app-link-helper";
@@ -37,7 +37,7 @@ export type { OrderedMatrix } from "./ordered-matrix";
 export type { OtpAuthHelper } from "./otp-auth-helper";
 export type { OutputFormat } from "./output-format";
 export type { OverlayMode } from "./overlay-mode";
-export type { OverlayType } from "./overlay-type";
+export type { OverlayType } from "./overlay.types";
 export type { PayloadKind } from "./payload-kind";
 export type { PremiumAccess } from "./premium-access";
 export type { PayPalMeHelper } from "./pay-pal-me-helper";

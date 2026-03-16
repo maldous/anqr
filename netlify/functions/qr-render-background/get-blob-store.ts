@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { QR_CACHE_STORE } from "./qr-cache-store.const.ts";
+import { QR_CACHE_STORE } from "./qr-cache-store.const";
 
 export function getBlobStore() {
   const siteID = process.env.SITE_ID;

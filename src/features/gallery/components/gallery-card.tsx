@@ -5,7 +5,7 @@ import {
   buildGalleryUrl,
   getGalleryImagePath,
 } from "@/content/gallery/gallery-items";
-import type { GalleryCardProps } from "./gallery-card.props";
+import type { GalleryCardProps } from "./gallery-card.types";
 
 export function GalleryCard({ item }: GalleryCardProps) {
   const { t } = useTranslation();

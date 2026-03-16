@@ -1,9 +1,9 @@
-import { blurServer } from "./blur-server.ts";
-import { sharpenServer } from "./sharpen-server.ts";
-import { posterizeServer } from "./posterize-server.ts";
-import { thresholdServer } from "./threshold-server.ts";
-import { sobelEdgeServer } from "./sobel-edge-server.ts";
-import { cannyEdgeServer } from "./canny-edge-server.ts";
+import { blurServer } from "./blur-server";
+import { sharpenServer } from "./sharpen-server";
+import { posterizeServer } from "./posterize-server";
+import { thresholdServer } from "./threshold-server";
+import { sobelEdgeServer } from "./sobel-edge-server";
+import { cannyEdgeServer } from "./canny-edge-server";
 
 export function applyPostProcessFilters(
   data: Uint8ClampedArray,

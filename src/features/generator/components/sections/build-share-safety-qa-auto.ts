@@ -1,4 +1,4 @@
-import type { StoreState } from "./share-config-store-state.type";
+import type { StoreState } from "./share-config-store.types";
 import { buildShareAutoFields } from "./build-share-auto-fields";
 import { buildShareMetadataFields } from "./build-share-metadata-fields";
 import { buildShareQaFields } from "./build-share-qa-fields";

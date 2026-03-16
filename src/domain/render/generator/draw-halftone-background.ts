@@ -1,5 +1,5 @@
 import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
-import type { ModuleDrawContext } from "./module-draw-context.interface";
+import type { ModuleDrawContext } from "./module-draw-context.types";
 
 export function drawHalftoneDitheredBackground(
   dctx: ModuleDrawContext,

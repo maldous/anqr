@@ -1,1 +1,1 @@
-export { rescueOutlierArtworkFrame } from "@/features/generator/application/safety/safety-fn-rescueoutlier";
+export { rescueOutlierArtworkFrame } from "@/features/generator/application/safety/rescue-outlier-artwork-frame.service";

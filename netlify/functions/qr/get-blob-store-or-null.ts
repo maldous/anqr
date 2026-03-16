@@ -1,10 +1,10 @@
 import { getStore } from "@netlify/blobs";
-import { IS_TEST_RUNTIME } from "./is-test-runtime.const.ts";
-import { blobStoreDisabled } from "./blob-store-disabled.const.ts";
-import { DEFAULT_NETLIFY_SITE_ID } from "./default-netlify-site-id.const.ts";
-import { QR_CACHE_STORE } from "./qr-cache-store.const.ts";
-import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error.ts";
-import { markBlobStoreDisabled } from "./mark-blob-store-disabled.ts";
+import { IS_TEST_RUNTIME } from "./is-test-runtime.const";
+import { blobStoreDisabled } from "./blob-store-disabled.const";
+import { DEFAULT_NETLIFY_SITE_ID } from "./default-netlify-site-id.const";
+import { QR_CACHE_STORE } from "./qr-cache-store.const";
+import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error";
+import { markBlobStoreDisabled } from "./mark-blob-store-disabled";
 
 export function getBlobStoreOrNull() {
   if (IS_TEST_RUNTIME) return null;

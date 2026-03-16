@@ -1,6 +1,6 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { AnimationInterpolation } from "./animation-interpolation.types.ts";
-import { interpolateOverlayFramesServer } from "./interpolate-overlay-frames-server.ts";
+import { AnimationInterpolation } from "./animation-interpolation.types";
+import { interpolateOverlayFramesServer } from "./interpolate-overlay-frames-server";
 
 export function applyFrameInterpolation(
   currentCanvas: Canvas,

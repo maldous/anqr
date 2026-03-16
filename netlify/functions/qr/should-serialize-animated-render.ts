@@ -1,4 +1,4 @@
-import { isGifLikeImageParam } from "./is-gif-like-image-param.ts";
+import { isGifLikeImageParam } from "./is-gif-like-image-param";
 
 export function shouldSerializeAnimatedRender(params: URLSearchParams): boolean {
   const format = (params.get("format") || "").toLowerCase();
