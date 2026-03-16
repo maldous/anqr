@@ -156,7 +156,7 @@ function buildLinearDescription(sonarIssue, projectKey, sonarHost) {
  * @param {number} opts.priority     — Linear priority (1=urgent, 2=high, etc.)
  * @param {boolean} opts.resolveStale — if true, mark Done any Linear [Sonar]
  *   issues whose SonarQube finding is no longer present (nightly only)
- * @returns {{ created: Array, skipped: Array, resolved: Array }}
+ * @returns {{ created: Array, skipped: Array, promoted: Array, requeued: Array, resolved: Array }}
  */
 export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, priority, resolveStale }) {
   const existingLinear = await findOpenSonarLinearIssues();
@@ -175,13 +175,15 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
 
   const currentKeys = new Set(sonarIssues.map((i) => i.key));
 
-  // Create missing Linear issues (and promote existing ones if priority changed)
+  // Create missing Linear issues (and promote/requeue existing ones as needed)
   const created = [];
   const skipped = [];
   const promoted = [];
+  const requeued = [];
   for (const si of sonarIssues) {
     if (keyToLinear.has(si.key)) {
       const existing = keyToLinear.get(si.key);
+      let changed = false;
 
       // Promote if requested priority is higher (lower number = higher priority)
       if (existing.priority > priority) {
@@ -198,7 +200,27 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
         );
         console.log(`[sonar-sync] Promoted ${existing.identifier} from ${fromLabel} → ${toLabel}`);
         promoted.push({ sonar: si, linear: existing, from: existing.priority, to: priority });
-      } else {
+        changed = true;
+      }
+
+      // Requeue to Todo if stuck in another state (nightly only)
+      if (resolveStale && existing.state.name !== 'Todo') {
+        const fromState = existing.state.name;
+        await updateIssue(existing.id, { stateId: STATES.todo });
+        await addComment(
+          existing.id,
+          [
+            `\u21a9\ufe0f **Requeued to Todo** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
+            '',
+            `Moved from ${fromState} back to Todo so the runner can pick it up.`,
+          ].join('\n'),
+        );
+        console.log(`[sonar-sync] Requeued ${existing.identifier} from ${fromState} → Todo`);
+        requeued.push({ linear: existing, fromState });
+        changed = true;
+      }
+
+      if (!changed) {
         skipped.push({ sonar: si, linear: existing });
       }
       continue;
@@ -246,5 +268,5 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
     }
   }
 
-  return { created, skipped, promoted, resolved };
+  return { created, skipped, promoted, requeued, resolved };
 }

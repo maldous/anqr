@@ -57,7 +57,7 @@ async function main() {
   const measSummary = measures.map((m) => `${m.metric}: ${m.value}`).join(', ');
   console.log(`[sonar-audit] Issues: ${issues.length}, Hotspots: ${hotspotCount}, Measures: ${measSummary || 'none'}`);
 
-  const { created, skipped, promoted, resolved } = await syncSonarToLinear({
+  const { created, skipped, promoted, requeued, resolved } = await syncSonarToLinear({
     sonarIssues: issues,
     projectKey: PROJECT_KEY,
     sonarHost: SONAR_HOST,
@@ -65,14 +65,17 @@ async function main() {
     resolveStale: true,
   });
 
-  console.log(`[sonar-audit] Created: ${created.length}, Promoted: ${promoted.length}, Existing: ${skipped.length}, Resolved: ${resolved.length}`);
+  console.log(`[sonar-audit] Created: ${created.length}, Promoted: ${promoted.length}, Requeued: ${requeued.length}, Existing: ${skipped.length}, Resolved: ${resolved.length}`);
 
-  if (created.length > 0 || promoted.length > 0) {
+  if (created.length > 0 || promoted.length > 0 || requeued.length > 0) {
     const createdLines = created.map(
       (c) => `  ${c.linear.identifier}: ${c.sonar.message} (${c.sonar.component.split('/').pop()}:${c.sonar.line})`,
     );
     const promotedLines = promoted.map(
       (p) => `  ${p.linear.identifier}: promoted to Urgent (was ${p.from === 2 ? 'High' : 'P' + p.from})`,
+    );
+    const requeuedLines = requeued.map(
+      (r) => `  ${r.linear.identifier}: moved from ${r.fromState} → Todo`,
     );
     const parts = [];
     if (created.length > 0) {
@@ -82,9 +85,14 @@ async function main() {
       if (parts.length > 0) parts.push('');
       parts.push(`Promoted ${promoted.length} existing issue(s) to Urgent:`, '', ...promotedLines);
     }
+    if (requeued.length > 0) {
+      if (parts.length > 0) parts.push('');
+      parts.push(`Requeued ${requeued.length} issue(s) back to Todo:`, '', ...requeuedLines);
+    }
     const subjectParts = [];
     if (created.length > 0) subjectParts.push(`${created.length} new`);
     if (promoted.length > 0) subjectParts.push(`${promoted.length} promoted`);
+    if (requeued.length > 0) subjectParts.push(`${requeued.length} requeued`);
     sendNotification({
       subject: `Nightly sonar: ${subjectParts.join(', ')} issue(s)`,
       body: [
