@@ -1,5 +1,5 @@
 .PHONY: dev build preview typecheck lint lint-fix format format-check depcruise \
-        test test-unit test-e2e cspell knip quality clean install hooks
+        test test-unit test-e2e cspell knip ast-density sonar-audit quality clean install hooks
 
 # ──────────────────────────────────────────────
 # Development
@@ -41,6 +41,12 @@ cspell:
 
 knip:
 	npx knip
+
+ast-density:
+	npm run audit:ast
+
+sonar-audit:
+	npm run sonar:audit
 
 quality: typecheck lint depcruise test-unit
 	@echo "\n✅ All quality gates passed"
