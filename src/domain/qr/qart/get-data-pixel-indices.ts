@@ -1,9 +1,9 @@
-import { dataPixelIndicesCache } from './data-pixel-indices-cache';
-import { DATA_PIXEL_INDICES_CACHE_LIMIT } from './data-pixel-indices-cache-limit';
-import { isStructural } from './is-structural';
-import { updateLruCache } from './update-lru-cache';
-import { getModuleCount } from './get-module-count';
-import { pixelToIndex } from './pixel-to-index';
+import { dataPixelIndicesCache } from "./data-pixel-indices-cache";
+import { DATA_PIXEL_INDICES_CACHE_LIMIT } from "./data-pixel-indices-cache-limit";
+import { isStructural } from "./is-structural";
+import { updateLruCache } from "./update-lru-cache";
+import { getModuleCount } from "./get-module-count";
+import { pixelToIndex } from "./pixel-to-index";
 
 /**
  * Get all data pixel indices (non-structural modules)

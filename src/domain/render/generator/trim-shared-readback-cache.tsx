@@ -1,5 +1,5 @@
-import { MAX_SHARED_READBACK_CANVASES } from './max-shared-readback-canvases';
-import { sharedReadbackCache } from './shared-readback-cache';
+import { MAX_SHARED_READBACK_CANVASES } from "./max-shared-readback-canvases";
+import { sharedReadbackCache } from "./shared-readback-cache";
 
 export function trimSharedReadbackCache(): void {
   if (sharedReadbackCache.size <= MAX_SHARED_READBACK_CANVASES) return;

@@ -1,5 +1,5 @@
-import type { ECCLevel } from './encoder-api.types';
-import { createQRInstance } from './create-qr-instance';
+import type { ECCLevel } from "./encoder-api.types";
+import { createQRInstance } from "./create-qr-instance";
 
 /**
  * Calculate optimal version for data
@@ -12,7 +12,7 @@ import { createQRInstance } from './create-qr-instance';
  */
 export function calculateOptimalVersion(
   data: string,
-  errorCorrectionLevel: ECCLevel = 'M'
+  errorCorrectionLevel: ECCLevel = "M",
 ): number {
   // Try each version until one fits
   // Note: We intentionally don't pass mode option - this matches the behavior

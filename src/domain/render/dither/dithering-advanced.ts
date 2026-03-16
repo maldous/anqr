@@ -3,18 +3,18 @@
  * Advanced dithering algorithms with blue noise support
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms';
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import { getOverlayBrightness } from '../overlay/overlay-data-packed';
-import { curveIntensity } from '../generator/pixel-matrix-utils';
+import { createLogger } from "../../../infra/logging/logger";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../../../modules/dither-algorithms";
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import { getOverlayBrightness } from "../overlay/overlay-data-packed";
+import { curveIntensity } from "../generator/pixel-matrix-utils";
 import type {
   CreateCanvasFn,
   OverlayData,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
+} from "../../../modules/qr-generator/types";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 /**
  * Apply advanced dithering with blue noise
@@ -24,7 +24,7 @@ export async function applyAdvancedDither(
   moduleCount: number,
   overlayData: OverlayData,
   config: QRGeneratorConfig,
-  _createCanvasFn: CreateCanvasFn
+  _createCanvasFn: CreateCanvasFn,
 ): Promise<boolean[][]> {
   const seed = config.blueNoiseSeed ?? 42;
   const tileSize = config.blueNoiseTileSize ?? 64;

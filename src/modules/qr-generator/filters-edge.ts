@@ -1,1 +1,1 @@
-export * from '../../domain/render/filters/filters-edge';
+export * from "../../domain/render/filters/filters-edge";

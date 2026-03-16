@@ -1,4 +1,4 @@
-import { computeGrayscale } from './compute-grayscale';
+import { computeGrayscale } from "./compute-grayscale";
 
 /**
  * Sample a single pixel from the image at the given coordinates
@@ -9,7 +9,7 @@ export function sampleSinglePixel(
   width: number,
   height: number,
   x: number,
-  y: number
+  y: number,
 ): number {
   const ix = Math.round(x);
   const iy = Math.round(y);

@@ -1,9 +1,9 @@
-import { getContainedImageRect } from './get-contained-image-rect';
+import { getContainedImageRect } from "./get-contained-image-rect";
 
 export function computeCropOverlayStyle(
   activeCropRegion: { x: number; y: number; size: number },
   previewImageSize: { width: number; height: number } | null,
-  containerEl: HTMLDivElement | null
+  containerEl: HTMLDivElement | null,
 ): { left: string; top: string; width: string; height: string } {
   if (!previewImageSize || previewImageSize.width <= 0 || previewImageSize.height <= 0) {
     return {
@@ -19,7 +19,7 @@ export function computeCropOverlayStyle(
     containerWidth,
     containerHeight,
     previewImageSize.width,
-    previewImageSize.height
+    previewImageSize.height,
   );
   const minEdge = Math.min(previewImageSize.width, previewImageSize.height);
   const cropSizePx = Math.max(1, minEdge * activeCropRegion.size);

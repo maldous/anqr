@@ -1,13 +1,13 @@
-import type { BitPixelMapping } from './bit-mapping';
-import type { RSBasisVector } from './rs-basis';
-import { BITSET_WORD_SHIFT } from './bitset-word-shift';
-import { BITSET_WORD_SIZE } from './bitset-word-size';
-import { BITSET_WORD_MASK } from './bitset-word-mask';
-import { attachNonZeroBytes } from './attach-non-zero-bytes';
-import { buildBlockAffectionMatrix } from './build-block-affection-matrix';
-import { findRowWithBitSet } from './find-row-with-bit-set';
-import { eliminatePixelFromOtherRows } from './eliminate-pixel-from-other-rows';
-import type { BlockEliminationResult } from './elimination.types';
+import type { BitPixelMapping } from "./bit-mapping";
+import type { RSBasisVector } from "./rs-basis";
+import { BITSET_WORD_SHIFT } from "./bitset-word-shift";
+import { BITSET_WORD_SIZE } from "./bitset-word-size";
+import { BITSET_WORD_MASK } from "./bitset-word-mask";
+import { attachNonZeroBytes } from "./attach-non-zero-bytes";
+import { buildBlockAffectionMatrix } from "./build-block-affection-matrix";
+import { findRowWithBitSet } from "./find-row-with-bit-set";
+import { eliminatePixelFromOtherRows } from "./eliminate-pixel-from-other-rows";
+import type { BlockEliminationResult } from "./elimination.types";
 
 /**
  * Perform Gauss-Jordan elimination for a SINGLE RS block
@@ -27,7 +27,7 @@ export function eliminateBlock(
   blockMappings: BitPixelMapping[],
   moduleCount: number,
   maskPattern: number,
-  pixelOrder: number[]
+  pixelOrder: number[],
 ): BlockEliminationResult {
   const numVectors = vectors.length;
   const totalPixels = moduleCount * moduleCount;
@@ -87,7 +87,7 @@ export function eliminateBlock(
       numVectors,
       wordIndex,
       bitIndex,
-      bitsetWordCount
+      bitsetWordCount,
     );
 
     // Mark this row as pivoting on this pixel

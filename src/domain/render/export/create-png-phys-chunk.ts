@@ -1,4 +1,4 @@
-import { createPngChunk } from './create-png-chunk';
+import { createPngChunk } from "./create-png-chunk";
 
 /**
  * Create PNG pHYs chunk for DPI embedding
@@ -18,5 +18,5 @@ export function createPngPhysChunk(dpi: number): Uint8Array {
   // Unit specifier: 1 = meter
   chunkData[8] = 1;
 
-  return createPngChunk('pHYs', chunkData);
+  return createPngChunk("pHYs", chunkData);
 }

@@ -1,1 +1,1 @@
-export type CropDragMode = 'move' | 'resize' | null;
+export type CropDragMode = "move" | "resize" | null;

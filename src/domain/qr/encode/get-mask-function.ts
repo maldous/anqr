@@ -1,1 +1,1 @@
-export { getMaskFunction } from '../../../modules/qr-spec';
+export { getMaskFunction } from "../../../modules/qr-spec";

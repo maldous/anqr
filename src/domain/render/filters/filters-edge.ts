@@ -3,8 +3,8 @@
  * Re-exports from overlay module (canonical source)
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
-export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from '../../../modules/overlay';
+export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from "../../../modules/overlay";

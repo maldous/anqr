@@ -1,4 +1,4 @@
-import type { LogEntry } from './log-entry';
+import type { LogEntry } from "./log-entry";
 
 export interface ScanStats {
   totalScans: number;

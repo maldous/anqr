@@ -1,5 +1,5 @@
-import type { RGBWithMeta } from './types';
-import { unpackColor } from './unpack-color';
+import type { RGBWithMeta } from "./types";
+import { unpackColor } from "./unpack-color";
 
 export function packedColorsToMatrix(colors: Uint32Array, size: number): (RGBWithMeta | null)[][] {
   const matrix: (RGBWithMeta | null)[][] = Array.from({ length: size });

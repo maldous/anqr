@@ -1,4 +1,4 @@
-import type { EmbedOptions } from '../../modules/share-links/types';
+import type { EmbedOptions } from "../../modules/share-links/types";
 
 /**
  * Generate iframe embed code
@@ -13,10 +13,10 @@ export function generateIframeEmbed(url: string, options: Partial<EmbedOptions> 
   };
 
   const style = opts.responsive
-    ? 'width: 100%; aspect-ratio: 1;'
+    ? "width: 100%; aspect-ratio: 1;"
     : `width: ${opts.width}px; height: ${opts.height}px;`;
 
-  const border = opts.showBorder ? ' border: 1px solid #ccc;' : ' border: none;';
+  const border = opts.showBorder ? " border: 1px solid #ccc;" : " border: none;";
 
   return `<iframe src="${url}" style="${style}${border}" loading="lazy" title="QR Code"></iframe>`;
 }

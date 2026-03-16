@@ -1,4 +1,4 @@
-import type { EccLevel } from './ecc-level';
+import type { EccLevel } from "./ecc-level";
 
 export interface SafetyAdjustmentResult {
   modulePx: number;

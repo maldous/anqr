@@ -1,1 +1,1 @@
-export * from '../../domain/render/filters/filters-sharpen';
+export * from "../../domain/render/filters/filters-sharpen";

@@ -1,7 +1,7 @@
-import { createLogger } from '../../../infra/logging/logger';
-import { checkTimingPosition } from './check-timing-position';
+import { createLogger } from "../../../infra/logging/logger";
+import { checkTimingPosition } from "./check-timing-position";
 
-const qrDecoderLog = createLogger('DECODER');
+const qrDecoderLog = createLogger("DECODER");
 
 export function collectTimingDiagnostics(rawMatrix: boolean[][], moduleCount: number): void {
   const timingMismatches: Array<{ r: number; c: number; exp: 0 | 1; got: 0 | 1 }> = [];
@@ -11,7 +11,7 @@ export function collectTimingDiagnostics(rawMatrix: boolean[][], moduleCount: nu
   for (let r = 8; r < moduleCount - 8; r++) {
     checkTimingPosition(rawMatrix, r, 6, r, timingMismatches);
   }
-  qrDecoderLog.trace('diag: Timing pattern mismatches (first 12)', {
+  qrDecoderLog.trace("diag: Timing pattern mismatches (first 12)", {
     count: timingMismatches.length,
     mismatches: timingMismatches.map((m) => `(${m.r},${m.c}) exp=${m.exp} got=${m.got}`),
   });

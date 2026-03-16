@@ -1,8 +1,8 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { copyImageToPixels } from './copy-image-to-pixels';
-import type { DiffusionPixelResult } from './diffusion-pixel-result';
-import type { DiffusionKernelDef } from './kernels.types';
-import { runDiffusionDither } from './run-diffusion-dither';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { copyImageToPixels } from "./copy-image-to-pixels";
+import type { DiffusionPixelResult } from "./diffusion-pixel-result";
+import type { DiffusionKernelDef } from "./kernels.types";
+import { runDiffusionDither } from "./run-diffusion-dither";
 
 export function runKernelDither(
   params: Readonly<{
@@ -12,12 +12,12 @@ export function runKernelDither(
     quantize: (
       pixel: { r: number; g: number; b: number },
       x: number,
-      y: number
+      y: number,
     ) => DiffusionPixelResult;
     serpentine: boolean;
     transform?: (r: number, g: number, b: number) => { r: number; g: number; b: number };
     width: number;
-  }>
+  }>,
 ): DitherResult {
   const pixels = copyImageToPixels(params.imageData, params.width, params.height, params.transform);
 

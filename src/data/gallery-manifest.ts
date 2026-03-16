@@ -1,1 +1,1 @@
-export * from '../content/gallery/gallery-manifest';
+export * from "../content/gallery/gallery-manifest";

@@ -1,6 +1,6 @@
-import { drawShapeMaskModule } from './draw-shape-mask-module';
-import { isStructuralPatternModule } from './is-structural-pattern-module';
-import type { ShapeMaskCtx } from '../scaled-render-types';
+import { drawShapeMaskModule } from "./draw-shape-mask-module";
+import { isStructuralPatternModule } from "./is-structural-pattern-module";
+import type { ShapeMaskCtx } from "../scaled-render-types";
 
 export async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
   const {
@@ -16,12 +16,12 @@ export async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
     createCanvasFn,
     releaseCanvasFn,
   } = smctx;
-  const moduleStyleName = config.moduleStyle || 'square';
-  if (moduleStyleName === 'square' || moduleStyleName === 'connected') return;
+  const moduleStyleName = config.moduleStyle || "square";
+  if (moduleStyleName === "square" || moduleStyleName === "connected") return;
   const maskCanvas = await createCanvasFn(size, size);
-  const maskCtx = maskCanvas.getContext('2d') as CanvasRenderingContext2D;
+  const maskCtx = maskCanvas.getContext("2d") as CanvasRenderingContext2D;
   maskCtx.imageSmoothingEnabled = false;
-  maskCtx.fillStyle = 'white';
+  maskCtx.fillStyle = "white";
   maskCtx.fillRect(0, 0, size, marginPx);
   maskCtx.fillRect(0, marginPx, marginPx, size - marginPx);
   const qrRight = marginPx + moduleCount * effectiveModuleSize;
@@ -34,7 +34,7 @@ export async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
       const mx = marginPx + col * effectiveModuleSize;
       const my = marginPx + row * effectiveModuleSize;
       if (isStructuralPatternModule(getPatternFlags(row, col)) || !qr.isDark(row, col)) {
-        maskCtx.fillStyle = 'white';
+        maskCtx.fillStyle = "white";
         maskCtx.fillRect(mx, my, effectiveModuleSize, effectiveModuleSize);
         continue;
       }
@@ -46,17 +46,17 @@ export async function applyModuleShapeMask(smctx: ShapeMaskCtx): Promise<void> {
         config,
         moduleStyleName,
         cornerRadius,
-        dotRotation
+        dotRotation,
       );
     }
   }
-  ctx.globalCompositeOperation = 'destination-in';
+  ctx.globalCompositeOperation = "destination-in";
   ctx.drawImage(maskCanvas as CanvasImageSource, 0, 0);
-  ctx.globalCompositeOperation = 'destination-over';
+  ctx.globalCompositeOperation = "destination-over";
   if (!config.transparentBg) {
     ctx.fillStyle = effectiveBgColor;
     ctx.fillRect(0, 0, size, size);
   }
-  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = "source-over";
   if (releaseCanvasFn) releaseCanvasFn(maskCanvas);
 }

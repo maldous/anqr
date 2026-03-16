@@ -1,9 +1,9 @@
-import { markAlignmentPatterns } from './mark-alignment-patterns';
-import { markFinderPatterns } from './mark-finder-patterns';
-import { markFixedDark } from './mark-fixed-dark';
-import { markFormatInfo } from './mark-format-info';
-import { markTimingPatterns } from './mark-timing-patterns';
-import { markVersionInfo } from './mark-version-info';
+import { markAlignmentPatterns } from "./mark-alignment-patterns";
+import { markFinderPatterns } from "./mark-finder-patterns";
+import { markFixedDark } from "./mark-fixed-dark";
+import { markFormatInfo } from "./mark-format-info";
+import { markTimingPatterns } from "./mark-timing-patterns";
+import { markVersionInfo } from "./mark-version-info";
 
 export function buildFunctionalMap(moduleCount: number, version: number): Uint8Array {
   const mc = moduleCount;

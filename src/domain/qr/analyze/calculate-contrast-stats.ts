@@ -1,9 +1,9 @@
-import type { ContrastReport } from './telemetry-contrast.types';
-import { relativeLuminance } from './relative-luminance';
+import type { ContrastReport } from "./telemetry-contrast.types";
+import { relativeLuminance } from "./relative-luminance";
 
 export function calculateContrastStats(
   fg: { r: number; g: number; b: number },
-  bg: { r: number; g: number; b: number }
+  bg: { r: number; g: number; b: number },
 ): ContrastReport {
   const fgLum = relativeLuminance(fg);
   const bgLum = relativeLuminance(bg);
@@ -12,7 +12,7 @@ export function calculateContrastStats(
   const ratio = (lighter + 0.05) / (darker + 0.05);
 
   const toHex = (rgb: { r: number; g: number; b: number }) =>
-    `#${[rgb.r, rgb.g, rgb.b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+    `#${[rgb.r, rgb.g, rgb.b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 
   return {
     ratio,

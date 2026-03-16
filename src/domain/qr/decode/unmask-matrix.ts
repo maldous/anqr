@@ -1,5 +1,5 @@
-import { getVersionFromModuleCount, isStructuralModule } from '../../../modules/qr-spec';
-import { getMaskFunction } from './get-mask-function';
+import { getVersionFromModuleCount, isStructuralModule } from "../../../modules/qr-spec";
+import { getMaskFunction } from "./get-mask-function";
 
 /**
  * Unmask the data modules in the matrix
@@ -7,7 +7,7 @@ import { getMaskFunction } from './get-mask-function';
 export function unmaskMatrix(
   matrix: boolean[][],
   maskPattern: number,
-  moduleCount: number
+  moduleCount: number,
 ): boolean[][] {
   const maskFunc = getMaskFunction(maskPattern);
   const unmasked: boolean[][] = [];

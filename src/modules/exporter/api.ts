@@ -5,49 +5,49 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('EXPORT');
+const _log = createLogger("EXPORT");
 
 // Image export (PNG, WebP, JPEG)
-export const IMAGE_API = ['exportImage', 'downloadImage'] as const;
+export const IMAGE_API = ["exportImage", "downloadImage"] as const;
 
 // GIF export
-export const GIF_API = ['exportGif', 'downloadGif'] as const;
+export const GIF_API = ["exportGif", "downloadGif"] as const;
 
 // SVG export (raster embedded)
-export const SVG_API = ['exportSvg', 'downloadSvg'] as const;
+export const SVG_API = ["exportSvg", "downloadSvg"] as const;
 
 // Vector SVG export (true vector)
-export const VECTOR_SVG_API = ['exportVectorSvg', 'downloadVectorSvg'] as const;
+export const VECTOR_SVG_API = ["exportVectorSvg", "downloadVectorSvg"] as const;
 
 // PNG metadata
 export const METADATA_API = [
-  'calculateCrc32',
-  'createPngPhysChunk',
-  'createPngTextChunk',
-  'embedPngDpi',
-  'embedPngMetadata',
+  "calculateCrc32",
+  "createPngPhysChunk",
+  "createPngTextChunk",
+  "embedPngDpi",
+  "embedPngMetadata",
 ] as const;
 
 // Utilities (re-exported from browser-io)
-export const UTILS_API = ['canvasToBlob', 'downloadUrl', 'escapeXml', 'saveFileNative'] as const;
+export const UTILS_API = ["canvasToBlob", "downloadUrl", "escapeXml", "saveFileNative"] as const;
 
 // Config helpers
-export const CONFIG_API = ['getDefaultExportConfig'] as const;
+export const CONFIG_API = ["getDefaultExportConfig"] as const;
 
 // Types
 export const TYPES = [
-  'ExportConfig',
-  'ExportResult',
-  'OutputFormat',
-  'PngMetadata',
-  'VectorAlignmentStyle',
-  'VectorFinderStyle',
-  'VectorGradient',
-  'VectorModuleStyle',
-  'VectorSvgConfig',
-  'VectorTimingStyle',
+  "ExportConfig",
+  "ExportResult",
+  "OutputFormat",
+  "PngMetadata",
+  "VectorAlignmentStyle",
+  "VectorFinderStyle",
+  "VectorGradient",
+  "VectorModuleStyle",
+  "VectorSvgConfig",
+  "VectorTimingStyle",
 ] as const;
 
 // All public exports

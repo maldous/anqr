@@ -6,5 +6,5 @@ export interface OtpAuthHelper {
   digits?: number;
   period?: number;
   counter?: number;
-  type?: 'totp' | 'hotp';
+  type?: "totp" | "hotp";
 }

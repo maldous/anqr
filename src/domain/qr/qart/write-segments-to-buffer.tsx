@@ -1,15 +1,15 @@
-import { qrBitBuffer } from '../encode/bit-buffer';
-import { qr8BitByte, qrNumber } from '../encode/data-modes';
-import { getLengthInBits } from '../encode/utils';
-import type { QArtEncodingPlan } from './q-art-encoding-plan';
-import type { SegmentWriteResult } from './segment-write-result';
+import { qrBitBuffer } from "../encode/bit-buffer";
+import { qr8BitByte, qrNumber } from "../encode/data-modes";
+import { getLengthInBits } from "../encode/utils";
+import type { QArtEncodingPlan } from "./q-art-encoding-plan";
+import type { SegmentWriteResult } from "./segment-write-result";
 
 export function writeSegmentsToBuffer(
   plan: QArtEncodingPlan,
   buffer: ReturnType<typeof qrBitBuffer>,
-  version: number
+  version: number,
 ): SegmentWriteResult {
-  if (plan.mode === 'numeric') {
+  if (plan.mode === "numeric") {
     const prefixSegment = qr8BitByte(plan.prefix);
     buffer.put(prefixSegment.getMode(), 4);
     const bitsAfterMode = buffer.getLengthInBits();
@@ -32,8 +32,8 @@ export function writeSegmentsToBuffer(
       bitsAfterData: buffer.getLengthInBits(),
       originalDataPreview:
         plan.prefix.slice(0, Math.min(60, plan.prefix.length)) +
-        (plan.prefix.length > 60 ? '...' : ''),
-      suffixPreview: plan.suffix.slice(0, 20) + (plan.suffix.length > 20 ? '...' : ''),
+        (plan.prefix.length > 60 ? "..." : ""),
+      suffixPreview: plan.suffix.slice(0, 20) + (plan.suffix.length > 20 ? "..." : ""),
       fullDataLength: plan.prefix.length + plan.suffix.length,
     };
   }
@@ -53,10 +53,10 @@ export function writeSegmentsToBuffer(
     bitsAfterData: buffer.getLengthInBits(),
     originalDataPreview:
       plan.fullData.slice(0, Math.min(60, plan.originalDataLength)) +
-      (plan.originalDataLength > 60 ? '...' : ''),
+      (plan.originalDataLength > 60 ? "..." : ""),
     suffixPreview:
       plan.fullData.slice(plan.originalDataLength, plan.originalDataLength + 20) +
-      (plan.fullData.length - plan.originalDataLength > 20 ? '...' : ''),
+      (plan.fullData.length - plan.originalDataLength > 20 ? "..." : ""),
     fullDataLength: plan.fullData.length,
   };
 }

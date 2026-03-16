@@ -1,5 +1,5 @@
-import { gexp, qrPolynomial } from './math';
-import type { QRPolynomial } from '../../../modules/qr-encoder/types';
+import { gexp, qrPolynomial } from "./math";
+import type { QRPolynomial } from "../../../modules/qr-encoder/types";
 
 /**
  * Get error correction polynomial

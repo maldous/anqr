@@ -1,9 +1,9 @@
-import { readBitFromMatrix } from './read-bit-from-matrix';
-import type { BitTrace } from './bit-trace';
+import { readBitFromMatrix } from "./read-bit-from-matrix";
+import type { BitTrace } from "./bit-trace";
 
 export function readFormatBitsCopy2(
   matrix: boolean[][],
-  moduleCount: number
+  moduleCount: number,
 ): { bits: number; trace: BitTrace[] } {
   const trace: BitTrace[] = [];
   let bits = 0;

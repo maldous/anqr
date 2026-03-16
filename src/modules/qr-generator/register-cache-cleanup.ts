@@ -1,4 +1,4 @@
-import { _registeredCleanups } from './registered-cleanups';
+import { _registeredCleanups } from "./registered-cleanups";
 
 /**
  * Register an additional cache-clearing callback.

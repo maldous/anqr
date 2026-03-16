@@ -1,1 +1,1 @@
-export type ToastDuration = 'short' | 'long';
+export type ToastDuration = "short" | "long";

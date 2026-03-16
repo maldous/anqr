@@ -1,4 +1,4 @@
-import { rgbToGray } from '../color/color';
+import { rgbToGray } from "../color/color";
 
 export function threshold(imageData: ImageData, level: number): ImageData {
   const data = imageData.data;

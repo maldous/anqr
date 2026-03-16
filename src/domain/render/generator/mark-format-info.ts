@@ -1,4 +1,4 @@
-import { PATTERN_FORMAT } from './functional-pattern-flags.const';
+import { PATTERN_FORMAT } from "./functional-pattern-flags.const";
 
 export function markFormatInfo(map: Uint8Array, mc: number): void {
   const row8 = 8 * mc;

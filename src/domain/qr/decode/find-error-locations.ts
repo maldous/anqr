@@ -1,8 +1,8 @@
-import { qrDecoderLog } from './qr-decoder-log';
-import { gfInv } from './gf-inv';
-import { polyDegree } from './poly-degree';
-import { polyGetCoeff } from './poly-get-coeff';
-import { polyEval } from './poly-eval';
+import { qrDecoderLog } from "./qr-decoder-log";
+import { gfInv } from "./gf-inv";
+import { polyDegree } from "./poly-degree";
+import { polyGetCoeff } from "./poly-get-coeff";
+import { polyEval } from "./poly-eval";
 
 // ============================================
 // Chien Search
@@ -33,10 +33,10 @@ export function findErrorLocations(sigma: number[], n: number): number[] | null 
 
   const result: number[] = [];
 
-  qrDecoderLog.trace('rs-decoder: Chien search starting', {
+  qrDecoderLog.trace("rs-decoder: Chien search starting", {
     numErrors,
     n,
-    sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, '0')).join(' '),
+    sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, "0")).join(" "),
   });
 
   // Evaluate sigma at all non-zero field elements
@@ -45,23 +45,23 @@ export function findErrorLocations(sigma: number[], n: number): number[] | null 
       // Found a root at i, error locator is inverse(i)
       result.push(gfInv(i));
 
-      qrDecoderLog.trace('rs-decoder: Chien found root', {
+      qrDecoderLog.trace("rs-decoder: Chien found root", {
         i,
-        errorLocator: gfInv(i).toString(16).padStart(2, '0'),
+        errorLocator: gfInv(i).toString(16).padStart(2, "0"),
       });
     }
   }
 
   if (result.length !== numErrors) {
-    qrDecoderLog.trace('rs-decoder: Chien search wrong number of roots', {
+    qrDecoderLog.trace("rs-decoder: Chien search wrong number of roots", {
       expected: numErrors,
       found: result.length,
     });
     return null;
   }
 
-  qrDecoderLog.trace('rs-decoder: Chien search found all roots', {
-    errorLocators: result.map((e) => e.toString(16).padStart(2, '0')).join(' '),
+  qrDecoderLog.trace("rs-decoder: Chien search found all roots", {
+    errorLocators: result.map((e) => e.toString(16).padStart(2, "0")).join(" "),
   });
 
   return result;

@@ -1,5 +1,5 @@
 export interface PromptPayParams {
-  type: 'mobile' | 'id' | 'ewallet' | 'billpay';
+  type: "mobile" | "id" | "ewallet" | "billpay";
   value: string;
   amount?: number;
   merchantName?: string;

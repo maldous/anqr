@@ -1,4 +1,4 @@
-import { hslToRgb, parseColor, rgbToHsl } from './color';
+import { hslToRgb, parseColor, rgbToHsl } from "./color";
 
 export function getRelatedHues(color: string, hueOffsets: [number, number]): [string, string] {
   const rgb = parseColor(color);

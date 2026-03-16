@@ -1,1 +1,1 @@
-export { processAndPostProcessFrame } from '@/features/generator/application/frames/frames-fn-processframe';
+export { processAndPostProcessFrame } from "@/features/generator/application/frames/frames-fn-processframe";

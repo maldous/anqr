@@ -5,78 +5,78 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('ANIMATION');
+const _log = createLogger("ANIMATION");
 
 // Parsing
 export const PARSING_API = [
-  'parseAnimatedImage',
-  'parseGifFrames',
-  'parseWebPFrames',
-  'getGifDelays',
+  "parseAnimatedImage",
+  "parseGifFrames",
+  "parseWebPFrames",
+  "getGifDelays",
 ] as const;
 
 // Format Detection
-export const FORMAT_DETECTION_API = ['detectImageFormat', 'isAnimatedWebP'] as const;
+export const FORMAT_DETECTION_API = ["detectImageFormat", "isAnimatedWebP"] as const;
 
 // Animation Patterns
 export const PATTERN_API = [
-  'generateAnimationPatternFrames',
-  'applyAnimationPattern',
-  'interpolateAnimationFramesWithEasing',
-  'interpolateFrames',
+  "generateAnimationPatternFrames",
+  "applyAnimationPattern",
+  "interpolateAnimationFramesWithEasing",
+  "interpolateFrames",
 ] as const;
 
 // Shared Pattern Functions
 export const SHARED_PATTERN_API = [
-  'applyAnimationColorCycle',
-  'applyAnimationDrift',
-  'applyAnimationEasing',
-  'applyAnimationPulse',
-  'applyAnimationScanline',
-  'applyAnimationShimmer',
-  'applyAnimationWave',
+  "applyAnimationColorCycle",
+  "applyAnimationDrift",
+  "applyAnimationEasing",
+  "applyAnimationPulse",
+  "applyAnimationScanline",
+  "applyAnimationShimmer",
+  "applyAnimationWave",
 ] as const;
 
 // State Management
-export const STATE_API = ['createAnimationState', 'advanceAnimation', 'getNextFrame'] as const;
+export const STATE_API = ["createAnimationState", "advanceAnimation", "getNextFrame"] as const;
 
 // GIF Compositor
-export const COMPOSITOR_API = ['createGifCompositor', 'createAnimationLoop'] as const;
+export const COMPOSITOR_API = ["createGifCompositor", "createAnimationLoop"] as const;
 
 // Frame Decimation
 export const DECIMATION_API = [
-  'calculateCompositorFps',
-  'calculateSourceFps',
-  'decimateCompositorFrames',
-  'decimateFramesToFps',
+  "calculateCompositorFps",
+  "calculateSourceFps",
+  "decimateCompositorFrames",
+  "decimateFramesToFps",
 ] as const;
 
 // Color Effects
-export const COLOR_API = ['applyColorCycle'] as const;
+export const COLOR_API = ["applyColorCycle"] as const;
 
 // Temporal Dithering (re-exported from dither-algorithms)
 export const TEMPORAL_DITHER_API = [
-  'applyTemporalNoiseToCanvas',
-  'calculateTemporalOffset',
-  'generateTemporalSequence',
-  'isTemporalDitherActive',
-  'temporalBlueNoiseDither',
-  'applyTemporalDither',
+  "applyTemporalNoiseToCanvas",
+  "calculateTemporalOffset",
+  "generateTemporalSequence",
+  "isTemporalDitherActive",
+  "temporalBlueNoiseDither",
+  "applyTemporalDither",
 ] as const;
 
 // Types
 export const TYPES = [
-  'AnimationFrame',
-  'AnimationOptions',
-  'AnimationPattern',
-  'AnimationState',
-  'AnimationEasing',
-  'GifCompositor',
-  'PatternType',
-  'InterpolationMode',
-  'TemporalDitherMode',
+  "AnimationFrame",
+  "AnimationOptions",
+  "AnimationPattern",
+  "AnimationState",
+  "AnimationEasing",
+  "GifCompositor",
+  "PatternType",
+  "InterpolationMode",
+  "TemporalDitherMode",
 ] as const;
 
 // All public exports

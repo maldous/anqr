@@ -1,1 +1,1 @@
-export * from '../../platform/browser/clipboard/copy-image';
+export * from "../../platform/browser/clipboard/copy-image";

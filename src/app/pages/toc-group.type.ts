@@ -1,4 +1,4 @@
-import type { TocItem } from './toc-item.type';
+import type { TocItem } from "./toc-item.type";
 
 export type TocGroup = {
   key: string;

@@ -1,29 +1,29 @@
-import { isValidABN, isValidEmail, isValidPhone } from '@/modules/payload-generators';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { isValidABN, isValidEmail, isValidPhone } from "@/modules/payload-generators";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/primitives/select';
-import type { EditorProps } from '../payload-editor-props';
-import type { AusPayNetForm } from '../payload-section-types';
+} from "@/ui/primitives/select";
+import type { EditorProps } from "../payload-editor-props";
+import type { AusPayNetForm } from "../payload-section-types";
 
 export function AuspaynetEditor({
   auspaynetForm,
   payload,
   setAuspaynetForm,
   t,
-}: Readonly<Pick<EditorProps, 'auspaynetForm' | 'payload' | 'setAuspaynetForm' | 't'>>) {
+}: Readonly<Pick<EditorProps, "auspaynetForm" | "payload" | "setAuspaynetForm" | "t">>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>{t('placeholders.payIdType')}</Label>
+        <Label>{t("placeholders.payIdType")}</Label>
         <Select
           value={auspaynetForm.payIdType}
-          onValueChange={(v: AusPayNetForm['payIdType']) =>
+          onValueChange={(v: AusPayNetForm["payIdType"]) =>
             setAuspaynetForm({ ...auspaynetForm, payIdType: v })
           }
         >
@@ -31,60 +31,60 @@ export function AuspaynetEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="EMAIL">{t('placeholders.emailOption')}</SelectItem>
-            <SelectItem value="MOBILE">{t('placeholders.mobileOption')}</SelectItem>
-            <SelectItem value="ABN">{t('placeholders.abn')}</SelectItem>
-            <SelectItem value="ORG">{t('placeholders.organizationId')}</SelectItem>
+            <SelectItem value="EMAIL">{t("placeholders.emailOption")}</SelectItem>
+            <SelectItem value="MOBILE">{t("placeholders.mobileOption")}</SelectItem>
+            <SelectItem value="ABN">{t("placeholders.abn")}</SelectItem>
+            <SelectItem value="ORG">{t("placeholders.organizationId")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>{t('placeholders.payId')}</Label>
+        <Label>{t("placeholders.payId")}</Label>
         <Input
           placeholder={(() => {
-            if (auspaynetForm.payIdType === 'EMAIL') return t('placeholders.emailExample');
-            if (auspaynetForm.payIdType === 'MOBILE') return '+61400123456';
-            return '12345678901';
+            if (auspaynetForm.payIdType === "EMAIL") return t("placeholders.emailExample");
+            if (auspaynetForm.payIdType === "MOBILE") return "+61400123456";
+            return "12345678901";
           })()}
           value={auspaynetForm.payId}
           onChange={(e) => setAuspaynetForm({ ...auspaynetForm, payId: e.target.value })}
           className={
             payload.validate &&
             auspaynetForm.payId &&
-            ((auspaynetForm.payIdType === 'EMAIL' && !isValidEmail(auspaynetForm.payId)) ||
-              (auspaynetForm.payIdType === 'MOBILE' && !isValidPhone(auspaynetForm.payId)) ||
-              (auspaynetForm.payIdType === 'ABN' && !isValidABN(auspaynetForm.payId)))
-              ? 'border-destructive focus-visible:ring-destructive'
-              : ''
+            ((auspaynetForm.payIdType === "EMAIL" && !isValidEmail(auspaynetForm.payId)) ||
+              (auspaynetForm.payIdType === "MOBILE" && !isValidPhone(auspaynetForm.payId)) ||
+              (auspaynetForm.payIdType === "ABN" && !isValidABN(auspaynetForm.payId)))
+              ? "border-destructive focus-visible:ring-destructive"
+              : ""
           }
         />
         {payload.validate &&
           auspaynetForm.payId &&
-          ((auspaynetForm.payIdType === 'EMAIL' && !isValidEmail(auspaynetForm.payId)) ||
-            (auspaynetForm.payIdType === 'MOBILE' && !isValidPhone(auspaynetForm.payId)) ||
-            (auspaynetForm.payIdType === 'ABN' && !isValidABN(auspaynetForm.payId))) && (
+          ((auspaynetForm.payIdType === "EMAIL" && !isValidEmail(auspaynetForm.payId)) ||
+            (auspaynetForm.payIdType === "MOBILE" && !isValidPhone(auspaynetForm.payId)) ||
+            (auspaynetForm.payIdType === "ABN" && !isValidABN(auspaynetForm.payId))) && (
             <p className="text-xs text-destructive">
-              {auspaynetForm.payIdType === 'EMAIL'
-                ? t('validation.invalidEmail', 'Enter a valid email address (must contain @)')
-                : auspaynetForm.payIdType === 'ABN'
-                  ? t('validation.invalidABN', 'Enter a valid ABN (11 digits)')
-                  : t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+              {auspaynetForm.payIdType === "EMAIL"
+                ? t("validation.invalidEmail", "Enter a valid email address (must contain @)")
+                : auspaynetForm.payIdType === "ABN"
+                  ? t("validation.invalidABN", "Enter a valid ABN (11 digits)")
+                  : t("validation.invalidPhone", "Enter a valid phone number (at least 3 digits)")}
             </p>
           )}
       </div>
       <div className="space-y-2">
         <Label>
-          {t('payload.merchantName')} {t('common.optional')}
+          {t("payload.merchantName")} {t("common.optional")}
         </Label>
         <Input
-          placeholder={t('placeholders.fullName')}
+          placeholder={t("placeholders.fullName")}
           value={auspaynetForm.merchantName}
           onChange={(e) => setAuspaynetForm({ ...auspaynetForm, merchantName: e.target.value })}
         />
       </div>
       <div className="space-y-2">
         <Label>
-          {t('payload.amount')} (AUD) {t('common.optional')}
+          {t("payload.amount")} (AUD) {t("common.optional")}
         </Label>
         <Input
           type="number"
@@ -93,7 +93,7 @@ export function AuspaynetEditor({
           onChange={(e) => setAuspaynetForm({ ...auspaynetForm, amount: e.target.value })}
         />
       </div>
-      <p className="text-xs text-muted-foreground">{t('placeholders.auspaynetHint')}</p>
+      <p className="text-xs text-muted-foreground">{t("placeholders.auspaynetHint")}</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import type { CreateCanvasFn } from './types';
-import type { ReadbackCtx } from './readback-ctx';
+import type { CreateCanvasFn } from "./types";
+import type { ReadbackCtx } from "./readback-ctx";
 
 export type SharedReadbackEntry = {
   canvas: HTMLCanvasElement | OffscreenCanvas;

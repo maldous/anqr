@@ -1,16 +1,16 @@
-import { createLogger } from '../../../infra/logging/logger';
-import { readCodewords } from './decode';
-import { unmaskMatrix } from './format';
-import { rsRootabilityFor } from './rs-rootability';
-import type { ECCLevelChar } from '../../../modules/qr-decoder/types';
+import { createLogger } from "../../../infra/logging/logger";
+import { readCodewords } from "./decode";
+import { unmaskMatrix } from "./format";
+import { rsRootabilityFor } from "./rs-rootability";
+import type { ECCLevelChar } from "../../../modules/qr-decoder/types";
 
-const qrDecoderLog = createLogger('DECODER');
+const qrDecoderLog = createLogger("DECODER");
 
 export function runMaskRootabilitySweep(
   rawMatrix: boolean[][],
   moduleCount: number,
   versionRounded: number,
-  diagEccChar: ECCLevelChar
+  diagEccChar: ECCLevelChar,
 ): void {
   const maskSweep: Array<{
     mask: number;
@@ -32,7 +32,7 @@ export function runMaskRootabilitySweep(
       })),
     });
   }
-  qrDecoderLog.trace('diag: RS rootability sweep (masks 0..7)', {
+  qrDecoderLog.trace("diag: RS rootability sweep (masks 0..7)", {
     version: versionRounded,
     ecc: diagEccChar,
     maskSweep,

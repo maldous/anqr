@@ -1,4 +1,4 @@
-import { workerClientState } from './worker-client-state';
+import { workerClientState } from "./worker-client-state";
 
 export function failAllPending(error: Error): void {
   for (const [id, request] of workerClientState.pending.entries()) {

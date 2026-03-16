@@ -3,7 +3,7 @@ export function sampleBlueNoise(
   x: number,
   y: number,
   tile: ArrayLike<number>,
-  tileSize: number
+  tileSize: number,
 ): number {
   const tx = ((x % tileSize) + tileSize) % tileSize;
   const ty = ((y % tileSize) + tileSize) % tileSize;

@@ -1,4 +1,4 @@
-import type { OverlayData, QRGeneratorConfig } from './types';
+import type { OverlayData, QRGeneratorConfig } from "./types";
 
 export type OverlayModeContext = {
   overlayMode: string | undefined;

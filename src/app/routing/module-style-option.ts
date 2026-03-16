@@ -1,1 +1,1 @@
-export type ModuleStyleOption = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
+export type ModuleStyleOption = "square" | "rounded" | "dots" | "diamond" | "connected";

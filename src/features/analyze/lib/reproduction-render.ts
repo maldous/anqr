@@ -1,1 +1,1 @@
-export { reproduceQRCode } from './analyze-reproduction';
+export { reproduceQRCode } from "./analyze-reproduction";

@@ -1,5 +1,5 @@
-import type { OverlayData } from './overlay-data';
-import type { QRGeneratorConfig } from './qr-generator-config';
+import type { OverlayData } from "./overlay-data";
+import type { QRGeneratorConfig } from "./qr-generator-config";
 
 export interface ApplyOverlayModeOptions {
   overlayMode: string | undefined;

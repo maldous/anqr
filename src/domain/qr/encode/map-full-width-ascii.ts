@@ -1,4 +1,4 @@
-import { FULLWIDTH_ASCII_START } from './fullwidth-ascii-start';
+import { FULLWIDTH_ASCII_START } from "./fullwidth-ascii-start";
 
 export function mapFullWidthASCII(codePoint: number): number[] | null {
   const offset = codePoint - FULLWIDTH_ASCII_START;

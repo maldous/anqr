@@ -1,2 +1,2 @@
 // Barrel: domain/qr/encode
-export { qrcode } from './encoder';
+export { qrcode } from "./encoder";

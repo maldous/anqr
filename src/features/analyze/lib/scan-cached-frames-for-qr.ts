@@ -1,10 +1,10 @@
-import { analyzeQRCode, type QRAnalysisResult } from '@/modules/qr-analyzer';
-import { buildCandidateFrameIndices } from './build-candidate-frame-indices';
-import { cloneCanvasLike } from './clone-canvas-like';
+import { analyzeQRCode, type QRAnalysisResult } from "@/modules/qr-analyzer";
+import { buildCandidateFrameIndices } from "./build-candidate-frame-indices";
+import { cloneCanvasLike } from "./clone-canvas-like";
 
 export function scanCachedFramesForQR(
   cachedFrames: (HTMLCanvasElement | OffscreenCanvas)[],
-  currentFrame: number
+  currentFrame: number,
 ): QRAnalysisResult | null {
   if (cachedFrames.length <= 1) {
     return null;

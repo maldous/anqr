@@ -1,5 +1,5 @@
-import { Loader2, QrCode } from 'lucide-react';
-import type { useTranslation } from 'react-i18next';
+import { Loader2, QrCode } from "lucide-react";
+import type { useTranslation } from "react-i18next";
 
 export function GeneratorCardActive({
   t,
@@ -7,7 +7,7 @@ export function GeneratorCardActive({
   handleAnalyzeGenerator,
   isLoading,
 }: Readonly<{
-  t: ReturnType<typeof useTranslation>['t'];
+  t: ReturnType<typeof useTranslation>["t"];
   isLoadingGenerator: boolean;
   handleAnalyzeGenerator: () => void;
   isLoading: boolean;
@@ -19,8 +19,8 @@ export function GeneratorCardActive({
       disabled={isLoading}
       className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
         isLoadingGenerator
-          ? 'border-primary bg-primary/5'
-          : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
+          ? "border-primary bg-primary/5"
+          : "border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10"
       }`}
     >
       {isLoadingGenerator ? (
@@ -30,10 +30,10 @@ export function GeneratorCardActive({
       )}
       <div className="text-center">
         <p className="text-sm font-medium text-primary">
-          {t('analyze.useCurrentQr', 'Current QR')}
+          {t("analyze.useCurrentQr", "Current QR")}
         </p>
         <p className="text-[10px] text-muted-foreground">
-          {t('analyze.fromGenerator', 'From Generator')}
+          {t("analyze.fromGenerator", "From Generator")}
         </p>
       </div>
     </button>

@@ -18,7 +18,7 @@ export function parseEpcSepaPayload(payload: string): Record<string, string | nu
     beneficiaryToOriginator: null,
   };
 
-  const lines = payload.split('\n');
+  const lines = payload.split("\n");
   if (lines.length < 4) return result;
 
   result.serviceTag = lines[0] || null; // Should be 'BCD'
@@ -46,7 +46,7 @@ export function parseEpcSepaPayload(payload: string): Record<string, string | nu
 
   // Format IBAN with spaces
   if (result.iban) {
-    result.iban = result.iban.replaceAll(/(.{4})/g, '$1 ').trim();
+    result.iban = result.iban.replaceAll(/(.{4})/g, "$1 ").trim();
   }
 
   return result;

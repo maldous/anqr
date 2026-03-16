@@ -1,10 +1,10 @@
-import type { FormatInfo } from '../../../modules/qr-decoder/types';
-import { ECC_LEVEL_MAP } from '../../../modules/qr-decoder/types';
-import { findBestFormatMatch } from './find-best-format-match';
-import { initFormatTable } from './init-format-table';
-import { qrDecoderLog } from './qr-decoder-log';
-import { readFormatBitsCopy1 } from './read-format-bits-copy1';
-import { readFormatBitsCopy2 } from './read-format-bits-copy2';
+import type { FormatInfo } from "../../../modules/qr-decoder/types";
+import { ECC_LEVEL_MAP } from "../../../modules/qr-decoder/types";
+import { findBestFormatMatch } from "./find-best-format-match";
+import { initFormatTable } from "./init-format-table";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { readFormatBitsCopy1 } from "./read-format-bits-copy1";
+import { readFormatBitsCopy2 } from "./read-format-bits-copy2";
 
 /**
  * Read format info from the matrix
@@ -28,21 +28,21 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
   const bits1 = copy1.bits;
   const bits2 = copy2.bits;
 
-  qrDecoderLog.trace('format: Read format bits with trace', {
-    bits1: bits1.toString(2).padStart(15, '0'),
-    bits2: bits2.toString(2).padStart(15, '0'),
-    bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,
-    bits2Hex: `0x${bits2.toString(16).padStart(4, '0')}`,
+  qrDecoderLog.trace("format: Read format bits with trace", {
+    bits1: bits1.toString(2).padStart(15, "0"),
+    bits2: bits2.toString(2).padStart(15, "0"),
+    bits1Hex: `0x${bits1.toString(16).padStart(4, "0")}`,
+    bits2Hex: `0x${bits2.toString(16).padStart(4, "0")}`,
     moduleCount,
-    trace1: copy1.trace.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
-    trace2: copy2.trace.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
+    trace1: copy1.trace.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(" "),
+    trace2: copy2.trace.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(" "),
   });
 
   const best = findBestFormatMatch(bits1, bits2);
 
   if (best.match) {
     const eccChar = ECC_LEVEL_MAP[best.match.eccLevel];
-    qrDecoderLog.trace('format: Decoded format info', {
+    qrDecoderLog.trace("format: Decoded format info", {
       eccLevel: best.match.eccLevel,
       eccChar,
       maskPattern: best.match.maskPattern,
@@ -52,11 +52,11 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
       usedCopy: best.fromCopy,
     });
   } else {
-    qrDecoderLog.trace('format: Failed to decode format info', {
-      bits1: bits1.toString(2).padStart(15, '0'),
-      bits2: bits2.toString(2).padStart(15, '0'),
-      bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,
-      bits2Hex: `0x${bits2.toString(16).padStart(4, '0')}`,
+    qrDecoderLog.trace("format: Failed to decode format info", {
+      bits1: bits1.toString(2).padStart(15, "0"),
+      bits2: bits2.toString(2).padStart(15, "0"),
+      bits1Hex: `0x${bits1.toString(16).padStart(4, "0")}`,
+      bits2Hex: `0x${bits2.toString(16).padStart(4, "0")}`,
     });
   }
 

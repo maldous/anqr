@@ -1,4 +1,4 @@
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
 
 export function buildDitherAttemptList(
   baseAttempts: DitherAttemptPatch[],
@@ -6,7 +6,7 @@ export function buildDitherAttemptList(
   isAnimatedFrame: boolean,
   isFirstAnimatedFrame: boolean,
   isAnimatedPreviewFrame: boolean,
-  patchSignature: (patch: DitherAttemptPatch) => string
+  patchSignature: (patch: DitherAttemptPatch) => string,
 ): DitherAttemptPatch[] {
   let attempts: DitherAttemptPatch[] = [];
   const seenAttemptSignatures = new Set<string>();

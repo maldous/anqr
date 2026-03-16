@@ -4,8 +4,8 @@ import {
   isFormatInfo,
   isTimingPattern,
   isVersionInfo,
-} from '../../../modules/qr-spec';
-import { isSeparatorModule } from './is-separator-module';
+} from "../../../modules/qr-spec";
+import { isSeparatorModule } from "./is-separator-module";
 
 export function categorizeSkippedModule(
   row: number,
@@ -21,7 +21,7 @@ export function categorizeSkippedModule(
     alignment: number;
     darkModule: number;
     other: number;
-  }
+  },
 ): void {
   if (isFinderPattern(row, col, moduleCount)) skipCounts.finder++;
   else if (isSeparatorModule(row, col, moduleCount)) skipCounts.separator++;

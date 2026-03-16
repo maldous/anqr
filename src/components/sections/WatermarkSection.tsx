@@ -1,1 +1,1 @@
-export * from '../../features/generator/components/sections/WatermarkSection';
+export * from "../../features/generator/components/sections/WatermarkSection";

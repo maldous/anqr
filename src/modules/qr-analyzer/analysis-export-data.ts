@@ -1,32 +1,32 @@
-import type { QRAnalysisResult } from './types';
-import type { AnalysisExportGeneratorSettings } from './analysis-export-generator-settings';
+import type { QRAnalysisResult } from "./types";
+import type { AnalysisExportGeneratorSettings } from "./analysis-export-generator-settings";
 
 export interface AnalysisExportData {
-  version: '1.1';
+  version: "1.1";
   timestamp: string;
-  source?: 'file' | 'url' | 'camera' | 'generator' | 'unknown';
+  source?: "file" | "url" | "camera" | "generator" | "unknown";
   analysis: {
     payload?: string;
     payloadBytes?: number[];
     version: number | null;
     moduleCount: number;
-    eccLevel: QRAnalysisResult['eccLevel'];
+    eccLevel: QRAnalysisResult["eccLevel"];
     maskPattern: number | null;
-    encodingMode: QRAnalysisResult['encodingMode'];
-    confidence?: QRAnalysisResult['confidence'];
+    encodingMode: QRAnalysisResult["encodingMode"];
+    confidence?: QRAnalysisResult["confidence"];
     warnings?: string[];
-    contentType?: QRAnalysisResult['contentType'];
-    detectedColors?: QRAnalysisResult['detectedColors'];
-    dominantColors?: QRAnalysisResult['dominantColors'];
+    contentType?: QRAnalysisResult["contentType"];
+    detectedColors?: QRAnalysisResult["detectedColors"];
+    dominantColors?: QRAnalysisResult["dominantColors"];
     estimatedModulePx: number | null;
-    quietZone?: QRAnalysisResult['quietZone'];
-    dataCapacity?: QRAnalysisResult['dataCapacity'];
-    structuralAnalysis?: QRAnalysisResult['structuralAnalysis'];
-    imageProperties?: QRAnalysisResult['imageProperties'];
-    geometry?: QRAnalysisResult['geometry'];
-    timing?: QRAnalysisResult['timing'];
+    quietZone?: QRAnalysisResult["quietZone"];
+    dataCapacity?: QRAnalysisResult["dataCapacity"];
+    structuralAnalysis?: QRAnalysisResult["structuralAnalysis"];
+    imageProperties?: QRAnalysisResult["imageProperties"];
+    geometry?: QRAnalysisResult["geometry"];
+    timing?: QRAnalysisResult["timing"];
     errorsCorrected: number | null;
-    decoderMetadata?: QRAnalysisResult['decoderMetadata'];
+    decoderMetadata?: QRAnalysisResult["decoderMetadata"];
     moduleMatrix?: string[];
   };
   diagnostics: {

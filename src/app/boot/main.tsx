@@ -1,22 +1,22 @@
-import { Capacitor } from '@capacitor/core';
-import * as Sentry from '@sentry/react';
-import React, { Suspense } from 'react';
-import ReactDOM from 'react-dom/client';
-import App from '@/app/shell/AppShell';
-import '@/index.css';
-import '@/app/i18n'; // Initialize i18n
-import { ErrorBoundary } from '@/app/shell/ErrorBoundary';
-import { initAutoDynamicTestIds } from '@/infra/testing/auto-testid';
-import { createLogger } from '@/infra/logging/logger';
-import { initRemoteDiagnostics } from '@/infra/telemetry/logger-remote';
+import { Capacitor } from "@capacitor/core";
+import * as Sentry from "@sentry/react";
+import React, { Suspense } from "react";
+import ReactDOM from "react-dom/client";
+import App from "@/app/shell/AppShell";
+import "@/index.css";
+import "@/app/i18n"; // Initialize i18n
+import { ErrorBoundary } from "@/app/shell/ErrorBoundary";
+import { initAutoDynamicTestIds } from "@/infra/testing/auto-testid";
+import { createLogger } from "@/infra/logging/logger";
+import { initRemoteDiagnostics } from "@/infra/telemetry/logger-remote";
 import {
   initializeAdMob,
   loadWebOnlyBootAssets,
   prepareAllAds,
   showBannerAd,
-} from '@/modules/platform';
+} from "@/modules/platform";
 
-const log = createLogger('MAIN');
+const log = createLogger("MAIN");
 
 // Detect if running in Capacitor (native app) environment
 const isCapacitor = Capacitor.isNativePlatform();
@@ -30,8 +30,8 @@ loadWebOnlyBootAssets();
 // DSN: anqr-web for web browser, anqr-mobile DSN is used in native Android code
 Sentry.init({
   dsn: isCapacitor
-    ? 'https://e21ce35eef457e8b07408316ee9cb262@o4510808522489856.ingest.us.sentry.io/4510808544247808'
-    : 'https://4cd2d9dfc1e109caf26e9105c03cdfd6@o4510808522489856.ingest.us.sentry.io/4510808540643328',
+    ? "https://e21ce35eef457e8b07408316ee9cb262@o4510808522489856.ingest.us.sentry.io/4510808544247808"
+    : "https://4cd2d9dfc1e109caf26e9105c03cdfd6@o4510808522489856.ingest.us.sentry.io/4510808540643328",
   sendDefaultPii: true,
   // Release version for source map matching - injected at build time by Vite
   release: import.meta.env.VITE_SENTRY_RELEASE,
@@ -66,26 +66,26 @@ Sentry.init({
   ],
   // Drop non-actionable events that slip past ignoreErrors (e.g. captureMessage)
   beforeSend(event) {
-    const msg = event.message || event.exception?.values?.[0]?.value || '';
+    const msg = event.message || event.exception?.values?.[0]?.value || "";
     // Drop all AdMob platform mismatch errors
-    if (msg.includes('is not implemented on')) return null;
+    if (msg.includes("is not implemented on")) return null;
     // Drop all QART diagnostic messages (sent via captureMessage from logger)
-    if (msg.includes('[QART]')) return null;
+    if (msg.includes("[QART]")) return null;
     // Drop known diagnostic patterns that may not have [QART] prefix
-    if (msg.includes('ECC budget exceeded')) return null;
-    if (msg.includes('SEMANTIC-HARD-GATE')) return null;
-    if (msg.includes('matrix scan validation')) return null;
-    if (msg.includes('DECODED BYTES')) return null;
+    if (msg.includes("ECC budget exceeded")) return null;
+    if (msg.includes("SEMANTIC-HARD-GATE")) return null;
+    if (msg.includes("matrix scan validation")) return null;
+    if (msg.includes("DECODED BYTES")) return null;
     // Drop stale cache reference errors
-    if (msg.includes('Grid3x3')) return null;
-    if (msg.includes('TrackerStorageType')) return null;
-    if (msg.includes('ditherMode')) return null;
+    if (msg.includes("Grid3x3")) return null;
+    if (msg.includes("TrackerStorageType")) return null;
+    if (msg.includes("ditherMode")) return null;
     return event;
   },
   // Don't send debug breadcrumbs to Sentry
   beforeBreadcrumb(breadcrumb) {
     // Filter out debug-level breadcrumbs in production
-    if (breadcrumb.level === 'debug' && !import.meta.env.DEV) {
+    if (breadcrumb.level === "debug" && !import.meta.env.DEV) {
       return null;
     }
     return breadcrumb;
@@ -94,12 +94,12 @@ Sentry.init({
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: isCapacitor ? 0 : 0.5,
   // Tag environment for filtering in Sentry dashboard
-  environment: isCapacitor ? 'capacitor' : 'web',
+  environment: isCapacitor ? "capacitor" : "web",
 });
 
 // Initialize logging system (after Sentry, so errors during init are captured)
 initRemoteDiagnostics();
-log.info('App starting', { environment: isCapacitor ? 'capacitor' : 'web' });
+log.info("App starting", { environment: isCapacitor ? "capacitor" : "web" });
 
 // Initialize AdMob for native apps after a short delay to ensure Capacitor bridge is ready
 // This is more reliable than calling at module load time
@@ -116,22 +116,22 @@ const initAds = async () => {
       // WebContent process; give the main view time to finish first paint.
       const bannerDelay = import.meta.env.DEV ? 5000 : 2000;
       await new Promise((resolve) => setTimeout(resolve, bannerDelay));
-      await showBannerAd('bottom');
+      await showBannerAd("bottom");
     }
   } catch (error) {
-    log.error('AdMob initialization error', { error });
+    log.error("AdMob initialization error", { error });
   }
 };
 
 // Start ad initialization after DOM is ready
-if (document.readyState === 'complete') {
+if (document.readyState === "complete") {
   initAds();
 } else {
-  globalThis.addEventListener('load', initAds, { once: true });
+  globalThis.addEventListener("load", initAds, { once: true });
 }
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Root element not found');
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Root element not found");
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <ErrorBoundary>
@@ -145,7 +145,7 @@ ReactDOM.createRoot(rootElement).render(
         <App />
       </Suspense>
     </ErrorBoundary>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 
 // Ensure every interactive element has a unique dynamic test id.

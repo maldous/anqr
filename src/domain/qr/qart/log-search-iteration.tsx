@@ -1,6 +1,6 @@
-import type { FormatVerificationResult } from './validation';
-import { log } from './log';
-import type { BinarySearchValidationResult } from './binary-search-validation-result';
+import type { FormatVerificationResult } from "./validation";
+import { log } from "./log";
+import type { BinarySearchValidationResult } from "./binary-search-validation-result";
 
 export function logSearchIteration(
   iterations: number,
@@ -11,9 +11,9 @@ export function logSearchIteration(
   validation: BinarySearchValidationResult,
   scan: { success: boolean; data?: string },
   formatVerification: FormatVerificationResult | undefined,
-  expectedData: string
+  expectedData: string,
 ): void {
-  log.debug('Binary search iteration', {
+  log.debug("Binary search iteration", {
     iteration: iterations,
     vectorsApplied: mid,
     low,

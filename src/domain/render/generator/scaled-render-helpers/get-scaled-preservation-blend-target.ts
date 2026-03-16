@@ -1,7 +1,7 @@
-import type { QRCodeInstance } from '../../../../modules/qr-generator/types';
-import type { PixelColor } from '../scaled-render-types';
-import { adjustLumaPreserveChroma } from './adjust-luma-preserve-chroma';
-import { sampleScaledModuleOverlayColor } from './sample-scaled-module-overlay-color';
+import type { QRCodeInstance } from "../../../../modules/qr-generator/types";
+import type { PixelColor } from "../scaled-render-types";
+import { adjustLumaPreserveChroma } from "./adjust-luma-preserve-chroma";
+import { sampleScaledModuleOverlayColor } from "./sample-scaled-module-overlay-color";
 
 export function getScaledPreservationBlendTarget(
   qr: QRCodeInstance,
@@ -13,7 +13,7 @@ export function getScaledPreservationBlendTarget(
   moduleRow: number,
   moduleCol: number,
   scaledRow: number,
-  scaledCol: number
+  scaledCol: number,
 ): { r: number; g: number; b: number } {
   const moduleDark = qr.isDark(moduleRow, moduleCol);
   const sampled =

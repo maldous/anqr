@@ -1,4 +1,4 @@
-import { polyEvalAsc } from './poly-eval-asc';
+import { polyEvalAsc } from "./poly-eval-asc";
 
 export function chienRootCount(locator: number[], gfExp: Uint8Array): number {
   let roots = 0;

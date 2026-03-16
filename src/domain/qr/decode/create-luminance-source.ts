@@ -1,4 +1,4 @@
-import { type LuminanceSource, RGBALuminanceSource } from './luminance';
+import { type LuminanceSource, RGBALuminanceSource } from "./luminance";
 
 export function createLuminanceSource(imageData: ImageData): LuminanceSource {
   const { data, width, height } = imageData;

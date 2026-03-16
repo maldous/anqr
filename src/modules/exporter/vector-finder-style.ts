@@ -1,1 +1,1 @@
-export type VectorFinderStyle = 'square' | 'rounded' | 'circle';
+export type VectorFinderStyle = "square" | "rounded" | "circle";

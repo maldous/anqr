@@ -1,4 +1,4 @@
-import type { GifPatchFrame } from './gif-patch-frame';
+import type { GifPatchFrame } from "./gif-patch-frame";
 
 export interface DecodedGif {
   width: number;

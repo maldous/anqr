@@ -1,6 +1,6 @@
-import type { ColorMode, DitherResult } from '../../../modules/dither-algorithms/types';
-import { createRNG } from '../../../modules/dither-algorithms/utils';
-import { buildBinaryDitherResult } from './build-binary-dither-result';
+import type { ColorMode, DitherResult } from "../../../modules/dither-algorithms/types";
+import { createRNG } from "../../../modules/dither-algorithms/utils";
+import { buildBinaryDitherResult } from "./build-binary-dither-result";
 
 export function noiseThresholdDither(
   params: Readonly<{
@@ -11,7 +11,7 @@ export function noiseThresholdDither(
     threshold: (rng: () => number) => number;
     width: number;
     _colorMode?: ColorMode;
-  }>
+  }>,
 ): DitherResult {
   const rng = createRNG(params.seed ?? 0);
 

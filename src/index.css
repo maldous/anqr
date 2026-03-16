@@ -1,17 +1,17 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* Safe area insets for devices with notches */
 /* Multi-language font stack with comprehensive script support */
 /* Supports: Latin, Hindi (Devanagari), Chinese (Simplified), Tamil, Thai, Malay, Portuguese */
 :root {
   --font-sans:
-    'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans SC', 'Noto Sans Tamil', 'Noto Sans Thai',
-    /* System UI fonts */ system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, /* CJK fallbacks */ 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    'WenQuanYi Micro Hei', /* Devanagari fallbacks */ 'Nirmala UI', 'Mangal', 'Kokila',
-    /* Tamil fallbacks */ 'Latha', 'Vijaya', /* Thai fallbacks */ 'Leelawadee UI', 'Tahoma',
-    'Angsana New', /* Generic fallback */ sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
+    "Noto Sans", "Noto Sans Devanagari", "Noto Sans SC", "Noto Sans Tamil", "Noto Sans Thai",
+    /* System UI fonts */ system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, /* CJK fallbacks */ "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "WenQuanYi Micro Hei", /* Devanagari fallbacks */ "Nirmala UI", "Mangal", "Kokila",
+    /* Tamil fallbacks */ "Latha", "Vijaya", /* Thai fallbacks */ "Leelawadee UI", "Tahoma",
+    "Angsana New", /* Generic fallback */ sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
   --sat: env(safe-area-inset-top, 0px);
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -94,8 +94,8 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
   font-feature-settings:
-    'rlig' 1,
-    'calt' 1;
+    "rlig" 1,
+    "calt" 1;
   /* Improve text rendering for non-Latin scripts */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -186,7 +186,7 @@ body {
 }
 
 /* Scroll margin for hash navigation - accounts for sticky headers */
-[id^='section-'] {
+[id^="section-"] {
   scroll-margin-top: 80px;
 }
 

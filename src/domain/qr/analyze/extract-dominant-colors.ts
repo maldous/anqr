@@ -1,11 +1,11 @@
-import type { DominantColor } from './analyzer-content.types';
+import type { DominantColor } from "./analyzer-content.types";
 
 /**
  * Extract dominant colors from image data
  */
 export function extractDominantColors(
   imageData: ImageData,
-  maxColors: number = 5
+  maxColors: number = 5,
 ): DominantColor[] {
   const data = imageData.data;
   const colorMap = new Map<string, number>();
@@ -25,9 +25,9 @@ export function extractDominantColors(
     .slice(0, maxColors);
 
   return sorted.map(([key, count]) => {
-    const [r, g, b] = key.split(',').map(Number);
+    const [r, g, b] = key.split(",").map(Number);
     return {
-      color: `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`,
+      color: `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`,
       percentage: Math.round((count / totalPixels) * 100),
       rgb: { r, g, b },
     };

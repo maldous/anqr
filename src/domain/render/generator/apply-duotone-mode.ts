@@ -1,7 +1,7 @@
-import { blendColors, parseColor } from '../core';
-import { DUOTONE_MAX_LIGHTEN } from './duotone-max-lighten';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
+import { blendColors, parseColor } from "../core";
+import { DUOTONE_MAX_LIGHTEN } from "./duotone-max-lighten";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
 
 export function applyDuotoneMode(context: OverlayModeContext, result: OverlayModeResult): void {
   const { isDark, config, effectiveIntensity, brightness } = context;
@@ -37,15 +37,15 @@ export function applyDuotoneMode(context: OverlayModeContext, result: OverlayMod
     const lightenAmt = (brightness - 0.5) * 2 * duoIntensity;
     const lightR = Math.min(
       255,
-      Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * DUOTONE_MAX_LIGHTEN)
+      Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * DUOTONE_MAX_LIGHTEN),
     );
     const lightG = Math.min(
       255,
-      Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * DUOTONE_MAX_LIGHTEN)
+      Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * DUOTONE_MAX_LIGHTEN),
     );
     const lightB = Math.min(
       255,
-      Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * DUOTONE_MAX_LIGHTEN)
+      Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * DUOTONE_MAX_LIGHTEN),
     );
     result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
     return;
@@ -55,6 +55,6 @@ export function applyDuotoneMode(context: OverlayModeContext, result: OverlayMod
   result.moduleColor = blendColors(
     config.fgColor,
     shadowColor,
-    duoIntensity * (0.5 - brightness) * 2
+    duoIntensity * (0.5 - brightness) * 2,
   );
 }

@@ -1,12 +1,12 @@
-import { ALPHANUMERIC_CHARS } from '../../../modules/qr-decoder/types';
-import { qrDecoderLog } from './qr-decoder-log';
-import { BitStream } from './bit-stream';
+import { ALPHANUMERIC_CHARS } from "../../../modules/qr-decoder/types";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { BitStream } from "./bit-stream";
 
 /**
  * Decode alphanumeric mode data
  */
 export function decodeAlphanumeric(bits: BitStream, count: number): string {
-  let result = '';
+  let result = "";
 
   // Read pairs of characters (11 bits each)
   let remaining = count;
@@ -20,8 +20,8 @@ export function decodeAlphanumeric(bits: BitStream, count: number): string {
     if (c1 >= 0 && c1 < ALPHANUMERIC_CHARS.length && c2 >= 0 && c2 < ALPHANUMERIC_CHARS.length) {
       result += ALPHANUMERIC_CHARS[c1] + ALPHANUMERIC_CHARS[c2];
     } else {
-      qrDecoderLog.debug('alphanumeric: Invalid character index', { value, c1, c2 });
-      result += '??'; // Placeholder for invalid characters
+      qrDecoderLog.debug("alphanumeric: Invalid character index", { value, c1, c2 });
+      result += "??"; // Placeholder for invalid characters
     }
     remaining -= 2;
   }
@@ -32,8 +32,8 @@ export function decodeAlphanumeric(bits: BitStream, count: number): string {
     if (value >= 0 && value < ALPHANUMERIC_CHARS.length) {
       result += ALPHANUMERIC_CHARS[value];
     } else {
-      qrDecoderLog.debug('alphanumeric: Invalid single character index', { value });
-      result += '?';
+      qrDecoderLog.debug("alphanumeric: Invalid single character index", { value });
+      result += "?";
     }
   }
 

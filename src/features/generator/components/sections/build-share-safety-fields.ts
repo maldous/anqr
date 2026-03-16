@@ -1,7 +1,7 @@
-import type { StoreState } from './share-config-store-state.type';
+import type { StoreState } from "./share-config-store-state.type";
 
-export function buildShareSafetyFields(safety: StoreState['safety']) {
-  const enabled = safety.mode !== 'off';
+export function buildShareSafetyFields(safety: StoreState["safety"]) {
+  const enabled = safety.mode !== "off";
   return {
     safetyMode: enabled ? safety.mode : undefined,
     safetyMinModulePx: enabled && safety.minModulePx !== 2 ? safety.minModulePx : undefined,

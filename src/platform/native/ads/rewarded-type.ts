@@ -1,1 +1,1 @@
-export type RewardedType = 'rewarded' | 'rewardedInterstitial' | 'premium' | string;
+export type RewardedType = "rewarded" | "rewardedInterstitial" | "premium" | string;

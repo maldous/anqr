@@ -1,11 +1,11 @@
-import { validateQRCode } from './validate-qr-code';
+import { validateQRCode } from "./validate-qr-code";
 
 /**
  * Validate multiple frames (for animated QR codes)
  */
 export function validateFrames(
   frames: HTMLCanvasElement[],
-  expectedContent?: string
+  expectedContent?: string,
 ): { valid: boolean; validCount: number; totalCount: number } {
   let validCount = 0;
   for (const frame of frames) {

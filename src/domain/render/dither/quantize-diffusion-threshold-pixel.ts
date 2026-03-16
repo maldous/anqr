@@ -1,4 +1,4 @@
-import type { DiffusionPixelResult } from './diffusion-pixel-result';
+import type { DiffusionPixelResult } from "./diffusion-pixel-result";
 
 export function quantizeDiffusionThresholdPixel(params: {
   errorScale: number;

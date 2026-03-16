@@ -4,7 +4,7 @@
  * Notes: Resolve overlay preservation options from safety + user config.
  */
 
-import type { ResolvedPreservationOptions } from '@/features/generator/application/generation/generation-type-preservation';
+import type { ResolvedPreservationOptions } from "@/features/generator/application/generation/generation-type-preservation";
 
 export function resolveOverlayPreservationOptions(params: {
   overlayEnabled: boolean;
@@ -22,11 +22,11 @@ export function resolveOverlayPreservationOptions(params: {
   protectVersionInfo: boolean;
 }): ResolvedPreservationOptions {
   const isDitheredOverlayMode =
-    params.overlayMode === 'dithered' ||
-    params.overlayMode === 'blue_noise' ||
-    params.overlayMode === 'blue-noise';
+    params.overlayMode === "dithered" ||
+    params.overlayMode === "blue_noise" ||
+    params.overlayMode === "blue-noise";
   const applySafetyLocks =
-    params.overlayEnabled && params.safetyMode !== 'off' && !isDitheredOverlayMode;
+    params.overlayEnabled && params.safetyMode !== "off" && !isDitheredOverlayMode;
 
   return {
     preserveFinders: applySafetyLocks

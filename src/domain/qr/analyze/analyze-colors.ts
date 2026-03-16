@@ -1,8 +1,11 @@
-import { grayAt } from './decoder-color-utils';
+import { grayAt } from "./decoder-color-utils";
 
 export function analyzeColors(
   imageData: ImageData,
-  location: { topLeftCorner: { x: number; y: number }; bottomRightCorner: { x: number; y: number } }
+  location: {
+    topLeftCorner: { x: number; y: number };
+    bottomRightCorner: { x: number; y: number };
+  },
 ): { foreground: string; background: string; contrastRatio: number } {
   const { data, width } = imageData;
   const minX = Math.max(0, Math.floor(location.topLeftCorner.x));
@@ -39,8 +42,8 @@ export function analyzeColors(
   const contrastRatio = Math.round((Math.max(l1, l2) / Math.min(l1, l2)) * 100) / 100;
 
   return {
-    foreground: `#${avgDark.toString(16).padStart(2, '0').repeat(3)}`,
-    background: `#${avgLight.toString(16).padStart(2, '0').repeat(3)}`,
+    foreground: `#${avgDark.toString(16).padStart(2, "0").repeat(3)}`,
+    background: `#${avgLight.toString(16).padStart(2, "0").repeat(3)}`,
     contrastRatio,
   };
 }

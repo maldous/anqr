@@ -1,7 +1,7 @@
 export function getScanParams(
   y: number,
   width: number,
-  serpentine: boolean
+  serpentine: boolean,
 ): { startX: number; endX: number; deltaX: number; leftToRight: boolean } {
   const leftToRight = serpentine ? y % 2 === 0 : true;
   return {

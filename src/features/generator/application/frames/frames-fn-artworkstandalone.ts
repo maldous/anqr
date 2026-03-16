@@ -4,18 +4,18 @@
  * Notes: Generate artwork frame in standalone mode.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import type { QArtModule } from '@/features/generator/application/qart/qart-shared-types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { makeArtworkFrameHelpers } from '@/features/generator/application/frames/frames-fn-artworkhelpers';
-import { handleArtworkWorkerSuccess } from '@/features/generator/application/frames/frames-fn-artworksuccess';
-import { invokeArtworkWorkerForFrame } from '@/features/generator/application/frames/frames-fn-invokeworker';
-import { isNoisyOutlierMatchCheck } from '@/features/generator/application/frames/frames-fn-outliercheck';
-import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
-import { getQArtSearchAttempts } from '@/features/generator/application/generation/generation-fn-qartattmpts';
-import { resolveArtworkMaskPattern } from '@/features/generator/application/safety/safety-fn-resolvemask';
+import { createLogger } from "@/infra/logging/logger";
+import type { QArtModule } from "@/features/generator/application/qart/qart-shared-types";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { makeArtworkFrameHelpers } from "@/features/generator/application/frames/frames-fn-artworkhelpers";
+import { handleArtworkWorkerSuccess } from "@/features/generator/application/frames/frames-fn-artworksuccess";
+import { invokeArtworkWorkerForFrame } from "@/features/generator/application/frames/frames-fn-invokeworker";
+import { isNoisyOutlierMatchCheck } from "@/features/generator/application/frames/frames-fn-outliercheck";
+import type { ArtworkFrameState } from "@/features/generator/application/frames/frames-interface-artworkstate";
+import { getQArtSearchAttempts } from "@/features/generator/application/generation/generation-fn-qartattmpts";
+import { resolveArtworkMaskPattern } from "@/features/generator/application/safety/safety-fn-resolvemask";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function generateArtworkFrameStandalone(params: {
   frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas;
@@ -38,24 +38,24 @@ export async function generateArtworkFrameStandalone(params: {
     isNoisyOutlierMatchCheck(
       mp,
       params.frameIdx,
-      params.artworkState.lastSuccessfulArtworkMatchPercentage
+      params.artworkState.lastSuccessfulArtworkMatchPercentage,
     );
 
   try {
     const useAutoMask =
-      typeof params.debouncedConfig.maskPattern !== 'number' ||
+      typeof params.debouncedConfig.maskPattern !== "number" ||
       params.debouncedConfig.maskPattern < 0;
     const qartConfig = {
-      data: (params.debouncedConfig.content as string) ?? '',
+      data: (params.debouncedConfig.content as string) ?? "",
       version: params.artworkState.artworkLockedVersion,
-      ecc: ((params.debouncedConfig.errorCorrection as string) || 'M') as 'L' | 'M' | 'Q' | 'H',
+      ecc: ((params.debouncedConfig.errorCorrection as string) || "M") as "L" | "M" | "Q" | "H",
       strictSuffix: true,
       targetControlPercent: 100,
       searchAttempts: getQArtSearchAttempts(params.debouncedConfig.qrartIterations as number),
       searchSeed: (params.debouncedConfig.qrartSeed as number) ?? 0,
       lockVersionToMinimum:
         (params.debouncedConfig.typeNumber as number) === 0 && params.frameIdx === 0,
-      performanceProfile: 'quality' as const,
+      performanceProfile: "quality" as const,
     };
 
     const workerRenderConfig: Record<string, unknown> = {
@@ -70,7 +70,7 @@ export async function generateArtworkFrameStandalone(params: {
     const resolvedMask = resolveArtworkMaskPattern(
       useAutoMask,
       params.artworkState.artworkLockedMask,
-      params.debouncedConfig.maskPattern as number
+      params.debouncedConfig.maskPattern as number,
     );
 
     const workerOutcome = await invokeArtworkWorkerForFrame({
@@ -89,7 +89,7 @@ export async function generateArtworkFrameStandalone(params: {
       fallbackGenerate,
       rememberSuccessfulFrame,
     });
-    if ('fallbackCanvas' in workerOutcome) return workerOutcome.fallbackCanvas;
+    if ("fallbackCanvas" in workerOutcome) return workerOutcome.fallbackCanvas;
 
     const { workerResult } = workerOutcome;
     if (workerResult.success) {
@@ -111,7 +111,7 @@ export async function generateArtworkFrameStandalone(params: {
       });
       if (successResult) return successResult;
     } else {
-      log.warn('QR-Art failed for animation frame', {
+      log.warn("QR-Art failed for animation frame", {
         frameIdx: params.frameIdx,
         error: workerResult.error,
       });
@@ -119,7 +119,7 @@ export async function generateArtworkFrameStandalone(params: {
       if (preserved) return preserved;
     }
   } catch (err) {
-    log.warn('QR-Art frame generation failed, falling back to standard', {
+    log.warn("QR-Art frame generation failed, falling back to standard", {
       frameIdx: params.frameIdx,
       error: err,
     });

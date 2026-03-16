@@ -1,5 +1,5 @@
-import { forEachFoldedLine } from './for-each-folded-line';
-import { processVCardLine } from './process-v-card-line';
+import { forEachFoldedLine } from "./for-each-folded-line";
+import { processVCardLine } from "./process-v-card-line";
 
 export function parseVCardPayload(payload: string): Record<string, string | string[] | null> {
   const result: Record<string, string | string[] | null> = {
@@ -17,7 +17,7 @@ export function parseVCardPayload(payload: string): Record<string, string | stri
     hasPhoto: null,
   };
 
-  if (!payload.toUpperCase().includes('BEGIN:VCARD')) return result;
+  if (!payload.toUpperCase().includes("BEGIN:VCARD")) return result;
 
   const phones: string[] = [];
   const emails: string[] = [];

@@ -2,7 +2,7 @@ import type {
   DiffusionKernel,
   DitherKind,
   OrderedMatrix,
-} from '../../../modules/dither-algorithms';
+} from "../../../modules/dither-algorithms";
 
 export interface OverlayDitherOptions {
   enabled?: boolean;

@@ -1,1 +1,1 @@
-export * from '../content/gallery/gallery-items';
+export * from "../content/gallery/gallery-items";

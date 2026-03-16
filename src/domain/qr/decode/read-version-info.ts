@@ -1,5 +1,5 @@
-import { readVersionBitsBottomLeft } from './read-version-bits-bottom-left';
-import { readVersionBitsTopRight } from './read-version-bits-top-right';
+import { readVersionBitsBottomLeft } from "./read-version-bits-bottom-left";
+import { readVersionBitsTopRight } from "./read-version-bits-top-right";
 
 /**
  * Read version info from the matrix (for versions 7+)

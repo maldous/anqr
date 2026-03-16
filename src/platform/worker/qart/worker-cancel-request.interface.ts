@@ -1,4 +1,4 @@
 export interface QArtWorkerCancelRequest {
-  type: 'cancel';
+  type: "cancel";
   id: number;
 }

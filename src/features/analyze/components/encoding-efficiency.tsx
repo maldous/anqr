@@ -1,6 +1,6 @@
-import { BarChart3, Code2 } from 'lucide-react';
-import { useMemo } from 'react';
-import { DetailRow } from '@/features/analyze/components/detail-row';
+import { BarChart3, Code2 } from "lucide-react";
+import { useMemo } from "react";
+import { DetailRow } from "@/features/analyze/components/detail-row";
 
 export function EncodingEfficiency({
   payload,
@@ -19,10 +19,10 @@ export function EncodingEfficiency({
     const numericPercentage = byteChars > 0 ? Math.round((numericChars / byteChars) * 100) : 0;
     const alphanumericPercentage =
       byteChars > 0 ? Math.round((alphanumericChars / byteChars) * 100) : 0;
-    let optimalMode = 'byte';
-    if (numericPercentage === 100) optimalMode = 'numeric';
-    else if (alphanumericPercentage === 100) optimalMode = 'alphanumeric';
-    else if (numericPercentage > 50 || alphanumericPercentage > 50) optimalMode = 'mixed';
+    let optimalMode = "byte";
+    if (numericPercentage === 100) optimalMode = "numeric";
+    else if (alphanumericPercentage === 100) optimalMode = "alphanumeric";
+    else if (numericPercentage > 50 || alphanumericPercentage > 50) optimalMode = "mixed";
     return {
       numericPercentage,
       alphanumericPercentage,
@@ -54,7 +54,7 @@ export function EncodingEfficiency({
       </div>
       <DetailRow
         label="Current Mode"
-        value={<span className="capitalize">{encodingMode || 'Unknown'}</span>}
+        value={<span className="capitalize">{encodingMode || "Unknown"}</span>}
         icon={<Code2 className="w-3.5 h-3.5" />}
       />
       <DetailRow
@@ -63,12 +63,12 @@ export function EncodingEfficiency({
           <span
             className={`capitalize ${
               analysis.optimalMode === encodingMode
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-amber-600 dark:text-amber-400'
+                ? "text-green-600 dark:text-green-400"
+                : "text-amber-600 dark:text-amber-400"
             }`}
           >
             {analysis.optimalMode}
-            {analysis.optimalMode === encodingMode && ' ✓'}
+            {analysis.optimalMode === encodingMode && " ✓"}
           </span>
         }
         icon={<BarChart3 className="w-3.5 h-3.5" />}

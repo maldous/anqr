@@ -1,7 +1,7 @@
-import * as gifencNs from 'gifenc';
-import type { GifEncoderFactory } from './gif-encoder-factory';
-import type { QuantizeFn } from './quantize-fn';
-import type { ApplyPaletteFn } from './apply-palette-fn';
+import * as gifencNs from "gifenc";
+import type { GifEncoderFactory } from "./gif-encoder-factory";
+import type { QuantizeFn } from "./quantize-fn";
+import type { ApplyPaletteFn } from "./apply-palette-fn";
 
 export function resolveGifEnc() {
   const ns = gifencNs as {

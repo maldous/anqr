@@ -1,4 +1,4 @@
-import type { CanvasFactory } from './canvas-factory.types';
+import type { CanvasFactory } from "./canvas-factory.types";
 
 /**
  * Canvas pool for reusing native canvas objects across render calls.
@@ -20,12 +20,12 @@ export class CanvasPool {
     const bucket = this.pool.get(key);
     if (bucket?.length) {
       const canvas = bucket.pop()!;
-      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null;
+      const ctx = canvas.getContext("2d") as CanvasRenderingContext2D | null;
       if (ctx) {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalCompositeOperation = "source-over";
         ctx.globalAlpha = 1;
-        if ('filter' in ctx) ctx.filter = 'none';
+        if ("filter" in ctx) ctx.filter = "none";
         ctx.clearRect(0, 0, width, height);
       }
       return canvas;

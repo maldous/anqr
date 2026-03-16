@@ -1,10 +1,10 @@
-import type { BinarySearchValidationResult } from './binary-search-validation-result';
-import type { RejectionHistogram } from './scan-fallback.types';
+import type { BinarySearchValidationResult } from "./binary-search-validation-result";
+import type { RejectionHistogram } from "./scan-fallback.types";
 
 export function trackRejection(
   rejectionHistogram: RejectionHistogram,
   isValid: boolean,
-  validation: BinarySearchValidationResult
+  validation: BinarySearchValidationResult,
 ): void {
   rejectionHistogram.total++;
   if (isValid) {
@@ -13,7 +13,7 @@ export function trackRejection(
   }
   if (validation.reason) {
     const reason = validation.reason as keyof RejectionHistogram;
-    if (reason in rejectionHistogram && reason !== 'ACCEPTED' && reason !== 'total') {
+    if (reason in rejectionHistogram && reason !== "ACCEPTED" && reason !== "total") {
       rejectionHistogram[reason]++;
     }
   }

@@ -1,8 +1,8 @@
-import type { ZarazWindow } from './zaraz-window';
+import type { ZarazWindow } from "./zaraz-window";
 
 declare global {
   interface Window {
-    zaraz?: ZarazWindow['zaraz'];
+    zaraz?: ZarazWindow["zaraz"];
   }
 }
 

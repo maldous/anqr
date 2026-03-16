@@ -4,12 +4,12 @@
  * Notes: Render frame via legacy rendering path.
  */
 
-import { type TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame } from '@/modules/animation';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
-import { applyFrameTemporalNoise } from './apply-frame-temporal-noise';
-import { renderGeneratedFrame } from './render-generated-frame';
+import { type TemporalDitherMode } from "@/domain/render/dither/temporal";
+import type { AnimationFrame } from "@/modules/animation";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { PatternEffect } from "@/features/generator/application/frames/frames-type-patterneffect";
+import { applyFrameTemporalNoise } from "./apply-frame-temporal-noise";
+import { renderGeneratedFrame } from "./render-generated-frame";
 
 export async function renderFrameWithLegacyPath(params: {
   frame: AnimationFrame;
@@ -20,7 +20,7 @@ export async function renderFrameWithLegacyPath(params: {
   applyModulePatternEphemeral: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    tf: number
+    tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
   useTemporalDither: boolean;
   temporalMode: TemporalDitherMode;
@@ -33,17 +33,17 @@ export async function renderFrameWithLegacyPath(params: {
   isArtworkMode: boolean;
   generateArtworkFrame: (
     c: HTMLCanvasElement | OffscreenCanvas,
-    fi: number
+    fi: number,
   ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
 }): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
   let processedOverlay: HTMLCanvasElement | OffscreenCanvas = params.applyGeometricTransforms(
-    params.frame.canvas
+    params.frame.canvas,
   );
   if (params.modulePatternEffects.length > 0) {
     processedOverlay = params.applyModulePatternEphemeral(
       processedOverlay,
       params.frameIdx,
-      params.framesToProcessLength
+      params.framesToProcessLength,
     );
   }
   let temporalOffset = 0;

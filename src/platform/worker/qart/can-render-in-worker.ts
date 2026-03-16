@@ -1,3 +1,3 @@
 export function canRenderInWorker(): boolean {
-  return typeof OffscreenCanvas !== 'undefined';
+  return typeof OffscreenCanvas !== "undefined";
 }

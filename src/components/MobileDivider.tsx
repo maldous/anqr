@@ -1,1 +1,1 @@
-export * from '../ui/composites/MobileDivider';
+export * from "../ui/composites/MobileDivider";

@@ -6,10 +6,10 @@
  * @returns Random alphanumeric string
  */
 export function generateRandomSuffix(length: number): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
-  let result = '';
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += chars[bytes[i] % chars.length];
   }

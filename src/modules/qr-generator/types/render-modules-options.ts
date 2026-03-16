@@ -1,7 +1,7 @@
-import type { Canvas2DContext } from './canvas-2d-context';
-import type { OverlayData } from './overlay-data';
-import type { QRCodeInstance } from './qr-code-instance';
-import type { QRGeneratorConfig } from './qr-generator-config';
+import type { Canvas2DContext } from "./canvas-2d-context";
+import type { OverlayData } from "./overlay-data";
+import type { QRCodeInstance } from "./qr-code-instance";
+import type { QRGeneratorConfig } from "./qr-generator-config";
 
 export interface RenderModulesOptions {
   ctx: Canvas2DContext;

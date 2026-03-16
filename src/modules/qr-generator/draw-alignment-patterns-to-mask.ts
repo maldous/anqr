@@ -1,7 +1,7 @@
-import { drawAlignmentPattern } from '../../domain/render/generator/drawing';
-import { getAlignmentPositionsCached } from '../../domain/render/generator/pattern-helpers';
-import { fillSkipMaskRect } from './fill-skip-mask-rect';
-import type { QRGeneratorConfig } from './types';
+import { drawAlignmentPattern } from "../../domain/render/generator/drawing";
+import { getAlignmentPositionsCached } from "../../domain/render/generator/pattern-helpers";
+import { fillSkipMaskRect } from "./fill-skip-mask-rect";
+import type { QRGeneratorConfig } from "./types";
 
 export function drawAlignmentPatternsToMask(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -10,9 +10,9 @@ export function drawAlignmentPatternsToMask(
   moduleSize: number,
   margin: number,
   version: number,
-  skipMask: Uint8Array
+  skipMask: Uint8Array,
 ): void {
-  const alignmentStyle = config.alignmentStyle || 'match_finder';
+  const alignmentStyle = config.alignmentStyle || "match_finder";
   const alignPositions = getAlignmentPositionsCached(version, moduleCount);
   for (const pos of alignPositions) {
     const centerX = (pos.col + margin) * moduleSize + moduleSize / 2;
@@ -23,7 +23,7 @@ export function drawAlignmentPatternsToMask(
       centerY,
       moduleSize,
       alignmentStyle,
-      config
+      config,
     );
     fillSkipMaskRect(skipMask, moduleCount, pos.row - 2, pos.row + 2, pos.col - 2, pos.col + 2);
   }

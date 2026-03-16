@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/pixel-matrix-overlay';
+export * from "../../domain/render/generator/pixel-matrix-overlay";

@@ -5,9 +5,9 @@ export function extractObjectProperties(obj: Record<string, unknown>): unknown {
       try {
         if (value === null || value === undefined) {
           result[key] = value;
-        } else if (typeof value === 'function') {
-          result[key] = '[Function]';
-        } else if (typeof value === 'object') {
+        } else if (typeof value === "function") {
+          result[key] = "[Function]";
+        } else if (typeof value === "object") {
           result[key] = structuredClone(value);
         } else {
           result[key] = value;
@@ -18,6 +18,6 @@ export function extractObjectProperties(obj: Record<string, unknown>): unknown {
     }
     return result;
   } catch {
-    return '[Unserializable object]';
+    return "[Unserializable object]";
   }
 }

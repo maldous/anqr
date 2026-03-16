@@ -1,14 +1,14 @@
-import { CreditCard, MessageSquare, Smartphone } from 'lucide-react';
-import type { SocialPlatformMatcher } from './social-platform-matcher';
+import { CreditCard, MessageSquare, Smartphone } from "lucide-react";
+import type { SocialPlatformMatcher } from "./social-platform-matcher";
 
 export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
-    hostPatterns: ['wa.me', 'whatsapp.com', 'api.whatsapp.com'],
+    hostPatterns: ["wa.me", "whatsapp.com", "api.whatsapp.com"],
     resolve: (_hostname, pathname) => {
       const phoneMatch = pathname.match(/(\d+)/);
       const phone = phoneMatch ? phoneMatch[1] : null;
       return {
-        name: 'WhatsApp',
+        name: "WhatsApp",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white flex items-center gap-1">
             <MessageSquare className="w-3 h-3" />
@@ -24,9 +24,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['facebook.com', 'fb.com', 'fb.me', 'm.facebook.com'],
+    hostPatterns: ["facebook.com", "fb.com", "fb.me", "m.facebook.com"],
     resolve: () => ({
-      name: 'Facebook',
+      name: "Facebook",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white">
           Facebook
@@ -35,15 +35,15 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['instagram.com', 'instagr.am'],
+    hostPatterns: ["instagram.com", "instagr.am"],
     resolve: (_hostname, pathname) => {
       const usernameMatch = pathname.match(/^\/([^/]+)/);
       const username =
-        usernameMatch && !['p', 'reel', 'stories', 'explore'].includes(usernameMatch[1])
+        usernameMatch && !["p", "reel", "stories", "explore"].includes(usernameMatch[1])
           ? usernameMatch[1]
           : null;
       return {
-        name: 'Instagram',
+        name: "Instagram",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white">
             Instagram
@@ -56,15 +56,15 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['twitter.com', 'x.com', 't.co'],
+    hostPatterns: ["twitter.com", "x.com", "t.co"],
     resolve: (_hostname, pathname) => {
       const usernameMatch = pathname.match(/^\/([^/]+)/);
       const username =
-        usernameMatch && !['search', 'explore', 'home', 'i', 'intent'].includes(usernameMatch[1])
+        usernameMatch && !["search", "explore", "home", "i", "intent"].includes(usernameMatch[1])
           ? usernameMatch[1]
           : null;
       return {
-        name: 'X (Twitter)',
+        name: "X (Twitter)",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white dark:bg-white dark:text-black">
             𝕏
@@ -77,17 +77,17 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['youtube.com', 'youtu.be', 'm.youtube.com'],
+    hostPatterns: ["youtube.com", "youtu.be", "m.youtube.com"],
     resolve: (hostname, pathname, urlObj) => {
       let videoId: string | null = null;
-      if (hostname.includes('youtu.be')) {
-        videoId = pathname.slice(1).split('?')[0];
+      if (hostname.includes("youtu.be")) {
+        videoId = pathname.slice(1).split("?")[0];
       } else {
-        const vParam = urlObj.searchParams.get('v');
+        const vParam = urlObj.searchParams.get("v");
         if (vParam) videoId = vParam;
       }
       return {
-        name: 'YouTube',
+        name: "YouTube",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">
             ▶ YouTube
@@ -100,9 +100,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['linkedin.com', 'lnkd.in'],
+    hostPatterns: ["linkedin.com", "lnkd.in"],
     resolve: () => ({
-      name: 'LinkedIn',
+      name: "LinkedIn",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-700 text-white">
           LinkedIn
@@ -111,11 +111,11 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['tiktok.com', 'vm.tiktok.com'],
+    hostPatterns: ["tiktok.com", "vm.tiktok.com"],
     resolve: (_hostname, pathname) => {
       const usernameMatch = pathname.match(/^\/@([^/]+)/);
       return {
-        name: 'TikTok',
+        name: "TikTok",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white">
             ♪ TikTok
@@ -128,11 +128,11 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['t.me', 'telegram.me', 'telegram.org'],
+    hostPatterns: ["t.me", "telegram.me", "telegram.org"],
     resolve: (_hostname, pathname) => {
       const usernameMatch = pathname.match(/^\/([^/]+)/);
       return {
-        name: 'Telegram',
+        name: "Telegram",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-sky-500 text-white">
             Telegram
@@ -145,9 +145,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['discord.gg', 'discord.com', 'discordapp.com'],
+    hostPatterns: ["discord.gg", "discord.com", "discordapp.com"],
     resolve: () => ({
-      name: 'Discord',
+      name: "Discord",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-600 text-white">
           Discord
@@ -156,9 +156,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['snapchat.com', 'snap.com'],
+    hostPatterns: ["snapchat.com", "snap.com"],
     resolve: () => ({
-      name: 'Snapchat',
+      name: "Snapchat",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-400 text-black">
           👻 Snapchat
@@ -167,11 +167,11 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['reddit.com', 'redd.it'],
+    hostPatterns: ["reddit.com", "redd.it"],
     resolve: (_hostname, pathname) => {
       const subredditMatch = pathname.match(/^\/r\/([^/]+)/);
       return {
-        name: 'Reddit',
+        name: "Reddit",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-600 text-white">
             Reddit
@@ -184,9 +184,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['pinterest.com', 'pin.it'],
+    hostPatterns: ["pinterest.com", "pin.it"],
     resolve: () => ({
-      name: 'Pinterest',
+      name: "Pinterest",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-700 text-white">
           Pinterest
@@ -195,9 +195,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['apps.apple.com', 'itunes.apple.com'],
+    hostPatterns: ["apps.apple.com", "itunes.apple.com"],
     resolve: () => ({
-      name: 'App Store',
+      name: "App Store",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white flex items-center gap-1">
           <Smartphone className="w-3 h-3" />
@@ -207,9 +207,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['play.google.com'],
+    hostPatterns: ["play.google.com"],
     resolve: () => ({
-      name: 'Google Play',
+      name: "Google Play",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-600 text-white flex items-center gap-1">
           <Smartphone className="w-3 h-3" />
@@ -219,9 +219,9 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['spotify.com', 'open.spotify.com'],
+    hostPatterns: ["spotify.com", "open.spotify.com"],
     resolve: () => ({
-      name: 'Spotify',
+      name: "Spotify",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white">
           ♫ Spotify
@@ -230,11 +230,11 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['github.com', 'gist.github.com'],
+    hostPatterns: ["github.com", "gist.github.com"],
     resolve: (_hostname, pathname) => {
       const repoMatch = pathname.match(/^\/([^/]+)\/([^/]+)/);
       return {
-        name: 'GitHub',
+        name: "GitHub",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800">
             GitHub
@@ -249,11 +249,11 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     },
   },
   {
-    hostPatterns: ['paypal.com', 'paypal.me'],
+    hostPatterns: ["paypal.com", "paypal.me"],
     resolve: (hostname, pathname) => {
       const usernameMatch = pathname.match(/^\/([^/]+)/);
       return {
-        name: 'PayPal',
+        name: "PayPal",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-800 text-white flex items-center gap-1">
             <CreditCard className="w-3 h-3" />
@@ -261,16 +261,16 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
           </span>
         ),
         extractedInfo:
-          usernameMatch && hostname.includes('paypal.me') ? (
+          usernameMatch && hostname.includes("paypal.me") ? (
             <span className="font-mono text-xs">@{usernameMatch[1]}</span>
           ) : undefined,
       };
     },
   },
   {
-    hostPatterns: ['venmo.com'],
+    hostPatterns: ["venmo.com"],
     resolve: () => ({
-      name: 'Venmo',
+      name: "Venmo",
       badge: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-400 text-white flex items-center gap-1">
           <CreditCard className="w-3 h-3" />
@@ -280,11 +280,11 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
     }),
   },
   {
-    hostPatterns: ['cash.app'],
+    hostPatterns: ["cash.app"],
     resolve: (_hostname, pathname) => {
       const cashtagMatch = pathname.match(/^\/(\$[^/]+)/);
       return {
-        name: 'Cash App',
+        name: "Cash App",
         badge: (
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white flex items-center gap-1">
             <CreditCard className="w-3 h-3" />

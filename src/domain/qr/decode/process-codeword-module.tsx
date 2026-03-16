@@ -1,6 +1,6 @@
-import { isStructuralModule } from '../../../modules/qr-spec';
-import { categorizeSkippedModule } from './categorize-skipped-module';
-import type { CodewordBuildState } from './codeword-build-state';
+import { isStructuralModule } from "../../../modules/qr-spec";
+import { categorizeSkippedModule } from "./categorize-skipped-module";
+import type { CodewordBuildState } from "./codeword-build-state";
 
 export function processCodewordModule(
   matrix: boolean[][],
@@ -19,7 +19,7 @@ export function processCodewordModule(
     alignment: number;
     darkModule: number;
     other: number;
-  }
+  },
 ): void {
   state.visitedModules++;
 

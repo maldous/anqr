@@ -1,30 +1,30 @@
-import { Capacitor } from '@capacitor/core';
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { BusyOverlay } from '@/ui/composites/BusyOverlay';
-import { Header } from '@/components/Header';
-import { MobileDivider } from '@/ui/composites/MobileDivider';
-import { Preview } from '@/features/generator/components/Preview';
-import { Sidebar } from '@/features/generator/components/Sidebar';
-import type { StaticPageType } from '@/app/pages/StaticPage';
-import { TooltipProvider } from '@/ui/primitives/tooltip';
-import type { GalleryCategory } from '@/content/gallery/gallery-manifest';
-import { useBannerHeight } from '@/ui/hooks/useBannerHeight';
-import { useQRGeneratorContext } from '@/hooks/useQRGenerator';
-import { isRtlLanguage, loadLocale } from '@/app/i18n';
-import { showNativeToast } from '@/modules/platform';
-import { parseUrlParams } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
-import { type PageView, getPageFromLocation } from '@/app/routing/page-resolution';
-import { updateCanonicalUrl, updateHreflangLinks } from '@/app/seo/head-links';
+import { Capacitor } from "@capacitor/core";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { BusyOverlay } from "@/ui/composites/BusyOverlay";
+import { Header } from "@/components/Header";
+import { MobileDivider } from "@/ui/composites/MobileDivider";
+import { Preview } from "@/features/generator/components/Preview";
+import { Sidebar } from "@/features/generator/components/Sidebar";
+import type { StaticPageType } from "@/app/pages/StaticPage";
+import { TooltipProvider } from "@/ui/primitives/tooltip";
+import type { GalleryCategory } from "@/content/gallery/gallery-manifest";
+import { useBannerHeight } from "@/ui/hooks/useBannerHeight";
+import { useQRGeneratorContext } from "@/hooks/useQRGenerator";
+import { isRtlLanguage, loadLocale } from "@/app/i18n";
+import { showNativeToast } from "@/modules/platform";
+import { parseUrlParams } from "@/modules/share-links";
+import { useQRStore } from "@/store/qr-store";
+import { type PageView, getPageFromLocation } from "@/app/routing/page-resolution";
+import { updateCanonicalUrl, updateHreflangLinks } from "@/app/seo/head-links";
 import {
   DEFAULT_MOBILE_SPLIT,
   MAX_MOBILE_SPLIT,
   MIN_MOBILE_SPLIT,
   MOBILE_SPLIT_STORAGE_KEY,
-} from '@/features/generator/model/mobile-split';
-import { applyTierAndPayloadParams } from '@/features/generator/application/url-import/apply-payload-params';
-import { applyQrEncodingParams } from '@/features/generator/application/url-import/apply-encoding-params';
+} from "@/features/generator/model/mobile-split";
+import { applyTierAndPayloadParams } from "@/features/generator/application/url-import/apply-payload-params";
+import { applyQrEncodingParams } from "@/features/generator/application/url-import/apply-encoding-params";
 import {
   applyDitheringParams,
   applyEccIntensityLimits,
@@ -32,13 +32,13 @@ import {
   applyRenderColorAndPaletteStyles,
   applyRenderEyeAndFrameStyles,
   applySubpixelAndHalftoneParams,
-} from '@/features/generator/application/url-import/apply-render-params';
+} from "@/features/generator/application/url-import/apply-render-params";
 import {
   applyOverlayAdvancedParams,
   applyOverlayPreprocessingParams,
   applyOverlayTransformParams,
   applyWatermarkParams,
-} from '@/features/generator/application/url-import/apply-overlay-params';
+} from "@/features/generator/application/url-import/apply-overlay-params";
 import {
   applyAnimationBasicParams,
   applyAnimationPatternParams,
@@ -47,21 +47,21 @@ import {
   applyOutputBasicParams,
   applyQaAndAutoParams,
   applySafetyParams,
-} from '@/features/generator/application/url-import/apply-animation-output-and-safety-params';
-import { Analyze } from './analyze';
-import type { CapacitorAppPlugin } from './capacitor-app-plugin';
-import { Gallery } from './gallery';
-import { log } from './log';
-import { StaticPage } from './static-page';
-import { trimRoutePath } from '@/app/routing/trim-route-path';
-import { WelcomeModal } from './welcome-modal';
-import { LazyLoadFallback } from './lazy-load-fallback';
+} from "@/features/generator/application/url-import/apply-animation-output-and-safety-params";
+import { Analyze } from "./analyze";
+import type { CapacitorAppPlugin } from "./capacitor-app-plugin";
+import { Gallery } from "./gallery";
+import { log } from "./log";
+import { StaticPage } from "./static-page";
+import { trimRoutePath } from "@/app/routing/trim-route-path";
+import { WelcomeModal } from "./welcome-modal";
+import { LazyLoadFallback } from "./lazy-load-fallback";
 
 export function AppContent() {
   const { t, i18n } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPage, setCurrentPage] = useState<PageView>('editor');
-  const [galleryFilter, setGalleryFilter] = useState<GalleryCategory | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState<PageView>("editor");
+  const [galleryFilter, setGalleryFilter] = useState<GalleryCategory | "all">("all");
   const [mobileSplitPercent, setMobileSplitPercent] = useState(DEFAULT_MOBILE_SPLIT);
   const containerRef = useRef<HTMLDivElement>(null);
   const bannerHeight = useBannerHeight();
@@ -109,8 +109,8 @@ export function AppContent() {
   // See issue #15 in tbd.txt for details on this optimization.
 
   const navigateTo = useCallback((page: PageView) => {
-    const nextPath = page === 'editor' ? '/' : `/${page}`;
-    const nextSearch = page === 'editor' ? globalThis.location.search : '';
+    const nextPath = page === "editor" ? "/" : `/${page}`;
+    const nextSearch = page === "editor" ? globalThis.location.search : "";
 
     // Avoid unnecessary history entries.
     const current = trimRoutePath(globalThis.location.pathname);
@@ -119,9 +119,9 @@ export function AppContent() {
       return;
     }
 
-    globalThis.history.pushState({}, '', `${nextPath}${nextSearch}`);
+    globalThis.history.pushState({}, "", `${nextPath}${nextSearch}`);
     setCurrentPage(page);
-    globalThis.scrollTo({ top: 0, behavior: 'smooth' });
+    globalThis.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   // Handle location changes for routing (paths + legacy hash)
@@ -131,7 +131,7 @@ export function AppContent() {
 
       // Process lang parameter on every navigation (works on all pages)
       const params = new URLSearchParams(globalThis.location.search);
-      const lang = params.get('lang');
+      const lang = params.get("lang");
       if (lang && lang !== i18n.language) {
         await loadLocale(lang);
         i18n.changeLanguage(lang);
@@ -140,11 +140,11 @@ export function AppContent() {
 
     handleLocationChange();
 
-    globalThis.addEventListener('popstate', handleLocationChange);
-    globalThis.addEventListener('hashchange', handleLocationChange);
+    globalThis.addEventListener("popstate", handleLocationChange);
+    globalThis.addEventListener("hashchange", handleLocationChange);
     return () => {
-      globalThis.removeEventListener('popstate', handleLocationChange);
-      globalThis.removeEventListener('hashchange', handleLocationChange);
+      globalThis.removeEventListener("popstate", handleLocationChange);
+      globalThis.removeEventListener("hashchange", handleLocationChange);
     };
   }, [i18n]);
 
@@ -156,8 +156,8 @@ export function AppContent() {
 
     const handleAndroidBackPress = async () => {
       // Navigate internally: gallery/analyze/static -> editor
-      if (currentPage !== 'editor') {
-        navigateTo('editor');
+      if (currentPage !== "editor") {
+        navigateTo("editor");
         return;
       }
 
@@ -179,42 +179,42 @@ export function AppContent() {
         return;
       }
       lastBackPressAtRef.current = now;
-      await showNativeToast('Press back again to exit', 'short');
+      await showNativeToast("Press back again to exit", "short");
     };
 
     // Listen for the custom event dispatched from native Android
-    document.addEventListener('androidBackPress', handleAndroidBackPress);
+    document.addEventListener("androidBackPress", handleAndroidBackPress);
 
     return () => {
-      document.removeEventListener('androidBackPress', handleAndroidBackPress);
+      document.removeEventListener("androidBackPress", handleAndroidBackPress);
     };
   }, [currentPage, navigateTo]);
 
   // Convenience booleans for view states
-  const showGallery = currentPage === 'gallery';
-  const showAnalyze = currentPage === 'analyze';
+  const showGallery = currentPage === "gallery";
+  const showAnalyze = currentPage === "analyze";
   const showStaticPage = [
-    'about',
-    'privacy',
-    'terms',
-    'contact',
-    'guide',
-    'learn',
-    'examples',
-    'translate',
+    "about",
+    "privacy",
+    "terms",
+    "contact",
+    "guide",
+    "learn",
+    "examples",
+    "translate",
   ].includes(currentPage);
-  const showEditor = currentPage === 'editor';
+  const showEditor = currentPage === "editor";
 
   // Update document title, RTL direction, and hreflang links when language/page changes
   useEffect(() => {
     if (showEditor) {
-      document.title = `${t('app.name')} - ${t('app.tagline')}`;
+      document.title = `${t("app.name")} - ${t("app.tagline")}`;
     }
 
     // Apply RTL direction based on current language
     const isRtl = isRtlLanguage(i18n.language);
-    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
-    document.documentElement.lang = i18n.language.split('-')[0];
+    document.documentElement.dir = isRtl ? "rtl" : "ltr";
+    document.documentElement.lang = i18n.language.split("-")[0];
 
     updateHreflangLinks(showEditor, currentPage);
     updateCanonicalUrl(showEditor, currentPage, i18n.language);
@@ -234,46 +234,46 @@ export function AppContent() {
       // On native platforms, bundled assets (public/) are available locally.
       // Convert remote anqr.link URLs to local paths to avoid cross-origin issues.
       let fetchUrl = url;
-      if (Capacitor.isNativePlatform() && url.startsWith('https://anqr.link/')) {
-        const localPath = url.replace('https://anqr.link', '');
+      if (Capacitor.isNativePlatform() && url.startsWith("https://anqr.link/")) {
+        const localPath = url.replace("https://anqr.link", "");
         fetchUrl = `${globalThis.location.origin}${localPath}`;
-        log.debug('Resolved overlay to local path', { original: url, local: fetchUrl });
+        log.debug("Resolved overlay to local path", { original: url, local: fetchUrl });
       }
 
       // Validate that it's a proper URL
       try {
         const parsed = new URL(fetchUrl);
-        if (!parsed.protocol.startsWith('http')) {
-          log.warn('Invalid overlay URL', { url, reason: 'must be http/https' });
+        if (!parsed.protocol.startsWith("http")) {
+          log.warn("Invalid overlay URL", { url, reason: "must be http/https" });
           return;
         }
       } catch {
-        log.warn('Invalid overlay URL format', { url });
+        log.warn("Invalid overlay URL format", { url });
         return;
       }
 
       try {
-        log.debug('Loading overlay from URL', { url: fetchUrl });
+        log.debug("Loading overlay from URL", { url: fetchUrl });
         const response = await fetch(fetchUrl);
         if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
 
         const blob = await response.blob();
-        const filename = url.split('/').pop()?.split('?')[0] || 'image';
+        const filename = url.split("/").pop()?.split("?")[0] || "image";
         const file = new File([blob], filename, { type: blob.type });
 
         store.setOverlayUrl(url);
         store.setOverlayFile(file);
         store.setOverlayEnabled(true);
-        log.debug('Overlay loaded successfully');
+        log.debug("Overlay loaded successfully");
       } catch (err) {
-        log.error('Failed to load overlay from URL', { error: err, url });
+        log.error("Failed to load overlay from URL", { error: err, url });
       }
     },
-    []
+    [],
   );
 
   useEffect(() => {
-    if (getPageFromLocation() !== 'editor') return;
+    if (getPageFromLocation() !== "editor") return;
     const params = parseUrlParams();
     const store = useQRStore.getState();
 
@@ -308,16 +308,16 @@ export function AppContent() {
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none"
-        aria-label={t('accessibility.skipToMainContent', 'Skip to main content')}
+        aria-label={t("accessibility.skipToMainContent", "Skip to main content")}
       >
-        {t('accessibility.skipToMainContent', 'Skip to main content')}
+        {t("accessibility.skipToMainContent", "Skip to main content")}
       </a>
       <div className="h-screen bg-background flex flex-col overflow-hidden relative">
         {/* Global busy overlay for export operations */}
         <BusyOverlay
           visible={isExporting}
-          stage={t('preview.busy.workingOnIt', 'Working on it...')}
-          cancelLabel={t('common.cancel', 'Cancel')}
+          stage={t("preview.busy.workingOnIt", "Working on it...")}
+          cancelLabel={t("common.cancel", "Cancel")}
         />
         {/* Welcome modal for first-time visitors (web only) */}
         <Suspense fallback={null}>
@@ -336,7 +336,7 @@ export function AppContent() {
         <div
           ref={containerRef}
           className="flex-1 flex flex-col md:flex-row overflow-hidden relative"
-          style={{ marginTop: 'calc(52px + max(var(--sat, 0px), env(safe-area-inset-top, 0px)))' }}
+          style={{ marginTop: "calc(52px + max(var(--sat, 0px), env(safe-area-inset-top, 0px)))" }}
         >
           {/* Mobile layout: Sidebar and Preview in column, both visible */}
           {/* Desktop/Tablet: Sidebar is fixed, Preview takes remaining space */}
@@ -384,8 +384,8 @@ export function AppContent() {
         {/* Fixed Footer - visible on all platforms */}
         {/* On native: positioned just above AdMob banner. Ad is pinned to safe area, footer sits above it. */}
         <footer
-          className={`border-t bg-background py-2 fixed left-0 right-0 z-40 transition-all duration-300 ${sidebarOpen && showEditor ? 'lg:ms-96' : ''}`}
-          style={{ bottom: Capacitor.isNativePlatform() ? `${bannerHeight}px` : '0' }}
+          className={`border-t bg-background py-2 fixed left-0 right-0 z-40 transition-all duration-300 ${sidebarOpen && showEditor ? "lg:ms-96" : ""}`}
+          style={{ bottom: Capacitor.isNativePlatform() ? `${bannerHeight}px` : "0" }}
         >
           {/* Inner wrapper with margins to center over QR area (between ad columns) */}
           <div className="px-4 lg:mx-[160px] text-center flex items-center justify-center min-h-[24px]">
@@ -395,56 +395,56 @@ export function AppContent() {
                 className="hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateTo('guide');
+                  navigateTo("guide");
                 }}
               >
-                {t('nav.guide')}
+                {t("nav.guide")}
               </a>
-              {' · '}
+              {" · "}
               <a
                 href="/about"
                 className="hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateTo('about');
+                  navigateTo("about");
                 }}
               >
-                {t('nav.about')}
+                {t("nav.about")}
               </a>
-              {' · '}
+              {" · "}
               <a
                 href="https://www.iubenda.com/privacy-policy/70266922"
                 className="iubenda-noiframe iubenda-embed hover:underline"
-                title={t('nav.privacy')}
+                title={t("nav.privacy")}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {t('nav.privacy')}
+                {t("nav.privacy")}
               </a>
-              {' · '}
+              {" · "}
               <a
                 href="/terms"
                 className="hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateTo('terms');
+                  navigateTo("terms");
                 }}
               >
-                {t('nav.terms')}
+                {t("nav.terms")}
               </a>
-              {' · '}
+              {" · "}
               <a
                 href="/contact"
                 className="hover:underline"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateTo('contact');
+                  navigateTo("contact");
                 }}
               >
-                {t('nav.contact')}
+                {t("nav.contact")}
               </a>
-              {' · '}
-              {t('footer.copyright', { year: new Date().getFullYear() })}
+              {" · "}
+              {t("footer.copyright", { year: new Date().getFullYear() })}
             </p>
           </div>
         </footer>

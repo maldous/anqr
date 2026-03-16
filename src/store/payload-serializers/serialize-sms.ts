@@ -1,4 +1,4 @@
-import type { PayloadData } from './payload-data';
+import type { PayloadData } from "./payload-data";
 
 export function serializeSms(payload: PayloadData): string {
   let sms = `sms:${payload.sms.number}`;

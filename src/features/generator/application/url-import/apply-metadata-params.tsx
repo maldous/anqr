@@ -1,6 +1,6 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
-import { log } from './log';
+import type { ShareConfig } from "@/modules/share-links";
+import { useQRStore } from "@/store/qr-store";
+import { log } from "./log";
 
 export function applyMetadataParams(params: Partial<ShareConfig>): void {
   if (params.metaTitle)
@@ -26,7 +26,7 @@ export function applyMetadataParams(params: Partial<ShareConfig>): void {
         useQRStore.setState((s) => ({ metadata: { ...s.metadata, customKv } }));
       }
     } catch (e) {
-      log.warn('Failed to parse custom metadata', { error: e });
+      log.warn("Failed to parse custom metadata", { error: e });
     }
   }
 }

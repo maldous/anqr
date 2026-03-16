@@ -1,5 +1,5 @@
-import { GF_EXP } from './gf-exp.const';
-import { GF_LOG } from './gf-log.const';
+import { GF_EXP } from "./gf-exp.const";
+import { GF_LOG } from "./gf-log.const";
 
 export function gfMul(a: number, b: number): number {
   if (a === 0 || b === 0) return 0;

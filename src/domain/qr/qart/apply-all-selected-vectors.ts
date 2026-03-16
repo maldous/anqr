@@ -1,5 +1,5 @@
-import type { EliminationResult, BlockSelectionResult } from './elimination.types';
-import { applySelectedVectorsToBlock } from './apply-selected-vectors-to-block';
+import type { EliminationResult, BlockSelectionResult } from "./elimination.types";
+import { applySelectedVectorsToBlock } from "./apply-selected-vectors-to-block";
 
 /**
  * Apply selected basis vectors to modify all block data AND ECC
@@ -18,7 +18,7 @@ export function applyAllSelectedVectors(
   blockEccArrays: Uint8Array[],
   eliminationResult: EliminationResult,
   blockSelections: BlockSelectionResult[],
-  blockDataCounts: number[]
+  blockDataCounts: number[],
 ): void {
   for (const selection of blockSelections) {
     const { blockIndex, selectedVectorIndices } = selection;
@@ -37,7 +37,7 @@ export function applyAllSelectedVectors(
       blockEcc,
       blockResult.vectors,
       selectedVectorIndices,
-      dataCount
+      dataCount,
     );
   }
 }

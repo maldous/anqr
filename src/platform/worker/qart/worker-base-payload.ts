@@ -1,5 +1,5 @@
-import type { ECCLevel } from '../../../domain/qr/qart/bit-mapping';
-import type { QArtWorkerPerformanceProfile } from './worker-performance-profile';
+import type { ECCLevel } from "../../../domain/qr/qart/bit-mapping";
+import type { QArtWorkerPerformanceProfile } from "./worker-performance-profile";
 
 export interface QArtWorkerBasePayload {
   data: string;

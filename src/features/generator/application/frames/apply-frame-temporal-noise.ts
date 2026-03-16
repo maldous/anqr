@@ -2,7 +2,7 @@ import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
   type TemporalDitherMode,
-} from '@/domain/render/dither/temporal';
+} from "@/domain/render/dither/temporal";
 
 export function applyFrameTemporalNoise(params: {
   animationSeed: number;
@@ -14,7 +14,7 @@ export function applyFrameTemporalNoise(params: {
   const temporalOffset = calculateTemporalOffset(
     params.frameIdx,
     params.temporalMode,
-    params.animationSeed
+    params.animationSeed,
   );
   return {
     frame: applyTemporalNoiseToCanvas(
@@ -24,8 +24,8 @@ export function applyFrameTemporalNoise(params: {
       params.getTemporalScratch(
         (params.frameIdx % 2) as 0 | 1,
         params.frame.width,
-        params.frame.height
-      )
+        params.frame.height,
+      ),
     ),
     temporalOffset,
   };

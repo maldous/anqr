@@ -1,9 +1,9 @@
 export interface OTPAuthParams {
-  type: 'totp' | 'hotp';
+  type: "totp" | "hotp";
   issuer?: string;
   account?: string;
   secret: string;
-  algorithm?: 'SHA1' | 'SHA256' | 'SHA512';
+  algorithm?: "SHA1" | "SHA256" | "SHA512";
   digits?: number;
   period?: number;
   counter?: number;

@@ -1,23 +1,23 @@
-import { DIFFUSION_KERNELS } from './kernels';
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import type { BlueNoiseErrorDiffusionOptions } from './blue-noise-error-diffusion-options';
-import { copyImageToPixels } from './copy-image-to-pixels';
-import { quantizeBNEDPixel } from './quantize-bned-pixel';
-import { runDiffusionDither } from './run-diffusion-dither';
+import { DIFFUSION_KERNELS } from "./kernels";
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../../../modules/dither-algorithms/utils";
+import type { BlueNoiseErrorDiffusionOptions } from "./blue-noise-error-diffusion-options";
+import { copyImageToPixels } from "./copy-image-to-pixels";
+import { quantizeBNEDPixel } from "./quantize-bned-pixel";
+import { runDiffusionDither } from "./run-diffusion-dither";
 
 /** Blue noise modulated error diffusion */
 export function blueNoiseErrorDiffusion(
   imageData: Float32Array[],
   width: number,
   height: number,
-  options: BlueNoiseErrorDiffusionOptions = {}
+  options: BlueNoiseErrorDiffusionOptions = {},
 ): DitherResult {
-  const kernelName = options.kernelName ?? 'floyd_steinberg';
+  const kernelName = options.kernelName ?? "floyd_steinberg";
   const serpentine = options.serpentine ?? true;
   const levels = options.levels ?? 2;
   const strength = options.strength ?? 100;
-  const colorMode = options.colorMode ?? 'bw';
+  const colorMode = options.colorMode ?? "bw";
   const tileSize = options.tileSize ?? 64;
   const seed = options.seed ?? 0;
   const kernel = DIFFUSION_KERNELS[kernelName];

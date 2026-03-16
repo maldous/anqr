@@ -4,11 +4,11 @@
  * Notes: Deliver QArt result to display and state.
  */
 
-import { drawToDisplayCanvas } from '@/features/generator/application/generation/generation-fn-drawtodisplay';
-import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
-import type { QArtPerfSnapshot } from '@/features/generator/application/generation/generation-type-perfsnap';
-import { recordQArtPerfTimings } from '@/features/generator/application/qart/qart-fn-perf';
-import { updateQrMatrixFromResult } from '@/features/generator/application/qart/qart-fn-updatematrix';
+import { drawToDisplayCanvas } from "@/features/generator/application/generation/generation-fn-drawtodisplay";
+import { applyWatermarkToCanvas } from "@/features/generator/application/generation/generation-fn-watermark";
+import type { QArtPerfSnapshot } from "@/features/generator/application/generation/generation-type-perfsnap";
+import { recordQArtPerfTimings } from "@/features/generator/application/qart/qart-fn-perf";
+import { updateQrMatrixFromResult } from "@/features/generator/application/qart/qart-fn-updatematrix";
 
 export async function deliverQArtResult(params: {
   fullQArtCanvas: HTMLCanvasElement;
@@ -33,7 +33,7 @@ export async function deliverQArtResult(params: {
   qartResultMark: string;
   qartRenderMark: string;
   qartComputeMs: number | null;
-  qartResultSource: 'worker' | 'main';
+  qartResultSource: "worker" | "main";
   qartResultVersion: number;
   qartResultMaskPattern: number;
   qartResultModuleCount: number;
@@ -44,7 +44,7 @@ export async function deliverQArtResult(params: {
   effectiveConfig: Record<string, unknown>;
   runValidationIfNeeded: (
     c: HTMLCanvasElement | OffscreenCanvas,
-    content: string | undefined
+    content: string | undefined,
   ) => void;
   setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
   setIsRendering: (v: boolean) => void;
@@ -57,8 +57,8 @@ export async function deliverQArtResult(params: {
   if (params.isStaleRequest()) return { handled: true };
   params.setCanvas(resultCanvas);
   params.updateGenerationProgress(
-    params.t('preview.busy.finalizingPreview', 'Finalizing the preview...'),
-    96
+    params.t("preview.busy.finalizingPreview", "Finalizing the preview..."),
+    96,
   );
   if (params.canvasRef.current) {
     drawToDisplayCanvas(params.canvasRef.current, resultCanvas);

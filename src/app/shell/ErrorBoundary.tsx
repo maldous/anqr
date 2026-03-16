@@ -5,13 +5,13 @@
  * logs them, and displays a fallback UI instead of crashing the app.
  */
 
-import { Component, type ErrorInfo } from 'react';
-import { createLogger } from '@/infra/logging/logger';
-import { ErrorFallbackUI } from './error-fallback-ui';
-import type { ErrorBoundaryProps } from './error-boundary-props';
-import type { ErrorBoundaryState } from './error-boundary-state';
+import { Component, type ErrorInfo } from "react";
+import { createLogger } from "@/infra/logging/logger";
+import { ErrorFallbackUI } from "./error-fallback-ui";
+import type { ErrorBoundaryProps } from "./error-boundary-props";
+import type { ErrorBoundaryState } from "./error-boundary-state";
 
-const log = createLogger('ERROR');
+const log = createLogger("ERROR");
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error using canonical logger (sends to Sentry automatically)
-    log.error('ErrorBoundary caught an error', {
+    log.error("ErrorBoundary caught an error", {
       error,
       componentStack: errorInfo.componentStack,
     });

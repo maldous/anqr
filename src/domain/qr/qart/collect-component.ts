@@ -1,5 +1,5 @@
-import type { BinaryComponent } from './binary-component.type';
-import { enqueueNeighbors } from './enqueue-neighbors';
+import type { BinaryComponent } from "./binary-component.type";
+import { enqueueNeighbors } from "./enqueue-neighbors";
 
 export function collectComponent(
   grid: boolean[][],
@@ -7,7 +7,7 @@ export function collectComponent(
   startRow: number,
   startCol: number,
   targetValue: boolean,
-  visited: Uint8Array
+  visited: Uint8Array,
 ): BinaryComponent {
   const queue: number[] = [];
   const cells: number[] = [];

@@ -1,1 +1,1 @@
-export * from '../../domain/qr/analyze/telemetry-stats';
+export * from "../../domain/qr/analyze/telemetry-stats";

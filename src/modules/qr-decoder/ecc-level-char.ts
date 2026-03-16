@@ -1,1 +1,1 @@
-export type ECCLevelChar = 'L' | 'M' | 'Q' | 'H';
+export type ECCLevelChar = "L" | "M" | "Q" | "H";

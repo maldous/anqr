@@ -1,4 +1,4 @@
-import { List, X } from 'lucide-react';
+import { List, X } from "lucide-react";
 
 export function TableOfContentsPanelHeader({
   className,

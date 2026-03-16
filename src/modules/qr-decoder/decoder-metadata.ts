@@ -1,7 +1,7 @@
 export interface DecoderMetadata {
   version: number | null;
   maskPattern: number | null;
-  eccLevel: 'L' | 'M' | 'Q' | 'H' | null;
+  eccLevel: "L" | "M" | "Q" | "H" | null;
   errorsCorrected: number | null;
   erasures: number | null;
   numBits: number | null;

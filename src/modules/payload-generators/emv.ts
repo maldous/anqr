@@ -1,1 +1,1 @@
-export * from '../../domain/payload/emv';
+export * from "../../domain/payload/emv";

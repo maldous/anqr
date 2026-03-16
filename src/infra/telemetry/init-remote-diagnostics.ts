@@ -8,13 +8,13 @@ import {
   saveFilteredLogs,
   saveLogs,
   setLogLevel,
-} from '../logging/logger';
-import { log } from './log';
-import { readState } from './read-state';
-import { writeState } from './write-state';
-import { enableDiagnostics } from './enable-diagnostics';
-import { disableDiagnostics } from './disable-diagnostics';
-import { getDiagnosticsStatus } from './get-diagnostics-status';
+} from "../logging/logger";
+import { log } from "./log";
+import { readState } from "./read-state";
+import { writeState } from "./write-state";
+import { enableDiagnostics } from "./enable-diagnostics";
+import { disableDiagnostics } from "./disable-diagnostics";
+import { getDiagnosticsStatus } from "./get-diagnostics-status";
 
 /**
  * Initialize remote diagnostics on app startup.
@@ -28,12 +28,12 @@ export function initRemoteDiagnostics(): void {
     if (Date.now() > state.expiresAt) {
       // Expired - clean up and use default level
       writeState(null);
-      log.info('Diagnostics expired on restart, reverting to default level');
+      log.info("Diagnostics expired on restart, reverting to default level");
     } else {
       // Still valid - apply debug level
-      setLogLevel('debug');
+      setLogLevel("debug");
       const remaining = Math.round((state.expiresAt - Date.now()) / 60000);
-      log.info('Diagnostics restored from storage', {
+      log.info("Diagnostics restored from storage", {
         remainingMinutes: remaining,
         reason: state.reason,
       });
@@ -41,7 +41,7 @@ export function initRemoteDiagnostics(): void {
   }
 
   // Expose to window for console access
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     (window as Window & { anqrDiag?: unknown }).anqrDiag = {
       enable: enableDiagnostics,
       disable: disableDiagnostics,
@@ -55,7 +55,7 @@ export function initRemoteDiagnostics(): void {
         saveLogs(filename);
       },
       saveQartLogs: (filename?: string) => {
-        saveFilteredLogs('QART', filename);
+        saveFilteredLogs("QART", filename);
       },
       saveByScope: (scope: string, filename?: string) => {
         saveFilteredLogs(scope, filename);
@@ -66,7 +66,7 @@ export function initRemoteDiagnostics(): void {
         return logs;
       },
       getQartLogs: () => {
-        const logs = filterLogs('QART');
+        const logs = filterLogs("QART");
 
         return logs;
       },
@@ -81,7 +81,7 @@ export function initRemoteDiagnostics(): void {
         return logs;
       },
       getErrors: () => {
-        const logs = filterLogsByLevel(['error', 'warn']);
+        const logs = filterLogsByLevel(["error", "warn"]);
 
         return logs;
       },

@@ -1,6 +1,6 @@
-import type { InterpolationMode } from './animation-patterns.types';
-import { applyEasing } from './apply-easing';
-import { blendFramePixels } from './blend-frame-pixels';
+import type { InterpolationMode } from "./animation-patterns.types";
+import { applyEasing } from "./apply-easing";
+import { blendFramePixels } from "./blend-frame-pixels";
 
 /**
  * Interpolate between frames with easing
@@ -8,7 +8,7 @@ import { blendFramePixels } from './blend-frame-pixels';
 export function interpolateAnimationFramesWithEasing(
   frames: HTMLCanvasElement[],
   targetCount: number,
-  mode: InterpolationMode = 'linear'
+  mode: InterpolationMode = "linear",
 ): HTMLCanvasElement[] {
   if (frames.length === 0) return [];
   if (frames.length === 1 || targetCount <= frames.length) {
@@ -21,11 +21,11 @@ export function interpolateAnimationFramesWithEasing(
   const framePixels = Array.from<Uint8ClampedArray | null>({ length: frames.length });
   for (let i = 0; i < frames.length; i++) {
     const frameCtx =
-      (frames[i]?.getContext('2d', {
+      (frames[i]?.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-      frames[i]?.getContext('2d');
+      frames[i]?.getContext("2d");
     framePixels[i] = frameCtx ? frameCtx.getImageData(0, 0, width, height).data : null;
   }
 
@@ -40,10 +40,10 @@ export function interpolateAnimationFramesWithEasing(
     const frameB = Math.min(frameA + 1, frames.length - 1);
     const blend = sourcePos - frameA;
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
 
     if (blend === 0 || frameA === frameB) {
       ctx.drawImage(frames[frameA], 0, 0);

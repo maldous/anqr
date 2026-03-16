@@ -1,10 +1,10 @@
-import type { RSBasisVector } from './rs-basis';
+import type { RSBasisVector } from "./rs-basis";
 
 export function applyVectorBitsToFlipParity(
   vector: RSBasisVector,
   bitToPixelTable: Int32Array,
   flipParity: Uint8Array,
-  maxPixelCount: number
+  maxPixelCount: number,
 ): void {
   for (let byteIdx = 0; byteIdx < vector.blockBits.length; byteIdx++) {
     let remainingBits = vector.blockBits[byteIdx];

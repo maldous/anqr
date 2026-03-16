@@ -1,4 +1,4 @@
-import { rgbToLumaLinear } from '../color/color';
+import { rgbToLumaLinear } from "../color/color";
 import {
   BUCKET_SHIFT,
   DARK_REGION_END,
@@ -7,8 +7,8 @@ import {
   MAX_VALLEY_RATIO,
   MIN_PEAK_RATIO,
   MIN_PEAK_SEPARATION,
-} from '../dither/dithering-constants';
-import { log } from './log';
+} from "../dither/dithering-constants";
+import { log } from "./log";
 
 /**
  * Detect if an image is high-contrast B&W (bimodal histogram).
@@ -86,7 +86,7 @@ export function detectBimodalBW(imageData: ImageData): boolean {
     darkRatio >= MIN_PEAK_RATIO && lightRatio >= MIN_PEAK_RATIO && valleyRatio < MAX_VALLEY_RATIO;
 
   if (isBimodal) {
-    log.debug('Detected bimodal B&W image', {
+    log.debug("Detected bimodal B&W image", {
       darkRatio: darkRatio.toFixed(3),
       lightRatio: lightRatio.toFixed(3),
       valleyRatio: valleyRatio.toFixed(3),

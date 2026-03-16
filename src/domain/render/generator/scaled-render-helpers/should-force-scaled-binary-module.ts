@@ -1,16 +1,16 @@
-import type { ScaledPreserveFlags } from '../scaled-render-types';
+import type { ScaledPreserveFlags } from "../scaled-render-types";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FIXED_DARK,
   PATTERN_FORMAT,
   PATTERN_TIMING,
   PATTERN_VERSION,
-} from './pattern-flag-constants';
-import { isFinderRegionFlag } from './is-finder-region-flag';
+} from "./pattern-flag-constants";
+import { isFinderRegionFlag } from "./is-finder-region-flag";
 
 export function shouldForceScaledBinaryModule(
   flags: number,
-  preserveFlags: ScaledPreserveFlags
+  preserveFlags: ScaledPreserveFlags,
 ): boolean {
   if (flags === 0) return false;
   if ((flags & PATTERN_FIXED_DARK) !== 0) return preserveFlags.preserveFixedDark;

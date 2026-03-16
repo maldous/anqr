@@ -1,5 +1,5 @@
-import { type ShareConfig } from '../../modules/share-links/types';
-import { parseUrlParamsFromSearchParams } from './parse-url-params-from-search-params';
+import { type ShareConfig } from "../../modules/share-links/types";
+import { parseUrlParamsFromSearchParams } from "./parse-url-params-from-search-params";
 
 /**
  * Parse URL parameters into a config object (browser-only)

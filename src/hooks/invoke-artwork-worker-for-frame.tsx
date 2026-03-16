@@ -1,1 +1,1 @@
-export { invokeArtworkWorkerForFrame } from '@/features/generator/application/frames/frames-fn-invokeworker';
+export { invokeArtworkWorkerForFrame } from "@/features/generator/application/frames/frames-fn-invokeworker";

@@ -1,6 +1,6 @@
-import { isNonEmpty } from '@/modules/payload-generators';
-import type { QRState } from '@/store/qr-store';
-import { ValidatedTextField } from './validated-text-field';
+import { isNonEmpty } from "@/modules/payload-generators";
+import type { QRState } from "@/store/qr-store";
+import { ValidatedTextField } from "./validated-text-field";
 
 export function MerchantNameField({
   invalidMessage,
@@ -14,7 +14,7 @@ export function MerchantNameField({
   label: string;
   merchantName: string;
   onChange: (value: string) => void;
-  payload: QRState['payload'];
+  payload: QRState["payload"];
   placeholder: string;
 }>) {
   return (

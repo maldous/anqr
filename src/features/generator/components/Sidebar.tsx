@@ -12,73 +12,73 @@ import {
   Shield,
   Type,
   X,
-} from 'lucide-react';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { AdUnit } from '@/platform/ads/components/AdUnit';
+} from "lucide-react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { AdUnit } from "@/platform/ads/components/AdUnit";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/ui/primitives/accordion';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HighlightedLabel, SearchProvider } from '@/features/generator/search/search-context';
-import { useQRStore } from '@/store/qr-store';
-import { SectionLoadFallback } from './sidebar-section-load-fallback';
-import { OPEN_SECTIONS_STORAGE_KEY, loadStoredOpenSections } from './sidebar-open-sections';
-import { getAvailableKeywords } from './sidebar-keywords';
-import type { SidebarProps } from './sidebar-types';
+} from "@/ui/primitives/accordion";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { HighlightedLabel, SearchProvider } from "@/features/generator/search/search-context";
+import { useQRStore } from "@/store/qr-store";
+import { SectionLoadFallback } from "./sidebar-section-load-fallback";
+import { OPEN_SECTIONS_STORAGE_KEY, loadStoredOpenSections } from "./sidebar-open-sections";
+import { getAvailableKeywords } from "./sidebar-keywords";
+import type { SidebarProps } from "./sidebar-types";
 
 const PayloadSection = lazy(() =>
-  import('@/components/sections/PayloadSection').then((m) => ({ default: m.PayloadSection }))
+  import("@/components/sections/PayloadSection").then((m) => ({ default: m.PayloadSection })),
 );
 const OverlaySection = lazy(() =>
-  import('@/components/sections/OverlaySection').then((m) => ({ default: m.OverlaySection }))
+  import("@/components/sections/OverlaySection").then((m) => ({ default: m.OverlaySection })),
 );
 const QREncodingSection = lazy(() =>
-  import('@/components/sections/qr-encoding-section').then((m) => ({
+  import("@/components/sections/qr-encoding-section").then((m) => ({
     default: m.QREncodingSection,
-  }))
+  })),
 );
 const RenderSection = lazy(() =>
-  import('@/components/sections/RenderSection').then((m) => ({ default: m.RenderSection }))
+  import("@/components/sections/RenderSection").then((m) => ({ default: m.RenderSection })),
 );
 const AnimationSection = lazy(() =>
-  import('@/components/sections/AnimationSection').then((m) => ({ default: m.AnimationSection }))
+  import("@/components/sections/AnimationSection").then((m) => ({ default: m.AnimationSection })),
 );
 const OutputSection = lazy(() =>
-  import('@/components/sections/OutputSection').then((m) => ({ default: m.OutputSection }))
+  import("@/components/sections/OutputSection").then((m) => ({ default: m.OutputSection })),
 );
 const WatermarkSection = lazy(() =>
-  import('@/components/sections/WatermarkSection').then((m) => ({ default: m.WatermarkSection }))
+  import("@/components/sections/WatermarkSection").then((m) => ({ default: m.WatermarkSection })),
 );
 const MetadataSection = lazy(() =>
-  import('@/components/sections/MetadataSection').then((m) => ({ default: m.MetadataSection }))
+  import("@/components/sections/MetadataSection").then((m) => ({ default: m.MetadataSection })),
 );
 const ShareSection = lazy(() =>
-  import('@/components/sections/ShareSection').then((m) => ({ default: m.ShareSection }))
+  import("@/components/sections/ShareSection").then((m) => ({ default: m.ShareSection })),
 );
 const SafetySection = lazy(() =>
-  import('@/components/sections/SafetySection').then((m) => ({ default: m.SafetySection }))
+  import("@/components/sections/SafetySection").then((m) => ({ default: m.SafetySection })),
 );
 
 const SECTIONS = [
-  { id: 'payload', labelKey: 'sections.payload', icon: Type, tier: 'basic' as const },
-  { id: 'overlay', labelKey: 'sections.overlay', icon: Image, tier: 'basic' as const },
-  { id: 'qr', labelKey: 'sections.qrEncoding', icon: QrCode, tier: 'advanced' as const },
-  { id: 'render', labelKey: 'sections.rendering', icon: Palette, tier: 'advanced' as const },
-  { id: 'animation', labelKey: 'sections.animation', icon: Play, tier: 'advanced' as const },
-  { id: 'output', labelKey: 'sections.output', icon: Download, tier: 'advanced' as const },
+  { id: "payload", labelKey: "sections.payload", icon: Type, tier: "basic" as const },
+  { id: "overlay", labelKey: "sections.overlay", icon: Image, tier: "basic" as const },
+  { id: "qr", labelKey: "sections.qrEncoding", icon: QrCode, tier: "advanced" as const },
+  { id: "render", labelKey: "sections.rendering", icon: Palette, tier: "advanced" as const },
+  { id: "animation", labelKey: "sections.animation", icon: Play, tier: "advanced" as const },
+  { id: "output", labelKey: "sections.output", icon: Download, tier: "advanced" as const },
   {
-    id: 'watermark',
-    labelKey: 'sections.watermark',
+    id: "watermark",
+    labelKey: "sections.watermark",
     icon: Droplets,
-    tier: 'professional' as const,
+    tier: "professional" as const,
   },
-  { id: 'metadata', labelKey: 'sections.metadata', icon: FileText, tier: 'professional' as const },
-  { id: 'share', labelKey: 'sections.share', icon: Share2, tier: 'professional' as const },
-  { id: 'safety', labelKey: 'sections.safety', icon: Shield, tier: 'professional' as const },
+  { id: "metadata", labelKey: "sections.metadata", icon: FileText, tier: "professional" as const },
+  { id: "share", labelKey: "sections.share", icon: Share2, tier: "professional" as const },
+  { id: "safety", labelKey: "sections.safety", icon: Shield, tier: "professional" as const },
 ];
 
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
@@ -90,7 +90,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
   const setSearchQuery = useQRStore((s) => s.setSearchQuery);
   const { t, i18n } = useTranslation();
   const [openSections, setOpenSections] = useState<string[]>(() =>
-    loadStoredOpenSections(VALID_SECTION_IDS)
+    loadStoredOpenSections(VALID_SECTION_IDS),
   );
 
   // Force re-render when language changes by using i18n.language as a key dependency
@@ -99,7 +99,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
 
   // Preserve open/closed accordion state when switching between editor and analyze views.
   useEffect(() => {
-    if (!('sessionStorage' in globalThis)) return;
+    if (!("sessionStorage" in globalThis)) return;
     try {
       globalThis.sessionStorage.setItem(OPEN_SECTIONS_STORAGE_KEY, JSON.stringify(openSections));
     } catch {
@@ -121,18 +121,18 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
       // These are rendered outside the sidebar but are part of the UI
       const targetElement = target as HTMLElement;
       if (
-        targetElement.closest?.('[data-radix-popper-content-wrapper]') ||
-        targetElement.closest?.('[data-radix-select-viewport]') ||
-        targetElement.closest?.('[data-radix-menu-content]') ||
-        targetElement.closest?.('[data-radix-dialog-content]') ||
-        targetElement.closest?.('[data-radix-tabs-list]') ||
+        targetElement.closest?.("[data-radix-popper-content-wrapper]") ||
+        targetElement.closest?.("[data-radix-select-viewport]") ||
+        targetElement.closest?.("[data-radix-menu-content]") ||
+        targetElement.closest?.("[data-radix-dialog-content]") ||
+        targetElement.closest?.("[data-radix-tabs-list]") ||
         targetElement.closest?.('[role="listbox"]') ||
         targetElement.closest?.('[role="menu"]') ||
         targetElement.closest?.('[role="dialog"]') ||
         targetElement.closest?.('[role="tablist"]') ||
-        targetElement.closest?.('header') ||
+        targetElement.closest?.("header") ||
         // Don't close when clicking on the welcome modal
-        targetElement.closest?.('dialog')
+        targetElement.closest?.("dialog")
       ) {
         return;
       }
@@ -142,13 +142,13 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
         onClose();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
   // Reset all settings
   const handleReset = () => {
-    if (confirm('Reset all settings to defaults?')) {
+    if (confirm("Reset all settings to defaults?")) {
       globalThis.location.reload();
     }
   };
@@ -156,8 +156,8 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
   // Filter sections by tier and search
   const visibleSections = SECTIONS.filter((section) => {
     // Tier filter
-    if (section.tier === 'advanced' && tier === 'basic') return false;
-    if (section.tier === 'professional' && tier !== 'professional') return false;
+    if (section.tier === "advanced" && tier === "basic") return false;
+    if (section.tier === "professional" && tier !== "professional") return false;
 
     // Search filter - check section label AND keywords available at current tier
     if (searchQuery) {
@@ -177,8 +177,8 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
       const query = searchQuery.toLowerCase();
       const matchingSections = SECTIONS.filter((section) => {
         // Check tier first
-        if (section.tier === 'advanced' && tier === 'basic') return false;
-        if (section.tier === 'professional' && tier !== 'professional') return false;
+        if (section.tier === "advanced" && tier === "basic") return false;
+        if (section.tier === "professional" && tier !== "professional") return false;
 
         const translatedLabel = t(section.labelKey);
         const labelMatch = translatedLabel.toLowerCase().includes(query);
@@ -203,38 +203,38 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
       const stillVisible = prev.filter((sectionId) => {
         const section = SECTIONS.find((s) => s.id === sectionId);
         if (!section) return false;
-        if (section.tier === 'basic') return true;
-        if (section.tier === 'advanced') return tier === 'advanced' || tier === 'professional';
-        if (section.tier === 'professional') return tier === 'professional';
+        if (section.tier === "basic") return true;
+        if (section.tier === "advanced") return tier === "advanced" || tier === "professional";
+        if (section.tier === "professional") return tier === "professional";
         return false;
       });
 
       // If nothing is open after filtering, default to payload
-      return stillVisible.length > 0 ? stillVisible : ['payload'];
+      return stillVisible.length > 0 ? stillVisible : ["payload"];
     });
   }, [tier]);
 
   const renderSection = (sectionId: string) => {
     switch (sectionId) {
-      case 'payload':
+      case "payload":
         return <PayloadSection />;
-      case 'qr':
+      case "qr":
         return <QREncodingSection />;
-      case 'render':
+      case "render":
         return <RenderSection />;
-      case 'overlay':
+      case "overlay":
         return <OverlaySection />;
-      case 'animation':
+      case "animation":
         return <AnimationSection />;
-      case 'output':
+      case "output":
         return <OutputSection />;
-      case 'watermark':
+      case "watermark":
         return <WatermarkSection />;
-      case 'metadata':
+      case "metadata":
         return <MetadataSection />;
-      case 'share':
+      case "share":
         return <ShareSection />;
-      case 'safety':
+      case "safety":
         return <SafetySection />;
       default:
         return null;
@@ -250,7 +250,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
           className="fixed inset-0 bg-black/50 z-30 hidden md:block lg:hidden appearance-none border-none cursor-default"
           onClick={onClose}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               onClose();
             }
@@ -263,32 +263,32 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
       <aside
         aria-label="QR code settings"
         ref={sidebarRef}
-        data-testid={DynamicTestId.resolve('sidebar', 'sidebar')}
+        data-testid={DynamicTestId.resolve("sidebar", "sidebar")}
         className={`
-          ${/* Mobile: relative in-flow element for split view */ ''}
-          ${/* Tablet: fixed overlay */ ''}
-          ${/* Desktop: fixed sidebar */ ''}
+          ${/* Mobile: relative in-flow element for split view */ ""}
+          ${/* Tablet: fixed overlay */ ""}
+          ${/* Desktop: fixed sidebar */ ""}
           mobile-sidebar-height
           md:fixed md:inset-y-0 md:top-0 md:start-0 md:end-auto md:z-50
           w-full md:w-80 lg:w-96 bg-card md:border-e md:shadow-xl
           transform transition-[transform,opacity] duration-300 ease-in-out
           ${
             isOpen
-              ? 'md:h-auto md:translate-x-0 rtl:md:-translate-x-0 opacity-100 md:border-b-0'
-              : 'md:h-auto md:-translate-x-full rtl:md:translate-x-full opacity-0 pointer-events-none md:pointer-events-auto'
+              ? "md:h-auto md:translate-x-0 rtl:md:-translate-x-0 opacity-100 md:border-b-0"
+              : "md:h-auto md:-translate-x-full rtl:md:translate-x-full opacity-0 pointer-events-none md:pointer-events-auto"
           }
           flex flex-col overflow-hidden flex-shrink-0
         `}
         style={
           {
-            '--mobile-height': isOpen ? `${mobileHeightPercent}%` : '0',
+            "--mobile-height": isOpen ? `${mobileHeightPercent}%` : "0",
           } as React.CSSProperties
         }
       >
         {/* Sections - scrolls within container */}
         <div
           className="flex-1 overflow-y-auto px-4 pt-1 scrollbar-hide"
-          data-testid={DynamicTestId.resolve('sidebar-scroll', 'sidebar-scroll')}
+          data-testid={DynamicTestId.resolve("sidebar-scroll", "sidebar-scroll")}
         >
           {/* Search bar styled like accordion items */}
           <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 rounded-md shadow-sm mb-[6px]">
@@ -296,16 +296,16 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('header.searchSettings')}
+              placeholder={t("header.searchSettings")}
               className="flex-1 bg-transparent border-none outline-none text-sm font-medium placeholder:text-muted-foreground"
-              title={t('header.searchSettings')}
+              title={t("header.searchSettings")}
             />
             {searchQuery && (
               <button
                 type="button"
                 className="h-4 w-4 flex-shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={() => setSearchQuery('')}
-                title={t('common.reset')}
+                onClick={() => setSearchQuery("")}
+                title={t("common.reset")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -314,7 +314,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
               type="button"
               className="h-4 w-4 flex-shrink-0 text-muted-foreground hover:text-foreground ml-auto"
               onClick={handleReset}
-              title={t('common.reset')}
+              title={t("common.reset")}
             >
               <RotateCcw className="h-4 w-4" />
             </button>
@@ -322,7 +322,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
               type="button"
               className="h-4 w-4 flex-shrink-0 text-muted-foreground hover:text-foreground"
               onClick={onClose}
-              title={t('common.close')}
+              title={t("common.close")}
             >
               <X className="h-4 w-4" />
             </button>
@@ -337,7 +337,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
                   className="border-none mb-[6px]"
                   data-testid={DynamicTestId.resolve(
                     `accordion-${section.id}`,
-                    `accordion-${section.id}`
+                    `accordion-${section.id}`,
                   )}
                 >
                   <AccordionTrigger
@@ -351,15 +351,15 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
                           <HighlightedLabel>{t(section.labelKey)}</HighlightedLabel>
                         </SearchProvider>
                       </span>
-                      {section.tier !== 'basic' && (
+                      {section.tier !== "basic" && (
                         <span
                           className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                            section.tier === 'advanced'
-                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                              : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                            section.tier === "advanced"
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                              : "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
                           }`}
                         >
-                          {section.tier === 'advanced' ? 'ADV' : 'PRO'}
+                          {section.tier === "advanced" ? "ADV" : "PRO"}
                         </span>
                       )}
                     </div>
@@ -367,8 +367,8 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
                   <AccordionContent
                     className="pb-4 pt-3 px-4 mt-1 bg-card rounded-md shadow-sm border"
                     style={{
-                      contentVisibility: 'auto',
-                      containIntrinsicSize: 'auto 520px',
+                      contentVisibility: "auto",
+                      containIntrinsicSize: "auto 520px",
                     }}
                   >
                     <SearchProvider searchQuery={searchQuery}>
@@ -385,7 +385,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
 
         {/* Desktop Ad below settings - only visible on large screens */}
         <div className="hidden lg:block p-4 border-t flex-shrink-0">
-          <AdUnit slot="sidebar-bottom" width={'100%'} height={250} format="rectangle" />
+          <AdUnit slot="sidebar-bottom" width={"100%"} height={250} format="rectangle" />
         </div>
       </aside>
     </>

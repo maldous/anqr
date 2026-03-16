@@ -1,6 +1,6 @@
-import type { StoreState } from './share-config-store-state.type';
+import type { StoreState } from "./share-config-store-state.type";
 
-export function buildShareOverlayEccFields(overlay: StoreState['overlay']) {
+export function buildShareOverlayEccFields(overlay: StoreState["overlay"]) {
   return {
     eccAwareEnabled: overlay.eccAwareEnabled ? true : undefined,
     eccAwareRiskBudget:
@@ -8,7 +8,7 @@ export function buildShareOverlayEccFields(overlay: StoreState['overlay']) {
         ? overlay.eccAwareRiskBudget
         : undefined,
     eccAwareWeightMap:
-      overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== 'distance_to_finders'
+      overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== "distance_to_finders"
         ? overlay.eccAwareWeightMap
         : undefined,
   };

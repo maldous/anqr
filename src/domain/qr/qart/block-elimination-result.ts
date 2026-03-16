@@ -1,4 +1,4 @@
-import type { RSBasisVector } from './rs-basis';
+import type { RSBasisVector } from "./rs-basis";
 
 export interface BlockEliminationResult {
   blockIndex: number;

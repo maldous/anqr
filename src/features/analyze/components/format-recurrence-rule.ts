@@ -1,13 +1,13 @@
-import { formatICalDateTime } from './format-i-cal-date-time';
-import { formatFrequencyText } from './format-frequency-text';
+import { formatICalDateTime } from "./format-i-cal-date-time";
+import { formatFrequencyText } from "./format-frequency-text";
 
 export function formatRecurrenceRule(rrule: string): string {
   const parts: Record<string, string> = {};
   rrule
-    .replaceAll('RRULE:', '')
-    .split(';')
+    .replaceAll("RRULE:", "")
+    .split(";")
     .forEach((p) => {
-      const [k, v] = p.split('=');
+      const [k, v] = p.split("=");
       if (k && v) parts[k] = v;
     });
 

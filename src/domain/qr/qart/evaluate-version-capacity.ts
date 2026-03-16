@@ -1,16 +1,16 @@
-import { QRMode } from '../../../modules/qr-encoder/types';
-import { getLengthInBits } from '../encode/utils';
-import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
-import { MIN_ECC_HEADROOM_BYTES } from './min-ecc-headroom-bytes';
-import { getNumericBitsForDigits } from './get-numeric-bits-for-digits';
-import { getMaxNumericDigitsForBits } from './get-max-numeric-digits-for-bits';
-import type { VersionCapacityResult } from './version-capacity-result';
+import { QRMode } from "../../../modules/qr-encoder/types";
+import { getLengthInBits } from "../encode/utils";
+import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
+import { MIN_ECC_HEADROOM_BYTES } from "./min-ecc-headroom-bytes";
+import { getNumericBitsForDigits } from "./get-numeric-bits-for-digits";
+import { getMaxNumericDigitsForBits } from "./get-max-numeric-digits-for-bits";
+import type { VersionCapacityResult } from "./version-capacity-result";
 
 export function evaluateVersionCapacity(
   version: number,
   ecc: ECCLevel,
   dataLength: number,
-  suffixMode: 'numeric' | 'byte'
+  suffixMode: "numeric" | "byte",
 ): VersionCapacityResult | null {
   const blocks = getRSBlockInfo(version, ecc);
   const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
@@ -21,7 +21,7 @@ export function evaluateVersionCapacity(
   const usableBits = (totalDataBytes - eccHeadroom) * 8;
 
   const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, version);
-  const prefixLen = suffixMode === 'numeric' ? dataLength : dataLength + 1;
+  const prefixLen = suffixMode === "numeric" ? dataLength : dataLength + 1;
   const prefixBits = 4 + byteCharCountBits + prefixLen * 8;
   const terminatorBits = 4;
 
@@ -29,7 +29,7 @@ export function evaluateVersionCapacity(
   let suffixCharCount: number;
   let bitsAfterAllData: number;
 
-  if (suffixMode === 'numeric') {
+  if (suffixMode === "numeric") {
     const availableForNumeric = usableBits - prefixBits - terminatorBits;
     if (availableForNumeric <= 0) return null;
     const suffixDigits = getMaxNumericDigitsForBits(availableForNumeric, version);

@@ -1,4 +1,4 @@
-import type { RSBasisVector } from './rs-basis.types';
+import type { RSBasisVector } from "./rs-basis.types";
 
 /**
  * XOR two basis vectors together
@@ -10,7 +10,7 @@ import type { RSBasisVector } from './rs-basis.types';
  */
 export function xorBasisVectors(a: RSBasisVector, b: RSBasisVector): RSBasisVector {
   if (a.rsBlockIndex !== b.rsBlockIndex) {
-    throw new Error('Cannot XOR vectors from different RS blocks');
+    throw new Error("Cannot XOR vectors from different RS blocks");
   }
 
   const blockBits = new Uint8Array(a.blockBits.length);

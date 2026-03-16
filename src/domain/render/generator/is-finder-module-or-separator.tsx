@@ -1,10 +1,10 @@
-import { isFinderPattern } from '../../qr/spec/qr-patterns';
+import { isFinderPattern } from "../../qr/spec/qr-patterns";
 
 export function isFinderModuleOrSeparator(
   row: number,
   col: number,
   moduleCount: number,
-  separatorsOnly: boolean = false
+  separatorsOnly: boolean = false,
 ): boolean {
   const isFinderSeparator =
     (row === 7 && col <= 7) ||

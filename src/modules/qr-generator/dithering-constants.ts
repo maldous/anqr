@@ -1,1 +1,1 @@
-export * from '../../domain/render/dither/dithering-constants';
+export * from "../../domain/render/dither/dithering-constants";

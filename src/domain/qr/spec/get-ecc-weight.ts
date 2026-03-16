@@ -7,10 +7,10 @@ export function getEccWeight(
   col: number,
   moduleCount: number,
   _version: number,
-  weightMap: string
+  weightMap: string,
 ): number {
   switch (weightMap) {
-    case 'distance_to_finders': {
+    case "distance_to_finders": {
       // Closer to finders = more important
       const distTL = Math.hypot(row, col);
       const distTR = Math.hypot(row, moduleCount - 1 - col);
@@ -20,7 +20,7 @@ export function getEccWeight(
       return 1 - minDist / maxDist;
     }
 
-    case 'block_heatmap': {
+    case "block_heatmap": {
       // Center blocks are less critical than edge blocks
       const centerRow = moduleCount / 2;
       const centerCol = moduleCount / 2;
@@ -29,7 +29,7 @@ export function getEccWeight(
       return distToCenter / maxDist;
     }
 
-    case 'empirical_scan_heatmap': {
+    case "empirical_scan_heatmap": {
       // Simulate typical scanner patterns - top-left to bottom-right priority
       const scanProgress = (row + col) / (2 * moduleCount);
       // Earlier in scan = more important

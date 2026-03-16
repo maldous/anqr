@@ -1,5 +1,5 @@
-import { gfAdd } from './gf-add';
-import { gfMul } from './gf-mul';
+import { gfAdd } from "./gf-add";
+import { gfMul } from "./gf-mul";
 
 /**
  * Evaluate polynomial at x (high-to-low convention)

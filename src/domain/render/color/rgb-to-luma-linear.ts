@@ -1,4 +1,4 @@
-import { srgbToLinear01 } from './srgb-to-linear01';
+import { srgbToLinear01 } from "./srgb-to-linear01";
 
 /** Convert sRGB RGB to linear-light relative luminance in 0..1 */
 export function rgbToLumaLinear(r: number, g: number, b: number): number {

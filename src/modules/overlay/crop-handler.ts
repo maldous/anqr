@@ -1,1 +1,1 @@
-export * from '../../domain/render/overlay/crop-handler';
+export * from "../../domain/render/overlay/crop-handler";

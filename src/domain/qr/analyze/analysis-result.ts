@@ -1,6 +1,6 @@
-import type { AnalysisIssue } from './analysis-issue';
-import type { AnalysisWarning } from './analysis-warning';
-import type { ContrastReport } from './contrast-report';
+import type { AnalysisIssue } from "./analysis-issue";
+import type { AnalysisWarning } from "./analysis-warning";
+import type { ContrastReport } from "./contrast-report";
 
 export interface AnalysisResult {
   valid: boolean;

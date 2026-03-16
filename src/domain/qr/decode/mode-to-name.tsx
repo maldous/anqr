@@ -6,26 +6,26 @@ import {
   MODE_KANJI,
   MODE_NUMERIC,
   MODE_TERMINATOR,
-} from '../../../modules/qr-decoder/types';
+} from "../../../modules/qr-decoder/types";
 
 /**
  * Helper to convert mode indicator to mode name
  */
-export function modeToName(mode: number): DecodedSegmentInfo['modeName'] {
+export function modeToName(mode: number): DecodedSegmentInfo["modeName"] {
   switch (mode) {
     case MODE_NUMERIC:
-      return 'numeric';
+      return "numeric";
     case MODE_ALPHANUMERIC:
-      return 'alphanumeric';
+      return "alphanumeric";
     case MODE_BYTE:
-      return 'byte';
+      return "byte";
     case MODE_KANJI:
-      return 'kanji';
+      return "kanji";
     case MODE_ECI:
-      return 'eci';
+      return "eci";
     case MODE_TERMINATOR:
-      return 'terminator';
+      return "terminator";
     default:
-      return 'unknown';
+      return "unknown";
   }
 }

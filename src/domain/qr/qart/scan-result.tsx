@@ -1,4 +1,4 @@
-import type { DecodedSegmentInfo } from '../decode';
+import type { DecodedSegmentInfo } from "../decode";
 
 // DecodedSegmentInfo is imported from '../qr-decoder'
 

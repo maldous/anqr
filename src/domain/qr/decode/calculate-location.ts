@@ -1,6 +1,6 @@
-import type { FinderPattern, Point, QRLocation } from '../../../modules/qr-decoder/types';
-import { pointDistance } from '../../../modules/qr-decoder/utils';
-import { qrDecoderLog } from './qr-decoder-log';
+import type { FinderPattern, Point, QRLocation } from "../../../modules/qr-decoder/types";
+import { pointDistance } from "../../../modules/qr-decoder/utils";
+import { qrDecoderLog } from "./qr-decoder-log";
 
 /**
  * Calculate the QR code location from finder patterns
@@ -8,7 +8,7 @@ import { qrDecoderLog } from './qr-decoder-log';
 export function calculateLocation(
   topLeft: FinderPattern,
   topRight: FinderPattern,
-  bottomLeft: FinderPattern
+  bottomLeft: FinderPattern,
 ): QRLocation {
   // Average module size
   const moduleSize = (topLeft.moduleSize + topRight.moduleSize + bottomLeft.moduleSize) / 3;
@@ -29,7 +29,7 @@ export function calculateLocation(
   const clampedVersion = Math.max(1, Math.min(40, version));
   const moduleCount = clampedVersion * 4 + 17;
 
-  qrDecoderLog.trace('extract: Calculated location', {
+  qrDecoderLog.trace("extract: Calculated location", {
     moduleSize: moduleSize.toFixed(2),
     topDist: topDist.toFixed(1),
     leftDist: leftDist.toFixed(1),

@@ -1,4 +1,4 @@
-import { gfMul } from './rs-rootability-gf';
+import { gfMul } from "./rs-rootability-gf";
 
 export function polyEvalAsc(poly: number[], x: number): number {
   let y = 0;

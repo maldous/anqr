@@ -1,4 +1,4 @@
-import { gfMul } from './rs-rootability-gf';
+import { gfMul } from "./rs-rootability-gf";
 
 export function polyEvalHighToLow(coeffs: number[], x: number): number {
   let y = 0;

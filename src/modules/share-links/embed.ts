@@ -1,1 +1,1 @@
-export * from '../../domain/share/embed';
+export * from "../../domain/share/embed";

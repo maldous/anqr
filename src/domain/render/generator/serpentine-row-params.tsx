@@ -1,7 +1,7 @@
 export function serpentineRowParams(
   y: number,
   scaledSize: number,
-  serpentine: boolean
+  serpentine: boolean,
 ): { leftToRight: boolean; startX: number; endX: number; deltaX: number } {
   const leftToRight = serpentine ? y % 2 === 0 : true;
   const startX = leftToRight ? 0 : scaledSize - 1;

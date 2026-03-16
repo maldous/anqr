@@ -1,5 +1,5 @@
-import type { DrawModuleOptions } from './drawing-primitives.types';
-import { roundRect } from './round-rect';
+import type { DrawModuleOptions } from "./drawing-primitives.types";
+import { roundRect } from "./round-rect";
 
 /**
  * Draw a single QR module with the specified style
@@ -9,8 +9,8 @@ export function drawModule(
   x: number,
   y: number,
   size: number,
-  style: string = 'square',
-  options: DrawModuleOptions = {}
+  style: string = "square",
+  options: DrawModuleOptions = {},
 ): void {
   const { cornerRadius = 0, rotation = 0 } = options;
 
@@ -25,13 +25,13 @@ export function drawModule(
   }
 
   switch (style) {
-    case 'rounded': {
+    case "rounded": {
       const radius = (cornerRadius / 100) * (size / 2);
       roundRect(ctx, x, y, size, size, radius);
       break;
     }
 
-    case 'dots': {
+    case "dots": {
       const radius = size * 0.4;
       ctx.beginPath();
       ctx.arc(x + size / 2, y + size / 2, radius, 0, Math.PI * 2);
@@ -39,7 +39,7 @@ export function drawModule(
       break;
     }
 
-    case 'diamond': {
+    case "diamond": {
       const half = size / 2;
       ctx.beginPath();
       ctx.moveTo(x + half, y);
@@ -51,7 +51,7 @@ export function drawModule(
       break;
     }
 
-    case 'star': {
+    case "star": {
       const cx = x + size / 2;
       const cy = y + size / 2;
       const outerRadius = size * 0.45;
@@ -75,7 +75,7 @@ export function drawModule(
       break;
     }
 
-    case 'heart': {
+    case "heart": {
       const cx = x + size / 2;
       const cy = y + size / 2;
       const s = size * 0.3;

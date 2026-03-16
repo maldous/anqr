@@ -1,9 +1,9 @@
-import type { RejectionReason, SemanticValidationResult } from './validation';
+import type { RejectionReason, SemanticValidationResult } from "./validation";
 
 export function semanticFailure(
   reason: RejectionReason,
   description: string,
-  details?: SemanticValidationResult['details']
+  details?: SemanticValidationResult["details"],
 ): SemanticValidationResult {
   return {
     valid: false,

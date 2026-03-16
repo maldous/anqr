@@ -1,12 +1,12 @@
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { autoTestIdState } from './auto-testid-state';
-import { getElementToken } from './get-element-token';
-import { normalizeToken } from './normalize-auto-testid-token';
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { autoTestIdState } from "./auto-testid-state";
+import { getElementToken } from "./get-element-token";
+import { normalizeToken } from "./normalize-auto-testid-token";
 
 export function ensureElementTestId(el: Element): void {
   if ((el as HTMLElement).dataset?.testid !== undefined) return;
 
-  const keyAttr = 'data-auto-testid-key';
+  const keyAttr = "data-auto-testid-key";
   let sourceKey = el.getAttribute(keyAttr);
   if (!sourceKey) {
     sourceKey = `auto-${++autoTestIdState.counter}`;
@@ -15,7 +15,7 @@ export function ensureElementTestId(el: Element): void {
 
   const tag = normalizeToken(el.tagName);
   const token = getElementToken(el);
-  const base = `auto-${tag}-${token || 'control'}`;
+  const base = `auto-${tag}-${token || "control"}`;
   const resolved = DynamicTestId.resolve(base, sourceKey);
   (el as HTMLElement).dataset.testid = resolved;
 }

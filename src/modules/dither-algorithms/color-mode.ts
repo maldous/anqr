@@ -1,1 +1,1 @@
-export type ColorMode = 'bw' | 'grayscale' | 'color';
+export type ColorMode = "bw" | "grayscale" | "color";

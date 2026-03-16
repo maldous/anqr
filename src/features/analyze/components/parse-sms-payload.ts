@@ -10,15 +10,15 @@ export function parseSmsPayload(payload: string): Record<string, string | number
   };
 
   let content = payload;
-  if (payload.toLowerCase().startsWith('sms:')) content = payload.slice(4);
-  else if (payload.toLowerCase().startsWith('smsto:')) content = payload.slice(6);
+  if (payload.toLowerCase().startsWith("sms:")) content = payload.slice(4);
+  else if (payload.toLowerCase().startsWith("smsto:")) content = payload.slice(6);
 
-  const [number, queryPart] = content.split('?');
+  const [number, queryPart] = content.split("?");
   result.number = number;
 
   if (queryPart) {
     const params = new URLSearchParams(queryPart);
-    result.body = params.get('body');
+    result.body = params.get("body");
     if (result.body) {
       result.charCount = result.body.length;
       // SMS segments: 160 chars for GSM-7, 70 for Unicode

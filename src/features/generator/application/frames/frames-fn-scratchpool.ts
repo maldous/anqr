@@ -20,11 +20,11 @@ export function createScratchCanvasPool(): {
     getA: () => HTMLCanvasElement | null,
     setA: (c: HTMLCanvasElement) => void,
     getB: () => HTMLCanvasElement | null,
-    setB: (c: HTMLCanvasElement) => void
+    setB: (c: HTMLCanvasElement) => void,
   ): HTMLCanvasElement => {
     const current = slot === 0 ? getA() : getB();
     if (!current) {
-      const created = document.createElement('canvas');
+      const created = document.createElement("canvas");
       created.width = width;
       created.height = height;
       if (slot === 0) setA(created);
@@ -49,7 +49,7 @@ export function createScratchCanvasPool(): {
         () => patternScratchB,
         (c) => {
           patternScratchB = c;
-        }
+        },
       ),
     getTemporalScratch: (slot, width, height) =>
       getScratch(
@@ -63,7 +63,7 @@ export function createScratchCanvasPool(): {
         () => temporalScratchB,
         (c) => {
           temporalScratchB = c;
-        }
+        },
       ),
   };
 }

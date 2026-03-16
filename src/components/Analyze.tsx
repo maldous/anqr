@@ -4,17 +4,17 @@
  * Extracts and displays every possible detail from uploaded/captured QR codes
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { AdUnit } from '@/platform/ads/components/AdUnit';
-import { type QRAnalysisResult } from '@/modules/qr-analyzer';
-import { AnalyzeErrorDisplay } from '@/features/analyze/components/analyze-error-display';
-import { AnalyzeHero } from '@/features/analyze/components/analyze-hero';
-import { AnalyzeInputCards } from '@/features/analyze/components/analyze-input-cards';
-import { AnalyzeResultDetails } from '@/features/analyze/components/analyze-result-details';
-import { AnalyzeResultsHeader } from '@/features/analyze/components/analyze-results-header';
-import { AnalyzeWarnings } from '@/features/analyze/components/analyze-warnings';
-import { useQRStore } from '@/store/qr-store';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { AdUnit } from "@/platform/ads/components/AdUnit";
+import { type QRAnalysisResult } from "@/modules/qr-analyzer";
+import { AnalyzeErrorDisplay } from "@/features/analyze/components/analyze-error-display";
+import { AnalyzeHero } from "@/features/analyze/components/analyze-hero";
+import { AnalyzeInputCards } from "@/features/analyze/components/analyze-input-cards";
+import { AnalyzeResultDetails } from "@/features/analyze/components/analyze-result-details";
+import { AnalyzeResultsHeader } from "@/features/analyze/components/analyze-results-header";
+import { AnalyzeWarnings } from "@/features/analyze/components/analyze-warnings";
+import { useQRStore } from "@/store/qr-store";
 import {
   analyzeGeneratorCanvasRobustImpl,
   exportAnalysisJSON,
@@ -22,14 +22,14 @@ import {
   type AnalysisSourceType,
   type AnalysisStateSetters,
   useAnalysisInputHandlers,
-} from '@/features/analyze/lib/analyze-runtime';
-import { useReproductionEffect } from '@/features/analyze/lib/reproduction-hook';
+} from "@/features/analyze/lib/analyze-runtime";
+import { useReproductionEffect } from "@/features/analyze/lib/reproduction-hook";
 
 export function Analyze({
   onNavigate,
   generatedCanvas,
 }: Readonly<{
-  onNavigate?: (page: 'editor' | 'gallery' | 'analyze') => void;
+  onNavigate?: (page: "editor" | "gallery" | "analyze") => void;
   generatedCanvas?: HTMLCanvasElement | OffscreenCanvas | null;
 }>) {
   const { t } = useTranslation();
@@ -64,7 +64,7 @@ export function Analyze({
     analysisSource,
     generatedCanvas,
     qrState,
-    renderState
+    renderState,
   );
   const { actualUsedVersion, uiTimings } = reproState;
 
@@ -79,7 +79,7 @@ export function Analyze({
       setUiTimings: reproState.setUiTimings,
       setOriginalImageUrl,
     }),
-    [reproState.setUiTimings]
+    [reproState.setUiTimings],
   );
 
   const {
@@ -93,12 +93,12 @@ export function Analyze({
     t,
     generatedCanvas,
     settersWithUiTimings,
-    analyzeGeneratorCanvasRobust
+    analyzeGeneratorCanvasRobust,
   );
 
   const combinedTimings = useMemo(
     () => ({ ...result?.timing, ...uiTimings }),
-    [result?.timing, uiTimings]
+    [result?.timing, uiTimings],
   );
 
   const handleImportToGenerator = useCallback(() => {
@@ -117,7 +117,7 @@ export function Analyze({
         setRenderFgColor,
         setRenderBgColor,
       },
-      onNavigate
+      onNavigate,
     );
     setImported(true);
   }, [
@@ -138,11 +138,11 @@ export function Analyze({
   const handleReset = useCallback(() => {
     setResult(null);
     setError(null);
-    setUrlInput('');
+    setUrlInput("");
     setImported(false);
     setAnalysisSource(null);
     reproState.setUiTimings({});
-    if (originalImageUrl?.startsWith('blob:')) {
+    if (originalImageUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(originalImageUrl);
     }
     setOriginalImageUrl(null);

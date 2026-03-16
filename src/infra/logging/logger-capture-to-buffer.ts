@@ -1,13 +1,13 @@
-import { safeSerializeContext } from './logger-context-serialization';
-import { loggerState, MAX_BUFFER_SIZE, MAX_STRUCTURED_BUFFER_SIZE } from './logger-state';
-import type { BufferCaptureOptions } from './logger-types';
+import { safeSerializeContext } from "./logger-context-serialization";
+import { loggerState, MAX_BUFFER_SIZE, MAX_STRUCTURED_BUFFER_SIZE } from "./logger-state";
+import type { BufferCaptureOptions } from "./logger-types";
 
 export function captureToBuffer(
   scope: string,
   level: string,
   message: string,
   context: unknown,
-  options: BufferCaptureOptions
+  options: BufferCaptureOptions,
 ): void {
   if (!(options.captureStructured || options.captureString)) return;
 
@@ -31,13 +31,13 @@ export function captureToBuffer(
 
   const prefix = `${timestamp} [${scope}:${level}]`;
   let logLine: string;
-  if (context && typeof context === 'object') {
+  if (context && typeof context === "object") {
     try {
       const dataStr = Object.entries(context as Record<string, unknown>)
         .map(([k, v]) =>
-          typeof v === 'object' && v !== null ? `${k}=${JSON.stringify(v)}` : `${k}=${v}`
+          typeof v === "object" && v !== null ? `${k}=${JSON.stringify(v)}` : `${k}=${v}`,
         )
-        .join(', ');
+        .join(", ");
       logLine = `${prefix} ${message} {${dataStr}}`;
     } catch {
       logLine = `${prefix} ${message} {[serialization failed]}`;

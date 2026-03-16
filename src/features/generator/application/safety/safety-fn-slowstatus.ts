@@ -4,8 +4,8 @@
  * Notes: Run generator with slow-render status feedback.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export async function runGeneratorWithSlowStatus(params: {
   cfg: QRGeneratorConfig;
@@ -19,10 +19,10 @@ export async function runGeneratorWithSlowStatus(params: {
     if (!params.isStaleRequest()) {
       params.updateGenerationProgress(
         params.t(
-          'preview.busy.stillRenderingDetailedOverlay',
-          'Still rendering the detailed overlay...'
+          "preview.busy.stillRenderingDetailedOverlay",
+          "Still rendering the detailed overlay...",
         ),
-        72
+        72,
       );
     }
   }, 900);

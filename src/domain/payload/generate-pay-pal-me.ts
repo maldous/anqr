@@ -1,4 +1,4 @@
-import type { PayPalMeParams } from '../../modules/payload-generators/types';
+import type { PayPalMeParams } from "../../modules/payload-generators/types";
 
 /**
  * Generate PayPal.Me payment link

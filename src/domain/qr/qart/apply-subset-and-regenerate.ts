@@ -1,8 +1,8 @@
-import type { EliminationResult } from './elimination';
-import { applySelectedVectorsToBlock } from './elimination';
-import type { RegenerateQrFn } from './regenerate-qr-fn.type';
-import type { FlattenedSelection } from './scan-fallback.types';
-import { unflattenSelections } from './unflatten-selections';
+import type { EliminationResult } from "./elimination";
+import { applySelectedVectorsToBlock } from "./elimination";
+import type { RegenerateQrFn } from "./regenerate-qr-fn.type";
+import type { FlattenedSelection } from "./scan-fallback.types";
+import { unflattenSelections } from "./unflatten-selections";
 
 /**
  * Apply a subset of vectors and regenerate the QR matrix.
@@ -16,7 +16,7 @@ export function applySubsetAndRegenerate(
   blockDataCounts: number[],
   blockEccCounts: number[],
   eliminationResult: EliminationResult,
-  regenerateQRFn: RegenerateQrFn
+  regenerateQRFn: RegenerateQrFn,
 ): {
   matrix: boolean[][];
   modifiedBlockData: Uint8Array[];
@@ -42,7 +42,7 @@ export function applySubsetAndRegenerate(
       modifiedBlockEcc[blockIndex],
       blockResult.vectors,
       selectedVectorIndices,
-      blockDataCounts[blockIndex]
+      blockDataCounts[blockIndex],
     );
   }
 
@@ -51,7 +51,7 @@ export function applySubsetAndRegenerate(
     modifiedBlockData,
     modifiedBlockEcc,
     blockDataCounts,
-    blockEccCounts
+    blockEccCounts,
   );
 
   return { matrix, modifiedBlockData, modifiedBlockEcc };

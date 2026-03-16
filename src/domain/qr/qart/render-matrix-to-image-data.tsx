@@ -1,11 +1,11 @@
-import { fillModuleBlock } from './fill-module-block';
+import { fillModuleBlock } from "./fill-module-block";
 
 export function renderMatrixToImageData(
   matrix: boolean[][],
   moduleCount: number,
   scale: number,
   quietZone: number,
-  invert: boolean
+  invert: boolean,
 ): ImageData {
   const size = (moduleCount + quietZone * 2) * scale;
   const data = new Uint8ClampedArray(size * size * 4);

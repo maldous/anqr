@@ -1,5 +1,5 @@
-import { rgbToGray } from '../color/color';
-import type { CreateCanvasFn, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { rgbToGray } from "../color/color";
+import type { CreateCanvasFn, QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Generate subpixel matrix for overlay modes
@@ -9,19 +9,19 @@ export async function getSubpixelOverlayData(
   moduleCount: number,
   scale: number,
   _config: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
 ): Promise<{ brightness: number[][]; colors: { r: number; g: number; b: number }[][] }> {
   const scaledSize = moduleCount * scale;
 
   // Scale overlay to subpixel size
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+  const ctx = scaledCanvas.getContext("2d") as CanvasRenderingContext2D | null;
   if (!ctx) {
     return { brightness: [], colors: [] };
   }
 
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
 
   const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);

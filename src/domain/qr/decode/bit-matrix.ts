@@ -1,8 +1,8 @@
-export { BitArray } from './bit-array';
+export { BitArray } from "./bit-array";
 
-import { IllegalArgumentException } from './exceptions';
-import { Arrays, arraycopy, StringBuilder } from './util';
-import { BitArray } from './bit-array';
+import { IllegalArgumentException } from "./exceptions";
+import { Arrays, arraycopy, StringBuilder } from "./util";
+import { BitArray } from "./bit-array";
 
 /**
  * Represents a 2D matrix of bits.
@@ -17,7 +17,7 @@ export class BitMatrix {
     this.width = width;
     this.height = height ?? width;
     if (width < 1 || this.height < 1) {
-      throw new IllegalArgumentException('Both dimensions must be greater than 0');
+      throw new IllegalArgumentException("Both dimensions must be greater than 0");
     }
     this.rowSize = rowSize ?? Math.floor((width + 31) / 32);
     this.bits = bits ?? new Int32Array(this.rowSize * this.height);
@@ -41,7 +41,7 @@ export class BitMatrix {
       if (rowLength === -1) {
         return bitsPos - rowStartPos;
       } else if (bitsPos - rowStartPos !== rowLength) {
-        throw new IllegalArgumentException('row lengths do not match');
+        throw new IllegalArgumentException("row lengths do not match");
       }
     }
     return rowLength;
@@ -50,10 +50,10 @@ export class BitMatrix {
   static parseFromString(
     stringRepresentation: string,
     setString: string,
-    unsetString: string
+    unsetString: string,
   ): BitMatrix {
     if (stringRepresentation === null) {
-      throw new IllegalArgumentException('stringRepresentation cannot be null');
+      throw new IllegalArgumentException("stringRepresentation cannot be null");
     }
     const bits: boolean[] = [];
     let bitsPos = 0;
@@ -62,7 +62,7 @@ export class BitMatrix {
     let nRows = 0;
     let pos = 0;
     while (pos < stringRepresentation.length) {
-      if (stringRepresentation.charAt(pos) === '\n' || stringRepresentation.charAt(pos) === '\r') {
+      if (stringRepresentation.charAt(pos) === "\n" || stringRepresentation.charAt(pos) === "\r") {
         rowLength = BitMatrix.finalizeRow(bitsPos, rowStartPos, rowLength);
         if (bitsPos > rowStartPos) {
           rowStartPos = bitsPos;
@@ -79,7 +79,7 @@ export class BitMatrix {
         bitsPos++;
       } else {
         throw new IllegalArgumentException(
-          `illegal character encountered: ${stringRepresentation.substring(pos)}`
+          `illegal character encountered: ${stringRepresentation.substring(pos)}`,
         );
       }
     }
@@ -120,7 +120,7 @@ export class BitMatrix {
       this.height !== mask.getHeight() ||
       this.rowSize !== mask.getRowSize()
     ) {
-      throw new IllegalArgumentException('input matrix dimensions do not match');
+      throw new IllegalArgumentException("input matrix dimensions do not match");
     }
     const rowArray = new BitArray(Math.floor(this.width / 32) + 1);
     for (let y = 0; y < this.height; y++) {
@@ -140,15 +140,15 @@ export class BitMatrix {
 
   setRegion(left: number, top: number, width: number, height: number): void {
     if (top < 0 || left < 0) {
-      throw new IllegalArgumentException('Left and top must be nonnegative');
+      throw new IllegalArgumentException("Left and top must be nonnegative");
     }
     if (height < 1 || width < 1) {
-      throw new IllegalArgumentException('Height and width must be at least 1');
+      throw new IllegalArgumentException("Height and width must be at least 1");
     }
     const right = left + width;
     const bottom = top + height;
     if (bottom > this.height || right > this.width) {
-      throw new IllegalArgumentException('The region must fit inside the matrix');
+      throw new IllegalArgumentException("The region must fit inside the matrix");
     }
     for (let y = top; y < bottom; y++) {
       const offset = y * this.rowSize;
@@ -286,9 +286,9 @@ export class BitMatrix {
   }
 
   toString(
-    setString: string = 'X ',
-    unsetString: string = '  ',
-    lineSeparator: string = '\n'
+    setString: string = "X ",
+    unsetString: string = "  ",
+    lineSeparator: string = "\n",
   ): string {
     const result = new StringBuilder();
     for (let y = 0; y < this.height; y++) {

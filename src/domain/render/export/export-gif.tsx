@@ -1,10 +1,10 @@
-import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../../../modules/animation';
-import { withGifEncodeLock } from '../animation/gif-lock';
-import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
-import { log } from './log';
-import { renderFrameToScaledCtx } from './render-frame-to-scaled-ctx';
-import { resolveExportConfig } from './resolve-export-config';
-import { sampleGlobalPalette } from './sample-global-palette';
+import { createGifEncoder, indexGifPixels, quantizeGifPalette } from "../../../modules/animation";
+import { withGifEncodeLock } from "../animation/gif-lock";
+import type { ExportConfig, ExportResult } from "../../../modules/exporter/types";
+import { log } from "./log";
+import { renderFrameToScaledCtx } from "./render-frame-to-scaled-ctx";
+import { resolveExportConfig } from "./resolve-export-config";
+import { sampleGlobalPalette } from "./sample-global-palette";
 
 /**
  * Export animation frames as GIF
@@ -14,12 +14,12 @@ export async function exportGif(
   frames: HTMLCanvasElement[],
   config: Partial<ExportConfig> = {},
   frameDelays?: number[], // Optional per-frame delays in ms
-  frameDisposals?: number[] // Optional per-frame disposal codes (0-3)
+  frameDisposals?: number[], // Optional per-frame disposal codes (0-3)
 ): Promise<ExportResult> {
   const opts = resolveExportConfig(config, {
     width: frames[0]?.width ?? 400,
     height: frames[0]?.height ?? 400,
-    format: 'gif',
+    format: "gif",
   });
 
   const width = opts.outputWidth;
@@ -30,33 +30,33 @@ export async function exportGif(
   // Get palette size from config (default 256, clamped to valid range 2-256)
   const paletteSize = Math.max(
     2,
-    Math.min(256, (config as { gifPaletteSize?: number }).gifPaletteSize ?? 256)
+    Math.min(256, (config as { gifPaletteSize?: number }).gifPaletteSize ?? 256),
   );
 
   // OPTIMIZATION: Reuse a single scaling canvas for all frames.
   // Prefer OffscreenCanvas where available to reduce main-thread canvas overhead.
   const scaledCanvas: HTMLCanvasElement | OffscreenCanvas =
-    typeof OffscreenCanvas === 'undefined'
+    typeof OffscreenCanvas === "undefined"
       ? (() => {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
           return canvas;
         })()
       : new OffscreenCanvas(width, height);
   const scaledCtx =
-    (scaledCanvas.getContext('2d', {
+    (scaledCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as
       | CanvasRenderingContext2D
       | OffscreenCanvasRenderingContext2D
       | null) ??
-    (scaledCanvas.getContext('2d') as
+    (scaledCanvas.getContext("2d") as
       | CanvasRenderingContext2D
       | OffscreenCanvasRenderingContext2D
       | null);
-  if (!scaledCtx) throw new Error('Could not get canvas context');
+  if (!scaledCtx) throw new Error("Could not get canvas context");
 
   // Pre-compute disposal code once (not per-frame)
   const disposalMap: Record<string, number> = {
@@ -70,7 +70,7 @@ export async function exportGif(
   // Check if we need to apply background
   const hasBgOverride = opts.bgOverride?.trim();
 
-  log.debug('exportGif: start', {
+  log.debug("exportGif: start", {
     frameCount: frames.length,
     width,
     height,
@@ -93,7 +93,7 @@ export async function exportGif(
       height,
       hasBgOverride,
       opts.bgOverride,
-      paletteSize
+      paletteSize,
     );
 
     for (let i = 0; i < frames.length; i++) {
@@ -109,11 +109,11 @@ export async function exportGif(
       const frameDisposal = frameDisposals?.[i] ?? disposal;
 
       if (i === 0 || i === frames.length - 1) {
-        log.debug('exportGif: frame', {
+        log.debug("exportGif: frame", {
           index: i,
           delayMs,
           disposal: frameDisposal,
-          source: frameDelays?.[i] ? 'perFrame' : 'default',
+          source: frameDelays?.[i] ? "perFrame" : "default",
         });
       }
 
@@ -131,15 +131,15 @@ export async function exportGif(
 
   const totalDelayMs = frames.reduce(
     (sum, _, i) => sum + (frameDelays?.[i] ? frameDelays[i] : defaultDelay),
-    0
+    0,
   );
-  log.debug('exportGif: complete', {
+  log.debug("exportGif: complete", {
     framesEncoded: frames.length,
     totalDurationMs: totalDelayMs,
     avgDelayMs: Math.round(totalDelayMs / frames.length),
     outputBytes: bytes.length,
   });
-  const blob = new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
+  const blob = new Blob([new Uint8Array(bytes)], { type: "image/gif" });
   const filename = `${opts.filename}.gif`;
   const url = URL.createObjectURL(blob);
 
@@ -147,7 +147,7 @@ export async function exportGif(
     blob,
     url,
     filename,
-    format: 'gif',
+    format: "gif",
     width,
     height,
   };

@@ -1,4 +1,4 @@
-import type { RSBasisVector } from './rs-basis.types';
+import type { RSBasisVector } from "./rs-basis.types";
 
 /**
  * Convert a basis to a binary matrix for Gauss-Jordan elimination

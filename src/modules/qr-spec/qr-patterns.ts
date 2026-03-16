@@ -1,1 +1,1 @@
-export * from '../../domain/qr/spec/qr-patterns';
+export * from "../../domain/qr/spec/qr-patterns";

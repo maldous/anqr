@@ -1,4 +1,4 @@
-import type { QRBitBuffer as QRBitBufferType } from '../../../modules/qr-encoder/types';
+import type { QRBitBuffer as QRBitBufferType } from "../../../modules/qr-encoder/types";
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;

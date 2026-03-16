@@ -1,4 +1,4 @@
-import { isStructuralModule } from './is-structural-module';
+import { isStructuralModule } from "./is-structural-module";
 
 /**
  * Check if a module position is "locked" (structural, should not be modified by overlay)

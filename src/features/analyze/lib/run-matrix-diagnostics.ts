@@ -1,10 +1,10 @@
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import { createQRInstance } from '@/modules/qr-encoder';
-import type { MatrixDiagnostics } from './matrix-diagnostics.type';
-import { buildOriginalMatrix } from './build-original-matrix';
-import { buildRegenMatrix } from './build-regen-matrix';
-import { findBestMatrixShift } from './canvas-analysis-helpers';
-import { diffMatrices } from './diff-matrices';
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { createQRInstance } from "@/modules/qr-encoder";
+import type { MatrixDiagnostics } from "./matrix-diagnostics.type";
+import { buildOriginalMatrix } from "./build-original-matrix";
+import { buildRegenMatrix } from "./build-regen-matrix";
+import { findBestMatrixShift } from "./canvas-analysis-helpers";
+import { diffMatrices } from "./diff-matrices";
 
 export function runMatrixDiagnostics(
   qr: ReturnType<typeof createQRInstance>,
@@ -13,7 +13,7 @@ export function runMatrixDiagnostics(
   isGeneratorSource: boolean,
   generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
   marginModules: number,
-  modulePx: number
+  modulePx: number,
 ): MatrixDiagnostics {
   const regenMatrix = buildRegenMatrix(qr, moduleCount);
   const originalMatrix = buildOriginalMatrix(
@@ -21,7 +21,7 @@ export function runMatrixDiagnostics(
     generatedCanvas,
     moduleCount,
     marginModules,
-    modulePx
+    modulePx,
   );
   return {
     regenVsDecoded: result.moduleMatrix ? diffMatrices(result.moduleMatrix, regenMatrix) : null,

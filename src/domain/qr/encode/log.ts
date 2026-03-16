@@ -1,3 +1,3 @@
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-export const _log = createLogger('ENCODER');
+export const _log = createLogger("ENCODER");

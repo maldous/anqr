@@ -1,4 +1,4 @@
-import { hslToRgbTuple } from '../color/color';
+import { hslToRgbTuple } from "../color/color";
 
 /**
  * Apply drift pattern effect to image data
@@ -9,7 +9,7 @@ export function applyAnimationDrift(
   progress: number,
   width: number,
   height: number,
-  seed: number
+  seed: number,
 ): void {
   const scale = 0.015 + (seed % 10) * 0.003;
   const timeOffset = progress * Math.PI * 2;

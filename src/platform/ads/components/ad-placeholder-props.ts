@@ -9,5 +9,5 @@ export interface AdPlaceholderProps {
   /** Additional CSS classes */
   readonly className?: string;
   /** Format type for responsive ads */
-  readonly format?: 'horizontal' | 'vertical' | 'rectangle' | 'auto';
+  readonly format?: "horizontal" | "vertical" | "rectangle" | "auto";
 }

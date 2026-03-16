@@ -1,4 +1,4 @@
-import type { PatternEffect } from './frames-type-patterneffect';
+import type { PatternEffect } from "./frames-type-patterneffect";
 
 export interface FramePostProcessContext<
   W extends {
@@ -14,7 +14,7 @@ export interface FramePostProcessContext<
   applyResultEphemeral: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    total: number
+    total: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   getLatestFrame: () => HTMLCanvasElement | OffscreenCanvas | undefined;

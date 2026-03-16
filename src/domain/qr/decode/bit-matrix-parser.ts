@@ -1,7 +1,7 @@
-import type { BitMatrix } from './bit-matrix';
-import { FormatException } from './exceptions';
-import { DataMask, FormatInformation, Version } from './qr-version';
-import { accumulateCodewordBit } from './accumulate-codeword-bit';
+import type { BitMatrix } from "./bit-matrix";
+import { FormatException } from "./exceptions";
+import { DataMask, FormatInformation, Version } from "./qr-version";
+import { accumulateCodewordBit } from "./accumulate-codeword-bit";
 
 /**
  * Parses the QR code bit matrix into format and version info
@@ -44,7 +44,7 @@ export class BitMatrixParser {
 
     this.parsedFormatInfo = FormatInformation.decodeFormatInformation(
       formatInfoBits1,
-      formatInfoBits2
+      formatInfoBits2,
     );
     if (this.parsedFormatInfo !== null) return this.parsedFormatInfo;
     throw new FormatException();
@@ -128,7 +128,7 @@ export class BitMatrixParser {
     DataMask.unmaskBitMatrix(
       this.bitMatrix,
       this.bitMatrix.getHeight(),
-      this.parsedFormatInfo.getDataMask()
+      this.parsedFormatInfo.getDataMask(),
     );
   }
 

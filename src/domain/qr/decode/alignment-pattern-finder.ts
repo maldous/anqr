@@ -1,7 +1,7 @@
-import type { BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
-import { ResultPoint } from './result-types';
-import { AlignmentPattern } from './alignment-pattern';
+import type { BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
+import { ResultPoint } from "./result-types";
+import { AlignmentPattern } from "./alignment-pattern";
 
 /**
  * Finds alignment patterns in QR codes version 2+
@@ -17,7 +17,7 @@ export class AlignmentPatternFinder {
     private readonly width: number,
     private readonly height: number,
     private readonly moduleSize: number,
-    private readonly resultPointCallback?: (point: ResultPoint) => void
+    private readonly resultPointCallback?: (point: ResultPoint) => void,
   ) {}
 
   find(): AlignmentPattern {
@@ -42,7 +42,7 @@ export class AlignmentPatternFinder {
   private checkAlignmentPatternCross(
     stateCount: Int32Array,
     i: number,
-    j: number
+    j: number,
   ): AlignmentPattern | null {
     if (!this.foundPatternCross(stateCount)) return null;
     return this.handlePossibleCenter(stateCount, i, j);
@@ -51,7 +51,7 @@ export class AlignmentPatternFinder {
   private handleAlignmentDarkAtState2(
     stateCount: Int32Array,
     i: number,
-    j: number
+    j: number,
   ): { currentState: number; result: AlignmentPattern | null } {
     const confirmed = this.checkAlignmentPatternCross(stateCount, i, j);
     if (confirmed !== null) return { currentState: 1, result: confirmed };
@@ -66,7 +66,7 @@ export class AlignmentPatternFinder {
     currentState: number,
     stateCount: Int32Array,
     i: number,
-    j: number
+    j: number,
   ): { currentState: number; result: AlignmentPattern | null } {
     if (isDark) {
       if (currentState === 1) {
@@ -88,7 +88,7 @@ export class AlignmentPatternFinder {
     i: number,
     startX: number,
     maxJ: number,
-    stateCount: Int32Array
+    stateCount: Int32Array,
   ): AlignmentPattern | null {
     stateCount[0] = 0;
     stateCount[1] = 0;
@@ -118,7 +118,7 @@ export class AlignmentPatternFinder {
     startI: number,
     centerJ: number,
     maxCount: number,
-    originalStateCountTotal: number
+    originalStateCountTotal: number,
   ): number {
     const image = this.image;
     const maxI = image.getHeight();
@@ -160,7 +160,7 @@ export class AlignmentPatternFinder {
   private handlePossibleCenter(
     stateCount: Int32Array,
     i: number,
-    j: number
+    j: number,
   ): AlignmentPattern | null {
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
     const centerJ = j - stateCount[2] - stateCount[1] / 2;
@@ -168,7 +168,7 @@ export class AlignmentPatternFinder {
       i,
       Math.floor(centerJ),
       2 * stateCount[1],
-      stateCountTotal
+      stateCountTotal,
     );
     if (!Number.isNaN(centerI)) {
       const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3;

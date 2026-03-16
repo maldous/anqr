@@ -1,4 +1,4 @@
-import { arraycopy } from './arraycopy';
+import { arraycopy } from "./arraycopy";
 
 /**
  * Array utility functions
@@ -117,7 +117,7 @@ export class Arrays {
   static binarySearch(
     ar: Int32Array,
     el: number,
-    comparator?: (a: number, b: number) => number
+    comparator?: (a: number, b: number) => number,
   ): number {
     comparator ??= (a, b) => a - b;
     let m = 0;

@@ -9,7 +9,7 @@
 export function isBitAllowed(
   blockAllowedBits: Map<number, Set<number>>,
   blockIndex: number,
-  localBitIndex: number
+  localBitIndex: number,
 ): boolean {
   const allowedSet = blockAllowedBits.get(blockIndex);
   if (!allowedSet) return false;

@@ -1,8 +1,8 @@
-import type { PixelDecisionMatrix } from './types';
-import { packColor } from './pack-color';
-import { luma01 } from './luma01';
-import { clamp01 } from './clamp01';
-import { lerp } from './lerp';
+import type { PixelDecisionMatrix } from "./types";
+import { packColor } from "./pack-color";
+import { luma01 } from "./luma01";
+import { clamp01 } from "./clamp01";
+import { lerp } from "./lerp";
 
 export function aggregateModuleHalftoneData(
   ditheredResult: PixelDecisionMatrix,
@@ -14,7 +14,7 @@ export function aggregateModuleHalftoneData(
   effectiveIntensity: number,
   densityInfluence: number,
   overlayBrightness: Float32Array,
-  overlayColorsPacked: Uint32Array
+  overlayColorsPacked: Uint32Array,
 ): void {
   const total = scale * scale;
   let darkCount = 0;
@@ -54,7 +54,7 @@ export function aggregateModuleHalftoneData(
   const densityBrightness = 1 - density;
   const overlayIndex = mr * moduleCount + mc;
   overlayBrightness[overlayIndex] = clamp01(
-    lerp(srcBrightness, densityBrightness, densityInfluence)
+    lerp(srcBrightness, densityBrightness, densityInfluence),
   );
 
   if (colorCount > 0) {
@@ -65,7 +65,7 @@ export function aggregateModuleHalftoneData(
     overlayColorsPacked[overlayIndex] = packColor(
       Math.round(lerp(srcR, ditherR, colorMix)),
       Math.round(lerp(srcG, ditherG, colorMix)),
-      Math.round(lerp(srcB, ditherB, colorMix))
+      Math.round(lerp(srcB, ditherB, colorMix)),
     );
   } else {
     overlayColorsPacked[overlayIndex] = packColor(srcR, srcG, srcB);

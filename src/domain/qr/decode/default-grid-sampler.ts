@@ -1,8 +1,8 @@
-import { BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
-import { GridSampler } from './grid-sampler';
-import { PerspectiveTransform } from './perspective-transform';
-import type { SampleGridArgs } from './sample-grid-args.type';
+import { BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
+import { GridSampler } from "./grid-sampler";
+import { PerspectiveTransform } from "./perspective-transform";
+import type { SampleGridArgs } from "./sample-grid-args.type";
 
 /**
  * Default grid sampler implementation
@@ -46,7 +46,7 @@ export class DefaultGridSampler extends GridSampler {
       p3FromX,
       p3FromY,
       p4FromX,
-      p4FromY
+      p4FromY,
     );
     return this.sampleGridWithTransform(image, dimensionX, dimensionY, transform);
   }
@@ -55,7 +55,7 @@ export class DefaultGridSampler extends GridSampler {
     image: BitMatrix,
     dimensionX: number,
     dimensionY: number,
-    transform: PerspectiveTransform
+    transform: PerspectiveTransform,
   ): BitMatrix {
     if (dimensionX <= 0 || dimensionY <= 0) {
       throw new NotFoundException();

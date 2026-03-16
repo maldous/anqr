@@ -1,8 +1,8 @@
-import type { VectorAlignmentStyle } from './vector-alignment-style';
-import type { VectorFinderStyle } from './vector-finder-style';
-import type { VectorGradient } from './vector-gradient';
-import type { VectorModuleStyle } from './vector-module-style';
-import type { VectorTimingStyle } from './vector-timing-style';
+import type { VectorAlignmentStyle } from "./vector-alignment-style";
+import type { VectorFinderStyle } from "./vector-finder-style";
+import type { VectorGradient } from "./vector-gradient";
+import type { VectorModuleStyle } from "./vector-module-style";
+import type { VectorTimingStyle } from "./vector-timing-style";
 
 export interface VectorSvgConfig {
   moduleSize?: number;

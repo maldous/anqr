@@ -1,1 +1,1 @@
-export * from '../features/onboarding/components/WelcomeModal';
+export * from "../features/onboarding/components/WelcomeModal";

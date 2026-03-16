@@ -1,9 +1,9 @@
 export type StaticPageType =
-  | 'about'
-  | 'guide'
-  | 'learn'
-  | 'examples'
-  | 'translate'
-  | 'privacy'
-  | 'terms'
-  | 'contact';
+  | "about"
+  | "guide"
+  | "learn"
+  | "examples"
+  | "translate"
+  | "privacy"
+  | "terms"
+  | "contact";

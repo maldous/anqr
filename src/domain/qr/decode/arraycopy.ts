@@ -6,7 +6,7 @@ export function arraycopy<T = number>(
   srcPos: number,
   dest: { [index: number]: T },
   destPos: number,
-  length: number
+  length: number,
 ): void {
   if ((src as unknown) === (dest as unknown) && srcPos < destPos) {
     // Copy backwards to avoid overwriting

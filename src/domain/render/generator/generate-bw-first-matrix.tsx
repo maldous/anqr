@@ -1,20 +1,20 @@
-import { sampleBlueNoise } from '../dither';
+import { sampleBlueNoise } from "../dither";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
-} from './types';
-import { log } from './log';
-import { rgbToLumaSrgb } from './rgb-to-luma-srgb';
-import { pixelIndex } from './pixel-index';
-import { packColor } from './pack-color';
-import { bitsToMatrix } from './bits-to-matrix';
-import { packedColorsToMatrix } from './packed-colors-to-matrix';
-import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';
-import { computeFinalShade } from './compute-final-shade';
-import { resolveMatrixInput } from './resolve-matrix-input';
-import type { RGBi } from './rg-bi';
+} from "./types";
+import { log } from "./log";
+import { rgbToLumaSrgb } from "./rgb-to-luma-srgb";
+import { pixelIndex } from "./pixel-index";
+import { packColor } from "./pack-color";
+import { bitsToMatrix } from "./bits-to-matrix";
+import { packedColorsToMatrix } from "./packed-colors-to-matrix";
+import { getBlueNoiseTileCached } from "./get-blue-noise-tile-cached";
+import { computeFinalShade } from "./compute-final-shade";
+import { resolveMatrixInput } from "./resolve-matrix-input";
+import type { RGBi } from "./rg-bi";
 
 export async function generateBWFirstMatrix(
   qr: QRCodeInstance,
@@ -24,7 +24,7 @@ export async function generateBWFirstMatrix(
   scale: number,
   effectiveIntensity: number,
   createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<PixelDecisionMatrix> {
   const matrixInput = await resolveMatrixInput({
     createCanvasFn,
@@ -34,7 +34,7 @@ export async function generateBWFirstMatrix(
     releaseCanvasFn,
     scale,
   });
-  if ('emptyMatrix' in matrixInput) {
+  if ("emptyMatrix" in matrixInput) {
     return matrixInput.emptyMatrix;
   }
   const { data, matrixBits, packedColors, scaledSize } = matrixInput;
@@ -45,7 +45,7 @@ export async function generateBWFirstMatrix(
     srcG: number,
     srcB: number,
     shade: number,
-    qrDark: boolean
+    qrDark: boolean,
   ): RGBi => {
     const gray = (srcR + srcG + srcB) / 3;
     const chromaScale = qrDark ? 0.9 : 0.58;
@@ -100,23 +100,23 @@ export async function generateBWFirstMatrix(
         moduleCol,
         moduleCount,
         version,
-        config
+        config,
       );
 
-      if (config.colorMode !== 'bw') {
+      if (config.colorMode !== "bw") {
         const mapped = mapShadeWithSourceColor(r, g, b, shade, qrIsDark);
         packedColors[sampleIdx] = packColor(mapped.r, mapped.g, mapped.b);
       }
     }
   }
 
-  log.debug('QR-first B&W matrix generated', {
+  log.debug("QR-first B&W matrix generated", {
     scaledSize,
     moduleCount,
     scale,
     textureAmount,
     contrastPower,
-    mode: 'bw-first',
+    mode: "bw-first",
   });
 
   return {

@@ -1,10 +1,10 @@
-import { pixelIndex } from './pixel-index';
-import type { ConstraintCtx } from './constraint-ctx';
+import { pixelIndex } from "./pixel-index";
+import type { ConstraintCtx } from "./constraint-ctx";
 
 export function computeModuleOccupancy(
   ctx: ConstraintCtx,
   mr: number,
-  mc: number
+  mc: number,
 ): { darkCount: number; centerDarkCount: number; desireSum: number; desireSq: number } {
   const y0 = mr * ctx.scale;
   const x0 = mc * ctx.scale;

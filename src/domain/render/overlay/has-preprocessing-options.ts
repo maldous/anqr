@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Check if overlay has preprocessing options that need to be applied
@@ -19,6 +19,6 @@ export function hasPreprocessingOptions(config: QRGeneratorConfig): boolean {
     (!!config.filterDuotone1 && !!config.filterDuotone2) ||
     !!config.filterEdgeDetect ||
     // colorMode 'grayscale' or 'bw' requires preprocessing
-    (config.colorMode !== undefined && config.colorMode !== 'color')
+    (config.colorMode !== undefined && config.colorMode !== "color")
   );
 }

@@ -1,8 +1,8 @@
 export type AnimationPattern =
-  | 'none'
-  | 'pulse'
-  | 'wave'
-  | 'scanline'
-  | 'shimmer'
-  | 'drift'
-  | 'color_cycle';
+  | "none"
+  | "pulse"
+  | "wave"
+  | "scanline"
+  | "shimmer"
+  | "drift"
+  | "color_cycle";

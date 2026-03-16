@@ -3,13 +3,13 @@
  * Apply color cycling effect to animation frames
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { resolveEffectTargetCanvas } from '../resolve-effect-target-canvas';
-import { clampToByte } from './clamp-to-byte';
+import { createLogger } from "../../../infra/logging/logger";
+import { resolveEffectTargetCanvas } from "../resolve-effect-target-canvas";
+import { clampToByte } from "./clamp-to-byte";
 
-const _log = createLogger('ANIMATION');
+const _log = createLogger("ANIMATION");
 
-import { hslToRgb } from '../color/color';
+import { hslToRgb } from "../color/color";
 
 /**
  * Apply color cycling effect to a frame
@@ -18,7 +18,7 @@ export function applyColorCycle(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   frameIndex: number,
   totalFrames: number,
-  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
+  targetCanvas?: HTMLCanvasElement | OffscreenCanvas,
 ): HTMLCanvasElement | OffscreenCanvas {
   const { ctx, result } = resolveEffectTargetCanvas(canvas, targetCanvas);
   if (!ctx) return canvas;

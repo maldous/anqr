@@ -1,7 +1,7 @@
-import type { PageSection } from '@/i18n/static';
-import { Button } from '@/ui/primitives/button';
-import { getImageUrl } from './static-page-image-url';
-import { renderTextWithLinks } from './static-page-text';
+import type { PageSection } from "@/i18n/static";
+import { Button } from "@/ui/primitives/button";
+import { getImageUrl } from "./static-page-image-url";
+import { renderTextWithLinks } from "./static-page-text";
 
 export function StaticPageSection({
   section,
@@ -22,11 +22,11 @@ export function StaticPageSection({
 }>) {
   const slug = `section-${index}`;
   const paragraphClassName = hasToc
-    ? 'text-sm sm:text-base text-muted-foreground leading-relaxed'
-    : 'text-base text-muted-foreground leading-relaxed';
+    ? "text-sm sm:text-base text-muted-foreground leading-relaxed"
+    : "text-base text-muted-foreground leading-relaxed";
   const listClassName = hasToc
-    ? 'list-disc pl-4 sm:pl-5 space-y-1.5 sm:space-y-2 text-sm sm:text-base text-muted-foreground'
-    : 'list-disc pl-5 space-y-2 text-base text-muted-foreground';
+    ? "list-disc pl-4 sm:pl-5 space-y-1.5 sm:space-y-2 text-sm sm:text-base text-muted-foreground"
+    : "list-disc pl-5 space-y-2 text-base text-muted-foreground";
 
   return (
     <section
@@ -36,8 +36,8 @@ export function StaticPageSection({
       ref={hasToc ? (el) => registerSectionRef?.(slug, el) : undefined}
       className={
         hasToc
-          ? `space-y-3 sm:space-y-4 scroll-mt-20 ${isMainHeading ? 'mt-8 pt-6 border-t border-border first:mt-0 first:pt-0 first:border-t-0' : ''}`
-          : 'space-y-4'
+          ? `space-y-3 sm:space-y-4 scroll-mt-20 ${isMainHeading ? "mt-8 pt-6 border-t border-border first:mt-0 first:pt-0 first:border-t-0" : ""}`
+          : "space-y-4"
       }
     >
       {hasToc ? (
@@ -81,7 +81,7 @@ export function StaticPageSection({
       {section.bullets && section.bullets.length > 0 && (
         <ul className={listClassName}>
           {section.bullets.map((bullet) => (
-            <li key={bullet} className={hasToc ? 'leading-relaxed' : undefined}>
+            <li key={bullet} className={hasToc ? "leading-relaxed" : undefined}>
               {renderTextWithLinks(bullet, lang)}
             </li>
           ))}
@@ -108,10 +108,10 @@ export function StaticPageSection({
         </div>
       )}
 
-      {section.links && section.links.some((link) => link.href.startsWith('http')) && (
+      {section.links && section.links.some((link) => link.href.startsWith("http")) && (
         <div className="flex flex-wrap gap-3 mt-4">
           {section.links
-            .filter((link) => link.href.startsWith('http'))
+            .filter((link) => link.href.startsWith("http"))
             .map((link) => (
               <Button key={link.href} asChild variant="outline" size="default">
                 <a href={link.href} target="_blank" rel="noopener noreferrer">

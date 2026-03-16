@@ -1,13 +1,13 @@
-import type { GFField } from './gf-field.types';
-import { formatPolyTermSign } from './format-poly-term-sign';
-import { formatPolyCoefficientValue } from './format-poly-coefficient-value';
-import { formatPolyDegreeLabel } from './format-poly-degree-label';
+import type { GFField } from "./gf-field.types";
+import { formatPolyTermSign } from "./format-poly-term-sign";
+import { formatPolyCoefficientValue } from "./format-poly-coefficient-value";
+import { formatPolyDegreeLabel } from "./format-poly-degree-label";
 
 export function formatPolyTerm(
   field: GFField,
   degree: number,
   coefficient: number,
-  hasExistingTerms: boolean
+  hasExistingTerms: boolean,
 ): string {
   let result = formatPolyTermSign(coefficient, hasExistingTerms);
   const absCoefficient = coefficient < 0 ? -coefficient : coefficient;

@@ -1,14 +1,14 @@
-import type { CreateCanvasFn } from './types';
-import { sharedReadbackCache } from './shared-readback-cache';
-import { get2DContext } from './get2-d-context';
-import { trimSharedReadbackCache } from './trim-shared-readback-cache';
-import type { SharedReadbackEntry } from './shared-readback-entry';
-import type { SharedReadbackLease } from './shared-readback-lease';
+import type { CreateCanvasFn } from "./types";
+import { sharedReadbackCache } from "./shared-readback-cache";
+import { get2DContext } from "./get2-d-context";
+import { trimSharedReadbackCache } from "./trim-shared-readback-cache";
+import type { SharedReadbackEntry } from "./shared-readback-entry";
+import type { SharedReadbackLease } from "./shared-readback-lease";
 
 export async function acquireSharedReadbackCanvas(
   scaledSize: number,
   createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<SharedReadbackLease | null> {
   const existing = sharedReadbackCache.get(scaledSize);
   const canReuseExisting =

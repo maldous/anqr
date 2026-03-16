@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/animation-loop';
+export * from "../../domain/render/animation/animation-loop";

@@ -19,6 +19,6 @@ export function buildPngMetadata(metadataState: {
     copyright: metadataState.copyright || undefined,
     description: metadataState.description || undefined,
     creationTime: metadataState.creationTime ? new Date().toISOString() : undefined,
-    software: 'ANQR - https://anqr.link',
+    software: "ANQR - https://anqr.link",
   };
 }

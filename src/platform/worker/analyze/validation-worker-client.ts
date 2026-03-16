@@ -4,15 +4,15 @@
  * Falls back to main-thread validation if the Worker fails to initialize.
  */
 
-import type { ValidationResult } from '../../../domain/qr/analyze/scanner';
-import { validateQRCodeRobust } from '../../../domain/qr/analyze/scanner';
-import type { CanvasContext } from './canvas-context.type';
-import type { CanvasLike } from './canvas-like.type';
-import { ensureWorker } from './ensure-validation-worker';
-export { terminateValidationWorker } from './terminate-validation-worker';
-import { validationWorkerState } from './validation-worker-state';
-import { VALIDATION_WORKER_TIMEOUT_MS } from './validation-worker-timeout.const';
-import { validationWorkerLog as log } from './validation-worker-log';
+import type { ValidationResult } from "../../../domain/qr/analyze/scanner";
+import { validateQRCodeRobust } from "../../../domain/qr/analyze/scanner";
+import type { CanvasContext } from "./canvas-context.type";
+import type { CanvasLike } from "./canvas-like.type";
+import { ensureWorker } from "./ensure-validation-worker";
+export { terminateValidationWorker } from "./terminate-validation-worker";
+import { validationWorkerState } from "./validation-worker-state";
+import { VALIDATION_WORKER_TIMEOUT_MS } from "./validation-worker-timeout.const";
+import { validationWorkerLog as log } from "./validation-worker-log";
 
 /**
  * Validate a QR code canvas using a Web Worker (off main thread).
@@ -23,7 +23,7 @@ import { validationWorkerLog as log } from './validation-worker-log';
 export function validateInWorker(
   canvas: CanvasLike,
   expectedContent: string | undefined,
-  attempts: number
+  attempts: number,
 ): Promise<ValidationResult> {
   const w = ensureWorker();
 
@@ -32,7 +32,7 @@ export function validateInWorker(
     return Promise.resolve(validateQRCodeRobust(canvas, expectedContent, attempts));
   }
 
-  const ctx = canvas.getContext('2d') as CanvasContext | null;
+  const ctx = canvas.getContext("2d") as CanvasContext | null;
   if (!ctx) {
     return Promise.resolve(validateQRCodeRobust(canvas, expectedContent, attempts));
   }
@@ -46,8 +46,8 @@ export function validateInWorker(
     const timeout = setTimeout(() => {
       if (validationWorkerState.pending.has(id)) {
         validationWorkerState.pending.delete(id);
-        log.warn('Validation worker timed out');
-        resolve({ valid: false, error: 'Worker timeout', confidence: 'low' });
+        log.warn("Validation worker timed out");
+        resolve({ valid: false, error: "Worker timeout", confidence: "low" });
       }
     }, VALIDATION_WORKER_TIMEOUT_MS);
 
@@ -65,7 +65,7 @@ export function validateInWorker(
         expectedContent,
         attempts,
       },
-      [imageData.data.buffer]
+      [imageData.data.buffer],
     );
   });
 }

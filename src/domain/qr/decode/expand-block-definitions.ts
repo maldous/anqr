@@ -1,4 +1,4 @@
-import type { BlockLayout } from './block-layout.interface';
+import type { BlockLayout } from "./block-layout.interface";
 
 export function expandBlockDefinitions(rsBlocks: number[][]): BlockLayout {
   const blockDataSizes: number[] = [];

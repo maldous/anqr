@@ -3,7 +3,7 @@ export function tintScanlinePixel(
   i: number,
   intensity: number,
   scanColor: [number, number, number],
-  trailColor: [number, number, number]
+  trailColor: [number, number, number],
 ): void {
   const r = data[i],
     g = data[i + 1],

@@ -1,7 +1,7 @@
-import { GF_EXP } from './gf-exp';
-import { gfAdd } from './gf-add';
-import { gfMul } from './gf-mul';
-import { POLY_ZERO } from './poly-zero';
+import { GF_EXP } from "./gf-exp";
+import { gfAdd } from "./gf-add";
+import { gfMul } from "./gf-mul";
+import { POLY_ZERO } from "./poly-zero";
 
 // ============================================
 // Syndrome Calculation

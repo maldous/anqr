@@ -2,7 +2,7 @@ export function computeLinearBitPosition(
   blockIndex: number,
   posInBlock: number,
   bitInByte: number,
-  blockDataCounts: number[]
+  blockDataCounts: number[],
 ): { linearByte: number; linearBit: number } {
   let linearByteOffset = 0;
   for (let b = 0; b < blockIndex; b++) {

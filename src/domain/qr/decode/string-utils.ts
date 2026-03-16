@@ -1,13 +1,13 @@
-import { CharacterSetECI } from './character-set-eci';
-import { StringEncoding } from './string-encoding';
+import { CharacterSetECI } from "./character-set-eci";
+import { StringEncoding } from "./string-encoding";
 
 /**
  * String utilities
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class StringUtils {
-  static readonly SHIFT_JIS = 'SJIS';
-  static readonly GB2312 = 'GB2312';
+  static readonly SHIFT_JIS = "SJIS";
+  static readonly GB2312 = "GB2312";
   static readonly ISO88591 = CharacterSetECI.ISO8859_1;
   private static readonly UTF8 = CharacterSetECI.UTF8;
 

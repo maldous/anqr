@@ -1,4 +1,4 @@
-import type { AnimationFrame } from './animation-frame';
+import type { AnimationFrame } from "./animation-frame";
 
 export interface AnimationState {
   frames: AnimationFrame[];

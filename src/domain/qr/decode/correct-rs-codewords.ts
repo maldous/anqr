@@ -1,7 +1,7 @@
-import { buildRSBlockConfigs } from './build-rs-block-configs';
-import { correctAllBlocks } from './correct-all-blocks';
-import { deinterleaveByBlock } from './deinterleave-by-block';
-import { qrDecoderLog } from './qr-decoder-log';
+import { buildRSBlockConfigs } from "./build-rs-block-configs";
+import { correctAllBlocks } from "./correct-all-blocks";
+import { deinterleaveByBlock } from "./deinterleave-by-block";
+import { qrDecoderLog } from "./qr-decoder-log";
 
 /**
  * Correct errors in all RS blocks of a QR code
@@ -12,7 +12,7 @@ import { qrDecoderLog } from './qr-decoder-log';
  */
 export function correctRSCodewords(
   codewords: number[],
-  rsBlocks: number[][]
+  rsBlocks: number[][],
 ): { dataCodewords: number[]; correctionsMade: number } | null {
   const blockConfigs = buildRSBlockConfigs(rsBlocks);
   const numBlocks = blockConfigs.length;
@@ -27,14 +27,14 @@ export function correctRSCodewords(
     codewords,
     dataCounts,
     maxDataCount,
-    0
+    0,
   );
   const { blocks: blockEcc } = deinterleaveByBlock(codewords, eccCounts, maxEccCount, nextIdx);
 
-  qrDecoderLog.trace('rs-decoder: De-interleaved into blocks', {
+  qrDecoderLog.trace("rs-decoder: De-interleaved into blocks", {
     numBlocks,
-    blockDataLengths: blockData.map((d) => d.length).join(','),
-    blockEccLengths: blockEcc.map((e) => e.length).join(','),
+    blockDataLengths: blockData.map((d) => d.length).join(","),
+    blockEccLengths: blockEcc.map((e) => e.length).join(","),
   });
 
   const result = correctAllBlocks(blockData, blockEcc, blockConfigs);
@@ -42,7 +42,7 @@ export function correctRSCodewords(
 
   const dataCodewords = result.correctedBlocks.flat();
 
-  qrDecoderLog.trace('rs-decoder: RS correction complete', {
+  qrDecoderLog.trace("rs-decoder: RS correction complete", {
     totalDataCodewords: dataCodewords.length,
     totalCorrections: result.totalCorrections,
   });

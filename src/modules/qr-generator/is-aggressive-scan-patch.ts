@@ -1,10 +1,10 @@
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
-import type { ScanGateCtx } from './scan-gate-ctx.interface';
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
+import type { ScanGateCtx } from "./scan-gate-ctx.interface";
 
 export function isAggressiveScanPatch(
   ctx: ScanGateCtx,
   patch: DitherAttemptPatch,
-  cacheIntensityFloor: number
+  cacheIntensityFloor: number,
 ): boolean {
   const { effectiveConfig, requestedOverlayIntensity, overlayComplexity } = ctx;
   if (effectiveConfig.preserveFinders === false && patch.preserveFinders === true) return true;

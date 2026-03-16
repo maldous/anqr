@@ -1,11 +1,11 @@
-import type { QROptions, QRMatrix } from './encoder-api.types';
-import { createQRInstance } from './create-qr-instance';
+import type { QROptions, QRMatrix } from "./encoder-api.types";
+import { createQRInstance } from "./create-qr-instance";
 
 /**
  * Generate QR code matrix
  */
 export function generateQR(data: string, options: QROptions = {}): QRMatrix {
-  const ecc = options.errorCorrectionLevel ?? 'M';
+  const ecc = options.errorCorrectionLevel ?? "M";
   const version = options.version ?? 0;
   const instance = createQRInstance(data, ecc, version, {
     mode: options.mode,

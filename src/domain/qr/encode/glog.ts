@@ -1,4 +1,4 @@
-import { LOG_TABLE } from './exp-table';
+import { LOG_TABLE } from "./exp-table";
 
 /**
  * Galois field logarithm

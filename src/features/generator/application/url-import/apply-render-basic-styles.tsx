@@ -1,8 +1,8 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { type AlignmentStyle, type FinderStyle, type TimingStyle } from '@/store/qr-store';
-import type { StoreState } from '@/features/generator/model/mobile-split';
-import type { ModuleStyleOption } from '@/app/routing/page-resolution';
-import type { GradientUpdate } from './apply-render-params.types';
+import type { ShareConfig } from "@/modules/share-links";
+import { type AlignmentStyle, type FinderStyle, type TimingStyle } from "@/store/qr-store";
+import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { ModuleStyleOption } from "@/app/routing/page-resolution";
+import type { GradientUpdate } from "./apply-render-params.types";
 
 export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.fg) store.setRenderFgColor(params.fg);
@@ -14,11 +14,11 @@ export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: Stor
   if (params.timingStyle) store.setRenderTimingStyle(params.timingStyle as TimingStyle);
   if (params.moduleGap !== undefined) store.setRenderModuleGap(params.moduleGap);
   if (params.gapMode)
-    store.setRenderGapMode(params.gapMode as 'none' | 'inset' | 'stroke' | 'negative_space');
+    store.setRenderGapMode(params.gapMode as "none" | "inset" | "stroke" | "negative_space");
   if (params.cornerRadius !== undefined) store.setRenderCornerRadius(params.cornerRadius);
   if (params.gradientType) {
     const gradientUpdate: GradientUpdate = {
-      type: params.gradientType as 'none' | 'linear' | 'radial' | 'conic',
+      type: params.gradientType as "none" | "linear" | "radial" | "conic",
     };
     if (params.gradientStops && params.gradientStops.length > 0) {
       gradientUpdate.stops = params.gradientStops;

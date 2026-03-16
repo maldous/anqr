@@ -1,7 +1,7 @@
-import type { ECCLevel } from './bit-mapping';
-import type { FormatVerificationResult, RejectionReason } from './validation.types';
-import { extractMaskFromMatrix } from './extract-mask-from-matrix';
-import { eccNumericToLevel } from './ecc-numeric-to-level';
+import type { ECCLevel } from "./bit-mapping";
+import type { FormatVerificationResult, RejectionReason } from "./validation.types";
+import { extractMaskFromMatrix } from "./extract-mask-from-matrix";
+import { eccNumericToLevel } from "./ecc-numeric-to-level";
 
 /**
  * Verify that a matrix's format info matches expected ECC and mask.
@@ -24,7 +24,7 @@ import { eccNumericToLevel } from './ecc-numeric-to-level';
 export function verifyMatrixFormatInfo(
   matrix: boolean[][],
   expectedEcc: ECCLevel,
-  expectedMask: number
+  expectedMask: number,
 ): FormatVerificationResult {
   const extracted = extractMaskFromMatrix(matrix);
   const extractedEcc = eccNumericToLevel(extracted.eccLevel);
@@ -33,9 +33,9 @@ export function verifyMatrixFormatInfo(
 
   let reason: RejectionReason | undefined;
   if (!eccMatch) {
-    reason = 'ECC_MISMATCH';
+    reason = "ECC_MISMATCH";
   } else if (!maskMatch) {
-    reason = 'MASK_MISMATCH';
+    reason = "MASK_MISMATCH";
   }
 
   return {

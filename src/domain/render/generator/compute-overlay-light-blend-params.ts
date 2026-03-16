@@ -1,4 +1,4 @@
-import type { DitherBlendFlags } from './dither-blend-flags';
+import type { DitherBlendFlags } from "./dither-blend-flags";
 
 export function computeOverlayLightBlendParams(flags: DitherBlendFlags): {
   maxBlend: number;

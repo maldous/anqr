@@ -1,1 +1,1 @@
-export type OutputFormat = 'png' | 'webp' | 'gif' | 'svg';
+export type OutputFormat = "png" | "webp" | "gif" | "svg";

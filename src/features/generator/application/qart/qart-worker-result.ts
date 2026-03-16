@@ -1,2 +1,2 @@
-export type { QArtModule } from './qart-module';
-export type { QArtWorkerResult } from './qart-worker-result-type';
+export type { QArtModule } from "./qart-module";
+export type { QArtWorkerResult } from "./qart-worker-result-type";

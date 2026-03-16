@@ -1,21 +1,21 @@
-import { computeECC } from './rs-basis';
-import { arraysEqual } from './arrays-equal';
-import { log } from './log';
+import { computeECC } from "./rs-basis";
+import { arraysEqual } from "./arrays-equal";
+import { log } from "./log";
 
 export function verifyRSLinearityAllBlocks(
   modifiedBlockData: Uint8Array[],
   modifiedBlockEcc: Uint8Array[],
-  blockEccCounts: number[]
+  blockEccCounts: number[],
 ): boolean {
   let ok = true;
   for (let i = 0; i < modifiedBlockData.length; i++) {
     const expectedEcc = computeECC(modifiedBlockData[i], blockEccCounts[i]);
     const actualEcc = modifiedBlockEcc[i];
     if (arraysEqual(expectedEcc, actualEcc)) {
-      log.debug('RS linearity verified for modified block', { blockIndex: i });
+      log.debug("RS linearity verified for modified block", { blockIndex: i });
     } else {
       ok = false;
-      log.warn('RS LINEARITY BROKEN - modified codeword is invalid!', {
+      log.warn("RS LINEARITY BROKEN - modified codeword is invalid!", {
         blockIndex: i,
         dataCount: modifiedBlockData[i].length,
         eccCount: blockEccCounts[i],
@@ -26,9 +26,9 @@ export function verifyRSLinearityAllBlocks(
     }
   }
   if (ok) {
-    log.info('RS linearity preserved - all modified codewords are valid');
+    log.info("RS linearity preserved - all modified codewords are valid");
   } else {
-    log.warn('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
+    log.warn("RS LINEARITY CHECK FAILED - QR code will likely not scan!");
   }
   return ok;
 }

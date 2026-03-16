@@ -1,17 +1,17 @@
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import { curveIntensity } from '../generator/pixel-matrix-utils';
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import { curveIntensity } from "../generator/pixel-matrix-utils";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
   QRGeneratorConfig,
   RGBWithMeta,
-} from '../../../modules/qr-generator/types';
-import { log } from './log';
-import { parseGridSize } from './parse-grid-size';
-import { parseHexColor } from './parse-hex-color';
-import { processSubpixelCell } from './process-subpixel-cell';
-import type { SubpixelCellCtx } from './subpixel-cell-ctx';
-import { getSubpixelOverlayData } from './get-subpixel-overlay-data';
+} from "../../../modules/qr-generator/types";
+import { log } from "./log";
+import { parseGridSize } from "./parse-grid-size";
+import { parseHexColor } from "./parse-hex-color";
+import { processSubpixelCell } from "./process-subpixel-cell";
+import type { SubpixelCellCtx } from "./subpixel-cell-ctx";
+import { getSubpixelOverlayData } from "./get-subpixel-overlay-data";
 
 /**
  * Generate subpixel matrix
@@ -23,7 +23,7 @@ export async function generateSubpixelMatrix(
   moduleCount: number,
   scale: number,
   useHalftoneCenter: boolean,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
 ): Promise<PixelDecisionMatrix> {
   const gridScale = parseGridSize(config.subpixelGridSize) || scale;
   const actualScale = gridScale;
@@ -35,7 +35,7 @@ export async function generateSubpixelMatrix(
     moduleCount,
     actualScale,
     config,
-    createCanvasFn
+    createCanvasFn,
   );
 
   const matrix: boolean[][] = [];
@@ -43,12 +43,12 @@ export async function generateSubpixelMatrix(
 
   const centerIdx = Math.floor(actualScale / 2);
   const neutralColor = parseHexColor(config.subpixelNeutralColor);
-  const centerRule = config.subpixelCenterRule || 'strict';
-  const useHalftone = centerRule === 'halftone_center' || useHalftoneCenter;
-  const finderOverride = config.subpixelFinderOverride || 'solid';
+  const centerRule = config.subpixelCenterRule || "strict";
+  const useHalftone = centerRule === "halftone_center" || useHalftoneCenter;
+  const finderOverride = config.subpixelFinderOverride || "solid";
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  log.debug('Subpixel matrix generation', {
+  log.debug("Subpixel matrix generation", {
     gridScale,
     actualScale,
     scaledSize,

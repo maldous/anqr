@@ -1,15 +1,15 @@
-import type { BitRange } from './semantic-layout';
-import { buildNumericSafeRangesForEncoder } from './build-numeric-safe-ranges-for-encoder';
+import type { BitRange } from "./semantic-layout";
+import { buildNumericSafeRangesForEncoder } from "./build-numeric-safe-ranges-for-encoder";
 
 export function computeTwoIntervalSafeRanges(
   bitsAfterOriginalData: number,
   bitsAfterData: number,
   paddingStartByte: number,
   totalDataCount: number,
-  suffixMode: 'byte' | 'numeric',
+  suffixMode: "byte" | "numeric",
   suffixLength: number,
   version: number,
-  buffer: { getAt: (index: number) => boolean }
+  buffer: { getAt: (index: number) => boolean },
 ): {
   protectedBitEnd: number;
   suffixSafeStartBit: number;
@@ -34,12 +34,12 @@ export function computeTwoIntervalSafeRanges(
 
   let numericSafeBitCount = 0;
   let numericSafeRanges: BitRange[] = [];
-  if (suffixMode === 'numeric' && suffixLength > 0) {
+  if (suffixMode === "numeric" && suffixLength > 0) {
     const numericSafe = buildNumericSafeRangesForEncoder(
       bitsAfterOriginalData,
       suffixLength,
       version,
-      buffer
+      buffer,
     );
     numericSafeRanges = numericSafe.ranges
       .map((range) => ({
@@ -51,13 +51,13 @@ export function computeTwoIntervalSafeRanges(
   }
 
   const suffixSafeBits =
-    suffixMode === 'numeric'
+    suffixMode === "numeric"
       ? numericSafeBitCount
       : Math.max(0, suffixSafeEndBit - suffixSafeStartBit);
   const paddingSafeBits = Math.max(0, paddingSafeEndBit - paddingSafeStartBit);
 
   const allowedBitRanges: BitRange[] = [];
-  if (suffixMode === 'numeric') {
+  if (suffixMode === "numeric") {
     allowedBitRanges.push(...numericSafeRanges);
   } else if (suffixSafeEndBit > suffixSafeStartBit) {
     allowedBitRanges.push({ startBit: suffixSafeStartBit, endBit: suffixSafeEndBit });

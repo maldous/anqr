@@ -1,4 +1,4 @@
-import type { BitMatrix } from './bit-matrix';
+import type { BitMatrix } from "./bit-matrix";
 
 /**
  * Accumulate a single data bit from the QR matrix into the codeword buffer.
@@ -10,7 +10,7 @@ export function accumulateCodewordBit(
   col: number,
   i: number,
   state: { currentByte: number; bitsRead: number; resultOffset: number },
-  result: number[]
+  result: number[],
 ): void {
   if (functionPattern.get(j - col, i)) return;
   state.bitsRead++;

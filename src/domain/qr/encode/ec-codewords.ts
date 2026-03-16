@@ -1,12 +1,12 @@
-import { qrPolynomial } from './math';
-import { getErrorCorrectPolynomial } from './utils';
-import type { QRBitBuffer as QRBitBufferType } from '../../../modules/qr-encoder/types';
-export { interleaveCodewords } from './interleave-codewords';
+import { qrPolynomial } from "./math";
+import { getErrorCorrectPolynomial } from "./utils";
+import type { QRBitBuffer as QRBitBufferType } from "../../../modules/qr-encoder/types";
+export { interleaveCodewords } from "./interleave-codewords";
 
 export function computeBlockECData(
   buffer: QRBitBufferType,
   rsBlock: { dataCount: number; totalCount: number },
-  offset: number
+  offset: number,
 ): { dcdata: number[]; ecdata: number[]; newOffset: number } {
   const dcCount = rsBlock.dataCount;
   const ecCount = rsBlock.totalCount - dcCount;

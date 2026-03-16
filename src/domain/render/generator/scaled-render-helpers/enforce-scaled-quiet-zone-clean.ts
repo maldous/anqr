@@ -5,7 +5,7 @@ export function enforceScaledQuietZoneClean(
   effectiveModuleSize: number,
   size: number,
   transparentBg: boolean,
-  effectiveBgColor: string
+  effectiveBgColor: string,
 ): void {
   if (marginPx <= 0) return;
   const qrStart = marginPx;

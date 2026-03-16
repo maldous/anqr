@@ -1,7 +1,7 @@
-import { generateBlueNoiseTile } from '../dither';
-import type { DiffusionKernel } from '../dither/types';
-import type { DitherThresholdPattern } from './dither-threshold-pattern';
-import type { DitherStaticState } from './dither-static-state';
+import { generateBlueNoiseTile } from "../dither";
+import type { DiffusionKernel } from "../dither/types";
+import type { DitherThresholdPattern } from "./dither-threshold-pattern";
+import type { DitherStaticState } from "./dither-static-state";
 
 export interface DitherResolvedConfig {
   intensity: number;

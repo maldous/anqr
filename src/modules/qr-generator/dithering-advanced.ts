@@ -1,1 +1,1 @@
-export * from '../../domain/render/dither/dithering-advanced';
+export * from "../../domain/render/dither/dithering-advanced";

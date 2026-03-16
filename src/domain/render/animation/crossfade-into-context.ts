@@ -2,7 +2,7 @@ export function crossfadeIntoContext(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   frame1: HTMLCanvasElement | OffscreenCanvas,
   frame2: HTMLCanvasElement | OffscreenCanvas,
-  t: number
+  t: number,
 ): void {
   ctx.globalAlpha = 1 - t;
   ctx.drawImage(frame1 as CanvasImageSource, 0, 0);

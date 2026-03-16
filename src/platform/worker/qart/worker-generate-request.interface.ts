@@ -1,7 +1,7 @@
-import type { QArtWorkerGeneratePayload } from './worker-generate-payload';
+import type { QArtWorkerGeneratePayload } from "./worker-generate-payload";
 
 export interface QArtWorkerGenerateRequest {
-  type: 'generate';
+  type: "generate";
   id: number;
   payload: QArtWorkerGeneratePayload;
 }

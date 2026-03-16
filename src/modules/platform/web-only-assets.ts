@@ -1,1 +1,1 @@
-export * from '../../platform/browser/boot/web-only-assets';
+export * from "../../platform/browser/boot/web-only-assets";

@@ -1,12 +1,12 @@
-import type { OverlayData } from '../../../modules/qr-generator/types';
-import { isPackedOverlayData } from './is-packed-overlay-data';
-import type { LegacyOverlayData } from './legacy-overlay-data';
-import { packOverlayColor } from './pack-overlay-color';
+import type { OverlayData } from "../../../modules/qr-generator/types";
+import { isPackedOverlayData } from "./is-packed-overlay-data";
+import type { LegacyOverlayData } from "./legacy-overlay-data";
+import { packOverlayColor } from "./pack-overlay-color";
 
 export function getOverlayColorPacked(
   overlayData: OverlayData | null | undefined,
   row: number,
-  col: number
+  col: number,
 ): number {
   if (isPackedOverlayData(overlayData) && overlayData.colorsPacked) {
     const size = overlayData.size;

@@ -3,7 +3,7 @@ export function computeCanvasSizing(
   generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
   moduleCount: number,
   marginModules: number,
-  _renderStateModulePx: number
+  _renderStateModulePx: number,
 ) {
   if (isGeneratorSource && generatedCanvas) {
     const size = generatedCanvas.width;

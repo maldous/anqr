@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
-import type { QRState } from '@/store/qr-store';
-import { CityAmountFields } from './city-amount-fields';
-import { MerchantNameField } from './merchant-name-field';
-import { ValidatedTextField } from './validated-text-field';
+import type { ReactNode } from "react";
+import type { QRState } from "@/store/qr-store";
+import { CityAmountFields } from "./city-amount-fields";
+import { MerchantNameField } from "./merchant-name-field";
+import { ValidatedTextField } from "./validated-text-field";
 
 export function MerchantCityAmountEditor({
   amountLabel,
@@ -40,7 +40,7 @@ export function MerchantCityAmountEditor({
   onCityChange: (value: string) => void;
   onMerchantNameChange: (value: string) => void;
   onPrimaryChange: (value: string) => void;
-  payload: QRState['payload'];
+  payload: QRState["payload"];
   primaryInvalid: boolean;
   primaryInvalidMessage: string;
   primaryLabel: string;

@@ -1,4 +1,4 @@
-import { decodeDataCodewordsDetailed } from './decode-data-codewords-detailed';
+import { decodeDataCodewordsDetailed } from "./decode-data-codewords-detailed";
 
 /**
  * Decode the data codewords into a string

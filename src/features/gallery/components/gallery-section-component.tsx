@@ -1,9 +1,9 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import type { GallerySection } from '@/content/gallery/gallery-items';
-import { HorizontalAd } from './horizontal-ad';
-import { DynamicIcon } from './gallery-icon-registry';
-import { GalleryCard } from './gallery-card';
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { GallerySection } from "@/content/gallery/gallery-items";
+import { HorizontalAd } from "./horizontal-ad";
+import { DynamicIcon } from "./gallery-icon-registry";
+import { GalleryCard } from "./gallery-card";
 
 export function GallerySectionComponent({
   section,
@@ -28,7 +28,7 @@ export function GallerySectionComponent({
         type="button"
         onClick={onToggle}
         className="w-full flex items-center justify-between gap-4 mb-4 group"
-        title={isExpanded ? t('gallery.collapse') : t('gallery.expand')}
+        title={isExpanded ? t("gallery.collapse") : t("gallery.expand")}
       >
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-muted group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">

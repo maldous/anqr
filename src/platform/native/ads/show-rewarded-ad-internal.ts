@@ -1,12 +1,12 @@
-import { rewardedPrepareKey, type RewardedType } from './admob-config';
-import { rewardedLog as log } from './rewarded-log';
+import { rewardedPrepareKey, type RewardedType } from "./admob-config";
+import { rewardedLog as log } from "./rewarded-log";
 
 export async function showRewardedAdInternal(
   adMobAvailable: boolean,
   AdMob: unknown,
   preparedRewardedKeys: Set<string>,
   prepareRewardedAd: (type: RewardedType) => Promise<boolean>,
-  type: RewardedType = 'rewarded'
+  type: RewardedType = "rewarded",
 ): Promise<{ rewarded: boolean; amount?: number; type?: string }> {
   if (!(adMobAvailable && AdMob)) return { rewarded: false };
   const adMob = AdMob as {
@@ -18,21 +18,21 @@ export async function showRewardedAdInternal(
     if (!preparedRewardedKeys.has(key)) {
       const prepared = await prepareRewardedAd(type);
       if (!prepared) {
-        log.warn('Rewarded ad not ready and prepare failed', { type });
+        log.warn("Rewarded ad not ready and prepare failed", { type });
         return { rewarded: false };
       }
     }
     const result =
-      type === 'rewardedInterstitial'
+      type === "rewardedInterstitial"
         ? await adMob.showRewardedInterstitialAd()
         : await adMob.showRewardedAd();
     preparedRewardedKeys.delete(key);
     void prepareRewardedAd(type);
-    log.info('Rewarded ad shown', { type, reward: result });
+    log.info("Rewarded ad shown", { type, reward: result });
     return { rewarded: true, amount: result?.amount, type: result?.type };
   } catch (err) {
     preparedRewardedKeys.delete(key);
-    log.error('Failed to show rewarded ad', { type, error: err });
+    log.error("Failed to show rewarded ad", { type, error: err });
     return { rewarded: false };
   }
 }

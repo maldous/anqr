@@ -1,4 +1,4 @@
-import type { QArtWorkerGenerateInput, QArtWorkerGeneratePayload } from './worker-protocol';
+import type { QArtWorkerGenerateInput, QArtWorkerGeneratePayload } from "./worker-protocol";
 
 export function toWorkerPayload(input: QArtWorkerGenerateInput): QArtWorkerGeneratePayload {
   const pixelsCopy = new Uint8ClampedArray(input.targetImage.data);

@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Check if overlay has geometric transforms that need to be applied

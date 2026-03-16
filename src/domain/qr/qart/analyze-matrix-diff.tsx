@@ -1,9 +1,9 @@
-import { buildStructuralPositionSet } from './build-structural-position-set';
+import { buildStructuralPositionSet } from "./build-structural-position-set";
 
 export function analyzeMatrixDiff(
   baseMatrix: boolean[][],
   finalMatrix: boolean[][],
-  moduleCount: number
+  moduleCount: number,
 ): {
   diffCount: number;
   structuralDiffCount: number;

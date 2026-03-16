@@ -1,4 +1,4 @@
-import type { ContentType } from './content-type';
+import type { ContentType } from "./content-type";
 
 export interface ContentTypeDetails {
   type: ContentType;

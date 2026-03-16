@@ -1,12 +1,12 @@
-import { createLogger } from '@/infra/logging/logger';
-import { contentCache } from './static-content-cache';
-import { staticModules } from './static-modules';
-import type { PageDefinition, StaticPageType } from './types';
+import { createLogger } from "@/infra/logging/logger";
+import { contentCache } from "./static-content-cache";
+import { staticModules } from "./static-modules";
+import type { PageDefinition, StaticPageType } from "./types";
 
-const log = createLogger('STATIC');
+const log = createLogger("STATIC");
 
 export async function loadLanguageContent(
-  lang: string
+  lang: string,
 ): Promise<Record<StaticPageType, PageDefinition>> {
   const cached = contentCache.get(lang);
   if (cached) {
@@ -18,10 +18,10 @@ export async function loadLanguageContent(
     const loader = staticModules[modulePath];
 
     if (!loader) {
-      log.warn('No static content module found', { lang });
-      const fallback = contentCache.get('en-GB');
+      log.warn("No static content module found", { lang });
+      const fallback = contentCache.get("en-GB");
       if (!fallback) {
-        throw new Error('English fallback content not loaded');
+        throw new Error("English fallback content not loaded");
       }
       return fallback;
     }
@@ -30,9 +30,9 @@ export async function loadLanguageContent(
     contentCache.set(lang, content);
     return content;
   } catch (error) {
-    log.error('Failed to load static content', { lang, error });
-    const fallback = contentCache.get('en-GB');
-    if (!fallback) throw new Error('English fallback not available');
+    log.error("Failed to load static content", { lang, error });
+    const fallback = contentCache.get("en-GB");
+    if (!fallback) throw new Error("English fallback not available");
     return fallback;
   }
 }

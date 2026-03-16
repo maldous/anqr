@@ -1,16 +1,16 @@
-import type { ECCLevel } from './bit-mapping';
-import { log } from './log';
-import { createQREncoderForGenerate } from './create-qr-encoder-for-generate';
+import type { ECCLevel } from "./bit-mapping";
+import { log } from "./log";
+import { createQREncoderForGenerate } from "./create-qr-encoder-for-generate";
 
 export function logMatrixMismatchDiagnostic(
   matrix: boolean[][],
   data: string,
   originalDataLength: number,
-  suffixMode: 'byte' | 'numeric',
+  suffixMode: "byte" | "numeric",
   ecc: ECCLevel,
   actualVersion: number,
   actualMask: number,
-  moduleCount: number
+  moduleCount: number,
 ): void {
   const debugQr = createQREncoderForGenerate(
     data,
@@ -18,7 +18,7 @@ export function logMatrixMismatchDiagnostic(
     suffixMode,
     ecc,
     actualVersion,
-    actualMask
+    actualMask,
   );
 
   let mismatchCount = 0;
@@ -29,7 +29,7 @@ export function logMatrixMismatchDiagnostic(
       const encoderValue = debugQr.isDark(r, c);
       if (regenValue !== encoderValue) {
         if (mismatchCount < maxMismatches) {
-          log.warn('Matrix mismatch detected', {
+          log.warn("Matrix mismatch detected", {
             row: r,
             col: c,
             regenerated: regenValue,
@@ -42,13 +42,13 @@ export function logMatrixMismatchDiagnostic(
   }
 
   if (mismatchCount > 0) {
-    log.warn('Total matrix mismatches', {
+    log.warn("Total matrix mismatches", {
       mismatchCount,
       moduleCount,
       totalModules: moduleCount * moduleCount,
       mismatchPercent: `${((mismatchCount / (moduleCount * moduleCount)) * 100).toFixed(2)}%`,
     });
   } else {
-    log.info('Matrix validation passed - regenerated matrix matches encoder exactly');
+    log.info("Matrix validation passed - regenerated matrix matches encoder exactly");
   }
 }

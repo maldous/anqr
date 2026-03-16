@@ -1,3 +1,3 @@
-import { resolveGifEnc } from './resolve-gif-enc';
+import { resolveGifEnc } from "./resolve-gif-enc";
 
 export const GIFENC = resolveGifEnc();

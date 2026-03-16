@@ -1,4 +1,4 @@
-import type { OutputFormat } from './output-format';
+import type { OutputFormat } from "./output-format";
 
 export interface ExportResult {
   blob: Blob;

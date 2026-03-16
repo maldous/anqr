@@ -4,13 +4,13 @@
  * Notes: Generate base animation frame set.
  */
 
-import type { AnimationFrame } from '@/modules/animation';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { canvasListToAnimationFrames } from '@/features/generator/application/frames/frames-fn-canvastoframes';
-import { generateJitteredFrameLoop } from '@/features/generator/application/frames/frames-fn-jitteredloop';
-import { generatePatternOnlyFrames } from '@/features/generator/application/frames/frames-fn-patternonly';
-import { generateStaticBaseFrames } from '@/features/generator/application/frames/frames-fn-staticbase';
-import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
+import type { AnimationFrame } from "@/modules/animation";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { canvasListToAnimationFrames } from "@/features/generator/application/frames/frames-fn-canvastoframes";
+import { generateJitteredFrameLoop } from "@/features/generator/application/frames/frames-fn-jitteredloop";
+import { generatePatternOnlyFrames } from "@/features/generator/application/frames/frames-fn-patternonly";
+import { generateStaticBaseFrames } from "@/features/generator/application/frames/frames-fn-staticbase";
+import { YieldController } from "@/features/generator/application/generation/generation-class-yieldcontroller";
 
 export async function generateBaseAnimationFrameSet(params: {
   hasPattern: boolean;
@@ -24,7 +24,7 @@ export async function generateBaseAnimationFrameSet(params: {
   applyResultPersistent: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    tf: number
+    tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
 }): Promise<AnimationFrame[] | null> {
   if (params.hasPattern && !params.hasJitter) {

@@ -1,10 +1,10 @@
-import { Binary, Globe, Hash, Type } from 'lucide-react';
-import type { ECCLevel } from '@/modules/qr-analyzer';
+import { Binary, Globe, Hash, Type } from "lucide-react";
+import type { ECCLevel } from "@/modules/qr-analyzer";
 import {
   ECC_CAPACITIES_ALPHANUMERIC,
   ECC_CAPACITIES_BYTE,
   ECC_CAPACITIES_NUMERIC,
-} from '@/modules/qr-spec';
+} from "@/modules/qr-spec";
 
 export const CapacityByModeTable = ({
   version,
@@ -18,29 +18,29 @@ export const CapacityByModeTable = ({
   const versionIndex = version - 1;
   const capacities = [
     {
-      mode: 'Numeric',
+      mode: "Numeric",
       icon: <Hash className="w-3.5 h-3.5" />,
       capacity: ECC_CAPACITIES_NUMERIC[eccLevel]?.[versionIndex] ?? 0,
-      unit: 'digits',
+      unit: "digits",
     },
     {
-      mode: 'Alphanumeric',
+      mode: "Alphanumeric",
       icon: <Type className="w-3.5 h-3.5" />,
       capacity: ECC_CAPACITIES_ALPHANUMERIC[eccLevel]?.[versionIndex] ?? 0,
-      unit: 'chars',
+      unit: "chars",
     },
     {
-      mode: 'Byte',
+      mode: "Byte",
       icon: <Binary className="w-3.5 h-3.5" />,
       capacity: ECC_CAPACITIES_BYTE[eccLevel]?.[versionIndex] ?? 0,
-      unit: 'bytes',
+      unit: "bytes",
       current: currentBytes,
     },
     {
-      mode: 'Kanji',
+      mode: "Kanji",
       icon: <Globe className="w-3.5 h-3.5" />,
       capacity: Math.floor((ECC_CAPACITIES_BYTE[eccLevel]?.[versionIndex] ?? 0) * 0.6),
-      unit: 'chars',
+      unit: "chars",
     },
   ];
 
@@ -54,7 +54,7 @@ export const CapacityByModeTable = ({
           <div
             key={cap.mode}
             className={`p-2.5 rounded-lg border bg-card ${
-              cap.current === undefined ? '' : 'ring-1 ring-primary/50'
+              cap.current === undefined ? "" : "ring-1 ring-primary/50"
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
@@ -71,10 +71,10 @@ export const CapacityByModeTable = ({
                   <div
                     className={`h-full transition-all ${
                       cap.current / cap.capacity > 0.9
-                        ? 'bg-red-500'
+                        ? "bg-red-500"
                         : cap.current / cap.capacity > 0.7
-                          ? 'bg-amber-500'
-                          : 'bg-green-500'
+                          ? "bg-amber-500"
+                          : "bg-green-500"
                     }`}
                     style={{ width: `${Math.min(100, (cap.current / cap.capacity) * 100)}%` }}
                   />

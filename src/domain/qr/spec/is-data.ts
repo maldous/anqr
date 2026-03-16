@@ -1,4 +1,4 @@
-import { isLocked } from './is-locked';
+import { isLocked } from "./is-locked";
 
 /**
  * Check if a position is a data module (not structural)

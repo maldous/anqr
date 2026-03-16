@@ -1,5 +1,5 @@
-import type { DataSegment } from './encoder-api.types';
-import { calculateModeDataBits } from './calculate-mode-data-bits';
+import type { DataSegment } from "./encoder-api.types";
+import { calculateModeDataBits } from "./calculate-mode-data-bits";
 
 /**
  * Calculate the approximate bit length for segments at a given version

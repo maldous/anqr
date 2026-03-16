@@ -1,4 +1,4 @@
-import type { QRBitBuffer } from './qr-bit-buffer';
+import type { QRBitBuffer } from "./qr-bit-buffer";
 
 export interface QRDataSegment {
   getMode: () => number;

@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/temporal-dither';
+export * from "../../domain/render/animation/temporal-dither";

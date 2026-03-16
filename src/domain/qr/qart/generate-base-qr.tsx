@@ -1,15 +1,15 @@
-import type { ECCLevel } from './bit-mapping';
-import { computeECC } from './rs-basis';
-import { arraysEqual } from './arrays-equal';
-import { log } from './log';
-import { createQREncoderForGenerate } from './create-qr-encoder-for-generate';
-import { extractActualMaskPattern } from './extract-actual-mask-pattern';
-import { logFormatVerificationDiagnostic } from './log-format-verification-diagnostic';
-import { logMatrixMismatchDiagnostic } from './log-matrix-mismatch-diagnostic';
-import { encodeDataToBytes } from './encode-data-to-bytes';
-import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
-import type { BaseQRResult } from './base-qr-result';
-import type { QArtEncodingPlan } from './q-art-encoding-plan';
+import type { ECCLevel } from "./bit-mapping";
+import { computeECC } from "./rs-basis";
+import { arraysEqual } from "./arrays-equal";
+import { log } from "./log";
+import { createQREncoderForGenerate } from "./create-qr-encoder-for-generate";
+import { extractActualMaskPattern } from "./extract-actual-mask-pattern";
+import { logFormatVerificationDiagnostic } from "./log-format-verification-diagnostic";
+import { logMatrixMismatchDiagnostic } from "./log-matrix-mismatch-diagnostic";
+import { encodeDataToBytes } from "./encode-data-to-bytes";
+import { regenerateQRFromModifiedData } from "./regenerate-qr-from-modified-data";
+import type { BaseQRResult } from "./base-qr-result";
+import type { QArtEncodingPlan } from "./q-art-encoding-plan";
 
 export function generateBaseQR(
   data: string,
@@ -17,14 +17,14 @@ export function generateBaseQR(
   ecc: ECCLevel,
   maskPattern: number,
   originalDataLength: number,
-  suffixMode: 'byte' | 'numeric'
+  suffixMode: "byte" | "numeric",
 ): BaseQRResult {
   // Log the exact data being encoded for debugging
-  log.debug('generateBaseQR called', {
+  log.debug("generateBaseQR called", {
     dataLength: data.length,
     dataPreview: data.length > 80 ? `${data.slice(0, 80)}...` : data,
     dataHash: data
-      .split('')
+      .split("")
       .reduce((a, c) => Math.trunc((a << 5) - a + (c.codePointAt(0) ?? 0)), 0)
       .toString(16),
     version,
@@ -40,7 +40,7 @@ export function generateBaseQR(
     suffixMode,
     ecc,
     version,
-    useMask
+    useMask,
   );
 
   const moduleCount = qr.getModuleCount();
@@ -53,16 +53,16 @@ export function generateBaseQR(
   // Also captures the ACTUAL semantic bit positions from the encoder
   // HYBRID MODE: Pass originalDataLength to track protection boundaries
   const plan: QArtEncodingPlan =
-    suffixMode === 'numeric'
+    suffixMode === "numeric"
       ? {
-          mode: 'numeric',
+          mode: "numeric",
           prefix: data.slice(0, originalDataLength),
           suffix: data.slice(originalDataLength),
           originalDataLength,
           suffixLength: data.length - originalDataLength,
         }
       : {
-          mode: 'byte',
+          mode: "byte",
           fullData: data,
           originalDataLength,
           suffixLength: data.length - originalDataLength,
@@ -76,9 +76,9 @@ export function generateBaseQR(
     const testEcc = computeECC(blockDataArrays[i], blockEccCounts[i]);
     const encoderEcc = blockEccArrays[i];
     if (arraysEqual(testEcc, encoderEcc)) {
-      log.debug('ECC verification passed for block', { blockIndex: i });
+      log.debug("ECC verification passed for block", { blockIndex: i });
     } else {
-      log.warn('ECC MISMATCH - computeECC differs from encoder!', {
+      log.warn("ECC MISMATCH - computeECC differs from encoder!", {
         blockIndex: i,
         dataCount: blockDataCounts[i],
         eccCount: blockEccCounts[i],
@@ -98,7 +98,7 @@ export function generateBaseQR(
     blockEccCounts,
     actualVersion,
     ecc,
-    actualMask
+    actualMask,
   );
 
   // DIAGNOSTIC VERIFICATION + DEBUG: Compare matrices
@@ -111,7 +111,7 @@ export function generateBaseQR(
     ecc,
     actualVersion,
     actualMask,
-    moduleCount
+    moduleCount,
   );
 
   return {

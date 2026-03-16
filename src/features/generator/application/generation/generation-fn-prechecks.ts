@@ -4,10 +4,10 @@
  * Notes: Pre-generation overflow and block checks.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { checkOverflowContentChanged } from '@/features/generator/application/generation/generation-fn-checkoverflow';
+import { createLogger } from "@/infra/logging/logger";
+import { checkOverflowContentChanged } from "@/features/generator/application/generation/generation-fn-checkoverflow";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export function handleGeneratePreChecks(params: {
   lastOverflowContentRef: { current: string | null };
@@ -18,14 +18,14 @@ export function handleGeneratePreChecks(params: {
   clearGenerationProgress: () => void;
 }): { shouldAbort: boolean } {
   if (checkOverflowContentChanged(params.lastOverflowContentRef.current, params.content)) {
-    log.debug('Content changed from failed content, clearing block');
+    log.debug("Content changed from failed content, clearing block");
     params.lastOverflowContentRef.current = null;
     params.isOverflowBlockedRef.current = false;
     params.setHasOverflowError(false);
     params.setError(null);
   }
   if (params.isOverflowBlockedRef.current) {
-    log.debug('generate BLOCKED by overflow ref');
+    log.debug("generate BLOCKED by overflow ref");
     params.clearGenerationProgress();
     return { shouldAbort: true };
   }

@@ -1,8 +1,8 @@
-import { BarChart3, Code2, Download, Palette, ScanLine, Settings, Timer } from 'lucide-react';
-import type { TFunction } from 'i18next';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { formatMilliseconds, hasAnyTimingData } from '@/features/analyze/lib/formatters';
+import { BarChart3, Code2, Download, Palette, ScanLine, Settings, Timer } from "lucide-react";
+import type { TFunction } from "i18next";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { formatMilliseconds, hasAnyTimingData } from "@/features/analyze/lib/formatters";
 
 export const TimingsSection = ({
   combinedTimings,
@@ -14,7 +14,7 @@ export const TimingsSection = ({
   if (!hasAnyTimingData(combinedTimings)) return null;
   return (
     <CollapsibleSection
-      title={t('analyze.processingTimings', 'Processing Timings')}
+      title={t("analyze.processingTimings", "Processing Timings")}
       icon={<Timer className="w-4 h-4" />}
       testId="analyze-section-processing-timings"
     >
@@ -51,7 +51,7 @@ export const TimingsSection = ({
             <DetailRow
               label="Non-Decode Overhead"
               value={formatMilliseconds(
-                Math.max(0, combinedTimings.totalAnalysisMs - combinedTimings.decodeMs)
+                Math.max(0, combinedTimings.totalAnalysisMs - combinedTimings.decodeMs),
               )}
               icon={<Settings className="w-3.5 h-3.5" />}
             />

@@ -2,8 +2,8 @@ import {
   applyPaletteColor,
   applyPerModuleColor,
   ensureContrast,
-} from '../../../modules/qr-generator/color';
-import type { OverlayData, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+} from "../../../modules/qr-generator/color";
+import type { OverlayData, QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 export function computeFinalModuleColor(
   baseColor: string,
@@ -16,7 +16,7 @@ export function computeFinalModuleColor(
   config: QRGeneratorConfig,
   hasPerModuleColor: boolean,
   hasPalette: boolean,
-  hasContrastGuard: boolean
+  hasContrastGuard: boolean,
 ): string {
   let finalColor = baseColor;
   if (isDark && hasPerModuleColor && overlayData) {
@@ -27,7 +27,7 @@ export function computeFinalModuleColor(
       row,
       col,
       moduleCount,
-      config
+      config,
     );
   }
   if (isDark && hasPalette) {
@@ -37,7 +37,7 @@ export function computeFinalModuleColor(
       moduleCount,
       overlayBrightness,
       config.palette!,
-      config
+      config,
     );
   }
   if (isDark && hasContrastGuard) {

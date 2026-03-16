@@ -1,16 +1,16 @@
-import { qrDecoderLog } from './qr-decoder-log';
-import { gfMul } from './gf-mul';
-import { gfInv } from './gf-inv';
-import { polyDegree } from './poly-degree';
-import { polyGetCoeff } from './poly-get-coeff';
-import { polyIsZero } from './poly-is-zero';
-import { polyAddOrSubtract } from './poly-add-or-subtract';
-import { polyMultiply } from './poly-multiply';
-import { polyMultiplyScalar } from './poly-multiply-scalar';
-import { polyMultiplyByMonomial } from './poly-multiply-by-monomial';
-import { buildMonomial } from './build-monomial';
-import { POLY_ZERO } from './poly-zero';
-import { POLY_ONE } from './poly-one';
+import { qrDecoderLog } from "./qr-decoder-log";
+import { gfMul } from "./gf-mul";
+import { gfInv } from "./gf-inv";
+import { polyDegree } from "./poly-degree";
+import { polyGetCoeff } from "./poly-get-coeff";
+import { polyIsZero } from "./poly-is-zero";
+import { polyAddOrSubtract } from "./poly-add-or-subtract";
+import { polyMultiply } from "./poly-multiply";
+import { polyMultiplyScalar } from "./poly-multiply-scalar";
+import { polyMultiplyByMonomial } from "./poly-multiply-by-monomial";
+import { buildMonomial } from "./build-monomial";
+import { POLY_ZERO } from "./poly-zero";
+import { POLY_ONE } from "./poly-one";
 
 // ============================================
 // Euclidean Algorithm
@@ -29,7 +29,7 @@ import { POLY_ONE } from './poly-one';
  */
 export function runEuclideanAlgorithm(
   syndromePoly: number[],
-  numEcc: number
+  numEcc: number,
 ): { sigma: number[]; omega: number[] } | null {
   // a = x^{2t}, b = syndrome polynomial
   // We want to find sigma, omega such that:
@@ -63,7 +63,7 @@ export function runEuclideanAlgorithm(
     // Divide rLastLast by rLast, with quotient in q and remainder in r
     if (polyIsZero(rLast)) {
       // Euclidean algorithm already terminated
-      qrDecoderLog.trace('rs-decoder: Euclidean r_{i-1} was zero');
+      qrDecoderLog.trace("rs-decoder: Euclidean r_{i-1} was zero");
       return null;
     }
 
@@ -83,7 +83,7 @@ export function runEuclideanAlgorithm(
     t = polyAddOrSubtract(polyMultiply(q, tLast), tLastLast);
 
     if (polyDegree(r) >= polyDegree(rLast)) {
-      qrDecoderLog.trace('rs-decoder: Euclidean Division algorithm failed to reduce polynomial');
+      qrDecoderLog.trace("rs-decoder: Euclidean Division algorithm failed to reduce polynomial");
       return null;
     }
   }
@@ -91,7 +91,7 @@ export function runEuclideanAlgorithm(
   // sigma(0) must not be zero
   const sigmaTildeAtZero = polyGetCoeff(t, 0); // Constant term of t
   if (sigmaTildeAtZero === 0) {
-    qrDecoderLog.trace('rs-decoder: Euclidean sigmaTilde(0) was zero');
+    qrDecoderLog.trace("rs-decoder: Euclidean sigmaTilde(0) was zero");
     return null;
   }
 
@@ -100,11 +100,11 @@ export function runEuclideanAlgorithm(
   const sigma = polyMultiplyScalar(t, inverse);
   const omega = polyMultiplyScalar(r, inverse);
 
-  qrDecoderLog.trace('rs-decoder: Euclidean algorithm completed', {
+  qrDecoderLog.trace("rs-decoder: Euclidean algorithm completed", {
     sigmaDegree: polyDegree(sigma),
     omegaDegree: polyDegree(omega),
-    sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, '0')).join(' '),
-    omegaCoeffs: omega.map((o) => o.toString(16).padStart(2, '0')).join(' '),
+    sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, "0")).join(" "),
+    omegaCoeffs: omega.map((o) => o.toString(16).padStart(2, "0")).join(" "),
   });
 
   return { sigma, omega };

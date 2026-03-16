@@ -1,4 +1,4 @@
-import type { TemporalDitherMode } from './temporal.types';
+import type { TemporalDitherMode } from "./temporal.types";
 
 /**
  * Calculate the temporal dither offset for a given frame
@@ -7,13 +7,13 @@ import type { TemporalDitherMode } from './temporal.types';
 export function calculateTemporalOffset(
   frameIndex: number,
   mode: TemporalDitherMode,
-  seed: number = 0
+  seed: number = 0,
 ): number {
-  if (mode === 'off' || !mode) {
+  if (mode === "off" || !mode) {
     return 0;
   }
 
-  if (mode === 'blue_noise') {
+  if (mode === "blue_noise") {
     // Blue noise temporal dithering: use golden ratio offset for each frame
     // This creates a maximally spread (low-discrepancy) sequence
     // that fills the [0,1] space evenly over time
@@ -21,7 +21,7 @@ export function calculateTemporalOffset(
     return (frameIndex * phi + seed * 0.1) % 1;
   }
 
-  if (mode === 'flicker_safe') {
+  if (mode === "flicker_safe") {
     // Flicker-safe: use slower, more gradual changes
     // Uses a carefully ordered set of offsets that:
     // 1. Don't create jarring transitions between adjacent frames

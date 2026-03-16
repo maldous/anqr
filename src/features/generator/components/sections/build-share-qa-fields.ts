@@ -1,6 +1,6 @@
-import type { StoreState } from './share-config-store-state.type';
+import type { StoreState } from "./share-config-store-state.type";
 
-export function buildShareQaFields(qa: StoreState['qa']) {
+export function buildShareQaFields(qa: StoreState["qa"]) {
   return {
     qaContrastCheck: qa.contrastCheck ? true : undefined,
     qaSimulateBlur: qa.simulateBlurPx === 0 ? undefined : qa.simulateBlurPx,

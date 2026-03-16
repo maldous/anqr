@@ -1,10 +1,10 @@
-import type { CropRegion } from './crop-region.type';
-import type { MappedPoint } from './mapped-point.type';
+import type { CropRegion } from "./crop-region.type";
+import type { MappedPoint } from "./mapped-point.type";
 
 export function computeResizedCropRegion(
   mapped: MappedPoint,
   currentRegion: CropRegion,
-  previewImageSize: { width: number; height: number } | null
+  previewImageSize: { width: number; height: number } | null,
 ): number {
   const centerX = currentRegion.x;
   const centerY = currentRegion.y;

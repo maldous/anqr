@@ -4,9 +4,9 @@
  * Notes: Finalize generated canvas with watermark and validation.
  */
 
-import { drawToDisplayCanvas } from '@/features/generator/application/generation/generation-fn-drawtodisplay';
-import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import { drawToDisplayCanvas } from "@/features/generator/application/generation/generation-fn-drawtodisplay";
+import { applyWatermarkToCanvas } from "@/features/generator/application/generation/generation-fn-watermark";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export async function finalizeGeneratedCanvas(params: {
   result: HTMLCanvasElement | OffscreenCanvas | null;
@@ -29,7 +29,7 @@ export async function finalizeGeneratedCanvas(params: {
   canvasRef: { current: HTMLCanvasElement | null };
   runValidationIfNeeded: (
     c: HTMLCanvasElement | OffscreenCanvas,
-    content: string | undefined
+    content: string | undefined,
   ) => void;
   effectiveConfig: Record<string, unknown>;
 }): Promise<void> {
@@ -41,8 +41,8 @@ export async function finalizeGeneratedCanvas(params: {
   if (params.isStaleRequest()) return;
   params.setCanvas(result);
   params.updateGenerationProgress(
-    params.t('preview.busy.finalizingPreview', 'Finalizing the preview...'),
-    92
+    params.t("preview.busy.finalizingPreview", "Finalizing the preview..."),
+    92,
   );
 
   const matrixData = qrGenerator.getLastMatrix();
@@ -57,8 +57,8 @@ export async function finalizeGeneratedCanvas(params: {
 
   if (result) {
     params.updateGenerationProgress(
-      params.t('preview.busy.checkingScanability', 'Checking that it scans properly...'),
-      98
+      params.t("preview.busy.checkingScanability", "Checking that it scans properly..."),
+      98,
     );
     params.runValidationIfNeeded(result, params.effectiveConfig.content as string);
   }

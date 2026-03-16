@@ -1,1 +1,1 @@
-export * from '../features/generator/components/Sidebar';
+export * from "../features/generator/components/Sidebar";

@@ -1,4 +1,4 @@
-import type { DecodedEncodingMode } from './decode.types';
+import type { DecodedEncodingMode } from "./decode.types";
 
 export interface SegmentDecodeResult {
   text: string;

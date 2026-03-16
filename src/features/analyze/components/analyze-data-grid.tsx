@@ -1,8 +1,8 @@
-import { Binary, Grid3x3, Settings } from 'lucide-react';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { HexDumpView } from '@/features/analyze/components/hex-dump-view';
-import { ModuleMatrixView } from '@/features/analyze/components/module-matrix-view';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+import { Binary, Grid3x3, Settings } from "lucide-react";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { HexDumpView } from "@/features/analyze/components/hex-dump-view";
+import { ModuleMatrixView } from "@/features/analyze/components/module-matrix-view";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
 
 export function AnalyzeDataGrid({ result }: Readonly<{ result: QRAnalysisResult }>) {
   return (

@@ -1,25 +1,25 @@
-import { applyPixelSnap } from './apply-pixel-snap';
-import { computeFinalModuleColor } from './compute-final-module-color';
-import { drawStyledModule } from './draw-styled-module';
+import { applyPixelSnap } from "./apply-pixel-snap";
+import { computeFinalModuleColor } from "./compute-final-module-color";
+import { drawStyledModule } from "./draw-styled-module";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FINDER,
   PATTERN_FORMAT,
   PATTERN_TIMING,
   PATTERN_VERSION,
-} from './render-loop-fast-path';
-import { getOverlayBrightness } from '../overlay/overlay-data-packed';
-import { applyQROverlayMode } from './render-modes';
-import type { RenderCellCtx } from './render-cell-ctx.interface';
-import type { RenderCellState } from './render-cell-state.interface';
-import { shouldApplyOverlayToModule } from './should-apply-overlay-to-module';
+} from "./render-loop-fast-path";
+import { getOverlayBrightness } from "../overlay/overlay-data-packed";
+import { applyQROverlayMode } from "./render-modes";
+import type { RenderCellCtx } from "./render-cell-ctx.interface";
+import type { RenderCellState } from "./render-cell-state.interface";
+import { shouldApplyOverlayToModule } from "./should-apply-overlay-to-module";
 
 export function processRenderCell(
   rctx: RenderCellCtx,
   row: number,
   col: number,
   idx: number,
-  state: RenderCellState
+  state: RenderCellState,
 ): void {
   const isDark = rctx.ditherPattern ? rctx.ditherPattern[row][col] : rctx.qr.isDark(row, col);
   const x = (col + rctx.margin) * rctx.moduleSize;
@@ -39,7 +39,7 @@ export function processRenderCell(
     isTiming,
     isAlignment,
     isFormat,
-    isVersion
+    isVersion,
   );
 
   let moduleColor = isDark ? rctx.effectiveFgColor : rctx.effectiveBgColor;
@@ -100,7 +100,7 @@ export function processRenderCell(
           rctx.config,
           rctx.hasPerModuleColor,
           rctx.hasPalette,
-          rctx.hasContrastGuard
+          rctx.hasContrastGuard,
         )
       : moduleColor;
 
@@ -141,6 +141,6 @@ export function processRenderCell(
     finalModuleColor,
     moduleFillStyle,
     row,
-    col
+    col,
   );
 }

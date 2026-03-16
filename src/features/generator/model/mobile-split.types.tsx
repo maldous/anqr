@@ -1,4 +1,4 @@
-import type { useQRStore } from '@/store/qr-store';
+import type { useQRStore } from "@/store/qr-store";
 
 // Maximum sidebar height %
 

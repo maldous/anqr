@@ -1,15 +1,15 @@
-import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { useTranslation } from 'react-i18next';
-import { AdUnit } from '@/platform/ads/components/AdUnit';
-import { BusyOverlay } from '@/ui/composites/BusyOverlay';
-import { useQRGeneratorContext } from '@/hooks/useQRGenerator';
-import { getContrastRatio, parseColor } from '@/domain/render/color/color';
-import { meetsContrastAA, meetsContrastAAA } from '@/domain/render/color/contrast';
-import { useQRStore } from '@/store/qr-store';
-import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from './preview-status';
-import type { PreviewProps, RenderState } from './preview-types';
+import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { useTranslation } from "react-i18next";
+import { AdUnit } from "@/platform/ads/components/AdUnit";
+import { BusyOverlay } from "@/ui/composites/BusyOverlay";
+import { useQRGeneratorContext } from "@/hooks/useQRGenerator";
+import { getContrastRatio, parseColor } from "@/domain/render/color/color";
+import { meetsContrastAA, meetsContrastAAA } from "@/domain/render/color/contrast";
+import { useQRStore } from "@/store/qr-store";
+import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from "./preview-status";
+import type { PreviewProps, RenderState } from "./preview-types";
 
 export function Preview({ sidebarOpen = true, hidden = false }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
@@ -33,7 +33,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     isPending,
     isRendering,
     isLoading,
-    isPreparingAnimation
+    isPreparingAnimation,
   );
   const busyStageLabel = computeBusyStageLabel(busyStage, isPending, isPreparingAnimation, t);
   const busyPercent = computeBusyPercent(
@@ -41,7 +41,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     isPending,
     isPreparingAnimation,
     isRendering,
-    isLoading
+    isLoading,
   );
   const canCancelBusyWork = isLoading || isRendering || isPreparingAnimation;
 
@@ -55,20 +55,20 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     // Skip initial mount (prevState is null)
     if (prevState !== null) {
       // Dispatch render-start when transitioning FROM idle to non-idle
-      if (prevState === 'idle' && renderingState !== 'idle') {
+      if (prevState === "idle" && renderingState !== "idle") {
         document.dispatchEvent(
-          new CustomEvent('anqr:render-start', {
+          new CustomEvent("anqr:render-start", {
             detail: { previousState: prevState, newState: renderingState },
-          })
+          }),
         );
       }
 
       // Dispatch render-complete when transitioning TO idle from non-idle
-      if (prevState !== 'idle' && renderingState === 'idle') {
+      if (prevState !== "idle" && renderingState === "idle") {
         document.dispatchEvent(
-          new CustomEvent('anqr:render-complete', {
+          new CustomEvent("anqr:render-complete", {
             detail: { success: true, previousState: prevState },
-          })
+          }),
         );
       }
     }
@@ -95,7 +95,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
 
   // Calculate contrast ratio between foreground and background colors
   const contrastAnalysis = useMemo(() => {
-    if (safety.mode === 'off') return null;
+    if (safety.mode === "off") return null;
     const fgRgb = parseColor(render.fgColor);
     const bgRgb = parseColor(render.bgColor);
     if (!(fgRgb && bgRgb)) return null;
@@ -112,17 +112,17 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
 
   // Determine badge color based on contrast ratio
   const getContrastBadgeColor = (ratio: number) => {
-    if (ratio >= 7) return 'bg-green-500'; // AAA level
-    if (ratio >= 4.5) return 'bg-green-400'; // AA level
-    if (ratio >= 3) return 'bg-yellow-500'; // AA Large
-    return 'bg-red-500'; // Poor contrast
+    if (ratio >= 7) return "bg-green-500"; // AAA level
+    if (ratio >= 4.5) return "bg-green-400"; // AA level
+    if (ratio >= 3) return "bg-yellow-500"; // AA Large
+    return "bg-red-500"; // Poor contrast
   };
 
   const getContrastLabel = (ratio: number) => {
-    if (ratio >= 7) return 'AAA';
-    if (ratio >= 4.5) return 'AA';
-    if (ratio >= 3) return 'AA-L';
-    return 'Poor';
+    if (ratio >= 7) return "AAA";
+    if (ratio >= 4.5) return "AA";
+    if (ratio >= 3) return "AA-L";
+    return "Poor";
   };
 
   const contrastRatioToHeatmapColor = (ratio: number): { r: number; g: number; b: number } => {
@@ -138,7 +138,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     if (!(canvas && heatmapCanvasRef.current)) return;
 
     const heatmapCanvas = heatmapCanvasRef.current;
-    const ctx = heatmapCanvas.getContext('2d');
+    const ctx = heatmapCanvas.getContext("2d");
     if (!ctx) return;
 
     // Match heatmap canvas size to QR canvas
@@ -147,11 +147,11 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
 
     // Get QR canvas pixel data
     const qrCtx =
-      (canvas.getContext('2d', {
+      (canvas.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-      (canvas.getContext('2d') as CanvasRenderingContext2D | null);
+      (canvas.getContext("2d") as CanvasRenderingContext2D | null);
     if (!qrCtx) return;
 
     const imageData = qrCtx.getImageData(0, 0, canvas.width, canvas.height);
@@ -192,7 +192,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     const noiseCanvas = noiseCanvasRef.current;
     noiseCanvas.width = canvas.width;
     noiseCanvas.height = canvas.height;
-    const ctx = noiseCanvas.getContext('2d');
+    const ctx = noiseCanvas.getContext("2d");
     if (!ctx) return;
 
     const imageData = ctx.createImageData(canvas.width, canvas.height);
@@ -220,7 +220,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
   // Calculate simulation styles for the QR canvas
   const simulationStyles = useMemo(() => {
     const styles: React.CSSProperties = {
-      imageRendering: 'pixelated' as const,
+      imageRendering: "pixelated" as const,
     };
 
     const filters: string[] = [];
@@ -237,11 +237,11 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     }
 
     if (filters.length > 0) {
-      styles.filter = filters.join(' ');
+      styles.filter = filters.join(" ");
     }
 
     if (transforms.length > 0) {
-      styles.transform = transforms.join(' ');
+      styles.transform = transforms.join(" ");
     }
 
     return styles;
@@ -253,10 +253,10 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
 
   return (
     <main
-      id={hidden ? undefined : 'main-content'}
-      className={`flex-1 flex flex-col lg:flex-row bg-background overflow-auto scrollbar-hide transition-all duration-300 ${sidebarOpen ? 'lg:ms-96' : ''}`}
+      id={hidden ? undefined : "main-content"}
+      className={`flex-1 flex flex-col lg:flex-row bg-background overflow-auto scrollbar-hide transition-all duration-300 ${sidebarOpen ? "lg:ms-96" : ""}`}
       tabIndex={-1}
-      style={hidden ? { display: 'none' } : undefined}
+      style={hidden ? { display: "none" } : undefined}
     >
       {/* Desktop Left Column Ad - Skyscraper 160x600, always visible */}
       {/* Fixed height based on viewport to prevent layout shift from AdSense */}
@@ -279,7 +279,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                   stage={busyStageLabel}
                   progress={busyPercent}
                   onCancel={canCancelBusyWork ? cancelGeneration : undefined}
-                  cancelLabel={t('common.cancel', 'Cancel')}
+                  cancelLabel={t("common.cancel", "Cancel")}
                 />
               )}
               {error && (
@@ -292,10 +292,10 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                 <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
                   <div
                     className={`${getContrastBadgeColor(contrastAnalysis.ratio)} text-white text-xs font-medium px-2 py-1 rounded-md shadow-sm flex items-center gap-1`}
-                    title={`${t('safety.contrast')}: ${contrastAnalysis.ratio.toFixed(2)}:1 - ${(() => {
-                      if (contrastAnalysis.meetsAAA) return 'WCAG AAA';
-                      if (contrastAnalysis.meetsAA) return 'WCAG AA';
-                      return t('safety.poor');
+                    title={`${t("safety.contrast")}: ${contrastAnalysis.ratio.toFixed(2)}:1 - ${(() => {
+                      if (contrastAnalysis.meetsAAA) return "WCAG AAA";
+                      if (contrastAnalysis.meetsAA) return "WCAG AA";
+                      return t("safety.poor");
                     })()}`}
                     aria-label={`Contrast ratio: ${contrastAnalysis.ratio.toFixed(1)} to 1, ${getContrastLabel(contrastAnalysis.ratio)}`}
                   >
@@ -309,15 +309,15 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                       onClick={() => setHeatmapActive(!heatmapActive)}
                       className={`text-xs font-medium px-2 py-1 rounded-md shadow-sm flex items-center gap-1 transition-colors ${
                         heatmapActive
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                       }`}
-                      title={t('safety.showHeatmap')}
-                      aria-label={t('safety.showHeatmap', 'Toggle contrast heatmap')}
+                      title={t("safety.showHeatmap")}
+                      aria-label={t("safety.showHeatmap", "Toggle contrast heatmap")}
                       aria-pressed={heatmapActive}
                     >
                       <Thermometer className="h-3 w-3" aria-hidden="true" />
-                      <span>{t('safety.showHeatmap')}</span>
+                      <span>{t("safety.showHeatmap")}</span>
                     </button>
                   )}
                 </div>
@@ -336,7 +336,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                         aria-hidden="true"
                       />
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-amber-800">{t('sections.safety')}</p>
+                        <p className="text-xs font-medium text-amber-800">{t("sections.safety")}</p>
                         <ul className="text-xs text-amber-700 mt-1 space-y-0.5">
                           {safetyWarnings.map((warning) => (
                             <li key={warning}>• {warning}</li>
@@ -347,8 +347,8 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                         type="button"
                         onClick={() => setShowWarnings(false)}
                         className="text-amber-600 hover:text-amber-800 text-xs"
-                        title={t('common.close')}
-                        aria-label={t('common.close', 'Close warnings')}
+                        title={t("common.close")}
+                        aria-label={t("common.close", "Close warnings")}
                       >
                         <span aria-hidden="true">✕</span>
                       </button>
@@ -359,36 +359,36 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
               <div
                 className="relative inline-block"
                 data-rendering-state={renderingState}
-                data-testid={DynamicTestId.resolve('qr-preview', 'qr-preview')}
+                data-testid={DynamicTestId.resolve("qr-preview", "qr-preview")}
               >
                 {/* Fast-preview indicator badge (Android: during live interaction) */}
                 {isFastPreview && (
                   <div
                     className="absolute -bottom-2 -right-2 z-20 bg-amber-500/80 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm animate-in fade-in duration-150"
-                    title={t('preview.fastPreview', 'Fast Preview')}
-                    aria-label={t('preview.fastPreview', 'Fast Preview')}
+                    title={t("preview.fastPreview", "Fast Preview")}
+                    aria-label={t("preview.fastPreview", "Fast Preview")}
                   >
                     <Zap className="h-2.5 w-2.5" aria-hidden="true" />
-                    <span>{t('preview.draft', 'Draft')}</span>
+                    <span>{t("preview.draft", "Draft")}</span>
                   </div>
                 )}
                 {/* Simulation indicator badge */}
                 {hasActiveSimulation && (
                   <div
                     className="absolute -top-2 -right-2 z-20 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"
-                    title={t('preview.simulationActive')}
-                    aria-label={t('preview.simulationActive', 'Simulation mode active')}
+                    title={t("preview.simulationActive")}
+                    aria-label={t("preview.simulationActive", "Simulation mode active")}
                   >
                     <Sparkles className="h-3 w-3" aria-hidden="true" />
-                    <span>{t('preview.simulating')}</span>
+                    <span>{t("preview.simulating")}</span>
                   </div>
                 )}
                 <canvas
                   ref={canvasRef}
                   className="max-w-full max-h-full transition-all duration-200"
                   style={simulationStyles}
-                  title={t('preview.qrCodePreview')}
-                  aria-label={t('preview.qrCodePreview', 'QR code preview')}
+                  title={t("preview.qrCodePreview")}
+                  aria-label={t("preview.qrCodePreview", "QR code preview")}
                 />
                 {/* Noise overlay canvas - positioned over the QR canvas */}
                 {qa.simulateNoise > 0 && (
@@ -396,8 +396,8 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                     ref={noiseCanvasRef}
                     className="absolute top-0 left-0 w-full h-full pointer-events-none"
                     style={{
-                      imageRendering: 'pixelated',
-                      mixBlendMode: 'overlay',
+                      imageRendering: "pixelated",
+                      mixBlendMode: "overlay",
                       opacity: qa.simulateNoise / 100,
                       ...simulationStyles, // Apply same rotation/transforms
                     }}
@@ -409,8 +409,8 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                     ref={heatmapCanvasRef}
                     className="absolute top-0 left-0 w-full h-full pointer-events-none"
                     style={{
-                      imageRendering: 'pixelated',
-                      mixBlendMode: 'multiply',
+                      imageRendering: "pixelated",
+                      mixBlendMode: "multiply",
                       ...simulationStyles, // Apply same rotation/transforms
                     }}
                   />

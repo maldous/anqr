@@ -1,9 +1,9 @@
-import type { AnimationFrame } from './types';
-import { decodeBlobToCanvasViaBitmap } from './decode-blob-to-canvas-via-bitmap';
+import type { AnimationFrame } from "./types";
+import { decodeBlobToCanvasViaBitmap } from "./decode-blob-to-canvas-via-bitmap";
 
 export async function parseBlobAsSingleFrame(
   blob: Blob,
-  errorMessage: string
+  errorMessage: string,
 ): Promise<AnimationFrame[]> {
   const bitmapCanvas = await decodeBlobToCanvasViaBitmap(blob);
   if (bitmapCanvas) {
@@ -15,10 +15,10 @@ export async function parseBlobAsSingleFrame(
     const img = new Image();
 
     img.onload = () => {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(img, 0, 0);
       }

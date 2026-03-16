@@ -1,4 +1,4 @@
-import { bannerHeightCallbacks, currentBannerHeight } from './banner-state-store';
+import { bannerHeightCallbacks, currentBannerHeight } from "./banner-state-store";
 
 export function updateBannerHeight(height: number): void {
   currentBannerHeight.value = height;

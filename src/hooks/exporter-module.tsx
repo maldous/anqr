@@ -1,1 +1,1 @@
-export type ExporterModule = typeof import('@/modules/exporter');
+export type ExporterModule = typeof import("@/modules/exporter");

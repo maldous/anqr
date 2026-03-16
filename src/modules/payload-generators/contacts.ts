@@ -1,1 +1,1 @@
-export * from '../../domain/payload/contacts';
+export * from "../../domain/payload/contacts";

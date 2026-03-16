@@ -3,8 +3,8 @@
  * Re-exports from overlay module (canonical source)
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
-export { blur as applyBoxBlur } from '../../../modules/overlay';
+export { blur as applyBoxBlur } from "../../../modules/overlay";

@@ -1,5 +1,5 @@
 export type QArtPerfSnapshot = {
-  source: 'worker' | 'main';
+  source: "worker" | "main";
   computeMs: number | null;
   renderMs: number | null;
   previewMs: number | null;

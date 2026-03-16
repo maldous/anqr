@@ -1,5 +1,5 @@
-import { VALID_SUFFIX_CHARS } from './valid-suffix-chars';
-import { validateSuffixCharacters } from './validate-suffix-characters';
+import { VALID_SUFFIX_CHARS } from "./valid-suffix-chars";
+import { validateSuffixCharacters } from "./validate-suffix-characters";
 
 /**
  * Validate that a suffix contains only URL-safe printable characters.

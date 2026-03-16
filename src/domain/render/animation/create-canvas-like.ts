@@ -1,6 +1,6 @@
 export function createCanvasLike(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
+  targetCanvas?: HTMLCanvasElement | OffscreenCanvas,
 ): HTMLCanvasElement | OffscreenCanvas {
   if (targetCanvas) {
     if (targetCanvas.width !== sourceCanvas.width) targetCanvas.width = sourceCanvas.width;
@@ -9,14 +9,14 @@ export function createCanvasLike(
   }
 
   if (
-    typeof OffscreenCanvas !== 'undefined' &&
+    typeof OffscreenCanvas !== "undefined" &&
     sourceCanvas instanceof OffscreenCanvas &&
-    typeof sourceCanvas.width === 'number'
+    typeof sourceCanvas.width === "number"
   ) {
     return new OffscreenCanvas(sourceCanvas.width, sourceCanvas.height);
   }
 
-  const result = document.createElement('canvas');
+  const result = document.createElement("canvas");
   result.width = sourceCanvas.width;
   result.height = sourceCanvas.height;
   return result;

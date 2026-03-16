@@ -1,5 +1,5 @@
-import type { QRGeneratorConfig } from './types';
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
+import type { QRGeneratorConfig } from "./types";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
 
 export interface ScanGateCallbacks {
   buildAttemptConfig: (patch: DitherAttemptPatch) => QRGeneratorConfig;

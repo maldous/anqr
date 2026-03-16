@@ -1,1 +1,1 @@
-export type RenderState = 'pending' | 'rendering' | 'idle';
+export type RenderState = "pending" | "rendering" | "idle";

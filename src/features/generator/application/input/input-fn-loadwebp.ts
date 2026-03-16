@@ -4,20 +4,20 @@
  * Notes: Load animated WebP file for overlay.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { parseAnimatedImage, type AnimationFrame, type GifCompositor } from '@/modules/animation';
-import { handleOverlayLoadFallback } from '@/features/generator/application/input/input-fn-handleloadfallback';
+import { createLogger } from "@/infra/logging/logger";
+import { parseAnimatedImage, type AnimationFrame, type GifCompositor } from "@/modules/animation";
+import { handleOverlayLoadFallback } from "@/features/generator/application/input/input-fn-handleloadfallback";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export function loadAnimatedWebPOverlayFile(
   file: File,
-  gifDisposalHandling: 'respect' | 'simplify' | undefined,
+  gifDisposalHandling: "respect" | "simplify" | undefined,
   setGifFrames: (f: AnimationFrame[]) => void,
   setGifCompositor: (c: GifCompositor | null) => void,
   setCurrentFrame: (n: number) => void,
   setRawOverlayCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void,
-  setIsLoadingOverlay: (v: boolean) => void
+  setIsLoadingOverlay: (v: boolean) => void,
 ): void {
   file
     .arrayBuffer()
@@ -34,17 +34,17 @@ export function loadAnimatedWebPOverlayFile(
           setIsLoadingOverlay(false);
         }
       } catch (err) {
-        log.error('Failed to parse animated WebP', { error: err });
+        log.error("Failed to parse animated WebP", { error: err });
         void handleOverlayLoadFallback(
           file,
           setRawOverlayCanvas,
           setGifFrames,
-          setIsLoadingOverlay
+          setIsLoadingOverlay,
         );
       }
     })
     .catch((err) => {
-      log.error('Failed to read WebP file', { error: err });
+      log.error("Failed to read WebP file", { error: err });
       setRawOverlayCanvas(null);
       setIsLoadingOverlay(false);
     });

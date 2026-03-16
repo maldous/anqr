@@ -1,5 +1,5 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import type { ShareConfig } from "@/modules/share-links";
+import { useQRStore } from "@/store/qr-store";
 
 export function applyQaAndAutoParams(params: Partial<ShareConfig>): void {
   if (params.qaContrastCheck)

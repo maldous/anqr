@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { findNextTextToken } from './find-next-text-token';
-import { processHref } from './process-href';
+import type { ReactNode } from "react";
+import { findNextTextToken } from "./find-next-text-token";
+import { processHref } from "./process-href";
 
 export function renderTextContent(text: string, lang: string): ReactNode {
   const result: ReactNode[] = [];
@@ -13,7 +13,7 @@ export function renderTextContent(text: string, lang: string): ReactNode {
       result.push(<span key={`text-${keyIndex++}`}>{text.slice(lastIndex, match.start)}</span>);
     }
 
-    if (match.kind === 'url') {
+    if (match.kind === "url") {
       result.push(
         <a
           key={`link-${keyIndex++}`}
@@ -23,22 +23,22 @@ export function renderTextContent(text: string, lang: string): ReactNode {
           className="text-primary hover:underline break-all"
         >
           {match.value}
-        </a>
+        </a>,
       );
     } else {
       const href = processHref(match.href, lang);
       const label = match.label;
-      const isExternal = href.startsWith('http');
+      const isExternal = href.startsWith("http");
 
       result.push(
         <a
           key={`link-${keyIndex++}`}
           href={href}
-          {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           className="text-primary hover:underline"
         >
           {label}
-        </a>
+        </a>,
       );
     }
 

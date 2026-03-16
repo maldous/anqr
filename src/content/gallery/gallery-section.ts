@@ -1,5 +1,5 @@
-import type { GalleryCategory } from '@/content/gallery/gallery-manifest';
-import type { GalleryItem } from './gallery-item';
+import type { GalleryCategory } from "@/content/gallery/gallery-manifest";
+import type { GalleryItem } from "./gallery-item";
 
 export type GallerySection = {
   id: GalleryCategory;

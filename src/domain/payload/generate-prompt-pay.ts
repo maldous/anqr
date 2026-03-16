@@ -1,6 +1,6 @@
-import { EMVQRBuilder } from './emv';
-import type { PromptPayParams } from '../../modules/payload-generators/types';
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
+import { EMVQRBuilder } from "./emv";
+import type { PromptPayParams } from "../../modules/payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "../../modules/payload-generators/types";
 
 /**
  * Generate PromptPay QR code (Thailand)
@@ -18,23 +18,23 @@ export function generatePromptPay(params: PromptPayParams): string {
   };
   const aid = aidMap[params.type];
 
-  let formattedValue = params.value.replaceAll(/[\s-]/g, '');
-  if (params.type === 'mobile' && formattedValue.startsWith('0')) {
+  let formattedValue = params.value.replaceAll(/[\s-]/g, "");
+  if (params.type === "mobile" && formattedValue.startsWith("0")) {
     formattedValue = `66${formattedValue.substring(1)}`;
   }
 
-  const maiData: Array<{ tag: string; value: string }> = [{ tag: '01', value: formattedValue }];
+  const maiData: Array<{ tag: string; value: string }> = [{ tag: "01", value: formattedValue }];
 
-  if (params.type === 'billpay') {
-    if (params.ref1) maiData.push({ tag: '02', value: params.ref1 });
-    if (params.ref2) maiData.push({ tag: '03', value: params.ref2 });
+  if (params.type === "billpay") {
+    if (params.ref1) maiData.push({ tag: "02", value: params.ref1 });
+    if (params.ref2) maiData.push({ tag: "03", value: params.ref2 });
   }
 
   builder.addMerchantAccountInfo(29, aid, maiData);
 
-  if (params.type === 'billpay' && params.ref3) {
+  if (params.type === "billpay" && params.ref3) {
     builder.addMerchantAccountInfo(30, PAYMENT_SCHEME_GUI.PROMPTPAY_BILLPAY, [
-      { tag: '01', value: params.ref3 },
+      { tag: "01", value: params.ref3 },
     ]);
   }
 
@@ -48,7 +48,7 @@ export function generatePromptPay(params: PromptPayParams): string {
     builder.setTransactionAmount(params.amount);
   }
 
-  builder.setCountryCode(params.countryCode || 'TH');
+  builder.setCountryCode(params.countryCode || "TH");
 
   if (params.merchantName) {
     builder.setMerchantName(params.merchantName);

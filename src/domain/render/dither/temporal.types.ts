@@ -8,4 +8,4 @@
  * - 'blue_noise': Uses golden ratio-based offsets for optimal temporal distribution
  * - 'flicker_safe': Uses carefully chosen offsets that minimize perceived flicker
  */
-export type TemporalDitherMode = 'off' | 'blue_noise' | 'flicker_safe';
+export type TemporalDitherMode = "off" | "blue_noise" | "flicker_safe";

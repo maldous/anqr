@@ -1,6 +1,6 @@
-import { BitMatrix } from './bit-matrix';
-import { Binarizer, type LuminanceSource } from './luminance';
-import { GlobalHistogramBinarizer } from './global-histogram-binarizer';
+import { BitMatrix } from "./bit-matrix";
+import { Binarizer, type LuminanceSource } from "./luminance";
+import { GlobalHistogramBinarizer } from "./global-histogram-binarizer";
 
 /**
  * Hybrid binarizer using local thresholding for better results
@@ -32,7 +32,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
         subWidth,
         subHeight,
         width,
-        height
+        height,
       );
 
       const newMatrix = new BitMatrix(width, height);
@@ -43,7 +43,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
         width,
         height,
         blackPoints,
-        newMatrix
+        newMatrix,
       );
       this.matrix = newMatrix;
     } else {
@@ -63,7 +63,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     width: number,
     height: number,
     blackPoints: Int32Array[],
-    matrix: BitMatrix
+    matrix: BitMatrix,
   ): void {
     const maxYOffset = height - HybridBinarizer.BLOCK_SIZE;
     const maxXOffset = width - HybridBinarizer.BLOCK_SIZE;
@@ -101,7 +101,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     yoffset: number,
     threshold: number,
     stride: number,
-    matrix: BitMatrix
+    matrix: BitMatrix,
   ): void {
     for (
       let y = 0, offset = yoffset * stride + xoffset;
@@ -120,7 +120,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     luminances: Uint8ClampedArray,
     offset: number,
     yy: number,
-    width: number
+    width: number,
   ): number {
     let sum = 0;
     let row = yy;
@@ -139,7 +139,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     luminances: Uint8ClampedArray,
     xoffset: number,
     yoffset: number,
-    width: number
+    width: number,
   ): { sum: number; min: number; max: number } {
     let sum = 0;
     let min = 0xff;
@@ -169,7 +169,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     stats: { sum: number; min: number; max: number },
     y: number,
     x: number,
-    blackPoints: Int32Array[]
+    blackPoints: Int32Array[],
   ): number {
     let average = stats.sum >> (HybridBinarizer.BLOCK_SIZE_POWER * 2);
     if (stats.max - stats.min <= HybridBinarizer.MIN_DYNAMIC_RANGE) {
@@ -190,7 +190,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     subWidth: number,
     subHeight: number,
     width: number,
-    height: number
+    height: number,
   ): Int32Array[] {
     const maxYOffset = height - HybridBinarizer.BLOCK_SIZE;
     const maxXOffset = width - HybridBinarizer.BLOCK_SIZE;

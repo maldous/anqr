@@ -16,4 +16,4 @@ export interface GFField<P = unknown> {
   exp(a: number): number;
   log(a: number): number;
 }
-export { gfAddOrSubtract } from './gf-add-or-subtract';
+export { gfAddOrSubtract } from "./gf-add-or-subtract";

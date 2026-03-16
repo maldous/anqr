@@ -13,7 +13,7 @@ export function scorePixelCandidate(
   scanScoreWeight: number,
   artPenaltyWeight: number,
   edgeBandPenalty: number,
-  centerPixelBonus: number
+  centerPixelBonus: number,
 ): { score: number; scanGain: number } | null {
   if (toDark === current) return null;
   const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;

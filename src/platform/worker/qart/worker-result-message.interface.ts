@@ -1,7 +1,7 @@
-import type { QArtWorkerResultPayload } from './worker-result-payload';
+import type { QArtWorkerResultPayload } from "./worker-result-payload";
 
 export interface QArtWorkerResultMessage {
-  type: 'result';
+  type: "result";
   id: number;
   result: QArtWorkerResultPayload;
 }

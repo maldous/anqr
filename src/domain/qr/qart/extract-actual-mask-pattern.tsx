@@ -1,12 +1,12 @@
-import type { ECCLevel } from './bit-mapping';
-import { eccNumericToLevel, extractMaskFromMatrix } from './validation';
-import { log } from './log';
+import type { ECCLevel } from "./bit-mapping";
+import { eccNumericToLevel, extractMaskFromMatrix } from "./validation";
+import { log } from "./log";
 
 export function extractActualMaskPattern(
   qr: { isDark: (row: number, col: number) => boolean },
   moduleCount: number,
   ecc: ECCLevel,
-  maskPattern: number
+  maskPattern: number,
 ): number {
   if (maskPattern >= 0) return maskPattern;
 
@@ -23,16 +23,16 @@ export function extractActualMaskPattern(
 
   const extractedEccLevel = eccNumericToLevel(extracted.eccLevel);
   if (extractedEccLevel !== ecc) {
-    log.warn('FORMAT_PARSER_DISAGREEMENT: Decoder extracted different ECC than requested', {
+    log.warn("FORMAT_PARSER_DISAGREEMENT: Decoder extracted different ECC than requested", {
       requested: ecc,
       extracted: extractedEccLevel,
       extractedNumeric: extracted.eccLevel,
-      action: 'CONTINUE_WITH_ENCODER_ECC',
-      note: 'Encoder-requested ECC is authoritative. Final scan validates correctness.',
+      action: "CONTINUE_WITH_ENCODER_ECC",
+      note: "Encoder-requested ECC is authoritative. Final scan validates correctness.",
     });
   }
 
-  log.info('Extracted actual mask from encoder (auto-mask mode)', {
+  log.info("Extracted actual mask from encoder (auto-mask mode)", {
     extractedMask: actualMask,
     extractedEcc: extractedEccLevel,
     formatInfoValid: extracted.isValid,

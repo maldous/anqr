@@ -1,9 +1,9 @@
-import { getSharedHashCanvas, setSharedHashCanvas } from './shared-hash-canvas';
-import { getSharedHashCanvasInUse, setSharedHashCanvasInUse } from './shared-hash-canvas-in-use';
-import { createHashCanvas } from './create-hash-canvas';
+import { getSharedHashCanvas, setSharedHashCanvas } from "./shared-hash-canvas";
+import { getSharedHashCanvasInUse, setSharedHashCanvasInUse } from "./shared-hash-canvas-in-use";
+import { createHashCanvas } from "./create-hash-canvas";
 
 export async function acquireHashCanvas(
-  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
+  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
 ): Promise<{ canvas: HTMLCanvasElement | OffscreenCanvas; release: () => void }> {
   if (!getSharedHashCanvas()) {
     setSharedHashCanvas(await createHashCanvas(createCanvasFn));

@@ -4,11 +4,11 @@
  * Notes: Record QArt performance timings.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { safeMark } from '@/features/generator/application/generation/generation-fn-safemark';
-import { safeMeasure } from '@/features/generator/application/generation/generation-fn-safemeasure';
+import { createLogger } from "@/infra/logging/logger";
+import { safeMark } from "@/features/generator/application/generation/generation-fn-safemark";
+import { safeMeasure } from "@/features/generator/application/generation/generation-fn-safemeasure";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export function recordQArtPerfTimings(params: {
   qartRequestMarked: boolean;
@@ -17,24 +17,24 @@ export function recordQArtPerfTimings(params: {
   qartResultMark: string;
   qartRenderMark: string;
   qartComputeMs: number | null;
-  qartResultSource: 'worker' | 'main';
+  qartResultSource: "worker" | "main";
 }): { renderMs: number | null; previewMs: number | null } {
   safeMark(params.qartRenderMark);
   const renderMs = params.qartRequestMarked
     ? safeMeasure(
         `${params.qartPerfMarkPrefix}:render`,
         params.qartResultMark,
-        params.qartRenderMark
+        params.qartRenderMark,
       )
     : null;
   const previewMs = params.qartRequestMarked
     ? safeMeasure(
         `${params.qartPerfMarkPrefix}:preview`,
         params.qartRequestMark,
-        params.qartRenderMark
+        params.qartRenderMark,
       )
     : null;
-  log.info('QR-Art timing', {
+  log.info("QR-Art timing", {
     source: params.qartResultSource,
     computeMs: params.qartComputeMs === null ? null : Math.round(params.qartComputeMs),
     renderMs: renderMs === null ? null : Math.round(renderMs),

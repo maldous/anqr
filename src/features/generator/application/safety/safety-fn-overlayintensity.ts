@@ -4,7 +4,7 @@
  * Notes: Adjust overlay intensity per safety mode.
  */
 
-import type { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
+import type { EccLevel } from "@/features/generator/application/safety/safety-type-ecclevel";
 
 export function adjustOverlayIntensity(params: {
   safetyMode: string;
@@ -18,21 +18,21 @@ export function adjustOverlayIntensity(params: {
   let adjusted = params.overlayIntensity;
 
   if (
-    params.safetyMode === 'strict' &&
+    params.safetyMode === "strict" &&
     params.overlayEnabled &&
     params.overlayIntensity > params.maxSafeIntensity
   ) {
     adjusted = params.maxSafeIntensity;
     warnings.push(
-      `Overlay intensity reduced to ${params.maxSafeIntensity}% for ECC level ${params.effectiveEcc}`
+      `Overlay intensity reduced to ${params.maxSafeIntensity}% for ECC level ${params.effectiveEcc}`,
     );
   } else if (
-    params.safetyMode === 'balanced' &&
+    params.safetyMode === "balanced" &&
     params.overlayEnabled &&
     params.overlayIntensity > params.maxSafeIntensity
   ) {
     warnings.push(
-      `Overlay intensity (${params.overlayIntensity}%) may reduce scannability with ECC ${params.effectiveEcc}`
+      `Overlay intensity (${params.overlayIntensity}%) may reduce scannability with ECC ${params.effectiveEcc}`,
     );
   }
 
@@ -43,7 +43,7 @@ export function adjustOverlayIntensity(params: {
   ) {
     adjusted = params.maxSafeIntensity;
     warnings.push(
-      `Auto-reduced overlay intensity to ${params.maxSafeIntensity}% for safe scanning`
+      `Auto-reduced overlay intensity to ${params.maxSafeIntensity}% for safe scanning`,
     );
   }
 

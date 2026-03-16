@@ -1,7 +1,7 @@
-import type { EncoderDerivedLayout } from './generate.types';
+import type { EncoderDerivedLayout } from "./generate.types";
 export function classifyIntervalStatus(
   linearBit: number,
-  encoderLayout: EncoderDerivedLayout
+  encoderLayout: EncoderDerivedLayout,
 ): {
   isInSuffixInterval: boolean;
   isInPaddingInterval: boolean;
@@ -16,13 +16,13 @@ export function classifyIntervalStatus(
   const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
   const isInProtected = linearBit < encoderLayout.protectedBitEnd;
   const status = isInSuffixInterval
-    ? 'Vector is in SUFFIX safe interval (EXPECTED)'
+    ? "Vector is in SUFFIX safe interval (EXPECTED)"
     : isInPaddingInterval
-      ? 'Vector is in PADDING safe interval (EXPECTED)'
+      ? "Vector is in PADDING safe interval (EXPECTED)"
       : isInGap
-        ? 'Vector is in TERMINATOR GAP - BUG!'
+        ? "Vector is in TERMINATOR GAP - BUG!"
         : isInProtected
-          ? 'Vector is in PROTECTED region - BUG!'
-          : 'Vector is in UNKNOWN region - BUG!';
+          ? "Vector is in PROTECTED region - BUG!"
+          : "Vector is in UNKNOWN region - BUG!";
   return { isInSuffixInterval, isInPaddingInterval, isInGap, isInProtected, status };
 }

@@ -1,5 +1,5 @@
-import type { QRGeneratorConfig } from '../../../../modules/qr-generator/types';
-import type { ScaledPreserveFlags } from '../scaled-render-types';
+import type { QRGeneratorConfig } from "../../../../modules/qr-generator/types";
+import type { ScaledPreserveFlags } from "../scaled-render-types";
 
 export function buildScaledPreserveFlags(config: QRGeneratorConfig): ScaledPreserveFlags {
   const preserveFunctional = config.preserveFunctionalPatterns === true;

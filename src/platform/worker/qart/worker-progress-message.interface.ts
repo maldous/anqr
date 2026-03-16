@@ -1,5 +1,5 @@
 export interface QArtWorkerProgressMessage {
-  type: 'progress';
+  type: "progress";
   id: number;
   stage: string;
   percent: number;

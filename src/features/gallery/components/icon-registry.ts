@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from "lucide-react";
 import {
   Contrast,
   FileText,
@@ -11,7 +11,7 @@ import {
   Settings2,
   Shapes,
   Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 
 export const iconRegistry: Record<string, LucideIcon> = {
   QrCode,

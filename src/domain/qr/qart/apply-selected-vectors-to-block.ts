@@ -1,13 +1,13 @@
-import type { RSBasisVector } from './rs-basis';
-import { applyVectorDenseXOR } from './apply-vector-dense-xor';
-import { applyVectorSparseXOR } from './apply-vector-sparse-xor';
+import type { RSBasisVector } from "./rs-basis";
+import { applyVectorDenseXOR } from "./apply-vector-dense-xor";
+import { applyVectorSparseXOR } from "./apply-vector-sparse-xor";
 
 export function applySelectedVectorsToBlock(
   blockData: Uint8Array,
   blockEcc: Uint8Array,
   blockVectors: RSBasisVector[],
   selectedIndices: number[],
-  dataCount: number
+  dataCount: number,
 ): void {
   for (const idx of selectedIndices) {
     const v = blockVectors[idx];
@@ -17,7 +17,7 @@ export function applySelectedVectorsToBlock(
         v.nonZeroByteValues,
         blockData,
         blockEcc,
-        dataCount
+        dataCount,
       );
     } else {
       applyVectorDenseXOR(v.blockBits, blockData, blockEcc, dataCount);

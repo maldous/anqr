@@ -1,4 +1,4 @@
-import { hslToRgb, parseColor, rgbToHsl } from './color';
+import { hslToRgb, parseColor, rgbToHsl } from "./color";
 
 /**
  * Get complementary color (opposite on color wheel)

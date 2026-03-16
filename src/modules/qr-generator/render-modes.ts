@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/render-modes';
+export * from "../../domain/render/generator/render-modes";

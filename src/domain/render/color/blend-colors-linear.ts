@@ -1,8 +1,8 @@
-import { parseColor } from './parse-color';
-import { BLACK } from './black';
-import { blendRgbLinear } from './blend-rgb-linear';
-import { rgbaToString } from './rgba-to-string';
-import { rgbToHex } from './rgb-to-hex';
+import { parseColor } from "./parse-color";
+import { BLACK } from "./black";
+import { blendRgbLinear } from "./blend-rgb-linear";
+import { rgbaToString } from "./rgba-to-string";
+import { rgbToHex } from "./rgb-to-hex";
 
 /** Blend two color strings in linear-light space with given ratio */
 export function blendColorsLinear(color1: string, color2: string, ratio: number): string {

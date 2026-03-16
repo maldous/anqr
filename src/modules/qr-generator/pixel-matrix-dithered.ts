@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/pixel-matrix-dithered';
+export * from "../../domain/render/generator/pixel-matrix-dithered";

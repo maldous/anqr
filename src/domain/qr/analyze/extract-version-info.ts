@@ -1,9 +1,9 @@
 export function extractVersionInfo(
   code: { version?: number | null },
-  avgFinderDist: number
+  avgFinderDist: number,
 ): { version: number | null; moduleCount: number; estimatedModulePx: number | null } {
   const version =
-    typeof code.version === 'number' && code.version >= 1 && code.version <= 40
+    typeof code.version === "number" && code.version >= 1 && code.version <= 40
       ? code.version
       : null;
   const moduleCount = version === null ? 0 : 17 + version * 4;

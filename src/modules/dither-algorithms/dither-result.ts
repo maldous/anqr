@@ -1,4 +1,4 @@
-import type { RGB } from './rgb';
+import type { RGB } from "./rgb";
 
 export interface DitherResult {
   matrix: boolean[][];

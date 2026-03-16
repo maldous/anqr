@@ -2,7 +2,7 @@ export function applyVectorDenseXOR(
   blockBits: Uint8Array,
   blockData: Uint8Array,
   blockEcc: Uint8Array,
-  dataCount: number
+  dataCount: number,
 ): void {
   for (let i = 0; i < dataCount; i++) {
     blockData[i] ^= blockBits[i];

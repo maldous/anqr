@@ -1,1 +1,1 @@
-export * from '../../domain/qr/qart/semantic-layout';
+export * from "../../domain/qr/qart/semantic-layout";

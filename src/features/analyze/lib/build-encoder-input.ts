@@ -1,20 +1,20 @@
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import type { ValidEncoderMode } from './reproduction-types';
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { ValidEncoderMode } from "./reproduction-types";
 
 export function buildEncoderInput(
   result: QRAnalysisResult,
-  modeToUse: ValidEncoderMode | undefined
-): { kind: 'bytes' | 'string'; data: string } {
+  modeToUse: ValidEncoderMode | undefined,
+): { kind: "bytes" | "string"; data: string } {
   const bytes = result.payloadBytes;
-  const wantsByte = modeToUse === 'byte' || result.encodingMode === 'byte';
+  const wantsByte = modeToUse === "byte" || result.encodingMode === "byte";
   if (!(bytes?.length && wantsByte)) {
-    return { kind: 'string', data: result.payload! };
+    return { kind: "string", data: result.payload! };
   }
 
-  let data = '';
+  let data = "";
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
     data += String.fromCodePoint(...Array.from(bytes.slice(i, i + chunk)));
   }
-  return { kind: 'bytes', data };
+  return { kind: "bytes", data };
 }

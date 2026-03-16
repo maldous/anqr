@@ -1,1 +1,1 @@
-export * from '../../domain/share/url-params';
+export * from "../../domain/share/url-params";

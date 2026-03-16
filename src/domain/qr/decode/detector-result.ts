@@ -1,5 +1,5 @@
-import type { BitMatrix } from './bit-matrix';
-import { ResultPoint } from './result-types';
+import type { BitMatrix } from "./bit-matrix";
+import { ResultPoint } from "./result-types";
 
 /**
  * Detector result containing bit matrix and detected points
@@ -7,7 +7,7 @@ import { ResultPoint } from './result-types';
 export class DetectorResult {
   constructor(
     private readonly bits: BitMatrix,
-    private readonly points: ResultPoint[]
+    private readonly points: ResultPoint[],
   ) {}
 
   getBits(): BitMatrix {

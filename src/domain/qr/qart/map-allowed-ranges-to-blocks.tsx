@@ -1,8 +1,8 @@
-import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
-import type { BitRange } from './semantic-layout.types';
-import { findBlockForLinearByte } from './find-block-for-linear-byte';
-import { log } from './log';
-import { logBlockMappingResults } from './log-block-mapping-results';
+import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
+import type { BitRange } from "./semantic-layout.types";
+import { findBlockForLinearByte } from "./find-block-for-linear-byte";
+import { log } from "./log";
+import { logBlockMappingResults } from "./log-block-mapping-results";
 
 /**
  * Map allowed bit ranges from the LINEAR BUFFER to per-block allowed bits.
@@ -26,7 +26,7 @@ import { logBlockMappingResults } from './log-block-mapping-results';
 export function mapAllowedRangesToBlocks(
   allowedRanges: BitRange[],
   version: number,
-  ecc: ECCLevel
+  ecc: ECCLevel,
 ): Map<number, Set<number>> {
   const blocks = getRSBlockInfo(version, ecc);
   const numBlocks = blocks.length;
@@ -43,7 +43,7 @@ export function mapAllowedRangesToBlocks(
   }
   const totalLinearBytes = offset;
 
-  log.debug('Block boundaries in linear buffer', {
+  log.debug("Block boundaries in linear buffer", {
     numBlocks,
     blockStartBytes,
     blockEndBytes,
@@ -59,7 +59,7 @@ export function mapAllowedRangesToBlocks(
 
   // For each allowed range, map linear buffer positions to per-block positions
   for (const range of allowedRanges) {
-    log.debug('Processing allowed range', {
+    log.debug("Processing allowed range", {
       startBit: range.startBit,
       endBit: range.endBit,
       startByte: Math.floor(range.startBit / 8),
@@ -79,7 +79,7 @@ export function mapAllowedRangesToBlocks(
         linearByte,
         blockStartBytes,
         blockEndBytes,
-        numBlocks
+        numBlocks,
       );
       if (blockMatch) {
         const localBitIndex = blockMatch.localByte * 8 + bitInByte;
@@ -94,7 +94,7 @@ export function mapAllowedRangesToBlocks(
     blockStartBytes,
     blockEndBytes,
     numBlocks,
-    allowedRanges
+    allowedRanges,
   );
 
   return blockAllowedBits;

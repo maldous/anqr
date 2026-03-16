@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/shared-patterns';
+export * from "../../domain/render/animation/shared-patterns";

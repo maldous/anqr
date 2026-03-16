@@ -1,1 +1,1 @@
-export type OverlayType = 'static' | 'gif' | 'apng' | 'webp_anim' | 'video';
+export type OverlayType = "static" | "gif" | "apng" | "webp_anim" | "video";

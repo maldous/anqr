@@ -1,5 +1,5 @@
-import { readState } from './read-state';
-import { writeState } from './write-state';
+import { readState } from "./read-state";
+import { writeState } from "./write-state";
 
 /**
  * Check if diagnostics is currently enabled and not expired

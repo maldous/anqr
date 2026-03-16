@@ -1,4 +1,4 @@
-import type { RGB } from '../../../modules/core/types';
+import type { RGB } from "../../../modules/core/types";
 
 export function screenBlend(top: RGB, bottom: RGB): RGB {
   return {

@@ -1,4 +1,4 @@
-import { createPngChunk } from './create-png-chunk';
+import { createPngChunk } from "./create-png-chunk";
 
 /**
  * Create a PNG iTXt chunk for metadata embedding (UTF-8 safe)
@@ -43,5 +43,5 @@ export function createPngTextChunk(keyword: string, text: string): Uint8Array {
   // UTF-8 text (no null terminator needed)
   chunkData.set(textBytes, offset);
 
-  return createPngChunk('iTXt', chunkData);
+  return createPngChunk("iTXt", chunkData);
 }

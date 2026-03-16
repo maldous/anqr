@@ -3,7 +3,7 @@ export function countShiftedDiffs(
   regen: boolean[][],
   moduleCount: number,
   dr: number,
-  dc: number
+  dc: number,
 ): number {
   let diffCount = 0;
 

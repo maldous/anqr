@@ -11,7 +11,7 @@ export function compareFinderModule(
   col: number,
   rowOffset: number,
   colOffset: number,
-  errors: string[]
+  errors: string[],
 ): boolean {
   const expected = finderPattern[row][col] === 1;
   const actual = matrix[rowOffset + row]?.[colOffset + col] ?? false;
@@ -20,7 +20,7 @@ export function compareFinderModule(
   }
   if (errors.length < 5) {
     errors.push(
-      `(${rowOffset + row},${colOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
+      `(${rowOffset + row},${colOffset + col}): expected ${expected ? "dark" : "light"}, got ${actual ? "dark" : "light"}`,
     );
   }
   return false;

@@ -1,7 +1,7 @@
-import { createLogger } from '../../../infra/logging/logger';
-import { admobRuntime } from './admob-runtime-state';
+import { createLogger } from "../../../infra/logging/logger";
+import { admobRuntime } from "./admob-runtime-state";
 
-const log = createLogger('ADMOB');
+const log = createLogger("ADMOB");
 
 export function getInterstitialDeps() {
   return {

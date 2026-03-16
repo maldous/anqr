@@ -1,4 +1,4 @@
-import { readFormatInfo as decoderReadFormatInfo } from '../decode/format';
+import { readFormatInfo as decoderReadFormatInfo } from "../decode/format";
 
 /**
  * Read format info using the decoder's proven format parser.

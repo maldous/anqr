@@ -1,9 +1,9 @@
-import { generateBharatQR } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateBharatQR } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeBharatQR(payload: PayloadData): string {
   const b = payload.bharatqr;
-  if (!b.merchantName) return '';
+  if (!b.merchantName) return "";
   return generateBharatQR({
     merchantVPA: b.merchantVPA,
     merchantPAN: b.merchantPAN,

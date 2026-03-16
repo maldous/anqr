@@ -1,5 +1,5 @@
-import { GripHorizontal } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { GripHorizontal } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function MobileDivider({
   onDrag,
@@ -26,7 +26,7 @@ export function MobileDivider({
       lastY.current = clientY;
       onDrag(deltaY);
     },
-    [isDragging, onDrag]
+    [isDragging, onDrag],
   );
 
   // Handle mouse/touch end
@@ -43,7 +43,7 @@ export function MobileDivider({
       e.preventDefault();
       handleDragStart(e.clientY);
     },
-    [handleDragStart]
+    [handleDragStart],
   );
 
   // Touch events
@@ -54,7 +54,7 @@ export function MobileDivider({
         handleDragStart(e.touches[0].clientY);
       }
     },
-    [handleDragStart]
+    [handleDragStart],
   );
 
   // Global event listeners for drag
@@ -77,24 +77,24 @@ export function MobileDivider({
     const handleTouchEnd = () => handleDragEnd();
 
     // Add listeners to document for global tracking
-    document.addEventListener('mousemove', handleMouseMove, { passive: false });
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-    document.addEventListener('touchcancel', handleTouchEnd);
+    document.addEventListener("mousemove", handleMouseMove, { passive: false });
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd);
+    document.addEventListener("touchcancel", handleTouchEnd);
 
     // Prevent text selection during drag
-    document.body.style.userSelect = 'none';
-    document.body.style.touchAction = 'none';
+    document.body.style.userSelect = "none";
+    document.body.style.touchAction = "none";
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-      document.removeEventListener('touchcancel', handleTouchEnd);
-      document.body.style.userSelect = '';
-      document.body.style.touchAction = '';
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchcancel", handleTouchEnd);
+      document.body.style.userSelect = "";
+      document.body.style.touchAction = "";
     };
   }, [isDragging, handleDragMove, handleDragEnd]);
 
@@ -116,22 +116,22 @@ export function MobileDivider({
         focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1
         ${
           isDragging
-            ? 'bg-accent shadow-md border-accent-foreground/20'
-            : 'hover:bg-accent/50 active:bg-accent hover:shadow-sm'
+            ? "bg-accent shadow-md border-accent-foreground/20"
+            : "hover:bg-accent/50 active:bg-accent hover:shadow-sm"
         }
       `}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onKeyDown={(e) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
           e.preventDefault();
-          onDrag(e.key === 'ArrowUp' ? -10 : 10);
+          onDrag(e.key === "ArrowUp" ? -10 : 10);
           onDragEnd();
         }
       }}
     >
       <GripHorizontal
-        className={`h-5 w-5 transition-all duration-150 ${isDragging ? 'text-foreground scale-110' : 'text-muted-foreground'}`}
+        className={`h-5 w-5 transition-all duration-150 ${isDragging ? "text-foreground scale-110" : "text-muted-foreground"}`}
       />
     </button>
   );

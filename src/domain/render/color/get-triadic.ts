@@ -1,4 +1,4 @@
-import { getRelatedHues } from './get-related-hues';
+import { getRelatedHues } from "./get-related-hues";
 
 /**
  * Get triadic colors (evenly spaced on color wheel)

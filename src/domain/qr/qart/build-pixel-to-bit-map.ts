@@ -1,4 +1,4 @@
-import type { BitPixelMapping } from './bit-mapping.types';
+import type { BitPixelMapping } from "./bit-mapping.types";
 
 /**
  * Build a map from pixel index to the bit that affects it

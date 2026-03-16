@@ -1,1 +1,1 @@
-export * from '../../domain/qr/encode/math';
+export * from "../../domain/qr/encode/math";

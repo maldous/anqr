@@ -1,5 +1,5 @@
-import type { CanvasPool } from '../../platform/browser/canvas/canvas-factory';
-import { simulateScenarioDecode } from './qr-generator-helpers';
+import type { CanvasPool } from "../../platform/browser/canvas/canvas-factory";
+import { simulateScenarioDecode } from "./qr-generator-helpers";
 
 export async function runRobustnessScenarios(
   pool: CanvasPool,
@@ -11,7 +11,7 @@ export async function runRobustnessScenarios(
     skewY: number;
     downscale: number;
   }>,
-  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>
+  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>,
 ): Promise<boolean> {
   for (const s of scenarios) {
     if (!(await simulateScenarioDecode(pool, finalRaster, s, runDecode))) {

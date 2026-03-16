@@ -1,6 +1,6 @@
-import { getRelativeLuminance, parseColor } from '../../domain/render/color/color';
-import { getContrastRatio } from './utils';
-import { log } from './log';
+import { getRelativeLuminance, parseColor } from "../../domain/render/color/color";
+import { getContrastRatio } from "./utils";
+import { log } from "./log";
 
 /**
  * Ensure module color has sufficient contrast with background
@@ -38,7 +38,7 @@ export function ensureContrast(moduleColor: string, bgColor: string, minRatio: n
         factor = Math.min(1, factor + 0.1); // Increase lightening
       }
       // Fallback to white for dark backgrounds
-      return '#ffffff';
+      return "#ffffff";
     } else {
       // Background is light: darken the foreground to increase contrast
       let factor = 0.9;
@@ -55,10 +55,10 @@ export function ensureContrast(moduleColor: string, bgColor: string, minRatio: n
         factor *= 0.85;
       }
       // Fallback to black for light backgrounds
-      return '#000000';
+      return "#000000";
     }
   } catch (error) {
-    log.warn('Contrast check failed', { error });
+    log.warn("Contrast check failed", { error });
     return moduleColor;
   }
 }

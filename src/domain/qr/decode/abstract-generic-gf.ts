@@ -1,5 +1,5 @@
-import { IllegalArgumentException } from './exceptions';
-import { gfAddOrSubtract, type GFField } from './gf-field.types';
+import { IllegalArgumentException } from "./exceptions";
+import { gfAddOrSubtract, type GFField } from "./gf-field.types";
 
 /**
  * Abstract base class for Galois Field operations

@@ -1,7 +1,7 @@
-import { preprocessImageData } from '../filters/filters-preprocess';
-import type { CreateCanvasFn, QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { hasPreprocessingOptions } from './has-preprocessing-options';
-import { log } from './log';
+import { preprocessImageData } from "../filters/filters-preprocess";
+import type { CreateCanvasFn, QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { hasPreprocessingOptions } from "./has-preprocessing-options";
+import { log } from "./log";
 
 /**
  * Preprocess overlay with filters
@@ -9,19 +9,19 @@ import { log } from './log';
 export async function preprocessOverlay(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   config: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   const debug = config.debugOverlayDither === true;
 
   if (!hasPreprocessingOptions(config)) {
     if (debug) {
-      log.debug('preprocessOverlay - no preprocessing needed, returning original canvas');
+      log.debug("preprocessOverlay - no preprocessing needed, returning original canvas");
     }
     return canvas;
   }
 
   if (debug) {
-    log.debug('preprocessOverlay - starting preprocessing', {
+    log.debug("preprocessOverlay - starting preprocessing", {
       canvasSize: { width: canvas.width, height: canvas.height },
       colorMode: config.colorMode,
       filterGrayscale: config.filterGrayscale,
@@ -34,11 +34,11 @@ export async function preprocessOverlay(
   const ctx = (
     canvas as unknown as {
       getContext(
-        contextId: '2d',
-        options?: CanvasRenderingContext2DSettings
+        contextId: "2d",
+        options?: CanvasRenderingContext2DSettings,
       ): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
     }
-  ).getContext('2d', {
+  ).getContext("2d", {
     willReadFrequently: true,
   });
   if (!ctx) return canvas;
@@ -50,13 +50,13 @@ export async function preprocessOverlay(
 
   // Create output canvas
   const result = await createCanvasFn(canvas.width, canvas.height);
-  const resultCtx = result.getContext('2d') as CanvasRenderingContext2D | null;
+  const resultCtx = result.getContext("2d") as CanvasRenderingContext2D | null;
   if (!resultCtx) return canvas;
 
   resultCtx.putImageData(processed, 0, 0);
 
   if (debug) {
-    log.debug('preprocessOverlay - complete', {
+    log.debug("preprocessOverlay - complete", {
       resultSize: { width: result.width, height: result.height },
     });
   }

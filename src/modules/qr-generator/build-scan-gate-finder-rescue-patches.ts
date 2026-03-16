@@ -1,7 +1,7 @@
-import { clampN } from './qr-generator-helpers';
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
-import type { ScanGateCtx } from './scan-gate-ctx.interface';
-import { resolveScanGateIntensity } from './resolve-scan-gate-intensity';
+import { clampN } from "./qr-generator-helpers";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
+import type { ScanGateCtx } from "./scan-gate-ctx.interface";
+import { resolveScanGateIntensity } from "./resolve-scan-gate-intensity";
 
 export function buildScanGateFinderRescuePatches(ctx: ScanGateCtx): DitherAttemptPatch[] {
   const {
@@ -20,7 +20,7 @@ export function buildScanGateFinderRescuePatches(ctx: ScanGateCtx): DitherAttemp
   const previewDropCap = clampN(
     Math.round(requestedOverlayIntensity * (0.66 - overlayComplexity * 0.12)),
     22,
-    64
+    64,
   );
   const rescueStep = overlayComplexity >= 0.65 ? 4 : 5;
   const rescueMaxDrop = isPreviewScanGate

@@ -1,13 +1,13 @@
-import { analyzeQRCode, type QRAnalysisResult } from '@/modules/qr-analyzer';
+import { analyzeQRCode, type QRAnalysisResult } from "@/modules/qr-analyzer";
 import {
   cloneCanvasLike,
   scanCachedFramesForQR,
   waitForAnimationReady,
   waitMs,
-} from '@/features/analyze/lib/canvas-analysis-helpers';
+} from "@/features/analyze/lib/canvas-analysis-helpers";
 
 export async function analyzeGeneratorCanvasRobustImpl(
-  sourceCanvas: HTMLCanvasElement | OffscreenCanvas
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
 ): Promise<QRAnalysisResult> {
   const currentFrameResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
   if (currentFrameResult.success) return currentFrameResult;
@@ -31,7 +31,7 @@ export async function analyzeGeneratorCanvasRobustImpl(
     const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
     if (retryResult.success) {
       const warnings = [...(retryResult.warnings ?? [])];
-      warnings.push('Analyzed using live animation frame retry');
+      warnings.push("Analyzed using live animation frame retry");
       return { ...retryResult, warnings };
     }
   }

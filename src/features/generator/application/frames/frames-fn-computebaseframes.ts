@@ -4,10 +4,10 @@
  * Notes: Compute which base animation frames to process.
  */
 
-import type { AnimationFrame } from '@/modules/animation';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { generateBaseAnimationFrameSet } from '@/features/generator/application/frames/frames-fn-baseanimation';
-import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
+import type { AnimationFrame } from "@/modules/animation";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { generateBaseAnimationFrameSet } from "@/features/generator/application/frames/frames-fn-baseanimation";
+import { YieldController } from "@/features/generator/application/generation/generation-class-yieldcontroller";
 
 export function computeBaseAnimationFramesToProcess(params: {
   shouldGenerateBaseAnimation: boolean;
@@ -23,7 +23,7 @@ export function computeBaseAnimationFramesToProcess(params: {
   applyResultPersistent: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    tf: number
+    tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
   applyGeometricTransforms: (c: HTMLCanvasElement | OffscreenCanvas) => HTMLCanvasElement;
 }): Promise<{ framesToProcess: AnimationFrame[] | null }> {

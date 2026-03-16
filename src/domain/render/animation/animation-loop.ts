@@ -3,22 +3,22 @@
  * Create and manage animation loop handlers
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { advanceAnimation, createAnimationState } from '../../../modules/animation/state';
+import { createLogger } from "../../../infra/logging/logger";
+import { advanceAnimation, createAnimationState } from "../../../modules/animation/state";
 import type {
   AnimationFrame,
   AnimationOptions,
   AnimationState,
-} from '../../../modules/animation/types';
+} from "../../../modules/animation/types";
 
-const _log = createLogger('ANIMATION');
+const _log = createLogger("ANIMATION");
 
 /**
  * Create an animation loop handler
  */
 export function createAnimationLoop(
   onFrame: (frameIndex: number, canvas: HTMLCanvasElement | OffscreenCanvas) => void,
-  options: AnimationOptions
+  options: AnimationOptions,
 ): { start: () => void; stop: () => void; setFrames: (frames: AnimationFrame[]) => void } {
   let state: AnimationState | null = null;
   let animationId: number | null = null;

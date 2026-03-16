@@ -1,6 +1,6 @@
-import { generateStyledRingSvg } from './generate-styled-ring-svg';
-import { generateStyledCenterShapeSvg } from './generate-styled-center-shape-svg';
-import type { VectorAlignmentStyle, VectorFinderStyle } from '../../../modules/exporter/types';
+import { generateStyledRingSvg } from "./generate-styled-ring-svg";
+import { generateStyledCenterShapeSvg } from "./generate-styled-center-shape-svg";
+import type { VectorAlignmentStyle, VectorFinderStyle } from "../../../modules/exporter/types";
 
 /**
  * Generate SVG for alignment pattern with styling
@@ -11,10 +11,10 @@ export function generateAlignmentSvg(
   moduleSize: number,
   style: VectorAlignmentStyle,
   finderStyle: VectorFinderStyle,
-  fillColor: string
+  fillColor: string,
 ): string {
   const effectiveStyle: VectorFinderStyle =
-    style === 'match_finder' ? finderStyle : (style as VectorFinderStyle);
+    style === "match_finder" ? finderStyle : (style as VectorFinderStyle);
 
   const outerSize = 5 * moduleSize;
   const middleSize = 3 * moduleSize;
@@ -30,7 +30,7 @@ export function generateAlignmentSvg(
     middleSize,
     effectiveStyle,
     moduleSize,
-    fillColor
+    fillColor,
   );
 
   paths += generateStyledCenterShapeSvg(
@@ -39,7 +39,7 @@ export function generateAlignmentSvg(
     innerSize,
     moduleSize,
     effectiveStyle,
-    fillColor
+    fillColor,
   );
 
   return paths;

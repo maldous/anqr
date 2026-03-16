@@ -1,5 +1,5 @@
-import { HIRAGANA_START } from './hiragana-start';
-import { HIRAGANA_END } from './hiragana-end';
+import { HIRAGANA_START } from "./hiragana-start";
+import { HIRAGANA_END } from "./hiragana-end";
 
 /**
  * Hiragana to Shift-JIS mapping

@@ -1,6 +1,6 @@
-import { getScaledPreservationBlendTarget } from './get-scaled-preservation-blend-target';
-import { sampleScaledModuleOverlayColor } from './sample-scaled-module-overlay-color';
-import type { BlendPreservationCtx, PatternBoostCtx, PixelColor } from '../scaled-render-types';
+import { getScaledPreservationBlendTarget } from "./get-scaled-preservation-blend-target";
+import { sampleScaledModuleOverlayColor } from "./sample-scaled-module-overlay-color";
+import type { BlendPreservationCtx, PatternBoostCtx, PixelColor } from "../scaled-render-types";
 
 export function createBlendPreservationContext(bctx: PatternBoostCtx): BlendPreservationCtx {
   const blendChannelToward = (src: number, target: number, t: number): number =>
@@ -38,7 +38,7 @@ export function createBlendPreservationContext(bctx: PatternBoostCtx): BlendPres
         mRow,
         mCol,
         sRow,
-        sCol
+        sCol,
       ),
     sampleModuleColor: (row, col) =>
       sampleScaledModuleOverlayColor(bctx.colors, bctx.scaledSize, bctx.scale, row, col),

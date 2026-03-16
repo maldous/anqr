@@ -2,7 +2,7 @@ export function flipComponentCells(
   grid: boolean[][],
   moduleCount: number,
   cells: number[],
-  targetValue: boolean
+  targetValue: boolean,
 ): void {
   for (const idx of cells) {
     const r = Math.floor(idx / moduleCount);

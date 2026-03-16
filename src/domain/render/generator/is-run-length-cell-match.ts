@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from '../../../modules/qr-generator/types';
+import type { QRCodeInstance } from "../../../modules/qr-generator/types";
 
 export function isRunLengthCellMatch(
   qr: QRCodeInstance,
@@ -8,7 +8,7 @@ export function isRunLengthCellMatch(
   row: number,
   col: number,
   moduleCount: number,
-  isDarkPass: boolean
+  isDarkPass: boolean,
 ): boolean {
   if (col >= moduleCount || skipMask[rowBase + col]) return false;
   const cellIsDark = ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col);

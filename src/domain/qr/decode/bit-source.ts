@@ -1,4 +1,4 @@
-import { FormatException } from './exceptions';
+import { FormatException } from "./exceptions";
 
 /**
  * Bit source for reading bits from byte array
@@ -48,16 +48,16 @@ export class BitSource {
         totalBytes: this.bytes.length,
         // Show remaining bytes as hex for debugging
         remainingBytesHex: Array.from(
-          this.bytes.slice(pos.byteOffset, Math.min(pos.byteOffset + 8, this.bytes.length))
+          this.bytes.slice(pos.byteOffset, Math.min(pos.byteOffset + 8, this.bytes.length)),
         )
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join(' '),
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join(" "),
       };
       throw new FormatException(
         `BitSource overrun: requested ${numBits} bits but only ${pos.available} available. ` +
           `Position: byte ${pos.byteOffset}, bit ${pos.bitOffset}. ` +
           `This often indicates corrupted terminator/padding in QR-Art. ` +
-          `Context: ${JSON.stringify(context)}`
+          `Context: ${JSON.stringify(context)}`,
       );
     }
 

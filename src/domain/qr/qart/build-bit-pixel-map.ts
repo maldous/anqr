@@ -1,14 +1,14 @@
-import { getMaskFunction } from '../spec/masks';
-import type { ECCLevel, BitPixelMapping } from './bit-mapping.types';
-import { bitPixelMapCache } from './bit-pixel-map-cache';
-import { BIT_PIXEL_MAP_CACHE_LIMIT } from './bit-pixel-map-cache-limit';
-import { buildInterleavingMap } from './build-interleaving-map';
-import { log } from './log';
-import { recordDataBitMapping } from './record-data-bit-mapping';
-import { updateLruCache } from './update-lru-cache';
-import { getModuleCount } from './get-module-count';
-import { getRSBlockInfo } from './get-rs-block-info';
-import { getTotalCodewords } from './get-total-codewords';
+import { getMaskFunction } from "../spec/masks";
+import type { ECCLevel, BitPixelMapping } from "./bit-mapping.types";
+import { bitPixelMapCache } from "./bit-pixel-map-cache";
+import { BIT_PIXEL_MAP_CACHE_LIMIT } from "./bit-pixel-map-cache-limit";
+import { buildInterleavingMap } from "./build-interleaving-map";
+import { log } from "./log";
+import { recordDataBitMapping } from "./record-data-bit-mapping";
+import { updateLruCache } from "./update-lru-cache";
+import { getModuleCount } from "./get-module-count";
+import { getRSBlockInfo } from "./get-rs-block-info";
+import { getTotalCodewords } from "./get-total-codewords";
 
 /**
  * Build the complete bit-to-pixel mapping by simulating the zigzag traversal
@@ -27,7 +27,7 @@ import { getTotalCodewords } from './get-total-codewords';
 export function buildBitPixelMap(
   version: number,
   ecc: ECCLevel,
-  maskPattern: number
+  maskPattern: number,
 ): BitPixelMapping[] {
   const cacheKey = `${version}:${ecc}:${maskPattern}`;
   const cached = bitPixelMapCache.get(cacheKey);
@@ -65,7 +65,7 @@ export function buildBitPixelMap(
           totalCodewords,
           interleavingMap,
           bitState,
-          mappings
+          mappings,
         );
       }
 
@@ -80,7 +80,7 @@ export function buildBitPixelMap(
     col -= 2;
   }
 
-  log.debug('Built bit-pixel map', {
+  log.debug("Built bit-pixel map", {
     version,
     ecc,
     maskPattern,

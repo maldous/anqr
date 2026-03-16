@@ -1,13 +1,13 @@
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { Label } from '@/ui/primitives/label';
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { Label } from "@/ui/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/primitives/select';
+} from "@/ui/primitives/select";
 
 export function PlatformSelectField({
   label,

@@ -1,8 +1,8 @@
-import type { ECCLevel } from '../qr-encoder';
-import type { RSBasisBlock } from './types';
-import { qartLog } from './qart-log';
+import type { ECCLevel } from "../qr-encoder";
+import type { RSBasisBlock } from "./types";
+import { qartLog } from "./qart-log";
 
 export function buildRSBasis(_version: number, _ecc: ECCLevel): RSBasisBlock[] {
-  qartLog.warn('buildRSBasis not yet implemented');
+  qartLog.warn("buildRSBasis not yet implemented");
   return [];
 }

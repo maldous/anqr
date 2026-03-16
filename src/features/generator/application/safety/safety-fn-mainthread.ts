@@ -7,8 +7,8 @@
 import type {
   FullQArtPipelineResult,
   QArtModule,
-} from '@/features/generator/application/qart/qart-shared-types';
-import { toFullQArtPipelineResult } from './to-full-qart-pipeline-result';
+} from "@/features/generator/application/qart/qart-shared-types";
+import { toFullQArtPipelineResult } from "./to-full-qart-pipeline-result";
 
 export async function runArtworkMainThreadFallback(params: {
   qartModule: QArtModule;
@@ -23,7 +23,7 @@ export async function runArtworkMainThreadFallback(params: {
         await params.qartModule.generateFullQArtOptimal({
           ...params.qartConfig,
           targetImage: params.frameOverlayCanvas,
-        } as Parameters<QArtModule['generateFullQArtOptimal']>[0])
+        } as Parameters<QArtModule["generateFullQArtOptimal"]>[0]),
       )
     : toFullQArtPipelineResult(
         await params.qartModule.generateFullQArt({
@@ -31,6 +31,6 @@ export async function runArtworkMainThreadFallback(params: {
           targetImage: params.frameOverlayCanvas,
           maskPattern:
             params.artworkLockedMask >= 0 ? params.artworkLockedMask : params.configMaskPattern,
-        } as Parameters<QArtModule['generateFullQArt']>[0])
+        } as Parameters<QArtModule["generateFullQArt"]>[0]),
       );
 }

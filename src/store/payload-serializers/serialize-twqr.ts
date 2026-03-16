@@ -1,9 +1,9 @@
-import { generateTWQR } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateTWQR } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeTWQR(payload: PayloadData): string {
   const t = payload.twqr;
-  if (!t.merchantName) return '';
+  if (!t.merchantName) return "";
   return generateTWQR({
     merchantId: t.merchantId,
     merchantName: t.merchantName,

@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType } from "react";
 
 export function HeaderMobileNavLinkBody({
   compact = false,
@@ -12,7 +12,7 @@ export function HeaderMobileNavLinkBody({
   return (
     <>
       <IconComponent className="w-5 h-5" aria-hidden="true" />
-      <span className={compact ? 'text-[11px] leading-tight text-center' : 'text-sm'}>{label}</span>
+      <span className={compact ? "text-[11px] leading-tight text-center" : "text-sm"}>{label}</span>
     </>
   );
 }

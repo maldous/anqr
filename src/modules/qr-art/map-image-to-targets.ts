@@ -1,7 +1,7 @@
 export function mapImageToTargets(
   image: ImageData,
   moduleCount: number,
-  threshold: number = 128
+  threshold: number = 128,
 ): { targets: boolean[][]; importance: number[][] } {
   const targets: boolean[][] = [];
   const importance: number[][] = [];

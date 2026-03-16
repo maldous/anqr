@@ -4,15 +4,15 @@
  * @deprecated Use calculateTemporalOffset and applyTemporalNoiseToCanvas directly from dither-algorithms
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('ANIMATION');
+const _log = createLogger("ANIMATION");
 
 import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
   type TemporalDitherMode,
-} from '../../../modules/dither-algorithms';
+} from "../../../modules/dither-algorithms";
 
 /**
  * Apply temporal dithering for animation frames
@@ -21,10 +21,10 @@ import {
 export function applyTemporalDither(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   frameIndex: number,
-  mode: 'off' | 'blue_noise' | 'flicker_safe',
-  seed: number = 0
+  mode: "off" | "blue_noise" | "flicker_safe",
+  seed: number = 0,
 ): HTMLCanvasElement {
-  if (mode === 'off') return canvas as HTMLCanvasElement;
+  if (mode === "off") return canvas as HTMLCanvasElement;
 
   const offset = calculateTemporalOffset(frameIndex, mode as TemporalDitherMode, seed);
   return applyTemporalNoiseToCanvas(canvas, offset, 0.02) as HTMLCanvasElement;

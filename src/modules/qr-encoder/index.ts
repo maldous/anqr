@@ -3,11 +3,11 @@
  * Our own QR code generator - zero external dependencies
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('ENCODER');
+const _log = createLogger("ENCODER");
 
-export { qrcode } from '../../domain/qr/encode/encoder';
+export { qrcode } from "../../domain/qr/encode/encoder";
 
 // Pattern functions - re-exported from qr-spec (canonical source)
 export {
@@ -21,10 +21,10 @@ export {
   isLocked,
   isStructuralModule,
   isTimingPattern,
-} from '../qr-spec';
+} from "../qr-spec";
 // Low-level APIs (for advanced use)
-export { qrBitBuffer } from '../../domain/qr/encode/bit-buffer';
-export { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from '../../domain/qr/encode/data-modes';
+export { qrBitBuffer } from "../../domain/qr/encode/bit-buffer";
+export { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from "../../domain/qr/encode/data-modes";
 // QR encoder functions
 export {
   calculateOptimalVersion,
@@ -41,17 +41,17 @@ export {
   type QRInstance,
   type QRMatrix,
   type QROptions,
-} from './encoder-api';
-export { gexp, glog, QRMath, qrPolynomial } from '../../domain/qr/encode/math';
+} from "./encoder-api";
+export { gexp, glog, QRMath, qrPolynomial } from "../../domain/qr/encode/math";
 export {
   base64EncodeOutputStream,
   byteArrayOutputStream,
   createDataURL,
   gifImage,
-} from '../../domain/qr/encode/output';
-export { getRSBlocks, QRRSBlock } from '../../domain/qr/encode/rs-blocks';
+} from "../../domain/qr/encode/output";
+export { getRSBlocks, QRRSBlock } from "../../domain/qr/encode/rs-blocks";
 // Shift-JIS encoding
-export { canEncodeAsShiftJIS, createShiftJISEncoder } from '../../domain/qr/encode/shift-jis';
+export { canEncodeAsShiftJIS, createShiftJISEncoder } from "../../domain/qr/encode/shift-jis";
 // String encoding
 export {
   createStringToBytes,
@@ -60,7 +60,7 @@ export {
   setStringToBytes,
   stringToBytes,
   stringToBytesFn,
-} from '../../domain/qr/encode/string-bytes';
+} from "../../domain/qr/encode/string-bytes";
 export type {
   QRBitBuffer,
   QRCodeInstance,
@@ -71,9 +71,9 @@ export type {
   QRModeType,
   QRPolynomial,
   RSBlock,
-} from './types';
+} from "./types";
 // Types
-export { QRErrorCorrectionLevel, QRMaskPattern, QRMode } from './types';
+export { QRErrorCorrectionLevel, QRMaskPattern, QRMode } from "./types";
 export {
   getBCHTypeInfo,
   getBCHTypeNumber,
@@ -83,4 +83,4 @@ export {
   getMaskFunction,
   getPatternPosition,
   QRUtil,
-} from '../../domain/qr/encode/utils';
+} from "../../domain/qr/encode/utils";

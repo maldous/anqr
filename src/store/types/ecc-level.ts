@@ -1,1 +1,1 @@
-export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
+export type ECCLevel = "L" | "M" | "Q" | "H";

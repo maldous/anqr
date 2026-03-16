@@ -1,5 +1,5 @@
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export async function renderGeneratedFrame(
   params: Readonly<{
@@ -7,13 +7,13 @@ export async function renderGeneratedFrame(
     frameIdx: number;
     generateArtworkFrame: (
       c: HTMLCanvasElement | OffscreenCanvas,
-      fi: number
+      fi: number,
     ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
     isArtworkMode: boolean;
     moduleJitterPx?: number;
     previewScanConfigBase: QRGeneratorConfig;
     temporalOffset: number;
-  }>
+  }>,
 ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
   const frameConfig = {
     ...params.previewScanConfigBase,

@@ -1,4 +1,4 @@
-import type { ColorMode, DiffusionKernel } from '../../../modules/dither-algorithms/types';
+import type { ColorMode, DiffusionKernel } from "../../../modules/dither-algorithms/types";
 
 /** Options for edge-aware dithering */
 export interface EdgeAwareDitherOptions {

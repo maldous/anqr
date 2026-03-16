@@ -1,11 +1,11 @@
-import type { ECCLevel } from './bit-mapping';
-import { drawFinderPattern } from './draw-finder-pattern';
-import { drawAlignmentPatterns } from './draw-alignment-patterns';
-import { drawTimingPatterns } from './draw-timing-patterns';
-import { writeFormatInfo } from './write-format-info';
-import { writeVersionInfo } from './write-version-info';
-import { interleaveBlockCodewords } from './interleave-block-codewords';
-import { placeDataWithZigzag } from './place-data-with-zigzag';
+import type { ECCLevel } from "./bit-mapping";
+import { drawFinderPattern } from "./draw-finder-pattern";
+import { drawAlignmentPatterns } from "./draw-alignment-patterns";
+import { drawTimingPatterns } from "./draw-timing-patterns";
+import { writeFormatInfo } from "./write-format-info";
+import { writeVersionInfo } from "./write-version-info";
+import { interleaveBlockCodewords } from "./interleave-block-codewords";
+import { placeDataWithZigzag } from "./place-data-with-zigzag";
 
 /**
  * Regenerate a QR code from modified per-block data and ECC.
@@ -19,7 +19,7 @@ export function regenerateQRFromModifiedData(
   blockEccCounts: number[],
   version: number,
   ecc: ECCLevel,
-  maskPattern: number
+  maskPattern: number,
 ): boolean[][] {
   const moduleCount = version * 4 + 17;
 

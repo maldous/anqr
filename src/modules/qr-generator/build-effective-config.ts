@@ -1,14 +1,14 @@
-import type { QRGeneratorConfig } from './types';
+import type { QRGeneratorConfig } from "./types";
 
 export function buildEffectiveConfig(
   config: QRGeneratorConfig,
   typeNumber: number,
-  processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null
+  processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
 ): QRGeneratorConfig {
   const overlayModeWithDefault =
-    processedOverlayCanvas && !config.overlayMode ? 'dithered' : config.overlayMode;
-  const blendPreservationMode: 'overlay' | 'dither' =
-    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
+    processedOverlayCanvas && !config.overlayMode ? "dithered" : config.overlayMode;
+  const blendPreservationMode: "overlay" | "dither" =
+    config.blendPreservationMode === "dither" ? "dither" : "overlay";
 
   return {
     ...config,

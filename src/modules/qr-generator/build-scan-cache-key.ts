@@ -1,11 +1,11 @@
-import type { QRGeneratorConfig } from './types';
+import type { QRGeneratorConfig } from "./types";
 
 export function buildScanCacheKey(
   config: QRGeneratorConfig,
   moduleCount: number,
   scanGateProfile: string,
   preserveFindersValue: boolean,
-  overlayToken: string
+  overlayToken: string,
 ): string {
   return [
     config.content,
@@ -18,16 +18,16 @@ export function buildScanCacheKey(
     Math.round(config.ditherStrength ?? 50),
     Math.round(config.finderDitherStrength ?? 65),
     config.blendPreservations === true ? 1 : 0,
-    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
-    config.ditherKind ?? 'none',
-    config.ditherMode ?? 'none',
+    config.blendPreservationMode === "dither" ? "dither" : "overlay",
+    config.ditherKind ?? "none",
+    config.ditherMode ?? "none",
     Math.round(config.ditherScale ?? 1),
     config.ditherSerpentine === false ? 0 : 1,
-    config.diffusionKernel ?? 'floyd_steinberg',
-    config.orderedMatrix ?? 'bayer4',
+    config.diffusionKernel ?? "floyd_steinberg",
+    config.orderedMatrix ?? "bayer4",
     Math.round(config.blueNoiseTileSize ?? 64),
-    config.blueNoiseSeed ?? 'noise-seed:auto',
-    config.colorDither ?? 'none',
+    config.blueNoiseSeed ?? "noise-seed:auto",
+    config.colorDither ?? "none",
     Math.round(config.renderScalePerModule ?? 18),
     preserveFindersValue ? 1 : 0,
     overlayToken,
@@ -36,6 +36,6 @@ export function buildScanCacheKey(
     config.protectFormatInfo === true ? 1 : 0,
     config.protectVersionInfo === true ? 1 : 0,
     config.qrFirstMode === true ? 1 : 0,
-    config.seed ?? 'seed:auto',
-  ].join('|');
+    config.seed ?? "seed:auto",
+  ].join("|");
 }

@@ -4,7 +4,7 @@ import {
   isFormatInfo as isFormatInfoSpec,
   isTimingPattern as isTimingPatternSpec,
   isVersionInfo as isVersionInfoSpec,
-} from '../../../../modules/qr-spec';
+} from "../../../../modules/qr-spec";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FIXED_DARK,
@@ -13,15 +13,15 @@ import {
   PATTERN_FORMAT,
   PATTERN_TIMING,
   PATTERN_VERSION,
-} from './pattern-flag-constants';
-import { isDarkModule } from './is-dark-module';
-import { isFinderSeparator } from './is-finder-separator';
+} from "./pattern-flag-constants";
+import { isDarkModule } from "./is-dark-module";
+import { isFinderSeparator } from "./is-finder-separator";
 
 export function classifyScaledModule(
   row: number,
   col: number,
   moduleCount: number,
-  version: number
+  version: number,
 ): number {
   let flags = 0;
   if (isFinderPatternSpec(row, col, moduleCount)) flags |= PATTERN_FINDER;

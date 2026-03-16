@@ -1,2 +1,2 @@
-export { QRGeneratorProvider } from './qr-generator-provider';
-export { useQRGeneratorContext } from './use-qr-generator-context';
+export { QRGeneratorProvider } from "./qr-generator-provider";
+export { useQRGeneratorContext } from "./use-qr-generator-context";

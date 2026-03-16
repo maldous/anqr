@@ -1,4 +1,4 @@
-import type { RuntimeLogLevel } from './logger-types';
+import type { RuntimeLogLevel } from "./logger-types";
 
 export const LOG_LEVEL_INDEX: Record<RuntimeLogLevel, number> = {
   trace: 0,

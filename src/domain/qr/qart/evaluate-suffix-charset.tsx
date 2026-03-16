@@ -1,11 +1,11 @@
-import { validateSuffixCharset } from './validation';
-import { countInvalidSuffixChars } from './count-invalid-suffix-chars';
-import type { BinarySearchValidationResult } from './binary-search-validation-result';
+import { validateSuffixCharset } from "./validation";
+import { countInvalidSuffixChars } from "./count-invalid-suffix-chars";
+import type { BinarySearchValidationResult } from "./binary-search-validation-result";
 
 export function evaluateSuffixCharset(
   decoded: string,
   originalData: string,
-  strictSuffix: boolean
+  strictSuffix: boolean,
 ): BinarySearchValidationResult {
   let suffixCharsetPenalty = 0;
   if (decoded.length > originalData.length) {
@@ -18,7 +18,7 @@ export function evaluateSuffixCharset(
       if (strictSuffix) {
         return {
           valid: false,
-          reason: 'SUFFIX_CHARSET_INVALID',
+          reason: "SUFFIX_CHARSET_INVALID",
           description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
           mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
           actualByte: charsetValidation.invalidCharCode,

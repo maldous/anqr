@@ -3,9 +3,9 @@ import {
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
-} from '../../../modules/qr-spec';
-import type { VectorModuleStyle } from '../../../modules/exporter/types';
-import { generateModulePath } from './generate-module-path';
+} from "../../../modules/qr-spec";
+import type { VectorModuleStyle } from "../../../modules/exporter/types";
+import { generateModulePath } from "./generate-module-path";
 
 export function buildSvgDataPaths(
   matrix: boolean[][],
@@ -13,9 +13,9 @@ export function buildSvgDataPaths(
   marginPx: number,
   moduleSize: number,
   moduleStyle: VectorModuleStyle,
-  cornerRadius: number
+  cornerRadius: number,
 ): string {
-  let pathData = '';
+  let pathData = "";
   const version = getVersionFromModuleCount(moduleCount);
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {

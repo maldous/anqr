@@ -1,4 +1,4 @@
-import { getHeaderBitCount } from './get-header-bit-count';
+import { getHeaderBitCount } from "./get-header-bit-count";
 
 /**
  * Calculate the number of CONTENT bits (header + data + terminator) for a given version and data length.

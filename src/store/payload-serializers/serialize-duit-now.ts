@@ -1,9 +1,9 @@
-import { generateDuitNow } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateDuitNow } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeDuitNow(payload: PayloadData): string {
   const d = payload.duitnow;
-  if (!(d.proxyValue && d.merchantName)) return '';
+  if (!(d.proxyValue && d.merchantName)) return "";
   return generateDuitNow({
     proxyType: d.proxyType,
     proxyValue: d.proxyValue,

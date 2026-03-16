@@ -1,12 +1,12 @@
-import type { ContrastBoostFlags } from '../scaled-render-types';
+import type { ContrastBoostFlags } from "../scaled-render-types";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FIXED_DARK,
   PATTERN_FORMAT,
   PATTERN_TIMING,
   PATTERN_VERSION,
-} from './pattern-flag-constants';
-import { isFinderRegionFlag } from './is-finder-region-flag';
+} from "./pattern-flag-constants";
+import { isFinderRegionFlag } from "./is-finder-region-flag";
 
 export function isScaledPatternBoostModule(flags: number, boostFlags: ContrastBoostFlags): boolean {
   return (

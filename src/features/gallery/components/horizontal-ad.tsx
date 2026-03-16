@@ -1,4 +1,4 @@
-import { AdUnit } from '@/platform/ads/components/AdUnit';
+import { AdUnit } from "@/platform/ads/components/AdUnit";
 
 export function HorizontalAd({ slot }: Readonly<{ slot: string }>) {
   return (

@@ -1,4 +1,4 @@
-import type { DiffusionKernel, OrderedMatrix } from '../dither/types';
+import type { DiffusionKernel, OrderedMatrix } from "../dither/types";
 
 export function buildDitherStaticStateKey(args: {
   ditherKind: string;
@@ -17,5 +17,5 @@ export function buildDitherStaticStateKey(args: {
     args.kernelName,
     args.colorDitherMode,
     args.scaledSize,
-  ].join('|');
+  ].join("|");
 }

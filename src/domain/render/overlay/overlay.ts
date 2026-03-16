@@ -3,15 +3,15 @@
  * Re-exports from split module files
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
-export { getOverlayData, loadImageDataRGB } from './overlay-data';
-export { generateSubpixelMatrix, getSubpixelOverlayData } from './overlay-subpixel';
+export { getOverlayData, loadImageDataRGB } from "./overlay-data";
+export { generateSubpixelMatrix, getSubpixelOverlayData } from "./overlay-subpixel";
 export {
   applyGeometricTransforms,
   hasGeometricTransforms,
   hasPreprocessingOptions,
   preprocessOverlay,
-} from './overlay-transforms';
+} from "./overlay-transforms";

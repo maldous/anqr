@@ -4,9 +4,9 @@
  * Notes: Apply pattern effect stack to canvas.
  */
 
-import { applyAnimationPattern } from '@/domain/render/animation/apply-animation-pattern';
-import { cloneCanvasSimple } from '@/features/generator/application/frames/frames-fn-clonesimple';
-import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import { applyAnimationPattern } from "@/domain/render/animation/apply-animation-pattern";
+import { cloneCanvasSimple } from "@/features/generator/application/frames/frames-fn-clonesimple";
+import type { PatternEffect } from "@/features/generator/application/frames/frames-type-patterneffect";
 
 export function applyPatternStackToCanvas(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
@@ -14,7 +14,7 @@ export function applyPatternStackToCanvas(
   frameIndex: number,
   totalFrames: number,
   persistentOutput: boolean,
-  getPatternScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement
+  getPatternScratch: (slot: 0 | 1, width: number, height: number) => HTMLCanvasElement,
 ): HTMLCanvasElement | OffscreenCanvas {
   if (effects.length === 0) return sourceCanvas;
   let out = sourceCanvas;
@@ -30,7 +30,7 @@ export function applyPatternStackToCanvas(
         seed: effect.seed,
         waveAxis: effect.waveAxis,
       },
-      targetCanvas
+      targetCanvas,
     );
   }
   return persistentOutput ? cloneCanvasSimple(out) : out;

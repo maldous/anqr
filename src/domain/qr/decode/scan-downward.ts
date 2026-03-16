@@ -1,5 +1,5 @@
-import { grayAt } from './gray-at';
-import { advanceVerticalScanState } from './advance-vertical-scan-state';
+import { grayAt } from "./gray-at";
+import { advanceVerticalScanState } from "./advance-vertical-scan-state";
 
 /**
  * Scan downward from startY, populating counts[2], counts[3], counts[4].
@@ -12,7 +12,7 @@ export function scanDownward(
   x: number,
   startY: number,
   threshold: number,
-  counts: number[]
+  counts: number[],
 ): void {
   let state = 2;
 

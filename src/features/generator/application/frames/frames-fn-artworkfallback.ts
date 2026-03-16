@@ -4,17 +4,17 @@
  * Notes: Handle main thread fallback for artwork frame.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
+import { createLogger } from "@/infra/logging/logger";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
 import type {
   FullQArtPipelineResult,
   QArtModule,
-} from '@/features/generator/application/qart/qart-shared-types';
-import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
-import { runArtworkMainThreadFallback } from '@/features/generator/application/safety/safety-fn-mainthread';
+} from "@/features/generator/application/qart/qart-shared-types";
+import type { ArtworkFrameState } from "@/features/generator/application/frames/frames-interface-artworkstate";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
+import { runArtworkMainThreadFallback } from "@/features/generator/application/safety/safety-fn-mainthread";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function handleArtworkMainThreadFallbackForFrame(params: {
   qartModule: QArtModule;
@@ -39,7 +39,7 @@ export async function handleArtworkMainThreadFallbackForFrame(params: {
   });
 
   if (!qartResult.success || !qartResult.matrix) {
-    log.warn('QR-Art failed for animation frame', { frameIdx: params.frameIdx });
+    log.warn("QR-Art failed for animation frame", { frameIdx: params.frameIdx });
     return params.reuseLastSuccessfulFrame() ?? (await params.fallbackGenerate());
   }
 

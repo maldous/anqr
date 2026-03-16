@@ -1,6 +1,6 @@
 export function buildCandidateFrameIndices(
   cachedFramesLength: number,
-  currentIdx: number
+  currentIdx: number,
 ): number[] {
   const candidateIndices: number[] = [];
 

@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/gif-compositor';
+export * from "../../domain/render/animation/gif-compositor";

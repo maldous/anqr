@@ -1,4 +1,4 @@
-import type { VCardVersion } from './vcard-version';
+import type { VCardVersion } from "./vcard-version";
 
 export interface VCardHelper {
   version: VCardVersion;

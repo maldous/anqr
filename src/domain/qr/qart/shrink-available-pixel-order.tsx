@@ -2,7 +2,7 @@ export function shrinkAvailablePixelOrder(
   availablePixelOrder: number[],
   controlledPixels: number[],
   assignedPixelMask: Uint8Array,
-  totalPixels: number
+  totalPixels: number,
 ): number[] {
   for (const pixel of controlledPixels) {
     if (pixel >= 0 && pixel < totalPixels) {

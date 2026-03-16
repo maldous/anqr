@@ -1,6 +1,6 @@
-import type { ScanResult } from './scanner.types';
-import { loadFileImageCanvas } from './load-file-image-canvas';
-import { scanCanvas } from './scan-canvas';
+import type { ScanResult } from "./scanner.types";
+import { loadFileImageCanvas } from "./load-file-image-canvas";
+import { scanCanvas } from "./scan-canvas";
 
 /**
  * Scan a file for QR code

@@ -1,5 +1,5 @@
-import { DEVICE_RENDER_SCALE_CAP } from './device-render-scale-cap.const';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { DEVICE_RENDER_SCALE_CAP } from "./device-render-scale-cap.const";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 export function getScaleFactor(overlayMode: string | undefined, config: QRGeneratorConfig): number {
   const isFastPreview = config.fastPreview === true;
@@ -18,12 +18,12 @@ export function getScaleFactor(overlayMode: string | undefined, config: QRGenera
   const renderScale = Math.max(minScale, Math.min(maxScale, targetScale));
 
   switch (overlayMode) {
-    case 'dithered':
-    case 'blue-noise':
-    case 'blue_noise':
+    case "dithered":
+    case "blue-noise":
+    case "blue_noise":
       return renderScale;
-    case 'subpixel':
-    case 'subpixel-size':
+    case "subpixel":
+    case "subpixel-size":
       return config.subpixelGrid ?? 3;
     default:
       return config.forceScaledOverlay ? renderScale : 1;

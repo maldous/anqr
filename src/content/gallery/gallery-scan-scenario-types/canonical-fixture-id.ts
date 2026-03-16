@@ -1,1 +1,1 @@
-export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test' | 'santa' | 'dance';
+export type CanonicalFixtureId = "tsunami" | "king" | "logo" | "test" | "santa" | "dance";

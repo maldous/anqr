@@ -1,4 +1,4 @@
-import { scoreFinderCenter } from './score-finder-center';
+import { scoreFinderCenter } from "./score-finder-center";
 
 /**
  * Search a grid of candidate positions around a center point, scoring each one.
@@ -13,7 +13,7 @@ export function searchGrid(
   moduleSize: number,
   threshold: number,
   radius: number,
-  step: number
+  step: number,
 ): { bestX: number; bestY: number; bestScore: number } {
   let bestX = centerX;
   let bestY = centerY;

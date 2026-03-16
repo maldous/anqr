@@ -1,5 +1,5 @@
-import type { BlendPreservationCtx } from '../scaled-render-types';
-import { computeInkCoverage } from './compute-ink-coverage';
+import type { BlendPreservationCtx } from "../scaled-render-types";
+import { computeInkCoverage } from "./compute-ink-coverage";
 
 export function blendModulePixels(
   bctx: BlendPreservationCtx,
@@ -9,7 +9,7 @@ export function blendModulePixels(
   x0: number,
   y0: number,
   x1: number,
-  y1: number
+  y1: number,
 ): void {
   const moduleDark = bctx.qr.isDark(row, col);
 
@@ -19,8 +19,8 @@ export function blendModulePixels(
       0,
       Math.min(
         bctx.scaledSize - 1,
-        Math.floor((py - bctx.marginPx) / Math.max(1e-6, bctx.subPixelSize))
-      )
+        Math.floor((py - bctx.marginPx) / Math.max(1e-6, bctx.subPixelSize)),
+      ),
     );
 
     for (let px = x0; px < x1; px++) {
@@ -28,8 +28,8 @@ export function blendModulePixels(
         0,
         Math.min(
           bctx.scaledSize - 1,
-          Math.floor((px - bctx.marginPx) / Math.max(1e-6, bctx.subPixelSize))
-        )
+          Math.floor((px - bctx.marginPx) / Math.max(1e-6, bctx.subPixelSize)),
+        ),
       );
       const sampled = bctx.colors[scaledRow]?.[scaledCol] ?? bctx.sampleModuleColor(row, col);
       const paperLuma = bctx.estimatePaperLuma(sampled ?? null);

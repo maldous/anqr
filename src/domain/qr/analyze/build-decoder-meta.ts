@@ -1,4 +1,4 @@
-import type { DecoderMetadata, ECCLevel } from '../../../modules/qr-analyzer/types';
+import type { DecoderMetadata, ECCLevel } from "../../../modules/qr-analyzer/types";
 
 export function buildDecoderMeta(code: {
   version?: number | null;

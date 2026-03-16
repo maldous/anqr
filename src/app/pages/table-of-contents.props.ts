@@ -1,4 +1,4 @@
-import type { TocGroup } from './static-page-types';
+import type { TocGroup } from "./static-page-types";
 
 export type TableOfContentsProps = Readonly<{
   groups: TocGroup[];

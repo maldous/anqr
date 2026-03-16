@@ -1,21 +1,21 @@
-import { MODE_TERMINATOR } from '../../../modules/qr-decoder/types';
-import type { DecodedDataResult } from './decode.types';
-import { BitStream } from './bit-stream';
-import type { DecodeLoopState } from './decode-loop-state';
-import { decodeSegmentData } from './decode-segment-data';
-import { getCharCountBits } from './get-char-count-bits';
-import { processDecodedSegment } from './process-decoded-segment';
-import { pushInvalidSegment } from './push-invalid-segment';
-import { qrDecoderLog } from './qr-decoder-log';
-import { resolveEncodingMode } from './resolve-encoding-mode';
+import { MODE_TERMINATOR } from "../../../modules/qr-decoder/types";
+import type { DecodedDataResult } from "./decode.types";
+import { BitStream } from "./bit-stream";
+import type { DecodeLoopState } from "./decode-loop-state";
+import { decodeSegmentData } from "./decode-segment-data";
+import { getCharCountBits } from "./get-char-count-bits";
+import { processDecodedSegment } from "./process-decoded-segment";
+import { pushInvalidSegment } from "./push-invalid-segment";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { resolveEncodingMode } from "./resolve-encoding-mode";
 
 export function decodeDataCodewordsDetailed(
   dataCodewords: number[],
-  version: number
+  version: number,
 ): DecodedDataResult {
   const bits = new BitStream(dataCodewords);
   const state: DecodeLoopState = {
-    text: '',
+    text: "",
     outBytes: [],
     modesSeen: new Set(),
     segments: [],
@@ -26,7 +26,7 @@ export function decodeDataCodewordsDetailed(
     hasExtraSegmentsAfterPrimary: false,
   };
 
-  qrDecoderLog.trace('decode: Starting data decode (detailed)', {
+  qrDecoderLog.trace("decode: Starting data decode (detailed)", {
     dataCodewords: dataCodewords.length,
     version,
   });
@@ -36,11 +36,11 @@ export function decodeDataCodewordsDetailed(
     const mode = bits.read(4);
 
     if (mode === MODE_TERMINATOR) {
-      qrDecoderLog.trace('decode: Found terminator', { segmentIndex: state.segmentIndex + 1 });
+      qrDecoderLog.trace("decode: Found terminator", { segmentIndex: state.segmentIndex + 1 });
       state.segments.push({
         index: state.segmentIndex,
         mode,
-        modeName: 'terminator',
+        modeName: "terminator",
         charCount: 0,
         decodedLength: 0,
         valid: true,
@@ -53,7 +53,7 @@ export function decodeDataCodewordsDetailed(
 
     const charCountBits = getCharCountBits(mode, version);
     if (bits.available() < charCountBits) {
-      qrDecoderLog.debug('decode: Not enough bits for char count - decode invalid', {
+      qrDecoderLog.debug("decode: Not enough bits for char count - decode invalid", {
         mode,
         charCountBits,
         available: bits.available(),
@@ -65,7 +65,7 @@ export function decodeDataCodewordsDetailed(
     const charCount = bits.read(charCountBits);
 
     if (charCount > 7000) {
-      qrDecoderLog.debug('decode: Unreasonable char count, aborting - decode invalid', {
+      qrDecoderLog.debug("decode: Unreasonable char count, aborting - decode invalid", {
         charCount,
         mode,
       });
@@ -82,7 +82,7 @@ export function decodeDataCodewordsDetailed(
   const encodingMode = resolveEncodingMode(state.modesSeen);
   const structurallyValid = state.valid && !state.hasExtraSegmentsAfterPrimary;
 
-  qrDecoderLog.trace('decode: Data decode complete', {
+  qrDecoderLog.trace("decode: Data decode complete", {
     valid: state.valid,
     structurallyValid,
     foundTerminator: state.foundTerminator,

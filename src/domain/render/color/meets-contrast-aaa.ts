@@ -1,4 +1,4 @@
-import { getContrastRatio, parseColor } from './color';
+import { getContrastRatio, parseColor } from "./color";
 
 /**
  * Check if foreground/background meet WCAG AAA contrast (7:1)

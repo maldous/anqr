@@ -1,4 +1,4 @@
-import { basisCache } from './basis-cache';
+import { basisCache } from "./basis-cache";
 
 /**
  * Clear the basis cache

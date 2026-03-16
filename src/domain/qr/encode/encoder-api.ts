@@ -2,4 +2,4 @@
 export {
   createQRInstanceWithSegments,
   type MaskPattern,
-} from '../../../modules/qr-encoder/encoder-api';
+} from "../../../modules/qr-encoder/encoder-api";

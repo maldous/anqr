@@ -1,1 +1,1 @@
-export * from '../../platform/browser/clipboard/copy-text';
+export * from "../../platform/browser/clipboard/copy-text";

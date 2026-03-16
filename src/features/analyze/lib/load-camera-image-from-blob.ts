@@ -3,7 +3,7 @@ export function loadCameraImageFromBlob(blob: Blob): Promise<{
   sourceWidth: number;
   sourceHeight: number;
 }> {
-  if (typeof createImageBitmap === 'function') {
+  if (typeof createImageBitmap === "function") {
     return createImageBitmap(blob).then((bitmap) => ({
       source: bitmap,
       sourceWidth: bitmap.width,
@@ -19,7 +19,7 @@ export function loadCameraImageFromBlob(blob: Blob): Promise<{
     };
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error('Failed to decode camera image'));
+      reject(new Error("Failed to decode camera image"));
     };
     img.src = objectUrl;
   });

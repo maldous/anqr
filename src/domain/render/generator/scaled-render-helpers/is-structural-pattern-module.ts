@@ -1,11 +1,11 @@
-import { isFinderRegionFlag } from './is-finder-region-flag';
+import { isFinderRegionFlag } from "./is-finder-region-flag";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FIXED_DARK,
   PATTERN_FORMAT,
   PATTERN_TIMING,
   PATTERN_VERSION,
-} from './pattern-flag-constants';
+} from "./pattern-flag-constants";
 
 export function isStructuralPatternModule(flags: number): boolean {
   return (

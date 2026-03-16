@@ -1,6 +1,6 @@
-import type { RSBlockInfo } from './bit-mapping';
-import type { RSBasisVector } from './rs-basis.types';
-import { computeECC } from './compute-ecc';
+import type { RSBlockInfo } from "./bit-mapping";
+import type { RSBasisVector } from "./rs-basis.types";
+import { computeECC } from "./compute-ecc";
 
 /**
  * Create a single RS basis vector for one data bit.
@@ -10,7 +10,7 @@ export function createSingleBitBasisVector(
   rsBlockIndex: number,
   globalBitOffset: number,
   byteIdx: number,
-  bitIdx: number
+  bitIdx: number,
 ): RSBasisVector {
   const { dataCount, eccCount, totalCount } = blockInfo;
   const dataBitIndex = globalBitOffset + byteIdx * 8 + (7 - bitIdx);

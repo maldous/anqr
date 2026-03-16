@@ -1,5 +1,5 @@
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 
 export function CityAmountFields({
   cityLabel,

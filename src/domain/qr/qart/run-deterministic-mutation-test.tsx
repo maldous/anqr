@@ -1,10 +1,10 @@
-import type { ECCLevel } from './bit-mapping';
-import { validateOriginalDataPreserved } from './validate-original-data-preserved';
-import { log } from './log';
-import { computeLinearBitPosition } from './compute-linear-bit-position';
-import { classifyIntervalStatus } from './classify-interval-status';
-import { applyTestVectorAndScan } from './apply-test-vector-and-scan';
-import type { EncoderDerivedLayout } from './generate.types';
+import type { ECCLevel } from "./bit-mapping";
+import { validateOriginalDataPreserved } from "./validate-original-data-preserved";
+import { log } from "./log";
+import { computeLinearBitPosition } from "./compute-linear-bit-position";
+import { classifyIntervalStatus } from "./classify-interval-status";
+import { applyTestVectorAndScan } from "./apply-test-vector-and-scan";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 export function runDeterministicMutationTest(
   testVector: {
@@ -24,18 +24,18 @@ export function runDeterministicMutationTest(
   actualMask: number,
   data: string,
   originalDataLength: number,
-  actualSuffix: string
+  actualSuffix: string,
 ): { passed: boolean; error?: string } {
   const testLocalBitIndex = testVector.posInBlock * 8 + (7 - testVector.bitInByte);
   const { linearByte, linearBit } = computeLinearBitPosition(
     testVector.rsBlockIndex,
     testVector.posInBlock,
     testVector.bitInByte,
-    blockDataCounts
+    blockDataCounts,
   );
   const interval = classifyIntervalStatus(linearBit, encoderLayout);
 
-  log.info('Test vector details (TWO-INTERVAL)', {
+  log.info("Test vector details (TWO-INTERVAL)", {
     vectorDataBitIndex: testVector.dataBitIndex,
     vectorBlockIndex: testVector.rsBlockIndex,
     vectorPosInBlock: testVector.posInBlock,
@@ -60,11 +60,11 @@ export function runDeterministicMutationTest(
     blockEccCounts,
     actualVersion,
     ecc,
-    actualMask
+    actualMask,
   );
 
   if (!testScan.success) {
-    log.warn('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
+    log.warn("HYBRID MUTATION TEST FAILED - single vector breaks scan!", {
       vectorDataBitIndex: testVector.dataBitIndex,
       vectorBlockIndex: testVector.rsBlockIndex,
       localBitIndex: testLocalBitIndex,
@@ -76,13 +76,13 @@ export function runDeterministicMutationTest(
     });
     return {
       passed: false,
-      error: 'HYBRID mutation test failed: single vector application broke QR scan',
+      error: "HYBRID mutation test failed: single vector application broke QR scan",
     };
   }
 
   const mutationValidation = validateOriginalDataPreserved(testScan.data, data);
   if (!mutationValidation.valid) {
-    log.warn('HYBRID MUTATION TEST FAILED - byte-exact validation failed!', {
+    log.warn("HYBRID MUTATION TEST FAILED - byte-exact validation failed!", {
       expectedOriginal: data,
       actualData: testScan.data,
       expectedLength: originalDataLength,
@@ -97,21 +97,21 @@ export function runDeterministicMutationTest(
     return { passed: false, error: `HYBRID mutation test failed: ${mutationValidation.reason}` };
   }
 
-  const decodedSuffix = testScan.data?.slice(originalDataLength) || '';
-  log.info('HYBRID MUTATION TEST PASSED (TWO-INTERVAL byte-exact)', {
+  const decodedSuffix = testScan.data?.slice(originalDataLength) || "";
+  log.info("HYBRID MUTATION TEST PASSED (TWO-INTERVAL byte-exact)", {
     vectorDataBitIndex: testVector.dataBitIndex,
     vectorBlockIndex: testVector.rsBlockIndex,
     localBitIndex: testLocalBitIndex,
     linearByte,
     linearBit,
     vectorInterval: interval.isInSuffixInterval
-      ? 'SUFFIX'
+      ? "SUFFIX"
       : interval.isInPaddingInterval
-        ? 'PADDING'
-        : 'UNKNOWN',
+        ? "PADDING"
+        : "UNKNOWN",
     gapProtected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
     originalDataPreserved: true,
-    validationMethod: 'BYTE_EXACT_PREFIX',
+    validationMethod: "BYTE_EXACT_PREFIX",
     suffixWasModified: decodedSuffix !== actualSuffix,
     matrixScansCorrectly: true,
   });

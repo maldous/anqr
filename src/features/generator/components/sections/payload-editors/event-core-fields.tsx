@@ -1,10 +1,10 @@
-import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { DateTimePicker } from '@/ui/primitives/date-time-picker';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
-import { Textarea } from '@/ui/primitives/textarea';
+import type { TFunction } from "i18next";
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { DateTimePicker } from "@/ui/primitives/date-time-picker";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
+import { Textarea } from "@/ui/primitives/textarea";
 
 export function EventCoreFields({
   summary,
@@ -49,7 +49,7 @@ export function EventCoreFields({
     <>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.summary')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.summary")}</HighlightedLabel>
         </Label>
         <Input
           value={summary}
@@ -60,7 +60,7 @@ export function EventCoreFields({
       </div>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.location')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.location")}</HighlightedLabel>
         </Label>
         <Input
           value={location}
@@ -71,12 +71,12 @@ export function EventCoreFields({
       </div>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.description')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.description")}</HighlightedLabel>
         </Label>
         <Textarea
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder={t('placeholders.eventDetails')}
+          placeholder={t("placeholders.eventDetails")}
           rows={2}
           data-testid={DynamicTestId.resolve(descriptionTestId, descriptionTestId)}
         />
@@ -84,23 +84,23 @@ export function EventCoreFields({
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-2">
           <Label>
-            <HighlightedLabel>{t('payload.start')}</HighlightedLabel>
+            <HighlightedLabel>{t("payload.start")}</HighlightedLabel>
           </Label>
           <DateTimePicker
             value={start}
             onChange={onStartChange}
-            placeholder={t('placeholders.selectDateTime', 'Select date & time')}
+            placeholder={t("placeholders.selectDateTime", "Select date & time")}
             data-testid={DynamicTestId.resolve(startTestId, startTestId)}
           />
         </div>
         <div className="space-y-2">
           <Label>
-            <HighlightedLabel>{t('payload.end')}</HighlightedLabel>
+            <HighlightedLabel>{t("payload.end")}</HighlightedLabel>
           </Label>
           <DateTimePicker
             value={end}
             onChange={onEndChange}
-            placeholder={t('placeholders.selectDateTime', 'Select date & time')}
+            placeholder={t("placeholders.selectDateTime", "Select date & time")}
             data-testid={DynamicTestId.resolve(endTestId, endTestId)}
           />
         </div>

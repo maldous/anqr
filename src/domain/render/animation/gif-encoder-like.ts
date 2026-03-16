@@ -3,7 +3,7 @@ export interface GifEncoderLike {
     index: Uint8Array,
     width: number,
     height: number,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ) => void;
   finish: () => void;
   bytesView: () => Uint8Array;

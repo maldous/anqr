@@ -3,6 +3,6 @@ export interface AdUnitProps {
   width?: number | string;
   height?: number;
   className?: string;
-  format?: 'horizontal' | 'vertical' | 'rectangle' | 'auto';
+  format?: "horizontal" | "vertical" | "rectangle" | "auto";
   responsive?: boolean;
 }

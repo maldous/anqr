@@ -1,12 +1,12 @@
-import { type BitPixelMapping } from './bit-mapping';
-import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
+import { type BitPixelMapping } from "./bit-mapping";
+import { acquireUint8Buffer, releaseUint8Buffer } from "./buffer-pool";
 import type {
   EliminationResult,
   BlockSelectionResult,
   BlockEliminationResult,
-} from './elimination.types';
-import { buildBlockBitToPixelTables } from './build-block-bit-to-pixel-tables';
-import { computeFlipParity } from './compute-flip-parity';
+} from "./elimination.types";
+import { buildBlockBitToPixelTables } from "./build-block-bit-to-pixel-tables";
+import { computeFlipParity } from "./compute-flip-parity";
 
 /**
  * Count how many pixels match the target after applying selected vectors
@@ -31,7 +31,7 @@ export function countMatchingPixels(
   targets: boolean[][],
   moduleCount: number,
   dataPixels: Set<number>,
-  mappings: BitPixelMapping[]
+  mappings: BitPixelMapping[],
 ): { matching: number; total: number } {
   const maxPixelCount = moduleCount * moduleCount;
   const blockBitToPixelTables = buildBlockBitToPixelTables(mappings);
@@ -56,7 +56,7 @@ export function countMatchingPixels(
       blockResultByIndex,
       blockBitToPixelTables,
       flipParity,
-      maxPixelCount
+      maxPixelCount,
     );
 
     let matching = 0;

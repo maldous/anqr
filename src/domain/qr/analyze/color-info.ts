@@ -1,4 +1,4 @@
-import type { DominantColor } from './dominant-color';
+import type { DominantColor } from "./dominant-color";
 
 export interface ColorInfo {
   dominantColors: DominantColor[];

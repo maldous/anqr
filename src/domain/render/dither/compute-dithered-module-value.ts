@@ -3,13 +3,13 @@ import {
   DARK_DESIRE_MIN,
   LIGHT_DESIRE_MAX,
   LIGHT_DESIRE_MIN,
-} from './dithering-constants';
+} from "./dithering-constants";
 
 export function computeDitheredModuleValue(
   qrIsDark: boolean,
   brightness: number,
   error: number,
-  mix: number
+  mix: number,
 ): { newValue: boolean; quantError: number } {
   const originalValue = qrIsDark ? 1 : 0;
   const overlayDark = 1 - brightness;

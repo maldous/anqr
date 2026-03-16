@@ -2,14 +2,14 @@
  * GIF Compositor - Optimal patch-only decode
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { getOrCreatePatchImageData } from './get-or-create-patch-image-data';
-import { getGifFrameStats } from './gif-frame-stats';
+import { createLogger } from "../../../infra/logging/logger";
+import { getOrCreatePatchImageData } from "./get-or-create-patch-image-data";
+import { getGifFrameStats } from "./gif-frame-stats";
 
-const log = createLogger('ANIMATION');
+const log = createLogger("ANIMATION");
 
-import { decodeGif } from './gif-codec';
-import type { GifCompositor } from '../../../modules/animation/types';
+import { decodeGif } from "./gif-codec";
+import type { GifCompositor } from "../../../modules/animation/types";
 
 /**
  * Create a GIF compositor from an ArrayBuffer.
@@ -21,10 +21,10 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const { uniqueDelays, uniqueDisposals, totalDurationMs } = getGifFrameStats(frames);
   const hasDeltaPatches = frames.some(
     (f) =>
-      f.dims.left !== 0 || f.dims.top !== 0 || f.dims.width !== width || f.dims.height !== height
+      f.dims.left !== 0 || f.dims.top !== 0 || f.dims.width !== width || f.dims.height !== height,
   );
 
-  log.debug('compositor: created', {
+  log.debug("compositor: created", {
     width,
     height,
     frameCount: frames.length,
@@ -34,24 +34,24 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     disposalPattern:
       uniqueDisposals.length <= 1
         ? `uniform(${uniqueDisposals[0] ?? 0})`
-        : `mixed(${uniqueDisposals.join(',')})`,
+        : `mixed(${uniqueDisposals.join(",")})`,
     hasDeltaPatches,
     totalDurationMs,
     avgFps:
       totalDurationMs > 0 ? Math.round((frames.length / totalDurationMs) * 1000 * 10) / 10 : 0,
   });
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const _ctx =
-    (canvas.getContext('2d', {
+    (canvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    canvas.getContext('2d');
+    canvas.getContext("2d");
   if (!_ctx) {
-    throw new Error('Failed to get 2D context for GIF compositor canvas');
+    throw new Error("Failed to get 2D context for GIF compositor canvas");
   }
   const ctx: CanvasRenderingContext2D = _ctx;
 
@@ -61,19 +61,28 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     maxPatchW = Math.max(maxPatchW, f.dims.width);
     maxPatchH = Math.max(maxPatchH, f.dims.height);
   }
-  const patchCanvas = document.createElement('canvas');
+  const patchCanvas = document.createElement("canvas");
   patchCanvas.width = maxPatchW;
   patchCanvas.height = maxPatchH;
   const patchCtx =
-    (patchCanvas.getContext('2d', {
+    (patchCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    patchCanvas.getContext('2d');
-  const patchImageDataCache: Array<ImageData | null> = Array.from({ length: frames.length }, () => null);
-  const patchBitmapCache: Array<ImageBitmap | null> = Array.from({ length: frames.length }, () => null);
-  const patchBitmapPromiseCache: Array<Promise<void> | null> = Array.from({ length: frames.length }, () => null);
-  const canCreateBitmap = typeof createImageBitmap === 'function';
+    patchCanvas.getContext("2d");
+  const patchImageDataCache: Array<ImageData | null> = Array.from(
+    { length: frames.length },
+    () => null,
+  );
+  const patchBitmapCache: Array<ImageBitmap | null> = Array.from(
+    { length: frames.length },
+    () => null,
+  );
+  const patchBitmapPromiseCache: Array<Promise<void> | null> = Array.from(
+    { length: frames.length },
+    () => null,
+  );
+  const canCreateBitmap = typeof createImageBitmap === "function";
 
   let restoreData: { x: number; y: number; w: number; h: number; data: ImageData } | null = null;
 
@@ -90,7 +99,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     const f = frames[i];
     const { left, top, width: w, height: h } = f.dims;
 
-    log.trace('compositor: apply', {
+    log.trace("compositor: apply", {
       frame: i,
       dims: { left, top, w, h },
       disposalType: f.disposalType,
@@ -142,11 +151,11 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     const f = frames[i];
     const { left, top, width: w, height: h } = f.dims;
 
-    log.trace('compositor: dispose', {
+    log.trace("compositor: dispose", {
       frame: i,
       disposalType: f.disposalType,
       action:
-        f.disposalType === 2 ? 'clearRect' : f.disposalType === 3 ? 'restorePrevious' : 'none',
+        f.disposalType === 2 ? "clearRect" : f.disposalType === 3 ? "restorePrevious" : "none",
     });
 
     switch (f.disposalType) {
@@ -162,7 +171,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   }
 
   function reset(): void {
-    log.trace('compositor: reset');
+    log.trace("compositor: reset");
     ctx.clearRect(0, 0, width, height);
     restoreData = null;
   }
@@ -172,10 +181,10 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
    * Use this when you need to store or pass the frame to avoid reference issues.
    */
   function getSnapshot(): HTMLCanvasElement {
-    const snapshot = document.createElement('canvas');
+    const snapshot = document.createElement("canvas");
     snapshot.width = width;
     snapshot.height = height;
-    const snapshotCtx = snapshot.getContext('2d');
+    const snapshotCtx = snapshot.getContext("2d");
     if (snapshotCtx) {
       snapshotCtx.drawImage(canvas, 0, 0);
     }

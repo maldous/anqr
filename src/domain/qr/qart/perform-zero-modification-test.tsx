@@ -1,7 +1,7 @@
-import type { ECCLevel } from './bit-mapping';
-import { log } from './log';
-import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
-import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
+import type { ECCLevel } from "./bit-mapping";
+import { log } from "./log";
+import { scanMatrixWithJsQR } from "./scan-matrix-with-js-qr";
+import { regenerateQRFromModifiedData } from "./regenerate-qr-from-modified-data";
 
 export function performZeroModificationTest(
   blockDataArrays: Uint8Array[],
@@ -11,7 +11,7 @@ export function performZeroModificationTest(
   actualVersion: number,
   ecc: ECCLevel,
   actualMask: number,
-  encodedData: string
+  encodedData: string,
 ): void {
   const zeroModMatrix = regenerateQRFromModifiedData(
     blockDataArrays,
@@ -20,23 +20,23 @@ export function performZeroModificationTest(
     blockEccCounts,
     actualVersion,
     ecc,
-    actualMask
+    actualMask,
   );
   const zeroModScan = scanMatrixWithJsQR(zeroModMatrix);
   if (zeroModScan.success) {
     const matchesData = zeroModScan.data === encodedData;
     if (matchesData) {
-      log.debug('Zero-modification test PASSED - decoded data matches exactly', {
+      log.debug("Zero-modification test PASSED - decoded data matches exactly", {
         decodedData: zeroModScan.data,
       });
     } else {
-      log.warn('Zero-modification test FAILED - decoded data mismatch!', {
+      log.warn("Zero-modification test FAILED - decoded data mismatch!", {
         decodedData: zeroModScan.data,
         expectedData: encodedData,
       });
     }
   } else {
-    log.warn('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
+    log.warn("ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!", {
       error: zeroModScan.error,
     });
   }

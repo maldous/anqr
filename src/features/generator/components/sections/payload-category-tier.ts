@@ -1,1 +1,1 @@
-export type PayloadTier = 'basic' | 'advanced' | 'professional';
+export type PayloadTier = "basic" | "advanced" | "professional";

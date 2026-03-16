@@ -1,13 +1,13 @@
-import type { EmbedOptions } from '../../modules/share-links/types';
-import { convertToImageApiUrl } from './convert-to-image-api-url';
+import type { EmbedOptions } from "../../modules/share-links/types";
+import { convertToImageApiUrl } from "./convert-to-image-api-url";
 
 /**
  * Generate HTML embed code for an image
  */
 export function generateImageEmbed(
   shareableUrl: string,
-  alt: string = 'QR Code',
-  options: Partial<EmbedOptions> = {}
+  alt: string = "QR Code",
+  options: Partial<EmbedOptions> = {},
 ): string {
   const opts: EmbedOptions = {
     width: options.width ?? 200,
@@ -21,14 +21,14 @@ export function generateImageEmbed(
     shareableUrl,
     opts.width,
     opts.width === opts.height ? undefined : opts.width,
-    opts.width === opts.height ? undefined : opts.height
+    opts.width === opts.height ? undefined : opts.height,
   );
 
   const style = opts.responsive
-    ? 'max-width: 100%; height: auto;'
+    ? "max-width: 100%; height: auto;"
     : `width: ${opts.width}px; height: ${opts.height}px;`;
 
-  const border = opts.showBorder ? ' border: 1px solid #ccc;' : '';
+  const border = opts.showBorder ? " border: 1px solid #ccc;" : "";
 
   const imgTag = `<img src="${imageUrl}" alt="${alt}" style="${style}${border}" />`;
 

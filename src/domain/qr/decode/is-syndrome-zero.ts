@@ -1,4 +1,4 @@
-import { polyIsZero } from './poly-is-zero';
+import { polyIsZero } from "./poly-is-zero";
 
 /**
  * Check if syndrome polynomial indicates no errors

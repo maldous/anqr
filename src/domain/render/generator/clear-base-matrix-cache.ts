@@ -1,4 +1,4 @@
-import { baseMatrixCacheState } from './base-matrix-cache-state';
+import { baseMatrixCacheState } from "./base-matrix-cache-state";
 
 export function clearBaseMatrixCache(): void {
   baseMatrixCacheState.qr = null;

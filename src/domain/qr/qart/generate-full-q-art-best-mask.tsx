@@ -1,14 +1,14 @@
-import type { FullQArtConfig, FullQArtResult } from './generate.types';
-import { checkBalancedMaskEarlyExit } from './check-balanced-mask-early-exit';
-import { log } from './log';
-import { prepareBestMaskConfig } from './prepare-best-mask-config';
-import { generateFullQArt } from './generate-full-q-art';
+import type { FullQArtConfig, FullQArtResult } from "./generate.types";
+import { checkBalancedMaskEarlyExit } from "./check-balanced-mask-early-exit";
+import { log } from "./log";
+import { prepareBestMaskConfig } from "./prepare-best-mask-config";
+import { generateFullQArt } from "./generate-full-q-art";
 
 export async function generateFullQArtBestMask(
-  config: Omit<FullQArtConfig, 'maskPattern'>
+  config: Omit<FullQArtConfig, "maskPattern">,
 ): Promise<FullQArtResult> {
   let bestResult: FullQArtResult | null = null;
-  const performanceProfile = config.performanceProfile ?? 'quality';
+  const performanceProfile = config.performanceProfile ?? "quality";
   let masksWithoutMeaningfulGain = 0;
   let lastBestMatch = -1;
 
@@ -34,13 +34,13 @@ export async function generateFullQArtBestMask(
       }
     }
 
-    if (performanceProfile !== 'balanced' || !bestResult) continue;
+    if (performanceProfile !== "balanced" || !bestResult) continue;
 
     const earlyExit = checkBalancedMaskEarlyExit(
       bestResult,
       lastBestMatch,
       masksWithoutMeaningfulGain,
-      mask
+      mask,
     );
     masksWithoutMeaningfulGain = earlyExit.masksWithoutMeaningfulGain;
     lastBestMatch = bestResult.matchPercentage;
@@ -50,7 +50,7 @@ export async function generateFullQArtBestMask(
   if (!bestResult) {
     return {
       success: false,
-      error: 'All mask patterns failed',
+      error: "All mask patterns failed",
       matrix: [],
       moduleCount: 0,
       version: 0,
@@ -59,15 +59,15 @@ export async function generateFullQArtBestMask(
       totalControllable: 0,
       matchPercentage: 0,
       encodedData:
-        resolvedSuffixMode === 'numeric'
-          ? `${config.data.split('#')[0]}#${sharedSuffix}`
+        resolvedSuffixMode === "numeric"
+          ? `${config.data.split("#")[0]}#${sharedSuffix}`
           : config.data + sharedSuffix,
       originalData: config.data,
       suffix: sharedSuffix,
     };
   }
 
-  log.info('Best mask pattern selected', {
+  log.info("Best mask pattern selected", {
     maskPattern: bestResult.maskPattern,
     matchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
   });

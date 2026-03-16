@@ -1,5 +1,5 @@
-import { ResultPoint } from './result-types';
-import { patternAboutEquals } from './pattern-about-equals';
+import { ResultPoint } from "./result-types";
+import { patternAboutEquals } from "./pattern-about-equals";
 
 /**
  * Alignment pattern (smaller squares in larger QR codes)
@@ -8,7 +8,7 @@ export class AlignmentPattern extends ResultPoint {
   constructor(
     posX: number,
     posY: number,
-    private readonly estimatedModuleSize: number
+    private readonly estimatedModuleSize: number,
   ) {
     super(posX, posY);
   }

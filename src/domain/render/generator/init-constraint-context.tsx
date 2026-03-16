@@ -1,8 +1,8 @@
-import type { QRCodeInstance, QRGeneratorConfig } from './types';
-import { clamp01 } from './clamp01';
-import { shouldLockModule } from './should-lock-module';
-import { isFinderModuleOrSeparator } from './is-finder-module-or-separator';
-import type { ConstraintCtx } from './constraint-ctx';
+import type { QRCodeInstance, QRGeneratorConfig } from "./types";
+import { clamp01 } from "./clamp01";
+import { shouldLockModule } from "./should-lock-module";
+import { isFinderModuleOrSeparator } from "./is-finder-module-or-separator";
+import type { ConstraintCtx } from "./constraint-ctx";
 
 export function initConstraintContext(
   qr: QRCodeInstance,
@@ -12,10 +12,10 @@ export function initConstraintContext(
   scale: number,
   scaledSize: number,
   version: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): { cctx: ConstraintCtx; maxIters: number } | null {
-  const scanGateProfile = config.scanGateProfile ?? 'full';
-  const strictScanGate = scanGateProfile === 'full';
+  const scanGateProfile = config.scanGateProfile ?? "full";
+  const strictScanGate = scanGateProfile === "full";
   const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.38);
   const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.62);
   if (baseDarkMin <= 0.001 && baseLightMax >= 0.999) return null;
@@ -37,13 +37,13 @@ export function initConstraintContext(
   const darkMinMap: number[][] = Array.from({ length: moduleCount }, () => fillRow(baseDarkMin));
   const lightMaxMap: number[][] = Array.from({ length: moduleCount }, () => fillRow(baseLightMax));
   const darkCenterMinMap: number[][] = Array.from({ length: moduleCount }, () =>
-    fillRow(Math.min(0.64, baseDarkMin + 0.18))
+    fillRow(Math.min(0.64, baseDarkMin + 0.18)),
   );
   const lightCenterMaxMap: number[][] = Array.from({ length: moduleCount }, () =>
-    fillRow(Math.max(0.36, baseLightMax - 0.18))
+    fillRow(Math.max(0.36, baseLightMax - 0.18)),
   );
   const locked: boolean[][] = Array.from({ length: moduleCount }, () =>
-    Array.from({ length: moduleCount }, () => false)
+    Array.from({ length: moduleCount }, () => false),
   );
   const decoupleFinderOptimization =
     config.preserveFinders === false && config.blendPreservations !== true;

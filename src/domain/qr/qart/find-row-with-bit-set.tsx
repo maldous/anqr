@@ -3,7 +3,7 @@ export function findRowWithBitSet(
   startRow: number,
   endRow: number,
   wordIndex: number,
-  bitIndex: number
+  bitIndex: number,
 ): number {
   for (let r = startRow; r < endRow; r++) {
     if (((matrix[r][wordIndex] >>> bitIndex) & 1) === 1) {

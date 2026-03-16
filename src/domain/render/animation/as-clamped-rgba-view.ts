@@ -6,6 +6,6 @@ export function asClampedRgbaView(pixels: Uint8Array): Uint8ClampedArray<ArrayBu
   return new Uint8ClampedArray(
     pixels.buffer as ArrayBuffer,
     pixels.byteOffset,
-    pixels.byteLength
+    pixels.byteLength,
   ) as Uint8ClampedArray<ArrayBuffer>;
 }

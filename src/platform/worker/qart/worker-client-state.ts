@@ -1,4 +1,4 @@
-import type { PendingRequest } from './pending-request.type';
+import type { PendingRequest } from "./pending-request.type";
 
 export const workerClientState = {
   worker: null as Worker | null,

@@ -1,7 +1,7 @@
 export function generateQArtUrl(
   baseUrl: string,
   numericLength: number = 200,
-  seed?: number
+  seed?: number,
 ): string {
   let rng = seed ?? Date.now();
   const random = () => {
@@ -9,7 +9,7 @@ export function generateQArtUrl(
     return rng / 0x7fffffff;
   };
 
-  let numeric = '';
+  let numeric = "";
   for (let i = 0; i < numericLength; i++) {
     numeric += Math.floor(random() * 10).toString();
   }

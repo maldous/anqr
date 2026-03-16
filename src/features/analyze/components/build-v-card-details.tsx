@@ -1,10 +1,10 @@
-import { FileText } from 'lucide-react';
-import { parseVCardPayload } from './payload-parsers';
-import { appendVCardPhoneEntries } from './append-v-card-phone-entries';
-import { appendVCardEmailEntries } from './append-v-card-email-entries';
-import { appendVCardAddressEntries } from './append-v-card-address-entries';
-import { appendVCardExtras } from './append-v-card-extras';
-import type { DetailEntry } from './detail-entry';
+import { FileText } from "lucide-react";
+import { parseVCardPayload } from "./payload-parsers";
+import { appendVCardPhoneEntries } from "./append-v-card-phone-entries";
+import { appendVCardEmailEntries } from "./append-v-card-email-entries";
+import { appendVCardAddressEntries } from "./append-v-card-address-entries";
+import { appendVCardExtras } from "./append-v-card-extras";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildVCardDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -12,28 +12,28 @@ export function buildVCardDetails(payload: string): DetailEntry[] {
 
   if (vcardData.version) {
     details.push({
-      label: 'vCard Version',
+      label: "vCard Version",
       value: <span className="font-mono text-xs">v{vcardData.version}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.fullName) {
     details.push({
-      label: 'Full Name',
+      label: "Full Name",
       value: <span className="font-medium">{vcardData.fullName}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.organization) {
     details.push({
-      label: 'Organization',
+      label: "Organization",
       value: vcardData.organization,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.title) {
     details.push({
-      label: 'Title',
+      label: "Title",
       value: vcardData.title,
       icon: <FileText className="w-3 h-3" />,
     });

@@ -3,14 +3,14 @@ import {
   hasGeometricTransforms,
   hasPreprocessingOptions,
   preprocessOverlay,
-} from '../../domain/render/overlay/overlay';
-import { generatorLog as log } from './generator-log';
-import type { QRGeneratorConfig } from './types';
+} from "../../domain/render/overlay/overlay";
+import { generatorLog as log } from "./generator-log";
+import type { QRGeneratorConfig } from "./types";
 
 export async function preprocessOverlayCanvas(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
   config: QRGeneratorConfig,
-  createCanvas: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
+  createCanvas: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
 ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
   let processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = overlayCanvas;
   if (overlayCanvas && hasGeometricTransforms(config)) {
@@ -18,7 +18,7 @@ export async function preprocessOverlayCanvas(
   }
 
   const needsPreprocessing = hasPreprocessingOptions(config);
-  log.trace('Preprocessing check', {
+  log.trace("Preprocessing check", {
     hasOverlay: !!processedOverlayCanvas,
     needsPreprocessing,
     overlayMode: config.overlayMode,
@@ -29,7 +29,7 @@ export async function preprocessOverlayCanvas(
   });
 
   if (processedOverlayCanvas && needsPreprocessing && !config.fastPreview) {
-    log.trace('Preprocessing overlay', {
+    log.trace("Preprocessing overlay", {
       overlayMode: config.overlayMode,
       colorMode: config.colorMode,
       filterBrightness: config.filterBrightness,
@@ -48,12 +48,12 @@ export async function preprocessOverlayCanvas(
 
     processedOverlayCanvas = await preprocessOverlay(processedOverlayCanvas, config, createCanvas);
 
-    log.trace('Preprocessing complete', {
+    log.trace("Preprocessing complete", {
       width: processedOverlayCanvas.width,
       height: processedOverlayCanvas.height,
     });
   } else if (processedOverlayCanvas) {
-    log.trace('Skipping preprocessing - no filters to apply');
+    log.trace("Skipping preprocessing - no filters to apply");
   }
 
   return processedOverlayCanvas;

@@ -1,6 +1,6 @@
-import { drawAlignmentPatternsToMask } from './draw-alignment-patterns-to-mask';
-import { drawFinderPatternsToMask } from './draw-finder-patterns-to-mask';
-import type { QRGeneratorConfig } from './types';
+import { drawAlignmentPatternsToMask } from "./draw-alignment-patterns-to-mask";
+import { drawFinderPatternsToMask } from "./draw-finder-patterns-to-mask";
+import type { QRGeneratorConfig } from "./types";
 
 export function drawStructuralPatterns(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -9,7 +9,7 @@ export function drawStructuralPatterns(
   moduleSize: number,
   margin: number,
   overlayData: unknown,
-  version: number
+  version: number,
 ): Uint8Array {
   const skipMask = new Uint8Array(moduleCount * moduleCount);
 

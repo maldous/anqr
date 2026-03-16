@@ -11,7 +11,7 @@ export class PerspectiveTransform {
     private readonly a32: number,
     private readonly a13: number,
     private readonly a23: number,
-    private readonly a33: number
+    private readonly a33: number,
   ) {}
 
   static quadrilateralToQuadrilateral(
@@ -30,7 +30,7 @@ export class PerspectiveTransform {
     x2p: number,
     y2p: number,
     x3p: number,
-    y3p: number
+    y3p: number,
   ): PerspectiveTransform {
     const qToS = PerspectiveTransform.quadrilateralToSquare(x0, y0, x1, y1, x2, y2, x3, y3);
     const sToQ = PerspectiveTransform.squareToQuadrilateral(x0p, y0p, x1p, y1p, x2p, y2p, x3p, y3p);
@@ -68,7 +68,7 @@ export class PerspectiveTransform {
     x2: number,
     y2: number,
     x3: number,
-    y3: number
+    y3: number,
   ): PerspectiveTransform {
     const dx3 = x0 - x1 + x2 - x3;
     const dy3 = y0 - y1 + y2 - y3;
@@ -92,7 +92,7 @@ export class PerspectiveTransform {
         y0,
         a13,
         a23,
-        1
+        1,
       );
     }
   }
@@ -105,7 +105,7 @@ export class PerspectiveTransform {
     x2: number,
     y2: number,
     x3: number,
-    y3: number
+    y3: number,
   ): PerspectiveTransform {
     return PerspectiveTransform.squareToQuadrilateral(
       x0,
@@ -115,7 +115,7 @@ export class PerspectiveTransform {
       x2,
       y2,
       x3,
-      y3
+      y3,
     ).buildAdjoint();
   }
 
@@ -129,7 +129,7 @@ export class PerspectiveTransform {
       this.a12 * this.a31 - this.a11 * this.a32,
       this.a12 * this.a23 - this.a13 * this.a22,
       this.a13 * this.a21 - this.a11 * this.a23,
-      this.a11 * this.a22 - this.a12 * this.a21
+      this.a11 * this.a22 - this.a12 * this.a21,
     );
   }
 
@@ -143,7 +143,7 @@ export class PerspectiveTransform {
       this.a12 * other.a31 + this.a22 * other.a32 + this.a32 * other.a33,
       this.a13 * other.a11 + this.a23 * other.a12 + this.a33 * other.a13,
       this.a13 * other.a21 + this.a23 * other.a22 + this.a33 * other.a23,
-      this.a13 * other.a31 + this.a23 * other.a32 + this.a33 * other.a33
+      this.a13 * other.a31 + this.a23 * other.a32 + this.a33 * other.a33,
     );
   }
 }

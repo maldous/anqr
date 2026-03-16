@@ -1,5 +1,5 @@
-import { getAlignmentPositionsCached } from './pattern-helpers';
-import { PATTERN_ALIGNMENT } from './functional-pattern-flags.const';
+import { getAlignmentPositionsCached } from "./pattern-helpers";
+import { PATTERN_ALIGNMENT } from "./functional-pattern-flags.const";
 
 export function markAlignmentPatterns(map: Uint8Array, mc: number, version: number): void {
   if (version < 2) return;

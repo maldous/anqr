@@ -4,28 +4,32 @@
  * Utilities for mapping target images to QR module values.
  * Extracted to its own file to avoid circular imports.
  */
-import { buildSamplePoints } from './build-sample-points';
-import { cleanupBinaryTargets } from './cleanup-binary-targets';
-import { resolveImageData } from './resolve-image-data';
-import { resolveCleanupArea } from './resolve-cleanup-area';
-import { resolveSupersampleLevel } from './resolve-supersample-level';
-import { sampleModuleStats } from './sample-module-stats';
+import { buildSamplePoints } from "./build-sample-points";
+import { cleanupBinaryTargets } from "./cleanup-binary-targets";
+import { resolveImageData } from "./resolve-image-data";
+import { resolveCleanupArea } from "./resolve-cleanup-area";
+import { resolveSupersampleLevel } from "./resolve-supersample-level";
+import { sampleModuleStats } from "./sample-module-stats";
 
 /**
  * Map an image to target pixel values with supersampling for better accuracy
  */
-import type { MapImageToTargetsOptions } from './image-utils.types';
-export type { MapImageToTargetsOptions } from './image-utils.types';
+import type { MapImageToTargetsOptions } from "./image-utils.types";
+export type { MapImageToTargetsOptions } from "./image-utils.types";
 
 export function mapImageToTargetsSupersampled(
   image: ImageData | HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   threshold: number = 128,
-  options?: MapImageToTargetsOptions
+  options?: MapImageToTargetsOptions,
 ): { targets: boolean[][]; importance: number[][] } {
   const emptyResult = {
-    targets: Array.from({ length: moduleCount }, () => Array.from({ length: moduleCount }, () => false)),
-    importance: Array.from({ length: moduleCount }, () => Array.from({ length: moduleCount }, () => 0)),
+    targets: Array.from({ length: moduleCount }, () =>
+      Array.from({ length: moduleCount }, () => false),
+    ),
+    importance: Array.from({ length: moduleCount }, () =>
+      Array.from({ length: moduleCount }, () => 0),
+    ),
   };
 
   const imageData = resolveImageData(image);
@@ -59,7 +63,7 @@ export function mapImageToTargetsSupersampled(
         scaleX,
         scaleY,
         maxX,
-        maxY
+        maxY,
       );
 
       targets[row][col] = sample.avgGray < threshold;
@@ -69,7 +73,7 @@ export function mapImageToTargetsSupersampled(
       const edgeBoost = Math.min(1, sample.edgeMagnitude / 220);
       importance[row][col] = Math.min(
         1,
-        distanceFromThreshold * 0.72 + contrastBoost * 0.18 + edgeBoost * 0.36
+        distanceFromThreshold * 0.72 + contrastBoost * 0.18 + edgeBoost * 0.36,
       );
     }
   }

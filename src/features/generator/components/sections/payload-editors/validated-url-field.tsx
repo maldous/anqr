@@ -1,7 +1,7 @@
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { isValidUrl } from '@/modules/payload-generators';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { isValidUrl } from "@/modules/payload-generators";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 
 export function ValidatedUrlField({
   label,
@@ -10,7 +10,7 @@ export function ValidatedUrlField({
   placeholder,
   validate,
   invalidMessage,
-  type = 'url',
+  type = "url",
   title,
   dataTestId,
 }: Readonly<{
@@ -20,7 +20,7 @@ export function ValidatedUrlField({
   placeholder: string;
   validate: boolean;
   invalidMessage: string;
-  type?: 'url' | 'text';
+  type?: "url" | "text";
   title?: string;
   dataTestId?: string;
 }>) {
@@ -38,7 +38,7 @@ export function ValidatedUrlField({
         placeholder={placeholder}
         title={title}
         data-testid={dataTestId}
-        className={isInvalid ? 'border-destructive focus-visible:ring-destructive' : ''}
+        className={isInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
       />
       {isInvalid && <p className="text-xs text-destructive">{invalidMessage}</p>}
     </div>

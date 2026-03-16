@@ -1,8 +1,8 @@
-import type { BitPixelMapping } from './bit-mapping';
-import type { RSBasisVector } from './rs-basis';
-import { BITSET_WORD_SHIFT } from './bitset-word-shift';
-import { BITSET_WORD_SIZE } from './bitset-word-size';
-import { BITSET_WORD_MASK } from './bitset-word-mask';
+import type { BitPixelMapping } from "./bit-mapping";
+import type { RSBasisVector } from "./rs-basis";
+import { BITSET_WORD_SHIFT } from "./bitset-word-shift";
+import { BITSET_WORD_SIZE } from "./bitset-word-size";
+import { BITSET_WORD_MASK } from "./bitset-word-mask";
 
 /**
  * Build a pixel affection matrix from basis vectors for a SINGLE RS block
@@ -18,7 +18,7 @@ export function buildBlockAffectionMatrix(
   vectors: RSBasisVector[],
   blockMappings: BitPixelMapping[],
   moduleCount: number,
-  _maskPattern: number
+  _maskPattern: number,
 ): Uint32Array[] {
   const totalPixels = moduleCount * moduleCount;
   const bitsetWordCount = (totalPixels + BITSET_WORD_SIZE - 1) >>> BITSET_WORD_SHIFT;

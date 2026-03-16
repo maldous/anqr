@@ -1,11 +1,11 @@
-import { adjustLumaPreserveChroma } from './adjust-luma-preserve-chroma';
-import type { PixelColor, PixelGridCtx } from '../scaled-render-types';
+import { adjustLumaPreserveChroma } from "./adjust-luma-preserve-chroma";
+import type { PixelColor, PixelGridCtx } from "../scaled-render-types";
 
 export function renderNonDitheredLightPixel(
   pgctx: PixelGridCtx,
   dx: number,
   dy: number,
-  color: PixelColor | null
+  color: PixelColor | null,
 ): void {
   const {
     ctx,

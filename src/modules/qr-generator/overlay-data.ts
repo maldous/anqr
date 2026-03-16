@@ -1,1 +1,1 @@
-export * from '../../domain/render/overlay/overlay-data';
+export * from "../../domain/render/overlay/overlay-data";

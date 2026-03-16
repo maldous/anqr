@@ -1,4 +1,4 @@
-import { base64DecodeChar } from './base64-decode-char';
+import { base64DecodeChar } from "./base64-decode-char";
 
 export function base64DecodeInputStream(str: string) {
   let pos = 0;
@@ -16,7 +16,7 @@ export function base64DecodeInputStream(str: string) {
         const c = str.charAt(pos);
         pos += 1;
 
-        if (c === '=') {
+        if (c === "=") {
           buflen = 0;
           return -1;
         }

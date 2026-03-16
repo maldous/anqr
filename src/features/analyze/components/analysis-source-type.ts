@@ -1,1 +1,1 @@
-export type AnalysisSourceType = 'generator' | 'file' | 'url' | 'camera' | null;
+export type AnalysisSourceType = "generator" | "file" | "url" | "camera" | null;

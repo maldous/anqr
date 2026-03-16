@@ -1,5 +1,5 @@
-import { ResultPoint } from './result-types';
-import { patternAboutEquals } from './pattern-about-equals';
+import { ResultPoint } from "./result-types";
+import { patternAboutEquals } from "./pattern-about-equals";
 
 /**
  * Finder pattern (one of three corner squares)
@@ -9,7 +9,7 @@ export class FinderPattern extends ResultPoint {
     posX: number,
     posY: number,
     private readonly estimatedModuleSize: number,
-    private count: number = 1
+    private count: number = 1,
   ) {
     super(posX, posY);
   }

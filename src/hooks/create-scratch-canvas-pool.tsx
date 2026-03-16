@@ -9,11 +9,11 @@ export function createScratchCanvasPool(): {
     pool: [HTMLCanvasElement | null, HTMLCanvasElement | null],
     slot: 0 | 1,
     width: number,
-    height: number
+    height: number,
   ): HTMLCanvasElement => {
     const current = pool[slot];
     if (!current) {
-      const created = document.createElement('canvas');
+      const created = document.createElement("canvas");
       created.width = width;
       created.height = height;
       pool[slot] = created;

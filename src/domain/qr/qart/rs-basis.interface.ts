@@ -1,5 +1,5 @@
-import { type ECCLevel, type RSBlockInfo } from './bit-mapping';
-import type { RSBasisVector } from './rs-basis-vector.interface';
+import { type ECCLevel, type RSBlockInfo } from "./bit-mapping";
+import type { RSBasisVector } from "./rs-basis-vector.interface";
 
 export interface RSBasis {
   version: number;

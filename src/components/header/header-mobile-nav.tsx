@@ -1,8 +1,8 @@
-import { HeaderMobileNavCompactLink } from './header-mobile-nav-compact-link';
-import { useTranslation } from 'react-i18next';
-import { HeaderMobileNavLinkBody } from './header-mobile-nav-link-body';
-import type { HeaderPage } from './header-resolve-page';
-import { NAV_LINKS } from './nav-links';
+import { HeaderMobileNavCompactLink } from "./header-mobile-nav-compact-link";
+import { useTranslation } from "react-i18next";
+import { HeaderMobileNavLinkBody } from "./header-mobile-nav-link-body";
+import type { HeaderPage } from "./header-resolve-page";
+import { NAV_LINKS } from "./nav-links";
 
 export function HeaderMobileNav({
   mobileMenuOpen,
@@ -24,7 +24,7 @@ export function HeaderMobileNav({
   return (
     <div
       id="mobile-nav-menu"
-      className={`lg:hidden border-t bg-card shadow-lg p-3 overflow-hidden origin-top ${isMobileMenuClosing ? 'animate-[slide-up_0.2s_ease-in_forwards]' : 'animate-[slide-down_0.2s_ease-out_forwards]'}`}
+      className={`lg:hidden border-t bg-card shadow-lg p-3 overflow-hidden origin-top ${isMobileMenuClosing ? "animate-[slide-up_0.2s_ease-in_forwards]" : "animate-[slide-down_0.2s_ease-out_forwards]"}`}
       onAnimationEnd={() => {
         if (isMobileMenuClosing) onCloseAnimationEnd();
       }}
@@ -39,7 +39,7 @@ export function HeaderMobileNav({
               <a
                 key={link.labelKey}
                 href={link.href}
-                className={`px-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm ${isActive ? 'bg-primary text-primary-foreground font-medium' : 'bg-muted hover:bg-primary/10 text-foreground font-medium'}`}
+                className={`px-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm ${isActive ? "bg-primary text-primary-foreground font-medium" : "bg-muted hover:bg-primary/10 text-foreground font-medium"}`}
                 onClick={(e) => {
                   if (onNavigate) {
                     e.preventDefault();
@@ -48,7 +48,7 @@ export function HeaderMobileNav({
                   onClose();
                 }}
                 title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
                 <HeaderMobileNavLinkBody
                   IconComponent={IconComponent}

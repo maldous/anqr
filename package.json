@@ -12,7 +12,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/sync-openapi-public.mjs && tsc && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "NODE_OPTIONS='--max-old-space-size=2048' tsc --noEmit",
     "test": "playwright test",

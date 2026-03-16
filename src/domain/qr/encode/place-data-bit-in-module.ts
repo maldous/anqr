@@ -4,7 +4,7 @@ export function placeDataBitInModule(
   col: number,
   data: number[],
   maskFunc: (r: number, c: number) => boolean,
-  state: { bitIndex: number; byteIndex: number }
+  state: { bitIndex: number; byteIndex: number },
 ): void {
   if (modules[row][col] != null) return;
 

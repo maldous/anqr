@@ -1,4 +1,4 @@
-import { getInterstitialDeps } from './admob-runtime';
+import { getInterstitialDeps } from "./admob-runtime";
 
 export function interstitialDeps() {
   return getInterstitialDeps();

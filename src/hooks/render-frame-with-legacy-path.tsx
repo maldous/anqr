@@ -1,1 +1,1 @@
-export { renderFrameWithLegacyPath } from '@/features/generator/application/frames/frames-fn-renderlegacy';
+export { renderFrameWithLegacyPath } from "@/features/generator/application/frames/frames-fn-renderlegacy";

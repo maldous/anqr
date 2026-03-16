@@ -1,1 +1,1 @@
-export * from '../../domain/render/export/svg-export';
+export * from "../../domain/render/export/svg-export";

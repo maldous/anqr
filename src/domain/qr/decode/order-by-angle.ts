@@ -1,5 +1,5 @@
-import type { FinderPattern } from './types';
-import { qrDecoderLog } from './qr-decoder-log';
+import type { FinderPattern } from "./types";
+import { qrDecoderLog } from "./qr-decoder-log";
 
 /**
  * Given top-left and two other patterns, determine which is top-right vs bottom-left
@@ -14,14 +14,14 @@ import { qrDecoderLog } from './qr-decoder-log';
 export function orderByAngle(
   topLeft: FinderPattern,
   a: FinderPattern,
-  b: FinderPattern
+  b: FinderPattern,
 ): [FinderPattern, FinderPattern] {
   // Cross product of vectors (topLeft→a) × (topLeft→b)
   const cross =
     (a.center.x - topLeft.center.x) * (b.center.y - topLeft.center.y) -
     (a.center.y - topLeft.center.y) * (b.center.x - topLeft.center.x);
 
-  qrDecoderLog.trace('select: Cross product calculation', {
+  qrDecoderLog.trace("select: Cross product calculation", {
     topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
     a: { x: a.center.x.toFixed(1), y: a.center.y.toFixed(1) },
     b: { x: b.center.x.toFixed(1), y: b.center.y.toFixed(1) },

@@ -1,9 +1,9 @@
-import { Grid3x3, Ruler, ScanLine, Square } from 'lucide-react';
-import type { TFunction } from 'i18next';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { StatusBadge } from '@/features/analyze/components/status-badge';
+import { Grid3x3, Ruler, ScanLine, Square } from "lucide-react";
+import type { TFunction } from "i18next";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { StatusBadge } from "@/features/analyze/components/status-badge";
 
 export const SpatialAnalysisSection = ({
   estimatedModulePx,
@@ -12,13 +12,13 @@ export const SpatialAnalysisSection = ({
   t,
 }: Readonly<{
   estimatedModulePx: number | null;
-  geometry: QRAnalysisResult['geometry'];
-  quietZone: QRAnalysisResult['quietZone'];
+  geometry: QRAnalysisResult["geometry"];
+  quietZone: QRAnalysisResult["quietZone"];
   t: TFunction;
 }>) => {
   return (
     <CollapsibleSection
-      title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
+      title={t("analyze.spatialAnalysis", "Spatial Analysis")}
       icon={<Ruler className="w-4 h-4" />}
       testId="analyze-section-spatial-analysis"
     >
@@ -60,7 +60,7 @@ export const SpatialAnalysisSection = ({
         {quietZone && (
           <>
             <DetailRow
-              label={t('safety.quietZone', 'Quiet Zone')}
+              label={t("safety.quietZone", "Quiet Zone")}
               value={
                 <StatusBadge
                   status={quietZone.adequate}

@@ -1,5 +1,5 @@
-import type { DiffusionKernelDef } from '../dither/kernels';
-import type { QRCodeInstance, QRGeneratorConfig } from './types';
+import type { DiffusionKernelDef } from "../dither/kernels";
+import type { QRCodeInstance, QRGeneratorConfig } from "./types";
 
 export interface ErrorDiffusionPixelCtx {
   qr: QRCodeInstance;

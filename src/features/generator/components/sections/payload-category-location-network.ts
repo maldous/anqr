@@ -1,10 +1,10 @@
-import { payloadCategory } from './payload-category';
+import { payloadCategory } from "./payload-category";
 
 export const payloadCategoryLocationNetwork = payloadCategory(
-  'payload.locationNetwork',
-  'advanced',
+  "payload.locationNetwork",
+  "advanced",
   [
-    ['geo', 'payload.geo'],
-    ['wifi', 'payload.wifiNetwork'],
-  ]
+    ["geo", "payload.geo"],
+    ["wifi", "payload.wifiNetwork"],
+  ],
 );

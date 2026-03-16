@@ -1,5 +1,5 @@
-import { buildFunctionalMap } from './build-functional-map';
-import { getFunctionalMapCache, setFunctionalMapCache } from './functional-map-cache';
+import { buildFunctionalMap } from "./build-functional-map";
+import { getFunctionalMapCache, setFunctionalMapCache } from "./functional-map-cache";
 
 export function getCachedFunctionalMap(moduleCount: number, version: number): Uint8Array {
   const cache = getFunctionalMapCache();

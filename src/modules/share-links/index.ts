@@ -13,9 +13,9 @@
  * - Pure URL/string manipulation
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('SHARE');
+const _log = createLogger("SHARE");
 
 // Embed code generation
 export {
@@ -24,11 +24,11 @@ export {
   generateIframeEmbed,
   generateImageEmbed,
   generateMarkdownEmbed,
-} from '../../domain/share/embed';
+} from "../../domain/share/embed";
 // Social sharing
-export { getSocialShareUrls } from '../../domain/share/social';
+export { getSocialShareUrls } from "../../domain/share/social";
 // Types
-export { type EmbedOptions, MAX_SHARE_URL_LENGTH, type ShareConfig } from './types';
+export { type EmbedOptions, MAX_SHARE_URL_LENGTH, type ShareConfig } from "./types";
 // URL parameter functions
 export {
   buildUrlParams,
@@ -37,4 +37,4 @@ export {
   parseUrlParams,
   parseUrlParamsFromSearchParams,
   updateBrowserUrl,
-} from '../../domain/share/url-params';
+} from "../../domain/share/url-params";

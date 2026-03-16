@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/pattern-helpers';
+export * from "../../domain/render/generator/pattern-helpers";

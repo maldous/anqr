@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import * as Popover from '@radix-ui/react-popover';
-import { format } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
-import * as React from 'react';
-import { Calendar } from '@/ui/primitives/calendar';
-import { Input } from '@/ui/primitives/input';
-import { cn } from '@/lib/utils';
+import * as Popover from "@radix-ui/react-popover";
+import { format } from "date-fns";
+import { CalendarIcon, Clock } from "lucide-react";
+import * as React from "react";
+import { Calendar } from "@/ui/primitives/calendar";
+import { Input } from "@/ui/primitives/input";
+import { cn } from "@/lib/utils";
 
-export type { DateTimePickerProps } from './date-time-picker.types';
-import type { DateTimePickerProps } from './date-time-picker.types';
+export type { DateTimePickerProps } from "./date-time-picker.types";
+import type { DateTimePickerProps } from "./date-time-picker.types";
 
 /**
  * DateTimePicker component that provides a graphical calendar picker with time input.
@@ -18,10 +18,10 @@ import type { DateTimePickerProps } from './date-time-picker.types';
 export function DateTimePicker({
   value,
   onChange,
-  placeholder = 'Pick date & time',
+  placeholder = "Pick date & time",
   className,
   disabled,
-  'data-testid': testId,
+  "data-testid": testId,
 }: Readonly<DateTimePickerProps>) {
   const [open, setOpen] = React.useState(false);
 
@@ -36,9 +36,9 @@ export function DateTimePicker({
   }, [value]);
 
   const timeValue = React.useMemo(() => {
-    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return '12:00';
-    const hours = String(parsedDate.getHours()).padStart(2, '0');
-    const minutes = String(parsedDate.getMinutes()).padStart(2, '0');
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return "12:00";
+    const hours = String(parsedDate.getHours()).padStart(2, "0");
+    const minutes = String(parsedDate.getMinutes()).padStart(2, "0");
     return `${hours}:${minutes}`;
   }, [parsedDate]);
 
@@ -47,15 +47,15 @@ export function DateTimePicker({
     if (!date) return;
 
     // Preserve the existing time or use current time
-    const [hours, minutes] = timeValue.split(':').map(Number);
+    const [hours, minutes] = timeValue.split(":").map(Number);
     date.setHours(hours, minutes, 0, 0);
 
     // Format as datetime-local value
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
 
     onChange(`${year}-${month}-${day}T${hour}:${minute}`);
   };
@@ -69,25 +69,25 @@ export function DateTimePicker({
     const date =
       parsedDate && !Number.isNaN(parsedDate.getTime()) ? new Date(parsedDate) : new Date();
 
-    const [hours, minutes] = newTime.split(':').map(Number);
+    const [hours, minutes] = newTime.split(":").map(Number);
     date.setHours(hours, minutes, 0, 0);
 
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
 
     onChange(`${year}-${month}-${day}T${hour}:${minute}`);
   };
 
   // Format display value
   const displayValue = React.useMemo(() => {
-    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return '';
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return "";
     try {
-      return format(parsedDate, 'PPP p'); // e.g., "Apr 29, 2024 at 10:30 AM"
+      return format(parsedDate, "PPP p"); // e.g., "Apr 29, 2024 at 10:30 AM"
     } catch {
-      return '';
+      return "";
     }
   }, [parsedDate]);
 
@@ -99,11 +99,11 @@ export function DateTimePicker({
           disabled={disabled}
           data-testid={testId}
           className={cn(
-            'flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            !displayValue && 'text-muted-foreground',
-            className
+            "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
+            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            !displayValue && "text-muted-foreground",
+            className,
           )}
         >
           <span className="truncate">{displayValue || placeholder}</span>
@@ -113,11 +113,11 @@ export function DateTimePicker({
       <Popover.Portal>
         <Popover.Content
           className={cn(
-            'z-50 rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-            'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2'
+            "z-50 rounded-md border bg-popover p-0 text-popover-foreground shadow-md outline-none",
+            "data-[state=open]:animate-in data-[state=closed]:animate-out",
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+            "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
           )}
           align="start"
           sideOffset={4}

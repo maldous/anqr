@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from "lucide-react";
 
 export function AnalyzeWarnings({ warnings }: Readonly<{ warnings: string[] }>) {
   return (

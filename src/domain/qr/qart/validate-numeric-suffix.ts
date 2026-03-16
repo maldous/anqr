@@ -1,4 +1,4 @@
-import { validateSuffixCharacters } from './validate-suffix-characters';
+import { validateSuffixCharacters } from "./validate-suffix-characters";
 
 /**
  * Validate that a suffix contains only digits (numeric mode).
@@ -9,5 +9,5 @@ export function validateNumericSuffix(suffix: string): {
   invalidCharCode?: number;
   invalidChar?: string;
 } {
-  return validateSuffixCharacters(suffix, (char) => char >= '0' && char <= '9');
+  return validateSuffixCharacters(suffix, (char) => char >= "0" && char <= "9");
 }

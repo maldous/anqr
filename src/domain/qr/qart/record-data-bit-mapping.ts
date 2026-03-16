@@ -1,7 +1,7 @@
-import type { BitPixelMapping } from './bit-mapping.types';
-import { pixelToIndex } from './pixel-to-index';
-import { isStructural } from './is-structural';
-import type { InterleavingEntry } from './interleaving-entry';
+import type { BitPixelMapping } from "./bit-mapping.types";
+import { pixelToIndex } from "./pixel-to-index";
+import { isStructural } from "./is-structural";
+import type { InterleavingEntry } from "./interleaving-entry";
 
 export function recordDataBitMapping(
   row: number,
@@ -11,7 +11,7 @@ export function recordDataBitMapping(
   totalCodewords: number,
   interleavingMap: InterleavingEntry[],
   state: { bitIndex: number; byteIndex: number },
-  mappings: BitPixelMapping[]
+  mappings: BitPixelMapping[],
 ): void {
   if (isStructural(row, col, moduleCount, version)) return;
   if (state.byteIndex >= totalCodewords) return;

@@ -1,5 +1,5 @@
-import type { AnimationOptions, AnimationState } from './types';
-import { getNextFrame } from './get-next-frame';
+import type { AnimationOptions, AnimationState } from "./types";
+import { getNextFrame } from "./get-next-frame";
 
 /**
  * Update animation state for the next frame

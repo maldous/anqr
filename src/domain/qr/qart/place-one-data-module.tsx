@@ -5,7 +5,7 @@ export function placeOneDataModule(
   interleaved: number[],
   byteIndex: number,
   bitIndex: number,
-  maskFunc: (r: number, c: number) => boolean
+  maskFunc: (r: number, c: number) => boolean,
 ): { byteIndex: number; bitIndex: number } {
   if (modules[row][col] !== null) {
     return { byteIndex, bitIndex };

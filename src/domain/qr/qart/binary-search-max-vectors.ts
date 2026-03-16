@@ -1,14 +1,14 @@
-import type { EliminationResult } from './elimination';
-import { type ECCLevel } from './validation';
-import type { FlattenedSelection, BinarySearchResult } from './scan-fallback.types';
-import { createRejectionHistogram } from './create-rejection-histogram';
-import { log } from './log';
-import { logSearchIteration } from './log-search-iteration';
-import type { RegenerateQrFn } from './regenerate-qr-fn.type';
-import { trackRejection } from './track-rejection';
-import { validateBaseMatrix } from './validate-base-matrix';
-import { validateCandidate } from './validate-candidate';
-import { applySubsetAndRegenerate } from './apply-subset-and-regenerate';
+import type { EliminationResult } from "./elimination";
+import { type ECCLevel } from "./validation";
+import type { FlattenedSelection, BinarySearchResult } from "./scan-fallback.types";
+import { createRejectionHistogram } from "./create-rejection-histogram";
+import { log } from "./log";
+import { logSearchIteration } from "./log-search-iteration";
+import type { RegenerateQrFn } from "./regenerate-qr-fn.type";
+import { trackRejection } from "./track-rejection";
+import { validateBaseMatrix } from "./validate-base-matrix";
+import { validateCandidate } from "./validate-candidate";
+import { applySubsetAndRegenerate } from "./apply-subset-and-regenerate";
 
 export function binarySearchMaxVectors(
   flattened: FlattenedSelection[],
@@ -22,12 +22,12 @@ export function binarySearchMaxVectors(
   expectedData: string,
   expectedEcc?: ECCLevel,
   expectedMask?: number,
-  strictSuffix: boolean = false
+  strictSuffix: boolean = false,
 ): BinarySearchResult {
   const totalVectors = flattened.length;
   const rejectionHistogram = createRejectionHistogram();
 
-  log.info('Starting binary search for maximum scannable vectors', {
+  log.info("Starting binary search for maximum scannable vectors", {
     totalVectors,
     expectedDataLength: expectedData.length,
     expectedDataPreview:
@@ -37,8 +37,8 @@ export function binarySearchMaxVectors(
     expectedMask,
     strictSuffix,
     note: strictSuffix
-      ? 'SEMANTIC-HARD-GATE: prefix match + format info + strict suffix charset'
-      : 'SEMANTIC-HARD-GATE: prefix match + format info (suffix charset is SOFT PENALTY)',
+      ? "SEMANTIC-HARD-GATE: prefix match + format info + strict suffix charset"
+      : "SEMANTIC-HARD-GATE: prefix match + format info (suffix charset is SOFT PENALTY)",
   });
 
   if (totalVectors === 0) {
@@ -50,7 +50,7 @@ export function binarySearchMaxVectors(
       blockDataCounts,
       blockEccCounts,
       eliminationResult,
-      regenerateQRFn
+      regenerateQRFn,
     );
     return { maxCount: 0, matrix, modifiedBlockData, modifiedBlockEcc, iterations: 0 };
   }
@@ -68,7 +68,7 @@ export function binarySearchMaxVectors(
     expectedEcc,
     expectedMask,
     strictSuffix,
-    rejectionHistogram
+    rejectionHistogram,
   );
 
   if (!base.valid) {
@@ -101,7 +101,7 @@ export function binarySearchMaxVectors(
       blockDataCounts,
       blockEccCounts,
       eliminationResult,
-      regenerateQRFn
+      regenerateQRFn,
     );
 
     const scan = scanQRFn(result.matrix);
@@ -111,7 +111,7 @@ export function binarySearchMaxVectors(
       expectedData,
       expectedEcc,
       expectedMask,
-      strictSuffix
+      strictSuffix,
     );
     const { isValid, validation, formatVerification } = candidateResult;
 
@@ -125,7 +125,7 @@ export function binarySearchMaxVectors(
       validation,
       scan,
       formatVerification,
-      expectedData
+      expectedData,
     );
 
     if (isValid) {
@@ -139,7 +139,7 @@ export function binarySearchMaxVectors(
     }
   }
 
-  log.info('Binary search complete', {
+  log.info("Binary search complete", {
     maxCount: bestCount,
     totalVectors,
     percentageUsed: `${((bestCount / totalVectors) * 100).toFixed(1)}%`,
@@ -150,15 +150,15 @@ export function binarySearchMaxVectors(
       acceptanceRate:
         rejectionHistogram.total > 0
           ? `${((rejectionHistogram.ACCEPTED / rejectionHistogram.total) * 100).toFixed(1)}%`
-          : 'N/A',
+          : "N/A",
     },
   });
 
   if (strictSuffix && rejectionHistogram.SUFFIX_CHARSET_INVALID > rejectionHistogram.ACCEPTED) {
-    log.warn('High suffix charset rejection rate with strictSuffix=true', {
+    log.warn("High suffix charset rejection rate with strictSuffix=true", {
       suffixCharsetRejections: rejectionHistogram.SUFFIX_CHARSET_INVALID,
       accepted: rejectionHistogram.ACCEPTED,
-      suggestion: 'Consider setting strictSuffix=false to allow more candidates',
+      suggestion: "Consider setting strictSuffix=false to allow more candidates",
     });
   }
 

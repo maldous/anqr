@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { parseNumberedListItems } from './parse-numbered-list-items';
-import { renderTextContent } from './render-text-content';
+import type { ReactNode } from "react";
+import { parseNumberedListItems } from "./parse-numbered-list-items";
+import { renderTextContent } from "./render-text-content";
 
 export function renderTextWithLinks(text: string, lang: string): ReactNode {
   const numberedListRegex = /(?:^|\s)(\d+)\.\s/g;

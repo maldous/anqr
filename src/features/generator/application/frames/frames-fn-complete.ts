@@ -4,10 +4,10 @@
  * Notes: Complete animation generation and dispatch events.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { drawToDisplayCanvas } from '@/features/generator/application/generation/generation-fn-drawtodisplay';
+import { createLogger } from "@/infra/logging/logger";
+import { drawToDisplayCanvas } from "@/features/generator/application/generation/generation-fn-drawtodisplay";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export function completeAnimationGeneration(params: {
   frames: (HTMLCanvasElement | OffscreenCanvas)[];
@@ -22,7 +22,7 @@ export function completeAnimationGeneration(params: {
 }): void {
   if (params.isRunCancelled()) return;
 
-  log.debug('animation cache: complete', {
+  log.debug("animation cache: complete", {
     totalFrames: params.frames.length,
     firstFrameSize: params.frames[0]
       ? { w: params.frames[0].width, h: params.frames[0].height }

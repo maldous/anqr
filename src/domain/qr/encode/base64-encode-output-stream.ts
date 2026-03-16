@@ -5,7 +5,7 @@ export function base64EncodeOutputStream() {
   let _buffer = 0;
   let _buflen = 0;
   let _length = 0;
-  let _base64 = '';
+  let _base64 = "";
 
   const encode = (n: number): number => {
     if (n < 0) {
@@ -52,7 +52,7 @@ export function base64EncodeOutputStream() {
         // padding
         const padlen = 3 - (_length % 3);
         for (let i = 0; i < padlen; i += 1) {
-          _base64 += '=';
+          _base64 += "=";
         }
       }
     },

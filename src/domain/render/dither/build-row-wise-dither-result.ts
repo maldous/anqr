@@ -1,11 +1,11 @@
-import type { DitherResult, RGB } from '../../../modules/dither-algorithms/types';
+import type { DitherResult, RGB } from "../../../modules/dither-algorithms/types";
 
 export function buildRowWiseDitherResult(
   params: Readonly<{
     height: number;
     resolvePixel: (x: number, y: number) => { color: RGB; isDark: boolean };
     width: number;
-  }>
+  }>,
 ): DitherResult {
   const resultMatrix: boolean[][] = [];
   const resultColors: RGB[][] = [];

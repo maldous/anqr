@@ -1,5 +1,5 @@
-import type { DecodedSegmentInfo } from '../../../modules/qr-decoder/types';
-import type { DecodedEncodingMode } from './decode.types';
+import type { DecodedSegmentInfo } from "../../../modules/qr-decoder/types";
+import type { DecodedEncodingMode } from "./decode.types";
 
 export interface DecodeLoopState {
   text: string;

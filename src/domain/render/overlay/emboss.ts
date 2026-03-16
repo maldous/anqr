@@ -1,4 +1,4 @@
-import { convolve } from './convolve';
+import { convolve } from "./convolve";
 
 export function emboss(imageData: ImageData): ImageData {
   const kernel = [

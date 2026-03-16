@@ -1,4 +1,4 @@
-declare module 'gifenc' {
+declare module "gifenc" {
   export function GIFEncoder(): {
     writeFrame(
       index: Uint8Array,
@@ -11,7 +11,7 @@ declare module 'gifenc' {
         repeat?: number;
         transparent?: boolean;
         transparentIndex?: number;
-      }
+      },
     ): void;
     finish(): void;
     bytesView(): Uint8Array;
@@ -21,11 +21,11 @@ declare module 'gifenc' {
   export function quantize(
     rgba: Uint8Array | Uint8ClampedArray,
     maxColors: number,
-    options?: { format?: string }
+    options?: { format?: string },
   ): number[][];
   export function applyPalette(
     rgba: Uint8Array | Uint8ClampedArray,
     palette: number[][],
-    format?: string
+    format?: string,
   ): Uint8Array;
 }

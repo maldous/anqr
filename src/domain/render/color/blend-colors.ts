@@ -1,7 +1,7 @@
-import { parseColor } from './parse-color';
-import { BLACK } from './black';
-import { rgbaToString } from './rgba-to-string';
-import { rgbToHex } from './rgb-to-hex';
+import { parseColor } from "./parse-color";
+import { BLACK } from "./black";
+import { rgbaToString } from "./rgba-to-string";
+import { rgbToHex } from "./rgb-to-hex";
 
 /** Blend two color strings with given ratio */
 export function blendColors(color1: string, color2: string, ratio: number): string {

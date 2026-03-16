@@ -1,10 +1,10 @@
-import { getAdUnitId } from './admob-config';
-import { setCurrentBannerPosition } from './admob-banner-state';
-import type { ShowBannerDeps, ShowBannerPosition } from './show-banner-deps.type';
+import { getAdUnitId } from "./admob-config";
+import { setCurrentBannerPosition } from "./admob-banner-state";
+import type { ShowBannerDeps, ShowBannerPosition } from "./show-banner-deps.type";
 
 export async function showBannerAd(
   deps: ShowBannerDeps,
-  position: ShowBannerPosition = 'bottom'
+  position: ShowBannerPosition = "bottom",
 ): Promise<boolean> {
   if (!(deps.adMobAvailable && deps.AdMob && deps.BannerAdSize && deps.BannerAdPosition)) {
     return false;
@@ -12,17 +12,17 @@ export async function showBannerAd(
 
   try {
     await deps.AdMob.showBanner({
-      adId: getAdUnitId('banner', position),
+      adId: getAdUnitId("banner", position),
       adSize: deps.BannerAdSize.ADAPTIVE_BANNER,
       position:
-        position === 'top' ? deps.BannerAdPosition.TOP_CENTER : deps.BannerAdPosition.BOTTOM_CENTER,
+        position === "top" ? deps.BannerAdPosition.TOP_CENTER : deps.BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
     });
     setCurrentBannerPosition(position);
-    deps.log.info('Banner shown', { position });
+    deps.log.info("Banner shown", { position });
     return true;
   } catch (error) {
-    deps.log.error('Failed to show banner', { error });
+    deps.log.error("Failed to show banner", { error });
     return false;
   }
 }

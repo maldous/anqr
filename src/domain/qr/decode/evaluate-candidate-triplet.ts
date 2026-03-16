@@ -1,13 +1,13 @@
-import type { FinderPattern } from './types';
-import { pointDistance } from './utils';
-import { qrDecoderLog } from './qr-decoder-log';
-import { orderFinderPatterns } from './order-finder-patterns';
-import type { ScoredTriplet } from './scored-triplet';
+import type { FinderPattern } from "./types";
+import { pointDistance } from "./utils";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { orderFinderPatterns } from "./order-finder-patterns";
+import type { ScoredTriplet } from "./scored-triplet";
 
 export function evaluateCandidateTriplet(
   p1: FinderPattern,
   p2: FinderPattern,
-  p3: FinderPattern
+  p3: FinderPattern,
 ): ScoredTriplet | null {
   const avgSize = (p1.moduleSize + p2.moduleSize + p3.moduleSize) / 3;
   const sizeVariance =
@@ -52,7 +52,7 @@ export function evaluateCandidateTriplet(
 
   const score = squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
 
-  qrDecoderLog.trace('select: Evaluating triplet', {
+  qrDecoderLog.trace("select: Evaluating triplet", {
     topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
     topRight: { x: topRight.center.x.toFixed(1), y: topRight.center.y.toFixed(1) },
     bottomLeft: { x: bottomLeft.center.x.toFixed(1), y: bottomLeft.center.y.toFixed(1) },
@@ -66,14 +66,14 @@ export function evaluateCandidateTriplet(
   });
 
   if (squareness > 0.1) {
-    qrDecoderLog.trace('select: Rejecting - not square enough', {
+    qrDecoderLog.trace("select: Rejecting - not square enough", {
       squareness: squareness.toFixed(3),
     });
     return null;
   }
 
   if (angleDev > 0.26) {
-    qrDecoderLog.trace('select: Rejecting - angle not close to 90°', {
+    qrDecoderLog.trace("select: Rejecting - angle not close to 90°", {
       angleDev: angleDev.toFixed(3),
     });
     return null;

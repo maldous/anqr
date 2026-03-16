@@ -1,5 +1,5 @@
-import type { DiagnosticsState } from './diagnostics-state';
-import { STORAGE_KEY } from './storage-key';
+import type { DiagnosticsState } from "./diagnostics-state";
+import { STORAGE_KEY } from "./storage-key";
 
 // ============================================================================
 // State management

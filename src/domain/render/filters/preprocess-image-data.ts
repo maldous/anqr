@@ -1,20 +1,20 @@
-import { applyFilters, copyImageData } from '../../../modules/overlay';
-import { applyCannyEdge, applySobelEdge } from './filters-edge';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { applyAdaptiveNormalizationIfNeeded } from './apply-adaptive-normalization-if-needed';
-import { autoSoftenIfNeeded } from './auto-soften-if-needed';
-import { buildFilterOptionsFromConfig } from './build-filter-options-from-config';
-import { log } from './log';
+import { applyFilters, copyImageData } from "../../../modules/overlay";
+import { applyCannyEdge, applySobelEdge } from "./filters-edge";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { applyAdaptiveNormalizationIfNeeded } from "./apply-adaptive-normalization-if-needed";
+import { autoSoftenIfNeeded } from "./auto-soften-if-needed";
+import { buildFilterOptionsFromConfig } from "./build-filter-options-from-config";
+import { log } from "./log";
 
 export function preprocessImageData(
   imageData: ImageData,
   config: QRGeneratorConfig,
-  debug = false
+  debug = false,
 ): ImageData {
   const filterOptions = buildFilterOptionsFromConfig(config);
 
   if (debug) {
-    log.debug('preprocessImageData - filter options', {
+    log.debug("preprocessImageData - filter options", {
       brightness: filterOptions.brightness,
       contrast: filterOptions.contrast,
       saturation: filterOptions.saturation,
@@ -46,14 +46,14 @@ export function preprocessImageData(
   // If no additional filters to apply, return the (possibly softened) image
   if (Object.keys(filterOptions).length === 0) {
     if (debug) {
-      log.debug('preprocessImageData - no additional filters to apply');
+      log.debug("preprocessImageData - no additional filters to apply");
     }
     return workingData;
   }
 
   // Apply basic color filters.
   if (debug) {
-    log.debug('preprocessImageData - applying filters');
+    log.debug("preprocessImageData - applying filters");
   }
   let out = applyFilters(workingData, filterOptions);
 
@@ -61,15 +61,15 @@ export function preprocessImageData(
 
   // Optional edge-detect post-pass.
   if (config.filterEdgeDetect) {
-    const mode = (config.filterEdgeMode || 'sobel').toLowerCase();
+    const mode = (config.filterEdgeMode || "sobel").toLowerCase();
     if (debug) {
-      log.debug('preprocessImageData - applying edge detection', { mode });
+      log.debug("preprocessImageData - applying edge detection", { mode });
     }
-    out = mode === 'canny' ? applyCannyEdge(out) : applySobelEdge(out);
+    out = mode === "canny" ? applyCannyEdge(out) : applySobelEdge(out);
   }
 
   if (debug) {
-    log.debug('preprocessImageData - complete');
+    log.debug("preprocessImageData - complete");
   }
   return out;
 }

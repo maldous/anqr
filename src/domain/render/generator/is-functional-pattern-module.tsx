@@ -3,15 +3,15 @@ import {
   isFormatInfo,
   isTimingPattern,
   isVersionInfo,
-} from '../../qr/spec/qr-patterns';
-import { isFinderModuleOrSeparator } from './is-finder-module-or-separator';
-import { isFixedDarkModule } from './is-fixed-dark-module';
+} from "../../qr/spec/qr-patterns";
+import { isFinderModuleOrSeparator } from "./is-finder-module-or-separator";
+import { isFixedDarkModule } from "./is-fixed-dark-module";
 
 export function isFunctionalPatternModule(
   row: number,
   col: number,
   moduleCount: number,
-  version: number
+  version: number,
 ): boolean {
   return (
     isFixedDarkModule(row, col, moduleCount) ||

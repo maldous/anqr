@@ -1,11 +1,11 @@
-import type { PixelColor } from '../scaled-render-types';
+import type { PixelColor } from "../scaled-render-types";
 
 export function sampleScaledModuleOverlayColor(
   colors: (PixelColor | null)[][],
   scaledSize: number,
   scale: number,
   row: number,
-  col: number
+  col: number,
 ): PixelColor | null {
   if (!colors?.length) return null;
   const px = Math.max(0, Math.min(scaledSize - 1, Math.floor((col + 0.5) * scale)));

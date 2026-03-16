@@ -1,5 +1,5 @@
-import { log } from './log';
-import { loadFileAsCanvas } from './load-file-as-canvas';
+import { log } from "./log";
+import { loadFileAsCanvas } from "./load-file-as-canvas";
 
 export async function loadWatermarkForAnimation(watermark: {
   enabled: boolean;
@@ -8,13 +8,13 @@ export async function loadWatermarkForAnimation(watermark: {
 }): Promise<HTMLImageElement | HTMLCanvasElement | null> {
   if (
     watermark.enabled &&
-    (watermark.kind === 'image' || watermark.kind === 'pattern') &&
+    (watermark.kind === "image" || watermark.kind === "pattern") &&
     watermark.image
   ) {
     try {
       return await loadFileAsCanvas(watermark.image);
     } catch (err) {
-      log.error('Error loading watermark', { error: err });
+      log.error("Error loading watermark", { error: err });
     }
   }
   return null;

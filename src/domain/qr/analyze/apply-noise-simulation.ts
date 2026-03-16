@@ -3,12 +3,12 @@
  */
 export function applyNoiseSimulation(
   canvas: HTMLCanvasElement,
-  noiseLevel: number
+  noiseLevel: number,
 ): HTMLCanvasElement {
-  const result = document.createElement('canvas');
+  const result = document.createElement("canvas");
   result.width = canvas.width;
   result.height = canvas.height;
-  const ctx = result.getContext('2d');
+  const ctx = result.getContext("2d");
   if (!ctx) return canvas;
 
   ctx.drawImage(canvas, 0, 0);

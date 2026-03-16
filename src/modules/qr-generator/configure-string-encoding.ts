@@ -1,7 +1,7 @@
-import { createShiftJISEncoder, resetStringToBytes, setStringToBytes } from '../qr-encoder';
+import { createShiftJISEncoder, resetStringToBytes, setStringToBytes } from "../qr-encoder";
 
 export function configureStringEncoding(encoding: string): void {
-  if (encoding === 'utf8') {
+  if (encoding === "utf8") {
     setStringToBytes((s: string) => {
       const encoder = new TextEncoder();
       return Array.from(encoder.encode(s));
@@ -9,7 +9,7 @@ export function configureStringEncoding(encoding: string): void {
     return;
   }
 
-  if (encoding === 'shift-jis') {
+  if (encoding === "shift-jis") {
     setStringToBytes(createShiftJISEncoder());
     return;
   }

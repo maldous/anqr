@@ -1,1 +1,1 @@
-export const GALLERY_IMAGE_PATH = '/gallery';
+export const GALLERY_IMAGE_PATH = "/gallery";

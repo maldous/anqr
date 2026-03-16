@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/drawing-frames';
+export * from "../../domain/render/generator/drawing-frames";

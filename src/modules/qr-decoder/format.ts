@@ -1,1 +1,1 @@
-export * from '../../domain/qr/decode/format';
+export * from "../../domain/qr/decode/format";

@@ -1,6 +1,6 @@
-import type { FinderPattern } from './types';
-import { pointDistance } from './utils';
-import { orderByAngle } from './order-by-angle';
+import type { FinderPattern } from "./types";
+import { pointDistance } from "./utils";
+import { orderByAngle } from "./order-by-angle";
 
 /**
  * Order 3 finder patterns as [topLeft, topRight, bottomLeft]
@@ -9,7 +9,7 @@ import { orderByAngle } from './order-by-angle';
 export function orderFinderPatterns(
   p1: FinderPattern,
   p2: FinderPattern,
-  p3: FinderPattern
+  p3: FinderPattern,
 ): [FinderPattern, FinderPattern, FinderPattern] | null {
   // Calculate distances
   const d12 = pointDistance(p1.center, p2.center);

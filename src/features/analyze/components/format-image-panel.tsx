@@ -6,24 +6,24 @@ import {
   Info,
   QrCode,
   Ratio,
-} from 'lucide-react';
-import type { useTranslation } from 'react-i18next';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { ECC_DESCRIPTIONS } from '@/features/analyze/components/ecc-descriptions';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+} from "lucide-react";
+import type { useTranslation } from "react-i18next";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { ECC_DESCRIPTIONS } from "@/features/analyze/components/ecc-descriptions";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
 
 export function FormatImagePanel({
   result,
   t,
 }: Readonly<{
   result: QRAnalysisResult;
-  t: ReturnType<typeof useTranslation>['t'];
+  t: ReturnType<typeof useTranslation>["t"];
 }>) {
   return (
     <div className="space-y-4">
       <CollapsibleSection
-        title={t('analyze.formatInformation', 'Format Information')}
+        title={t("analyze.formatInformation", "Format Information")}
         icon={<Info className="w-4 h-4" />}
       >
         <div className="space-y-2">
@@ -51,7 +51,7 @@ export function FormatImagePanel({
 
       {result.imageProperties && (
         <CollapsibleSection
-          title={t('analyze.imageProperties', 'Image Properties')}
+          title={t("analyze.imageProperties", "Image Properties")}
           icon={<FileImage className="w-4 h-4" />}
         >
           <div className="space-y-2">
@@ -64,7 +64,7 @@ export function FormatImagePanel({
               label="Aspect Ratio"
               value={
                 result.imageProperties.aspectRatio === 1
-                  ? '1:1 (Square)'
+                  ? "1:1 (Square)"
                   : `${result.imageProperties.aspectRatio}:1`
               }
               icon={<Ratio className="w-3.5 h-3.5" />}

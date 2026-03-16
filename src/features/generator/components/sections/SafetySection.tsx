@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import { type SafetyMode, useQRStore } from '@/store/qr-store';
+import { useTranslation } from "react-i18next";
+import { type SafetyMode, useQRStore } from "@/store/qr-store";
 import {
   DynamicTestId,
   HelpLink,
@@ -12,7 +12,7 @@ import {
   SelectValue,
   Slider,
   Switch,
-} from './section-ui';
+} from "./section-ui";
 
 export function SafetySection() {
   const {
@@ -36,46 +36,46 @@ export function SafetySection() {
       {/* Safety Mode */}
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
-          <HighlightedLabel>{t('safety.safetyMode')}</HighlightedLabel>
+          <HighlightedLabel>{t("safety.safetyMode")}</HighlightedLabel>
           <HelpLink
             href="/guide#section-41"
             requiredTier="professional"
-            title={t('common.learnMore')}
+            title={t("common.learnMore")}
           />
         </Label>
         <Select value={safety.mode} onValueChange={(v) => setSafetyMode(v as SafetyMode)}>
           <SelectTrigger
-            data-testid={DynamicTestId.resolve('safety-mode-trigger', 'safety-mode-trigger')}
-            title={t('hints.safetyMode')}
+            data-testid={DynamicTestId.resolve("safety-mode-trigger", "safety-mode-trigger")}
+            title={t("hints.safetyMode")}
           >
             <SelectValue />
           </SelectTrigger>
           <SelectContent
-            data-testid={DynamicTestId.resolve('safety-mode-content', 'safety-mode-content')}
+            data-testid={DynamicTestId.resolve("safety-mode-content", "safety-mode-content")}
           >
-            <SelectItem value="off">{t('safety.off')}</SelectItem>
-            <SelectItem value="balanced">{t('safety.balanced')}</SelectItem>
-            <SelectItem value="strict">{t('safety.strict')}</SelectItem>
+            <SelectItem value="off">{t("safety.off")}</SelectItem>
+            <SelectItem value="balanced">{t("safety.balanced")}</SelectItem>
+            <SelectItem value="strict">{t("safety.strict")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {safety.mode !== 'off' && (
+      {safety.mode !== "off" && (
         <>
           {/* Min Module Size */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>
-                <HighlightedLabel>{t('safety.minModuleSize')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.minModuleSize")}</HighlightedLabel>
               </Label>
               <span className="text-sm text-muted-foreground">
-                {t('qr.nPx', { count: safety.minModulePx })}
+                {t("qr.nPx", { count: safety.minModulePx })}
               </span>
             </div>
             <Slider
               data-testid={DynamicTestId.resolve(
-                'safety-min-module-slider',
-                'safety-min-module-slider'
+                "safety-min-module-slider",
+                "safety-min-module-slider",
               )}
               value={[safety.minModulePx]}
               onValueChange={([v]) => setSafetyMinModulePx(v)}
@@ -89,16 +89,16 @@ export function SafetySection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>
-                <HighlightedLabel>{t('safety.minQuietZone')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.minQuietZone")}</HighlightedLabel>
               </Label>
               <span className="text-sm text-muted-foreground">
-                {t('qr.nModules', { count: safety.minQuietZoneModules })}
+                {t("qr.nModules", { count: safety.minQuietZoneModules })}
               </span>
             </div>
             <Slider
               data-testid={DynamicTestId.resolve(
-                'safety-min-quiet-zone-slider',
-                'safety-min-quiet-zone-slider'
+                "safety-min-quiet-zone-slider",
+                "safety-min-quiet-zone-slider",
               )}
               value={[safety.minQuietZoneModules]}
               onValueChange={([v]) =>
@@ -113,21 +113,21 @@ export function SafetySection() {
           {/* Locks */}
           <div className="space-y-2 pt-2 border-t">
             <Label className="text-muted-foreground flex items-center gap-1.5">
-              <HighlightedLabel>{t('safety.protectionLocks')}</HighlightedLabel>
+              <HighlightedLabel>{t("safety.protectionLocks")}</HighlightedLabel>
               <HelpLink
                 href="/guide#section-54"
                 requiredTier="professional"
-                title={t('common.learnMore')}
+                title={t("common.learnMore")}
               />
             </Label>
             <div className="flex items-center justify-between">
               <Label className="text-sm">
-                <HighlightedLabel>{t('safety.lockFinders')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.lockFinders")}</HighlightedLabel>
               </Label>
               <Switch
                 data-testid={DynamicTestId.resolve(
-                  'safety-lock-finders-switch',
-                  'safety-lock-finders-switch'
+                  "safety-lock-finders-switch",
+                  "safety-lock-finders-switch",
                 )}
                 checked={safety.lockFinders}
                 onCheckedChange={(checked) => setSafetyLocks({ lockFinders: checked })}
@@ -135,12 +135,12 @@ export function SafetySection() {
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-sm">
-                <HighlightedLabel>{t('safety.lockTiming')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.lockTiming")}</HighlightedLabel>
               </Label>
               <Switch
                 data-testid={DynamicTestId.resolve(
-                  'safety-lock-timing-switch',
-                  'safety-lock-timing-switch'
+                  "safety-lock-timing-switch",
+                  "safety-lock-timing-switch",
                 )}
                 checked={safety.lockTiming}
                 onCheckedChange={(checked) => setSafetyLocks({ lockTiming: checked })}
@@ -148,12 +148,12 @@ export function SafetySection() {
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-sm">
-                <HighlightedLabel>{t('safety.lockAlignment')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.lockAlignment")}</HighlightedLabel>
               </Label>
               <Switch
                 data-testid={DynamicTestId.resolve(
-                  'safety-lock-alignment-switch',
-                  'safety-lock-alignment-switch'
+                  "safety-lock-alignment-switch",
+                  "safety-lock-alignment-switch",
                 )}
                 checked={safety.lockAlign}
                 onCheckedChange={(checked) => setSafetyLocks({ lockAlign: checked })}
@@ -161,12 +161,12 @@ export function SafetySection() {
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-sm">
-                <HighlightedLabel>{t('safety.lockFormat')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.lockFormat")}</HighlightedLabel>
               </Label>
               <Switch
                 data-testid={DynamicTestId.resolve(
-                  'safety-lock-format-switch',
-                  'safety-lock-format-switch'
+                  "safety-lock-format-switch",
+                  "safety-lock-format-switch",
                 )}
                 checked={safety.lockFormat}
                 onCheckedChange={(checked) => setSafetyLocks({ lockFormat: checked })}
@@ -174,12 +174,12 @@ export function SafetySection() {
             </div>
             <div className="flex items-center justify-between">
               <Label className="text-sm">
-                <HighlightedLabel>{t('safety.lockVersion')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.lockVersion")}</HighlightedLabel>
               </Label>
               <Switch
                 data-testid={DynamicTestId.resolve(
-                  'safety-lock-version-switch',
-                  'safety-lock-version-switch'
+                  "safety-lock-version-switch",
+                  "safety-lock-version-switch",
                 )}
                 checked={safety.lockVersion}
                 onCheckedChange={(checked) => setSafetyLocks({ lockVersion: checked })}
@@ -192,18 +192,18 @@ export function SafetySection() {
       {/* QA / Analysis */}
       <div className="space-y-2 pt-2 border-t">
         <Label className="text-muted-foreground flex items-center gap-1.5">
-          <HighlightedLabel>{t('safety.qualityAnalysis')}</HighlightedLabel>
+          <HighlightedLabel>{t("safety.qualityAnalysis")}</HighlightedLabel>
           <HelpLink anchor="section-40" />
         </Label>
 
         <div className="flex items-center justify-between">
           <Label className="text-sm">
-            <HighlightedLabel>{t('safety.contrastCheck')}</HighlightedLabel>
+            <HighlightedLabel>{t("safety.contrastCheck")}</HighlightedLabel>
           </Label>
           <Switch
             data-testid={DynamicTestId.resolve(
-              'safety-contrast-check-switch',
-              'safety-contrast-check-switch'
+              "safety-contrast-check-switch",
+              "safety-contrast-check-switch",
             )}
             checked={qa.contrastCheck}
             onCheckedChange={setQaContrastCheck}
@@ -212,12 +212,12 @@ export function SafetySection() {
 
         <div className="flex items-center justify-between">
           <Label className="text-sm">
-            <HighlightedLabel>{t('safety.showHeatmap')}</HighlightedLabel>
+            <HighlightedLabel>{t("safety.showHeatmap")}</HighlightedLabel>
           </Label>
           <Switch
             data-testid={DynamicTestId.resolve(
-              'safety-show-heatmap-switch',
-              'safety-show-heatmap-switch'
+              "safety-show-heatmap-switch",
+              "safety-show-heatmap-switch",
             )}
             checked={qa.showHeatmap}
             onCheckedChange={setQaShowHeatmap}
@@ -227,16 +227,16 @@ export function SafetySection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm">
-              <HighlightedLabel>{t('safety.simulateBlur')}</HighlightedLabel>
+              <HighlightedLabel>{t("safety.simulateBlur")}</HighlightedLabel>
             </Label>
             <span className="text-sm text-muted-foreground">
-              {t('qr.nPx', { count: qa.simulateBlurPx })}
+              {t("qr.nPx", { count: qa.simulateBlurPx })}
             </span>
           </div>
           <Slider
             data-testid={DynamicTestId.resolve(
-              'safety-simulate-blur-slider',
-              'safety-simulate-blur-slider'
+              "safety-simulate-blur-slider",
+              "safety-simulate-blur-slider",
             )}
             value={[qa.simulateBlurPx]}
             onValueChange={([v]) => setQaSimulateBlur(v)}
@@ -249,16 +249,16 @@ export function SafetySection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm">
-              <HighlightedLabel>{t('safety.simulateNoise')}</HighlightedLabel>
+              <HighlightedLabel>{t("safety.simulateNoise")}</HighlightedLabel>
             </Label>
             <span className="text-sm text-muted-foreground">
-              {t('qr.nPercent', { count: qa.simulateNoise })}
+              {t("qr.nPercent", { count: qa.simulateNoise })}
             </span>
           </div>
           <Slider
             data-testid={DynamicTestId.resolve(
-              'safety-simulate-noise-slider',
-              'safety-simulate-noise-slider'
+              "safety-simulate-noise-slider",
+              "safety-simulate-noise-slider",
             )}
             value={[qa.simulateNoise]}
             onValueChange={([v]) =>
@@ -273,16 +273,16 @@ export function SafetySection() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm">
-              <HighlightedLabel>{t('safety.simulateRotation')}</HighlightedLabel>
+              <HighlightedLabel>{t("safety.simulateRotation")}</HighlightedLabel>
             </Label>
             <span className="text-sm text-muted-foreground">
-              {t('qr.nDegrees', { count: qa.simulateRotationDeg })}
+              {t("qr.nDegrees", { count: qa.simulateRotationDeg })}
             </span>
           </div>
           <Slider
             data-testid={DynamicTestId.resolve(
-              'safety-simulate-rotation-slider',
-              'safety-simulate-rotation-slider'
+              "safety-simulate-rotation-slider",
+              "safety-simulate-rotation-slider",
             )}
             value={[qa.simulateRotationDeg]}
             onValueChange={([v]) =>
@@ -298,18 +298,18 @@ export function SafetySection() {
       {/* Auto-Tuning */}
       <div className="space-y-2 pt-2 border-t">
         <Label className="text-muted-foreground flex items-center gap-1.5">
-          <HighlightedLabel>{t('safety.autoTuning')}</HighlightedLabel>
+          <HighlightedLabel>{t("safety.autoTuning")}</HighlightedLabel>
           <HelpLink anchor="section-40" />
         </Label>
 
         <div className="flex items-center justify-between">
           <Label className="text-sm">
-            <HighlightedLabel>{t('safety.autoPickVersion')}</HighlightedLabel>
+            <HighlightedLabel>{t("safety.autoPickVersion")}</HighlightedLabel>
           </Label>
           <Switch
             data-testid={DynamicTestId.resolve(
-              'safety-auto-pick-version-switch',
-              'safety-auto-pick-version-switch'
+              "safety-auto-pick-version-switch",
+              "safety-auto-pick-version-switch",
             )}
             checked={auto.pickVersion}
             onCheckedChange={setAutoPickVersion}
@@ -318,12 +318,12 @@ export function SafetySection() {
 
         <div className="flex items-center justify-between">
           <Label className="text-sm">
-            <HighlightedLabel>{t('safety.autoPickEcc')}</HighlightedLabel>
+            <HighlightedLabel>{t("safety.autoPickEcc")}</HighlightedLabel>
           </Label>
           <Switch
             data-testid={DynamicTestId.resolve(
-              'safety-auto-pick-ecc-switch',
-              'safety-auto-pick-ecc-switch'
+              "safety-auto-pick-ecc-switch",
+              "safety-auto-pick-ecc-switch",
             )}
             checked={auto.pickEcc}
             onCheckedChange={setAutoPickEcc}
@@ -333,14 +333,14 @@ export function SafetySection() {
         <div className="flex items-center justify-between">
           <div>
             <Label className="text-sm">
-              <HighlightedLabel>{t('safety.autoReduceIntensity')}</HighlightedLabel>
+              <HighlightedLabel>{t("safety.autoReduceIntensity")}</HighlightedLabel>
             </Label>
-            <p className="text-xs text-muted-foreground">{t('safety.untilScannable')}</p>
+            <p className="text-xs text-muted-foreground">{t("safety.untilScannable")}</p>
           </div>
           <Switch
             data-testid={DynamicTestId.resolve(
-              'safety-auto-reduce-intensity-switch',
-              'safety-auto-reduce-intensity-switch'
+              "safety-auto-reduce-intensity-switch",
+              "safety-auto-reduce-intensity-switch",
             )}
             checked={auto.reduceIntensityUntilSafe}
             onCheckedChange={(checked) =>
@@ -355,25 +355,25 @@ export function SafetySection() {
       {/* ECC-Aware Mode */}
       <div className="space-y-2 pt-2 border-t">
         <Label className="text-muted-foreground flex items-center gap-1.5">
-          <HighlightedLabel>{t('safety.eccAwareMode')}</HighlightedLabel>
+          <HighlightedLabel>{t("safety.eccAwareMode")}</HighlightedLabel>
           <HelpLink
             href="/guide#section-55"
             requiredTier="professional"
-            title={t('common.learnMore')}
+            title={t("common.learnMore")}
           />
         </Label>
 
         <div className="flex items-center justify-between">
           <div>
             <Label className="text-sm">
-              <HighlightedLabel>{t('safety.eccAwareEnabled')}</HighlightedLabel>
+              <HighlightedLabel>{t("safety.eccAwareEnabled")}</HighlightedLabel>
             </Label>
-            <p className="text-xs text-muted-foreground">{t('safety.eccAwareDesc')}</p>
+            <p className="text-xs text-muted-foreground">{t("safety.eccAwareDesc")}</p>
           </div>
           <Switch
             data-testid={DynamicTestId.resolve(
-              'safety-ecc-aware-enabled-switch',
-              'safety-ecc-aware-enabled-switch'
+              "safety-ecc-aware-enabled-switch",
+              "safety-ecc-aware-enabled-switch",
             )}
             checked={overlay.eccAwareEnabled}
             onCheckedChange={(checked) =>
@@ -387,16 +387,16 @@ export function SafetySection() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-sm">
-                  <HighlightedLabel>{t('safety.eccAwareRiskBudget')}</HighlightedLabel>
+                  <HighlightedLabel>{t("safety.eccAwareRiskBudget")}</HighlightedLabel>
                 </Label>
                 <span className="text-sm text-muted-foreground">
-                  {t('qr.nPercent', { count: overlay.eccAwareRiskBudget })}
+                  {t("qr.nPercent", { count: overlay.eccAwareRiskBudget })}
                 </span>
               </div>
               <Slider
                 data-testid={DynamicTestId.resolve(
-                  'safety-ecc-risk-budget-slider',
-                  'safety-ecc-risk-budget-slider'
+                  "safety-ecc-risk-budget-slider",
+                  "safety-ecc-risk-budget-slider",
                 )}
                 value={[overlay.eccAwareRiskBudget]}
                 onValueChange={([v]) =>
@@ -406,12 +406,12 @@ export function SafetySection() {
                 max={100}
                 step={5}
               />
-              <p className="text-xs text-muted-foreground">{t('safety.eccAwareRiskBudgetDesc')}</p>
+              <p className="text-xs text-muted-foreground">{t("safety.eccAwareRiskBudgetDesc")}</p>
             </div>
 
             <div className="space-y-2">
               <Label className="text-sm">
-                <HighlightedLabel>{t('safety.eccAwareWeightMap')}</HighlightedLabel>
+                <HighlightedLabel>{t("safety.eccAwareWeightMap")}</HighlightedLabel>
               </Label>
               <Select
                 value={overlay.eccAwareWeightMap}
@@ -420,33 +420,33 @@ export function SafetySection() {
                     overlay: {
                       ...s.overlay,
                       eccAwareWeightMap: v as
-                        | 'distance_to_finders'
-                        | 'block_heatmap'
-                        | 'empirical_scan_heatmap',
+                        | "distance_to_finders"
+                        | "block_heatmap"
+                        | "empirical_scan_heatmap",
                     },
                   }))
                 }
               >
                 <SelectTrigger
                   data-testid={DynamicTestId.resolve(
-                    'safety-ecc-weight-map-trigger',
-                    'safety-ecc-weight-map-trigger'
+                    "safety-ecc-weight-map-trigger",
+                    "safety-ecc-weight-map-trigger",
                   )}
                 >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent
                   data-testid={DynamicTestId.resolve(
-                    'safety-ecc-weight-map-content',
-                    'safety-ecc-weight-map-content'
+                    "safety-ecc-weight-map-content",
+                    "safety-ecc-weight-map-content",
                   )}
                 >
                   <SelectItem value="distance_to_finders">
-                    {t('safety.eccMapDistanceToFinders')}
+                    {t("safety.eccMapDistanceToFinders")}
                   </SelectItem>
-                  <SelectItem value="block_heatmap">{t('safety.eccMapBlockHeatmap')}</SelectItem>
+                  <SelectItem value="block_heatmap">{t("safety.eccMapBlockHeatmap")}</SelectItem>
                   <SelectItem value="empirical_scan_heatmap">
-                    {t('safety.eccMapEmpiricalScan')}
+                    {t("safety.eccMapEmpiricalScan")}
                   </SelectItem>
                 </SelectContent>
               </Select>

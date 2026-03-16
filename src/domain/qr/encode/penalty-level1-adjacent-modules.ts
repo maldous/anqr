@@ -1,5 +1,5 @@
-import type { QRCodeInstance } from '../../../modules/qr-encoder/types';
-import { countSameNeighbors } from './count-same-neighbors';
+import type { QRCodeInstance } from "../../../modules/qr-encoder/types";
+import { countSameNeighbors } from "./count-same-neighbors";
 
 // LEVEL1: Same color in a row/column (5+ consecutive)
 export function penaltyLevel1AdjacentModules(qrcode: QRCodeInstance, moduleCount: number): number {

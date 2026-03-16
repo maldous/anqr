@@ -2,15 +2,15 @@ import type {
   BlockEliminationResult,
   BlockSelectionResult,
   EliminationResult,
-} from './elimination';
-import type { FlattenedSelection } from './scan-fallback.types';
+} from "./elimination";
+import type { FlattenedSelection } from "./scan-fallback.types";
 
 export function forEachFlattenedSelection(
   blockSelections: BlockSelectionResult[],
   eliminationResult: EliminationResult,
   importance: number[][],
   moduleCount: number,
-  visit: (entry: FlattenedSelection) => void
+  visit: (entry: FlattenedSelection) => void,
 ): void {
   const blockResultMap = new Map<number, BlockEliminationResult>();
   for (const blockResult of eliminationResult.blockResults) {

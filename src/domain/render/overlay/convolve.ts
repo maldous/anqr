@@ -1,7 +1,7 @@
-import { clamp } from '../primitives/clamp';
-import { accumulateKernelRgb } from './accumulate-kernel-rgb';
-import { clampImageCoordinate } from './clamp-image-coordinate';
-import { edgePixelIndex } from './edge-pixel-index';
+import { clamp } from "../primitives/clamp";
+import { accumulateKernelRgb } from "./accumulate-kernel-rgb";
+import { clampImageCoordinate } from "./clamp-image-coordinate";
+import { edgePixelIndex } from "./edge-pixel-index";
 
 // ============================================
 // CONVOLUTION FILTERS

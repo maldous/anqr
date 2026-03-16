@@ -1,1 +1,1 @@
-export * from '../../platform/worker/qart/worker';
+export * from "../../platform/worker/qart/worker";

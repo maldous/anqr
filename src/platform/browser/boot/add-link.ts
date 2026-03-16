@@ -5,12 +5,12 @@ export function addLink(
     href: string;
     as?: string;
     crossOrigin?: string;
-  }
+  },
 ): void {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   if (document.getElementById(id)) return;
 
-  const link = document.createElement('link');
+  const link = document.createElement("link");
   link.id = id;
   link.rel = attrs.rel;
   link.href = attrs.href;

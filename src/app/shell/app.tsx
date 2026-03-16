@@ -1,5 +1,5 @@
-import { QRGeneratorProvider } from '@/hooks/useQRGenerator';
-import { AppContent } from './app-content';
+import { QRGeneratorProvider } from "@/hooks/useQRGenerator";
+import { AppContent } from "./app-content";
 
 export default function App() {
   return (

@@ -1,4 +1,4 @@
-import { lookupShiftJIS } from './lookup-shift-jis';
+import { lookupShiftJIS } from "./lookup-shift-jis";
 
 /**
  * Check if a string can be fully encoded in Shift-JIS without replacements

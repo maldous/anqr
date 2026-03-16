@@ -4,9 +4,9 @@
  * Notes: Generate pattern-only animation frames.
  */
 
-import type { AnimationFrame } from '@/modules/animation';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import type { AnimationFrame } from "@/modules/animation";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export async function generatePatternOnlyFrames(params: {
   previewScanConfigBase: QRGeneratorConfig;
@@ -16,7 +16,7 @@ export async function generatePatternOnlyFrames(params: {
   applyResultPersistent: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    tf: number
+    tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
 }): Promise<AnimationFrame[] | null> {
   const baseQR = await qrGenerator.generate(params.previewScanConfigBase, null);

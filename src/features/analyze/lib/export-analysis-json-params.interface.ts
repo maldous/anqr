@@ -1,6 +1,6 @@
-import type React from 'react';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import type { AnalysisSourceType } from './analysis-source-type';
+import type React from "react";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { AnalysisSourceType } from "./analysis-source-type";
 
 export interface ExportAnalysisJSONParams {
   result: QRAnalysisResult;

@@ -1,4 +1,4 @@
-import type { AnalysisStateSetters } from './analysis-runtime.types';
+import type { AnalysisStateSetters } from "./analysis-runtime.types";
 
 export function resetAnalysisState(setters: AnalysisStateSetters): void {
   setters.setError(null);

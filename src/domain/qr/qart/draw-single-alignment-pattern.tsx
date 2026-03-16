@@ -1,7 +1,7 @@
 export function drawSingleAlignmentPattern(
   modules: (boolean | null)[][],
   row: number,
-  col: number
+  col: number,
 ): void {
   for (let r = -2; r <= 2; r++) {
     for (let c = -2; c <= 2; c++) {

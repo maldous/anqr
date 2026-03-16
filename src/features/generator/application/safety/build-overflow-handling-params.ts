@@ -1,4 +1,4 @@
-import type { SafetyRunnerParams } from './safety-runner-params';
+import type { SafetyRunnerParams } from "./safety-runner-params";
 
 export function buildOverflowHandlingParams(params: SafetyRunnerParams) {
   return {

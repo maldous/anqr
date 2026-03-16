@@ -1,10 +1,10 @@
-import type { CanvasPool } from '../../platform/browser/canvas/canvas-factory';
-import { clampN } from './clamp-n';
+import type { CanvasPool } from "../../platform/browser/canvas/canvas-factory";
+import { clampN } from "./clamp-n";
 
 export async function computeOverlayComplexity(
   pool: CanvasPool,
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
-  sampleSize: number
+  sampleSize: number,
 ): Promise<number> {
   if (!overlayCanvas) return 0;
   const analysisCanvas = await pool.acquire(sampleSize, sampleSize);
@@ -12,15 +12,15 @@ export async function computeOverlayComplexity(
     analysisCanvas.width = sampleSize;
     analysisCanvas.height = sampleSize;
     const analysisCtx =
-      (analysisCanvas.getContext('2d', {
+      (analysisCanvas.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings) as CanvasRenderingContext2D | null) ??
-      (analysisCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+      (analysisCanvas.getContext("2d") as CanvasRenderingContext2D | null);
     if (!analysisCtx) return 0;
 
     analysisCtx.imageSmoothingEnabled = true;
-    analysisCtx.imageSmoothingQuality = 'high';
+    analysisCtx.imageSmoothingQuality = "high";
     analysisCtx.clearRect(0, 0, sampleSize, sampleSize);
     analysisCtx.drawImage(overlayCanvas as CanvasImageSource, 0, 0, sampleSize, sampleSize);
 

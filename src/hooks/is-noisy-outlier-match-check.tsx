@@ -1,7 +1,7 @@
 export function isNoisyOutlierMatchCheck(
   matchPercentage: number,
   frameIdx: number,
-  lastSuccessfulMatchPercentage: number
+  lastSuccessfulMatchPercentage: number,
 ): boolean {
   const minOutlierMatchPercent = 58;
   const maxAllowedMatchDrop = 12;
@@ -12,7 +12,7 @@ export function isNoisyOutlierMatchCheck(
   }
   const dynamicFloor = Math.max(
     minOutlierMatchPercent,
-    lastSuccessfulMatchPercentage - maxAllowedMatchDrop
+    lastSuccessfulMatchPercentage - maxAllowedMatchDrop,
   );
   return matchPercentage < dynamicFloor;
 }

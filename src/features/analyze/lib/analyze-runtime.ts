@@ -1,45 +1,45 @@
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { useCallback, useState } from 'react';
-import type React from 'react';
-import type { useTranslation } from 'react-i18next';
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { useCallback, useState } from "react";
+import type React from "react";
+import type { useTranslation } from "react-i18next";
 import {
   analyzeQRCode,
   analyzeQRFromFile,
   analyzeQRFromUrl,
   type QRAnalysisResult,
-} from '@/modules/qr-analyzer';
-import { cloneCanvasLike } from '@/features/analyze/lib/canvas-analysis-helpers';
-import { closeBitmapSource } from '@/features/analyze/lib/close-bitmap-source';
-import { loadCameraImageFromBlob } from '@/features/analyze/lib/load-camera-image-from-blob';
-import { resetAnalysisState } from '@/features/analyze/lib/reset-analysis-state';
-import type { AnalysisStateSetters } from '@/features/analyze/lib/analysis-runtime.types';
+} from "@/modules/qr-analyzer";
+import { cloneCanvasLike } from "@/features/analyze/lib/canvas-analysis-helpers";
+import { closeBitmapSource } from "@/features/analyze/lib/close-bitmap-source";
+import { loadCameraImageFromBlob } from "@/features/analyze/lib/load-camera-image-from-blob";
+import { resetAnalysisState } from "@/features/analyze/lib/reset-analysis-state";
+import type { AnalysisStateSetters } from "@/features/analyze/lib/analysis-runtime.types";
 export type {
   AnalysisSourceType,
   AnalysisStateSetters,
   ExportAnalysisJSONParams,
   ImportToGeneratorSetters,
-} from '@/features/analyze/lib/analysis-runtime.types';
-export { analyzeGeneratorCanvasRobustImpl } from '@/features/analyze/lib/analyze-generator-canvas-robust';
-export { exportAnalysisJSON } from '@/features/analyze/lib/export-analysis-json';
-export { importAnalysisToGenerator } from '@/features/analyze/lib/import-analysis-to-generator';
+} from "@/features/analyze/lib/analysis-runtime.types";
+export { analyzeGeneratorCanvasRobustImpl } from "@/features/analyze/lib/analyze-generator-canvas-robust";
+export { exportAnalysisJSON } from "@/features/analyze/lib/export-analysis-json";
+export { importAnalysisToGenerator } from "@/features/analyze/lib/import-analysis-to-generator";
 
 export function useAnalysisInputHandlers(
-  t: ReturnType<typeof useTranslation>['t'],
+  t: ReturnType<typeof useTranslation>["t"],
   generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
   setters: AnalysisStateSetters,
   analyzeGeneratorCanvasRobust: (
-    sourceCanvas: HTMLCanvasElement | OffscreenCanvas
-  ) => Promise<QRAnalysisResult>
+    sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+  ) => Promise<QRAnalysisResult>,
 ) {
-  const [urlInput, setUrlInput] = useState('');
+  const [urlInput, setUrlInput] = useState("");
 
   const handleFileUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       setters.setIsLoading(true);
-      setters.setLoadingSource('file');
-      setters.setAnalysisSource('file');
+      setters.setLoadingSource("file");
+      setters.setAnalysisSource("file");
       resetAnalysisState(setters);
       const imageUrl = URL.createObjectURL(file);
       setters.setOriginalImageUrl(imageUrl);
@@ -48,32 +48,32 @@ export function useAnalysisInputHandlers(
         setters.setResult(analysisResult);
         if (!analysisResult.success) {
           setters.setError(
-            analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code')
+            analysisResult.error || t("analyze.genericError", "Failed to analyze QR code"),
           );
         }
       } catch (err) {
         setters.setError(
           err instanceof Error
             ? err.message
-            : t('analyze.genericError', 'Failed to analyze QR code')
+            : t("analyze.genericError", "Failed to analyze QR code"),
         );
       } finally {
         setters.setIsLoading(false);
         setters.setLoadingSource(null);
-        e.target.value = '';
+        e.target.value = "";
       }
     },
-    [t, setters]
+    [t, setters],
   );
 
   const handleUrlSubmit = useCallback(async () => {
     if (!urlInput.trim()) {
-      setters.setError(t('analyze.urlRequired', 'Please enter a URL'));
+      setters.setError(t("analyze.urlRequired", "Please enter a URL"));
       return;
     }
     setters.setIsLoading(true);
-    setters.setLoadingSource('url');
-    setters.setAnalysisSource('url');
+    setters.setLoadingSource("url");
+    setters.setAnalysisSource("url");
     resetAnalysisState(setters);
     setters.setOriginalImageUrl(urlInput.trim());
     try {
@@ -81,12 +81,12 @@ export function useAnalysisInputHandlers(
       setters.setResult(analysisResult);
       if (!analysisResult.success) {
         setters.setError(
-          analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code')
+          analysisResult.error || t("analyze.genericError", "Failed to analyze QR code"),
         );
       }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : t('analyze.loadFailed', 'Failed to load image');
+        err instanceof Error ? err.message : t("analyze.loadFailed", "Failed to load image");
       setters.setError(message);
     } finally {
       setters.setIsLoading(false);
@@ -96,15 +96,15 @@ export function useAnalysisInputHandlers(
 
   const handleCameraCapture = useCallback(async () => {
     setters.setIsLoading(true);
-    setters.setLoadingSource('camera');
-    setters.setAnalysisSource('camera');
+    setters.setLoadingSource("camera");
+    setters.setAnalysisSource("camera");
     resetAnalysisState(setters);
     try {
       const permissions = await Camera.checkPermissions();
-      if (permissions.camera === 'denied') {
+      if (permissions.camera === "denied") {
         const requested = await Camera.requestPermissions();
-        if (requested.camera === 'denied') {
-          setters.setError(t('camera.permissionDenied', 'Camera permission denied'));
+        if (requested.camera === "denied") {
+          setters.setError(t("camera.permissionDenied", "Camera permission denied"));
           return;
         }
       }
@@ -115,7 +115,7 @@ export function useAnalysisInputHandlers(
         source: CameraSource.Camera,
       });
       if (!image.webPath) {
-        setters.setError(t('analyze.cameraLoadFailed', 'Failed to load captured image'));
+        setters.setError(t("analyze.cameraLoadFailed", "Failed to load captured image"));
         return;
       }
       setters.setOriginalImageUrl(image.webPath);
@@ -128,33 +128,33 @@ export function useAnalysisInputHandlers(
       const scale = sourceMaxEdge > maxEdge ? maxEdge / sourceMaxEdge : 1;
       const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
       const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = targetWidth;
       canvas.height = targetHeight;
-      const ctx = canvas.getContext('2d', {
+      const ctx = canvas.getContext("2d", {
         willReadFrequently: true,
       } as CanvasRenderingContext2DSettings | undefined);
       if (!ctx) {
         closeBitmapSource(source);
-        setters.setError(t('analyze.cameraProcessError', 'Could not process image'));
+        setters.setError(t("analyze.cameraProcessError", "Could not process image"));
         return;
       }
       ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      ctx.imageSmoothingQuality = "high";
       ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
       closeBitmapSource(source);
       const analysisResult = analyzeQRCode(canvas);
       setters.setResult(analysisResult);
-      setters.setAnalysisSource('camera');
+      setters.setAnalysisSource("camera");
       if (!analysisResult.success) {
         setters.setError(
-          analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected')
+          analysisResult.error || t("analyze.noCodeDetected", "No QR code detected"),
         );
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
-        setters.setError(t('analyze.cameraFailed', 'Camera capture failed'));
+      if (!(errorMessage.includes("cancelled") || errorMessage.includes("User cancelled"))) {
+        setters.setError(t("analyze.cameraFailed", "Camera capture failed"));
       }
     } finally {
       setters.setIsLoading(false);
@@ -165,42 +165,42 @@ export function useAnalysisInputHandlers(
   const handleAnalyzeGenerator = useCallback(async () => {
     if (!generatedCanvas) return;
     setters.setIsLoading(true);
-    setters.setLoadingSource('generator');
+    setters.setLoadingSource("generator");
     resetAnalysisState(setters);
     try {
       const canvasForDisplay =
         generatedCanvas instanceof HTMLCanvasElement
           ? generatedCanvas
           : cloneCanvasLike(generatedCanvas);
-      if (typeof canvasForDisplay.toBlob === 'function') {
+      if (typeof canvasForDisplay.toBlob === "function") {
         const blob = await new Promise<Blob | null>((resolve) => {
-          canvasForDisplay.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+          canvasForDisplay.toBlob((nextBlob) => resolve(nextBlob), "image/png");
         });
         if (blob) {
           const objectUrl = URL.createObjectURL(blob);
           setters.setOriginalImageUrl((previous) => {
-            if (typeof previous === 'string' && previous.startsWith('blob:')) {
+            if (typeof previous === "string" && previous.startsWith("blob:")) {
               URL.revokeObjectURL(previous);
             }
             return objectUrl;
           });
         } else {
-          setters.setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
+          setters.setOriginalImageUrl(canvasForDisplay.toDataURL("image/png"));
         }
       } else {
-        setters.setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
+        setters.setOriginalImageUrl(canvasForDisplay.toDataURL("image/png"));
       }
       const analysisResult = await analyzeGeneratorCanvasRobust(generatedCanvas);
       setters.setResult(analysisResult);
-      setters.setAnalysisSource('generator');
+      setters.setAnalysisSource("generator");
       if (!analysisResult.success) {
         setters.setError(
-          analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected')
+          analysisResult.error || t("analyze.noCodeDetected", "No QR code detected"),
         );
       }
     } catch (err) {
       setters.setError(
-        err instanceof Error ? err.message : t('analyze.genericError', 'Failed to analyze QR code')
+        err instanceof Error ? err.message : t("analyze.genericError", "Failed to analyze QR code"),
       );
     } finally {
       setters.setIsLoading(false);

@@ -1,12 +1,12 @@
-import { decodeQR } from '../../../modules/qr-decoder';
-import type { ScanResult } from './scanner.types';
+import { decodeQR } from "../../../modules/qr-decoder";
+import type { ScanResult } from "./scanner.types";
 
 /**
  * Scan image data for QR code
  */
 export function scanImageData(imageData: ImageData): ScanResult {
   try {
-    const result = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
+    const result = decodeQR(imageData, { inversionAttempts: "attemptBoth" });
 
     if (result?.success && result.data) {
       return {

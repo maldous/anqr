@@ -1,1 +1,1 @@
-export * from '../../domain/qr/spec/constants';
+export * from "../../domain/qr/spec/constants";

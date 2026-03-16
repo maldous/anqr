@@ -1,8 +1,8 @@
-import type { AnimationOptions } from '../../../modules/animation/types';
+import type { AnimationOptions } from "../../../modules/animation/types";
 
 export function resolveEffectBounds(
   canvas: HTMLCanvasElement | OffscreenCanvas,
-  options: Partial<AnimationOptions>
+  options: Partial<AnimationOptions>,
 ): { x: number; y: number; width: number; height: number } {
   const raw = options.effectBounds;
   if (!raw) {

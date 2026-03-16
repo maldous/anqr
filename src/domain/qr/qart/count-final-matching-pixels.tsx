@@ -2,7 +2,7 @@ export function countFinalMatchingPixels(
   finalMatrix: boolean[][],
   targets: boolean[][],
   dataPixels: Set<number>,
-  moduleCount: number
+  moduleCount: number,
 ): number {
   let matching = 0;
   for (let row = 0; row < moduleCount; row++) {

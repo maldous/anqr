@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
 
 export interface SafetyRunnerParams {
   clearGenerationProgress: () => void;
@@ -9,7 +9,7 @@ export interface SafetyRunnerParams {
   overlayEnabled: boolean;
   runGeneratorWithStatus: (
     cfg: QRGeneratorConfig,
-    overlaySource: HTMLCanvasElement | OffscreenCanvas | null
+    overlaySource: HTMLCanvasElement | OffscreenCanvas | null,
   ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
   setError: (v: string | null) => void;
   setHasOverflowError: (v: boolean) => void;

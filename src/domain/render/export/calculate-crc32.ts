@@ -1,4 +1,4 @@
-import { CRC32_TABLE } from './crc32-table.const';
+import { CRC32_TABLE } from "./crc32-table.const";
 
 /**
  * CRC32 calculation for PNG chunks

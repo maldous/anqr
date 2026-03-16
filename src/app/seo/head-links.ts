@@ -1,2 +1,2 @@
-export { updateHreflangLinks } from './update-hreflang-links';
-export { updateCanonicalUrl } from './update-canonical-url';
+export { updateHreflangLinks } from "./update-hreflang-links";
+export { updateCanonicalUrl } from "./update-canonical-url";

@@ -1,1 +1,1 @@
-export type OverlayType = 'static' | 'animated';
+export type OverlayType = "static" | "animated";

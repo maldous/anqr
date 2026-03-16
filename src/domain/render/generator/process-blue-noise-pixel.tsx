@@ -1,10 +1,10 @@
-import { sampleBlueNoise } from '../dither';
-import { packColor } from './pack-color';
-import { clamp01 } from './clamp01';
-import { moduleCenterWeight } from './module-center-weight';
-import { pixelSamplePrelude } from './pixel-sample-prelude';
-import { writeLockedModulePixel } from './write-locked-module-pixel';
-import type { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
+import { sampleBlueNoise } from "../dither";
+import { packColor } from "./pack-color";
+import { clamp01 } from "./clamp01";
+import { moduleCenterWeight } from "./module-center-weight";
+import { pixelSamplePrelude } from "./pixel-sample-prelude";
+import { writeLockedModulePixel } from "./write-locked-module-pixel";
+import type { BlueNoisePixelCtx } from "./blue-noise-pixel-ctx";
 
 export function processBlueNoisePixel(
   ctx: BlueNoisePixelCtx,
@@ -12,7 +12,7 @@ export function processBlueNoisePixel(
   y: number,
   matrixBits: Uint8Array,
   packedColors: Uint32Array,
-  desire: Float32Array
+  desire: Float32Array,
 ): void {
   const { b, fixedDarkUnlocked, g, moduleLocked, overlayDark, qrIsDark, r, sampleIdx } =
     pixelSamplePrelude(ctx, x, y);
@@ -37,7 +37,7 @@ export function processBlueNoisePixel(
   const isDark = n < d;
 
   matrixBits[sampleIdx] = isDark ? 1 : 0;
-  if (ctx.config.colorMode !== 'bw') {
+  if (ctx.config.colorMode !== "bw") {
     packedColors[sampleIdx] = packColor(r, g, b);
   }
 }

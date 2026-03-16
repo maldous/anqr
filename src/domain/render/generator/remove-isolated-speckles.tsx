@@ -1,7 +1,7 @@
-import type { QRCodeInstance, QRGeneratorConfig } from './types';
-import { pixelIndex } from './pixel-index';
-import { shouldLockModule } from './should-lock-module';
-import { countSameNeighbors } from './count-same-neighbors';
+import type { QRCodeInstance, QRGeneratorConfig } from "./types";
+import { pixelIndex } from "./pixel-index";
+import { shouldLockModule } from "./should-lock-module";
+import { countSameNeighbors } from "./count-same-neighbors";
 
 export function removeIsolatedSpeckles(
   qr: QRCodeInstance,
@@ -10,7 +10,7 @@ export function removeIsolatedSpeckles(
   moduleCount: number,
   scale: number,
   version: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): void {
   const copy = matrixBits.slice();
   for (let y = 1; y < scaledSize - 1; y++) {

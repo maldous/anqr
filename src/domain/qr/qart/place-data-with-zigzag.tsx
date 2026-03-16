@@ -1,11 +1,11 @@
-import { getMaskFunction } from '../spec/masks';
-import { placeOneDataModule } from './place-one-data-module';
+import { getMaskFunction } from "../spec/masks";
+import { placeOneDataModule } from "./place-one-data-module";
 
 export function placeDataWithZigzag(
   modules: (boolean | null)[][],
   interleaved: number[],
   maskPattern: number,
-  moduleCount: number
+  moduleCount: number,
 ): void {
   const maskFunc = getMaskFunction(maskPattern);
   let inc = -1;
@@ -26,7 +26,7 @@ export function placeDataWithZigzag(
           interleaved,
           byteIndex,
           bitIndex,
-          maskFunc
+          maskFunc,
         );
         byteIndex = placed.byteIndex;
         bitIndex = placed.bitIndex;

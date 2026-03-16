@@ -4,7 +4,7 @@
  * Notes: Cleanup generation state after completion.
  */
 
-import { dispatchRenderCompleteEvent } from '@/features/generator/application/generation/generation-fn-dispatchevent';
+import { dispatchRenderCompleteEvent } from "@/features/generator/application/generation/generation-fn-dispatchevent";
 
 export function cleanupGenerateState(params: {
   activeQArtRequestAbortRef: { current: AbortController | null };

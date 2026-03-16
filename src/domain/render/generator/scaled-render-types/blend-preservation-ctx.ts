@@ -1,4 +1,4 @@
-import type { RGB } from '../../../../modules/qr-generator/types';
+import type { RGB } from "../../../../modules/qr-generator/types";
 
 export interface BlendPreservationCtx {
   ctx: CanvasRenderingContext2D;
@@ -9,7 +9,7 @@ export interface BlendPreservationCtx {
   scaledSize: number;
   moduleCount: number;
   finderStrengthN: number;
-  blendPreservationMode: 'dither' | 'overlay';
+  blendPreservationMode: "dither" | "overlay";
   isDitheredMode: boolean;
   qr: { isDark(row: number, col: number): boolean };
   colors: (RGB | null)[][];
@@ -17,7 +17,7 @@ export interface BlendPreservationCtx {
     mRow: number,
     mCol: number,
     sRow: number,
-    sCol: number
+    sCol: number,
   ) => { r: number; g: number; b: number };
   sampleModuleColor: (row: number, col: number) => RGB | null;
   estimatePaperLuma: (sampled: RGB | null) => number;

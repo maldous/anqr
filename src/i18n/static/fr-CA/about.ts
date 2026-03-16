@@ -1,17 +1,17 @@
-import type { PageDefinition } from '../types';
+import type { PageDefinition } from "../types";
 
 export const about: PageDefinition = {
   title: "À propos de l'ANQR",
   description:
     "ANQR est un générateur de codes QR gratuit avec une approche axée sur le client : générez des codes QR localement ou utilisez notre API pour l'intégration.",
-  lastUpdated: '1 février 2026',
+  lastUpdated: "1 février 2026",
   primaryLinks: [
-    { href: '/?lang=${lang}', label: 'Ouvrez le générateur', type: 'generator' },
-    { href: '/learn?lang=${lang}', label: 'Parcourir les articles Apprendre', type: 'learn' },
+    { href: "/?lang=${lang}", label: "Ouvrez le générateur", type: "generator" },
+    { href: "/learn?lang=${lang}", label: "Parcourir les articles Apprendre", type: "learn" },
   ],
   relatedLinks: [
-    { href: '/privacy?lang=${lang}', label: 'Politique de confidentialité', type: 'external' },
-    { href: '/terms?lang=${lang}', label: "Conditions d'utilisation", type: 'external' },
+    { href: "/privacy?lang=${lang}", label: "Politique de confidentialité", type: "external" },
+    { href: "/terms?lang=${lang}", label: "Conditions d'utilisation", type: "external" },
   ],
   sections: [
     {
@@ -22,14 +22,14 @@ export const about: PageDefinition = {
       ],
     },
     {
-      heading: 'Principales caractéristiques',
+      heading: "Principales caractéristiques",
       bullets: [
-        'Générez instantanément des codes QR dans votre navigateur – aucun compte requis.',
+        "Générez instantanément des codes QR dans votre navigateur – aucun compte requis.",
         "Personnalisez les couleurs, les styles de modules, les modèles de recherche et ajoutez des superpositions d'images.",
-        'Exportez dans plusieurs formats : PNG, SVG, WebP et GIF animé.',
+        "Exportez dans plusieurs formats : PNG, SVG, WebP et GIF animé.",
         "Contrôles avancés pour le niveau de correction des erreurs, la version QR, le mode d'encodage et la sélection du masque.",
-        'Conseils de sécurité de numérisation et aperçu en direct pour aider à garder les codes lisibles sur papier et sur les écrans.',
-        'API côté serveur pour une intégration professionnelle avec prise en charge complète des paramètres.',
+        "Conseils de sécurité de numérisation et aperçu en direct pour aider à garder les codes lisibles sur papier et sur les écrans.",
+        "API côté serveur pour une intégration professionnelle avec prise en charge complète des paramètres.",
         "Fonctionne hors ligne une fois chargée - il s'agit d'une application Web statique que vous pouvez exécuter n'importe où.",
       ],
     },
@@ -47,29 +47,29 @@ export const about: PageDefinition = {
       paragraphs: [`email@anqr.link`],
     },
     {
-      heading: 'La publicité et comment nous restons libres',
+      heading: "La publicité et comment nous restons libres",
       paragraphs: [
         "ANQR est gratuit et financé par la publicité. Nous pouvons diffuser des annonces via Google AdSense et/ou d'autres partenaires publicitaires.",
-        'Les fournisseurs de publicités peuvent utiliser des cookies ou des technologies similaires pour personnaliser les publicités en fonction de vos intérêts et de votre activité de navigation. Vous pouvez gérer les préférences publicitaires dans les paramètres de votre appareil et via les paramètres publicitaires de Google, et en savoir plus dans notre Politique de confidentialité.',
+        "Les fournisseurs de publicités peuvent utiliser des cookies ou des technologies similaires pour personnaliser les publicités en fonction de vos intérêts et de votre activité de navigation. Vous pouvez gérer les préférences publicitaires dans les paramètres de votre appareil et via les paramètres publicitaires de Google, et en savoir plus dans notre Politique de confidentialité.",
         "Nous ne vendons pas le contenu que vous encodez dans les codes QR. Les publicités aident à couvrir les coûts de fonctionnement et d'amélioration du projet.",
       ],
     },
     {
-      heading: 'Normes ouvertes',
+      heading: "Normes ouvertes",
       paragraphs: [
         "ANQR génère des codes QR basés sur la norme ISO/IEC 18004 et vise une large compatibilité entre les scanners, les appareils photo et les flux de travail d'impression.",
       ],
     },
     {
-      heading: 'Avis de marque',
+      heading: "Avis de marque",
       paragraphs: [
         "QR Code® est une marque déposée de DENSO WAVE INCORPORATED. ANQR n'est pas affilié, approuvé ou sponsorisé par DENSO WAVE INCORPORATED.",
       ],
     },
     {
-      heading: 'Commentaires et contributions',
+      heading: "Commentaires et contributions",
       paragraphs: [
-        'Nous apprécions les commentaires, les rapports de bogues et les suggestions de fonctionnalités. Veuillez nous contacter par e-mail ou via la page de contact. Nous lisons chaque message, bien que les délais de réponse puissent varier.',
+        "Nous apprécions les commentaires, les rapports de bogues et les suggestions de fonctionnalités. Veuillez nous contacter par e-mail ou via la page de contact. Nous lisons chaque message, bien que les délais de réponse puissent varier.",
       ],
     },
   ],

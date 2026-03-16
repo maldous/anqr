@@ -1,9 +1,9 @@
-import { generateEthereumEIP681 } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateEthereumEIP681 } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeEthereumEIP681(payload: PayloadData): string {
   const eth = payload.ethereum;
-  if (!eth.targetAddress) return '';
+  if (!eth.targetAddress) return "";
   return generateEthereumEIP681({
     targetAddress: eth.targetAddress,
     chainId: eth.chainId,

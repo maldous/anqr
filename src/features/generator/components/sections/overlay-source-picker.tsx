@@ -1,12 +1,12 @@
-import { Camera as CameraIcon, Image as ImageIcon, Link, Loader2, Upload } from 'lucide-react';
-import type { useOverlaySourceActions } from './use-overlay-source-actions';
-import { Capacitor } from '@capacitor/core';
-import type React from 'react';
-import { Button } from '@/ui/primitives/button';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
-import { GALLERY_IMAGES } from './overlay-section-manifest';
+import { Camera as CameraIcon, Image as ImageIcon, Link, Loader2, Upload } from "lucide-react";
+import type { useOverlaySourceActions } from "./use-overlay-source-actions";
+import { Capacitor } from "@capacitor/core";
+import type React from "react";
+import { Button } from "@/ui/primitives/button";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
+import { GALLERY_IMAGES } from "./overlay-section-manifest";
 
 export function OverlaySourcePicker({
   fileInputRef,
@@ -48,38 +48,38 @@ export function OverlaySourcePicker({
           {cameraError}
         </div>
       )}
-      <div className={`grid gap-2 ${Capacitor.isNativePlatform() ? 'grid-cols-4' : 'grid-cols-3'}`}>
+      <div className={`grid gap-2 ${Capacitor.isNativePlatform() ? "grid-cols-4" : "grid-cols-3"}`}>
         <Button
           variant="outline"
           className="flex flex-col items-center justify-center h-16 p-2"
           onClick={() => fileInputRef.current?.click()}
-          data-testid={DynamicTestId.resolve('overlay-upload', 'overlay-upload')}
+          data-testid={DynamicTestId.resolve("overlay-upload", "overlay-upload")}
         >
           <Upload className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('overlay.upload')}</span>
+          <span className="text-xs">{t("overlay.upload")}</span>
         </Button>
         <Button
           variant="outline"
           className="flex flex-col items-center justify-center h-16 p-2"
           onClick={() => setShowUrlInput(!showUrlInput)}
-          data-testid={DynamicTestId.resolve('overlay-from-url-button', 'overlay-from-url-button')}
+          data-testid={DynamicTestId.resolve("overlay-from-url-button", "overlay-from-url-button")}
         >
           <Link className="h-5 w-5 mb-1" />
-          <span className="text-xs">{t('payload.url')}</span>
+          <span className="text-xs">{t("payload.url")}</span>
         </Button>
         <Button
           variant="outline"
           className="flex flex-col items-center justify-center h-16 p-2"
           onClick={() => setShowGalleryPicker(!showGalleryPicker)}
           disabled={galleryLoading}
-          data-testid={DynamicTestId.resolve('overlay-gallery-button', 'overlay-gallery-button')}
+          data-testid={DynamicTestId.resolve("overlay-gallery-button", "overlay-gallery-button")}
         >
           {galleryLoading ? (
             <Loader2 className="h-5 w-5 mb-1 animate-spin" />
           ) : (
             <ImageIcon className="h-5 w-5 mb-1" />
           )}
-          <span className="text-xs">{t('nav.gallery')}</span>
+          <span className="text-xs">{t("nav.gallery")}</span>
         </Button>
         {Capacitor.isNativePlatform() && (
           <Button
@@ -87,20 +87,20 @@ export function OverlaySourcePicker({
             className="flex flex-col items-center justify-center h-16 p-2"
             onClick={sourceActions.handleCameraCapture}
             disabled={cameraLoading}
-            data-testid={DynamicTestId.resolve('overlay-photo-button', 'overlay-photo-button')}
+            data-testid={DynamicTestId.resolve("overlay-photo-button", "overlay-photo-button")}
           >
             {cameraLoading ? (
               <Loader2 className="h-5 w-5 mb-1 animate-spin" />
             ) : (
               <CameraIcon className="h-5 w-5 mb-1" />
             )}
-            <span className="text-xs">{t('overlay.photo')}</span>
+            <span className="text-xs">{t("overlay.photo")}</span>
           </Button>
         )}
       </div>
       {showGalleryPicker && (
         <div className="space-y-2 p-3 border rounded-md bg-muted/30">
-          <Label className="text-sm">{t('overlay.selectImage')}</Label>
+          <Label className="text-sm">{t("overlay.selectImage")}</Label>
           <div className="grid grid-cols-2 gap-2">
             {GALLERY_IMAGES.map((img) => (
               <button
@@ -121,7 +121,7 @@ export function OverlaySourcePicker({
       )}
       {showUrlInput && (
         <div className="space-y-2 p-3 border rounded-md bg-muted/30">
-          <Label className="text-sm">{t('overlay.imageUrl')}</Label>
+          <Label className="text-sm">{t("overlay.imageUrl")}</Label>
           <div className="flex gap-2">
             <Input
               type="url"
@@ -131,7 +131,7 @@ export function OverlaySourcePicker({
                 setUrlInput(e.target.value);
                 setUrlError(null);
               }}
-              onKeyDown={(e) => e.key === 'Enter' && sourceActions.loadFromUrl()}
+              onKeyDown={(e) => e.key === "Enter" && sourceActions.loadFromUrl()}
               className="flex-1"
             />
             <Button
@@ -139,15 +139,15 @@ export function OverlaySourcePicker({
               disabled={isLoadingUrl || !urlInput.trim()}
               size="sm"
               data-testid={DynamicTestId.resolve(
-                'overlay-load-url-button',
-                'overlay-load-url-button'
+                "overlay-load-url-button",
+                "overlay-load-url-button",
               )}
             >
-              {isLoadingUrl ? <Loader2 className="h-4 w-4 animate-spin" /> : t('overlay.load')}
+              {isLoadingUrl ? <Loader2 className="h-4 w-4 animate-spin" /> : t("overlay.load")}
             </Button>
           </div>
           {urlError && <p className="text-xs text-destructive">{urlError}</p>}
-          <p className="text-xs text-muted-foreground">{t('overlay.corsNote')}</p>
+          <p className="text-xs text-muted-foreground">{t("overlay.corsNote")}</p>
         </div>
       )}
     </div>

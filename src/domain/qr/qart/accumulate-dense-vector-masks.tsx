@@ -1,4 +1,4 @@
-import { accumulateByteGroupMasks } from './accumulate-byte-group-masks';
+import { accumulateByteGroupMasks } from "./accumulate-byte-group-masks";
 
 export function accumulateDenseVectorMasks(
   blockBits: Uint8Array,
@@ -9,7 +9,7 @@ export function accumulateDenseVectorMasks(
   groupIndexForBit: Int32Array,
   bitMaskForBit: Int32Array,
   groupMasks: Int32Array,
-  touched: Int32Array
+  touched: Int32Array,
 ): number {
   let touchedCount = 0;
   for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
@@ -24,7 +24,7 @@ export function accumulateDenseVectorMasks(
       bitMaskForBit,
       groupMasks,
       touched,
-      touchedCount
+      touchedCount,
     );
   }
   return touchedCount;

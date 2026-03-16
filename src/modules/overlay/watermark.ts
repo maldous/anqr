@@ -1,1 +1,1 @@
-export * from '../../domain/render/overlay/watermark';
+export * from "../../domain/render/overlay/watermark";

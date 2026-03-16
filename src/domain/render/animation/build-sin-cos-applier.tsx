@@ -1,13 +1,13 @@
-import { clampToByte } from './clamp-to-byte';
-import { buildSinCosLUT } from './build-sin-cos-lut';
-import type { PatternFrameApplier } from './pattern-frame-applier';
+import { clampToByte } from "./clamp-to-byte";
+import { buildSinCosLUT } from "./build-sin-cos-lut";
+import type { PatternFrameApplier } from "./pattern-frame-applier";
 
 export function buildSinCosApplier(
   lut: ReturnType<typeof buildSinCosLUT>,
   width: number,
   height: number,
   baseScale: number,
-  amplitudeScale: number
+  amplitudeScale: number,
 ): PatternFrameApplier {
   return (data) => {
     for (let y = 0; y < height; y++) {

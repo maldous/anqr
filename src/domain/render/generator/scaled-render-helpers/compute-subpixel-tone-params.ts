@@ -1,6 +1,6 @@
-import type { QRGeneratorConfig } from '../../../../modules/qr-generator/types';
-import type { SubpixelToneParams } from '../scaled-render-types';
-import { curveIntensity } from '../pixel-matrix-utils';
+import type { QRGeneratorConfig } from "../../../../modules/qr-generator/types";
+import type { SubpixelToneParams } from "../scaled-render-types";
+import { curveIntensity } from "../pixel-matrix-utils";
 
 export function computeSubpixelToneParams(config: QRGeneratorConfig): SubpixelToneParams {
   const strength = curveIntensity(config.overlayIntensity ?? 100);

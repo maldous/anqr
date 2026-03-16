@@ -1,6 +1,6 @@
-import { BitArray, BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
-import { Binarizer, type LuminanceSource } from './luminance';
+import { BitArray, BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
+import { Binarizer, type LuminanceSource } from "./luminance";
 
 /**
  * Global histogram binarizer using image-wide threshold

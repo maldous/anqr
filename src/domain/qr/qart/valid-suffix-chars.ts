@@ -7,5 +7,5 @@
  * The '#' character is NOT included as it's added as the prefix.
  */
 export const VALID_SUFFIX_CHARS = new Set(
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~'.split('')
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~".split(""),
 );

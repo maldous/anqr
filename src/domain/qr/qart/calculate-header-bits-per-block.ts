@@ -1,5 +1,5 @@
-import { type RSBlockInfo } from './bit-mapping';
-import { calculateProtectedBitsPerBlock } from './calculate-protected-bits-per-block';
+import { type RSBlockInfo } from "./bit-mapping";
+import { calculateProtectedBitsPerBlock } from "./calculate-protected-bits-per-block";
 
 /**
  * @deprecated Use calculateProtectedBitsPerBlock instead
@@ -7,7 +7,7 @@ import { calculateProtectedBitsPerBlock } from './calculate-protected-bits-per-b
  */
 export function calculateHeaderBitsPerBlock(
   rsBlockInfo: RSBlockInfo[],
-  headerBitCount: number
+  headerBitCount: number,
 ): number[] {
   return calculateProtectedBitsPerBlock(rsBlockInfo, headerBitCount);
 }

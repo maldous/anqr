@@ -1,5 +1,5 @@
-import { getContrastRatio, parseColor } from '../../render/color/color';
-import type { ContrastReport } from './safety.types';
+import { getContrastRatio, parseColor } from "../../render/color/color";
+import type { ContrastReport } from "./safety.types";
 
 /**
  * Analyze contrast between foreground and background colors

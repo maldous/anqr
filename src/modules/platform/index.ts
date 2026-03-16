@@ -3,9 +3,9 @@
  * Platform-specific adapters for Capacitor plugins (AdMob, MediaStore)
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('PLATFORM');
+const _log = createLogger("PLATFORM");
 
 // AdMob Service
 export {
@@ -30,15 +30,15 @@ export {
   showRewardedAd,
   showTopBanner,
   trackGenerationAndShowAd,
-} from '../../platform/native/ads/admob';
+} from "../../platform/native/ads/admob";
 
 // Media Store Writer
 export {
   MediaStoreWriter,
   type MediaStoreWriterPlugin,
   saveBase64ToDocuments,
-} from '../../platform/native/media-store/media-store';
+} from "../../platform/native/media-store/media-store";
 
 // Platform UX helpers
-export { showNativeToast } from '../../platform/native/notifications/native-toast';
-export { loadWebOnlyBootAssets } from '../../platform/browser/boot/web-only-assets';
+export { showNativeToast } from "../../platform/native/notifications/native-toast";
+export { loadWebOnlyBootAssets } from "../../platform/browser/boot/web-only-assets";

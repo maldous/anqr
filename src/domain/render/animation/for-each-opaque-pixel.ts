@@ -1,6 +1,6 @@
 export function forEachOpaquePixel(
   data: Uint8ClampedArray,
-  visit: (index: number, r: number, g: number, b: number, isDark: boolean) => void
+  visit: (index: number, r: number, g: number, b: number, isDark: boolean) => void,
 ): void {
   for (let index = 0; index < data.length; index += 4) {
     if (data[index + 3] === 0) continue;

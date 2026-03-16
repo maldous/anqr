@@ -1,5 +1,5 @@
-import { getOverlayColor } from '../overlay/overlay-data-packed';
-import type { OverlayData, RGBWithMeta } from '../../../modules/qr-generator/types';
+import { getOverlayColor } from "../overlay/overlay-data-packed";
+import type { OverlayData, RGBWithMeta } from "../../../modules/qr-generator/types";
 
 /**
  * Normalize colors to RGB format
@@ -7,7 +7,7 @@ import type { OverlayData, RGBWithMeta } from '../../../modules/qr-generator/typ
  */
 export function normalizeColors(
   overlayData: OverlayData | null | undefined,
-  moduleCount: number
+  moduleCount: number,
 ): (RGBWithMeta | null)[][] {
   const result: (RGBWithMeta | null)[][] = [];
 

@@ -5,7 +5,7 @@
 export function calculateECCDamage(
   originalData: Uint8Array,
   modifiedData: Uint8Array,
-  eccCount: number
+  eccCount: number,
 ): { changedCodewords: number; safeLimit: number; isOverBudget: boolean } {
   let changedCodewords = 0;
   for (let i = 0; i < originalData.length; i++) {

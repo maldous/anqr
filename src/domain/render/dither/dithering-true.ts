@@ -3,11 +3,11 @@
  * True pixel-level dithering for high-quality overlay integration
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { rgbToGray } from '../color/color';
-import type { QRGeneratorConfig, RGBWithMeta } from '../../../modules/qr-generator/types';
+import { createLogger } from "../../../infra/logging/logger";
+import { rgbToGray } from "../color/color";
+import type { QRGeneratorConfig, RGBWithMeta } from "../../../modules/qr-generator/types";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 /**
  * Apply true dithering at pixel level
@@ -16,10 +16,10 @@ export function applyTrueDither(
   imageData: Uint8ClampedArray,
   width: number,
   height: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } {
   const _strength = (config.ditherStrength ?? 50) / 100;
-  const colorMode = config.colorMode || 'bw';
+  const colorMode = config.colorMode || "bw";
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
@@ -43,7 +43,7 @@ export function applyTrueDither(
 
       matrix[y][x] = isDark;
 
-      if (colorMode === 'bw') {
+      if (colorMode === "bw") {
         colors[y][x] = null;
       } else {
         colors[y][x] = { r, g, b };

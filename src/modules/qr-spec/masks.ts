@@ -1,1 +1,1 @@
-export * from '../../domain/qr/spec/masks';
+export * from "../../domain/qr/spec/masks";

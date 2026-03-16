@@ -1,10 +1,10 @@
-import { type BitPixelMapping } from './bit-mapping';
-import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
-import type { RSBasisVector } from './rs-basis';
-import type { EliminationResult, BlockEliminationResult } from './elimination.types';
-import { eliminateBlock } from './eliminate-block';
-import { log } from './log';
-import { shrinkAvailablePixelOrder } from './shrink-available-pixel-order';
+import { type BitPixelMapping } from "./bit-mapping";
+import { acquireUint8Buffer, releaseUint8Buffer } from "./buffer-pool";
+import type { RSBasisVector } from "./rs-basis";
+import type { EliminationResult, BlockEliminationResult } from "./elimination.types";
+import { eliminateBlock } from "./eliminate-block";
+import { log } from "./log";
+import { shrinkAvailablePixelOrder } from "./shrink-available-pixel-order";
 
 /**
  * Perform Gauss-Jordan elimination on all RS blocks
@@ -22,7 +22,7 @@ export function gaussJordanEliminate(
   mappings: BitPixelMapping[],
   moduleCount: number,
   maskPattern: number,
-  pixelOrder: number[]
+  pixelOrder: number[],
 ): EliminationResult {
   const totalPixels = moduleCount * moduleCount;
 
@@ -44,7 +44,7 @@ export function gaussJordanEliminate(
 
   // Get all block indices, sorted
   const blockIndices = [...new Set([...blockVectors.keys(), ...blockMappings.keys()])].sort(
-    (a, b) => a - b
+    (a, b) => a - b,
   );
 
   // Track the still-available pixel order once and shrink it as blocks claim pivots.
@@ -69,7 +69,7 @@ export function gaussJordanEliminate(
         bMappings,
         moduleCount,
         maskPattern,
-        availablePixelOrder
+        availablePixelOrder,
       );
 
       blockResults.push(result);
@@ -79,7 +79,7 @@ export function gaussJordanEliminate(
           availablePixelOrder,
           result.controlledPixels,
           assignedPixelMask,
-          totalPixels
+          totalPixels,
         );
       }
 
@@ -96,7 +96,7 @@ export function gaussJordanEliminate(
       totalControllable += result.controllablePixels;
     }
 
-    log.debug('Gauss-Jordan elimination complete (per-block)', {
+    log.debug("Gauss-Jordan elimination complete (per-block)", {
       numBlocks: blockIndices.length,
       totalVectors: allVectors.length,
       controllablePixels: totalControllable,

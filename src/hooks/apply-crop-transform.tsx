@@ -1,10 +1,10 @@
 export function applyCropTransform(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-  cropRegion: { x: number; y: number; size: number }
+  cropRegion: { x: number; y: number; size: number },
 ): HTMLCanvasElement | null {
   const { x, y, size } = cropRegion;
-  const cropCanvas = document.createElement('canvas');
-  const cropCtx = cropCanvas.getContext('2d');
+  const cropCanvas = document.createElement("canvas");
+  const cropCtx = cropCanvas.getContext("2d");
   if (!cropCtx) return null;
 
   const srcWidth = sourceCanvas.width;
@@ -30,7 +30,7 @@ export function applyCropTransform(
     0,
     0,
     cropSizePx,
-    cropSizePx
+    cropSizePx,
   );
   return cropCanvas;
 }

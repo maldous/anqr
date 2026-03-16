@@ -1,4 +1,4 @@
-import type { AnalysisStats } from './telemetry-stats.types';
+import type { AnalysisStats } from "./telemetry-stats.types";
 
 export function aggregateStats(statsArray: AnalysisStats[]): AnalysisStats {
   if (statsArray.length === 0) {

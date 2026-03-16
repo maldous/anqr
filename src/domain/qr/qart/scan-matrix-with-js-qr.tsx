@@ -1,12 +1,12 @@
-import { type DecodedSegmentInfo, decodeQR } from '../decode';
-import { renderMatrixToImageData } from './render-matrix-to-image-data';
-import { hasExtraInvalidSegments } from './has-extra-invalid-segments';
-import type { ScanResult } from './scan-result';
+import { type DecodedSegmentInfo, decodeQR } from "../decode";
+import { renderMatrixToImageData } from "./render-matrix-to-image-data";
+import { hasExtraInvalidSegments } from "./has-extra-invalid-segments";
+import type { ScanResult } from "./scan-result";
 
 export function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
   const moduleCount = matrix.length;
   if (moduleCount === 0) {
-    return { success: false, error: 'Empty matrix' };
+    return { success: false, error: "Empty matrix" };
   }
 
   // Try multiple configurations for robustness
@@ -17,7 +17,7 @@ export function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
     { scale: 4, quietZone: 4, invert: true },
   ];
 
-  let lastError = '';
+  let lastError = "";
   let attempts = 0;
 
   for (const config of configs) {
@@ -27,7 +27,7 @@ export function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
     try {
       const imageData = renderMatrixToImageData(matrix, moduleCount, scale, quietZone, invert);
       const result = decodeQR(imageData, {
-        inversionAttempts: 'attemptBoth',
+        inversionAttempts: "attemptBoth",
       });
 
       if (result && result.data !== null) {

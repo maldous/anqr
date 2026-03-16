@@ -4,5 +4,5 @@ export {
   createPngTextChunk,
   embedPngDpi,
   embedPngMetadata,
-} from '../../domain/render/export/png-metadata';
-export type { PngMetadata } from './png-metadata.type';
+} from "../../domain/render/export/png-metadata";
+export type { PngMetadata } from "./png-metadata.type";

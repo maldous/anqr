@@ -1,4 +1,4 @@
-import { type BitRange } from './semantic-layout';
+import { type BitRange } from "./semantic-layout";
 
 export interface EncoderDerivedLayout {
   bitsAfterMode: number;
@@ -12,7 +12,7 @@ export interface EncoderDerivedLayout {
   paddingByteCount: number;
   originalDataLength: number;
   suffixLength: number;
-  suffixMode: 'byte' | 'numeric';
+  suffixMode: "byte" | "numeric";
   protectedBitEnd: number;
   suffixSafeStartBit: number;
   suffixSafeEndBit: number;

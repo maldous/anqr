@@ -36,9 +36,9 @@ export function validateFinderPatterns(matrix: boolean[][]): {
     return valid;
   };
 
-  const topLeft = checkFinder(0, 0, 'TopLeft');
-  const topRight = checkFinder(0, moduleCount - 7, 'TopRight');
-  const bottomLeft = checkFinder(moduleCount - 7, 0, 'BottomLeft');
+  const topLeft = checkFinder(0, 0, "TopLeft");
+  const topRight = checkFinder(0, moduleCount - 7, "TopRight");
+  const bottomLeft = checkFinder(moduleCount - 7, 0, "BottomLeft");
 
   return {
     topLeft,

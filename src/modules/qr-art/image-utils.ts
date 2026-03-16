@@ -1,1 +1,1 @@
-export * from '../../domain/qr/qart/image-utils';
+export * from "../../domain/qr/qart/image-utils";

@@ -2,11 +2,11 @@
  * Share Links Module - Types
  * Types for URL sharing and embed generation
  */
-export type { EmbedOptions } from './embed-options';
+export type { EmbedOptions } from "./embed-options";
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('SHARE');
+const _log = createLogger("SHARE");
 
 /**
  * Maximum recommended URL length for reliable sharing
@@ -27,7 +27,7 @@ export interface ShareConfig {
   size?: number;
   margin?: number;
   encodingMode?: string;
-  maskPattern?: number | 'auto';
+  maskPattern?: number | "auto";
   characterEncoding?: string;
   borderModulesExtra?: number;
   quietZoneMinEnforce?: boolean;
@@ -113,7 +113,7 @@ export interface ShareConfig {
   ditherStrength?: number;
   finderDitherStrength?: number;
   blendPreservations?: boolean;
-  blendPreservationMode?: 'overlay' | 'dither';
+  blendPreservationMode?: "overlay" | "dither";
   ditherSerpentine?: boolean;
   orderedMatrix?: string;
   blueNoiseTileSize?: number;
@@ -144,11 +144,11 @@ export interface ShareConfig {
   interpolate?: string;
   temporalDither?: string;
   pattern?: string;
-  target?: 'result' | 'modules' | 'both';
-  waveAxis?: 'x' | 'y' | 'xy';
+  target?: "result" | "modules" | "both";
+  waveAxis?: "x" | "y" | "xy";
   pattern2?: string;
-  target2?: 'result' | 'modules' | 'both';
-  waveAxis2?: 'x' | 'y' | 'xy';
+  target2?: "result" | "modules" | "both";
+  waveAxis2?: "x" | "y" | "xy";
   moduleJitter?: number;
   colorCycle?: boolean;
   seed?: number;
@@ -209,11 +209,11 @@ export interface ShareConfig {
 
   // Animation
   animationPattern?: string;
-  animationTarget?: 'result' | 'modules' | 'both';
-  animationWaveAxis?: 'x' | 'y' | 'xy';
+  animationTarget?: "result" | "modules" | "both";
+  animationWaveAxis?: "x" | "y" | "xy";
   animationPattern2?: string;
-  animationTarget2?: 'result' | 'modules' | 'both';
-  animationWaveAxis2?: 'x' | 'y' | 'xy';
+  animationTarget2?: "result" | "modules" | "both";
+  animationWaveAxis2?: "x" | "y" | "xy";
   animationFrames?: number;
   animationSpeed?: number;
   animationSeed?: number;

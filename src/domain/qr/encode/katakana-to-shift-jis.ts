@@ -1,5 +1,5 @@
-import { KATAKANA_START } from './katakana-start';
-import { KATAKANA_END } from './katakana-end';
+import { KATAKANA_START } from "./katakana-start";
+import { KATAKANA_END } from "./katakana-end";
 
 /**
  * Katakana to Shift-JIS mapping

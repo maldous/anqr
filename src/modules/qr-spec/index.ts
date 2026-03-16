@@ -15,12 +15,12 @@
  * - Pure coordinate/number math only
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('SPEC');
+const _log = createLogger("SPEC");
 
 // BCH encoding
-export { getBCHTypeInfo, getBCHTypeNumber } from '../../domain/qr/spec/bch';
+export { getBCHTypeInfo, getBCHTypeNumber } from "../../domain/qr/spec/bch";
 // Constants
 export {
   ALIGNMENT_POSITIONS,
@@ -30,9 +30,9 @@ export {
   getAlignmentPositions,
   getModuleCountForVersion,
   getVersionFromModuleCount,
-} from '../../domain/qr/spec/constants';
+} from "../../domain/qr/spec/constants";
 // Mask functions
-export { getMaskFunction } from '../../domain/qr/spec/masks';
+export { getMaskFunction } from "../../domain/qr/spec/masks";
 
 // Pattern detection
 export {
@@ -45,7 +45,7 @@ export {
   isStructuralModule,
   isTimingPattern,
   isVersionInfo,
-} from '../../domain/qr/spec/qr-patterns';
+} from "../../domain/qr/spec/qr-patterns";
 // Types
 export type {
   ECCLevel,
@@ -54,7 +54,7 @@ export type {
   QRErrorCorrectionLevelType,
   QRMaskPatternType,
   QRModeType,
-} from './types';
+} from "./types";
 export {
   ECC_LEVEL_MAP,
   MODE_ALPHANUMERIC,
@@ -65,6 +65,6 @@ export {
   QRErrorCorrectionLevel,
   QRMaskPattern,
   QRMode,
-} from './types';
+} from "./types";
 // Lightweight verification
-export { verifyQRStructure } from '../../domain/qr/spec/verify';
+export { verifyQRStructure } from "../../domain/qr/spec/verify";

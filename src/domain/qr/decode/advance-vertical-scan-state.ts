@@ -8,7 +8,7 @@ export function advanceVerticalScanState(
   counts: number[],
   centerIdx: number,
   whiteIdx: number,
-  outerIdx: number
+  outerIdx: number,
 ): number {
   if (state === centerIdx) {
     if (isDark) counts[centerIdx]++;

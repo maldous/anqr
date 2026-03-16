@@ -1,7 +1,7 @@
-import { Capacitor } from '@capacitor/core';
-import type { VectorSvgConfig } from '../../../modules/exporter/types';
-import { downloadUrl } from '../../../modules/exporter/utils';
-import { exportVectorSvg } from './export-vector-svg';
+import { Capacitor } from "@capacitor/core";
+import type { VectorSvgConfig } from "../../../modules/exporter/types";
+import { downloadUrl } from "../../../modules/exporter/utils";
+import { exportVectorSvg } from "./export-vector-svg";
 
 /**
  * Download QR matrix as true vector SVG

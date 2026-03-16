@@ -1,4 +1,4 @@
-import type { AnimationPattern } from './animation-pattern';
+import type { AnimationPattern } from "./animation-pattern";
 
 export interface AnimationOptions {
   speedMs: number;
@@ -7,16 +7,16 @@ export interface AnimationOptions {
   startFrame: number;
   maxFrames: number;
   frameStep: number;
-  interpolate: 'none' | 'crossfade' | 'morph';
+  interpolate: "none" | "crossfade" | "morph";
   pattern: AnimationPattern;
   moduleJitterPx: number;
   colorCycle: boolean;
-  temporalDither: 'off' | 'blue_noise' | 'flicker_safe';
+  temporalDither: "off" | "blue_noise" | "flicker_safe";
   seed: number;
-  target: 'result' | 'modules' | 'both';
-  waveAxis: 'x' | 'y' | 'xy';
+  target: "result" | "modules" | "both";
+  waveAxis: "x" | "y" | "xy";
   pattern2?: AnimationPattern;
-  target2?: 'result' | 'modules' | 'both';
-  waveAxis2?: 'x' | 'y' | 'xy';
+  target2?: "result" | "modules" | "both";
+  waveAxis2?: "x" | "y" | "xy";
   effectBounds?: { x: number; y: number; width: number; height: number };
 }

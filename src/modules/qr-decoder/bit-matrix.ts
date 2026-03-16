@@ -1,1 +1,1 @@
-export * from '../../domain/qr/decode/bit-matrix';
+export * from "../../domain/qr/decode/bit-matrix";

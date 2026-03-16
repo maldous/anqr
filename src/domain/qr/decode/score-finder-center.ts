@@ -1,4 +1,4 @@
-import { sampleFinderContrast } from './sample-finder-contrast';
+import { sampleFinderContrast } from "./sample-finder-contrast";
 
 /**
  * Score a candidate finder pattern center position by measuring contrast
@@ -15,7 +15,7 @@ export function scoreFinderCenter(
   testX: number,
   testY: number,
   moduleSize: number,
-  threshold: number
+  threshold: number,
 ): number {
   const { avgDark, avgLight, darkCount, lightCount, contrast } = sampleFinderContrast(
     pixels,
@@ -23,7 +23,7 @@ export function scoreFinderCenter(
     height,
     testX,
     testY,
-    moduleSize
+    moduleSize,
   );
   if (darkCount < 5 || lightCount < 5) return -Infinity;
 

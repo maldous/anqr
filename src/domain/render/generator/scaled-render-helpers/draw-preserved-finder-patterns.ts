@@ -1,6 +1,6 @@
-import { drawFinderPatternComplete } from '../drawing';
-import { resolveBinaryConfig } from './resolve-binary-config';
-import type { StructuralPreservationCtx } from '../scaled-render-types';
+import { drawFinderPatternComplete } from "../drawing";
+import { resolveBinaryConfig } from "./resolve-binary-config";
+import type { StructuralPreservationCtx } from "../scaled-render-types";
 
 export function drawPreservedFinderPatterns(spctx: StructuralPreservationCtx): void {
   const {
@@ -19,7 +19,7 @@ export function drawPreservedFinderPatterns(spctx: StructuralPreservationCtx): v
     config,
     forceBinaryFunctionPatterns,
     effectiveFgColor,
-    effectiveBgColor
+    effectiveBgColor,
   );
   for (const pos of [
     { row: 0, col: 0 },
@@ -31,7 +31,7 @@ export function drawPreservedFinderPatterns(spctx: StructuralPreservationCtx): v
       marginPx + pos.col * effectiveModuleSize,
       marginPx + pos.row * effectiveModuleSize,
       effectiveModuleSize,
-      resolvedConfig
+      resolvedConfig,
     );
   }
 }

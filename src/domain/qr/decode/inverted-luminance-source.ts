@@ -1,4 +1,4 @@
-import { LuminanceSource } from './luminance-source';
+import { LuminanceSource } from "./luminance-source";
 
 /**
  * Inverted luminance source wrapper

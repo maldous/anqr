@@ -7,7 +7,7 @@ export function roundRect(
   y: number,
   width: number,
   height: number,
-  radius: number
+  radius: number,
 ): void {
   const r = Math.min(radius, width / 2, height / 2);
   ctx.beginPath();

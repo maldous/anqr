@@ -6,7 +6,7 @@ export function releaseUint8Buffer(
   buffer: Uint8Array,
   buckets: Map<number, Uint8Array[]>,
   pooledBytes: number,
-  setPooledBytes: (next: number) => void
+  setPooledBytes: (next: number) => void,
 ): void {
   if (buffer.length === 0 || buffer.length > MAX_POOLED_LENGTH) return;
   if (pooledBytes + buffer.length > MAX_TOTAL_POOLED_BYTES) return;

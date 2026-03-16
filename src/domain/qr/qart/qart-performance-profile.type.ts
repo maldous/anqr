@@ -1,1 +1,1 @@
-export type QArtPerformanceProfile = 'quality' | 'balanced';
+export type QArtPerformanceProfile = "quality" | "balanced";

@@ -1,17 +1,17 @@
-import { HIRAGANA_START } from './hiragana-start';
-import { HIRAGANA_END } from './hiragana-end';
-import { KATAKANA_START } from './katakana-start';
-import { KATAKANA_END } from './katakana-end';
-import { HW_KATAKANA_START } from './hw-katakana-start';
-import { HW_KATAKANA_END } from './hw-katakana-end';
-import { HW_KATAKANA_SJIS_START } from './hw-katakana-sjis-start';
-import { FULLWIDTH_ASCII_START } from './fullwidth-ascii-start';
-import { FULLWIDTH_ASCII_END } from './fullwidth-ascii-end';
-import { FULLWIDTH_MAP } from './fullwidth-map';
-import { KANJI_MAP } from './kanji-map';
-import { hiraganaToShiftJIS } from './hiragana-to-shift-jis';
-import { katakanaToShiftJIS } from './katakana-to-shift-jis';
-import { mapFullWidthASCII } from './map-full-width-ascii';
+import { HIRAGANA_START } from "./hiragana-start";
+import { HIRAGANA_END } from "./hiragana-end";
+import { KATAKANA_START } from "./katakana-start";
+import { KATAKANA_END } from "./katakana-end";
+import { HW_KATAKANA_START } from "./hw-katakana-start";
+import { HW_KATAKANA_END } from "./hw-katakana-end";
+import { HW_KATAKANA_SJIS_START } from "./hw-katakana-sjis-start";
+import { FULLWIDTH_ASCII_START } from "./fullwidth-ascii-start";
+import { FULLWIDTH_ASCII_END } from "./fullwidth-ascii-end";
+import { FULLWIDTH_MAP } from "./fullwidth-map";
+import { KANJI_MAP } from "./kanji-map";
+import { hiraganaToShiftJIS } from "./hiragana-to-shift-jis";
+import { katakanaToShiftJIS } from "./katakana-to-shift-jis";
+import { mapFullWidthASCII } from "./map-full-width-ascii";
 
 export function lookupShiftJIS(codePoint: number): number[] | null {
   if (codePoint < 0x80) return [codePoint];

@@ -1,6 +1,6 @@
-import { renderRunLengthPass } from './render-run-length-pass';
-import type { FastPathCanvasContext } from './fast-path-canvas-context.type';
-import type { QRCodeInstance } from '../../../modules/qr-generator/types';
+import { renderRunLengthPass } from "./render-run-length-pass";
+import type { FastPathCanvasContext } from "./fast-path-canvas-context.type";
+import type { QRCodeInstance } from "../../../modules/qr-generator/types";
 
 export function renderModulesFastPath(
   ctx: FastPathCanvasContext,
@@ -12,7 +12,7 @@ export function renderModulesFastPath(
   skipMask: Uint8Array,
   fgFill: string | CanvasGradient,
   bgColor: string,
-  needsExplicitLightModules: boolean
+  needsExplicitLightModules: boolean,
 ): void {
   ctx.fillStyle = fgFill;
   renderRunLengthPass(ctx, qr, moduleCount, moduleSize, margin, ditherPattern, skipMask, true);

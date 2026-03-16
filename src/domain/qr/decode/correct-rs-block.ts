@@ -1,6 +1,6 @@
-import { GenericGF } from './generic-gf';
-import { qrDecoderLog } from './qr-decoder-log';
-import { ReedSolomonDecoder } from './reed-solomon-decoder';
+import { GenericGF } from "./generic-gf";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { ReedSolomonDecoder } from "./reed-solomon-decoder";
 
 const qrRsDecoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
 
@@ -10,10 +10,10 @@ const qrRsDecoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
 export function correctRSBlock(
   codeword: number[],
   dataCount: number,
-  eccCount: number
+  eccCount: number,
 ): number[] | null {
   if (codeword.length !== dataCount + eccCount) {
-    qrDecoderLog.debug('rs-decoder: Codeword length mismatch', {
+    qrDecoderLog.debug("rs-decoder: Codeword length mismatch", {
       n: codeword.length,
       expected: dataCount + eccCount,
     });
@@ -26,7 +26,7 @@ export function correctRSBlock(
     qrRsDecoder.decode(received, eccCount);
     return Array.from(received.slice(0, dataCount));
   } catch (error) {
-    qrDecoderLog.debug('rs-decoder: Reed-Solomon correction failed', {
+    qrDecoderLog.debug("rs-decoder: Reed-Solomon correction failed", {
       dataCount,
       eccCount,
       error,

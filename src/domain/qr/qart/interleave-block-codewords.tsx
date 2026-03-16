@@ -1,7 +1,7 @@
 export function interleaveBlockCodewords(
   blockCodewords: Uint8Array[],
   blockDataCounts: number[],
-  blockEccCounts: number[]
+  blockEccCounts: number[],
 ): number[] {
   const maxDataCount = Math.max(...blockDataCounts);
   const maxEccCount = Math.max(...blockEccCounts);

@@ -1,4 +1,4 @@
-import type { BlockLayout } from './block-layout.interface';
+import type { BlockLayout } from "./block-layout.interface";
 
 export function deinterleaveBlocks(codewords: number[], layout: BlockLayout): number[][] {
   const { blockDataSizes, blockEccSizes, numBlocks, maxData, maxEcc } = layout;

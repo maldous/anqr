@@ -1,4 +1,4 @@
-import type { ColorMode, DiffusionKernel } from '../../../modules/dither-algorithms/types';
+import type { ColorMode, DiffusionKernel } from "../../../modules/dither-algorithms/types";
 
 /** Options for perceptual dithering */
 export interface PerceptualDitherOptions {

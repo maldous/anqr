@@ -1,5 +1,5 @@
-import { generateEvent } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateEvent } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeEventRsvp(payload: PayloadData): string {
   const rsvp = payload.eventRsvp;
@@ -19,7 +19,7 @@ export function serializeEventRsvp(payload: PayloadData): string {
     });
   }
   const url = rsvp.rsvpUrl || payload.text;
-  if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
+  if (url.includes("@") && !url.startsWith("mailto:") && !url.startsWith("http")) {
     return `mailto:${url}?subject=RSVP`;
   }
   return url;

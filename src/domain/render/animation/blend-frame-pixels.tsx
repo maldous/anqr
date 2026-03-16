@@ -6,7 +6,7 @@ export function blendFramePixels(
   sourceA: Uint8ClampedArray,
   sourceB: Uint8ClampedArray,
   blend: number,
-  output: Uint8ClampedArray
+  output: Uint8ClampedArray,
 ): void {
   for (let p = 0; p < sourceA.length; p += 4) {
     output[p] = Math.round(sourceA[p] * (1 - blend) + sourceB[p] * blend);

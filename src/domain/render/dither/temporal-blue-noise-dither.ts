@@ -1,6 +1,6 @@
-import type { ColorMode, DitherResult } from '../../../modules/dither-algorithms/types';
-import { generateBlueNoiseTile } from '../../../modules/dither-algorithms/utils';
-import { buildBinaryDitherResult } from './build-binary-dither-result';
+import type { ColorMode, DitherResult } from "../../../modules/dither-algorithms/types";
+import { generateBlueNoiseTile } from "../../../modules/dither-algorithms/utils";
+import { buildBinaryDitherResult } from "./build-binary-dither-result";
 
 // ============================================================================
 // Temporal Blue Noise Dithering Algorithm
@@ -14,7 +14,7 @@ export function temporalBlueNoiseDither(
   frameIndex: number,
   tileSize: number = 64,
   seed: number = 0,
-  _colorMode: ColorMode = 'bw'
+  _colorMode: ColorMode = "bw",
 ): DitherResult {
   const tile = generateBlueNoiseTile(tileSize, seed);
   const offset = (frameIndex * 17) % (tileSize * tileSize);

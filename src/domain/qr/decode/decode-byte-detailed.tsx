@@ -1,4 +1,4 @@
-import { BitStream } from './bit-stream';
+import { BitStream } from "./bit-stream";
 
 /**
  * Decode byte mode and preserve raw bytes.
@@ -10,7 +10,7 @@ import { BitStream } from './bit-stream';
  */
 export function decodeByteDetailed(
   bits: BitStream,
-  count: number
+  count: number,
 ): { text: string; bytes: number[] } {
   const bytes: number[] = [];
 
@@ -20,15 +20,15 @@ export function decodeByteDetailed(
   }
 
   // UTF-8 best effort
-  let utf8Text = '';
+  let utf8Text = "";
   try {
-    utf8Text = new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+    utf8Text = new TextDecoder("utf-8").decode(new Uint8Array(bytes));
   } catch {
-    utf8Text = '';
+    utf8Text = "";
   }
 
   // If decoder had to replace invalid sequences, prefer a raw latin1 view.
-  if (utf8Text.includes('\uFFFD')) {
+  if (utf8Text.includes("\uFFFD")) {
     const latin1 = String.fromCodePoint(...bytes);
     return { text: latin1, bytes };
   }

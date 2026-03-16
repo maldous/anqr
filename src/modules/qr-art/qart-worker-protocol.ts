@@ -1,1 +1,1 @@
-export * from '../../platform/worker/qart/worker-protocol';
+export * from "../../platform/worker/qart/worker-protocol";

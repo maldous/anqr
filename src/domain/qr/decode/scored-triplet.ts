@@ -1,4 +1,4 @@
-import type { FinderPattern } from './types';
+import type { FinderPattern } from "./types";
 
 export interface ScoredTriplet {
   ordered: [FinderPattern, FinderPattern, FinderPattern];

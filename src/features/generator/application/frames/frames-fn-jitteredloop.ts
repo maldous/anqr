@@ -4,9 +4,9 @@
  * Notes: Generate jittered animation frame loop.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { YieldController } from "@/features/generator/application/generation/generation-class-yieldcontroller";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export async function generateJitteredFrameLoop(params: {
   previewScanConfigBase: QRGeneratorConfig;
@@ -17,7 +17,7 @@ export async function generateJitteredFrameLoop(params: {
   applyResultPersistent: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    tf: number
+    tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
 }): Promise<(HTMLCanvasElement | OffscreenCanvas)[] | null> {
   const collected: (HTMLCanvasElement | OffscreenCanvas)[] = [];

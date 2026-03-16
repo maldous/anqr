@@ -1,14 +1,14 @@
-import { zarazLog as log } from './zaraz-log';
+import { zarazLog as log } from "./zaraz-log";
 
 export function trackZarazEvent(
   eventName: string,
-  properties?: Record<string, string | number | boolean>
+  properties?: Record<string, string | number | boolean>,
 ): void {
   try {
-    if (typeof window === 'undefined' || !window.zaraz?.track) return;
+    if (typeof window === "undefined" || !window.zaraz?.track) return;
     window.zaraz.track(eventName, properties);
-    log.debug('Event tracked', { eventName, ...properties });
+    log.debug("Event tracked", { eventName, ...properties });
   } catch (err) {
-    log.warn('Failed to track event', { event: eventName, error: err });
+    log.warn("Failed to track event", { event: eventName, error: err });
   }
 }

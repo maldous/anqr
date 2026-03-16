@@ -1,6 +1,6 @@
-import type { ColorMode, DitherResult } from '../../../modules/dither-algorithms/types';
-import { rgbToGray } from '../../../modules/dither-algorithms/utils';
-import { buildBinaryDitherResult } from './build-binary-dither-result';
+import type { ColorMode, DitherResult } from "../../../modules/dither-algorithms/types";
+import { rgbToGray } from "../../../modules/dither-algorithms/utils";
+import { buildBinaryDitherResult } from "./build-binary-dither-result";
 
 /** Adaptive threshold dithering - uses local mean for threshold */
 export function adaptiveThresholdDither(
@@ -8,7 +8,7 @@ export function adaptiveThresholdDither(
   width: number,
   height: number,
   strength: number = 100,
-  _colorMode: ColorMode = 'bw'
+  _colorMode: ColorMode = "bw",
 ): DitherResult {
   const strengthFactor = strength / 100;
   const blockSize = 8;

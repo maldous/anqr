@@ -1,6 +1,6 @@
-import { stringToBytesFn } from './string-bytes';
-import type { QRBitBuffer, QRDataSegment } from '../../../modules/qr-encoder/types';
-import { QRMode } from '../../../modules/qr-encoder/types';
+import { stringToBytesFn } from "./string-bytes";
+import type { QRBitBuffer, QRDataSegment } from "../../../modules/qr-encoder/types";
+import { QRMode } from "../../../modules/qr-encoder/types";
 
 /**
  * Kanji mode encoder (Shift-JIS)
@@ -9,9 +9,9 @@ export function qrKanji(data: string): QRDataSegment {
   const _mode = QRMode.MODE_KANJI;
 
   // Self test for sjis support
-  const test = stringToBytesFn('\u53cb');
+  const test = stringToBytesFn("\u53cb");
   if (test.length !== 2 || ((test[0] << 8) | test[1]) !== 0x9746) {
-    throw new Error('sjis not supported.');
+    throw new Error("sjis not supported.");
   }
 
   const _bytes = stringToBytesFn(data);

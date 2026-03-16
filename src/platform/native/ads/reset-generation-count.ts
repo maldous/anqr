@@ -1,4 +1,4 @@
-import { generationCountState } from './generation-count-state';
+import { generationCountState } from "./generation-count-state";
 
 export function resetGenerationCount(): void {
   generationCountState.value = 0;

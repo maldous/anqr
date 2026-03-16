@@ -3,14 +3,14 @@
  * Apply visual effects to animation frames
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { createCanvasLike } from './create-canvas-like';
-import { resetCanvas2D } from './reset-canvas-2d';
-import { resolveEffectBounds } from './resolve-effect-bounds';
+import { createLogger } from "../../../infra/logging/logger";
+import { createCanvasLike } from "./create-canvas-like";
+import { resetCanvas2D } from "./reset-canvas-2d";
+import { resolveEffectBounds } from "./resolve-effect-bounds";
 
-const _log = createLogger('ANIMATION');
+const _log = createLogger("ANIMATION");
 
-import type { AnimationOptions, AnimationPattern } from '../../../modules/animation/types';
+import type { AnimationOptions, AnimationPattern } from "../../../modules/animation/types";
 
 /**
  * Apply animation pattern to a frame
@@ -21,9 +21,9 @@ export function applyAnimationPattern(
   totalFrames: number,
   pattern: AnimationPattern,
   options: Partial<AnimationOptions> = {},
-  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
+  targetCanvas?: HTMLCanvasElement | OffscreenCanvas,
 ): HTMLCanvasElement | OffscreenCanvas {
-  if (pattern === 'none') return canvas;
+  if (pattern === "none") return canvas;
 
   const result = createCanvasLike(canvas, targetCanvas);
   const ctx = resetCanvas2D(result);
@@ -34,7 +34,7 @@ export function applyAnimationPattern(
   const bounds = resolveEffectBounds(canvas, options);
 
   switch (pattern) {
-    case 'pulse': {
+    case "pulse": {
       const scale = 1 + Math.sin(progress * Math.PI * 2) * 0.05;
       const offset = ((1 - scale) * canvas.width) / 2;
       ctx.drawImage(
@@ -42,21 +42,21 @@ export function applyAnimationPattern(
         offset,
         offset,
         canvas.width * scale,
-        canvas.height * scale
+        canvas.height * scale,
       );
       break;
     }
 
-    case 'wave': {
+    case "wave": {
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
-      const axis = options.waveAxis || 'y';
+      const axis = options.waveAxis || "y";
       const amplitude = 2;
       const waveScale = 0.1;
 
-      if (axis === 'y' || axis === 'xy') {
+      if (axis === "y" || axis === "xy") {
         for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
           const offsetX = Math.round(
-            Math.sin((y + progress * canvas.height + seed) * waveScale) * amplitude
+            Math.sin((y + progress * canvas.height + seed) * waveScale) * amplitude,
           );
           ctx.drawImage(
             canvas as CanvasImageSource,
@@ -67,15 +67,15 @@ export function applyAnimationPattern(
             bounds.x + offsetX,
             y,
             bounds.width,
-            1
+            1,
           );
         }
       }
 
-      if (axis === 'x' || axis === 'xy') {
+      if (axis === "x" || axis === "xy") {
         for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
           const offsetY = Math.round(
-            Math.sin((x + progress * canvas.width + seed) * waveScale) * amplitude
+            Math.sin((x + progress * canvas.width + seed) * waveScale) * amplitude,
           );
           ctx.drawImage(
             canvas as CanvasImageSource,
@@ -86,24 +86,24 @@ export function applyAnimationPattern(
             x,
             bounds.y + offsetY,
             1,
-            bounds.height
+            bounds.height,
           );
         }
       }
       break;
     }
 
-    case 'scanline': {
+    case "scanline": {
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
       const scanY = Math.floor(progress * canvas.height);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
       ctx.fillRect(0, scanY - 2, canvas.width, 4);
       break;
     }
 
-    case 'shimmer': {
+    case "shimmer": {
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
-      if (typeof (ctx as CanvasRenderingContext2D).createLinearGradient !== 'function') {
+      if (typeof (ctx as CanvasRenderingContext2D).createLinearGradient !== "function") {
         // Test/mocked contexts may not implement gradients; fall back gracefully.
         break;
       }
@@ -116,19 +116,19 @@ export function applyAnimationPattern(
         bounds.x + sweep - bandWidth,
         bounds.y,
         bounds.x + sweep + bandWidth,
-        bounds.y + bounds.height
+        bounds.y + bounds.height,
       );
-      gradient.addColorStop(0, 'rgba(255,255,255,0)');
-      gradient.addColorStop(0.5, 'rgba(255,255,255,0.24)');
-      gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.globalCompositeOperation = 'screen';
+      gradient.addColorStop(0, "rgba(255,255,255,0)");
+      gradient.addColorStop(0.5, "rgba(255,255,255,0.24)");
+      gradient.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.globalCompositeOperation = "screen";
       ctx.fillStyle = gradient;
       ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = "source-over";
       break;
     }
 
-    case 'drift': {
+    case "drift": {
       const driftX = Math.sin(progress * Math.PI * 2) * 3;
       const driftY = Math.cos(progress * Math.PI * 2) * 3;
       ctx.drawImage(canvas as CanvasImageSource, driftX, driftY);

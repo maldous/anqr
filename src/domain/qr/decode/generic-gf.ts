@@ -1,7 +1,7 @@
-import { ArithmeticException, IllegalArgumentException } from './exceptions';
-import { Integer } from './util';
-import { AbstractGenericGF } from './abstract-generic-gf';
-import { GenericGFPoly } from './generic-gf-poly';
+import { ArithmeticException, IllegalArgumentException } from "./exceptions";
+import { Integer } from "./util";
+import { AbstractGenericGF } from "./abstract-generic-gf";
+import { GenericGFPoly } from "./generic-gf-poly";
 
 /**
  * Generic Galois Field implementation
@@ -22,7 +22,7 @@ export class GenericGF extends AbstractGenericGF<GenericGFPoly> {
   constructor(
     private readonly primitive: number,
     private readonly size: number,
-    private readonly generatorBase: number
+    private readonly generatorBase: number,
   ) {
     super();
     const expTable = new Int32Array(size);

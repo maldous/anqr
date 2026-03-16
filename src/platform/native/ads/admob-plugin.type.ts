@@ -4,10 +4,7 @@ export type AdMobPlugin = {
     testingDevices: string[];
     initializeForTesting: boolean;
   }): Promise<void>;
-  addListener(
-    event: string,
-    callback: (info: { height: number }) => void
-  ): unknown;
+  addListener(event: string, callback: (info: { height: number }) => void): unknown;
   showBanner(options: {
     adId: string;
     adSize: unknown;

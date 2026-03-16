@@ -1,14 +1,14 @@
-import type { PageSection } from '@/i18n/static';
-import type { TocGroup } from './static-page-types';
+import type { PageSection } from "@/i18n/static";
+import type { TocGroup } from "./static-page-types";
 
 export function buildGuideToc(sections: PageSection[], t: (key: string) => string): TocGroup[] {
   const groups: TocGroup[] = [
-    { key: 'guide-0', title: t('nav.guide'), id: '', items: [] },
-    { key: 'guide-1', title: t('tiers.basic'), id: '', items: [] },
-    { key: 'guide-2', title: t('tiers.advanced'), id: '', items: [] },
-    { key: 'guide-3', title: t('tiers.professional'), id: '', items: [] },
-    { key: 'guide-4', title: 'API', id: '', items: [] },
-    { key: 'guide-5', title: t('payload.other'), id: '', items: [] },
+    { key: "guide-0", title: t("nav.guide"), id: "", items: [] },
+    { key: "guide-1", title: t("tiers.basic"), id: "", items: [] },
+    { key: "guide-2", title: t("tiers.advanced"), id: "", items: [] },
+    { key: "guide-3", title: t("tiers.professional"), id: "", items: [] },
+    { key: "guide-4", title: "API", id: "", items: [] },
+    { key: "guide-5", title: t("payload.other"), id: "", items: [] },
   ];
 
   const getGroupIndex = (sectionIndex: number): number => {

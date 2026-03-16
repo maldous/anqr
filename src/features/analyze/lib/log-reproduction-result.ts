@@ -1,11 +1,11 @@
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import type { MatrixDiagnostics } from './matrix-diagnostics.type';
-import type { ValidEncoderMode } from './reproduction-types';
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { MatrixDiagnostics } from "./matrix-diagnostics.type";
+import type { ValidEncoderMode } from "./reproduction-types";
 
 export function logReproductionResult(params: {
   result: QRAnalysisResult;
   isGeneratorSource: boolean;
-  encoderInput: { kind: 'bytes' | 'string'; data: string };
+  encoderInput: { kind: "bytes" | "string"; data: string };
   ecc: string;
   versionToUseFinal: number;
   maskToUse: number | undefined;
@@ -18,7 +18,10 @@ export function logReproductionResult(params: {
   size: number;
   diagnostics: MatrixDiagnostics;
   qrState: { borderModulesExtra?: number };
-  log: { debug: (msg: string, data?: Record<string, unknown>) => void; warn: (msg: string, data?: Record<string, unknown>) => void };
+  log: {
+    debug: (msg: string, data?: Record<string, unknown>) => void;
+    warn: (msg: string, data?: Record<string, unknown>) => void;
+  };
 }) {
   const {
     result,
@@ -39,14 +42,14 @@ export function logReproductionResult(params: {
     log,
   } = params;
 
-  log.debug('Generated QR code', {
-    strategy: isGeneratorSource ? 'exact' : 'detected_only',
+  log.debug("Generated QR code", {
+    strategy: isGeneratorSource ? "exact" : "detected_only",
     encoderInputKind: encoderInput.kind,
     ecc,
     detectedVersion: result.version,
     usedVersion: versionToUseFinal,
     detectedMaskPattern: result.maskPattern,
-    usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
+    usedMaskPattern: typeof maskToUse === "number" ? maskToUse : null,
     usedMode: effectiveMode ?? null,
     actualVersion,
     moduleCount,
@@ -58,12 +61,12 @@ export function logReproductionResult(params: {
   });
 
   if (diagnostics.regenVsOriginal?.diffCount) {
-    log.warn('Matrix mismatch (original vs regenerated)', {
+    log.warn("Matrix mismatch (original vs regenerated)", {
       ecc,
       version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
       mask: {
         detected: result.maskPattern,
-        used: typeof maskToUse === 'number' ? maskToUse : null,
+        used: typeof maskToUse === "number" ? maskToUse : null,
       },
       mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
       regenVsDecoded: diagnostics.regenVsDecoded,

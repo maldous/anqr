@@ -1,4 +1,4 @@
-import type { BitMatrix } from './bit-matrix';
+import type { BitMatrix } from "./bit-matrix";
 
 export type SampleGridArgs = [
   image: BitMatrix,

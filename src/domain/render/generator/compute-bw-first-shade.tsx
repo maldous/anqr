@@ -1,10 +1,10 @@
-import { clamp01 } from './clamp01';
+import { clamp01 } from "./clamp01";
 
 export function computeBWFirstShade(
   overlayBrightness: number,
   textureAmount: number,
   noiseVariation: number,
-  qrIsDark: boolean
+  qrIsDark: boolean,
 ): number {
   if (qrIsDark) {
     const darkRange = 100;

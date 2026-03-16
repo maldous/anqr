@@ -1,1 +1,1 @@
-export * from '../../platform/native/notifications/native-toast';
+export * from "../../platform/native/notifications/native-toast";

@@ -3,10 +3,10 @@
  * Gradient creation and application for QR modules
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { createLogger } from "../../../infra/logging/logger";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 /**
  * Create a gradient fill based on config
@@ -14,9 +14,9 @@ const _log = createLogger('GENERATE');
 export function createGradientFill(
   ctx: CanvasRenderingContext2D,
   config: QRGeneratorConfig,
-  size: number
+  size: number,
 ): CanvasGradient | null {
-  if (!config.gradient || config.gradient.type === 'none') {
+  if (!config.gradient || config.gradient.type === "none") {
     return null;
   }
 
@@ -27,14 +27,14 @@ export function createGradientFill(
     configStops.length > 0
       ? configStops
       : [
-          { pos: 0, color: config.fgColor || '#000000' },
-          { pos: 1, color: config.bgColor || '#ffffff' },
+          { pos: 0, color: config.fgColor || "#000000" },
+          { pos: 1, color: config.bgColor || "#ffffff" },
         ];
 
   let gradient: CanvasGradient;
 
   switch (type) {
-    case 'linear': {
+    case "linear": {
       const rad = (angle * Math.PI) / 180;
       const x1 = size / 2 - (Math.cos(rad) * size) / 2;
       const y1 = size / 2 - (Math.sin(rad) * size) / 2;
@@ -44,8 +44,8 @@ export function createGradientFill(
       break;
     }
 
-    case 'radial':
-    case 'conic': {
+    case "radial":
+    case "conic": {
       // Canvas doesn't support conic gradients natively, fall back to radial
       const centerX = size / 2;
       const centerY = size / 2;

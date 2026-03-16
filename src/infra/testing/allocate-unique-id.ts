@@ -1,4 +1,4 @@
-import { getRegistry } from './get-registry';
+import { getRegistry } from "./get-registry";
 
 export function allocateUniqueId(base: string, sourceKey: string): string {
   const registry = getRegistry();

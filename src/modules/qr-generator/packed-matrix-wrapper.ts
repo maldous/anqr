@@ -1,4 +1,4 @@
-import { BaseMatrixWrapper } from './base-matrix-wrapper';
+import { BaseMatrixWrapper } from "./base-matrix-wrapper";
 
 export class PackedMatrixWrapper extends BaseMatrixWrapper {
   private readonly packed: Uint8Array;
@@ -13,7 +13,7 @@ export class PackedMatrixWrapper extends BaseMatrixWrapper {
   }
 
   make(_maskPattern?: number): void {
-    throw new Error('PackedMatrixWrapper.make is not supported');
+    throw new Error("PackedMatrixWrapper.make is not supported");
   }
 
   isDark(row: number, col: number): boolean {

@@ -1,4 +1,4 @@
-import { ALIGNMENT_POSITIONS } from './alignment-positions';
+import { ALIGNMENT_POSITIONS } from "./alignment-positions";
 
 /**
  * Get alignment pattern positions for a version

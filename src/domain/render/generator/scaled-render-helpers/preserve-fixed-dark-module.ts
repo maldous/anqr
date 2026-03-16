@@ -3,7 +3,7 @@ export function preserveFixedDarkModule(
   marginPx: number,
   moduleCount: number,
   effectiveModuleSize: number,
-  darkFill: string | CanvasGradient
+  darkFill: string | CanvasGradient,
 ): void {
   const dmRow = moduleCount - 8;
   const dmCol = 8;
@@ -13,7 +13,7 @@ export function preserveFixedDarkModule(
       marginPx + dmCol * effectiveModuleSize,
       marginPx + dmRow * effectiveModuleSize,
       effectiveModuleSize,
-      effectiveModuleSize
+      effectiveModuleSize,
     );
   }
 }

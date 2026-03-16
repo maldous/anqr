@@ -1,1 +1,1 @@
-export * from '../../domain/share/social';
+export * from "../../domain/share/social";

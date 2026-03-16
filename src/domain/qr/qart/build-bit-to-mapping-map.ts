@@ -1,4 +1,4 @@
-import type { BitPixelMapping } from './bit-mapping.types';
+import type { BitPixelMapping } from "./bit-mapping.types";
 
 /**
  * Build a map from global bit index to its mapping

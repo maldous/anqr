@@ -2,10 +2,10 @@ export function applyRotateFlipTransform(
   workingCanvas: HTMLCanvasElement,
   rotateDeg: number,
   flipX: boolean,
-  flipY: boolean
+  flipY: boolean,
 ): HTMLCanvasElement | null {
-  const processedCanvas = document.createElement('canvas');
-  const ctx = processedCanvas.getContext('2d');
+  const processedCanvas = document.createElement("canvas");
+  const ctx = processedCanvas.getContext("2d");
   if (!ctx) return null;
   const angle = (rotateDeg * Math.PI) / 180;
   const isRightAngle = rotateDeg === 90 || rotateDeg === 270;

@@ -1,11 +1,11 @@
-import { disableLogBuffer, flushLogBuffer } from '../../../infra/logging/logger';
-import type { ErrorType, QRAnalysisResult } from '../../../modules/qr-analyzer/types';
-import { elapsedMs } from './elapsed-ms';
+import { disableLogBuffer, flushLogBuffer } from "../../../infra/logging/logger";
+import type { ErrorType, QRAnalysisResult } from "../../../modules/qr-analyzer/types";
+import { elapsedMs } from "./elapsed-ms";
 
 export function buildDecodeFailure(
   error: string,
   errorType: ErrorType,
-  decodeStartMs: number
+  decodeStartMs: number,
 ): QRAnalysisResult {
   const debugLog = flushLogBuffer();
   disableLogBuffer();

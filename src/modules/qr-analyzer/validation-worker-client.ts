@@ -1,1 +1,1 @@
-export * from '../../platform/worker/analyze/validation-worker-client';
+export * from "../../platform/worker/analyze/validation-worker-client";

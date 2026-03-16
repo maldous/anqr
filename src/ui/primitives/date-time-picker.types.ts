@@ -4,5 +4,5 @@ export interface DateTimePickerProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }

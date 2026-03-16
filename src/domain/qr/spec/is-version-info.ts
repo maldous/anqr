@@ -6,7 +6,7 @@ export function isVersionInfo(
   row: number,
   col: number,
   moduleCount: number,
-  version: number
+  version: number,
 ): boolean {
   if (version < 7) return false;
 

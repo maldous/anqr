@@ -3,38 +3,38 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
-import type { GradientConfig } from '../core/types';
+import type { GradientConfig } from "../core/types";
 import {
   calculateOptimalVersion,
   getCompatibleMode,
   qrcode,
   resetStringToBytes,
-} from '../qr-encoder';
-import { verifyQRStructure } from '../qr-spec';
-import { qrMatrixCache } from './cache';
+} from "../qr-encoder";
+import { verifyQRStructure } from "../qr-spec";
+import { qrMatrixCache } from "./cache";
 import {
   type CanvasFactory,
   CanvasPool,
   defaultBrowserCanvasFactory,
-} from '../../platform/browser/canvas/canvas-factory';
+} from "../../platform/browser/canvas/canvas-factory";
 import {
   createGradientFill,
   drawCenterLogo,
   drawFrame,
   drawFrameBackground,
-} from '../../domain/render/generator/drawing';
-import { preprocessOverlayCanvas as preprocessOverlayCanvasStandalone } from './preprocess-overlay-canvas';
+} from "../../domain/render/generator/drawing";
+import { preprocessOverlayCanvas as preprocessOverlayCanvasStandalone } from "./preprocess-overlay-canvas";
 import {
   curveIntensity,
   getScaleFactor,
   prepareUnifiedOverlayData,
-} from '../../domain/render/generator/pixel-matrix';
-import { renderModules } from '../../domain/render/generator/render-loop';
-import { generateScaledQR } from '../../domain/render/generator/scaled-render';
-import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from './types';
-import { validateColor } from './utils';
-import { MatrixWrapper } from './matrix-wrapper';
-import { PackedMatrixWrapper } from './packed-matrix-wrapper';
+} from "../../domain/render/generator/pixel-matrix";
+import { renderModules } from "../../domain/render/generator/render-loop";
+import { generateScaledQR } from "../../domain/render/generator/scaled-render";
+import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from "./types";
+import { validateColor } from "./utils";
+import { MatrixWrapper } from "./matrix-wrapper";
+import { PackedMatrixWrapper } from "./packed-matrix-wrapper";
 import {
   buildFixedVisualPolicy,
   buildOverlayFamilyKey,
@@ -46,7 +46,7 @@ import {
   configureStringEncoding,
   decodeCanvasData,
   ditherPatchSignature,
-} from './qr-generator-helpers';
+} from "./qr-generator-helpers";
 import {
   type DitherAttemptPatch,
   type ScanGateCallbacks,
@@ -55,19 +55,19 @@ import {
   runScanGateMainLoop,
   runScanGateQRFirstFallback,
   runScanGateRescueLoop,
-} from './qr-generator-scan-gate';
+} from "./qr-generator-scan-gate";
 import {
   buildScanGateBaseAttempts,
   buildScanGateDecodeRescuePatches,
   buildScanGateFinderRescuePatches,
   isAggressiveScanPatch,
-} from './qr-generator-scan-gate-patches';
-import type { DitherPatchCacheEntry } from './dither-patch-cache-entry.type';
-import { generatorLog as log } from './generator-log';
-import { buildEffectiveConfig } from './build-effective-config';
-import { drawStructuralPatterns } from './draw-structural-patterns';
-import { findOldestCacheKey } from './find-oldest-cache-key';
-import type { OverlayComplexityCacheEntry } from './overlay-complexity-cache-entry.type';
+} from "./qr-generator-scan-gate-patches";
+import type { DitherPatchCacheEntry } from "./dither-patch-cache-entry.type";
+import { generatorLog as log } from "./generator-log";
+import { buildEffectiveConfig } from "./build-effective-config";
+import { drawStructuralPatterns } from "./draw-structural-patterns";
+import { findOldestCacheKey } from "./find-oldest-cache-key";
+import type { OverlayComplexityCacheEntry } from "./overlay-complexity-cache-entry.type";
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -107,9 +107,9 @@ export class QRGenerator {
     pool: CanvasPool,
     overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
     isAnimatedFrame: boolean,
-    overlaySignature: string
+    overlaySignature: string,
   ): Promise<number> {
-    const cacheKey = `${isAnimatedFrame ? 'anim' : 'static'}:${overlaySignature}`;
+    const cacheKey = `${isAnimatedFrame ? "anim" : "static"}:${overlaySignature}`;
     const cached = this.readOverlayComplexityCache(cacheKey);
     if (cached !== null) return cached;
     const complexity = await computeOverlayComplexity(pool, overlayCanvas, 48);
@@ -192,7 +192,7 @@ export class QRGenerator {
     typeNumber: number,
     encodingMode: string,
     maskPatternConfig: number | undefined,
-    characterEncodingConfig: string
+    characterEncodingConfig: string,
   ): { qr: QRCodeInstance; moduleCount: number } {
     const qrCacheKey = `${config.content}:${config.errorCorrection}:${typeNumber}:${encodingMode}:${maskPatternConfig}:${characterEncodingConfig}`;
 
@@ -209,10 +209,10 @@ export class QRGenerator {
 
     // Map encoding mode to qrcode-generator mode parameter
     const modeMap: Record<string, string | undefined> = {
-      numeric: 'Numeric',
-      alphanumeric: 'Alphanumeric',
-      byte: 'Byte',
-      kanji: 'Kanji',
+      numeric: "Numeric",
+      alphanumeric: "Alphanumeric",
+      byte: "Byte",
+      kanji: "Kanji",
       auto: undefined,
     };
     const libraryMode = modeMap[encodingMode] || undefined;
@@ -221,7 +221,7 @@ export class QRGenerator {
 
     // Get mask pattern from config (handle 'auto' by converting to undefined)
     const maskPattern =
-      typeof maskPatternConfig === 'number' && maskPatternConfig >= 0 && maskPatternConfig <= 7
+      typeof maskPatternConfig === "number" && maskPatternConfig >= 0 && maskPatternConfig <= 7
         ? maskPatternConfig
         : undefined;
 
@@ -239,7 +239,7 @@ export class QRGenerator {
 
   private async preprocessOverlayCanvas(
     overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
-    config: QRGeneratorConfig
+    config: QRGeneratorConfig,
   ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
     return preprocessOverlayCanvasStandalone(overlayCanvas, config, this.createCanvas.bind(this));
   }
@@ -254,7 +254,7 @@ export class QRGenerator {
     version: number,
     overlayData: OverlayData | null,
     ditherPattern: boolean[][] | null,
-    effectiveIntensity: number
+    effectiveIntensity: number,
   ): Promise<{
     canvas: HTMLCanvasElement | OffscreenCanvas;
     ctx: CanvasRenderingContext2D;
@@ -263,15 +263,15 @@ export class QRGenerator {
     margin: number;
   }> {
     const frameOffsetModules =
-      structuralConfig.frameStyle && structuralConfig.frameStyle !== 'none' ? 2 : 0;
+      structuralConfig.frameStyle && structuralConfig.frameStyle !== "none" ? 2 : 0;
     const margin = baseMargin + frameOffsetModules;
     const size = moduleCount * moduleSize + margin * 2 * moduleSize;
 
     const canvas = await this.createCanvas(size, size);
-    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     ctx.imageSmoothingEnabled = false;
 
-    const effectiveBgColor = validateColor(structuralConfig.bgColor, '#ffffff');
+    const effectiveBgColor = validateColor(structuralConfig.bgColor, "#ffffff");
     if (!structuralConfig.transparentBg) {
       ctx.fillStyle = effectiveBgColor;
       ctx.fillRect(0, 0, size, size);
@@ -285,7 +285,7 @@ export class QRGenerator {
     const useGradient =
       !structuralConfig.fastPreview &&
       structuralConfig.gradient &&
-      structuralConfig.gradient.type !== 'none';
+      structuralConfig.gradient.type !== "none";
 
     const skipMask = drawStructuralPatterns(
       ctx,
@@ -294,7 +294,7 @@ export class QRGenerator {
       moduleSize,
       margin,
       overlayData,
-      version
+      version,
     );
 
     renderModules({
@@ -321,7 +321,7 @@ export class QRGenerator {
     effectiveConfig: QRGeneratorConfig,
     processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
     moduleCount: number,
-    scale: number
+    scale: number,
   ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
     if (scale <= 1 || !processedOverlayCanvas) return null;
 
@@ -337,21 +337,21 @@ export class QRGenerator {
         this.canvasFactory,
         this.storeMatrix.bind(this) as (
           qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
-          moduleCount: number
+          moduleCount: number,
         ) => void,
-        pool.release.bind(pool)
+        pool.release.bind(pool),
       );
 
     if (effectiveConfig.fastPreview) {
       return await renderScaled(effectiveConfig);
     }
 
-    if (effectiveConfig.overlayMode === 'dithered' || effectiveConfig.forceScaledOverlay === true) {
+    if (effectiveConfig.overlayMode === "dithered" || effectiveConfig.forceScaledOverlay === true) {
       return await this.runDitheredScanGate(
         effectiveConfig,
         processedOverlayCanvas,
         moduleCount,
-        renderScaled
+        renderScaled,
       );
     }
 
@@ -360,15 +360,15 @@ export class QRGenerator {
 
   async generate(
     config: QRGeneratorConfig,
-    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = null
+    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = null,
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     if (!this.qrcode) {
       await this.loadLibrary();
     }
 
     // Get encoding mode early (needed for version calculation)
-    let encodingMode = config.encodingMode || 'auto';
-    const content = config.content || '';
+    let encodingMode = config.encodingMode || "auto";
+    const content = config.content || "";
 
     // Use getCompatibleMode which handles both auto-detection AND validation
     encodingMode = getCompatibleMode(content, encodingMode);
@@ -386,21 +386,21 @@ export class QRGenerator {
     // STAGE 1: QR MATRIX GENERATION
     // =======================================================================
     const maskPatternConfig =
-      typeof config.maskPattern === 'number' ? config.maskPattern : undefined;
-    const characterEncodingConfig = config.characterEncoding || 'default';
+      typeof config.maskPattern === "number" ? config.maskPattern : undefined;
+    const characterEncodingConfig = config.characterEncoding || "default";
 
     const { qr, moduleCount } = this.buildQRMatrix(
       config,
       typeNumber,
       encodingMode,
       maskPatternConfig,
-      characterEncodingConfig
+      characterEncodingConfig,
     );
 
     // Lightweight structural verification
     const vr = verifyQRStructure(qr, typeNumber || undefined);
     if (!vr.ok) {
-      log.warn('QR structural check failed', {
+      log.warn("QR structural check failed", {
         moduleCount,
         version: vr.version,
         issues: vr.issues,
@@ -414,7 +414,7 @@ export class QRGenerator {
     // =======================================================================
     const scale = getScaleFactor(effectiveConfig.overlayMode, effectiveConfig);
 
-    log.debug('Overlay mode resolution', {
+    log.debug("Overlay mode resolution", {
       hasOverlay: !!processedOverlayCanvas,
       configOverlayMode: config.overlayMode,
       effectiveOverlayMode: effectiveConfig.overlayMode,
@@ -429,7 +429,7 @@ export class QRGenerator {
       effectiveConfig,
       processedOverlayCanvas,
       moduleCount,
-      scale
+      scale,
     );
     if (scaledResult) return scaledResult;
 
@@ -442,13 +442,13 @@ export class QRGenerator {
     let overlayData: OverlayData | null = null;
     let effectiveIntensity = 0;
 
-    if (effectiveConfig.overlayMode !== 'center') {
+    if (effectiveConfig.overlayMode !== "center") {
       const overlayResult = await prepareUnifiedOverlayData(
         qr,
         effectiveConfig,
         processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas | null,
         moduleCount,
-        this.createCanvas.bind(this)
+        this.createCanvas.bind(this),
       );
       ditherPattern = overlayResult.ditherPattern;
       overlayData = overlayResult.overlayData;
@@ -473,7 +473,7 @@ export class QRGenerator {
       version,
       overlayData,
       ditherPattern,
-      effectiveIntensity
+      effectiveIntensity,
     );
 
     // Enforce a clean quiet zone in the final composition.
@@ -483,8 +483,8 @@ export class QRGenerator {
     // STAGE 6: FINAL TOUCHES
     // =======================================================================
     // Draw center logo if in center mode
-    if (processedOverlayCanvas && config.overlayMode === 'center') {
-      log.debug('Drawing center logo', {
+    if (processedOverlayCanvas && config.overlayMode === "center") {
+      log.debug("Drawing center logo", {
         canvasSize: size,
         logoSize: config.logoSize,
         overlayWidth: processedOverlayCanvas.width,
@@ -506,7 +506,7 @@ export class QRGenerator {
     sgctx: ScanGateCtx,
     scanCacheKey: string,
     scanCacheFallbackKey: string,
-    cacheIntensityFloor: number
+    cacheIntensityFloor: number,
   ): DitherAttemptPatch | null {
     const keyCandidates =
       scanCacheFallbackKey === scanCacheKey ? [scanCacheKey] : [scanCacheKey, scanCacheFallbackKey];
@@ -531,7 +531,7 @@ export class QRGenerator {
     patch: DitherAttemptPatch,
     scanCacheKey: string,
     scanCacheFallbackKey: string,
-    cacheIntensityFloor: number
+    cacheIntensityFloor: number,
   ): void {
     if (isAggressiveScanPatch(sgctx, patch, cacheIntensityFloor)) return;
     const now = Date.now();
@@ -556,13 +556,13 @@ export class QRGenerator {
     effectiveConfig: QRGeneratorConfig,
     processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
     moduleCount: number,
-    renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>
+    renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>,
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     const pool = this._canvasPool;
 
-    const scanGateProfile = effectiveConfig.scanGateProfile ?? 'full';
-    const isPreviewScanGate = scanGateProfile === 'preview';
-    const isScanGateDisabled = scanGateProfile === 'off';
+    const scanGateProfile = effectiveConfig.scanGateProfile ?? "full";
+    const isPreviewScanGate = scanGateProfile === "preview";
+    const isScanGateDisabled = scanGateProfile === "off";
     const skipScanGateEscalation =
       effectiveConfig.preserveFinders === false && effectiveConfig.blendPreservations !== true;
     const edgeImprintThreshold = clampN(effectiveConfig.edgeImprintThreshold ?? 0.2, 0.05, 0.5);
@@ -573,7 +573,7 @@ export class QRGenerator {
 
     const requestedOverlayIntensity = clampN(effectiveConfig.overlayIntensity ?? 100, 0, 100);
     const isAnimatedFrame =
-      typeof effectiveConfig.frameIndex === 'number' && Number.isFinite(effectiveConfig.frameIndex);
+      typeof effectiveConfig.frameIndex === "number" && Number.isFinite(effectiveConfig.frameIndex);
     const isFirstAnimatedFrame = isAnimatedFrame && effectiveConfig.frameIndex === 0;
     const isAnimatedPreviewFrame = isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame;
     const overlayFamilyKey = buildOverlayFamilyKey(processedOverlayCanvas, effectiveConfig);
@@ -581,13 +581,13 @@ export class QRGenerator {
       processedOverlayCanvas,
       isAnimatedFrame,
       overlayFamilyKey,
-      this.createCanvas.bind(this)
+      this.createCanvas.bind(this),
     );
     const overlayComplexity = await this.resolveOverlayComplexity(
       pool,
       processedOverlayCanvas,
       isAnimatedFrame,
-      overlaySignature
+      overlaySignature,
     );
     const sgctx: ScanGateCtx = {
       effectiveConfig,
@@ -602,12 +602,12 @@ export class QRGenerator {
         overlayComplexity * 0.08 +
         curveIntensity(requestedOverlayIntensity) * 0.03,
       0.05,
-      0.6
+      0.6,
     );
     const adaptiveToneStdThreshold = clampN(
       toneStdThreshold - overlayComplexity * 0.035,
       0.04,
-      0.3
+      0.3,
     );
     const adaptiveEdgeWorsenLimit = clampN(edgeWorsenLimit + overlayComplexity * 0.02, 0, 0.24);
 
@@ -616,19 +616,19 @@ export class QRGenerator {
       moduleCount,
       scanGateProfile,
       effectiveConfig.preserveFinders !== false,
-      overlaySignature
+      overlaySignature,
     );
     const scanCacheFallbackKey = buildScanCacheKey(
       effectiveConfig,
       moduleCount,
       scanGateProfile,
       effectiveConfig.preserveFinders !== false,
-      `overlay-family:${Math.round(overlayComplexity * 10)}`
+      `overlay-family:${Math.round(overlayComplexity * 10)}`,
     );
     const cacheIntensityFloor = clampN(
       requestedOverlayIntensity - Math.round(28 + overlayComplexity * 18),
       8,
-      requestedOverlayIntensity
+      requestedOverlayIntensity,
     );
 
     const baseAttempts = buildScanGateBaseAttempts(sgctx);
@@ -636,7 +636,7 @@ export class QRGenerator {
       sgctx,
       scanCacheKey,
       scanCacheFallbackKey,
-      cacheIntensityFloor
+      cacheIntensityFloor,
     );
     const attempts = buildDitherAttemptList(
       baseAttempts,
@@ -644,7 +644,7 @@ export class QRGenerator {
       isAnimatedFrame,
       isFirstAnimatedFrame,
       isAnimatedPreviewFrame,
-      ditherPatchSignature
+      ditherPatchSignature,
     );
 
     const buildAttemptConfig = (patch: DitherAttemptPatch): QRGeneratorConfig => ({
@@ -673,7 +673,7 @@ export class QRGenerator {
         patch,
         scanCacheKey,
         scanCacheFallbackKey,
-        cacheIntensityFloor
+        cacheIntensityFloor,
       );
     };
 
@@ -694,7 +694,7 @@ export class QRGenerator {
       thresholds,
       scenarioSeed,
       skipScanGateEscalation,
-      cb
+      cb,
     );
     if (mainResult.earlyReturn) return mainResult.earlyReturn;
     const lastCanvas = mainResult.lastCanvas;
@@ -713,7 +713,7 @@ export class QRGenerator {
       cb,
       renderScaled,
       buildAttemptConfig,
-      rememberPatch
+      rememberPatch,
     );
   }
 
@@ -731,7 +731,7 @@ export class QRGenerator {
     cb: ScanGateCallbacks,
     renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>,
     buildAttemptConfig: (patch: DitherAttemptPatch) => QRGeneratorConfig,
-    rememberPatch: (patch: DitherAttemptPatch) => void
+    rememberPatch: (patch: DitherAttemptPatch) => void,
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     const pool = this._canvasPool;
     const lastPatch = attempts[attempts.length - 1] || {};
@@ -743,7 +743,7 @@ export class QRGenerator {
         finderRescuePatches,
         isPreviewScanGate,
         cb,
-        lastCanvas
+        lastCanvas,
       );
       if (rescue.found) return rescue.found;
       lastCanvas = rescue.lastCanvas;
@@ -764,7 +764,7 @@ export class QRGenerator {
       rescuePatches,
       isPreviewScanGate,
       cb,
-      lastCanvas
+      lastCanvas,
     );
     if (rescue.found) return rescue.found;
     lastCanvas = rescue.lastCanvas;
@@ -785,7 +785,7 @@ export class QRGenerator {
       requestedOverlayIntensity,
       effectiveConfig,
       lastPatch,
-      cb
+      cb,
     );
 
     return qrFirstResult ?? (lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch))));
@@ -798,10 +798,10 @@ export class QRGenerator {
     qr: QRCodeInstance,
     moduleCount: number,
     config: QRGeneratorConfig,
-    storeMatrix: () => void
+    storeMatrix: () => void,
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     if (moduleCount === 0) {
-      throw new Error('Empty matrix provided to renderFromMatrix');
+      throw new Error("Empty matrix provided to renderFromMatrix");
     }
 
     // Calculate version from module count: moduleCount = version * 4 + 17
@@ -814,25 +814,25 @@ export class QRGenerator {
           ...config,
           typeNumber: version,
           overlayMode: undefined,
-          moduleStyle: 'square',
+          moduleStyle: "square",
           moduleGap: 0,
-          gapMode: 'none',
+          gapMode: "none",
           cornerRadius: 0,
-          finderStyle: 'square',
-          eyeOuterStyle: 'square',
-          eyeInnerStyle: 'square',
-          alignmentStyle: 'square',
-          timingStyle: 'square',
+          finderStyle: "square",
+          eyeOuterStyle: "square",
+          eyeInnerStyle: "square",
+          alignmentStyle: "square",
+          timingStyle: "square",
           preserveFinders: true,
           preserveTiming: true,
           preserveAlignment: true,
-          gradient: { type: 'none' } as GradientConfig,
-          frameStyle: 'none',
+          gradient: { type: "none" } as GradientConfig,
+          frameStyle: "none",
           frameText: undefined,
           frameColor: undefined,
           frameTextColor: undefined,
-          fgColor: '#000000',
-          bgColor: '#ffffff',
+          fgColor: "#000000",
+          bgColor: "#ffffff",
           transparentBg: false,
         }
       : {
@@ -859,7 +859,7 @@ export class QRGenerator {
       version,
       null,
       null,
-      0
+      0,
     );
 
     // =======================================================================
@@ -871,7 +871,7 @@ export class QRGenerator {
     // Store the matrix for vector SVG export
     storeMatrix();
 
-    log.debug('renderFromMatrix complete', {
+    log.debug("renderFromMatrix complete", {
       moduleCount,
       version,
       canvasSize: size,
@@ -896,7 +896,7 @@ export class QRGenerator {
    */
   async renderFromMatrix(
     matrix: boolean[][],
-    config: QRGeneratorConfig
+    config: QRGeneratorConfig,
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     const moduleCount = matrix.length;
     const qr = new MatrixWrapper(matrix);
@@ -911,15 +911,15 @@ export class QRGenerator {
   async renderFromPackedMatrix(
     packedMatrix: Uint8Array,
     moduleCount: number,
-    config: QRGeneratorConfig
+    config: QRGeneratorConfig,
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
     if (moduleCount <= 0) {
-      throw new Error('Invalid module count provided to renderFromPackedMatrix');
+      throw new Error("Invalid module count provided to renderFromPackedMatrix");
     }
     const expectedLength = moduleCount * moduleCount;
     if (packedMatrix.length !== expectedLength) {
       throw new Error(
-        `Invalid packed matrix length ${packedMatrix.length}, expected ${expectedLength}`
+        `Invalid packed matrix length ${packedMatrix.length}, expected ${expectedLength}`,
       );
     }
 

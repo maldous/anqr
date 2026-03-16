@@ -1,11 +1,11 @@
-import { rgbToLumaLinear } from '../../render/color/color';
+import { rgbToLumaLinear } from "../../render/color/color";
 
 export function computeSobelContribution(
   imageData: ImageData,
   imgX: number,
   imgY: number,
   maxX: number,
-  maxY: number
+  maxY: number,
 ): { sobelX: number; sobelY: number } {
   const nx = Math.max(0, Math.min(maxX, imgX + 1));
   const px = Math.max(0, Math.min(maxX, imgX - 1));

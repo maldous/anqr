@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from '../../../modules/qr-encoder/types';
+import type { QRCodeInstance } from "../../../modules/qr-encoder/types";
 
 /**
  * Count how many of the 8 neighbors around (row, col) share the same dark/light value.
@@ -7,7 +7,7 @@ export function countSameNeighbors(
   qrcode: QRCodeInstance,
   row: number,
   col: number,
-  moduleCount: number
+  moduleCount: number,
 ): number {
   let sameCount = 0;
   const dark = qrcode.isDark(row, col);

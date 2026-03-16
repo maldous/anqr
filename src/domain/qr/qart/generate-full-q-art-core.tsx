@@ -1,22 +1,22 @@
-import { buildBitPixelMap, getDataPixelIndices } from './bit-mapping';
-import { applyAllSelectedVectors, countMatchingPixels } from './elimination';
-import { mapImageToTargetsSupersampled } from './image-utils';
-import { log } from './log';
-import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
-import { generateBaseQR } from './generate-base-qr';
-import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
-import { buildQArtFailResult } from './build-q-art-fail-result';
-import { logBlockModificationSummary } from './log-block-modification-summary';
-import { validateFinalMatrixDiagnostics } from './validate-final-matrix-diagnostics';
-import { performSemanticGateAndFallback } from './perform-semantic-gate-and-fallback';
-import { countFinalMatchingPixels } from './count-final-matching-pixels';
-import { performZeroModificationTest } from './perform-zero-modification-test';
-import { validateBoundariesAndBaseline } from './validate-boundaries-and-baseline';
-import { verifyModifiedDataIntegrity } from './verify-modified-data-integrity';
-import { buildAndValidateBasis } from './build-and-validate-basis';
-import { selectAndFilterVectors } from './select-and-filter-vectors';
-import type { QArtCoreParams } from './q-art-core-params';
-import type { FullQArtResult } from './generate.types';
+import { buildBitPixelMap, getDataPixelIndices } from "./bit-mapping";
+import { applyAllSelectedVectors, countMatchingPixels } from "./elimination";
+import { mapImageToTargetsSupersampled } from "./image-utils";
+import { log } from "./log";
+import { scanMatrixWithJsQR } from "./scan-matrix-with-js-qr";
+import { generateBaseQR } from "./generate-base-qr";
+import { regenerateQRFromModifiedData } from "./regenerate-qr-from-modified-data";
+import { buildQArtFailResult } from "./build-q-art-fail-result";
+import { logBlockModificationSummary } from "./log-block-modification-summary";
+import { validateFinalMatrixDiagnostics } from "./validate-final-matrix-diagnostics";
+import { performSemanticGateAndFallback } from "./perform-semantic-gate-and-fallback";
+import { countFinalMatchingPixels } from "./count-final-matching-pixels";
+import { performZeroModificationTest } from "./perform-zero-modification-test";
+import { validateBoundariesAndBaseline } from "./validate-boundaries-and-baseline";
+import { verifyModifiedDataIntegrity } from "./verify-modified-data-integrity";
+import { buildAndValidateBasis } from "./build-and-validate-basis";
+import { selectAndFilterVectors } from "./select-and-filter-vectors";
+import type { QArtCoreParams } from "./q-art-core-params";
+import type { FullQArtResult } from "./generate.types";
 
 export async function generateFullQArtCore(params: QArtCoreParams): Promise<FullQArtResult> {
   const {
@@ -39,14 +39,14 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     suffix,
   } = params;
 
-  onProgress?.('Encoding base data', 0);
+  onProgress?.("Encoding base data", 0);
 
   // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
   // HYBRID MODE: Pass protectedDataLength to track protection boundaries
   // CRITICAL: When using byte-mode suffix with a leading '#', protect the separator.
   // In numeric mode, the prefix already includes '#', so originalDataLength is correct.
   const protectedDataLength =
-    resolvedSuffixMode === 'byte' && actualSuffix.startsWith('#')
+    resolvedSuffixMode === "byte" && actualSuffix.startsWith("#")
       ? originalDataLength + 1
       : originalDataLength;
 
@@ -56,21 +56,21 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     ecc,
     maskPattern,
     protectedDataLength,
-    encodingSuffixMode
+    encodingSuffixMode,
   );
 
   // FAIL FAST: If base matrix generation failed (e.g., ECC/mask mismatch), return error immediately
   if (!baseResult.success) {
-    log.warn('BASE QR GENERATION FAILED - FAIL FAST!', {
+    log.warn("BASE QR GENERATION FAILED - FAIL FAST!", {
       error: baseResult.error,
       rejectionReason: baseResult.rejectionReason,
       errorDetails: baseResult.errorDetails,
-      note: 'This indicates a critical bug in the QR encoder or regeneration pipeline',
+      note: "This indicates a critical bug in the QR encoder or regeneration pipeline",
     });
 
     return {
       success: false,
-      error: baseResult.error ?? 'Base QR generation failed with unknown error',
+      error: baseResult.error ?? "Base QR generation failed with unknown error",
       matrix: baseResult.matrix,
       moduleCount: baseResult.matrix.length,
       version: baseResult.actualVersion,
@@ -96,7 +96,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
   } = baseResult;
   const moduleCount = baseMatrix.length;
 
-  log.info('Base QR generated', {
+  log.info("Base QR generated", {
     version: actualVersion,
     moduleCount,
     maskPattern: actualMask,
@@ -105,7 +105,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
   });
 
   // Step 1.5: Validate boundaries, compute baseline stats, verify base matrix
-  onProgress?.('Analyzing semantic layout', 5);
+  onProgress?.("Analyzing semantic layout", 5);
 
   const boundaryError = validateBoundariesAndBaseline(
     encoderLayout,
@@ -119,7 +119,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     data,
     encodedData.length,
     autoSuffix,
-    suffix
+    suffix,
   );
   if (boundaryError) {
     return buildQArtFailResult(
@@ -130,11 +130,11 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
       actualMask,
       encodedData,
       data,
-      actualSuffix
+      actualSuffix,
     );
   }
 
-  onProgress?.('Building RS basis', 10);
+  onProgress?.("Building RS basis", 10);
 
   const basisResult = buildAndValidateBasis(
     encoderLayout,
@@ -150,23 +150,23 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     encodedData,
     data,
     actualSuffix,
-    originalDataLength
+    originalDataLength,
   );
   if (basisResult.earlyReturn) {
     return basisResult.earlyReturn;
   }
   const { basis, actualControlPercentage, allowedBitRanges } = basisResult;
 
-  onProgress?.('Mapping bits to pixels', 20);
+  onProgress?.("Mapping bits to pixels", 20);
 
   // Step 3: Build bit-to-pixel mapping
   const mappings = buildBitPixelMap(actualVersion, ecc, actualMask);
 
-  log.debug('Bit-pixel mapping built', {
+  log.debug("Bit-pixel mapping built", {
     totalMappings: mappings.length,
   });
 
-  onProgress?.('Processing target image', 30);
+  onProgress?.("Processing target image", 30);
 
   // Step 4: Map target image to module targets
   const { targets, importance } = mapImageToTargetsSupersampled(targetImage, moduleCount, 128, {
@@ -180,11 +180,11 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
   const dataPixelIndices = getDataPixelIndices(actualVersion);
   const dataPixels = new Set(dataPixelIndices);
 
-  onProgress?.('Ranking pixels by importance', 40);
+  onProgress?.("Ranking pixels by importance", 40);
 
-  onProgress?.('Performing Gauss-Jordan elimination', 50);
+  onProgress?.("Performing Gauss-Jordan elimination", 50);
 
-  onProgress?.('Selecting basis vectors', 70);
+  onProgress?.("Selecting basis vectors", 70);
 
   const selectionResult = selectAndFilterVectors(
     basis,
@@ -203,12 +203,12 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     blockDataCounts,
     encoderLayout,
     actualVersion,
-    actualMask
+    actualMask,
   );
   const { blockSelections, flattenedSelections, totalSelected, elimination } = selectionResult;
   const _orderedSelections = flattenedSelections;
 
-  onProgress?.('Counting predicted matches', 75);
+  onProgress?.("Counting predicted matches", 75);
 
   // Step 8: Count predicted matching pixels (before re-encoding)
   // Pass mappings so we can accurately track ALL pixels affected by selected vectors
@@ -219,18 +219,18 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     targets,
     moduleCount,
     dataPixels,
-    mappings
+    mappings,
   );
 
   const predictedMatchPercentage = total > 0 ? (predictedMatching / total) * 100 : 0;
 
-  log.info('Predicted QR-Art result', {
+  log.info("Predicted QR-Art result", {
     predictedMatchingPixels: predictedMatching,
     totalControllable: total,
     predictedMatchPercentage: `${predictedMatchPercentage.toFixed(1)}%`,
   });
 
-  onProgress?.('Modifying data bytes', 80);
+  onProgress?.("Modifying data bytes", 80);
 
   // Step 9: Apply vectors and verify integrity (RS linearity, ECC damage, protected bytes)
   const modifiedBlockData = blockDataArrays.map((arr) => new Uint8Array(arr));
@@ -240,7 +240,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     modifiedBlockEcc,
     elimination,
     blockSelections,
-    blockDataCounts
+    blockDataCounts,
   );
 
   const integrityError = verifyModifiedDataIntegrity(
@@ -253,7 +253,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     encoderLayout,
     actualVersion,
     ecc,
-    totalSelected
+    totalSelected,
   );
   if (integrityError) {
     return buildQArtFailResult(
@@ -264,11 +264,11 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
       actualMask,
       encodedData,
       data,
-      actualSuffix
+      actualSuffix,
     );
   }
 
-  onProgress?.('Re-encoding QR code', 85);
+  onProgress?.("Re-encoding QR code", 85);
 
   // Zero-modification test - verify that regenerating with UNMODIFIED data still scans
   performZeroModificationTest(
@@ -279,7 +279,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     actualVersion,
     ecc,
     actualMask,
-    encodedData
+    encodedData,
   );
 
   // Log modification summary per block
@@ -294,7 +294,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     blockEccCounts,
     actualVersion,
     ecc,
-    actualMask
+    actualMask,
   );
 
   // Diagnostic: Check format info, matrix diff, finder/timing patterns, format info comparison
@@ -303,7 +303,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     baseMatrix,
     ecc,
     actualMask,
-    moduleCount
+    moduleCount,
   );
 
   // Scan the final matrix to verify it's actually scannable
@@ -335,19 +335,19 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     totalSelected,
     diagnostics,
     actualControlPercentage,
-    basis.vectors.length
+    basis.vectors.length,
   );
 
   // Also scan the base matrix to confirm it was valid
   const baseScanResult = scanMatrixWithJsQR(baseMatrix);
-  log.debug('Base matrix scan check', {
+  log.debug("Base matrix scan check", {
     success: baseScanResult.success,
     data: baseScanResult.data,
     error: baseScanResult.error,
     scanAttempts: baseScanResult.attempts,
   });
 
-  onProgress?.('Validating result', 95);
+  onProgress?.("Validating result", 95);
 
   // Step 11: Count actual matching pixels in the final matrix
   // Use finalMatrixToUse which may have been updated by binary search fallback
@@ -358,7 +358,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
   // Get final scan result for segment info
   const finalScan = scanMatrixWithJsQR(finalMatrixToUse);
 
-  log.info('QR-Art generation complete (SEMANTIC-HARD-GATE TWO-INTERVAL HYBRID)', {
+  log.info("QR-Art generation complete (SEMANTIC-HARD-GATE TWO-INTERVAL HYBRID)", {
     success: true,
     matchingPixels: matching,
     totalControllable: total,
@@ -375,7 +375,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
       byteExactPrefixMatch: true,
       formatInfoVerified: true,
       structuralValidityChecked: true,
-      suffixCharsetMode: strictSuffix ? 'STRICT' : 'RELAXED',
+      suffixCharsetMode: strictSuffix ? "STRICT" : "RELAXED",
       ecc,
       mask: actualMask,
     },
@@ -392,7 +392,7 @@ export async function generateFullQArtCore(params: QArtCoreParams): Promise<Full
     },
   });
 
-  onProgress?.('Complete', 100);
+  onProgress?.("Complete", 100);
 
   return {
     success: true,

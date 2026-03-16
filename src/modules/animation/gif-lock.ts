@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/gif-lock';
+export * from "../../domain/render/animation/gif-lock";

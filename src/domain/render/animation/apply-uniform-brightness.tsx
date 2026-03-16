@@ -1,4 +1,4 @@
-import { clampToByte } from './clamp-to-byte';
+import { clampToByte } from "./clamp-to-byte";
 
 export function applyUniformBrightness(data: Uint8ClampedArray, factor: number): void {
   for (let i = 0; i < data.length; i += 4) {

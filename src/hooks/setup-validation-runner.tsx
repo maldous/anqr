@@ -1,1 +1,1 @@
-export { setupValidationRunner } from '@/features/generator/application/generation/generation-fn-setupvalidation';
+export { setupValidationRunner } from "@/features/generator/application/generation/generation-fn-setupvalidation";

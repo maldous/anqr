@@ -1,4 +1,4 @@
-import type { DiffusionKernelDef } from './kernels';
+import type { DiffusionKernelDef } from "./kernels";
 
 /** Options for distributing error to neighboring pixels */
 export interface DistributeErrorOptions {

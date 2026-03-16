@@ -1,5 +1,5 @@
-import type { RGB } from '../../../modules/core/types';
-import { getRelativeLuminance } from './get-relative-luminance';
+import type { RGB } from "../../../modules/core/types";
+import { getRelativeLuminance } from "./get-relative-luminance";
 
 /** Calculate WCAG contrast ratio between two colors */
 export function getContrastRatio(color1: RGB | string, color2: RGB | string): number {

@@ -7,16 +7,16 @@
  *   Worker → Main: { id, result: ValidationResult }
  */
 
-import { decodeQR } from '../../../modules/qr-decoder';
-import type { ValidateRequest } from './validate-request';
-import type { ValidationResult } from './validation-worker-result';
+import { decodeQR } from "../../../modules/qr-decoder";
+import type { ValidateRequest } from "./validate-request";
+import type { ValidationResult } from "./validation-worker-result";
 
 globalThis.onmessage = (e: MessageEvent<ValidateRequest>) => {
   const { id, width, height, pixels, expectedContent, attempts } = e.data;
   const pixelView = new Uint8ClampedArray(
     pixels.buffer as ArrayBuffer,
     pixels.byteOffset,
-    pixels.byteLength
+    pixels.byteLength,
   );
   const imageData = new ImageData(pixelView, width, height);
   const result = validate(imageData, expectedContent, attempts);
@@ -26,22 +26,22 @@ globalThis.onmessage = (e: MessageEvent<ValidateRequest>) => {
 const validate = (
   imageData: ImageData,
   expectedContent: string | undefined,
-  attempts: number
+  attempts: number,
 ): ValidationResult => {
   for (let i = 0; i < attempts; i++) {
     try {
-      const decoded = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
+      const decoded = decodeQR(imageData, { inversionAttempts: "attemptBoth" });
 
       if (decoded?.success && decoded.data) {
         if (expectedContent && decoded.data !== expectedContent) {
           return {
             valid: false,
             data: decoded.data,
-            error: 'Content does not match expected',
-            confidence: 'medium',
+            error: "Content does not match expected",
+            confidence: "medium",
           };
         }
-        return { valid: true, data: decoded.data, confidence: 'high' };
+        return { valid: true, data: decoded.data, confidence: "high" };
       }
     } catch {
       // Decode attempt failed — retry
@@ -50,7 +50,7 @@ const validate = (
 
   return {
     valid: false,
-    error: 'Failed to validate after multiple attempts',
-    confidence: 'low',
+    error: "Failed to validate after multiple attempts",
+    confidence: "low",
   };
 };

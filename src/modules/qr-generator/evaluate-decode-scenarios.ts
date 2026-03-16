@@ -1,7 +1,7 @@
-import type { CanvasPool } from '../../platform/browser/canvas/canvas-factory';
-import { computeScanGateRasterMetrics, roundtripToFinalRaster } from './qr-generator-helpers';
-import { runRobustnessScenarios } from './run-robustness-scenarios';
-import type { ScanGateCtx } from './scan-gate-ctx.interface';
+import type { CanvasPool } from "../../platform/browser/canvas/canvas-factory";
+import { computeScanGateRasterMetrics, roundtripToFinalRaster } from "./qr-generator-helpers";
+import { runRobustnessScenarios } from "./run-robustness-scenarios";
+import type { ScanGateCtx } from "./scan-gate-ctx.interface";
 
 export async function evaluateDecodeScenarios(
   ctx: ScanGateCtx,
@@ -11,7 +11,7 @@ export async function evaluateDecodeScenarios(
   prevEdgeImprint: number | null,
   thresholds: { edge: number; toneStd: number; edgeWorsen: number },
   scenarioSeed: number,
-  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>
+  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>,
 ): Promise<{
   ok: boolean;
   baseDecodeOk: boolean;

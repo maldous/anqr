@@ -1,12 +1,12 @@
-import type { CreateCanvasFn } from './types';
-import { get2DContext } from './get2-d-context';
-import { acquireSharedReadbackCanvas } from './acquire-shared-readback-canvas';
+import type { CreateCanvasFn } from "./types";
+import { get2DContext } from "./get2-d-context";
+import { acquireSharedReadbackCanvas } from "./acquire-shared-readback-canvas";
 
 export async function readOverlayPixelsAtSize(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   scaledSize: number,
   createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<Uint8ClampedArray | null> {
   if (overlayCanvas.width === scaledSize && overlayCanvas.height === scaledSize) {
     const directCtx = get2DContext(overlayCanvas);

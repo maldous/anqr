@@ -1,6 +1,6 @@
-import type { QRCodeInstance } from '../../../../modules/qr-generator/types';
-import type { ContrastBoostFlags } from './contrast-boost-flags';
-import type { PixelColor } from './pixel-color';
+import type { QRCodeInstance } from "../../../../modules/qr-generator/types";
+import type { ContrastBoostFlags } from "./contrast-boost-flags";
+import type { PixelColor } from "./pixel-color";
 
 export interface PatternBoostCtx {
   ctx: CanvasRenderingContext2D;
@@ -13,7 +13,7 @@ export interface PatternBoostCtx {
   scale: number;
   finderStrengthN: number;
   blendPreservations: boolean;
-  blendPreservationMode: 'dither' | 'overlay';
+  blendPreservationMode: "dither" | "overlay";
   isDitheredMode: boolean;
   bgLuma: number;
   ditherPaperOverlayMix: number;

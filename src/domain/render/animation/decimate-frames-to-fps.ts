@@ -1,5 +1,5 @@
-import type { AnimationFrame } from '../../../modules/animation/types';
-import { calculateSourceFps } from './calculate-source-fps';
+import type { AnimationFrame } from "../../../modules/animation/types";
+import { calculateSourceFps } from "./calculate-source-fps";
 
 /**
  * Decimate frames to target FPS by skipping frames

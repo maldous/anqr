@@ -1,1 +1,1 @@
-export * from '../app/pages/StaticPage';
+export * from "../app/pages/StaticPage";

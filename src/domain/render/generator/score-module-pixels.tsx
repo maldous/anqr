@@ -1,7 +1,7 @@
-import { pixelIndex } from './pixel-index';
-import { scorePixelCandidate } from './score-pixel-candidate';
-import type { ConstraintCandidate } from './constraint-candidate';
-import type { ConstraintCtx } from './constraint-ctx';
+import { pixelIndex } from "./pixel-index";
+import { scorePixelCandidate } from "./score-pixel-candidate";
+import type { ConstraintCandidate } from "./constraint-candidate";
+import type { ConstraintCtx } from "./constraint-ctx";
 
 export function scoreModulePixels(
   ctx: ConstraintCtx,
@@ -10,7 +10,7 @@ export function scoreModulePixels(
   occViolation: number,
   centerViolation: number,
   toDark: boolean,
-  out: ConstraintCandidate[]
+  out: ConstraintCandidate[],
 ): void {
   const {
     matrixBits,
@@ -56,7 +56,7 @@ export function scoreModulePixels(
         scanScoreWeight,
         artPenaltyWeight,
         edgeBandPenalty,
-        centerPixelBonus
+        centerPixelBonus,
       );
       if (result) {
         out.push({ y: yy, x: xx, score: result.score, toDark, scanGain: result.scanGain });

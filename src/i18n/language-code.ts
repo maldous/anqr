@@ -1,3 +1,3 @@
-import type { languages } from './languages';
+import type { languages } from "./languages";
 
-export type LanguageCode = (typeof languages)[number]['code'];
+export type LanguageCode = (typeof languages)[number]["code"];

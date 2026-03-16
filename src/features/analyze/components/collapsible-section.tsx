@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 export const CollapsibleSection = ({
   title,
@@ -31,7 +31,7 @@ export const CollapsibleSection = ({
           {badge}
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "" : "-rotate-90"}`}
         />
       </button>
       {isOpen && (

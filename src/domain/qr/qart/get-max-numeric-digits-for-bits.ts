@@ -1,6 +1,6 @@
-import { QRMode } from '../../../modules/qr-encoder/types';
-import { getLengthInBits } from '../encode/utils';
-import { getNumericBitsForDigits } from './get-numeric-bits-for-digits';
+import { QRMode } from "../../../modules/qr-encoder/types";
+import { getLengthInBits } from "../encode/utils";
+import { getNumericBitsForDigits } from "./get-numeric-bits-for-digits";
 
 export function getMaxNumericDigitsForBits(availableBits: number, version: number): number {
   if (availableBits <= 0) return 0;

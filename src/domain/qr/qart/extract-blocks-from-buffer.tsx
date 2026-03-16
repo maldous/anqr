@@ -1,8 +1,8 @@
-import { computeECC } from './rs-basis';
+import { computeECC } from "./rs-basis";
 
 export function extractBlocksFromBuffer(
   bufferBytes: number[] | Uint8Array,
-  rsBlocks: Array<{ dataCount: number; totalCount: number }>
+  rsBlocks: Array<{ dataCount: number; totalCount: number }>,
 ): {
   blockDataArrays: Uint8Array[];
   blockEccArrays: Uint8Array[];

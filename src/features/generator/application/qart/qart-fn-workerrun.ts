@@ -4,29 +4,29 @@
  * Notes: Run QArt generation via worker.
  */
 
-import { createLogger } from '@/infra/logging/logger';
+import { createLogger } from "@/infra/logging/logger";
 import type {
   FullQArtPipelineResult,
   QArtModule,
-} from '@/features/generator/application/qart/qart-shared-types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { readCanvasImageData } from '@/features/generator/application/generation/generation-fn-readcanvas';
-import { sanitizeQArtRenderConfig } from '@/features/generator/application/generation/generation-fn-sanitizeconfig';
+} from "@/features/generator/application/qart/qart-shared-types";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { readCanvasImageData } from "@/features/generator/application/generation/generation-fn-readcanvas";
+import { sanitizeQArtRenderConfig } from "@/features/generator/application/generation/generation-fn-sanitizeconfig";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function runQArtWorkerGeneration(params: {
   qartModule: QArtModule;
   qartConfig: {
     data: string;
     version: number;
-    ecc: 'L' | 'M' | 'Q' | 'H';
+    ecc: "L" | "M" | "Q" | "H";
     strictSuffix: boolean;
     targetControlPercent: number;
     searchAttempts: number;
     searchSeed: number;
     lockVersionToMinimum: boolean;
-    performanceProfile: 'quality';
+    performanceProfile: "quality";
     onProgress: (stage: string, percent: number) => void;
   };
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas;
@@ -35,7 +35,7 @@ export async function runQArtWorkerGeneration(params: {
   qartAbortSignal: AbortSignal;
 }): Promise<{
   result: FullQArtPipelineResult;
-  source: 'worker' | 'main';
+  source: "worker" | "main";
   packedMatrix: Uint8Array | null;
   bitmap: ImageBitmap | null;
 }> {
@@ -67,7 +67,7 @@ export async function runQArtWorkerGeneration(params: {
       {
         onProgress: params.qartConfig.onProgress,
         signal: params.qartAbortSignal,
-      }
+      },
     );
 
     const packedMatrix =
@@ -86,16 +86,16 @@ export async function runQArtWorkerGeneration(params: {
       totalControllable: workerResult.totalControllable,
       matchPercentage: workerResult.matchPercentage,
       encodedData:
-        typeof workerResult.encodedData === 'string'
+        typeof workerResult.encodedData === "string"
           ? new TextEncoder().encode(workerResult.encodedData)
           : (workerResult.encodedData ?? new Uint8Array(0)),
     };
-    return { result, source: 'worker', packedMatrix, bitmap };
+    return { result, source: "worker", packedMatrix, bitmap };
   } catch (error_) {
     if (params.qartAbortSignal.aborted) {
       throw error_;
     }
-    log.warn('QArt worker failed, falling back to main thread generation', {
+    log.warn("QArt worker failed, falling back to main thread generation", {
       error: error_,
     });
     const mainResult = params.useAutoMask
@@ -110,7 +110,7 @@ export async function runQArtWorkerGeneration(params: {
         });
     return {
       result: mainResult as unknown as FullQArtPipelineResult,
-      source: 'main',
+      source: "main",
       packedMatrix: null,
       bitmap: null,
     };

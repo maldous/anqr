@@ -1,11 +1,11 @@
-import type { EliminationResult } from './elimination';
-import { type ECCLevel, type FormatVerificationResult, verifyMatrixFormatInfo } from './validation';
-import { log } from './log';
-import { validateByteExactPrefix } from './validate-byte-exact-prefix';
-import { logBaseValidationFailure } from './log-base-validation-failure';
-import type { BaseMatrixResult } from './base-matrix-result';
-import type { RejectionHistogram, FlattenedSelection } from './scan-fallback.types';
-import { applySubsetAndRegenerate } from './apply-subset-and-regenerate';
+import type { EliminationResult } from "./elimination";
+import { type ECCLevel, type FormatVerificationResult, verifyMatrixFormatInfo } from "./validation";
+import { log } from "./log";
+import { validateByteExactPrefix } from "./validate-byte-exact-prefix";
+import { logBaseValidationFailure } from "./log-base-validation-failure";
+import type { BaseMatrixResult } from "./base-matrix-result";
+import type { RejectionHistogram, FlattenedSelection } from "./scan-fallback.types";
+import { applySubsetAndRegenerate } from "./apply-subset-and-regenerate";
 
 export function validateBaseMatrix(
   flattened: FlattenedSelection[],
@@ -18,14 +18,14 @@ export function validateBaseMatrix(
     blockData: Uint8Array[],
     blockEcc: Uint8Array[],
     blockDataCounts: number[],
-    blockEccCounts: number[]
+    blockEccCounts: number[],
   ) => boolean[][],
   scanQRFn: (matrix: boolean[][]) => { success: boolean; data?: string },
   expectedData: string,
   expectedEcc: ECCLevel | undefined,
   expectedMask: number | undefined,
   strictSuffix: boolean,
-  rejectionHistogram: RejectionHistogram
+  rejectionHistogram: RejectionHistogram,
 ): BaseMatrixResult {
   const baseResult = applySubsetAndRegenerate(
     flattened,
@@ -35,11 +35,11 @@ export function validateBaseMatrix(
     blockDataCounts,
     blockEccCounts,
     eliminationResult,
-    regenerateQRFn
+    regenerateQRFn,
   );
   const baseScan = scanQRFn(baseResult.matrix);
   if (!baseScan.success) {
-    log.warn('Base matrix (0 vectors) does not scan - this is a fundamental bug');
+    log.warn("Base matrix (0 vectors) does not scan - this is a fundamental bug");
     return { valid: false, result: baseResult };
   }
 
@@ -55,7 +55,7 @@ export function validateBaseMatrix(
   if (expectedEcc !== undefined && expectedMask !== undefined) {
     baseFormatVerification = verifyMatrixFormatInfo(baseResult.matrix, expectedEcc, expectedMask);
     if (!baseFormatVerification.valid) {
-      log.warn('Base matrix (0 vectors) FORMAT VERIFICATION FAILED!', {
+      log.warn("Base matrix (0 vectors) FORMAT VERIFICATION FAILED!", {
         rejectionReason: baseFormatVerification.reason,
         expectedEcc,
         extractedEcc: baseFormatVerification.extractedEcc,
@@ -69,10 +69,10 @@ export function validateBaseMatrix(
 
   rejectionHistogram.ACCEPTED++;
 
-  log.debug('Base matrix (0 vectors) validation PASSED', {
+  log.debug("Base matrix (0 vectors) validation PASSED", {
     decodedData: baseScan.data,
     decodedLength: baseScan.data?.length,
-    validationMethod: 'SEMANTIC_HARD_GATE',
+    validationMethod: "SEMANTIC_HARD_GATE",
     formatVerified: baseFormatVerification?.valid,
     extractedEcc: baseFormatVerification?.extractedEcc,
     extractedMask: baseFormatVerification?.extractedMask,

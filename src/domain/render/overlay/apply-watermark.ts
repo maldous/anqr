@@ -1,8 +1,8 @@
-import type { WatermarkOptions, WatermarkResult } from './watermark.types';
-import { applyWatermarkBlendMode } from './apply-watermark-blend-mode';
-import { renderTextWatermark } from './render-text-watermark';
-import { renderPatternWatermark } from './render-pattern-watermark';
-import { calculateWatermarkPositions } from './calculate-watermark-positions';
+import type { WatermarkOptions, WatermarkResult } from "./watermark.types";
+import { applyWatermarkBlendMode } from "./apply-watermark-blend-mode";
+import { renderTextWatermark } from "./render-text-watermark";
+import { renderPatternWatermark } from "./render-pattern-watermark";
+import { calculateWatermarkPositions } from "./calculate-watermark-positions";
 
 // ============================================
 // MAIN WATERMARK FUNCTIONS
@@ -10,27 +10,27 @@ import { calculateWatermarkPositions } from './calculate-watermark-positions';
 
 export function applyWatermark(
   sourceCanvas: HTMLCanvasElement,
-  options: WatermarkOptions
+  options: WatermarkOptions,
 ): WatermarkResult {
   const {
     kind,
-    text = '',
+    text = "",
     image,
-    position = 'bottom-right',
+    position = "bottom-right",
     opacity = 0.5,
-    blend = 'normal',
+    blend = "normal",
     scale = 1,
     padding = 10,
-    font = '16px Arial',
-    color = 'rgba(0, 0, 0, 0.3)',
+    font = "16px Arial",
+    color = "rgba(0, 0, 0, 0.3)",
     tiled = false,
   } = options;
 
-  const result = document.createElement('canvas');
+  const result = document.createElement("canvas");
   result.width = sourceCanvas.width;
   result.height = sourceCanvas.height;
-  const ctx = result.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2D context');
+  const ctx = result.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context");
 
   // Draw source
   ctx.drawImage(sourceCanvas, 0, 0);
@@ -42,13 +42,13 @@ export function applyWatermark(
   let watermark: HTMLCanvasElement | HTMLImageElement | null = null;
 
   switch (kind) {
-    case 'text':
+    case "text":
       watermark = renderTextWatermark(text, font, color);
       break;
-    case 'pattern':
+    case "pattern":
       watermark = renderPatternWatermark(text, font, color);
       break;
-    case 'image':
+    case "image":
       watermark = image || null;
       break;
   }
@@ -60,9 +60,9 @@ export function applyWatermark(
   const wmWidth = watermark.width * scale;
   const wmHeight = watermark.height * scale;
 
-  if (tiled || kind === 'pattern') {
+  if (tiled || kind === "pattern") {
     // Tile the watermark
-    const pattern = ctx.createPattern(watermark, 'repeat');
+    const pattern = ctx.createPattern(watermark, "repeat");
     if (pattern) {
       ctx.fillStyle = pattern;
       ctx.fillRect(0, 0, result.width, result.height);
@@ -75,14 +75,14 @@ export function applyWatermark(
       wmWidth,
       wmHeight,
       position,
-      padding
+      padding,
     );
     ctx.drawImage(watermark, pos.x, pos.y, wmWidth, wmHeight);
   }
 
   // Reset compositing
   ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = "source-over";
 
   return { canvas: result, width: result.width, height: result.height };
 }

@@ -3,16 +3,16 @@
  * Generates social media share URLs
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('SHARE');
+const _log = createLogger("SHARE");
 
 /**
  * Generate social share URLs
  */
 export function getSocialShareUrls(
   url: string,
-  title: string = 'Check out this QR code!'
+  title: string = "Check out this QR code!",
 ): Record<string, string> {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);

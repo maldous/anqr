@@ -1,6 +1,6 @@
-import type { ECCLevel } from './bit-mapping';
-import type { RejectionReason } from './validation';
-import type { EncoderDerivedLayout } from './generate.types';
+import type { ECCLevel } from "./bit-mapping";
+import type { RejectionReason } from "./validation";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 /**
  * Result of base QR generation with data extraction

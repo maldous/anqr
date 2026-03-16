@@ -1,5 +1,5 @@
-import type { RGB } from './rgb';
-import type { ColorMode } from './color-mode';
+import type { RGB } from "./rgb";
+import type { ColorMode } from "./color-mode";
 
 export interface FilterOptions {
   brightness?: number;

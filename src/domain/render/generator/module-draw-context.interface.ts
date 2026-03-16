@@ -1,5 +1,5 @@
-import type { OverlayData, QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import type { CanvasContext } from './canvas-context.interface';
+import type { OverlayData, QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import type { CanvasContext } from "./canvas-context.interface";
 
 export interface ModuleDrawContext {
   ctx: CanvasContext;

@@ -1,9 +1,9 @@
-import type { DarkModuleReader } from './verify.types';
+import type { DarkModuleReader } from "./verify.types";
 
 export function isFinderCoreCorrect(
-  isDark: DarkModuleReader['isDark'],
+  isDark: DarkModuleReader["isDark"],
   baseRow: number,
-  baseCol: number
+  baseCol: number,
 ): boolean {
   for (let row = 0; row < 7; row++) {
     for (let col = 0; col < 7; col++) {

@@ -17,7 +17,7 @@ export function applyVectorSparseXOR(
   nzVals: Uint8Array,
   blockData: Uint8Array,
   blockEcc: Uint8Array,
-  dataCount: number
+  dataCount: number,
 ): void {
   for (let k = 0; k < nzIdx.length; k++) {
     const byteIdx = nzIdx[k];

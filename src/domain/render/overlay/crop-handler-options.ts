@@ -1,4 +1,4 @@
-import type { CropRegion } from './crop-region';
+import type { CropRegion } from "./crop-region";
 
 export interface CropHandlerOptions {
   container: HTMLElement;

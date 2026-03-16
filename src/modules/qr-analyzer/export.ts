@@ -1,20 +1,20 @@
-import type { QRAnalysisResult } from './types';
+import type { QRAnalysisResult } from "./types";
 
-export type { AnalysisExportGeneratorSettings, AnalysisExportData } from './export.types';
-import type { AnalysisExportGeneratorSettings, AnalysisExportData } from './export.types';
+export type { AnalysisExportGeneratorSettings, AnalysisExportData } from "./export.types";
+import type { AnalysisExportGeneratorSettings, AnalysisExportData } from "./export.types";
 
 export function buildAnalysisExportData(
   result: QRAnalysisResult,
   options: {
     timestamp?: string;
-    source?: 'file' | 'url' | 'camera' | 'generator' | null;
+    source?: "file" | "url" | "camera" | "generator" | null;
     actualUsedVersion?: number | null;
-  } = {}
+  } = {},
 ): AnalysisExportData {
   const timestamp = options.timestamp ?? new Date().toISOString();
-  const source = options.source ?? 'unknown';
+  const source = options.source ?? "unknown";
   const moduleMatrix = result.moduleMatrix
-    ? result.moduleMatrix.map((row) => row.map((cell) => (cell ? 1 : 0)).join(''))
+    ? result.moduleMatrix.map((row) => row.map((cell) => (cell ? 1 : 0)).join(""))
     : undefined;
 
   const generatorSettings: AnalysisExportGeneratorSettings = {
@@ -23,7 +23,7 @@ export function buildAnalysisExportData(
     version: options.actualUsedVersion ?? result.version,
     maskPattern: result.maskPattern,
     encodingMode:
-      result.encodingMode && result.encodingMode !== 'unknown' && result.encodingMode !== 'mixed'
+      result.encodingMode && result.encodingMode !== "unknown" && result.encodingMode !== "mixed"
         ? result.encodingMode
         : undefined,
     fgColor: result.detectedColors?.foreground,
@@ -31,7 +31,7 @@ export function buildAnalysisExportData(
   };
 
   return {
-    version: '1.1',
+    version: "1.1",
     timestamp,
     source,
     analysis: {

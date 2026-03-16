@@ -3,10 +3,10 @@
  * Error distribution for dithering algorithms
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { DiffusionKernel } from '../../../modules/qr-generator/types';
+import { createLogger } from "../../../infra/logging/logger";
+import type { DiffusionKernel } from "../../../modules/qr-generator/types";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 /**
  * Distribute quantization error to neighboring pixels
@@ -18,7 +18,7 @@ export function distributeError(
   error: number,
   kernel: DiffusionKernel,
   width: number,
-  height: number
+  height: number,
 ): void {
   for (const offset of kernel.offsets) {
     const nx = x + offset.dx;

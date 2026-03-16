@@ -1,1 +1,1 @@
-export type { UseQRGeneratorResult } from './useQRGenerator.types';
+export type { UseQRGeneratorResult } from "./useQRGenerator.types";

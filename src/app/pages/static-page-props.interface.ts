@@ -1,4 +1,4 @@
-import type { StaticPageType } from './StaticPage.types';
+import type { StaticPageType } from "./StaticPage.types";
 
 export interface StaticPageProps {
   page: StaticPageType;

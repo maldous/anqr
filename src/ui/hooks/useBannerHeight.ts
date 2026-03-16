@@ -1,6 +1,6 @@
-import { Capacitor } from '@capacitor/core';
-import { useEffect, useState } from 'react';
-import { onBannerHeightChange } from '@/modules/platform';
+import { Capacitor } from "@capacitor/core";
+import { useEffect, useState } from "react";
+import { onBannerHeightChange } from "@/modules/platform";
 
 /**
  * Hook to track AdMob banner height for layout purposes.

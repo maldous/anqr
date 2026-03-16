@@ -1,4 +1,4 @@
-import { gexp, qrPolynomial } from '../encode/math';
+import { gexp, qrPolynomial } from "../encode/math";
 
 /**
  * Create the error correction polynomial for a given ECC length

@@ -1,7 +1,7 @@
-import { BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
-import { PerspectiveTransform } from './perspective-transform';
-import type { SampleGridArgs } from './sample-grid-args.type';
+import { BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
+import { PerspectiveTransform } from "./perspective-transform";
+import type { SampleGridArgs } from "./sample-grid-args.type";
 
 /**
  * Abstract grid sampler
@@ -13,14 +13,14 @@ export abstract class GridSampler {
     image: BitMatrix,
     dimensionX: number,
     dimensionY: number,
-    transform: PerspectiveTransform
+    transform: PerspectiveTransform,
   ): BitMatrix;
 
   private static nudgePoint(
     points: Float32Array,
     offset: number,
     width: number,
-    height: number
+    height: number,
   ): boolean {
     const x = Math.floor(points[offset]);
     const y = Math.floor(points[offset + 1]);

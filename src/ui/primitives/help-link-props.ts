@@ -1,4 +1,4 @@
-import type { Tier } from '@/store/qr-store';
+import type { Tier } from "@/store/qr-store";
 
 export type HelpLinkProps = {
   href?: string;

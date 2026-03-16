@@ -1,9 +1,9 @@
-import type { EditorProps } from './payload-editor-props';
+import type { EditorProps } from "./payload-editor-props";
 
-export function runLookup(query: string, setPayloadGeo: EditorProps['setPayloadGeo']) {
+export function runLookup(query: string, setPayloadGeo: EditorProps["setPayloadGeo"]) {
   if (!query) return;
   fetch(
-    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
   )
     .then((res) => res.json())
     .then((data) => {

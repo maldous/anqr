@@ -1,21 +1,21 @@
-import { generateFullQArt, generateFullQArtOptimal } from '../../../domain/qr/qart/generate';
+import { generateFullQArt, generateFullQArtOptimal } from "../../../domain/qr/qart/generate";
 import type {
   QArtWorkerGenerateRequest,
   QArtWorkerMessage,
   QArtWorkerRequest,
   QArtWorkerResultPayload,
-} from './worker-protocol';
-import { buildWorkerTransferList } from './build-worker-transfer-list';
-import { clampPercent } from './clamp-percent';
-import { packBooleanMatrix } from './pack-boolean-matrix';
-import { tryWorkerSideRender } from './try-worker-side-render';
-import type { WorkerContext } from './worker-context.type';
+} from "./worker-protocol";
+import { buildWorkerTransferList } from "./build-worker-transfer-list";
+import { clampPercent } from "./clamp-percent";
+import { packBooleanMatrix } from "./pack-boolean-matrix";
+import { tryWorkerSideRender } from "./try-worker-side-render";
+import type { WorkerContext } from "./worker-context.type";
 import {
   addCancelledRequestId,
   clearCancelledRequestId,
   isCancelledOrStale,
   updateLatestRequestId,
-} from './worker-render-guards';
+} from "./worker-render-guards";
 
 const PROGRESS_THROTTLE_MS = 80;
 
@@ -29,7 +29,7 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
 
   let lastProgressAt = 0;
   let lastPercent = -1;
-  let lastStage = '';
+  let lastStage = "";
 
   const postProgress = (stage: string, percent: number): void => {
     if (isCancelledOrStale(id)) return;
@@ -51,7 +51,7 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
     lastStage = stage;
 
     const progressMessage: QArtWorkerMessage = {
-      type: 'progress',
+      type: "progress",
       id,
       stage,
       percent: normalizedPercent,
@@ -64,12 +64,12 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
     const targetImagePixels = new Uint8ClampedArray(
       payload.targetImagePixels.buffer as ArrayBuffer,
       payload.targetImagePixels.byteOffset,
-      payload.targetImagePixels.byteLength
+      payload.targetImagePixels.byteLength,
     );
     const targetImage = new ImageData(
       targetImagePixels,
       payload.targetImageWidth,
-      payload.targetImageHeight
+      payload.targetImageHeight,
     );
     const sharedConfig = {
       data: payload.data,
@@ -81,12 +81,12 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
       searchAttempts: payload.searchAttempts ?? 1,
       searchSeed: payload.searchSeed ?? 0,
       lockVersionToMinimum: payload.lockVersionToMinimum ?? false,
-      performanceProfile: payload.performanceProfile ?? 'quality',
+      performanceProfile: payload.performanceProfile ?? "quality",
       onProgress: postProgress,
     };
 
     const result =
-      typeof payload.maskPattern === 'number' && payload.maskPattern >= 0
+      typeof payload.maskPattern === "number" && payload.maskPattern >= 0
         ? await generateFullQArt({
             ...sharedConfig,
             maskPattern: payload.maskPattern,
@@ -114,20 +114,20 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
       }
     }
 
-    const resultMessage: QArtWorkerMessage = { type: 'result', id, result: response };
+    const resultMessage: QArtWorkerMessage = { type: "result", id, result: response };
     workerContext.postMessage(resultMessage, buildWorkerTransferList(response));
   } catch (err) {
     if (isCancelledOrStale(id)) return;
 
     const resultMessage: QArtWorkerMessage = {
-      type: 'result',
+      type: "result",
       id,
       result: {
         success: false,
-        error: err instanceof Error ? err.message : 'QArt worker error',
+        error: err instanceof Error ? err.message : "QArt worker error",
         moduleCount: 0,
         version: payload.version || 0,
-        maskPattern: typeof payload.maskPattern === 'number' ? payload.maskPattern : 0,
+        maskPattern: typeof payload.maskPattern === "number" ? payload.maskPattern : 0,
         matchingPixels: 0,
         totalControllable: 0,
         matchPercentage: 0,
@@ -142,14 +142,14 @@ const handleGenerate = async (message: QArtWorkerGenerateRequest): Promise<void>
 workerContext.onmessage = (event: MessageEvent<QArtWorkerRequest>) => {
   const message = event.data;
 
-  if (!message || typeof message !== 'object') return;
+  if (!message || typeof message !== "object") return;
 
-  if (message.type === 'cancel') {
+  if (message.type === "cancel") {
     addCancelledRequestId(message.id);
     return;
   }
 
-  if (message.type === 'generate') {
+  if (message.type === "generate") {
     void handleGenerate(message);
   }
 };

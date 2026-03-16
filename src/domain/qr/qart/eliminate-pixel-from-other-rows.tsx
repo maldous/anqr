@@ -1,4 +1,4 @@
-import type { RSBasisVector } from './rs-basis';
+import type { RSBasisVector } from "./rs-basis";
 
 export function eliminatePixelFromOtherRows(
   matrix: Uint32Array[],
@@ -7,7 +7,7 @@ export function eliminatePixelFromOtherRows(
   numVectors: number,
   wordIndex: number,
   bitIndex: number,
-  bitsetWordCount: number
+  bitsetWordCount: number,
 ): void {
   const pivotMatrixRow = matrix[pivotRow];
   for (let r = 0; r < numVectors; r++) {

@@ -1,10 +1,10 @@
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import type { RGBWithMeta } from '../../../modules/qr-generator/types';
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import type { RGBWithMeta } from "../../../modules/qr-generator/types";
 
 export function buildBaseMatrix(
   qr: QRCodeObject,
   scaledSize: number,
-  scale: number
+  scale: number,
 ): { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } {
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];

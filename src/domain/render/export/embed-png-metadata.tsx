@@ -1,6 +1,6 @@
-import type { PngMetadata } from '../../../modules/exporter/png-metadata.type';
-import { log } from './log';
-import { createPngTextChunk } from './create-png-text-chunk';
+import type { PngMetadata } from "../../../modules/exporter/png-metadata.type";
+import { log } from "./log";
+import { createPngTextChunk } from "./create-png-text-chunk";
 
 /**
  * Embed metadata into PNG blob
@@ -13,7 +13,7 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
   for (const [i, sigByte] of pngSignature.entries()) {
     if (data[i] !== sigByte) {
-      log.warn('Invalid PNG signature, returning original');
+      log.warn("Invalid PNG signature, returning original");
       return pngBlob;
     }
   }
@@ -23,18 +23,18 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
 
   // Standard PNG text keywords
   const keywordMap: Record<string, string> = {
-    title: 'Title',
-    author: 'Author',
-    description: 'Description',
-    copyright: 'Copyright',
-    creationTime: 'Creation Time',
-    software: 'Software',
-    comment: 'Comment',
+    title: "Title",
+    author: "Author",
+    description: "Description",
+    copyright: "Copyright",
+    creationTime: "Creation Time",
+    software: "Software",
+    comment: "Comment",
   };
 
   for (const entry of Object.entries(metadata)) {
     const [key, value] = entry;
-    if (value && typeof value === 'string') {
+    if (value && typeof value === "string") {
       const keyword = keywordMap[key] || key;
       metadataChunks.push(createPngTextChunk(keyword, value));
     }
@@ -55,7 +55,7 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   }
 
   if (iendPos === -1) {
-    log.warn('Could not find IEND chunk, returning original');
+    log.warn("Could not find IEND chunk, returning original");
     return pngBlob;
   }
 
@@ -78,5 +78,5 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   // Copy IEND chunk (and anything after, though there shouldn't be)
   newPng.set(data.slice(iendPos), offset);
 
-  return new Blob([newPng], { type: 'image/png' });
+  return new Blob([newPng], { type: "image/png" });
 }

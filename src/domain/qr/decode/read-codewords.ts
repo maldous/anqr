@@ -1,7 +1,7 @@
-import { getVersionFromModuleCount } from '../../../modules/qr-spec';
-import type { CodewordBuildState } from './codeword-build-state';
-import { processCodewordModule } from './process-codeword-module';
-import { qrDecoderLog } from './qr-decoder-log';
+import { getVersionFromModuleCount } from "../../../modules/qr-spec";
+import type { CodewordBuildState } from "./codeword-build-state";
+import { processCodewordModule } from "./process-codeword-module";
+import { qrDecoderLog } from "./qr-decoder-log";
 
 /**
  * Read codewords from the matrix in the QR-specified zigzag order
@@ -29,7 +29,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     skippedAsFunction: 0,
   };
 
-  qrDecoderLog.trace('codewords: Starting codeword extraction', {
+  qrDecoderLog.trace("codewords: Starting codeword extraction", {
     moduleCount,
     matrixRows: matrix.length,
   });
@@ -55,7 +55,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
           version,
           state,
           codewords,
-          skipCounts
+          skipCounts,
         );
       }
     }
@@ -63,12 +63,12 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     col -= 2;
   }
 
-  qrDecoderLog.trace('codewords: Extracted codewords', {
+  qrDecoderLog.trace("codewords: Extracted codewords", {
     count: codewords.length,
     first10: codewords
       .slice(0, 10)
-      .map((c) => c.toString(16).padStart(2, '0'))
-      .join(' '),
+      .map((c) => c.toString(16).padStart(2, "0"))
+      .join(" "),
     traversal: {
       visitedModules: state.visitedModules,
       skippedAsFunction: state.skippedAsFunction,

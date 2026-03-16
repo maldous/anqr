@@ -6,10 +6,10 @@ import {
   Hash,
   MessageSquare,
   Wallet,
-} from 'lucide-react';
-import { parseCryptoPayload } from './payload-parsers';
-import { CopyButton } from './copy-button';
-import type { DetailEntry } from './detail-entry';
+} from "lucide-react";
+import { parseCryptoPayload } from "./payload-parsers";
+import { CopyButton } from "./copy-button";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildCryptoDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -17,14 +17,14 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.network) {
     const networkColors: Record<string, string> = {
-      Bitcoin: 'bg-orange-500 text-white',
-      Ethereum: 'bg-purple-500 text-white',
-      Litecoin: 'bg-gray-500 text-white',
-      Dogecoin: 'bg-yellow-500 text-black',
+      Bitcoin: "bg-orange-500 text-white",
+      Ethereum: "bg-purple-500 text-white",
+      Litecoin: "bg-gray-500 text-white",
+      Dogecoin: "bg-yellow-500 text-black",
     };
-    const colorClass = networkColors[String(cryptoData.network)] || 'bg-muted text-foreground';
+    const colorClass = networkColors[String(cryptoData.network)] || "bg-muted text-foreground";
     details.push({
-      label: 'Network',
+      label: "Network",
       value: (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
           {cryptoData.network}
@@ -36,7 +36,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.addressPreview) {
     details.push({
-      label: 'Address',
+      label: "Address",
       value: <span className="font-mono text-xs">{cryptoData.addressPreview}</span>,
       icon: <Hash className="w-3 h-3" />,
     });
@@ -44,7 +44,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.address) {
     details.push({
-      label: 'Full Address',
+      label: "Full Address",
       value: (
         <div className="flex items-center gap-1">
           <span className="font-mono text-[10px] break-all max-w-[150px]">
@@ -59,7 +59,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.amount) {
     details.push({
-      label: 'Amount',
+      label: "Amount",
       value: (
         <span className="font-mono text-sm font-bold">
           {cryptoData.amount} {cryptoData.network}
@@ -71,7 +71,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.label) {
     details.push({
-      label: 'Label',
+      label: "Label",
       value: cryptoData.label,
       icon: <FileText className="w-3 h-3" />,
     });
@@ -79,7 +79,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.message) {
     details.push({
-      label: 'Message',
+      label: "Message",
       value: <span className="text-xs">{cryptoData.message}</span>,
       icon: <MessageSquare className="w-3 h-3" />,
     });
@@ -87,7 +87,7 @@ export function buildCryptoDetails(payload: string): DetailEntry[] {
 
   if (cryptoData.explorerUrl) {
     details.push({
-      label: 'Block Explorer',
+      label: "Block Explorer",
       value: (
         <a
           href={String(cryptoData.explorerUrl)}

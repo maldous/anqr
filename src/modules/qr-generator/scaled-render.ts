@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/scaled-render';
+export * from "../../domain/render/generator/scaled-render";

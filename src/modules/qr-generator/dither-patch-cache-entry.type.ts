@@ -1,4 +1,4 @@
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
 
 export type DitherPatchCacheEntry = {
   patch: DitherAttemptPatch;

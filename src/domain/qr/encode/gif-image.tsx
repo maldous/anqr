@@ -1,4 +1,4 @@
-import { byteArrayOutputStream } from './byte-array-output-stream';
+import { byteArrayOutputStream } from "./byte-array-output-stream";
 
 /**
  * GIF image generator (black & white)
@@ -31,7 +31,7 @@ export function gifImage(width: number, height: number) {
     return {
       write: (data: number, length: number): void => {
         if (data >>> length !== 0) {
-          throw new Error('length over');
+          throw new Error("length over");
         }
 
         while (_bitLength + length >= 8) {
@@ -117,7 +117,7 @@ export function gifImage(width: number, height: number) {
 
     write: (out: ReturnType<typeof byteArrayOutputStream>): void => {
       // GIF Signature
-      out.writeString('GIF87a');
+      out.writeString("GIF87a");
 
       // Screen Descriptor
       out.writeShort(width);
@@ -139,7 +139,7 @@ export function gifImage(width: number, height: number) {
       out.writeByte(0xff);
 
       // Image Descriptor
-      out.writeString(',');
+      out.writeString(",");
       out.writeShort(0);
       out.writeShort(0);
       out.writeShort(width);
@@ -165,7 +165,7 @@ export function gifImage(width: number, height: number) {
       out.writeByte(0x00);
 
       // GIF Terminator
-      out.writeString(';');
+      out.writeString(";");
     },
   };
 }

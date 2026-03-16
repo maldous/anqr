@@ -4,18 +4,18 @@
  * Notes: Load static image for overlay.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import type { AnimationFrame, GifCompositor } from '@/modules/animation';
-import { loadFileAsCanvas } from '@/features/generator/application/input/input-fn-loadfilecanvas';
+import { createLogger } from "@/infra/logging/logger";
+import type { AnimationFrame, GifCompositor } from "@/modules/animation";
+import { loadFileAsCanvas } from "@/features/generator/application/input/input-fn-loadfilecanvas";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export function loadStaticOverlayFile(
   file: File,
   setGifFrames: (f: AnimationFrame[]) => void,
   setGifCompositor: (c: GifCompositor | null) => void,
   setRawOverlayCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void,
-  setIsLoadingOverlay: (v: boolean) => void
+  setIsLoadingOverlay: (v: boolean) => void,
 ): void {
   setGifFrames([]);
   setGifCompositor(null);
@@ -25,7 +25,7 @@ export function loadStaticOverlayFile(
       setIsLoadingOverlay(false);
     })
     .catch((err) => {
-      log.error('Failed to load overlay', { error: err });
+      log.error("Failed to load overlay", { error: err });
       setRawOverlayCanvas(null);
       setIsLoadingOverlay(false);
     });

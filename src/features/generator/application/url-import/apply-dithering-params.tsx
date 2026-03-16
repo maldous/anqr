@@ -1,10 +1,16 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore, type DitherKind, type DiffusionKernel, type OrderedMatrix } from '@/store/qr-store';
-import type { StoreState } from '@/features/generator/model/mobile-split';
+import type { ShareConfig } from "@/modules/share-links";
+import {
+  useQRStore,
+  type DitherKind,
+  type DiffusionKernel,
+  type OrderedMatrix,
+} from "@/store/qr-store";
+import type { StoreState } from "@/features/generator/model/mobile-split";
 
 export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreState): void {
   if (params.ditherKind) store.setOverlayDitherKind(params.ditherKind as DitherKind);
-  if (params.diffusionKernel) store.setOverlayDiffusionKernel(params.diffusionKernel as DiffusionKernel);
+  if (params.diffusionKernel)
+    store.setOverlayDiffusionKernel(params.diffusionKernel as DiffusionKernel);
   if (params.ditherStrength !== undefined) store.setOverlayDitherStrength(params.ditherStrength);
   if (params.finderDitherStrength !== undefined)
     useQRStore.setState((s) => ({
@@ -18,7 +24,7 @@ export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreS
     useQRStore.setState((s) => ({
       overlay: {
         ...s.overlay,
-        blendPreservationMode: params.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
+        blendPreservationMode: params.blendPreservationMode === "dither" ? "dither" : "overlay",
       },
     }));
   if (params.ditherSerpentine)
@@ -37,6 +43,9 @@ export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreS
     }));
   if (params.colorDither)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, colorDither: params.colorDither as 'none' | 'per_channel' | 'perceptual' },
+      overlay: {
+        ...s.overlay,
+        colorDither: params.colorDither as "none" | "per_channel" | "perceptual",
+      },
     }));
 }

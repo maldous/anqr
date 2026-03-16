@@ -1,1 +1,1 @@
-export { renderArtworkWorkerBitmap } from '@/features/generator/application/frames/frames-fn-renderbitmap';
+export { renderArtworkWorkerBitmap } from "@/features/generator/application/frames/frames-fn-renderbitmap";

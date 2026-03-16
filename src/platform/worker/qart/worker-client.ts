@@ -1,9 +1,9 @@
-import type { QArtWorkerGenerateInput, QArtWorkerResultPayload } from './worker-protocol';
-import { ensureWorker } from './ensure-worker';
-import { DEFAULT_TIMEOUT_MS } from './worker-timeout-ms.const';
-export { terminateQArtWorker } from './terminate-qart-worker';
-import { toWorkerPayload } from './to-worker-payload';
-import { workerClientState } from './worker-client-state';
+import type { QArtWorkerGenerateInput, QArtWorkerResultPayload } from "./worker-protocol";
+import { ensureWorker } from "./ensure-worker";
+import { DEFAULT_TIMEOUT_MS } from "./worker-timeout-ms.const";
+export { terminateQArtWorker } from "./terminate-qart-worker";
+import { toWorkerPayload } from "./to-worker-payload";
+import { workerClientState } from "./worker-client-state";
 
 export async function generateQArtInWorker(
   payload: QArtWorkerGenerateInput,
@@ -11,11 +11,11 @@ export async function generateQArtInWorker(
     timeoutMs?: number;
     onProgress?: (stage: string, percent: number) => void;
     signal?: AbortSignal;
-  }
+  },
 ): Promise<QArtWorkerResultPayload> {
   const w = ensureWorker();
   if (!w) {
-    throw new Error('QArt worker unavailable');
+    throw new Error("QArt worker unavailable");
   }
 
   const id = ++workerClientState.nextId;
@@ -27,15 +27,15 @@ export async function generateQArtInWorker(
       if (!request) return;
 
       workerClientState.pending.delete(id);
-      w.postMessage({ type: 'cancel', id });
+      w.postMessage({ type: "cancel", id });
       reject(new Error(`QArt worker timed out after ${timeoutMs}ms`));
     }, timeoutMs);
 
     const signal = options?.signal;
     if (signal?.aborted) {
       clearTimeout(timeoutId);
-      w.postMessage({ type: 'cancel', id });
-      reject(new Error('QArt worker request aborted'));
+      w.postMessage({ type: "cancel", id });
+      reject(new Error("QArt worker request aborted"));
       return;
     }
 
@@ -45,12 +45,12 @@ export async function generateQArtInWorker(
       workerClientState.pending.delete(id);
       clearTimeout(request.timeoutId);
       request.removeAbortListener?.();
-      w.postMessage({ type: 'cancel', id });
-      reject(new Error('QArt worker request aborted'));
+      w.postMessage({ type: "cancel", id });
+      reject(new Error("QArt worker request aborted"));
     };
 
     if (signal) {
-      signal.addEventListener('abort', onAbort, { once: true });
+      signal.addEventListener("abort", onAbort, { once: true });
     }
 
     workerClientState.pending.set(id, {
@@ -60,13 +60,13 @@ export async function generateQArtInWorker(
       onProgress: options?.onProgress,
       removeAbortListener: signal
         ? () => {
-            signal.removeEventListener('abort', onAbort);
+            signal.removeEventListener("abort", onAbort);
           }
         : undefined,
     });
 
     const workerPayload = toWorkerPayload(payload);
     const transferables: Transferable[] = [workerPayload.targetImagePixels.buffer as ArrayBuffer];
-    w.postMessage({ type: 'generate', id, payload: workerPayload }, transferables);
+    w.postMessage({ type: "generate", id, payload: workerPayload }, transferables);
   });
 }

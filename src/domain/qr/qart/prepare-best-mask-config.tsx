@@ -1,22 +1,22 @@
-import { calculateOptimalVersionAndSuffix } from './rs-basis';
-import { log } from './log';
-import { resolveSharedSuffix } from './resolve-shared-suffix';
-import type { FullQArtConfig } from './generate.types';
+import { calculateOptimalVersionAndSuffix } from "./rs-basis";
+import { log } from "./log";
+import { resolveSharedSuffix } from "./resolve-shared-suffix";
+import type { FullQArtConfig } from "./generate.types";
 
-export function prepareBestMaskConfig(config: Omit<FullQArtConfig, 'maskPattern'>): {
-  resolvedSuffixMode: 'numeric' | 'byte';
+export function prepareBestMaskConfig(config: Omit<FullQArtConfig, "maskPattern">): {
+  resolvedSuffixMode: "numeric" | "byte";
   sharedVersion: number;
   sharedSuffix: string;
 } {
   const targetControlPercent = config.targetControlPercent ?? 100;
-  const resolvedSuffixMode: 'numeric' | 'byte' =
-    config.suffixMode === 'numeric'
-      ? 'numeric'
-      : config.suffixMode === 'byte'
-        ? 'byte'
+  const resolvedSuffixMode: "numeric" | "byte" =
+    config.suffixMode === "numeric"
+      ? "numeric"
+      : config.suffixMode === "byte"
+        ? "byte"
         : /^https?:\/\//i.test(config.data)
-          ? 'numeric'
-          : 'byte';
+          ? "numeric"
+          : "byte";
 
   const requestedVersion = config.forceVersion ?? config.version;
   const controlTarget =
@@ -27,7 +27,7 @@ export function prepareBestMaskConfig(config: Omit<FullQArtConfig, 'maskPattern'
     config.ecc,
     config.data.length,
     controlTarget,
-    resolvedSuffixMode
+    resolvedSuffixMode,
   );
 
   const sharedVersion = config.forceVersion ?? optimalConfig.version;
@@ -35,19 +35,19 @@ export function prepareBestMaskConfig(config: Omit<FullQArtConfig, 'maskPattern'
     config,
     resolvedSuffixMode,
     optimalConfig.suffixLength,
-    sharedVersion
+    sharedVersion,
   );
 
-  log.info('Pre-selected version and DETERMINISTIC suffix for mask comparison (HYBRID mode)', {
+  log.info("Pre-selected version and DETERMINISTIC suffix for mask comparison (HYBRID mode)", {
     sharedVersion,
     originalDataLength: config.data.length,
     suffixLength: sharedSuffix.length,
     paddingBytes: optimalConfig.paddingBytes,
     expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
     encoding:
-      resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
+      resolvedSuffixMode === "numeric" ? "mixed (byte + numeric)" : "byte mode (single segment)",
     lockVersionToMinimum: config.lockVersionToMinimum,
-    note: 'Each mask will use the same DETERMINISTIC suffix for fair comparison',
+    note: "Each mask will use the same DETERMINISTIC suffix for fair comparison",
   });
 
   return { resolvedSuffixMode, sharedVersion, sharedSuffix };

@@ -1,6 +1,6 @@
-import { shouldForceScaledBinaryModule } from './should-force-scaled-binary-module';
-import type { QRCodeInstance } from '../../../../modules/qr-generator/types';
-import type { ScaledPreserveFlags } from '../scaled-render-types';
+import { shouldForceScaledBinaryModule } from "./should-force-scaled-binary-module";
+import type { QRCodeInstance } from "../../../../modules/qr-generator/types";
+import type { ScaledPreserveFlags } from "../scaled-render-types";
 
 export function drawScaledStrictFunctionOverlay(
   ctx: CanvasRenderingContext2D,
@@ -11,7 +11,7 @@ export function drawScaledStrictFunctionOverlay(
   effectiveFgColor: string,
   effectiveBgColor: string,
   functionalMap: Uint8Array,
-  pf: ScaledPreserveFlags
+  pf: ScaledPreserveFlags,
 ): void {
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {

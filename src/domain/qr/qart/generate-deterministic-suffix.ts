@@ -1,4 +1,4 @@
-import { mulberry32 } from './mulberry32';
+import { mulberry32 } from "./mulberry32";
 
 /**
  * Generate a deterministic URL-safe suffix.
@@ -12,9 +12,9 @@ import { mulberry32 } from './mulberry32';
  * @returns Deterministic alphanumeric string
  */
 export function generateDeterministicSuffix(length: number, seed: number): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const random = mulberry32(seed);
-  let result = '';
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += chars[Math.floor(random() * chars.length)];
   }

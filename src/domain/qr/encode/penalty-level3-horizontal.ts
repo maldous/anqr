@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from '../../../modules/qr-encoder/types';
+import type { QRCodeInstance } from "../../../modules/qr-encoder/types";
 
 export function penaltyLevel3Horizontal(qrcode: QRCodeInstance, moduleCount: number): number {
   let penalty = 0;

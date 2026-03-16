@@ -1,6 +1,6 @@
 export function parseNumberedListItems(
   text: string,
-  matches: RegExpMatchArray[]
+  matches: RegExpMatchArray[],
 ): { num: string; content: string }[] {
   const items: { num: string; content: string }[] = [];
 
@@ -11,7 +11,7 @@ export function parseNumberedListItems(
     const startOfContent = matchIndex + match[0].length;
     const nextMatch = matches[i + 1];
     const endOfContent = nextMatch
-      ? (nextMatch.index ?? 0) + (nextMatch[0].startsWith(' ') ? 1 : 0)
+      ? (nextMatch.index ?? 0) + (nextMatch[0].startsWith(" ") ? 1 : 0)
       : text.length;
     const content = text.slice(startOfContent, endOfContent).trim();
     if (content) items.push({ num, content });

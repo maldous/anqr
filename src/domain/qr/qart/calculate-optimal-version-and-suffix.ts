@@ -1,9 +1,9 @@
-import { QRMode } from '../../../modules/qr-encoder/types';
-import { getLengthInBits } from '../encode/utils';
-import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
-import type { OptimalVersionAndSuffix } from './rs-basis.types';
-import { evaluateVersionCapacity } from './evaluate-version-capacity';
-import { log } from './log';
+import { QRMode } from "../../../modules/qr-encoder/types";
+import { getLengthInBits } from "../encode/utils";
+import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
+import type { OptimalVersionAndSuffix } from "./rs-basis.types";
+import { evaluateVersionCapacity } from "./evaluate-version-capacity";
+import { log } from "./log";
 
 /**
  * Calculate the optimal QR version and suffix length to achieve a target control percentage.
@@ -35,7 +35,7 @@ export function calculateOptimalVersionAndSuffix(
   ecc: ECCLevel,
   dataLength: number,
   minControlPercent: number = 50,
-  suffixMode: 'numeric' | 'byte' = 'byte'
+  suffixMode: "numeric" | "byte" = "byte",
 ): OptimalVersionAndSuffix {
   // Find the minimum version that can fit the data
   // Enforce MIN_QART_VERSION for reliable real-world scanning
@@ -91,7 +91,7 @@ export function calculateOptimalVersionAndSuffix(
       totalDataBytes,
     } = metrics;
 
-    log.debug('Evaluating version for QR-Art (suffix mode)', {
+    log.debug("Evaluating version for QR-Art (suffix mode)", {
       version,
       totalDataBytes,
       suffixCharCount,
@@ -123,7 +123,7 @@ export function calculateOptimalVersionAndSuffix(
       selectedSuffixBits = suffixSafeBits;
       selectedPaddingBits = paddingBitsVal;
 
-      log.info('Selected version meets minimum control threshold (suffix mode)', {
+      log.info("Selected version meets minimum control threshold (suffix mode)", {
         version,
         controlPercent: `${controlPercent.toFixed(1)}%`,
         minThreshold: `${minControlPercent}%`,
@@ -146,7 +146,7 @@ export function calculateOptimalVersionAndSuffix(
     selectedSuffixBits = bestSuffixBits;
     selectedPaddingBits = bestPaddingBits;
 
-    log.warn('No version achieved minimum control threshold, using best available', {
+    log.warn("No version achieved minimum control threshold, using best available", {
       bestVersion,
       bestControlPercent: `${bestControlPercent.toFixed(1)}%`,
       minThreshold: `${minControlPercent}%`,
@@ -157,7 +157,7 @@ export function calculateOptimalVersionAndSuffix(
 
   const versionUpgraded = selectedVersion > originalVersion;
 
-  log.info('Calculated optimal version and suffix for QR-Art (suffix mode)', {
+  log.info("Calculated optimal version and suffix for QR-Art (suffix mode)", {
     originalVersion,
     selectedVersion,
     versionUpgraded,
@@ -169,7 +169,7 @@ export function calculateOptimalVersionAndSuffix(
     totalCapacity: selectedCapacity,
     dataLength,
     ecc,
-    encoding: suffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
+    encoding: suffixMode === "numeric" ? "mixed (byte + numeric)" : "byte mode (single segment)",
     controllableBits: {
       suffix: selectedSuffixBits,
       padding: selectedPaddingBits,

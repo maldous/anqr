@@ -1,20 +1,20 @@
-import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { isValidPhone } from '@/modules/payload-generators';
-import type { QRState } from '@/store/qr-store';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import type { TFunction } from "i18next";
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { isValidPhone } from "@/modules/payload-generators";
+import type { QRState } from "@/store/qr-store";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/primitives/select';
-import type { PayNowForm } from '../payload-section-types';
-import { OptionalAmountField } from './optional-amount-field';
-import { ValidatedLabeledInputField } from './validated-labeled-input-field';
+} from "@/ui/primitives/select";
+import type { PayNowForm } from "../payload-section-types";
+import { OptionalAmountField } from "./optional-amount-field";
+import { ValidatedLabeledInputField } from "./validated-labeled-input-field";
 
 export const PaynowEditor = ({
   payNowForm,
@@ -23,49 +23,49 @@ export const PaynowEditor = ({
   t,
 }: Readonly<{
   payNowForm: PayNowForm;
-  payload: QRState['payload'];
+  payload: QRState["payload"];
   setPayNowForm: React.Dispatch<React.SetStateAction<PayNowForm>>;
   t: TFunction;
 }>) => (
   <div className="space-y-4">
     <div className="space-y-2">
       <Label>
-        <HighlightedLabel>{t('payload.proxyType')}</HighlightedLabel>
+        <HighlightedLabel>{t("payload.proxyType")}</HighlightedLabel>
       </Label>
       <Select
         value={payNowForm.type}
-        onValueChange={(v) => setPayNowForm((prev) => ({ ...prev, type: v as 'mobile' | 'uen' }))}
+        onValueChange={(v) => setPayNowForm((prev) => ({ ...prev, type: v as "mobile" | "uen" }))}
       >
         <SelectTrigger
           data-testid={DynamicTestId.resolve(
-            'payload-paynow-type-select',
-            'payload-paynow-type-select'
+            "payload-paynow-type-select",
+            "payload-paynow-type-select",
           )}
         >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="uen">UEN (Business)</SelectItem>
-          <SelectItem value="mobile">{t('payload.mobileNumber')}</SelectItem>
+          <SelectItem value="mobile">{t("payload.mobileNumber")}</SelectItem>
         </SelectContent>
       </Select>
     </div>
     <ValidatedLabeledInputField
-      label={t('payload.uenMobile')}
+      label={t("payload.uenMobile")}
       value={payNowForm.value}
       onChange={(value) => setPayNowForm((prev) => ({ ...prev, value }))}
       placeholder="201234567X or +65..."
-      validate={payload.validate && payNowForm.type === 'mobile'}
+      validate={payload.validate && payNowForm.type === "mobile"}
       invalidMessage={t(
-        'validation.invalidPhone',
-        'Enter a valid phone number (at least 3 digits)'
+        "validation.invalidPhone",
+        "Enter a valid phone number (at least 3 digits)",
       )}
       dataTestId="payload-paynow-value-input"
       type="tel"
       isValid={isValidPhone}
     />
     <OptionalAmountField
-      label={t('payload.amountSgd')}
+      label={t("payload.amountSgd")}
       value={payNowForm.amount}
       onChange={(value) => setPayNowForm((prev) => ({ ...prev, amount: value }))}
       placeholder="50.00"
@@ -73,18 +73,18 @@ export const PaynowEditor = ({
     />
     <div className="space-y-2">
       <Label>
-        <HighlightedLabel>{t('payload.referenceOptional')}</HighlightedLabel>
+        <HighlightedLabel>{t("payload.referenceOptional")}</HighlightedLabel>
       </Label>
       <Input
         value={payNowForm.reference}
         onChange={(e) => setPayNowForm((prev) => ({ ...prev, reference: e.target.value }))}
         placeholder="Invoice 123"
         data-testid={DynamicTestId.resolve(
-          'payload-paynow-reference-input',
-          'payload-paynow-reference-input'
+          "payload-paynow-reference-input",
+          "payload-paynow-reference-input",
         )}
       />
     </div>
-    <p className="text-xs text-muted-foreground">{t('hints.paynowNote')}</p>
+    <p className="text-xs text-muted-foreground">{t("hints.paynowNote")}</p>
   </div>
 );

@@ -1,4 +1,4 @@
-import { classifyScaledModule } from './classify-scaled-module';
+import { classifyScaledModule } from "./classify-scaled-module";
 
 export function buildScaledFunctionalMap(moduleCount: number, version: number): Uint8Array {
   const map = new Uint8Array(moduleCount * moduleCount);

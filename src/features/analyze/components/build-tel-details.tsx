@@ -1,6 +1,6 @@
-import { ChevronRight, Globe, Phone } from 'lucide-react';
-import { parseTelPayload } from './payload-parsers';
-import type { DetailEntry } from './detail-entry';
+import { ChevronRight, Globe, Phone } from "lucide-react";
+import { parseTelPayload } from "./payload-parsers";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildTelDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -8,7 +8,7 @@ export function buildTelDetails(payload: string): DetailEntry[] {
 
   if (telData.country && telData.countryFlag) {
     details.push({
-      label: 'Country',
+      label: "Country",
       value: (
         <span className="flex items-center gap-1">
           <span className="text-lg">{telData.countryFlag}</span>
@@ -21,7 +21,7 @@ export function buildTelDetails(payload: string): DetailEntry[] {
 
   if (telData.countryCode) {
     details.push({
-      label: 'Country Code',
+      label: "Country Code",
       value: <span className="font-mono text-xs font-medium">{telData.countryCode}</span>,
       icon: <Phone className="w-3 h-3" />,
     });
@@ -29,7 +29,7 @@ export function buildTelDetails(payload: string): DetailEntry[] {
 
   if (telData.number) {
     details.push({
-      label: 'Phone Number',
+      label: "Phone Number",
       value: (
         <a
           href={`tel:${telData.number}`}
@@ -43,7 +43,7 @@ export function buildTelDetails(payload: string): DetailEntry[] {
   }
 
   details.push({
-    label: 'Action',
+    label: "Action",
     value: (
       <a
         href={`tel:${telData.number}`}

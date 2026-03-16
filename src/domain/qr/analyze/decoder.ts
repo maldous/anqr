@@ -7,15 +7,15 @@ import {
   createLogger,
   enableLogBuffer,
   flushLogBuffer,
-} from '../../../infra/logging/logger';
-import { decodeQR } from '../../../modules/qr-decoder';
-import { detectContentType, extractDominantColors } from './analyzer-content';
-import { analyzeColors } from './analyze-colors';
-import { analyzeQuietZone } from './analyze-quiet-zone';
-import { buildModuleMatrix } from './build-module-matrix';
-import { detectEncodingMode, stringToLatin1Bytes } from './decoder-primitives';
-import type { QRLocationCorners } from './decoder-types';
-import { validateFinderPatterns } from './validate-finder-patterns';
+} from "../../../infra/logging/logger";
+import { decodeQR } from "../../../modules/qr-decoder";
+import { detectContentType, extractDominantColors } from "./analyzer-content";
+import { analyzeColors } from "./analyze-colors";
+import { analyzeQuietZone } from "./analyze-quiet-zone";
+import { buildModuleMatrix } from "./build-module-matrix";
+import { detectEncodingMode, stringToLatin1Bytes } from "./decoder-primitives";
+import type { QRLocationCorners } from "./decoder-types";
+import { validateFinderPatterns } from "./validate-finder-patterns";
 import {
   buildDecodeFailure,
   buildDecoderMeta,
@@ -25,40 +25,40 @@ import {
   extractCodeFields,
   extractVersionInfo,
   formatContentTypeLabel,
-} from './decoder-helpers';
-import type { QRAnalysisResult } from '../../../modules/qr-analyzer/types';
+} from "./decoder-helpers";
+import type { QRAnalysisResult } from "../../../modules/qr-analyzer/types";
 
-const qrAnalyzerLog = createLogger('ANALYZER');
+const qrAnalyzerLog = createLogger("ANALYZER");
 
 /**
  * Decode a QR code from canvas and extract all metadata
  */
 export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult {
   const decodeStartMs =
-    typeof globalThis.performance?.now === 'function' ? globalThis.performance.now() : Date.now();
+    typeof globalThis.performance?.now === "function" ? globalThis.performance.now() : Date.now();
 
   // Enable log buffering to capture debug info for failed detections
   enableLogBuffer();
 
-  qrAnalyzerLog.trace('decode: Starting QR decode', {
+  qrAnalyzerLog.trace("decode: Starting QR decode", {
     canvasWidth: canvas.width,
     canvasHeight: canvas.height,
   });
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
-    qrAnalyzerLog.debug('decode: Could not get canvas context');
-    return buildDecodeFailure('Could not get canvas context', 'unknown', decodeStartMs);
+    qrAnalyzerLog.debug("decode: Could not get canvas context");
+    return buildDecodeFailure("Could not get canvas context", "unknown", decodeStartMs);
   }
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
   try {
-    const code = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
+    const code = decodeQR(imageData, { inversionAttempts: "attemptBoth" });
 
     if (!(code?.success && code.data)) {
-      qrAnalyzerLog.debug('decode: No QR code detected by our decoder');
-      return buildDecodeFailure('No QR code detected in image', 'no_qr_detected', decodeStartMs);
+      qrAnalyzerLog.debug("decode: No QR code detected by our decoder");
+      return buildDecodeFailure("No QR code detected in image", "no_qr_detected", decodeStartMs);
     }
 
     // Extract location info from our decoder
@@ -67,7 +67,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     const location = code.location!;
     const geometry = calculateGeometryDiagnostics(location as QRLocationCorners);
 
-    qrAnalyzerLog.trace('location: Finder pattern centers', {
+    qrAnalyzerLog.trace("location: Finder pattern centers", {
       topLeft: location.topLeftCorner,
       topRight: location.topRightCorner,
       bottomLeft: location.bottomLeftCorner,
@@ -77,15 +77,15 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     // Calculate distances between finder pattern centers
     const topEdgeDist = Math.hypot(
       location.topRightCorner.x - location.topLeftCorner.x,
-      location.topRightCorner.y - location.topLeftCorner.y
+      location.topRightCorner.y - location.topLeftCorner.y,
     );
     const leftEdgeDist = Math.hypot(
       location.bottomLeftCorner.x - location.topLeftCorner.x,
-      location.bottomLeftCorner.y - location.topLeftCorner.y
+      location.bottomLeftCorner.y - location.topLeftCorner.y,
     );
     const avgFinderDist = (topEdgeDist + leftEdgeDist) / 2;
 
-    qrAnalyzerLog.trace('location: Finder pattern distances', {
+    qrAnalyzerLog.trace("location: Finder pattern distances", {
       topEdge: topEdgeDist.toFixed(2),
       leftEdge: leftEdgeDist.toFixed(2),
       average: avgFinderDist.toFixed(2),
@@ -93,18 +93,18 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const { version, moduleCount, estimatedModulePx } = extractVersionInfo(code, avgFinderDist);
 
-    qrAnalyzerLog.trace('detection: Module count from decoder (authoritative)', {
+    qrAnalyzerLog.trace("detection: Module count from decoder (authoritative)", {
       moduleCount,
       version,
-      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : 'null',
+      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : "null",
       source:
-        version === null ? 'NOT DETECTED - will fail reproduction' : 'Decoder (authoritative)',
+        version === null ? "NOT DETECTED - will fail reproduction" : "Decoder (authoritative)",
     });
 
     // Warn if version not detected - reproduction will fail
     if (version === null) {
       qrAnalyzerLog.warn(
-        'detection: Decoder did not provide version - reproduction will not work correctly'
+        "detection: Decoder did not provide version - reproduction will not work correctly",
       );
     }
 
@@ -115,7 +115,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     // Analyze colors from the QR region
     const detectedColors = analyzeColors(imageData, location);
     const dominantColors = extractDominantColors(imageData, 3);
-    qrAnalyzerLog.trace('colors: Detected colors', detectedColors);
+    qrAnalyzerLog.trace("colors: Detected colors", detectedColors);
 
     // Calculate quiet zone
     const quietZone = analyzeQuietZone(imageData, location, estimatedModulePx ?? 10);
@@ -125,7 +125,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       imageData,
       location,
       moduleCount,
-      estimatedModulePx ?? 10
+      estimatedModulePx ?? 10,
     );
 
     // Validate matrix by checking finder patterns
@@ -137,7 +137,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const encodingMode = detectEncodingMode(code.data!);
     const payloadBytes =
-      encodingMode === 'byte'
+      encodingMode === "byte"
         ? stringToLatin1Bytes(code.data!)
         : new TextEncoder().encode(code.data!);
 
@@ -147,7 +147,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const decoderMetadata = buildDecoderMeta(code);
 
-    qrAnalyzerLog.trace('decoder: Complete decoder metadata (authoritative)', {
+    qrAnalyzerLog.trace("decoder: Complete decoder metadata (authoritative)", {
       version: decoderMetadata.version,
       maskPattern: decoderMetadata.maskPattern,
       eccLevel: decoderMetadata.eccLevel,
@@ -182,16 +182,16 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       },
       geometry,
       moduleMatrix,
-      confidence: 'high',
+      confidence: "high",
       timing: { decodeMs: elapsedMs(decodeStartMs) },
       decoderMetadata,
     };
   } catch (err) {
-    qrAnalyzerLog.debug('decode: Exception during decode', { error: String(err) });
+    qrAnalyzerLog.debug("decode: Exception during decode", { error: String(err) });
     return buildDecodeFailure(
-      err instanceof Error ? err.message : 'Failed to decode QR code',
-      'decode_error',
-      decodeStartMs
+      err instanceof Error ? err.message : "Failed to decode QR code",
+      "decode_error",
+      decodeStartMs,
     );
   }
 }

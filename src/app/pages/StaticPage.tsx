@@ -3,18 +3,18 @@
  * About, Privacy, Terms, Contact, and Guide pages.
  */
 
-import { Loader2, Menu } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import type { PageDefinition } from '@/i18n/static';
-import { getStaticContentAsync } from '@/i18n/static';
-import { StaticPageAdRail } from './static-page-ad-rail';
-import { StaticPageArticle } from './static-page-article';
-import { StaticPageContentHeader } from './static-page-content-header';
-import { TableOfContents } from './static-page-shell-parts';
-import { buildToc } from './static-page-toc';
-export type { StaticPageType } from './StaticPage.types';
-import type { StaticPageProps } from './static-page-types';
+import { Loader2, Menu } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { PageDefinition } from "@/i18n/static";
+import { getStaticContentAsync } from "@/i18n/static";
+import { StaticPageAdRail } from "./static-page-ad-rail";
+import { StaticPageArticle } from "./static-page-article";
+import { StaticPageContentHeader } from "./static-page-content-header";
+import { TableOfContents } from "./static-page-shell-parts";
+import { buildToc } from "./static-page-toc";
+export type { StaticPageType } from "./StaticPage.types";
+import type { StaticPageProps } from "./static-page-types";
 
 export function StaticPage({ page }: Readonly<StaticPageProps>) {
   const { t, i18n } = useTranslation();
@@ -46,12 +46,12 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
   }, [def]);
 
   // Pages that show TOC sidebar: guide, learn, examples
-  const hasToc = page === 'guide' || page === 'learn' || page === 'examples';
+  const hasToc = page === "guide" || page === "learn" || page === "examples";
   const tocGroups = useMemo(
     () => (hasToc && def ? buildToc(page, def.sections, t) : []),
-    [hasToc, page, def, t]
+    [hasToc, page, def, t],
   );
-  const [activeSlug, setActiveSlug] = useState('');
+  const [activeSlug, setActiveSlug] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -78,9 +78,9 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
       },
       {
         root: contentRef.current,
-        rootMargin: '-10% 0px -70% 0px',
+        rootMargin: "-10% 0px -70% 0px",
         threshold: 0,
-      }
+      },
     );
 
     // Observe all section headings
@@ -98,10 +98,10 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
     if (el) {
       // scrollIntoView handles nested scroll containers correctly
       // scroll-margin-top CSS handles the header offset
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
       setActiveSlug(slug);
       // Update URL hash without triggering scroll
-      globalThis.history.replaceState(null, '', `#${slug}`);
+      globalThis.history.replaceState(null, "", `#${slug}`);
     }
   }, []);
 
@@ -164,7 +164,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
       <main className="min-h-[200px] flex-1 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="text-sm">{t('loading')}</span>
+          <span className="text-sm">{t("loading")}</span>
         </div>
       </main>
     );
@@ -190,7 +190,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                 setIsTocSidebarOpen(true);
               }}
               className="toc-sidebar-toggle absolute left-4 top-4 z-40 p-2 rounded-lg bg-card border shadow-md hover:bg-muted transition-colors"
-              title={t('accessibility.openGuideSidebar')}
+              title={t("accessibility.openGuideSidebar")}
             >
               <Menu className="h-5 w-5" />
             </button>

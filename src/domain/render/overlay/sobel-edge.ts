@@ -1,6 +1,6 @@
-import { rgbToGray } from '../color/color';
-import { edgePixelIndex } from './edge-pixel-index';
-import { SOBEL_X, SOBEL_Y } from './sobel-kernels.const';
+import { rgbToGray } from "../color/color";
+import { edgePixelIndex } from "./edge-pixel-index";
+import { SOBEL_X, SOBEL_Y } from "./sobel-kernels.const";
 
 // ============================================
 // EDGE DETECTION

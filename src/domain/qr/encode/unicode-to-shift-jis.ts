@@ -1,4 +1,4 @@
-import { lookupShiftJIS } from './lookup-shift-jis';
+import { lookupShiftJIS } from "./lookup-shift-jis";
 
 /**
  * Convert a single Unicode character to Shift-JIS bytes

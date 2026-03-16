@@ -1,5 +1,5 @@
-import type { BitArray, BitMatrix } from './bit-matrix';
-import { LuminanceSource } from './luminance-source';
+import type { BitArray, BitMatrix } from "./bit-matrix";
+import { LuminanceSource } from "./luminance-source";
 
 /**
  * Abstract binarizer for converting luminance to bits

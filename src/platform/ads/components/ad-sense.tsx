@@ -1,12 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { AD_CLIENT } from './ad-client';
-import type { AdSenseProps } from './ad-sense-props';
+import { useEffect, useRef } from "react";
+import { AD_CLIENT } from "./ad-client";
+import type { AdSenseProps } from "./ad-sense-props";
 
 export function AdSense({
   slot,
-  format = 'auto',
+  format = "auto",
   responsive = true,
-  className = '',
+  className = "",
   width,
   height,
 }: AdSenseProps) {
@@ -29,7 +29,7 @@ export function AdSense({
       }
 
       // Push ad to AdSense
-      if (typeof globalThis !== 'undefined' && globalThis.adsbygoogle) {
+      if (typeof globalThis !== "undefined" && globalThis.adsbygoogle) {
         globalThis.adsbygoogle.push({});
         isLoaded.current = true;
       }
@@ -58,13 +58,13 @@ export function AdSense({
   // Wrapper style to maintain FIXED height even if AdSense collapses the inner element
   // Using fixed height (not minHeight) to prevent layout shift when ads load/fail
   const wrapperStyle: React.CSSProperties = {
-    height: height ? `${height}px` : '90px',
-    width: width ? `${width}px` : '100%',
-    overflow: 'hidden', // Prevent ads from expanding beyond allocated space
+    height: height ? `${height}px` : "90px",
+    width: width ? `${width}px` : "100%",
+    overflow: "hidden", // Prevent ads from expanding beyond allocated space
   };
 
   const insStyle: React.CSSProperties = {
-    display: 'block',
+    display: "block",
     ...(width && { width: `${width}px` }),
     ...(height && { height: `${height}px` }),
   };
@@ -78,7 +78,7 @@ export function AdSense({
         data-ad-client={AD_CLIENT}
         data-ad-slot={slot}
         data-ad-format={format}
-        data-full-width-responsive={responsive ? 'true' : 'false'}
+        data-full-width-responsive={responsive ? "true" : "false"}
       />
     </div>
   );

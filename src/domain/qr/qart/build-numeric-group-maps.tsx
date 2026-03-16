@@ -1,11 +1,11 @@
-import { getNumericBitsCount } from './get-numeric-bits-count';
-import { getNumericGroupMax } from './get-numeric-group-max';
-import { getLinearBit } from './get-linear-bit';
+import { getNumericBitsCount } from "./get-numeric-bits-count";
+import { getNumericGroupMax } from "./get-numeric-group-max";
+import { getLinearBit } from "./get-linear-bit";
 
 export function buildNumericGroupMaps(
   linearData: Uint8Array,
   numericDataStart: number,
-  suffixLength: number
+  suffixLength: number,
 ): {
   groupIndexForBit: Int32Array;
   bitMaskForBit: Int32Array;

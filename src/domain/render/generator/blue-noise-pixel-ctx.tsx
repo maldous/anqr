@@ -1,5 +1,5 @@
-import { generateBlueNoiseTile } from '../dither';
-import type { QRCodeInstance, QRGeneratorConfig } from './types';
+import { generateBlueNoiseTile } from "../dither";
+import type { QRCodeInstance, QRGeneratorConfig } from "./types";
 
 export interface BlueNoisePixelCtx {
   qr: QRCodeInstance;

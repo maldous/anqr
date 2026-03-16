@@ -1,5 +1,5 @@
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 export interface SubpixelCellCtx {
   qr: QRCodeObject;

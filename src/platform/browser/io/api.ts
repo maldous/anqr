@@ -5,18 +5,18 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('BROWSER_IO');
+const _log = createLogger("BROWSER_IO");
 
 // Canvas utilities
-export const CANVAS_API = ['canvasToBlob', 'canvasToDataUrl'] as const;
+export const CANVAS_API = ["canvasToBlob", "canvasToDataUrl"] as const;
 
 // Download utilities
-export const DOWNLOAD_API = ['downloadBlob', 'downloadUrl'] as const;
+export const DOWNLOAD_API = ["downloadBlob", "downloadUrl"] as const;
 
 // Native save utilities
-export const NATIVE_API = ['saveFileNative'] as const;
+export const NATIVE_API = ["saveFileNative"] as const;
 
 // All public exports
 export const PUBLIC_API = [...CANVAS_API, ...DOWNLOAD_API, ...NATIVE_API] as const;

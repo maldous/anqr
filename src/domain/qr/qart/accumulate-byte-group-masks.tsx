@@ -7,7 +7,7 @@ export function accumulateByteGroupMasks(
   bitMaskForBit: Int32Array,
   groupMasks: Int32Array,
   touched: Int32Array,
-  touchedCount: number
+  touchedCount: number,
 ): number {
   for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
     if ((byteValue & (1 << bitInByte)) === 0) continue;

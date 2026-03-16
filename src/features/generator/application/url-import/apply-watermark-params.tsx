@@ -1,5 +1,5 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import type { ShareConfig } from "@/modules/share-links";
+import { useQRStore } from "@/store/qr-store";
 
 export function applyWatermarkParams(params: Partial<ShareConfig>): void {
   if (params.watermarkEnabled)
@@ -12,7 +12,10 @@ export function applyWatermarkParams(params: Partial<ShareConfig>): void {
     useQRStore.setState((s) => ({ watermark: { ...s.watermark, text: params.watermarkText! } }));
   if (params.watermarkPosition)
     useQRStore.setState((s) => ({
-      watermark: { ...s.watermark, position: params.watermarkPosition as typeof s.watermark.position },
+      watermark: {
+        ...s.watermark,
+        position: params.watermarkPosition as typeof s.watermark.position,
+      },
     }));
   if (params.watermarkOpacity !== undefined)
     useQRStore.setState((s) => ({

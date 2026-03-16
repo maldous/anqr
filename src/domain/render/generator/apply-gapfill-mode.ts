@@ -1,8 +1,8 @@
-import { blendColors } from '../core';
-import { getOverlayColorPacked } from '../overlay/overlay-data-packed';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
-import { computeLightBlend } from './compute-light-blend';
+import { blendColors } from "../core";
+import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
+import { computeLightBlend } from "./compute-light-blend";
 
 export function applyGapfillMode(context: OverlayModeContext, result: OverlayModeResult): void {
   const { isDark, overlayData, row, col, effectiveIntensity, config } = context;

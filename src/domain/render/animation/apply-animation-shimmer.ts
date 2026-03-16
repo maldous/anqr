@@ -1,5 +1,5 @@
-import { hslToRgbTuple } from '../color/color';
-import { createSeededRandom } from '../primitives/math';
+import { hslToRgbTuple } from "../color/color";
+import { createSeededRandom } from "../primitives/math";
 
 /**
  * Apply shimmer pattern effect to image data
@@ -10,7 +10,7 @@ export function applyAnimationShimmer(
   progress: number,
   width: number,
   height: number,
-  seed: number
+  seed: number,
 ): void {
   const random = createSeededRandom(seed + Math.floor(progress * 1000));
   const spotCount = Math.floor(width * height * 0.02);

@@ -1,7 +1,7 @@
-import { clampN } from './qr-generator-helpers';
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
-import type { ScanGateCtx } from './scan-gate-ctx.interface';
-import { resolveScanGateIntensity } from './resolve-scan-gate-intensity';
+import { clampN } from "./qr-generator-helpers";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
+import type { ScanGateCtx } from "./scan-gate-ctx.interface";
+import { resolveScanGateIntensity } from "./resolve-scan-gate-intensity";
 
 export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[] {
   const {
@@ -23,7 +23,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
         qrBitBiasStrength: clampN(
           (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03 + overlayComplexity * 0.01,
           0,
-          0.24
+          0.24,
         ),
       },
       {
@@ -34,7 +34,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
         qrBitBiasStrength: clampN(
           (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.05 + overlayComplexity * 0.015,
           0,
-          0.24
+          0.24,
         ),
       },
       {
@@ -45,7 +45,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
         qrBitBiasStrength: clampN(
           (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.07 + overlayComplexity * 0.02,
           0,
-          0.24
+          0.24,
         ),
       },
     ];
@@ -68,7 +68,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
         qrBitBiasStrength: clampN(
           (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.04 + overlayComplexity * 0.01,
           0,
-          0.28
+          0.28,
         ),
       },
       {
@@ -79,7 +79,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
         qrBitBiasStrength: clampN(
           (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.07 + overlayComplexity * 0.015,
           0,
-          0.28
+          0.28,
         ),
       },
       {
@@ -90,7 +90,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
         qrBitBiasStrength: clampN(
           (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.1 + overlayComplexity * 0.02,
           0,
-          0.3
+          0.3,
         ),
       },
     ];
@@ -112,7 +112,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
       qrBitBiasStrength: clampN(
         (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03 + overlayComplexity * 0.01,
         0,
-        0.24
+        0.24,
       ),
     },
     {
@@ -123,7 +123,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
       qrBitBiasStrength: clampN(
         (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.06 + overlayComplexity * 0.015,
         0,
-        0.24
+        0.24,
       ),
     },
     {
@@ -134,7 +134,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
       qrBitBiasStrength: clampN(
         (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.09 + overlayComplexity * 0.02,
         0,
-        0.24
+        0.24,
       ),
     },
     {
@@ -145,7 +145,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
       qrBitBiasStrength: clampN(
         (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.12 + overlayComplexity * 0.025,
         0,
-        0.24
+        0.24,
       ),
     },
     {
@@ -156,7 +156,7 @@ export function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[
       qrBitBiasStrength: clampN(
         (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.16 + overlayComplexity * 0.03,
         0,
-        0.28
+        0.28,
       ),
     },
   ];

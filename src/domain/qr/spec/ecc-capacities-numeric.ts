@@ -1,4 +1,4 @@
-import type { ECCLevel } from '../../../modules/qr-spec/types';
+import type { ECCLevel } from "../../../modules/qr-spec/types";
 
 /** ECC capacity (numeric digits) per version */
 export const ECC_CAPACITIES_NUMERIC: Record<ECCLevel, number[]> = {

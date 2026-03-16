@@ -1,4 +1,4 @@
-import { Grid3x3 } from 'lucide-react';
+import { Grid3x3 } from "lucide-react";
 
 export function MobileAllButton({
   isActive,
@@ -11,8 +11,8 @@ export function MobileAllButton({
       onClick={onClick}
       className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full transition-colors ${
         isActive
-          ? 'bg-primary text-primary-foreground'
-          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted text-muted-foreground hover:bg-muted/80"
       }`}
       title={title}
     >

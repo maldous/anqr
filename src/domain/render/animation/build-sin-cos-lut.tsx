@@ -1,12 +1,12 @@
-import { TAU } from './tau';
-import { PI4 } from './pi4';
+import { TAU } from "./tau";
+import { PI4 } from "./pi4";
 
 export function buildSinCosLUT(
   time: number,
   seed: number,
   width: number,
   height: number,
-  pattern: 'shimmer' | 'drift'
+  pattern: "shimmer" | "drift",
 ): {
   colSin: Float32Array;
   colCos: Float32Array;
@@ -18,7 +18,7 @@ export function buildSinCosLUT(
   const rowSin = new Float32Array(height);
   const rowCos = new Float32Array(height);
 
-  if (pattern === 'shimmer') {
+  if (pattern === "shimmer") {
     const denom = Math.max(1, width + height);
     const shimmerScale = PI4 / denom;
     const base = time + seed;

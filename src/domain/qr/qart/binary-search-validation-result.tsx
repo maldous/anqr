@@ -1,4 +1,4 @@
-import type { RejectionReason } from './validation';
+import type { RejectionReason } from "./validation";
 
 /**
  * Result of binary search validation
@@ -6,7 +6,7 @@ import type { RejectionReason } from './validation';
 export interface BinarySearchValidationResult {
   valid: boolean;
   /** Rejection reason if hard gate failed */
-  reason?: RejectionReason | 'SUFFIX_CHARSET_INVALID';
+  reason?: RejectionReason | "SUFFIX_CHARSET_INVALID";
   description?: string;
   mismatchIndex?: number;
   expectedByte?: number;

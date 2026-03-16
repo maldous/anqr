@@ -1,1 +1,1 @@
-export { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
+export { YieldController } from "@/features/generator/application/generation/generation-class-yieldcontroller";

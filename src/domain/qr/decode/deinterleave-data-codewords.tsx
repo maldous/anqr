@@ -1,4 +1,4 @@
-import { qrDecoderLog } from './qr-decoder-log';
+import { qrDecoderLog } from "./qr-decoder-log";
 
 // ALIGNMENT_POSITIONS and getAlignmentPositions imported from qr-spec
 
@@ -50,9 +50,9 @@ export function deinterleaveDataCodewords(codewords: number[], rsBlocks: number[
   // Concatenate blocks to get sequential data
   const result = blockData.flat();
 
-  qrDecoderLog.trace('deinterleave: De-interleaved data codewords', {
+  qrDecoderLog.trace("deinterleave: De-interleaved data codewords", {
     numBlocks,
-    blockSizes: blockSizes.join(','),
+    blockSizes: blockSizes.join(","),
     inputLength: codewords.length,
     outputLength: result.length,
   });

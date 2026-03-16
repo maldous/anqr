@@ -16,13 +16,13 @@
  */
 export type QArtEncodingPlan =
   | {
-      mode: 'byte';
+      mode: "byte";
       fullData: string;
       originalDataLength: number;
       suffixLength: number;
     }
   | {
-      mode: 'numeric';
+      mode: "numeric";
       prefix: string;
       suffix: string;
       originalDataLength: number;

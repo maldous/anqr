@@ -5,7 +5,7 @@ export function deinterleaveByBlock(
   codewords: number[],
   countsPerBlock: number[],
   maxCount: number,
-  startIdx: number
+  startIdx: number,
 ): { blocks: number[][]; nextIdx: number } {
   const numBlocks = countsPerBlock.length;
   const blocks: number[][] = Array.from({ length: numBlocks }, () => []);

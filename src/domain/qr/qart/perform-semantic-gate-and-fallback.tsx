@@ -1,14 +1,14 @@
-import type { ECCLevel } from './bit-mapping';
-import type { BlockSelectionResult, EliminationResult } from './elimination';
-import { extractFormatInfo } from './validation';
-import { performSemanticValidation } from './perform-semantic-validation';
-import { log } from './log';
-import { validateTimingPatterns } from './validate-timing-patterns';
-import { validateFinderPatterns } from './validate-finder-patterns';
-import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
-import { handleScanFailureFallback } from './handle-scan-failure-fallback';
-import { evaluateSemanticGateResult } from './evaluate-semantic-gate-result';
-import type { ScanResult } from './scan-result';
+import type { ECCLevel } from "./bit-mapping";
+import type { BlockSelectionResult, EliminationResult } from "./elimination";
+import { extractFormatInfo } from "./validation";
+import { performSemanticValidation } from "./perform-semantic-validation";
+import { log } from "./log";
+import { validateTimingPatterns } from "./validate-timing-patterns";
+import { validateFinderPatterns } from "./validate-finder-patterns";
+import { scanMatrixWithJsQR } from "./scan-matrix-with-js-qr";
+import { handleScanFailureFallback } from "./handle-scan-failure-fallback";
+import { evaluateSemanticGateResult } from "./evaluate-semantic-gate-result";
+import type { ScanResult } from "./scan-result";
 
 export function performSemanticGateAndFallback(
   finalMatrix: boolean[][],
@@ -20,7 +20,7 @@ export function performSemanticGateAndFallback(
   actualMask: number,
   actualSuffix: string,
   strictSuffix: boolean,
-  resolvedSuffixMode: 'byte' | 'numeric',
+  resolvedSuffixMode: "byte" | "numeric",
   originalDataLength: number,
   scanResult: ScanResult,
   blockSelections: BlockSelectionResult[],
@@ -42,7 +42,7 @@ export function performSemanticGateAndFallback(
     finalFormatInfo: ReturnType<typeof extractFormatInfo>;
   },
   actualControlPercentage: number,
-  basisVectorCount: number
+  basisVectorCount: number,
 ): { finalMatrixToUse: boolean[][]; actualVectorsApplied: number } {
   const semanticValidation = performSemanticValidation(
     finalMatrix,
@@ -52,7 +52,7 @@ export function performSemanticGateAndFallback(
     actualSuffix,
     scanMatrixWithJsQR,
     strictSuffix,
-    resolvedSuffixMode
+    resolvedSuffixMode,
   );
 
   const currentScanResult = evaluateSemanticGateResult(
@@ -62,14 +62,14 @@ export function performSemanticGateAndFallback(
     originalDataLength,
     ecc,
     actualMask,
-    strictSuffix
+    strictSuffix,
   );
 
   let finalMatrixToUse = finalMatrix;
   let actualVectorsApplied = totalSelected;
 
   if (!currentScanResult.success) {
-    log.warn('QR-Art matrix scan validation FAILED - matrix does not scan!', {
+    log.warn("QR-Art matrix scan validation FAILED - matrix does not scan!", {
       error: currentScanResult.error,
       expectedData: encodedData,
       scanAttempts: currentScanResult.attempts,
@@ -98,7 +98,7 @@ export function performSemanticGateAndFallback(
       actualSuffix,
       strictSuffix,
       totalSelected,
-      baseMatrix
+      baseMatrix,
     );
 
     finalMatrixToUse = fallbackResult.matrix;

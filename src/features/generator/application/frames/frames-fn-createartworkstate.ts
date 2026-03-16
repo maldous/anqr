@@ -4,13 +4,13 @@
  * Notes: Create initial artwork frame state.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
-import { readCanvasImageData } from '@/features/generator/application/generation/generation-fn-readcanvas';
-import { sanitizeQArtRenderConfig } from '@/features/generator/application/generation/generation-fn-sanitizeconfig';
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { ArtworkFrameState } from "@/features/generator/application/frames/frames-interface-artworkstate";
+import { readCanvasImageData } from "@/features/generator/application/generation/generation-fn-readcanvas";
+import { sanitizeQArtRenderConfig } from "@/features/generator/application/generation/generation-fn-sanitizeconfig";
 
 export function createArtworkFrameState(
-  debouncedConfig: Record<string, unknown>
+  debouncedConfig: Record<string, unknown>,
 ): ArtworkFrameState {
   const artworkFrameImageDataCache = new WeakMap<
     HTMLCanvasElement | OffscreenCanvas,
@@ -18,7 +18,7 @@ export function createArtworkFrameState(
   >();
   const getArtworkFrameTargetImage = (
     sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-    frameIdx: number
+    frameIdx: number,
   ): ImageData => {
     const cached = artworkFrameImageDataCache.get(sourceCanvas);
     if (
@@ -47,11 +47,11 @@ export function createArtworkFrameState(
   const getArtworkBitmapScratchCanvas = (
     slot: 0 | 1,
     width: number,
-    height: number
+    height: number,
   ): HTMLCanvasElement => {
     const current = slot === 0 ? artworkBitmapScratchA : artworkBitmapScratchB;
     if (!current) {
-      const created = document.createElement('canvas');
+      const created = document.createElement("canvas");
       created.width = width;
       created.height = height;
       if (slot === 0) {

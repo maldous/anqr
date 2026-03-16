@@ -1,1 +1,1 @@
-export type EncodingMode = 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed';
+export type EncodingMode = "auto" | "numeric" | "alphanumeric" | "byte" | "kanji" | "mixed";

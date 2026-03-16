@@ -1,9 +1,9 @@
-import { QRErrorCorrectionLevel } from '../../../modules/qr-encoder/types';
-import { RS_BLOCK_TABLE } from './rs-block-table';
+import { QRErrorCorrectionLevel } from "../../../modules/qr-encoder/types";
+import { RS_BLOCK_TABLE } from "./rs-block-table";
 
 export function getRsBlockTable(
   typeNumber: number,
-  errorCorrectionLevel: number
+  errorCorrectionLevel: number,
 ): number[] | undefined {
   switch (errorCorrectionLevel) {
     case QRErrorCorrectionLevel.L:

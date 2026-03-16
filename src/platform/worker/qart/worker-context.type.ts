@@ -1,4 +1,4 @@
-import type { QArtWorkerRequest } from './worker-protocol';
+import type { QArtWorkerRequest } from "./worker-protocol";
 
 export type WorkerContext = {
   postMessage: (message: unknown, transfer?: Transferable[]) => void;

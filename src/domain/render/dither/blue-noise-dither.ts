@@ -1,21 +1,21 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import type { BlueNoiseOptions } from './blue-noise-options';
-import { buildRowWiseDitherResult } from './build-row-wise-dither-result';
-import { quantizeBlueNoisePixel } from './quantize-blue-noise-pixel';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../../../modules/dither-algorithms/utils";
+import type { BlueNoiseOptions } from "./blue-noise-options";
+import { buildRowWiseDitherResult } from "./build-row-wise-dither-result";
+import { quantizeBlueNoisePixel } from "./quantize-blue-noise-pixel";
 
 /** Apply blue noise threshold dithering */
 export function blueNoiseDither(
   imageData: Float32Array[],
   width: number,
   height: number,
-  options: BlueNoiseOptions = {}
+  options: BlueNoiseOptions = {},
 ): DitherResult {
   const tileSize = options.tileSize ?? 64;
   const seed = options.seed ?? 0;
   const levels = options.levels ?? 2;
   const strength = options.strength ?? 100;
-  const colorMode = options.colorMode ?? 'bw';
+  const colorMode = options.colorMode ?? "bw";
   const tile = generateBlueNoiseTile(tileSize, seed);
   const strengthFactor = strength / 100;
 
@@ -31,7 +31,7 @@ export function blueNoiseDither(
         threshold,
         strengthFactor,
         colorMode,
-        levels
+        levels,
       );
       return { color: px.color, isDark: px.isDark };
     },

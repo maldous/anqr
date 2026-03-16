@@ -9,22 +9,22 @@
  *  - Loop-invariant computations hoisted out of the double loop
  */
 
-import { registerCacheCleanup } from '../../../modules/qr-generator/cache';
-import { buildRenderCellCtx } from './build-render-cell-ctx';
-import { computeModuleGap } from './compute-module-gap';
-import { processRenderCell } from './process-render-cell';
+import { registerCacheCleanup } from "../../../modules/qr-generator/cache";
+import { buildRenderCellCtx } from "./build-render-cell-ctx";
+import { computeModuleGap } from "./compute-module-gap";
+import { processRenderCell } from "./process-render-cell";
 import {
   canUseFastPath,
   clearFunctionalMapCache,
   getCachedFunctionalMap,
   renderModulesFastPath,
-} from './render-loop-fast-path';
-import type { RenderModulesOptions } from '../../../modules/qr-generator/types';
-import type { ModuleDrawContext } from './module-draw-context.interface';
-import type { RenderCellCtx } from './render-cell-ctx.interface';
-import type { RenderCellState } from './render-cell-state.interface';
-import { validateColor } from '../../../modules/qr-generator/utils';
-export { clearFunctionalMapCache } from './render-loop-fast-path';
+} from "./render-loop-fast-path";
+import type { RenderModulesOptions } from "../../../modules/qr-generator/types";
+import type { ModuleDrawContext } from "./module-draw-context.interface";
+import type { RenderCellCtx } from "./render-cell-ctx.interface";
+import type { RenderCellState } from "./render-cell-state.interface";
+import { validateColor } from "../../../modules/qr-generator/utils";
+export { clearFunctionalMapCache } from "./render-loop-fast-path";
 
 // Register with central cache clearer (avoids circular import from cache.ts)
 registerCacheCleanup(clearFunctionalMapCache);
@@ -48,8 +48,8 @@ export function renderModules(options: RenderModulesOptions): void {
     useGradient,
   } = options;
   const isFastPreview = config.fastPreview === true;
-  const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
-  const effectiveFgColor = validateColor(config.fgColor, '#000000');
+  const effectiveBgColor = validateColor(config.bgColor, "#ffffff");
+  const effectiveFgColor = validateColor(config.fgColor, "#000000");
   const needsExplicitLightModules = config.transparentBg === true;
   const hasOverlayData = overlayData !== null;
 
@@ -68,7 +68,7 @@ export function renderModules(options: RenderModulesOptions): void {
       skipMask,
       fgFill,
       effectiveBgColor,
-      needsExplicitLightModules
+      needsExplicitLightModules,
     );
     return;
   }
@@ -86,14 +86,14 @@ export function renderModules(options: RenderModulesOptions): void {
   };
 
   const overlayModeIsHalftoneDithered =
-    !isFastPreview && config.overlayMode === 'halftone-dithered';
+    !isFastPreview && config.overlayMode === "halftone-dithered";
   const moduleDrawCtx: ModuleDrawContext = {
     ctx,
     config,
     isFastPreview,
     cornerRadius: config.cornerRadius || 0,
     dotRotation: config.dotRotationDeg || 0,
-    timingStyle: config.timingStyle || 'match_module',
+    timingStyle: config.timingStyle || "match_module",
     isStrokeGapMode,
     strokeWidth,
     overlayModeIsHalftoneDithered,
@@ -110,7 +110,7 @@ export function renderModules(options: RenderModulesOptions): void {
     hasOverlayData,
     functionalMap,
     moduleDrawCtx,
-    gap
+    gap,
   );
 
   for (let row = 0; row < moduleCount; row++) {

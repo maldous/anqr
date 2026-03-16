@@ -1,18 +1,18 @@
-import type { QRGeneratorConfig } from './types';
-import { resolveDitherKind } from './resolve-dither-kind';
-import { resolveDiffusionKernel } from './resolve-diffusion-kernel';
-import { resolveOrderedMatrixName } from './resolve-ordered-matrix-name';
-import { resolveThresholdPattern } from './resolve-threshold-pattern';
-import { isThresholdOnlyDitherKind } from './is-threshold-only-dither-kind';
-import { getDitherStaticState } from './get-dither-static-state';
-import { clamp01 } from './clamp01';
-import type { DitherResolvedConfig } from './dither-resolved-config';
+import type { QRGeneratorConfig } from "./types";
+import { resolveDitherKind } from "./resolve-dither-kind";
+import { resolveDiffusionKernel } from "./resolve-diffusion-kernel";
+import { resolveOrderedMatrixName } from "./resolve-ordered-matrix-name";
+import { resolveThresholdPattern } from "./resolve-threshold-pattern";
+import { isThresholdOnlyDitherKind } from "./is-threshold-only-dither-kind";
+import { getDitherStaticState } from "./get-dither-static-state";
+import { clamp01 } from "./clamp01";
+import type { DitherResolvedConfig } from "./dither-resolved-config";
 
 export function buildDitherResolvedConfig(
   config: QRGeneratorConfig,
   moduleCount: number,
   effectiveIntensity: number,
-  scaledSize: number
+  scaledSize: number,
 ): DitherResolvedConfig {
   const rawIntensity = effectiveIntensity;
   const intensity = clamp01(rawIntensity);
@@ -22,8 +22,8 @@ export function buildDitherResolvedConfig(
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   const serpentine = config.ditherSerpentine ?? true;
-  const colorDitherMode = config.colorDither ?? 'none';
-  const useColorDither = colorDitherMode !== 'none';
+  const colorDitherMode = config.colorDither ?? "none";
+  const useColorDither = colorDitherMode !== "none";
   const ditherKind = resolveDitherKind(config);
   const thresholdPattern = resolveThresholdPattern(ditherKind);
   const thresholdOnly = isThresholdOnlyDitherKind(ditherKind);

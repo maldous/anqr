@@ -3,7 +3,7 @@ import {
   MODE_BYTE,
   MODE_KANJI,
   MODE_NUMERIC,
-} from '../../../modules/qr-decoder/types';
+} from "../../../modules/qr-decoder/types";
 
 /**
  * Get the number of bits for character count indicator

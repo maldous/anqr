@@ -3,9 +3,9 @@
  * Re-exports from the canonical content module
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('ANALYZER');
+const _log = createLogger("ANALYZER");
 
-export { detectContentType } from './analyzer-content';
-export type { ContentType, ContentTypeDetails } from '../../../modules/qr-analyzer/types';
+export { detectContentType } from "./analyzer-content";
+export type { ContentType, ContentTypeDetails } from "../../../modules/qr-analyzer/types";

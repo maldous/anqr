@@ -1,5 +1,5 @@
-import { Capacitor } from '@capacitor/core';
-import { saveFileNative } from './native-save';
+import { Capacitor } from "@capacitor/core";
+import { saveFileNative } from "./native-save";
 
 /**
  * Download from URL (web) or save file (native)
@@ -10,7 +10,7 @@ export function downloadUrl(url: string, filename: string, blob?: Blob): void {
     saveFileNative(filename, blob); // Fire and forget
   } else {
     // On web, use standard download approach
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);

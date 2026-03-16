@@ -22,5 +22,5 @@ export type BasisVectorViolation = {
   blockIndex: number;
   localBitIndex: number;
   linearBit: number;
-  violationType: 'ORIGINAL_DATA' | 'TERMINATOR_GAP';
+  violationType: "ORIGINAL_DATA" | "TERMINATOR_GAP";
 };

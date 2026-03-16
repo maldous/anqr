@@ -6,11 +6,11 @@ export function rotateOverlayCanvas(source: HTMLCanvasElement, degrees: number):
   const newWidth = Math.round(source.width * cos + source.height * sin);
   const newHeight = Math.round(source.width * sin + source.height * cos);
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = newWidth;
   canvas.height = newHeight;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2D context');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context");
 
   ctx.translate(newWidth / 2, newHeight / 2);
   ctx.rotate(radians);

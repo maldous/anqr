@@ -1,6 +1,6 @@
-import { createEmptyMatrix } from './create-empty-matrix';
-import { readOverlayPixelsAtSize } from './read-overlay-pixels-at-size';
-import type { CreateCanvasFn, PixelDecisionMatrix } from './types';
+import { createEmptyMatrix } from "./create-empty-matrix";
+import { readOverlayPixelsAtSize } from "./read-overlay-pixels-at-size";
+import type { CreateCanvasFn, PixelDecisionMatrix } from "./types";
 
 export async function resolveMatrixInput(params: {
   createCanvasFn: CreateCanvasFn;
@@ -24,7 +24,7 @@ export async function resolveMatrixInput(params: {
     params.overlayCanvas,
     scaledSize,
     params.createCanvasFn,
-    params.releaseCanvasFn
+    params.releaseCanvasFn,
   );
   if (!data) {
     return {

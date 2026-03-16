@@ -1,4 +1,4 @@
-import { getAlignmentPatternCenters } from '../../../modules/qr-spec';
+import { getAlignmentPatternCenters } from "../../../modules/qr-spec";
 
 /**
  * Helper: Get alignment pattern positions for a given moduleCount
@@ -10,7 +10,7 @@ import { getAlignmentPatternCenters } from '../../../modules/qr-spec';
  * Wrapper that uses qr-spec's getAlignmentPositions internally
  */
 export function getAlignmentPositionsFromModuleCount(
-  moduleCount: number
+  moduleCount: number,
 ): Array<{ row: number; col: number }> {
   const version = Math.round((moduleCount - 17) / 4);
   return getAlignmentPatternCenters(version, moduleCount);

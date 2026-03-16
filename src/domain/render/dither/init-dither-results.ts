@@ -1,8 +1,8 @@
-import type { RGB } from '../../../modules/dither-algorithms/types';
+import type { RGB } from "../../../modules/dither-algorithms/types";
 
 export function initDitherResults(
   width: number,
-  height: number
+  height: number,
 ): { resultMatrix: boolean[][]; resultColors: RGB[][] } {
   const resultMatrix: boolean[][] = [];
   const resultColors: RGB[][] = [];

@@ -1,7 +1,7 @@
-import { type RSBlockInfo } from './bit-mapping';
-import type { RSBasisVector } from './rs-basis.types';
-import { createSingleBitBasisVector } from './create-single-bit-basis-vector';
-import { log } from './log';
+import { type RSBlockInfo } from "./bit-mapping";
+import type { RSBasisVector } from "./rs-basis.types";
+import { createSingleBitBasisVector } from "./create-single-bit-basis-vector";
+import { log } from "./log";
 
 /**
  * Build basis vectors for a single RS block
@@ -17,7 +17,7 @@ export function buildBlockBasis(
   blockInfo: RSBlockInfo,
   rsBlockIndex: number,
   globalBitOffset: number,
-  allowedLocalBits?: Set<number>
+  allowedLocalBits?: Set<number>,
 ): RSBasisVector[] {
   const { dataCount } = blockInfo;
   const vectors: RSBasisVector[] = [];
@@ -41,13 +41,13 @@ export function buildBlockBasis(
       createdCount++;
 
       vectors.push(
-        createSingleBitBasisVector(blockInfo, rsBlockIndex, globalBitOffset, byteIdx, bitIdx)
+        createSingleBitBasisVector(blockInfo, rsBlockIndex, globalBitOffset, byteIdx, bitIdx),
       );
     }
   }
 
   if (allowedLocalBits !== undefined) {
-    log.debug('Block basis created with protection', {
+    log.debug("Block basis created with protection", {
       blockIndex: rsBlockIndex,
       dataBytes: dataCount,
       totalBlockBits: dataCount * 8,
@@ -55,11 +55,11 @@ export function buildBlockBasis(
       vectorsCreated: createdCount,
       vectorsSkipped: skippedCount,
       createdLocalBitRange:
-        createdCount > 0 ? `${firstCreatedLocalBit} - ${lastCreatedLocalBit}` : 'none',
+        createdCount > 0 ? `${firstCreatedLocalBit} - ${lastCreatedLocalBit}` : "none",
       createdByteRange:
         createdCount > 0
           ? `${Math.floor(firstCreatedLocalBit / 8)} - ${Math.floor(lastCreatedLocalBit / 8)}`
-          : 'none',
+          : "none",
     });
   }
 

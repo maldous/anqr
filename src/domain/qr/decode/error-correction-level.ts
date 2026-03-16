@@ -1,5 +1,5 @@
-import { IllegalArgumentException } from './exceptions';
-import { ErrorCorrectionLevelValue } from './error-correction-level-value';
+import { IllegalArgumentException } from "./exceptions";
+import { ErrorCorrectionLevelValue } from "./error-correction-level-value";
 
 /**
  * Error correction level (L, M, Q, H)
@@ -7,15 +7,15 @@ import { ErrorCorrectionLevelValue } from './error-correction-level-value';
 export class ErrorCorrectionLevel {
   private static readonly FOR_BITS = new Map<number, ErrorCorrectionLevel>();
 
-  static readonly L = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.L, 'L', 0x01);
-  static readonly M = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.M, 'M', 0x00);
-  static readonly Q = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.Q, 'Q', 0x03);
-  static readonly H = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.H, 'H', 0x02);
+  static readonly L = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.L, "L", 0x01);
+  static readonly M = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.M, "M", 0x00);
+  static readonly Q = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.Q, "Q", 0x03);
+  static readonly H = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.H, "H", 0x02);
 
   private constructor(
     private readonly value: ErrorCorrectionLevelValue,
     private readonly stringValue: string,
-    private readonly bits: number
+    private readonly bits: number,
   ) {
     ErrorCorrectionLevel.FOR_BITS.set(bits, this);
   }
@@ -46,13 +46,13 @@ export class ErrorCorrectionLevel {
 
   static fromString(s: string): ErrorCorrectionLevel {
     switch (s) {
-      case 'L':
+      case "L":
         return ErrorCorrectionLevel.L;
-      case 'M':
+      case "M":
         return ErrorCorrectionLevel.M;
-      case 'Q':
+      case "Q":
         return ErrorCorrectionLevel.Q;
-      case 'H':
+      case "H":
         return ErrorCorrectionLevel.H;
       default:
         throw new IllegalArgumentException(`${s} not available`);

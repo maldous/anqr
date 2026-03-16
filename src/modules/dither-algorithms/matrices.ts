@@ -1,1 +1,1 @@
-export * from '../../domain/render/dither/matrices';
+export * from "../../domain/render/dither/matrices";

@@ -1,34 +1,34 @@
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/primitives/select';
-import type { EditorProps } from '../payload-editor-props';
-import type { EMVGenericForm } from '../payload-section-types';
+} from "@/ui/primitives/select";
+import type { EditorProps } from "../payload-editor-props";
+import type { EMVGenericForm } from "../payload-section-types";
 
 export function EmvGenericEditor({
   emvGenericForm,
   payload: _payload,
   setEmvGenericForm,
   t,
-}: Readonly<Pick<EditorProps, 'emvGenericForm' | 'payload' | 'setEmvGenericForm' | 't'>>) {
+}: Readonly<Pick<EditorProps, "emvGenericForm" | "payload" | "setEmvGenericForm" | "t">>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>{t('payload.merchantName')}</Label>
+        <Label>{t("payload.merchantName")}</Label>
         <Input
-          placeholder={t('placeholders.fullName')}
+          placeholder={t("placeholders.fullName")}
           value={emvGenericForm.merchantName}
           onChange={(e) => setEmvGenericForm({ ...emvGenericForm, merchantName: e.target.value })}
         />
       </div>
       <div className="space-y-2">
         <Label>
-          {t('payload.city')} {t('common.optional')}
+          {t("payload.city")} {t("common.optional")}
         </Label>
         <Input
           placeholder="Singapore"
@@ -38,7 +38,7 @@ export function EmvGenericEditor({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-2">
-          <Label>{t('placeholders.countryCode')}</Label>
+          <Label>{t("placeholders.countryCode")}</Label>
           <Input
             placeholder="SG"
             maxLength={2}
@@ -50,23 +50,23 @@ export function EmvGenericEditor({
               })
             }
           />
-          <p className="text-xs text-muted-foreground">{t('placeholders.isoCountryHint')}</p>
+          <p className="text-xs text-muted-foreground">{t("placeholders.isoCountryHint")}</p>
         </div>
         <div className="space-y-2">
-          <Label>{t('placeholders.currencyCode')}</Label>
+          <Label>{t("placeholders.currencyCode")}</Label>
           <Input
             placeholder="702"
             maxLength={3}
             value={emvGenericForm.currencyCode}
             onChange={(e) => setEmvGenericForm({ ...emvGenericForm, currencyCode: e.target.value })}
           />
-          <p className="text-xs text-muted-foreground">{t('placeholders.isoCurrencyHint')}</p>
+          <p className="text-xs text-muted-foreground">{t("placeholders.isoCurrencyHint")}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-2">
           <Label>
-            {t('payload.amount')} {t('common.optional')}
+            {t("payload.amount")} {t("common.optional")}
           </Label>
           <Input
             type="number"
@@ -77,7 +77,7 @@ export function EmvGenericEditor({
         </div>
         <div className="space-y-2">
           <Label>
-            {t('placeholders.mcc')} {t('common.optional')}
+            {t("placeholders.mcc")} {t("common.optional")}
           </Label>
           <Input
             placeholder="5411"
@@ -88,10 +88,10 @@ export function EmvGenericEditor({
         </div>
       </div>
       <div className="space-y-2">
-        <Label>{t('placeholders.tipConvenienceFee')}</Label>
+        <Label>{t("placeholders.tipConvenienceFee")}</Label>
         <Select
           value={emvGenericForm.tipIndicator}
-          onValueChange={(v: EMVGenericForm['tipIndicator']) =>
+          onValueChange={(v: EMVGenericForm["tipIndicator"]) =>
             setEmvGenericForm({ ...emvGenericForm, tipIndicator: v })
           }
         >
@@ -99,16 +99,16 @@ export function EmvGenericEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">{t('common.none')}</SelectItem>
-            <SelectItem value="prompt">{t('placeholders.promptUser')}</SelectItem>
-            <SelectItem value="fixed">{t('placeholders.fixedAmount')}</SelectItem>
-            <SelectItem value="percent">{t('placeholders.percentageOption')}</SelectItem>
+            <SelectItem value="none">{t("common.none")}</SelectItem>
+            <SelectItem value="prompt">{t("placeholders.promptUser")}</SelectItem>
+            <SelectItem value="fixed">{t("placeholders.fixedAmount")}</SelectItem>
+            <SelectItem value="percent">{t("placeholders.percentageOption")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      {emvGenericForm.tipIndicator === 'fixed' && (
+      {emvGenericForm.tipIndicator === "fixed" && (
         <div className="space-y-2">
-          <Label>{t('placeholders.tipAmount')}</Label>
+          <Label>{t("placeholders.tipAmount")}</Label>
           <Input
             type="number"
             placeholder="0.00"
@@ -117,9 +117,9 @@ export function EmvGenericEditor({
           />
         </div>
       )}
-      {emvGenericForm.tipIndicator === 'percent' && (
+      {emvGenericForm.tipIndicator === "percent" && (
         <div className="space-y-2">
-          <Label>{t('placeholders.tipPercentage')}</Label>
+          <Label>{t("placeholders.tipPercentage")}</Label>
           <Input
             type="number"
             placeholder="10"
@@ -130,15 +130,15 @@ export function EmvGenericEditor({
       )}
       <div className="space-y-2">
         <Label>
-          {t('payload.reference')} {t('common.optional')}
+          {t("payload.reference")} {t("common.optional")}
         </Label>
         <Input
-          placeholder={t('placeholders.invoiceReference')}
+          placeholder={t("placeholders.invoiceReference")}
           value={emvGenericForm.reference}
           onChange={(e) => setEmvGenericForm({ ...emvGenericForm, reference: e.target.value })}
         />
       </div>
-      <p className="text-xs text-muted-foreground">{t('placeholders.emvGenericHint')}</p>
+      <p className="text-xs text-muted-foreground">{t("placeholders.emvGenericHint")}</p>
     </div>
   );
 }

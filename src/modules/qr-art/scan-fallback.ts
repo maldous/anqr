@@ -1,1 +1,1 @@
-export * from '../../domain/qr/qart/scan-fallback';
+export * from "../../domain/qr/qart/scan-fallback";

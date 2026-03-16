@@ -1,11 +1,11 @@
-import { AdUnit } from '@/platform/ads/components/AdUnit';
+import { AdUnit } from "@/platform/ads/components/AdUnit";
 
 export function StaticPageAdRail({
   slot,
   hiddenClassName,
   paddingClassName,
 }: Readonly<{
-  slot: 'static-left' | 'static-right';
+  slot: "static-left" | "static-right";
   hiddenClassName: string;
   paddingClassName: string;
 }>) {

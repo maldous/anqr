@@ -4,15 +4,15 @@
  * Notes: Invoke artwork worker for a single frame.
  */
 
-import { createLogger } from '@/infra/logging/logger';
+import { createLogger } from "@/infra/logging/logger";
 import type {
   QArtModule,
   QArtWorkerResult,
-} from '@/features/generator/application/qart/qart-shared-types';
-import { handleArtworkMainThreadFallbackForFrame } from '@/features/generator/application/frames/frames-fn-artworkfallback';
-import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
+} from "@/features/generator/application/qart/qart-shared-types";
+import { handleArtworkMainThreadFallbackForFrame } from "@/features/generator/application/frames/frames-fn-artworkfallback";
+import type { ArtworkFrameState } from "@/features/generator/application/frames/frames-interface-artworkstate";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function invokeArtworkWorkerForFrame(params: {
   qartModule: QArtModule;
@@ -36,30 +36,30 @@ export async function invokeArtworkWorkerForFrame(params: {
   try {
     const targetImage = params.artworkState.getArtworkFrameTargetImage(
       params.frameOverlayCanvas,
-      params.frameIdx
+      params.frameIdx,
     );
     const workerResult = await params.qartModule.generateQArtInWorker(
       {
         data: params.qartConfig.data as string,
         targetImage,
         version: params.qartConfig.version as number,
-        ecc: params.qartConfig.ecc as 'L' | 'M' | 'Q' | 'H',
+        ecc: params.qartConfig.ecc as "L" | "M" | "Q" | "H",
         strictSuffix: params.qartConfig.strictSuffix as boolean,
         targetControlPercent: params.qartConfig.targetControlPercent as number,
         searchAttempts: params.qartConfig.searchAttempts as number,
         searchSeed: params.qartConfig.searchSeed as number,
         lockVersionToMinimum: params.qartConfig.lockVersionToMinimum as boolean,
         maskPattern: params.resolvedMask,
-        performanceProfile: params.qartConfig.performanceProfile as 'quality' | 'balanced',
+        performanceProfile: params.qartConfig.performanceProfile as "quality" | "balanced",
         renderConfig: params.workerRenderConfig,
         renderInWorker: true,
       },
-      { signal: params.abortSignal }
+      { signal: params.abortSignal },
     );
     return { workerResult };
   } catch (error_) {
     if (params.isRunCancelled()) return { fallbackCanvas: null };
-    log.warn('QR-Art animation frame worker failed; falling back to main thread', {
+    log.warn("QR-Art animation frame worker failed; falling back to main thread", {
       frameIdx: params.frameIdx,
       error: error_,
     });

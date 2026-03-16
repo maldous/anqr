@@ -5,7 +5,7 @@ export function drawCenterLogo(
   ctx: CanvasRenderingContext2D,
   logoCanvas: HTMLCanvasElement | OffscreenCanvas,
   canvasSize: number,
-  logoSizePercent: number = 20
+  logoSizePercent: number = 20,
 ): void {
   const logoSize = (canvasSize * logoSizePercent) / 100;
   const logoX = (canvasSize - logoSize) / 2;

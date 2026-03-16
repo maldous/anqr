@@ -1,6 +1,6 @@
-import type { BlockSelectionResult, EliminationResult } from './elimination';
-import { forEachFlattenedSelection } from './for-each-flattened-selection';
-import type { FlattenedSelection } from './scan-fallback.types';
+import type { BlockSelectionResult, EliminationResult } from "./elimination";
+import { forEachFlattenedSelection } from "./for-each-flattened-selection";
+import type { FlattenedSelection } from "./scan-fallback.types";
 
 /**
  * Flatten block selections into an ordered list sorted by pixel importance.
@@ -16,11 +16,11 @@ export function flattenAndOrderSelections(
   blockSelections: BlockSelectionResult[],
   eliminationResult: EliminationResult,
   importance: number[][],
-  moduleCount: number
+  moduleCount: number,
 ): FlattenedSelection[] {
   const flattened: FlattenedSelection[] = [];
   forEachFlattenedSelection(blockSelections, eliminationResult, importance, moduleCount, (entry) =>
-    flattened.push(entry)
+    flattened.push(entry),
   );
 
   // Sort by importance (highest first) - we want to keep the most important pixels

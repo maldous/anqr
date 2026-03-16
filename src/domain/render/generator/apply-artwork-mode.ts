@@ -1,5 +1,5 @@
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
 
 export function applyArtworkMode(context: OverlayModeContext, result: OverlayModeResult): void {
   const { isDark, config } = context;

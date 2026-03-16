@@ -1,4 +1,4 @@
-import type { PixelColor } from './pixel-color';
+import type { PixelColor } from "./pixel-color";
 
 export interface PixelGridCtx {
   ctx: CanvasRenderingContext2D;

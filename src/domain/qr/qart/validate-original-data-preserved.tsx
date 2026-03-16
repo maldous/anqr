@@ -13,7 +13,7 @@
  */
 export function validateOriginalDataPreserved(
   decoded: string | undefined,
-  originalData: string
+  originalData: string,
 ): {
   valid: boolean;
   reason?: string;
@@ -26,7 +26,7 @@ export function validateOriginalDataPreserved(
   };
 } {
   if (decoded === undefined || decoded === null) {
-    return { valid: false, reason: 'decoded data is null/undefined' };
+    return { valid: false, reason: "decoded data is null/undefined" };
   }
 
   if (decoded.length < originalData.length) {

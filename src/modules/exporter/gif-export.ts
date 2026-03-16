@@ -1,1 +1,1 @@
-export * from '../../domain/render/export/gif-export';
+export * from "../../domain/render/export/gif-export";

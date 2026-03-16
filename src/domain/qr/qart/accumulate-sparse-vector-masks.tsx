@@ -1,4 +1,4 @@
-import { accumulateByteGroupMasks } from './accumulate-byte-group-masks';
+import { accumulateByteGroupMasks } from "./accumulate-byte-group-masks";
 
 export function accumulateSparseVectorMasks(
   nzIdx: Uint16Array,
@@ -12,7 +12,7 @@ export function accumulateSparseVectorMasks(
   groupIndexForBit: Int32Array,
   bitMaskForBit: Int32Array,
   groupMasks: Int32Array,
-  touched: Int32Array
+  touched: Int32Array,
 ): number {
   let touchedCount = 0;
   const firstByte = nzIdx[0] ?? -1;
@@ -30,7 +30,7 @@ export function accumulateSparseVectorMasks(
         bitMaskForBit,
         groupMasks,
         touched,
-        touchedCount
+        touchedCount,
       );
     }
   }

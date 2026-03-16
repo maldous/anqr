@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
-import type { HeaderPage } from './header-resolve-page';
-import { NAV_LINKS } from './nav-links';
+import { useTranslation } from "react-i18next";
+import type { HeaderPage } from "./header-resolve-page";
+import { NAV_LINKS } from "./nav-links";
 
 export function HeaderDesktopNav({
   resolvedPage,
@@ -16,7 +16,7 @@ export function HeaderDesktopNav({
             <a
               key={link.labelKey}
               href={link.href}
-              className={`px-3 py-2 text-sm rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
+              className={`px-3 py-2 text-sm rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted${link.iubendaEmbed ? " iubenda-noiframe iubenda-embed" : ""}`}
               title={t(link.labelKey, link.defaultLabel)}
               target="_blank"
               rel="noopener noreferrer"
@@ -29,7 +29,7 @@ export function HeaderDesktopNav({
           <a
             key={link.labelKey}
             href={link.href}
-            className={`px-3 py-2 text-sm rounded-md transition-colors ${isActive ? 'text-foreground bg-muted font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+            className={`px-3 py-2 text-sm rounded-md transition-colors ${isActive ? "text-foreground bg-muted font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
             onClick={(e) => {
               if (!onNavigate) return;
               e.preventDefault();

@@ -18,25 +18,25 @@
  * - Reed-Solomon basis block generation (future)
  * - Linear algebra utilities for pixel control (future)
  */
-import { buildRSBasis } from './build-rs-basis';
-import { evaluateQRMatch, searchBestFragment } from './fragment-search';
-import { gfAdd, gfInv, gfMul } from './gf-utils';
-import { gaussJordanEliminate } from './gauss-jordan-eliminate';
-import { generateQArt } from './generate-qart';
+import { buildRSBasis } from "./build-rs-basis";
+import { evaluateQRMatch, searchBestFragment } from "./fragment-search";
+import { gfAdd, gfInv, gfMul } from "./gf-utils";
+import { gaussJordanEliminate } from "./gauss-jordan-eliminate";
+import { generateQArt } from "./generate-qart";
 import {
   getModuleCount,
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
   mapImageToTargets,
-} from './pixel-mapping';
+} from "./pixel-mapping";
 import {
   analyzeUrlEfficiency,
   canUseFragmentSearch,
   generateQArtUrl,
   getBaseUrl,
-} from './url-utils';
-import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
+} from "./url-utils";
+import { mapImageToTargetsSupersampled } from "../../domain/qr/qart/image-utils";
 
 // ============================================
 // TYPES
@@ -86,25 +86,25 @@ import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils'
  * Check if a URL can use fragment search (must be a valid URL)
  */
 // Import and re-export mapImageToTargetsSupersampled from image-utils to avoid circular imports
-export { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
-export { evaluateQRMatch, searchBestFragment } from './fragment-search';
-export { gfAdd, gfInv, gfMul } from './gf-utils';
+export { mapImageToTargetsSupersampled } from "../../domain/qr/qart/image-utils";
+export { evaluateQRMatch, searchBestFragment } from "./fragment-search";
+export { gfAdd, gfInv, gfMul } from "./gf-utils";
 export {
   getModuleCount,
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
   mapImageToTargets,
-} from './pixel-mapping';
+} from "./pixel-mapping";
 export {
   analyzeUrlEfficiency,
   canUseFragmentSearch,
   generateQArtUrl,
   getBaseUrl,
-} from './url-utils';
-export { buildRSBasis } from './build-rs-basis';
-export { gaussJordanEliminate } from './gauss-jordan-eliminate';
-export { generateQArt } from './generate-qart';
+} from "./url-utils";
+export { buildRSBasis } from "./build-rs-basis";
+export { gaussJordanEliminate } from "./gauss-jordan-eliminate";
+export { generateQArt } from "./generate-qart";
 
 // ============================================
 // FULL QART ALGORITHM IMPORTS
@@ -125,7 +125,7 @@ export {
   indexToPixel,
   pixelToIndex,
   type RSBlockInfo,
-} from '../../domain/qr/qart/bit-mapping';
+} from "../../domain/qr/qart/bit-mapping";
 export {
   applyAllSelectedVectors,
   applySelectedVectorsToBlock,
@@ -136,8 +136,8 @@ export {
   gaussJordanEliminate as performGaussJordanElimination,
   rankPixelsByImportance,
   selectBasisVectorsForTarget,
-} from '../../domain/qr/qart/elimination';
-export { clearQArtBufferPool } from '../../domain/qr/qart/buffer-pool';
+} from "../../domain/qr/qart/elimination";
+export { clearQArtBufferPool } from "../../domain/qr/qart/buffer-pool";
 export {
   eccNumericToLevel,
   // Format info utilities
@@ -159,7 +159,7 @@ export {
   // Suffix charset validation
   validateSuffixCharset,
   verifyMatrixFormatInfo,
-} from '../../domain/qr/qart/generate';
+} from "../../domain/qr/qart/generate";
 export {
   basisToMatrix,
   buildBlockBasis,
@@ -177,17 +177,17 @@ export {
   type RSBasis,
   type RSBasisVector,
   xorBasisVectors,
-} from '../../domain/qr/qart/rs-basis';
+} from "../../domain/qr/qart/rs-basis";
 export {
   binarySearchMaxVectors,
   flattenAndOrderSelections,
   type RejectionHistogram,
   unflattenSelections,
-} from '../../domain/qr/qart/scan-fallback';
+} from "../../domain/qr/qart/scan-fallback";
 export {
   generateQArtInWorker,
   terminateQArtWorker,
-} from '../../platform/worker/qart/worker-client';
+} from "../../platform/worker/qart/worker-client";
 export type {
   FragmentSearchConfig,
   FragmentSearchResult,
@@ -195,7 +195,7 @@ export type {
   QArtPixel,
   QArtResult,
   RSBasisBlock,
-} from './types';
+} from "./types";
 
 // ============================================
 // EXPORTS

@@ -1,5 +1,5 @@
-import { type ECCLevel } from './bit-mapping';
-import type { QArtPerformanceProfile } from './qart-performance-profile.type';
+import { type ECCLevel } from "./bit-mapping";
+import type { QArtPerformanceProfile } from "./qart-performance-profile.type";
 
 export interface FullQArtConfig {
   data: string;
@@ -9,7 +9,7 @@ export interface FullQArtConfig {
   maskPattern: number;
   onProgress?: (stage: string, percent: number) => void;
   suffix?: string;
-  suffixMode?: 'numeric' | 'byte' | 'auto';
+  suffixMode?: "numeric" | "byte" | "auto";
   autoSuffix?: boolean;
   minPadCodewords?: number;
   forceVersion?: number;

@@ -1,5 +1,5 @@
-import type { PageSection } from '@/i18n/static';
-import type { TocGroup } from './static-page-types';
+import type { PageSection } from "@/i18n/static";
+import type { TocGroup } from "./static-page-types";
 
 export function buildLearnToc(sections: PageSection[]): TocGroup[] {
   const groups: TocGroup[] = [];

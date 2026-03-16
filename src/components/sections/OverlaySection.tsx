@@ -1,1 +1,1 @@
-export * from '../../features/generator/components/sections/OverlaySection';
+export * from "../../features/generator/components/sections/OverlaySection";

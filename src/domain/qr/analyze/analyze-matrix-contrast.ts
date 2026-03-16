@@ -1,5 +1,5 @@
-import type { ContrastReport } from './safety.types';
-import { analyzeContrast } from './analyze-contrast';
+import type { ContrastReport } from "./safety.types";
+import { analyzeContrast } from "./analyze-contrast";
 
 /**
  * Analyze contrast from a QR matrix
@@ -7,7 +7,7 @@ import { analyzeContrast } from './analyze-contrast';
 export function analyzeMatrixContrast(
   _matrix: boolean[][],
   fgColor: string,
-  bgColor: string
+  bgColor: string,
 ): ContrastReport {
   return analyzeContrast(fgColor, bgColor);
 }

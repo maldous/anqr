@@ -9,12 +9,12 @@ import {
   Ruler,
   Settings,
   Shield,
-} from 'lucide-react';
-import { parseUrlPayload } from './payload-parsers';
-import { buildUrlSocialEntries } from './build-url-social-entries';
-import { buildUrlParamEntries } from './build-url-param-entries';
-import type { DetailEntry } from './detail-entry';
-import { detectSocialPlatform } from './detect-social-platform';
+} from "lucide-react";
+import { parseUrlPayload } from "./payload-parsers";
+import { buildUrlSocialEntries } from "./build-url-social-entries";
+import { buildUrlParamEntries } from "./build-url-param-entries";
+import type { DetailEntry } from "./detail-entry";
+import { detectSocialPlatform } from "./detect-social-platform";
 
 export function buildUrlDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -25,10 +25,10 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
 
   if (urlData.hostname) {
     details.push({
-      label: 'Domain',
+      label: "Domain",
       value: (
         <span className="flex items-center gap-1">
-          {urlData.isSecure === 'true' && <Lock className="w-3 h-3 text-green-500" />}
+          {urlData.isSecure === "true" && <Lock className="w-3 h-3 text-green-500" />}
           <span className="font-mono text-xs">{urlData.hostname}</span>
         </span>
       ),
@@ -37,9 +37,9 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
   }
 
   details.push({
-    label: 'Security',
+    label: "Security",
     value:
-      urlData.isSecure === 'true' ? (
+      urlData.isSecure === "true" ? (
         <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
           <Lock className="w-3 h-3" /> HTTPS (Encrypted)
         </span>
@@ -53,7 +53,7 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
 
   if (urlData.protocol) {
     details.push({
-      label: 'Protocol',
+      label: "Protocol",
       value: <span className="font-mono text-xs uppercase">{urlData.protocol}</span>,
       icon: <Link className="w-3 h-3" />,
     });
@@ -61,7 +61,7 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
 
   if (urlData.port) {
     details.push({
-      label: 'Port',
+      label: "Port",
       value: <span className="font-mono text-xs">{urlData.port}</span>,
       icon: <Settings className="w-3 h-3" />,
     });
@@ -69,7 +69,7 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
 
   if (urlData.path) {
     details.push({
-      label: 'Path',
+      label: "Path",
       value: <span className="font-mono text-xs break-all">{urlData.path}</span>,
       icon: <Link className="w-3 h-3" />,
     });
@@ -77,15 +77,15 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
 
   if (urlData.fragment) {
     details.push({
-      label: 'Fragment',
+      label: "Fragment",
       value: <span className="font-mono text-xs">#{urlData.fragment}</span>,
       icon: <Hash className="w-3 h-3" />,
     });
   }
 
-  if (urlData.isShortened === 'true') {
+  if (urlData.isShortened === "true") {
     details.push({
-      label: 'URL Type',
+      label: "URL Type",
       value: (
         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
           Shortened ({urlData.shortenerService})
@@ -98,21 +98,21 @@ export function buildUrlDetails(payload: string): DetailEntry[] {
   details.push(...buildUrlParamEntries(urlData.params));
 
   details.push({
-    label: 'URL Length',
+    label: "URL Length",
     value: `${urlData.urlLength} characters`,
     icon: <Ruler className="w-3 h-3" />,
   });
 
-  if (urlData.hasPercentEncoding === 'true') {
+  if (urlData.hasPercentEncoding === "true") {
     details.push({
-      label: 'Encoding',
+      label: "Encoding",
       value: <span className="text-xs">Contains percent-encoded characters</span>,
       icon: <Binary className="w-3 h-3" />,
     });
   }
 
   details.push({
-    label: 'Open URL',
+    label: "Open URL",
     value: (
       <a
         href={payload}

@@ -1,4 +1,4 @@
-import { type ECCLevel } from './bit-mapping';
+import { type ECCLevel } from "./bit-mapping";
 
 export interface QRArtCapacityInfo {
   version: number;
@@ -7,7 +7,7 @@ export interface QRArtCapacityInfo {
   protectedBits: number;
   controllableBits: number;
   controlPercentage: number;
-  protectionMode: 'header-only' | 'full-content';
+  protectionMode: "header-only" | "full-content";
   breakdown: {
     headerBits: number;
     dataBits: number;

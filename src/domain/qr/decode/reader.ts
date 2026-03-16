@@ -1,8 +1,8 @@
-import { BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
-import type { BinaryBitmap } from './luminance';
-import { QRDecoder } from './qr-data-decoder';
-import { Detector } from './qr-detector';
+import { BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
+import type { BinaryBitmap } from "./luminance";
+import { QRDecoder } from "./qr-data-decoder";
+import { Detector } from "./qr-detector";
 import {
   BarcodeFormat,
   DecodeHintType,
@@ -10,8 +10,8 @@ import {
   Result,
   ResultMetadataType,
   type ResultPoint,
-} from './result-types';
-import { QRCodeDecoderMetaData } from './qr-code-decoder-meta-data';
+} from "./result-types";
+import { QRCodeDecoderMetaData } from "./qr-code-decoder-meta-data";
 
 /**
  * QR Code Reader - main decoder class
@@ -47,7 +47,7 @@ export class Reader {
       undefined,
       points,
       BarcodeFormat.QR_CODE,
-      Date.now()
+      Date.now(),
     );
 
     const byteSegments = decoderResult.getByteSegments();
@@ -63,17 +63,17 @@ export class Reader {
     if (decoderResult.hasStructuredAppend()) {
       result.putMetadata(
         ResultMetadataType.STRUCTURED_APPEND_SEQUENCE,
-        decoderResult.getStructuredAppendSequenceNumber()
+        decoderResult.getStructuredAppendSequenceNumber(),
       );
       result.putMetadata(
         ResultMetadataType.STRUCTURED_APPEND_PARITY,
-        decoderResult.getStructuredAppendParity()
+        decoderResult.getStructuredAppendParity(),
       );
     }
 
     result.putMetadata(
       ResultMetadataType.SYMBOLOGY_IDENTIFIER,
-      decoderResult.getSymbologyModifier()
+      decoderResult.getSymbologyModifier(),
     );
 
     const version = decoderResult.getVersion();
@@ -186,4 +186,4 @@ export class Reader {
   }
 }
 
-export { QRCodeDecoderMetaData } from './qr-code-decoder-meta-data';
+export { QRCodeDecoderMetaData } from "./qr-code-decoder-meta-data";

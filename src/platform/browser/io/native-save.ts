@@ -3,10 +3,10 @@
  * Save file on native platform (Android/iOS) using MediaStore API
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { saveBase64ToDocuments, showNativeToast } from '../../../modules/platform';
+import { createLogger } from "../../../infra/logging/logger";
+import { saveBase64ToDocuments, showNativeToast } from "../../../modules/platform";
 
-const _log = createLogger('DOWNLOAD');
+const _log = createLogger("DOWNLOAD");
 
 /**
  * Save file on native platform (Android/iOS) using MediaStore API
@@ -24,18 +24,18 @@ export async function saveFileNative(filename: string, blob: Blob): Promise<bool
     });
 
     // Determine mime type from blob
-    const mimeType = blob.type || 'application/octet-stream';
+    const mimeType = blob.type || "application/octet-stream";
 
     // Write to Documents directory via MediaStore
-    const result = await saveBase64ToDocuments(filename, base64DataUrl, mimeType, 'ANQR');
+    const result = await saveBase64ToDocuments(filename, base64DataUrl, mimeType, "ANQR");
 
-    await showNativeToast(`Saved to Documents/ANQR: ${filename}`, 'short');
-    _log.info('Native save complete', { filename, mimeType, hasUri: Boolean(result?.uri) });
+    await showNativeToast(`Saved to Documents/ANQR: ${filename}`, "short");
+    _log.info("Native save complete", { filename, mimeType, hasUri: Boolean(result?.uri) });
 
     return Boolean(result);
   } catch (error) {
-    _log.error('Native save failed', { filename, error });
-    await showNativeToast('Failed to save file', 'long');
+    _log.error("Native save failed", { filename, error });
+    await showNativeToast("Failed to save file", "long");
     return false;
   }
 }

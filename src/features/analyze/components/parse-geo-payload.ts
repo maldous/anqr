@@ -27,8 +27,8 @@ export function parseGeoPayload(payload: string): Record<string, string | number
   result.uncertainty = match[4] ? Number.parseFloat(match[4]) : null;
 
   // Determine hemispheres
-  result.latHemisphere = lat >= 0 ? 'N' : 'S';
-  result.lonHemisphere = lon >= 0 ? 'E' : 'W';
+  result.latHemisphere = lat >= 0 ? "N" : "S";
+  result.lonHemisphere = lon >= 0 ? "E" : "W";
 
   // Convert to DMS
   const toDms = (decimal: number): string => {

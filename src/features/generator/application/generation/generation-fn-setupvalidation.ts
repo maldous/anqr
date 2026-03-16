@@ -4,11 +4,11 @@
  * Notes: Setup post-generation validation runner.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import type { ValidationResult } from '@/domain/qr/analyze/scanner';
-import { validateInWorker } from '@/modules/qr-analyzer';
+import { createLogger } from "@/infra/logging/logger";
+import type { ValidationResult } from "@/domain/qr/analyze/scanner";
+import { validateInWorker } from "@/modules/qr-analyzer";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export function setupValidationRunner(params: {
   requestId: number;
@@ -20,11 +20,11 @@ export function setupValidationRunner(params: {
   generationRequestIdRef: { current: number };
 }): (
   renderedCanvas: HTMLCanvasElement | OffscreenCanvas,
-  expectedContent: string | undefined
+  expectedContent: string | undefined,
 ) => void {
   return (
     renderedCanvas: HTMLCanvasElement | OffscreenCanvas,
-    expectedContent: string | undefined
+    expectedContent: string | undefined,
   ): void => {
     const isCurrentlyAnimating =
       (params.animationFrameCount > 1 || params.hasMultipleSourceFramesRef.current) &&
@@ -47,7 +47,7 @@ export function setupValidationRunner(params: {
           }
         })
         .catch((err) => {
-          log.error('Validation error', { error: err });
+          log.error("Validation error", { error: err });
           if (params.generationRequestIdRef.current === validationRequestId) {
             params.setValidation(null);
           }

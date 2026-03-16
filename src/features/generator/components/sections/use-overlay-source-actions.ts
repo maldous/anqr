@@ -1,13 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 import {
   acquireCameraImage,
   classifyCameraError,
   classifyUrlLoadError,
   fetchImageFromUrl,
   getImageDimensionsFromFileStandalone,
-} from './overlay-image-utils';
-import type { OverlaySourceActionsDeps } from './overlay-source-actions-types';
-import { overlayLog as log } from './overlay-log';
+} from "./overlay-image-utils";
+import type { OverlaySourceActionsDeps } from "./overlay-source-actions-types";
+import { overlayLog as log } from "./overlay-log";
 
 export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
   const {
@@ -37,12 +37,12 @@ export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
         setOverlayCrop({ enabled: true, region: { x: 0.5, y: 0.5, size: 1 } });
       }
     },
-    [setPreviewImageSize, setOverlayCrop]
+    [setPreviewImageSize, setOverlayCrop],
   );
 
   const loadFromUrl = useCallback(async () => {
     if (!urlInput.trim()) {
-      setUrlError(t('overlay.pleaseEnterUrl'));
+      setUrlError(t("overlay.pleaseEnterUrl"));
       return;
     }
     setIsLoadingUrl(true);
@@ -55,7 +55,7 @@ export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
       setShowUrlInput(false);
       void autoEnableSquareCropForNonSquareInput(file);
     } catch (err) {
-      log.error('Failed to load image from URL', { error: err });
+      log.error("Failed to load image from URL", { error: err });
       setUrlError(classifyUrlLoadError(err));
     } finally {
       setIsLoadingUrl(false);
@@ -77,7 +77,7 @@ export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
     setCameraLoading(true);
     try {
       const file = await acquireCameraImage();
-      setOverlayUrl('');
+      setOverlayUrl("");
       setOverlayFile(file);
       setOverlayEnabled(true);
       void autoEnableSquareCropForNonSquareInput(file);
@@ -101,20 +101,20 @@ export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        setOverlayUrl('');
+        setOverlayUrl("");
         setOverlayFile(file);
         setOverlayEnabled(true);
         void autoEnableSquareCropForNonSquareInput(file);
       }
-      e.target.value = '';
+      e.target.value = "";
     },
-    [autoEnableSquareCropForNonSquareInput, setOverlayFile, setOverlayUrl, setOverlayEnabled]
+    [autoEnableSquareCropForNonSquareInput, setOverlayFile, setOverlayUrl, setOverlayEnabled],
   );
 
   const clearOverlay = useCallback(() => {
     setOverlayFile(null);
-    setOverlayUrl('');
-    setUrlInput('');
+    setOverlayUrl("");
+    setUrlInput("");
     setUrlError(null);
   }, [setOverlayFile, setOverlayUrl, setUrlInput, setUrlError]);
 
@@ -126,14 +126,14 @@ export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
         const response = await fetch(imageUrl);
         if (!response.ok) throw new Error(`Failed to load: ${response.status}`);
         const blob = await response.blob();
-        const filename = imageUrl.split('/').pop() || 'gallery-image';
+        const filename = imageUrl.split("/").pop() || "gallery-image";
         const file = new File([blob], filename, { type: blob.type });
         setOverlayUrl(imageUrl);
         setOverlayFile(file);
         setOverlayEnabled(true);
         void autoEnableSquareCropForNonSquareInput(file);
       } catch (err) {
-        log.error('Failed to load gallery image', { error: err });
+        log.error("Failed to load gallery image", { error: err });
       } finally {
         setGalleryLoading(false);
       }
@@ -145,7 +145,7 @@ export function useOverlaySourceActions(deps: OverlaySourceActionsDeps) {
       setOverlayEnabled,
       setGalleryLoading,
       setShowGalleryPicker,
-    ]
+    ],
   );
 
   return { loadFromUrl, handleCameraCapture, handleFileSelect, clearOverlay, loadGalleryImage };

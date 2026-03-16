@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from './types';
+import type { QRGeneratorConfig } from "./types";
 
 export interface ScanGateCtx {
   effectiveConfig: QRGeneratorConfig;

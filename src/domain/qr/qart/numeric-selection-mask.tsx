@@ -1,4 +1,4 @@
-import type { FlattenedSelection } from './scan-fallback';
+import type { FlattenedSelection } from "./scan-fallback";
 
 export type NumericSelectionMask = {
   entry: FlattenedSelection;

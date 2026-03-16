@@ -1,5 +1,5 @@
-import { buildScaledFunctionalMap } from './build-scaled-functional-map';
-import { scaledFunctionalMapCache } from './scaled-functional-map-cache';
+import { buildScaledFunctionalMap } from "./build-scaled-functional-map";
+import { scaledFunctionalMapCache } from "./scaled-functional-map-cache";
 
 export function getScaledFunctionalMap(moduleCount: number, version: number): Uint8Array {
   const key = `${moduleCount}:${version}`;

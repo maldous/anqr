@@ -1,5 +1,5 @@
-import { scanNumericRun } from './scan-numeric-run';
-import { scanAlphanumericRun } from './scan-alphanumeric-run';
+import { scanNumericRun } from "./scan-numeric-run";
+import { scanAlphanumericRun } from "./scan-alphanumeric-run";
 
 export function scanByteRunEnd(text: string, upperText: string, start: number): number {
   let i = start;

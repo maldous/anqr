@@ -1,7 +1,7 @@
-import type { AnimationFrame } from '@/modules/animation';
-import type { YieldController } from '@/features/generator/application/generation/generation-class-yieldcontroller';
-import type { FramePostProcessContext } from './frame-post-process-context.type';
-import type { FrameRenderContext } from './frame-render-context.type';
+import type { AnimationFrame } from "@/modules/animation";
+import type { YieldController } from "@/features/generator/application/generation/generation-class-yieldcontroller";
+import type { FramePostProcessContext } from "./frame-post-process-context.type";
+import type { FrameRenderContext } from "./frame-render-context.type";
 
 export interface ExecuteFrameGenerationLoopParams<
   W extends {
@@ -15,7 +15,7 @@ export interface ExecuteFrameGenerationLoopParams<
   },
 >
   extends
-    Omit<FrameRenderContext, 'frame' | 'frameIdx' | 'framesToProcessLength'>,
+    Omit<FrameRenderContext, "frame" | "frameIdx" | "framesToProcessLength">,
     FramePostProcessContext<W> {
   frames: (HTMLCanvasElement | OffscreenCanvas)[];
   framesToProcess: AnimationFrame[];

@@ -3,7 +3,7 @@ export function computeMarginModules(
   generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined,
   moduleCount: number,
   renderStateModulePx: number,
-  quietZoneTop: number | undefined
+  quietZoneTop: number | undefined,
 ): number {
   if (isGeneratorSource && generatedCanvas) {
     const modulePxFromStore = Math.max(1, Math.floor(renderStateModulePx || 1));

@@ -1,4 +1,4 @@
-import type { GifPatchFrame } from './gif-codec.types';
+import type { GifPatchFrame } from "./gif-codec.types";
 
 export function getGifFrameStats(frames: GifPatchFrame[]): {
   uniqueDelays: number[];

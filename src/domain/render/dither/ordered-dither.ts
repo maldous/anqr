@@ -1,6 +1,6 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { clamp01, rgbToGray } from '../../../modules/dither-algorithms/utils';
-import { buildRowWiseDitherResult } from './build-row-wise-dither-result';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { clamp01, rgbToGray } from "../../../modules/dither-algorithms/utils";
+import { buildRowWiseDitherResult } from "./build-row-wise-dither-result";
 
 /** Apply ordered (threshold) dithering */
 export function orderedDither(
@@ -9,7 +9,7 @@ export function orderedDither(
   height: number,
   matrix: number[][],
   levels: number = 2,
-  strength: number = 100
+  strength: number = 100,
 ): DitherResult {
   const matrixSize = matrix.length;
   const maxVal = matrixSize * matrixSize;

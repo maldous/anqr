@@ -1,5 +1,5 @@
-import type { GifCompositor } from '../../../modules/animation/types';
-import { calculateCompositorFps } from './calculate-compositor-fps';
+import type { GifCompositor } from "../../../modules/animation/types";
+import { calculateCompositorFps } from "./calculate-compositor-fps";
 
 /**
  * Calculate which frame indices to keep for target FPS (compositor version)

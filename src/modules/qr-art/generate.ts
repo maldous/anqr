@@ -1,1 +1,1 @@
-export * from '../../domain/qr/qart/generate';
+export * from "../../domain/qr/qart/generate";

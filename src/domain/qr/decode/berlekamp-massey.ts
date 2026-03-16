@@ -1,4 +1,4 @@
-import { gfInv, gfMul } from './rs-rootability-gf';
+import { gfInv, gfMul } from "./rs-rootability-gf";
 
 export function berlekampMassey(syndromes: number[]): { sigma: number[]; degree: number } {
   const C: number[] = [1];

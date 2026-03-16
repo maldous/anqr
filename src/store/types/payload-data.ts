@@ -24,7 +24,7 @@ import type {
   SwissQRBillHelper,
   TWQRHelper,
   VietQRHelper,
-} from '../types';
+} from "../types";
 import type {
   CryptoHelper,
   EmailHelper,
@@ -36,7 +36,7 @@ import type {
   UrlHelper,
   VCardHelper,
   WifiHelper,
-} from '@/modules/payload-generators';
+} from "@/modules/payload-generators";
 
 export interface PayloadData {
   kind: PayloadKind;

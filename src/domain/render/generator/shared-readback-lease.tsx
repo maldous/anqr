@@ -1,4 +1,4 @@
-import type { ReadbackCtx } from './readback-ctx';
+import type { ReadbackCtx } from "./readback-ctx";
 
 export type SharedReadbackLease = {
   canvas: HTMLCanvasElement | OffscreenCanvas;

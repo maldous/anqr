@@ -1,5 +1,5 @@
-import { distributeError } from './distribute-error';
-import type { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
+import { distributeError } from "./distribute-error";
+import type { ErrorDiffusionPixelCtx } from "./error-diffusion-pixel-ctx";
 
 export function resolveDarkCandidate(
   ctx: ErrorDiffusionPixelCtx,
@@ -9,7 +9,7 @@ export function resolveDarkCandidate(
   x: number,
   y: number,
   errors: Float32Array,
-  leftToRight: boolean
+  leftToRight: boolean,
 ): boolean {
   if (ctx.thresholdOnly && !ctx.useColorDither) {
     return biasedOverlayDark > threshold;

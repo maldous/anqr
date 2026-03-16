@@ -1,9 +1,9 @@
-import { polyEvalHighToLow } from './poly-eval-high-to-low';
+import { polyEvalHighToLow } from "./poly-eval-high-to-low";
 
 export function computeSyndromes(
   received: number[],
   eccCount: number,
-  gfExp: Uint8Array
+  gfExp: Uint8Array,
 ): number[] {
   const syndromes: number[] = [];
 

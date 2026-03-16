@@ -1,5 +1,5 @@
-import { LuminanceSource } from './luminance-source';
-import { InvertedLuminanceSource } from './inverted-luminance-source';
+import { LuminanceSource } from "./luminance-source";
+import { InvertedLuminanceSource } from "./inverted-luminance-source";
 
 /**
  * RGBA luminance source from canvas/ImageData

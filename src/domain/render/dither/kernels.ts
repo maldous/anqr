@@ -2,14 +2,14 @@
  * Error Diffusion Kernels
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { DiffusionKernel } from '../../../modules/dither-algorithms/types';
-import { prepareKernel } from './prepare-kernel';
+import { createLogger } from "../../../infra/logging/logger";
+import type { DiffusionKernel } from "../../../modules/dither-algorithms/types";
+import { prepareKernel } from "./prepare-kernel";
 
-const _log = createLogger('DITHER');
+const _log = createLogger("DITHER");
 
-export type { DiffusionKernelDef } from './kernels.types';
-import type { DiffusionKernelDef } from './kernels.types';
+export type { DiffusionKernelDef } from "./kernels.types";
+import type { DiffusionKernelDef } from "./kernels.types";
 
 export const DIFFUSION_KERNELS: Record<DiffusionKernel, DiffusionKernelDef> = {
   floyd_steinberg: {

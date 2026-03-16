@@ -4,7 +4,7 @@
 export class ECB {
   constructor(
     private readonly count: number,
-    private readonly dataCodewords: number
+    private readonly dataCodewords: number,
   ) {}
 
   getCount(): number {

@@ -1,6 +1,6 @@
-import { isFinderPatternRatio } from './is-finder-pattern-ratio';
-import { scanUpward } from './scan-upward';
-import { scanDownward } from './scan-downward';
+import { isFinderPatternRatio } from "./is-finder-pattern-ratio";
+import { scanUpward } from "./scan-upward";
+import { scanDownward } from "./scan-downward";
 
 /**
  * Verify a potential finder pattern by checking vertically
@@ -12,7 +12,7 @@ export function verifyVertical(
   x: number,
   y: number,
   expectedModuleSize: number,
-  threshold: number
+  threshold: number,
 ): { valid: boolean; center: number; moduleSize: number } {
   const counts = [0, 0, 0, 0, 0];
 

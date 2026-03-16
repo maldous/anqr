@@ -1,10 +1,10 @@
-import { generateBlueNoiseTile } from '../dither';
-import { MAX_DITHER_STATIC_STATES } from './max-dither-static-states';
-import { blueNoiseTileCache } from './blue-noise-tile-cache';
+import { generateBlueNoiseTile } from "../dither";
+import { MAX_DITHER_STATIC_STATES } from "./max-dither-static-states";
+import { blueNoiseTileCache } from "./blue-noise-tile-cache";
 
 export function getBlueNoiseTileCached(
   tileSize: number,
-  seed: number
+  seed: number,
 ): ReturnType<typeof generateBlueNoiseTile> {
   const key = `${tileSize}:${seed}`;
   const existing = blueNoiseTileCache.get(key);

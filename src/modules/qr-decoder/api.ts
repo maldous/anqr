@@ -5,18 +5,18 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('DECODER');
+const _log = createLogger("DECODER");
 
 // Main decoder
-export const DECODER_API = ['decodeQR', 'decodeFromCanvas'] as const;
+export const DECODER_API = ["decodeQR", "decodeFromCanvas"] as const;
 
 // Constants
-export const CONSTANTS = ['ECC_LEVEL_MAP'] as const;
+export const CONSTANTS = ["ECC_LEVEL_MAP"] as const;
 
 // Types
-export const TYPES = ['DecodeResult', 'Point'] as const;
+export const TYPES = ["DecodeResult", "Point"] as const;
 
 // All public exports
 export const PUBLIC_API = [...DECODER_API, ...CONSTANTS] as const;

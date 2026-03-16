@@ -1,1 +1,1 @@
-export * from '../../domain/qr/decode/reed-solomon';
+export * from "../../domain/qr/decode/reed-solomon";

@@ -4,8 +4,8 @@
  * Notes: Render artwork worker bitmap result.
  */
 
-import type { QArtWorkerResult } from '@/features/generator/application/qart/qart-shared-types';
-import { imageBitmapToCanvas } from '@/features/generator/application/generation/generation-fn-bitmaptocanvas';
+import type { QArtWorkerResult } from "@/features/generator/application/qart/qart-shared-types";
+import { imageBitmapToCanvas } from "@/features/generator/application/generation/generation-fn-bitmaptocanvas";
 
 export function renderArtworkWorkerBitmap(params: {
   workerResult: QArtWorkerResult;
@@ -18,10 +18,10 @@ export function renderArtworkWorkerBitmap(params: {
     params.getScratchCanvas(
       (params.frameIdx % 2) as 0 | 1,
       params.workerResult.bitmap.width,
-      params.workerResult.bitmap.height
-    )
+      params.workerResult.bitmap.height,
+    ),
   );
-  if (typeof params.workerResult.bitmap.close === 'function') {
+  if (typeof params.workerResult.bitmap.close === "function") {
     params.workerResult.bitmap.close();
   }
   return rendered;

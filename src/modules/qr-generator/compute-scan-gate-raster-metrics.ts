@@ -1,12 +1,12 @@
-import type { QRGeneratorConfig } from './types';
-import type { ScanGateRasterMetrics } from './scan-gate-raster-metrics.type';
+import type { QRGeneratorConfig } from "./types";
+import type { ScanGateRasterMetrics } from "./scan-gate-raster-metrics.type";
 
 export function computeScanGateRasterMetrics(
   src: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): ScanGateRasterMetrics | null {
-  const ctx = src.getContext('2d') as CanvasRenderingContext2D | null;
+  const ctx = src.getContext("2d") as CanvasRenderingContext2D | null;
   if (!ctx) return null;
   const { width, height } = src;
   const imageData = ctx.getImageData(0, 0, width, height).data;

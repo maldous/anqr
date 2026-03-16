@@ -4,13 +4,13 @@
  * Notes: Process one iteration of animation frame loop.
  */
 
-import { renderFrameForBaseAnimation } from '@/features/generator/application/frames/frames-fn-renderbase';
-import { renderFrameWithCompositor } from '@/features/generator/application/frames/frames-fn-rendercompositor';
-import { renderFrameWithLegacyPath } from '@/features/generator/application/frames/frames-fn-renderlegacy';
-import type { FrameRenderContext } from './frame-render-context.type';
+import { renderFrameForBaseAnimation } from "@/features/generator/application/frames/frames-fn-renderbase";
+import { renderFrameWithCompositor } from "@/features/generator/application/frames/frames-fn-rendercompositor";
+import { renderFrameWithLegacyPath } from "@/features/generator/application/frames/frames-fn-renderlegacy";
+import type { FrameRenderContext } from "./frame-render-context.type";
 
 export async function processAnimationFrameLoopIteration(
-  params: FrameRenderContext
+  params: FrameRenderContext,
 ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
   if (params.shouldGenerateBaseAnimation) {
     return await renderFrameForBaseAnimation({

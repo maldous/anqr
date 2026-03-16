@@ -1,1 +1,1 @@
-export { normalizeToken } from './normalize-token';
+export { normalizeToken } from "./normalize-token";

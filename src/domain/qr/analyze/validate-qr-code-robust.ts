@@ -1,5 +1,5 @@
-import type { ValidationResult } from './scanner.types';
-import { validateQRCode } from './validate-qr-code';
+import type { ValidationResult } from "./scanner.types";
+import { validateQRCode } from "./validate-qr-code";
 
 /**
  * Validate QR code with multiple scan attempts
@@ -7,7 +7,7 @@ import { validateQRCode } from './validate-qr-code';
 export function validateQRCodeRobust(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   expectedContent?: string,
-  attempts: number = 3
+  attempts: number = 3,
 ): ValidationResult {
   for (let i = 0; i < attempts; i++) {
     const result = validateQRCode(canvas, expectedContent);
@@ -16,7 +16,7 @@ export function validateQRCodeRobust(
 
   return {
     valid: false,
-    error: 'Failed to validate after multiple attempts',
-    confidence: 'low',
+    error: "Failed to validate after multiple attempts",
+    confidence: "low",
   };
 }

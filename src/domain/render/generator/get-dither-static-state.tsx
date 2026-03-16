@@ -1,12 +1,12 @@
-import { createRNG, getOrderedMatrix } from '../dither';
-import { DIFFUSION_KERNELS } from '../dither/kernels';
-import type { DiffusionKernel, OrderedMatrix } from '../dither/types';
-import { MAX_DITHER_STATIC_STATES } from './max-dither-static-states';
-import { ditherStaticStateCache } from './dither-static-state-cache';
-import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';
-import { buildDitherStaticStateKey } from './build-dither-static-state-key';
-import { clamp01 } from './clamp01';
-import type { DitherStaticState } from './dither-static-state';
+import { createRNG, getOrderedMatrix } from "../dither";
+import { DIFFUSION_KERNELS } from "../dither/kernels";
+import type { DiffusionKernel, OrderedMatrix } from "../dither/types";
+import { MAX_DITHER_STATIC_STATES } from "./max-dither-static-states";
+import { ditherStaticStateCache } from "./dither-static-state-cache";
+import { getBlueNoiseTileCached } from "./get-blue-noise-tile-cached";
+import { buildDitherStaticStateKey } from "./build-dither-static-state-key";
+import { clamp01 } from "./clamp01";
+import type { DitherStaticState } from "./dither-static-state";
 
 export function getDitherStaticState(args: {
   ditherKind: string;

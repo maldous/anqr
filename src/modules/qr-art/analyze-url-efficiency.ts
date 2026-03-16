@@ -4,8 +4,8 @@ export function analyzeUrlEfficiency(url: string): {
   savings: number;
   savingsPercent: number;
 } {
-  const hashIndex = url.indexOf('#');
-  const numericFragment = hashIndex >= 0 ? url.slice(hashIndex + 1) : '';
+  const hashIndex = url.indexOf("#");
+  const numericFragment = hashIndex >= 0 ? url.slice(hashIndex + 1) : "";
   const isAllNumeric = /^\d+$/.test(numericFragment);
   const byteModeBits = url.length * 8 + 4 + 16;
 

@@ -1,11 +1,11 @@
-import { relativeLuminance } from './relative-luminance';
+import { relativeLuminance } from "./relative-luminance";
 
 /**
  * Calculate contrast ratio between two colors
  */
 export function calculateContrastRatio(
   fg: { r: number; g: number; b: number },
-  bg: { r: number; g: number; b: number }
+  bg: { r: number; g: number; b: number },
 ): number {
   const fgLum = relativeLuminance(fg);
   const bgLum = relativeLuminance(bg);

@@ -4,7 +4,7 @@
  */
 export function yieldToMainThread(timeout = 50): Promise<void> {
   return new Promise((resolve) => {
-    if (typeof requestIdleCallback === 'undefined') {
+    if (typeof requestIdleCallback === "undefined") {
       // Fallback for browsers without requestIdleCallback
       setTimeout(resolve, 0);
     } else {

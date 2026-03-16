@@ -16,7 +16,7 @@ export function enqueueNeighbors(
   col: number,
   targetValue: boolean,
   visited: Uint8Array,
-  queue: number[]
+  queue: number[],
 ): void {
   for (const [dr, dc] of EIGHT_CONNECTED_OFFSETS) {
     const nextRow = row + dr;

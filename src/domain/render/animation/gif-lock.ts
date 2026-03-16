@@ -4,12 +4,12 @@
  * when multiple encodes run concurrently.
  */
 
-import type { GifEncodeLockOptions } from './gif-encode-lock-options';
-import { gifEncodeLockState } from './gif-lock-state';
+import type { GifEncodeLockOptions } from "./gif-encode-lock-options";
+import { gifEncodeLockState } from "./gif-lock-state";
 
 export async function withGifEncodeLock<T>(
   fn: () => T | Promise<T>,
-  options: GifEncodeLockOptions = {}
+  options: GifEncodeLockOptions = {},
 ): Promise<T> {
   let release: () => void = () => {};
   const queuedAt = Date.now();

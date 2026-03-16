@@ -1,22 +1,22 @@
-import type { QRGeneratorConfig } from './types';
+import type { QRGeneratorConfig } from "./types";
 
 export function buildOverlayFamilyKey(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): string {
-  if (!overlayCanvas) return 'overlay:none';
+  if (!overlayCanvas) return "overlay:none";
   return [
     overlayCanvas.width,
     overlayCanvas.height,
-    config.overlayMode ?? 'none',
-    config.colorMode ?? 'color',
+    config.overlayMode ?? "none",
+    config.colorMode ?? "color",
     Math.round(config.overlayIntensity ?? 100),
     Math.round(config.ditherStrength ?? 50),
     Math.round(config.finderDitherStrength ?? 65),
-    config.ditherKind ?? 'none',
-    config.ditherMode ?? 'none',
+    config.ditherKind ?? "none",
+    config.ditherMode ?? "none",
     Math.round(config.renderScalePerModule ?? 18),
     config.blendPreservations === true ? 1 : 0,
-    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
-  ].join('|');
+    config.blendPreservationMode === "dither" ? "dither" : "overlay",
+  ].join("|");
 }

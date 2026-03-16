@@ -6,29 +6,29 @@ import {
   Image as ImageIcon,
   QrCode,
   Settings,
-} from 'lucide-react';
-import type React from 'react';
-import type { useTranslation } from 'react-i18next';
-import { Button } from '@/ui/primitives/button';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { AnalyzeCapacityGrid } from '@/features/analyze/components/analyze-capacity-grid';
-import { AnalyzeDataGrid } from '@/features/analyze/components/analyze-data-grid';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { ColorsWcagSection } from '@/features/analyze/components/colors-wcag-section';
-import { CONTENT_TYPE_ICONS } from '@/features/analyze/components/content-type-icons';
-import { CopyButton } from '@/features/analyze/components/copy-button';
-import { DataCapacityPanel } from '@/features/analyze/components/data-capacity-panel';
-import { DecoderMetadataPanel } from '@/features/analyze/components/decoder-metadata-panel';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { EncodingPanel } from '@/features/analyze/components/encoding-panel';
-import { FormatImagePanel } from '@/features/analyze/components/format-image-panel';
-import { QrStructurePanel } from '@/features/analyze/components/qr-structure-panel';
-import { SpatialAnalysisSection } from '@/features/analyze/components/spatial-analysis-section';
-import { StatusBadge } from '@/features/analyze/components/status-badge';
-import { SummaryBar } from '@/features/analyze/components/summary-bar';
-import { TimingsSection } from '@/features/analyze/components/timings-section';
-import { buildContentTypeDetails } from '@/features/analyze/components/content-type-renderers';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+} from "lucide-react";
+import type React from "react";
+import type { useTranslation } from "react-i18next";
+import { Button } from "@/ui/primitives/button";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { AnalyzeCapacityGrid } from "@/features/analyze/components/analyze-capacity-grid";
+import { AnalyzeDataGrid } from "@/features/analyze/components/analyze-data-grid";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { ColorsWcagSection } from "@/features/analyze/components/colors-wcag-section";
+import { CONTENT_TYPE_ICONS } from "@/features/analyze/components/content-type-icons";
+import { CopyButton } from "@/features/analyze/components/copy-button";
+import { DataCapacityPanel } from "@/features/analyze/components/data-capacity-panel";
+import { DecoderMetadataPanel } from "@/features/analyze/components/decoder-metadata-panel";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { EncodingPanel } from "@/features/analyze/components/encoding-panel";
+import { FormatImagePanel } from "@/features/analyze/components/format-image-panel";
+import { QrStructurePanel } from "@/features/analyze/components/qr-structure-panel";
+import { SpatialAnalysisSection } from "@/features/analyze/components/spatial-analysis-section";
+import { StatusBadge } from "@/features/analyze/components/status-badge";
+import { SummaryBar } from "@/features/analyze/components/summary-bar";
+import { TimingsSection } from "@/features/analyze/components/timings-section";
+import { buildContentTypeDetails } from "@/features/analyze/components/content-type-renderers";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
 
 export function AnalyzeResultDetails({
   result,
@@ -45,7 +45,7 @@ export function AnalyzeResultDetails({
   combinedTimings: Record<string, number | null | undefined>;
   imported: boolean;
   handleImportToGenerator: () => void;
-  t: ReturnType<typeof useTranslation>['t'];
+  t: ReturnType<typeof useTranslation>["t"];
 }>) {
   return (
     <>
@@ -67,8 +67,8 @@ export function AnalyzeResultDetails({
                 src={originalImageUrl}
                 alt="Original QR Code"
                 data-testid={DynamicTestId.resolve(
-                  'analyze-original-image',
-                  'analyze-original-image'
+                  "analyze-original-image",
+                  "analyze-original-image",
                 )}
                 className="max-w-full max-h-full object-contain"
               />
@@ -87,11 +87,11 @@ export function AnalyzeResultDetails({
             <canvas
               ref={reproducedCanvasRef}
               data-testid={DynamicTestId.resolve(
-                'analyze-reproduced-canvas',
-                'analyze-reproduced-canvas'
+                "analyze-reproduced-canvas",
+                "analyze-reproduced-canvas",
               )}
               className="max-w-full max-h-full object-contain"
-              style={{ imageRendering: 'pixelated' }}
+              style={{ imageRendering: "pixelated" }}
             />
           </div>
         </div>
@@ -132,7 +132,7 @@ export function AnalyzeResultDetails({
                   value={result.contentType.label}
                   icon={<Fingerprint className="w-3.5 h-3.5" />}
                 />
-                {buildContentTypeDetails(result.contentType, result.payload || '').map((detail) => (
+                {buildContentTypeDetails(result.contentType, result.payload || "").map((detail) => (
                   <DetailRow
                     key={detail.label}
                     label={detail.label}
@@ -240,12 +240,12 @@ export function AnalyzeResultDetails({
         {imported ? (
           <>
             <Check className="w-5 h-5" />
-            {t('analyze.imported', 'Imported!')}
+            {t("analyze.imported", "Imported!")}
           </>
         ) : (
           <>
             <ArrowRight className="w-5 h-5" />
-            {t('analyze.importToGenerator', 'Import to Generator')}
+            {t("analyze.importToGenerator", "Import to Generator")}
           </>
         )}
       </Button>

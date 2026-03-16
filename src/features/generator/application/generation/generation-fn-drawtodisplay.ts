@@ -6,7 +6,7 @@
 
 export function drawToDisplayCanvas(
   displayCanvas: HTMLCanvasElement,
-  source: HTMLCanvasElement | OffscreenCanvas
+  source: HTMLCanvasElement | OffscreenCanvas,
 ): void {
   const dpr = Math.max(1, globalThis.devicePixelRatio || 1);
   // Enforce a stable square preview surface regardless of upstream frame aspect.
@@ -22,9 +22,9 @@ export function drawToDisplayCanvas(
   if (displayCanvas.height !== backingHeight) displayCanvas.height = backingHeight;
   displayCanvas.style.width = `${cssWidth}px`;
   // Keep CSS scaling ratio-locked on resize (avoid independent max-width/max-height squish).
-  displayCanvas.style.height = 'auto';
+  displayCanvas.style.height = "auto";
 
-  const ctx = displayCanvas.getContext('2d');
+  const ctx = displayCanvas.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, backingWidth, backingHeight);

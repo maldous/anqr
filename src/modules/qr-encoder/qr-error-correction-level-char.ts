@@ -1,1 +1,1 @@
-export type QRErrorCorrectionLevelChar = 'L' | 'M' | 'Q' | 'H';
+export type QRErrorCorrectionLevelChar = "L" | "M" | "Q" | "H";

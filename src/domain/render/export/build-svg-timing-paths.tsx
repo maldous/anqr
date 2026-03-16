@@ -1,5 +1,5 @@
-import type { VectorModuleStyle, VectorTimingStyle } from '../../../modules/exporter/types';
-import { generateTimingModulePath } from './generate-timing-module-path';
+import type { VectorModuleStyle, VectorTimingStyle } from "../../../modules/exporter/types";
+import { generateTimingModulePath } from "./generate-timing-module-path";
 
 export function buildSvgTimingPaths(
   matrix: boolean[][],
@@ -8,9 +8,9 @@ export function buildSvgTimingPaths(
   moduleSize: number,
   timingStyle: VectorTimingStyle,
   moduleStyle: VectorModuleStyle,
-  cornerRadius: number
+  cornerRadius: number,
 ): string {
-  let pathData = '';
+  let pathData = "";
   for (let col = 8; col < moduleCount - 8; col++) {
     if (matrix[6][col]) {
       const x = marginPx + col * moduleSize;

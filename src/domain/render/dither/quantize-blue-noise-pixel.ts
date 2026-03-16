@@ -1,6 +1,6 @@
-import type { ColorMode } from '../../../modules/dither-algorithms/types';
-import { rgbToGray } from '../../../modules/dither-algorithms/utils';
-import type { BlueNoisePixelResult } from './blue-noise-pixel-result';
+import type { ColorMode } from "../../../modules/dither-algorithms/types";
+import { rgbToGray } from "../../../modules/dither-algorithms/utils";
+import type { BlueNoisePixelResult } from "./blue-noise-pixel-result";
 
 export function quantizeBlueNoisePixel(
   r: number,
@@ -9,14 +9,14 @@ export function quantizeBlueNoisePixel(
   threshold: number,
   strengthFactor: number,
   colorMode: ColorMode,
-  levels: number
+  levels: number,
 ): BlueNoisePixelResult {
-  if (colorMode === 'bw') {
+  if (colorMode === "bw") {
     const gray = rgbToGray(r, g, b);
     const adjustedThreshold = 0.5 + (threshold - 0.5) * strengthFactor;
     const isDark = gray < adjustedThreshold;
     return { isDark, color: isDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 } };
-  } else if (colorMode === 'grayscale') {
+  } else if (colorMode === "grayscale") {
     const gray = rgbToGray(r, g, b);
     const scaled = gray * (levels - 1);
     const low = Math.floor(scaled);

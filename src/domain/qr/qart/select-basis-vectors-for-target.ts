@@ -1,5 +1,5 @@
-import type { EliminationResult, BlockSelectionResult } from './elimination.types';
-import { selectVectorsForBlock } from './select-vectors-for-block';
+import type { EliminationResult, BlockSelectionResult } from "./elimination.types";
+import { selectVectorsForBlock } from "./select-vectors-for-block";
 
 /**
  * Select which basis vectors to apply to achieve the target pattern
@@ -10,7 +10,7 @@ export function selectBasisVectorsForTarget(
   targets: boolean[][],
   baseMatrix: boolean[][],
   moduleCount: number,
-  pixelDiff?: Uint8Array
+  pixelDiff?: Uint8Array,
 ): BlockSelectionResult[] {
   const results: BlockSelectionResult[] = [];
 
@@ -20,7 +20,7 @@ export function selectBasisVectorsForTarget(
       targets,
       baseMatrix,
       moduleCount,
-      pixelDiff
+      pixelDiff,
     );
     results.push({ blockIndex: blockResult.blockIndex, selectedVectorIndices });
   }

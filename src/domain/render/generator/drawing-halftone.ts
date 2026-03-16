@@ -3,12 +3,12 @@
  * Halftone pattern rendering for artistic QR effects
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { drawHalftoneDot } from './draw-halftone-dot';
-import { parseHalftoneCell } from './parse-halftone-cell';
+import { createLogger } from "../../../infra/logging/logger";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { drawHalftoneDot } from "./draw-halftone-dot";
+import { parseHalftoneCell } from "./parse-halftone-cell";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 /**
  * Draw a halftone-style module with size based on brightness
@@ -22,7 +22,7 @@ export function drawHalftoneModule(
   brightness: number,
   config: QRGeneratorConfig,
   moduleRow: number = 0,
-  moduleCol: number = 0
+  moduleCol: number = 0,
 ): void {
   // Legacy settings for backward compatibility
   const htDot = config.htDot ?? 0.8;
@@ -30,7 +30,7 @@ export function drawHalftoneModule(
 
   // New configurable settings
   const gridSize = parseHalftoneCell(config.halftoneCell ?? config.htCell);
-  const dotShape = config.halftoneDotShape || 'circle';
+  const dotShape = config.halftoneDotShape || "circle";
 
   // Apply curve to brightness for non-linear dot size mapping
   const adjustedBrightness = (1 - brightness) ** htCurve;
@@ -66,7 +66,7 @@ export function drawHalftoneModule(
           dotSize,
           dotShape,
           moduleRow * gridSize + row,
-          moduleCol * gridSize + col
+          moduleCol * gridSize + col,
         );
       }
     }

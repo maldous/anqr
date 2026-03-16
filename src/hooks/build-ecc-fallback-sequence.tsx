@@ -1,1 +1,1 @@
-export { buildEccFallbackSequence } from '@/features/generator/application/safety/safety-fn-eccfallback';
+export { buildEccFallbackSequence } from "@/features/generator/application/safety/safety-fn-eccfallback";

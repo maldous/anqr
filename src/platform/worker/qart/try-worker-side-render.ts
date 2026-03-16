@@ -1,12 +1,12 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator';
-import type { QArtWorkerResultPayload } from './worker-protocol';
-import { canRenderInWorker } from './worker-render-guards';
-import { workerRenderer } from './worker-canvas-factory';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator";
+import type { QArtWorkerResultPayload } from "./worker-protocol";
+import { canRenderInWorker } from "./worker-render-guards";
+import { workerRenderer } from "./worker-canvas-factory";
 
 export async function tryWorkerSideRender(
   response: QArtWorkerResultPayload,
   renderConfig: unknown,
-  moduleCount: number
+  moduleCount: number,
 ): Promise<void> {
   if (!canRenderInWorker() || !response.matrix) return;
   try {
@@ -18,12 +18,12 @@ export async function tryWorkerSideRender(
     const renderedCanvas = await workerRenderer.renderFromPackedMatrix(
       response.matrix,
       moduleCount,
-      config
+      config,
     );
     if (
-      typeof OffscreenCanvas !== 'undefined' &&
+      typeof OffscreenCanvas !== "undefined" &&
       renderedCanvas instanceof OffscreenCanvas &&
-      typeof renderedCanvas.transferToImageBitmap === 'function'
+      typeof renderedCanvas.transferToImageBitmap === "function"
     ) {
       response.bitmap = renderedCanvas.transferToImageBitmap();
     }

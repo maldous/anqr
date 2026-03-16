@@ -1,5 +1,5 @@
-export type { FlattenedSelection } from './flattened-selection';
-export type { BinarySearchResult } from './binary-search-result';
+export type { FlattenedSelection } from "./flattened-selection";
+export type { BinarySearchResult } from "./binary-search-result";
 
 /**
  * Rejection histogram for tracking why candidates were rejected.

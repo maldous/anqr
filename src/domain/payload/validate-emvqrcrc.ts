@@ -1,4 +1,4 @@
-import { crc16CCITT } from '../../modules/payload-generators/utils';
+import { crc16CCITT } from "../../modules/payload-generators/utils";
 
 /**
  * Validate an EMV QR code CRC

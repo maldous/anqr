@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/interpolate-frames';
+export * from "../../domain/render/animation/interpolate-frames";

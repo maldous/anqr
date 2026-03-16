@@ -1,9 +1,9 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { distributeErrorWithKernel } from './distribute-error-with-kernel';
-import { getScanParams } from './get-scan-params';
-import { initDitherResults } from './init-dither-results';
-import type { DiffusionPixelResult } from './diffusion-pixel-result';
-import type { DiffusionKernelDef } from './kernels.types';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { distributeErrorWithKernel } from "./distribute-error-with-kernel";
+import { getScanParams } from "./get-scan-params";
+import { initDitherResults } from "./init-dither-results";
+import type { DiffusionPixelResult } from "./diffusion-pixel-result";
+import type { DiffusionKernelDef } from "./kernels.types";
 
 export function runDiffusionDither(params: {
   height: number;
@@ -13,7 +13,7 @@ export function runDiffusionDither(params: {
   quantize: (
     pixel: { r: number; g: number; b: number },
     x: number,
-    y: number
+    y: number,
   ) => DiffusionPixelResult;
   serpentine: boolean;
   width: number;

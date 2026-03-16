@@ -10,14 +10,14 @@ import {
   edgeAwareDither,
   perceptualDither,
   screenedBlueNoiseDither,
-} from './advanced';
-import { errorDiffusion } from './error-diffusion';
-import { CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
-import { gaussianNoiseDither, triangularNoiseDither, whiteNoiseDither } from './noise';
-import { bayerDither, orderedDither } from './ordered';
-import { temporalBlueNoiseDither } from './temporal';
-import type { DitherOptions, DitherResult } from '../../../modules/dither-algorithms/types';
-import { imageDataToFloat } from '../../../modules/dither-algorithms/utils';
+} from "./advanced";
+import { errorDiffusion } from "./error-diffusion";
+import { CLUSTERED_DOT, VOID_CLUSTER } from "./matrices";
+import { gaussianNoiseDither, triangularNoiseDither, whiteNoiseDither } from "./noise";
+import { bayerDither, orderedDither } from "./ordered";
+import { temporalBlueNoiseDither } from "./temporal";
+import type { DitherOptions, DitherResult } from "../../../modules/dither-algorithms/types";
+import { imageDataToFloat } from "../../../modules/dither-algorithms/utils";
 
 /** Apply dithering based on kind */
 export function applyDither(imageData: ImageData, options: DitherOptions): DitherResult {
@@ -25,34 +25,34 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
   const { width, height } = imageData;
 
   switch (options.kind) {
-    case 'ordered_bayer': {
+    case "ordered_bayer": {
       const bayerSizeMap: Record<string, 2 | 4 | 8> = { bayer2: 2, bayer4: 4, bayer8: 8 };
-      const bayerSize = bayerSizeMap[options.orderedMatrix ?? ''] ?? 4;
+      const bayerSize = bayerSizeMap[options.orderedMatrix ?? ""] ?? 4;
       return bayerDither(floatData, width, height, bayerSize, options.levels, options.strength);
     }
 
-    case 'ordered_clustered':
+    case "ordered_clustered":
       return orderedDither(
         floatData,
         width,
         height,
         CLUSTERED_DOT,
         options.levels,
-        options.strength
+        options.strength,
       );
 
-    case 'ordered_void_cluster':
+    case "ordered_void_cluster":
       return orderedDither(
         floatData,
         width,
         height,
         VOID_CLUSTER,
         options.levels,
-        options.strength
+        options.strength,
       );
 
-    case 'blue_noise':
-    case 'blue_noise_threshold':
+    case "blue_noise":
+    case "blue_noise_threshold":
       return blueNoiseDither(floatData, width, height, {
         tileSize: options.blueNoiseTileSize,
         seed: options.blueNoiseSeed,
@@ -61,37 +61,37 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
         colorMode: options.colorMode,
       });
 
-    case 'white_noise':
+    case "white_noise":
       return whiteNoiseDither(
         floatData,
         width,
         height,
         options.blueNoiseSeed,
         options.strength,
-        options.colorMode
+        options.colorMode,
       );
 
-    case 'gaussian_noise':
+    case "gaussian_noise":
       return gaussianNoiseDither(
         floatData,
         width,
         height,
         options.blueNoiseSeed,
         options.strength,
-        options.colorMode
+        options.colorMode,
       );
 
-    case 'triangular_noise':
+    case "triangular_noise":
       return triangularNoiseDither(
         floatData,
         width,
         height,
         options.blueNoiseSeed,
         options.strength,
-        options.colorMode
+        options.colorMode,
       );
 
-    case 'blue_noise_error_diffusion':
+    case "blue_noise_error_diffusion":
       return blueNoiseErrorDiffusion(floatData, width, height, {
         kernelName: options.diffusionKernel,
         serpentine: options.serpentine,
@@ -102,7 +102,7 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
         seed: options.blueNoiseSeed,
       });
 
-    case 'screened_blue_noise':
+    case "screened_blue_noise":
       return screenedBlueNoiseDither(floatData, width, height, {
         tileSize: options.blueNoiseTileSize,
         seed: options.blueNoiseSeed,
@@ -111,7 +111,7 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
         colorMode: options.colorMode,
       });
 
-    case 'perceptual':
+    case "perceptual":
       return perceptualDither(floatData, width, height, {
         kernelName: options.diffusionKernel,
         serpentine: options.serpentine,
@@ -120,7 +120,7 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
         colorMode: options.colorMode,
       });
 
-    case 'edge_aware':
+    case "edge_aware":
       return edgeAwareDither(floatData, width, height, {
         kernelName: options.diffusionKernel,
         serpentine: options.serpentine,
@@ -129,10 +129,10 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
         colorMode: options.colorMode,
       });
 
-    case 'adaptive_threshold':
+    case "adaptive_threshold":
       return adaptiveThresholdDither(floatData, width, height, options.strength, options.colorMode);
 
-    case 'temporal_blue_noise':
+    case "temporal_blue_noise":
       return temporalBlueNoiseDither(
         floatData,
         width,
@@ -140,7 +140,7 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
         0,
         options.blueNoiseTileSize,
         options.blueNoiseSeed,
-        options.colorMode
+        options.colorMode,
       );
 
     default:

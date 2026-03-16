@@ -1,7 +1,7 @@
-import { Binary, Database, Shield, Type } from 'lucide-react';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { formatRsErrorCorrection } from '@/features/analyze/lib/formatters';
+import { Binary, Database, Shield, Type } from "lucide-react";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { formatRsErrorCorrection } from "@/features/analyze/lib/formatters";
 
 export function EncodingPanel({
   encodingMode,
@@ -22,7 +22,7 @@ export function EncodingPanel({
           <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
             <Shield className="w-3 h-3" />
             {errorsCorrected} error
-            {errorsCorrected === 1 ? '' : 's'} corrected
+            {errorsCorrected === 1 ? "" : "s"} corrected
           </span>
         ) : null
       }
@@ -30,7 +30,7 @@ export function EncodingPanel({
       <div className="space-y-2">
         <DetailRow
           label="Mode"
-          value={<span className="capitalize">{encodingMode || 'Unknown'}</span>}
+          value={<span className="capitalize">{encodingMode || "Unknown"}</span>}
           icon={<Type className="w-3.5 h-3.5" />}
         />
         {payloadBytes && (

@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Draw frame text and border
@@ -8,15 +8,15 @@ export function drawFrame(
   size: number,
   moduleSize: number,
   _margin: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): void {
-  if (!config.frameStyle || config.frameStyle === 'none') return;
+  if (!config.frameStyle || config.frameStyle === "none") return;
 
-  const fgColor = config.fgColor || '#000000';
+  const fgColor = config.fgColor || "#000000";
 
   // Draw a visible border so the frame is distinguishable even without text.
   // This runs after quiet zone enforcement, so the border won't be erased.
-  const defaultRadius = config.frameStyle === 'sticker' ? 12 : config.frameStyle === 'tag' ? 4 : 0;
+  const defaultRadius = config.frameStyle === "sticker" ? 12 : config.frameStyle === "tag" ? 4 : 0;
   const borderRadius = config.frameBorderRadius ?? defaultRadius;
   const lineWidth = Math.max(1, Math.round(size / 200));
   const inset = lineWidth / 2;
@@ -52,13 +52,13 @@ export function drawFrame(
   const maxTextWidth = Math.max(40, size - moduleSize * 8);
 
   ctx.fillStyle = textColor;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
   // Use a clean sans-serif stack and size to fit the available frame width.
   let fontSize = Math.max(14, Math.round(frameHeight * 0.72));
   const minFontSize = Math.max(11, Math.round(frameHeight * 0.5));
-  const canMeasureText = typeof ctx.measureText === 'function';
+  const canMeasureText = typeof ctx.measureText === "function";
   while (fontSize > minFontSize) {
     ctx.font = `600 ${fontSize}px "Helvetica Neue", "Segoe UI", Arial, sans-serif`;
     if (!canMeasureText || ctx.measureText(frameText).width <= maxTextWidth) break;

@@ -1,7 +1,7 @@
-import { qrDecoderLog } from './qr-decoder-log';
-import { gfMul } from './gf-mul';
-import { gfInv } from './gf-inv';
-import { polyEval } from './poly-eval';
+import { qrDecoderLog } from "./qr-decoder-log";
+import { gfMul } from "./gf-mul";
+import { gfInv } from "./gf-inv";
+import { polyEval } from "./poly-eval";
 
 // ============================================
 // Forney Algorithm
@@ -27,10 +27,10 @@ export function findErrorMagnitudes(omega: number[], errorLocators: number[]): n
   const numErrors = errorLocators.length;
   const result: number[] = Array.from({ length: numErrors });
 
-  qrDecoderLog.trace('rs-decoder: Forney calculating magnitudes (direct product)', {
+  qrDecoderLog.trace("rs-decoder: Forney calculating magnitudes (direct product)", {
     numErrors,
-    errorLocators: errorLocators.map((e) => e.toString(16).padStart(2, '0')).join(' '),
-    omegaCoeffs: omega.map((o) => o.toString(16).padStart(2, '0')).join(' '),
+    errorLocators: errorLocators.map((e) => e.toString(16).padStart(2, "0")).join(" "),
+    omegaCoeffs: omega.map((o) => o.toString(16).padStart(2, "0")).join(" "),
   });
 
   for (let i = 0; i < numErrors; i++) {
@@ -58,11 +58,11 @@ export function findErrorMagnitudes(omega: number[], errorLocators: number[]): n
     // (Only multiply by xiInverse when generatorBase != 0)
 
     qrDecoderLog.trace(`rs-decoder: Forney magnitude for error ${i}`, {
-      errorLocator: errorLocators[i].toString(16).padStart(2, '0'),
-      xiInverse: xiInverse.toString(16).padStart(2, '0'),
-      omegaVal: omegaVal.toString(16).padStart(2, '0'),
-      denominator: denominator.toString(16).padStart(2, '0'),
-      magnitude: result[i].toString(16).padStart(2, '0'),
+      errorLocator: errorLocators[i].toString(16).padStart(2, "0"),
+      xiInverse: xiInverse.toString(16).padStart(2, "0"),
+      omegaVal: omegaVal.toString(16).padStart(2, "0"),
+      denominator: denominator.toString(16).padStart(2, "0"),
+      magnitude: result[i].toString(16).padStart(2, "0"),
     });
   }
 

@@ -1,10 +1,10 @@
-import { clampN } from './qr-generator-helpers';
-import type { ScanGateCtx } from './scan-gate-ctx.interface';
+import { clampN } from "./qr-generator-helpers";
+import type { ScanGateCtx } from "./scan-gate-ctx.interface";
 
 export function resolveScanGateIntensity(
   ctx: ScanGateCtx,
   rawDrop: number,
-  options?: { minIntensity?: number; maxDrop?: number }
+  options?: { minIntensity?: number; maxDrop?: number },
 ): number {
   const { overlayComplexity, requestedOverlayIntensity, isPreviewScanGate } = ctx;
   const complexityScale = overlayComplexity >= 0.65 ? 0.75 : 1;

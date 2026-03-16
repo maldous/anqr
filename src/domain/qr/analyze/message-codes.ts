@@ -1,5 +1,5 @@
-import type { AnalyzeMessageCode } from './analyze-message-code';
-export type { AnalyzeMessageCode } from './analyze-message-code';
+import type { AnalyzeMessageCode } from "./analyze-message-code";
+export type { AnalyzeMessageCode } from "./analyze-message-code";
 
 export interface AnalyzeMessage {
   code: AnalyzeMessageCode;

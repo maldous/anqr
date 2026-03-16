@@ -1,1 +1,1 @@
-export * from '../../domain/render/color/contrast';
+export * from "../../domain/render/color/contrast";

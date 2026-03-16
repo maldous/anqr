@@ -1,10 +1,10 @@
-import { applyFilters } from './overlay-filters';
-import type { OverlayOptions, ProcessedOverlay } from './processor.types';
-import { cropOverlayImage } from './crop-overlay-image';
-import { rotateOverlayCanvas } from './rotate-overlay-canvas';
-import { flipOverlayCanvas } from './flip-overlay-canvas';
-import { fitOverlayImage } from './fit-overlay-image';
-import { applyOverlayDitherForQR } from './apply-overlay-dither-for-qr';
+import { applyFilters } from "./overlay-filters";
+import type { OverlayOptions, ProcessedOverlay } from "./processor.types";
+import { cropOverlayImage } from "./crop-overlay-image";
+import { rotateOverlayCanvas } from "./rotate-overlay-canvas";
+import { flipOverlayCanvas } from "./flip-overlay-canvas";
+import { fitOverlayImage } from "./fit-overlay-image";
+import { applyOverlayDitherForQR } from "./apply-overlay-dither-for-qr";
 
 // ============================================
 // MAIN PROCESSOR FUNCTION
@@ -14,7 +14,7 @@ export function processOverlay(
   source: HTMLCanvasElement,
   targetWidth: number,
   targetHeight: number,
-  options: OverlayOptions = {}
+  options: OverlayOptions = {},
 ): ProcessedOverlay {
   let canvas = source;
   const originalWidth = source.width;
@@ -36,11 +36,11 @@ export function processOverlay(
   }
 
   // Fit to target size
-  canvas = fitOverlayImage(canvas, targetWidth, targetHeight, options.fitMode ?? 'cover');
+  canvas = fitOverlayImage(canvas, targetWidth, targetHeight, options.fitMode ?? "cover");
 
   // Apply filters
   if (options.filters) {
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (ctx) {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const filtered = applyFilters(imageData, options.filters);

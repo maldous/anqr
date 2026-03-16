@@ -1,4 +1,4 @@
-import type { WatermarkPosition } from './watermark.types';
+import type { WatermarkPosition } from "./watermark.types";
 
 // ============================================
 // POSITION CALCULATION
@@ -10,39 +10,39 @@ export function calculateWatermarkPositions(
   watermarkWidth: number,
   watermarkHeight: number,
   position: WatermarkPosition,
-  padding: number = 10
+  padding: number = 10,
 ): { x: number; y: number } {
   let x = padding;
   let y = padding;
 
   switch (position) {
-    case 'top-left':
+    case "top-left":
       break;
-    case 'top-center':
+    case "top-center":
       x = (canvasWidth - watermarkWidth) / 2;
       break;
-    case 'top-right':
+    case "top-right":
       x = canvasWidth - watermarkWidth - padding;
       break;
-    case 'center-left':
+    case "center-left":
       y = (canvasHeight - watermarkHeight) / 2;
       break;
-    case 'center':
+    case "center":
       x = (canvasWidth - watermarkWidth) / 2;
       y = (canvasHeight - watermarkHeight) / 2;
       break;
-    case 'center-right':
+    case "center-right":
       x = canvasWidth - watermarkWidth - padding;
       y = (canvasHeight - watermarkHeight) / 2;
       break;
-    case 'bottom-left':
+    case "bottom-left":
       y = canvasHeight - watermarkHeight - padding;
       break;
-    case 'bottom-center':
+    case "bottom-center":
       x = (canvasWidth - watermarkWidth) / 2;
       y = canvasHeight - watermarkHeight - padding;
       break;
-    case 'bottom-right':
+    case "bottom-right":
       x = canvasWidth - watermarkWidth - padding;
       y = canvasHeight - watermarkHeight - padding;
       break;

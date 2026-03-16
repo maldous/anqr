@@ -1,4 +1,4 @@
-import type { LogContext } from './log-context';
+import type { LogContext } from "./log-context";
 
 export interface Logger {
   trace(message: string, context?: LogContext): void;

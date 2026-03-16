@@ -1,29 +1,29 @@
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/ui/primitives/select';
-import type { EditorProps } from '../payload-editor-props';
+} from "@/ui/primitives/select";
+import type { EditorProps } from "../payload-editor-props";
 
 export function RemovedOtpauthEditor({
   payload,
   setPayloadOtpAuth,
   t,
-}: Readonly<Pick<EditorProps, 'payload' | 'setPayloadOtpAuth' | 't'>>) {
+}: Readonly<Pick<EditorProps, "payload" | "setPayloadOtpAuth" | "t">>) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.otpType')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.otpType")}</HighlightedLabel>
         </Label>
         <Select
-          value={payload.otpauth.type || 'totp'}
-          onValueChange={(v) => setPayloadOtpAuth({ type: v as 'totp' | 'hotp' })}
+          value={payload.otpauth.type || "totp"}
+          onValueChange={(v) => setPayloadOtpAuth({ type: v as "totp" | "hotp" })}
         >
           <SelectTrigger>
             <SelectValue />
@@ -36,40 +36,40 @@ export function RemovedOtpauthEditor({
       </div>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.issuer')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.issuer")}</HighlightedLabel>
         </Label>
         <Input
-          value={payload.otpauth.issuer || ''}
+          value={payload.otpauth.issuer || ""}
           onChange={(e) => setPayloadOtpAuth({ issuer: e.target.value })}
           placeholder="MyApp"
         />
       </div>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.accountName')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.accountName")}</HighlightedLabel>
         </Label>
         <Input
-          value={payload.otpauth.account || ''}
+          value={payload.otpauth.account || ""}
           onChange={(e) => setPayloadOtpAuth({ account: e.target.value })}
           placeholder="user@anqr.link"
         />
       </div>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.secretBase32')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.secretBase32")}</HighlightedLabel>
         </Label>
         <Input
-          value={payload.otpauth.secret || ''}
+          value={payload.otpauth.secret || ""}
           onChange={(e) => setPayloadOtpAuth({ secret: e.target.value })}
           placeholder="JBSWY3DPEHPK3PXP"
         />
       </div>
       <div className="space-y-2">
         <Label>
-          <HighlightedLabel>{t('payload.algorithm')}</HighlightedLabel>
+          <HighlightedLabel>{t("payload.algorithm")}</HighlightedLabel>
         </Label>
         <Select
-          value={payload.otpauth.algorithm || 'SHA1'}
+          value={payload.otpauth.algorithm || "SHA1"}
           onValueChange={(v) => setPayloadOtpAuth({ algorithm: v })}
         >
           <SelectTrigger>

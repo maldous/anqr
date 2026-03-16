@@ -1,8 +1,8 @@
-import { grayAt } from './gray-at';
-import { isFinderPatternRatio } from './is-finder-pattern-ratio';
-import { handleDarkPixel } from './handle-dark-pixel';
-import { handleLightPixel } from './handle-light-pixel';
-import type { ScanResult } from './scan-result';
+import { grayAt } from "./gray-at";
+import { isFinderPatternRatio } from "./is-finder-pattern-ratio";
+import { handleDarkPixel } from "./handle-dark-pixel";
+import { handleLightPixel } from "./handle-light-pixel";
+import type { ScanResult } from "./scan-result";
 
 /**
  * Scan a row for potential finder patterns
@@ -11,7 +11,7 @@ export function scanRow(
   pixels: Uint8ClampedArray,
   width: number,
   y: number,
-  threshold: number
+  threshold: number,
 ): ScanResult[] {
   const results: ScanResult[] = [];
   const counts = [0, 0, 0, 0, 0];

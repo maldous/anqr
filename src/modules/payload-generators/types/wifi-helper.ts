@@ -1,4 +1,4 @@
-import type { WifiAuth } from './wifi-auth';
+import type { WifiAuth } from "./wifi-auth";
 
 export interface WifiHelper {
   ssid: string;

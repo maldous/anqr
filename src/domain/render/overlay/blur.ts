@@ -1,4 +1,4 @@
-import { convolve } from './convolve';
+import { convolve } from "./convolve";
 
 export function blur(imageData: ImageData, radius: number = 1): ImageData {
   const size = 2 * radius + 1;

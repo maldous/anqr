@@ -1,5 +1,5 @@
-import { extractObjectProperties } from './extract-object-properties';
-import { safeJsonReplacer } from './safe-json-replacer';
+import { extractObjectProperties } from "./extract-object-properties";
+import { safeJsonReplacer } from "./safe-json-replacer";
 
 export function safeSerializeContext(context: unknown): unknown {
   if (context === null || context === undefined) {
@@ -15,9 +15,9 @@ export function safeSerializeContext(context: unknown): unknown {
     return JSON.parse(jsonStr);
   } catch {}
 
-  if (typeof context === 'object') {
+  if (typeof context === "object") {
     return extractObjectProperties(context as Record<string, unknown>);
   }
 
-  return '[Unserializable]';
+  return "[Unserializable]";
 }

@@ -1,6 +1,6 @@
-import { gfAdd } from './gf-add';
-import { gfMul } from './gf-mul';
-import { polyIsZero } from './poly-is-zero';
+import { gfAdd } from "./gf-add";
+import { gfMul } from "./gf-mul";
+import { polyIsZero } from "./poly-is-zero";
 
 /**
  * Multiply two polynomials (high-to-low convention)

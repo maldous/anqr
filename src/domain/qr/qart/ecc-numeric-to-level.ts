@@ -1,4 +1,4 @@
-import type { ECCLevel } from './bit-mapping';
+import type { ECCLevel } from "./bit-mapping";
 
 /**
  * Map ECC numeric value (from format info) to ECCLevel character
@@ -9,14 +9,14 @@ import type { ECCLevel } from './bit-mapping';
 export function eccNumericToLevel(eccNumeric: number): ECCLevel {
   switch (eccNumeric) {
     case 0:
-      return 'M';
+      return "M";
     case 1:
-      return 'L';
+      return "L";
     case 2:
-      return 'H';
+      return "H";
     case 3:
-      return 'Q';
+      return "Q";
     default:
-      return 'M';
+      return "M";
   }
 }

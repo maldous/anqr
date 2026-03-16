@@ -1,4 +1,4 @@
-import type { DistributeErrorOptions } from './distribute-error-options';
+import type { DistributeErrorOptions } from "./distribute-error-options";
 
 /** Distribute error to neighboring pixels */
 export function distributeErrorWithKernel(opts: DistributeErrorOptions): void {

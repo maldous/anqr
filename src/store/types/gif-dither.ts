@@ -1,1 +1,1 @@
-export type GifDither = 'off' | 'floyd' | 'ordered';
+export type GifDither = "off" | "floyd" | "ordered";

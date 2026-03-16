@@ -1,1 +1,1 @@
-export { handleGeneratePreChecks } from '@/features/generator/application/generation/generation-fn-prechecks';
+export { handleGeneratePreChecks } from "@/features/generator/application/generation/generation-fn-prechecks";

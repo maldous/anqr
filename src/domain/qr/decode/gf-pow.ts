@@ -1,5 +1,5 @@
-import { GF_EXP } from './gf-exp';
-import { GF_LOG } from './gf-log';
+import { GF_EXP } from "./gf-exp";
+import { GF_LOG } from "./gf-log";
 
 /**
  * GF(256) power: a^n

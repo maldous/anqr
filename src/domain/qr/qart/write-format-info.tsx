@@ -1,12 +1,12 @@
-import { getBCHTypeInfo } from '../encode/utils';
-import type { ECCLevel } from './bit-mapping';
-import { eccToNumericForEncoder } from './ecc-to-numeric-for-encoder';
+import { getBCHTypeInfo } from "../encode/utils";
+import type { ECCLevel } from "./bit-mapping";
+import { eccToNumericForEncoder } from "./ecc-to-numeric-for-encoder";
 
 export function writeFormatInfo(
   modules: (boolean | null)[][],
   ecc: ECCLevel,
   maskPattern: number,
-  moduleCount: number
+  moduleCount: number,
 ): void {
   const eccLevel = eccToNumericForEncoder(ecc);
   const formatData = (eccLevel << 3) | maskPattern;

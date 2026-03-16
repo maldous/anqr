@@ -1,1 +1,1 @@
-export { adjustOverlayIntensity } from '@/features/generator/application/safety/safety-fn-overlayintensity';
+export { adjustOverlayIntensity } from "@/features/generator/application/safety/safety-fn-overlayintensity";

@@ -1,5 +1,5 @@
-import { drawModule } from './drawing-primitives';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { drawModule } from "./drawing-primitives";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Draw a timing pattern module
@@ -10,13 +10,13 @@ export function drawTimingModule(
   y: number,
   size: number,
   style: string,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): void {
-  if (style === 'match_module') {
-    drawModule(ctx, x, y, size, config.moduleStyle || 'square', {
+  if (style === "match_module") {
+    drawModule(ctx, x, y, size, config.moduleStyle || "square", {
       cornerRadius: config.cornerRadius || 0,
     });
-  } else if (style === 'dashed') {
+  } else if (style === "dashed") {
     // Draw dashed timing module
     const dashSize = size * 0.7;
     const offset = (size - dashSize) / 2;

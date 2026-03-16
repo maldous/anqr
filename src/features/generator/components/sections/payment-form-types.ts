@@ -20,4 +20,4 @@ export type {
   TWQRForm,
   UPIForm,
   VietQRForm,
-} from './payload-section-types';
+} from "./payload-section-types";

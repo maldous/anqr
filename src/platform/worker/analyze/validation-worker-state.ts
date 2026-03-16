@@ -1,4 +1,4 @@
-import type { ValidationResult } from '../../../domain/qr/analyze/scanner';
+import type { ValidationResult } from "../../../domain/qr/analyze/scanner";
 
 export const validationWorkerState = {
   worker: null as Worker | null,

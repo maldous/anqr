@@ -1,24 +1,24 @@
-import type { ExportConfig, ExportResult } from '../../../modules/exporter/types';
-import { escapeXml } from '../../../modules/exporter/utils';
-import { canvasToPngDataUrl } from './canvas-to-png-data-url';
-import { resolveExportConfig } from './resolve-export-config';
+import type { ExportConfig, ExportResult } from "../../../modules/exporter/types";
+import { escapeXml } from "../../../modules/exporter/utils";
+import { canvasToPngDataUrl } from "./canvas-to-png-data-url";
+import { resolveExportConfig } from "./resolve-export-config";
 
 /**
  * Export canvas as SVG (embedded raster)
  */
 export async function exportSvg(
   canvas: HTMLCanvasElement,
-  config: Partial<ExportConfig> = {}
+  config: Partial<ExportConfig> = {},
 ): Promise<ExportResult> {
   const opts = resolveExportConfig(config, {
     width: canvas.width,
     height: canvas.height,
-    format: 'svg',
+    format: "svg",
   });
 
   const dataUrl = await canvasToPngDataUrl(canvas);
 
-  let metadata = '';
+  let metadata = "";
   if (opts.includeMetadata && opts.metadata) {
     const m = opts.metadata;
     if (m.title) metadata += `  <title>${escapeXml(m.title)}</title>\n`;
@@ -32,7 +32,7 @@ export async function exportSvg(
 ${metadata}  <image width="${opts.outputWidth}" height="${opts.outputHeight}" xlink:href="${dataUrl}"/>
 </svg>`;
 
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const blob = new Blob([svg], { type: "image/svg+xml" });
   const filename = `${opts.filename}.svg`;
   const url = URL.createObjectURL(blob);
 
@@ -40,7 +40,7 @@ ${metadata}  <image width="${opts.outputWidth}" height="${opts.outputHeight}" xl
     blob,
     url,
     filename,
-    format: 'svg',
+    format: "svg",
     width: opts.outputWidth,
     height: opts.outputHeight,
   };

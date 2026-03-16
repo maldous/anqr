@@ -1,11 +1,11 @@
-import type { ECCLevel } from './bit-mapping';
-import { buildFullBasis } from './rs-basis';
-import { log } from './log';
-import { validateBasisVectorSafety } from './validate-basis-vector-safety';
-import { runDeterministicMutationTest } from './run-deterministic-mutation-test';
-import { buildQArtFailResult } from './build-q-art-fail-result';
-import type { BasisValidationSuccess } from './basis-validation-success';
-import type { EncoderDerivedLayout } from './generate.types';
+import type { ECCLevel } from "./bit-mapping";
+import { buildFullBasis } from "./rs-basis";
+import { log } from "./log";
+import { validateBasisVectorSafety } from "./validate-basis-vector-safety";
+import { runDeterministicMutationTest } from "./run-deterministic-mutation-test";
+import { buildQArtFailResult } from "./build-q-art-fail-result";
+import type { BasisValidationSuccess } from "./basis-validation-success";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 export function buildAndValidateBasis(
   encoderLayout: EncoderDerivedLayout,
@@ -21,7 +21,7 @@ export function buildAndValidateBasis(
   encodedData: string,
   data: string,
   actualSuffix: string,
-  originalDataLength: number
+  originalDataLength: number,
 ): BasisValidationSuccess {
   // Step 2: Build RS basis with TWO-INTERVAL RANGE protection (HYBRID STRATEGY)
   // =========================================================================
@@ -34,19 +34,19 @@ export function buildAndValidateBasis(
   // This prevents the decoder from seeing fake mode indicators when terminator bits flip.
   const allowedBitRanges = encoderLayout.allowedBitRanges;
 
-  log.info('TWO-INTERVAL SAFE RANGES for RS basis', {
+  log.info("TWO-INTERVAL SAFE RANGES for RS basis", {
     numIntervals: allowedBitRanges.length,
     interval1_suffix: allowedBitRanges[0]
       ? `bits ${allowedBitRanges[0].startBit} - ${allowedBitRanges[0].endBit}`
-      : 'NONE',
+      : "NONE",
     interval2_padding: allowedBitRanges[1]
       ? `bits ${allowedBitRanges[1].startBit} - ${allowedBitRanges[1].endBit}`
-      : 'NONE (may be included in interval 1)',
+      : "NONE (may be included in interval 1)",
     gap_protected: {
       startBit: encoderLayout.gapStartBit,
       endBit: encoderLayout.gapEndBit,
       bitCount: encoderLayout.gapBitCount,
-      description: 'TERMINATOR + PAD-TO-BYTE - NEVER MODIFY!',
+      description: "TERMINATOR + PAD-TO-BYTE - NEVER MODIFY!",
     },
   });
 
@@ -61,18 +61,18 @@ export function buildAndValidateBasis(
     blockDataCounts,
     protectedBitEnd,
     gapStartBit,
-    gapEndBit
+    gapEndBit,
   );
 
   if (vectorsInProtectedRegion.length > 0) {
     const originalDataViolations = vectorsInProtectedRegion.filter(
-      (v) => v.violationType === 'ORIGINAL_DATA'
+      (v) => v.violationType === "ORIGINAL_DATA",
     );
     const terminatorViolations = vectorsInProtectedRegion.filter(
-      (v) => v.violationType === 'TERMINATOR_GAP'
+      (v) => v.violationType === "TERMINATOR_GAP",
     );
 
-    log.warn('CRITICAL: Basis vectors exist in PROTECTED region or TERMINATOR GAP!', {
+    log.warn("CRITICAL: Basis vectors exist in PROTECTED region or TERMINATOR GAP!", {
       protectedBitEnd,
       gapRange: `${gapStartBit} - ${gapEndBit}`,
       originalDataViolations: originalDataViolations.length,
@@ -81,8 +81,8 @@ export function buildAndValidateBasis(
       sampleViolations: vectorsInProtectedRegion.slice(0, 10),
       note:
         originalDataViolations.length > 0
-          ? 'These vectors would corrupt original data!'
-          : 'These vectors would corrupt terminator bits (causing fake mode indicators)!',
+          ? "These vectors would corrupt original data!"
+          : "These vectors would corrupt terminator bits (causing fake mode indicators)!",
     });
 
     // FAIL FAST - this is a fundamental bug in allowed range calculation
@@ -94,7 +94,7 @@ export function buildAndValidateBasis(
       actualMask,
       encodedData,
       data,
-      actualSuffix
+      actualSuffix,
     );
     return {
       earlyReturn: _failResult,
@@ -106,7 +106,7 @@ export function buildAndValidateBasis(
   }
 
   log.info(
-    'GUARD PASSED: All basis vectors are in allowed regions (suffix bytes OR padding bytes)',
+    "GUARD PASSED: All basis vectors are in allowed regions (suffix bytes OR padding bytes)",
     {
       protectedBitEnd,
       gapRange: `${gapStartBit} - ${gapEndBit} (${encoderLayout.gapBitCount} bits protected)`,
@@ -114,8 +114,8 @@ export function buildAndValidateBasis(
       paddingSafeRange: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
       vectorCount: basis.vectors.length,
       numIntervals: encoderLayout.allowedBitRanges.length,
-      stage: 'POST_BASIS_BUILD',
-    }
+      stage: "POST_BASIS_BUILD",
+    },
   );
 
   // Calculate actual controllable bits
@@ -125,7 +125,7 @@ export function buildAndValidateBasis(
     totalDataBits > 0 ? (actualControllableBits / totalDataBits) * 100 : 0;
   const expectedControllableBits = encoderLayout.suffixBits + encoderLayout.paddingBits;
 
-  log.info('QR-Art capacity analysis (TWO-INTERVAL HYBRID STRATEGY)', {
+  log.info("QR-Art capacity analysis (TWO-INTERVAL HYBRID STRATEGY)", {
     totalDataBits,
     protectedBits: encoderLayout.protectedBitEnd,
     protectedContent: `mode + charCount + original data (${encoderLayout.originalDataLength} chars)`,
@@ -141,13 +141,13 @@ export function buildAndValidateBasis(
       numIntervals: encoderLayout.allowedBitRanges.length,
     },
     vectorsCreated: basis.vectors.length,
-    source: 'ENCODER_DERIVED_TWO_INTERVAL',
+    source: "ENCODER_DERIVED_TWO_INTERVAL",
   });
 
   // Warn if control is very limited
   if (basis.vectors.length === 0) {
-    log.warn('ZERO controllable vectors! QR-Art cannot modify any pixels.', {
-      suggestion: 'Use a larger QR version or add a longer suffix.',
+    log.warn("ZERO controllable vectors! QR-Art cannot modify any pixels.", {
+      suggestion: "Use a larger QR version or add a longer suffix.",
       suffixLength: actualSuffix.length,
       paddingBytes: encoderLayout.paddingByteCount,
       originalDataLength,
@@ -174,18 +174,18 @@ export function buildAndValidateBasis(
       allowedBitRanges,
     };
   } else if (actualControlPercentage < 20) {
-    log.warn('Limited QR-Art control. Image quality may be reduced.', {
+    log.warn("Limited QR-Art control. Image quality may be reduced.", {
       controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
       controllableVectors: basis.vectors.length,
       suffixBits: encoderLayout.suffixBits,
       paddingBits: encoderLayout.paddingBits,
-      suggestion: 'Use a larger QR version or enable autoSuffix for better control.',
+      suggestion: "Use a larger QR version or enable autoSuffix for better control.",
     });
   }
 
   // =========================================================================
   if (basis.vectors.length > 0) {
-    log.info('Running deterministic HYBRID mutation test...');
+    log.info("Running deterministic HYBRID mutation test...");
     const mutationTestResult = runDeterministicMutationTest(
       basis.vectors[0],
       blockDataArrays,
@@ -198,19 +198,19 @@ export function buildAndValidateBasis(
       actualMask,
       data,
       originalDataLength,
-      actualSuffix
+      actualSuffix,
     );
 
     if (!mutationTestResult.passed) {
       const _failResult = buildQArtFailResult(
-        mutationTestResult.error ?? 'HYBRID mutation test failed',
+        mutationTestResult.error ?? "HYBRID mutation test failed",
         baseMatrix,
         moduleCount,
         actualVersion,
         actualMask,
         encodedData,
         data,
-        actualSuffix
+        actualSuffix,
       );
       return {
         earlyReturn: _failResult,

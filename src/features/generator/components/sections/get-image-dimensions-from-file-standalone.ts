@@ -1,11 +1,11 @@
 export async function getImageDimensionsFromFileStandalone(
-  file: File
+  file: File,
 ): Promise<{ width: number; height: number } | null> {
-  if (typeof createImageBitmap === 'function') {
+  if (typeof createImageBitmap === "function") {
     try {
       const bitmap = await createImageBitmap(file);
       const dims = { width: bitmap.width, height: bitmap.height };
-      if (typeof bitmap.close === 'function') bitmap.close();
+      if (typeof bitmap.close === "function") bitmap.close();
       return dims;
     } catch {
       // fall through

@@ -1,4 +1,4 @@
-import type { QRCodeInstance, QRGeneratorConfig } from '../../../../modules/qr-generator/types';
+import type { QRCodeInstance, QRGeneratorConfig } from "../../../../modules/qr-generator/types";
 
 export interface StructuralPreservationCtx {
   ctx: CanvasRenderingContext2D;

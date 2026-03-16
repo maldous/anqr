@@ -1,14 +1,14 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { log } from './log';
-import { computeOverlayToneStats } from './compute-overlay-tone-stats';
-import { applyAdaptiveColorNormalization } from './apply-adaptive-color-normalization';
-import { shouldAutoNormalizeColor } from './should-auto-normalize-color';
-import { computeNormalizationStrength } from './compute-normalization-strength';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { log } from "./log";
+import { computeOverlayToneStats } from "./compute-overlay-tone-stats";
+import { applyAdaptiveColorNormalization } from "./apply-adaptive-color-normalization";
+import { shouldAutoNormalizeColor } from "./should-auto-normalize-color";
+import { computeNormalizationStrength } from "./compute-normalization-strength";
 
 export function applyAdaptiveNormalizationIfNeeded(
   imageData: ImageData,
   config: QRGeneratorConfig,
-  debug: boolean
+  debug: boolean,
 ): ImageData {
   if (!shouldAutoNormalizeColor(config)) return imageData;
 
@@ -18,7 +18,7 @@ export function applyAdaptiveNormalizationIfNeeded(
 
   if (normalizationStrength > 0.08) {
     if (debug) {
-      log.debug('preprocessImageData - adaptive color normalization', {
+      log.debug("preprocessImageData - adaptive color normalization", {
         strength: normalizationStrength.toFixed(3),
         lumaStd: stats.lumaStd.toFixed(3),
         saturationMean: stats.saturationMean.toFixed(3),
@@ -31,7 +31,7 @@ export function applyAdaptiveNormalizationIfNeeded(
   }
 
   if (debug) {
-    log.debug('preprocessImageData - adaptive normalization skipped (low risk)', {
+    log.debug("preprocessImageData - adaptive normalization skipped (low risk)", {
       lumaStd: stats.lumaStd.toFixed(3),
       saturationMean: stats.saturationMean.toFixed(3),
       clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),

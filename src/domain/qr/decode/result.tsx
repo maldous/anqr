@@ -1,7 +1,7 @@
-import { arraycopy, currentTimeMillis } from './util';
-import { ResultMetadataType } from './result-metadata-type';
-import { ResultPoint } from './result-point';
-import { BarcodeFormat } from './barcode-format';
+import { arraycopy, currentTimeMillis } from "./util";
+import { ResultMetadataType } from "./result-metadata-type";
+import { ResultPoint } from "./result-point";
+import { BarcodeFormat } from "./barcode-format";
 
 /**
  * Encapsulates the result of decoding a barcode
@@ -15,7 +15,7 @@ export class Result {
     private readonly numBits: number = rawBytes == null ? 0 : 8 * rawBytes.length,
     private resultPoints: ResultPoint[],
     private readonly format: BarcodeFormat,
-    private readonly timestamp: number = currentTimeMillis()
+    private readonly timestamp: number = currentTimeMillis(),
   ) {
     if (numBits === undefined || numBits === null) {
       this.numBits = rawBytes === null || rawBytes === undefined ? 0 : 8 * rawBytes.length;

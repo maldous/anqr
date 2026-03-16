@@ -9,7 +9,7 @@ export function checkBlockByteViolations(
     original: number;
     modified: number;
     localBitStart: number;
-  }>
+  }>,
 ): void {
   for (let byteIdx = 0; byteIdx < originalData.length; byteIdx++) {
     const originalByte = originalData[byteIdx];

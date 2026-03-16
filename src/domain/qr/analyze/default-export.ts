@@ -1,1 +1,1 @@
-export { SafetyAnalyzer as default } from './safety-analyzer';
+export { SafetyAnalyzer as default } from "./safety-analyzer";

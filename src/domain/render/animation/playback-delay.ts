@@ -1,4 +1,4 @@
-import type { AnimationFrame } from '../../../modules/animation/types';
+import type { AnimationFrame } from "../../../modules/animation/types";
 
 /**
  * Resolve frame delay for preview/export playback.
@@ -11,7 +11,7 @@ export function resolveAnimationFrameDelay(
     useSourceFrameDelays: boolean;
     gifMaxFps: number;
     fallbackDelayMs: number;
-  }
+  },
 ): number {
   const { useSourceFrameDelays, gifMaxFps, fallbackDelayMs } = options;
 

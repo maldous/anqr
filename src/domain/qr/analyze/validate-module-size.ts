@@ -3,7 +3,7 @@
  */
 export function validateModuleSize(
   moduleSize: number,
-  minSize = 4
+  minSize = 4,
 ): { valid: boolean; warning?: string } {
   if (moduleSize < minSize) {
     return {

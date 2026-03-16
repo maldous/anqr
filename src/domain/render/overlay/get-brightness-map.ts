@@ -1,4 +1,4 @@
-import { rgbToGray } from '../color/color';
+import { rgbToGray } from "../color/color";
 
 // ============================================
 // DATA EXTRACTION

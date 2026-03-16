@@ -3,9 +3,9 @@
  * Provides QR code analysis, scanning, validation, and safety checking
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('ANALYZER');
+const _log = createLogger("ANALYZER");
 
 // High-level analysis functions
 export {
@@ -13,7 +13,7 @@ export {
   analyzeQRFromCanvas,
   analyzeQRFromFile,
   analyzeQRFromUrl,
-} from '../../domain/qr/analyze/analyzer';
+} from "../../domain/qr/analyze/analyzer";
 // Content analysis utilities (from analyzer-content.ts)
 export {
   averageColor,
@@ -29,12 +29,12 @@ export {
   parseUrlDetails,
   rgbToHex,
   type UrlDetails,
-} from '../../domain/qr/analyze/analyzer-content';
+} from "../../domain/qr/analyze/analyzer-content";
 // Content detection (from content-detection.ts)
-export { detectContentType as detectContentTypeDetails } from '../../domain/qr/analyze/content-detection';
+export { detectContentType as detectContentTypeDetails } from "../../domain/qr/analyze/content-detection";
 // Main decoder
-export { decodeQRFromCanvas } from '../../domain/qr/analyze/decoder';
-export { type AnalysisExportData, buildAnalysisExportData } from './export';
+export { decodeQRFromCanvas } from "../../domain/qr/analyze/decoder";
+export { type AnalysisExportData, buildAnalysisExportData } from "./export";
 // Safety analyzer
 export {
   type AnalysisIssue,
@@ -55,7 +55,7 @@ export {
   validateModuleSize,
   validateOverlayIntensity,
   validateQuietZone,
-} from '../../domain/qr/analyze/safety';
+} from "../../domain/qr/analyze/safety";
 // Scanner
 export {
   type QRLocation,
@@ -68,32 +68,32 @@ export {
   validateFrames,
   validateQRCode,
   validateQRCodeRobust,
-} from '../../domain/qr/analyze/scanner';
+} from "../../domain/qr/analyze/scanner";
 // Worker-based validation (off main thread)
 export {
   terminateValidationWorker,
   validateInWorker,
-} from '../../platform/worker/analyze/validation-worker-client';
+} from "../../platform/worker/analyze/validation-worker-client";
 
 // Telemetry and statistics
 export {
   type ContrastReport,
   calculateContrastStats,
   checkContrastCompliance,
-} from '../../domain/qr/analyze/telemetry-contrast';
+} from "../../domain/qr/analyze/telemetry-contrast";
 
 export {
   createScanLogger,
   type LogEntry,
   type ScanLogger,
   type ScanStats,
-} from '../../domain/qr/analyze/telemetry-logging';
+} from "../../domain/qr/analyze/telemetry-logging";
 
 export {
   type AnalysisStats,
   aggregateStats,
   calculateAnalysisStats,
-} from '../../domain/qr/analyze/telemetry-stats';
+} from "../../domain/qr/analyze/telemetry-stats";
 // Types (canonical source)
 export type {
   ContentType,
@@ -110,4 +110,4 @@ export type {
   QuietZoneInfo,
   StructuralAnalysis,
   TimingDiagnostics,
-} from './types';
+} from "./types";

@@ -1,13 +1,13 @@
-import { markInvalidGroups } from './mark-invalid-groups';
-import { selectionTouchesInvalidGroup } from './selection-touches-invalid-group';
-import { removeSelectionAndUpdate } from './remove-selection-and-update';
-import type { NumericSelectionMask } from './numeric-selection-mask';
+import { markInvalidGroups } from "./mark-invalid-groups";
+import { selectionTouchesInvalidGroup } from "./selection-touches-invalid-group";
+import { removeSelectionAndUpdate } from "./remove-selection-and-update";
+import type { NumericSelectionMask } from "./numeric-selection-mask";
 
 export function greedyRemoveInvalidSelections(
   selections: NumericSelectionMask[],
   currentValues: number[],
   groupMax: number[],
-  groupCount: number
+  groupCount: number,
 ): boolean[] {
   const invalid = new Uint8Array(groupCount);
   let invalidCount = markInvalidGroups(currentValues, groupMax, groupCount, invalid);

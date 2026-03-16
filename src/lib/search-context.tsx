@@ -1,1 +1,1 @@
-export { SearchContext } from '@/app/search/search-context-instance';
+export { SearchContext } from "@/app/search/search-context-instance";

@@ -2,7 +2,7 @@ export function resolveImagePreview(
   file: File | null,
   url: string,
   setImagePreview: (v: string | null) => void,
-  setPreviewImageSize: (v: { width: number; height: number } | null) => void
+  setPreviewImageSize: (v: { width: number; height: number } | null) => void,
 ): (() => void) | undefined {
   if (file) {
     const objectUrl = URL.createObjectURL(file);

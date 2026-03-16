@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/gif-codec';
+export * from "../../domain/render/animation/gif-codec";

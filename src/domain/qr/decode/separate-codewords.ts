@@ -1,6 +1,6 @@
-import { RS_BLOCKS } from './rs-blocks';
-import { deinterleaveDataCodewords } from './deinterleave-data-codewords';
-import { qrDecoderLog } from './qr-decoder-log';
+import { RS_BLOCKS } from "./rs-blocks";
+import { deinterleaveDataCodewords } from "./deinterleave-data-codewords";
+import { qrDecoderLog } from "./qr-decoder-log";
 
 /**
  * Separate data and error correction codewords
@@ -8,12 +8,12 @@ import { qrDecoderLog } from './qr-decoder-log';
 export function separateCodewords(
   codewords: number[],
   version: number,
-  eccLevel: number
+  eccLevel: number,
 ): { dataCodewords: number[]; ecCodewords: number[] } {
-  const eccLevelChar = ['M', 'L', 'H', 'Q'][eccLevel];
+  const eccLevelChar = ["M", "L", "H", "Q"][eccLevel];
   const rsBlocks = RS_BLOCKS[eccLevelChar]?.[version - 1];
 
-  qrDecoderLog.trace('separate: Separating codewords', {
+  qrDecoderLog.trace("separate: Separating codewords", {
     version,
     eccLevel,
     eccLevelChar,
@@ -21,7 +21,7 @@ export function separateCodewords(
   });
 
   if (!rsBlocks) {
-    qrDecoderLog.warn('separate: No RS blocks found for version/ECC, returning all as data');
+    qrDecoderLog.warn("separate: No RS blocks found for version/ECC, returning all as data");
     return { dataCodewords: codewords, ecCodewords: [] };
   }
 
@@ -39,7 +39,7 @@ export function separateCodewords(
   // De-interleave for multi-block QR codes
   const dataCodewords = deinterleaveDataCodewords(interleavedData, rsBlocks);
 
-  qrDecoderLog.trace('separate: Separated codewords', {
+  qrDecoderLog.trace("separate: Separated codewords", {
     totalCodewords: codewords.length,
     dataCodewords: totalDataCodewords,
     ecCodewords: codewords.length - totalDataCodewords,

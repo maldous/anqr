@@ -1,5 +1,5 @@
-import { roundRect } from './drawing-primitives';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { roundRect } from "./drawing-primitives";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Draw frame background (sticker style)
@@ -9,14 +9,14 @@ export function drawFrameBackground(
   size: number,
   _moduleSize: number,
   _margin: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): void {
-  if (!config.frameStyle || config.frameStyle === 'none') return;
+  if (!config.frameStyle || config.frameStyle === "none") return;
 
   const frameColor = config.frameColor || config.bgColor;
 
   // Determine border radius based on frame style
-  const defaultRadius = config.frameStyle === 'sticker' ? 12 : config.frameStyle === 'tag' ? 4 : 0;
+  const defaultRadius = config.frameStyle === "sticker" ? 12 : config.frameStyle === "tag" ? 4 : 0;
   const borderRadius = config.frameBorderRadius ?? defaultRadius;
 
   ctx.fillStyle = frameColor;

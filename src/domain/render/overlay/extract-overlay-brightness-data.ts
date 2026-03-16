@@ -1,5 +1,5 @@
-import { rgbToGray } from '../color/color';
-import { fitOverlayImage } from './fit-overlay-image';
+import { rgbToGray } from "../color/color";
+import { fitOverlayImage } from "./fit-overlay-image";
 
 // ============================================
 // OVERLAY DATA EXTRACTION
@@ -7,12 +7,12 @@ import { fitOverlayImage } from './fit-overlay-image';
 
 export function extractOverlayBrightnessData(
   canvas: HTMLCanvasElement,
-  targetSize: number
+  targetSize: number,
 ): Float32Array {
   // Resize to target size for module-level data
-  const resized = fitOverlayImage(canvas, targetSize, targetSize, 'cover');
-  const ctx = resized.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2D context');
+  const resized = fitOverlayImage(canvas, targetSize, targetSize, "cover");
+  const ctx = resized.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context");
 
   const imageData = ctx.getImageData(0, 0, targetSize, targetSize);
   const data = imageData.data;

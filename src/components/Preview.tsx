@@ -1,1 +1,1 @@
-export * from '../features/generator/components/Preview';
+export * from "../features/generator/components/Preview";

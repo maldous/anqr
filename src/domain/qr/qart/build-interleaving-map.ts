@@ -1,5 +1,5 @@
-import type { RSBlockInfo } from './bit-mapping.types';
-import type { InterleavingEntry } from './interleaving-entry';
+import type { RSBlockInfo } from "./bit-mapping.types";
+import type { InterleavingEntry } from "./interleaving-entry";
 
 export function buildInterleavingMap(rsBlockInfo: RSBlockInfo[]): InterleavingEntry[] {
   const map: InterleavingEntry[] = [];

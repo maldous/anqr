@@ -1,5 +1,5 @@
-import en from './locales/en-GB.json';
+import en from "./locales/en-GB.json";
 
 export const resources: Record<string, { translation: Record<string, unknown> }> = {
-  'en-GB': { translation: en },
+  "en-GB": { translation: en },
 };

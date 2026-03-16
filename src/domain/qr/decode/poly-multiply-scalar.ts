@@ -1,4 +1,4 @@
-import { gfMul } from './gf-mul';
+import { gfMul } from "./gf-mul";
 
 /**
  * Multiply polynomial by scalar (high-to-low convention)

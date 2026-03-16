@@ -1,11 +1,11 @@
-import type { BitMatrix } from './bit-matrix';
-import { ChecksumException, FormatException } from './exceptions';
-import { type ErrorCorrectionLevel, Mode, Version } from './qr-version';
-import { GenericGF, ReedSolomonDecoder } from './reed-solomon';
-import { DecoderResult } from './result-types';
-import { StringBuilder, StringEncoding, StringUtils } from './util';
-import { BitMatrixParser } from './bit-matrix-parser';
-import { BitSource } from './bit-source';
+import type { BitMatrix } from "./bit-matrix";
+import { ChecksumException, FormatException } from "./exceptions";
+import { type ErrorCorrectionLevel, Mode, Version } from "./qr-version";
+import { GenericGF, ReedSolomonDecoder } from "./reed-solomon";
+import { DecoderResult } from "./result-types";
+import { StringBuilder, StringEncoding, StringUtils } from "./util";
+import { BitMatrixParser } from "./bit-matrix-parser";
+import { BitSource } from "./bit-source";
 
 /**
  * Main QR code decoder
@@ -78,7 +78,7 @@ export class QRDecoder {
   private getDataBlocks(
     rawCodewords: Uint8Array,
     version: Version,
-    ecLevel: ErrorCorrectionLevel
+    ecLevel: ErrorCorrectionLevel,
   ): { codewords: Int32Array; numDataCodewords: number }[] {
     const ecBlocks = version.getECBlocksForLevel(ecLevel);
     let totalBlocks = 0;
@@ -87,7 +87,9 @@ export class QRDecoder {
       totalBlocks += ecBlock.getCount();
     }
 
-    const result: { codewords: Int32Array; numDataCodewords: number }[] = Array.from({ length: totalBlocks });
+    const result: { codewords: Int32Array; numDataCodewords: number }[] = Array.from({
+      length: totalBlocks,
+    });
     let numResultBlocks = 0;
     for (const ecBlock of ecBlockArray) {
       for (let i = 0; i < ecBlock.getCount(); i++) {
@@ -116,7 +118,7 @@ export class QRDecoder {
       rawCodewords,
       numResultBlocks,
       shorterBlocksNumDataCodewords,
-      longerBlocksStartAt
+      longerBlocksStartAt,
     );
     return result;
   }
@@ -126,7 +128,7 @@ export class QRDecoder {
     rawCodewords: Uint8Array,
     numResultBlocks: number,
     shorterBlocksNumDataCodewords: number,
-    longerBlocksStartAt: number
+    longerBlocksStartAt: number,
   ): void {
     let offset = 0;
     for (let i = 0; i < shorterBlocksNumDataCodewords; i++) {
@@ -166,7 +168,7 @@ export class QRDecoder {
     bytes: Uint8Array,
     version: Version,
     ecLevel: ErrorCorrectionLevel,
-    hints?: Map<number, unknown>
+    hints?: Map<number, unknown>,
   ): DecoderResult {
     const bits = new BitSource(bytes);
     const result = new StringBuilder();
@@ -215,7 +217,7 @@ export class QRDecoder {
       bytes,
       result.toString(),
       byteSegments.length === 0 ? null : byteSegments,
-      ecLevel.toString()
+      ecLevel.toString(),
     );
   }
 
@@ -226,7 +228,7 @@ export class QRDecoder {
     count: number,
     fc1InEffect: boolean,
     byteSegments: Uint8Array[],
-    hints?: Map<number, unknown>
+    hints?: Map<number, unknown>,
   ): void {
     switch (mode) {
       case Mode.NUMERIC:
@@ -285,13 +287,13 @@ export class QRDecoder {
   }
 
   private static readonly ALPHANUMERIC_CHARS =
-    '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'.split('');
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".split("");
 
   private decodeAlphanumericSegment(
     bits: BitSource,
     result: StringBuilder,
     count: number,
-    fc1InEffect: boolean
+    fc1InEffect: boolean,
   ): void {
     const start = result.length();
     while (count > 1) {
@@ -312,8 +314,8 @@ export class QRDecoder {
 
   private static applyFNC1Substitution(result: StringBuilder, start: number): void {
     for (let i = start; i < result.length(); i++) {
-      if (result.charAt(i) === '%') {
-        if (i < result.length() - 1 && result.charAt(i + 1) === '%') {
+      if (result.charAt(i) === "%") {
+        if (i < result.length() - 1 && result.charAt(i + 1) === "%") {
           result.deleteCharAt(i + 1);
         } else {
           result.setCharAt(i, String.fromCodePoint(0x1d));
@@ -327,7 +329,7 @@ export class QRDecoder {
     result: StringBuilder,
     count: number,
     byteSegments: Uint8Array[],
-    hints?: Map<number, unknown>
+    hints?: Map<number, unknown>,
   ): void {
     if (8 * count > bits.available()) throw new FormatException();
     const readBytes = new Uint8Array(count);
@@ -359,7 +361,7 @@ export class QRDecoder {
       buffer.push((assembledTwoBytes >> 8) & 0xff);
       buffer.push(assembledTwoBytes & 0xff);
     }
-    result.append(StringEncoding.decode(new Uint8Array(buffer), 'SJIS'));
+    result.append(StringEncoding.decode(new Uint8Array(buffer), "SJIS"));
   }
 
   private decodeHanziSegment(bits: BitSource, result: StringBuilder, count: number): void {
@@ -376,6 +378,6 @@ export class QRDecoder {
       buffer.push((assembledTwoBytes >> 8) & 0xff);
       buffer.push(assembledTwoBytes & 0xff);
     }
-    result.append(StringEncoding.decode(new Uint8Array(buffer), 'GB2312'));
+    result.append(StringEncoding.decode(new Uint8Array(buffer), "GB2312"));
   }
 }

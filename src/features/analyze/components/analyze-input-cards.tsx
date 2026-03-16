@@ -1,12 +1,12 @@
-import { Capacitor } from '@capacitor/core';
-import type React from 'react';
-import type { useTranslation } from 'react-i18next';
-import type { AnalysisSourceType } from './analysis-source-type';
-import { CameraCardButton } from './camera-card-button';
-import { FileUploadCard } from './file-upload-card';
-import { GeneratorCardActive } from './generator-card-active';
-import { GeneratorCardDisabled } from './generator-card-disabled';
-import { UrlInputCard } from './url-input-card';
+import { Capacitor } from "@capacitor/core";
+import type React from "react";
+import type { useTranslation } from "react-i18next";
+import type { AnalysisSourceType } from "./analysis-source-type";
+import { CameraCardButton } from "./camera-card-button";
+import { FileUploadCard } from "./file-upload-card";
+import { GeneratorCardActive } from "./generator-card-active";
+import { GeneratorCardDisabled } from "./generator-card-disabled";
+import { UrlInputCard } from "./url-input-card";
 
 export function AnalyzeInputCards({
   t,
@@ -20,7 +20,7 @@ export function AnalyzeInputCards({
   handleUrlSubmit,
   handleCameraCapture,
 }: Readonly<{
-  t: ReturnType<typeof useTranslation>['t'];
+  t: ReturnType<typeof useTranslation>["t"];
   generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined;
   isLoading: boolean;
   loadingSource: AnalysisSourceType;
@@ -33,12 +33,12 @@ export function AnalyzeInputCards({
 }>) {
   return (
     <div
-      className={`grid gap-3 ${Capacitor.isNativePlatform() ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`}
+      className={`grid gap-3 ${Capacitor.isNativePlatform() ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-3"}`}
     >
       {generatedCanvas ? (
         <GeneratorCardActive
           t={t}
-          isLoadingGenerator={isLoading && loadingSource === 'generator'}
+          isLoadingGenerator={isLoading && loadingSource === "generator"}
           handleAnalyzeGenerator={handleAnalyzeGenerator}
           isLoading={isLoading}
         />
@@ -48,13 +48,13 @@ export function AnalyzeInputCards({
       <FileUploadCard
         t={t}
         isLoading={isLoading}
-        isLoadingFile={isLoading && loadingSource === 'file'}
+        isLoadingFile={isLoading && loadingSource === "file"}
         handleFileUpload={handleFileUpload}
       />
       <UrlInputCard
         t={t}
         isLoading={isLoading}
-        isLoadingUrl={isLoading && loadingSource === 'url'}
+        isLoadingUrl={isLoading && loadingSource === "url"}
         urlInput={urlInput}
         setUrlInput={setUrlInput}
         handleUrlSubmit={handleUrlSubmit}
@@ -63,7 +63,7 @@ export function AnalyzeInputCards({
         <CameraCardButton
           t={t}
           isLoading={isLoading}
-          isLoadingCamera={isLoading && loadingSource === 'camera'}
+          isLoadingCamera={isLoading && loadingSource === "camera"}
           handleCameraCapture={handleCameraCapture}
         />
       )}

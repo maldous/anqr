@@ -21,7 +21,7 @@ export function fillModuleBlock(
   startX: number,
   startY: number,
   scale: number,
-  color: number
+  color: number,
 ): void {
   for (let py = 0; py < scale; py++) {
     for (let px = 0; px < scale; px++) {

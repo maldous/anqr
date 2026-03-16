@@ -10,15 +10,15 @@
  * - It checks only a few scan-critical invariants.
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { isAlternatingCol } from './is-alternating-col';
-import { isAlternatingLine } from './is-alternating-line';
-import { isFinderCoreCorrect } from './is-finder-core-correct';
+import { createLogger } from "../../../infra/logging/logger";
+import { isAlternatingCol } from "./is-alternating-col";
+import { isAlternatingLine } from "./is-alternating-line";
+import { isFinderCoreCorrect } from "./is-finder-core-correct";
 
-const _log = createLogger('SPEC');
+const _log = createLogger("SPEC");
 
-export type { DarkModuleReader, QRVerifyResult } from './verify.types';
-import type { DarkModuleReader, QRVerifyResult } from './verify.types';
+export type { DarkModuleReader, QRVerifyResult } from "./verify.types";
+import type { DarkModuleReader, QRVerifyResult } from "./verify.types";
 
 export function verifyQRStructure(qr: DarkModuleReader, explicitVersion?: number): QRVerifyResult {
   const issues: string[] = [];
@@ -39,24 +39,24 @@ export function verifyQRStructure(qr: DarkModuleReader, explicitVersion?: number
   const tl = isFinderCoreCorrect(isDark, 0, 0);
   const tr = isFinderCoreCorrect(isDark, 0, moduleCount - 7);
   const bl = isFinderCoreCorrect(isDark, moduleCount - 7, 0);
-  if (!tl) issues.push('top-left finder core mismatch');
-  if (!tr) issues.push('top-right finder core mismatch');
-  if (!bl) issues.push('bottom-left finder core mismatch');
+  if (!tl) issues.push("top-left finder core mismatch");
+  if (!tr) issues.push("top-right finder core mismatch");
+  if (!bl) issues.push("bottom-left finder core mismatch");
 
   // Timing alternation (between finders)
   // Row 6, cols 8..(moduleCount-9)
   if (moduleCount >= 21) {
     const timingRowOk = isAlternatingLine(isDark, 6, 8, moduleCount - 9);
     const timingColOk = isAlternatingCol(isDark, 6, 8, moduleCount - 9);
-    if (!timingRowOk) issues.push('timing row does not alternate');
-    if (!timingColOk) issues.push('timing col does not alternate');
+    if (!timingRowOk) issues.push("timing row does not alternate");
+    if (!timingColOk) issues.push("timing col does not alternate");
   }
 
   // Fixed dark module
   const dmRow = moduleCount - 8;
   const dmCol = 8;
   if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
-    if (!isDark(dmRow, dmCol)) issues.push('fixed dark module is not dark');
+    if (!isDark(dmRow, dmCol)) issues.push("fixed dark module is not dark");
   }
 
   return { ok: issues.length === 0, version, issues };

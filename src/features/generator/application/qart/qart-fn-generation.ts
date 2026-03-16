@@ -4,13 +4,13 @@
  * Notes: Top-level QArt generation entry point.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { loadQArtModule } from '@/features/generator/application/qart/qart-shared-state';
-import type { QArtPerfSnapshot } from '@/features/generator/application/generation/generation-type-perfsnap';
-import { deliverQArtResult } from '@/features/generator/application/qart/qart-fn-deliver';
-import { executeQArtWorkerPipeline } from '@/features/generator/application/qart/qart-fn-pipeline';
+import { createLogger } from "@/infra/logging/logger";
+import { loadQArtModule } from "@/features/generator/application/qart/qart-shared-state";
+import type { QArtPerfSnapshot } from "@/features/generator/application/generation/generation-type-perfsnap";
+import { deliverQArtResult } from "@/features/generator/application/qart/qart-fn-deliver";
+import { executeQArtWorkerPipeline } from "@/features/generator/application/qart/qart-fn-pipeline";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function runQArtGeneration(params: {
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas;
@@ -42,7 +42,7 @@ export async function runQArtGeneration(params: {
   effectiveConfig: Record<string, unknown>;
   runValidationIfNeeded: (
     c: HTMLCanvasElement | OffscreenCanvas,
-    content: string | undefined
+    content: string | undefined,
   ) => void;
   setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
   requestId: number;
@@ -50,10 +50,10 @@ export async function runQArtGeneration(params: {
   const qartModule = await loadQArtModule();
   if (params.isStaleRequest()) return { handled: true };
   params.updateGenerationProgress(
-    params.t('preview.busy.preparingQrArtComputation', 'Preparing QR-Art computation...'),
-    18
+    params.t("preview.busy.preparingQrArtComputation", "Preparing QR-Art computation..."),
+    18,
   );
-  log.info('Starting QR-Art generation', {
+  log.info("Starting QR-Art generation", {
     content: (params.debouncedConfig.content as string)?.substring(0, 50),
     version: params.debouncedConfig.typeNumber,
     ecc: params.debouncedConfig.errorCorrection,

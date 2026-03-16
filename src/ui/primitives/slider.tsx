@@ -1,14 +1,14 @@
-import * as SliderPrimitive from '@radix-ui/react-slider';
-import { Minus, Plus } from 'lucide-react';
-import * as React from 'react';
-import { useDynamicTestId } from '@/infra/testing/dynamic-testid';
-import { cn } from '@/lib/utils';
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { Minus, Plus } from "lucide-react";
+import * as React from "react";
+import { useDynamicTestId } from "@/infra/testing/dynamic-testid";
+import { cn } from "@/lib/utils";
 
 const Slider = React.forwardRef<
   React.ComponentRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
 >(({ className, min = 0, max = 100, step = 1, value, onValueChange, disabled, ...props }, ref) => {
-  const testId = useDynamicTestId(props, 'slider');
+  const testId = useDynamicTestId(props, "slider");
 
   const handleDecrement = () => {
     if (!value) return;
@@ -43,7 +43,7 @@ const Slider = React.forwardRef<
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
-        className={cn('relative flex w-full touch-none select-none items-center', className)}
+        className={cn("relative flex w-full touch-none select-none items-center", className)}
         {...props}
       >
         <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">

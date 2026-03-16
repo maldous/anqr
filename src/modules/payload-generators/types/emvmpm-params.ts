@@ -1,4 +1,4 @@
-import type { EMVMerchantAccount } from './emv-merchant-account';
+import type { EMVMerchantAccount } from "./emv-merchant-account";
 
 export interface EMVMPMParams {
   merchantName: string;
@@ -9,7 +9,7 @@ export interface EMVMPMParams {
   isStatic?: boolean;
   mcc?: string;
   postalCode?: string;
-  tipIndicator?: '01' | '02' | '03';
+  tipIndicator?: "01" | "02" | "03";
   tipFixed?: number;
   tipPercentage?: number;
   billNumber?: string;

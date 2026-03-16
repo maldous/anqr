@@ -1,5 +1,5 @@
-import { isFinderPatternRatio } from './is-finder-pattern-ratio';
-import type { ScanResult } from './scan-result';
+import { isFinderPatternRatio } from "./is-finder-pattern-ratio";
+import type { ScanResult } from "./scan-result";
 
 /**
  * Handle a light pixel during row scanning, advancing the state machine.
@@ -10,7 +10,7 @@ export function handleLightPixel(
   state: number,
   counts: number[],
   x: number,
-  results: ScanResult[]
+  results: ScanResult[],
 ): number {
   if (state === 0 || state === 2 || state === 4) {
     // Was in dark, transition to next light

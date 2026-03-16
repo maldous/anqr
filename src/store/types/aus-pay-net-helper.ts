@@ -1,6 +1,6 @@
 export interface AusPayNetHelper {
   payId?: string;
-  payIdType?: 'EMAIL' | 'MOBILE' | 'ABN' | 'ORG';
+  payIdType?: "EMAIL" | "MOBILE" | "ABN" | "ORG";
   bsb?: string;
   accountNumber?: string;
   merchantName?: string;

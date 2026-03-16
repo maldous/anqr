@@ -1,5 +1,5 @@
-import { QRMode } from '../../../modules/qr-encoder/types';
-import { getLengthInBits } from '../encode/utils';
+import { QRMode } from "../../../modules/qr-encoder/types";
+import { getLengthInBits } from "../encode/utils";
 
 /**
  * Calculate the number of header bits (mode indicator + character count) for a given version.

@@ -1,19 +1,19 @@
-import type { GalleryScanScenario } from './gallery-scan-scenario-types/gallery-scan-scenario';
-import type { PreservationDiff } from './gallery-scan-scenario-types/preservation-diff';
+import type { GalleryScanScenario } from "./gallery-scan-scenario-types/gallery-scan-scenario";
+import type { PreservationDiff } from "./gallery-scan-scenario-types/preservation-diff";
 
 function buildPreservationScenario(d: PreservationDiff): GalleryScanScenario {
   return {
     id: d.id,
     title: d.title,
     description: d.description,
-    featureGroup: 'preservation',
+    featureGroup: "preservation",
     heroPriority: d.heroPriority,
     galleryEligible: true,
     useOverlay: true,
     generatorPatch: {
-      overlayMode: 'dithered',
+      overlayMode: "dithered",
       overlayIntensity: d.intensity,
-      colorMode: 'color',
+      colorMode: "color",
       preserveFinders: d.finders,
       preserveTiming: d.timing,
       preserveAlignment: d.alignment,
@@ -24,9 +24,9 @@ function buildPreservationScenario(d: PreservationDiff): GalleryScanScenario {
       ...(d.blendMode !== undefined && { blendPreservationMode: d.blendMode }),
     },
     galleryParams: {
-      mode: 'dithered',
+      mode: "dithered",
       intensity: d.intensity,
-      colorMode: 'color',
+      colorMode: "color",
       keepFinders: d.finders ? 1 : 0,
       keepTiming: d.timing ? 1 : 0,
       keepAlign: d.alignment ? 1 : 0,
@@ -36,16 +36,16 @@ function buildPreservationScenario(d: PreservationDiff): GalleryScanScenario {
       blendPres: d.blendPres ? 1 : 0,
       ...(d.blendMode !== undefined && { blendPresMode: d.blendMode }),
       v: 6,
-      ec: 'H',
+      ec: "H",
     },
   };
 }
 
 export const GALLERY_SCAN_SCENARIOS_PRESERVATION: readonly GalleryScanScenario[] = [
   buildPreservationScenario({
-    id: 'preserve-balanced',
-    title: 'Preservation Balanced',
-    description: 'Functional modules preserved for scan stability',
+    id: "preserve-balanced",
+    title: "Preservation Balanced",
+    description: "Functional modules preserved for scan stability",
     heroPriority: 90,
     intensity: 70,
     finders: true,
@@ -57,9 +57,9 @@ export const GALLERY_SCAN_SCENARIOS_PRESERVATION: readonly GalleryScanScenario[]
     blendPres: false,
   }),
   buildPreservationScenario({
-    id: 'preserve-blended',
-    title: 'Preservation Blended',
-    description: 'Unpreserved functional modules blended with image rails',
+    id: "preserve-blended",
+    title: "Preservation Blended",
+    description: "Unpreserved functional modules blended with image rails",
     heroPriority: 88,
     intensity: 48,
     finders: false,
@@ -69,13 +69,13 @@ export const GALLERY_SCAN_SCENARIOS_PRESERVATION: readonly GalleryScanScenario[]
     versionInfo: true,
     finderDither: 82,
     blendPres: true,
-    blendMode: 'overlay',
+    blendMode: "overlay",
   }),
   buildPreservationScenario({
-    id: 'preserve-blended-dithered-in',
-    title: 'Preservation Dithered-In',
+    id: "preserve-blended-dithered-in",
+    title: "Preservation Dithered-In",
     description:
-      'Unpreserved functional modules are dither-integrated instead of full pass-through',
+      "Unpreserved functional modules are dither-integrated instead of full pass-through",
     heroPriority: 87,
     intensity: 48,
     finders: false,
@@ -85,12 +85,12 @@ export const GALLERY_SCAN_SCENARIOS_PRESERVATION: readonly GalleryScanScenario[]
     versionInfo: true,
     finderDither: 82,
     blendPres: true,
-    blendMode: 'dither',
+    blendMode: "dither",
   }),
   buildPreservationScenario({
-    id: 'preserve-strength-100',
-    title: 'Preservation Strength 100',
-    description: 'Maximum preservation contrast',
+    id: "preserve-strength-100",
+    title: "Preservation Strength 100",
+    description: "Maximum preservation contrast",
     heroPriority: 82,
     intensity: 52,
     finders: false,

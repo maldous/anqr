@@ -1,9 +1,9 @@
-import { countShiftedDiffs } from './count-shifted-diffs';
+import { countShiftedDiffs } from "./count-shifted-diffs";
 
 export function findBestMatrixShift(
   originalMatrix: boolean[][],
   regenMatrix: boolean[][],
-  moduleCount: number
+  moduleCount: number,
 ): { dr: number; dc: number; diffCount: number; diffPct: number } {
   let best = { dr: 0, dc: 0, diffCount: Number.POSITIVE_INFINITY };
 

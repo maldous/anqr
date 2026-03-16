@@ -1,5 +1,5 @@
-import { glog } from './glog';
-import { gexp } from './gexp';
+import { glog } from "./glog";
+import { gexp } from "./gexp";
 
 export const QRMath = {
   glog,

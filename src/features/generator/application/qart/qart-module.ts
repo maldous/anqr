@@ -1,1 +1,1 @@
-export type QArtModule = typeof import('@/modules/qr-art');
+export type QArtModule = typeof import("@/modules/qr-art");

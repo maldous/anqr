@@ -1,1 +1,1 @@
-export * from '../../domain/qr/encode/data-modes';
+export * from "../../domain/qr/encode/data-modes";

@@ -1,5 +1,5 @@
-import { getOverlayColorPacked } from '../overlay/overlay-data-packed';
-import type { ModuleDrawContext } from './module-draw-context.interface';
+import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
+import type { ModuleDrawContext } from "./module-draw-context.interface";
 
 export function drawHalftoneDitheredBackground(
   dctx: ModuleDrawContext,
@@ -9,7 +9,7 @@ export function drawHalftoneDitheredBackground(
   isDark: boolean,
   moduleFillStyle: string | CanvasGradient,
   row: number,
-  col: number
+  col: number,
 ): void {
   const cellColor = getOverlayColorPacked(dctx.overlayData, row, col);
   if (!cellColor) return;

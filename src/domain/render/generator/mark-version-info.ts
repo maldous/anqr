@@ -1,4 +1,4 @@
-import { PATTERN_VERSION } from './functional-pattern-flags.const';
+import { PATTERN_VERSION } from "./functional-pattern-flags.const";
 
 export function markVersionInfo(map: Uint8Array, mc: number, version: number): void {
   if (version < 7) return;

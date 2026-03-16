@@ -1,11 +1,11 @@
-import type { CanvasPool } from '../../platform/browser/canvas/canvas-factory';
-import { evaluateDecodeScenarios } from './evaluate-decode-scenarios';
-import { processEvaluatedAttempt } from './process-evaluated-attempt';
-import type { DitherAttemptPatch } from './dither-attempt-patch.type';
-import type { ScanGateCallbacks } from './scan-gate-callbacks.interface';
-import type { ScanGateCtx } from './scan-gate-ctx.interface';
-import type { ScanGateLoopState } from './scan-gate-loop-state.interface';
-import type { ScanGateMainLoopResult } from './scan-gate-main-loop-result.interface';
+import type { CanvasPool } from "../../platform/browser/canvas/canvas-factory";
+import { evaluateDecodeScenarios } from "./evaluate-decode-scenarios";
+import { processEvaluatedAttempt } from "./process-evaluated-attempt";
+import type { DitherAttemptPatch } from "./dither-attempt-patch.type";
+import type { ScanGateCallbacks } from "./scan-gate-callbacks.interface";
+import type { ScanGateCtx } from "./scan-gate-ctx.interface";
+import type { ScanGateLoopState } from "./scan-gate-loop-state.interface";
+import type { ScanGateMainLoopResult } from "./scan-gate-main-loop-result.interface";
 
 export async function runScanGateMainLoop(
   pool: CanvasPool,
@@ -15,7 +15,7 @@ export async function runScanGateMainLoop(
   thresholds: { edge: number; toneStd: number; edgeWorsen: number },
   scenarioSeed: number,
   skipScanGateEscalation: boolean,
-  cb: ScanGateCallbacks
+  cb: ScanGateCallbacks,
 ): Promise<ScanGateMainLoopResult> {
   let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
   const state: ScanGateLoopState = {
@@ -38,7 +38,7 @@ export async function runScanGateMainLoop(
         state.prevEdgeImprint,
         thresholds,
         scenarioSeed,
-        cb.runDecode
+        cb.runDecode,
       );
       lastCanvas = evaluated.evaluatedCanvas;
       const result = processEvaluatedAttempt(evaluated, patch, state, skipScanGateEscalation, cb);

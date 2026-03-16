@@ -1,5 +1,5 @@
-import { CharacterSetECI } from './character-set-eci';
-import { StringUtils } from './string-utils';
+import { CharacterSetECI } from "./character-set-eci";
+import { StringUtils } from "./string-utils";
 
 /**
  * StringBuilder for string building operations
@@ -8,7 +8,7 @@ export class StringBuilder {
   private value: string;
   private encoding: CharacterSetECI | null = null;
 
-  constructor(value: string = '') {
+  constructor(value: string = "") {
     this.value = value;
   }
 
@@ -18,7 +18,7 @@ export class StringBuilder {
   }
 
   append(s: string | number): this {
-    if (typeof s === 'string') {
+    if (typeof s === "string") {
       this.value += s;
     } else if (this.encoding) {
       this.value += StringUtils.castAsNonUtf8Char(s, this.encoding);
@@ -56,7 +56,7 @@ export class StringBuilder {
   }
 
   setLengthToZero(): void {
-    this.value = '';
+    this.value = "";
   }
 
   toString(): string {

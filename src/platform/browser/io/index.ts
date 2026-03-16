@@ -12,15 +12,15 @@
  * - No dependencies on other modules except platform
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('BROWSER_IO');
+const _log = createLogger("BROWSER_IO");
 
 // Canvas utilities
-export { canvasToBlob, canvasToDataUrl } from '../canvas/canvas-utils';
+export { canvasToBlob, canvasToDataUrl } from "../canvas/canvas-utils";
 
 // Download utilities
-export { downloadBlob, downloadUrl } from './download';
+export { downloadBlob, downloadUrl } from "./download";
 
 // Native save utilities
-export { saveFileNative } from './native-save';
+export { saveFileNative } from "./native-save";

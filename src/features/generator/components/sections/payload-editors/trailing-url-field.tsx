@@ -1,4 +1,4 @@
-import { LabeledInputField } from './labeled-input-field';
+import { LabeledInputField } from "./labeled-input-field";
 
 export function TrailingUrlField({
   label,

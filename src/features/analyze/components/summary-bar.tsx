@@ -11,22 +11,22 @@ import {
   Ruler,
   Shield,
   Type,
-} from 'lucide-react';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import { WCAGBadge } from '@/features/analyze/components/wcag-badge';
-import { CONTENT_TYPE_ICONS } from './content-type-icons';
+} from "lucide-react";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { WCAGBadge } from "@/features/analyze/components/wcag-badge";
+import { CONTENT_TYPE_ICONS } from "./content-type-icons";
 
 export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) => {
   if (!result.success) return null;
 
   const badgeBase =
-    'inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md font-medium text-center flex-1 min-w-[65px] shadow-sm';
+    "inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md font-medium text-center flex-1 min-w-[65px] shadow-sm";
 
   return (
     <div
       className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border rounded-lg shadow-sm py-2 px-3 mb-4 animate-in slide-in-from-top duration-300"
-      data-testid={DynamicTestId.resolve('analyze-summary-bar', 'analyze-summary-bar')}
+      data-testid={DynamicTestId.resolve("analyze-summary-bar", "analyze-summary-bar")}
     >
       <div className="flex flex-wrap items-stretch gap-1.5 text-xs">
         {result.version !== null && (
@@ -46,7 +46,7 @@ export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) =
             Mask {result.maskPattern}
           </span>
         )}
-        {result.encodingMode && result.encodingMode !== 'unknown' && (
+        {result.encodingMode && result.encodingMode !== "unknown" && (
           <span
             className={`${badgeBase} bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 capitalize`}
           >
@@ -82,20 +82,20 @@ export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) =
             {result.payloadBytes.length} bytes
           </span>
         )}
-        {typeof result.decoderMetadata?.totalByteLength === 'number' &&
+        {typeof result.decoderMetadata?.totalByteLength === "number" &&
           result.decoderMetadata.totalByteLength > 0 && (
             <span className={`${badgeBase} bg-muted text-muted-foreground`}>
               <Database className="w-3 h-3" />
               Dec {result.decoderMetadata.totalByteLength}
             </span>
           )}
-        {typeof result.erasures === 'number' && result.erasures >= 0 && (
+        {typeof result.erasures === "number" && result.erasures >= 0 && (
           <span className={`${badgeBase} bg-amber-500/10 text-amber-700 dark:text-amber-400`}>
             <AlertTriangle className="w-3 h-3" />
             Erasures {result.erasures}
           </span>
         )}
-        {typeof result.orientation === 'number' && (
+        {typeof result.orientation === "number" && (
           <span className={`${badgeBase} bg-muted text-muted-foreground`}>
             <Ruler className="w-3 h-3" />
             {result.orientation}°
@@ -103,7 +103,7 @@ export const SummaryBar = ({ result }: Readonly<{ result: QRAnalysisResult }>) =
         )}
         {result.quietZone && (
           <span
-            className={`${badgeBase} ${result.quietZone.adequate ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}`}
+            className={`${badgeBase} ${result.quietZone.adequate ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-amber-500/10 text-amber-700 dark:text-amber-400"}`}
           >
             {result.quietZone.adequate ? (
               <Check className="w-3 h-3" />

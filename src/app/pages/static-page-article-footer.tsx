@@ -1,5 +1,5 @@
-import { AdUnit } from '@/platform/ads/components/AdUnit';
-import type { StaticPageType } from './StaticPage.types';
+import { AdUnit } from "@/platform/ads/components/AdUnit";
+import type { StaticPageType } from "./StaticPage.types";
 
 export function StaticPageArticleFooter({
   page,
@@ -18,7 +18,7 @@ export function StaticPageArticleFooter({
 
       <div className="mt-8 pt-4 border-t border-border text-center">
         <p className="text-xs text-muted-foreground">
-          {t('accessibility.lastUpdated')}: {lastUpdated}
+          {t("accessibility.lastUpdated")}: {lastUpdated}
         </p>
       </div>
     </>

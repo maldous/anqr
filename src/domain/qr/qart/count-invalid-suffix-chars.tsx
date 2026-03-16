@@ -1,4 +1,4 @@
-import { URL_SAFE_CHARS } from './url-safe-chars';
+import { URL_SAFE_CHARS } from "./url-safe-chars";
 
 export function countInvalidSuffixChars(suffix: string): number {
   let invalidCount = 0;

@@ -1,10 +1,10 @@
-import type { VectorSvgConfig } from '../../../modules/exporter/types';
-import { escapeXml } from '../../../modules/exporter/utils';
+import type { VectorSvgConfig } from "../../../modules/exporter/types";
+import { escapeXml } from "../../../modules/exporter/utils";
 
-export function buildSvgMetadata(metadata: VectorSvgConfig['metadata']): string {
-  if (!metadata) return '';
+export function buildSvgMetadata(metadata: VectorSvgConfig["metadata"]): string {
+  if (!metadata) return "";
   const m = metadata;
-  let content = '';
+  let content = "";
   if (m.title) {
     content += `  <title>${escapeXml(m.title)}</title>\n`;
   }
@@ -29,7 +29,7 @@ export function buildSvgMetadata(metadata: VectorSvgConfig['metadata']): string 
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
              xmlns:dc="http://purl.org/dc/elements/1.1/">
       <rdf:Description>
-${dcElements.join('\n')}
+${dcElements.join("\n")}
       </rdf:Description>
     </rdf:RDF>
   </metadata>\n`;

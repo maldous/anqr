@@ -1,11 +1,11 @@
-import type { ECCLevel } from './bit-mapping';
-import type { BlockSelectionResult, EliminationResult } from './elimination';
-import { binarySearchMaxVectors, flattenAndOrderSelections } from './scan-fallback';
-import { performSemanticValidation } from './perform-semantic-validation';
-import { log } from './log';
-import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
-import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
-import type { ScanResult } from './scan-result';
+import type { ECCLevel } from "./bit-mapping";
+import type { BlockSelectionResult, EliminationResult } from "./elimination";
+import { binarySearchMaxVectors, flattenAndOrderSelections } from "./scan-fallback";
+import { performSemanticValidation } from "./perform-semantic-validation";
+import { log } from "./log";
+import { scanMatrixWithJsQR } from "./scan-matrix-with-js-qr";
+import { regenerateQRFromModifiedData } from "./regenerate-qr-from-modified-data";
+import type { ScanResult } from "./scan-result";
 
 export function handleScanFailureFallback(
   blockSelections: BlockSelectionResult[],
@@ -23,22 +23,22 @@ export function handleScanFailureFallback(
   actualSuffix: string,
   strictSuffix: boolean,
   totalSelected: number,
-  baseMatrix: boolean[][]
+  baseMatrix: boolean[][],
 ): { matrix: boolean[][]; vectorsApplied: number; scanResult: ScanResult } {
-  log.info('Attempting binary search fallback to find scannable configuration');
+  log.info("Attempting binary search fallback to find scannable configuration");
 
   const flattenedSelections = flattenAndOrderSelections(
     blockSelections,
     elimination,
     importance,
-    moduleCount
+    moduleCount,
   );
 
   const regenerateFn = (
     blockData: Uint8Array[],
     blockEcc: Uint8Array[],
     dataCounts: number[],
-    eccCounts: number[]
+    eccCounts: number[],
   ) =>
     regenerateQRFromModifiedData(
       blockData,
@@ -47,7 +47,7 @@ export function handleScanFailureFallback(
       eccCounts,
       actualVersion,
       ecc,
-      actualMask
+      actualMask,
     );
 
   const binarySearchResult = binarySearchMaxVectors(
@@ -62,11 +62,11 @@ export function handleScanFailureFallback(
     data,
     ecc,
     actualMask,
-    strictSuffix
+    strictSuffix,
   );
 
   if (binarySearchResult.maxCount > 0) {
-    log.info('Binary search fallback successful', {
+    log.info("Binary search fallback successful", {
       originalVectors: totalSelected,
       usableVectors: binarySearchResult.maxCount,
       reductionPercent: `${((1 - binarySearchResult.maxCount / totalSelected) * 100).toFixed(1)}%`,
@@ -83,24 +83,24 @@ export function handleScanFailureFallback(
       actualMask,
       actualSuffix,
       scanMatrixWithJsQR,
-      strictSuffix
+      strictSuffix,
     );
 
     if (postSearchValidation.valid) {
       const postSearchScan = scanMatrixWithJsQR(resultMatrix);
-      log.info('Binary search result SEMANTIC-HARD-GATE validation PASSED', {
+      log.info("Binary search result SEMANTIC-HARD-GATE validation PASSED", {
         originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
         ecc,
         mask: actualMask,
         structurallyValid: postSearchScan.structurallyValid,
         segmentCount: postSearchScan.segmentCount,
         segmentModes: postSearchScan.segments?.map((s) => s.modeName),
-        validationMethod: 'SEMANTIC_HARD_GATE',
+        validationMethod: "SEMANTIC_HARD_GATE",
       });
       return { matrix: resultMatrix, vectorsApplied, scanResult: postSearchScan };
     } else {
       const postSearchScan = scanMatrixWithJsQR(resultMatrix);
-      log.warn('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
+      log.warn("Binary search result SEMANTIC-HARD-GATE validation FAILED!", {
         rejectionReason: postSearchValidation.reason,
         description: postSearchValidation.description,
         details: postSearchValidation.details,
@@ -125,7 +125,7 @@ export function handleScanFailureFallback(
       };
     }
   } else {
-    log.warn('Binary search found 0 usable vectors - returning base matrix', {
+    log.warn("Binary search found 0 usable vectors - returning base matrix", {
       iterations: binarySearchResult.iterations,
     });
     return { matrix: baseMatrix, vectorsApplied: 0, scanResult: scanMatrixWithJsQR(baseMatrix) };

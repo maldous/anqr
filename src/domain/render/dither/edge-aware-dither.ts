@@ -1,16 +1,16 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { computeSobelEdgeMap } from './compute-sobel-edge-map';
-import { resolveDiffusionDitherOptions } from './diffusion-dither-options';
-import type { EdgeAwareDitherOptions } from './edge-aware-dither-options';
-import { quantizeEdgeAwarePixel } from './quantize-edge-aware-pixel';
-import { runKernelDither } from './run-kernel-dither';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { computeSobelEdgeMap } from "./compute-sobel-edge-map";
+import { resolveDiffusionDitherOptions } from "./diffusion-dither-options";
+import type { EdgeAwareDitherOptions } from "./edge-aware-dither-options";
+import { quantizeEdgeAwarePixel } from "./quantize-edge-aware-pixel";
+import { runKernelDither } from "./run-kernel-dither";
 
 /** Edge-aware dithering - reduces error diffusion across edges */
 export function edgeAwareDither(
   imageData: Float32Array[],
   width: number,
   height: number,
-  options: EdgeAwareDitherOptions = {}
+  options: EdgeAwareDitherOptions = {},
 ): DitherResult {
   const { colorMode, kernel, serpentine, step, strengthFactor } =
     resolveDiffusionDitherOptions(options);

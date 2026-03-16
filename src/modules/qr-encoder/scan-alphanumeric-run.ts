@@ -1,4 +1,4 @@
-import { isAlphanumeric } from './is-alphanumeric';
+import { isAlphanumeric } from "./is-alphanumeric";
 
 export function scanAlphanumericRun(text: string, upperText: string, start: number): number {
   let i = start;

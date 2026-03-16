@@ -1,9 +1,9 @@
-import { MIN_QART_VERSION } from './rs-basis';
-import type { FullQArtConfig, FullQArtResult } from './generate.types';
-import { generateFullQArtCore } from './generate-full-q-art-core';
-import { log } from './log';
-import { resolvePerformanceSettings } from './resolve-performance-settings';
-import { resolveQArtSuffixConfig } from './resolve-q-art-suffix-config';
+import { MIN_QART_VERSION } from "./rs-basis";
+import type { FullQArtConfig, FullQArtResult } from "./generate.types";
+import { generateFullQArtCore } from "./generate-full-q-art-core";
+import { log } from "./log";
+import { resolvePerformanceSettings } from "./resolve-performance-settings";
+import { resolveQArtSuffixConfig } from "./resolve-q-art-suffix-config";
 
 export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArtResult> {
   const {
@@ -14,14 +14,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     maskPattern,
     onProgress,
     suffix,
-    suffixMode = 'auto',
+    suffixMode = "auto",
     autoSuffix = true, // Default to auto-generating suffix for better control
     minPadCodewords = 10, // Lower default since suffix provides most control
     forceVersion,
     targetControlPercent = 100,
     strictSuffix = true, // Default to true for real-world scannability
     lockVersionToMinimum = false,
-    performanceProfile = 'quality',
+    performanceProfile = "quality",
   } = config;
   const performanceSettings = resolvePerformanceSettings(performanceProfile);
 
@@ -50,7 +50,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
   } = suffixConfig;
 
   // Log the encoding target (HYBRID mode)
-  log.info('QR-Art encoding target (HYBRID STRATEGY)', {
+  log.info("QR-Art encoding target (HYBRID STRATEGY)", {
     originalData: originalData.length > 50 ? `${originalData.slice(0, 50)}...` : originalData,
     originalDataLength,
     suffix: actualSuffix.length > 30 ? `${actualSuffix.slice(0, 30)}...` : actualSuffix,
@@ -62,12 +62,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     ecc,
     strictSuffix,
     suffixMode: resolvedSuffixMode,
-    strategy: 'HYBRID - original data protected, suffix + padding controllable',
+    strategy: "HYBRID - original data protected, suffix + padding controllable",
     suffixPolicy: strictSuffix
-      ? resolvedSuffixMode === 'numeric'
-        ? 'STRICT - numeric suffix digits only'
-        : 'STRICT - suffix must contain only URL-safe characters'
-      : 'RELAXED - suffix can contain ANY byte values (max QArt control)',
+      ? resolvedSuffixMode === "numeric"
+        ? "STRICT - numeric suffix digits only"
+        : "STRICT - suffix must contain only URL-safe characters"
+      : "RELAXED - suffix can contain ANY byte values (max QArt control)",
   });
 
   try {
@@ -91,7 +91,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       suffix,
     });
   } catch (error) {
-    log.error('QR-Art generation failed', { error });
+    log.error("QR-Art generation failed", { error });
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),

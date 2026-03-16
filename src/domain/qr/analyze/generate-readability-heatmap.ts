@@ -2,14 +2,14 @@
  * Generate a readability heatmap
  */
 export function generateReadabilityHeatmap(canvas: HTMLCanvasElement): HTMLCanvasElement {
-  const result = document.createElement('canvas');
+  const result = document.createElement("canvas");
   result.width = canvas.width;
   result.height = canvas.height;
-  const ctx = result.getContext('2d');
+  const ctx = result.getContext("2d");
   if (!ctx) return canvas;
 
   // Simple implementation - darker areas are more readable
-  const sourceCtx = canvas.getContext('2d');
+  const sourceCtx = canvas.getContext("2d");
   if (!sourceCtx) return canvas;
 
   const imageData = sourceCtx.getImageData(0, 0, canvas.width, canvas.height);

@@ -3,36 +3,36 @@
  * Hero-style gallery showcasing ANQR features organized by category
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { AdUnit } from '@/platform/ads/components/AdUnit';
-import { type GalleryCategory, gallerySections } from '@/content/gallery/gallery-items';
-import { trackEvent } from '@/infra/telemetry/zaraz';
-import { prepareInterstitial, showInterstitial } from '@/modules/platform';
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { AdUnit } from "@/platform/ads/components/AdUnit";
+import { type GalleryCategory, gallerySections } from "@/content/gallery/gallery-items";
+import { trackEvent } from "@/infra/telemetry/zaraz";
+import { prepareInterstitial, showInterstitial } from "@/modules/platform";
 import {
   GuideLinks,
   HorizontalAd,
   GallerySectionComponent,
   MobileAllButton,
   MobileJumpButton,
-} from './gallery-layout-parts';
-import { galleryInterstitialGuard } from './gallery-interstitial-guard';
-import type { GalleryProps } from './gallery.props';
-import { initGalleryInterstitialGuard } from './init-gallery-interstitial-guard';
-import { markGalleryInterstitialShown } from './mark-gallery-interstitial-shown';
+} from "./gallery-layout-parts";
+import { galleryInterstitialGuard } from "./gallery-interstitial-guard";
+import type { GalleryProps } from "./gallery.props";
+import { initGalleryInterstitialGuard } from "./init-gallery-interstitial-guard";
+import { markGalleryInterstitialShown } from "./mark-gallery-interstitial-shown";
 
 galleryInterstitialGuard.value = initGalleryInterstitialGuard();
 
 export function Gallery({ filter }: GalleryProps) {
   const { t, i18n } = useTranslation();
   const [expandedSections, setExpandedSections] = useState<Set<GalleryCategory>>(
-    new Set(gallerySections.map((s) => s.id))
+    new Set(gallerySections.map((s) => s.id)),
   );
-  const [mobileFilter, setMobileFilter] = useState<GalleryCategory | 'all'>('all');
+  const [mobileFilter, setMobileFilter] = useState<GalleryCategory | "all">("all");
 
   // Track gallery page view
   useEffect(() => {
-    trackEvent('gallery_view');
+    trackEvent("gallery_view");
   }, []);
 
   // Show interstitial ad once per session when Gallery opens (on native apps)
@@ -42,9 +42,9 @@ export function Gallery({ filter }: GalleryProps) {
     galleryInterstitialGuard.value = true;
     let cancelled = false;
     const showGalleryInterstitial = async () => {
-      await prepareInterstitial('gallery');
+      await prepareInterstitial("gallery");
       if (!cancelled) {
-        const shown = await showInterstitial('gallery');
+        const shown = await showInterstitial("gallery");
         if (shown) {
           markGalleryInterstitialShown();
         } else if (!cancelled) {
@@ -58,7 +58,7 @@ export function Gallery({ filter }: GalleryProps) {
       cancelled = true;
       // If ad wasn't successfully shown, reset guard so next mount can retry
       try {
-        if (sessionStorage.getItem('galleryInterstitialShown') !== 'true') {
+        if (sessionStorage.getItem("galleryInterstitialShown") !== "true") {
           galleryInterstitialGuard.value = false;
         }
       } catch {
@@ -69,16 +69,16 @@ export function Gallery({ filter }: GalleryProps) {
 
   // Update document title when language changes
   useEffect(() => {
-    document.title = `${t('gallery.title')} | ANQR`;
+    document.title = `${t("gallery.title")} | ANQR`;
   }, [t]);
 
   const _filteredSections = useMemo(() => {
-    return filter === 'all' ? gallerySections : gallerySections.filter((s) => s.id === filter);
+    return filter === "all" ? gallerySections : gallerySections.filter((s) => s.id === filter);
   }, [filter]);
 
   const _totalItems = useMemo(
     () => gallerySections.reduce((acc, s) => acc + s.items.length, 0),
-    []
+    [],
   );
 
   const toggleSection = (id: GalleryCategory) => {
@@ -94,10 +94,10 @@ export function Gallery({ filter }: GalleryProps) {
   };
 
   // Combined filter: use prop filter on desktop, mobile filter on mobile
-  const effectiveFilter = mobileFilter === 'all' ? filter : mobileFilter;
+  const effectiveFilter = mobileFilter === "all" ? filter : mobileFilter;
 
   const displaySections = useMemo(() => {
-    if (effectiveFilter === 'all') return gallerySections;
+    if (effectiveFilter === "all") return gallerySections;
     return gallerySections.filter((s) => s.id === effectiveFilter);
   }, [effectiveFilter]);
 
@@ -114,9 +114,9 @@ export function Gallery({ filter }: GalleryProps) {
         <div className="lg:hidden sticky top-0 z-40 bg-background border-b px-1 py-1.5">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide justify-between">
             <MobileAllButton
-              isActive={mobileFilter === 'all'}
-              onClick={() => setMobileFilter('all')}
-              title={t('gallery.all')}
+              isActive={mobileFilter === "all"}
+              onClick={() => setMobileFilter("all")}
+              title={t("gallery.all")}
             />
             {gallerySections.map((section) => (
               <MobileJumpButton
@@ -134,10 +134,10 @@ export function Gallery({ filter }: GalleryProps) {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-2 tracking-tight text-foreground">
-              {t('gallery.title')}
+              {t("gallery.title")}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              {t('gallery.subtitle')}
+              {t("gallery.subtitle")}
             </p>
           </div>
         </div>

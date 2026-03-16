@@ -12,7 +12,7 @@ export function rankPixelsByImportance(
   _targets: boolean[][],
   importance: number[][],
   moduleCount: number,
-  dataPixels: Set<number>
+  dataPixels: Set<number>,
 ): number[] {
   if (dataPixels.size === 0) return [];
   const candidateCapacity = dataPixels.size;

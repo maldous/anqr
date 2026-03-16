@@ -1,4 +1,4 @@
-import type { DiffusionKernelDef } from './kernels.types';
+import type { DiffusionKernelDef } from "./kernels.types";
 
 export function prepareKernel(kernel: DiffusionKernelDef): void {
   let count = 0;

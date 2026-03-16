@@ -1,1 +1,1 @@
-export const REDACTED = '[REDACTED]';
+export const REDACTED = "[REDACTED]";

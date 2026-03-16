@@ -1,22 +1,22 @@
-import { QRMode } from '../encode/types';
-import { getLengthInBits } from '../encode/utils';
-import type { FlattenedSelection } from './scan-fallback';
-import { log } from './log';
-import { getNumericBitsCount } from './get-numeric-bits-count';
-import { greedyRemoveInvalidSelections } from './greedy-remove-invalid-selections';
-import { buildNumericGroupMaps } from './build-numeric-group-maps';
-import { computeEntryGroupMasks } from './compute-entry-group-masks';
-import type { NumericSelectionMask } from './numeric-selection-mask';
-import type { EncoderDerivedLayout } from './generate.types';
+import { QRMode } from "../encode/types";
+import { getLengthInBits } from "../encode/utils";
+import type { FlattenedSelection } from "./scan-fallback";
+import { log } from "./log";
+import { getNumericBitsCount } from "./get-numeric-bits-count";
+import { greedyRemoveInvalidSelections } from "./greedy-remove-invalid-selections";
+import { buildNumericGroupMaps } from "./build-numeric-group-maps";
+import { computeEntryGroupMasks } from "./compute-entry-group-masks";
+import type { NumericSelectionMask } from "./numeric-selection-mask";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 export function filterSelectionsForNumericSuffix(
   flattened: FlattenedSelection[],
   blockDataArrays: Uint8Array[],
   blockDataCounts: number[],
   encoderLayout: EncoderDerivedLayout,
-  version: number
+  version: number,
 ): FlattenedSelection[] {
-  if (encoderLayout.suffixMode !== 'numeric' || encoderLayout.suffixLength <= 0) {
+  if (encoderLayout.suffixMode !== "numeric" || encoderLayout.suffixLength <= 0) {
     return flattened;
   }
 
@@ -38,7 +38,7 @@ export function filterSelectionsForNumericSuffix(
   const { groupIndexForBit, bitMaskForBit, groupMax, baseGroupValues } = buildNumericGroupMaps(
     linearData,
     numericDataStart,
-    encoderLayout.suffixLength
+    encoderLayout.suffixLength,
   );
 
   const blockStartBytes: number[] = [];
@@ -64,8 +64,8 @@ export function filterSelectionsForNumericSuffix(
       groupIndexForBit,
       bitMaskForBit,
       groupMasks,
-      touched
-    )
+      touched,
+    ),
   );
 
   const currentValues = baseGroupValues.slice();
@@ -84,7 +84,7 @@ export function filterSelectionsForNumericSuffix(
   }
 
   if (accepted.length !== flattened.length) {
-    log.info('Numeric suffix repair filter applied', {
+    log.info("Numeric suffix repair filter applied", {
       originalSelections: flattened.length,
       acceptedSelections: accepted.length,
       removed: flattened.length - accepted.length,

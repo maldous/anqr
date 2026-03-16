@@ -2,7 +2,7 @@ export function markInvalidGroups(
   currentValues: number[],
   groupMax: number[],
   groupCount: number,
-  invalid: Uint8Array
+  invalid: Uint8Array,
 ): number {
   let count = 0;
   for (let g = 0; g < groupCount; g++) {

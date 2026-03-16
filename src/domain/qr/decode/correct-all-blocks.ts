@@ -1,5 +1,5 @@
-import { qrDecoderLog } from './qr-decoder-log';
-import { correctRSBlock } from './correct-rs-block';
+import { qrDecoderLog } from "./qr-decoder-log";
+import { correctRSBlock } from "./correct-rs-block";
 
 /**
  * Correct each RS block and count corrections made.
@@ -7,7 +7,7 @@ import { correctRSBlock } from './correct-rs-block';
 export function correctAllBlocks(
   blockData: number[][],
   blockEcc: number[][],
-  blockConfigs: Array<{ dataCount: number; eccCount: number }>
+  blockConfigs: Array<{ dataCount: number; eccCount: number }>,
 ): { correctedBlocks: number[][]; totalCorrections: number } | null {
   const correctedBlocks: number[][] = [];
   let totalCorrections = 0;

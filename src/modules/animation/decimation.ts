@@ -1,1 +1,1 @@
-export * from '../../domain/render/animation/decimation';
+export * from "../../domain/render/animation/decimation";

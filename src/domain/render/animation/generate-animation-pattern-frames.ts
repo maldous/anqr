@@ -1,5 +1,5 @@
-import type { AnimationPattern } from './animation-patterns.types';
-import { applyPatternToImageData } from './apply-pattern-to-image-data';
+import type { AnimationPattern } from "./animation-patterns.types";
+import { applyPatternToImageData } from "./apply-pattern-to-image-data";
 
 // ============================================
 // MAIN EXPORTS
@@ -14,14 +14,14 @@ export function generateAnimationPatternFrames(
   pattern: AnimationPattern,
   frameCount: number,
   speed: number = 1,
-  seed: number = 0
+  seed: number = 0,
 ): HTMLCanvasElement[] {
-  if (pattern === 'none' || frameCount <= 1) {
+  if (pattern === "none" || frameCount <= 1) {
     // Return single frame copy
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = sourceCanvas.width;
     canvas.height = sourceCanvas.height;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
     ctx.drawImage(sourceCanvas, 0, 0);
     return [canvas];
   }
@@ -32,13 +32,13 @@ export function generateAnimationPatternFrames(
 
   // Get source image data
   const sourceCtx =
-    (sourceCanvas.getContext('2d', {
+    (sourceCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    sourceCanvas.getContext('2d');
+    sourceCanvas.getContext("2d");
   if (!sourceCtx) {
-    throw new Error('Could not get 2D context from source canvas');
+    throw new Error("Could not get 2D context from source canvas");
   }
   const sourceData = sourceCtx.getImageData(0, 0, width, height);
   const sourcePixels = sourceData.data;
@@ -46,10 +46,10 @@ export function generateAnimationPatternFrames(
   const reusableFrameData = new ImageData(framePixels, width, height);
 
   for (let f = 0; f < frameCount; f++) {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext("2d")!;
 
     // Copy source data into a reusable frame buffer.
     framePixels.set(sourcePixels);

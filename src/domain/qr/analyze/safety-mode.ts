@@ -1,1 +1,1 @@
-export type SafetyMode = 'off' | 'balanced' | 'strict';
+export type SafetyMode = "off" | "balanced" | "strict";

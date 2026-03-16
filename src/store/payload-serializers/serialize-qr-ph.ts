@@ -1,9 +1,9 @@
-import { generateQRPh } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateQRPh } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeQRPh(payload: PayloadData): string {
   const p = payload.qrph;
-  if (!(p.accountNumber && p.merchantName)) return '';
+  if (!(p.accountNumber && p.merchantName)) return "";
   return generateQRPh({
     accountNumber: p.accountNumber,
     merchantName: p.merchantName,

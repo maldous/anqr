@@ -6,19 +6,19 @@
  * builds, or when slot IDs have not been configured yet.
  */
 
-import { Capacitor } from '@capacitor/core';
-import { AdPlaceholder, AdSense } from './AdPlaceholder';
-import { resolveSlotId } from './ad-slot-resolver';
+import { Capacitor } from "@capacitor/core";
+import { AdPlaceholder, AdSense } from "./AdPlaceholder";
+import { resolveSlotId } from "./ad-slot-resolver";
 
-export type { AdUnitProps } from './AdUnit.types';
-import type { AdUnitProps } from './AdUnit.types';
+export type { AdUnitProps } from "./AdUnit.types";
+import type { AdUnitProps } from "./AdUnit.types";
 
 export const AdUnit = ({
   slot,
-  width = '100%',
+  width = "100%",
   height = 90,
-  className = '',
-  format = 'auto',
+  className = "",
+  format = "auto",
   responsive = true,
 }: Readonly<AdUnitProps>) => {
   const slotId = resolveSlotId(slot);
@@ -34,11 +34,11 @@ export const AdUnit = ({
   }
 
   // Test mode: show placeholders in production before AdSense approval
-  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === "true";
 
   const enabled =
     import.meta.env.PROD &&
-    import.meta.env.VITE_ADSENSE_ENABLED !== 'false' &&
+    import.meta.env.VITE_ADSENSE_ENABLED !== "false" &&
     !!slotId &&
     !isTestMode;
 
@@ -56,7 +56,7 @@ export const AdUnit = ({
   }
 
   // When rendering a fixed-size unit, pass width/height via inline style.
-  const w = typeof width === 'number' ? width : undefined;
+  const w = typeof width === "number" ? width : undefined;
   return (
     <AdSense
       slot={slotId}

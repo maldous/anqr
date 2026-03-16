@@ -1,9 +1,9 @@
-import type { PixelDecisionMatrix, RGBWithMeta } from './types';
+import type { PixelDecisionMatrix, RGBWithMeta } from "./types";
 
 export function createEmptyMatrix(
   size: number,
   scale: number,
-  effectiveIntensity: number
+  effectiveIntensity: number,
 ): PixelDecisionMatrix {
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];

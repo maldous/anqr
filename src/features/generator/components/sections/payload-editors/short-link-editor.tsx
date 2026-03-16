@@ -1,11 +1,11 @@
-import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { isValidUrl } from '@/modules/payload-generators';
-import type { QRState } from '@/store/qr-store';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
-import type { ShortLinkForm } from '../payload-section-types';
+import type { TFunction } from "i18next";
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { isValidUrl } from "@/modules/payload-generators";
+import type { QRState } from "@/store/qr-store";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
+import type { ShortLinkForm } from "../payload-section-types";
 
 export const ShortLinkEditor = ({
   payload,
@@ -14,8 +14,8 @@ export const ShortLinkEditor = ({
   shortLinkForm,
   t,
 }: Readonly<{
-  payload: QRState['payload'];
-  setPayloadText: QRState['setPayloadText'];
+  payload: QRState["payload"];
+  setPayloadText: QRState["setPayloadText"];
   setShortLinkForm: React.Dispatch<React.SetStateAction<ShortLinkForm>>;
   shortLinkForm: ShortLinkForm;
   t: TFunction;
@@ -23,18 +23,18 @@ export const ShortLinkEditor = ({
   <div className="space-y-4">
     <div className="space-y-2">
       <Label>
-        <HighlightedLabel>{t('payload.longUrl', 'Long URL')}</HighlightedLabel>
+        <HighlightedLabel>{t("payload.longUrl", "Long URL")}</HighlightedLabel>
       </Label>
       <Input
         type="url"
         value={shortLinkForm.longUrl}
         onChange={(e) =>
-          setShortLinkForm((prev) => ({ ...prev, longUrl: e.target.value, error: '' }))
+          setShortLinkForm((prev) => ({ ...prev, longUrl: e.target.value, error: "" }))
         }
         placeholder="https://example.com/very/long/url/that/needs/shortening"
         data-testid={DynamicTestId.resolve(
-          'payload-shortlink-long-input',
-          'payload-shortlink-long-input'
+          "payload-shortlink-long-input",
+          "payload-shortlink-long-input",
         )}
       />
     </div>
@@ -46,56 +46,56 @@ export const ShortLinkEditor = ({
       }
       onClick={async () => {
         if (!shortLinkForm.longUrl) return;
-        setShortLinkForm((prev) => ({ ...prev, isLoading: true, error: '' }));
+        setShortLinkForm((prev) => ({ ...prev, isLoading: true, error: "" }));
         try {
           const encodedUrl = encodeURIComponent(shortLinkForm.longUrl);
           const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodedUrl}`);
-          if (!response.ok) throw new Error('TinyURL service unavailable');
+          if (!response.ok) throw new Error("TinyURL service unavailable");
           const shortUrl = await response.text();
-          if (!shortUrl.startsWith('http')) throw new Error('Invalid response from shortener');
+          if (!shortUrl.startsWith("http")) throw new Error("Invalid response from shortener");
           setShortLinkForm((prev) => ({ ...prev, shortUrl, isLoading: false }));
           setPayloadText(shortUrl.trim());
         } catch (err) {
           setShortLinkForm((prev) => ({
             ...prev,
             isLoading: false,
-            error: err instanceof Error ? err.message : 'Failed to shorten URL',
+            error: err instanceof Error ? err.message : "Failed to shorten URL",
           }));
         }
       }}
     >
       {shortLinkForm.isLoading
-        ? t('actions.shortening', 'Shortening...')
-        : t('actions.shortenUrl', 'Shorten URL')}
+        ? t("actions.shortening", "Shortening...")
+        : t("actions.shortenUrl", "Shorten URL")}
     </button>
     {shortLinkForm.error && <p className="text-xs text-destructive">{shortLinkForm.error}</p>}
     <div className="space-y-2">
       <Label>
-        <HighlightedLabel>{t('payload.shortUrl', 'Short URL')}</HighlightedLabel>
+        <HighlightedLabel>{t("payload.shortUrl", "Short URL")}</HighlightedLabel>
       </Label>
       <Input
         type="url"
         value={payload.text}
         onChange={(e) => setPayloadText(e.target.value)}
-        placeholder={t('placeholders.generatedShortUrl', 'Generated short URL will appear here')}
-        data-testid={DynamicTestId.resolve('payload-shortlink-input', 'payload-shortlink-input')}
+        placeholder={t("placeholders.generatedShortUrl", "Generated short URL will appear here")}
+        data-testid={DynamicTestId.resolve("payload-shortlink-input", "payload-shortlink-input")}
         className={
           payload.validate && payload.text && !isValidUrl(payload.text)
-            ? 'border-destructive focus-visible:ring-destructive'
-            : ''
+            ? "border-destructive focus-visible:ring-destructive"
+            : ""
         }
-        readOnly={shortLinkForm.shortUrl !== ''}
+        readOnly={shortLinkForm.shortUrl !== ""}
       />
       {payload.validate && payload.text && !isValidUrl(payload.text) && (
         <p className="text-xs text-destructive">
-          {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+          {t("validation.invalidUrl", "Enter a valid URL (must start with http:// or https://)")}
         </p>
       )}
     </div>
     <p className="text-xs text-muted-foreground">
       {t(
-        'hints.shortLinkAuto',
-        'Enter a long URL above and click "Shorten URL" to generate a short link.'
+        "hints.shortLinkAuto",
+        'Enter a long URL above and click "Shorten URL" to generate a short link.',
       )}
     </p>
   </div>

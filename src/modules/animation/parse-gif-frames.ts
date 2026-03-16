@@ -1,7 +1,7 @@
-import { decodeGif } from '../../domain/render/animation/gif-codec';
-import type { AnimationFrame } from './types';
-import { asClampedRgbaView } from './as-clamped-rgba-view';
-import { log } from './log';
+import { decodeGif } from "../../domain/render/animation/gif-codec";
+import type { AnimationFrame } from "./types";
+import { asClampedRgbaView } from "./as-clamped-rgba-view";
+import { log } from "./log";
 
 /**
  * Parse a GIF file and extract frames as canvas elements
@@ -10,7 +10,7 @@ import { log } from './log';
 export async function parseGifFrames(source: string | ArrayBuffer): Promise<AnimationFrame[]> {
   let arrayBuffer: ArrayBuffer;
 
-  if (typeof source === 'string') {
+  if (typeof source === "string") {
     const response = await fetch(source);
     arrayBuffer = await response.arrayBuffer();
   } else {
@@ -20,25 +20,25 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
   const { width, height, frames } = decodeGif(arrayBuffer);
 
   if (frames.length === 0) {
-    throw new Error('No frames found in GIF');
+    throw new Error("No frames found in GIF");
   }
 
-  const compositeCanvas = document.createElement('canvas');
+  const compositeCanvas = document.createElement("canvas");
   compositeCanvas.width = width;
   compositeCanvas.height = height;
   const compositeCtx =
-    (compositeCanvas.getContext('2d', {
+    (compositeCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    compositeCanvas.getContext('2d');
+    compositeCanvas.getContext("2d");
   if (!compositeCtx) {
-    throw new Error('Failed to get 2D context for GIF composite canvas');
+    throw new Error("Failed to get 2D context for GIF composite canvas");
   }
 
   const animationFrames: AnimationFrame[] = [];
 
-  log.debug('parseGifFrames: decoding', {
+  log.debug("parseGifFrames: decoding", {
     frameCount: frames.length,
     width,
     height,
@@ -56,25 +56,25 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
 
     const imageData = new ImageData(asClampedRgbaView(patch), dims.width, dims.height);
 
-    const patchCanvas = document.createElement('canvas');
+    const patchCanvas = document.createElement("canvas");
     patchCanvas.width = dims.width;
     patchCanvas.height = dims.height;
     const patchCtx =
-      (patchCanvas.getContext('2d', {
+      (patchCanvas.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-      patchCanvas.getContext('2d');
+      patchCanvas.getContext("2d");
     if (patchCtx) {
       patchCtx.putImageData(imageData, 0, 0);
     }
 
     compositeCtx.drawImage(patchCanvas, dims.left, dims.top);
 
-    const outputCanvas = document.createElement('canvas');
+    const outputCanvas = document.createElement("canvas");
     outputCanvas.width = width;
     outputCanvas.height = height;
-    const outputCtx = outputCanvas.getContext('2d');
+    const outputCtx = outputCanvas.getContext("2d");
     if (outputCtx) {
       outputCtx.drawImage(compositeCanvas, 0, 0);
     }

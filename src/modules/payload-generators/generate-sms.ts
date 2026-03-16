@@ -1,4 +1,4 @@
-import type { SmsHelper } from './types';
+import type { SmsHelper } from "./types";
 
 /** Generate SMS URI */
 export function generateSms(params: SmsHelper): string {

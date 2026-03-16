@@ -3,12 +3,12 @@
  * for selecting regions from non-square images
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('OVERLAY');
+const _log = createLogger("OVERLAY");
 
-export type { CropRegion, CropHandlerOptions } from './crop-handler.types';
-import type { CropRegion, CropHandlerOptions } from './crop-handler.types';
+export type { CropRegion, CropHandlerOptions } from "./crop-handler.types";
+import type { CropRegion, CropHandlerOptions } from "./crop-handler.types";
 
 export class CropHandler {
   private readonly container: HTMLElement;
@@ -33,30 +33,30 @@ export class CropHandler {
     this.region = options.initialRegion ?? { x: 0, y: 0, size: 100 };
 
     // Create canvas
-    this.canvas = document.createElement('canvas');
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
-    this.canvas.style.cursor = 'crosshair';
+    this.canvas = document.createElement("canvas");
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
+    this.canvas.style.cursor = "crosshair";
     this.container.appendChild(this.canvas);
 
-    const ctx = this.canvas.getContext('2d');
-    if (!ctx) throw new Error('Could not get 2D context');
+    const ctx = this.canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not get 2D context");
     this.ctx = ctx;
 
     // Set up event listeners
-    this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-    this.canvas.addEventListener('mouseleave', this.handleMouseUp.bind(this));
+    this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
+    this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
+    this.canvas.addEventListener("mouseup", this.handleMouseUp.bind(this));
+    this.canvas.addEventListener("mouseleave", this.handleMouseUp.bind(this));
 
     // Touch events
-    this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), {
+    this.canvas.addEventListener("touchstart", this.handleTouchStart.bind(this), {
       passive: false,
     });
-    this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), {
+    this.canvas.addEventListener("touchmove", this.handleTouchMove.bind(this), {
       passive: false,
     });
-    this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), {
+    this.canvas.addEventListener("touchend", this.handleTouchEnd.bind(this), {
       passive: true,
     });
 
@@ -66,7 +66,7 @@ export class CropHandler {
 
   private loadImage(url: string): void {
     this.image = new Image();
-    this.image.crossOrigin = 'anonymous';
+    this.image.crossOrigin = "anonymous";
     this.image.onload = () => {
       this.updateCanvasSize();
       this.draw();
@@ -109,11 +109,11 @@ export class CropHandler {
       this.offsetX,
       this.offsetY,
       this.image.width * this.scale,
-      this.image.height * this.scale
+      this.image.height * this.scale,
     );
 
     // Draw semi-transparent overlay
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     this.ctx.fillRect(0, 0, rect.width, rect.height);
 
     // Cut out crop region (show original image)
@@ -130,23 +130,23 @@ export class CropHandler {
       this.offsetX,
       this.offsetY,
       this.image.width * this.scale,
-      this.image.height * this.scale
+      this.image.height * this.scale,
     );
     this.ctx.restore();
 
     // Draw crop border
-    this.ctx.strokeStyle = '#ffffff';
+    this.ctx.strokeStyle = "#ffffff";
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(cropX, cropY, cropSize, cropSize);
 
     // Draw resize handle
     const handleSize = 10;
-    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillStyle = "#ffffff";
     this.ctx.fillRect(
       cropX + cropSize - handleSize,
       cropY + cropSize - handleSize,
       handleSize,
-      handleSize
+      handleSize,
     );
   }
 
@@ -200,11 +200,11 @@ export class CropHandler {
 
     // Update cursor
     if (this.isInResizeHandle(pos)) {
-      this.canvas.style.cursor = 'nwse-resize';
+      this.canvas.style.cursor = "nwse-resize";
     } else if (this.isInCropRegion(pos)) {
-      this.canvas.style.cursor = 'move';
+      this.canvas.style.cursor = "move";
     } else {
-      this.canvas.style.cursor = 'crosshair';
+      this.canvas.style.cursor = "crosshair";
     }
 
     if (!(this.isDragging || this.isResizing)) return;
@@ -223,11 +223,11 @@ export class CropHandler {
       // Move the crop region
       this.region.x = Math.max(
         0,
-        Math.min(this.image.width - this.region.size, this.regionStart.x + dx)
+        Math.min(this.image.width - this.region.size, this.regionStart.x + dx),
       );
       this.region.y = Math.max(
         0,
-        Math.min(this.image.height - this.region.size, this.regionStart.y + dy)
+        Math.min(this.image.height - this.region.size, this.regionStart.y + dy),
       );
     }
 
@@ -242,11 +242,11 @@ export class CropHandler {
 
   private handleTouchStart(e: TouchEvent): void {
     if (e.touches.length === 1) {
-      if (typeof (e as Event).preventDefault === 'function') {
+      if (typeof (e as Event).preventDefault === "function") {
         (e as Event).preventDefault();
       }
       const touch = e.touches[0];
-      const mouseEvent = new MouseEvent('mousedown', {
+      const mouseEvent = new MouseEvent("mousedown", {
         clientX: touch.clientX,
         clientY: touch.clientY,
       });
@@ -256,11 +256,11 @@ export class CropHandler {
 
   private handleTouchMove(e: TouchEvent): void {
     if (e.touches.length === 1) {
-      if (typeof (e as Event).preventDefault === 'function') {
+      if (typeof (e as Event).preventDefault === "function") {
         (e as Event).preventDefault();
       }
       const touch = e.touches[0];
-      const mouseEvent = new MouseEvent('mousemove', {
+      const mouseEvent = new MouseEvent("mousemove", {
         clientX: touch.clientX,
         clientY: touch.clientY,
       });

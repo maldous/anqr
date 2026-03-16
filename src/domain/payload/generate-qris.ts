@@ -1,6 +1,6 @@
-import { EMVQRBuilder } from './emv';
-import type { QRISParams } from '../../modules/payload-generators/types';
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
+import { EMVQRBuilder } from "./emv";
+import type { QRISParams } from "../../modules/payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "../../modules/payload-generators/types";
 
 // ============================================
 // NATIONAL EMV PAYMENT SCHEME GENERATORS
@@ -14,19 +14,19 @@ export function generateQRIS(params: QRISParams): string {
     .setPayloadFormatIndicator()
     .setPointOfInitiation(!params.amount);
 
-  const maiData: Array<{ tag: string; value: string }> = [{ tag: '01', value: params.merchantID }];
+  const maiData: Array<{ tag: string; value: string }> = [{ tag: "01", value: params.merchantID }];
   if (params.merchantCriteria) {
-    maiData.push({ tag: '02', value: params.merchantCriteria });
+    maiData.push({ tag: "02", value: params.merchantCriteria });
   }
   if (params.nmid) {
-    maiData.push({ tag: '03', value: params.nmid });
+    maiData.push({ tag: "03", value: params.nmid });
   }
 
   builder.addMerchantAccountInfo(26, PAYMENT_SCHEME_GUI.QRIS, maiData);
 
   if (params.merchantPAN) {
-    builder.addMerchantAccountInfo(51, 'ID.CO.QRIS.WWW', [
-      { tag: '01', value: params.merchantPAN },
+    builder.addMerchantAccountInfo(51, "ID.CO.QRIS.WWW", [
+      { tag: "01", value: params.merchantPAN },
     ]);
   }
 
@@ -36,13 +36,13 @@ export function generateQRIS(params: QRISParams): string {
     builder.setTransactionAmount(params.amount, ISO_CURRENCY.IDR);
   }
 
-  if (params.feeType === 'FIXED' && params.feeAmount) {
-    builder.setTipIndicator('02', params.feeAmount);
-  } else if (params.feeType === 'PERCENT' && params.feeAmount) {
-    builder.setTipIndicator('03', params.feeAmount);
+  if (params.feeType === "FIXED" && params.feeAmount) {
+    builder.setTipIndicator("02", params.feeAmount);
+  } else if (params.feeType === "PERCENT" && params.feeAmount) {
+    builder.setTipIndicator("03", params.feeAmount);
   }
 
-  builder.setCountryCode('ID');
+  builder.setCountryCode("ID");
   builder.setMerchantName(params.merchantName);
   builder.setMerchantCity(params.merchantCity);
 

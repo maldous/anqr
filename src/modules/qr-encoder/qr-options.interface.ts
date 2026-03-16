@@ -1,6 +1,6 @@
-import type { ECCLevel } from './ecc-level';
-import type { EncodingMode } from './encoding-mode';
-import type { MaskPattern } from './mask-pattern';
+import type { ECCLevel } from "./ecc-level";
+import type { EncodingMode } from "./encoding-mode";
+import type { MaskPattern } from "./mask-pattern";
 
 export interface QROptions {
   errorCorrectionLevel?: ECCLevel;

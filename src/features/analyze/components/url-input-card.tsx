@@ -1,7 +1,7 @@
-import { ChevronRight, Link, Loader2 } from 'lucide-react';
-import type { useTranslation } from 'react-i18next';
-import { Button } from '@/ui/primitives/button';
-import { Input } from '@/ui/primitives/input';
+import { ChevronRight, Link, Loader2 } from "lucide-react";
+import type { useTranslation } from "react-i18next";
+import { Button } from "@/ui/primitives/button";
+import { Input } from "@/ui/primitives/input";
 
 export function UrlInputCard({
   t,
@@ -11,7 +11,7 @@ export function UrlInputCard({
   setUrlInput,
   handleUrlSubmit,
 }: Readonly<{
-  t: ReturnType<typeof useTranslation>['t'];
+  t: ReturnType<typeof useTranslation>["t"];
   isLoading: boolean;
   isLoadingUrl: boolean;
   urlInput: string;
@@ -21,12 +21,12 @@ export function UrlInputCard({
   return (
     <div
       className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
-        isLoadingUrl ? 'border-primary bg-primary/5' : 'border-border'
+        isLoadingUrl ? "border-primary bg-primary/5" : "border-border"
       }`}
     >
       <div className="flex items-center gap-1.5 text-muted-foreground">
         <Link className="w-4 h-4" />
-        <span className="text-sm font-medium">{t('analyze.fromUrl', 'From URL')}</span>
+        <span className="text-sm font-medium">{t("analyze.fromUrl", "From URL")}</span>
       </div>
       <div className="flex gap-1.5">
         <Input
@@ -34,7 +34,7 @@ export function UrlInputCard({
           placeholder="https://..."
           value={urlInput}
           onChange={(e) => setUrlInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+          onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
           disabled={isLoading}
           className="flex-1 h-8 text-xs"
         />

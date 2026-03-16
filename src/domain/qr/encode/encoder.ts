@@ -3,23 +3,23 @@
  * Main factory function for creating QR codes
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { autoDetectTypeNumber } from './auto-detect-type-number';
-import { qrBitBuffer } from './bit-buffer';
-import { composeSvgAccessibilityAttr } from './compose-svg-accessibility-attr';
-import { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
-import { computeBlockECData, interleaveCodewords } from './ec-codewords';
-import { createDataURL } from './output';
-import { padDataBuffer } from './pad-data-buffer';
-import { placeDataBitInModule } from './place-data-bit-in-module';
-import { getRSBlocks } from './rs-blocks';
+import { createLogger } from "../../../infra/logging/logger";
+import { autoDetectTypeNumber } from "./auto-detect-type-number";
+import { qrBitBuffer } from "./bit-buffer";
+import { composeSvgAccessibilityAttr } from "./compose-svg-accessibility-attr";
+import { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from "./data-modes";
+import { computeBlockECData, interleaveCodewords } from "./ec-codewords";
+import { createDataURL } from "./output";
+import { padDataBuffer } from "./pad-data-buffer";
+import { placeDataBitInModule } from "./place-data-bit-in-module";
+import { getRSBlocks } from "./rs-blocks";
 import type {
   QRBitBuffer as QRBitBufferType,
   QRCodeInstance,
   QRDataSegment,
   QRErrorCorrectionLevelChar,
-} from '../../../modules/qr-encoder/types';
-import { QRErrorCorrectionLevel } from '../../../modules/qr-encoder/types';
+} from "../../../modules/qr-encoder/types";
+import { QRErrorCorrectionLevel } from "../../../modules/qr-encoder/types";
 import {
   getBCHTypeInfo,
   getBCHTypeNumber,
@@ -27,9 +27,9 @@ import {
   getLostPoint,
   getMaskFunction,
   getPatternPosition,
-} from './utils';
+} from "./utils";
 
-const _log = createLogger('ENCODER');
+const _log = createLogger("ENCODER");
 
 /**
  * Create a QR code instance
@@ -38,7 +38,7 @@ const _log = createLogger('ENCODER');
  */
 export function qrcode(
   typeNumber: number,
-  errorCorrectionLevel: QRErrorCorrectionLevelChar
+  errorCorrectionLevel: QRErrorCorrectionLevelChar,
 ): QRCodeInstance {
   let _typeNumber = typeNumber;
   const _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
@@ -227,7 +227,7 @@ export function qrcode(
 
   const createBytes = (
     buffer: QRBitBufferType,
-    rsBlocks: ReturnType<typeof getRSBlocks>
+    rsBlocks: ReturnType<typeof getRSBlocks>,
   ): number[] => {
     let offset = 0;
     let maxDcCount = 0;
@@ -255,7 +255,7 @@ export function qrcode(
   const createData = (
     typeNumber: number,
     errorCorrectionLevel: number,
-    dataList: QRDataSegment[]
+    dataList: QRDataSegment[],
   ): number[] => {
     const rsBlocks = getRSBlocks(typeNumber, errorCorrectionLevel);
 
@@ -284,21 +284,21 @@ export function qrcode(
   };
 
   const escapeXml = (s: string): string => {
-    let escaped = '';
+    let escaped = "";
     for (let i = 0; i < s.length; i += 1) {
       const c = s.charAt(i);
       switch (c) {
-        case '<':
-          escaped += '&lt;';
+        case "<":
+          escaped += "&lt;";
           break;
-        case '>':
-          escaped += '&gt;';
+        case ">":
+          escaped += "&gt;";
           break;
-        case '&':
-          escaped += '&amp;';
+        case "&":
+          escaped += "&amp;";
           break;
         case '"':
-          escaped += '&quot;';
+          escaped += "&quot;";
           break;
         default:
           escaped += c;
@@ -321,14 +321,14 @@ export function qrcode(
     max: number,
     marginVal: number,
     blocks: Record<string, string>,
-    blocksLastLineNoMargin: Record<string, string>
+    blocksLastLineNoMargin: Record<string, string>,
   ): string => {
     const r1 = Math.floor((y - min) / 1);
     const r2 = Math.floor((y + 1 - min) / 1);
-    let row = '';
+    let row = "";
     for (let x = 0; x < size; x += 1) {
-      let p = _isHalfDark(x, y, min, max, r1) ? ' ' : '█';
-      p += _isHalfDark(x, y + 1, min, max, r2) ? ' ' : '█';
+      let p = _isHalfDark(x, y, min, max, r1) ? " " : "█";
+      p += _isHalfDark(x, y + 1, min, max, r2) ? " " : "█";
       row += marginVal < 1 && y + 1 >= max ? blocksLastLineNoMargin[p] : blocks[p];
     }
     return row;
@@ -343,47 +343,47 @@ export function qrcode(
     const max = size - marginVal;
 
     const blocks: Record<string, string> = {
-      '██': '█',
-      '█ ': '▀',
-      ' █': '▄',
-      '  ': ' ',
+      "██": "█",
+      "█ ": "▀",
+      " █": "▄",
+      "  ": " ",
     };
 
     const blocksLastLineNoMargin: Record<string, string> = {
-      '██': '▀',
-      '█ ': '▀',
-      ' █': ' ',
-      '  ': ' ',
+      "██": "▀",
+      "█ ": "▀",
+      " █": " ",
+      "  ": " ",
     };
 
-    let ascii = '';
+    let ascii = "";
     for (let y = 0; y < size; y += 2) {
       ascii += _buildHalfRow(y, size, min, max, marginVal, blocks, blocksLastLineNoMargin);
-      ascii += '\n';
+      ascii += "\n";
     }
 
     if (size % 2 && marginVal > 0) {
-      return ascii.substring(0, ascii.length - size - 1) + '▀'.repeat(size);
+      return ascii.substring(0, ascii.length - size - 1) + "▀".repeat(size);
     }
 
     return ascii.substring(0, ascii.length - 1);
   };
 
   const _this: QRCodeInstance = {
-    addData: (data: string, mode = 'Byte'): void => {
+    addData: (data: string, mode = "Byte"): void => {
       let newData: QRDataSegment | null = null;
 
       switch (mode) {
-        case 'Numeric':
+        case "Numeric":
           newData = qrNumber(data);
           break;
-        case 'Alphanumeric':
+        case "Alphanumeric":
           newData = qrAlphaNum(data);
           break;
-        case 'Byte':
+        case "Byte":
           newData = qr8BitByte(data);
           break;
-        case 'Kanji':
+        case "Kanji":
           newData = qrKanji(data);
           break;
         default:
@@ -410,7 +410,7 @@ export function qrcode(
 
       // Use specified mask pattern (0-7) or auto-select best one
       const finalMaskPattern =
-        typeof maskPattern === 'number' && maskPattern >= 0 && maskPattern <= 7
+        typeof maskPattern === "number" && maskPattern >= 0 && maskPattern <= 7
           ? maskPattern
           : getBestMaskPattern();
       makeImpl(false, finalMaskPattern);
@@ -420,36 +420,36 @@ export function qrcode(
       const cellSizeVal = cellSize || 2;
       const marginVal = margin ?? cellSizeVal * 4;
 
-      let qrHtml = '';
+      let qrHtml = "";
 
       qrHtml += '<table style="';
-      qrHtml += ' border-width: 0px; border-style: none;';
-      qrHtml += ' border-collapse: collapse;';
+      qrHtml += " border-width: 0px; border-style: none;";
+      qrHtml += " border-collapse: collapse;";
       qrHtml += ` padding: 0px; margin: ${marginVal}px;`;
       qrHtml += '">';
-      qrHtml += '<tbody>';
+      qrHtml += "<tbody>";
 
       for (let r = 0; r < _this.getModuleCount(); r += 1) {
-        qrHtml += '<tr>';
+        qrHtml += "<tr>";
 
         for (let c = 0; c < _this.getModuleCount(); c += 1) {
           qrHtml += '<td style="';
-          qrHtml += ' border-width: 0px; border-style: none;';
-          qrHtml += ' border-collapse: collapse;';
-          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += " border-width: 0px; border-style: none;";
+          qrHtml += " border-collapse: collapse;";
+          qrHtml += " padding: 0px; margin: 0px;";
           qrHtml += ` width: ${cellSizeVal}px;`;
           qrHtml += ` height: ${cellSizeVal}px;`;
-          qrHtml += ' background-color: ';
-          qrHtml += _this.isDark(r, c) ? '#000000' : '#ffffff';
-          qrHtml += ';';
+          qrHtml += " background-color: ";
+          qrHtml += _this.isDark(r, c) ? "#000000" : "#ffffff";
+          qrHtml += ";";
           qrHtml += '"/>';
         }
 
-        qrHtml += '</tr>';
+        qrHtml += "</tr>";
       }
 
-      qrHtml += '</tbody>';
-      qrHtml += '</table>';
+      qrHtml += "</tbody>";
+      qrHtml += "</table>";
 
       return qrHtml;
     },
@@ -466,7 +466,7 @@ export function qrcode(
           },
       margin?: number,
       alt?: unknown,
-      title?: unknown
+      title?: unknown,
     ): string => {
       let opts: {
         cellSize?: number;
@@ -475,7 +475,7 @@ export function qrcode(
         title?: unknown;
         scalable?: boolean;
       } = {};
-      if (typeof cellSize === 'object') {
+      if (typeof cellSize === "object") {
         opts = cellSize;
         cellSize = opts.cellSize;
         margin = opts.margin;
@@ -486,28 +486,28 @@ export function qrcode(
       const cellSizeVal = cellSize || 2;
       const marginVal = margin ?? cellSizeVal * 4;
 
-      const altObj = composeSvgAccessibilityAttr(alt, 'qrcode-description');
-      const titleObj = composeSvgAccessibilityAttr(title, 'qrcode-title');
+      const altObj = composeSvgAccessibilityAttr(alt, "qrcode-description");
+      const titleObj = composeSvgAccessibilityAttr(title, "qrcode-title");
 
       const size = _this.getModuleCount() * cellSizeVal + marginVal * 2;
       const rect = `l${cellSizeVal},0 0,${cellSizeVal} -${cellSizeVal},0 0,-${cellSizeVal}z `;
 
-      let qrSvg = '';
+      let qrSvg = "";
       qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
-      qrSvg += opts.scalable ? '' : ` width="${size}px" height="${size}px"`;
+      qrSvg += opts.scalable ? "" : ` width="${size}px" height="${size}px"`;
       qrSvg += ` viewBox="0 0 ${size} ${size}" `;
       qrSvg += ' preserveAspectRatio="xMinYMin meet"';
       qrSvg +=
         titleObj.text || altObj.text
-          ? ` role="img" aria-labelledby="${escapeXml([titleObj.id, altObj.id].join(' ').trim())}"`
-          : '';
-      qrSvg += '>';
+          ? ` role="img" aria-labelledby="${escapeXml([titleObj.id, altObj.id].join(" ").trim())}"`
+          : "";
+      qrSvg += ">";
       qrSvg += titleObj.text
-        ? `<title id="${escapeXml(titleObj.id || '')}">${escapeXml(titleObj.text)}</title>`
-        : '';
+        ? `<title id="${escapeXml(titleObj.id || "")}">${escapeXml(titleObj.text)}</title>`
+        : "";
       qrSvg += altObj.text
-        ? `<description id="${escapeXml(altObj.id || '')}">${escapeXml(altObj.text)}</description>`
-        : '';
+        ? `<description id="${escapeXml(altObj.id || "")}">${escapeXml(altObj.text)}</description>`
+        : "";
       qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
       qrSvg += '<path d="';
 
@@ -522,7 +522,7 @@ export function qrcode(
       }
 
       qrSvg += '" stroke="transparent" fill="black"/>';
-      qrSvg += '</svg>';
+      qrSvg += "</svg>";
 
       return qrSvg;
     },
@@ -552,8 +552,8 @@ export function qrcode(
 
       const size = _this.getModuleCount() * cellSizeVal + marginVal * 2;
 
-      let img = '';
-      img += '<img';
+      let img = "";
+      img += "<img";
       img += '\u0020src="';
       img += _this.createDataURL(cellSizeVal, marginVal);
       img += '"';
@@ -568,7 +568,7 @@ export function qrcode(
         img += escapeXml(alt);
         img += '"';
       }
-      img += '/>';
+      img += "/>";
 
       return img;
     },
@@ -587,13 +587,13 @@ export function qrcode(
       const min = marginVal;
       const max = size - marginVal;
 
-      const white = '██'.repeat(cs);
-      const black = '  '.repeat(cs);
+      const white = "██".repeat(cs);
+      const black = "  ".repeat(cs);
 
-      let ascii = '';
+      let ascii = "";
       for (let y = 0; y < size; y += 1) {
         const r = Math.floor((y - min) / cs);
-        let line = '';
+        let line = "";
         for (let x = 0; x < size; x += 1) {
           let p = 1;
 
@@ -622,7 +622,7 @@ export function qrcode(
       const length = _this.getModuleCount();
       for (let row = 0; row < length; row++) {
         for (let col = 0; col < length; col++) {
-          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillStyle = _this.isDark(row, col) ? "black" : "white";
           context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
         }
       }
@@ -631,7 +631,7 @@ export function qrcode(
     // Debug/test helper to access interleaved data bytes
     getDataCache: (): number[] => {
       if (_typeNumber < 1) {
-        throw new Error('QR code not initialized: call make() before getDataCache()');
+        throw new Error("QR code not initialized: call make() before getDataCache()");
       }
       _dataCache ??= createData(_typeNumber, _errorCorrectionLevel, _dataList);
       return _dataCache;

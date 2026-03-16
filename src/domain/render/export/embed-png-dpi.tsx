@@ -1,4 +1,4 @@
-import { createPngPhysChunk } from './create-png-phys-chunk';
+import { createPngPhysChunk } from "./create-png-phys-chunk";
 
 /**
  * Embed DPI into PNG blob
@@ -22,5 +22,5 @@ export async function embedPngDpi(pngBlob: Blob, dpi: number): Promise<Blob> {
   newPng.set(physChunk, ihdrEnd);
   newPng.set(data.slice(ihdrEnd), ihdrEnd + physChunk.length);
 
-  return new Blob([newPng], { type: 'image/png' });
+  return new Blob([newPng], { type: "image/png" });
 }

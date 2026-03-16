@@ -3,20 +3,20 @@
  * Unified overlay data preparation
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import { applyDitherToMatrix } from '../dither/dithering-matrix';
-import { getOverlayData } from '../overlay/overlay-data';
-import { generateHalftoneDitheredOverlayData } from './pixel-matrix-dithered';
-import { getEffectiveIntensity } from './pixel-matrix-utils';
+import { createLogger } from "../../../infra/logging/logger";
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import { applyDitherToMatrix } from "../dither/dithering-matrix";
+import { getOverlayData } from "../overlay/overlay-data";
+import { generateHalftoneDitheredOverlayData } from "./pixel-matrix-dithered";
+import { getEffectiveIntensity } from "./pixel-matrix-utils";
 import type {
   CreateCanvasFn,
   OverlayData,
   QRCodeInstance,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
+} from "../../../modules/qr-generator/types";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 /**
  * Prepare unified overlay data for rendering
@@ -26,7 +26,7 @@ export async function prepareUnifiedOverlayData(
   config: QRGeneratorConfig,
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
   moduleCount: number,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
 ): Promise<{
   ditherPattern: boolean[][] | null;
   overlayData: OverlayData | null;
@@ -43,8 +43,8 @@ export async function prepareUnifiedOverlayData(
   const { effectiveIntensity, effectiveConfig } = getEffectiveIntensity(config);
 
   // Halftone-dithered: use error-diffusion density instead of raw overlay brightness
-  const overlayMode = config.overlayMode || 'blend';
-  if (overlayMode === 'halftone-dithered') {
+  const overlayMode = config.overlayMode || "blend";
+  if (overlayMode === "halftone-dithered") {
     const result = await generateHalftoneDitheredOverlayData(
       // Safe: QRCodeObject satisfies QRCodeInstance (isDark + getModuleCount)
       qr as QRCodeInstance,
@@ -53,7 +53,7 @@ export async function prepareUnifiedOverlayData(
       moduleCount,
       effectiveIntensity,
       effectiveConfig,
-      createCanvasFn
+      createCanvasFn,
     );
     return {
       ditherPattern: null,
@@ -67,12 +67,12 @@ export async function prepareUnifiedOverlayData(
     overlayCanvas,
     moduleCount,
     effectiveConfig,
-    createCanvasFn
+    createCanvasFn,
   );
 
   // Apply dithering if needed
   let ditherPattern: boolean[][] | null = null;
-  if (overlayMode === 'dither' || overlayMode === 'extreme') {
+  if (overlayMode === "dither" || overlayMode === "extreme") {
     ditherPattern = applyDitherToMatrix(qr, moduleCount, overlayData, effectiveConfig);
   }
 

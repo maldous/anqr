@@ -1,6 +1,6 @@
-import { applyBrightnessCurve } from './apply-brightness-curve';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
+import { applyBrightnessCurve } from "./apply-brightness-curve";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
 
 export function applyHalftoneMode(context: OverlayModeContext, result: OverlayModeResult): void {
   const { isDark, brightness, effectiveIntensity, config } = context;

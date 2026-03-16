@@ -1,6 +1,6 @@
 export function countDataDiffs(
   origData: Uint8Array,
-  modData: Uint8Array
+  modData: Uint8Array,
 ): { bytesChanged: number; bitsChanged: number } {
   let bytesChanged = 0;
   let bitsChanged = 0;

@@ -1,6 +1,6 @@
-import { type RSBlockInfo } from './bit-mapping';
-import { log } from './log';
-import { simulateInterleavingProtection } from './simulate-interleaving-protection';
+import { type RSBlockInfo } from "./bit-mapping";
+import { log } from "./log";
+import { simulateInterleavingProtection } from "./simulate-interleaving-protection";
 
 /**
  * Calculate how many protected bits belong to each RS block.
@@ -30,7 +30,7 @@ import { simulateInterleavingProtection } from './simulate-interleaving-protecti
  */
 export function calculateProtectedBitsPerBlock(
   rsBlockInfo: RSBlockInfo[],
-  protectedBitCount: number
+  protectedBitCount: number,
 ): number[] {
   const numBlocks = rsBlockInfo.length;
   const protectedBitsPerBlock = Array.from({ length: numBlocks }, () => 0);
@@ -43,7 +43,7 @@ export function calculateProtectedBitsPerBlock(
   const maxProtectedByteInBlock = simulateInterleavingProtection(
     rsBlockInfo,
     numBlocks,
-    protectedByteCount
+    protectedByteCount,
   );
 
   for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
@@ -52,7 +52,7 @@ export function calculateProtectedBitsPerBlock(
     }
   }
 
-  log.debug('Calculated interleave-aware protected bits per block', {
+  log.debug("Calculated interleave-aware protected bits per block", {
     protectedBitCount,
     protectedByteCount,
     maxProtectedByteInBlock,

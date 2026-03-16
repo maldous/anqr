@@ -1,7 +1,7 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { detectBimodalBW } from './detect-bimodal-bw';
-import { softenBWImage } from './soften-bw-image';
-import { log } from './log';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { detectBimodalBW } from "./detect-bimodal-bw";
+import { softenBWImage } from "./soften-bw-image";
+import { log } from "./log";
 
 /**
  * Preprocess image data with configured filters
@@ -10,12 +10,12 @@ import { log } from './log';
 export function autoSoftenIfNeeded(
   data: ImageData,
   config: QRGeneratorConfig,
-  debug: boolean
+  debug: boolean,
 ): ImageData {
   if (config.disableAutoSoften || config.qrFirstMode) return data;
   if (!detectBimodalBW(data)) return data;
   if (debug) {
-    log.debug('preprocessImageData - detected high-contrast B&W, applying softening');
+    log.debug("preprocessImageData - detected high-contrast B&W, applying softening");
   }
   return softenBWImage(data);
 }

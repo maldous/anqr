@@ -1,5 +1,5 @@
-import type { QRBitBuffer, QRDataSegment } from '../../../modules/qr-encoder/types';
-import { QRMode } from '../../../modules/qr-encoder/types';
+import type { QRBitBuffer, QRDataSegment } from "../../../modules/qr-encoder/types";
+import { QRMode } from "../../../modules/qr-encoder/types";
 
 /**
  * Alphanumeric mode encoder (0-9, A-Z, space, $%*+-./:)
@@ -9,29 +9,29 @@ export function qrAlphaNum(data: string): QRDataSegment {
   const _data = data;
 
   const getCode = (c: string): number => {
-    if (c >= '0' && c <= '9') {
-      return c.codePointAt(0)! - '0'.codePointAt(0)!;
-    } else if (c >= 'A' && c <= 'Z') {
-      return c.codePointAt(0)! - 'A'.codePointAt(0)! + 10;
+    if (c >= "0" && c <= "9") {
+      return c.codePointAt(0)! - "0".codePointAt(0)!;
+    } else if (c >= "A" && c <= "Z") {
+      return c.codePointAt(0)! - "A".codePointAt(0)! + 10;
     } else {
       switch (c) {
-        case '\u0020':
+        case "\u0020":
           return 36;
-        case '$':
+        case "$":
           return 37;
-        case '%':
+        case "%":
           return 38;
-        case '*':
+        case "*":
           return 39;
-        case '+':
+        case "+":
           return 40;
-        case '-':
+        case "-":
           return 41;
-        case '.':
+        case ".":
           return 42;
-        case '/':
+        case "/":
           return 43;
-        case ':':
+        case ":":
           return 44;
         default:
           throw new Error(`illegal char :${c}`);

@@ -1,6 +1,6 @@
-import { readFormatInfoFromDecoder } from './read-format-info-from-decoder';
-import { extractFormatInfo } from './extract-format-info';
-import { log } from './log';
+import { readFormatInfoFromDecoder } from "./read-format-info-from-decoder";
+import { extractFormatInfo } from "./extract-format-info";
+import { log } from "./log";
 
 /**
  * Extract the actual mask pattern from a QR matrix by reading the format info bits.
@@ -55,7 +55,7 @@ export function extractMaskFromMatrix(matrix: boolean[][]): {
 
   // FALLBACK: Use legacy extraction if decoder failed
   // This shouldn't happen for valid QR codes, but provides backwards compatibility
-  log.warn('Decoder format parser failed, falling back to legacy extraction');
+  log.warn("Decoder format parser failed, falling back to legacy extraction");
 
   // The format info XOR mask (10101000010010 in binary)
   const FORMAT_INFO_MASK = 0x5412;
@@ -82,13 +82,13 @@ export function extractMaskFromMatrix(matrix: boolean[][]): {
   const isValid = verticalMask === horizontalMask && verticalEcc === horizontalEcc;
 
   if (!isValid) {
-    log.warn('Format info copies disagree!', {
+    log.warn("Format info copies disagree!", {
       verticalMask,
       horizontalMask,
       verticalEcc,
       horizontalEcc,
-      rawVertical: formatInfo.vertical.toString(2).padStart(15, '0'),
-      rawHorizontal: formatInfo.horizontal.toString(2).padStart(15, '0'),
+      rawVertical: formatInfo.vertical.toString(2).padStart(15, "0"),
+      rawHorizontal: formatInfo.horizontal.toString(2).padStart(15, "0"),
     });
   }
 

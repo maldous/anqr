@@ -1,21 +1,21 @@
-import type { CanvasFactory } from '../../../platform/browser/canvas/canvas-factory';
+import type { CanvasFactory } from "../../../platform/browser/canvas/canvas-factory";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
-import { bitsToMatrix } from './bits-to-matrix';
-import type { BlueNoisePixelCtx } from './blue-noise-pixel-ctx';
-import { buildStrictConstraintConfig } from './build-strict-constraint-config';
-import { clamp01 } from './clamp01';
-import { enforceModuleConstraints } from './enforce-module-constraints';
-import { getBlueNoiseTileCached } from './get-blue-noise-tile-cached';
-import { log } from './log';
-import { packedColorsToMatrix } from './packed-colors-to-matrix';
-import { processBlueNoisePixel } from './process-blue-noise-pixel';
-import { removeIsolatedSpeckles } from './remove-isolated-speckles';
-import { resolvePreparedMatrixInput } from './resolve-prepared-matrix-input';
+} from "../../../modules/qr-generator/types";
+import { bitsToMatrix } from "./bits-to-matrix";
+import type { BlueNoisePixelCtx } from "./blue-noise-pixel-ctx";
+import { buildStrictConstraintConfig } from "./build-strict-constraint-config";
+import { clamp01 } from "./clamp01";
+import { enforceModuleConstraints } from "./enforce-module-constraints";
+import { getBlueNoiseTileCached } from "./get-blue-noise-tile-cached";
+import { log } from "./log";
+import { packedColorsToMatrix } from "./packed-colors-to-matrix";
+import { processBlueNoisePixel } from "./process-blue-noise-pixel";
+import { removeIsolatedSpeckles } from "./remove-isolated-speckles";
+import { resolvePreparedMatrixInput } from "./resolve-prepared-matrix-input";
 
 /**
  * Generate blue noise pixel matrix
@@ -30,13 +30,13 @@ export async function generateBlueNoiseMatrix(
   effectiveIntensity: number,
   _canvasFactory: CanvasFactory,
   createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<PixelDecisionMatrix> {
   const prepared = await resolvePreparedMatrixInput({
     config,
     createCanvasFn,
     effectiveIntensity,
-    modeLabel: 'blue-noise',
+    modeLabel: "blue-noise",
     moduleCount,
     overlayCanvas,
     qr,
@@ -58,13 +58,13 @@ export async function generateBlueNoiseMatrix(
   const tileSize = config.blueNoiseTileSize ?? 64;
   const tile = getBlueNoiseTileCached(tileSize, seed);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
-  const scanGateProfile = config.scanGateProfile ?? 'full';
-  const scanGateActive = scanGateProfile !== 'off';
+  const scanGateProfile = config.scanGateProfile ?? "full";
+  const scanGateActive = scanGateProfile !== "off";
   const scanGateBiasBoost = scanGateActive ? 0.06 + intensity * 0.04 : 0;
   const minPolarityBias = 0.08 + intensity * 0.08;
   const effectiveBitBias = Math.max(
     qrBitBiasStrength + scanGateBiasBoost,
-    minPolarityBias + scanGateBiasBoost * 0.4
+    minPolarityBias + scanGateBiasBoost * 0.4,
   );
 
   const bnCtx: BlueNoisePixelCtx = {
@@ -97,13 +97,13 @@ export async function generateBlueNoiseMatrix(
     scale,
     scaledSize,
     version,
-    strictConstraintConfig
+    strictConstraintConfig,
   );
   if (config.cleanupSpeckle === true) {
     removeIsolatedSpeckles(qr, matrixBits, scaledSize, moduleCount, scale, version, config);
   }
 
-  log.debug('blue-noise-matrix generated', {
+  log.debug("blue-noise-matrix generated", {
     scaledSize,
     moduleCount,
     scale,

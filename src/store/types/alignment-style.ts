@@ -1,1 +1,1 @@
-export type AlignmentStyle = 'match_finder' | 'square' | 'rounded' | 'circle';
+export type AlignmentStyle = "match_finder" | "square" | "rounded" | "circle";

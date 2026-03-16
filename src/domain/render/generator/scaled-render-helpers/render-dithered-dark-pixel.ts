@@ -1,6 +1,6 @@
-import { adjustLumaPreserveChroma } from './adjust-luma-preserve-chroma';
-import type { PixelColor, PixelGridCtx } from '../scaled-render-types';
-import { hash01 } from '../hash01';
+import { adjustLumaPreserveChroma } from "./adjust-luma-preserve-chroma";
+import type { PixelColor, PixelGridCtx } from "../scaled-render-types";
+import { hash01 } from "../hash01";
 
 export function renderDitheredDarkPixel(
   pgctx: PixelGridCtx,
@@ -9,7 +9,7 @@ export function renderDitheredDarkPixel(
   dx: number,
   dy: number,
   color: PixelColor | null,
-  moduleLocked: boolean
+  moduleLocked: boolean,
 ): void {
   const {
     ctx,
@@ -44,7 +44,7 @@ export function renderDitheredDarkPixel(
   }
   const radiusT = Math.max(
     0,
-    Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34)
+    Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34),
   );
   const rawRadius = dotMinRadiusPx + radiusT * (dotMaxRadiusPx - dotMinRadiusPx);
   const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));

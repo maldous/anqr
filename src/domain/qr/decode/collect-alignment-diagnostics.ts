@@ -1,14 +1,14 @@
-import { createLogger } from '../../../infra/logging/logger';
-import { getAlignmentPatternCenters } from '../../../modules/qr-spec';
-import { overlapsFinderRegion } from './overlaps-finder-region';
-import { scoreAlignmentCenter } from './score-alignment-center';
+import { createLogger } from "../../../infra/logging/logger";
+import { getAlignmentPatternCenters } from "../../../modules/qr-spec";
+import { overlapsFinderRegion } from "./overlaps-finder-region";
+import { scoreAlignmentCenter } from "./score-alignment-center";
 
-const qrDecoderLog = createLogger('DECODER');
+const qrDecoderLog = createLogger("DECODER");
 
 export function collectAlignmentDiagnostics(
   rawMatrix: boolean[][],
   moduleCount: number,
-  versionRounded: number
+  versionRounded: number,
 ): void {
   const centers = getAlignmentPatternCenters(versionRounded, moduleCount);
   const alignmentScores: Array<{ center: string; score: string; mismatches: string[] }> = [];
@@ -25,14 +25,14 @@ export function collectAlignmentDiagnostics(
     });
   }
   if (alignmentScores.length) {
-    qrDecoderLog.trace('diag: Alignment pattern scores', {
+    qrDecoderLog.trace("diag: Alignment pattern scores", {
       version: versionRounded,
       scores: alignmentScores,
     });
   } else {
-    qrDecoderLog.trace('diag: Alignment pattern scores', {
+    qrDecoderLog.trace("diag: Alignment pattern scores", {
       version: versionRounded,
-      scores: 'none (v1 or finder-overlap only)',
+      scores: "none (v1 or finder-overlap only)",
     });
   }
 }

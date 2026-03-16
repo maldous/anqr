@@ -1,12 +1,12 @@
-import { useCallback, useRef, useState } from 'react';
-import { Check, ClipboardCopy, ZoomIn, ZoomOut } from 'lucide-react';
-import { Button } from '@/ui/primitives/button';
+import { useCallback, useRef, useState } from "react";
+import { Check, ClipboardCopy, ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/ui/primitives/button";
 
 export const ModuleMatrixView = ({
   matrix,
   version,
-  fgColor = '#000000',
-  bgColor = '#ffffff',
+  fgColor = "#000000",
+  bgColor = "#ffffff",
 }: Readonly<{
   matrix: boolean[][];
   version: number | null;
@@ -22,7 +22,7 @@ export const ModuleMatrixView = ({
   const gridSize = moduleCount * moduleSize;
 
   const generateAsciiArt = useCallback(() => {
-    return matrix.map((row) => row.map((isDark) => (isDark ? '██' : '░░')).join('')).join('\n');
+    return matrix.map((row) => row.map((isDark) => (isDark ? "██" : "░░")).join("")).join("\n");
   }, [matrix]);
 
   const handleCopyAsText = useCallback(async () => {
@@ -89,7 +89,7 @@ export const ModuleMatrixView = ({
           style={{
             width: gridSize,
             height: gridSize,
-            display: 'grid',
+            display: "grid",
             gridTemplateColumns: `repeat(${moduleCount}, ${moduleSize}px)`,
             gap: 0,
           }}
@@ -103,9 +103,9 @@ export const ModuleMatrixView = ({
                   height: moduleSize,
                   backgroundColor: isDark ? fgColor : bgColor,
                 }}
-                title={`Row ${r}, Col ${c}: ${isDark ? 'Dark' : 'Light'}`}
+                title={`Row ${r}, Col ${c}: ${isDark ? "Dark" : "Light"}`}
               />
-            ))
+            )),
           )}
         </div>
       </div>

@@ -1,7 +1,7 @@
-import { Binary, Database, Hash, Layers, Settings, Shield } from 'lucide-react';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
+import { Binary, Database, Hash, Layers, Settings, Shield } from "lucide-react";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
 import {
   formatDecoderErrors,
   formatDecoderErasures,
@@ -9,12 +9,12 @@ import {
   formatDecoderNumBits,
   formatDecoderOrientation,
   formatDecoderVersion,
-} from '@/features/analyze/lib/formatters';
+} from "@/features/analyze/lib/formatters";
 
 export const DecoderMetadataPanel = ({
   decoderMetadata,
 }: Readonly<{
-  decoderMetadata: NonNullable<QRAnalysisResult['decoderMetadata']>;
+  decoderMetadata: NonNullable<QRAnalysisResult["decoderMetadata"]>;
 }>) => {
   return (
     <CollapsibleSection
@@ -74,7 +74,7 @@ export const DecoderMetadataPanel = ({
           value={
             decoderMetadata.hasStructuredAppend
               ? `Seq ${decoderMetadata.structuredAppendSequence}, Parity ${decoderMetadata.structuredAppendParity}`
-              : 'No'
+              : "No"
           }
           icon={<Layers className="w-3.5 h-3.5" />}
         />
@@ -83,7 +83,7 @@ export const DecoderMetadataPanel = ({
           value={
             decoderMetadata.byteSegmentCount > 0
               ? `${decoderMetadata.byteSegmentCount} segment(s), ${decoderMetadata.totalByteLength} bytes`
-              : 'None'
+              : "None"
           }
           icon={<Database className="w-3.5 h-3.5" />}
         />

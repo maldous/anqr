@@ -4,10 +4,10 @@
  * Notes: Apply post-processing to animation frame.
  */
 
-import { applyColorCycle } from '@/domain/render/animation/color-cycle';
-import { cloneCanvasSimple } from '@/features/generator/application/frames/frames-fn-clonesimple';
-import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
-import { applyWatermarkToCanvas } from '@/features/generator/application/generation/generation-fn-watermark';
+import { applyColorCycle } from "@/domain/render/animation/color-cycle";
+import { cloneCanvasSimple } from "@/features/generator/application/frames/frames-fn-clonesimple";
+import type { PatternEffect } from "@/features/generator/application/frames/frames-type-patterneffect";
+import { applyWatermarkToCanvas } from "@/features/generator/application/generation/generation-fn-watermark";
 
 export async function applyFramePostProcessing<
   W extends {
@@ -26,7 +26,7 @@ export async function applyFramePostProcessing<
   applyResultEphemeral: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    tf: number
+    tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
   frameIdx: number;
   framesToProcessLength: number;
@@ -39,7 +39,7 @@ export async function applyFramePostProcessing<
     finalResult = params.applyResultEphemeral(
       finalResult,
       params.frameIdx,
-      params.framesToProcessLength
+      params.framesToProcessLength,
     );
   }
   if (params.hasColorCycle) {
@@ -48,7 +48,7 @@ export async function applyFramePostProcessing<
       finalResult,
       params.frameIdx,
       params.framesToProcessLength,
-      colorCycleTarget
+      colorCycleTarget,
     );
   }
   let previewFrame: HTMLCanvasElement | OffscreenCanvas = finalResult;

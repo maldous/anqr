@@ -1,8 +1,8 @@
-import type { TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { AnimationFrame, GifCompositor } from '@/modules/animation';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import type { createScratchCanvasPool } from './frames-fn-scratchpool';
-import type { PatternEffect } from './frames-type-patterneffect';
+import type { TemporalDitherMode } from "@/domain/render/dither/temporal";
+import type { AnimationFrame, GifCompositor } from "@/modules/animation";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { createScratchCanvasPool } from "./frames-fn-scratchpool";
+import type { PatternEffect } from "./frames-type-patterneffect";
 
 export interface FrameRenderContext {
   animationSeed: number;
@@ -10,7 +10,7 @@ export interface FrameRenderContext {
   applyModulePatternEphemeral: (
     c: HTMLCanvasElement | OffscreenCanvas,
     fi: number,
-    total: number
+    total: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
   computeJitter: (fi: number, total: number) => number;
   effectiveFrameIndices: number[];
@@ -19,7 +19,7 @@ export interface FrameRenderContext {
   framesToProcessLength: number;
   generateArtworkFrame: (
     c: HTMLCanvasElement | OffscreenCanvas,
-    i: number
+    i: number,
   ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
   gifCompositor: GifCompositor | null;
   hasJitter: boolean;

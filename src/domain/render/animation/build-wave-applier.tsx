@@ -1,6 +1,6 @@
-import { PI4 } from './pi4';
-import { clampToByte } from './clamp-to-byte';
-import type { PatternFrameApplier } from './pattern-frame-applier';
+import { PI4 } from "./pi4";
+import { clampToByte } from "./clamp-to-byte";
+import type { PatternFrameApplier } from "./pattern-frame-applier";
 
 export function buildWaveApplier(time: number, width: number, height: number): PatternFrameApplier {
   const waveFactors = new Float32Array(width);

@@ -1,4 +1,4 @@
-import { QRGenerator, type CanvasFactory } from '../../../modules/qr-generator';
+import { QRGenerator, type CanvasFactory } from "../../../modules/qr-generator";
 
 export const workerCanvasFactory: CanvasFactory = {
   createCanvas: async (width: number, height: number) => new OffscreenCanvas(width, height),

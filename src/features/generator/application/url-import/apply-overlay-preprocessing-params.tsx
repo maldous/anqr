@@ -1,11 +1,11 @@
-import type { ShareConfig } from '@/modules/share-links';
-import type { StoreState } from '@/features/generator/model/mobile-split';
+import type { ShareConfig } from "@/modules/share-links";
+import type { StoreState } from "@/features/generator/model/mobile-split";
 
 export function applyOverlayPreprocessingParams(
   params: Partial<ShareConfig>,
-  store: StoreState
+  store: StoreState,
 ): void {
-  if (params.colorMode) store.setOverlayColorMode(params.colorMode as 'color' | 'grayscale' | 'bw');
+  if (params.colorMode) store.setOverlayColorMode(params.colorMode as "color" | "grayscale" | "bw");
   if (params.brightness !== undefined) store.setOverlayBrightness(params.brightness);
   if (params.contrast !== undefined) store.setOverlayContrast(params.contrast);
   if (params.gamma !== undefined) store.setOverlayGamma(params.gamma);
@@ -15,6 +15,6 @@ export function applyOverlayPreprocessingParams(
   if (params.sharpen !== undefined) store.setOverlaySharpen(params.sharpen);
   if (params.posterize !== undefined) store.setOverlayPosterize(params.posterize);
   if (params.threshold !== undefined) store.setOverlayThreshold(params.threshold);
-  if (params.edge) store.setOverlayEdgeDetect(params.edge as 'off' | 'sobel' | 'canny');
+  if (params.edge) store.setOverlayEdgeDetect(params.edge as "off" | "sobel" | "canny");
   if (params.invert) store.setOverlayInvert(params.invert);
 }

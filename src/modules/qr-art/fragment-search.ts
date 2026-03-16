@@ -1,12 +1,12 @@
-import { createSeededRandom } from './create-seeded-random';
-import { fragmentSearchLog as log } from './fragment-search-log';
-import { generateRandomFragment } from './generate-random-fragment';
-import { tryFragmentCandidate } from './try-fragment-candidate';
-import type { FragmentSearchConfig, FragmentSearchResult, FragmentSearchState } from './types';
-export { evaluateQRMatch } from './evaluate-qr-match';
+import { createSeededRandom } from "./create-seeded-random";
+import { fragmentSearchLog as log } from "./fragment-search-log";
+import { generateRandomFragment } from "./generate-random-fragment";
+import { tryFragmentCandidate } from "./try-fragment-candidate";
+import type { FragmentSearchConfig, FragmentSearchResult, FragmentSearchState } from "./types";
+export { evaluateQRMatch } from "./evaluate-qr-match";
 
 export async function searchBestFragment(
-  config: FragmentSearchConfig
+  config: FragmentSearchConfig,
 ): Promise<FragmentSearchResult> {
   const {
     baseUrl,
@@ -24,7 +24,7 @@ export async function searchBestFragment(
     targets: null,
     importance: null,
     cachedModuleCount: 0,
-    bestFragment: '',
+    bestFragment: "",
     bestScore: -1,
     bestMatchingModules: 0,
     bestTotalControllable: 0,
@@ -32,7 +32,7 @@ export async function searchBestFragment(
 
   const batchSize = 50;
   const totalBatches = Math.ceil(iterations / batchSize);
-  log.debug('Starting fragment search', { iterations, fragmentLength, baseUrl });
+  log.debug("Starting fragment search", { iterations, fragmentLength, baseUrl });
 
   for (let batch = 0; batch < totalBatches; batch++) {
     const batchStart = batch * batchSize;
@@ -42,7 +42,7 @@ export async function searchBestFragment(
       try {
         tryFragmentCandidate(baseUrl, fragment, version, ecc, maskPattern, targetImage, state, i);
       } catch (err) {
-        log.trace('Fragment caused encoding error', { fragment, error: err });
+        log.trace("Fragment caused encoding error", { fragment, error: err });
       }
     }
     if (onProgress) onProgress(Math.round(((batch + 1) / totalBatches) * 100));
@@ -61,7 +61,7 @@ export async function searchBestFragment(
         : 0,
   };
 
-  log.info('Fragment search complete', {
+  log.info("Fragment search complete", {
     bestFragment: state.bestFragment,
     score: `${(state.bestScore * 100).toFixed(1)}%`,
     matchPercentage: `${result.matchPercentage.toFixed(1)}%`,

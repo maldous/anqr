@@ -1,5 +1,5 @@
-import { clamp01 } from '../../../modules/dither-algorithms/utils';
-import type { DiffusionPixelResult } from './diffusion-pixel-result';
+import { clamp01 } from "../../../modules/dither-algorithms/utils";
+import type { DiffusionPixelResult } from "./diffusion-pixel-result";
 
 export function quantizeDiffusionStepPixel(params: {
   brightnessOf: (r: number, g: number, b: number) => number;

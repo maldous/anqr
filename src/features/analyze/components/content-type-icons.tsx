@@ -12,8 +12,8 @@ import {
   Type,
   Wallet,
   Wifi,
-} from 'lucide-react';
-import type { ContentType } from '@/modules/qr-analyzer';
+} from "lucide-react";
+import type { ContentType } from "@/modules/qr-analyzer";
 
 export const CONTENT_TYPE_ICONS: Record<ContentType, React.ReactNode> = {
   url: <Globe className="w-4 h-4" />,

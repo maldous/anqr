@@ -6,7 +6,7 @@ export function parseUpiPayload(payload: string): Record<string, string | null> 
     vpa: null,
     payeeName: null,
     amount: null,
-    currency: 'INR',
+    currency: "INR",
     transactionRef: null,
     transactionNote: null,
     merchantCode: null,
@@ -14,19 +14,19 @@ export function parseUpiPayload(payload: string): Record<string, string | null> 
     url: null,
   };
 
-  if (!payload.toLowerCase().startsWith('upi://')) return result;
+  if (!payload.toLowerCase().startsWith("upi://")) return result;
 
   try {
     const url = new URL(payload);
-    result.vpa = url.searchParams.get('pa');
-    result.payeeName = url.searchParams.get('pn');
-    result.amount = url.searchParams.get('am');
-    result.currency = url.searchParams.get('cu') || 'INR';
-    result.transactionRef = url.searchParams.get('tr');
-    result.transactionNote = url.searchParams.get('tn');
-    result.merchantCode = url.searchParams.get('mc');
-    result.minAmount = url.searchParams.get('mam');
-    result.url = url.searchParams.get('url');
+    result.vpa = url.searchParams.get("pa");
+    result.payeeName = url.searchParams.get("pn");
+    result.amount = url.searchParams.get("am");
+    result.currency = url.searchParams.get("cu") || "INR";
+    result.transactionRef = url.searchParams.get("tr");
+    result.transactionNote = url.searchParams.get("tn");
+    result.merchantCode = url.searchParams.get("mc");
+    result.minAmount = url.searchParams.get("mam");
+    result.url = url.searchParams.get("url");
   } catch {
     // Invalid URL format
   }

@@ -1,5 +1,5 @@
-import { forEachOpaquePixel } from './for-each-opaque-pixel';
-import { hslToRgbTuple } from '../color/color';
+import { forEachOpaquePixel } from "./for-each-opaque-pixel";
+import { hslToRgbTuple } from "../color/color";
 
 /**
  * Apply color cycle pattern effect to image data
@@ -8,7 +8,7 @@ import { hslToRgbTuple } from '../color/color';
 export function applyAnimationColorCycle(
   data: Uint8ClampedArray,
   progress: number,
-  seed: number
+  seed: number,
 ): void {
   const baseHue = (progress * 360 + seed) % 360;
   const tintColor = hslToRgbTuple(baseHue, 80, 50);

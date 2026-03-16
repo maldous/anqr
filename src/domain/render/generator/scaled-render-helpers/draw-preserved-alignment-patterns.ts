@@ -1,7 +1,7 @@
-import { drawAlignmentPattern } from '../drawing';
-import { getAlignmentPositionsCached } from '../pattern-helpers';
-import { resolveBinaryConfig } from './resolve-binary-config';
-import type { StructuralPreservationCtx } from '../scaled-render-types';
+import { drawAlignmentPattern } from "../drawing";
+import { getAlignmentPositionsCached } from "../pattern-helpers";
+import { resolveBinaryConfig } from "./resolve-binary-config";
+import type { StructuralPreservationCtx } from "../scaled-render-types";
 
 export function drawPreservedAlignmentPatterns(spctx: StructuralPreservationCtx): void {
   const {
@@ -22,10 +22,10 @@ export function drawPreservedAlignmentPatterns(spctx: StructuralPreservationCtx)
     config,
     forceBinaryFunctionPatterns,
     effectiveFgColor,
-    effectiveBgColor
+    effectiveBgColor,
   );
   const alignPositions = getAlignmentPositionsCached(version, moduleCount);
-  const alignmentStyle = config.alignmentStyle || 'match_finder';
+  const alignmentStyle = config.alignmentStyle || "match_finder";
   for (const pos of alignPositions) {
     drawAlignmentPattern(
       ctx,
@@ -33,7 +33,7 @@ export function drawPreservedAlignmentPatterns(spctx: StructuralPreservationCtx)
       marginPx + (pos.row + 0.5) * effectiveModuleSize,
       effectiveModuleSize,
       alignmentStyle,
-      resolvedConfig
+      resolvedConfig,
     );
   }
 }

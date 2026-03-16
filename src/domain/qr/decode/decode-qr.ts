@@ -3,9 +3,9 @@
  * Main QR code decoding logic
  */
 
-import { invertImageData } from './invert-image-data';
-import { tryDecode } from './try-decode-qr';
-import type { DecodeResult } from '../../../modules/qr-decoder/types';
+import { invertImageData } from "./invert-image-data";
+import { tryDecode } from "./try-decode-qr";
+import type { DecodeResult } from "../../../modules/qr-decoder/types";
 
 /**
  * Decode a QR code from ImageData
@@ -13,18 +13,18 @@ import type { DecodeResult } from '../../../modules/qr-decoder/types';
  */
 export function decodeQR(
   imageData: ImageData,
-  options: { inversionAttempts?: 'dontInvert' | 'onlyInvert' | 'attemptBoth' } = {}
+  options: { inversionAttempts?: "dontInvert" | "onlyInvert" | "attemptBoth" } = {},
 ): DecodeResult | null {
-  const { inversionAttempts = 'attemptBoth' } = options;
+  const { inversionAttempts = "attemptBoth" } = options;
 
   // Try normal first
-  if (inversionAttempts !== 'onlyInvert') {
+  if (inversionAttempts !== "onlyInvert") {
     const result = tryDecode(imageData);
     if (result) return result;
   }
 
   // Try inverted if needed
-  if (inversionAttempts !== 'dontInvert') {
+  if (inversionAttempts !== "dontInvert") {
     const inverted = invertImageData(imageData);
     const result = tryDecode(inverted);
     if (result) return result;

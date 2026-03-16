@@ -1,11 +1,11 @@
-import type { AnimationOptions, AnimationState } from './types';
+import type { AnimationOptions, AnimationState } from "./types";
 
 /**
  * Get the next frame index based on animation options
  */
 export function getNextFrame(
   state: AnimationState,
-  options: AnimationOptions
+  options: AnimationOptions,
 ): { frameIndex: number; direction: 1 | -1 } {
   const { frames, currentFrame, direction } = state;
   const { loop, bounce, frameStep } = options;

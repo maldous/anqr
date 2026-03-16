@@ -30,12 +30,12 @@ export function byteArrayOutputStream() {
     toByteArray: (): number[] => _bytes,
 
     toString: (): string => {
-      let s = '[';
+      let s = "[";
       for (let i = 0; i < _bytes.length; i += 1) {
-        if (i > 0) s += ',';
+        if (i > 0) s += ",";
         s += _bytes[i];
       }
-      s += ']';
+      s += "]";
       return s;
     },
   };

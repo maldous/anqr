@@ -1,16 +1,16 @@
-import type { FitMode } from './processor.types';
+import type { FitMode } from "./processor.types";
 
 export function fitOverlayImage(
   source: HTMLCanvasElement,
   targetWidth: number,
   targetHeight: number,
-  mode: FitMode
+  mode: FitMode,
 ): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = targetWidth;
   canvas.height = targetHeight;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2D context');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context");
 
   const sourceAspect = source.width / source.height;
   const targetAspect = targetWidth / targetHeight;
@@ -21,7 +21,7 @@ export function fitOverlayImage(
   let drawHeight = targetHeight;
 
   switch (mode) {
-    case 'contain': {
+    case "contain": {
       if (sourceAspect > targetAspect) {
         drawHeight = targetWidth / sourceAspect;
         drawY = (targetHeight - drawHeight) / 2;
@@ -31,7 +31,7 @@ export function fitOverlayImage(
       }
       break;
     }
-    case 'cover': {
+    case "cover": {
       if (sourceAspect > targetAspect) {
         drawWidth = targetHeight * sourceAspect;
         drawX = (targetWidth - drawWidth) / 2;
@@ -41,7 +41,7 @@ export function fitOverlayImage(
       }
       break;
     }
-    case 'none': {
+    case "none": {
       drawWidth = source.width;
       drawHeight = source.height;
       drawX = (targetWidth - drawWidth) / 2;

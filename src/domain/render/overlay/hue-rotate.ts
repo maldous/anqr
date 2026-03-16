@@ -1,4 +1,4 @@
-import { hslToRgb, rgbToHsl } from '../color/color';
+import { hslToRgb, rgbToHsl } from "../color/color";
 
 export function hueRotate(imageData: ImageData, degrees: number): ImageData {
   const data = imageData.data;

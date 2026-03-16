@@ -1,3 +1,3 @@
 export function getGalleryBaseUrl(): string {
-  return 'https://anqr.link';
+  return "https://anqr.link";
 }

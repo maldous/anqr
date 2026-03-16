@@ -1,8 +1,8 @@
-import { createQRInstance } from '@/modules/qr-encoder';
-import { nowMs } from './now-ms';
-import { renderQRModules } from './render-qr-modules';
-export { computeMarginModules } from './compute-margin-modules';
-export { computeCanvasSizing } from './compute-canvas-sizing';
+import { createQRInstance } from "@/modules/qr-encoder";
+import { nowMs } from "./now-ms";
+import { renderQRModules } from "./render-qr-modules";
+export { computeMarginModules } from "./compute-margin-modules";
+export { computeCanvasSizing } from "./compute-canvas-sizing";
 
 export function renderQRToCanvas(
   ctx: CanvasRenderingContext2D,
@@ -12,7 +12,7 @@ export function renderQRToCanvas(
   modulePx: number,
   size: number,
   fg: string,
-  bg: string
+  bg: string,
 ) {
   const renderStartMs = nowMs();
   ctx.fillStyle = bg;
@@ -22,7 +22,7 @@ export function renderQRToCanvas(
   return Math.round((nowMs() - renderStartMs) * 100) / 100;
 }
 
-export { resolveColors } from './resolve-reproduction-colors';
-export { drawCanvasError } from './draw-canvas-error';
-export { logReproductionResult } from './log-reproduction-result';
-export { runMatrixDiagnostics } from './run-matrix-diagnostics';
+export { resolveColors } from "./resolve-reproduction-colors";
+export { drawCanvasError } from "./draw-canvas-error";
+export { logReproductionResult } from "./log-reproduction-result";
+export { runMatrixDiagnostics } from "./run-matrix-diagnostics";

@@ -1,5 +1,5 @@
-import { Move } from 'lucide-react';
-import type { CropOverlayStyle } from './crop-overlay-style.type';
+import { Move } from "lucide-react";
+import type { CropOverlayStyle } from "./crop-overlay-style.type";
 
 export function CropOverlayIndicator({
   cropOverlayStyle,
@@ -14,7 +14,7 @@ export function CropOverlayIndicator({
           top: cropOverlayStyle.top,
           width: cropOverlayStyle.width,
           height: cropOverlayStyle.height,
-          boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
+          boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
         }}
       >
         <div className="absolute -top-1 -left-1 w-3 h-3 bg-white border border-gray-400 rounded-sm" />

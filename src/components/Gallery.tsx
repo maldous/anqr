@@ -1,1 +1,1 @@
-export * from '../features/gallery/components/GalleryScreen';
+export * from "../features/gallery/components/GalleryScreen";

@@ -1,1 +1,1 @@
-export * from '../../domain/qr/analyze/telemetry-contrast';
+export * from "../../domain/qr/analyze/telemetry-contrast";

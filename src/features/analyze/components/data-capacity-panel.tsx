@@ -1,14 +1,14 @@
-import { AlertTriangle, Database } from 'lucide-react';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { ProgressBar } from '@/features/analyze/components/progress-bar';
-import { capacityBadgeClass } from '@/features/analyze/lib/formatters';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+import { AlertTriangle, Database } from "lucide-react";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { ProgressBar } from "@/features/analyze/components/progress-bar";
+import { capacityBadgeClass } from "@/features/analyze/lib/formatters";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
 
 export function DataCapacityPanel({
   dataCapacity,
 }: Readonly<{
-  dataCapacity: NonNullable<QRAnalysisResult['dataCapacity']>;
+  dataCapacity: NonNullable<QRAnalysisResult["dataCapacity"]>;
 }>) {
   return (
     <CollapsibleSection
@@ -23,7 +23,7 @@ export function DataCapacityPanel({
         ) : (
           <span
             className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${capacityBadgeClass(
-              dataCapacity.percentage
+              dataCapacity.percentage,
             )}`}
           >
             {dataCapacity.percentage}% used
@@ -36,7 +36,7 @@ export function DataCapacityPanel({
           <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
-              Payload ({dataCapacity.used} bytes) exceeds detected capacity ({dataCapacity.total}{' '}
+              Payload ({dataCapacity.used} bytes) exceeds detected capacity ({dataCapacity.total}{" "}
               bytes). Version or ECC detection may be inaccurate.
             </span>
           </div>

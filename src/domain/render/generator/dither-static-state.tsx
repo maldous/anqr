@@ -1,6 +1,6 @@
-import { generateBlueNoiseTile } from '../dither';
-import type { DiffusionKernelDef } from '../dither/kernels';
-import type { DiffusionKernel } from '../dither/types';
+import { generateBlueNoiseTile } from "../dither";
+import type { DiffusionKernelDef } from "../dither/kernels";
+import type { DiffusionKernel } from "../dither/types";
 
 export type DitherStaticState = {
   key: string;

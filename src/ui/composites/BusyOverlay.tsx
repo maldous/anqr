@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
-import { BusySpinner } from './busy-overlay-spinner';
-import { clampProgress } from './clamp-progress';
+import { useTranslation } from "react-i18next";
+import { BusySpinner } from "./busy-overlay-spinner";
+import { clampProgress } from "./clamp-progress";
 
 /**
  * BusyOverlay Component
@@ -26,21 +26,21 @@ export const BusyOverlay = ({
 }>) => {
   const { t } = useTranslation();
   if (!visible) return null;
-  const resolvedStage = stage ?? t('preview.busy.workingOnIt', 'Working on it...');
-  const resolvedCancelLabel = cancelLabel ?? t('common.cancel', 'Cancel');
+  const resolvedStage = stage ?? t("preview.busy.workingOnIt", "Working on it...");
+  const resolvedCancelLabel = cancelLabel ?? t("common.cancel", "Cancel");
 
-  const hasProgress = typeof progress === 'number' && Number.isFinite(progress);
+  const hasProgress = typeof progress === "number" && Number.isFinite(progress);
   const normalizedProgress = clampProgress(progress);
   const overlayClass = fullScreen
-    ? 'fixed inset-0 z-[100] flex items-center justify-center'
-    : 'absolute inset-0 z-20 flex items-center justify-center rounded-lg';
+    ? "fixed inset-0 z-[100] flex items-center justify-center"
+    : "absolute inset-0 z-20 flex items-center justify-center rounded-lg";
 
   return (
     <div
       className={overlayClass}
       style={{
-        backgroundColor: fullScreen ? 'rgba(8, 10, 14, 0.42)' : 'rgba(255, 255, 255, 0.28)',
-        backdropFilter: fullScreen ? 'blur(4px)' : 'blur(1.5px)',
+        backgroundColor: fullScreen ? "rgba(8, 10, 14, 0.42)" : "rgba(255, 255, 255, 0.28)",
+        backdropFilter: fullScreen ? "blur(4px)" : "blur(1.5px)",
       }}
     >
       <div className="w-[288px] max-w-[90%] rounded-md bg-black/72 px-3 py-2.5 text-white shadow-lg">
@@ -49,10 +49,10 @@ export const BusyOverlay = ({
           <div
             className="min-w-0 h-[2.4rem] overflow-hidden text-xs font-medium leading-[1.2] text-white/95"
             style={{
-              display: '-webkit-box',
+              display: "-webkit-box",
               WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              wordBreak: 'break-word',
+              WebkitBoxOrient: "vertical",
+              wordBreak: "break-word",
             }}
             title={resolvedStage}
           >

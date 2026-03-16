@@ -1,7 +1,7 @@
-import type { ECCLevel } from './bit-mapping';
-import { log } from './log';
-import { verifyBaseMatrixScan } from './verify-base-matrix-scan';
-import type { EncoderDerivedLayout } from './generate.types';
+import type { ECCLevel } from "./bit-mapping";
+import { log } from "./log";
+import { verifyBaseMatrixScan } from "./verify-base-matrix-scan";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 export function validateBoundariesAndBaseline(
   encoderLayout: EncoderDerivedLayout,
@@ -15,7 +15,7 @@ export function validateBoundariesAndBaseline(
   data: string,
   encodedDataLength: number,
   autoSuffix: boolean,
-  suffix: string | undefined
+  suffix: string | undefined,
 ): string | null {
   const internalConsistencyOk =
     encoderLayout.bitsAfterData >= encoderLayout.bitsAfterOriginalData &&
@@ -23,11 +23,11 @@ export function validateBoundariesAndBaseline(
     encoderLayout.protectedBitEnd <= encoderLayout.suffixSafeStartBit &&
     encoderLayout.totalDataBytes > 0;
 
-  log.info('BOUNDARY AUDIT (single source of truth: encoderLayout)', {
+  log.info("BOUNDARY AUDIT (single source of truth: encoderLayout)", {
     version: actualVersion,
-    stage: 'PRE_ELIMINATION',
-    source: 'ENCODER_DERIVED_ONLY',
-    modeUsedByEncoder: '8-bit byte',
+    stage: "PRE_ELIMINATION",
+    source: "ENCODER_DERIVED_ONLY",
+    modeUsedByEncoder: "8-bit byte",
     charCountBitsUsed: encoderLayout.bitsAfterCharCount - encoderLayout.bitsAfterMode,
     boundaries: {
       bitsAfterMode: encoderLayout.bitsAfterMode,
@@ -42,7 +42,7 @@ export function validateBoundariesAndBaseline(
       protectedBytesCount: Math.ceil(encoderLayout.protectedBitEnd / 8),
       originalDataLength,
       protectedDataLength,
-      hashCharProtected: actualSuffix.startsWith('#'),
+      hashCharProtected: actualSuffix.startsWith("#"),
     },
     twoIntervalRanges: {
       interval1_suffix: `bits ${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit} (${encoderLayout.suffixBits} bits)`,
@@ -58,17 +58,17 @@ export function validateBoundariesAndBaseline(
   });
 
   if (!internalConsistencyOk) {
-    log.warn('INTERNAL CONSISTENCY FAILURE - encoder boundary math is wrong!', {
+    log.warn("INTERNAL CONSISTENCY FAILURE - encoder boundary math is wrong!", {
       bitsAfterOriginalData: encoderLayout.bitsAfterOriginalData,
       bitsAfterData: encoderLayout.bitsAfterData,
       bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
       originalDataLength,
-      note: 'This is a bug in encodeDataToBytes()',
+      note: "This is a bug in encodeDataToBytes()",
     });
-    return 'Internal consistency failure: encoder boundary math incorrect';
+    return "Internal consistency failure: encoder boundary math incorrect";
   }
 
-  log.info('ENCODER-DERIVED SEMANTIC LAYOUT (TWO-INTERVAL HYBRID STRATEGY)', {
+  log.info("ENCODER-DERIVED SEMANTIC LAYOUT (TWO-INTERVAL HYBRID STRATEGY)", {
     version: actualVersion,
     ecc,
     originalDataLength: encoderLayout.originalDataLength,
@@ -113,7 +113,7 @@ export function validateBoundariesAndBaseline(
   }
   const baseDarkPercent = (baseDarkModules / totalModules) * 100;
 
-  log.info('BASELINE STATS (before QR-Art)', {
+  log.info("BASELINE STATS (before QR-Art)", {
     version: actualVersion,
     moduleCount,
     totalModules,
@@ -124,8 +124,8 @@ export function validateBoundariesAndBaseline(
     isDeterministicSuffix: autoSuffix && !suffix,
     note:
       baseDarkPercent > 60 || baseDarkPercent < 40
-        ? 'Baseline is unbalanced - QR-Art may struggle'
-        : 'Baseline is balanced',
+        ? "Baseline is unbalanced - QR-Art may struggle"
+        : "Baseline is balanced",
   });
 
   const baseVerifyError = verifyBaseMatrixScan(baseMatrix, data, originalDataLength);

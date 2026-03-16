@@ -1,4 +1,4 @@
-import { grayAt } from './decoder-color-utils';
+import { grayAt } from "./decoder-color-utils";
 
 export function sampleModulePixel(
   data: Uint8ClampedArray,
@@ -6,7 +6,7 @@ export function sampleModulePixel(
   imgWidth: number,
   imgHeight: number,
   x: number,
-  y: number
+  y: number,
 ): { isDark: boolean; dark: number; light: number; oob: number } {
   if (x >= 0 && x < imgWidth && y >= 0 && y < imgHeight) {
     const idx = (y * width + x) * 4;

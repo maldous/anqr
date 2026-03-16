@@ -1,4 +1,4 @@
-import type { GalleryCategory } from '@/content/gallery/gallery-manifest';
+import type { GalleryCategory } from "@/content/gallery/gallery-manifest";
 
 export type GalleryItem = {
   id: string;

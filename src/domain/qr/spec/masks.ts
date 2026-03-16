@@ -5,7 +5,7 @@
  * Both encoder and decoder should import from here
  */
 
-import { QRMaskPattern } from '../../../modules/qr-spec/types';
+import { QRMaskPattern } from "../../../modules/qr-spec/types";
 
 /**
  * Get mask function for a mask pattern (0-7)
@@ -22,9 +22,9 @@ import { QRMaskPattern } from '../../../modules/qr-spec/types';
  * @param maskPattern Mask pattern number (0-7)
  * @returns Function that returns true if the module at (i, j) should be flipped */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('SPEC');
+const _log = createLogger("SPEC");
 
 export function getMaskFunction(maskPattern: number): (i: number, j: number) => boolean {
   switch (maskPattern) {

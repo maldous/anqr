@@ -1,3 +1,3 @@
-import type { OverlayData } from './types';
+import type { OverlayData } from "./types";
 
 export type OverlayDataMatrix = OverlayData;

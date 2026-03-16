@@ -1,4 +1,4 @@
-import type { QRLocationCorners } from './decoder-types';
+import type { QRLocationCorners } from "./decoder-types";
 
 export function calculateGeometryDiagnostics(location: QRLocationCorners) {
   const corners = [
@@ -15,16 +15,16 @@ export function calculateGeometryDiagnostics(location: QRLocationCorners) {
   const maxY = Math.max(...ys);
   const topEdgePx = Math.hypot(
     location.topRightCorner.x - location.topLeftCorner.x,
-    location.topRightCorner.y - location.topLeftCorner.y
+    location.topRightCorner.y - location.topLeftCorner.y,
   );
   const leftEdgePx = Math.hypot(
     location.bottomLeftCorner.x - location.topLeftCorner.x,
-    location.bottomLeftCorner.y - location.topLeftCorner.y
+    location.bottomLeftCorner.y - location.topLeftCorner.y,
   );
   const estimatedRotationDeg =
     (Math.atan2(
       location.topRightCorner.y - location.topLeftCorner.y,
-      location.topRightCorner.x - location.topLeftCorner.x
+      location.topRightCorner.x - location.topLeftCorner.x,
     ) *
       180) /
     Math.PI;

@@ -1,17 +1,17 @@
-import { isFinderPattern } from '../../qr/spec/qr-patterns';
-import type { RGBWithMeta } from '../../../modules/qr-generator/types';
-import { isFinderSeparator } from './is-finder-separator';
-import { shouldLockModule } from './should-lock-module';
-import { resolveOverlayColor } from './resolve-overlay-color';
-import { resolveHalftoneColor } from './resolve-halftone-color';
-import type { SubpixelCellCtx } from './subpixel-cell-ctx';
+import { isFinderPattern } from "../../qr/spec/qr-patterns";
+import type { RGBWithMeta } from "../../../modules/qr-generator/types";
+import { isFinderSeparator } from "./is-finder-separator";
+import { shouldLockModule } from "./should-lock-module";
+import { resolveOverlayColor } from "./resolve-overlay-color";
+import { resolveHalftoneColor } from "./resolve-halftone-color";
+import type { SubpixelCellCtx } from "./subpixel-cell-ctx";
 
 export function processSubpixelCell(
   ctx: SubpixelCellCtx,
   x: number,
   y: number,
   matrix: boolean[][],
-  colorMatrix: (RGBWithMeta | null)[][]
+  colorMatrix: (RGBWithMeta | null)[][],
 ): void {
   const moduleRow = Math.floor(y / ctx.actualScale);
   const moduleCol = Math.floor(x / ctx.actualScale);
@@ -28,12 +28,12 @@ export function processSubpixelCell(
     moduleCol,
     ctx.moduleCount,
     ctx.version,
-    ctx.config
+    ctx.config,
   );
   const isFinderModule =
     isFinderPattern(moduleRow, moduleCol, ctx.moduleCount) ||
     isFinderSeparator(moduleRow, moduleCol, ctx.moduleCount);
-  const forceSolidFinder = ctx.finderOverride === 'solid' && isFinderModule && lockModule;
+  const forceSolidFinder = ctx.finderOverride === "solid" && isFinderModule && lockModule;
 
   if (lockModule || forceSolidFinder) {
     matrix[y][x] = qrValue;

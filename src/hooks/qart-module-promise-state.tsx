@@ -1,4 +1,4 @@
-import type { QArtModule } from './q-art-module';
+import type { QArtModule } from "./q-art-module";
 
 export const qartModulePromiseState: {
   current: Promise<QArtModule> | null;

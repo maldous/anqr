@@ -4,8 +4,8 @@
  * Notes: Finalize animation frames with watermark and validation.
  */
 
-import { ensureDecodableFirstFrameHelper } from '@/features/generator/application/frames/frames-fn-ensuredecodable';
-import { applyInterpolationToFrames } from '@/features/generator/application/frames/frames-fn-interpolation';
+import { ensureDecodableFirstFrameHelper } from "@/features/generator/application/frames/frames-fn-ensuredecodable";
+import { applyInterpolationToFrames } from "@/features/generator/application/frames/frames-fn-interpolation";
 
 export async function finalizeAnimationFrames(params: {
   frames: (HTMLCanvasElement | OffscreenCanvas)[];
@@ -20,18 +20,18 @@ export async function finalizeAnimationFrames(params: {
   let frames = params.frames;
   if (params.hasInterpolation && frames.length > 1) {
     params.updateGenerationProgress(
-      params.t('preview.busy.smoothingAnimationFrames', 'Smoothing the animation frames...'),
-      92
+      params.t("preview.busy.smoothingAnimationFrames", "Smoothing the animation frames..."),
+      92,
     );
     frames = await applyInterpolationToFrames(frames, params.interpolateMode);
   }
   if (frames.length > 1 && params.content) {
     params.updateGenerationProgress(
       params.t(
-        'preview.busy.finalizingFirstAnimationFrame',
-        'Finalizing the first animation frame...'
+        "preview.busy.finalizingFirstAnimationFrame",
+        "Finalizing the first animation frame...",
       ),
-      96
+      96,
     );
     await ensureDecodableFirstFrameHelper(frames, params.content);
   }

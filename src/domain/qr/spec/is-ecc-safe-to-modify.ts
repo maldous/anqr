@@ -1,5 +1,5 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { getEccWeight } from './get-ecc-weight';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { getEccWeight } from "./get-ecc-weight";
 
 /**
  * Check if modifying a module is safe given ECC-aware constraints
@@ -12,7 +12,7 @@ export function isEccSafeToModify(
   version: number,
   config: QRGeneratorConfig,
   modifiedCount: number,
-  totalDataModules: number
+  totalDataModules: number,
 ): boolean {
   if (!config.eccAwareEnabled) return true;
 
@@ -28,7 +28,7 @@ export function isEccSafeToModify(
     col,
     moduleCount,
     version,
-    config.eccAwareWeightMap || 'distance_to_finders'
+    config.eccAwareWeightMap || "distance_to_finders",
   );
 
   // Use deterministic decision based on position hash for reproducibility

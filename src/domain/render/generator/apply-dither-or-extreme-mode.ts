@@ -1,14 +1,14 @@
-import { blendColors } from '../core';
-import { getOverlayColorPacked } from '../overlay/overlay-data-packed';
-import { computeDitherBlendFlags } from './compute-dither-blend-flags';
-import { applyDitherLightModule } from './apply-dither-light-module';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
-import { computeDarkFactor } from './compute-dark-factor';
+import { blendColors } from "../core";
+import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
+import { computeDitherBlendFlags } from "./compute-dither-blend-flags";
+import { applyDitherLightModule } from "./apply-dither-light-module";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
+import { computeDarkFactor } from "./compute-dark-factor";
 
 export function applyDitherOrExtremeMode(
   context: OverlayModeContext,
-  result: OverlayModeResult
+  result: OverlayModeResult,
 ): void {
   const { overlayData, row, col, config, effectiveIntensity, isDark } = context;
   const ditherColor = getOverlayColorPacked(overlayData, row, col);
@@ -29,7 +29,7 @@ export function applyDitherOrExtremeMode(
   // Keep extreme mode dark rail significantly darker to preserve scanner contrast.
   const darkFactor = computeDarkFactor(
     darkBlend,
-    flags.functionalExtremeBlend ? 0.22 : flags.isExtreme ? 0.44 : 0.68
+    flags.functionalExtremeBlend ? 0.22 : flags.isExtreme ? 0.44 : 0.68,
   );
   const darkR = Math.round(ditherR * darkFactor);
   const darkG = Math.round(ditherG * darkFactor);
@@ -48,6 +48,6 @@ export function applyDitherOrExtremeMode(
     ditherR,
     ditherG,
     ditherB,
-    config.bgColor
+    config.bgColor,
   );
 }

@@ -1,4 +1,4 @@
-import { isValidPhone } from './is-valid-phone';
+import { isValidPhone } from "./is-valid-phone";
 
 /**
  * Validate DuitNow proxy value based on proxy type
@@ -13,12 +13,12 @@ export function isValidProxyValue(value: string, proxyType: string): boolean {
   if (!value || value.trim().length === 0) return false;
 
   switch (proxyType) {
-    case 'MOBILE':
+    case "MOBILE":
       // Valid phone number with at least 3 digits
       return isValidPhone(value);
-    case 'NRIC':
+    case "NRIC":
       // Malaysian NRIC is 12 digits (without dashes)
-      return /^\d{12}$/.test(value.replaceAll(/[-\s]/g, ''));
+      return /^\d{12}$/.test(value.replaceAll(/[-\s]/g, ""));
     default:
       // Just needs to be non-empty
       return value.trim().length >= 1;

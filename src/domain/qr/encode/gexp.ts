@@ -1,4 +1,4 @@
-import { EXP_TABLE } from './exp-table';
+import { EXP_TABLE } from "./exp-table";
 
 /**
  * Galois field exponentiation

@@ -1,6 +1,6 @@
-import { gfAdd } from './gf-add';
-import { polyIsZero } from './poly-is-zero';
-import { polyTrimLeadingZeros } from './poly-trim-leading-zeros';
+import { gfAdd } from "./gf-add";
+import { polyIsZero } from "./poly-is-zero";
+import { polyTrimLeadingZeros } from "./poly-trim-leading-zeros";
 
 /**
  * Add/subtract two polynomials (same in GF(2^m))

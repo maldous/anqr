@@ -1,7 +1,7 @@
-import { qrDecoderLog } from './qr-decoder-log';
-import { computeFinderContrast } from './compute-finder-contrast';
-import { scoreFinderCenter } from './score-finder-center';
-import { searchGrid } from './search-grid';
+import { qrDecoderLog } from "./qr-decoder-log";
+import { computeFinderContrast } from "./compute-finder-contrast";
+import { scoreFinderCenter } from "./score-finder-center";
+import { searchGrid } from "./search-grid";
 
 /**
  * Refine a finder pattern center by sampling the expected finder pattern structure
@@ -26,7 +26,7 @@ export function refineFinderPatternCenter(
   centerX: number,
   centerY: number,
   moduleSize: number,
-  threshold: number
+  threshold: number,
 ): { x: number; y: number; score: number } {
   // Search radius in pixels (about 2.5 modules to correct for potential larger offsets)
   const searchRadius = Math.ceil(moduleSize * 2.5);
@@ -39,7 +39,7 @@ export function refineFinderPatternCenter(
     centerX,
     centerY,
     moduleSize,
-    threshold
+    threshold,
   );
 
   // Coarse pass: search the area around the detected center
@@ -52,7 +52,7 @@ export function refineFinderPatternCenter(
     moduleSize,
     threshold,
     searchRadius,
-    step
+    step,
   );
 
   // Use the initial score if the grid search didn't beat it
@@ -76,7 +76,7 @@ export function refineFinderPatternCenter(
       moduleSize,
       threshold,
       fineRadius,
-      fineStep
+      fineStep,
     );
 
     if (fineResult.bestScore > bestScore) {
@@ -99,10 +99,10 @@ export function refineFinderPatternCenter(
     height,
     centerX,
     centerY,
-    moduleSize
+    moduleSize,
   );
 
-  qrDecoderLog.trace('locate: Finder center refinement', {
+  qrDecoderLog.trace("locate: Finder center refinement", {
     original: `(${centerX.toFixed(1)}, ${centerY.toFixed(1)})`,
     refined: `(${bestX.toFixed(1)}, ${bestY.toFixed(1)})`,
     delta: `(${deltaX.toFixed(1)}, ${deltaY.toFixed(1)})`,
@@ -120,8 +120,8 @@ export function refineFinderPatternCenter(
     bestContrast: bestContrast.contrast.toFixed(1),
     note:
       bestContrast.avgDark > 80 || bestContrast.avgLight < 180
-        ? 'WARNING: Poor contrast suggests finder center still not accurate'
-        : 'OK - good contrast detected',
+        ? "WARNING: Poor contrast suggests finder center still not accurate"
+        : "OK - good contrast detected",
   });
 
   return { x: bestX, y: bestY, score: bestScore };

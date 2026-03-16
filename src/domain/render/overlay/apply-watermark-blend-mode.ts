@@ -1,4 +1,4 @@
-import type { WatermarkBlend } from './watermark.types';
+import type { WatermarkBlend } from "./watermark.types";
 
 // ============================================
 // BLEND MODES
@@ -6,22 +6,22 @@ import type { WatermarkBlend } from './watermark.types';
 
 export function applyWatermarkBlendMode(
   ctx: CanvasRenderingContext2D,
-  blend: WatermarkBlend
+  blend: WatermarkBlend,
 ): void {
   switch (blend) {
-    case 'multiply':
-      ctx.globalCompositeOperation = 'multiply';
+    case "multiply":
+      ctx.globalCompositeOperation = "multiply";
       break;
-    case 'screen':
-      ctx.globalCompositeOperation = 'screen';
+    case "screen":
+      ctx.globalCompositeOperation = "screen";
       break;
-    case 'overlay':
-      ctx.globalCompositeOperation = 'overlay';
+    case "overlay":
+      ctx.globalCompositeOperation = "overlay";
       break;
-    case 'soft-light':
-      ctx.globalCompositeOperation = 'soft-light';
+    case "soft-light":
+      ctx.globalCompositeOperation = "soft-light";
       break;
     default:
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = "source-over";
   }
 }

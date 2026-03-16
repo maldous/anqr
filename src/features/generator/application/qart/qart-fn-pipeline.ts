@@ -4,19 +4,19 @@
  * Notes: Full QArt worker pipeline orchestration.
  */
 
-import { createLogger } from '@/infra/logging/logger';
+import { createLogger } from "@/infra/logging/logger";
 import type {
   FullQArtPipelineResult,
   QArtModule,
-} from '@/features/generator/application/qart/qart-shared-types';
-import { localizeQArtProgressStage } from '@/features/generator/application/generation/generation-fn-localizeprogress';
-import { getQArtSearchAttempts } from '@/features/generator/application/generation/generation-fn-qartattmpts';
-import { safeMark } from '@/features/generator/application/generation/generation-fn-safemark';
-import { safeMeasure } from '@/features/generator/application/generation/generation-fn-safemeasure';
-import { renderQArtResultToCanvas } from '@/features/generator/application/qart/qart-fn-render';
-import { runQArtWorkerGeneration } from '@/features/generator/application/qart/qart-fn-workerrun';
+} from "@/features/generator/application/qart/qart-shared-types";
+import { localizeQArtProgressStage } from "@/features/generator/application/generation/generation-fn-localizeprogress";
+import { getQArtSearchAttempts } from "@/features/generator/application/generation/generation-fn-qartattmpts";
+import { safeMark } from "@/features/generator/application/generation/generation-fn-safemark";
+import { safeMeasure } from "@/features/generator/application/generation/generation-fn-safemeasure";
+import { renderQArtResultToCanvas } from "@/features/generator/application/qart/qart-fn-render";
+import { runQArtWorkerGeneration } from "@/features/generator/application/qart/qart-fn-workerrun";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function executeQArtWorkerPipeline(params: {
   qartModule: QArtModule;
@@ -37,7 +37,7 @@ export async function executeQArtWorkerPipeline(params: {
   qartResultVersion: number;
   qartResultMaskPattern: number;
   qartResultModuleCount: number;
-  qartResultSource: 'worker' | 'main';
+  qartResultSource: "worker" | "main";
   qartComputeMs: number | null;
   qartRequestMarked: boolean;
   workerPackedMatrix: Uint8Array | null;
@@ -53,7 +53,7 @@ export async function executeQArtWorkerPipeline(params: {
   let qartResultVersion = 0;
   let qartResultMaskPattern = 0;
   let qartResultModuleCount = 0;
-  let qartResultSource: 'worker' | 'main' = 'main';
+  let qartResultSource: "worker" | "main" = "main";
   let qartComputeMs: number | null = null;
   let qartRequestMarked = false;
   let workerPackedMatrix: Uint8Array | null = null;
@@ -86,26 +86,26 @@ export async function executeQArtWorkerPipeline(params: {
   try {
     if (await params.yieldForResponsiveness()) return mkResult(true);
     const useAutoMask =
-      typeof params.debouncedConfig.maskPattern !== 'number' ||
+      typeof params.debouncedConfig.maskPattern !== "number" ||
       params.debouncedConfig.maskPattern < 0;
     const qartConfig = {
       data: params.debouncedConfig.content as string,
       version: (params.debouncedConfig.typeNumber as number) || 0,
-      ecc: ((params.debouncedConfig.errorCorrection as string) || 'M') as 'L' | 'M' | 'Q' | 'H',
+      ecc: ((params.debouncedConfig.errorCorrection as string) || "M") as "L" | "M" | "Q" | "H",
       strictSuffix: true,
       targetControlPercent: 100,
       searchAttempts: getQArtSearchAttempts(params.debouncedConfig.qrartIterations as number),
       searchSeed: (params.debouncedConfig.qrartSeed as number) ?? 0,
       lockVersionToMinimum: (params.debouncedConfig.typeNumber as number) === 0,
-      performanceProfile: 'quality' as const,
+      performanceProfile: "quality" as const,
       onProgress: (stage: string, percent: number) => {
         const localizedStage = localizeQArtProgressStage(
           stage,
           params.translateQArtStage,
-          params.t as unknown as (...args: unknown[]) => string
+          params.t as unknown as (...args: unknown[]) => string,
         );
         params.updateGenerationProgress(localizedStage, 18 + percent * 0.64);
-        log.debug('QR-Art progress', { stage: localizedStage, percent: `${percent}%` });
+        log.debug("QR-Art progress", { stage: localizedStage, percent: `${percent}%` });
       },
     };
 
@@ -142,7 +142,7 @@ export async function executeQArtWorkerPipeline(params: {
     qartResultModuleCount = fullQArtResult.moduleCount ?? 0;
 
     if (fullQArtResult.success && fullQArtResult.encodedData) {
-      log.info('Full QR-Art generation successful', {
+      log.info("Full QR-Art generation successful", {
         matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
         matchingPixels: fullQArtResult.matchingPixels,
         totalControllable: fullQArtResult.totalControllable,
@@ -168,18 +168,18 @@ export async function executeQArtWorkerPipeline(params: {
         workerRenderedBitmap = null;
         useFullQArt = true;
       } catch (error_) {
-        log.error('Failed to render QR-Art matrix', { error: error_ });
+        log.error("Failed to render QR-Art matrix", { error: error_ });
       }
     } else if (fullQArtResult.success) {
-      log.warn('QR-Art succeeded but encodedData is missing');
+      log.warn("QR-Art succeeded but encodedData is missing");
     } else {
-      log.warn('Full QR-Art generation failed', {
+      log.warn("Full QR-Art generation failed", {
         error: fullQArtResult.error,
         source: qartResultSource,
       });
     }
   } catch (err) {
-    log.warn('Full QR-Art generation threw error, falling back to fragment search', {
+    log.warn("Full QR-Art generation threw error, falling back to fragment search", {
       error: err,
     });
   }

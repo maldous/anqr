@@ -1,5 +1,5 @@
-import { EMV_TAGS, MAI_SUBTAGS, POI_METHOD } from '../../modules/payload-generators/types';
-import { crc16CCITT, utf8ByteLength } from '../../modules/payload-generators/utils';
+import { EMV_TAGS, MAI_SUBTAGS, POI_METHOD } from "../../modules/payload-generators/types";
+import { crc16CCITT, utf8ByteLength } from "../../modules/payload-generators/utils";
 
 /**
  * EMV QR Code Builder class for Merchant-Presented Mode
@@ -8,16 +8,16 @@ export class EMVQRBuilder {
   private readonly fields: Map<string, string> = new Map();
 
   static encodeTLV(tag: string, value: string): string {
-    if (!value?.length) return '';
-    const paddedTag = tag.padStart(2, '0');
+    if (!value?.length) return "";
+    const paddedTag = tag.padStart(2, "0");
     const byteLength = utf8ByteLength(value);
     if (byteLength > 99) {
       throw new Error(
         `EMV TLV value for tag ${paddedTag} exceeds 99 bytes (${byteLength} bytes). ` +
-          `Please shorten the value.`
+          `Please shorten the value.`,
       );
     }
-    const length = byteLength.toString().padStart(2, '0');
+    const length = byteLength.toString().padStart(2, "0");
     return `${paddedTag}${length}${value}`;
   }
 
@@ -25,18 +25,18 @@ export class EMVQRBuilder {
     return fields
       .filter((f) => f.value && f.value.length > 0)
       .map((f) => EMVQRBuilder.encodeTLV(f.tag, f.value))
-      .join('');
+      .join("");
   }
 
   setPayloadFormatIndicator(): this {
-    this.fields.set(EMV_TAGS.PAYLOAD_FORMAT_INDICATOR, '01');
+    this.fields.set(EMV_TAGS.PAYLOAD_FORMAT_INDICATOR, "01");
     return this;
   }
 
   setPointOfInitiation(isStatic: boolean): this {
     this.fields.set(
       EMV_TAGS.POINT_OF_INITIATION,
-      isStatic ? POI_METHOD.STATIC : POI_METHOD.DYNAMIC
+      isStatic ? POI_METHOD.STATIC : POI_METHOD.DYNAMIC,
     );
     return this;
   }
@@ -44,14 +44,14 @@ export class EMVQRBuilder {
   addMerchantAccountInfo(
     tag: number,
     gui: string,
-    additionalData: Array<{ tag: string; value: string }> = []
+    additionalData: Array<{ tag: string; value: string }> = [],
   ): this {
     if (tag < 26 || tag > 51) {
-      throw new Error('Merchant account info tag must be 26-51');
+      throw new Error("Merchant account info tag must be 26-51");
     }
     const templateFields = [{ tag: MAI_SUBTAGS.GLOBALLY_UNIQUE_ID, value: gui }, ...additionalData];
     const templateValue = EMVQRBuilder.buildTemplate(templateFields);
-    this.fields.set(tag.toString().padStart(2, '0'), templateValue);
+    this.fields.set(tag.toString().padStart(2, "0"), templateValue);
     return this;
   }
 
@@ -63,14 +63,14 @@ export class EMVQRBuilder {
   }
 
   setTransactionCurrency(currencyCode: string): this {
-    this.fields.set(EMV_TAGS.TRANSACTION_CURRENCY, currencyCode.padStart(3, '0'));
+    this.fields.set(EMV_TAGS.TRANSACTION_CURRENCY, currencyCode.padStart(3, "0"));
     return this;
   }
 
   setTransactionAmount(amount: number, currencyCode?: string): this {
     if (amount > 0) {
-      const zeroDecimalCurrencies = new Set(['392', '410', '704', '348', '352', '901', '360']);
-      const formattedAmount = zeroDecimalCurrencies.has(currencyCode || '')
+      const zeroDecimalCurrencies = new Set(["392", "410", "704", "348", "352", "901", "360"]);
+      const formattedAmount = zeroDecimalCurrencies.has(currencyCode || "")
         ? Math.round(amount).toString()
         : amount.toFixed(2);
       this.fields.set(EMV_TAGS.TRANSACTION_AMOUNT, formattedAmount);
@@ -78,11 +78,11 @@ export class EMVQRBuilder {
     return this;
   }
 
-  setTipIndicator(indicator: '01' | '02' | '03', value?: number): this {
+  setTipIndicator(indicator: "01" | "02" | "03", value?: number): this {
     this.fields.set(EMV_TAGS.TIP_INDICATOR, indicator);
-    if (indicator === '02' && value !== undefined) {
+    if (indicator === "02" && value !== undefined) {
       this.fields.set(EMV_TAGS.TIP_FIXED, value.toFixed(2));
-    } else if (indicator === '03' && value !== undefined) {
+    } else if (indicator === "03" && value !== undefined) {
       this.fields.set(EMV_TAGS.TIP_PERCENTAGE, value.toString());
     }
     return this;
@@ -123,23 +123,23 @@ export class EMVQRBuilder {
   }): this {
     const templateFields: Array<{ tag: string; value: string }> = [];
     if (data.billNumber)
-      templateFields.push({ tag: '01', value: data.billNumber.substring(0, 25) });
+      templateFields.push({ tag: "01", value: data.billNumber.substring(0, 25) });
     if (data.mobileNumber)
-      templateFields.push({ tag: '02', value: data.mobileNumber.substring(0, 25) });
+      templateFields.push({ tag: "02", value: data.mobileNumber.substring(0, 25) });
     if (data.storeLabel)
-      templateFields.push({ tag: '03', value: data.storeLabel.substring(0, 25) });
+      templateFields.push({ tag: "03", value: data.storeLabel.substring(0, 25) });
     if (data.loyaltyNumber)
-      templateFields.push({ tag: '04', value: data.loyaltyNumber.substring(0, 25) });
+      templateFields.push({ tag: "04", value: data.loyaltyNumber.substring(0, 25) });
     if (data.referenceLabel)
-      templateFields.push({ tag: '05', value: data.referenceLabel.substring(0, 25) });
+      templateFields.push({ tag: "05", value: data.referenceLabel.substring(0, 25) });
     if (data.customerLabel)
-      templateFields.push({ tag: '06', value: data.customerLabel.substring(0, 25) });
+      templateFields.push({ tag: "06", value: data.customerLabel.substring(0, 25) });
     if (data.terminalLabel)
-      templateFields.push({ tag: '07', value: data.terminalLabel.substring(0, 25) });
+      templateFields.push({ tag: "07", value: data.terminalLabel.substring(0, 25) });
     if (data.purposeOfTransaction)
-      templateFields.push({ tag: '08', value: data.purposeOfTransaction.substring(0, 25) });
+      templateFields.push({ tag: "08", value: data.purposeOfTransaction.substring(0, 25) });
     if (data.additionalConsumerData)
-      templateFields.push({ tag: '09', value: data.additionalConsumerData.substring(0, 3) });
+      templateFields.push({ tag: "09", value: data.additionalConsumerData.substring(0, 3) });
 
     if (templateFields.length > 0) {
       const templateValue = EMVQRBuilder.buildTemplate(templateFields);
@@ -150,17 +150,17 @@ export class EMVQRBuilder {
 
   setField(tag: string, value: string): this {
     if (value && value.length > 0) {
-      this.fields.set(tag.padStart(2, '0'), value);
+      this.fields.set(tag.padStart(2, "0"), value);
     }
     return this;
   }
 
   build(): string {
     const sortedTags = Array.from(this.fields.keys()).sort(
-      (a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10)
+      (a, b) => Number.parseInt(a, 10) - Number.parseInt(b, 10),
     );
 
-    let payload = '';
+    let payload = "";
     for (const tag of sortedTags) {
       const value = this.fields.get(tag);
       if (value) {
@@ -168,7 +168,7 @@ export class EMVQRBuilder {
       }
     }
 
-    payload += '6304';
+    payload += "6304";
     const crc = crc16CCITT(payload);
     payload += crc;
 

@@ -1,14 +1,14 @@
-import { registerCacheCleanup } from '../../../modules/qr-generator/cache';
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import type { RGBWithMeta } from '../../../modules/qr-generator/types';
-import { baseMatrixCacheState } from './base-matrix-cache-state';
-import { buildBaseMatrix } from './build-base-matrix';
-import { clearBaseMatrixCache } from './clear-base-matrix-cache';
+import { registerCacheCleanup } from "../../../modules/qr-generator/cache";
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import type { RGBWithMeta } from "../../../modules/qr-generator/types";
+import { baseMatrixCacheState } from "./base-matrix-cache-state";
+import { buildBaseMatrix } from "./build-base-matrix";
+import { clearBaseMatrixCache } from "./clear-base-matrix-cache";
 
-export { clearBaseMatrixCache } from './clear-base-matrix-cache';
-export { getScaleFactor } from './resolve-render-scale';
-export { curveIntensity } from './curve-overlay-intensity';
-export { getEffectiveIntensity } from './get-effective-overlay-intensity';
+export { clearBaseMatrixCache } from "./clear-base-matrix-cache";
+export { getScaleFactor } from "./resolve-render-scale";
+export { curveIntensity } from "./curve-overlay-intensity";
+export { getEffectiveIntensity } from "./get-effective-overlay-intensity";
 
 registerCacheCleanup(clearBaseMatrixCache);
 
@@ -20,7 +20,7 @@ registerCacheCleanup(clearBaseMatrixCache);
 export function generateBaseMatrix(
   qr: QRCodeObject,
   scaledSize: number,
-  scale: number
+  scale: number,
 ): { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } {
   if (
     baseMatrixCacheState.result !== null &&

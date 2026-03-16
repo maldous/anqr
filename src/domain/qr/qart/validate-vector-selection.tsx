@@ -1,4 +1,4 @@
-import { log } from './log';
+import { log } from "./log";
 
 /**
  * Validate that selected vectors only affect allowed bits
@@ -9,7 +9,7 @@ import { log } from './log';
  */
 export function validateVectorSelection(
   selectedVectorBits: Array<{ blockIndex: number; affectedLocalBits: number[] }>,
-  blockAllowedBits: Map<number, Set<number>>
+  blockAllowedBits: Map<number, Set<number>>,
 ): { valid: boolean; violations: Array<{ blockIndex: number; bit: number }> } {
   const violations: Array<{ blockIndex: number; bit: number }> = [];
 
@@ -31,7 +31,7 @@ export function validateVectorSelection(
   }
 
   if (violations.length > 0) {
-    log.warn('Vector selection violates protected bits!', {
+    log.warn("Vector selection violates protected bits!", {
       violationCount: violations.length,
       sampleViolations: violations.slice(0, 10),
     });

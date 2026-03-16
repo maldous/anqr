@@ -1,4 +1,4 @@
-import { resolveEffectTargetCanvas } from '../resolve-effect-target-canvas';
+import { resolveEffectTargetCanvas } from "../resolve-effect-target-canvas";
 
 /**
  * Apply temporal dither offset to a canvas by modifying pixel values slightly
@@ -8,7 +8,7 @@ export function applyTemporalNoiseToCanvas(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   offset: number,
   strength: number = 0.02,
-  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
+  targetCanvas?: HTMLCanvasElement | OffscreenCanvas,
 ): HTMLCanvasElement | OffscreenCanvas {
   if (offset === 0 || strength === 0) {
     return canvas;
@@ -19,13 +19,13 @@ export function applyTemporalNoiseToCanvas(
     return canvas as HTMLCanvasElement;
   }
 
-  if ('setTransform' in ctx && typeof ctx.setTransform === 'function') {
+  if ("setTransform" in ctx && typeof ctx.setTransform === "function") {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
-  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = "source-over";
   ctx.globalAlpha = 1;
-  if ('filter' in ctx) {
-    (ctx as CanvasRenderingContext2D).filter = 'none';
+  if ("filter" in ctx) {
+    (ctx as CanvasRenderingContext2D).filter = "none";
   }
   ctx.clearRect(0, 0, result.width, result.height);
 

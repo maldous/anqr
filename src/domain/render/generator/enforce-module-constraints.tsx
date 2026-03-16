@@ -1,9 +1,9 @@
-import type { QRCodeInstance, QRGeneratorConfig } from './types';
-import { recomputeConstraintStats } from './recompute-constraint-stats';
-import { buildConstraintCandidates } from './build-constraint-candidates';
-import { computeConstraintViolationEnergy } from './compute-constraint-violation-energy';
-import { initConstraintContext } from './init-constraint-context';
-import { applyRankedCandidates } from './apply-ranked-candidates';
+import type { QRCodeInstance, QRGeneratorConfig } from "./types";
+import { recomputeConstraintStats } from "./recompute-constraint-stats";
+import { buildConstraintCandidates } from "./build-constraint-candidates";
+import { computeConstraintViolationEnergy } from "./compute-constraint-violation-energy";
+import { initConstraintContext } from "./init-constraint-context";
+import { applyRankedCandidates } from "./apply-ranked-candidates";
 
 export function enforceModuleConstraints(
   qr: QRCodeInstance,
@@ -13,7 +13,7 @@ export function enforceModuleConstraints(
   scale: number,
   scaledSize: number,
   version: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): void {
   const init = initConstraintContext(
     qr,
@@ -23,7 +23,7 @@ export function enforceModuleConstraints(
     scale,
     scaledSize,
     version,
-    config
+    config,
   );
   if (!init) return;
   const { cctx, maxIters } = init;
@@ -45,7 +45,7 @@ export function enforceModuleConstraints(
       scaledSize,
       candidates,
       totalViolationEnergy,
-      total
+      total,
     );
 
     if (applied === 0) break;

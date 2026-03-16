@@ -1,7 +1,7 @@
-import { scanCanvas } from './scanner';
-import type { ScanSimulationResult } from './safety.types';
-import { applyBlurSimulation } from './apply-blur-simulation';
-import { applyNoiseSimulation } from './apply-noise-simulation';
+import { scanCanvas } from "./scanner";
+import type { ScanSimulationResult } from "./safety.types";
+import { applyBlurSimulation } from "./apply-blur-simulation";
+import { applyNoiseSimulation } from "./apply-noise-simulation";
 
 /**
  * Simulate scanning under various conditions
@@ -9,18 +9,18 @@ import { applyNoiseSimulation } from './apply-noise-simulation';
 export function simulateScan(
   canvas: HTMLCanvasElement,
   expectedContent: string,
-  conditions: 'ideal' | 'blur' | 'noise' | 'low_light' = 'ideal'
+  conditions: "ideal" | "blur" | "noise" | "low_light" = "ideal",
 ): ScanSimulationResult {
   let testCanvas = canvas;
 
   switch (conditions) {
-    case 'blur':
+    case "blur":
       testCanvas = applyBlurSimulation(canvas, 2);
       break;
-    case 'noise':
+    case "noise":
       testCanvas = applyNoiseSimulation(canvas, 0.1);
       break;
-    case 'low_light':
+    case "low_light":
       testCanvas = applyNoiseSimulation(applyBlurSimulation(canvas, 1), 0.05);
       break;
   }

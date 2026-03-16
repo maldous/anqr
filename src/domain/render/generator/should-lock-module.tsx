@@ -4,9 +4,9 @@ import {
   isFormatInfo,
   isTimingPattern,
   isVersionInfo,
-} from '../../qr/spec/qr-patterns';
-import type { QRGeneratorConfig } from './types';
-import { isFinderModuleOrSeparator } from './is-finder-module-or-separator';
+} from "../../qr/spec/qr-patterns";
+import type { QRGeneratorConfig } from "./types";
+import { isFinderModuleOrSeparator } from "./is-finder-module-or-separator";
 
 /**
  * Check if a module should be locked based on config preserve/protect settings.
@@ -18,7 +18,7 @@ export function shouldLockModule(
   col: number,
   moduleCount: number,
   version: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): boolean {
   const preserveFunctional = config.preserveFunctionalPatterns === true;
   const preserveFinders = config.preserveFinders !== false;

@@ -11,11 +11,11 @@
  * - No dependencies on other modules
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('CLIPBOARD');
+const _log = createLogger("CLIPBOARD");
 
 // Image clipboard
-export { copyImageToClipboard } from './copy-image';
+export { copyImageToClipboard } from "./copy-image";
 // Text clipboard
-export { copyToClipboard } from './copy-text';
+export { copyToClipboard } from "./copy-text";

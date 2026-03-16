@@ -4,13 +4,13 @@
  * Notes: Compute jitter value from pattern effects.
  */
 
-import type { PatternEffect } from '@/features/generator/application/frames/frames-type-patterneffect';
+import type { PatternEffect } from "@/features/generator/application/frames/frames-type-patterneffect";
 
 export function computePatternDrivenJitterValue(
   frameIndex: number,
   totalFrames: number,
   baseJitterPx: number,
-  modulePatternEffects: PatternEffect[]
+  modulePatternEffects: PatternEffect[],
 ): number {
   let jitter = baseJitterPx;
   for (const effect of modulePatternEffects) {
@@ -18,19 +18,19 @@ export function computePatternDrivenJitterValue(
     const phase = Math.sin(progress * Math.PI * 2 + effect.seed * 0.013);
     const intensity = (phase + 1) / 2;
     switch (effect.pattern) {
-      case 'pulse':
+      case "pulse":
         jitter += 0.3 + intensity * 0.7;
         break;
-      case 'wave':
+      case "wave":
         jitter += 0.6 + intensity * 0.65;
         break;
-      case 'scanline':
+      case "scanline":
         jitter += intensity * 0.8;
         break;
-      case 'shimmer':
+      case "shimmer":
         jitter += (Math.sin((frameIndex + effect.seed * 3) * 1.6) + 1) * 0.35;
         break;
-      case 'drift':
+      case "drift":
         jitter += 0.4 + intensity * 0.75;
         break;
       default:

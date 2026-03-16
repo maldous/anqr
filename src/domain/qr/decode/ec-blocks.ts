@@ -1,4 +1,4 @@
-import { ECB } from './ecb';
+import { ECB } from "./ecb";
 
 /**
  * Error correction blocks for a version/level

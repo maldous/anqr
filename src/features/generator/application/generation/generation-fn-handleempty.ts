@@ -4,7 +4,7 @@
  * Notes: Handle empty content edge case.
  */
 
-import { clearDisplayCanvas } from '@/features/generator/application/generation/generation-fn-cleardisplay';
+import { clearDisplayCanvas } from "@/features/generator/application/generation/generation-fn-cleardisplay";
 
 export function handleEmptyContent(params: {
   trimmedContent: string;

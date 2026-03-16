@@ -1,5 +1,5 @@
-import type { PageImage } from './page-image';
-import type { PageLink } from './page-link';
+import type { PageImage } from "./page-image";
+import type { PageLink } from "./page-link";
 
 export type PageSection = {
   heading: string;

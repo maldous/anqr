@@ -1,5 +1,5 @@
-import { IllegalArgumentException } from './exceptions';
-import { Arrays, arraycopy, Integer } from './util';
+import { IllegalArgumentException } from "./exceptions";
+import { Arrays, arraycopy, Integer } from "./util";
 
 /**
  * A simple, fast array of bits, represented compactly by an array of ints internally.
@@ -134,7 +134,7 @@ export class BitArray {
 
   appendBits(value: number, numBits: number): void {
     if (numBits < 0 || numBits > 32) {
-      throw new IllegalArgumentException('Num bits must be between 0 and 32');
+      throw new IllegalArgumentException("Num bits must be between 0 and 32");
     }
     this.ensureCapacity(this.size + numBits);
     for (let numBitsLeft = numBits; numBitsLeft > 0; numBitsLeft--) {
@@ -219,10 +219,10 @@ export class BitArray {
   }
 
   toString(): string {
-    let result = '';
+    let result = "";
     for (let i = 0; i < this.size; i++) {
-      if ((i & 0x07) === 0) result += ' ';
-      result += this.get(i) ? 'X' : '.';
+      if ((i & 0x07) === 0) result += " ";
+      result += this.get(i) ? "X" : ".";
     }
     return result;
   }

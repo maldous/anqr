@@ -1,10 +1,10 @@
-import { mapImageToTargetsSupersampled } from '../../domain/qr/qart/image-utils';
-import { type ECCLevel, qrcode } from '../qr-encoder';
-import { createLogger } from '../../infra/logging/logger';
-import { evaluateQRMatch } from './evaluate-qr-match';
-import type { FragmentSearchState } from './types';
+import { mapImageToTargetsSupersampled } from "../../domain/qr/qart/image-utils";
+import { type ECCLevel, qrcode } from "../qr-encoder";
+import { createLogger } from "../../infra/logging/logger";
+import { evaluateQRMatch } from "./evaluate-qr-match";
+import type { FragmentSearchState } from "./types";
 
-const log = createLogger('QART');
+const log = createLogger("QART");
 
 export function tryFragmentCandidate(
   baseUrl: string,
@@ -14,7 +14,7 @@ export function tryFragmentCandidate(
   maskPattern: number,
   targetImage: ImageData | HTMLCanvasElement | OffscreenCanvas,
   state: FragmentSearchState,
-  iterationIndex: number
+  iterationIndex: number,
 ): void {
   const testUrl = `${baseUrl}#${fragment}`;
   const qr = qrcode(version, ecc);
@@ -35,7 +35,7 @@ export function tryFragmentCandidate(
     moduleCount,
     actualVersion,
     state.targets!,
-    state.importance!
+    state.importance!,
   );
 
   if (score > state.bestScore) {
@@ -43,7 +43,7 @@ export function tryFragmentCandidate(
     state.bestFragment = fragment;
     state.bestMatchingModules = matchingModules;
     state.bestTotalControllable = totalControllable;
-    log.debug('New best fragment', {
+    log.debug("New best fragment", {
       fragment,
       score: `${(score * 100).toFixed(1)}%`,
       iteration: iterationIndex,

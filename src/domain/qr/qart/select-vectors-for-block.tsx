@@ -1,5 +1,5 @@
-import { indexToPixel } from './bit-mapping';
-import type { BlockEliminationResult } from './elimination.types';
+import { indexToPixel } from "./bit-mapping";
+import type { BlockEliminationResult } from "./elimination.types";
 
 /**
  * Select which basis vectors to apply to achieve the target pattern
@@ -17,7 +17,7 @@ export function selectVectorsForBlock(
   targets: boolean[][],
   baseMatrix: boolean[][],
   moduleCount: number,
-  pixelDiff: Uint8Array | undefined
+  pixelDiff: Uint8Array | undefined,
 ): number[] {
   const selectedVectorIndices: number[] = [];
 

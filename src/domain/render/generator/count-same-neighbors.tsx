@@ -1,11 +1,11 @@
-import { pixelIndex } from './pixel-index';
+import { pixelIndex } from "./pixel-index";
 
 export function countSameNeighbors(
   copy: Uint8Array,
   x: number,
   y: number,
   scaledSize: number,
-  current: number
+  current: number,
 ): number {
   let count = 0;
   for (let oy = -1; oy <= 1; oy++) {

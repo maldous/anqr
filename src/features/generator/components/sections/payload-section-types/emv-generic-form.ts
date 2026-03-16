@@ -6,7 +6,7 @@ export interface EMVGenericForm {
   amount: string;
   mcc: string;
   postalCode: string;
-  tipIndicator: 'none' | 'prompt' | 'fixed' | 'percent';
+  tipIndicator: "none" | "prompt" | "fixed" | "percent";
   tipAmount: string;
   tipPercent: string;
   reference: string;

@@ -2,12 +2,12 @@
  * Scan Logging Telemetry
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('TELEMETRY');
+const _log = createLogger("TELEMETRY");
 
-export type { LogEntry, ScanStats, ScanLogger } from './telemetry-logging.types';
-import type { LogEntry, ScanStats, ScanLogger } from './telemetry-logging.types';
+export type { LogEntry, ScanStats, ScanLogger } from "./telemetry-logging.types";
+import type { LogEntry, ScanStats, ScanLogger } from "./telemetry-logging.types";
 
 export function createScanLogger(): ScanLogger {
   const logs: LogEntry[] = [];
@@ -26,14 +26,14 @@ export function createScanLogger(): ScanLogger {
       });
 
       // Track scan statistics
-      if (category === 'scan') {
+      if (category === "scan") {
         totalScans++;
         if (data?.success) {
           successfulScans++;
         } else if (data?.success === false) {
           failedScans++;
         }
-        if (typeof data?.duration === 'number') {
+        if (typeof data?.duration === "number") {
           totalScanTime += data.duration;
         }
       }

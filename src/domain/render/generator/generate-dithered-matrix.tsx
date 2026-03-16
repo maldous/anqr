@@ -3,20 +3,20 @@ import type {
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
-import { bitsToMatrix } from './bits-to-matrix';
-import { buildDitherResolvedConfig } from './build-dither-resolved-config';
-import { computeDitherThreshold } from './compute-dither-threshold';
-import { computeQualityMetrics } from './compute-quality-metrics';
-import { enforceModuleConstraints } from './enforce-module-constraints';
-import type { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
-import { log } from './log';
-import { packedColorsToMatrix } from './packed-colors-to-matrix';
-import { pixelIndex } from './pixel-index';
-import { processErrorDiffusionPixel } from './process-error-diffusion-pixel';
-import { removeIsolatedSpeckles } from './remove-isolated-speckles';
-import { resolvePreparedMatrixInput } from './resolve-prepared-matrix-input';
-import { serpentineRowParams } from './serpentine-row-params';
+} from "../../../modules/qr-generator/types";
+import { bitsToMatrix } from "./bits-to-matrix";
+import { buildDitherResolvedConfig } from "./build-dither-resolved-config";
+import { computeDitherThreshold } from "./compute-dither-threshold";
+import { computeQualityMetrics } from "./compute-quality-metrics";
+import { enforceModuleConstraints } from "./enforce-module-constraints";
+import type { ErrorDiffusionPixelCtx } from "./error-diffusion-pixel-ctx";
+import { log } from "./log";
+import { packedColorsToMatrix } from "./packed-colors-to-matrix";
+import { pixelIndex } from "./pixel-index";
+import { processErrorDiffusionPixel } from "./process-error-diffusion-pixel";
+import { removeIsolatedSpeckles } from "./remove-isolated-speckles";
+import { resolvePreparedMatrixInput } from "./resolve-prepared-matrix-input";
+import { serpentineRowParams } from "./serpentine-row-params";
 
 /**
  * Generate dithered pixel matrix
@@ -31,13 +31,13 @@ export async function generateDitheredMatrix(
   effectiveIntensity: number,
   _effectiveConfig: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<PixelDecisionMatrix> {
   const prepared = await resolvePreparedMatrixInput({
     config,
     createCanvasFn,
     effectiveIntensity,
-    modeLabel: 'dithered',
+    modeLabel: "dithered",
     moduleCount,
     overlayCanvas,
     qr,
@@ -66,7 +66,7 @@ export async function generateDitheredMatrix(
       dc.noiseTile,
       dc.tileSize,
       dc.temporalOffsetX,
-      dc.temporalOffsetY
+      dc.temporalOffsetY,
     );
 
   const edCtx: ErrorDiffusionPixelCtx = {
@@ -97,7 +97,7 @@ export async function generateDitheredMatrix(
         matrixBits,
         packedColors,
         desire,
-        errors
+        errors,
       );
     }
   }
@@ -110,7 +110,7 @@ export async function generateDitheredMatrix(
     scale,
     scaledSize,
     dc.version,
-    config
+    config,
   );
   if (config.cleanupSpeckle === true) {
     removeIsolatedSpeckles(qr, matrixBits, scaledSize, moduleCount, scale, dc.version, config);
@@ -121,7 +121,7 @@ export async function generateDitheredMatrix(
   const sampleMc = Math.min(10, moduleCount - 1);
   const sy = sampleMr * scale + center;
   const sx = sampleMc * scale + center;
-  log.debug('dithered-matrix generated', {
+  log.debug("dithered-matrix generated", {
     scaledSize,
     moduleCount,
     scale,

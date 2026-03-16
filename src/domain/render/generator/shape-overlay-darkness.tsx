@@ -1,4 +1,4 @@
-import { clamp01 } from './clamp01';
+import { clamp01 } from "./clamp01";
 
 export function shapeOverlayDarkness(overlayDark: number): number {
   const t = clamp01(overlayDark);

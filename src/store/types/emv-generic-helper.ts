@@ -6,7 +6,7 @@ export interface EMVGenericHelper {
   currencyCode: string;
   amount?: number;
   isStatic?: boolean;
-  tipIndicator?: 'none' | 'prompt' | 'fixed' | 'percent';
+  tipIndicator?: "none" | "prompt" | "fixed" | "percent";
   tipAmount?: number;
   tipPercent?: number;
   storeLabel?: string;

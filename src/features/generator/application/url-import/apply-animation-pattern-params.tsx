@@ -1,5 +1,10 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore, type AnimationPatternType, type AnimationTarget, type AnimationWaveAxis } from '@/store/qr-store';
+import type { ShareConfig } from "@/modules/share-links";
+import {
+  useQRStore,
+  type AnimationPatternType,
+  type AnimationTarget,
+  type AnimationWaveAxis,
+} from "@/store/qr-store";
 
 export function applyAnimationPatternParams(params: Partial<ShareConfig>): void {
   if (params.pattern)

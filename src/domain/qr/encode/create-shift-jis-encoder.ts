@@ -1,4 +1,4 @@
-import { unicodeToShiftJIS } from './unicode-to-shift-jis';
+import { unicodeToShiftJIS } from "./unicode-to-shift-jis";
 
 /**
  * Create a Shift-JIS encoder function for use with qrcode.stringToBytes

@@ -1,6 +1,6 @@
-import { grayAt } from './gray-at';
-import { DARK_CORE_MODULES } from './dark-core-modules';
-import { WHITE_RING_MODULES } from './white-ring-modules';
+import { grayAt } from "./gray-at";
+import { DARK_CORE_MODULES } from "./dark-core-modules";
+import { WHITE_RING_MODULES } from "./white-ring-modules";
 
 export function sampleFinderContrast(
   pixels: Uint8ClampedArray,
@@ -8,7 +8,7 @@ export function sampleFinderContrast(
   height: number,
   testX: number,
   testY: number,
-  moduleSize: number
+  moduleSize: number,
 ) {
   const finderOriginX = testX - 3.5 * moduleSize;
   const finderOriginY = testY - 3.5 * moduleSize;

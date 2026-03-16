@@ -1,6 +1,6 @@
-import { GF_EXP } from './gf-exp.const';
-import { GF_LOG } from './gf-log.const';
-import { gfInitState } from './gf-init-state';
+import { GF_EXP } from "./gf-exp.const";
+import { GF_LOG } from "./gf-log.const";
+import { gfInitState } from "./gf-init-state";
 
 export function initGF(): void {
   if (gfInitState.value) return;

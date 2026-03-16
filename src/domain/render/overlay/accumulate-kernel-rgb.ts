@@ -1,4 +1,4 @@
-import { edgePixelIndex } from './edge-pixel-index';
+import { edgePixelIndex } from "./edge-pixel-index";
 
 export function accumulateKernelRgb(
   data: Uint8ClampedArray,
@@ -6,7 +6,7 @@ export function accumulateKernelRgb(
   px: number,
   py: number,
   weight: number,
-  accum: { r: number; g: number; b: number }
+  accum: { r: number; g: number; b: number },
 ): void {
   const idx = edgePixelIndex(width, px, py);
   accum.r += data[idx] * weight;

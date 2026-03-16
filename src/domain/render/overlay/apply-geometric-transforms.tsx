@@ -1,5 +1,5 @@
-import type { CreateCanvasFn, QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { hasGeometricTransforms } from './has-geometric-transforms';
+import type { CreateCanvasFn, QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { hasGeometricTransforms } from "./has-geometric-transforms";
 
 /**
  * Apply geometric transforms to overlay canvas
@@ -7,7 +7,7 @@ import { hasGeometricTransforms } from './has-geometric-transforms';
 export async function applyGeometricTransforms(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   config: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   // Return canvas as-is if no transforms needed
   if (!hasGeometricTransforms(config)) {
@@ -16,7 +16,7 @@ export async function applyGeometricTransforms(
 
   // Create new canvas for transformed output
   const result = await createCanvasFn(canvas.width, canvas.height);
-  const ctx = result.getContext('2d') as CanvasRenderingContext2D | null;
+  const ctx = result.getContext("2d") as CanvasRenderingContext2D | null;
   if (!ctx) return canvas;
 
   ctx.drawImage(canvas as CanvasImageSource, 0, 0);

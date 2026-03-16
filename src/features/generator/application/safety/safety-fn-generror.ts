@@ -4,26 +4,26 @@
  * Notes: Handle generation error with overflow detection.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { buildOverflowHandlingParams } from '@/features/generator/application/safety/build-overflow-handling-params';
-import { handleOverflowError } from '@/features/generator/application/safety/safety-fn-overflow';
-import type { SafetyRunnerParams } from './safety-runner-params';
+import { createLogger } from "@/infra/logging/logger";
+import { buildOverflowHandlingParams } from "@/features/generator/application/safety/build-overflow-handling-params";
+import { handleOverflowError } from "@/features/generator/application/safety/safety-fn-overflow";
+import type { SafetyRunnerParams } from "./safety-runner-params";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function handleGenerationError(
   params: SafetyRunnerParams & {
     error: unknown;
     debouncedConfig: Record<string, unknown>;
     isStaleRequest: () => boolean;
-  }
+  },
 ): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; aborted: boolean }> {
-  const msg = params.error instanceof Error ? params.error.message : '';
-  log.debug('Initial generation failed', {
+  const msg = params.error instanceof Error ? params.error.message : "";
+  log.debug("Initial generation failed", {
     errorMessage: msg,
-    isOverflow: msg.includes('code length overflow'),
+    isOverflow: msg.includes("code length overflow"),
   });
-  if (!msg.includes('code length overflow')) {
+  if (!msg.includes("code length overflow")) {
     throw params.error;
   }
   const overflowResult = await handleOverflowError({
@@ -32,7 +32,7 @@ export async function handleGenerationError(
   });
   if (overflowResult.succeeded) {
     if (params.isStaleRequest()) return { result: null, aborted: true };
-    log.debug('QR generated using fallback settings due to content length');
+    log.debug("QR generated using fallback settings due to content length");
     return { result: overflowResult.result, aborted: false };
   }
   return { result: null, aborted: true };

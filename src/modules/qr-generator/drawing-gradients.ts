@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/drawing-gradients';
+export * from "../../domain/render/generator/drawing-gradients";

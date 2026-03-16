@@ -1,5 +1,5 @@
-import type { ShareConfig } from '@/modules/share-links';
-import { useQRStore } from '@/store/qr-store';
+import type { ShareConfig } from "@/modules/share-links";
+import { useQRStore } from "@/store/qr-store";
 
 export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
   if (params.eccAwareEnabled)
@@ -10,10 +10,15 @@ export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
     }));
   if (params.eccAwareWeightMap)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, eccAwareWeightMap: params.eccAwareWeightMap as typeof s.overlay.eccAwareWeightMap },
+      overlay: {
+        ...s.overlay,
+        eccAwareWeightMap: params.eccAwareWeightMap as typeof s.overlay.eccAwareWeightMap,
+      },
     }));
   if (params.overlayType)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, type: params.overlayType as typeof s.overlay.type } }));
+    useQRStore.setState((s) => ({
+      overlay: { ...s.overlay, type: params.overlayType as typeof s.overlay.type },
+    }));
   if (params.overlayFramePick)
     useQRStore.setState((s) => ({
       overlay: { ...s.overlay, framePick: params.overlayFramePick as typeof s.overlay.framePick },
@@ -38,6 +43,9 @@ export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
     useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifMaxFps: params.gifMaxFps! } }));
   if (params.gifDisposalHandling)
     useQRStore.setState((s) => ({
-      overlay: { ...s.overlay, gifDisposalHandling: params.gifDisposalHandling as typeof s.overlay.gifDisposalHandling },
+      overlay: {
+        ...s.overlay,
+        gifDisposalHandling: params.gifDisposalHandling as typeof s.overlay.gifDisposalHandling,
+      },
     }));
 }

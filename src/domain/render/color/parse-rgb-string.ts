@@ -1,4 +1,4 @@
-import type { RGBA } from '../../../modules/core/types';
+import type { RGBA } from "../../../modules/core/types";
 
 /** Parse rgb() or rgba() string */
 export function parseRgbString(str: string): RGBA {

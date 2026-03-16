@@ -1,13 +1,13 @@
-import { getOverlayColorPacked } from '../overlay/overlay-data-packed';
-import { applyBrightnessCurve } from './apply-brightness-curve';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
-import { computeDarkFactor } from './compute-dark-factor';
-import { computeLightBlend } from './compute-light-blend';
+import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
+import { applyBrightnessCurve } from "./apply-brightness-curve";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
+import { computeDarkFactor } from "./compute-dark-factor";
+import { computeLightBlend } from "./compute-light-blend";
 
 export function applyHalftoneDitheredMode(
   context: OverlayModeContext,
-  result: OverlayModeResult
+  result: OverlayModeResult,
 ): void {
   const { overlayData, row, col, brightness, config, effectiveIntensity, isDark } = context;
   result.useHalftoneRendering = true;

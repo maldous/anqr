@@ -1,11 +1,11 @@
-import type { FullQArtConfig, FullQArtResult } from './generate.types';
-import { generateFullQArtBestMask } from './generate-full-q-art-best-mask';
+import type { FullQArtConfig, FullQArtResult } from "./generate.types";
+import { generateFullQArtBestMask } from "./generate-full-q-art-best-mask";
 
 /**
  * Generate QR-Art with optimal settings (best mask, rotation, etc.)
  */
 export async function generateFullQArtOptimal(
-  config: Omit<FullQArtConfig, 'maskPattern'>
+  config: Omit<FullQArtConfig, "maskPattern">,
 ): Promise<FullQArtResult> {
   const attempts = Math.max(1, Math.min(8, Math.floor(config.searchAttempts ?? 1)));
   if (attempts === 1) {
@@ -38,14 +38,14 @@ export async function generateFullQArtOptimal(
   }
 
   if (bestResult) {
-    config.onProgress?.('Complete', 100);
+    config.onProgress?.("Complete", 100);
     return bestResult;
   }
 
   return (
     lastFailure ?? {
       success: false,
-      error: 'All search attempts failed',
+      error: "All search attempts failed",
       matrix: [],
       moduleCount: 0,
       version: 0,
@@ -55,7 +55,7 @@ export async function generateFullQArtOptimal(
       matchPercentage: 0,
       encodedData: config.data,
       originalData: config.data,
-      suffix: '',
+      suffix: "",
     }
   );
 }

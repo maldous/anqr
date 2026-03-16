@@ -1,15 +1,15 @@
-import type { CropRegion } from './processor.types';
+import type { CropRegion } from "./processor.types";
 
 // ============================================
 // IMAGE TRANSFORMATION
 // ============================================
 
 export function cropOverlayImage(source: HTMLCanvasElement, region: CropRegion): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = region.width;
   canvas.height = region.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2D context');
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context");
 
   ctx.drawImage(
     source,
@@ -20,7 +20,7 @@ export function cropOverlayImage(source: HTMLCanvasElement, region: CropRegion):
     0,
     0,
     region.width,
-    region.height
+    region.height,
   );
 
   return canvas;

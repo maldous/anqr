@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from './types';
+import type { QRCodeInstance } from "./types";
 
 export abstract class BaseMatrixWrapper implements QRCodeInstance {
   protected readonly moduleCount: number;

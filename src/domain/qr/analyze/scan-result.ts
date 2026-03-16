@@ -1,4 +1,4 @@
-import type { QRLocation } from './qr-location';
+import type { QRLocation } from "./qr-location";
 
 export interface ScanResult {
   data: string | null;

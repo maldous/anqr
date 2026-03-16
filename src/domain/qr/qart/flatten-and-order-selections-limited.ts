@@ -1,7 +1,7 @@
-import type { BlockSelectionResult, EliminationResult } from './elimination';
-import { forEachFlattenedSelection } from './for-each-flattened-selection';
-import type { FlattenedSelection } from './scan-fallback.types';
-import { flattenAndOrderSelections } from './flatten-and-order-selections';
+import type { BlockSelectionResult, EliminationResult } from "./elimination";
+import { forEachFlattenedSelection } from "./for-each-flattened-selection";
+import type { FlattenedSelection } from "./scan-fallback.types";
+import { flattenAndOrderSelections } from "./flatten-and-order-selections";
 
 /**
  * Flatten and order selections, optionally limiting to the top-K by importance.
@@ -12,7 +12,7 @@ export function flattenAndOrderSelectionsLimited(
   eliminationResult: EliminationResult,
   importance: number[][],
   moduleCount: number,
-  limit?: number
+  limit?: number,
 ): FlattenedSelection[] {
   if (!limit || limit <= 0) {
     return flattenAndOrderSelections(blockSelections, eliminationResult, importance, moduleCount);

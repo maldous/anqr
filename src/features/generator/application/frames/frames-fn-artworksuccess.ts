@@ -4,17 +4,17 @@
  * Notes: Handle successful artwork worker result.
  */
 
-import { createLogger } from '@/infra/logging/logger';
+import { createLogger } from "@/infra/logging/logger";
 import type {
   QArtModule,
   QArtWorkerResult,
-} from '@/features/generator/application/qart/qart-shared-types';
-import { renderArtworkWorkerBitmap } from '@/features/generator/application/frames/frames-fn-renderbitmap';
-import { renderArtworkWorkerMatrix } from '@/features/generator/application/frames/frames-fn-rendermatrix';
-import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
-import { rescueOutlierArtworkFrame } from '@/features/generator/application/safety/safety-fn-rescueoutlier';
+} from "@/features/generator/application/qart/qart-shared-types";
+import { renderArtworkWorkerBitmap } from "@/features/generator/application/frames/frames-fn-renderbitmap";
+import { renderArtworkWorkerMatrix } from "@/features/generator/application/frames/frames-fn-rendermatrix";
+import type { ArtworkFrameState } from "@/features/generator/application/frames/frames-interface-artworkstate";
+import { rescueOutlierArtworkFrame } from "@/features/generator/application/safety/safety-fn-rescueoutlier";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function handleArtworkWorkerSuccess(params: {
   workerResult: QArtWorkerResult;
@@ -36,13 +36,13 @@ export async function handleArtworkWorkerSuccess(params: {
   if (params.isNoisyOutlierMatch(params.workerResult.matchPercentage)) {
     const rescueAttempts = Math.min(
       8,
-      Math.max((params.qartConfig.searchAttempts as number) + 2, 4)
+      Math.max((params.qartConfig.searchAttempts as number) + 2, 4),
     );
     const rescueSeed =
       (((params.qartConfig.searchSeed as number) ?? 0) ^
         Math.imul(params.frameIdx + 1, 0x85ebca6b)) >>>
       0;
-    log.warn('QR-Art frame quality outlier detected; retrying frame', {
+    log.warn("QR-Art frame quality outlier detected; retrying frame", {
       frameIdx: params.frameIdx,
       previousMatch: params.artworkState.lastSuccessfulArtworkMatchPercentage,
       currentMatch: params.workerResult.matchPercentage,

@@ -1,1 +1,1 @@
-export { completeAnimationGeneration } from '@/features/generator/application/frames/frames-fn-complete';
+export { completeAnimationGeneration } from "@/features/generator/application/frames/frames-fn-complete";

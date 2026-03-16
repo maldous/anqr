@@ -1,6 +1,6 @@
-import { clamp01 } from './clamp01';
-import { moduleCenterWeight } from './module-center-weight';
-import type { ErrorDiffusionPixelCtx } from './error-diffusion-pixel-ctx';
+import { clamp01 } from "./clamp01";
+import { moduleCenterWeight } from "./module-center-weight";
+import type { ErrorDiffusionPixelCtx } from "./error-diffusion-pixel-ctx";
 
 export function computeBiasedDarkness(
   overlayDark: number,
@@ -8,7 +8,7 @@ export function computeBiasedDarkness(
   y: number,
   ctx: ErrorDiffusionPixelCtx,
   qrIsDark: boolean,
-  fixedDarkUnlocked: boolean
+  fixedDarkUnlocked: boolean,
 ): number {
   const centerW = moduleCenterWeight(x, y, ctx.scale);
   const qrBias = fixedDarkUnlocked

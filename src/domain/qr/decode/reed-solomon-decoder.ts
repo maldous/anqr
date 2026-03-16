@@ -1,6 +1,6 @@
-import { IllegalStateException, ReedSolomonException } from './exceptions';
-import { GenericGF } from './generic-gf';
-import { GenericGFPoly } from './generic-gf-poly';
+import { IllegalStateException, ReedSolomonException } from "./exceptions";
+import { GenericGF } from "./generic-gf";
+import { GenericGFPoly } from "./generic-gf-poly";
 
 /**
  * Reed-Solomon decoder
@@ -23,11 +23,11 @@ export class ReedSolomonDecoder {
   private applyCorrections(
     received: Int32Array,
     errorLocations: Int32Array,
-    errorMagnitudes: Int32Array
+    errorMagnitudes: Int32Array,
   ): void {
     for (let i = 0; i < errorLocations.length; i++) {
       const position = received.length - 1 - this.field.log(errorLocations[i]);
-      if (position < 0) throw new ReedSolomonException('Bad error location');
+      if (position < 0) throw new ReedSolomonException("Bad error location");
       received[position] = GenericGF.addOrSubtract(received[position], errorMagnitudes[i]);
     }
   }
@@ -40,7 +40,7 @@ export class ReedSolomonDecoder {
     const sigmaOmega = this.runEuclideanAlgorithm(
       this.field.buildMonomial(twoS, 1),
       syndrome,
-      twoS
+      twoS,
     );
     const sigma = sigmaOmega[0];
     const omega = sigmaOmega[1];
@@ -51,7 +51,7 @@ export class ReedSolomonDecoder {
 
   private polyDivide(
     dividend: GenericGFPoly,
-    divisor: GenericGFPoly
+    divisor: GenericGFPoly,
   ): { quotient: GenericGFPoly; remainder: GenericGFPoly } {
     let r = dividend;
     let q = this.field.getZero();
@@ -83,17 +83,17 @@ export class ReedSolomonDecoder {
       rLast = r;
       tLast = t;
 
-      if (rLast.isZero()) throw new ReedSolomonException('r_{i-1} was zero');
+      if (rLast.isZero()) throw new ReedSolomonException("r_{i-1} was zero");
       const div = this.polyDivide(rLastLast, rLast);
       r = div.remainder;
       t = div.quotient.multiply(tLast).addOrSubtract(tLastLast);
       if (r.getDegree() >= rLast.getDegree()) {
-        throw new IllegalStateException('Division algorithm failed to reduce polynomial?');
+        throw new IllegalStateException("Division algorithm failed to reduce polynomial?");
       }
     }
 
     const sigmaTildeAtZero = t.getCoefficient(0);
-    if (sigmaTildeAtZero === 0) throw new ReedSolomonException('sigmaTilde(0) was zero');
+    if (sigmaTildeAtZero === 0) throw new ReedSolomonException("sigmaTilde(0) was zero");
 
     const inverse = this.field.inverse(sigmaTildeAtZero);
     const sigma = t.multiplyScalar(inverse);
@@ -113,14 +113,14 @@ export class ReedSolomonDecoder {
       }
     }
     if (e !== numErrors) {
-      throw new ReedSolomonException('Error locator degree does not match number of roots');
+      throw new ReedSolomonException("Error locator degree does not match number of roots");
     }
     return result;
   }
 
   private findErrorMagnitudes(
     errorEvaluator: GenericGFPoly,
-    errorLocations: Int32Array
+    errorLocations: Int32Array,
   ): Int32Array {
     const s = errorLocations.length;
     const result = new Int32Array(s);
@@ -136,7 +136,7 @@ export class ReedSolomonDecoder {
       }
       result[i] = this.field.multiply(
         errorEvaluator.evaluateAt(xiInverse),
-        this.field.inverse(denominator)
+        this.field.inverse(denominator),
       );
       if (this.field.getGeneratorBase() !== 0) {
         result[i] = this.field.multiply(result[i], xiInverse);

@@ -1,5 +1,5 @@
-import type { OverlayData } from './overlay-data';
-import type { RGBWithMeta } from './rgb-with-meta';
+import type { OverlayData } from "./overlay-data";
+import type { RGBWithMeta } from "./rgb-with-meta";
 
 export interface PixelDecisionMatrix {
   matrix: boolean[][];

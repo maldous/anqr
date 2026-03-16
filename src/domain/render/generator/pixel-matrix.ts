@@ -4,32 +4,32 @@
  * Re-exports from split module files
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { CanvasFactory } from '../../../platform/browser/canvas/canvas-factory';
-import { generateSubpixelMatrix } from '../overlay/overlay';
-import { generateDitherModeMatrix } from './pixel-matrix-dither';
-import { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-dithered';
-import { generateStandardMatrix } from './pixel-matrix-standard';
-import { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from './pixel-matrix-utils';
+import { createLogger } from "../../../infra/logging/logger";
+import type { CanvasFactory } from "../../../platform/browser/canvas/canvas-factory";
+import { generateSubpixelMatrix } from "../overlay/overlay";
+import { generateDitherModeMatrix } from "./pixel-matrix-dither";
+import { generateBlueNoiseMatrix, generateDitheredMatrix } from "./pixel-matrix-dithered";
+import { generateStandardMatrix } from "./pixel-matrix-standard";
+import { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from "./pixel-matrix-utils";
 import type {
   PixelDecisionResult,
   QRCodeInstance,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
+} from "../../../modules/qr-generator/types";
 
-export { generateDitherModeMatrix, normalizeColors } from './pixel-matrix-dither';
-export { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-dithered';
-export { prepareUnifiedOverlayData } from './pixel-matrix-overlay';
-export { generateStandardMatrix } from './pixel-matrix-standard';
+export { generateDitherModeMatrix, normalizeColors } from "./pixel-matrix-dither";
+export { generateBlueNoiseMatrix, generateDitheredMatrix } from "./pixel-matrix-dithered";
+export { prepareUnifiedOverlayData } from "./pixel-matrix-overlay";
+export { generateStandardMatrix } from "./pixel-matrix-standard";
 // Re-export utilities
 export {
   curveIntensity,
   generateBaseMatrix,
   getEffectiveIntensity,
   getScaleFactor,
-} from './pixel-matrix-utils';
+} from "./pixel-matrix-utils";
 
-const log = createLogger('GENERATE');
+const log = createLogger("GENERATE");
 
 /**
  * UNIFIED PIXEL DECISION MATRIX
@@ -43,7 +43,7 @@ export async function generatePixelDecisionMatrix(
   moduleCount: number,
   createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
   canvasFactory: CanvasFactory,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<PixelDecisionResult> {
   const overlayMode = config.overlayMode;
   const scale = getScaleFactor(overlayMode, config);
@@ -54,7 +54,7 @@ export async function generatePixelDecisionMatrix(
 
   // Debug (targeted): only emit overlay-dither logs when explicitly enabled.
   if (config.debugOverlayDither) {
-    log.debug('pixel-matrix', {
+    log.debug("pixel-matrix", {
       overlayMode,
       scale,
       scaledSize,
@@ -72,8 +72,8 @@ export async function generatePixelDecisionMatrix(
 
   // Route to mode-specific pixel generation
   switch (overlayMode) {
-    case 'dithered':
-      if (config.ditherMode === 'blue_noise' || config.ditherKind === 'blue_noise') {
+    case "dithered":
+      if (config.ditherMode === "blue_noise" || config.ditherKind === "blue_noise") {
         return generateBlueNoiseMatrix(
           qr,
           config,
@@ -83,7 +83,7 @@ export async function generatePixelDecisionMatrix(
           effectiveIntensity,
           canvasFactory,
           createCanvasFn,
-          releaseCanvasFn
+          releaseCanvasFn,
         );
       }
       return generateDitheredMatrix(
@@ -95,11 +95,11 @@ export async function generatePixelDecisionMatrix(
         effectiveIntensity,
         effectiveConfig,
         createCanvasFn,
-        releaseCanvasFn
+        releaseCanvasFn,
       );
 
-    case 'blue-noise':
-    case 'blue_noise':
+    case "blue-noise":
+    case "blue_noise":
       return generateBlueNoiseMatrix(
         qr,
         config,
@@ -109,13 +109,13 @@ export async function generatePixelDecisionMatrix(
         effectiveIntensity,
         canvasFactory,
         createCanvasFn,
-        releaseCanvasFn
+        releaseCanvasFn,
       );
 
-    case 'subpixel':
-    case 'subpixel-size': {
+    case "subpixel":
+    case "subpixel-size": {
       // Generate NxN grid where center=QR data, surrounding=image
-      const useHalftoneCenter = overlayMode === 'subpixel-size';
+      const useHalftoneCenter = overlayMode === "subpixel-size";
       return await generateSubpixelMatrix(
         qr,
         config,
@@ -123,12 +123,12 @@ export async function generatePixelDecisionMatrix(
         moduleCount,
         scale,
         useHalftoneCenter,
-        createCanvasFn
+        createCanvasFn,
       );
     }
 
-    case 'dither':
-    case 'extreme':
+    case "dither":
+    case "extreme":
       return generateDitherModeMatrix(
         qr,
         config,
@@ -137,7 +137,7 @@ export async function generatePixelDecisionMatrix(
         effectiveIntensity,
         effectiveConfig,
         overlayMode,
-        createCanvasFn
+        createCanvasFn,
       );
 
     default:
@@ -148,7 +148,7 @@ export async function generatePixelDecisionMatrix(
         moduleCount,
         effectiveIntensity,
         effectiveConfig,
-        createCanvasFn
+        createCanvasFn,
       );
   }
 }

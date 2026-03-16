@@ -1,5 +1,5 @@
-import type { FilterOptions } from '../../../modules/overlay';
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import type { FilterOptions } from "../../../modules/overlay";
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
 /**
  * Build FilterOptions from QR generator config.
@@ -17,7 +17,7 @@ import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
  */
 export function applyColorAdjustmentFilters(
   config: QRGeneratorConfig,
-  filterOptions: FilterOptions
+  filterOptions: FilterOptions,
 ): void {
   if (config.filterBrightness !== undefined && config.filterBrightness !== 0)
     filterOptions.brightness = config.filterBrightness;

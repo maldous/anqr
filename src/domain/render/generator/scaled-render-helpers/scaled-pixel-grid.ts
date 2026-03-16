@@ -1,13 +1,13 @@
-import { createLogger } from '../../../../infra/logging/logger';
-import { dispatchPixelRender } from './dispatch-pixel-render';
-import type { PixelGridCtx } from '../scaled-render-types';
+import { createLogger } from "../../../../infra/logging/logger";
+import { dispatchPixelRender } from "./dispatch-pixel-render";
+import type { PixelGridCtx } from "../scaled-render-types";
 
-const log = createLogger('GENERATE');
+const log = createLogger("GENERATE");
 
-export { drawScaledDitherBackdrop } from './draw-scaled-dither-backdrop';
-export { drawScaledPatternContrastBoostOverlay } from './draw-scaled-pattern-contrast-boost-overlay';
-export { drawScaledStrictFunctionOverlay } from './draw-scaled-strict-function-overlay';
-export { enforceScaledQuietZoneClean } from './enforce-scaled-quiet-zone-clean';
+export { drawScaledDitherBackdrop } from "./draw-scaled-dither-backdrop";
+export { drawScaledPatternContrastBoostOverlay } from "./draw-scaled-pattern-contrast-boost-overlay";
+export { drawScaledStrictFunctionOverlay } from "./draw-scaled-strict-function-overlay";
+export { enforceScaledQuietZoneClean } from "./enforce-scaled-quiet-zone-clean";
 
 export function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   const {
@@ -32,7 +32,7 @@ export function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
         y === Math.floor(scaledSize / 2) &&
         (x === Math.floor(scaledSize / 2) || x === Math.floor(scaledSize / 2) + 4)
       ) {
-        log.debug('ScaledRender samplePixel', { y, x, isDark, color });
+        log.debug("ScaledRender samplePixel", { y, x, isDark, color });
       }
       dispatchPixelRender(pgctx, x, y, isDark, color, shouldDrawLightPixel);
     }

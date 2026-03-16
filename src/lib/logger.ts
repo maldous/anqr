@@ -1,1 +1,1 @@
-export * from '../infra/logging/logger';
+export * from "../infra/logging/logger";

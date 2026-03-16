@@ -1,22 +1,22 @@
-import type { EventHelper } from '../../modules/payload-generators/types';
-import { escapeValue, formatICalDate } from '../../modules/payload-generators/utils';
+import type { EventHelper } from "../../modules/payload-generators/types";
+import { escapeValue, formatICalDate } from "../../modules/payload-generators/utils";
 
 /** Generate iCalendar VEVENT string per RFC 5545
  * Optimized for QR code size - uses minimal required fields
  */
 export function generateEvent(params: EventHelper): string {
   const lines: string[] = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//ANQR//EN', // Shortened PRODID to save space
-    'BEGIN:VEVENT',
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//ANQR//EN", // Shortened PRODID to save space
+    "BEGIN:VEVENT",
   ];
 
   // Use a shorter UID format to save bytes
   const uid = `${Date.now().toString(36)}@anqr`;
   // DTSTAMP - use shorter format without full timestamp
   const now = new Date();
-  const dtstamp = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, '0')}${String(now.getUTCDate()).padStart(2, '0')}T${String(now.getUTCHours()).padStart(2, '0')}${String(now.getUTCMinutes()).padStart(2, '0')}00Z`;
+  const dtstamp = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}T${String(now.getUTCHours()).padStart(2, "0")}${String(now.getUTCMinutes()).padStart(2, "0")}00Z`;
   lines.push(`UID:${uid}`, `DTSTAMP:${dtstamp}`);
 
   if (params.start) {
@@ -58,8 +58,8 @@ export function generateEvent(params: EventHelper): string {
     lines.push(`RRULE:${params.rrule}`);
   }
 
-  lines.push('END:VEVENT', 'END:VCALENDAR');
+  lines.push("END:VEVENT", "END:VCALENDAR");
 
   // Use CRLF line endings per RFC 5545
-  return lines.join('\r\n');
+  return lines.join("\r\n");
 }

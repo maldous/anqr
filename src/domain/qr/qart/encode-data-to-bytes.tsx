@@ -1,18 +1,18 @@
-import { qrBitBuffer } from '../encode/bit-buffer';
-import { getRSBlocks } from '../encode/rs-blocks';
-import type { ECCLevel } from './bit-mapping';
-import { log } from './log';
-import { eccToNumericForEncoder } from './ecc-to-numeric-for-encoder';
-import { writeSegmentsToBuffer } from './write-segments-to-buffer';
-import { computeTwoIntervalSafeRanges } from './compute-two-interval-safe-ranges';
-import { extractBlocksFromBuffer } from './extract-blocks-from-buffer';
-import type { QArtEncodingPlan } from './q-art-encoding-plan';
-import type { EncoderDerivedLayout } from './generate.types';
+import { qrBitBuffer } from "../encode/bit-buffer";
+import { getRSBlocks } from "../encode/rs-blocks";
+import type { ECCLevel } from "./bit-mapping";
+import { log } from "./log";
+import { eccToNumericForEncoder } from "./ecc-to-numeric-for-encoder";
+import { writeSegmentsToBuffer } from "./write-segments-to-buffer";
+import { computeTwoIntervalSafeRanges } from "./compute-two-interval-safe-ranges";
+import { extractBlocksFromBuffer } from "./extract-blocks-from-buffer";
+import type { QArtEncodingPlan } from "./q-art-encoding-plan";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 export function encodeDataToBytes(
   plan: QArtEncodingPlan,
   version: number,
-  ecc: ECCLevel
+  ecc: ECCLevel,
 ): {
   blockDataArrays: Uint8Array[];
   blockEccArrays: Uint8Array[];
@@ -26,7 +26,7 @@ export function encodeDataToBytes(
 
   const suffixLength = plan.suffixLength;
   const originalDataLength = plan.originalDataLength;
-  const suffixMode: 'byte' | 'numeric' = plan.mode === 'numeric' ? 'numeric' : 'byte';
+  const suffixMode: "byte" | "numeric" = plan.mode === "numeric" ? "numeric" : "byte";
 
   const segments = writeSegmentsToBuffer(plan, buffer, version);
   const {
@@ -99,7 +99,7 @@ export function encodeDataToBytes(
     suffixMode,
     suffixLength,
     version,
-    buffer
+    buffer,
   );
   const {
     protectedBitEnd,
@@ -156,13 +156,13 @@ export function encodeDataToBytes(
 
   // Log the ACTUAL semantic boundaries from the encoder (HYBRID mode)
   // This now shows the TWO-INTERVAL safe ranges and the protected gap
-  log.info('ENCODER-DERIVED SEMANTIC BOUNDARIES (TWO-INTERVAL HYBRID mode)', {
+  log.info("ENCODER-DERIVED SEMANTIC BOUNDARIES (TWO-INTERVAL HYBRID mode)", {
     version,
     ecc,
     originalDataLength,
     suffixLength,
     fullDataLength,
-    encoding: suffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
+    encoding: suffixMode === "numeric" ? "mixed (byte + numeric)" : "byte mode (single segment)",
     checkpoints: {
       bitsAfterMode: `${bitsAfterMode} bits (mode indicator)`,
       bitsAfterCharCount: `${bitsAfterCharCount} bits (+char count)`,
@@ -182,15 +182,15 @@ export function encodeDataToBytes(
       interval1_suffix:
         suffixSafeEndBit > suffixSafeStartBit
           ? `bits ${suffixSafeStartBit} - ${suffixSafeEndBit} (${suffixSafeBits} bits, ${suffixSafeBits / 8} bytes)`
-          : 'NONE (suffix too short or ends mid-byte)',
+          : "NONE (suffix too short or ends mid-byte)",
       interval2_padding:
         paddingSafeEndBit > paddingSafeStartBit
           ? `bits ${paddingSafeStartBit} - ${paddingSafeEndBit} (${paddingSafeBits} bits, ${paddingSafeBits / 8} bytes)`
-          : 'NONE (no padding codewords)',
+          : "NONE (no padding codewords)",
       gap_protected:
         gapBitCount > 0
           ? `bits ${gapStartBit} - ${gapEndBit} (${gapBitCount} bits) [TERMINATOR + PAD-TO-BYTE - NEVER MODIFY!]`
-          : 'NONE (no gap)',
+          : "NONE (no gap)",
     },
     controllable: {
       totalControllableBits,
@@ -203,7 +203,7 @@ export function encodeDataToBytes(
   const bufferBytes = buffer.getBuffer();
 
   // Log first 32 bytes of the encoded buffer for debugging
-  log.debug('ENCODE SUMMARY - first 32 bytes of buffer', {
+  log.debug("ENCODE SUMMARY - first 32 bytes of buffer", {
     bufferBits: buffer.getLengthInBits(),
     bufferBytesLen: bufferBytes.length,
     first32Bytes: Array.from(bufferBytes.slice(0, 32)),

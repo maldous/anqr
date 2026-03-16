@@ -1,5 +1,5 @@
-import type { BlockSelectionResult, EliminationResult } from './elimination';
-import type { FlattenedSelection } from './scan-fallback';
+import type { BlockSelectionResult, EliminationResult } from "./elimination";
+import type { FlattenedSelection } from "./scan-fallback";
 
 export interface VectorSelectionResult {
   blockSelections: BlockSelectionResult[];

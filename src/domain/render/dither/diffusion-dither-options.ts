@@ -1,5 +1,5 @@
-import { DIFFUSION_KERNELS } from './kernels';
-import type { ColorMode, DiffusionKernel } from '../../../modules/dither-algorithms/types';
+import { DIFFUSION_KERNELS } from "./kernels";
+import type { ColorMode, DiffusionKernel } from "../../../modules/dither-algorithms/types";
 
 export function resolveDiffusionDitherOptions(options: {
   colorMode?: ColorMode;
@@ -8,11 +8,11 @@ export function resolveDiffusionDitherOptions(options: {
   serpentine?: boolean;
   strength?: number;
 }) {
-  const kernelName = options.kernelName ?? 'floyd_steinberg';
+  const kernelName = options.kernelName ?? "floyd_steinberg";
   const serpentine = options.serpentine ?? true;
   const levels = options.levels ?? 2;
   const strength = options.strength ?? 100;
-  const colorMode = options.colorMode ?? 'bw';
+  const colorMode = options.colorMode ?? "bw";
   return {
     colorMode,
     kernel: DIFFUSION_KERNELS[kernelName],

@@ -2,7 +2,7 @@
  * Build flat list of block configurations from RS block groups.
  */
 export function buildRSBlockConfigs(
-  rsBlocks: number[][]
+  rsBlocks: number[][],
 ): Array<{ dataCount: number; eccCount: number }> {
   const configs: Array<{ dataCount: number; eccCount: number }> = [];
   for (const blockGroup of rsBlocks) {

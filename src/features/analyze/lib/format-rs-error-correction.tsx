@@ -3,7 +3,7 @@ export const formatRsErrorCorrection = (errorsCorrected: number | null) => {
   if (errorsCorrected > 0) {
     return (
       <span className="text-amber-600 dark:text-amber-400 font-medium">
-        {errorsCorrected} error{errorsCorrected === 1 ? '' : 's'} recovered
+        {errorsCorrected} error{errorsCorrected === 1 ? "" : "s"} recovered
       </span>
     );
   }

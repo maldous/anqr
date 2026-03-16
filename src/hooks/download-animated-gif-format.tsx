@@ -1,1 +1,1 @@
-export { downloadAnimatedGifFormat } from '@/features/generator/application/export/export-fn-downloadgif';
+export { downloadAnimatedGifFormat } from "@/features/generator/application/export/export-fn-downloadgif";

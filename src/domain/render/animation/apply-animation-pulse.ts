@@ -1,5 +1,5 @@
-import { forEachOpaquePixel } from './for-each-opaque-pixel';
-import { hslToRgbTuple } from '../color/color';
+import { forEachOpaquePixel } from "./for-each-opaque-pixel";
+import { hslToRgbTuple } from "../color/color";
 
 // ============================================
 // PIXEL-LEVEL PATTERN FUNCTIONS

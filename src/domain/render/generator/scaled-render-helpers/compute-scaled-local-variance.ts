@@ -1,9 +1,9 @@
-import type { PixelColor } from '../scaled-render-types';
+import type { PixelColor } from "../scaled-render-types";
 
 export function computeScaledLocalVariance(
   colors: (PixelColor | null)[][],
   x: number,
-  y: number
+  y: number,
 ): number {
   const centerColor = colors[y]?.[x] as PixelColor | undefined;
   if (!centerColor) return 0;

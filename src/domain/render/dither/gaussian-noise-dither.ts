@@ -1,6 +1,6 @@
-import type { ColorMode, DitherResult } from '../../../modules/dither-algorithms/types';
-import { clamp01 } from '../../../modules/dither-algorithms/utils';
-import { runNoiseThresholdDither } from './run-noise-threshold-dither';
+import type { ColorMode, DitherResult } from "../../../modules/dither-algorithms/types";
+import { clamp01 } from "../../../modules/dither-algorithms/utils";
+import { runNoiseThresholdDither } from "./run-noise-threshold-dither";
 
 /** Apply Gaussian noise dithering */
 export function gaussianNoiseDither(
@@ -9,7 +9,7 @@ export function gaussianNoiseDither(
   height: number,
   seed: number = 0,
   strength: number = 100,
-  _colorMode: ColorMode = 'bw'
+  _colorMode: ColorMode = "bw",
 ): DitherResult {
   return runNoiseThresholdDither(imageData, width, height, seed, strength, _colorMode, (rng) => {
     const u1 = rng() || 0.0001;

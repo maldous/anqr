@@ -11,16 +11,16 @@ export function analyzePlainText(payload: string): Record<string, string | numbe
     hasEmoji: /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/u.test(payload),
     isAllNumeric: /^\d+$/.test(payload),
     isAllAlphanumeric: /^[0-9A-Z $%*+\-./:]+$/i.test(payload),
-    encodingRecommendation: 'Byte mode',
+    encodingRecommendation: "Byte mode",
     preview: payload.length > 200 ? `${payload.slice(0, 200)}...` : payload,
   };
 
   if (result.isAllNumeric) {
-    result.encodingRecommendation = 'Numeric mode (most efficient)';
+    result.encodingRecommendation = "Numeric mode (most efficient)";
   } else if (result.isAllAlphanumeric && !result.hasNonAscii) {
-    result.encodingRecommendation = 'Alphanumeric mode (efficient)';
+    result.encodingRecommendation = "Alphanumeric mode (efficient)";
   } else if (result.hasNonAscii) {
-    result.encodingRecommendation = 'Byte mode (UTF-8 required)';
+    result.encodingRecommendation = "Byte mode (UTF-8 required)";
   }
 
   return result;

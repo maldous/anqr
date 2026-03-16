@@ -1,9 +1,9 @@
-import { generateSwissQRBill } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateSwissQRBill } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeSwissQRBill(payload: PayloadData): string {
   const sqb = payload.swissQRBill;
-  if (!(sqb.creditorIBAN && sqb.creditorName)) return '';
+  if (!(sqb.creditorIBAN && sqb.creditorName)) return "";
   return generateSwissQRBill({
     creditorIBAN: sqb.creditorIBAN,
     creditorName: sqb.creditorName,

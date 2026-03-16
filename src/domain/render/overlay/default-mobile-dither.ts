@@ -1,4 +1,4 @@
-import type { OverlayDitherOptions } from './processor.types';
+import type { OverlayDitherOptions } from "./processor.types";
 
 // ============================================
 // CONSTANTS
@@ -6,7 +6,7 @@ import type { OverlayDitherOptions } from './processor.types';
 
 export const DEFAULT_MOBILE_DITHER: OverlayDitherOptions = {
   enabled: true,
-  kind: 'floyd_steinberg',
+  kind: "floyd_steinberg",
   strength: 0.8,
   levels: 4,
   serpentine: true,

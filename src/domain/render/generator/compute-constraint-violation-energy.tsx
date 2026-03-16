@@ -1,5 +1,5 @@
-import { isFixedDarkModule } from './is-fixed-dark-module';
-import type { ConstraintCtx } from './constraint-ctx';
+import { isFixedDarkModule } from "./is-fixed-dark-module";
+import type { ConstraintCtx } from "./constraint-ctx";
 
 export function computeConstraintViolationEnergy(ctx: ConstraintCtx): number {
   let energy = 0;

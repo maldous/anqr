@@ -3,11 +3,11 @@
  * Shared helper functions for QR decoding
  */
 
-import { createLogger } from '../../infra/logging/logger';
+import { createLogger } from "../../infra/logging/logger";
 
-const _log = createLogger('DECODER');
+const _log = createLogger("DECODER");
 
-import type { Point } from './types';
+import type { Point } from "./types";
 
 /**
  * Calculate Euclidean distance between two points

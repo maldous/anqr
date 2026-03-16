@@ -1,4 +1,4 @@
-import type { FullQArtResult } from './generate.types';
+import type { FullQArtResult } from "./generate.types";
 export function buildQArtFailResult(
   error: string,
   matrix: boolean[][],
@@ -7,7 +7,7 @@ export function buildQArtFailResult(
   mask: number,
   encodedData: string,
   originalData: string,
-  suffix: string
+  suffix: string,
 ): FullQArtResult {
   return {
     success: false,

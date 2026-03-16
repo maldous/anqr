@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Button } from '@/ui/primitives/button';
-import { CopyButton } from '@/features/analyze/components/copy-button';
+import { useMemo, useState } from "react";
+import { Button } from "@/ui/primitives/button";
+import { CopyButton } from "@/features/analyze/components/copy-button";
 
 export const HexDumpView = ({
   bytes,
@@ -26,15 +26,15 @@ export const HexDumpView = ({
     ) {
       const slice = bytes.slice(i, Math.min(i + bytesPerRowMobile, bytes.length));
       const hex = Array.from(slice)
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join(' ');
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
       const ascii = Array.from(slice)
-        .map((b) => (b >= 32 && b <= 126 ? String.fromCodePoint(b) : '.'))
-        .join('');
+        .map((b) => (b >= 32 && b <= 126 ? String.fromCodePoint(b) : "."))
+        .join("");
       rows.push({
-        offset: i.toString(16).padStart(4, '0'),
-        hex: hex.padEnd(bytesPerRowMobile * 3 - 1, ' '),
-        ascii: ascii.padEnd(bytesPerRowMobile, ' '),
+        offset: i.toString(16).padStart(4, "0"),
+        hex: hex.padEnd(bytesPerRowMobile * 3 - 1, " "),
+        ascii: ascii.padEnd(bytesPerRowMobile, " "),
       });
     }
     return rows;
@@ -49,15 +49,15 @@ export const HexDumpView = ({
     ) {
       const slice = bytes.slice(i, Math.min(i + bytesPerRowDesktop, bytes.length));
       const hex = Array.from(slice)
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join(' ');
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" ");
       const ascii = Array.from(slice)
-        .map((b) => (b >= 32 && b <= 126 ? String.fromCodePoint(b) : '.'))
-        .join('');
+        .map((b) => (b >= 32 && b <= 126 ? String.fromCodePoint(b) : "."))
+        .join("");
       rows.push({
-        offset: i.toString(16).padStart(4, '0'),
-        hex: hex.padEnd(bytesPerRowDesktop * 3 - 1, ' '),
-        ascii: ascii.padEnd(bytesPerRowDesktop, ' '),
+        offset: i.toString(16).padStart(4, "0"),
+        hex: hex.padEnd(bytesPerRowDesktop * 3 - 1, " "),
+        ascii: ascii.padEnd(bytesPerRowDesktop, " "),
       });
     }
     return rows;
@@ -66,9 +66,9 @@ export const HexDumpView = ({
   const fullHex = useMemo(
     () =>
       Array.from(bytes)
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join(' '),
-    [bytes]
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join(" "),
+    [bytes],
   );
 
   return (
@@ -116,7 +116,7 @@ export const HexDumpView = ({
           onClick={() => setExpanded(!expanded)}
           className="w-full text-xs shadow-sm"
         >
-          {expanded ? 'Show Less' : `Show All (${totalRowsMobile} rows)`}
+          {expanded ? "Show Less" : `Show All (${totalRowsMobile} rows)`}
         </Button>
       )}
     </div>

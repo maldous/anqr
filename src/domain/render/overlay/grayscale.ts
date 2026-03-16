@@ -1,4 +1,4 @@
-import { rgbToGray } from '../color/color';
+import { rgbToGray } from "../color/color";
 
 export function grayscale(imageData: ImageData): ImageData {
   const data = imageData.data;

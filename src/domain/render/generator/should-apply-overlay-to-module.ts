@@ -1,4 +1,4 @@
-import type { RenderCellCtx } from './render-cell-ctx.interface';
+import type { RenderCellCtx } from "./render-cell-ctx.interface";
 
 export function shouldApplyOverlayToModule(
   rctx: RenderCellCtx,
@@ -6,7 +6,7 @@ export function shouldApplyOverlayToModule(
   isTiming: boolean,
   isAlignment: boolean,
   isFormat: boolean,
-  isVersion: boolean
+  isVersion: boolean,
 ): boolean {
   return (
     rctx.hasOverlayData &&

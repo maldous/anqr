@@ -1,5 +1,5 @@
-import type { DitherResult, RGB } from '../../../modules/dither-algorithms/types';
-import { rgbToGray } from '../../../modules/dither-algorithms/utils';
+import type { DitherResult, RGB } from "../../../modules/dither-algorithms/types";
+import { rgbToGray } from "../../../modules/dither-algorithms/utils";
 
 export function buildBinaryDitherResult(params: {
   height: number;

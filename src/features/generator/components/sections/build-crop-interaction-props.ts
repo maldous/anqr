@@ -1,4 +1,4 @@
-import type React from 'react';
+import type React from "react";
 
 export function buildCropInteractionProps(cropDrag: {
   beginDragAtPoint: (x: number, y: number) => void;

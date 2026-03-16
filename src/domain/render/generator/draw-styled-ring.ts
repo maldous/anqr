@@ -1,4 +1,4 @@
-import { roundRect } from './drawing-primitives';
+import { roundRect } from "./drawing-primitives";
 
 export function drawStyledRing(
   ctx: CanvasRenderingContext2D,
@@ -6,14 +6,14 @@ export function drawStyledRing(
   y: number,
   size: number,
   style: string,
-  roundedRadiusFactor: number
+  roundedRadiusFactor: number,
 ): void {
   switch (style) {
-    case 'rounded': {
+    case "rounded": {
       roundRect(ctx, x, y, size, size, size * roundedRadiusFactor);
       break;
     }
-    case 'circle': {
+    case "circle": {
       ctx.beginPath();
       ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
       ctx.fill();

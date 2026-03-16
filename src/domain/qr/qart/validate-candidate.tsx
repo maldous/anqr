@@ -1,6 +1,6 @@
-import { type ECCLevel, verifyMatrixFormatInfo } from './validation';
-import { validateByteExactPrefix } from './validate-byte-exact-prefix';
-import type { CandidateValidation } from './candidate-validation';
+import { type ECCLevel, verifyMatrixFormatInfo } from "./validation";
+import { validateByteExactPrefix } from "./validate-byte-exact-prefix";
+import type { CandidateValidation } from "./candidate-validation";
 
 export function validateCandidate(
   scan: { success: boolean; data?: string },
@@ -8,15 +8,15 @@ export function validateCandidate(
   expectedData: string,
   expectedEcc: ECCLevel | undefined,
   expectedMask: number | undefined,
-  strictSuffix: boolean
+  strictSuffix: boolean,
 ): CandidateValidation {
   if (!scan.success) {
     return {
       isValid: false,
       validation: {
         valid: false,
-        reason: 'SCAN_FAILED',
-        description: 'not scanned',
+        reason: "SCAN_FAILED",
+        description: "not scanned",
         hardGateFailed: true,
       },
     };
@@ -34,7 +34,7 @@ export function validateCandidate(
         isValid: false,
         validation: {
           valid: false,
-          reason: formatVerification.reason || 'ECC_MISMATCH',
+          reason: formatVerification.reason || "ECC_MISMATCH",
           description: `Format info mismatch: ECC ${formatVerification.extractedEcc} vs ${expectedEcc}, mask ${formatVerification.extractedMask} vs ${expectedMask}`,
           hardGateFailed: true,
         },

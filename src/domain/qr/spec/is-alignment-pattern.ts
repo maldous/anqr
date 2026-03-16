@@ -1,4 +1,4 @@
-import { getAlignmentPatternCenters } from './get-alignment-pattern-centers';
+import { getAlignmentPatternCenters } from "./get-alignment-pattern-centers";
 
 /**
  * Check if position is within an alignment pattern
@@ -8,7 +8,7 @@ export function isAlignmentPattern(
   row: number,
   col: number,
   moduleCount: number,
-  version: number
+  version: number,
 ): boolean {
   if (version < 2) return false;
 

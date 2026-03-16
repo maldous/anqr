@@ -17,7 +17,7 @@ export class DecoderResult {
     private readonly text: string,
     private readonly byteSegments: Uint8Array[] | null,
     private readonly ecLevel: string | null,
-    numBits?: number
+    numBits?: number,
   ) {
     this.numBits = numBits ?? (rawBytes == null ? 0 : 8 * rawBytes.length);
   }

@@ -1,5 +1,5 @@
-import { getLoglevelInstance } from './logger-config';
-import type { LogLevel } from './logger-types';
+import { getLoglevelInstance } from "./logger-config";
+import type { LogLevel } from "./logger-types";
 
 export function setLogLevel(level: LogLevel): void {
   const loglevel = getLoglevelInstance();

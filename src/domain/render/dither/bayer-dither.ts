@@ -1,6 +1,6 @@
-import { BAYER_2, BAYER_4, BAYER_8 } from './matrices';
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { orderedDither } from './ordered-dither';
+import { BAYER_2, BAYER_4, BAYER_8 } from "./matrices";
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { orderedDither } from "./ordered-dither";
 
 /** Apply Bayer ordered dithering */
 export function bayerDither(
@@ -9,7 +9,7 @@ export function bayerDither(
   height: number,
   size: 2 | 4 | 8 = 4,
   levels: number = 2,
-  strength: number = 100
+  strength: number = 100,
 ): DitherResult {
   const matrix = (() => {
     if (size === 2) return BAYER_2;

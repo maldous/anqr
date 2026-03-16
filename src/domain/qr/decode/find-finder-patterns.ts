@@ -1,9 +1,9 @@
-import type { FinderPattern, FinderPatternResult } from '../../../modules/qr-decoder/types';
-import { grayAt } from './gray-at';
-import { qrDecoderLog } from './qr-decoder-log';
-import { refineFinderPatternCenter } from './refine-finder-pattern-center';
-import { scanRow } from './scan-row';
-import { verifyVertical } from './verify-vertical';
+import type { FinderPattern, FinderPatternResult } from "../../../modules/qr-decoder/types";
+import { grayAt } from "./gray-at";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { refineFinderPatternCenter } from "./refine-finder-pattern-center";
+import { scanRow } from "./scan-row";
+import { verifyVertical } from "./verify-vertical";
 
 /**
  * Find all finder patterns in the image
@@ -12,7 +12,7 @@ import { verifyVertical } from './verify-vertical';
 export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
   const { data: pixels, width, height } = imageData;
 
-  qrDecoderLog.trace('locate: Finding finder patterns', { width, height });
+  qrDecoderLog.trace("locate: Finding finder patterns", { width, height });
 
   // Calculate threshold (simple mean). We composite transparency over white
   // so a transparent background is treated as light modules.
@@ -24,7 +24,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
   }
   const threshold = sum / count;
 
-  qrDecoderLog.trace('locate: Calculated threshold', { threshold: threshold.toFixed(1) });
+  qrDecoderLog.trace("locate: Calculated threshold", { threshold: threshold.toFixed(1) });
 
   const candidates: Map<string, FinderPattern> = new Map();
 
@@ -43,7 +43,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
         result.center,
         y,
         result.moduleSize,
-        threshold
+        threshold,
       );
 
       if (vertical.valid) {
@@ -55,7 +55,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
           result.center,
           vertical.center,
           vertical.moduleSize,
-          threshold
+          threshold,
         );
 
         // Use grid key to deduplicate nearby patterns
@@ -81,7 +81,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
     .filter((p) => p.count >= 1)
     .sort((a, b) => b.count - a.count);
 
-  qrDecoderLog.trace('locate: Found finder pattern candidates', {
+  qrDecoderLog.trace("locate: Found finder pattern candidates", {
     count: patterns.length,
     patterns: patterns.slice(0, 5).map((p) => ({
       x: p.center.x.toFixed(1),

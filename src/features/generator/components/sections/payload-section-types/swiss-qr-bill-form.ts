@@ -3,8 +3,8 @@ export interface SwissQRBillForm {
   creditorName: string;
   creditorCity: string;
   creditorCountry: string;
-  referenceType: 'QRR' | 'SCOR' | 'NON';
+  referenceType: "QRR" | "SCOR" | "NON";
   reference: string;
   amount: string;
-  currency: 'CHF' | 'EUR';
+  currency: "CHF" | "EUR";
 }

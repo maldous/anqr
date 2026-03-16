@@ -1,4 +1,4 @@
-import { mulberry32 } from './mulberry32';
+import { mulberry32 } from "./mulberry32";
 
 /**
  * Generate a deterministic numeric suffix (digits only).
@@ -10,7 +10,7 @@ import { mulberry32 } from './mulberry32';
  */
 export function generateDeterministicNumericSuffix(length: number, seed: number): string {
   const random = mulberry32(seed);
-  let result = '';
+  let result = "";
   for (let i = 0; i < length; i++) {
     result += Math.floor(random() * 10).toString();
   }

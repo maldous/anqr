@@ -1,13 +1,13 @@
-import { collectComponent } from './collect-component';
-import { flipComponentCells } from './flip-component-cells';
-import { shouldRemoveComponent } from './should-remove-component';
+import { collectComponent } from "./collect-component";
+import { flipComponentCells } from "./flip-component-cells";
+import { shouldRemoveComponent } from "./should-remove-component";
 
 export function removeSmallComponents(
   grid: boolean[][],
   moduleCount: number,
   targetValue: boolean,
   maxArea: number,
-  skipBoundaryTouching: boolean
+  skipBoundaryTouching: boolean,
 ): void {
   const visited = new Uint8Array(moduleCount * moduleCount);
   for (let row = 0; row < moduleCount; row++) {

@@ -3,33 +3,33 @@
  * Handles all scaled overlay modes (dithered, blue-noise, subpixel)
  */
 
-import type { CanvasFactory } from '../../../platform/browser/canvas/canvas-factory';
-import { createGradientFill, drawFrame, drawFrameBackground } from './drawing';
-import { generatePixelDecisionMatrix } from './pixel-matrix';
-import type { QRCodeInstance, QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { buildScaledPreserveFlags } from './scaled-render-helpers/build-scaled-preserve-flags';
-import { classifyScaledOverlayMode } from './scaled-render-helpers/classify-scaled-overlay-mode';
-import { computeDitherBackdropParams } from './scaled-render-helpers/compute-dither-backdrop-params';
-import { computeDitherDotParams } from './scaled-render-helpers/compute-dither-dot-params';
-import { computeScaledLocalVariance } from './scaled-render-helpers/compute-scaled-local-variance';
-import { computeSubpixelToneParams } from './scaled-render-helpers/compute-subpixel-tone-params';
-import { shouldForceScaledBinaryModule } from './scaled-render-helpers/should-force-scaled-binary-module';
+import type { CanvasFactory } from "../../../platform/browser/canvas/canvas-factory";
+import { createGradientFill, drawFrame, drawFrameBackground } from "./drawing";
+import { generatePixelDecisionMatrix } from "./pixel-matrix";
+import type { QRCodeInstance, QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { buildScaledPreserveFlags } from "./scaled-render-helpers/build-scaled-preserve-flags";
+import { classifyScaledOverlayMode } from "./scaled-render-helpers/classify-scaled-overlay-mode";
+import { computeDitherBackdropParams } from "./scaled-render-helpers/compute-dither-backdrop-params";
+import { computeDitherDotParams } from "./scaled-render-helpers/compute-dither-dot-params";
+import { computeScaledLocalVariance } from "./scaled-render-helpers/compute-scaled-local-variance";
+import { computeSubpixelToneParams } from "./scaled-render-helpers/compute-subpixel-tone-params";
+import { shouldForceScaledBinaryModule } from "./scaled-render-helpers/should-force-scaled-binary-module";
 import {
   drawScaledDitherBackdrop,
   drawScaledPatternContrastBoostOverlay,
   drawScaledStrictFunctionOverlay,
   enforceScaledQuietZoneClean,
   renderScaledPixelGrid,
-} from './scaled-render-helpers/scaled-pixel-grid';
+} from "./scaled-render-helpers/scaled-pixel-grid";
 import {
   applyModuleShapeMask,
   drawPreservedStructuralPatterns,
   getScaledFunctionalMap,
-} from './scaled-render-helpers/scaled-structure';
-import type { ContrastBoostFlags } from './scaled-render-types';
-import { validateColor } from '../../../modules/qr-generator/utils';
-import { hash01 } from './hash01';
-import { scaledRenderLog as log } from './scaled-render-log';
+} from "./scaled-render-helpers/scaled-structure";
+import type { ContrastBoostFlags } from "./scaled-render-types";
+import { validateColor } from "../../../modules/qr-generator/utils";
+import { hash01 } from "./hash01";
+import { scaledRenderLog as log } from "./scaled-render-log";
 
 /**
  * UNIFIED SCALED QR GENERATION
@@ -45,7 +45,7 @@ export async function generateScaledQR(
   createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
   canvasFactory: CanvasFactory,
   storeMatrixFn: (qr: QRCodeInstance, moduleCount: number) => void,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   // Get pixel decision matrix (unified for all scaled modes)
   const pixelData = await generatePixelDecisionMatrix(
@@ -55,7 +55,7 @@ export async function generateScaledQR(
     moduleCount,
     createCanvasFn,
     canvasFactory,
-    releaseCanvasFn
+    releaseCanvasFn,
   );
   const { matrix, colors } = pixelData;
   const scaledSize = matrix.length;
@@ -69,27 +69,27 @@ export async function generateScaledQR(
   const effectiveModuleSize = subPixelSize * scale;
 
   // Keep QR centered when frame text/border reserves extra canvas area.
-  const frameOffsetModules = config.frameStyle && config.frameStyle !== 'none' ? 2 : 0;
+  const frameOffsetModules = config.frameStyle && config.frameStyle !== "none" ? 2 : 0;
   const marginModules = baseMarginModules + frameOffsetModules;
   const marginPx = marginModules * effectiveModuleSize;
   const size = Math.round(scaledSize * subPixelSize + marginPx * 2);
 
   const canvas = await createCanvasFn(size, size);
   const ctx =
-    (canvas.getContext('2d', {
+    (canvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
     } as CanvasRenderingContext2DSettings) as CanvasRenderingContext2D | null) ??
-    (canvas.getContext('2d') as CanvasRenderingContext2D | null);
+    (canvas.getContext("2d") as CanvasRenderingContext2D | null);
   if (!ctx) {
-    throw new Error('Failed to acquire scaled render context');
+    throw new Error("Failed to acquire scaled render context");
   }
   ctx.imageSmoothingEnabled = false;
 
   // IMPORTANT: Ensure bgColor has a fallback - undefined fillStyle becomes black
   // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
-  const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
-  const effectiveFgColor = validateColor(config.fgColor, '#000000');
+  const effectiveBgColor = validateColor(config.bgColor, "#ffffff");
+  const effectiveFgColor = validateColor(config.fgColor, "#000000");
   const needsExplicitLightModules = config.transparentBg === true;
 
   // Draw background
@@ -103,10 +103,10 @@ export async function generateScaledQR(
 
   // UNIFIED: Create gradient fill if configured
   const gradientFill = createGradientFill(ctx, config, size);
-  const useGradient = config.gradient && config.gradient.type !== 'none';
+  const useGradient = config.gradient && config.gradient.type !== "none";
 
   // Determine color rendering mode
-  const useColorRendering = Boolean(overlayCanvas && config.colorMode !== 'bw');
+  const useColorRendering = Boolean(overlayCanvas && config.colorMode !== "bw");
 
   const { isDitheredMode, forceBinaryFunctionPatterns, needsBothDarkAndLightColors } =
     classifyScaledOverlayMode(config);
@@ -137,12 +137,12 @@ export async function generateScaledQR(
       effectiveBgColor,
       isDitheredMode,
       overlayCanvas,
-      useColorRendering
+      useColorRendering,
     );
 
   const debug = config.debugOverlayDither === true;
   if (debug) {
-    log.debug('ScaledRender start', {
+    log.debug("ScaledRender start", {
       moduleCount,
       scale,
       scaledSize,
@@ -170,7 +170,7 @@ export async function generateScaledQR(
       qrDrawSize,
       ditherBackdropAlpha,
       ditherBackdropWash,
-      effectiveBgColor
+      effectiveBgColor,
     );
   }
 
@@ -182,7 +182,7 @@ export async function generateScaledQR(
   const quantizeRadius = (r: number): number => {
     const t = Math.max(
       0,
-      Math.min(1, (r - dotMinRadiusPx) / Math.max(1e-6, dotMaxRadiusPx - dotMinRadiusPx))
+      Math.min(1, (r - dotMinRadiusPx) / Math.max(1e-6, dotMaxRadiusPx - dotMinRadiusPx)),
     );
     const q = Math.round(t * (radiusBins - 1)) / Math.max(1, radiusBins - 1);
     return dotMinRadiusPx + q * (dotMaxRadiusPx - dotMinRadiusPx);
@@ -204,7 +204,7 @@ export async function generateScaledQR(
       y + subPixelSize / 2 + jy,
       Math.min(radius, maxRadiusBound),
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
   };
@@ -213,14 +213,14 @@ export async function generateScaledQR(
     shouldForceScaledBinaryModule(getPatternFlags(row, col), pf);
 
   const rawFinderDitherStrength =
-    typeof config.finderDitherStrength === 'number' && Number.isFinite(config.finderDitherStrength)
+    typeof config.finderDitherStrength === "number" && Number.isFinite(config.finderDitherStrength)
       ? config.finderDitherStrength
       : 65;
   const finderDitherStrength = Math.max(0, Math.min(100, rawFinderDitherStrength));
   const finderStrengthN = finderDitherStrength / 100;
   const blendPreservations = config.blendPreservations === true;
-  const blendPreservationMode: 'dither' | 'overlay' =
-    config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
+  const blendPreservationMode: "dither" | "overlay" =
+    config.blendPreservationMode === "dither" ? "dither" : "overlay";
   const boostFlags: ContrastBoostFlags = {
     finderContrastBoost: !preserveFinders,
     alignmentContrastBoost: !preserveAlignment,
@@ -309,7 +309,7 @@ export async function generateScaledQR(
       effectiveFgColor,
       effectiveBgColor,
       functionalMap,
-      pf
+      pf,
     );
   }
   drawPreservedStructuralPatterns({
@@ -342,7 +342,7 @@ export async function generateScaledQR(
     effectiveModuleSize,
     size,
     config.transparentBg === true,
-    effectiveBgColor
+    effectiveBgColor,
   );
 
   // UNIFIED: Draw frame if configured

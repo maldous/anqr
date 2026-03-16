@@ -1,13 +1,13 @@
-import type { ECCLevel } from './bit-mapping';
+import type { ECCLevel } from "./bit-mapping";
 import {
   eccNumericToLevel,
   extractMaskFromMatrix,
   type SemanticValidationResult,
-} from './validation';
-import { semanticFailure } from './semantic-failure';
-import { validateDecodedPrefix } from './validate-decoded-prefix';
-import { validateSuffixForSemanticGate } from './validate-suffix-for-semantic-gate';
-import type { ScanResult } from './scan-result';
+} from "./validation";
+import { semanticFailure } from "./semantic-failure";
+import { validateDecodedPrefix } from "./validate-decoded-prefix";
+import { validateSuffixForSemanticGate } from "./validate-suffix-for-semantic-gate";
+import type { ScanResult } from "./scan-result";
 
 /**
  * SEMANTIC-HARD-GATE VALIDATION
@@ -50,20 +50,20 @@ export function performSemanticValidation(
   expectedSuffix: string | undefined,
   scanFn: (matrix: boolean[][]) => ScanResult,
   strictSuffix: boolean = false,
-  suffixMode: 'byte' | 'numeric' = 'byte'
+  suffixMode: "byte" | "numeric" = "byte",
 ): SemanticValidationResult {
   // Step 1: Scan the matrix
   const scanResult = scanFn(matrix);
 
   if (!scanResult.success) {
-    return semanticFailure('SCAN_FAILED', `Scan failed: ${scanResult.error}`);
+    return semanticFailure("SCAN_FAILED", `Scan failed: ${scanResult.error}`);
   }
 
   const decoded = scanResult.data;
 
   // Step 2: Check decoded data exists and has sufficient length
   if (decoded === undefined || decoded === null) {
-    return semanticFailure('SCAN_FAILED', 'Decoded data is null/undefined');
+    return semanticFailure("SCAN_FAILED", "Decoded data is null/undefined");
   }
 
   const prefixValidationError = validateDecodedPrefix(decoded, originalData);
@@ -77,23 +77,23 @@ export function performSemanticValidation(
 
   if (actualEccLevel !== expectedEcc) {
     return semanticFailure(
-      'ECC_MISMATCH',
+      "ECC_MISMATCH",
       `Format ECC mismatch: expected ${expectedEcc}, got ${actualEccLevel}`,
       {
         expectedEcc,
         actualEcc: actualEccLevel,
-      }
+      },
     );
   }
 
   if (formatInfo.mask !== expectedMask) {
     return semanticFailure(
-      'MASK_MISMATCH',
+      "MASK_MISMATCH",
       `Format mask mismatch: expected ${expectedMask}, got ${formatInfo.mask}`,
       {
         expectedMask,
         actualMask: formatInfo.mask,
-      }
+      },
     );
   }
 
@@ -103,7 +103,7 @@ export function performSemanticValidation(
     originalData.length,
     expectedSuffix,
     strictSuffix,
-    suffixMode
+    suffixMode,
   );
   if (suffixValidationError) {
     return suffixValidationError;
@@ -118,11 +118,11 @@ export function performSemanticValidation(
     const _invalidSegments = scanResult.segments?.filter((s) => !s.valid) ?? [];
 
     return semanticFailure(
-      'EXTRA_SEGMENT',
-      `Extra/fake segment(s) detected after primary data (modes: ${segmentModes.join(', ')})`,
+      "EXTRA_SEGMENT",
+      `Extra/fake segment(s) detected after primary data (modes: ${segmentModes.join(", ")})`,
       {
         segmentCount: scanResult.segmentCount,
-      }
+      },
     );
   }
 

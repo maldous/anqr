@@ -1,13 +1,13 @@
-import { Capacitor } from '@capacitor/core';
-import { showDomToast } from './show-dom-toast';
-import type { ToastDuration } from './toast-duration';
-import type { ToastPluginLike } from './toast-plugin-like';
+import { Capacitor } from "@capacitor/core";
+import { showDomToast } from "./show-dom-toast";
+import type { ToastDuration } from "./toast-duration";
+import type { ToastPluginLike } from "./toast-plugin-like";
 
 export const showNativeToast = async (
   message: string,
-  duration: ToastDuration = 'short'
+  duration: ToastDuration = "short",
 ): Promise<void> => {
-  const text = String(message || '').trim();
+  const text = String(message || "").trim();
   if (!text) return;
 
   const plugin = (
@@ -17,7 +17,7 @@ export const showNativeToast = async (
   ).Capacitor?.Plugins?.Toast;
   if (Capacitor.isNativePlatform() && plugin?.show) {
     try {
-      await plugin.show({ text, duration, position: 'bottom' });
+      await plugin.show({ text, duration, position: "bottom" });
       return;
     } catch {
       // Fall through to DOM toast fallback.

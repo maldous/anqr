@@ -1,5 +1,5 @@
 export interface PayNowForm {
-  type: 'mobile' | 'uen';
+  type: "mobile" | "uen";
   value: string;
   amount: string;
   reference: string;

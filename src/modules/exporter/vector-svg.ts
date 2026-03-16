@@ -1,1 +1,1 @@
-export * from '../../domain/render/export/vector-svg';
+export * from "../../domain/render/export/vector-svg";

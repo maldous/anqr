@@ -1,5 +1,5 @@
-import type { QRCodeInstance } from '../../../modules/qr-encoder/types';
-import { count2x2DarkModules } from './count2x2-dark-modules';
+import type { QRCodeInstance } from "../../../modules/qr-encoder/types";
+import { count2x2DarkModules } from "./count2x2-dark-modules";
 
 // LEVEL2: 2x2 blocks of same color
 export function penaltyLevel2Blocks(qrcode: QRCodeInstance, moduleCount: number): number {

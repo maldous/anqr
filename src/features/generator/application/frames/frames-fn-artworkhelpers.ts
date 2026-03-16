@@ -4,10 +4,10 @@
  * Notes: Create helper functions for artwork frame processing.
  */
 
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { cloneCanvasFrame } from '@/features/generator/application/frames/frames-fn-cloneframe';
-import type { ArtworkFrameState } from '@/features/generator/application/frames/frames-interface-artworkstate';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { cloneCanvasFrame } from "@/features/generator/application/frames/frames-fn-cloneframe";
+import type { ArtworkFrameState } from "@/features/generator/application/frames/frames-interface-artworkstate";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export function makeArtworkFrameHelpers(params: {
   artworkState: ArtworkFrameState;
@@ -25,10 +25,10 @@ export function makeArtworkFrameHelpers(params: {
       : null;
   const rememberSuccessfulFrame = (
     frame: HTMLCanvasElement | OffscreenCanvas,
-    matchPercentage: number
+    matchPercentage: number,
   ): void => {
     params.artworkState.setLastSuccessfulFrame(
-      cloneCanvasFrame(frame, params.artworkState.lastSuccessfulArtworkFrame)
+      cloneCanvasFrame(frame, params.artworkState.lastSuccessfulArtworkFrame),
     );
     if (Number.isFinite(matchPercentage)) {
       params.artworkState.setLastSuccessfulMatchPercentage(matchPercentage);
@@ -39,9 +39,9 @@ export function makeArtworkFrameHelpers(params: {
       {
         ...params.previewScanConfigBase,
         frameIndex: params.frameIdx,
-        overlayMode: 'dithered',
+        overlayMode: "dithered",
       },
-      params.frameOverlayCanvas
+      params.frameOverlayCanvas,
     );
   return { reuseLastSuccessfulFrame, rememberSuccessfulFrame, fallbackGenerate };
 }

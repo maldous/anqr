@@ -1,5 +1,5 @@
-import loglevel from 'loglevel';
-import prefix from 'loglevel-plugin-prefix';
+import loglevel from "loglevel";
+import prefix from "loglevel-plugin-prefix";
 
 prefix.reg(loglevel);
 prefix.apply(loglevel, {

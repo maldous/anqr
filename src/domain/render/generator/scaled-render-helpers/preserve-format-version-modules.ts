@@ -1,7 +1,7 @@
-import { paintClassifiedModule } from './paint-classified-module';
-import { preserveFixedDarkModule } from './preserve-fixed-dark-module';
-import { resolveDarkFillStyle } from './resolve-dark-fill-style';
-import type { StructuralPreservationCtx } from '../scaled-render-types';
+import { paintClassifiedModule } from "./paint-classified-module";
+import { preserveFixedDarkModule } from "./preserve-fixed-dark-module";
+import { resolveDarkFillStyle } from "./resolve-dark-fill-style";
+import type { StructuralPreservationCtx } from "../scaled-render-types";
 
 export function preserveFormatVersionModules(spctx: StructuralPreservationCtx): void {
   const {
@@ -26,7 +26,7 @@ export function preserveFormatVersionModules(spctx: StructuralPreservationCtx): 
     forceBinaryFunctionPatterns,
     effectiveFgColor,
     useGradient,
-    gradientFill
+    gradientFill,
   );
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
@@ -40,7 +40,7 @@ export function preserveFormatVersionModules(spctx: StructuralPreservationCtx): 
         darkFill,
         effectiveBgColor,
         shouldProtectFormatInfo,
-        shouldProtectVersionInfo
+        shouldProtectVersionInfo,
       );
     }
   }

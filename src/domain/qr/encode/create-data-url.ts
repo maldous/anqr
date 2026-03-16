@@ -1,6 +1,6 @@
-import { gifImage } from './gif-image';
-import { byteArrayOutputStream } from './byte-array-output-stream';
-import { base64EncodeOutputStream } from './base64-encode-output-stream';
+import { gifImage } from "./gif-image";
+import { byteArrayOutputStream } from "./byte-array-output-stream";
+import { base64EncodeOutputStream } from "./base64-encode-output-stream";
 
 /**
  * Create a data URL from pixel data
@@ -8,7 +8,7 @@ import { base64EncodeOutputStream } from './base64-encode-output-stream';
 export function createDataURL(
   width: number,
   height: number,
-  getPixel: (x: number, y: number) => number
+  getPixel: (x: number, y: number) => number,
 ): string {
   const gif = gifImage(width, height);
   for (let y = 0; y < height; y += 1) {

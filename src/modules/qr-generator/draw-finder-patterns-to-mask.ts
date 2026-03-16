@@ -1,7 +1,7 @@
-import { drawFinderPatternComplete } from '../../domain/render/generator/drawing';
-import { fillSkipMaskRect } from './fill-skip-mask-rect';
-import { FINDER_POSITIONS } from './finder-positions.const';
-import type { QRGeneratorConfig } from './types';
+import { drawFinderPatternComplete } from "../../domain/render/generator/drawing";
+import { fillSkipMaskRect } from "./fill-skip-mask-rect";
+import { FINDER_POSITIONS } from "./finder-positions.const";
+import type { QRGeneratorConfig } from "./types";
 
 export function drawFinderPatternsToMask(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -9,7 +9,7 @@ export function drawFinderPatternsToMask(
   moduleCount: number,
   moduleSize: number,
   margin: number,
-  skipMask: Uint8Array
+  skipMask: Uint8Array,
 ): void {
   for (const basePosition of FINDER_POSITIONS) {
     const position = {
@@ -25,7 +25,7 @@ export function drawFinderPatternsToMask(
       position.row,
       position.row + 6,
       position.col,
-      position.col + 6
+      position.col + 6,
     );
   }
 }

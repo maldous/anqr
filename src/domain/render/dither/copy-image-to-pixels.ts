@@ -2,7 +2,7 @@ export function copyImageToPixels(
   imageData: Float32Array[],
   width: number,
   height: number,
-  transform?: (r: number, g: number, b: number) => { r: number; g: number; b: number }
+  transform?: (r: number, g: number, b: number) => { r: number; g: number; b: number },
 ): { r: number; g: number; b: number }[][] {
   const pixels: { r: number; g: number; b: number }[][] = [];
   for (let y = 0; y < height; y++) {

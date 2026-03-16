@@ -1,4 +1,4 @@
-import { getAlignmentPatternCount } from './alignment-pattern-count-for-version';
+import { getAlignmentPatternCount } from "./alignment-pattern-count-for-version";
 
 export function buildStructuralAnalysis(version: number | null) {
   return {

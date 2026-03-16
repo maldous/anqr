@@ -1,6 +1,6 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { DEFAULT_ECC_LIMITS } from './default-ecc-limits.const';
-import { curveIntensity } from './curve-overlay-intensity';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { DEFAULT_ECC_LIMITS } from "./default-ecc-limits.const";
+import { curveIntensity } from "./curve-overlay-intensity";
 
 export function getEffectiveIntensity(config: QRGeneratorConfig): {
   effectiveIntensity: number;

@@ -1,7 +1,7 @@
-import type { FlattenedSelection } from './scan-fallback';
-import { accumulateSparseVectorMasks } from './accumulate-sparse-vector-masks';
-import { accumulateDenseVectorMasks } from './accumulate-dense-vector-masks';
-import type { NumericSelectionMask } from './numeric-selection-mask';
+import type { FlattenedSelection } from "./scan-fallback";
+import { accumulateSparseVectorMasks } from "./accumulate-sparse-vector-masks";
+import { accumulateDenseVectorMasks } from "./accumulate-dense-vector-masks";
+import type { NumericSelectionMask } from "./numeric-selection-mask";
 
 export function computeEntryGroupMasks(
   entry: FlattenedSelection,
@@ -14,7 +14,7 @@ export function computeEntryGroupMasks(
   groupIndexForBit: Int32Array,
   bitMaskForBit: Int32Array,
   groupMasks: Int32Array,
-  touched: Int32Array
+  touched: Int32Array,
 ): NumericSelectionMask {
   const vector = entry.vector;
   const dataCount = blockDataCounts[entry.blockIndex] ?? 0;
@@ -36,7 +36,7 @@ export function computeEntryGroupMasks(
           groupIndexForBit,
           bitMaskForBit,
           groupMasks,
-          touched
+          touched,
         )
       : accumulateDenseVectorMasks(
           vector.blockBits,
@@ -47,7 +47,7 @@ export function computeEntryGroupMasks(
           groupIndexForBit,
           bitMaskForBit,
           groupMasks,
-          touched
+          touched,
         );
 
   if (touchedCount === 0) {

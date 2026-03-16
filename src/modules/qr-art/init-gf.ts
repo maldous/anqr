@@ -1,5 +1,5 @@
-import { GF_EXP } from './gf-exp.const';
-import { GF_LOG } from './gf-log.const';
+import { GF_EXP } from "./gf-exp.const";
+import { GF_LOG } from "./gf-log.const";
 
 export function initGF(): void {
   let x = 1;

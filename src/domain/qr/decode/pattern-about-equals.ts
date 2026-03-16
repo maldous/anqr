@@ -4,7 +4,7 @@ export function patternAboutEquals(
   patternModuleSize: number,
   moduleSize: number,
   i: number,
-  j: number
+  j: number,
 ): boolean {
   if (Math.abs(i - patternY) <= moduleSize && Math.abs(j - patternX) <= moduleSize) {
     const moduleSizeDiff = Math.abs(moduleSize - patternModuleSize);

@@ -1,3 +1,3 @@
-import type { QArtModule } from './qart-module';
+import type { QArtModule } from "./qart-module";
 
-export type QArtWorkerResult = Awaited<ReturnType<QArtModule['generateQArtInWorker']>>;
+export type QArtWorkerResult = Awaited<ReturnType<QArtModule["generateQArtInWorker"]>>;

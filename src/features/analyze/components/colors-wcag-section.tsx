@@ -1,17 +1,17 @@
-import { ArrowRight, Eye, Palette } from 'lucide-react';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { ColorSwatch } from '@/features/analyze/components/color-swatch';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { WCAGBadge } from '@/features/analyze/components/wcag-badge';
-import { wcagComplianceClass } from '@/features/analyze/lib/formatters';
+import { ArrowRight, Eye, Palette } from "lucide-react";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { ColorSwatch } from "@/features/analyze/components/color-swatch";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { WCAGBadge } from "@/features/analyze/components/wcag-badge";
+import { wcagComplianceClass } from "@/features/analyze/lib/formatters";
 
 export const ColorsWcagSection = ({
   detectedColors,
   dominantColors,
 }: Readonly<{
-  detectedColors: NonNullable<QRAnalysisResult['detectedColors']>;
-  dominantColors: QRAnalysisResult['dominantColors'];
+  detectedColors: NonNullable<QRAnalysisResult["detectedColors"]>;
+  dominantColors: QRAnalysisResult["dominantColors"];
 }>) => {
   return (
     <CollapsibleSection

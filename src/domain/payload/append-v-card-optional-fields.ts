@@ -1,5 +1,5 @@
-import type { VCardHelper } from '../../modules/payload-generators/types';
-import { escapeValue } from '../../modules/payload-generators/utils';
+import type { VCardHelper } from "../../modules/payload-generators/types";
+import { escapeValue } from "../../modules/payload-generators/utils";
 
 export function appendVCardOptionalFields(lines: string[], params: VCardHelper): void {
   if (params.adr) {
@@ -11,7 +11,7 @@ export function appendVCardOptionalFields(lines: string[], params: VCardHelper):
     lines.push(`BDAY:${params.bday}`);
   }
   if (params.photo) {
-    if (params.version === '4.0') {
+    if (params.version === "4.0") {
       lines.push(`PHOTO:${params.photo}`);
     } else {
       lines.push(`PHOTO;VALUE=URI:${params.photo}`);

@@ -4,5 +4,5 @@ export interface VietQRParams {
   accountName?: string;
   amount?: number;
   description?: string;
-  serviceCode?: 'QRPUSH' | 'QRIBFTTA' | 'QRIBFTTC';
+  serviceCode?: "QRPUSH" | "QRIBFTTA" | "QRIBFTTC";
 }

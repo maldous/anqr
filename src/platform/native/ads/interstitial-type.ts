@@ -1,6 +1,6 @@
 export type InterstitialType =
-  | 'interstitial'
-  | 'rewardedInterstitial'
-  | 'gallery'
-  | 'export'
+  | "interstitial"
+  | "rewardedInterstitial"
+  | "gallery"
+  | "export"
   | string;

@@ -1,5 +1,5 @@
 export function findOldestCacheKey<T extends { updatedAt: number }>(
-  entries: IterableIterator<[string, T]>
+  entries: IterableIterator<[string, T]>,
 ): string | null {
   let oldestKey: string | null = null;
   let oldestAt = Number.POSITIVE_INFINITY;

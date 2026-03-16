@@ -5,16 +5,16 @@
  * scripts/publish-gallery-showcase.ts -> src/data/gallery-showcase.generated.ts
  */
 
-import { generatedGallerySections } from '@/content/generated/gallery-showcase.generated';
-import { buildGalleryCacheKey } from './gallery-cache-key';
-import { getGalleryImagePath as getGalleryImagePathBase } from './get-gallery-image-path';
-import type { GalleryItem, GallerySection } from './gallery-items.types';
+import { generatedGallerySections } from "@/content/generated/gallery-showcase.generated";
+import { buildGalleryCacheKey } from "./gallery-cache-key";
+import { getGalleryImagePath as getGalleryImagePathBase } from "./get-gallery-image-path";
+import type { GalleryItem, GallerySection } from "./gallery-items.types";
 
-export type { GalleryCategory, GalleryItem, GallerySection } from './gallery-items.types';
-export { buildGalleryRenderImageUrl } from './build-gallery-render-image-url';
-export { buildGalleryUrl } from './build-gallery-url';
-export { GALLERY_IMAGE_PATH } from './gallery-image-path.const';
-export { getGalleryBaseUrl } from './get-gallery-base-url';
+export type { GalleryCategory, GalleryItem, GallerySection } from "./gallery-items.types";
+export { buildGalleryRenderImageUrl } from "./build-gallery-render-image-url";
+export { buildGalleryUrl } from "./build-gallery-url";
+export { GALLERY_IMAGE_PATH } from "./gallery-image-path.const";
+export { getGalleryBaseUrl } from "./get-gallery-base-url";
 
 // Generated source of truth.
 export const gallerySections: GallerySection[] =
@@ -22,6 +22,6 @@ export const gallerySections: GallerySection[] =
 
 const GALLERY_CACHE_KEY = buildGalleryCacheKey(gallerySections);
 
-export function getGalleryImagePath(item: GalleryItem, formatOverride?: 'png' | 'gif'): string {
+export function getGalleryImagePath(item: GalleryItem, formatOverride?: "png" | "gif"): string {
   return getGalleryImagePathBase(item, GALLERY_CACHE_KEY, formatOverride);
 }

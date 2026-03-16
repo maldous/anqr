@@ -1,7 +1,7 @@
-import { decompressFrames, parseGIF } from 'gifuct-js';
-import type { DecodedGif, GifPatchFrame } from './gif-codec.types';
-import { getGifFrameStats } from './gif-frame-stats';
-import { log } from './log';
+import { decompressFrames, parseGIF } from "gifuct-js";
+import type { DecodedGif, GifPatchFrame } from "./gif-codec.types";
+import { getGifFrameStats } from "./gif-frame-stats";
+import { log } from "./log";
 
 export function decodeGif(arrayBuffer: ArrayBuffer): DecodedGif {
   const parsed = parseGIF(arrayBuffer);
@@ -10,7 +10,7 @@ export function decodeGif(arrayBuffer: ArrayBuffer): DecodedGif {
 
   const { uniqueDelays, uniqueDisposals, totalDurationMs } = getGifFrameStats(frames);
 
-  log.debug('decodeGif: decoded', {
+  log.debug("decodeGif: decoded", {
     width,
     height,
     frameCount: frames.length,

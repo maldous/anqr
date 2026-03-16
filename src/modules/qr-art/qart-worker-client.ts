@@ -1,1 +1,1 @@
-export * from '../../platform/worker/qart/worker-client';
+export * from "../../platform/worker/qart/worker-client";

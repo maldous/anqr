@@ -1,1 +1,1 @@
-export * from '../app/shell/ErrorBoundary';
+export * from "../app/shell/ErrorBoundary";

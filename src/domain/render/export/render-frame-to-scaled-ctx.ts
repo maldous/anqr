@@ -1,4 +1,4 @@
-import type { ScaledCtx } from './scaled-ctx';
+import type { ScaledCtx } from "./scaled-ctx";
 
 export function renderFrameToScaledCtx(
   scaledCtx: ScaledCtx,
@@ -6,7 +6,7 @@ export function renderFrameToScaledCtx(
   width: number,
   height: number,
   hasBgOverride: string | undefined,
-  bgOverride: string
+  bgOverride: string,
 ): void {
   scaledCtx.clearRect(0, 0, width, height);
   if (hasBgOverride) {

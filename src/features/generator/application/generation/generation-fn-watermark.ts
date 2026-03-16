@@ -4,8 +4,8 @@
  * Notes: Apply watermark overlay to generated canvas.
  */
 
-import { applyWatermark, type WatermarkPosition } from '@/domain/render/overlay/watermark';
-import { loadFileAsCanvas } from '@/features/generator/application/input/input-fn-loadfilecanvas';
+import { applyWatermark, type WatermarkPosition } from "@/domain/render/overlay/watermark";
+import { loadFileAsCanvas } from "@/features/generator/application/input/input-fn-loadfilecanvas";
 
 export async function applyWatermarkToCanvas<
   T extends {
@@ -19,12 +19,12 @@ export async function applyWatermarkToCanvas<
   },
 >(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
-  watermarkConfig: T
+  watermarkConfig: T,
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   if (!watermarkConfig.enabled) return sourceCanvas;
   let watermarkImage: HTMLImageElement | HTMLCanvasElement | null = null;
   if (
-    (watermarkConfig.kind === 'image' || watermarkConfig.kind === 'pattern') &&
+    (watermarkConfig.kind === "image" || watermarkConfig.kind === "pattern") &&
     watermarkConfig.image
   ) {
     watermarkImage = await loadFileAsCanvas(watermarkConfig.image);
@@ -38,7 +38,7 @@ export async function applyWatermarkToCanvas<
       position: watermarkConfig.position as WatermarkPosition,
       opacity: watermarkConfig.opacity,
       blend: watermarkConfig.blend,
-    } as Parameters<typeof applyWatermark>[1]
+    } as Parameters<typeof applyWatermark>[1],
   );
   return watermarked.canvas;
 }

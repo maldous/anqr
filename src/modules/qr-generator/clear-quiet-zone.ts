@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from './types';
+import type { QRGeneratorConfig } from "./types";
 
 export function clearQuietZone(
   ctx: CanvasRenderingContext2D,
@@ -7,7 +7,7 @@ export function clearQuietZone(
   size: number,
   margin: number,
   moduleCount: number,
-  moduleSize: number
+  moduleSize: number,
 ): void {
   const qrStart = margin * moduleSize;
   const qrSpan = moduleCount * moduleSize;

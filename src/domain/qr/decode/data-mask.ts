@@ -1,4 +1,4 @@
-import { BitMatrix } from './bit-matrix';
+import { BitMatrix } from "./bit-matrix";
 
 /**
  * Data mask patterns for QR codes

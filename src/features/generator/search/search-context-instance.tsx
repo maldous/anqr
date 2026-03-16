@@ -1,4 +1,4 @@
-import { createContext } from 'react';
-import type { SearchContextValue } from './search-context-value';
+import { createContext } from "react";
+import type { SearchContextValue } from "./search-context-value";
 
-export const SearchContext = createContext<SearchContextValue>({ searchQuery: '' });
+export const SearchContext = createContext<SearchContextValue>({ searchQuery: "" });

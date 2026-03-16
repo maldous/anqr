@@ -1,4 +1,4 @@
-import type { BasisVectorViolation } from './basis-vector-violation';
+import type { BasisVectorViolation } from "./basis-vector-violation";
 
 export function validateBasisVectorSafety(
   vectors: Array<{
@@ -10,7 +10,7 @@ export function validateBasisVectorSafety(
   blockDataCounts: number[],
   protectedBitEnd: number,
   gapStartBit: number,
-  gapEndBit: number
+  gapEndBit: number,
 ): BasisVectorViolation[] {
   const violations: BasisVectorViolation[] = [];
 
@@ -30,7 +30,7 @@ export function validateBasisVectorSafety(
         blockIndex: vector.rsBlockIndex,
         localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
         linearBit,
-        violationType: 'ORIGINAL_DATA',
+        violationType: "ORIGINAL_DATA",
       });
     } else if (linearBit >= gapStartBit && linearBit < gapEndBit) {
       violations.push({
@@ -39,7 +39,7 @@ export function validateBasisVectorSafety(
         blockIndex: vector.rsBlockIndex,
         localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
         linearBit,
-        violationType: 'TERMINATOR_GAP',
+        violationType: "TERMINATOR_GAP",
       });
     }
   }

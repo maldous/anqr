@@ -1,1 +1,1 @@
-export { shouldLockModule } from '@/domain/render/generator/should-lock-module';
+export { shouldLockModule } from "@/domain/render/generator/should-lock-module";

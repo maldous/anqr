@@ -1,4 +1,4 @@
-import { ensureElementTestId } from './ensure-element-testid';
+import { ensureElementTestId } from "./ensure-element-testid";
 
 export function assignInTree(root: ParentNode, selector: string): void {
   const elements = root.querySelectorAll(selector);

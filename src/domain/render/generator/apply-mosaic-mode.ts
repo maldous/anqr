@@ -1,8 +1,8 @@
-import { getOverlayColorPacked } from '../overlay/overlay-data-packed';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
-import { computeDarkFactor } from './compute-dark-factor';
-import { computeLightBlend } from './compute-light-blend';
+import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
+import { computeDarkFactor } from "./compute-dark-factor";
+import { computeLightBlend } from "./compute-light-blend";
 
 export function applyMosaicMode(context: OverlayModeContext, result: OverlayModeResult): void {
   const { overlayData, row, col, effectiveIntensity, isDark } = context;

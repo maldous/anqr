@@ -4,11 +4,11 @@
  * Notes: Process and post-process a single animation frame.
  */
 
-import { processAnimationFrameLoopIteration } from '@/features/generator/application/frames/frames-fn-loopiter';
-import { applyFramePostProcessing } from '@/features/generator/application/frames/frames-fn-postprocess';
-import { drawToDisplayCanvas } from '@/features/generator/application/generation/generation-fn-drawtodisplay';
-import type { FramePostProcessContext } from './frame-post-process-context.type';
-import type { FrameRenderContext } from './frame-render-context.type';
+import { processAnimationFrameLoopIteration } from "@/features/generator/application/frames/frames-fn-loopiter";
+import { applyFramePostProcessing } from "@/features/generator/application/frames/frames-fn-postprocess";
+import { drawToDisplayCanvas } from "@/features/generator/application/generation/generation-fn-drawtodisplay";
+import type { FramePostProcessContext } from "./frame-post-process-context.type";
+import type { FrameRenderContext } from "./frame-render-context.type";
 
 export async function processAndPostProcessFrame<
   W extends {

@@ -3,5 +3,5 @@
  * Android requires EMAIL to contain @.
  */
 export function isValidEmail(email: string): boolean {
-  return email.includes('@') && email.length >= 3;
+  return email.includes("@") && email.length >= 3;
 }

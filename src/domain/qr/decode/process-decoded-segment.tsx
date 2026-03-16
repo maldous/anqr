@@ -1,21 +1,21 @@
-import { qrDecoderLog } from './qr-decoder-log';
-import { modeToName } from './mode-to-name';
-import type { SegmentDecodeResult } from './segment-decode-result';
-import type { DecodeLoopState } from './decode-loop-state';
+import { qrDecoderLog } from "./qr-decoder-log";
+import { modeToName } from "./mode-to-name";
+import type { SegmentDecodeResult } from "./segment-decode-result";
+import type { DecodeLoopState } from "./decode-loop-state";
 
 export function processDecodedSegment(
   state: DecodeLoopState,
   seg: SegmentDecodeResult,
   mode: number,
   charCount: number,
-  bitOffset: number
+  bitOffset: number,
 ): void {
   for (const b of seg.outBytes) state.outBytes.push(b);
 
   const decodedLength =
-    seg.modeTag === 'kanji'
+    seg.modeTag === "kanji"
       ? seg.rawBytes.length / 2
-      : seg.modeTag === 'byte'
+      : seg.modeTag === "byte"
         ? seg.rawBytes.length
         : seg.text.length;
   state.segments.push({
@@ -30,7 +30,7 @@ export function processDecodedSegment(
   state.segmentIndex++;
 
   if (seg.valid) {
-    if (seg.modeTag !== 'unknown') {
+    if (seg.modeTag !== "unknown") {
       state.primarySegmentEnded = true;
     }
   } else {
@@ -40,7 +40,7 @@ export function processDecodedSegment(
     }
   }
 
-  if (seg.modeTag !== 'unknown') state.modesSeen.add(seg.modeTag);
+  if (seg.modeTag !== "unknown") state.modesSeen.add(seg.modeTag);
   state.text += seg.text;
 
   qrDecoderLog.trace(`decode: Decoded segment ${state.segmentIndex}`, {

@@ -1,4 +1,4 @@
-import { CharacterSetECI } from './character-set-eci';
+import { CharacterSetECI } from "./character-set-eci";
 
 /**
  * String encoding/decoding utilities
@@ -16,7 +16,7 @@ export class StringEncoding {
       return StringEncoding.customDecoder(bytes, encodingName);
     }
 
-    if (typeof TextDecoder === 'undefined' || StringEncoding.shouldDecodeOnFallback(encodingName)) {
+    if (typeof TextDecoder === "undefined" || StringEncoding.shouldDecodeOnFallback(encodingName)) {
       return StringEncoding.decodeFallback(bytes, encodingName);
     }
 
@@ -24,7 +24,7 @@ export class StringEncoding {
   }
 
   private static shouldDecodeOnFallback(encodingName: string): boolean {
-    return !StringEncoding.isBrowser() && encodingName === 'ISO-8859-1';
+    return !StringEncoding.isBrowser() && encodingName === "ISO-8859-1";
   }
 
   static encode(s: string, encoding: string | CharacterSetECI): Uint8Array {
@@ -34,7 +34,7 @@ export class StringEncoding {
       return StringEncoding.customEncoder(s, encodingName);
     }
 
-    if (typeof TextEncoder === 'undefined') {
+    if (typeof TextEncoder === "undefined") {
       return StringEncoding.encodeFallback(s);
     }
 
@@ -43,13 +43,13 @@ export class StringEncoding {
 
   private static isBrowser(): boolean {
     return (
-      typeof globalThis !== 'undefined' &&
-      Object.prototype.toString.call(globalThis) === '[object Window]'
+      typeof globalThis !== "undefined" &&
+      Object.prototype.toString.call(globalThis) === "[object Window]"
     );
   }
 
   static encodingName(encoding: string | CharacterSetECI): string {
-    return typeof encoding === 'string' ? encoding : encoding.getName();
+    return typeof encoding === "string" ? encoding : encoding.getName();
   }
 
   static encodingCharacterSet(encoding: string | CharacterSetECI): CharacterSetECI | null {
@@ -63,7 +63,7 @@ export class StringEncoding {
     const characterSet = StringEncoding.encodingCharacterSet(encoding);
 
     if (characterSet && StringEncoding.isDecodeFallbackSupported(characterSet)) {
-      let s = '';
+      let s = "";
       for (let i = 0; i < bytes.length; i++) {
         let h = bytes[i].toString(16);
         if (h.length < 2) h = `0${h}`;
@@ -89,7 +89,7 @@ export class StringEncoding {
 
   private static encodeFallback(s: string): Uint8Array {
     const encodedURIstring = btoa(unescape(encodeURIComponent(s))); // NOSONAR: classic btoa-Unicode pattern, TextEncoder used elsewhere
-    const charList = encodedURIstring.split('');
+    const charList = encodedURIstring.split("");
     const uintArray: number[] = [];
     for (let i = 0; i < charList.length; i++) {
       uintArray.push(charList[i].codePointAt(0)!);

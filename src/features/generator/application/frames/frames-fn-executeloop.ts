@@ -4,13 +4,13 @@
  * Notes: Execute the main frame generation loop.
  */
 
-import { createLogger } from '@/infra/logging/logger';
+import { createLogger } from "@/infra/logging/logger";
 // eslint-disable-next-line no-restricted-imports -- Sub-path import required to avoid circular dependency through barrel
-import { canvasHashCache } from '@/modules/qr-generator/cache';
-import { processAndPostProcessFrame } from '@/features/generator/application/frames/frames-fn-processframe';
-import type { ExecuteFrameGenerationLoopParams } from './execute-frame-generation-loop-params.type';
+import { canvasHashCache } from "@/modules/qr-generator/cache";
+import { processAndPostProcessFrame } from "@/features/generator/application/frames/frames-fn-processframe";
+import type { ExecuteFrameGenerationLoopParams } from "./execute-frame-generation-loop-params.type";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function executeFrameGenerationLoop<
   W extends {
@@ -26,8 +26,8 @@ export async function executeFrameGenerationLoop<
   for (let frameIdx = 0; frameIdx < params.framesToProcess.length; frameIdx++) {
     const frame = params.framesToProcess[frameIdx];
     params.updateGenerationProgress(
-      params.t('preview.busy.renderingAnimationFrames', 'Rendering the animation frames...'),
-      10 + ((frameIdx + 1) / Math.max(1, params.framesToProcess.length)) * 78
+      params.t("preview.busy.renderingAnimationFrames", "Rendering the animation frames..."),
+      10 + ((frameIdx + 1) / Math.max(1, params.framesToProcess.length)) * 78,
     );
     if (params.isRunCancelled()) return;
 
@@ -47,7 +47,7 @@ export async function executeFrameGenerationLoop<
         framesToProcessLength: params.framesToProcess.length,
       });
     } catch (err) {
-      log.error('Error generating frame', { error: err });
+      log.error("Error generating frame", { error: err });
     }
   }
 }

@@ -1,6 +1,6 @@
-import type { BitArray, BitMatrix } from './bit-matrix';
-import { IllegalArgumentException } from './exceptions';
-import { Binarizer } from './abstract-binarizer';
+import type { BitArray, BitMatrix } from "./bit-matrix";
+import { IllegalArgumentException } from "./exceptions";
+import { Binarizer } from "./abstract-binarizer";
 
 /**
  * Binary bitmap combining luminance source and binarizer
@@ -10,7 +10,7 @@ export class BinaryBitmap {
 
   constructor(private readonly binarizer: Binarizer) {
     if (binarizer === null) {
-      throw new IllegalArgumentException('Binarizer must be non-null.');
+      throw new IllegalArgumentException("Binarizer must be non-null.");
     }
   }
 
@@ -58,7 +58,7 @@ export class BinaryBitmap {
     try {
       return this.getBlackMatrix().toString();
     } catch {
-      return '';
+      return "";
     }
   }
 }

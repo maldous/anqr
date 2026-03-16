@@ -1,6 +1,6 @@
-import { quantizeGifPalette } from '../../../modules/animation';
-import { renderFrameToScaledCtx } from './render-frame-to-scaled-ctx';
-import type { ScaledCtx } from './scaled-ctx';
+import { quantizeGifPalette } from "../../../modules/animation";
+import { renderFrameToScaledCtx } from "./render-frame-to-scaled-ctx";
+import type { ScaledCtx } from "./scaled-ctx";
 
 export function sampleGlobalPalette(
   frames: HTMLCanvasElement[],
@@ -9,7 +9,7 @@ export function sampleGlobalPalette(
   height: number,
   hasBgOverride: string | undefined,
   bgOverride: string,
-  paletteSize: number
+  paletteSize: number,
 ): number[][] | null {
   if (frames.length === 0) return null;
 

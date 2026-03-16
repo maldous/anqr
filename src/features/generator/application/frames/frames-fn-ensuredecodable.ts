@@ -4,15 +4,15 @@
  * Notes: Ensure first animation frame is decodable.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import { validateInWorker } from '@/modules/qr-analyzer';
-import { cloneCanvasFrame } from '@/features/generator/application/frames/frames-fn-cloneframe';
+import { createLogger } from "@/infra/logging/logger";
+import { validateInWorker } from "@/modules/qr-analyzer";
+import { cloneCanvasFrame } from "@/features/generator/application/frames/frames-fn-cloneframe";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function ensureDecodableFirstFrameHelper(
   frames: (HTMLCanvasElement | OffscreenCanvas)[],
-  expectedContent: string | undefined
+  expectedContent: string | undefined,
 ): Promise<void> {
   if (frames.length <= 1) return;
   if (!expectedContent) return;
@@ -34,13 +34,13 @@ export async function ensureDecodableFirstFrameHelper(
     const validation = await validateInWorker(frames[frameIdx], expectedContent, 1);
     if (!validation.valid) continue;
     frames[0] = cloneCanvasFrame(frames[frameIdx], null);
-    log.info('animation cache: promoted decodable start frame', {
+    log.info("animation cache: promoted decodable start frame", {
       sourceFrame: frameIdx,
       frameCount: frames.length,
     });
     return;
   }
-  log.warn('animation cache: no decodable frame found for start frame promotion', {
+  log.warn("animation cache: no decodable frame found for start frame promotion", {
     frameCount: frames.length,
   });
 }

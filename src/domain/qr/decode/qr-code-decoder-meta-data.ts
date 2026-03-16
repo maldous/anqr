@@ -1,4 +1,4 @@
-import { type ResultPoint } from './result-types';
+import { type ResultPoint } from "./result-types";
 
 /**
  * Metadata holder for QR code decoder information

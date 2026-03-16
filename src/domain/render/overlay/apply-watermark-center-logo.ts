@@ -2,13 +2,13 @@ export function applyWatermarkCenterLogo(
   sourceCanvas: HTMLCanvasElement,
   logoCanvas: HTMLCanvasElement,
   maxSizePercent: number = 20,
-  opacity: number = 1
+  opacity: number = 1,
 ): HTMLCanvasElement {
-  const result = document.createElement('canvas');
+  const result = document.createElement("canvas");
   result.width = sourceCanvas.width;
   result.height = sourceCanvas.height;
-  const ctx = result.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2D context');
+  const ctx = result.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context");
 
   // Draw source
   ctx.drawImage(sourceCanvas, 0, 0);

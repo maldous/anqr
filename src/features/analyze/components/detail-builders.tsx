@@ -1,19 +1,19 @@
-import { buildUrlDetails } from './build-url-details';
-import { buildWifiDetails } from './build-wifi-details';
-import { buildVCardDetails } from './build-v-card-details';
-import { buildMeCardDetails } from './build-me-card-details';
-import { buildEmailDetails } from './build-email-details';
-import { buildTelDetails } from './build-tel-details';
-import { buildSmsDetails } from './build-sms-details';
-import { buildGeoDetails } from './build-geo-details';
-import { buildCryptoDetails } from './build-crypto-details';
-import { buildEpcSepaDetails } from './build-epc-sepa-details';
-import { buildUpiDetails } from './build-upi-details';
-import { buildEmvQrDetails } from './build-emv-qr-details';
-import { buildSwissQrBillDetails } from './build-swiss-qr-bill-details';
-import { buildCalendarEventDetails } from './build-calendar-event-details';
-import { buildOtpAuthDetails } from './build-otp-auth-details';
-import type { DetailEntry } from './detail-entry';
+import { buildUrlDetails } from "./build-url-details";
+import { buildWifiDetails } from "./build-wifi-details";
+import { buildVCardDetails } from "./build-v-card-details";
+import { buildMeCardDetails } from "./build-me-card-details";
+import { buildEmailDetails } from "./build-email-details";
+import { buildTelDetails } from "./build-tel-details";
+import { buildSmsDetails } from "./build-sms-details";
+import { buildGeoDetails } from "./build-geo-details";
+import { buildCryptoDetails } from "./build-crypto-details";
+import { buildEpcSepaDetails } from "./build-epc-sepa-details";
+import { buildUpiDetails } from "./build-upi-details";
+import { buildEmvQrDetails } from "./build-emv-qr-details";
+import { buildSwissQrBillDetails } from "./build-swiss-qr-bill-details";
+import { buildCalendarEventDetails } from "./build-calendar-event-details";
+import { buildOtpAuthDetails } from "./build-otp-auth-details";
+import type { DetailEntry } from "./detail-entry";
 
 // ---------------------------------------------------------------------------
 // Detail Builder Registry

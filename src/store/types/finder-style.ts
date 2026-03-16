@@ -1,1 +1,1 @@
-export type FinderStyle = 'square' | 'rounded' | 'circle';
+export type FinderStyle = "square" | "rounded" | "circle";

@@ -1,1 +1,1 @@
-export * from '../../features/generator/components/sections/PayloadSection';
+export * from "../../features/generator/components/sections/PayloadSection";

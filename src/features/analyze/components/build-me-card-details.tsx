@@ -1,6 +1,6 @@
-import { FileText, Globe, Mail, MapPin, Phone } from 'lucide-react';
-import { parseMeCardPayload } from './payload-parsers';
-import type { DetailEntry } from './detail-entry';
+import { FileText, Globe, Mail, MapPin, Phone } from "lucide-react";
+import { parseMeCardPayload } from "./payload-parsers";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildMeCardDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -8,24 +8,24 @@ export function buildMeCardDetails(payload: string): DetailEntry[] {
 
   if (mecardData.name) {
     details.push({
-      label: 'Name',
+      label: "Name",
       value: <span className="font-medium">{mecardData.name}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (mecardData.organization) {
     details.push({
-      label: 'Organization',
+      label: "Organization",
       value: mecardData.organization,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (mecardData.phone) {
     details.push({
-      label: 'Phone',
+      label: "Phone",
       value: (
         <a
-          href={`tel:${String(mecardData.phone).replaceAll(/[^+\d]/g, '')}`}
+          href={`tel:${String(mecardData.phone).replaceAll(/[^+\d]/g, "")}`}
           className="font-mono text-xs text-primary hover:underline"
         >
           {mecardData.phone}
@@ -36,7 +36,7 @@ export function buildMeCardDetails(payload: string): DetailEntry[] {
   }
   if (mecardData.email) {
     details.push({
-      label: 'Email',
+      label: "Email",
       value: (
         <a
           href={`mailto:${mecardData.email}`}
@@ -50,21 +50,21 @@ export function buildMeCardDetails(payload: string): DetailEntry[] {
   }
   if (mecardData.address) {
     details.push({
-      label: 'Address',
+      label: "Address",
       value: <span className="text-xs">{mecardData.address}</span>,
       icon: <MapPin className="w-3 h-3" />,
     });
   }
   if (mecardData.birthday) {
     details.push({
-      label: 'Birthday',
+      label: "Birthday",
       value: mecardData.birthday,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (mecardData.url) {
     details.push({
-      label: 'Website',
+      label: "Website",
       value: (
         <a
           href={String(mecardData.url)}
@@ -80,7 +80,7 @@ export function buildMeCardDetails(payload: string): DetailEntry[] {
   }
   if (mecardData.note) {
     details.push({
-      label: 'Notes',
+      label: "Notes",
       value: <span className="text-xs">{mecardData.note}</span>,
       icon: <FileText className="w-3 h-3" />,
     });

@@ -1,10 +1,10 @@
-import { isAlignmentPattern, isFinderPattern, isTimingPattern } from './pixel-mapping';
+import { isAlignmentPattern, isFinderPattern, isTimingPattern } from "./pixel-mapping";
 
 export function isEvalStructuralModule(
   row: number,
   col: number,
   moduleCount: number,
-  alignmentPositions: number[]
+  alignmentPositions: number[],
 ): boolean {
   return (
     isFinderPattern(row, col, moduleCount) ||

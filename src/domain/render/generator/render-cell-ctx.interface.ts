@@ -2,8 +2,8 @@ import type {
   OverlayData,
   QRCodeInstance,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
-import type { ModuleDrawContext } from './module-draw-context.interface';
+} from "../../../modules/qr-generator/types";
+import type { ModuleDrawContext } from "./module-draw-context.interface";
 
 export interface RenderCellCtx {
   qr: QRCodeInstance;

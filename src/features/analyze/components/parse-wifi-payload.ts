@@ -1,4 +1,4 @@
-import { parsePrefixedPayload } from './parse-prefixed-payload';
+import { parsePrefixedPayload } from "./parse-prefixed-payload";
 
 /**
  * Pure payload parser functions extracted from the Analyze component.
@@ -22,33 +22,33 @@ export function parseWifiPayload(payload: string): Record<string, string | null>
     phase2: null,
   };
 
-  const parsed = parsePrefixedPayload(payload, 'WIFI:');
+  const parsed = parsePrefixedPayload(payload, "WIFI:");
   if (!parsed) return result;
 
   for (const [key, value] of Object.entries(parsed)) {
     switch (key) {
-      case 'S':
+      case "S":
         result.ssid = value;
         break;
-      case 'P':
+      case "P":
         result.password = value;
         break;
-      case 'T':
+      case "T":
         result.security = value.toUpperCase();
         break;
-      case 'H':
-        result.hidden = value.toLowerCase() === 'true' ? 'true' : 'false';
+      case "H":
+        result.hidden = value.toLowerCase() === "true" ? "true" : "false";
         break;
-      case 'E':
+      case "E":
         result.eapMethod = value;
         break;
-      case 'I':
+      case "I":
         result.identity = value;
         break;
-      case 'A':
+      case "A":
         result.anonymousIdentity = value;
         break;
-      case 'PH2':
+      case "PH2":
         result.phase2 = value;
         break;
     }

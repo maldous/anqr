@@ -4,13 +4,13 @@
  * Notes: Apply interpolation between animation frames.
  */
 
-import { interpolateFrames } from '@/domain/render/animation/interpolate-frames';
+import { interpolateFrames } from "@/domain/render/animation/interpolate-frames";
 
 export async function applyInterpolationToFrames(
   frames: (HTMLCanvasElement | OffscreenCanvas)[],
-  interpolateMode: string
+  interpolateMode: string,
 ): Promise<(HTMLCanvasElement | OffscreenCanvas)[]> {
-  if (interpolateMode === 'none' || frames.length <= 1) return frames;
+  if (interpolateMode === "none" || frames.length <= 1) return frames;
   const interpolatedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
   const interpolationSteps = 2;
   for (let i = 0; i < frames.length - 1; i++) {
@@ -21,7 +21,7 @@ export async function applyInterpolationToFrames(
         frames[i],
         frames[i + 1],
         t,
-        interpolateMode as 'none' | 'crossfade' | 'morph'
+        interpolateMode as "none" | "crossfade" | "morph",
       );
       interpolatedFrames.push(interpolated);
     }

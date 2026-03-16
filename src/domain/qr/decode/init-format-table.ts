@@ -1,4 +1,4 @@
-import { FORMAT_INFO_DECODE_TABLE } from './format-info-decode-table';
+import { FORMAT_INFO_DECODE_TABLE } from "./format-info-decode-table";
 // Generate the decode table
 export function initFormatTable(): void {
   if (FORMAT_INFO_DECODE_TABLE.size > 0) return;

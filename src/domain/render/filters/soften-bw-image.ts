@@ -1,5 +1,5 @@
-import { copyImageData, gamma, gaussianBlur } from '../../../modules/overlay';
-import { log } from './log';
+import { copyImageData, gamma, gaussianBlur } from "../../../modules/overlay";
+import { log } from "./log";
 
 /**
  * Soften a high-contrast B&W image to create gradients for better dithering.
@@ -15,7 +15,7 @@ import { log } from './log';
  * @returns Softened image data with gradients
  */
 export function softenBWImage(imageData: ImageData): ImageData {
-  log.debug('Softening B&W image for better dithering');
+  log.debug("Softening B&W image for better dithering");
 
   // First copy to avoid mutating original
   let result = copyImageData(imageData);

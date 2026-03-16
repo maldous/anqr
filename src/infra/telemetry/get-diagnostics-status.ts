@@ -1,6 +1,6 @@
-import { getLogLevel } from '../logging/logger';
-import { isEnabled } from './is-enabled';
-import { readState } from './read-state';
+import { getLogLevel } from "../logging/logger";
+import { isEnabled } from "./is-enabled";
+import { readState } from "./read-state";
 
 /**
  * Get current diagnostics status.

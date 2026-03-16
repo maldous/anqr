@@ -1,5 +1,5 @@
-import type { BlockSelectionResult } from './elimination';
-import type { FlattenedSelection } from './scan-fallback.types';
+import type { BlockSelectionResult } from "./elimination";
+import type { FlattenedSelection } from "./scan-fallback.types";
 
 /**
  * Convert flattened selections back to block selections format,
@@ -11,7 +11,7 @@ import type { FlattenedSelection } from './scan-fallback.types';
  */
 export function unflattenSelections(
   flattened: FlattenedSelection[],
-  count: number
+  count: number,
 ): BlockSelectionResult[] {
   const blockMap = new Map<number, number[]>();
 

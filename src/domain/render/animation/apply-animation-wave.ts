@@ -1,6 +1,6 @@
-import { clampToByte } from './clamp-to-byte';
-import { forEachOpaquePixel } from './for-each-opaque-pixel';
-import { hslToRgbTuple } from '../color/color';
+import { clampToByte } from "./clamp-to-byte";
+import { forEachOpaquePixel } from "./for-each-opaque-pixel";
+import { hslToRgbTuple } from "../color/color";
 
 /**
  * Apply wave pattern effect to image data
@@ -11,7 +11,7 @@ export function applyAnimationWave(
   progress: number,
   width: number,
   height: number,
-  seed: number
+  seed: number,
 ): void {
   const waveFrequency = 3 + (seed % 5);
   const baseHue = (seed * 23) % 360;
@@ -37,7 +37,7 @@ export function applyAnimationWave(
           data[i + 1] = clampToByte(g * (1 - darkenAmount));
           data[i + 2] = clampToByte(b * (1 - darkenAmount));
         }
-      }
+      },
     );
   }
 }

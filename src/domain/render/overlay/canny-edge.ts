@@ -1,10 +1,10 @@
-import { sobelEdge } from './sobel-edge';
-import { copyImageData } from './copy-image-data';
+import { sobelEdge } from "./sobel-edge";
+import { copyImageData } from "./copy-image-data";
 
 export function cannyEdge(
   imageData: ImageData,
   lowThreshold: number = 50,
-  highThreshold: number = 150
+  highThreshold: number = 150,
 ): ImageData {
   // Simplified Canny: just use Sobel + threshold
   const sobelResult = sobelEdge(copyImageData(imageData));

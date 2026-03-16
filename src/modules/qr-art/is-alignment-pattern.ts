@@ -1,7 +1,7 @@
 export function isAlignmentPattern(
   row: number,
   col: number,
-  alignmentPositions: number[]
+  alignmentPositions: number[],
 ): boolean {
   for (const r of alignmentPositions) {
     for (const c of alignmentPositions) {

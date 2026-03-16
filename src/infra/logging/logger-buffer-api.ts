@@ -3,9 +3,9 @@ export {
   enableLogBuffer,
   flushLogBuffer,
   getBufferSize,
-} from './logger-buffer-controls';
-export { captureToBuffer } from './logger-capture-to-buffer';
-export { saveFilteredLogs, saveLogs } from './logger-save-logs';
+} from "./logger-buffer-controls";
+export { captureToBuffer } from "./logger-capture-to-buffer";
+export { saveFilteredLogs, saveLogs } from "./logger-save-logs";
 export {
   clearStructuredLogs,
   filterLogs,
@@ -13,4 +13,4 @@ export {
   filterLogsByScopes,
   getStructuredLogCount,
   getStructuredLogs,
-} from './logger-structured-log-access';
+} from "./logger-structured-log-access";

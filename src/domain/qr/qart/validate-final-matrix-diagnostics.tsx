@@ -1,16 +1,16 @@
-import type { ECCLevel } from './bit-mapping';
-import { extractFormatInfo, verifyMatrixFormatInfo } from './validation';
-import { log } from './log';
-import { validateTimingPatterns } from './validate-timing-patterns';
-import { validateFinderPatterns } from './validate-finder-patterns';
-import { analyzeMatrixDiff } from './analyze-matrix-diff';
+import type { ECCLevel } from "./bit-mapping";
+import { extractFormatInfo, verifyMatrixFormatInfo } from "./validation";
+import { log } from "./log";
+import { validateTimingPatterns } from "./validate-timing-patterns";
+import { validateFinderPatterns } from "./validate-finder-patterns";
+import { analyzeMatrixDiff } from "./analyze-matrix-diff";
 
 export function validateFinalMatrixDiagnostics(
   finalMatrix: boolean[][],
   baseMatrix: boolean[][],
   ecc: ECCLevel,
   actualMask: number,
-  moduleCount: number
+  moduleCount: number,
 ): {
   structuralDiffCount: number;
   dataDiffCount: number;
@@ -21,7 +21,7 @@ export function validateFinalMatrixDiagnostics(
 } {
   const finalFormatVerification = verifyMatrixFormatInfo(finalMatrix, ecc, actualMask);
   if (finalFormatVerification.valid) {
-    log.info('Final matrix format verification passed (diagnostic)', {
+    log.info("Final matrix format verification passed (diagnostic)", {
       ecc,
       mask: actualMask,
       eccMatch: finalFormatVerification.eccMatch,
@@ -29,7 +29,7 @@ export function validateFinalMatrixDiagnostics(
     });
   } else {
     log.warn(
-      'FORMAT_PARSER_DISAGREEMENT: Final matrix format verification disagreement (diagnostic)',
+      "FORMAT_PARSER_DISAGREEMENT: Final matrix format verification disagreement (diagnostic)",
       {
         expectedEcc: ecc,
         extractedEcc: finalFormatVerification.extractedEcc,
@@ -38,16 +38,16 @@ export function validateFinalMatrixDiagnostics(
         extractedMask: finalFormatVerification.extractedMask,
         maskMatch: finalFormatVerification.maskMatch,
         parserDisagreement: finalFormatVerification.reason,
-        action: 'CONTINUE_TO_SEMANTIC_VALIDATION',
-        note: 'Encoder is authoritative. Semantic scan validation is the real gate.',
-      }
+        action: "CONTINUE_TO_SEMANTIC_VALIDATION",
+        note: "Encoder is authoritative. Semantic scan validation is the real gate.",
+      },
     );
   }
 
   const matrixDiff = analyzeMatrixDiff(baseMatrix, finalMatrix, moduleCount);
   const { diffCount, structuralDiffCount, dataDiffCount, sampleDiffs } = matrixDiff;
 
-  log.info('Matrix diff between base and final', {
+  log.info("Matrix diff between base and final", {
     diffCount,
     structuralDiffCount,
     dataDiffCount,
@@ -58,7 +58,7 @@ export function validateFinalMatrixDiagnostics(
   });
 
   if (structuralDiffCount > 0) {
-    log.warn('CRITICAL: Structural patterns modified!', {
+    log.warn("CRITICAL: Structural patterns modified!", {
       structuralDiffCount,
       structuralDiffs: sampleDiffs.filter((d) => d.isStructural),
     });
@@ -66,9 +66,9 @@ export function validateFinalMatrixDiagnostics(
 
   const finderValidation = validateFinderPatterns(finalMatrix);
   if (finderValidation.allValid) {
-    log.debug('Finder patterns validated OK');
+    log.debug("Finder patterns validated OK");
   } else {
-    log.warn('FINDER PATTERNS CORRUPTED', {
+    log.warn("FINDER PATTERNS CORRUPTED", {
       topLeft: finderValidation.topLeft,
       topRight: finderValidation.topRight,
       bottomLeft: finderValidation.bottomLeft,
@@ -78,9 +78,9 @@ export function validateFinalMatrixDiagnostics(
 
   const timingValidation = validateTimingPatterns(finalMatrix);
   if (timingValidation.allValid) {
-    log.debug('Timing patterns validated OK');
+    log.debug("Timing patterns validated OK");
   } else {
-    log.warn('TIMING PATTERNS CORRUPTED', {
+    log.warn("TIMING PATTERNS CORRUPTED", {
       horizontal: timingValidation.horizontal,
       vertical: timingValidation.vertical,
       errors: timingValidation.errors,
@@ -90,15 +90,15 @@ export function validateFinalMatrixDiagnostics(
   const baseFormatInfo = extractFormatInfo(baseMatrix);
   const finalFormatInfo = extractFormatInfo(finalMatrix);
 
-  log.info('Format info comparison', {
+  log.info("Format info comparison", {
     base: {
-      vertical: baseFormatInfo.vertical.toString(2).padStart(15, '0'),
-      horizontal: baseFormatInfo.horizontal.toString(2).padStart(15, '0'),
+      vertical: baseFormatInfo.vertical.toString(2).padStart(15, "0"),
+      horizontal: baseFormatInfo.horizontal.toString(2).padStart(15, "0"),
       match: baseFormatInfo.match,
     },
     final: {
-      vertical: finalFormatInfo.vertical.toString(2).padStart(15, '0'),
-      horizontal: finalFormatInfo.horizontal.toString(2).padStart(15, '0'),
+      vertical: finalFormatInfo.vertical.toString(2).padStart(15, "0"),
+      horizontal: finalFormatInfo.horizontal.toString(2).padStart(15, "0"),
       match: finalFormatInfo.match,
     },
     formatInfoUnchanged:
@@ -110,7 +110,7 @@ export function validateFinalMatrixDiagnostics(
     baseFormatInfo.vertical !== finalFormatInfo.vertical ||
     baseFormatInfo.horizontal !== finalFormatInfo.horizontal
   ) {
-    log.warn('FORMAT INFO CHANGED - This will break scanning!');
+    log.warn("FORMAT INFO CHANGED - This will break scanning!");
   }
 
   return {

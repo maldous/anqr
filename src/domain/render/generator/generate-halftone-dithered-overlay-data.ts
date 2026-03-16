@@ -3,11 +3,11 @@ import type {
   OverlayData,
   QRCodeInstance,
   QRGeneratorConfig,
-} from '../../../modules/qr-generator/types';
-import { generateDitheredMatrix } from './generate-dithered-matrix';
-import { aggregateModuleHalftoneData } from './aggregate-module-halftone-data';
-import { clamp01 } from './clamp01';
-import { log } from './log';
+} from "../../../modules/qr-generator/types";
+import { generateDitheredMatrix } from "./generate-dithered-matrix";
+import { aggregateModuleHalftoneData } from "./aggregate-module-halftone-data";
+import { clamp01 } from "./clamp01";
+import { log } from "./log";
 
 /**
  * Generate halftone-dithered overlay data.
@@ -23,7 +23,7 @@ export async function generateHalftoneDitheredOverlayData(
   effectiveIntensity: number,
   effectiveConfig: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn,
-  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void,
 ): Promise<{ overlayData: OverlayData; effectiveIntensity: number }> {
   const scale = 4;
 
@@ -36,20 +36,20 @@ export async function generateHalftoneDitheredOverlayData(
     effectiveIntensity,
     effectiveConfig,
     createCanvasFn,
-    releaseCanvasFn
+    releaseCanvasFn,
   );
 
   // Also sample the original overlay at module resolution so halftone dot sizing
   // preserves the actual image luminance instead of only QR-constrained density.
   const moduleCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const moduleCtx = moduleCanvas.getContext('2d', {
+  const moduleCtx = moduleCanvas.getContext("2d", {
     willReadFrequently: true,
     desynchronized: true,
   } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
   let moduleData: Uint8ClampedArray | null = null;
   if (moduleCtx) {
     moduleCtx.imageSmoothingEnabled = true;
-    moduleCtx.imageSmoothingQuality = 'high';
+    moduleCtx.imageSmoothingQuality = "high";
     moduleCtx.drawImage(overlayCanvas, 0, 0, moduleCount, moduleCount);
     moduleData = moduleCtx.getImageData(0, 0, moduleCount, moduleCount).data;
   }
@@ -74,12 +74,12 @@ export async function generateHalftoneDitheredOverlayData(
         effectiveIntensity,
         densityInfluence,
         overlayBrightness,
-        overlayColorsPacked
+        overlayColorsPacked,
       );
     }
   }
 
-  log.debug('halftone-dithered overlay data generated', {
+  log.debug("halftone-dithered overlay data generated", {
     moduleCount,
     scale,
     effectiveIntensity,

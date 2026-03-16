@@ -2,7 +2,7 @@ export function drawFinderPattern(
   modules: (boolean | null)[][],
   moduleCount: number,
   centerRow: number,
-  centerCol: number
+  centerCol: number,
 ): void {
   for (let r = -1; r <= 7; r++) {
     if (centerRow + r < 0 || centerRow + r >= moduleCount) continue;

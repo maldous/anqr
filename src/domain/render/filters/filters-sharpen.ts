@@ -3,8 +3,8 @@
  * Re-exports from overlay module (canonical source)
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
-export { sharpen as applySharpen } from '../../../modules/overlay';
+export { sharpen as applySharpen } from "../../../modules/overlay";

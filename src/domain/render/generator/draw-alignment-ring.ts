@@ -1,4 +1,4 @@
-import { drawStyledRing } from './draw-styled-ring';
+import { drawStyledRing } from "./draw-styled-ring";
 
 /**
  * Draw an alignment ring with the specified style
@@ -8,7 +8,7 @@ export function drawAlignmentRing(
   x: number,
   y: number,
   size: number,
-  style: string
+  style: string,
 ): void {
   drawStyledRing(ctx, x, y, size, style, 0.15);
 }

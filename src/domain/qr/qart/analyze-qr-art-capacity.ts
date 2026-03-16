@@ -1,7 +1,7 @@
-import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
-import type { QRArtCapacityInfo } from './rs-basis.types';
-import { getHeaderBitCount } from './get-header-bit-count';
-import { calculateProtectedBitsPerBlock } from './calculate-protected-bits-per-block';
+import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
+import type { QRArtCapacityInfo } from "./rs-basis.types";
+import { getHeaderBitCount } from "./get-header-bit-count";
+import { calculateProtectedBitsPerBlock } from "./calculate-protected-bits-per-block";
 
 /**
  * Analyze QR-Art capacity for a given configuration
@@ -20,7 +20,7 @@ import { calculateProtectedBitsPerBlock } from './calculate-protected-bits-per-b
 export function analyzeQRArtCapacity(
   version: number,
   ecc: ECCLevel,
-  dataLength: number
+  dataLength: number,
 ): QRArtCapacityInfo {
   const blocks = getRSBlockInfo(version, ecc);
   const totalDataBits = blocks.reduce((sum, b) => sum + b.dataCount * 8, 0);
@@ -49,7 +49,7 @@ export function analyzeQRArtCapacity(
     protectedBits: actualProtectedBits,
     controllableBits,
     controlPercentage: totalDataBits > 0 ? (controllableBits / totalDataBits) * 100 : 0,
-    protectionMode: 'full-content',
+    protectionMode: "full-content",
     breakdown: {
       headerBits,
       dataBits,

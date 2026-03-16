@@ -1,6 +1,6 @@
-import { qrcode } from '../encode';
-import { createQRInstanceWithSegments, type MaskPattern } from '../encode/encoder-api';
-import type { ECCLevel } from './bit-mapping';
+import { qrcode } from "../encode";
+import { createQRInstanceWithSegments, type MaskPattern } from "../encode/encoder-api";
+import type { ECCLevel } from "./bit-mapping";
 
 /**
  * Generate a QR matrix from the encoder and extract per-block data
@@ -20,22 +20,22 @@ import type { ECCLevel } from './bit-mapping';
 export function createQREncoderForGenerate(
   data: string,
   originalDataLength: number,
-  suffixMode: 'byte' | 'numeric',
+  suffixMode: "byte" | "numeric",
   ecc: ECCLevel,
   version: number,
-  mask: number | undefined
+  mask: number | undefined,
 ): { getModuleCount: () => number; isDark: (row: number, col: number) => boolean } {
-  if (suffixMode === 'numeric') {
+  if (suffixMode === "numeric") {
     return createQRInstanceWithSegments(
       [
-        { data: data.slice(0, originalDataLength), mode: 'byte' as const },
+        { data: data.slice(0, originalDataLength), mode: "byte" as const },
         ...(data.slice(originalDataLength).length > 0
-          ? [{ data: data.slice(originalDataLength), mode: 'numeric' as const }]
+          ? [{ data: data.slice(originalDataLength), mode: "numeric" as const }]
           : []),
       ],
       ecc,
       version,
-      { maskPattern: mask as MaskPattern }
+      { maskPattern: mask as MaskPattern },
     );
   }
   const instance = qrcode(version, ecc);

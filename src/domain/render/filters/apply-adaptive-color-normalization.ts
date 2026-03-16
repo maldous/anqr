@@ -1,12 +1,12 @@
-import { rgbToLumaLinear } from '../color/color';
-import { clamp01 } from './clamp01';
-import { clampByte } from './clamp-byte';
-import type { OverlayToneStats } from './overlay-tone-stats';
+import { rgbToLumaLinear } from "../color/color";
+import { clamp01 } from "./clamp01";
+import { clampByte } from "./clamp-byte";
+import type { OverlayToneStats } from "./overlay-tone-stats";
 
 export function applyAdaptiveColorNormalization(
   imageData: ImageData,
   stats: OverlayToneStats,
-  strength: number
+  strength: number,
 ): ImageData {
   const normalizedStrength = clamp01(strength);
   if (normalizedStrength <= 0.001) return imageData;

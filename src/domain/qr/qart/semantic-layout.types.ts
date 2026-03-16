@@ -1,6 +1,6 @@
-import { type ECCLevel } from './bit-mapping';
-import type { BitRange } from './bit-range';
-export type { BitRange } from './bit-range';
+import { type ECCLevel } from "./bit-mapping";
+import type { BitRange } from "./bit-range";
+export type { BitRange } from "./bit-range";
 
 /**
  * Exact bit positions for QR semantic boundaries

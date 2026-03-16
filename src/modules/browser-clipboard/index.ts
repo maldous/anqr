@@ -1,1 +1,1 @@
-export * from '../../platform/browser/clipboard';
+export * from "../../platform/browser/clipboard";

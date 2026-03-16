@@ -1,4 +1,4 @@
-import { isNumeric } from './is-numeric';
+import { isNumeric } from "./is-numeric";
 
 export function scanNumericRun(text: string, start: number): number {
   let i = start;

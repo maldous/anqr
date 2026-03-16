@@ -1,4 +1,4 @@
-import type { HSLA } from '../../../modules/core/types';
+import type { HSLA } from "../../../modules/core/types";
 
 /** Parse hsl() or hsla() string */
 export function parseHslString(str: string): HSLA {

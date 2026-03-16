@@ -1,4 +1,4 @@
-import { isFinderPattern } from './is-finder-pattern';
+import { isFinderPattern } from "./is-finder-pattern";
 
 /**
  * Check whether the 5×5 region around (row, col) overlaps any finder pattern.
@@ -6,7 +6,7 @@ import { isFinderPattern } from './is-finder-pattern';
 export function alignmentOverlapsFinderRegion(
   row: number,
   col: number,
-  moduleCount: number
+  moduleCount: number,
 ): boolean {
   if (isFinderPattern(row, col, moduleCount)) return true;
   for (let dr = -2; dr <= 2; dr++) {

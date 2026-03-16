@@ -1,4 +1,4 @@
-import type { ModuleViolation } from './module-violation';
+import type { ModuleViolation } from "./module-violation";
 
 export function computeModuleViolation(
   qrIsDark: boolean,
@@ -7,7 +7,7 @@ export function computeModuleViolation(
   darkMin: number,
   lightMax: number,
   darkCenterMin: number,
-  lightCenterMax: number
+  lightCenterMax: number,
 ): ModuleViolation | null {
   let occViolation = 0;
   let centerViolation = 0;

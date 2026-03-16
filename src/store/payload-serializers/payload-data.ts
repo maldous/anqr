@@ -1,1 +1,1 @@
-export type { PayloadData } from '../types/payload-data';
+export type { PayloadData } from "../types/payload-data";

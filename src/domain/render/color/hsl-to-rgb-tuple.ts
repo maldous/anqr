@@ -1,4 +1,4 @@
-import { hslToRgb } from './hsl-to-rgb';
+import { hslToRgb } from "./hsl-to-rgb";
 
 /**
  * Convert HSL to RGB tuple [r, g, b] (0-255)

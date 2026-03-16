@@ -1,5 +1,5 @@
-import { failAllPending } from './fail-all-pending';
-import { workerClientState } from './worker-client-state';
+import { failAllPending } from "./fail-all-pending";
+import { workerClientState } from "./worker-client-state";
 
 export function terminateQArtWorker(): void {
   if (workerClientState.worker) {
@@ -7,5 +7,5 @@ export function terminateQArtWorker(): void {
     workerClientState.worker = null;
   }
 
-  failAllPending(new Error('QArt worker terminated'));
+  failAllPending(new Error("QArt worker terminated"));
 }

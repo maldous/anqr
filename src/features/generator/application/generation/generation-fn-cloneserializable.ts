@@ -7,9 +7,9 @@
 export function clonePlainSerializable(value: unknown): unknown {
   if (
     value == null ||
-    typeof value === 'string' ||
-    typeof value === 'boolean' ||
-    typeof value === 'number'
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    typeof value === "number"
   ) {
     return value;
   }
@@ -18,7 +18,7 @@ export function clonePlainSerializable(value: unknown): unknown {
     return value.map((entry) => clonePlainSerializable(entry));
   }
 
-  if (typeof value !== 'object') {
+  if (typeof value !== "object") {
     return undefined;
   }
 

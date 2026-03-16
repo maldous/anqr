@@ -1,21 +1,21 @@
-import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HighlightedLabel } from '@/features/generator/search/search-context';
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { HighlightedLabel } from "@/features/generator/search/search-context";
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 
 export function LabeledInputField({
   label,
   placeholder,
   value,
   onChange,
-  type = 'text',
+  type = "text",
   dataTestId,
 }: Readonly<{
   label: string;
   placeholder: string;
   value?: string;
   onChange?: (value: string) => void;
-  type?: 'text' | 'url' | 'datetime-local' | 'number' | 'tel' | 'date';
+  type?: "text" | "url" | "datetime-local" | "number" | "tel" | "date";
   dataTestId?: string;
 }>) {
   return (

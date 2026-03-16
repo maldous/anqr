@@ -1,10 +1,10 @@
-import type { ECCLevel } from './bit-mapping';
-import { type BitRange, mapAllowedRangesToBlocks } from './semantic-layout';
-import { log } from './log';
-import { verifyProtectedBytes } from './verify-protected-bytes';
-import { estimateBlockECCDamage } from './estimate-block-ecc-damage';
-import { verifyRSLinearityAllBlocks } from './verify-rs-linearity-all-blocks';
-import type { EncoderDerivedLayout } from './generate.types';
+import type { ECCLevel } from "./bit-mapping";
+import { type BitRange, mapAllowedRangesToBlocks } from "./semantic-layout";
+import { log } from "./log";
+import { verifyProtectedBytes } from "./verify-protected-bytes";
+import { estimateBlockECCDamage } from "./estimate-block-ecc-damage";
+import { verifyRSLinearityAllBlocks } from "./verify-rs-linearity-all-blocks";
+import type { EncoderDerivedLayout } from "./generate.types";
 
 export function verifyModifiedDataIntegrity(
   blockDataArrays: Uint8Array[],
@@ -16,34 +16,34 @@ export function verifyModifiedDataIntegrity(
   encoderLayout: EncoderDerivedLayout,
   actualVersion: number,
   ecc: ECCLevel,
-  totalSelected: number
+  totalSelected: number,
 ): string | null {
   const rsLinearityOk = verifyRSLinearityAllBlocks(
     modifiedBlockData,
     modifiedBlockEcc,
-    blockEccCounts
+    blockEccCounts,
   );
   if (!rsLinearityOk) {
-    return 'RS linearity broken - modified codewords are invalid';
+    return "RS linearity broken - modified codewords are invalid";
   }
 
   const { anyBlockOverBudget } = estimateBlockECCDamage(
     blockDataArrays,
     modifiedBlockData,
-    blockEccCounts
+    blockEccCounts,
   );
 
   if (anyBlockOverBudget) {
-    log.warn('ECC budget exceeded in one or more blocks - falling back to binary search', {
-      suggestion: 'Reduce number of vectors or use higher ECC level',
-      note: 'Binary search fallback will find maximum safe vector count',
+    log.warn("ECC budget exceeded in one or more blocks - falling back to binary search", {
+      suggestion: "Reduce number of vectors or use higher ECC level",
+      note: "Binary search fallback will find maximum safe vector count",
     });
   }
 
-  log.info('BOUNDARY AUDIT (single source of truth: encoderLayout)', {
+  log.info("BOUNDARY AUDIT (single source of truth: encoderLayout)", {
     version: actualVersion,
-    stage: 'PRE_SCAN',
-    source: 'ENCODER_DERIVED_TWO_INTERVAL',
+    stage: "PRE_SCAN",
+    source: "ENCODER_DERIVED_TWO_INTERVAL",
     protection: {
       protectedBitEnd: encoderLayout.protectedBitEnd,
       protectedByteEnd: Math.ceil(encoderLayout.protectedBitEnd / 8),
@@ -66,18 +66,18 @@ export function verifyModifiedDataIntegrity(
   const protectedCheck = verifyProtectedBytes(blockDataArrays, modifiedBlockData, blockAllowedBits);
 
   if (!protectedCheck.valid) {
-    log.warn('PROTECTED BYTES MODIFIED - HYBRID protection violation!', {
+    log.warn("PROTECTED BYTES MODIFIED - HYBRID protection violation!", {
       violationCount: protectedCheck.violations.length,
       violations: protectedCheck.violations.slice(0, 10),
       protectedBitEnd: encoderLayout.protectedBitEnd,
       originalDataLength: encoderLayout.originalDataLength,
-      note: 'Vectors modified original data bytes - algorithm bug!',
+      note: "Vectors modified original data bytes - algorithm bug!",
     });
-    log.warn('FAILING FAST - returning base matrix due to protected byte violation');
+    log.warn("FAILING FAST - returning base matrix due to protected byte violation");
     return `Protected byte violation: ${protectedCheck.violations.length} original data bytes were modified`;
   }
 
-  log.info('HYBRID protection validation PASSED (TWO-INTERVAL encoder-derived)', {
+  log.info("HYBRID protection validation PASSED (TWO-INTERVAL encoder-derived)", {
     protectedBitRange: `0 - ${encoderLayout.protectedBitEnd} (mode + charCount + original data)`,
     twoIntervalRanges: {
       interval1_suffix: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
@@ -87,7 +87,7 @@ export function verifyModifiedDataIntegrity(
     originalDataLength: encoderLayout.originalDataLength,
     suffixLength: encoderLayout.suffixLength,
     totalVectorsApplied: totalSelected,
-    protectedBytesChecked: 'all blocks verified (including terminator gap)',
+    protectedBytesChecked: "all blocks verified (including terminator gap)",
   });
 
   return null;

@@ -11,5 +11,5 @@ export interface PreservationDiff {
   versionInfo: boolean;
   finderDither: number;
   blendPres: boolean;
-  blendMode?: 'overlay' | 'dither';
+  blendMode?: "overlay" | "dither";
 }

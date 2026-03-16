@@ -1,4 +1,4 @@
-import type { ECCLevel } from '../../qr-encoder';
+import type { ECCLevel } from "../../qr-encoder";
 
 export interface QArtConfig {
   data: string;

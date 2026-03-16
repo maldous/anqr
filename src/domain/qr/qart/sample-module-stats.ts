@@ -1,5 +1,5 @@
-import { rgbToLumaLinear } from '../../render/color/color';
-import { computeSobelContribution } from './compute-sobel-contribution';
+import { rgbToLumaLinear } from "../../render/color/color";
+import { computeSobelContribution } from "./compute-sobel-contribution";
 
 export function sampleModuleStats(
   imageData: ImageData,
@@ -10,7 +10,7 @@ export function sampleModuleStats(
   scaleX: number,
   scaleY: number,
   maxX: number,
-  maxY: number
+  maxY: number,
 ): { avgGray: number; contrast: number; edgeMagnitude: number } {
   let totalGray = 0;
   let minGray = 255;

@@ -4,11 +4,11 @@
  * Notes: Download QR code as SVG format.
  */
 
-import { createLogger } from '@/infra/logging/logger';
-import type { ExporterModule } from '@/features/generator/application/export/export-shared-types';
-import { expandPackedQArtMatrix } from '@/features/generator/application/generation/generation-fn-expandmatrix';
+import { createLogger } from "@/infra/logging/logger";
+import type { ExporterModule } from "@/features/generator/application/export/export-shared-types";
+import { expandPackedQArtMatrix } from "@/features/generator/application/generation/generation-fn-expandmatrix";
 
-const log = createLogger('QR');
+const log = createLogger("QR");
 
 export async function downloadSvgFormat(params: {
   exporter: ExporterModule;
@@ -35,8 +35,8 @@ export async function downloadSvgFormat(params: {
   }
   if (!vectorMatrix) {
     log.warn(
-      'Vector SVG export requested but QR matrix is unavailable. ' +
-        'Falling back to raster SVG. This can happen with special render modes.'
+      "Vector SVG export requested but QR matrix is unavailable. " +
+        "Falling back to raster SVG. This can happen with special render modes.",
     );
     await params.exporter.downloadSvg(params.exportCanvas, params.exportConfig);
     return;
@@ -54,14 +54,14 @@ export async function downloadSvgFormat(params: {
           copyright: (ms.copyright as string) || undefined,
           description: (ms.description as string) || undefined,
           creationTime: ms.creationTime as boolean,
-          software: 'ANQR - https://anqr.link',
+          software: "ANQR - https://anqr.link",
         }
       : undefined;
   params.exporter.downloadVectorSvg(vectorMatrix, {
     moduleSize: svgModuleSize,
     margin: totalMargin,
     fgColor: rs.fgColor as string,
-    bgColor: (rs.bgTransparent ? 'transparent' : rs.bgColor) as string,
+    bgColor: (rs.bgTransparent ? "transparent" : rs.bgColor) as string,
     filename: params.outputFilename,
     moduleStyle: rs.moduleStyle as string,
     cornerRadius: rs.cornerRadius as number,

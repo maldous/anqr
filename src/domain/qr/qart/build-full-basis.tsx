@@ -1,10 +1,10 @@
-import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
-import { type BitRange, mapAllowedRangesToBlocks } from './semantic-layout';
-import type { RSBasis, RSBasisVector } from './rs-basis.types';
-import { basisCache } from './basis-cache';
-import { log } from './log';
-import { updateBasisCacheLru } from './update-basis-cache-lru';
-import { buildBlockBasis } from './build-block-basis';
+import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
+import { type BitRange, mapAllowedRangesToBlocks } from "./semantic-layout";
+import type { RSBasis, RSBasisVector } from "./rs-basis.types";
+import { basisCache } from "./basis-cache";
+import { log } from "./log";
+import { updateBasisCacheLru } from "./update-basis-cache-lru";
+import { buildBlockBasis } from "./build-block-basis";
 
 /**
  * Build the complete RS basis for a version/ECC combination
@@ -25,12 +25,12 @@ import { buildBlockBasis } from './build-block-basis';
 export function buildFullBasis(
   version: number,
   ecc: ECCLevel,
-  allowedBitRanges?: BitRange[]
+  allowedBitRanges?: BitRange[],
 ): RSBasis {
   // Build cache key from allowed ranges
   const rangesKey = allowedBitRanges
-    ? allowedBitRanges.map((r) => `${r.startBit}-${r.endBit}`).join(',')
-    : 'all';
+    ? allowedBitRanges.map((r) => `${r.startBit}-${r.endBit}`).join(",")
+    : "all";
   const cacheKey = `${version}-${ecc}-${rangesKey}`;
   const cached = basisCache.get(cacheKey);
   if (cached) {
@@ -54,7 +54,7 @@ export function buildFullBasis(
   // Map allowed ranges to per-block allowed bits (handles interleaving!)
   let blockAllowedBits: Map<number, Set<number>> | undefined;
   let controllableBits: number;
-  let protectionMode: 'semantic-ranges' | 'legacy-all';
+  let protectionMode: "semantic-ranges" | "legacy-all";
 
   if (allowedBitRanges !== undefined && allowedBitRanges.length > 0) {
     // Strategy 2: Only specific bit ranges are allowed
@@ -65,9 +65,9 @@ export function buildFullBasis(
     for (const allowedSet of blockAllowedBits.values()) {
       controllableBits += allowedSet.size;
     }
-    protectionMode = 'semantic-ranges';
+    protectionMode = "semantic-ranges";
 
-    log.info('Building RS basis with SEMANTIC RANGE protection (Strategy 2)', {
+    log.info("Building RS basis with SEMANTIC RANGE protection (Strategy 2)", {
       version,
       ecc,
       allowedRanges: allowedBitRanges.map((r) => `${r.startBit}-${r.endBit}`),
@@ -79,10 +79,10 @@ export function buildFullBasis(
   } else {
     // Legacy mode: all bits allowed (DANGEROUS!)
     controllableBits = totalDataBits;
-    protectionMode = 'legacy-all';
+    protectionMode = "legacy-all";
     log.warn(
-      'Building RS basis in LEGACY MODE (all bits allowed). ' +
-        'This WILL corrupt the decoded message! Pass allowedBitRanges for safe QR-Art.'
+      "Building RS basis in LEGACY MODE (all bits allowed). " +
+        "This WILL corrupt the decoded message! Pass allowedBitRanges for safe QR-Art.",
     );
   }
 
@@ -90,14 +90,14 @@ export function buildFullBasis(
 
   // Warn if control percentage is very low
   if (controllableBits <= 0) {
-    log.warn('ZERO controllable bits! QR-Art cannot modify any pixels.', {
-      suggestion: 'Use a larger QR version to create more padding codewords',
+    log.warn("ZERO controllable bits! QR-Art cannot modify any pixels.", {
+      suggestion: "Use a larger QR version to create more padding codewords",
     });
   } else if (controlPercentage < 10) {
-    log.warn('Very low controllable bit percentage. QR-Art effect will be minimal.', {
+    log.warn("Very low controllable bit percentage. QR-Art effect will be minimal.", {
       controllableBits,
       controlPercentage: `${controlPercentage.toFixed(1)}%`,
-      suggestion: 'Use a larger QR version for more padding codewords',
+      suggestion: "Use a larger QR version for more padding codewords",
     });
   }
 
@@ -127,7 +127,7 @@ export function buildFullBasis(
     totalEccBits,
   };
 
-  log.info('Built full RS basis', {
+  log.info("Built full RS basis", {
     version,
     ecc,
     protectionMode,

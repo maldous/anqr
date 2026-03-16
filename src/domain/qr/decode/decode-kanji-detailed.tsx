@@ -1,11 +1,11 @@
-import { BitStream } from './bit-stream';
+import { BitStream } from "./bit-stream";
 
 /**
  * Decode Kanji mode and preserve raw bytes (Shift-JIS).
  */
 export function decodeKanjiDetailed(
   bits: BitStream,
-  count: number
+  count: number,
 ): { text: string; bytes: number[] } {
   const bytes: number[] = [];
 
@@ -28,11 +28,11 @@ export function decodeKanjiDetailed(
     bytes.push(value & 0xff);
   }
 
-  let text = '';
+  let text = "";
   try {
-    text = new TextDecoder('shift-jis').decode(new Uint8Array(bytes));
+    text = new TextDecoder("shift-jis").decode(new Uint8Array(bytes));
   } catch {
-    text = '';
+    text = "";
   }
 
   return { text, bytes };

@@ -1,5 +1,5 @@
-import { MathUtils } from './perspective';
-import { Float } from './util';
+import { MathUtils } from "./perspective";
+import { Float } from "./util";
 
 /**
  * Represents a point of interest in an image
@@ -7,7 +7,7 @@ import { Float } from './util';
 export class ResultPoint {
   constructor(
     private readonly x: number,
-    private readonly y: number
+    private readonly y: number,
   ) {}
 
   getX(): number {
@@ -74,7 +74,7 @@ export class ResultPoint {
   private static crossProductZ(
     pointA: ResultPoint,
     pointB: ResultPoint,
-    pointC: ResultPoint
+    pointC: ResultPoint,
   ): number {
     const bX = pointB.x;
     const bY = pointB.y;

@@ -1,4 +1,4 @@
-import type { QRCodeInstance, QRGeneratorConfig } from './types';
+import type { QRCodeInstance, QRGeneratorConfig } from "./types";
 
 export interface ConstraintCtx {
   qr: QRCodeInstance;

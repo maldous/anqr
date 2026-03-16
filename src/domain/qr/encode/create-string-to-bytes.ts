@@ -1,15 +1,15 @@
-import { base64DecodeInputStream } from './base64-decode-input-stream';
+import { base64DecodeInputStream } from "./base64-decode-input-stream";
 
 export function createStringToBytes(
   unicodeData: string,
-  numChars: number
+  numChars: number,
 ): (s: string) => number[] {
   const unicodeMap: Record<string, number> = {};
   const bin = base64DecodeInputStream(unicodeData);
 
   const read = (): number => {
     const b = bin.read();
-    if (b === -1) throw new Error('eof');
+    if (b === -1) throw new Error("eof");
     return b;
   };
 
@@ -28,7 +28,7 @@ export function createStringToBytes(
 
   if (count !== numChars) throw new Error(`${count} != ${numChars}`);
 
-  const unknownChar = '?'.codePointAt(0)!;
+  const unknownChar = "?".codePointAt(0)!;
 
   return (s: string): number[] => {
     const bytes: number[] = [];
@@ -41,7 +41,7 @@ export function createStringToBytes(
       }
 
       const b = unicodeMap[s.charAt(i)];
-      if (typeof b === 'number') {
+      if (typeof b === "number") {
         if ((b & 0xff) === b) {
           bytes.push(b);
         } else {

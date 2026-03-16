@@ -1,10 +1,10 @@
-import type { ContainedImageRect } from './contained-image-rect.type';
+import type { ContainedImageRect } from "./contained-image-rect.type";
 
 export function getContainedImageRect(
   containerWidth: number,
   containerHeight: number,
   imageWidth: number,
-  imageHeight: number
+  imageHeight: number,
 ): ContainedImageRect {
   if (containerWidth <= 0 || containerHeight <= 0 || imageWidth <= 0 || imageHeight <= 0) {
     return {

@@ -1,4 +1,4 @@
-import type { RGB } from '../../../modules/core/types';
+import type { RGB } from "../../../modules/core/types";
 
 export function overlayBlend(top: RGB, bottom: RGB): RGB {
   const blendChannel = (topValue: number, bottomValue: number) => {

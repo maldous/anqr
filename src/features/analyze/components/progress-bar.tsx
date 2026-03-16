@@ -9,7 +9,7 @@ export const ProgressBar = ({
 }>) => {
   const percentage = Math.min((value / max) * 100, 100);
   const colorClass =
-    percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-green-500';
+    percentage > 90 ? "bg-red-500" : percentage > 70 ? "bg-amber-500" : "bg-green-500";
 
   return (
     <div className="space-y-1">

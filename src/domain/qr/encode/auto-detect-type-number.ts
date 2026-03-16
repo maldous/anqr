@@ -1,11 +1,11 @@
-import { qrBitBuffer } from './bit-buffer';
-import { getRSBlocks } from './rs-blocks';
-import { getLengthInBits } from './utils';
-import type { QRDataSegment } from '../../../modules/qr-encoder/types';
+import { qrBitBuffer } from "./bit-buffer";
+import { getRSBlocks } from "./rs-blocks";
+import { getLengthInBits } from "./utils";
+import type { QRDataSegment } from "../../../modules/qr-encoder/types";
 
 export function autoDetectTypeNumber(
   errorCorrectionLevel: number,
-  dataList: QRDataSegment[]
+  dataList: QRDataSegment[],
 ): number {
   for (let typeNum = 1; typeNum < 40; typeNum++) {
     const rsBlocks = getRSBlocks(typeNum, errorCorrectionLevel);

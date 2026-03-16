@@ -1,4 +1,4 @@
-import { convolve } from './convolve';
+import { convolve } from "./convolve";
 
 export function sharpen(imageData: ImageData, amount: number = 1): ImageData {
   const kernel = [

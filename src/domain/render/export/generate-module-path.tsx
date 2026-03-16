@@ -1,4 +1,4 @@
-import type { VectorModuleStyle } from '../../../modules/exporter/types';
+import type { VectorModuleStyle } from "../../../modules/exporter/types";
 
 /**
  * Generate SVG path for a single module with styling
@@ -8,12 +8,12 @@ export function generateModulePath(
   y: number,
   size: number,
   style: VectorModuleStyle,
-  cornerRadius: number
+  cornerRadius: number,
 ): string {
   const r = (cornerRadius / 100) * (size / 2);
 
   switch (style) {
-    case 'rounded': {
+    case "rounded": {
       if (r <= 0) return `M${x},${y}h${size}v${size}h${-size}Z`;
       return (
         `M${x + r},${y}` +
@@ -27,7 +27,7 @@ export function generateModulePath(
         `a${r},${r} 0 0 1 ${r},${-r}Z`
       );
     }
-    case 'dots': {
+    case "dots": {
       const cx = x + size / 2;
       const cy = y + size / 2;
       const radius = (size / 2) * 0.85;
@@ -37,11 +37,11 @@ export function generateModulePath(
         `a${radius},${radius} 0 1 0 ${-radius * 2},0Z`
       );
     }
-    case 'diamond': {
+    case "diamond": {
       const half = size / 2;
       return `M${x + half},${y}l${half},${half}l${-half},${half}l${-half},${-half}Z`;
     }
-    case 'connected': {
+    case "connected": {
       return `M${x},${y}h${size}v${size}h${-size}Z`;
     }
     default:

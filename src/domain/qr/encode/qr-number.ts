@@ -1,5 +1,5 @@
-import type { QRBitBuffer, QRDataSegment } from '../../../modules/qr-encoder/types';
-import { QRMode } from '../../../modules/qr-encoder/types';
+import type { QRBitBuffer, QRDataSegment } from "../../../modules/qr-encoder/types";
+import { QRMode } from "../../../modules/qr-encoder/types";
 
 /**
  * Numeric mode encoder (0-9 only)
@@ -17,8 +17,8 @@ export function qrNumber(data: string): QRDataSegment {
   };
 
   const charToNum = (c: string): number => {
-    if (c >= '0' && c <= '9') {
-      return c.codePointAt(0)! - '0'.codePointAt(0)!;
+    if (c >= "0" && c <= "9") {
+      return c.codePointAt(0)! - "0".codePointAt(0)!;
     }
     throw new Error(`illegal char :${c}`);
   };

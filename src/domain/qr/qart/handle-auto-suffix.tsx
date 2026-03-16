@@ -1,21 +1,21 @@
-import type { ECCLevel } from './bit-mapping';
+import type { ECCLevel } from "./bit-mapping";
 import {
   calculateOptimalVersionAndSuffix,
   generateDeterministicNumericSuffix,
   generateDeterministicSuffix,
   hashStringToSeed,
-} from './rs-basis';
-import { log } from './log';
+} from "./rs-basis";
+import { log } from "./log";
 
 export function handleAutoSuffix(
   data: string,
   ecc: ECCLevel,
   prefix: string,
-  resolvedSuffixMode: 'numeric' | 'byte',
+  resolvedSuffixMode: "numeric" | "byte",
   originalDataLength: number,
   versionToUse: number,
   targetControlPercent: number,
-  lockVersionToMinimum: boolean
+  lockVersionToMinimum: boolean,
 ): { actualSuffix: string; encodedData: string; optimalVersion: number } {
   const controlTarget = lockVersionToMinimum || versionToUse > 0 ? 0 : targetControlPercent;
   const optimalConfig = calculateOptimalVersionAndSuffix(
@@ -23,13 +23,13 @@ export function handleAutoSuffix(
     ecc,
     originalDataLength,
     controlTarget,
-    resolvedSuffixMode
+    resolvedSuffixMode,
   );
   const seed = hashStringToSeed(data + optimalConfig.version.toString() + ecc);
 
   let actualSuffix: string;
   let encodedData: string;
-  if (resolvedSuffixMode === 'numeric') {
+  if (resolvedSuffixMode === "numeric") {
     const suffixDigits = Math.max(0, optimalConfig.suffixLength);
     actualSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
     encodedData = prefix + actualSuffix;
@@ -39,12 +39,12 @@ export function handleAutoSuffix(
     encodedData = data + actualSuffix;
   }
 
-  log.info('Auto-generated DETERMINISTIC suffix for HYBRID QR-Art', {
+  log.info("Auto-generated DETERMINISTIC suffix for HYBRID QR-Art", {
     originalDataLength,
     suffixLength: actualSuffix.length,
-    suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
+    suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? "..." : ""),
     encoding:
-      resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
+      resolvedSuffixMode === "numeric" ? "mixed (byte + numeric)" : "byte mode (single segment)",
     optimalVersion: optimalConfig.version,
     versionToUse,
     expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,

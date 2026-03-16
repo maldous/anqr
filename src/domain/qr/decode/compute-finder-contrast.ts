@@ -1,4 +1,4 @@
-import { sampleFinderContrast } from './sample-finder-contrast';
+import { sampleFinderContrast } from "./sample-finder-contrast";
 
 /**
  * Compute the average dark and light values at a candidate finder center.
@@ -10,7 +10,7 @@ export function computeFinderContrast(
   height: number,
   testX: number,
   testY: number,
-  moduleSize: number
+  moduleSize: number,
 ): { avgDark: number; avgLight: number; contrast: number } {
   const { avgDark, avgLight, contrast } = sampleFinderContrast(
     pixels,
@@ -18,7 +18,7 @@ export function computeFinderContrast(
     height,
     testX,
     testY,
-    moduleSize
+    moduleSize,
   );
   return { avgDark, avgLight, contrast };
 }

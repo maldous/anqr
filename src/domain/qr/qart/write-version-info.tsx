@@ -1,9 +1,9 @@
-import { getBCHTypeNumber } from '../encode/utils';
+import { getBCHTypeNumber } from "../encode/utils";
 
 export function writeVersionInfo(
   modules: (boolean | null)[][],
   version: number,
-  moduleCount: number
+  moduleCount: number,
 ): void {
   if (version < 7) return;
   const versionBits = getBCHTypeNumber(version);

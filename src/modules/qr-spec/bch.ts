@@ -1,1 +1,1 @@
-export * from '../../domain/qr/spec/bch';
+export * from "../../domain/qr/spec/bch";

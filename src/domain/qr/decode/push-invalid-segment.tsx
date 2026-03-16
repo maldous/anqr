@@ -1,11 +1,11 @@
-import { modeToName } from './mode-to-name';
-import type { DecodeLoopState } from './decode-loop-state';
+import { modeToName } from "./mode-to-name";
+import type { DecodeLoopState } from "./decode-loop-state";
 
 export function pushInvalidSegment(
   state: DecodeLoopState,
   mode: number,
   charCount: number,
-  bitOffset: number
+  bitOffset: number,
 ): void {
   state.segments.push({
     index: state.segmentIndex,

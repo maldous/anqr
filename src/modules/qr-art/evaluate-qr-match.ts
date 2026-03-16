@@ -1,12 +1,12 @@
-import { getAlignmentPositionsForVersion } from './get-alignment-positions-for-version';
-import { isEvalStructuralModule } from './is-eval-structural-module';
+import { getAlignmentPositionsForVersion } from "./get-alignment-positions-for-version";
+import { isEvalStructuralModule } from "./is-eval-structural-module";
 
 export function evaluateQRMatch(
   qrIsDark: (row: number, col: number) => boolean,
   moduleCount: number,
   version: number,
   targets: boolean[][],
-  importance: number[][]
+  importance: number[][],
 ): { score: number; matchingModules: number; totalControllable: number } {
   let weightedMatch = 0;
   let totalWeight = 0;

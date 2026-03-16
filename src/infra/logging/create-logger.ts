@@ -1,13 +1,13 @@
-import { captureToBuffer } from './logger-buffer-api';
+import { captureToBuffer } from "./logger-buffer-api";
 import {
   getLoglevelInstance,
   isLevelEnabledForLogger,
   shouldCaptureStructured,
-} from './logger-config';
-import { sanitizeLogContext } from './sanitize-log-context';
-import { captureErrorEvent, captureWarningBreadcrumb } from './logger-sentry';
-import { loggerState } from './logger-state';
-import type { LogContext, Logger, RuntimeLogLevel } from './logger-types';
+} from "./logger-config";
+import { sanitizeLogContext } from "./sanitize-log-context";
+import { captureErrorEvent, captureWarningBreadcrumb } from "./logger-sentry";
+import { loggerState } from "./logger-state";
+import type { LogContext, Logger, RuntimeLogLevel } from "./logger-types";
 
 const loglevel = getLoglevelInstance();
 
@@ -18,15 +18,15 @@ export function createLogger(scope: string): Logger {
   logger.setLevel(loglevel.getLevel());
 
   const emit = (
-    level: Exclude<RuntimeLogLevel, 'silent'>,
+    level: Exclude<RuntimeLogLevel, "silent">,
     message: string,
-    context?: LogContext
+    context?: LogContext,
   ): LogContext | undefined => {
     const consoleEnabled = isLevelEnabledForLogger(logger, level);
     const captureStructured = shouldCaptureStructured(level, consoleEnabled);
     const captureString = loggerState.logBufferEnabled;
     const needsSanitizedContext =
-      !!context && (captureStructured || captureString || level === 'warn' || level === 'error');
+      !!context && (captureStructured || captureString || level === "warn" || level === "error");
     const safeContext = needsSanitizedContext ? sanitizeLogContext(context) : undefined;
     const contextForConsole = safeContext ?? context;
 
@@ -51,20 +51,20 @@ export function createLogger(scope: string): Logger {
 
   return {
     trace(message: string, context?: LogContext): void {
-      emit('trace', message, context);
+      emit("trace", message, context);
     },
     debug(message: string, context?: LogContext): void {
-      emit('debug', message, context);
+      emit("debug", message, context);
     },
     info(message: string, context?: LogContext): void {
-      emit('info', message, context);
+      emit("info", message, context);
     },
     warn(message: string, context?: LogContext): void {
-      const safeContext = emit('warn', message, context);
+      const safeContext = emit("warn", message, context);
       captureWarningBreadcrumb(upperScope, message, safeContext);
     },
     error(message: string, context?: LogContext): void {
-      const safeContext = emit('error', message, context);
+      const safeContext = emit("error", message, context);
       captureErrorEvent(upperScope, message, safeContext, context);
     },
   };

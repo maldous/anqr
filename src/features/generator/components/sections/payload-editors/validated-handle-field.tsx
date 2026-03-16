@@ -1,5 +1,5 @@
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 
 export function ValidatedHandleField({
   label,
@@ -23,7 +23,7 @@ export function ValidatedHandleField({
   const input = (
     <Input
       placeholder={placeholder}
-      className={`${prefix ? 'pl-7 ' : ''}${invalid ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+      className={`${prefix ? "pl-7 " : ""}${invalid ? "border-destructive focus-visible:ring-destructive" : ""}`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />

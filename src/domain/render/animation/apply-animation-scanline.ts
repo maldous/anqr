@@ -1,5 +1,5 @@
-import { hslToRgbTuple } from '../color/color';
-import { tintScanlinePixel } from './tint-scanline-pixel';
+import { hslToRgbTuple } from "../color/color";
+import { tintScanlinePixel } from "./tint-scanline-pixel";
 
 /**
  * Apply scanline pattern effect to image data
@@ -10,7 +10,7 @@ export function applyAnimationScanline(
   progress: number,
   width: number,
   height: number,
-  seed: number
+  seed: number,
 ): void {
   const lineWidth = Math.max(4, height * 0.08);
   const lineY = progress * (height + lineWidth * 2) - lineWidth;

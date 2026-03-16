@@ -8,7 +8,7 @@ export function expandPackedQArtMatrix(packed: Uint8Array, moduleCount: number):
   const expectedLength = moduleCount * moduleCount;
   if (packed.length !== expectedLength) {
     throw new Error(
-      `Invalid packed matrix length ${packed.length}, expected ${expectedLength} for ${moduleCount}x${moduleCount}`
+      `Invalid packed matrix length ${packed.length}, expected ${expectedLength} for ${moduleCount}x${moduleCount}`,
     );
   }
 

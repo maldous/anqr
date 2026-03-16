@@ -3,10 +3,10 @@ import type {
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
-} from './types';
-import { generateBWFirstMatrix } from './generate-bw-first-matrix';
-import { log } from './log';
-import { resolveMatrixInput } from './resolve-matrix-input';
+} from "./types";
+import { generateBWFirstMatrix } from "./generate-bw-first-matrix";
+import { log } from "./log";
+import { resolveMatrixInput } from "./resolve-matrix-input";
 
 export async function resolvePreparedMatrixInput(
   params: Readonly<{
@@ -19,7 +19,7 @@ export async function resolvePreparedMatrixInput(
     qr: QRCodeInstance;
     releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
     scale: number;
-  }>
+  }>,
 ): Promise<
   | { matrix: PixelDecisionMatrix; matrixInput: null }
   | {
@@ -32,7 +32,7 @@ export async function resolvePreparedMatrixInput(
 > {
   if (params.config.qrFirstMode) {
     log.debug(
-      `QR-first mode enabled via config in ${params.modeLabel} mode - using QR-first matrix`
+      `QR-first mode enabled via config in ${params.modeLabel} mode - using QR-first matrix`,
     );
     return {
       matrix: await generateBWFirstMatrix(
@@ -43,7 +43,7 @@ export async function resolvePreparedMatrixInput(
         params.scale,
         params.effectiveIntensity,
         params.createCanvasFn,
-        params.releaseCanvasFn
+        params.releaseCanvasFn,
       ),
       matrixInput: null,
     };
@@ -58,7 +58,7 @@ export async function resolvePreparedMatrixInput(
     scale: params.scale,
   });
 
-  if ('emptyMatrix' in matrixInput) {
+  if ("emptyMatrix" in matrixInput) {
     return { matrix: matrixInput.emptyMatrix, matrixInput: null };
   }
 

@@ -1,4 +1,4 @@
-import type { SocialPlatformResult } from './social-platform-result';
+import type { SocialPlatformResult } from "./social-platform-result";
 
 export interface SocialPlatformMatcher {
   hostPatterns: string[];

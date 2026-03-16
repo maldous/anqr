@@ -1,7 +1,7 @@
 export type DecodedEncodingMode =
-  | 'numeric'
-  | 'alphanumeric'
-  | 'byte'
-  | 'kanji'
-  | 'mixed'
-  | 'unknown';
+  | "numeric"
+  | "alphanumeric"
+  | "byte"
+  | "kanji"
+  | "mixed"
+  | "unknown";

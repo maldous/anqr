@@ -1,9 +1,9 @@
-import { computeOverlayLightBlendParams } from './compute-overlay-light-blend-params';
-import { computeDitherLightBlendParams } from './compute-dither-light-blend-params';
-import { blendLightModuleColor } from './blend-light-module-color';
-import type { DitherBlendFlags } from './dither-blend-flags';
-import type { OverlayModeResult } from './render-modes.types';
-import { computeLightBlend } from './compute-light-blend';
+import { computeOverlayLightBlendParams } from "./compute-overlay-light-blend-params";
+import { computeDitherLightBlendParams } from "./compute-dither-light-blend-params";
+import { blendLightModuleColor } from "./blend-light-module-color";
+import type { DitherBlendFlags } from "./dither-blend-flags";
+import type { OverlayModeResult } from "./render-modes.types";
+import { computeLightBlend } from "./compute-light-blend";
 
 export function applyDitherLightModule(
   result: OverlayModeResult,
@@ -12,7 +12,7 @@ export function applyDitherLightModule(
   ditherR: number,
   ditherG: number,
   ditherB: number,
-  bgColor: string
+  bgColor: string,
 ): void {
   // "overlay" mode keeps unprotected functional light cells image-forward.
   // "dither" mode keeps them integrated but noticeably less pass-through.
@@ -27,7 +27,7 @@ export function applyDitherLightModule(
       params.whitePush,
       lightMix,
       bgColor,
-      1
+      1,
     );
     result.shouldDrawCell = true;
     return;
@@ -44,7 +44,7 @@ export function applyDitherLightModule(
     params.whitePush,
     lightMix,
     bgColor,
-    0.5
+    0.5,
   );
   result.shouldDrawCell = true;
 }

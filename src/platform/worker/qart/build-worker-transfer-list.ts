@@ -1,4 +1,4 @@
-import type { QArtWorkerResultPayload } from './worker-protocol';
+import type { QArtWorkerResultPayload } from "./worker-protocol";
 
 export const buildWorkerTransferList = (response: QArtWorkerResultPayload): Transferable[] => {
   const transferList: Transferable[] = [];

@@ -1,12 +1,12 @@
-import type { OverlayData } from '../../../modules/qr-generator/types';
-import { isPackedOverlayData } from './is-packed-overlay-data';
-import type { LegacyOverlayData } from './legacy-overlay-data';
+import type { OverlayData } from "../../../modules/qr-generator/types";
+import { isPackedOverlayData } from "./is-packed-overlay-data";
+import type { LegacyOverlayData } from "./legacy-overlay-data";
 
 export function getOverlayBrightness(
   overlayData: OverlayData | null | undefined,
   row: number,
   col: number,
-  fallback: number = 0.5
+  fallback: number = 0.5,
 ): number {
   if (isPackedOverlayData(overlayData)) {
     const size = overlayData.size;
@@ -18,5 +18,5 @@ export function getOverlayBrightness(
 
   const legacy = overlayData as LegacyOverlayData | null | undefined;
   const legacyValue = legacy?.[row]?.[col];
-  return typeof legacyValue === 'number' && Number.isFinite(legacyValue) ? legacyValue : fallback;
+  return typeof legacyValue === "number" && Number.isFinite(legacyValue) ? legacyValue : fallback;
 }

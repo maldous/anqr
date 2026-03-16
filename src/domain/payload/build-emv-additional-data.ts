@@ -1,4 +1,4 @@
-import type { EMVMPMParams } from '../../modules/payload-generators/types';
+import type { EMVMPMParams } from "../../modules/payload-generators/types";
 
 export function buildEMVAdditionalData(params: EMVMPMParams): Record<string, string> {
   const data: Record<string, string> = {};

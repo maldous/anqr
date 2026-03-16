@@ -12,9 +12,9 @@
  * Note: Some types are defined locally with UI-specific extensions (e.g., 'auto' for MaskPattern)
  * that are not part of the core module types.
  */
-import { create } from 'zustand';
+import { create } from "zustand";
 // Import gradient types from core types (canonical source)
-import type { GradientStop, GradientType } from '@/modules/core';
+import type { GradientStop, GradientType } from "@/modules/core";
 // Import payload generator types and functions from payload-generators module
 import {
   type CryptoHelper,
@@ -27,7 +27,7 @@ import {
   type UrlHelper,
   type VCardHelper,
   type WifiHelper,
-} from '@/modules/payload-generators';
+} from "@/modules/payload-generators";
 import type {
   AlignmentStyle,
   AnimationPatternType,
@@ -81,13 +81,13 @@ import type {
   TimingStyle,
   TWQRHelper,
   VietQRHelper,
-} from './types';
-import type { PayloadData } from './types/payload-data';
-import { applyPayloadTransforms } from './payload-serializers/apply-payload-transforms';
-import { PAYLOAD_SERIALIZERS } from './payload-serializers';
+} from "./types";
+import type { PayloadData } from "./types/payload-data";
+import { applyPayloadTransforms } from "./payload-serializers/apply-payload-transforms";
+import { PAYLOAD_SERIALIZERS } from "./payload-serializers";
 
 // Re-export types for backward compatibility
-export type * from './types';
+export type * from "./types";
 export type {
   CryptoHelper,
   EmailHelper,
@@ -101,8 +101,8 @@ export type {
   VCardVersion,
   WifiAuth,
   WifiHelper,
-} from '@/modules/payload-generators';
-export type { GradientStop, GradientType } from '@/modules/core';
+} from "@/modules/payload-generators";
+export type { GradientStop, GradientType } from "@/modules/core";
 
 // Main QR Store State
 export interface QRState {
@@ -186,7 +186,7 @@ export interface QRState {
   render: {
     modulePx: number;
     crispEdges: boolean;
-    pixelSnap: 'floor' | 'round' | 'ceil';
+    pixelSnap: "floor" | "round" | "ceil";
     moduleGapPercent: number;
     gapMode: GapMode;
     moduleStyle: ModuleStyle;
@@ -205,12 +205,12 @@ export interface QRState {
     bgColor: string;
     bgTransparent: boolean;
     palette: string[];
-    paletteMode: 'position' | 'brightness' | 'diagonal' | 'radial' | 'random' | 'row' | 'column';
+    paletteMode: "position" | "brightness" | "diagonal" | "radial" | "random" | "row" | "column";
     gradient: {
       type: GradientType;
       stops: GradientStop[];
     };
-    perModuleColorMode: 'solid' | 'by_brightness' | 'by_position' | 'by_overlay' | 'by_cluster';
+    perModuleColorMode: "solid" | "by_brightness" | "by_position" | "by_overlay" | "by_cluster";
     contrastGuard: boolean;
     minContrastRatio: number;
   };
@@ -228,7 +228,7 @@ export interface QRState {
   setRenderFgColor: (color: string) => void;
   setRenderBgColor: (color: string) => void;
   setRenderBgTransparent: (transparent: boolean) => void;
-  setRenderGradient: (gradient: Partial<QRState['render']['gradient']>) => void;
+  setRenderGradient: (gradient: Partial<QRState["render"]["gradient"]>) => void;
 
   // Internal: saved QR settings before artwork mode override (restored on mode switch back)
   _preArtworkQr: { ecc: ECCLevel; version: number } | null;
@@ -239,7 +239,7 @@ export interface QRState {
     file: File | null;
     url: string;
     type: OverlayType;
-    framePick: 'all' | 'every_n' | 'max_frames' | 'duration_limit';
+    framePick: "all" | "every_n" | "max_frames" | "duration_limit";
     // Crop & transform
     cropEnabled: boolean;
     cropRegion: CropRegion;
@@ -259,7 +259,7 @@ export interface QRState {
     sharpen: number;
     posterizeLevels: number;
     threshold: number;
-    edgeDetect: 'off' | 'sobel' | 'canny';
+    edgeDetect: "off" | "sobel" | "canny";
     // Blend
     mode: OverlayMode;
     intensity: number;
@@ -269,35 +269,35 @@ export interface QRState {
     protectFormatInfo: boolean;
     protectVersionInfo: boolean;
     // Subpixel
-    subpixelGridSize: '2x2' | '3x3' | '4x4';
-    subpixelCenterRule: 'strict' | 'halftone_center';
+    subpixelGridSize: "2x2" | "3x3" | "4x4";
+    subpixelCenterRule: "strict" | "halftone_center";
     subpixelNeutralColor: string;
-    subpixelFinderOverride: 'solid' | 'stylized';
+    subpixelFinderOverride: "solid" | "stylized";
     // Dither
     ditherKind: DitherKind;
     ditherStrength: number;
     finderDitherStrength: number;
     blendPreservations: boolean;
-    blendPreservationMode: 'overlay' | 'dither';
+    blendPreservationMode: "overlay" | "dither";
     ditherSerpentine: boolean;
     diffusionKernel: DiffusionKernel;
     orderedMatrix: OrderedMatrix;
     blueNoiseTileSize: number;
     blueNoiseSeed: number;
-    colorDither: 'none' | 'per_channel' | 'perceptual';
+    colorDither: "none" | "per_channel" | "perceptual";
     // Halftone
-    halftoneCell: 'per_module' | 'n×n';
-    halftoneDotShape: 'circle' | 'square' | 'line';
+    halftoneCell: "per_module" | "n×n";
+    halftoneDotShape: "circle" | "square" | "line";
     duotoneColors: [string, string];
-    brightnessCurve: 'linear' | 's-curve' | 'gamma';
+    brightnessCurve: "linear" | "s-curve" | "gamma";
     // ECC aware
     eccAwareEnabled: boolean;
     eccAwareRiskBudget: number;
-    eccAwareWeightMap: 'distance_to_finders' | 'block_heatmap' | 'empirical_scan_heatmap';
+    eccAwareWeightMap: "distance_to_finders" | "block_heatmap" | "empirical_scan_heatmap";
     // GIF specific
     gifUseFrameDelays: boolean;
     gifMaxFps: number;
-    gifDisposalHandling: 'respect' | 'simplify';
+    gifDisposalHandling: "respect" | "simplify";
     // QR-first mode (forces QR data preservation for high-contrast images)
     qrFirstMode: boolean;
     // QR-Art settings (fragment search for artwork mode)
@@ -333,7 +333,7 @@ export interface QRState {
   setOverlaySharpen: (sharpen: number) => void;
   setOverlayPosterize: (levels: number) => void;
   setOverlayThreshold: (threshold: number) => void;
-  setOverlayEdgeDetect: (edge: 'off' | 'sobel' | 'canny') => void;
+  setOverlayEdgeDetect: (edge: "off" | "sobel" | "canny") => void;
 
   // === ANIMATION ===
   animation: {
@@ -345,8 +345,8 @@ export interface QRState {
     maxFrames: number;
     frameStep: number;
     perFrameDelay: number[];
-    interpolate: 'none' | 'crossfade' | 'morph';
-    temporalDither: 'off' | 'blue_noise' | 'flicker_safe';
+    interpolate: "none" | "crossfade" | "morph";
+    temporalDither: "off" | "blue_noise" | "flicker_safe";
     seed: number;
     pattern: AnimationPatternType;
     target: AnimationTarget;
@@ -383,11 +383,11 @@ export interface QRState {
     gifDisposal: string;
     // SVG
     svgTrueVector: boolean;
-    svgShapePrecision: 'pixel' | 'precise';
+    svgShapePrecision: "pixel" | "precise";
     svgEmbedRasterOverlay: boolean;
     svgMetadata: Record<string, string>;
     // Extra formats
-    formatExtra: 'none' | 'eps' | 'animated_webp';
+    formatExtra: "none" | "eps" | "animated_webp";
   };
   setOutputFormat: (format: OutputFormat) => void;
   setOutputWidth: (width: number) => void;
@@ -401,17 +401,17 @@ export interface QRState {
   // === WATERMARK ===
   watermark: {
     enabled: boolean;
-    kind: 'text' | 'image' | 'pattern';
+    kind: "text" | "image" | "pattern";
     text: string;
     image: File | null;
-    position: 'center' | 'corners' | 'edges' | 'behind' | 'quiet_zone';
+    position: "center" | "corners" | "edges" | "behind" | "quiet_zone";
     opacity: number;
-    blend: 'normal' | 'multiply' | 'screen' | 'overlay';
+    blend: "normal" | "multiply" | "screen" | "overlay";
   };
   setWatermarkEnabled: (enabled: boolean) => void;
-  setWatermarkKind: (kind: QRState['watermark']['kind']) => void;
+  setWatermarkKind: (kind: QRState["watermark"]["kind"]) => void;
   setWatermarkText: (text: string) => void;
-  setWatermarkPosition: (position: QRState['watermark']['position']) => void;
+  setWatermarkPosition: (position: QRState["watermark"]["position"]) => void;
   setWatermarkOpacity: (opacity: number) => void;
 
   // === METADATA ===
@@ -424,7 +424,7 @@ export interface QRState {
     creationTime: boolean;
     customKv: Array<{ k: string; v: string }>;
   };
-  setMetadata: (meta: Partial<QRState['metadata']>) => void;
+  setMetadata: (meta: Partial<QRState["metadata"]>) => void;
 
   // === SAFETY ===
   safety: {
@@ -443,10 +443,10 @@ export interface QRState {
   setSafetyLocks: (
     locks: Partial<
       Pick<
-        QRState['safety'],
-        'lockFinders' | 'lockTiming' | 'lockAlign' | 'lockFormat' | 'lockVersion'
+        QRState["safety"],
+        "lockFinders" | "lockTiming" | "lockAlign" | "lockFormat" | "lockVersion"
       >
-    >
+    >,
   ) => void;
 
   // === QA / ANALYSIS ===
@@ -477,7 +477,7 @@ export interface QRState {
     embedHtml: boolean;
     encodeMoreParams: boolean;
   };
-  setShare: (share: Partial<QRState['share']>) => void;
+  setShare: (share: Partial<QRState["share"]>) => void;
 
   // === UI STATE ===
   searchQuery: string;
@@ -492,7 +492,7 @@ const PREMIUM_DURATION_MS = 24 * 60 * 60 * 1000;
 
 export const useQRStore = create<QRState>((set, get) => ({
   // Tier
-  tier: 'basic',
+  tier: "basic",
   setTier: (tier) => set({ tier }),
 
   // Premium access (from watching rewarded ad)
@@ -521,63 +521,63 @@ export const useQRStore = create<QRState>((set, get) => ({
     const state = get();
     // Check if premium access is active
     if (state.checkPremiumAccess()) {
-      return 'professional';
+      return "professional";
     }
     return state.tier;
   },
 
   // Payload defaults
   payload: {
-    kind: 'url',
-    text: 'https://anqr.link',
-    url: { href: 'https://anqr.link', forceHttps: false },
-    tel: { number: '' },
-    email: { to: '' },
-    sms: { number: '' },
+    kind: "url",
+    text: "https://anqr.link",
+    url: { href: "https://anqr.link", forceHttps: false },
+    tel: { number: "" },
+    email: { to: "" },
+    sms: { number: "" },
     geo: { lat: 0, lon: 0 },
-    wifi: { ssid: '', auth: 'WPA2', hidden: false },
-    vcard: { version: '2.1' },
+    wifi: { ssid: "", auth: "WPA2", hidden: false },
+    vcard: { version: "2.1" },
     mecard: {},
     event: {},
-    crypto: { type: 'bitcoin', address: '' },
-    otpauth: { type: 'totp' },
+    crypto: { type: "bitcoin", address: "" },
+    otpauth: { type: "totp" },
     // Additional content type defaults
     bizcard: {},
-    messaging: { platform: 'whatsapp', identifier: '' },
-    socialProfile: { platform: 'linkedin', username: '' },
-    appLink: { platform: 'universal' },
-    gs1: { gtin: '', resolver: 'id.gs1.org' },
-    cloudLink: { service: 'gdrive', url: '' },
-    calendarSub: { url: '' },
+    messaging: { platform: "whatsapp", identifier: "" },
+    socialProfile: { platform: "linkedin", username: "" },
+    appLink: { platform: "universal" },
+    gs1: { gtin: "", resolver: "id.gs1.org" },
+    cloudLink: { service: "gdrive", url: "" },
+    calendarSub: { url: "" },
     eventRsvp: {},
     // Payment helpers defaults
     swissQRBill: {
-      creditorIBAN: '',
-      creditorName: '',
-      creditorAddressType: 'S',
-      creditorCountry: 'CH',
-      currency: 'CHF',
-      referenceType: 'NON',
+      creditorIBAN: "",
+      creditorName: "",
+      creditorAddressType: "S",
+      creditorCountry: "CH",
+      currency: "CHF",
+      referenceType: "NON",
     },
-    lightning: { invoice: '' },
-    ethereum: { targetAddress: '' },
-    qris: { merchantId: '', merchantName: '', merchantCity: '' },
-    duitnow: { proxyType: 'MOBILE', proxyValue: '', merchantName: '' },
-    bharatqr: { merchantName: '', merchantCity: '' },
-    vietqr: { bankBin: '', accountNumber: '' },
-    qrph: { accountNumber: '', merchantName: '', merchantCity: '' },
-    twqr: { merchantId: '', merchantName: '', merchantCity: '' },
-    hkqr: { fpsId: '', merchantName: '' },
-    jpqr: { storeId: '', merchantName: '' },
-    auspaynet: { merchantName: '' },
-    paypalMe: { username: '' },
-    cashapp: { cashtag: '' },
+    lightning: { invoice: "" },
+    ethereum: { targetAddress: "" },
+    qris: { merchantId: "", merchantName: "", merchantCity: "" },
+    duitnow: { proxyType: "MOBILE", proxyValue: "", merchantName: "" },
+    bharatqr: { merchantName: "", merchantCity: "" },
+    vietqr: { bankBin: "", accountNumber: "" },
+    qrph: { accountNumber: "", merchantName: "", merchantCity: "" },
+    twqr: { merchantId: "", merchantName: "", merchantCity: "" },
+    hkqr: { fpsId: "", merchantName: "" },
+    jpqr: { storeId: "", merchantName: "" },
+    auspaynet: { merchantName: "" },
+    paypalMe: { username: "" },
+    cashapp: { cashtag: "" },
     emvGeneric: {
-      merchantId: '',
-      merchantName: '',
-      merchantCity: '',
-      countryCode: '',
-      currencyCode: '',
+      merchantId: "",
+      merchantName: "",
+      merchantCity: "",
+      countryCode: "",
+      currencyCode: "",
     },
     validate: false,
     normalizeNewlines: false,
@@ -679,10 +679,10 @@ export const useQRStore = create<QRState>((set, get) => ({
   // QR defaults
   qr: {
     version: 0,
-    ecc: 'H',
-    encodingMode: 'auto',
-    maskPattern: 'auto',
-    characterEncoding: 'default',
+    ecc: "H",
+    encodingMode: "auto",
+    maskPattern: "auto",
+    characterEncoding: "default",
     quietZoneModules: 4,
     quietZoneMinEnforce: true,
     borderModulesExtra: 0,
@@ -701,27 +701,27 @@ export const useQRStore = create<QRState>((set, get) => ({
   render: {
     modulePx: 20,
     crispEdges: true,
-    pixelSnap: 'floor',
+    pixelSnap: "floor",
     moduleGapPercent: 0,
-    gapMode: 'none',
-    moduleStyle: 'square',
-    finderStyle: 'square',
-    alignmentStyle: 'match_finder',
-    timingStyle: 'match_module',
+    gapMode: "none",
+    moduleStyle: "square",
+    finderStyle: "square",
+    alignmentStyle: "match_finder",
+    timingStyle: "match_module",
     cornerRadius: 0,
     dotRotationDeg: 0,
-    eyeOuterStyle: 'square',
-    eyeInnerStyle: 'square',
+    eyeOuterStyle: "square",
+    eyeInnerStyle: "square",
     eyeScale: 100,
-    frameStyle: 'none',
-    frameText: '',
-    fgColor: '#000000',
-    bgColor: '#ffffff',
+    frameStyle: "none",
+    frameText: "",
+    fgColor: "#000000",
+    bgColor: "#ffffff",
     bgTransparent: false,
     palette: [],
-    paletteMode: 'position',
-    gradient: { type: 'none', stops: [] },
-    perModuleColorMode: 'solid',
+    paletteMode: "position",
+    gradient: { type: "none", stops: [] },
+    perModuleColorMode: "solid",
     contrastGuard: false,
     minContrastRatio: 4.5,
   },
@@ -754,16 +754,16 @@ export const useQRStore = create<QRState>((set, get) => ({
   overlay: {
     enabled: false,
     file: null,
-    url: '',
-    type: 'static',
-    framePick: 'all',
+    url: "",
+    type: "static",
+    framePick: "all",
     cropEnabled: false,
     cropRegion: { x: 0.5, y: 0.5, size: 1 },
-    fit: 'cover',
+    fit: "cover",
     rotateDeg: 0,
     flipX: false,
     flipY: false,
-    colorMode: 'color',
+    colorMode: "color",
     invert: false,
     brightness: 0,
     contrast: 0,
@@ -775,39 +775,39 @@ export const useQRStore = create<QRState>((set, get) => ({
     posterizeLevels: 0,
     // 0 disables hard thresholding. Any positive value applies a binary threshold.
     threshold: 0,
-    edgeDetect: 'off',
-    mode: 'dithered',
+    edgeDetect: "off",
+    mode: "dithered",
     intensity: 50,
     preserveFinders: true,
     preserveTiming: true,
     preserveAlignment: true,
     protectFormatInfo: true,
     protectVersionInfo: true,
-    subpixelGridSize: '3x3',
-    subpixelCenterRule: 'strict',
-    subpixelNeutralColor: '#808080',
-    subpixelFinderOverride: 'solid',
-    ditherKind: 'error_diffusion',
+    subpixelGridSize: "3x3",
+    subpixelCenterRule: "strict",
+    subpixelNeutralColor: "#808080",
+    subpixelFinderOverride: "solid",
+    ditherKind: "error_diffusion",
     ditherStrength: 50,
     finderDitherStrength: 65,
     blendPreservations: false,
-    blendPreservationMode: 'overlay',
+    blendPreservationMode: "overlay",
     ditherSerpentine: false,
-    diffusionKernel: 'floyd_steinberg',
-    orderedMatrix: 'bayer4',
+    diffusionKernel: "floyd_steinberg",
+    orderedMatrix: "bayer4",
     blueNoiseTileSize: 64,
     blueNoiseSeed: 0,
-    colorDither: 'none',
-    halftoneCell: 'per_module',
-    halftoneDotShape: 'circle',
-    duotoneColors: ['#000000', '#ffffff'],
-    brightnessCurve: 'linear',
+    colorDither: "none",
+    halftoneCell: "per_module",
+    halftoneDotShape: "circle",
+    duotoneColors: ["#000000", "#ffffff"],
+    brightnessCurve: "linear",
     eccAwareEnabled: false,
     eccAwareRiskBudget: 50,
-    eccAwareWeightMap: 'distance_to_finders',
+    eccAwareWeightMap: "distance_to_finders",
     gifUseFrameDelays: true,
     gifMaxFps: 30,
-    gifDisposalHandling: 'respect',
+    gifDisposalHandling: "respect",
     qrFirstMode: false,
     qrartIterations: 10000,
     qrartFragmentLength: 8,
@@ -818,7 +818,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     set((s) => ({ overlay: { ...s.overlay, file, enabled: !!file || !!s.overlay.url } })),
   setOverlayUrl: (url) => set((s) => ({ overlay: { ...s.overlay, url } })),
   clearOverlay: () =>
-    set((s) => ({ overlay: { ...s.overlay, file: null, url: '', enabled: false } })),
+    set((s) => ({ overlay: { ...s.overlay, file: null, url: "", enabled: false } })),
   setOverlayType: (type) => set((s) => ({ overlay: { ...s.overlay, type } })),
   setOverlayCrop: (crop) =>
     set((s) => ({
@@ -845,13 +845,13 @@ export const useQRStore = create<QRState>((set, get) => ({
   setOverlayGamma: (gamma) => set((s) => ({ overlay: { ...s.overlay, gamma } })),
   setOverlayMode: (mode) =>
     set((s) => {
-      const enteringArtwork = mode === 'artwork' && s.overlay.mode !== 'artwork';
-      const leavingArtwork = mode !== 'artwork' && s.overlay.mode === 'artwork';
+      const enteringArtwork = mode === "artwork" && s.overlay.mode !== "artwork";
+      const leavingArtwork = mode !== "artwork" && s.overlay.mode === "artwork";
 
       if (enteringArtwork) {
         return {
           overlay: { ...s.overlay, mode },
-          qr: { ...s.qr, ecc: 'L' as ECCLevel, version: 6 },
+          qr: { ...s.qr, ecc: "L" as ECCLevel, version: 6 },
           _preArtworkQr: { ecc: s.qr.ecc, version: s.qr.version },
         };
       }
@@ -898,15 +898,15 @@ export const useQRStore = create<QRState>((set, get) => ({
     maxFrames: 0, // 0 = auto (use source frames, capped for performance)
     frameStep: 1,
     perFrameDelay: [],
-    interpolate: 'none',
-    temporalDither: 'off',
+    interpolate: "none",
+    temporalDither: "off",
     seed: 0,
-    pattern: 'none',
-    target: 'result',
-    waveAxis: 'y',
-    pattern2: 'none',
-    target2: 'result',
-    waveAxis2: 'x',
+    pattern: "none",
+    target: "result",
+    waveAxis: "y",
+    pattern2: "none",
+    target2: "result",
+    waveAxis2: "x",
     moduleJitterPx: 0,
     colorCycle: false,
   },
@@ -921,24 +921,24 @@ export const useQRStore = create<QRState>((set, get) => ({
 
   // Output defaults
   output: {
-    format: 'gif',
+    format: "gif",
     widthPx: 400,
     heightPx: 400,
     quality: 0.9,
-    filename: 'anqr-qrcode',
+    filename: "anqr-qrcode",
     includeQuietZone: true,
     dpi: 72,
-    bgOverride: '',
+    bgOverride: "",
     gifPaletteSize: 256,
-    gifQuantizer: 'median_cut',
-    gifDither: 'floyd',
-    gifTransparentColor: '',
-    gifDisposal: 'keep',
+    gifQuantizer: "median_cut",
+    gifDither: "floyd",
+    gifTransparentColor: "",
+    gifDisposal: "keep",
     svgTrueVector: false,
-    svgShapePrecision: 'pixel',
+    svgShapePrecision: "pixel",
     svgEmbedRasterOverlay: true,
     svgMetadata: {},
-    formatExtra: 'none',
+    formatExtra: "none",
   },
   setOutputFormat: (format) => set((s) => ({ output: { ...s.output, format } })),
   setOutputWidth: (widthPx) =>
@@ -966,12 +966,12 @@ export const useQRStore = create<QRState>((set, get) => ({
   // Watermark defaults
   watermark: {
     enabled: false,
-    kind: 'text',
-    text: '',
+    kind: "text",
+    text: "",
     image: null,
-    position: 'center',
+    position: "center",
     opacity: 50,
-    blend: 'normal',
+    blend: "normal",
   },
   setWatermarkEnabled: (enabled) => set((s) => ({ watermark: { ...s.watermark, enabled } })),
   setWatermarkKind: (kind) => set((s) => ({ watermark: { ...s.watermark, kind } })),
@@ -981,11 +981,11 @@ export const useQRStore = create<QRState>((set, get) => ({
 
   // Metadata defaults
   metadata: {
-    title: '',
-    author: '',
-    copyright: '',
-    license: '',
-    description: '',
+    title: "",
+    author: "",
+    copyright: "",
+    license: "",
+    description: "",
     creationTime: false,
     customKv: [],
   },
@@ -993,7 +993,7 @@ export const useQRStore = create<QRState>((set, get) => ({
 
   // Safety defaults
   safety: {
-    mode: 'off',
+    mode: "off",
     minModulePx: 2,
     minQuietZoneModules: 4,
     lockFinders: true,
@@ -1038,7 +1038,7 @@ export const useQRStore = create<QRState>((set, get) => ({
   setShare: (share) => set((s) => ({ share: { ...s.share, ...share } })),
 
   // UI state
-  searchQuery: '',
+  searchQuery: "",
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 
   // Generate final payload text based on kind

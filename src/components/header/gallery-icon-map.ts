@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from "lucide-react";
 import {
   Contrast,
   Film,
@@ -13,7 +13,7 @@ import {
   Shapes,
   Sliders,
   Sparkles,
-} from 'lucide-react';
+} from "lucide-react";
 
 export const GALLERY_ICON_MAP: Record<string, LucideIcon> = {
   QrCode,

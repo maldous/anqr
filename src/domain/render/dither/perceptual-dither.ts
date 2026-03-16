@@ -1,15 +1,15 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { resolveDiffusionDitherOptions } from './diffusion-dither-options';
-import type { PerceptualDitherOptions } from './perceptual-dither-options';
-import { quantizePerceptualPixel } from './quantize-perceptual-pixel';
-import { runKernelDither } from './run-kernel-dither';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { resolveDiffusionDitherOptions } from "./diffusion-dither-options";
+import type { PerceptualDitherOptions } from "./perceptual-dither-options";
+import { quantizePerceptualPixel } from "./quantize-perceptual-pixel";
+import { runKernelDither } from "./run-kernel-dither";
 
 /** Perceptual dithering - uses perceptual luminance weighting */
 export function perceptualDither(
   imageData: Float32Array[],
   width: number,
   height: number,
-  options: PerceptualDitherOptions = {}
+  options: PerceptualDitherOptions = {},
 ): DitherResult {
   const { colorMode, kernel, serpentine, step, strengthFactor } =
     resolveDiffusionDitherOptions(options);

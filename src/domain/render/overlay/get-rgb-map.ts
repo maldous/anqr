@@ -1,4 +1,4 @@
-import { createRGBMap } from './create-rgb-map';
+import { createRGBMap } from "./create-rgb-map";
 
 export function getRGBMap(imageData: ImageData): {
   r: Float32Array;

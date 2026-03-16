@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
-import { Check, ClipboardCopy } from 'lucide-react';
-import { Button } from '@/ui/primitives/button';
+import { useCallback, useState } from "react";
+import { Check, ClipboardCopy } from "lucide-react";
+import { Button } from "@/ui/primitives/button";
 
 export const CopyButton = ({
   text,
   label,
-  className = '',
+  className = "",
 }: Readonly<{
   text: string;
   label?: string;

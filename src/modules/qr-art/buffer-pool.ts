@@ -1,1 +1,1 @@
-export * from '../../domain/qr/qart/buffer-pool';
+export * from "../../domain/qr/qart/buffer-pool";

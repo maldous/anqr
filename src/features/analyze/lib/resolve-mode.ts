@@ -1,19 +1,19 @@
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import type { ReproductionQrState, ValidEncoderMode } from './reproduction-types';
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { ReproductionQrState, ValidEncoderMode } from "./reproduction-types";
 
 export function resolveMode(
   isGeneratorSource: boolean,
   result: QRAnalysisResult,
-  qrState: ReproductionQrState
+  qrState: ReproductionQrState,
 ): ValidEncoderMode | undefined {
   const candidate = isGeneratorSource ? qrState.encodingMode : result.encodingMode;
 
   if (
-    candidate === 'numeric' ||
-    candidate === 'alphanumeric' ||
-    candidate === 'byte' ||
-    candidate === 'kanji' ||
-    candidate === 'auto'
+    candidate === "numeric" ||
+    candidate === "alphanumeric" ||
+    candidate === "byte" ||
+    candidate === "kanji" ||
+    candidate === "auto"
   ) {
     return candidate;
   }

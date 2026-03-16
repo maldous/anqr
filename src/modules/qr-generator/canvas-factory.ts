@@ -1,1 +1,1 @@
-export * from '../../platform/browser/canvas/canvas-factory';
+export * from "../../platform/browser/canvas/canvas-factory";

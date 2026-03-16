@@ -1,1 +1,1 @@
-export * from '../../platform/native/ads/admob';
+export * from "../../platform/native/ads/admob";

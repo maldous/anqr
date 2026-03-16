@@ -1,7 +1,7 @@
-import { IllegalArgumentException } from './exceptions';
-import { arraycopy } from './util';
-import { gfAddOrSubtract, type GFField } from './gf-field.types';
-import { formatPolyTerm } from './format-poly-term';
+import { IllegalArgumentException } from "./exceptions";
+import { arraycopy } from "./util";
+import { gfAddOrSubtract, type GFField } from "./gf-field.types";
+import { formatPolyTerm } from "./format-poly-term";
 
 /**
  * Polynomial over a Galois Field
@@ -65,7 +65,7 @@ export class GenericGFPoly {
 
   addOrSubtract(other: GenericGFPoly): GenericGFPoly {
     if (!this.field.equals(other.field)) {
-      throw new IllegalArgumentException('GenericGFPolys do not have same GenericGF field');
+      throw new IllegalArgumentException("GenericGFPolys do not have same GenericGF field");
     }
     if (this.isZero()) return other;
     if (other.isZero()) return this;
@@ -88,7 +88,7 @@ export class GenericGFPoly {
 
   multiply(other: GenericGFPoly): GenericGFPoly {
     if (!this.field.equals(other.field)) {
-      throw new IllegalArgumentException('GenericGFPolys do not have same GenericGF field');
+      throw new IllegalArgumentException("GenericGFPolys do not have same GenericGF field");
     }
     if (this.isZero() || other.isZero()) return this.field.getZero();
     const aCoefficients = this.coefficients;
@@ -101,7 +101,7 @@ export class GenericGFPoly {
       for (let j = 0; j < bLength; j++) {
         product[i + j] = gfAddOrSubtract(
           product[i + j],
-          this.field.multiply(aCoeff, bCoefficients[j])
+          this.field.multiply(aCoeff, bCoefficients[j]),
         );
       }
     }
@@ -132,9 +132,9 @@ export class GenericGFPoly {
 
   divide(other: GenericGFPoly): GenericGFPoly[] {
     if (!this.field.equals(other.field)) {
-      throw new IllegalArgumentException('GenericGFPolys do not have same GenericGF field');
+      throw new IllegalArgumentException("GenericGFPolys do not have same GenericGF field");
     }
-    if (other.isZero()) throw new IllegalArgumentException('Divide by 0');
+    if (other.isZero()) throw new IllegalArgumentException("Divide by 0");
 
     let quotient: GenericGFPoly = this.field.getZero();
     let remainder = new GenericGFPoly(this.field, this.coefficients);
@@ -145,7 +145,7 @@ export class GenericGFPoly {
       const degreeDifference = remainder.getDegree() - other.getDegree();
       const scale = this.field.multiply(
         remainder.getCoefficient(remainder.getDegree()),
-        inverseDenominatorLeadingTerm
+        inverseDenominatorLeadingTerm,
       );
       const term = other.multiplyByMonomial(degreeDifference, scale);
       const iterationQuotient = this.field.buildMonomial(degreeDifference, scale);
@@ -156,7 +156,7 @@ export class GenericGFPoly {
   }
 
   toString(): string {
-    let result = '';
+    let result = "";
     for (let degree = this.getDegree(); degree >= 0; degree--) {
       const coefficient = this.getCoefficient(degree);
       if (coefficient === 0) continue;

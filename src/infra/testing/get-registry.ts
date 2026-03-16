@@ -1,5 +1,5 @@
-import { REGISTRY_KEY } from './registry-key';
-import type { RegistryState } from './registry-state';
+import { REGISTRY_KEY } from "./registry-key";
+import type { RegistryState } from "./registry-state";
 
 export function getRegistry(): RegistryState {
   const bag = globalThis as Record<string, unknown>;

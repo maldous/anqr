@@ -1,10 +1,10 @@
-import { log } from './log';
-import { checkBlockByteViolations } from './check-block-byte-violations';
+import { log } from "./log";
+import { checkBlockByteViolations } from "./check-block-byte-violations";
 
 export function verifyProtectedBytes(
   blockDataArrays: Uint8Array[],
   modifiedBlockData: Uint8Array[],
-  blockAllowedBits: Map<number, Set<number>>
+  blockAllowedBits: Map<number, Set<number>>,
 ): {
   valid: boolean;
   violations: Array<{
@@ -31,7 +31,7 @@ export function verifyProtectedBytes(
     checkBlockByteViolations(blockIdx, originalData, modifiedData, allowedBitsInBlock, violations);
 
     const firstProtectedBytes = Math.min(24, originalData.length);
-    log.debug('BLOCK HEAD BYTES (orig vs mod)', {
+    log.debug("BLOCK HEAD BYTES (orig vs mod)", {
       blockIdx,
       blockDataBytes: originalData.length,
       allowedBitsCount: allowedBitsInBlock.size,

@@ -1,4 +1,4 @@
-import type { VectorFinderStyle } from '../../../modules/exporter/types';
+import type { VectorFinderStyle } from "../../../modules/exporter/types";
 
 export function generateStyledRingSvg(
   startX: number,
@@ -7,11 +7,11 @@ export function generateStyledRingSvg(
   middleSize: number,
   style: VectorFinderStyle,
   moduleSize: number,
-  fillColor: string
+  fillColor: string,
 ): string {
   const middleOffset = (outerSize - middleSize) / 2;
 
-  if (style === 'circle') {
+  if (style === "circle") {
     const cx = startX + outerSize / 2;
     const cy = startY + outerSize / 2;
     const outerR = outerSize / 2;
@@ -19,7 +19,7 @@ export function generateStyledRingSvg(
     return `<path d="M${cx - outerR},${cy}a${outerR},${outerR} 0 1 0 ${outerR * 2},0a${outerR},${outerR} 0 1 0 ${-outerR * 2},0Z M${cx - innerR},${cy}a${innerR},${innerR} 0 1 1 ${innerR * 2},0a${innerR},${innerR} 0 1 1 ${-innerR * 2},0Z" fill="${fillColor}" fill-rule="evenodd"/>`;
   }
 
-  if (style === 'rounded') {
+  if (style === "rounded") {
     const roundedRadius = (outerSize - middleSize) / 2;
     const middleRadius = roundedRadius / 2;
     const middleX = startX + middleOffset;

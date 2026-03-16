@@ -1,4 +1,4 @@
-import { rgbToGray } from '../color/color';
+import { rgbToGray } from "../color/color";
 
 export function saturation(imageData: ImageData, amount: number): ImageData {
   const data = imageData.data;

@@ -1,7 +1,7 @@
-import type { VCardHelper } from '../../modules/payload-generators/types';
-import { escapeValue, isValidUrl } from '../../modules/payload-generators/utils';
-import { appendValidTelLines } from './append-valid-tel-lines';
-import { appendValidEmailLines } from './append-valid-email-lines';
+import type { VCardHelper } from "../../modules/payload-generators/types";
+import { escapeValue, isValidUrl } from "../../modules/payload-generators/utils";
+import { appendValidTelLines } from "./append-valid-tel-lines";
+import { appendValidEmailLines } from "./append-valid-email-lines";
 
 export function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
   if (params.org) {

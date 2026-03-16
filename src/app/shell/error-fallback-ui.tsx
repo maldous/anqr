@@ -1,6 +1,6 @@
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { Button } from '@/ui/primitives/button';
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/ui/primitives/button";
 
 export function ErrorFallbackUI({
   error,
@@ -19,12 +19,12 @@ export function ErrorFallbackUI({
 
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-foreground">
-            {t('error.title', 'Something went wrong')}
+            {t("error.title", "Something went wrong")}
           </h1>
           <p className="text-muted-foreground">
             {t(
-              'error.description',
-              'An unexpected error occurred. Please try refreshing the page.'
+              "error.description",
+              "An unexpected error occurred. Please try refreshing the page.",
             )}
           </p>
         </div>
@@ -38,15 +38,15 @@ export function ErrorFallbackUI({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button onClick={onRetry} variant="default">
             <RefreshCw className="h-4 w-4 mr-2" />
-            {t('error.retry', 'Try Again')}
+            {t("error.retry", "Try Again")}
           </Button>
           <Button
             onClick={() => {
-              globalThis.location.href = '/';
+              globalThis.location.href = "/";
             }}
             variant="outline"
           >
-            {t('error.goHome', 'Go to Home')}
+            {t("error.goHome", "Go to Home")}
           </Button>
         </div>
       </div>

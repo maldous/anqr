@@ -1,21 +1,21 @@
-import { FileText, Globe, Image as ImageIcon } from 'lucide-react';
-import { parseVCardPayload } from './payload-parsers';
-import type { DetailEntry } from './detail-entry';
+import { FileText, Globe, Image as ImageIcon } from "lucide-react";
+import { parseVCardPayload } from "./payload-parsers";
+import type { DetailEntry } from "./detail-entry";
 
 export function appendVCardExtras(
   details: DetailEntry[],
-  vcardData: ReturnType<typeof parseVCardPayload>
+  vcardData: ReturnType<typeof parseVCardPayload>,
 ): void {
   if (vcardData.birthday) {
     details.push({
-      label: 'Birthday',
+      label: "Birthday",
       value: vcardData.birthday,
       icon: <FileText className="w-3 h-3" />,
     });
   }
   if (vcardData.url) {
     details.push({
-      label: 'Website',
+      label: "Website",
       value: (
         <a
           href={String(vcardData.url)}
@@ -31,19 +31,19 @@ export function appendVCardExtras(
   }
   if (vcardData.note) {
     details.push({
-      label: 'Notes',
+      label: "Notes",
       value: (
         <span className="text-xs">
           {String(vcardData.note).slice(0, 100)}
-          {String(vcardData.note).length > 100 ? '...' : ''}
+          {String(vcardData.note).length > 100 ? "..." : ""}
         </span>
       ),
       icon: <FileText className="w-3 h-3" />,
     });
   }
-  if (vcardData.hasPhoto === 'true') {
+  if (vcardData.hasPhoto === "true") {
     details.push({
-      label: 'Photo',
+      label: "Photo",
       value: <span className="text-green-600 dark:text-green-400">Embedded</span>,
       icon: <ImageIcon className="w-3 h-3" />,
     });

@@ -1,7 +1,7 @@
-import { createLogger } from '@/infra/logging/logger';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
-import { getStringToBytes, setStringToBytes } from '@/modules/qr-encoder';
-import { nowMs } from './formatters';
+import { createLogger } from "@/infra/logging/logger";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { getStringToBytes, setStringToBytes } from "@/modules/qr-encoder";
+import { nowMs } from "./formatters";
 import {
   computeCanvasSizing,
   computeMarginModules,
@@ -10,19 +10,19 @@ import {
   renderQRToCanvas,
   resolveColors,
   runMatrixDiagnostics,
-} from './reproduction-canvas';
+} from "./reproduction-canvas";
 import {
   buildEncoderInput,
   createQRWithFallback,
   resolveEffectiveMode,
   resolveFinalVersion,
   resolveReproductionParams,
-} from './reproduction-encode';
-import type { ValidEncoderMode } from './reproduction-types';
+} from "./reproduction-encode";
+import type { ValidEncoderMode } from "./reproduction-types";
 
-const log = createLogger('ANALYZE');
+const log = createLogger("ANALYZE");
 const ENABLE_ANALYZE_MATRIX_DIAGNOSTICS =
-  import.meta.env.DEV && import.meta.env.VITE_ANALYZE_MATRIX_DIAGNOSTICS === '1';
+  import.meta.env.DEV && import.meta.env.VITE_ANALYZE_MATRIX_DIAGNOSTICS === "1";
 
 export function reproduceQRCode(params: {
   result: QRAnalysisResult;
@@ -31,35 +31,35 @@ export function reproduceQRCode(params: {
   generatedCanvas: HTMLCanvasElement | OffscreenCanvas | null | undefined;
   qrState: {
     version: number;
-    maskPattern: 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+    maskPattern: "auto" | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
     encodingMode: string;
     borderModulesExtra?: number;
   };
   renderState: { fgColor: string; bgColor: string; bgTransparent: boolean; modulePx: number };
 }) {
   const { result, canvas, analysisSource, generatedCanvas, qrState, renderState } = params;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return { encodeMs: null, renderMs: null, actualVersionUsed: null };
 
   const { ecc, isGeneratorSource, versionToUse, maskToUse, modeToUse } = resolveReproductionParams(
     result,
     analysisSource,
     generatedCanvas,
-    qrState
+    qrState,
   );
   const encoderInput = buildEncoderInput(result, modeToUse);
   const versionToUseFinal = resolveFinalVersion(result.version, versionToUse);
   if (versionToUseFinal === null) {
-    drawCanvasError(canvas, ctx, '#fff3cd', '#856404', [
-      'Cannot reproduce:',
-      'Version not detected',
-      'by decoder',
+    drawCanvasError(canvas, ctx, "#fff3cd", "#856404", [
+      "Cannot reproduce:",
+      "Version not detected",
+      "by decoder",
     ]);
     return { encodeMs: null, renderMs: null, actualVersionUsed: null };
   }
 
   const prevStringToBytes = getStringToBytes();
-  const needsIdentityBytes = encoderInput.kind === 'bytes';
+  const needsIdentityBytes = encoderInput.kind === "bytes";
   if (needsIdentityBytes) {
     setStringToBytes((s: string) => {
       const out: number[] = Array.from({ length: s.length });
@@ -71,7 +71,7 @@ export function reproduceQRCode(params: {
   const effectiveMode = resolveEffectiveMode(
     encoderInput.kind,
     result.encodingMode,
-    modeToUse as ValidEncoderMode | undefined
+    modeToUse as ValidEncoderMode | undefined,
   );
   const encodeStartMs = nowMs();
   let qrResult;
@@ -81,7 +81,7 @@ export function reproduceQRCode(params: {
       ecc,
       versionToUseFinal,
       effectiveMode,
-      maskToUse
+      maskToUse,
     );
   } finally {
     if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
@@ -96,14 +96,14 @@ export function reproduceQRCode(params: {
     generatedCanvas,
     moduleCount,
     renderState.modulePx,
-    result.quietZone?.top
+    result.quietZone?.top,
   );
   const { modulePx, size } = computeCanvasSizing(
     isGeneratorSource,
     generatedCanvas,
     moduleCount,
     marginModules,
-    renderState.modulePx
+    renderState.modulePx,
   );
   canvas.width = size;
   canvas.height = size;
@@ -118,7 +118,7 @@ export function reproduceQRCode(params: {
         isGeneratorSource,
         generatedCanvas,
         marginModules,
-        modulePx
+        modulePx,
       )
     : { regenVsDecoded: null, regenVsOriginal: null, bestShift: null };
 

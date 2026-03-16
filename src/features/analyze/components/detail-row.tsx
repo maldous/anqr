@@ -2,7 +2,7 @@ export const DetailRow = ({
   label,
   value,
   icon,
-  className = '',
+  className = "",
 }: Readonly<{
   label: string;
   value: React.ReactNode;

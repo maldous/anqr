@@ -4,9 +4,9 @@
  * Notes: Compute full safety adjustments for generation.
  */
 
-import { adjustOverlayIntensity } from '@/features/generator/application/safety/safety-fn-overlayintensity';
-import type { SafetyAdjustmentResult } from '@/features/generator/application/safety/safety-interface-adjustmentresult';
-import type { EccLevel } from '@/features/generator/application/safety/safety-type-ecclevel';
+import { adjustOverlayIntensity } from "@/features/generator/application/safety/safety-fn-overlayintensity";
+import type { SafetyAdjustmentResult } from "@/features/generator/application/safety/safety-interface-adjustmentresult";
+import type { EccLevel } from "@/features/generator/application/safety/safety-type-ecclevel";
 
 export function computeSafetyAdjustments(params: {
   safetyMode: string;
@@ -30,7 +30,7 @@ export function computeSafetyAdjustments(params: {
   let adjustedQuietZone = params.quietZoneModules;
   let adjustedIntensity = params.overlayIntensity;
 
-  if (params.safetyMode !== 'off') {
+  if (params.safetyMode !== "off") {
     if (params.modulePx < params.minModulePx) {
       adjustedModulePx = params.minModulePx;
       warnings.push(`Module size increased to ${params.minModulePx}px for scannability`);
@@ -54,11 +54,11 @@ export function computeSafetyAdjustments(params: {
     warnings.push(...intensityResult.warnings);
 
     if (params.moduleGapPercent > 20) {
-      warnings.push('Large module gaps may affect QR readability');
+      warnings.push("Large module gaps may affect QR readability");
     }
 
-    if (params.moduleStyle === 'dots' && params.moduleGapPercent > 10) {
-      warnings.push('Dots with large gaps may be hard to scan');
+    if (params.moduleStyle === "dots" && params.moduleGapPercent > 10) {
+      warnings.push("Dots with large gaps may be hard to scan");
     }
   }
 

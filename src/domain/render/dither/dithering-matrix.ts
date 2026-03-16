@@ -3,21 +3,21 @@
  * Matrix-based dithering for QR modules with QR scannability protection
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import { buildQRFirstMatrix } from './build-qr-first-matrix';
-import { computeDitheredModuleValue } from './compute-dithered-module-value';
-import { detectBWFromOverlayData } from './detect-bw-from-overlay-data';
-import type { QRCodeObject } from '../../../modules/qr-generator/cache';
-import { distributeError } from './dithering-error';
-import { enforceModuleConstraints } from './enforce-module-constraints-matrix';
-import { initErrorMatrix } from './init-error-matrix';
-import { getDiffusionKernel } from './dithering-kernels';
-import { getOverlayBrightness } from '../overlay/overlay-data-packed';
-import { shouldLockModule } from '../overlay/should-lock-module';
-import { curveIntensity } from '../generator/pixel-matrix-utils';
-import type { OverlayData, QRGeneratorConfig } from '../../../modules/qr-generator/types';
+import { createLogger } from "../../../infra/logging/logger";
+import { buildQRFirstMatrix } from "./build-qr-first-matrix";
+import { computeDitheredModuleValue } from "./compute-dithered-module-value";
+import { detectBWFromOverlayData } from "./detect-bw-from-overlay-data";
+import type { QRCodeObject } from "../../../modules/qr-generator/cache";
+import { distributeError } from "./dithering-error";
+import { enforceModuleConstraints } from "./enforce-module-constraints-matrix";
+import { initErrorMatrix } from "./init-error-matrix";
+import { getDiffusionKernel } from "./dithering-kernels";
+import { getOverlayBrightness } from "../overlay/overlay-data-packed";
+import { shouldLockModule } from "../overlay/should-lock-module";
+import { curveIntensity } from "../generator/pixel-matrix-utils";
+import type { OverlayData, QRGeneratorConfig } from "../../../modules/qr-generator/types";
 
-const log = createLogger('GENERATE');
+const log = createLogger("GENERATE");
 
 /**
  * Apply dithering to create a modified QR matrix
@@ -27,16 +27,16 @@ export function applyDitherToMatrix(
   qr: QRCodeObject,
   moduleCount: number,
   overlayData: OverlayData,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): boolean[][] {
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   if (detectBWFromOverlayData(overlayData, moduleCount)) {
-    log.debug('Detected high-contrast B&W overlay in dither mode - using QR-first (no dithering)');
+    log.debug("Detected high-contrast B&W overlay in dither mode - using QR-first (no dithering)");
     return buildQRFirstMatrix(qr, moduleCount);
   }
 
-  const kernel = getDiffusionKernel(config.ditherKind || 'floyd_steinberg');
+  const kernel = getDiffusionKernel(config.ditherKind || "floyd_steinberg");
   const strength = (config.ditherStrength ?? 50) / 100;
   const intensity = curveIntensity(config.overlayIntensity ?? 100);
   const mix = intensity * strength;
@@ -56,7 +56,7 @@ export function applyDitherToMatrix(
         qrIsDark,
         brightness,
         errors[row][col] || 0,
-        mix
+        mix,
       );
       result[row][col] = newValue;
       distributeError(errors, col, row, quantError, kernel, moduleCount, moduleCount);
@@ -65,7 +65,7 @@ export function applyDitherToMatrix(
 
   enforceModuleConstraints(qr, result, moduleCount, version, config);
 
-  log.debug('dither-matrix applied with QR protection', {
+  log.debug("dither-matrix applied with QR protection", {
     moduleCount,
     strength,
     intensity,

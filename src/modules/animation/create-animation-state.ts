@@ -1,4 +1,4 @@
-import type { AnimationFrame, AnimationState } from './types';
+import type { AnimationFrame, AnimationState } from "./types";
 
 /**
  * Create initial animation state

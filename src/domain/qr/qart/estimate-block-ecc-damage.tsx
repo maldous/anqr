@@ -1,10 +1,10 @@
-import { calculateECCDamage } from './calculate-ecc-damage';
-import { log } from './log';
+import { calculateECCDamage } from "./calculate-ecc-damage";
+import { log } from "./log";
 
 export function estimateBlockECCDamage(
   blockDataArrays: Uint8Array[],
   modifiedBlockData: Uint8Array[],
-  blockEccCounts: number[]
+  blockEccCounts: number[],
 ): { anyBlockOverBudget: boolean; blockDamage: Array<{ changed: number; safeLimit: number }> } {
   let anyBlockOverBudget = false;
   const blockDamage: Array<{ changed: number; safeLimit: number }> = [];
@@ -13,7 +13,7 @@ export function estimateBlockECCDamage(
     const eccDamage = calculateECCDamage(
       blockDataArrays[blockIdx],
       modifiedBlockData[blockIdx],
-      blockEccCounts[blockIdx]
+      blockEccCounts[blockIdx],
     );
 
     blockDamage.push({ changed: eccDamage.changedCodewords, safeLimit: eccDamage.safeLimit });
@@ -22,7 +22,7 @@ export function estimateBlockECCDamage(
       anyBlockOverBudget = true;
     }
 
-    log.info('ECC DAMAGE ESTIMATE', {
+    log.info("ECC DAMAGE ESTIMATE", {
       blockIndex: blockIdx,
       eccCount: blockEccCounts[blockIdx],
       changedDataCodewords: eccDamage.changedCodewords,
@@ -32,7 +32,7 @@ export function estimateBlockECCDamage(
       percentOfBudget:
         eccDamage.safeLimit > 0
           ? `${((eccDamage.changedCodewords / eccDamage.safeLimit) * 100).toFixed(1)}%`
-          : 'N/A',
+          : "N/A",
     });
   }
 

@@ -1,4 +1,4 @@
-import { convolve } from './convolve';
+import { convolve } from "./convolve";
 
 export function gaussianBlur(imageData: ImageData, radius: number = 1): ImageData {
   // Simple 3x3 Gaussian

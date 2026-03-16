@@ -1,5 +1,5 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { TocGroup } from './static-page-types';
+import { ChevronDown, ChevronUp } from "lucide-react";
+import type { TocGroup } from "./static-page-types";
 
 export function renderTocContent(
   groups: TocGroup[],
@@ -7,7 +7,7 @@ export function renderTocContent(
   expandedGroups: Set<string>,
   handleGroupClick: (group: TocGroup) => void,
   toggleGroup: (key: string) => void,
-  handleItemClick: (slug: string) => void
+  handleItemClick: (slug: string) => void,
 ) {
   return (
     <nav className="text-sm">
@@ -26,7 +26,7 @@ export function renderTocContent(
               type="button"
               onClick={() => toggleGroup(group.key)}
               className="p-2 rounded-r hover:bg-muted transition-colors"
-              title={expandedGroups.has(group.key) ? 'Collapse' : 'Expand'}
+              title={expandedGroups.has(group.key) ? "Collapse" : "Expand"}
             >
               {expandedGroups.has(group.key) ? (
                 <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -44,8 +44,8 @@ export function renderTocContent(
                     onClick={() => handleItemClick(item.id)}
                     className={`block w-full text-left py-1 pl-3 pr-2 text-xs leading-snug transition-colors rounded-r ${
                       activeSlug === item.id
-                        ? 'text-primary font-medium bg-primary/10 border-l-2 border-primary -ml-[2px]'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        ? "text-primary font-medium bg-primary/10 border-l-2 border-primary -ml-[2px]"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }`}
                   >
                     {item.title}

@@ -1,6 +1,6 @@
-import type { QRGeneratorConfig } from './types';
-import { computeBWFirstShade } from './compute-bw-first-shade';
-import { shouldLockModule } from './should-lock-module';
+import type { QRGeneratorConfig } from "./types";
+import { computeBWFirstShade } from "./compute-bw-first-shade";
+import { shouldLockModule } from "./should-lock-module";
 
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
@@ -21,7 +21,7 @@ export function computeFinalShade(
   moduleCol: number,
   moduleCount: number,
   version: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): number {
   const shade = computeBWFirstShade(overlayBrightness, textureAmount, noiseVariation, qrIsDark);
   if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {

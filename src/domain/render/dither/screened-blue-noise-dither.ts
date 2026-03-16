@@ -1,14 +1,14 @@
-import type { DitherResult } from '../../../modules/dither-algorithms/types';
-import { generateBlueNoiseTile, sampleBlueNoise } from '../../../modules/dither-algorithms/utils';
-import type { ScreenedBlueNoiseOptions } from './screened-blue-noise-options';
-import { buildBinaryDitherResult } from './build-binary-dither-result';
+import type { DitherResult } from "../../../modules/dither-algorithms/types";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../../../modules/dither-algorithms/utils";
+import type { ScreenedBlueNoiseOptions } from "./screened-blue-noise-options";
+import { buildBinaryDitherResult } from "./build-binary-dither-result";
 
 /** Screened blue noise - combines halftone screening with blue noise */
 export function screenedBlueNoiseDither(
   imageData: Float32Array[],
   width: number,
   height: number,
-  options: ScreenedBlueNoiseOptions = {}
+  options: ScreenedBlueNoiseOptions = {},
 ): DitherResult {
   const tileSize = options.tileSize ?? 64;
   const seed = options.seed ?? 0;

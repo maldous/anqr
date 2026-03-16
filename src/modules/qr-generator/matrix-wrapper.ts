@@ -1,4 +1,4 @@
-import { BaseMatrixWrapper } from './base-matrix-wrapper';
+import { BaseMatrixWrapper } from "./base-matrix-wrapper";
 
 export class MatrixWrapper extends BaseMatrixWrapper {
   private readonly matrix: boolean[][];
@@ -9,11 +9,11 @@ export class MatrixWrapper extends BaseMatrixWrapper {
   }
 
   addData(_data: string, _mode?: string): void {
-    throw new Error('MatrixWrapper.addData is not supported');
+    throw new Error("MatrixWrapper.addData is not supported");
   }
 
   make(_maskPattern?: number): void {
-    throw new Error('MatrixWrapper.make is not supported');
+    throw new Error("MatrixWrapper.make is not supported");
   }
 
   isDark(row: number, col: number): boolean {

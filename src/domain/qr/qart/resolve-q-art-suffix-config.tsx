@@ -1,25 +1,25 @@
-import type { ECCLevel } from './bit-mapping';
-import { calculateVersionForSlack } from './semantic-layout';
-import { log } from './log';
-import { resolveQArtVersion } from './resolve-q-art-version';
-import { handleUserProvidedSuffix } from './handle-user-provided-suffix';
-import { handleAutoSuffix } from './handle-auto-suffix';
-import { resolvePrefixAndSuffixMode } from './resolve-prefix-and-suffix-mode';
+import type { ECCLevel } from "./bit-mapping";
+import { calculateVersionForSlack } from "./semantic-layout";
+import { log } from "./log";
+import { resolveQArtVersion } from "./resolve-q-art-version";
+import { handleUserProvidedSuffix } from "./handle-user-provided-suffix";
+import { handleAutoSuffix } from "./handle-auto-suffix";
+import { resolvePrefixAndSuffixMode } from "./resolve-prefix-and-suffix-mode";
 
 export function resolveQArtSuffixConfig(config: {
   data: string;
   version: number;
   ecc: ECCLevel;
   suffix?: string;
-  suffixMode: 'auto' | 'numeric' | 'byte';
+  suffixMode: "auto" | "numeric" | "byte";
   autoSuffix: boolean;
   minPadCodewords: number;
   forceVersion?: number;
   targetControlPercent: number;
   lockVersionToMinimum: boolean;
 }): {
-  resolvedSuffixMode: 'numeric' | 'byte';
-  encodingSuffixMode: 'numeric' | 'byte';
+  resolvedSuffixMode: "numeric" | "byte";
+  encodingSuffixMode: "numeric" | "byte";
   encodedData: string;
   actualSuffix: string;
   originalData: string;
@@ -42,14 +42,14 @@ export function resolveQArtSuffixConfig(config: {
 
   const prefixResult = resolvePrefixAndSuffixMode(data, suffixMode);
   let resolvedSuffixMode = prefixResult.resolvedSuffixMode;
-  const encodingSuffixMode: 'numeric' | 'byte' = resolvedSuffixMode;
+  const encodingSuffixMode: "numeric" | "byte" = resolvedSuffixMode;
   const prefix = prefixResult.prefix;
   let originalData = prefix;
   let originalDataLength = originalData.length;
 
   let versionWasUpgradedForQArt = false;
-  let encodedData = '';
-  let actualSuffix = '';
+  let encodedData = "";
+  let actualSuffix = "";
   let versionToUse: number;
 
   // Determine the version to use
@@ -64,7 +64,7 @@ export function resolveQArtSuffixConfig(config: {
       resolvedSuffixMode,
       prefix,
       data,
-      originalDataLength
+      originalDataLength,
     );
     resolvedSuffixMode = userSuffixResult.resolvedSuffixMode;
     actualSuffix = userSuffixResult.actualSuffix;
@@ -80,7 +80,7 @@ export function resolveQArtSuffixConfig(config: {
       originalDataLength,
       versionToUse,
       targetControlPercent,
-      lockVersionToMinimum
+      lockVersionToMinimum,
     );
     actualSuffix = autoResult.actualSuffix;
     encodedData = autoResult.encodedData;
@@ -89,17 +89,17 @@ export function resolveQArtSuffixConfig(config: {
     }
   } else {
     encodedData = data;
-    resolvedSuffixMode = 'byte';
+    resolvedSuffixMode = "byte";
     originalData = data;
     originalDataLength = data.length;
     if (versionToUse === 0) {
       versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
     }
-    log.warn('No suffix - only padding codewords controllable (limited QR-Art control)', {
+    log.warn("No suffix - only padding codewords controllable (limited QR-Art control)", {
       originalDataLength,
       versionToUse,
       minPadCodewords,
-      note: 'Set autoSuffix=true for better image quality',
+      note: "Set autoSuffix=true for better image quality",
     });
   }
 

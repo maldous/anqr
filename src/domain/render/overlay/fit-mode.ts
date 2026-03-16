@@ -1,1 +1,1 @@
-export type FitMode = 'contain' | 'cover' | 'fill' | 'none';
+export type FitMode = "contain" | "cover" | "fill" | "none";

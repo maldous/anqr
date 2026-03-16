@@ -1,8 +1,8 @@
-import { QRMode } from '../../../modules/qr-encoder/types';
-import { getLengthInBits } from '../encode/utils';
-import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
-import type { SemanticBitLayout } from './semantic-layout.types';
-import { log } from './log';
+import { QRMode } from "../../../modules/qr-encoder/types";
+import { getLengthInBits } from "../encode/utils";
+import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
+import type { SemanticBitLayout } from "./semantic-layout.types";
+import { log } from "./log";
 
 /**
  * Calculate the semantic bit layout for a QR code
@@ -18,7 +18,7 @@ import { log } from './log';
 export function getSemanticBitLayout(
   version: number,
   ecc: ECCLevel,
-  dataLength: number
+  dataLength: number,
 ): SemanticBitLayout {
   // Calculate total data capacity
   const blocks = getRSBlockInfo(version, ecc);
@@ -77,7 +77,7 @@ export function getSemanticBitLayout(
     dataLength,
   };
 
-  log.info('Semantic bit layout calculated', {
+  log.info("Semantic bit layout calculated", {
     version,
     ecc,
     dataLength,

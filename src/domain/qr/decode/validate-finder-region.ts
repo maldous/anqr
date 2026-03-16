@@ -1,10 +1,10 @@
-import { compareFinderModule } from './compare-finder-module';
+import { compareFinderModule } from "./compare-finder-module";
 
 export function validateFinderRegion(
   matrix: boolean[][],
   finderPattern: number[][],
   rowOffset: number,
-  colOffset: number
+  colOffset: number,
 ): { matches: number; mismatches: number; errors: string[] } {
   let matches = 0;
   let mismatches = 0;

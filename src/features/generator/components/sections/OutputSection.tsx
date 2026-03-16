@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import { type GifDither, type GifQuantizer, type OutputFormat, useQRStore } from '@/store/qr-store';
+import { useTranslation } from "react-i18next";
+import { type GifDither, type GifQuantizer, type OutputFormat, useQRStore } from "@/store/qr-store";
 import {
   DynamicTestId,
   HelpLink,
@@ -13,7 +13,7 @@ import {
   SelectValue,
   Slider,
   Switch,
-} from './section-ui';
+} from "./section-ui";
 
 export function OutputSection() {
   const {
@@ -36,19 +36,19 @@ export function OutputSection() {
       <div className="space-y-2">
         <div className="flex items-center gap-1">
           <Label>
-            <HighlightedLabel>{t('output.format')}</HighlightedLabel>
+            <HighlightedLabel>{t("output.format")}</HighlightedLabel>
           </Label>
           <HelpLink anchor="section-13" />
         </div>
         <Select value={output.format} onValueChange={(v) => setOutputFormat(v as OutputFormat)}>
           <SelectTrigger
-            data-testid={DynamicTestId.resolve('output-format-trigger', 'output-format-trigger')}
-            title={t('hints.outputFormat')}
+            data-testid={DynamicTestId.resolve("output-format-trigger", "output-format-trigger")}
+            title={t("hints.outputFormat")}
           >
             <SelectValue />
           </SelectTrigger>
           <SelectContent
-            data-testid={DynamicTestId.resolve('output-format-content', 'output-format-content')}
+            data-testid={DynamicTestId.resolve("output-format-content", "output-format-content")}
           >
             <SelectItem value="png">PNG</SelectItem>
             <SelectItem value="webp">WebP</SelectItem>
@@ -62,17 +62,17 @@ export function OutputSection() {
       <div className="space-y-2">
         <div className="flex items-center gap-1">
           <Label>
-            <HighlightedLabel>{t('output.outputSize')}</HighlightedLabel>
+            <HighlightedLabel>{t("output.outputSize")}</HighlightedLabel>
           </Label>
           <HelpLink anchor="section-14" />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">
-              <HighlightedLabel>{t('output.width')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.width")}</HighlightedLabel>
             </Label>
             <Input
-              data-testid={DynamicTestId.resolve('output-width-input', 'output-width-input')}
+              data-testid={DynamicTestId.resolve("output-width-input", "output-width-input")}
               type="number"
               value={output.widthPx}
               onChange={(e) => setOutputWidth(Number.parseInt(e.target.value, 10) || 400)}
@@ -82,10 +82,10 @@ export function OutputSection() {
           </div>
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">
-              <HighlightedLabel>{t('output.height')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.height")}</HighlightedLabel>
             </Label>
             <Input
-              data-testid={DynamicTestId.resolve('output-height-input', 'output-height-input')}
+              data-testid={DynamicTestId.resolve("output-height-input", "output-height-input")}
               type="number"
               value={output.heightPx}
               onChange={(e) => setOutputHeight(Number.parseInt(e.target.value, 10) || 400)}
@@ -97,18 +97,18 @@ export function OutputSection() {
       </div>
 
       {/* Quality (for WebP/JPEG) */}
-      {output.format === 'webp' && (
+      {output.format === "webp" && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>
-              <HighlightedLabel>{t('output.quality')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.quality")}</HighlightedLabel>
             </Label>
             <span className="text-sm text-muted-foreground">
-              {t('qr.nPercent', { count: Math.round(output.quality * 100) })}
+              {t("qr.nPercent", { count: Math.round(output.quality * 100) })}
             </span>
           </div>
           <Slider
-            data-testid={DynamicTestId.resolve('output-quality-slider', 'output-quality-slider')}
+            data-testid={DynamicTestId.resolve("output-quality-slider", "output-quality-slider")}
             value={[output.quality]}
             onValueChange={([v]) => setOutputQuality(v)}
             min={0.1}
@@ -119,15 +119,15 @@ export function OutputSection() {
       )}
 
       {/* Advanced Options */}
-      {(tier === 'advanced' || tier === 'professional') && (
+      {(tier === "advanced" || tier === "professional") && (
         <>
           {/* Filename */}
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('output.filename')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.filename")}</HighlightedLabel>
             </Label>
             <Input
-              data-testid={DynamicTestId.resolve('output-filename-input', 'output-filename-input')}
+              data-testid={DynamicTestId.resolve("output-filename-input", "output-filename-input")}
               value={output.filename}
               onChange={(e) => setOutputFilename(e.target.value)}
               placeholder="anqr-qrcode"
@@ -135,24 +135,24 @@ export function OutputSection() {
           </div>
 
           {/* GIF Options */}
-          {output.format === 'gif' && (
+          {output.format === "gif" && (
             <div className="space-y-2 pt-2 border-t">
               <Label className="text-muted-foreground flex items-center gap-1.5">
-                <HighlightedLabel>{t('output.gifSettings')}</HighlightedLabel>
+                <HighlightedLabel>{t("output.gifSettings")}</HighlightedLabel>
                 <HelpLink anchor="section-31" />
               </Label>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">
-                    <HighlightedLabel>{t('output.paletteSize')}</HighlightedLabel>
+                    <HighlightedLabel>{t("output.paletteSize")}</HighlightedLabel>
                   </Label>
                   <span className="text-sm text-muted-foreground">{output.gifPaletteSize}</span>
                 </div>
                 <Slider
                   data-testid={DynamicTestId.resolve(
-                    'output-gif-palette-slider',
-                    'output-gif-palette-slider'
+                    "output-gif-palette-slider",
+                    "output-gif-palette-slider",
                   )}
                   value={[output.gifPaletteSize]}
                   onValueChange={([v]) => setOutputGifPaletteSize(v)}
@@ -164,7 +164,7 @@ export function OutputSection() {
 
               <div className="space-y-2">
                 <Label className="text-sm">
-                  <HighlightedLabel>{t('output.quantizer')}</HighlightedLabel>
+                  <HighlightedLabel>{t("output.quantizer")}</HighlightedLabel>
                 </Label>
                 <Select
                   value={output.gifQuantizer}
@@ -172,28 +172,28 @@ export function OutputSection() {
                 >
                   <SelectTrigger
                     data-testid={DynamicTestId.resolve(
-                      'output-gif-quantizer-trigger',
-                      'output-gif-quantizer-trigger'
+                      "output-gif-quantizer-trigger",
+                      "output-gif-quantizer-trigger",
                     )}
                   >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent
                     data-testid={DynamicTestId.resolve(
-                      'output-gif-quantizer-content',
-                      'output-gif-quantizer-content'
+                      "output-gif-quantizer-content",
+                      "output-gif-quantizer-content",
                     )}
                   >
-                    <SelectItem value="median_cut">{t('output.medianCut')}</SelectItem>
-                    <SelectItem value="neuquant">{t('output.neuquant')}</SelectItem>
-                    <SelectItem value="octree">{t('output.octree')}</SelectItem>
+                    <SelectItem value="median_cut">{t("output.medianCut")}</SelectItem>
+                    <SelectItem value="neuquant">{t("output.neuquant")}</SelectItem>
+                    <SelectItem value="octree">{t("output.octree")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-sm">
-                  <HighlightedLabel>{t('output.dithering')}</HighlightedLabel>
+                  <HighlightedLabel>{t("output.dithering")}</HighlightedLabel>
                 </Label>
                 <Select
                   value={output.gifDither}
@@ -205,21 +205,21 @@ export function OutputSection() {
                 >
                   <SelectTrigger
                     data-testid={DynamicTestId.resolve(
-                      'output-gif-dither-trigger',
-                      'output-gif-dither-trigger'
+                      "output-gif-dither-trigger",
+                      "output-gif-dither-trigger",
                     )}
                   >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent
                     data-testid={DynamicTestId.resolve(
-                      'output-gif-dither-content',
-                      'output-gif-dither-content'
+                      "output-gif-dither-content",
+                      "output-gif-dither-content",
                     )}
                   >
-                    <SelectItem value="off">{t('output.off')}</SelectItem>
-                    <SelectItem value="floyd">{t('output.floydSteinberg')}</SelectItem>
-                    <SelectItem value="ordered">{t('output.ordered')}</SelectItem>
+                    <SelectItem value="off">{t("output.off")}</SelectItem>
+                    <SelectItem value="floyd">{t("output.floydSteinberg")}</SelectItem>
+                    <SelectItem value="ordered">{t("output.ordered")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -227,24 +227,24 @@ export function OutputSection() {
           )}
 
           {/* SVG Options */}
-          {output.format === 'svg' && (
+          {output.format === "svg" && (
             <div className="space-y-2 pt-2 border-t">
               <Label className="text-muted-foreground flex items-center gap-1.5">
-                <HighlightedLabel>{t('output.svgSettings')}</HighlightedLabel>
+                <HighlightedLabel>{t("output.svgSettings")}</HighlightedLabel>
                 <HelpLink anchor="section-34" />
               </Label>
 
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm">
-                    <HighlightedLabel>{t('output.trueVector')}</HighlightedLabel>
+                    <HighlightedLabel>{t("output.trueVector")}</HighlightedLabel>
                   </Label>
-                  <p className="text-xs text-muted-foreground">{t('output.trueVectorDesc')}</p>
+                  <p className="text-xs text-muted-foreground">{t("output.trueVectorDesc")}</p>
                 </div>
                 <Switch
                   data-testid={DynamicTestId.resolve(
-                    'output-svg-true-vector-switch',
-                    'output-svg-true-vector-switch'
+                    "output-svg-true-vector-switch",
+                    "output-svg-true-vector-switch",
                   )}
                   checked={output.svgTrueVector}
                   onCheckedChange={setOutputSvgTrueVector}
@@ -254,7 +254,7 @@ export function OutputSection() {
               {output.svgTrueVector && (
                 <div className="space-y-2">
                   <Label className="text-sm">
-                    <HighlightedLabel>{t('output.shapePrecision')}</HighlightedLabel>
+                    <HighlightedLabel>{t("output.shapePrecision")}</HighlightedLabel>
                   </Label>
                   <Select
                     value={output.svgShapePrecision}
@@ -269,20 +269,20 @@ export function OutputSection() {
                   >
                     <SelectTrigger
                       data-testid={DynamicTestId.resolve(
-                        'output-svg-precision-trigger',
-                        'output-svg-precision-trigger'
+                        "output-svg-precision-trigger",
+                        "output-svg-precision-trigger",
                       )}
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent
                       data-testid={DynamicTestId.resolve(
-                        'output-svg-precision-content',
-                        'output-svg-precision-content'
+                        "output-svg-precision-content",
+                        "output-svg-precision-content",
                       )}
                     >
-                      <SelectItem value="pixel">{t('output.pixel')}</SelectItem>
-                      <SelectItem value="precise">{t('output.precise')}</SelectItem>
+                      <SelectItem value="pixel">{t("output.pixel")}</SelectItem>
+                      <SelectItem value="precise">{t("output.precise")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -290,12 +290,12 @@ export function OutputSection() {
 
               <div className="flex items-center justify-between">
                 <Label className="text-sm">
-                  <HighlightedLabel>{t('output.embedRasterOverlay')}</HighlightedLabel>
+                  <HighlightedLabel>{t("output.embedRasterOverlay")}</HighlightedLabel>
                 </Label>
                 <Switch
                   data-testid={DynamicTestId.resolve(
-                    'output-svg-embed-raster-switch',
-                    'output-svg-embed-raster-switch'
+                    "output-svg-embed-raster-switch",
+                    "output-svg-embed-raster-switch",
                   )}
                   checked={output.svgEmbedRasterOverlay}
                   onCheckedChange={(checked) =>
@@ -309,15 +309,15 @@ export function OutputSection() {
           )}
 
           {/* GIF Transparent Color */}
-          {output.format === 'gif' && (
+          {output.format === "gif" && (
             <div className="space-y-2">
               <Label className="text-sm">
-                <HighlightedLabel>{t('output.transparentColor')}</HighlightedLabel>
+                <HighlightedLabel>{t("output.transparentColor")}</HighlightedLabel>
               </Label>
               <div className="flex gap-2">
                 <Input
                   type="color"
-                  value={output.gifTransparentColor || '#ffffff'}
+                  value={output.gifTransparentColor || "#ffffff"}
                   onChange={(e) =>
                     useQRStore.setState((s) => ({
                       output: { ...s.output, gifTransparentColor: e.target.value },
@@ -333,7 +333,7 @@ export function OutputSection() {
                       output: { ...s.output, gifTransparentColor: e.target.value },
                     }))
                   }
-                  placeholder={t('output.transparentColorPlaceholder')}
+                  placeholder={t("output.transparentColorPlaceholder")}
                   className="flex-1"
                 />
               </div>
@@ -343,12 +343,12 @@ export function OutputSection() {
           {/* Background Override */}
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('output.backgroundOverride')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.backgroundOverride")}</HighlightedLabel>
             </Label>
             <div className="flex gap-2">
               <Input
                 type="color"
-                value={output.bgOverride || '#ffffff'}
+                value={output.bgOverride || "#ffffff"}
                 onChange={(e) =>
                   useQRStore.setState((s) => ({
                     output: { ...s.output, bgOverride: e.target.value },
@@ -364,7 +364,7 @@ export function OutputSection() {
                     output: { ...s.output, bgOverride: e.target.value },
                   }))
                 }
-                placeholder={t('output.backgroundOverridePlaceholder')}
+                placeholder={t("output.backgroundOverridePlaceholder")}
                 className="flex-1"
               />
             </div>
@@ -373,18 +373,18 @@ export function OutputSection() {
       )}
 
       {/* Professional Options */}
-      {tier === 'professional' && (
+      {tier === "professional" && (
         <>
           {/* DPI */}
           <div className="space-y-2 pt-2 border-t">
             <div className="flex items-center justify-between">
               <Label>
-                <HighlightedLabel>{t('output.dpi')}</HighlightedLabel>
+                <HighlightedLabel>{t("output.dpi")}</HighlightedLabel>
               </Label>
               <span className="text-sm text-muted-foreground">{output.dpi}</span>
             </div>
             <Slider
-              data-testid={DynamicTestId.resolve('output-dpi-slider', 'output-dpi-slider')}
+              data-testid={DynamicTestId.resolve("output-dpi-slider", "output-dpi-slider")}
               value={[output.dpi]}
               onValueChange={([v]) =>
                 useQRStore.setState((s) => ({ output: { ...s.output, dpi: v } }))
@@ -398,12 +398,12 @@ export function OutputSection() {
           {/* Include Quiet Zone */}
           <div className="flex items-center justify-between">
             <Label>
-              <HighlightedLabel>{t('output.includeQuietZone')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.includeQuietZone")}</HighlightedLabel>
             </Label>
             <Switch
               data-testid={DynamicTestId.resolve(
-                'output-include-quiet-zone-switch',
-                'output-include-quiet-zone-switch'
+                "output-include-quiet-zone-switch",
+                "output-include-quiet-zone-switch",
               )}
               checked={output.includeQuietZone}
               onCheckedChange={(checked) =>
@@ -415,7 +415,7 @@ export function OutputSection() {
           {/* Extra Formats */}
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('output.exportAsAdditional')}</HighlightedLabel>
+              <HighlightedLabel>{t("output.exportAsAdditional")}</HighlightedLabel>
             </Label>
             <Select
               value={output.formatExtra}
@@ -427,21 +427,21 @@ export function OutputSection() {
             >
               <SelectTrigger
                 data-testid={DynamicTestId.resolve(
-                  'output-format-extra-trigger',
-                  'output-format-extra-trigger'
+                  "output-format-extra-trigger",
+                  "output-format-extra-trigger",
                 )}
               >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent
                 data-testid={DynamicTestId.resolve(
-                  'output-format-extra-content',
-                  'output-format-extra-content'
+                  "output-format-extra-content",
+                  "output-format-extra-content",
                 )}
               >
-                <SelectItem value="none">{t('output.none')}</SelectItem>
+                <SelectItem value="none">{t("output.none")}</SelectItem>
                 <SelectItem value="eps">EPS</SelectItem>
-                <SelectItem value="animated_webp">{t('output.animatedWebp')}</SelectItem>
+                <SelectItem value="animated_webp">{t("output.animatedWebp")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -1,1 +1,1 @@
-export * from '../content/generated/gallery-showcase.generated';
+export * from "../content/generated/gallery-showcase.generated";

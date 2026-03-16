@@ -4,4 +4,4 @@
  * Notes: Lazy-load QArt module.
  */
 
-export { loadQArtModule } from '@/features/generator/application/qart/qart-shared-state';
+export { loadQArtModule } from "@/features/generator/application/qart/qart-shared-state";

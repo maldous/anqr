@@ -1,18 +1,18 @@
-import type { AnimationFrame } from './types';
-import { log } from './log';
-import { parseWebPAsSingleFrame } from './parse-web-p-as-single-frame';
+import type { AnimationFrame } from "./types";
+import { log } from "./log";
+import { parseWebPAsSingleFrame } from "./parse-web-p-as-single-frame";
 
 /**
  * Parse animated WebP using ImageDecoder API
  */
 export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFrame[]> {
-  if (typeof ImageDecoder === 'undefined') {
+  if (typeof ImageDecoder === "undefined") {
     return parseWebPAsSingleFrame(source);
   }
 
   try {
     const decoder = new ImageDecoder({
-      type: 'image/webp',
+      type: "image/webp",
       data: source,
     });
 
@@ -25,10 +25,10 @@ export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFra
       const result = await decoder.decode({ frameIndex: i });
       const { image, duration } = result;
 
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = image.displayWidth;
       canvas.height = image.displayHeight;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(image, 0, 0);
       }
@@ -44,7 +44,7 @@ export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFra
     decoder.close();
     return frames;
   } catch (err) {
-    log.warn('ImageDecoder failed, falling back to single frame', { error: err });
+    log.warn("ImageDecoder failed, falling back to single frame", { error: err });
     return parseWebPAsSingleFrame(source);
   }
 }

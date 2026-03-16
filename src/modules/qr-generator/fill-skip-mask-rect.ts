@@ -4,7 +4,7 @@ export function fillSkipMaskRect(
   rowStart: number,
   rowEnd: number,
   colStart: number,
-  colEnd: number
+  colEnd: number,
 ): void {
   for (let row = rowStart; row <= rowEnd; row++) {
     for (let col = colStart; col <= colEnd; col++) {

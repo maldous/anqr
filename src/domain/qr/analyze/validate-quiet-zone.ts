@@ -3,7 +3,7 @@
  */
 export function validateQuietZone(
   quietZone: number,
-  minModules = 4
+  minModules = 4,
 ): { valid: boolean; warning?: string } {
   if (quietZone < minModules) {
     return {

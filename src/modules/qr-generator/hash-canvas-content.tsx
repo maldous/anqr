@@ -1,7 +1,7 @@
-import { canvasHashCache } from './cache';
-import { acquireHashCanvas } from './acquire-hash-canvas';
-import { HASH_CANVAS_SIZE } from './hash-canvas-size';
-import { log } from './log';
+import { canvasHashCache } from "./cache";
+import { acquireHashCanvas } from "./acquire-hash-canvas";
+import { HASH_CANVAS_SIZE } from "./hash-canvas-size";
+import { log } from "./log";
 
 /**
  * Hash canvas content for cache key disambiguation
@@ -10,7 +10,7 @@ import { log } from './log';
  */
 export async function hashCanvasContent(
   canvas: HTMLCanvasElement | OffscreenCanvas,
-  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
+  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
 ): Promise<string> {
   // Check WeakMap cache first (avoids re-hashing same canvas instance)
   // Only HTMLCanvasElement can be cached in WeakMap (OffscreenCanvas not supported)
@@ -27,14 +27,14 @@ export async function hashCanvasContent(
       hashCanvas.height = HASH_CANVAS_SIZE;
     }
     const hashCtx =
-      (hashCanvas.getContext('2d', {
+      (hashCanvas.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
       } as CanvasRenderingContext2DSettings) as
         | CanvasRenderingContext2D
         | OffscreenCanvasRenderingContext2D
         | null) ??
-      (hashCanvas.getContext('2d') as
+      (hashCanvas.getContext("2d") as
         | CanvasRenderingContext2D
         | OffscreenCanvasRenderingContext2D
         | null);
@@ -72,7 +72,7 @@ export async function hashCanvasContent(
     return hashStr;
   } catch (error) {
     // Fallback to dimensions-only if getImageData fails
-    log.warn('Canvas hashing failed', { error });
+    log.warn("Canvas hashing failed", { error });
     return `${canvas.width}x${canvas.height}`;
   } finally {
     release();

@@ -1,6 +1,6 @@
-import type { RSBlock } from '../../../modules/qr-encoder/types';
-import { createRSBlock } from './create-rs-block';
-import { getRsBlockTable } from './get-rs-block-table';
+import type { RSBlock } from "../../../modules/qr-encoder/types";
+import { createRSBlock } from "./create-rs-block";
+import { getRsBlockTable } from "./get-rs-block-table";
 
 /**
  * Get Reed-Solomon blocks for a given version and ECC level
@@ -10,7 +10,7 @@ export function getRSBlocks(typeNumber: number, errorCorrectionLevel: number): R
 
   if (rsBlock === undefined) {
     throw new TypeError(
-      `bad rs block @ typeNumber:${typeNumber}/errorCorrectionLevel:${errorCorrectionLevel}`
+      `bad rs block @ typeNumber:${typeNumber}/errorCorrectionLevel:${errorCorrectionLevel}`,
     );
   }
 

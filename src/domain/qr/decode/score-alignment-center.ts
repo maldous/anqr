@@ -1,7 +1,7 @@
 export function scoreAlignmentCenter(
   rawMatrix: boolean[][],
   cx: number,
-  cy: number
+  cy: number,
 ): { good: number; total: number; mismatches: string[] } {
   let good = 0;
   let total = 0;

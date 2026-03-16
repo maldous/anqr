@@ -1,15 +1,15 @@
-import type { AdPlaceholderProps } from './ad-placeholder-props';
+import type { AdPlaceholderProps } from "./ad-placeholder-props";
 
 export function AdPlaceholder({
   slot,
-  width = '100%',
+  width = "100%",
   height = 90,
-  className = '',
-  format = 'auto',
+  className = "",
+  format = "auto",
 }: AdPlaceholderProps) {
-  const widthStyle = typeof width === 'number' ? `${width}px` : width;
+  const widthStyle = typeof width === "number" ? `${width}px` : width;
   const isProduction = import.meta.env.PROD;
-  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === "true";
 
   // In production test mode, show a more polished placeholder
   if (isProduction && isTestMode) {

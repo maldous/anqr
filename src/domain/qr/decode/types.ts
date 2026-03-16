@@ -1,5 +1,5 @@
 // Barrel: domain/qr/decode/types
-export type { DecodedEncodingMode, DecodedDataResult } from './decode.types';
+export type { DecodedEncodingMode, DecodedDataResult } from "./decode.types";
 export type {
   FinderPattern,
   Point,
@@ -8,4 +8,4 @@ export type {
   ECCLevelChar,
   FormatInfo,
   DecodedSegmentInfo,
-} from '../../../modules/qr-decoder/types';
+} from "../../../modules/qr-decoder/types";

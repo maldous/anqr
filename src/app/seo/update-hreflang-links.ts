@@ -1,7 +1,7 @@
-import { languages } from '@/app/i18n';
+import { languages } from "@/app/i18n";
 
 export function updateHreflangLinks(showEditor: boolean, currentPage: string): void {
-  const staticPageTypes = ['learn', 'examples', 'guide', 'about', 'privacy', 'terms', 'contact'];
+  const staticPageTypes = ["learn", "examples", "guide", "about", "privacy", "terms", "contact"];
   const isStaticPage = staticPageTypes.includes(currentPage);
   const shouldAddHreflang = isStaticPage || showEditor;
 
@@ -12,21 +12,21 @@ export function updateHreflangLinks(showEditor: boolean, currentPage: string): v
 
   if (!shouldAddHreflang) return;
 
-  const baseUrl = 'https://anqr.link';
-  const pagePath = showEditor ? '/' : `/${currentPage}`;
+  const baseUrl = "https://anqr.link";
+  const pagePath = showEditor ? "/" : `/${currentPage}`;
 
-  const xDefaultLink = document.createElement('link');
-  xDefaultLink.rel = 'alternate';
-  xDefaultLink.hreflang = 'x-default';
+  const xDefaultLink = document.createElement("link");
+  xDefaultLink.rel = "alternate";
+  xDefaultLink.hreflang = "x-default";
   xDefaultLink.href = `${baseUrl}${pagePath}`;
   document.head.appendChild(xDefaultLink);
 
   for (const lang of languages) {
-    const link = document.createElement('link');
-    link.rel = 'alternate';
-    link.hreflang = lang.code === 'en-GB' ? 'en' : lang.code.toLowerCase();
+    const link = document.createElement("link");
+    link.rel = "alternate";
+    link.hreflang = lang.code === "en-GB" ? "en" : lang.code.toLowerCase();
     link.href =
-      lang.code === 'en-GB' ? `${baseUrl}${pagePath}` : `${baseUrl}${pagePath}?lang=${lang.code}`;
+      lang.code === "en-GB" ? `${baseUrl}${pagePath}` : `${baseUrl}${pagePath}?lang=${lang.code}`;
     document.head.appendChild(link);
   }
 }

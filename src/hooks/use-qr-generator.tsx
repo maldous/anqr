@@ -1,69 +1,69 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   type AnimationFrame,
   decimateCompositorFrames,
   type GifCompositor,
   resolveAnimationFrameDelay,
-} from '@/modules/animation';
-import { isTemporalDitherActive, type TemporalDitherMode } from '@/modules/dither-algorithms';
-import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
-import { prepareInterstitial, showInterstitial } from '@/modules/platform';
-import { type ValidationResult, terminateValidationWorker } from '@/modules/qr-analyzer';
-import { INTRINSICALLY_SCALED_OVERLAY_MODES, type QRGeneratorConfig } from '@/modules/qr-generator';
-import { useQRStore } from '@/store/qr-store';
-import type { UseQRGeneratorResult } from './useQRGenerator.types';
-import { applyCropTransform } from './apply-crop-transform';
-import { applyFitTransform } from './apply-fit-transform';
-import { applyPatternStackToCanvas } from './apply-pattern-stack-to-canvas';
-import { applyRotateFlipTransform } from './apply-rotate-flip-transform';
-import { buildExportConfig } from './build-export-config';
-import { buildPatternEffectLists } from './build-pattern-effect-lists';
-import { buildPngMetadata } from './build-png-metadata';
-import { cleanupGenerateState } from './cleanup-generate-state';
-import { cloneCanvasSimple } from './clone-canvas-simple';
-import { completeAnimationGeneration } from './complete-animation-generation';
-import { computeBaseAnimationFramesToProcess } from './compute-base-animation-frames-to-process';
-import { computePatternDrivenJitterValue } from './compute-pattern-driven-jitter-value';
-import { computeSafetyAdjustments } from './compute-safety-adjustments';
-import { CONFIG_DEBOUNCE_MS } from './config-debounce-ms';
-import { CONFIG_SETTLE_DEBOUNCE_MS } from './config-settle-debounce-ms';
-import { createArtworkFrameState } from './create-artwork-frame-state';
-import { createScaledExportCanvas } from './create-scaled-export-canvas';
-import { createScratchCanvasPool } from './create-scratch-canvas-pool';
-import { dispatchRenderCompleteEvent } from './dispatch-render-complete-event';
-import { downloadAnimatedGifFormat } from './download-animated-gif-format';
-import { downloadSvgFormat } from './download-svg-format';
-import { drawToDisplayCanvas } from './draw-to-display-canvas';
-import { ENABLE_QART_PERF_OVERLAY } from './enable-qart-perf-overlay';
-import { executeFrameGenerationLoop } from './execute-frame-generation-loop';
-import { finalizeAnimationFrames } from './finalize-animation-frames';
-import { finalizeGeneratedCanvas } from './finalize-generated-canvas';
-import { formatGenerationErrorMessage } from './format-generation-error-message';
-import { generateArtworkFrameStandalone } from './generate-artwork-frame-standalone';
-import type { GenerationProgressState } from './generation-progress-state';
-import { handleEmptyContent } from './handle-empty-content';
-import { handleGeneratePreChecks } from './handle-generate-pre-checks';
-import { loadAnimatedWebPOverlayFile } from './load-animated-web-p-overlay-file';
-import { loadExporterModule } from './load-exporter-module';
-import { loadGifOverlayFile } from './load-gif-overlay-file';
-import { loadQArtModule } from './load-q-art-module';
-import { loadStaticOverlayFile } from './load-static-overlay-file';
-import { loadWatermarkForAnimation } from './load-watermark-for-animation';
-import { log } from './log';
-import type { QArtPerfSnapshot } from './q-art-perf-snapshot';
-import { QART_PERF_OVERLAY_ELEMENT_ID } from './qart-perf-overlay-element-id';
-import { runGeneratorWithSlowStatus } from './run-generator-with-slow-status';
-import { runQArtGeneration } from './run-q-art-generation';
-import { runStandardGeneration } from './run-standard-generation';
-import { scheduleTrackEvent } from './schedule-track-event';
-import { setupValidationRunner } from './setup-validation-runner';
-import { terminateQArtWorkerIfLoaded } from './terminate-q-art-worker-if-loaded';
-import { updateCompositorToFrame } from './update-compositor-to-frame';
-import { useDebounce } from './use-debounce';
-import { YieldController } from './yield-controller';
-import { yieldToMainThread } from './yield-to-main-thread';
-import { resolveOverlayPreservationOptions } from './resolve-overlay-preservation-options';
+} from "@/modules/animation";
+import { isTemporalDitherActive, type TemporalDitherMode } from "@/modules/dither-algorithms";
+import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/modules/overlay";
+import { prepareInterstitial, showInterstitial } from "@/modules/platform";
+import { type ValidationResult, terminateValidationWorker } from "@/modules/qr-analyzer";
+import { INTRINSICALLY_SCALED_OVERLAY_MODES, type QRGeneratorConfig } from "@/modules/qr-generator";
+import { useQRStore } from "@/store/qr-store";
+import type { UseQRGeneratorResult } from "./useQRGenerator.types";
+import { applyCropTransform } from "./apply-crop-transform";
+import { applyFitTransform } from "./apply-fit-transform";
+import { applyPatternStackToCanvas } from "./apply-pattern-stack-to-canvas";
+import { applyRotateFlipTransform } from "./apply-rotate-flip-transform";
+import { buildExportConfig } from "./build-export-config";
+import { buildPatternEffectLists } from "./build-pattern-effect-lists";
+import { buildPngMetadata } from "./build-png-metadata";
+import { cleanupGenerateState } from "./cleanup-generate-state";
+import { cloneCanvasSimple } from "./clone-canvas-simple";
+import { completeAnimationGeneration } from "./complete-animation-generation";
+import { computeBaseAnimationFramesToProcess } from "./compute-base-animation-frames-to-process";
+import { computePatternDrivenJitterValue } from "./compute-pattern-driven-jitter-value";
+import { computeSafetyAdjustments } from "./compute-safety-adjustments";
+import { CONFIG_DEBOUNCE_MS } from "./config-debounce-ms";
+import { CONFIG_SETTLE_DEBOUNCE_MS } from "./config-settle-debounce-ms";
+import { createArtworkFrameState } from "./create-artwork-frame-state";
+import { createScaledExportCanvas } from "./create-scaled-export-canvas";
+import { createScratchCanvasPool } from "./create-scratch-canvas-pool";
+import { dispatchRenderCompleteEvent } from "./dispatch-render-complete-event";
+import { downloadAnimatedGifFormat } from "./download-animated-gif-format";
+import { downloadSvgFormat } from "./download-svg-format";
+import { drawToDisplayCanvas } from "./draw-to-display-canvas";
+import { ENABLE_QART_PERF_OVERLAY } from "./enable-qart-perf-overlay";
+import { executeFrameGenerationLoop } from "./execute-frame-generation-loop";
+import { finalizeAnimationFrames } from "./finalize-animation-frames";
+import { finalizeGeneratedCanvas } from "./finalize-generated-canvas";
+import { formatGenerationErrorMessage } from "./format-generation-error-message";
+import { generateArtworkFrameStandalone } from "./generate-artwork-frame-standalone";
+import type { GenerationProgressState } from "./generation-progress-state";
+import { handleEmptyContent } from "./handle-empty-content";
+import { handleGeneratePreChecks } from "./handle-generate-pre-checks";
+import { loadAnimatedWebPOverlayFile } from "./load-animated-web-p-overlay-file";
+import { loadExporterModule } from "./load-exporter-module";
+import { loadGifOverlayFile } from "./load-gif-overlay-file";
+import { loadQArtModule } from "./load-q-art-module";
+import { loadStaticOverlayFile } from "./load-static-overlay-file";
+import { loadWatermarkForAnimation } from "./load-watermark-for-animation";
+import { log } from "./log";
+import type { QArtPerfSnapshot } from "./q-art-perf-snapshot";
+import { QART_PERF_OVERLAY_ELEMENT_ID } from "./qart-perf-overlay-element-id";
+import { runGeneratorWithSlowStatus } from "./run-generator-with-slow-status";
+import { runQArtGeneration } from "./run-q-art-generation";
+import { runStandardGeneration } from "./run-standard-generation";
+import { scheduleTrackEvent } from "./schedule-track-event";
+import { setupValidationRunner } from "./setup-validation-runner";
+import { terminateQArtWorkerIfLoaded } from "./terminate-q-art-worker-if-loaded";
+import { updateCompositorToFrame } from "./update-compositor-to-frame";
+import { useDebounce } from "./use-debounce";
+import { YieldController } from "./yield-controller";
+import { yieldToMainThread } from "./yield-to-main-thread";
+import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservation-options";
 
 export function useQRGenerator(): UseQRGeneratorResult {
   const { t } = useTranslation();
@@ -75,7 +75,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [pendingVisible, setPendingVisible] = useState(false); // Delayed pending state to avoid immediate blur while typing
   const [error, setError] = useState<string | null>(null);
   const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(
-    null
+    null,
   );
 
   // Animation state
@@ -125,7 +125,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState<GenerationProgressState | null>(
-    null
+    null,
   );
   const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null); // NOSONAR: setter name matches domain acronym QArt
   const qartPreviewBitmapCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -170,46 +170,46 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const translateQArtStage = useCallback(
     (stage: string): string => {
       switch (stage) {
-        case 'Encoding base data':
-          return t('preview.busy.qrArt.encodingBaseData', 'Encoding the base data...');
-        case 'Analyzing semantic layout':
-          return t('preview.busy.qrArt.analyzingLayout', 'Analyzing the layout...');
-        case 'Building RS basis':
+        case "Encoding base data":
+          return t("preview.busy.qrArt.encodingBaseData", "Encoding the base data...");
+        case "Analyzing semantic layout":
+          return t("preview.busy.qrArt.analyzingLayout", "Analyzing the layout...");
+        case "Building RS basis":
           return t(
-            'preview.busy.qrArt.buildingErrorCorrectionFoundation',
-            'Building the error correction foundation...'
+            "preview.busy.qrArt.buildingErrorCorrectionFoundation",
+            "Building the error correction foundation...",
           );
-        case 'Mapping bits to pixels':
-          return t('preview.busy.qrArt.mappingBitsToPixels', 'Mapping bits to pixels...');
-        case 'Processing target image':
-          return t('preview.busy.qrArt.processingImage', 'Processing your image...');
-        case 'Ranking pixels by importance':
+        case "Mapping bits to pixels":
+          return t("preview.busy.qrArt.mappingBitsToPixels", "Mapping bits to pixels...");
+        case "Processing target image":
+          return t("preview.busy.qrArt.processingImage", "Processing your image...");
+        case "Ranking pixels by importance":
           return t(
-            'preview.busy.qrArt.rankingPixelsByImportance',
-            'Ranking pixels by importance...'
+            "preview.busy.qrArt.rankingPixelsByImportance",
+            "Ranking pixels by importance...",
           );
-        case 'Performing Gauss-Jordan elimination':
-          return t('preview.busy.qrArt.solvingMatrix', 'Solving the matrix...');
-        case 'Selecting basis vectors':
+        case "Performing Gauss-Jordan elimination":
+          return t("preview.busy.qrArt.solvingMatrix", "Solving the matrix...");
+        case "Selecting basis vectors":
           return t(
-            'preview.busy.qrArt.selectingBestBasisVectors',
-            'Selecting the best basis vectors...'
+            "preview.busy.qrArt.selectingBestBasisVectors",
+            "Selecting the best basis vectors...",
           );
-        case 'Counting predicted matches':
-          return t('preview.busy.qrArt.countingPredictedMatches', 'Counting predicted matches...');
-        case 'Modifying data bytes':
-          return t('preview.busy.qrArt.adjustingDataBytes', 'Adjusting data bytes...');
-        case 'Re-encoding QR code':
-          return t('preview.busy.qrArt.reEncodingQrCode', 'Re-encoding the QR code...');
-        case 'Validating result':
-          return t('preview.busy.qrArt.validatingResult', 'Validating the result...');
-        case 'Complete':
-          return t('preview.busy.qrArt.complete', 'Complete...');
+        case "Counting predicted matches":
+          return t("preview.busy.qrArt.countingPredictedMatches", "Counting predicted matches...");
+        case "Modifying data bytes":
+          return t("preview.busy.qrArt.adjustingDataBytes", "Adjusting data bytes...");
+        case "Re-encoding QR code":
+          return t("preview.busy.qrArt.reEncodingQrCode", "Re-encoding the QR code...");
+        case "Validating result":
+          return t("preview.busy.qrArt.validatingResult", "Validating the result...");
+        case "Complete":
+          return t("preview.busy.qrArt.complete", "Complete...");
         default:
           return stage;
       }
     },
-    [t]
+    [t],
   );
 
   const cancelGeneration = useCallback(() => {
@@ -242,25 +242,25 @@ export function useQRGenerator(): UseQRGeneratorResult {
   }, []);
 
   useEffect(() => {
-    if (!ENABLE_QART_PERF_OVERLAY || typeof document === 'undefined') return;
+    if (!ENABLE_QART_PERF_OVERLAY || typeof document === "undefined") return;
 
     let overlayEl = document.getElementById(QART_PERF_OVERLAY_ELEMENT_ID) as HTMLDivElement | null;
     if (!overlayEl) {
-      overlayEl = document.createElement('div');
+      overlayEl = document.createElement("div");
       overlayEl.id = QART_PERF_OVERLAY_ELEMENT_ID;
-      overlayEl.style.position = 'fixed';
-      overlayEl.style.right = '12px';
-      overlayEl.style.bottom = '12px';
-      overlayEl.style.zIndex = '2147483646';
-      overlayEl.style.maxWidth = '72vw';
-      overlayEl.style.padding = '6px 10px';
-      overlayEl.style.borderRadius = '8px';
-      overlayEl.style.background = 'rgba(0, 0, 0, 0.82)';
-      overlayEl.style.color = '#7CFFBE';
-      overlayEl.style.font = '11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace';
-      overlayEl.style.pointerEvents = 'none';
-      overlayEl.style.whiteSpace = 'pre';
-      overlayEl.textContent = 'QArt perf: waiting...';
+      overlayEl.style.position = "fixed";
+      overlayEl.style.right = "12px";
+      overlayEl.style.bottom = "12px";
+      overlayEl.style.zIndex = "2147483646";
+      overlayEl.style.maxWidth = "72vw";
+      overlayEl.style.padding = "6px 10px";
+      overlayEl.style.borderRadius = "8px";
+      overlayEl.style.background = "rgba(0, 0, 0, 0.82)";
+      overlayEl.style.color = "#7CFFBE";
+      overlayEl.style.font = "11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace";
+      overlayEl.style.pointerEvents = "none";
+      overlayEl.style.whiteSpace = "pre";
+      overlayEl.textContent = "QArt perf: waiting...";
       document.body.appendChild(overlayEl);
     }
 
@@ -286,8 +286,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     overlayEl.textContent = [
       `QArt ${qartPerfSnapshot.source} v${qartPerfSnapshot.version} m${qartPerfSnapshot.maskPattern}`,
-      `compute=${computeMs ?? '-'}ms render=${renderMs ?? '-'}ms preview=${previewMs ?? '-'}ms`,
-    ].join('\n');
+      `compute=${computeMs ?? "-"}ms render=${renderMs ?? "-"}ms preview=${previewMs ?? "-"}ms`,
+    ].join("\n");
   }, [qartPerfSnapshot]);
 
   // Get all relevant state from store
@@ -318,24 +318,24 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     // If overlay is enabled with high intensity, prefer higher ECC
     if (overlay.enabled && overlay.intensity > 50) {
-      return 'H'; // Maximum error correction for heavy overlays
+      return "H"; // Maximum error correction for heavy overlays
     }
 
     if (overlay.enabled && overlay.intensity > 25) {
-      return 'Q'; // High error correction for moderate overlays
+      return "Q"; // High error correction for moderate overlays
     }
 
     // For longer content, use lower ECC to fit more data
     if (contentLength > 500) {
-      return 'L'; // Low ECC for very long content
+      return "L"; // Low ECC for very long content
     }
 
     if (contentLength > 200) {
-      return 'M'; // Medium ECC for long content
+      return "M"; // Medium ECC for long content
     }
 
     // Default to Q for good balance
-    return 'Q';
+    return "Q";
   }, [auto.pickEcc, qr.ecc, overlay.enabled, overlay.intensity, getPayloadText]);
 
   // Apply safety constraints and generate warnings
@@ -401,7 +401,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // This helps users who paste UTF-8 content (emojis, Chinese, Japanese, etc.)
   // without manually changing the encoding setting
   const detectedCharacterEncoding = useMemo(() => {
-    if (!rawContent) return 'default';
+    if (!rawContent) return "default";
 
     // Helper functions to categorize characters
     // Uniquely Japanese: only found in Japanese text (hiragana, katakana)
@@ -449,23 +449,23 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     // Priority 1: If content has non-CJK Unicode (emojis, Korean, etc.), use UTF-8
     if (hasOtherNonLatin1) {
-      return 'utf8';
+      return "utf8";
     }
 
     // Priority 2: If content has uniquely Japanese chars (hiragana/katakana),
     // use Shift-JIS for efficiency (it's a native QR code encoding mode)
     if (hasUniquelyJapanese) {
-      return 'shift-jis';
+      return "shift-jis";
     }
 
     // Priority 3: If content has only shared CJK (kanji without hiragana/katakana),
     // it's likely Chinese text - use UTF-8 as Shift-JIS may not encode all Chinese chars
     if (hasSharedCJK) {
-      return 'utf8';
+      return "utf8";
     }
 
     // Content fits within Latin-1 range, default encoding works
-    return 'default';
+    return "default";
   }, [rawContent]);
 
   // Auto-update character encoding when user has 'default' selected and content requires
@@ -476,13 +476,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
   useEffect(() => {
     // Only auto-update when character encoding is 'default' (allows auto-detection)
     // If user explicitly set a specific encoding, don't override their choice
-    if (qr.characterEncoding !== 'default') return;
+    if (qr.characterEncoding !== "default") return;
 
     // If content requires UTF-8 or Shift-JIS, update the encoding
-    if (detectedCharacterEncoding === 'utf8') {
-      setQrCharacterEncoding('utf8');
-    } else if (detectedCharacterEncoding === 'shift-jis') {
-      setQrCharacterEncoding('shift-jis');
+    if (detectedCharacterEncoding === "utf8") {
+      setQrCharacterEncoding("utf8");
+    } else if (detectedCharacterEncoding === "shift-jis") {
+      setQrCharacterEncoding("shift-jis");
     }
     // Note: We don't auto-downgrade back to 'default' because once the user's
     // content triggered a specific encoding, they might paste more such content later
@@ -554,7 +554,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       overlayIntensity: safetyAdjustedConfig.intensity,
       colorMode: overlay.colorMode,
       // Avoid hidden ECC clamping in normal mode; only apply explicit safety policy caps.
-      maxOverlayIntensityByEcc: safety.mode === 'off' ? undefined : safety.maxOverlayIntensityByEcc,
+      maxOverlayIntensityByEcc: safety.mode === "off" ? undefined : safety.maxOverlayIntensityByEcc,
       preserveFinders: preservation.preserveFinders,
       preserveTiming: preservation.preserveTiming,
       preserveAlignment: preservation.preserveAlignment,
@@ -576,12 +576,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
       filterPosterize: overlay.posterizeLevels,
       // Threshold remains opt-in from the overlay control. B&W mode itself is handled by colorMode.
       filterThreshold: overlay.threshold,
-      filterEdgeDetect: overlay.edgeDetect !== 'off',
+      filterEdgeDetect: overlay.edgeDetect !== "off",
       filterEdgeMode: overlay.edgeDetect,
       filterDuotone1: overlay.duotoneColors?.[0],
       filterDuotone2: overlay.duotoneColors?.[1],
       // Map colorMode to filterGrayscale for preprocessing
-      filterGrayscale: overlay.colorMode === 'grayscale' || overlay.colorMode === 'bw',
+      filterGrayscale: overlay.colorMode === "grayscale" || overlay.colorMode === "bw",
       // NOTE: Geometric transforms (rotate, flip, crop, fit) are applied in
       // applyGeometricTransforms() BEFORE passing to qr-generator.
       // We intentionally do NOT pass these values to avoid double-application.
@@ -755,8 +755,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const settledConfig = useDebounce(config, CONFIG_SETTLE_DEBOUNCE_MS);
   const overlaySourceKey = useMemo(() => {
     const file = overlay.file;
-    if (!file) return `url:${overlay.url || ''}`;
-    return `file:${file.name}:${file.size}:${file.lastModified}:${file.type}:${overlay.url || ''}`;
+    if (!file) return `url:${overlay.url || ""}`;
+    return `file:${file.name}:${file.size}:${file.lastModified}:${file.type}:${overlay.url || ""}`;
   }, [overlay.file, overlay.url]);
   currentOverlaySourceKeyRef.current = overlaySourceKey;
 
@@ -826,7 +826,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // useEffect ran. The clearing operations are cheap and ensuring they always run
   // prevents stuck overflow error states, especially in iCalendar/Event content types.
   useEffect(() => {
-    log.debug('rawContent useEffect triggered', {
+    log.debug("rawContent useEffect triggered", {
       rawContentLength: rawContent.length,
       rawContentPreview: rawContent.substring(0, 100),
       lastOverflowContent: lastOverflowContentRef.current?.substring(0, 50),
@@ -895,7 +895,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           workingCanvas,
           overlay.rotateDeg,
           overlay.flipX,
-          overlay.flipY
+          overlay.flipY,
         );
         if (!rotated) return workingCanvas;
         workingCanvas = rotated;
@@ -910,7 +910,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       overlay.cropEnabled,
       overlay.cropRegion,
       overlay.fit,
-    ]
+    ],
   );
 
   // Load overlay image when file changes
@@ -933,11 +933,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     // Check for GIF format (use compositor for optimal decoding)
     const isGif =
-      overlay.file.type === 'image/gif' || overlay.file.name.toLowerCase().endsWith('.gif');
+      overlay.file.type === "image/gif" || overlay.file.name.toLowerCase().endsWith(".gif");
 
     // Check for animated WebP (still uses legacy path for now)
     const isAnimatedWebP =
-      overlay.file.type === 'image/webp' || overlay.file.name.toLowerCase().endsWith('.webp');
+      overlay.file.type === "image/webp" || overlay.file.name.toLowerCase().endsWith(".webp");
 
     if (isGif) {
       loadGifOverlayFile(
@@ -946,7 +946,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         setGifFrames,
         setCurrentFrame,
         setRawOverlayCanvas,
-        setIsLoadingOverlay
+        setIsLoadingOverlay,
       );
     } else if (isAnimatedWebP) {
       loadAnimatedWebPOverlayFile(
@@ -956,7 +956,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         setGifCompositor,
         setCurrentFrame,
         setRawOverlayCanvas,
-        setIsLoadingOverlay
+        setIsLoadingOverlay,
       );
     } else {
       loadStaticOverlayFile(
@@ -964,7 +964,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         setGifFrames,
         setGifCompositor,
         setRawOverlayCanvas,
-        setIsLoadingOverlay
+        setIsLoadingOverlay,
       );
     }
   }, [overlay.file, overlay.gifDisposalHandling]);
@@ -982,7 +982,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Generate QR code
   const generate = useCallback(async () => {
-    log.debug('generate() called', {
+    log.debug("generate() called", {
       debouncedContentLength: debouncedConfig.content?.length,
       debouncedContentPreview: debouncedConfig.content?.substring(0, 100),
       lastOverflowContent: lastOverflowContentRef.current?.substring(0, 50),
@@ -1009,7 +1009,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     const requestId = ++generationRequestIdRef.current;
     const isStaleRequest = (): boolean => generationRequestIdRef.current !== requestId;
 
-    const trimmedContent = debouncedConfig.content?.trim() || '';
+    const trimmedContent = debouncedConfig.content?.trim() || "";
     const emptyCheck = handleEmptyContent({
       trimmedContent,
       isStaleRequest,
@@ -1024,7 +1024,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     setIsLoading(true);
     setError(null);
-    updateGenerationProgress(t('preview.busy.preparingPreview', 'Preparing your preview...'), 6);
+    updateGenerationProgress(t("preview.busy.preparingPreview", "Preparing your preview..."), 6);
 
     // CRITICAL: Yield to browser to allow React to render the loading state
     // before starting expensive QR generation. Without this, the busy overlay
@@ -1039,8 +1039,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
     if (isStaleRequest()) return;
     setIsRendering(true);
     updateGenerationProgress(
-      t('preview.busy.buildingQrStructure', 'Building the QR structure...'),
-      14
+      t("preview.busy.buildingQrStructure", "Building the QR structure..."),
+      14,
     );
     const yieldForResponsiveness = async (): Promise<boolean> => {
       await yieldToMainThread(16);
@@ -1061,7 +1061,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       const effectiveConfig = { ...debouncedConfig };
       const runGeneratorWithStatus = (
         cfg: QRGeneratorConfig,
-        overlaySource: HTMLCanvasElement | OffscreenCanvas | null
+        overlaySource: HTMLCanvasElement | OffscreenCanvas | null,
       ): Promise<HTMLCanvasElement | OffscreenCanvas | null> =>
         runGeneratorWithSlowStatus({
           cfg,
@@ -1071,7 +1071,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           t,
         });
 
-      if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
+      if (overlay.enabled && overlay.mode === "artwork" && overlayCanvas) {
         const qartResult = await runQArtGeneration({
           overlayCanvas,
           debouncedConfig: debouncedConfig as unknown as Record<string, unknown>,
@@ -1133,7 +1133,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       });
     } catch (err) {
       if (isStaleRequest()) return;
-      log.error('QR generation error', { error: err });
+      log.error("QR generation error", { error: err });
       const errorMessage = formatGenerationErrorMessage(err, t);
       setError(errorMessage);
       clearGenerationProgress();
@@ -1175,7 +1175,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // Regenerate when config changes
   // Skip if we're playing from cached animation frames or if we have an overflow error
   useEffect(() => {
-    log.debug('regenerate useEffect triggered', {
+    log.debug("regenerate useEffect triggered", {
       hasOverflowError,
       isOverflowBlocked: isOverflowBlockedRef.current,
       isAnimationCacheReady,
@@ -1190,11 +1190,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // from before the rawContent useEffect's state update was flushed.
     // The ref is always up-to-date because it's synchronous.
     if (isOverflowBlockedRef.current) {
-      log.debug('regenerate BLOCKED by overflow ref');
+      log.debug("regenerate BLOCKED by overflow ref");
       return;
     }
     if (autoGenerateSuppressedRef.current) {
-      log.debug('regenerate BLOCKED by user cancel');
+      log.debug("regenerate BLOCKED by user cancel");
       return;
     }
     // If we have cached animation frames and animation is playing, don't regenerate
@@ -1241,7 +1241,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     }
 
     if (candidateIndices.length > 0) {
-      log.debug('effectiveFrameIndices', {
+      log.debug("effectiveFrameIndices", {
         totalFrames,
         preDecimation: preDecimationCount,
         postDecimation: candidateIndices.length,
@@ -1269,7 +1269,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       const frames = effectiveFrameIndices.map((i) => {
         const srcDisposal = gifCompositor.disposalType(i);
         const effectiveDisposal =
-          overlay.gifDisposalHandling === 'simplify' && srcDisposal === 3 ? 2 : srcDisposal;
+          overlay.gifDisposalHandling === "simplify" && srcDisposal === 3 ? 2 : srcDisposal;
         return {
           canvas: gifCompositor.canvas, // Note: this is the same canvas, caller must use compositor.apply(i)
           delay: gifCompositor.delayMs(i),
@@ -1278,7 +1278,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       });
       const totalMs = frames.reduce((s, f) => s + f.delay, 0);
       const uniqueDisposals = [...new Set(frames.map((f) => f.disposalType))].sort((a, b) => a - b);
-      log.debug('effectiveFrames: compositor', {
+      log.debug("effectiveFrames: compositor", {
         frameCount: frames.length,
         sampleDelays: frames.slice(0, 3).map((f) => f.delay),
         uniqueDisposals,
@@ -1291,7 +1291,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // Legacy path for WebP
     const frames = effectiveFrameIndices.map((i) => gifFrames[i]).filter(Boolean);
     if (frames.length > 0) {
-      log.debug('effectiveFrames: legacy', {
+      log.debug("effectiveFrames: legacy", {
         frameCount: frames.length,
         sampleDelays: frames.slice(0, 3).map((f) => f.delay),
       });
@@ -1380,7 +1380,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
       if (elapsed >= frameDelay) {
         if (tickCount < 3) {
-          log.debug('animation tick', {
+          log.debug("animation tick", {
             tickCount,
             frameIndex: activeFrameIndex,
             elapsed: Math.round(elapsed),
@@ -1388,7 +1388,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             playbackFrameCount,
           });
         } else if (tickCount % 60 === 0) {
-          log.trace('animation tick', {
+          log.trace("animation tick", {
             tickCount,
             frameIndex: activeFrameIndex,
             elapsed: Math.round(elapsed),
@@ -1478,16 +1478,16 @@ export function useQRGenerator(): UseQRGeneratorResult {
     if (gifCompositor) {
       const lastRendered = lastRenderedFrameRef.current;
 
-      log.trace('overlay frame update', {
+      log.trace("overlay frame update", {
         currentFrame,
         frameIdx,
         lastRendered,
         action:
           lastRendered < 0 || frameIdx < lastRendered
-            ? 'replay'
+            ? "replay"
             : frameIdx > lastRendered
-              ? 'forward'
-              : 'noop',
+              ? "forward"
+              : "noop",
       });
 
       updateCompositorToFrame(gifCompositor, frameIdx, lastRendered);
@@ -1537,7 +1537,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Prepare interstitial ad on mount (so it's ready when user downloads)
   useEffect(() => {
-    prepareInterstitial('export');
+    prepareInterstitial("export");
   }, []);
 
   // Download function with output scaling
@@ -1551,21 +1551,21 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     try {
       // Show interstitial ad BEFORE download on native platforms
-      await showInterstitial('export');
-      scheduleTrackEvent('export', { format: output.format });
+      await showInterstitial("export");
+      scheduleTrackEvent("export", { format: output.format });
       const exporter = await loadExporterModule();
 
       const exportCanvas = createScaledExportCanvas(
         canvas,
         output.widthPx,
         output.heightPx,
-        render.crispEdges
+        render.crispEdges,
       );
 
       const exportConfig = buildExportConfig(output, metadata);
       const pngMetadata = buildPngMetadata(metadata);
 
-      if (output.format === 'svg') {
+      if (output.format === "svg") {
         await downloadSvgFormat({
           exporter,
           exportCanvas,
@@ -1580,7 +1580,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           renderState: render,
           metadataState: metadata,
         });
-      } else if (output.format === 'gif' && animationFrameCount > 1) {
+      } else if (output.format === "gif" && animationFrameCount > 1) {
         await downloadAnimatedGifFormat({
           exporter,
           cachedAnimationFrames: animationFramesRef.current,
@@ -1594,13 +1594,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
           gifUseFrameDelays: overlay.gifUseFrameDelays,
           gifMaxFps: overlay.gifMaxFps,
         });
-      } else if (output.format === 'gif') {
+      } else if (output.format === "gif") {
         await exporter.downloadGif([exportCanvas], exportConfig);
       } else {
         await exporter.downloadImage(exportCanvas, exportConfig, pngMetadata, output.dpi);
       }
     } catch (err) {
-      log.error('Download error', { error: err });
+      log.error("Download error", { error: err });
     } finally {
       setIsExporting(false);
     }
@@ -1634,8 +1634,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
     const { modulePatternEffects, resultPatternEffects } = buildPatternEffectLists(animation);
     const hasColorCycle = animation.colorCycle === true;
     const hasPattern = modulePatternEffects.length > 0 || resultPatternEffects.length > 0;
-    const hasTemporalDither = animation.temporalDither !== 'off';
-    const hasInterpolation = animation.interpolate !== 'none';
+    const hasTemporalDither = animation.temporalDither !== "off";
+    const hasInterpolation = animation.interpolate !== "none";
     const hasJitter = animation.moduleJitterPx > 0 || modulePatternEffects.length > 0;
 
     // True only if at least one animation effect is actually enabled
@@ -1655,14 +1655,14 @@ export function useQRGenerator(): UseQRGeneratorResult {
         frameIndex,
         totalFrames,
         animation.moduleJitterPx,
-        modulePatternEffects
+        modulePatternEffects,
       );
 
     const scratchPool = createScratchCanvasPool();
     const applyResultPatternStackPersistent = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
-      totalFrames: number
+      totalFrames: number,
     ): HTMLCanvasElement | OffscreenCanvas =>
       applyPatternStackToCanvas(
         sourceCanvas,
@@ -1670,12 +1670,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
         frameIndex,
         totalFrames,
         true,
-        scratchPool.getPatternScratch
+        scratchPool.getPatternScratch,
       );
     const applyResultPatternStackEphemeral = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
-      totalFrames: number
+      totalFrames: number,
     ): HTMLCanvasElement | OffscreenCanvas =>
       applyPatternStackToCanvas(
         sourceCanvas,
@@ -1683,12 +1683,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
         frameIndex,
         totalFrames,
         false,
-        scratchPool.getPatternScratch
+        scratchPool.getPatternScratch,
       );
     const applyModulePatternStackEphemeral = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
-      totalFrames: number
+      totalFrames: number,
     ): HTMLCanvasElement | OffscreenCanvas =>
       applyPatternStackToCanvas(
         sourceCanvas,
@@ -1696,7 +1696,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         frameIndex,
         totalFrames,
         false,
-        scratchPool.getPatternScratch
+        scratchPool.getPatternScratch,
       );
 
     // Early return only if no animation is needed
@@ -1717,8 +1717,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
     setIsAnimationCacheReady(false);
     setIsLoading(true);
     updateGenerationProgress(
-      t('preview.busy.preparingAnimationFrames', 'Preparing the animation frames...'),
-      8
+      t("preview.busy.preparingAnimationFrames", "Preparing the animation frames..."),
+      8,
     );
 
     // Generate QR for each frame (batch generation)
@@ -1743,7 +1743,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // For GIF compositor, we need to process frames sequentially using apply/dispose
       const useCompositor = gifCompositor && effectiveFrameIndices.length > 0 && overlay.enabled;
 
-      log.debug('animation cache: building', {
+      log.debug("animation cache: building", {
         effectiveFrameCount: effectiveFrames.length,
         useCompositor: !!useCompositor,
         hasMultiFrameOverlay,
@@ -1755,7 +1755,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         mode !== undefined && INTRINSICALLY_SCALED_OVERLAY_MODES.has(mode);
       const previewScanConfigBase = {
         ...debouncedConfig,
-        scanGateProfile: 'preview' as const,
+        scanGateProfile: "preview" as const,
         ...(hasMultiFrameOverlay && isScaledOverlayMode(debouncedConfig.overlayMode)
           ? { forceScaledOverlay: true }
           : {}),
@@ -1782,15 +1782,15 @@ export function useQRGenerator(): UseQRGeneratorResult {
         gifCompositor.reset();
       }
 
-      const isArtworkMode = overlay.enabled && overlay.mode === 'artwork';
+      const isArtworkMode = overlay.enabled && overlay.mode === "artwork";
       const qartModule = isArtworkMode ? await loadQArtModule() : null;
       const artworkState = createArtworkFrameState(
-        debouncedConfig as unknown as Record<string, unknown>
+        debouncedConfig as unknown as Record<string, unknown>,
       );
 
       const generateArtworkFrame = (
         frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
-        frameIdx: number
+        frameIdx: number,
       ): Promise<HTMLCanvasElement | OffscreenCanvas | null> =>
         generateArtworkFrameStandalone({
           frameOverlayCanvas,
@@ -1915,9 +1915,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const hasMultiFrameContent = (gifCompositor?.frameCount || 0) > 1 || gifFrames.length > 1;
   const hasAnimationEffectsEnabled =
     animation.colorCycle ||
-    animation.pattern !== 'none' ||
-    animation.pattern2 !== 'none' ||
-    animation.temporalDither !== 'off' ||
+    animation.pattern !== "none" ||
+    animation.pattern2 !== "none" ||
+    animation.temporalDither !== "off" ||
     animation.moduleJitterPx > 0;
 
   // Show preparing state when:

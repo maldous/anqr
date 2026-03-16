@@ -4,9 +4,9 @@
  * Notes: Render artwork worker matrix result.
  */
 
-import type { QArtWorkerResult } from '@/features/generator/application/qart/qart-shared-types';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { qrGenerator } from '@/features/generator/application/generation/generation-singleton';
+import type { QArtWorkerResult } from "@/features/generator/application/qart/qart-shared-types";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { qrGenerator } from "@/features/generator/application/generation/generation-singleton";
 
 export async function renderArtworkWorkerMatrix(params: {
   workerResult: QArtWorkerResult;
@@ -21,6 +21,6 @@ export async function renderArtworkWorkerMatrix(params: {
   return await qrGenerator.renderFromPackedMatrix(
     params.workerResult.matrix,
     params.workerResult.moduleCount,
-    qrArtConfig
+    qrArtConfig,
   );
 }

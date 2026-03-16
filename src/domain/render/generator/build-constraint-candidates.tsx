@@ -1,8 +1,8 @@
-import { isFixedDarkModule } from './is-fixed-dark-module';
-import { computeModuleViolation } from './compute-module-violation';
-import { scoreModulePixels } from './score-module-pixels';
-import type { ConstraintCandidate } from './constraint-candidate';
-import type { ConstraintCtx } from './constraint-ctx';
+import { isFixedDarkModule } from "./is-fixed-dark-module";
+import { computeModuleViolation } from "./compute-module-violation";
+import { scoreModulePixels } from "./score-module-pixels";
+import type { ConstraintCandidate } from "./constraint-candidate";
+import type { ConstraintCtx } from "./constraint-ctx";
 
 export function buildConstraintCandidates(ctx: ConstraintCtx): {
   candidates: ConstraintCandidate[];
@@ -35,7 +35,7 @@ export function buildConstraintCandidates(ctx: ConstraintCtx): {
         darkMinMap[mr][mc],
         lightMaxMap[mr][mc],
         darkCenterMinMap[mr][mc],
-        lightCenterMaxMap[mr][mc]
+        lightCenterMaxMap[mr][mc],
       );
       if (!violation) continue;
       totalViolationEnergy +=
@@ -48,7 +48,7 @@ export function buildConstraintCandidates(ctx: ConstraintCtx): {
         violation.occViolation,
         violation.centerViolation,
         violation.toDark,
-        candidates
+        candidates,
       );
     }
   }

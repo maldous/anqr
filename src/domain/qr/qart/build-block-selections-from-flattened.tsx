@@ -1,9 +1,9 @@
-import type { BlockSelectionResult } from './elimination';
-import type { FlattenedSelection } from './scan-fallback';
+import type { BlockSelectionResult } from "./elimination";
+import type { FlattenedSelection } from "./scan-fallback";
 
 export function buildBlockSelectionsFromFlattened(
   flattened: FlattenedSelection[],
-  blockIndices: number[]
+  blockIndices: number[],
 ): BlockSelectionResult[] {
   const blockMap = new Map<number, number[]>();
   for (const idx of blockIndices) {

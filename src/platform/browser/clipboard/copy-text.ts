@@ -3,9 +3,9 @@
  * Text clipboard operations
  */
 
-import { createLogger } from '../../../infra/logging/logger';
+import { createLogger } from "../../../infra/logging/logger";
 
-const log = createLogger('CLIPBOARD');
+const log = createLogger("CLIPBOARD");
 
 /**
  * Copy text to clipboard
@@ -15,7 +15,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    log.debug('Clipboard API failed', { error });
+    log.debug("Clipboard API failed", { error });
     return false;
   }
 }

@@ -1,4 +1,4 @@
-import { drawStyledRing } from './draw-styled-ring';
+import { drawStyledRing } from "./draw-styled-ring";
 
 /**
  * Draw a finder ring with the specified style
@@ -8,7 +8,7 @@ export function drawFinderRing(
   x: number,
   y: number,
   size: number,
-  style: string
+  style: string,
 ): void {
   drawStyledRing(ctx, x, y, size, style, 0.2);
 }

@@ -1,2 +1,2 @@
-export { getRSBlocks } from './get-rs-blocks';
-export { QRRSBlock } from './qrrs-block';
+export { getRSBlocks } from "./get-rs-blocks";
+export { QRRSBlock } from "./qrrs-block";

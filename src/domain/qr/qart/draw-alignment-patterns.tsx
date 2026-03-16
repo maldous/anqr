@@ -1,10 +1,10 @@
-import { getPatternPosition } from '../encode/utils';
-import { drawSingleAlignmentPattern } from './draw-single-alignment-pattern';
+import { getPatternPosition } from "../encode/utils";
+import { drawSingleAlignmentPattern } from "./draw-single-alignment-pattern";
 
 export function drawAlignmentPatterns(
   modules: (boolean | null)[][],
   version: number,
-  _moduleCount: number
+  _moduleCount: number,
 ): void {
   if (version < 2) return;
   const positions = getPatternPosition(version);

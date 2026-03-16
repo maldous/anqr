@@ -1,3 +1,3 @@
-import type { QRGeneratorConfig } from '../domain/render/generator';
+import type { QRGeneratorConfig } from "../domain/render/generator";
 
-export type EccLevel = QRGeneratorConfig['errorCorrection'];
+export type EccLevel = QRGeneratorConfig["errorCorrection"];

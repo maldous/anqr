@@ -1,7 +1,7 @@
-import type { Point, QRLocation } from '../../../modules/qr-decoder/types';
-import { qrDecoderLog } from './qr-decoder-log';
-import { sampleSinglePixel } from './sample-single-pixel';
-import { validateFinderRegion } from './validate-finder-region';
+import type { Point, QRLocation } from "../../../modules/qr-decoder/types";
+import { qrDecoderLog } from "./qr-decoder-log";
+import { sampleSinglePixel } from "./sample-single-pixel";
+import { validateFinderRegion } from "./validate-finder-region";
 
 /**
  * Extract the module matrix from the image
@@ -13,7 +13,7 @@ import { validateFinderRegion } from './validate-finder-region';
 export function extractModuleMatrix(
   imageData: ImageData,
   location: QRLocation,
-  globalThreshold: number
+  globalThreshold: number,
 ): boolean[][] {
   const { data: pixels, width, height } = imageData;
   const { moduleCount } = location;
@@ -28,11 +28,11 @@ export function extractModuleMatrix(
   // Calculate distances and unified pitch
   const topDist = Math.hypot(
     location.topRight.x - location.topLeft.x,
-    location.topRight.y - location.topLeft.y
+    location.topRight.y - location.topLeft.y,
   );
   const leftDist = Math.hypot(
     location.bottomLeft.x - location.topLeft.x,
-    location.bottomLeft.y - location.topLeft.y
+    location.bottomLeft.y - location.topLeft.y,
   );
   const avgDist = (topDist + leftDist) / 2;
   const unifiedPitch = avgDist / moduleSpan;
@@ -55,7 +55,7 @@ export function extractModuleMatrix(
     y: downDirY * unifiedPitch,
   };
 
-  qrDecoderLog.trace('extract: Unified pitch calculation', {
+  qrDecoderLog.trace("extract: Unified pitch calculation", {
     topDist: topDist.toFixed(2),
     leftDist: leftDist.toFixed(2),
     avgDist: avgDist.toFixed(2),
@@ -65,7 +65,7 @@ export function extractModuleMatrix(
     originalDownMag: (leftDist / moduleSpan).toFixed(3),
     driftPerModule: Math.abs(topDist / moduleSpan - leftDist / moduleSpan).toFixed(4),
     totalDriftOver29Modules: (Math.abs(topDist / moduleSpan - leftDist / moduleSpan) * 29).toFixed(
-      2
+      2,
     ),
   });
 
@@ -86,7 +86,7 @@ export function extractModuleMatrix(
   };
   const topLeftError = Math.hypot(
     verifyTopLeft.x - location.topLeft.x,
-    verifyTopLeft.y - location.topLeft.y
+    verifyTopLeft.y - location.topLeft.y,
   );
 
   // The finder center at module position (moduleCount-3.5, 3.5) should map to topRight
@@ -96,7 +96,7 @@ export function extractModuleMatrix(
   };
   const topRightError = Math.hypot(
     verifyTopRight.x - location.topRight.x,
-    verifyTopRight.y - location.topRight.y
+    verifyTopRight.y - location.topRight.y,
   );
 
   // The finder center at module position (3.5, moduleCount-3.5) should map to bottomLeft
@@ -106,10 +106,10 @@ export function extractModuleMatrix(
   };
   const bottomLeftError = Math.hypot(
     verifyBottomLeft.x - location.bottomLeft.x,
-    verifyBottomLeft.y - location.bottomLeft.y
+    verifyBottomLeft.y - location.bottomLeft.y,
   );
 
-  qrDecoderLog.trace('extract: Origin validation', {
+  qrDecoderLog.trace("extract: Origin validation", {
     origin: `(${origin.x.toFixed(1)}, ${origin.y.toFixed(1)})`,
     rightVec: `(${rightVec.x.toFixed(2)}, ${rightVec.y.toFixed(2)})`,
     downVec: `(${downVec.x.toFixed(2)}, ${downVec.y.toFixed(2)})`,
@@ -125,7 +125,7 @@ export function extractModuleMatrix(
   });
 
   if (topLeftError > 1 || topRightError > 1 || bottomLeftError > 1) {
-    qrDecoderLog.debug('extract: Finder center mapping errors detected', {
+    qrDecoderLog.debug("extract: Finder center mapping errors detected", {
       topLeftError: topLeftError.toFixed(2),
       topRightError: topRightError.toFixed(2),
       bottomLeftError: bottomLeftError.toFixed(2),
@@ -135,9 +135,9 @@ export function extractModuleMatrix(
   // Note: Adaptive local thresholding (HybridBinarizer) infrastructure is kept
   // but not used - the global threshold from finder patterns is more reliable.
 
-  qrDecoderLog.trace('extract: Sampling configuration', {
+  qrDecoderLog.trace("extract: Sampling configuration", {
     moduleSize: location.moduleSize.toFixed(1),
-    samplingMode: 'global threshold (from finder patterns)',
+    samplingMode: "global threshold (from finder patterns)",
     globalThreshold: globalThreshold.toFixed(1),
   });
 
@@ -185,9 +185,9 @@ export function extractModuleMatrix(
     matrix.push(matrixRow);
   }
 
-  qrDecoderLog.trace('extract: Extracted matrix', {
+  qrDecoderLog.trace("extract: Extracted matrix", {
     moduleCount,
-    thresholdMode: 'global (from finder patterns)',
+    thresholdMode: "global (from finder patterns)",
     threshold: globalThreshold.toFixed(1),
     darkModules: totalDarkModules,
     lightModules: totalLightModules,
@@ -197,22 +197,22 @@ export function extractModuleMatrix(
   // Validate matrix by checking finder patterns (reuse finderPattern defined above)
   const tlResult = validateFinderRegion(matrix, finderPattern, 0, 0);
 
-  qrDecoderLog.trace('extract: Top-left finder pattern validation', {
+  qrDecoderLog.trace("extract: Top-left finder pattern validation", {
     matches: tlResult.matches,
     mismatches: tlResult.mismatches,
     accuracy: `${((tlResult.matches / 49) * 100).toFixed(1)}%`,
-    errors: tlResult.errors.length > 0 ? tlResult.errors : 'none',
+    errors: tlResult.errors.length > 0 ? tlResult.errors : "none",
   });
 
   // Validate top-right finder pattern (at columns moduleCount-7 to moduleCount-1)
   const trColOffset = moduleCount - 7;
   const trResult = validateFinderRegion(matrix, finderPattern, 0, trColOffset);
 
-  qrDecoderLog.trace('extract: Top-right finder pattern validation', {
+  qrDecoderLog.trace("extract: Top-right finder pattern validation", {
     matches: trResult.matches,
     mismatches: trResult.mismatches,
     accuracy: `${((trResult.matches / 49) * 100).toFixed(1)}%`,
-    errors: trResult.errors.length > 0 ? trResult.errors : 'none',
+    errors: trResult.errors.length > 0 ? trResult.errors : "none",
   });
 
   // Check for potential 180° rotation: if top-right is very wrong but top-left is ok,
@@ -223,7 +223,7 @@ export function extractModuleMatrix(
   const trAccuracy = trResult.matches / 49;
 
   if (tlMismatches > 20 || trMismatches > 20) {
-    qrDecoderLog.debug('extract: Finder pattern accuracy very low - matrix may be mis-oriented', {
+    qrDecoderLog.debug("extract: Finder pattern accuracy very low - matrix may be mis-oriented", {
       topLeftAccuracy: `${(tlAccuracy * 100).toFixed(1)}%`,
       topRightAccuracy: `${(trAccuracy * 100).toFixed(1)}%`,
     });
@@ -232,11 +232,11 @@ export function extractModuleMatrix(
   // Detect 180° rotation: top-left looks good but top-right is garbage (or vice versa)
   if (tlAccuracy > 0.8 && trAccuracy < 0.5) {
     qrDecoderLog.debug(
-      'extract: Possible 180° rotation detected - top-left OK but top-right wrong'
+      "extract: Possible 180° rotation detected - top-left OK but top-right wrong",
     );
   } else if (trAccuracy > 0.8 && tlAccuracy < 0.5) {
     qrDecoderLog.debug(
-      'extract: Possible 180° rotation detected - top-right OK but top-left wrong'
+      "extract: Possible 180° rotation detected - top-right OK but top-left wrong",
     );
   }
 

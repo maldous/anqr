@@ -1,5 +1,5 @@
 export function waitForAnimationReady(
-  maxRetries: number
+  maxRetries: number,
 ): Promise<typeof globalThis.__ANQR_STATE__> {
   return new Promise((resolve) => {
     let attempts = 0;

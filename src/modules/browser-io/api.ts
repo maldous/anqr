@@ -1,1 +1,1 @@
-export * from '../../platform/browser/io/api';
+export * from "../../platform/browser/io/api";

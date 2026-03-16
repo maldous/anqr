@@ -1,11 +1,11 @@
-import { getBitsPerGroup } from './get-bits-per-group';
-import { getNumericBitsCount } from './get-numeric-bits-count';
-import { getNumericGroupMax } from './get-numeric-group-max';
+import { getBitsPerGroup } from "./get-bits-per-group";
+import { getNumericBitsCount } from "./get-numeric-bits-count";
+import { getNumericGroupMax } from "./get-numeric-group-max";
 
 export function computeNumericGroupSafeBits(
   suffixLength: number,
   numericDataStart: number,
-  buffer: { getAt: (index: number) => boolean }
+  buffer: { getAt: (index: number) => boolean },
 ): boolean[] {
   const numericDataBits = getNumericBitsCount(suffixLength);
   const safeBits: boolean[] = Array.from({ length: numericDataBits }, () => false);

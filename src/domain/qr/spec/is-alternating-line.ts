@@ -1,10 +1,10 @@
-import type { DarkModuleReader } from './verify.types';
+import type { DarkModuleReader } from "./verify.types";
 
 export function isAlternatingLine(
-  isDark: DarkModuleReader['isDark'],
+  isDark: DarkModuleReader["isDark"],
   row: number,
   colStart: number,
-  colEnd: number
+  colEnd: number,
 ): boolean {
   let previous = isDark(row, colStart);
   for (let col = colStart + 1; col <= colEnd; col++) {

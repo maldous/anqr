@@ -1,4 +1,4 @@
-import { parsePrefixedPayload } from './parse-prefixed-payload';
+import { parsePrefixedPayload } from "./parse-prefixed-payload";
 
 // ---------------------------------------------------------------------------
 // 3. MeCard parser – parses MECARD:N:Last,First;...;;
@@ -15,33 +15,33 @@ export function parseMeCardPayload(payload: string): Record<string, string | nul
     note: null,
   };
 
-  const parsed = parsePrefixedPayload(payload, 'MECARD:');
+  const parsed = parsePrefixedPayload(payload, "MECARD:");
   if (!parsed) return result;
 
   for (const [key, value] of Object.entries(parsed)) {
     switch (key) {
-      case 'N':
-        result.name = value.replaceAll(',', ' ');
+      case "N":
+        result.name = value.replaceAll(",", " ");
         break;
-      case 'ORG':
+      case "ORG":
         result.organization = value;
         break;
-      case 'TEL':
+      case "TEL":
         result.phone = value;
         break;
-      case 'EMAIL':
+      case "EMAIL":
         result.email = value;
         break;
-      case 'ADR':
-        result.address = value.replaceAll(',', ', ');
+      case "ADR":
+        result.address = value.replaceAll(",", ", ");
         break;
-      case 'BDAY':
+      case "BDAY":
         result.birthday = value;
         break;
-      case 'URL':
+      case "URL":
         result.url = value;
         break;
-      case 'NOTE':
+      case "NOTE":
         result.note = value;
         break;
     }

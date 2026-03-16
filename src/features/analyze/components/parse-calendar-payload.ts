@@ -1,5 +1,5 @@
-import { forEachFoldedLine } from './for-each-folded-line';
-import { processCalendarLine } from './process-calendar-line';
+import { forEachFoldedLine } from "./for-each-folded-line";
+import { processCalendarLine } from "./process-calendar-line";
 
 export function parseCalendarPayload(payload: string): Record<string, string | boolean | null> {
   const result: Record<string, string | boolean | null> = {
@@ -22,8 +22,8 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
 
   if (
     !(
-      payload.toUpperCase().includes('BEGIN:VCALENDAR') ||
-      payload.toUpperCase().includes('BEGIN:VEVENT')
+      payload.toUpperCase().includes("BEGIN:VCALENDAR") ||
+      payload.toUpperCase().includes("BEGIN:VEVENT")
     )
   ) {
     return result;

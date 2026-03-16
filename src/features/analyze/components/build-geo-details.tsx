@@ -1,6 +1,6 @@
-import { ChevronRight, MapPin } from 'lucide-react';
-import { parseGeoPayload } from './payload-parsers';
-import type { DetailEntry } from './detail-entry';
+import { ChevronRight, MapPin } from "lucide-react";
+import { parseGeoPayload } from "./payload-parsers";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildGeoDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -8,7 +8,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
 
   if (geoData.latitude !== null && geoData.longitude !== null) {
     details.push({
-      label: 'Latitude',
+      label: "Latitude",
       value: (
         <span className="font-mono text-xs">
           {Number(geoData.latitude).toFixed(6)}° {geoData.latHemisphere}
@@ -17,7 +17,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
       icon: <MapPin className="w-3 h-3" />,
     });
     details.push({
-      label: 'Longitude',
+      label: "Longitude",
       value: (
         <span className="font-mono text-xs">
           {Number(geoData.longitude).toFixed(6)}° {geoData.lonHemisphere}
@@ -29,7 +29,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
 
   if (geoData.latDms && geoData.lonDms) {
     details.push({
-      label: 'DMS Format',
+      label: "DMS Format",
       value: (
         <span className="font-mono text-xs">
           {geoData.latDms}, {geoData.lonDms}
@@ -41,7 +41,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
 
   if (geoData.altitude !== null) {
     details.push({
-      label: 'Altitude',
+      label: "Altitude",
       value: `${geoData.altitude}m`,
       icon: <MapPin className="w-3 h-3" />,
     });
@@ -49,7 +49,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
 
   if (geoData.uncertainty !== null) {
     details.push({
-      label: 'Uncertainty',
+      label: "Uncertainty",
       value: `±${geoData.uncertainty}m`,
       icon: <MapPin className="w-3 h-3" />,
     });
@@ -57,7 +57,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
 
   if (geoData.googleMapsUrl) {
     details.push({
-      label: 'Google Maps',
+      label: "Google Maps",
       value: (
         <a
           href={String(geoData.googleMapsUrl)}
@@ -73,7 +73,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
   }
   if (geoData.appleMapsUrl) {
     details.push({
-      label: 'Apple Maps',
+      label: "Apple Maps",
       value: (
         <a
           href={String(geoData.appleMapsUrl)}
@@ -89,7 +89,7 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
   }
   if (geoData.osmUrl) {
     details.push({
-      label: 'OpenStreetMap',
+      label: "OpenStreetMap",
       value: (
         <a
           href={String(geoData.osmUrl)}

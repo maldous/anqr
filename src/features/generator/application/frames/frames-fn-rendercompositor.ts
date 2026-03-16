@@ -4,11 +4,11 @@
  * Notes: Render frame using GIF compositor.
  */
 
-import type { GifCompositor } from '@/modules/animation';
-import { type TemporalDitherMode } from '@/domain/render/dither/temporal';
-import type { QRGeneratorConfig } from '@/modules/qr-generator';
-import { applyFrameTemporalNoise } from './apply-frame-temporal-noise';
-import { renderGeneratedFrame } from './render-generated-frame';
+import type { GifCompositor } from "@/modules/animation";
+import { type TemporalDitherMode } from "@/domain/render/dither/temporal";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { applyFrameTemporalNoise } from "./apply-frame-temporal-noise";
+import { renderGeneratedFrame } from "./render-generated-frame";
 
 export async function renderFrameWithCompositor(params: {
   gifCompositor: GifCompositor;
@@ -23,7 +23,7 @@ export async function renderFrameWithCompositor(params: {
   isArtworkMode: boolean;
   generateArtworkFrame: (
     c: HTMLCanvasElement | OffscreenCanvas,
-    fi: number
+    fi: number,
   ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
 }): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
   const actualFrameIdx = params.effectiveFrameIndices[params.frameIdx];

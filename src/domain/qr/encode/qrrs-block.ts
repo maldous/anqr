@@ -1,4 +1,4 @@
-import { getRSBlocks } from './get-rs-blocks';
+import { getRSBlocks } from "./get-rs-blocks";
 
 export const QRRSBlock = {
   getRSBlocks,

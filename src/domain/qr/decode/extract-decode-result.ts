@@ -2,9 +2,9 @@ import type {
   DecodeResult,
   DecoderMetadata,
   ECCLevelChar,
-} from '../../../modules/qr-decoder/types';
-import { type Result, ResultMetadataType } from './result-types';
-import { detectEncodingMode } from './adapter-detect-encoding-mode';
+} from "../../../modules/qr-decoder/types";
+import { type Result, ResultMetadataType } from "./result-types";
+import { detectEncodingMode } from "./adapter-detect-encoding-mode";
 
 export function extractDecodeResult(result: Result, imageData: ImageData): DecodeResult {
   const text = result.getText();
@@ -57,7 +57,7 @@ export function extractDecodeResult(result: Result, imageData: ImageData): Decod
   }
 
   const version =
-    typeof versionFromMetadata === 'number' && versionFromMetadata >= 1 && versionFromMetadata <= 40
+    typeof versionFromMetadata === "number" && versionFromMetadata >= 1 && versionFromMetadata <= 40
       ? versionFromMetadata
       : null;
   const numBits = result.getNumBits() || null;
@@ -66,8 +66,8 @@ export function extractDecodeResult(result: Result, imageData: ImageData): Decod
     | undefined;
   const erasuresFromMeta = metadata?.get(ResultMetadataType.QR_ERASURES) as number | undefined;
   const errorsCorrected: number | null =
-    typeof errorsCorrectedFromMeta === 'number' ? errorsCorrectedFromMeta : null;
-  const erasures: number | null = typeof erasuresFromMeta === 'number' ? erasuresFromMeta : null;
+    typeof errorsCorrectedFromMeta === "number" ? errorsCorrectedFromMeta : null;
+  const erasures: number | null = typeof erasuresFromMeta === "number" ? erasuresFromMeta : null;
   const encodingMode = detectEncodingMode(text);
 
   const decoderMetadata: DecoderMetadata = {

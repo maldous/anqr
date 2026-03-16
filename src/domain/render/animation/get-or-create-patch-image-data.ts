@@ -1,11 +1,11 @@
-import { asClampedRgbaView } from './as-clamped-rgba-view';
+import { asClampedRgbaView } from "./as-clamped-rgba-view";
 
 export function getOrCreatePatchImageData(
   patchImageDataCache: Array<ImageData | null>,
   index: number,
   patch: Uint8Array,
   width: number,
-  height: number
+  height: number,
 ): ImageData {
   let imageData = patchImageDataCache[index];
   if (!imageData) {

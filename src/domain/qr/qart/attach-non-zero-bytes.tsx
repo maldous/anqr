@@ -1,4 +1,4 @@
-import type { RSBasisVector } from './rs-basis';
+import type { RSBasisVector } from "./rs-basis";
 
 export function attachNonZeroBytes(vectors: RSBasisVector[]): void {
   for (const v of vectors) {

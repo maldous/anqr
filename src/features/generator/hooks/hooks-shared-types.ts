@@ -1,1 +1,1 @@
-export type { UseQRGeneratorResult } from '@/hooks/useQRGenerator';
+export type { UseQRGeneratorResult } from "@/hooks/useQRGenerator";

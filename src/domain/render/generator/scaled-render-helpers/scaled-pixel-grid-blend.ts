@@ -1,10 +1,10 @@
-import type { BlendPreservationCtx } from '../scaled-render-types';
-import { blendModulePixels } from './blend-module-pixels';
-export { createBlendPreservationContext } from './create-blend-preservation-context';
+import type { BlendPreservationCtx } from "../scaled-render-types";
+import { blendModulePixels } from "./blend-module-pixels";
+export { createBlendPreservationContext } from "./create-blend-preservation-context";
 
 export function blendPreservationPass(
   bctx: BlendPreservationCtx,
-  boostedModules: Array<{ row: number; col: number }>
+  boostedModules: Array<{ row: number; col: number }>,
 ): void {
   const imageData = bctx.ctx.getImageData(0, 0, bctx.size, bctx.size);
   const data = imageData.data;

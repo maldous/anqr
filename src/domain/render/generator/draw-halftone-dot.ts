@@ -5,16 +5,16 @@ export function drawHalftoneDot(
   dotSize: number,
   shape: string | undefined,
   row: number,
-  col: number
+  col: number,
 ): void {
   const halfSize = dotSize / 2;
 
   switch (shape) {
-    case 'square':
+    case "square":
       ctx.fillRect(cx - halfSize, cy - halfSize, dotSize, dotSize);
       break;
 
-    case 'line': {
+    case "line": {
       ctx.save();
       ctx.translate(cx, cy);
       const angle = (row + col) % 2 === 0 ? Math.PI / 4 : -Math.PI / 4;

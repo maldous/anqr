@@ -1,1 +1,1 @@
-export type VectorTimingStyle = 'match_module' | 'solid' | 'dashed';
+export type VectorTimingStyle = "match_module" | "solid" | "dashed";

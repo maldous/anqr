@@ -1,9 +1,9 @@
 export function applyFitTransform(
   workingCanvas: HTMLCanvasElement,
-  fitMode: string
+  fitMode: string,
 ): HTMLCanvasElement | null {
-  const fitCanvas = document.createElement('canvas');
-  const fitCtx = fitCanvas.getContext('2d');
+  const fitCanvas = document.createElement("canvas");
+  const fitCtx = fitCanvas.getContext("2d");
   if (!fitCtx) return null;
   const srcW = workingCanvas.width;
   const srcH = workingCanvas.height;
@@ -17,21 +17,21 @@ export function applyFitTransform(
     drawW = srcW,
     drawH = srcH;
 
-  if (fitMode === 'cover') {
+  if (fitMode === "cover") {
     const scale = Math.max(targetSize / srcW, targetSize / srcH);
     drawW = srcW * scale;
     drawH = srcH * scale;
     drawX = (targetSize - drawW) / 2;
     drawY = (targetSize - drawH) / 2;
-  } else if (fitMode === 'contain') {
+  } else if (fitMode === "contain") {
     const scale = Math.min(targetSize / srcW, targetSize / srcH);
     drawW = srcW * scale;
     drawH = srcH * scale;
     drawX = (targetSize - drawW) / 2;
     drawY = (targetSize - drawH) / 2;
-    fitCtx.fillStyle = 'transparent';
+    fitCtx.fillStyle = "transparent";
     fitCtx.fillRect(0, 0, targetSize, targetSize);
-  } else if (fitMode === 'stretch') {
+  } else if (fitMode === "stretch") {
     drawW = targetSize;
     drawH = targetSize;
   }

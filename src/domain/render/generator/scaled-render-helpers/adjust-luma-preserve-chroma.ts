@@ -1,9 +1,9 @@
-import type { PixelColor } from '../scaled-render-types';
+import type { PixelColor } from "../scaled-render-types";
 
 export function adjustLumaPreserveChroma(
   color: PixelColor,
   targetLuma: number,
-  chromaScale: number
+  chromaScale: number,
 ): { r: number; g: number; b: number } {
   const gray = (color.r + color.g + color.b) / 3;
   let r = gray + (color.r - gray) * chromaScale;

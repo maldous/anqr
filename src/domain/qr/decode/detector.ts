@@ -1,15 +1,15 @@
-import type { BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
+import type { BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
 import {
   type AlignmentPattern,
   AlignmentPatternFinder,
   FinderPatternFinder,
   type FinderPatternInfo,
-} from './pattern-finder';
-import { DefaultGridSampler, MathUtils, PerspectiveTransform } from './perspective';
-import { Version } from './qr-version';
-import { ResultPoint } from './result-types';
-import { DetectorResult } from './detector-result';
+} from "./pattern-finder";
+import { DefaultGridSampler, MathUtils, PerspectiveTransform } from "./perspective";
+import { Version } from "./qr-version";
+import { ResultPoint } from "./result-types";
+import { DetectorResult } from "./detector-result";
 
 /**
  * Detects a QR code in an image
@@ -47,10 +47,10 @@ export class Detector {
       const bottomRightY = topRight.getY() - topLeft.getY() + bottomLeft.getY();
       const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
       const estAlignmentX = Math.floor(
-        topLeft.getX() + correctionToTopLeft * (bottomRightX - topLeft.getX())
+        topLeft.getX() + correctionToTopLeft * (bottomRightX - topLeft.getX()),
       );
       const estAlignmentY = Math.floor(
-        topLeft.getY() + correctionToTopLeft * (bottomRightY - topLeft.getY())
+        topLeft.getY() + correctionToTopLeft * (bottomRightY - topLeft.getY()),
       );
 
       for (let i = 4; i <= 16; i <<= 1) {
@@ -59,7 +59,7 @@ export class Detector {
             moduleSize,
             estAlignmentX,
             estAlignmentY,
-            i
+            i,
           );
           break;
         } catch {
@@ -73,7 +73,7 @@ export class Detector {
       topRight,
       bottomLeft,
       alignmentPattern,
-      dimension
+      dimension,
     );
     const bits = Detector.sampleGrid(this.image, transform, dimension);
 
@@ -91,7 +91,7 @@ export class Detector {
     topRight: ResultPoint,
     bottomLeft: ResultPoint,
     alignmentPattern: AlignmentPattern | null,
-    dimension: number
+    dimension: number,
   ): PerspectiveTransform {
     const dimMinusThree = dimension - 3.5;
     let bottomRightX: number;
@@ -126,14 +126,14 @@ export class Detector {
       bottomRightX,
       bottomRightY,
       bottomLeft.getX(),
-      bottomLeft.getY()
+      bottomLeft.getY(),
     );
   }
 
   private static sampleGrid(
     image: BitMatrix,
     transform: PerspectiveTransform,
-    dimension: number
+    dimension: number,
   ): BitMatrix {
     const sampler = new DefaultGridSampler();
     return sampler.sampleGridWithTransform(image, dimension, dimension, transform);
@@ -143,13 +143,13 @@ export class Detector {
     topLeft: ResultPoint,
     topRight: ResultPoint,
     bottomLeft: ResultPoint,
-    moduleSize: number
+    moduleSize: number,
   ): number {
     const tltrCentersDimension = MathUtils.round(
-      ResultPoint.distance(topLeft, topRight) / moduleSize
+      ResultPoint.distance(topLeft, topRight) / moduleSize,
     );
     const tlblCentersDimension = MathUtils.round(
-      ResultPoint.distance(topLeft, bottomLeft) / moduleSize
+      ResultPoint.distance(topLeft, bottomLeft) / moduleSize,
     );
     let dimension = Math.floor((tltrCentersDimension + tlblCentersDimension) / 2) + 7;
     switch (dimension & 0x03) {
@@ -168,7 +168,7 @@ export class Detector {
   protected calculateModuleSize(
     topLeft: ResultPoint,
     topRight: ResultPoint,
-    bottomLeft: ResultPoint
+    bottomLeft: ResultPoint,
   ): number {
     return (
       (this.calculateModuleSizeOneWay(topLeft, topRight) +
@@ -182,13 +182,13 @@ export class Detector {
       Math.floor(pattern.getX()),
       Math.floor(pattern.getY()),
       Math.floor(otherPattern.getX()),
-      Math.floor(otherPattern.getY())
+      Math.floor(otherPattern.getY()),
     );
     const moduleSizeEst2 = this.sizeOfBlackWhiteBlackRunBothWays(
       Math.floor(otherPattern.getX()),
       Math.floor(otherPattern.getY()),
       Math.floor(pattern.getX()),
-      Math.floor(pattern.getY())
+      Math.floor(pattern.getY()),
     );
     if (Number.isNaN(moduleSizeEst1)) return moduleSizeEst2 / 7;
     if (Number.isNaN(moduleSizeEst2)) return moduleSizeEst1 / 7;
@@ -198,7 +198,7 @@ export class Detector {
   private static clampEndpoint(
     from: number,
     to: number,
-    size: number
+    size: number,
   ): { clamped: number; scale: number } {
     if (to < 0) {
       return { clamped: 0, scale: from / (from - to) };
@@ -213,7 +213,7 @@ export class Detector {
     fromX: number,
     fromY: number,
     toX: number,
-    toY: number
+    toY: number,
   ): number {
     let result = this.sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
 
@@ -234,7 +234,7 @@ export class Detector {
     image: BitMatrix,
     realX: number,
     realY: number,
-    state: number
+    state: number,
   ): number {
     if (state === 1) {
       if (image.get(realX, realY)) return state + 1;
@@ -249,7 +249,7 @@ export class Detector {
     fromX: number,
     fromY: number,
     toX: number,
-    toY: number
+    toY: number,
   ): { fromX: number; fromY: number; toX: number; toY: number } {
     if (!steep) return { fromX, fromY, toX, toY };
     return { fromX: fromY, fromY: fromX, toX: toY, toY: toX };
@@ -297,7 +297,7 @@ export class Detector {
     overallEstModuleSize: number,
     estAlignmentX: number,
     estAlignmentY: number,
-    allowanceFactor: number
+    allowanceFactor: number,
   ): AlignmentPattern {
     const allowance = Math.floor(allowanceFactor * overallEstModuleSize);
     const alignmentAreaLeftX = Math.max(0, estAlignmentX - allowance);
@@ -319,7 +319,7 @@ export class Detector {
       alignmentAreaRightX - alignmentAreaLeftX,
       alignmentAreaBottomY - alignmentAreaTopY,
       overallEstModuleSize,
-      this.resultPointCallback
+      this.resultPointCallback,
     );
     return alignmentFinder.find();
   }

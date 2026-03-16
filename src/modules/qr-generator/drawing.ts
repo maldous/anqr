@@ -1,1 +1,1 @@
-export * from '../../domain/render/generator/drawing';
+export * from "../../domain/render/generator/drawing";

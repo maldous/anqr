@@ -1,5 +1,5 @@
-import type { EthereumEIP681Params } from '../../modules/payload-generators/types';
-import { appendGasParams } from './append-gas-params';
+import type { EthereumEIP681Params } from "../../modules/payload-generators/types";
+import { appendGasParams } from "./append-gas-params";
 
 export function buildPlainEthURI(params: EthereumEIP681Params): string {
   let uri = `ethereum:${params.targetAddress}`;
@@ -13,7 +13,7 @@ export function buildPlainEthURI(params: EthereumEIP681Params): string {
   }
 
   const queryParams = new URLSearchParams();
-  if (params.value) queryParams.set('value', params.value);
+  if (params.value) queryParams.set("value", params.value);
   appendGasParams(queryParams, params);
 
   if (params.functionParams) {

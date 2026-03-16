@@ -1,1 +1,1 @@
-export { computeSafetyAdjustments } from '@/features/generator/application/safety/safety-fn-adjustments';
+export { computeSafetyAdjustments } from "@/features/generator/application/safety/safety-fn-adjustments";

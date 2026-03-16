@@ -1,1 +1,1 @@
-export * from '../../features/generator/components/sections/qr-encoding-section';
+export * from "../../features/generator/components/sections/qr-encoding-section";

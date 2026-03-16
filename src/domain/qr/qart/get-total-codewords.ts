@@ -1,5 +1,5 @@
-import type { ECCLevel } from './bit-mapping.types';
-import { getRSBlockInfo } from './get-rs-block-info';
+import type { ECCLevel } from "./bit-mapping.types";
+import { getRSBlockInfo } from "./get-rs-block-info";
 
 /**
  * Get total codewords (data + ECC) for a version/ECC

@@ -1,4 +1,4 @@
-import { classifyFormatVersionModule } from './classify-format-version-module';
+import { classifyFormatVersionModule } from "./classify-format-version-module";
 
 export function paintClassifiedModule(
   ctx: CanvasRenderingContext2D,
@@ -10,12 +10,12 @@ export function paintClassifiedModule(
   darkFill: string | CanvasGradient,
   bgColor: string,
   shouldProtectFormat: boolean,
-  shouldProtectVersion: boolean
+  shouldProtectVersion: boolean,
 ) {
   const { isFormat, isVersion } = classifyFormatVersionModule(
     flags,
     shouldProtectFormat,
-    shouldProtectVersion
+    shouldProtectVersion,
   );
   if (!isFormat && !isVersion) return { formatHit: false, versionHit: false };
   ctx.fillStyle = isDark ? darkFill : bgColor;

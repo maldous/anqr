@@ -1,5 +1,5 @@
-import type { VectorModuleStyle, VectorTimingStyle } from '../../../modules/exporter/types';
-import { generateModulePath } from './generate-module-path';
+import type { VectorModuleStyle, VectorTimingStyle } from "../../../modules/exporter/types";
+import { generateModulePath } from "./generate-module-path";
 
 /**
  * Generate SVG path for timing pattern modules
@@ -10,13 +10,13 @@ export function generateTimingModulePath(
   size: number,
   timingStyle: VectorTimingStyle,
   moduleStyle: VectorModuleStyle,
-  cornerRadius: number
+  cornerRadius: number,
 ): string {
-  if (timingStyle === 'match_module') {
+  if (timingStyle === "match_module") {
     return generateModulePath(x, y, size, moduleStyle, cornerRadius);
   }
 
-  if (timingStyle === 'solid') {
+  if (timingStyle === "solid") {
     return `M${x},${y}h${size}v${size}h${-size}Z`;
   }
 

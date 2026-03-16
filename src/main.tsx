@@ -1,1 +1,1 @@
-export * from './app/boot/main';
+export * from "./app/boot/main";

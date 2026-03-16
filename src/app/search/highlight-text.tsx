@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode } from "react";
 
 export function highlightText(text: string, searchQuery: string): ReactNode {
   if (!searchQuery || searchQuery.length < 2) {

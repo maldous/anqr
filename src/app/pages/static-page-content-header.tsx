@@ -1,6 +1,6 @@
-import { AdUnit } from '@/platform/ads/components/AdUnit';
-import { Breadcrumb } from './static-page-shell-parts';
-import type { StaticPageType } from './StaticPage.types';
+import { AdUnit } from "@/platform/ads/components/AdUnit";
+import { Breadcrumb } from "./static-page-shell-parts";
+import type { StaticPageType } from "./StaticPage.types";
 
 export function StaticPageContentHeader({
   page,

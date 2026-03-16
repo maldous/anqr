@@ -1,9 +1,9 @@
-import { type RewardedType } from './admob-config';
-import { prepareRewardedAdInternal, showRewardedAdInternal } from './admob-rewarded';
-import { admobRuntime } from './admob-runtime-state';
+import { type RewardedType } from "./admob-config";
+import { prepareRewardedAdInternal, showRewardedAdInternal } from "./admob-rewarded";
+import { admobRuntime } from "./admob-runtime-state";
 
 export async function showRewardedAd(
-  type: RewardedType = 'rewarded'
+  type: RewardedType = "rewarded",
 ): Promise<{ rewarded: boolean; amount?: number; type?: string }> {
   return showRewardedAdInternal(
     admobRuntime.available,
@@ -14,8 +14,8 @@ export async function showRewardedAd(
         admobRuntime.available,
         admobRuntime.AdMob,
         admobRuntime.preparedRewardedKeys,
-        rewardedType
+        rewardedType,
       ),
-    type
+    type,
   );
 }

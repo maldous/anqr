@@ -1,6 +1,6 @@
-import type { QRCodeInstance } from '../../../modules/qr-generator/types';
-import { isRunLengthCellMatch } from './is-run-length-cell-match';
-import type { RunLengthCanvasContext } from './run-length-canvas-context.type';
+import type { QRCodeInstance } from "../../../modules/qr-generator/types";
+import { isRunLengthCellMatch } from "./is-run-length-cell-match";
+import type { RunLengthCanvasContext } from "./run-length-canvas-context.type";
 
 export function renderRunLengthPass(
   ctx: RunLengthCanvasContext,
@@ -10,7 +10,7 @@ export function renderRunLengthPass(
   margin: number,
   ditherPattern: boolean[][] | null,
   skipMask: Uint8Array,
-  isDarkPass: boolean
+  isDarkPass: boolean,
 ): void {
   for (let row = 0; row < moduleCount; row++) {
     const rowBase = row * moduleCount;
@@ -25,7 +25,7 @@ export function renderRunLengthPass(
         row,
         col,
         moduleCount,
-        isDarkPass
+        isDarkPass,
       );
       if (match) {
         if (runStart === -1) runStart = col;
@@ -34,7 +34,7 @@ export function renderRunLengthPass(
           (runStart + margin) * moduleSize,
           y,
           (col - runStart) * moduleSize,
-          moduleSize
+          moduleSize,
         );
         runStart = -1;
       }

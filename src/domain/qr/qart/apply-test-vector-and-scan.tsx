@@ -1,7 +1,7 @@
-import type { ECCLevel } from './bit-mapping';
-import { scanMatrixWithJsQR } from './scan-matrix-with-js-qr';
-import { regenerateQRFromModifiedData } from './regenerate-qr-from-modified-data';
-import type { ScanResult } from './scan-result';
+import type { ECCLevel } from "./bit-mapping";
+import { scanMatrixWithJsQR } from "./scan-matrix-with-js-qr";
+import { regenerateQRFromModifiedData } from "./regenerate-qr-from-modified-data";
+import type { ScanResult } from "./scan-result";
 
 export function applyTestVectorAndScan(
   testVector: { rsBlockIndex: number; blockBits: Uint8Array },
@@ -11,7 +11,7 @@ export function applyTestVectorAndScan(
   blockEccCounts: number[],
   actualVersion: number,
   ecc: ECCLevel,
-  actualMask: number
+  actualMask: number,
 ): ScanResult {
   const testBlockData = blockDataArrays.map((arr) => new Uint8Array(arr));
   const testBlockEcc = blockEccArrays.map((arr) => new Uint8Array(arr));
@@ -31,7 +31,7 @@ export function applyTestVectorAndScan(
     blockEccCounts,
     actualVersion,
     ecc,
-    actualMask
+    actualMask,
   );
   return scanMatrixWithJsQR(testMatrix);
 }

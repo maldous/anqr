@@ -1,12 +1,12 @@
-import { applyVectorBitsToFlipParity } from './apply-vector-bits-to-flip-parity';
-import type { BlockSelectionResult, BlockEliminationResult } from './elimination.types';
+import { applyVectorBitsToFlipParity } from "./apply-vector-bits-to-flip-parity";
+import type { BlockSelectionResult, BlockEliminationResult } from "./elimination.types";
 
 export function computeFlipParity(
   blockSelections: BlockSelectionResult[],
   blockResultByIndex: Array<BlockEliminationResult | undefined>,
   blockBitToPixelTables: Array<Int32Array | undefined>,
   flipParity: Uint8Array,
-  maxPixelCount: number
+  maxPixelCount: number,
 ): void {
   for (const sel of blockSelections) {
     const { blockIndex, selectedVectorIndices } = sel;

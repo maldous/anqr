@@ -1,4 +1,4 @@
-import type { BannerLog } from './banner-log.type';
+import type { BannerLog } from "./banner-log.type";
 
 export type HideBannerDeps = {
   adMobAvailable: boolean;

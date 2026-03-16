@@ -1,1 +1,1 @@
-export * from '../infra/telemetry/logger-remote';
+export * from "../infra/telemetry/logger-remote";

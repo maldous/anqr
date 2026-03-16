@@ -1,8 +1,8 @@
-import type { BitRange } from './semantic-layout';
+import type { BitRange } from "./semantic-layout";
 
 export function collectSafeBitRanges(
   safeBits: boolean[],
-  numericDataStart: number
+  numericDataStart: number,
 ): { ranges: BitRange[]; safeBitCount: number } {
   const ranges: BitRange[] = [];
   let safeBitCount = 0;

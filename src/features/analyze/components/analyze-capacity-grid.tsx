@@ -1,8 +1,8 @@
-import { BarChart3 } from 'lucide-react';
-import { CapacityByModeTable } from '@/features/analyze/components/capacity-by-mode-table';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { EncodingEfficiency } from '@/features/analyze/components/encoding-efficiency';
-import type { QRAnalysisResult } from '@/modules/qr-analyzer';
+import { BarChart3 } from "lucide-react";
+import { CapacityByModeTable } from "@/features/analyze/components/capacity-by-mode-table";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { EncodingEfficiency } from "@/features/analyze/components/encoding-efficiency";
+import type { QRAnalysisResult } from "@/modules/qr-analyzer";
 
 export function AnalyzeCapacityGrid({ result }: Readonly<{ result: QRAnalysisResult }>) {
   return (

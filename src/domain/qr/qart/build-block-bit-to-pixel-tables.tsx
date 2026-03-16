@@ -1,7 +1,7 @@
-import type { BitPixelMapping } from './bit-mapping';
+import type { BitPixelMapping } from "./bit-mapping";
 
 export function buildBlockBitToPixelTables(
-  mappings: BitPixelMapping[]
+  mappings: BitPixelMapping[],
 ): Array<Int32Array | undefined> {
   const blockMaxBitKeys: number[] = [];
   for (const mapping of mappings) {

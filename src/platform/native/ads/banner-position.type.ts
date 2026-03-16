@@ -1,1 +1,1 @@
-export type BannerPosition = 'top' | 'bottom';
+export type BannerPosition = "top" | "bottom";

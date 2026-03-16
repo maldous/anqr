@@ -1,5 +1,5 @@
-import { Input } from '@/ui/primitives/input';
-import { Label } from '@/ui/primitives/label';
+import { Input } from "@/ui/primitives/input";
+import { Label } from "@/ui/primitives/label";
 
 export function ValidatedTextField({
   label,
@@ -8,7 +8,7 @@ export function ValidatedTextField({
   onChange,
   invalid,
   invalidMessage,
-  type = 'text',
+  type = "text",
 }: Readonly<{
   label: string;
   placeholder: string;
@@ -16,7 +16,7 @@ export function ValidatedTextField({
   onChange: (value: string) => void;
   invalid: boolean;
   invalidMessage: string;
-  type?: 'text' | 'number';
+  type?: "text" | "number";
 }>) {
   return (
     <div className="space-y-2">
@@ -26,7 +26,7 @@ export function ValidatedTextField({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={invalid ? 'border-destructive focus-visible:ring-destructive' : ''}
+        className={invalid ? "border-destructive focus-visible:ring-destructive" : ""}
       />
       {invalid && <p className="text-xs text-destructive">{invalidMessage}</p>}
     </div>

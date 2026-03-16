@@ -1,14 +1,14 @@
-import { log } from './log';
+import { log } from "./log";
 
 export function logSelectionTiming(
   timingEnabled: boolean,
   timingMarks: Record<string, number>,
   preReduceTargetCount: number | undefined,
-  totalSelected: number
+  totalSelected: number,
 ): void {
   if (!timingEnabled) return;
   const t = timingMarks;
-  log.info('QART selection timing', {
+  log.info("QART selection timing", {
     selectMs:
       t.select_done && t.select_start ? (t.select_done - t.select_start).toFixed(1) : undefined,
     eccApplyMs:

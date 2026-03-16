@@ -1,5 +1,5 @@
-import type { HSL } from '../../../modules/core/types';
-import { resolveHslHue } from './resolve-hsl-hue';
+import type { HSL } from "../../../modules/core/types";
+import { resolveHslHue } from "./resolve-hsl-hue";
 
 /** Convert RGB to HSL */
 export function rgbToHsl(r: number, g: number, b: number): HSL {

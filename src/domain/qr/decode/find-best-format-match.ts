@@ -1,10 +1,10 @@
-import type { FormatInfo } from '../../../modules/qr-decoder/types';
-import { hammingDistance } from './hamming-distance';
-import { FORMAT_INFO_DECODE_TABLE } from './format-info-decode-table';
+import type { FormatInfo } from "../../../modules/qr-decoder/types";
+import { hammingDistance } from "./hamming-distance";
+import { FORMAT_INFO_DECODE_TABLE } from "./format-info-decode-table";
 
 export function findBestFormatMatch(
   bits1: number,
-  bits2: number
+  bits2: number,
 ): {
   match: FormatInfo | null;
   distance: number;

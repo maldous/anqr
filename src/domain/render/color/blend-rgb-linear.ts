@@ -1,6 +1,6 @@
-import type { RGB } from '../../../modules/core/types';
-import { srgbToLinear01 } from './srgb-to-linear01';
-import { linearToSrgb8 } from './linear-to-srgb8';
+import type { RGB } from "../../../modules/core/types";
+import { srgbToLinear01 } from "./srgb-to-linear01";
+import { linearToSrgb8 } from "./linear-to-srgb8";
 
 /** Blend RGB values in linear-light space with ratio (0 = c1, 1 = c2) */
 export function blendRgbLinear(c1: RGB, c2: RGB, ratio: number): RGB {

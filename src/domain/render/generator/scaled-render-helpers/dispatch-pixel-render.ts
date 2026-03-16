@@ -1,8 +1,8 @@
-import { renderDitheredDarkPixel } from './render-dithered-dark-pixel';
-import { renderDitheredLightPixel } from './render-dithered-light-pixel';
-import { renderNonDitheredDarkPixel } from './render-nondithered-dark-pixel';
-import { renderNonDitheredLightPixel } from './render-nondithered-light-pixel';
-import type { PixelColor, PixelGridCtx } from '../scaled-render-types';
+import { renderDitheredDarkPixel } from "./render-dithered-dark-pixel";
+import { renderDitheredLightPixel } from "./render-dithered-light-pixel";
+import { renderNonDitheredDarkPixel } from "./render-nondithered-dark-pixel";
+import { renderNonDitheredLightPixel } from "./render-nondithered-light-pixel";
+import type { PixelColor, PixelGridCtx } from "../scaled-render-types";
 
 export function dispatchPixelRender(
   pgctx: PixelGridCtx,
@@ -10,7 +10,7 @@ export function dispatchPixelRender(
   y: number,
   isDark: boolean | undefined,
   color: PixelColor | null,
-  shouldDrawLightPixel: boolean
+  shouldDrawLightPixel: boolean,
 ): void {
   const dx = pgctx.marginPx + x * pgctx.subPixelSize;
   const dy = pgctx.marginPx + y * pgctx.subPixelSize;

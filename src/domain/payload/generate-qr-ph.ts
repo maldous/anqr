@@ -1,6 +1,6 @@
-import { EMVQRBuilder } from './emv';
-import type { QRPhParams } from '../../modules/payload-generators/types';
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
+import { EMVQRBuilder } from "./emv";
+import type { QRPhParams } from "../../modules/payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "../../modules/payload-generators/types";
 
 /**
  * Generate QR Ph code (Philippines)
@@ -11,7 +11,7 @@ export function generateQRPh(params: QRPhParams): string {
     .setPointOfInitiation(!params.amount);
 
   builder.addMerchantAccountInfo(26, PAYMENT_SCHEME_GUI.QRPH, [
-    { tag: '01', value: params.accountNumber },
+    { tag: "01", value: params.accountNumber },
   ]);
 
   builder.setTransactionCurrency(ISO_CURRENCY.PHP);
@@ -20,7 +20,7 @@ export function generateQRPh(params: QRPhParams): string {
     builder.setTransactionAmount(params.amount);
   }
 
-  builder.setCountryCode('PH');
+  builder.setCountryCode("PH");
   builder.setMerchantName(params.merchantName);
   builder.setMerchantCity(params.merchantCity);
 

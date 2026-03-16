@@ -1,4 +1,4 @@
-import type { RSBlockInfo } from './bit-mapping';
+import type { RSBlockInfo } from "./bit-mapping";
 
 /**
  * Simulate the QR interleaving pattern to determine the highest protected byte
@@ -7,7 +7,7 @@ import type { RSBlockInfo } from './bit-mapping';
 export function simulateInterleavingProtection(
   rsBlockInfo: RSBlockInfo[],
   numBlocks: number,
-  protectedByteCount: number
+  protectedByteCount: number,
 ): number[] {
   const maxProtectedByteInBlock: number[] = Array.from({ length: numBlocks }, () => -1);
   const maxDataCount = Math.max(...rsBlockInfo.map((b) => b.dataCount));

@@ -1,4 +1,4 @@
-import type { DataSegment } from './encoder-api.types';
+import type { DataSegment } from "./encoder-api.types";
 
 export function mergeAdjacentSegments(segments: DataSegment[]): DataSegment[] {
   const merged: DataSegment[] = [];

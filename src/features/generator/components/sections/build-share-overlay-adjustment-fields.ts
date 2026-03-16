@@ -1,8 +1,8 @@
-import type { StoreState } from './share-config-store-state.type';
+import type { StoreState } from "./share-config-store-state.type";
 
-export function buildShareOverlayAdjustmentFields(overlay: StoreState['overlay']) {
+export function buildShareOverlayAdjustmentFields(overlay: StoreState["overlay"]) {
   return {
-    colorMode: overlay.colorMode === 'color' ? undefined : overlay.colorMode,
+    colorMode: overlay.colorMode === "color" ? undefined : overlay.colorMode,
     brightness: overlay.brightness === 0 ? undefined : overlay.brightness,
     contrast: overlay.contrast === 0 ? undefined : overlay.contrast,
     gamma: overlay.gamma === 1 ? undefined : overlay.gamma,
@@ -12,7 +12,7 @@ export function buildShareOverlayAdjustmentFields(overlay: StoreState['overlay']
     sharpen: overlay.sharpen === 0 ? undefined : overlay.sharpen,
     posterize: overlay.posterizeLevels === 0 ? undefined : overlay.posterizeLevels,
     threshold: overlay.threshold === 128 ? undefined : overlay.threshold,
-    edge: overlay.edgeDetect === 'off' ? undefined : overlay.edgeDetect,
+    edge: overlay.edgeDetect === "off" ? undefined : overlay.edgeDetect,
     invert: overlay.invert || undefined,
   };
 }

@@ -1,6 +1,6 @@
-import type { QRGeneratorConfig } from '../../../modules/qr-generator/types';
-import { validateColor } from '../../../modules/qr-generator/utils';
-import { drawFinderRing } from './draw-finder-ring';
+import type { QRGeneratorConfig } from "../../../modules/qr-generator/types";
+import { validateColor } from "../../../modules/qr-generator/utils";
+import { drawFinderRing } from "./draw-finder-ring";
 
 /**
  * Draw a complete finder pattern at the specified position
@@ -10,15 +10,15 @@ export function drawFinderPatternComplete(
   x: number,
   y: number,
   moduleSize: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
 ): void {
-  const outerStyle = config.eyeOuterStyle || config.finderStyle || 'square';
-  const innerStyle = config.eyeInnerStyle || config.finderStyle || 'square';
+  const outerStyle = config.eyeOuterStyle || config.finderStyle || "square";
+  const innerStyle = config.eyeInnerStyle || config.finderStyle || "square";
   // eyeScale is stored as percentage (100 = 100%) in the store, convert to decimal multiplier
   const eyeScale = (config.eyeScale ?? 100) / 100;
   // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
-  const fgColor = validateColor(config.fgColor, '#000000');
-  const bgColor = validateColor(config.bgColor, '#ffffff');
+  const fgColor = validateColor(config.fgColor, "#000000");
+  const bgColor = validateColor(config.bgColor, "#ffffff");
 
   const outerSize = 7 * moduleSize;
   const middleSize = 5 * moduleSize;
@@ -45,7 +45,7 @@ export function drawFinderPatternComplete(
     x + outerOffset + middleRingOffset,
     y + outerOffset + middleRingOffset,
     middleRingSize,
-    outerStyle
+    outerStyle,
   );
 
   // Draw inner dot (dark)
@@ -57,6 +57,6 @@ export function drawFinderPatternComplete(
     x + outerOffset + innerDotOffset,
     y + outerOffset + innerDotOffset,
     innerDotSize,
-    innerStyle
+    innerStyle,
   );
 }

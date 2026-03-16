@@ -1,6 +1,6 @@
-import { generateStyledRingSvg } from './generate-styled-ring-svg';
-import { generateStyledCenterShapeSvg } from './generate-styled-center-shape-svg';
-import type { VectorFinderStyle } from '../../../modules/exporter/types';
+import { generateStyledRingSvg } from "./generate-styled-ring-svg";
+import { generateStyledCenterShapeSvg } from "./generate-styled-center-shape-svg";
+import type { VectorFinderStyle } from "../../../modules/exporter/types";
 
 /**
  * Generate SVG for finder pattern with styling
@@ -11,7 +11,7 @@ export function generateFinderSvg(
   moduleSize: number,
   outerStyle: VectorFinderStyle,
   innerStyle: VectorFinderStyle,
-  fillColor: string
+  fillColor: string,
 ): string {
   const outerSize = 7 * moduleSize;
   const middleSize = 5 * moduleSize;
@@ -24,7 +24,7 @@ export function generateFinderSvg(
     middleSize,
     outerStyle,
     moduleSize,
-    fillColor
+    fillColor,
   );
 
   paths += generateStyledCenterShapeSvg(
@@ -33,7 +33,7 @@ export function generateFinderSvg(
     innerSize,
     moduleSize,
     innerStyle,
-    fillColor
+    fillColor,
   );
 
   return paths;

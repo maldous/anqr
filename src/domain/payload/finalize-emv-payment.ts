@@ -1,4 +1,4 @@
-import { EMVQRBuilder } from './emv';
+import { EMVQRBuilder } from "./emv";
 
 export function finalizeEmvPayment(
   builder: EMVQRBuilder,
@@ -9,7 +9,7 @@ export function finalizeEmvPayment(
     merchantCity?: string;
     merchantName?: string;
     reference?: string;
-  }>
+  }>,
 ): string {
   builder.setTransactionCurrency(params.currency);
 

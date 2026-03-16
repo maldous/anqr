@@ -15,5 +15,5 @@ export function crc16CCITT(str: string): string {
     }
     crc &= 0xffff;
   }
-  return crc.toString(16).toUpperCase().padStart(4, '0');
+  return crc.toString(16).toUpperCase().padStart(4, "0");
 }

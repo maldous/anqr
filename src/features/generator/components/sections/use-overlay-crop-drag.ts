@@ -1,15 +1,15 @@
-import { useCallback, useState } from 'react';
-import type React from 'react';
-import { getContainedImageRect, type ContainedImageRect } from './overlay-image-utils';
-import { computeResizedCropRegion } from './overlay-crop-utils';
-import type { CropDragMode } from './overlay-crop-types';
-import type { useQRStore } from '@/store/qr-store';
+import { useCallback, useState } from "react";
+import type React from "react";
+import { getContainedImageRect, type ContainedImageRect } from "./overlay-image-utils";
+import { computeResizedCropRegion } from "./overlay-crop-utils";
+import type { CropDragMode } from "./overlay-crop-types";
+import type { useQRStore } from "@/store/qr-store";
 
 export function useOverlayCropDrag(
-  overlay: ReturnType<typeof useQRStore.getState>['overlay'],
+  overlay: ReturnType<typeof useQRStore.getState>["overlay"],
   previewImageSize: { width: number; height: number } | null,
   previewContainerRef: React.RefObject<HTMLDivElement | null>,
-  setOverlayCrop: ReturnType<typeof useQRStore.getState>['setOverlayCrop']
+  setOverlayCrop: ReturnType<typeof useQRStore.getState>["setOverlayCrop"],
 ) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<CropDragMode>(null);
@@ -32,7 +32,7 @@ export function useOverlayCropDrag(
         halfY: Math.min(0.5, cropSizePx / (2 * previewImageSize.height)),
       };
     },
-    [previewImageSize]
+    [previewImageSize],
   );
 
   const activeCropRegion = isDragging && draftCropRegion ? draftCropRegion : overlay.cropRegion;
@@ -49,13 +49,13 @@ export function useOverlayCropDrag(
       }
       setOverlayCrop({ region: nextRegion });
     },
-    [overlay.cropRegion, setOverlayCrop]
+    [overlay.cropRegion, setOverlayCrop],
   );
 
   const mapPointerToImageSpace = useCallback(
     (
       clientX: number,
-      clientY: number
+      clientY: number,
     ): { x: number; y: number; imageRect: ContainedImageRect } | null => {
       const container = previewContainerRef.current;
       if (!container) return null;
@@ -68,7 +68,7 @@ export function useOverlayCropDrag(
               rect.width,
               rect.height,
               previewImageSize.width,
-              previewImageSize.height
+              previewImageSize.height,
             )
           : { x: 0, y: 0, width: rect.width, height: rect.height };
       if (imageRect.width <= 0 || imageRect.height <= 0) return null;
@@ -82,7 +82,7 @@ export function useOverlayCropDrag(
         imageRect,
       };
     },
-    [previewImageSize, previewContainerRef]
+    [previewImageSize, previewContainerRef],
   );
 
   const beginDragAtPoint = useCallback(
@@ -118,10 +118,10 @@ export function useOverlayCropDrag(
       }
 
       setDraftCropRegion(currentRegion);
-      setDragMode(nearCorner ? 'resize' : 'move');
+      setDragMode(nearCorner ? "resize" : "move");
       setIsDragging(true);
     },
-    [overlay.cropEnabled, overlay.cropRegion, mapPointerToImageSpace, getCropHalfExtents]
+    [overlay.cropEnabled, overlay.cropRegion, mapPointerToImageSpace, getCropHalfExtents],
   );
 
   const handleCropDrag = useCallback(
@@ -130,7 +130,7 @@ export function useOverlayCropDrag(
       const mapped = mapPointerToImageSpace(clientX, clientY);
       if (!mapped) return;
 
-      if (dragMode === 'resize') {
+      if (dragMode === "resize") {
         const newSize = computeResizedCropRegion(mapped, currentRegion, previewImageSize);
         setDraftCropRegion({ ...currentRegion, size: newSize });
         return;
@@ -148,7 +148,7 @@ export function useOverlayCropDrag(
       getCropHalfExtents,
       draftCropRegion,
       overlay.cropRegion,
-    ]
+    ],
   );
 
   const handleMouseMove = useCallback(
@@ -157,7 +157,7 @@ export function useOverlayCropDrag(
       e.preventDefault();
       handleCropDrag(e.clientX, e.clientY);
     },
-    [isDragging, previewContainerRef, handleCropDrag]
+    [isDragging, previewContainerRef, handleCropDrag],
   );
 
   const handleTouchStart = useCallback(
@@ -167,7 +167,7 @@ export function useOverlayCropDrag(
       const touch = e.touches[0];
       beginDragAtPoint(touch.clientX, touch.clientY);
     },
-    [overlay.cropEnabled, beginDragAtPoint]
+    [overlay.cropEnabled, beginDragAtPoint],
   );
 
   const handleTouchMove = useCallback(
@@ -178,7 +178,7 @@ export function useOverlayCropDrag(
       const touch = e.touches[0];
       handleCropDrag(touch.clientX, touch.clientY);
     },
-    [isDragging, previewContainerRef, handleCropDrag]
+    [isDragging, previewContainerRef, handleCropDrag],
   );
 
   const finishDrag = useCallback(() => {

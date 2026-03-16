@@ -1,5 +1,5 @@
-import type { BlockEliminationResult } from './block-elimination-result';
-import type { RSBasisVector } from './rs-basis';
+import type { BlockEliminationResult } from "./block-elimination-result";
+import type { RSBasisVector } from "./rs-basis";
 
 export interface EliminationResult {
   /** Per-block elimination results */

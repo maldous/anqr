@@ -1,5 +1,5 @@
-export type { RSBlockInfo } from './rs-block-info';
-export type { ECCLevel } from './qart-ecc-level';
+export type { RSBlockInfo } from "./rs-block-info";
+export type { ECCLevel } from "./qart-ecc-level";
 
 /**
  * Represents the mapping of a single bit to its pixel position

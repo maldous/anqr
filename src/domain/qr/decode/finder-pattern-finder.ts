@@ -1,8 +1,8 @@
-import type { BitMatrix } from './bit-matrix';
-import { NotFoundException } from './exceptions';
-import { ResultPoint } from './result-types';
-import { FinderPattern } from './finder-pattern';
-import { FinderPatternInfo } from './finder-pattern-info';
+import type { BitMatrix } from "./bit-matrix";
+import { NotFoundException } from "./exceptions";
+import { ResultPoint } from "./result-types";
+import { FinderPattern } from "./finder-pattern";
+import { FinderPatternInfo } from "./finder-pattern-info";
 
 /**
  * Finds the three finder patterns in a QR code image
@@ -18,7 +18,7 @@ export class FinderPatternFinder {
 
   constructor(
     private readonly image: BitMatrix,
-    private readonly resultPointCallback?: (point: ResultPoint) => void
+    private readonly resultPointCallback?: (point: ResultPoint) => void,
   ) {}
 
   find(hints?: Map<number, unknown>): FinderPatternInfo {
@@ -52,7 +52,7 @@ export class FinderPatternFinder {
 
   private processConfirmedCenter(
     stateCount: Int32Array,
-    _iSkip: number
+    _iSkip: number,
   ): { iSkip: number; done: boolean; rowJump: number; jumpToEnd: boolean } {
     const iSkip = 2;
     if (this.hasSkipped) {
@@ -69,7 +69,7 @@ export class FinderPatternFinder {
     stateCount: Int32Array,
     i: number,
     j: number,
-    iSkip: number
+    iSkip: number,
   ): {
     currentState: number;
     iSkip: number;
@@ -120,7 +120,7 @@ export class FinderPatternFinder {
 
   private static advanceFinderLightPixel(
     currentState: number,
-    stateCount: Int32Array
+    stateCount: Int32Array,
   ): number | -1 {
     if ((currentState & 1) !== 0) {
       stateCount[currentState]++;
@@ -136,7 +136,7 @@ export class FinderPatternFinder {
     i: number,
     maxJ: number,
     iSkip: number,
-    done: boolean
+    done: boolean,
   ): { iSkip: number; done: boolean } {
     if (FinderPatternFinder.foundPatternCross(stateCount)) {
       const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);
@@ -161,7 +161,7 @@ export class FinderPatternFinder {
     },
     stateCount: Int32Array,
     j: number,
-    maxJ: number
+    maxJ: number,
   ): {
     currentState: number;
     iSkip: number;
@@ -200,7 +200,7 @@ export class FinderPatternFinder {
     i: number,
     maxJ: number,
     stateCount: Int32Array,
-    iSkip: number
+    iSkip: number,
   ): { iSkip: number; done: boolean; rowJump: number } {
     FinderPatternFinder.doClearCounts(stateCount);
     let currentState = 0;
@@ -219,7 +219,7 @@ export class FinderPatternFinder {
             this.processLightPixelAtState4(stateCount, i, j, iSkip),
             stateCount,
             j,
-            maxJ
+            maxJ,
           );
           currentState = h.currentState;
           iSkip = h.iSkip;
@@ -275,7 +275,7 @@ export class FinderPatternFinder {
     centerJ: number,
     startI: number,
     maxCount: number,
-    stateCount: Int32Array
+    stateCount: Int32Array,
   ): boolean {
     const image = this.image;
     let i = startI;
@@ -300,7 +300,7 @@ export class FinderPatternFinder {
     centerJ: number,
     startI: number,
     maxCount: number,
-    stateCount: Int32Array
+    stateCount: Int32Array,
   ): number {
     const image = this.image;
     const maxI = image.getHeight();
@@ -327,7 +327,7 @@ export class FinderPatternFinder {
     startI: number,
     centerJ: number,
     maxCount: number,
-    originalStateCountTotal: number
+    originalStateCountTotal: number,
   ): number {
     const stateCount = this.getCrossCheckStateCount();
 
@@ -348,7 +348,7 @@ export class FinderPatternFinder {
     centerI: number,
     startJ: number,
     maxCount: number,
-    stateCount: Int32Array
+    stateCount: Int32Array,
   ): boolean {
     const image = this.image;
     let j = startJ;
@@ -373,7 +373,7 @@ export class FinderPatternFinder {
     centerI: number,
     startJ: number,
     maxCount: number,
-    stateCount: Int32Array
+    stateCount: Int32Array,
   ): number {
     const image = this.image;
     const maxJ = image.getWidth();
@@ -400,7 +400,7 @@ export class FinderPatternFinder {
     startJ: number,
     centerI: number,
     maxCount: number,
-    originalStateCountTotal: number
+    originalStateCountTotal: number,
   ): number {
     const stateCount = this.getCrossCheckStateCount();
 
@@ -427,7 +427,7 @@ export class FinderPatternFinder {
         Math.floor(centerJ),
         Math.floor(centerI),
         stateCount[2],
-        stateCountTotal
+        stateCountTotal,
       );
       if (!Number.isNaN(centerJ)) {
         this.confirmCenter(centerI, centerJ, stateCountTotal / 7);
@@ -469,7 +469,7 @@ export class FinderPatternFinder {
           return Math.floor(
             (Math.abs(firstConfirmedCenter.getX() - center.getX()) -
               Math.abs(firstConfirmedCenter.getY() - center.getY())) /
-              2
+              2,
           );
         }
       }
@@ -523,7 +523,7 @@ export class FinderPatternFinder {
   private scorePairsFrom(
     fpi: FinderPattern,
     i: number,
-    startSize: number
+    startSize: number,
   ): { score: number; fpj: FinderPattern; fpk: FinderPattern } {
     const minModuleSize = fpi.getEstimatedModuleSize();
     let bestScore = Number.MAX_VALUE;
@@ -550,7 +550,7 @@ export class FinderPatternFinder {
     fpi: FinderPattern,
     fpj: FinderPattern,
     fpk: FinderPattern,
-    squares0: number
+    squares0: number,
   ): number {
     const a = squares0;
     const b = FinderPatternFinder.squaredDistance(fpj, fpk);

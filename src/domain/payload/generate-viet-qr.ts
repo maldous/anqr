@@ -1,6 +1,6 @@
-import { EMVQRBuilder } from './emv';
-import type { VietQRParams } from '../../modules/payload-generators/types';
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from '../../modules/payload-generators/types';
+import { EMVQRBuilder } from "./emv";
+import type { VietQRParams } from "../../modules/payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "../../modules/payload-generators/types";
 
 /**
  * Generate VietQR code (Vietnam)
@@ -11,11 +11,11 @@ export function generateVietQR(params: VietQRParams): string {
     .setPointOfInitiation(!params.amount);
 
   const maiData: Array<{ tag: string; value: string }> = [
-    { tag: '01', value: params.bankBin },
-    { tag: '02', value: params.accountNumber },
+    { tag: "01", value: params.bankBin },
+    { tag: "02", value: params.accountNumber },
   ];
   if (params.serviceCode) {
-    maiData.push({ tag: '03', value: params.serviceCode });
+    maiData.push({ tag: "03", value: params.serviceCode });
   }
 
   builder.addMerchantAccountInfo(38, PAYMENT_SCHEME_GUI.VIETQR, maiData);
@@ -26,7 +26,7 @@ export function generateVietQR(params: VietQRParams): string {
     builder.setTransactionAmount(params.amount, ISO_CURRENCY.VND);
   }
 
-  builder.setCountryCode('VN');
+  builder.setCountryCode("VN");
 
   if (params.accountName) {
     builder.setMerchantName(params.accountName);

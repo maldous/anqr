@@ -1,8 +1,8 @@
-import { blendColors } from '../core';
-import { getOverlayColorPacked } from '../overlay/overlay-data-packed';
-import type { OverlayModeContext } from './overlay-mode-context';
-import type { OverlayModeResult } from './render-modes.types';
-import { computeDarkFactor } from './compute-dark-factor';
+import { blendColors } from "../core";
+import { getOverlayColorPacked } from "../overlay/overlay-data-packed";
+import type { OverlayModeContext } from "./overlay-mode-context";
+import type { OverlayModeResult } from "./render-modes.types";
+import { computeDarkFactor } from "./compute-dark-factor";
 
 export function applyPixelateMode(context: OverlayModeContext, result: OverlayModeResult): void {
   const { isDark, row, col, moduleCount, overlayData, effectiveIntensity, config } = context;

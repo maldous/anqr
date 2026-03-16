@@ -4,12 +4,12 @@
  * Notes: Advance GIF compositor to target frame.
  */
 
-import type { GifCompositor } from '@/modules/animation';
+import type { GifCompositor } from "@/modules/animation";
 
 export function updateCompositorToFrame(
   gifCompositor: GifCompositor,
   frameIdx: number,
-  lastRendered: number
+  lastRendered: number,
 ): void {
   if (lastRendered < 0 || frameIdx < lastRendered) {
     gifCompositor.reset();

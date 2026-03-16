@@ -1,6 +1,6 @@
-import { FileText, Globe, Mail } from 'lucide-react';
-import { parseEmailPayload } from './payload-parsers';
-import type { DetailEntry } from './detail-entry';
+import { FileText, Globe, Mail } from "lucide-react";
+import { parseEmailPayload } from "./payload-parsers";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildEmailDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -8,15 +8,15 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.provider) {
     const providerColors: Record<string, string> = {
-      Gmail: 'bg-red-500/10 text-red-600 dark:text-red-400',
-      'Microsoft Outlook': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-      'Yahoo Mail': 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      'Apple iCloud': 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
-      ProtonMail: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+      Gmail: "bg-red-500/10 text-red-600 dark:text-red-400",
+      "Microsoft Outlook": "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      "Yahoo Mail": "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+      "Apple iCloud": "bg-gray-500/10 text-gray-600 dark:text-gray-400",
+      ProtonMail: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
     };
-    const colorClass = providerColors[String(emailData.provider)] || 'bg-muted text-foreground';
+    const colorClass = providerColors[String(emailData.provider)] || "bg-muted text-foreground";
     details.push({
-      label: 'Email Provider',
+      label: "Email Provider",
       value: (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
           {emailData.provider}
@@ -28,7 +28,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.to) {
     details.push({
-      label: 'Recipient',
+      label: "Recipient",
       value: (
         <a
           href={`mailto:${emailData.to}`}
@@ -43,7 +43,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.domain) {
     details.push({
-      label: 'Domain',
+      label: "Domain",
       value: <span className="font-mono text-xs">{emailData.domain}</span>,
       icon: <Globe className="w-3 h-3" />,
     });
@@ -51,7 +51,7 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.subject) {
     details.push({
-      label: 'Subject',
+      label: "Subject",
       value: <span className="text-xs font-medium">{emailData.subject}</span>,
       icon: <FileText className="w-3 h-3" />,
     });
@@ -59,11 +59,11 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.body) {
     details.push({
-      label: 'Body Preview',
+      label: "Body Preview",
       value: (
         <span className="text-xs text-muted-foreground">
           {String(emailData.body).slice(0, 80)}
-          {String(emailData.body).length > 80 ? '...' : ''}
+          {String(emailData.body).length > 80 ? "..." : ""}
         </span>
       ),
       icon: <FileText className="w-3 h-3" />,
@@ -72,14 +72,14 @@ export function buildEmailDetails(payload: string): DetailEntry[] {
 
   if (emailData.cc) {
     details.push({
-      label: 'CC',
+      label: "CC",
       value: <span className="font-mono text-xs">{emailData.cc}</span>,
       icon: <Mail className="w-3 h-3" />,
     });
   }
   if (emailData.bcc) {
     details.push({
-      label: 'BCC',
+      label: "BCC",
       value: <span className="font-mono text-xs">{emailData.bcc}</span>,
       icon: <Mail className="w-3 h-3" />,
     });

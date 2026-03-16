@@ -1,4 +1,4 @@
-import { ErrorCorrectionLevel } from './error-correction-level';
+import { ErrorCorrectionLevel } from "./error-correction-level";
 
 /**
  * Format information (error correction level and mask pattern)
@@ -41,7 +41,7 @@ export class FormatInformation {
 
   private constructor(
     private readonly errorCorrectionLevel: ErrorCorrectionLevel,
-    private readonly dataMask: number
+    private readonly dataMask: number,
   ) {}
 
   static numBitsDiffering(a: number, b: number): number {
@@ -56,22 +56,22 @@ export class FormatInformation {
 
   static decodeFormatInformation(
     maskedFormatInfo1: number,
-    maskedFormatInfo2: number
+    maskedFormatInfo2: number,
   ): FormatInformation | null {
     const formatInfo = FormatInformation.doDecodeFormatInformation(
       maskedFormatInfo1,
-      maskedFormatInfo2
+      maskedFormatInfo2,
     );
     if (formatInfo !== null) return formatInfo;
     return FormatInformation.doDecodeFormatInformation(
       maskedFormatInfo1 ^ 0x5412,
-      maskedFormatInfo2 ^ 0x5412
+      maskedFormatInfo2 ^ 0x5412,
     );
   }
 
   private static doDecodeFormatInformation(
     maskedFormatInfo1: number,
-    maskedFormatInfo2: number
+    maskedFormatInfo2: number,
   ): FormatInformation | null {
     let bestDifference = Number.MAX_SAFE_INTEGER;
     let bestFormatInfo = 0;
@@ -80,7 +80,7 @@ export class FormatInformation {
       if (targetInfo === maskedFormatInfo1 || targetInfo === maskedFormatInfo2) {
         return new FormatInformation(
           ErrorCorrectionLevel.forBits((decodeInfo[1] >> 3) & 0x03),
-          decodeInfo[1] & 0x07
+          decodeInfo[1] & 0x07,
         );
       }
       let bitsDifference = FormatInformation.numBitsDiffering(maskedFormatInfo1, targetInfo);
@@ -99,7 +99,7 @@ export class FormatInformation {
     if (bestDifference <= 3) {
       return new FormatInformation(
         ErrorCorrectionLevel.forBits((bestFormatInfo >> 3) & 0x03),
-        bestFormatInfo & 0x07
+        bestFormatInfo & 0x07,
       );
     }
     return null;

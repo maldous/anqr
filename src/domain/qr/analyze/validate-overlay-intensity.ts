@@ -1,11 +1,11 @@
-import { calculateSafeIntensity } from './calculate-safe-intensity';
+import { calculateSafeIntensity } from "./calculate-safe-intensity";
 
 /**
  * Validate overlay intensity
  */
 export function validateOverlayIntensity(
   intensity: number,
-  eccLevel: string
+  eccLevel: string,
 ): { valid: boolean; warning?: string } {
   const maxSafe = calculateSafeIntensity(eccLevel);
   if (intensity > maxSafe) {

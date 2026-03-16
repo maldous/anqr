@@ -1,6 +1,6 @@
-import type { StoreState } from './share-config-store-state.type';
+import type { StoreState } from "./share-config-store-state.type";
 
-export function buildShareMetadataFields(metadata: StoreState['metadata']) {
+export function buildShareMetadataFields(metadata: StoreState["metadata"]) {
   return {
     metaTitle: metadata.title || undefined,
     metaAuthor: metadata.author || undefined,

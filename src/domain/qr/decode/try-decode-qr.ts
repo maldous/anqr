@@ -1,38 +1,38 @@
-import { decodeDataCodewordsDetailed, RS_BLOCKS } from './decode';
-import { attemptRSCorrectionWithFallback } from './attempt-rs-correction-with-fallback';
-import { collectAlignmentDiagnostics } from './collect-alignment-diagnostics';
-import { collectTimingDiagnostics } from './collect-timing-diagnostics';
-import { calculateLocation, extractModuleMatrix } from './extract';
-import { getECCLevelChar, readFormatInfo } from './format';
-import { findFinderPatterns, selectFinderPatterns } from './locate';
-import { runMaskRootabilitySweep } from './run-mask-rootability-sweep';
-import type { DecodeResult } from '../../../modules/qr-decoder/types';
-import { qrDecoderLog } from './decoder-log';
+import { decodeDataCodewordsDetailed, RS_BLOCKS } from "./decode";
+import { attemptRSCorrectionWithFallback } from "./attempt-rs-correction-with-fallback";
+import { collectAlignmentDiagnostics } from "./collect-alignment-diagnostics";
+import { collectTimingDiagnostics } from "./collect-timing-diagnostics";
+import { calculateLocation, extractModuleMatrix } from "./extract";
+import { getECCLevelChar, readFormatInfo } from "./format";
+import { findFinderPatterns, selectFinderPatterns } from "./locate";
+import { runMaskRootabilitySweep } from "./run-mask-rootability-sweep";
+import type { DecodeResult } from "../../../modules/qr-decoder/types";
+import { qrDecoderLog } from "./decoder-log";
 
 export function tryDecode(imageData: ImageData): DecodeResult | null {
   try {
-    qrDecoderLog.trace('main: Starting decode attempt', {
+    qrDecoderLog.trace("main: Starting decode attempt", {
       width: imageData.width,
       height: imageData.height,
     });
     const { patterns, threshold } = findFinderPatterns(imageData);
     if (patterns.length < 3) {
-      qrDecoderLog.trace('main: Failed - not enough finder patterns', { found: patterns.length });
+      qrDecoderLog.trace("main: Failed - not enough finder patterns", { found: patterns.length });
       return null;
     }
     const selected = selectFinderPatterns(patterns);
     if (!selected) {
-      qrDecoderLog.trace('main: Failed - could not select valid pattern triplet');
+      qrDecoderLog.trace("main: Failed - could not select valid pattern triplet");
       return null;
     }
     const [topLeft, topRight, bottomLeft] = selected;
     const location = calculateLocation(topLeft, topRight, bottomLeft);
     const version = (location.moduleCount - 17) / 4;
-    qrDecoderLog.trace('main: Calculated version', { version, moduleCount: location.moduleCount });
+    qrDecoderLog.trace("main: Calculated version", { version, moduleCount: location.moduleCount });
     const rawMatrix = extractModuleMatrix(imageData, location, threshold);
     const formatInfo = readFormatInfo(rawMatrix, location.moduleCount);
     if (!formatInfo) {
-      qrDecoderLog.trace('main: Failed - could not read format info');
+      qrDecoderLog.trace("main: Failed - could not read format info");
       return null;
     }
     const moduleCount = location.moduleCount;
@@ -43,7 +43,7 @@ export function tryDecode(imageData: ImageData): DecodeResult | null {
       rawMatrix,
       moduleCount,
       versionRounded,
-      getECCLevelChar(formatInfo.eccLevel)
+      getECCLevelChar(formatInfo.eccLevel),
     );
     const eccChar = getECCLevelChar(formatInfo.eccLevel) as keyof typeof RS_BLOCKS;
     const rsBlocks = RS_BLOCKS[eccChar]?.[versionRounded - 1];
@@ -52,7 +52,7 @@ export function tryDecode(imageData: ImageData): DecodeResult | null {
       rawMatrix,
       moduleCount,
       rsBlocks,
-      formatInfo.maskPattern
+      formatInfo.maskPattern,
     );
     if (!correctionResult) return null;
     const {
@@ -81,7 +81,7 @@ export function tryDecode(imageData: ImageData): DecodeResult | null {
       segments: decoded.segments,
     };
   } catch (err) {
-    qrDecoderLog.trace('main: Exception during decode', { error: String(err) });
+    qrDecoderLog.trace("main: Exception during decode", { error: String(err) });
     return null;
   }
 }

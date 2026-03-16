@@ -1,4 +1,4 @@
-import { getMediaStoreWriter } from './get-media-store-writer';
+import { getMediaStoreWriter } from "./get-media-store-writer";
 
 /**
  * Save a base64-encoded file to the Documents folder
@@ -12,7 +12,7 @@ export async function saveBase64ToDocuments(
   filename: string,
   base64Data: string,
   mimeType: string,
-  subfolder?: string
+  subfolder?: string,
 ): Promise<{ uri?: string; path?: string; displayName?: string }> {
   const plugin = getMediaStoreWriter();
   if (plugin.saveToDocuments) {

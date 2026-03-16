@@ -1,17 +1,17 @@
-import { applyDither } from '../../../modules/dither-algorithms';
-import type { OverlayDitherOptions } from './processor.types';
+import { applyDither } from "../../../modules/dither-algorithms";
+import type { OverlayDitherOptions } from "./processor.types";
 
 export function applyOverlayDither(imageData: ImageData, options: OverlayDitherOptions): ImageData {
-  if (!options.enabled || options.kind === 'none') {
+  if (!options.enabled || options.kind === "none") {
     return imageData;
   }
 
   const result = applyDither(imageData, {
-    kind: options.kind ?? 'floyd_steinberg',
+    kind: options.kind ?? "floyd_steinberg",
     strength: options.strength ?? 1,
     levels: options.levels ?? 2,
     serpentine: options.serpentine ?? false,
-    colorMode: 'color',
+    colorMode: "color",
     diffusionKernel: options.kernel,
     orderedMatrix: options.matrix,
   });

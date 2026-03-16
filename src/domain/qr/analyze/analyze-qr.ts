@@ -1,5 +1,5 @@
-import { scanCanvas } from './scanner';
-import type { AnalysisResult, AnalysisWarning, AnalysisIssue } from './safety.types';
+import { scanCanvas } from "./scanner";
+import type { AnalysisResult, AnalysisWarning, AnalysisIssue } from "./safety.types";
 
 /**
  * Comprehensive QR analysis
@@ -14,12 +14,12 @@ export function analyzeQR(canvas: HTMLCanvasElement, expectedContent?: string): 
 
   if (!scannable) {
     issues.push({
-      type: 'scan_failed',
-      message: 'QR code could not be scanned',
+      type: "scan_failed",
+      message: "QR code could not be scanned",
     });
   } else if (expectedContent && scanResult.data !== expectedContent) {
     issues.push({
-      type: 'content_mismatch',
+      type: "content_mismatch",
       message: `Scanned content does not match expected: got "${scanResult.data}"`,
     });
   }

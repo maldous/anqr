@@ -1,4 +1,4 @@
-import type { CryptoHelper } from '../../modules/payload-generators/types';
+import type { CryptoHelper } from "../../modules/payload-generators/types";
 
 /**
  * Generate cryptocurrency payment URI (BIP-21 for Bitcoin, etc.)
@@ -9,10 +9,10 @@ export function generateCrypto(params: CryptoHelper): string {
 
   const queryParams = new URLSearchParams();
   if (params.amount !== undefined && params.amount > 0) {
-    queryParams.set('amount', params.amount.toString());
+    queryParams.set("amount", params.amount.toString());
   }
   if (params.label) {
-    queryParams.set('label', params.label);
+    queryParams.set("label", params.label);
   }
 
   const paramStr = queryParams.toString();

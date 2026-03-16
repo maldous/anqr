@@ -1,1 +1,1 @@
-export * from '../platform/ads/components/AdPlaceholder';
+export * from "../platform/ads/components/AdPlaceholder";

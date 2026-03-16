@@ -1,5 +1,5 @@
-import type { DiffusionKernelDef } from '../dither/kernels';
-import { pixelIndex } from './pixel-index';
+import type { DiffusionKernelDef } from "../dither/kernels";
+import { pixelIndex } from "./pixel-index";
 
 /**
  * Distribute error to neighboring pixels using the specified kernel.
@@ -12,7 +12,7 @@ export function distributeError(
   error: number,
   kernel: DiffusionKernelDef,
   scaledSize: number,
-  leftToRight: boolean
+  leftToRight: boolean,
 ): void {
   const prepared = kernel.prepared;
   if (!prepared) return;

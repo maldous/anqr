@@ -1,6 +1,6 @@
-import type { DecodedSegmentInfo } from './decoded-segment-info';
-import type { DecoderMetadata } from './decoder-metadata';
-import type { Point } from './point';
+import type { DecodedSegmentInfo } from "./decoded-segment-info";
+import type { DecoderMetadata } from "./decoder-metadata";
+import type { Point } from "./point";
 
 export interface DecodeResult {
   success: boolean;
@@ -14,9 +14,9 @@ export interface DecodeResult {
     bottomRightCorner: Point;
   } | null;
   version: number | null;
-  eccLevel: 'L' | 'M' | 'Q' | 'H' | null;
+  eccLevel: "L" | "M" | "Q" | "H" | null;
   maskPattern: number | null;
-  encodingMode?: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed' | 'unknown' | null;
+  encodingMode?: "numeric" | "alphanumeric" | "byte" | "kanji" | "mixed" | "unknown" | null;
   errorsCorrected?: number | null;
   erasures?: number | null;
   orientation?: number | null;

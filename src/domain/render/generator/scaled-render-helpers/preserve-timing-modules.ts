@@ -1,6 +1,6 @@
-import { drawTimingModule } from '../drawing';
-import { resolveDarkFillStyle } from './resolve-dark-fill-style';
-import type { StructuralPreservationCtx } from '../scaled-render-types';
+import { drawTimingModule } from "../drawing";
+import { resolveDarkFillStyle } from "./resolve-dark-fill-style";
+import type { StructuralPreservationCtx } from "../scaled-render-types";
 
 export function preserveTimingModules(spctx: StructuralPreservationCtx): void {
   const {
@@ -16,12 +16,12 @@ export function preserveTimingModules(spctx: StructuralPreservationCtx): void {
     useGradient,
     gradientFill,
   } = spctx;
-  const timingStyle = config.timingStyle || 'match_module';
+  const timingStyle = config.timingStyle || "match_module";
   const darkFill = resolveDarkFillStyle(
     forceBinaryFunctionPatterns,
     effectiveFgColor,
     useGradient,
-    gradientFill
+    gradientFill,
   );
   for (let col = 8; col < moduleCount - 8; col++) {
     const isDark = qr.isDark(6, col);

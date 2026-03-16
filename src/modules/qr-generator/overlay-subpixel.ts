@@ -1,1 +1,1 @@
-export * from '../../domain/render/overlay/overlay-subpixel';
+export * from "../../domain/render/overlay/overlay-subpixel";

@@ -1,4 +1,4 @@
-import { blendColors } from '../core';
+import { blendColors } from "../core";
 
 export function blendLightModuleColor(
   ditherR: number,
@@ -8,7 +8,7 @@ export function blendLightModuleColor(
   whitePush: number,
   lightMix: number,
   bgColor: string,
-  mixScale: number
+  mixScale: number,
 ): string {
   const factor = whiteBase + lightMix * whitePush;
   const lightR = Math.round(ditherR + (255 - ditherR) * factor);

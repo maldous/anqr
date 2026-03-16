@@ -1,4 +1,4 @@
-import type { ImageProperties } from './analyzer-content.types';
+import type { ImageProperties } from "./analyzer-content.types";
 
 /**
  * Calculate image properties from ImageData

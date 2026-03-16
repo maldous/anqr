@@ -1,4 +1,4 @@
-import { validationWorkerState } from './validation-worker-state';
+import { validationWorkerState } from "./validation-worker-state";
 
 export function terminateValidationWorker(): void {
   if (validationWorkerState.worker) {
@@ -8,6 +8,6 @@ export function terminateValidationWorker(): void {
 
   for (const [id, resolve] of validationWorkerState.pending) {
     validationWorkerState.pending.delete(id);
-    resolve({ valid: false, error: 'Worker terminated', confidence: 'low' });
+    resolve({ valid: false, error: "Worker terminated", confidence: "low" });
   }
 }

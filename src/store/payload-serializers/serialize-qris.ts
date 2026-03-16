@@ -1,9 +1,9 @@
-import { generateQRIS } from '@/modules/payload-generators';
-import type { PayloadData } from './payload-data';
+import { generateQRIS } from "@/modules/payload-generators";
+import type { PayloadData } from "./payload-data";
 
 export function serializeQRIS(payload: PayloadData): string {
   const q = payload.qris;
-  if (!q.merchantName) return '';
+  if (!q.merchantName) return "";
   return generateQRIS({
     merchantID: q.merchantId,
     nmid: q.nmid,

@@ -1,5 +1,5 @@
-import { rgbToLumaLinear } from '../color/color';
-import type { OverlayToneStats } from './overlay-tone-stats';
+import { rgbToLumaLinear } from "../color/color";
+import type { OverlayToneStats } from "./overlay-tone-stats";
 
 export function computeOverlayToneStats(imageData: ImageData): OverlayToneStats {
   const data = imageData.data;

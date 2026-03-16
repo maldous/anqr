@@ -1,1 +1,1 @@
-export * from '../../platform/browser/io/download';
+export * from "../../platform/browser/io/download";

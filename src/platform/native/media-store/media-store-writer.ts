@@ -1,5 +1,5 @@
-import type { MediaStoreWriterPlugin } from './media-store.types';
-import { getMediaStoreWriter } from './get-media-store-writer';
+import type { MediaStoreWriterPlugin } from "./media-store.types";
+import { getMediaStoreWriter } from "./get-media-store-writer";
 
 /**
  * @deprecated Use saveBase64ToDocuments instead. This export is kept for backward compatibility.
@@ -23,6 +23,6 @@ export const MediaStoreWriter: MediaStoreWriterPlugin = {
     if (plugin.saveBase64ToDocuments) {
       return plugin.saveBase64ToDocuments(options);
     }
-    throw new Error('MediaStoreWriter plugin method not available');
+    throw new Error("MediaStoreWriter plugin method not available");
   },
 };

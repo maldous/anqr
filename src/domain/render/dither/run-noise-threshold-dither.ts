@@ -1,5 +1,5 @@
-import type { ColorMode, DitherResult } from '../../../modules/dither-algorithms/types';
-import { noiseThresholdDither } from './noise-threshold-dither';
+import type { ColorMode, DitherResult } from "../../../modules/dither-algorithms/types";
+import { noiseThresholdDither } from "./noise-threshold-dither";
 
 export function runNoiseThresholdDither(
   imageData: Float32Array[],
@@ -8,7 +8,7 @@ export function runNoiseThresholdDither(
   seed: number,
   strength: number,
   colorMode: ColorMode,
-  threshold: (rng: () => number) => number
+  threshold: (rng: () => number) => number,
 ): DitherResult {
   return noiseThresholdDither({
     height,

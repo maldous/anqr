@@ -3,10 +3,10 @@
  * Error diffusion kernels for dithering algorithms
  */
 
-import { createLogger } from '../../../infra/logging/logger';
-import type { DiffusionKernel } from '../../../modules/qr-generator/types';
+import { createLogger } from "../../../infra/logging/logger";
+import type { DiffusionKernel } from "../../../modules/qr-generator/types";
 
-const _log = createLogger('GENERATE');
+const _log = createLogger("GENERATE");
 
 const BURKES_OFFSETS = [
   { dx: 1, dy: 0, weight: 8 },

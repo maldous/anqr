@@ -1,6 +1,6 @@
-import { MessageSquare, Phone, Type } from 'lucide-react';
-import { parseSmsPayload } from './payload-parsers';
-import type { DetailEntry } from './detail-entry';
+import { MessageSquare, Phone, Type } from "lucide-react";
+import { parseSmsPayload } from "./payload-parsers";
+import type { DetailEntry } from "./detail-entry";
 
 export function buildSmsDetails(payload: string): DetailEntry[] {
   const details: DetailEntry[] = [];
@@ -8,10 +8,10 @@ export function buildSmsDetails(payload: string): DetailEntry[] {
 
   if (smsData.number) {
     details.push({
-      label: 'Recipient',
+      label: "Recipient",
       value: (
         <a
-          href={`tel:${String(smsData.number).replaceAll(/[^+\d]/g, '')}`}
+          href={`tel:${String(smsData.number).replaceAll(/[^+\d]/g, "")}`}
           className="font-mono text-xs text-primary hover:underline"
         >
           {smsData.number}
@@ -23,7 +23,7 @@ export function buildSmsDetails(payload: string): DetailEntry[] {
 
   if (smsData.body) {
     details.push({
-      label: 'Message',
+      label: "Message",
       value: <span className="text-xs">{smsData.body}</span>,
       icon: <MessageSquare className="w-3 h-3" />,
     });
@@ -31,7 +31,7 @@ export function buildSmsDetails(payload: string): DetailEntry[] {
 
   if (smsData.charCount) {
     details.push({
-      label: 'Character Count',
+      label: "Character Count",
       value: `${smsData.charCount} characters`,
       icon: <Type className="w-3 h-3" />,
     });
@@ -39,13 +39,13 @@ export function buildSmsDetails(payload: string): DetailEntry[] {
 
   if (smsData.segmentCount) {
     details.push({
-      label: 'SMS Segments',
+      label: "SMS Segments",
       value: (
         <span
-          className={Number(smsData.segmentCount) > 1 ? 'text-amber-600 dark:text-amber-400' : ''}
+          className={Number(smsData.segmentCount) > 1 ? "text-amber-600 dark:text-amber-400" : ""}
         >
           {smsData.segmentCount} segment(s)
-          {Number(smsData.segmentCount) > 1 && ' (may cost more)'}
+          {Number(smsData.segmentCount) > 1 && " (may cost more)"}
         </span>
       ),
       icon: <MessageSquare className="w-3 h-3" />,

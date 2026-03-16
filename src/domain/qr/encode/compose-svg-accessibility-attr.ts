@@ -1,13 +1,13 @@
-import type { SvgAccessibilityAttr } from './svg-accessibility-attr';
+import type { SvgAccessibilityAttr } from "./svg-accessibility-attr";
 
 export function composeSvgAccessibilityAttr(
   value: unknown,
-  defaultId: string
+  defaultId: string,
 ): SvgAccessibilityAttr {
   let result: SvgAccessibilityAttr = { text: null, id: null };
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     result = { text: value, id: value ? defaultId : null };
-  } else if (value && typeof value === 'object') {
+  } else if (value && typeof value === "object") {
     result = value as SvgAccessibilityAttr;
   }
   result.text = result.text || null;

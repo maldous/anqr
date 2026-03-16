@@ -1,1 +1,1 @@
-export * from '../../domain/render/primitives/math';
+export * from "../../domain/render/primitives/math";

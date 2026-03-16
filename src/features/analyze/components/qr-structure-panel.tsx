@@ -1,9 +1,9 @@
-import { Grid3x3, Hash, Layers, Shield } from 'lucide-react';
-import { CollapsibleSection } from '@/features/analyze/components/collapsible-section';
-import { DetailRow } from '@/features/analyze/components/detail-row';
-import { ECC_DESCRIPTIONS } from '@/features/analyze/components/ecc-descriptions';
-import { MASK_DESCRIPTIONS } from '@/features/analyze/components/mask-descriptions';
-import type { ECCLevel } from '@/modules/qr-analyzer';
+import { Grid3x3, Hash, Layers, Shield } from "lucide-react";
+import { CollapsibleSection } from "@/features/analyze/components/collapsible-section";
+import { DetailRow } from "@/features/analyze/components/detail-row";
+import { ECC_DESCRIPTIONS } from "@/features/analyze/components/ecc-descriptions";
+import { MASK_DESCRIPTIONS } from "@/features/analyze/components/mask-descriptions";
+import type { ECCLevel } from "@/modules/qr-analyzer";
 
 export function QrStructurePanel({
   version,
@@ -25,7 +25,7 @@ export function QrStructurePanel({
       <div className="space-y-2">
         <DetailRow
           label="Version"
-          value={version === null ? '—' : `${version} (${moduleCount}×${moduleCount} modules)`}
+          value={version === null ? "—" : `${version} (${moduleCount}×${moduleCount} modules)`}
           icon={<Hash className="w-3.5 h-3.5" />}
         />
         <DetailRow
@@ -39,7 +39,7 @@ export function QrStructurePanel({
                 </div>
               </div>
             ) : (
-              '—'
+              "—"
             )
           }
           icon={<Shield className="w-3.5 h-3.5" />}
@@ -48,7 +48,7 @@ export function QrStructurePanel({
           label="Mask Pattern"
           value={
             maskPattern === null ? (
-              '—'
+              "—"
             ) : (
               <div className="text-right">
                 <div>Pattern {maskPattern}</div>
