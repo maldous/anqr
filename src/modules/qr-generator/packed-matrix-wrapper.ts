@@ -10,7 +10,9 @@ export class PackedMatrixWrapper extends BaseMatrixWrapper {
 
   addData(_data: string, _mode?: string): void {}
 
-  make(_maskPattern?: number): void {}
+  make(_maskPattern?: number): void {
+    throw new Error('PackedMatrixWrapper.make is not supported');
+  }
 
   isDark(row: number, col: number): boolean {
     if (row < 0 || col < 0 || row >= this.moduleCount || col >= this.moduleCount) return false;

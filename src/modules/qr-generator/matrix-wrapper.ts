@@ -10,7 +10,9 @@ export class MatrixWrapper extends BaseMatrixWrapper {
 
   addData(_data: string, _mode?: string): void {}
 
-  make(_maskPattern?: number): void {}
+  make(_maskPattern?: number): void {
+    throw new Error('MatrixWrapper.make is not supported');
+  }
 
   isDark(row: number, col: number): boolean {
     return this.matrix[row]?.[col] ?? false;
