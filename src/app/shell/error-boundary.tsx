@@ -8,7 +8,8 @@
 import { Component, type ErrorInfo } from "react";
 import { createLogger } from "@/infra/logging/logger";
 import { ErrorFallbackUI } from "./error-fallback-ui";
-import type { ErrorBoundaryProps, ErrorBoundaryState } from "./error-boundary.types";
+import type { ErrorBoundaryProps } from "./error-boundary-props.types";
+import type { ErrorBoundaryState } from "./error-boundary-state.types";
 
 const log = createLogger("ERROR");
 

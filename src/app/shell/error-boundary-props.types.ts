@@ -4,8 +4,3 @@ export type ErrorBoundaryProps = {
   children: ReactNode;
   fallback?: ReactNode;
 };
-
-export type ErrorBoundaryState = {
-  hasError: boolean;
-  error: Error | null;
-};
