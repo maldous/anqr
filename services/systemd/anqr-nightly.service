@@ -26,6 +26,7 @@ WorkingDirectory=/home/user/src/anqr
 Environment=PATH=/home/user/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=HOME=/home/user
 Environment=NODE_PATH=/home/user/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=NODE_OPTIONS=--max-old-space-size=512
 Environment=OLLAMA_API_BASE=http://localhost:11434
 
 # Secrets and overrides (LINEAR_API_KEY, etc.)
@@ -40,7 +41,7 @@ SyslogIdentifier=anqr-nightly
 
 # Safety limits
 TimeoutStartSec=600
-MemoryMax=2G
+MemoryMax=4G
 
 [Install]
 WantedBy=default.target
