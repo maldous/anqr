@@ -1,6 +1,7 @@
 # Launch Scope v1
 
 ## Objective
+
 Define exactly what 1.0 includes and excludes.
 
 ---
@@ -8,80 +9,86 @@ Define exactly what 1.0 includes and excludes.
 # Required features
 
 ### Feature:
+
 QR generation engine (standard, animated, overlays, customization)
 
 - Why required:
-Core purpose of ANQR — platform must generate reliable, customizable QR codes.
+  Core purpose of ANQR — platform must generate reliable, customizable QR codes.
 
 - Platform(s):
-Web, API, Android, iOS
+  Web, API, Android, iOS
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 QR analysis / scan safety diagnostics
 
 - Why required:
-Ensures QR codes remain scannable and allows users to validate overlays and styling.
+  Ensures QR codes remain scannable and allows users to validate overlays and styling.
 
 - Platform(s):
-Web, Android, iOS, API
+  Web, Android, iOS, API
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Platform parity
 
 - Why required:
-QR codes must render identically across web, API, Android, and iOS.
+  QR codes must render identically across web, API, Android, and iOS.
 
 - Platform(s):
-Web, API, Android, iOS
+  Web, API, Android, iOS
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Gallery generation system
 
 - Why required:
-Provides automated demonstrations of QR capabilities and validates rendering.
+  Provides automated demonstrations of QR capabilities and validates rendering.
 
 - Platform(s):
-Web
+  Web
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Export / sharing capabilities
 
 - Why required:
-Core user journey is **generate → export/share QR code**.
+  Core user journey is **generate → export/share QR code**.
 
 - Platform(s):
-Web, Android, iOS
+  Web, Android, iOS
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Observability
 
 - Why required:
-System must remain observable and diagnosable.
+  System must remain observable and diagnosable.
 
 Includes:
 
@@ -90,46 +97,49 @@ Includes:
 - telemetry signals
 
 - Platform(s):
-Web, API, Android, iOS, Harness
+  Web, API, Android, iOS, Harness
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Analytics instrumentation
 
 - Why required:
-Measure usage, growth, and user journeys.
+  Measure usage, growth, and user journeys.
 
 - Platform(s):
-Web, Android, iOS
+  Web, Android, iOS
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Ad monetization
 
 - Why required:
-Primary revenue model for 1.0.
+  Primary revenue model for 1.0.
 
 - Platform(s):
-Web, Android
+  Web, Android
 
 - Launch critical?:
-No (can launch without ads initially)
+  No (can launch without ads initially)
 
 ---
 
 ### Feature:
+
 AI harness automation
 
 - Why required:
-Core architectural goal is continuous improvement through autonomous engineering.
+  Core architectural goal is continuous improvement through autonomous engineering.
 
 Includes:
 
@@ -140,28 +150,30 @@ Includes:
 - watchdog recovery
 
 - Platform(s):
-Harness / local automation
+  Harness / local automation
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Self-healing pipeline
 
 - Why required:
-System must recover from transient failures automatically.
+  System must recover from transient failures automatically.
 
 - Platform(s):
-Harness / CI
+  Harness / CI
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Test automation
 
 Includes:
@@ -171,44 +183,47 @@ Includes:
 - parity validation
 
 - Why required:
-Required to maintain deterministic QR generation.
+  Required to maintain deterministic QR generation.
 
 - Platform(s):
-Web, Android, iOS, API
+  Web, Android, iOS, API
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 ### Feature:
+
 Performance optimization for mobile devices
 
 - Why required:
-QR rendering must work on lower-end devices.
+  QR rendering must work on lower-end devices.
 
 - Platform(s):
-Web mobile, Android, iOS
+  Web mobile, Android, iOS
 
 - Launch critical?:
-Yes
+  Yes
 
 ---
 
 # Deferred features
 
 ### Feature:
+
 Enterprise authentication and API rate limiting
 
 - Why deferred:
-1.0 focuses on anonymous QR generation.
+  1.0 focuses on anonymous QR generation.
 
 - Revisit milestone:
-1.1 / enterprise edition
+  1.1 / enterprise edition
 
 ---
 
 ### Feature:
+
 Enterprise integrations
 
 Examples:
@@ -218,146 +233,157 @@ Examples:
 - partner systems
 
 - Why deferred:
-Not required for consumer launch.
+  Not required for consumer launch.
 
 - Revisit milestone:
-Post-1.0 growth phase
+  Post-1.0 growth phase
 
 ---
 
 ### Feature:
+
 Advanced account system
 
 - Why deferred:
-Product designed for anonymous usage initially.
+  Product designed for anonymous usage initially.
 
 - Revisit milestone:
-Future SaaS expansion
+  Future SaaS expansion
 
 ---
 
 ### Feature:
+
 AI-assisted QR generation
 
 - Why deferred:
-Experimental and not necessary for initial stability.
+  Experimental and not necessary for initial stability.
 
 - Revisit milestone:
-1.x experimental features
+  1.x experimental features
 
 ---
 
 ### Feature:
+
 Complex marketing automation
 
 - Why deferred:
-Initial marketing can rely on SEO and organic discovery.
+  Initial marketing can rely on SEO and organic discovery.
 
 - Revisit milestone:
-Growth phase
+  Growth phase
 
 ---
 
 ### Feature:
+
 Advanced analytics / ML insights
 
 - Why deferred:
-Requires larger user base.
+  Requires larger user base.
 
 - Revisit milestone:
-After traffic scale
+  After traffic scale
 
 ---
 
 # Launch blockers
 
 ### Blocker:
+
 Cross-platform QR parity not verified
 
 - Owner:
-Engineering
+  Engineering
 
 - Evidence to clear:
-Automated parity tests passing across Web / Android / iOS / API
+  Automated parity tests passing across Web / Android / iOS / API
 
 ---
 
 ### Blocker:
+
 QR scan reliability not validated across devices
 
 - Owner:
-Engineering / QA
+  Engineering / QA
 
 - Evidence to clear:
-Scan tests on multiple device classes and QR scanning apps
+  Scan tests on multiple device classes and QR scanning apps
 
 ---
 
 ### Blocker:
+
 Performance degradation on mobile devices
 
 - Owner:
-Engineering
+  Engineering
 
 - Evidence to clear:
-Benchmark results within defined performance budgets
+  Benchmark results within defined performance budgets
 
 ---
 
 ### Blocker:
+
 Critical runtime errors
 
 - Owner:
-Reliability / Engineering
+  Reliability / Engineering
 
 - Evidence to clear:
-Sentry error rate stable and near zero
+  Sentry error rate stable and near zero
 
 ---
 
 ### Blocker:
+
 CI pipeline instability
 
 - Owner:
-Harness
+  Harness
 
 - Evidence to clear:
-Stable CI runs with high pass rate
+  Stable CI runs with high pass rate
 
 ---
 
 ### Blocker:
+
 App store submission readiness
 
 - Owner:
-Release management
+  Release management
 
 - Evidence to clear:
-Android build verified  
-iOS TestFlight build accepted
+  Android build verified  
+  iOS TestFlight build accepted
 
 ---
 
 ### Blocker:
+
 Monitoring gaps
 
 - Owner:
-Reliability
+  Reliability
 
 - Evidence to clear:
-Sentry, uptime monitoring, and analytics verified operational
+  Sentry, uptime monitoring, and analytics verified operational
 
 ---
 
 ### Blocker:
+
 Codebase maintainability
 
 - Owner:
-Engineering / Harness
+  Engineering / Harness
 
 - Evidence to clear:
 
 - Sonar quality gates passing
 - Cognitive complexity within thresholds
 - architecture refactor complete
-

@@ -1,6 +1,7 @@
 # Scorecards and KPIs
 
 ## Objective
+
 Score the **product** and the **harness (AI pipeline)** separately.
 
 Product KPIs measure **user-facing quality, correctness, and adoption**.  
@@ -11,275 +12,293 @@ Harness KPIs measure **how well the autonomous engineering system operates**.
 # Product KPIs
 
 ## Test pass rate
+
 - Why it matters:
-Ensures the codebase remains correct and prevents regressions.
+  Ensures the codebase remains correct and prevents regressions.
 
 - Source of truth:
-CI pipeline test results (GitHub CI / test runners)
+  CI pipeline test results (GitHub CI / test runners)
 
 - Target:
-100%
+  100%
 
 - Alert threshold:
-Anything < 100% on main branch
+  Anything < 100% on main branch
 
 ---
 
 ## Parity pass rate
+
 - Why it matters:
-QR generation must produce **identical output across Web, API, Android, and iOS**.
+  QR generation must produce **identical output across Web, API, Android, and iOS**.
 
 - Source of truth:
-Automated parity test suite and gallery comparison outputs
+  Automated parity test suite and gallery comparison outputs
 
 - Target:
-100% before release readiness
+  100% before release readiness
 
 - Alert threshold:
-Below 95% or any regression in previously passing tests
+  Below 95% or any regression in previously passing tests
 
 ---
 
 ## Performance budget adherence
+
 - Why it matters:
-QR generation must remain fast, especially on lower-end mobile devices.
+  QR generation must remain fast, especially on lower-end mobile devices.
 
 - Source of truth:
-Benchmark tests and runtime telemetry
+  Benchmark tests and runtime telemetry
 
 - Target:
-Within defined performance budgets
+  Within defined performance budgets
 
 - Alert threshold:
-Performance degradation greater than 20% from baseline
+  Performance degradation greater than 20% from baseline
 
 ---
 
 ## Crash / error rate
+
 - Why it matters:
-Stability directly affects user trust.
+  Stability directly affects user trust.
 
 - Source of truth:
-Sentry error monitoring
+  Sentry error monitoring
 
 - Target:
-Near-zero crash rate
+  Near-zero crash rate
 
 - Alert threshold:
-Any significant spike or post-deployment increase in errors
+  Any significant spike or post-deployment increase in errors
 
 ---
 
 ## Key user journey completion
+
 - Why it matters:
-The core journey is **generate → export/share QR code**.
+  The core journey is **generate → export/share QR code**.
 
 - Source of truth:
-Google Analytics event tracking such as:
+  Google Analytics event tracking such as:
 - export events
 - download events
 - share actions
 - screenshot detection proxies
 
 - Target:
-High completion rate for generation sessions
+  High completion rate for generation sessions
 
 - Alert threshold:
-Drop greater than 25% compared with historical baseline
+  Drop greater than 25% compared with historical baseline
 
 ---
 
 ## Retention / conversion proxies
+
 - Why it matters:
-Indicates whether users return and continue generating QR codes.
+  Indicates whether users return and continue generating QR codes.
 
 - Source of truth:
-Google Analytics and related analytics APIs
+  Google Analytics and related analytics APIs
 
 - Target:
-Stable or increasing returning-user trends
+  Stable or increasing returning-user trends
 
 - Alert threshold:
-Sustained decline in returning users or QR generation volume
+  Sustained decline in returning users or QR generation volume
 
 ---
 
 ## Release readiness
+
 - Why it matters:
-Ensures a release meets required stability, parity, and performance gates.
+  Ensures a release meets required stability, parity, and performance gates.
 
 - Source of truth:
-CI results, parity checks, performance benchmarks, and release checklist
+  CI results, parity checks, performance benchmarks, and release checklist
 
 - Target:
-All release gates satisfied before production deployment
+  All release gates satisfied before production deployment
 
 - Alert threshold:
-Any failed release gate
+  Any failed release gate
 
 ---
 
 ## Trust / privacy incidents
+
 - Why it matters:
-User trust and anonymity are core goals of ANQR.
+  User trust and anonymity are core goals of ANQR.
 
 - Source of truth:
-Security reviews, incident reports, and issue tracker alerts
+  Security reviews, incident reports, and issue tracker alerts
 
 - Target:
-Zero incidents
+  Zero incidents
 
 - Alert threshold:
-Any confirmed privacy or trust breach
+  Any confirmed privacy or trust breach
 
 ---
 
 # Harness KPIs
 
 ## Task throughput
+
 - Why it matters:
-Measures how effectively the autonomous engineering system performs work.
+  Measures how effectively the autonomous engineering system performs work.
 
 - Source of truth:
-Issue tracker metrics and pipeline execution logs
+  Issue tracker metrics and pipeline execution logs
 
 - Target:
-Stable and consistent task completion
+  Stable and consistent task completion
 
 - Alert threshold:
-Sustained drop in completed tasks
+  Sustained drop in completed tasks
 
 ---
 
 ## False-positive issue rate
+
 - Why it matters:
-Prevents automation from generating excessive noise.
+  Prevents automation from generating excessive noise.
 
 - Source of truth:
-Issue tracker classification and review
+  Issue tracker classification and review
 
 - Target:
-Very low rate
+  Very low rate
 
 - Alert threshold:
-More than 10% of issues classified as false positives
+  More than 10% of issues classified as false positives
 
 ---
 
 ## False-complete rate
+
 - Why it matters:
-Ensures automation actually solves problems rather than marking them complete incorrectly.
+  Ensures automation actually solves problems rather than marking them complete incorrectly.
 
 - Source of truth:
-Issue reopen events and verification failures
+  Issue reopen events and verification failures
 
 - Target:
-Near zero
+  Near zero
 
 - Alert threshold:
-Repeated issue reopenings
+  Repeated issue reopenings
 
 ---
 
 ## Retry success rate
+
 - Why it matters:
-Temporary failures should be recoverable automatically.
+  Temporary failures should be recoverable automatically.
 
 - Source of truth:
-Pipeline retry logs
+  Pipeline retry logs
 
 - Target:
-High retry success rate
+  High retry success rate
 
 - Alert threshold:
-Repeated retry failures or retry loops
+  Repeated retry failures or retry loops
 
 ---
 
 ## Model / provider reliability
+
 - Why it matters:
-The harness depends on external AI model providers.
+  The harness depends on external AI model providers.
 
 - Source of truth:
-Provider health checks and pipeline logs
+  Provider health checks and pipeline logs
 
 - Target:
-Provider state mostly **healthy**
+  Provider state mostly **healthy**
 
 - Alert threshold:
-Provider marked **degraded**, **blocked**, or **disabled**
+  Provider marked **degraded**, **blocked**, or **disabled**
 
 ---
 
 ## Average latency per run
+
 - Why it matters:
-Pipeline responsiveness affects development velocity.
+  Pipeline responsiveness affects development velocity.
 
 - Source of truth:
-Pipeline runtime telemetry
+  Pipeline runtime telemetry
 
 - Target:
-Stable average runtime
+  Stable average runtime
 
 - Alert threshold:
-Latency increase greater than 50% from baseline
+  Latency increase greater than 50% from baseline
 
 ---
 
 ## Cost per successful task
+
 - Why it matters:
-ANQR aims to operate as a **zero-cost or minimal-cost system**.
+  ANQR aims to operate as a **zero-cost or minimal-cost system**.
 
 - Source of truth:
-Provider usage metrics and billing data
+  Provider usage metrics and billing data
 
 - Target:
-Zero cost where possible
+  Zero cost where possible
 
 - Alert threshold:
-Any unexpected paid model usage
+  Any unexpected paid model usage
 
 ---
 
 ## Watchdog interventions
+
 - Why it matters:
-Frequent watchdog interventions indicate instability.
+  Frequent watchdog interventions indicate instability.
 
 - Source of truth:
-Watchdog monitoring logs
+  Watchdog monitoring logs
 
 - Target:
-Rare occurrences
+  Rare occurrences
 
 - Alert threshold:
-Repeated watchdog triggers
+  Repeated watchdog triggers
 
 ---
 
 ## Mean time to recovery (MTTR)
+
 - Why it matters:
-Measures how quickly the system recovers from failures.
+  Measures how quickly the system recovers from failures.
 
 - Source of truth:
-Incident logs and monitoring systems
+  Incident logs and monitoring systems
 
 - Target:
-Rapid automated recovery
+  Rapid automated recovery
 
 - Alert threshold:
-Recovery time exceeding expected thresholds
+  Recovery time exceeding expected thresholds
 
 ---
 
 ## Human override rate
+
 - Why it matters:
-High override rates indicate the autonomous system cannot safely resolve issues.
+  High override rates indicate the autonomous system cannot safely resolve issues.
 
 - Source of truth:
-Issue tracker override records and manual interventions
+  Issue tracker override records and manual interventions
 
 - Target:
-Low override frequency
+  Low override frequency
 
 - Alert threshold:
-Increasing trend of human intervention
+  Increasing trend of human intervention

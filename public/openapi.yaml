@@ -37,191 +37,191 @@ paths:
         control.
       operationId: getQrImage
       parameters:
-        - $ref: '#/components/parameters/DataParam'
-        - $ref: '#/components/parameters/FormatParam'
-        - $ref: '#/components/parameters/SizeParam'
-        - $ref: '#/components/parameters/WidthParam'
-        - $ref: '#/components/parameters/HeightParam'
-        - $ref: '#/components/parameters/EccParam'
-        - $ref: '#/components/parameters/StyleParam'
-        - $ref: '#/components/parameters/FgParam'
-        - $ref: '#/components/parameters/BgParam'
-        - $ref: '#/components/parameters/TransparentParam'
-        - $ref: '#/components/parameters/VersionParam'
-        - $ref: '#/components/parameters/EncodingParam'
-        - $ref: '#/components/parameters/ImageParam'
-        - $ref: '#/components/parameters/OverlayModeParam'
-        - $ref: '#/components/parameters/AnimationPatternParam'
-        - $ref: '#/components/parameters/FullRenderParam'
-        - $ref: '#/components/parameters/StrictOverlayParam'
-        - $ref: '#/components/parameters/AlignParam'
-        - $ref: '#/components/parameters/AnimFramesParam'
-        - $ref: '#/components/parameters/AnimPattern2Param'
-        - $ref: '#/components/parameters/AnimSeedParam'
-        - $ref: '#/components/parameters/AnimSeed2Param'
-        - $ref: '#/components/parameters/AnimSpeedParam'
-        - $ref: '#/components/parameters/AnimTargetParam'
-        - $ref: '#/components/parameters/AnimTarget2Param'
-        - $ref: '#/components/parameters/AnimWaveAxisParam'
-        - $ref: '#/components/parameters/AnimWaveAxis2Param'
-        - $ref: '#/components/parameters/AutoEccParam'
-        - $ref: '#/components/parameters/AutoReduceParam'
-        - $ref: '#/components/parameters/AutoVerParam'
-        - $ref: '#/components/parameters/BgOverParam'
-        - $ref: '#/components/parameters/BlendPresParam'
-        - $ref: '#/components/parameters/BlendPresModeParam'
-        - $ref: '#/components/parameters/BlurParam'
-        - $ref: '#/components/parameters/BnSeedParam'
-        - $ref: '#/components/parameters/BnTileParam'
-        - $ref: '#/components/parameters/BorderParam'
-        - $ref: '#/components/parameters/BounceParam'
-        - $ref: '#/components/parameters/Bounce2Param'
-        - $ref: '#/components/parameters/BrightnessParam'
-        - $ref: '#/components/parameters/CGuardParam'
-        - $ref: '#/components/parameters/CharsetParam'
-        - $ref: '#/components/parameters/ColorCycleParam'
-        - $ref: '#/components/parameters/ColorCycle2Param'
-        - $ref: '#/components/parameters/ColorDitherParam'
-        - $ref: '#/components/parameters/ColorModeParam'
-        - $ref: '#/components/parameters/ContrastParam'
-        - $ref: '#/components/parameters/CrispParam'
-        - $ref: '#/components/parameters/CropEnParam'
-        - $ref: '#/components/parameters/CropSizeParam'
-        - $ref: '#/components/parameters/CropXParam'
-        - $ref: '#/components/parameters/CropYParam'
-        - $ref: '#/components/parameters/DiffusionKernelParam'
-        - $ref: '#/components/parameters/DitherKindParam'
-        - $ref: '#/components/parameters/DitherStrengthParam'
-        - $ref: '#/components/parameters/DotRotParam'
-        - $ref: '#/components/parameters/DpiParam'
-        - $ref: '#/components/parameters/Duo1Param'
-        - $ref: '#/components/parameters/Duo2Param'
-        - $ref: '#/components/parameters/EasingParam'
-        - $ref: '#/components/parameters/Easing2Param'
-        - $ref: '#/components/parameters/EccAwareParam'
-        - $ref: '#/components/parameters/EccMapParam'
-        - $ref: '#/components/parameters/EccRiskParam'
-        - $ref: '#/components/parameters/EdgeParam'
-        - $ref: '#/components/parameters/EyeInnerParam'
-        - $ref: '#/components/parameters/EyeOuterParam'
-        - $ref: '#/components/parameters/EyeScaleParam'
-        - $ref: '#/components/parameters/FinderParam'
-        - $ref: '#/components/parameters/FinderDitherParam'
-        - $ref: '#/components/parameters/FitParam'
-        - $ref: '#/components/parameters/FlipXParam'
-        - $ref: '#/components/parameters/FlipYParam'
-        - $ref: '#/components/parameters/FmtExtraParam'
-        - $ref: '#/components/parameters/FnameParam'
-        - $ref: '#/components/parameters/FrameParam'
-        - $ref: '#/components/parameters/FrameTextParam'
-        - $ref: '#/components/parameters/GammaParam'
-        - $ref: '#/components/parameters/GapParam'
-        - $ref: '#/components/parameters/GapModeParam'
-        - $ref: '#/components/parameters/GifColorsParam'
-        - $ref: '#/components/parameters/GifDelaysParam'
-        - $ref: '#/components/parameters/GifDispParam'
-        - $ref: '#/components/parameters/GifDispHParam'
-        - $ref: '#/components/parameters/GifDithParam'
-        - $ref: '#/components/parameters/GifMaxFpsParam'
-        - $ref: '#/components/parameters/GifPalParam'
-        - $ref: '#/components/parameters/GifQuantParam'
-        - $ref: '#/components/parameters/GifTransParam'
-        - $ref: '#/components/parameters/GradParam'
-        - $ref: '#/components/parameters/GradAngleParam'
-        - $ref: '#/components/parameters/GradStopsParam'
-        - $ref: '#/components/parameters/HalftoneCellParam'
-        - $ref: '#/components/parameters/HalftoneCurveParam'
-        - $ref: '#/components/parameters/HalftoneDotParam'
-        - $ref: '#/components/parameters/HueParam'
-        - $ref: '#/components/parameters/IncludeQuietZoneParam'
-        - $ref: '#/components/parameters/IntensityParam'
-        - $ref: '#/components/parameters/InterpParam'
-        - $ref: '#/components/parameters/InvertParam'
-        - $ref: '#/components/parameters/JitterParam'
-        - $ref: '#/components/parameters/JpegQParam'
-        - $ref: '#/components/parameters/KeepAlignParam'
-        - $ref: '#/components/parameters/KeepFindersParam'
-        - $ref: '#/components/parameters/KeepTimingParam'
-        - $ref: '#/components/parameters/LangParam'
-        - $ref: '#/components/parameters/LockAParam'
-        - $ref: '#/components/parameters/LockFParam'
-        - $ref: '#/components/parameters/LockFmtParam'
-        - $ref: '#/components/parameters/LockTParam'
-        - $ref: '#/components/parameters/LockVParam'
-        - $ref: '#/components/parameters/LogoSizeParam'
-        - $ref: '#/components/parameters/LoopParam'
-        - $ref: '#/components/parameters/MarginParam'
-        - $ref: '#/components/parameters/MaskParam'
-        - $ref: '#/components/parameters/MatrixParam'
-        - $ref: '#/components/parameters/MaxFParam'
-        - $ref: '#/components/parameters/MaxIntHParam'
-        - $ref: '#/components/parameters/MaxIntLParam'
-        - $ref: '#/components/parameters/MaxIntMParam'
-        - $ref: '#/components/parameters/MaxIntQParam'
-        - $ref: '#/components/parameters/MaxOverlayIntensityHParam'
-        - $ref: '#/components/parameters/MaxOverlayIntensityLParam'
-        - $ref: '#/components/parameters/MaxOverlayIntensityMParam'
-        - $ref: '#/components/parameters/MaxOverlayIntensityQParam'
-        - $ref: '#/components/parameters/MetaAuthorParam'
-        - $ref: '#/components/parameters/MetaCopyParam'
-        - $ref: '#/components/parameters/MetaDescParam'
-        - $ref: '#/components/parameters/MetaKvParam'
-        - $ref: '#/components/parameters/MetaLicParam'
-        - $ref: '#/components/parameters/MetaTimeParam'
-        - $ref: '#/components/parameters/MetaTitleParam'
-        - $ref: '#/components/parameters/MinContrastParam'
-        - $ref: '#/components/parameters/ModColorParam'
-        - $ref: '#/components/parameters/ModulePxParam'
-        - $ref: '#/components/parameters/OvFramePickParam'
-        - $ref: '#/components/parameters/OvTypeParam'
-        - $ref: '#/components/parameters/PaletteParam'
-        - $ref: '#/components/parameters/PaletteModeParam'
-        - $ref: '#/components/parameters/PosterizeParam'
-        - $ref: '#/components/parameters/ProtectFmtParam'
-        - $ref: '#/components/parameters/ProtectVerParam'
-        - $ref: '#/components/parameters/QaBlurParam'
-        - $ref: '#/components/parameters/QaContrastParam'
-        - $ref: '#/components/parameters/QaHeatmapParam'
-        - $ref: '#/components/parameters/QaNoiseParam'
-        - $ref: '#/components/parameters/QaRotParam'
-        - $ref: '#/components/parameters/QzEnforceParam'
-        - $ref: '#/components/parameters/RadiusParam'
-        - $ref: '#/components/parameters/ReverseParam'
-        - $ref: '#/components/parameters/Reverse2Param'
-        - $ref: '#/components/parameters/RotParam'
-        - $ref: '#/components/parameters/SafeMinPxParam'
-        - $ref: '#/components/parameters/SafeMinQzParam'
-        - $ref: '#/components/parameters/SafeModeParam'
-        - $ref: '#/components/parameters/SaturationParam'
-        - $ref: '#/components/parameters/SeedParam'
-        - $ref: '#/components/parameters/SerpentineParam'
-        - $ref: '#/components/parameters/SharpenParam'
-        - $ref: '#/components/parameters/SnapParam'
-        - $ref: '#/components/parameters/SpCenterParam'
-        - $ref: '#/components/parameters/SpFinderParam'
-        - $ref: '#/components/parameters/SpGridParam'
-        - $ref: '#/components/parameters/SpGridNumParam'
-        - $ref: '#/components/parameters/SpNeutralParam'
-        - $ref: '#/components/parameters/SpeedParam'
-        - $ref: '#/components/parameters/StartFParam'
-        - $ref: '#/components/parameters/StepFParam'
-        - $ref: '#/components/parameters/SubpixelParam'
-        - $ref: '#/components/parameters/SvgEmbedParam'
-        - $ref: '#/components/parameters/SvgPrecParam'
-        - $ref: '#/components/parameters/SvgVecParam'
-        - $ref: '#/components/parameters/TempDitherParam'
-        - $ref: '#/components/parameters/ThresholdParam'
-        - $ref: '#/components/parameters/TimingParam'
-        - $ref: '#/components/parameters/WebpQParam'
-        - $ref: '#/components/parameters/WmBlendParam'
-        - $ref: '#/components/parameters/WmEnParam'
-        - $ref: '#/components/parameters/WmImgParam'
-        - $ref: '#/components/parameters/WmKindParam'
-        - $ref: '#/components/parameters/WmOpacityParam'
-        - $ref: '#/components/parameters/WmPosParam'
-        - $ref: '#/components/parameters/WmTextParam'
+        - $ref: "#/components/parameters/DataParam"
+        - $ref: "#/components/parameters/FormatParam"
+        - $ref: "#/components/parameters/SizeParam"
+        - $ref: "#/components/parameters/WidthParam"
+        - $ref: "#/components/parameters/HeightParam"
+        - $ref: "#/components/parameters/EccParam"
+        - $ref: "#/components/parameters/StyleParam"
+        - $ref: "#/components/parameters/FgParam"
+        - $ref: "#/components/parameters/BgParam"
+        - $ref: "#/components/parameters/TransparentParam"
+        - $ref: "#/components/parameters/VersionParam"
+        - $ref: "#/components/parameters/EncodingParam"
+        - $ref: "#/components/parameters/ImageParam"
+        - $ref: "#/components/parameters/OverlayModeParam"
+        - $ref: "#/components/parameters/AnimationPatternParam"
+        - $ref: "#/components/parameters/FullRenderParam"
+        - $ref: "#/components/parameters/StrictOverlayParam"
+        - $ref: "#/components/parameters/AlignParam"
+        - $ref: "#/components/parameters/AnimFramesParam"
+        - $ref: "#/components/parameters/AnimPattern2Param"
+        - $ref: "#/components/parameters/AnimSeedParam"
+        - $ref: "#/components/parameters/AnimSeed2Param"
+        - $ref: "#/components/parameters/AnimSpeedParam"
+        - $ref: "#/components/parameters/AnimTargetParam"
+        - $ref: "#/components/parameters/AnimTarget2Param"
+        - $ref: "#/components/parameters/AnimWaveAxisParam"
+        - $ref: "#/components/parameters/AnimWaveAxis2Param"
+        - $ref: "#/components/parameters/AutoEccParam"
+        - $ref: "#/components/parameters/AutoReduceParam"
+        - $ref: "#/components/parameters/AutoVerParam"
+        - $ref: "#/components/parameters/BgOverParam"
+        - $ref: "#/components/parameters/BlendPresParam"
+        - $ref: "#/components/parameters/BlendPresModeParam"
+        - $ref: "#/components/parameters/BlurParam"
+        - $ref: "#/components/parameters/BnSeedParam"
+        - $ref: "#/components/parameters/BnTileParam"
+        - $ref: "#/components/parameters/BorderParam"
+        - $ref: "#/components/parameters/BounceParam"
+        - $ref: "#/components/parameters/Bounce2Param"
+        - $ref: "#/components/parameters/BrightnessParam"
+        - $ref: "#/components/parameters/CGuardParam"
+        - $ref: "#/components/parameters/CharsetParam"
+        - $ref: "#/components/parameters/ColorCycleParam"
+        - $ref: "#/components/parameters/ColorCycle2Param"
+        - $ref: "#/components/parameters/ColorDitherParam"
+        - $ref: "#/components/parameters/ColorModeParam"
+        - $ref: "#/components/parameters/ContrastParam"
+        - $ref: "#/components/parameters/CrispParam"
+        - $ref: "#/components/parameters/CropEnParam"
+        - $ref: "#/components/parameters/CropSizeParam"
+        - $ref: "#/components/parameters/CropXParam"
+        - $ref: "#/components/parameters/CropYParam"
+        - $ref: "#/components/parameters/DiffusionKernelParam"
+        - $ref: "#/components/parameters/DitherKindParam"
+        - $ref: "#/components/parameters/DitherStrengthParam"
+        - $ref: "#/components/parameters/DotRotParam"
+        - $ref: "#/components/parameters/DpiParam"
+        - $ref: "#/components/parameters/Duo1Param"
+        - $ref: "#/components/parameters/Duo2Param"
+        - $ref: "#/components/parameters/EasingParam"
+        - $ref: "#/components/parameters/Easing2Param"
+        - $ref: "#/components/parameters/EccAwareParam"
+        - $ref: "#/components/parameters/EccMapParam"
+        - $ref: "#/components/parameters/EccRiskParam"
+        - $ref: "#/components/parameters/EdgeParam"
+        - $ref: "#/components/parameters/EyeInnerParam"
+        - $ref: "#/components/parameters/EyeOuterParam"
+        - $ref: "#/components/parameters/EyeScaleParam"
+        - $ref: "#/components/parameters/FinderParam"
+        - $ref: "#/components/parameters/FinderDitherParam"
+        - $ref: "#/components/parameters/FitParam"
+        - $ref: "#/components/parameters/FlipXParam"
+        - $ref: "#/components/parameters/FlipYParam"
+        - $ref: "#/components/parameters/FmtExtraParam"
+        - $ref: "#/components/parameters/FnameParam"
+        - $ref: "#/components/parameters/FrameParam"
+        - $ref: "#/components/parameters/FrameTextParam"
+        - $ref: "#/components/parameters/GammaParam"
+        - $ref: "#/components/parameters/GapParam"
+        - $ref: "#/components/parameters/GapModeParam"
+        - $ref: "#/components/parameters/GifColorsParam"
+        - $ref: "#/components/parameters/GifDelaysParam"
+        - $ref: "#/components/parameters/GifDispParam"
+        - $ref: "#/components/parameters/GifDispHParam"
+        - $ref: "#/components/parameters/GifDithParam"
+        - $ref: "#/components/parameters/GifMaxFpsParam"
+        - $ref: "#/components/parameters/GifPalParam"
+        - $ref: "#/components/parameters/GifQuantParam"
+        - $ref: "#/components/parameters/GifTransParam"
+        - $ref: "#/components/parameters/GradParam"
+        - $ref: "#/components/parameters/GradAngleParam"
+        - $ref: "#/components/parameters/GradStopsParam"
+        - $ref: "#/components/parameters/HalftoneCellParam"
+        - $ref: "#/components/parameters/HalftoneCurveParam"
+        - $ref: "#/components/parameters/HalftoneDotParam"
+        - $ref: "#/components/parameters/HueParam"
+        - $ref: "#/components/parameters/IncludeQuietZoneParam"
+        - $ref: "#/components/parameters/IntensityParam"
+        - $ref: "#/components/parameters/InterpParam"
+        - $ref: "#/components/parameters/InvertParam"
+        - $ref: "#/components/parameters/JitterParam"
+        - $ref: "#/components/parameters/JpegQParam"
+        - $ref: "#/components/parameters/KeepAlignParam"
+        - $ref: "#/components/parameters/KeepFindersParam"
+        - $ref: "#/components/parameters/KeepTimingParam"
+        - $ref: "#/components/parameters/LangParam"
+        - $ref: "#/components/parameters/LockAParam"
+        - $ref: "#/components/parameters/LockFParam"
+        - $ref: "#/components/parameters/LockFmtParam"
+        - $ref: "#/components/parameters/LockTParam"
+        - $ref: "#/components/parameters/LockVParam"
+        - $ref: "#/components/parameters/LogoSizeParam"
+        - $ref: "#/components/parameters/LoopParam"
+        - $ref: "#/components/parameters/MarginParam"
+        - $ref: "#/components/parameters/MaskParam"
+        - $ref: "#/components/parameters/MatrixParam"
+        - $ref: "#/components/parameters/MaxFParam"
+        - $ref: "#/components/parameters/MaxIntHParam"
+        - $ref: "#/components/parameters/MaxIntLParam"
+        - $ref: "#/components/parameters/MaxIntMParam"
+        - $ref: "#/components/parameters/MaxIntQParam"
+        - $ref: "#/components/parameters/MaxOverlayIntensityHParam"
+        - $ref: "#/components/parameters/MaxOverlayIntensityLParam"
+        - $ref: "#/components/parameters/MaxOverlayIntensityMParam"
+        - $ref: "#/components/parameters/MaxOverlayIntensityQParam"
+        - $ref: "#/components/parameters/MetaAuthorParam"
+        - $ref: "#/components/parameters/MetaCopyParam"
+        - $ref: "#/components/parameters/MetaDescParam"
+        - $ref: "#/components/parameters/MetaKvParam"
+        - $ref: "#/components/parameters/MetaLicParam"
+        - $ref: "#/components/parameters/MetaTimeParam"
+        - $ref: "#/components/parameters/MetaTitleParam"
+        - $ref: "#/components/parameters/MinContrastParam"
+        - $ref: "#/components/parameters/ModColorParam"
+        - $ref: "#/components/parameters/ModulePxParam"
+        - $ref: "#/components/parameters/OvFramePickParam"
+        - $ref: "#/components/parameters/OvTypeParam"
+        - $ref: "#/components/parameters/PaletteParam"
+        - $ref: "#/components/parameters/PaletteModeParam"
+        - $ref: "#/components/parameters/PosterizeParam"
+        - $ref: "#/components/parameters/ProtectFmtParam"
+        - $ref: "#/components/parameters/ProtectVerParam"
+        - $ref: "#/components/parameters/QaBlurParam"
+        - $ref: "#/components/parameters/QaContrastParam"
+        - $ref: "#/components/parameters/QaHeatmapParam"
+        - $ref: "#/components/parameters/QaNoiseParam"
+        - $ref: "#/components/parameters/QaRotParam"
+        - $ref: "#/components/parameters/QzEnforceParam"
+        - $ref: "#/components/parameters/RadiusParam"
+        - $ref: "#/components/parameters/ReverseParam"
+        - $ref: "#/components/parameters/Reverse2Param"
+        - $ref: "#/components/parameters/RotParam"
+        - $ref: "#/components/parameters/SafeMinPxParam"
+        - $ref: "#/components/parameters/SafeMinQzParam"
+        - $ref: "#/components/parameters/SafeModeParam"
+        - $ref: "#/components/parameters/SaturationParam"
+        - $ref: "#/components/parameters/SeedParam"
+        - $ref: "#/components/parameters/SerpentineParam"
+        - $ref: "#/components/parameters/SharpenParam"
+        - $ref: "#/components/parameters/SnapParam"
+        - $ref: "#/components/parameters/SpCenterParam"
+        - $ref: "#/components/parameters/SpFinderParam"
+        - $ref: "#/components/parameters/SpGridParam"
+        - $ref: "#/components/parameters/SpGridNumParam"
+        - $ref: "#/components/parameters/SpNeutralParam"
+        - $ref: "#/components/parameters/SpeedParam"
+        - $ref: "#/components/parameters/StartFParam"
+        - $ref: "#/components/parameters/StepFParam"
+        - $ref: "#/components/parameters/SubpixelParam"
+        - $ref: "#/components/parameters/SvgEmbedParam"
+        - $ref: "#/components/parameters/SvgPrecParam"
+        - $ref: "#/components/parameters/SvgVecParam"
+        - $ref: "#/components/parameters/TempDitherParam"
+        - $ref: "#/components/parameters/ThresholdParam"
+        - $ref: "#/components/parameters/TimingParam"
+        - $ref: "#/components/parameters/WebpQParam"
+        - $ref: "#/components/parameters/WmBlendParam"
+        - $ref: "#/components/parameters/WmEnParam"
+        - $ref: "#/components/parameters/WmImgParam"
+        - $ref: "#/components/parameters/WmKindParam"
+        - $ref: "#/components/parameters/WmOpacityParam"
+        - $ref: "#/components/parameters/WmPosParam"
+        - $ref: "#/components/parameters/WmTextParam"
       responses:
-        '200':
+        "200":
           description: QR image returned successfully
           headers:
             Content-Type:
@@ -234,7 +234,7 @@ paths:
             Access-Control-Allow-Origin:
               schema:
                 type: string
-                example: '*'
+                example: "*"
             X-ANQR-Status:
               schema:
                 type: string
@@ -256,7 +256,7 @@ paths:
               schema:
                 type: string
                 format: binary
-        '400':
+        "400":
           description: Invalid or missing request parameters
           content:
             text/plain:
@@ -264,22 +264,22 @@ paths:
                 type: string
               examples:
                 missingData:
-                  value: 'Missing required parameter: data'
+                  value: "Missing required parameter: data"
                 invalidEcc:
-                  value: 'Invalid ec parameter'
-        '403':
+                  value: "Invalid ec parameter"
+        "403":
           description: Forbidden due to remote resource restrictions
           content:
             text/plain:
               schema:
                 type: string
-        '405':
+        "405":
           description: Method not allowed
           content:
             text/plain:
               schema:
                 type: string
-        '500':
+        "500":
           description: Unexpected rendering error
           content:
             text/plain:
@@ -291,13 +291,13 @@ paths:
       description: Returns the CORS preflight response for the public QR image endpoint.
       operationId: optionsQrImage
       responses:
-        '204':
+        "204":
           description: Preflight accepted
           headers:
             Access-Control-Allow-Origin:
               schema:
                 type: string
-                example: '*'
+                example: "*"
             Access-Control-Allow-Methods:
               schema:
                 type: string
@@ -306,7 +306,7 @@ paths:
               schema:
                 type: string
                 example: Content-Type
-        '405':
+        "405":
           description: Method not allowed
           content:
             text/plain:
@@ -326,27 +326,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BackgroundRenderRequest'
+              $ref: "#/components/schemas/BackgroundRenderRequest"
       responses:
-        '200':
+        "200":
           description: Background render request processed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BackgroundRenderResponse'
-        '400':
+                $ref: "#/components/schemas/BackgroundRenderResponse"
+        "400":
           description: Missing request body or url
           content:
             text/plain:
               schema:
                 type: string
-        '403':
+        "403":
           description: Target URL not allowed
           content:
             text/plain:
               schema:
                 type: string
-        '405':
+        "405":
           description: Method not allowed
           content:
             text/plain:
@@ -426,8 +426,8 @@ components:
       description: Foreground color as hex without leading hash
       schema:
         type: string
-        pattern: '^[0-9A-Fa-f]{6}$'
-        default: '000000'
+        pattern: "^[0-9A-Fa-f]{6}$"
+        default: "000000"
     BgParam:
       name: bg
       in: query
@@ -435,8 +435,8 @@ components:
       description: Background color as hex without leading hash
       schema:
         type: string
-        pattern: '^[0-9A-Fa-f]{6}$'
-        default: 'ffffff'
+        pattern: "^[0-9A-Fa-f]{6}$"
+        default: "ffffff"
     TransparentParam:
       name: transparent
       in: query
@@ -444,8 +444,8 @@ components:
       description: Use a transparent background when set to 1
       schema:
         type: string
-        enum: ['0', '1']
-        default: '0'
+        enum: ["0", "1"]
+        default: "0"
     VersionParam:
       name: v
       in: query
@@ -512,15 +512,15 @@ components:
       description: Internal flag enabling full overlay render path
       schema:
         type: string
-        enum: ['0', '1']
-        default: '0'
+        enum: ["0", "1"]
+        default: "0"
     StrictOverlayParam:
       {
         name: _strictOverlay,
         in: query,
         required: false,
         description: Internal strict overlay validation flag,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     AlignParam:
       {
@@ -528,7 +528,7 @@ components:
         in: query,
         required: false,
         description: Alignment pattern style,
-        schema: { $ref: '#/components/schemas/AlignmentStyle' },
+        schema: { $ref: "#/components/schemas/AlignmentStyle" },
       }
     AnimFramesParam:
       {
@@ -536,7 +536,7 @@ components:
         in: query,
         required: false,
         description: Number of animation frames,
-        schema: { $ref: '#/components/schemas/AnimFrames' },
+        schema: { $ref: "#/components/schemas/AnimFrames" },
       }
     AnimPattern2Param:
       {
@@ -544,7 +544,7 @@ components:
         in: query,
         required: false,
         description: Secondary animation pattern,
-        schema: { $ref: '#/components/schemas/AnimationPattern' },
+        schema: { $ref: "#/components/schemas/AnimationPattern" },
       }
     AnimSeedParam:
       {
@@ -552,7 +552,7 @@ components:
         in: query,
         required: false,
         description: Primary animation seed,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     AnimSeed2Param:
       {
@@ -560,7 +560,7 @@ components:
         in: query,
         required: false,
         description: Secondary animation seed,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     AnimSpeedParam:
       {
@@ -568,7 +568,7 @@ components:
         in: query,
         required: false,
         description: Animation frame delay in milliseconds,
-        schema: { $ref: '#/components/schemas/AnimSpeed' },
+        schema: { $ref: "#/components/schemas/AnimSpeed" },
       }
     AnimTargetParam:
       {
@@ -576,7 +576,7 @@ components:
         in: query,
         required: false,
         description: Primary animation target,
-        schema: { $ref: '#/components/schemas/AnimationTarget' },
+        schema: { $ref: "#/components/schemas/AnimationTarget" },
       }
     AnimTarget2Param:
       {
@@ -584,7 +584,7 @@ components:
         in: query,
         required: false,
         description: Secondary animation target,
-        schema: { $ref: '#/components/schemas/AnimationTarget' },
+        schema: { $ref: "#/components/schemas/AnimationTarget" },
       }
     AnimWaveAxisParam:
       {
@@ -592,7 +592,7 @@ components:
         in: query,
         required: false,
         description: Primary wave axis,
-        schema: { $ref: '#/components/schemas/AnimationWaveAxisInput' },
+        schema: { $ref: "#/components/schemas/AnimationWaveAxisInput" },
       }
     AnimWaveAxis2Param:
       {
@@ -600,7 +600,7 @@ components:
         in: query,
         required: false,
         description: Secondary wave axis,
-        schema: { $ref: '#/components/schemas/AnimationWaveAxisInput' },
+        schema: { $ref: "#/components/schemas/AnimationWaveAxisInput" },
       }
     AutoEccParam:
       {
@@ -608,7 +608,7 @@ components:
         in: query,
         required: false,
         description: Auto-pick error correction level,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     AutoReduceParam:
       {
@@ -616,7 +616,7 @@ components:
         in: query,
         required: false,
         description: Auto-reduce intensity until scannable,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     AutoVerParam:
       {
@@ -624,7 +624,7 @@ components:
         in: query,
         required: false,
         description: Auto-pick QR version,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     BgOverParam:
       {
@@ -632,7 +632,7 @@ components:
         in: query,
         required: false,
         description: Background override hex color,
-        schema: { $ref: '#/components/schemas/HexColor6' },
+        schema: { $ref: "#/components/schemas/HexColor6" },
       }
     BlendPresParam:
       {
@@ -640,7 +640,7 @@ components:
         in: query,
         required: false,
         description: Blend preservation toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     BlendPresModeParam:
       {
@@ -656,7 +656,7 @@ components:
         in: query,
         required: false,
         description: Overlay blur radius in pixels,
-        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+        schema: { $ref: "#/components/schemas/NonNegativeIntegerString" },
       }
     BnSeedParam:
       {
@@ -664,7 +664,7 @@ components:
         in: query,
         required: false,
         description: Blue noise seed,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     BnTileParam:
       {
@@ -672,7 +672,7 @@ components:
         in: query,
         required: false,
         description: Blue noise tile size,
-        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+        schema: { $ref: "#/components/schemas/PositiveIntegerString" },
       }
     BorderParam:
       {
@@ -680,7 +680,7 @@ components:
         in: query,
         required: false,
         description: Additional border modules,
-        schema: { type: string, pattern: '^(0|[1-9]|10)$' },
+        schema: { type: string, pattern: "^(0|[1-9]|10)$" },
       }
     BounceParam:
       {
@@ -688,7 +688,7 @@ components:
         in: query,
         required: false,
         description: Bounce primary animation,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     Bounce2Param:
       {
@@ -696,7 +696,7 @@ components:
         in: query,
         required: false,
         description: Bounce secondary animation,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     BrightnessParam:
       {
@@ -704,7 +704,7 @@ components:
         in: query,
         required: false,
         description: Overlay brightness adjustment,
-        schema: { $ref: '#/components/schemas/SignedPercentString' },
+        schema: { $ref: "#/components/schemas/SignedPercentString" },
       }
     CGuardParam:
       {
@@ -712,7 +712,7 @@ components:
         in: query,
         required: false,
         description: Per-module contrast guard toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     CharsetParam:
       {
@@ -728,7 +728,7 @@ components:
         in: query,
         required: false,
         description: Primary color cycle toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     ColorCycle2Param:
       {
@@ -736,7 +736,7 @@ components:
         in: query,
         required: false,
         description: Secondary color cycle toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     ColorDitherParam:
       {
@@ -752,7 +752,7 @@ components:
         in: query,
         required: false,
         description: Overlay color mode,
-        schema: { $ref: '#/components/schemas/ColorMode' },
+        schema: { $ref: "#/components/schemas/ColorMode" },
       }
     ContrastParam:
       {
@@ -760,7 +760,7 @@ components:
         in: query,
         required: false,
         description: Overlay contrast adjustment,
-        schema: { $ref: '#/components/schemas/SignedPercentString' },
+        schema: { $ref: "#/components/schemas/SignedPercentString" },
       }
     CrispParam:
       {
@@ -768,7 +768,7 @@ components:
         in: query,
         required: false,
         description: Crisp pixel-edge rendering toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     CropEnParam:
       {
@@ -776,7 +776,7 @@ components:
         in: query,
         required: false,
         description: Enable overlay cropping,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     CropSizeParam:
       {
@@ -784,7 +784,7 @@ components:
         in: query,
         required: false,
         description: Crop size fraction,
-        schema: { $ref: '#/components/schemas/FractionString' },
+        schema: { $ref: "#/components/schemas/FractionString" },
       }
     CropXParam:
       {
@@ -792,7 +792,7 @@ components:
         in: query,
         required: false,
         description: Crop center X,
-        schema: { $ref: '#/components/schemas/FractionString' },
+        schema: { $ref: "#/components/schemas/FractionString" },
       }
     CropYParam:
       {
@@ -800,7 +800,7 @@ components:
         in: query,
         required: false,
         description: Crop center Y,
-        schema: { $ref: '#/components/schemas/FractionString' },
+        schema: { $ref: "#/components/schemas/FractionString" },
       }
     DiffusionKernelParam:
       {
@@ -816,7 +816,7 @@ components:
         in: query,
         required: false,
         description: Dither algorithm,
-        schema: { $ref: '#/components/schemas/DitherKind' },
+        schema: { $ref: "#/components/schemas/DitherKind" },
       }
     DitherStrengthParam:
       {
@@ -824,7 +824,7 @@ components:
         in: query,
         required: false,
         description: Dither strength percentage,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     DotRotParam:
       {
@@ -832,7 +832,7 @@ components:
         in: query,
         required: false,
         description: Dot rotation in degrees,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     DpiParam:
       {
@@ -840,7 +840,7 @@ components:
         in: query,
         required: false,
         description: Output DPI,
-        schema: { type: string, pattern: '^([1-9][0-9]{0,2}|1[01][0-9]{2}|1200)$' },
+        schema: { type: string, pattern: "^([1-9][0-9]{0,2}|1[01][0-9]{2}|1200)$" },
       }
     Duo1Param:
       {
@@ -848,7 +848,7 @@ components:
         in: query,
         required: false,
         description: Halftone duotone dark color,
-        schema: { $ref: '#/components/schemas/HexColor6' },
+        schema: { $ref: "#/components/schemas/HexColor6" },
       }
     Duo2Param:
       {
@@ -856,7 +856,7 @@ components:
         in: query,
         required: false,
         description: Halftone duotone light color,
-        schema: { $ref: '#/components/schemas/HexColor6' },
+        schema: { $ref: "#/components/schemas/HexColor6" },
       }
     EasingParam:
       {
@@ -864,7 +864,7 @@ components:
         in: query,
         required: false,
         description: Primary animation easing,
-        schema: { $ref: '#/components/schemas/AnimationEasing' },
+        schema: { $ref: "#/components/schemas/AnimationEasing" },
       }
     Easing2Param:
       {
@@ -872,7 +872,7 @@ components:
         in: query,
         required: false,
         description: Secondary animation easing,
-        schema: { $ref: '#/components/schemas/AnimationEasing' },
+        schema: { $ref: "#/components/schemas/AnimationEasing" },
       }
     EccAwareParam:
       {
@@ -880,7 +880,7 @@ components:
         in: query,
         required: false,
         description: ECC-aware overlay mode toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     EccMapParam:
       {
@@ -896,7 +896,7 @@ components:
         in: query,
         required: false,
         description: ECC risk budget,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     EdgeParam:
       {
@@ -912,7 +912,7 @@ components:
         in: query,
         required: false,
         description: Finder inner eye style,
-        schema: { $ref: '#/components/schemas/FinderStyle' },
+        schema: { $ref: "#/components/schemas/FinderStyle" },
       }
     EyeOuterParam:
       {
@@ -920,7 +920,7 @@ components:
         in: query,
         required: false,
         description: Finder outer eye style,
-        schema: { $ref: '#/components/schemas/FinderStyle' },
+        schema: { $ref: "#/components/schemas/FinderStyle" },
       }
     EyeScaleParam:
       {
@@ -928,7 +928,7 @@ components:
         in: query,
         required: false,
         description: Finder eye scale percentage,
-        schema: { type: string, pattern: '^(50|[5-9][0-9]|1[0-4][0-9]|150)$' },
+        schema: { type: string, pattern: "^(50|[5-9][0-9]|1[0-4][0-9]|150)$" },
       }
     FinderParam:
       {
@@ -936,7 +936,7 @@ components:
         in: query,
         required: false,
         description: Finder style,
-        schema: { $ref: '#/components/schemas/FinderStyle' },
+        schema: { $ref: "#/components/schemas/FinderStyle" },
       }
     FinderDitherParam:
       {
@@ -944,7 +944,7 @@ components:
         in: query,
         required: false,
         description: Finder dithering strength,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     FitParam:
       {
@@ -960,7 +960,7 @@ components:
         in: query,
         required: false,
         description: Flip overlay horizontally,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     FlipYParam:
       {
@@ -968,7 +968,7 @@ components:
         in: query,
         required: false,
         description: Flip overlay vertically,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     FmtExtraParam:
       {
@@ -976,7 +976,7 @@ components:
         in: query,
         required: false,
         description: Additional output variant,
-        schema: { $ref: '#/components/schemas/FormatExtra' },
+        schema: { $ref: "#/components/schemas/FormatExtra" },
       }
     FnameParam:
       {
@@ -992,7 +992,7 @@ components:
         in: query,
         required: false,
         description: Frame style,
-        schema: { $ref: '#/components/schemas/FrameStyle' },
+        schema: { $ref: "#/components/schemas/FrameStyle" },
       }
     FrameTextParam:
       {
@@ -1008,7 +1008,7 @@ components:
         in: query,
         required: false,
         description: Overlay gamma adjustment,
-        schema: { $ref: '#/components/schemas/GammaString' },
+        schema: { $ref: "#/components/schemas/GammaString" },
       }
     GapParam:
       {
@@ -1016,7 +1016,7 @@ components:
         in: query,
         required: false,
         description: Module gap percentage,
-        schema: { type: string, pattern: '^([0-9]|[1-4][0-9]|50)$' },
+        schema: { type: string, pattern: "^([0-9]|[1-4][0-9]|50)$" },
       }
     GapModeParam:
       {
@@ -1024,7 +1024,7 @@ components:
         in: query,
         required: false,
         description: Gap rendering mode,
-        schema: { $ref: '#/components/schemas/GapMode' },
+        schema: { $ref: "#/components/schemas/GapMode" },
       }
     GifColorsParam:
       {
@@ -1032,7 +1032,7 @@ components:
         in: query,
         required: false,
         description: GIF palette size,
-        schema: { $ref: '#/components/schemas/GifColors' },
+        schema: { $ref: "#/components/schemas/GifColors" },
       }
     GifDelaysParam:
       {
@@ -1040,7 +1040,7 @@ components:
         in: query,
         required: false,
         description: Use native GIF frame delays,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     GifDispParam:
       {
@@ -1048,7 +1048,7 @@ components:
         in: query,
         required: false,
         description: GIF disposal code or named mode,
-        schema: { $ref: '#/components/schemas/GifDisposal' },
+        schema: { $ref: "#/components/schemas/GifDisposal" },
       }
     GifDispHParam:
       {
@@ -1072,7 +1072,7 @@ components:
         in: query,
         required: false,
         description: GIF maximum frames per second,
-        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+        schema: { $ref: "#/components/schemas/PositiveIntegerString" },
       }
     GifPalParam:
       {
@@ -1080,7 +1080,7 @@ components:
         in: query,
         required: false,
         description: GIF palette alias for gifColors,
-        schema: { $ref: '#/components/schemas/GifColors' },
+        schema: { $ref: "#/components/schemas/GifColors" },
       }
     GifQuantParam:
       {
@@ -1096,7 +1096,7 @@ components:
         in: query,
         required: false,
         description: GIF transparent color hex,
-        schema: { $ref: '#/components/schemas/HexColor6' },
+        schema: { $ref: "#/components/schemas/HexColor6" },
       }
     GradParam:
       {
@@ -1104,7 +1104,7 @@ components:
         in: query,
         required: false,
         description: Gradient type,
-        schema: { $ref: '#/components/schemas/GradientType' },
+        schema: { $ref: "#/components/schemas/GradientType" },
       }
     GradAngleParam:
       {
@@ -1112,7 +1112,7 @@ components:
         in: query,
         required: false,
         description: Gradient angle,
-        schema: { $ref: '#/components/schemas/AngleString' },
+        schema: { $ref: "#/components/schemas/AngleString" },
       }
     GradStopsParam:
       {
@@ -1120,7 +1120,7 @@ components:
         in: query,
         required: false,
         description: Gradient stop list,
-        schema: { $ref: '#/components/schemas/GradientStops' },
+        schema: { $ref: "#/components/schemas/GradientStops" },
       }
     HalftoneCellParam:
       {
@@ -1128,7 +1128,7 @@ components:
         in: query,
         required: false,
         description: Halftone cell mode,
-        schema: { $ref: '#/components/schemas/HalftoneCellMode' },
+        schema: { $ref: "#/components/schemas/HalftoneCellMode" },
       }
     HalftoneCurveParam:
       {
@@ -1136,7 +1136,7 @@ components:
         in: query,
         required: false,
         description: Halftone brightness curve,
-        schema: { $ref: '#/components/schemas/HalftoneCurve' },
+        schema: { $ref: "#/components/schemas/HalftoneCurve" },
       }
     HalftoneDotParam:
       {
@@ -1144,7 +1144,7 @@ components:
         in: query,
         required: false,
         description: Halftone dot shape,
-        schema: { $ref: '#/components/schemas/HalftoneDotShape' },
+        schema: { $ref: "#/components/schemas/HalftoneDotShape" },
       }
     HueParam:
       {
@@ -1152,7 +1152,7 @@ components:
         in: query,
         required: false,
         description: Overlay hue rotation,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     IncludeQuietZoneParam:
       {
@@ -1160,7 +1160,7 @@ components:
         in: query,
         required: false,
         description: Include quiet zone in output,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     IntensityParam:
       {
@@ -1168,7 +1168,7 @@ components:
         in: query,
         required: false,
         description: Overlay intensity,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     InterpParam:
       {
@@ -1176,7 +1176,7 @@ components:
         in: query,
         required: false,
         description: Animation interpolation mode,
-        schema: { $ref: '#/components/schemas/AnimationInterpolation' },
+        schema: { $ref: "#/components/schemas/AnimationInterpolation" },
       }
     InvertParam:
       {
@@ -1184,7 +1184,7 @@ components:
         in: query,
         required: false,
         description: Invert overlay colors,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     JitterParam:
       {
@@ -1192,7 +1192,7 @@ components:
         in: query,
         required: false,
         description: Animation module jitter,
-        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+        schema: { $ref: "#/components/schemas/NonNegativeIntegerString" },
       }
     JpegQParam:
       {
@@ -1200,7 +1200,7 @@ components:
         in: query,
         required: false,
         description: JPEG quality fallback control,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     KeepAlignParam:
       {
@@ -1208,7 +1208,7 @@ components:
         in: query,
         required: false,
         description: Preserve alignment patterns,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     KeepFindersParam:
       {
@@ -1216,7 +1216,7 @@ components:
         in: query,
         required: false,
         description: Preserve finder patterns,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     KeepTimingParam:
       {
@@ -1224,7 +1224,7 @@ components:
         in: query,
         required: false,
         description: Preserve timing patterns,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     LangParam:
       {
@@ -1232,7 +1232,7 @@ components:
         in: query,
         required: false,
         description: Localization hint for generated text,
-        schema: { $ref: '#/components/schemas/LanguageTag' },
+        schema: { $ref: "#/components/schemas/LanguageTag" },
       }
     LockAParam:
       {
@@ -1240,7 +1240,7 @@ components:
         in: query,
         required: false,
         description: Lock alignment patterns,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     LockFParam:
       {
@@ -1248,7 +1248,7 @@ components:
         in: query,
         required: false,
         description: Lock finder patterns,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     LockFmtParam:
       {
@@ -1256,7 +1256,7 @@ components:
         in: query,
         required: false,
         description: Lock format information,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     LockTParam:
       {
@@ -1264,7 +1264,7 @@ components:
         in: query,
         required: false,
         description: Lock timing patterns,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     LockVParam:
       {
@@ -1272,7 +1272,7 @@ components:
         in: query,
         required: false,
         description: Lock version information,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     LogoSizeParam:
       {
@@ -1280,7 +1280,7 @@ components:
         in: query,
         required: false,
         description: Center logo size percentage,
-        schema: { type: string, pattern: '^(5|[6-9]|[1-4][0-9]|50)$' },
+        schema: { type: string, pattern: "^(5|[6-9]|[1-4][0-9]|50)$" },
       }
     LoopParam:
       {
@@ -1288,7 +1288,7 @@ components:
         in: query,
         required: false,
         description: Loop animation,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     MarginParam:
       {
@@ -1296,7 +1296,7 @@ components:
         in: query,
         required: false,
         description: Quiet zone margin in modules,
-        schema: { type: string, pattern: '^([0-9]|1[0-9]|20)$' },
+        schema: { type: string, pattern: "^([0-9]|1[0-9]|20)$" },
       }
     MaskParam:
       {
@@ -1304,7 +1304,7 @@ components:
         in: query,
         required: false,
         description: Mask pattern or auto,
-        schema: { $ref: '#/components/schemas/MaskPatternInput' },
+        schema: { $ref: "#/components/schemas/MaskPatternInput" },
       }
     MatrixParam:
       {
@@ -1312,7 +1312,7 @@ components:
         in: query,
         required: false,
         description: Ordered dither matrix,
-        schema: { $ref: '#/components/schemas/OrderedMatrix' },
+        schema: { $ref: "#/components/schemas/OrderedMatrix" },
       }
     MaxFParam:
       {
@@ -1320,7 +1320,7 @@ components:
         in: query,
         required: false,
         description: Maximum animation frames,
-        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+        schema: { $ref: "#/components/schemas/NonNegativeIntegerString" },
       }
     MaxIntHParam:
       {
@@ -1328,7 +1328,7 @@ components:
         in: query,
         required: false,
         description: Max overlay intensity for ECC H,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxIntLParam:
       {
@@ -1336,7 +1336,7 @@ components:
         in: query,
         required: false,
         description: Max overlay intensity for ECC L,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxIntMParam:
       {
@@ -1344,7 +1344,7 @@ components:
         in: query,
         required: false,
         description: Max overlay intensity for ECC M,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxIntQParam:
       {
@@ -1352,7 +1352,7 @@ components:
         in: query,
         required: false,
         description: Max overlay intensity for ECC Q,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxOverlayIntensityHParam:
       {
@@ -1360,7 +1360,7 @@ components:
         in: query,
         required: false,
         description: Alias for maxIntH,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxOverlayIntensityLParam:
       {
@@ -1368,7 +1368,7 @@ components:
         in: query,
         required: false,
         description: Alias for maxIntL,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxOverlayIntensityMParam:
       {
@@ -1376,7 +1376,7 @@ components:
         in: query,
         required: false,
         description: Alias for maxIntM,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MaxOverlayIntensityQParam:
       {
@@ -1384,7 +1384,7 @@ components:
         in: query,
         required: false,
         description: Alias for maxIntQ,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     MetaAuthorParam:
       {
@@ -1432,7 +1432,7 @@ components:
         in: query,
         required: false,
         description: Include creation time in metadata,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     MetaTitleParam:
       {
@@ -1448,7 +1448,7 @@ components:
         in: query,
         required: false,
         description: Minimum contrast ratio,
-        schema: { $ref: '#/components/schemas/ContrastRatioString' },
+        schema: { $ref: "#/components/schemas/ContrastRatioString" },
       }
     ModColorParam:
       {
@@ -1456,7 +1456,7 @@ components:
         in: query,
         required: false,
         description: Per-module color mode,
-        schema: { $ref: '#/components/schemas/PerModuleColorMode' },
+        schema: { $ref: "#/components/schemas/PerModuleColorMode" },
       }
     ModulePxParam:
       {
@@ -1464,7 +1464,7 @@ components:
         in: query,
         required: false,
         description: Module size in pixels,
-        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+        schema: { $ref: "#/components/schemas/PositiveIntegerString" },
       }
     OvFramePickParam:
       {
@@ -1472,7 +1472,7 @@ components:
         in: query,
         required: false,
         description: Overlay frame selection strategy,
-        schema: { $ref: '#/components/schemas/OverlayFramePick' },
+        schema: { $ref: "#/components/schemas/OverlayFramePick" },
       }
     OvTypeParam:
       {
@@ -1480,7 +1480,7 @@ components:
         in: query,
         required: false,
         description: Overlay source type,
-        schema: { $ref: '#/components/schemas/OverlayType' },
+        schema: { $ref: "#/components/schemas/OverlayType" },
       }
     PaletteParam:
       {
@@ -1488,7 +1488,7 @@ components:
         in: query,
         required: false,
         description: Palette colors list,
-        schema: { $ref: '#/components/schemas/HexColorPalette' },
+        schema: { $ref: "#/components/schemas/HexColorPalette" },
       }
     PaletteModeParam:
       {
@@ -1496,7 +1496,7 @@ components:
         in: query,
         required: false,
         description: Palette assignment mode,
-        schema: { $ref: '#/components/schemas/PaletteMode' },
+        schema: { $ref: "#/components/schemas/PaletteMode" },
       }
     PosterizeParam:
       {
@@ -1504,7 +1504,7 @@ components:
         in: query,
         required: false,
         description: Overlay posterization level,
-        schema: { type: string, pattern: '^([2-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-6])$' },
+        schema: { type: string, pattern: "^([2-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-6])$" },
       }
     ProtectFmtParam:
       {
@@ -1512,7 +1512,7 @@ components:
         in: query,
         required: false,
         description: Protect QR format bits,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     ProtectVerParam:
       {
@@ -1520,7 +1520,7 @@ components:
         in: query,
         required: false,
         description: Protect QR version bits,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     QaBlurParam:
       {
@@ -1528,7 +1528,7 @@ components:
         in: query,
         required: false,
         description: Client-only QA blur simulation,
-        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+        schema: { $ref: "#/components/schemas/NonNegativeIntegerString" },
       }
     QaContrastParam:
       {
@@ -1536,7 +1536,7 @@ components:
         in: query,
         required: false,
         description: Client-only QA contrast simulation,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     QaHeatmapParam:
       {
@@ -1544,7 +1544,7 @@ components:
         in: query,
         required: false,
         description: Client-only QA heatmap toggle,
-        schema: { $ref: '#/components/schemas/BinaryFlag' },
+        schema: { $ref: "#/components/schemas/BinaryFlag" },
       }
     QaNoiseParam:
       {
@@ -1552,7 +1552,7 @@ components:
         in: query,
         required: false,
         description: Client-only QA noise simulation,
-        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+        schema: { $ref: "#/components/schemas/NonNegativeIntegerString" },
       }
     QaRotParam:
       {
@@ -1560,7 +1560,7 @@ components:
         in: query,
         required: false,
         description: Client-only QA rotation simulation,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     QzEnforceParam:
       {
@@ -1568,7 +1568,7 @@ components:
         in: query,
         required: false,
         description: Enforce minimum quiet zone,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     RadiusParam:
       {
@@ -1576,7 +1576,7 @@ components:
         in: query,
         required: false,
         description: Module corner radius percentage,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     ReverseParam:
       {
@@ -1584,7 +1584,7 @@ components:
         in: query,
         required: false,
         description: Reverse primary animation,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     Reverse2Param:
       {
@@ -1592,7 +1592,7 @@ components:
         in: query,
         required: false,
         description: Reverse secondary animation,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     RotParam:
       {
@@ -1600,7 +1600,7 @@ components:
         in: query,
         required: false,
         description: Overlay rotation degrees,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     SafeMinPxParam:
       {
@@ -1608,7 +1608,7 @@ components:
         in: query,
         required: false,
         description: Minimum safe module pixel size,
-        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+        schema: { $ref: "#/components/schemas/PositiveIntegerString" },
       }
     SafeMinQzParam:
       {
@@ -1616,7 +1616,7 @@ components:
         in: query,
         required: false,
         description: Minimum safe quiet zone modules,
-        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+        schema: { $ref: "#/components/schemas/PositiveIntegerString" },
       }
     SafeModeParam:
       {
@@ -1624,7 +1624,7 @@ components:
         in: query,
         required: false,
         description: Safety mode,
-        schema: { $ref: '#/components/schemas/SafetyMode' },
+        schema: { $ref: "#/components/schemas/SafetyMode" },
       }
     SaturationParam:
       {
@@ -1632,7 +1632,7 @@ components:
         in: query,
         required: false,
         description: Overlay saturation adjustment,
-        schema: { $ref: '#/components/schemas/SignedPercentString' },
+        schema: { $ref: "#/components/schemas/SignedPercentString" },
       }
     SeedParam:
       {
@@ -1640,7 +1640,7 @@ components:
         in: query,
         required: false,
         description: Shared render seed,
-        schema: { $ref: '#/components/schemas/AnyIntegerString' },
+        schema: { $ref: "#/components/schemas/AnyIntegerString" },
       }
     SerpentineParam:
       {
@@ -1648,7 +1648,7 @@ components:
         in: query,
         required: false,
         description: Serpentine dithering toggle,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     SharpenParam:
       {
@@ -1656,7 +1656,7 @@ components:
         in: query,
         required: false,
         description: Overlay sharpen amount,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     SnapParam:
       {
@@ -1664,7 +1664,7 @@ components:
         in: query,
         required: false,
         description: Pixel snapping mode,
-        schema: { $ref: '#/components/schemas/PixelSnapMode' },
+        schema: { $ref: "#/components/schemas/PixelSnapMode" },
       }
     SpCenterParam:
       {
@@ -1672,7 +1672,7 @@ components:
         in: query,
         required: false,
         description: Subpixel center rule,
-        schema: { $ref: '#/components/schemas/SubpixelCenterRule' },
+        schema: { $ref: "#/components/schemas/SubpixelCenterRule" },
       }
     SpFinderParam:
       {
@@ -1680,7 +1680,7 @@ components:
         in: query,
         required: false,
         description: Subpixel finder override,
-        schema: { $ref: '#/components/schemas/SubpixelFinderOverride' },
+        schema: { $ref: "#/components/schemas/SubpixelFinderOverride" },
       }
     SpGridParam:
       {
@@ -1688,7 +1688,7 @@ components:
         in: query,
         required: false,
         description: Subpixel grid size,
-        schema: { $ref: '#/components/schemas/SubpixelGridSize' },
+        schema: { $ref: "#/components/schemas/SubpixelGridSize" },
       }
     SpGridNumParam:
       {
@@ -1696,7 +1696,7 @@ components:
         in: query,
         required: false,
         description: Numeric subpixel grid size alias,
-        schema: { enum: ['2', '3', '4'] },
+        schema: { enum: ["2", "3", "4"] },
       }
     SpNeutralParam:
       {
@@ -1704,7 +1704,7 @@ components:
         in: query,
         required: false,
         description: Subpixel neutral color,
-        schema: { $ref: '#/components/schemas/HexColor6' },
+        schema: { $ref: "#/components/schemas/HexColor6" },
       }
     SpeedParam:
       {
@@ -1712,7 +1712,7 @@ components:
         in: query,
         required: false,
         description: Alias for animSpeed,
-        schema: { $ref: '#/components/schemas/AnimSpeed' },
+        schema: { $ref: "#/components/schemas/AnimSpeed" },
       }
     StartFParam:
       {
@@ -1720,7 +1720,7 @@ components:
         in: query,
         required: false,
         description: Animation start frame,
-        schema: { $ref: '#/components/schemas/NonNegativeIntegerString' },
+        schema: { $ref: "#/components/schemas/NonNegativeIntegerString" },
       }
     StepFParam:
       {
@@ -1728,7 +1728,7 @@ components:
         in: query,
         required: false,
         description: Animation frame step,
-        schema: { $ref: '#/components/schemas/PositiveIntegerString' },
+        schema: { $ref: "#/components/schemas/PositiveIntegerString" },
       }
     SubpixelParam:
       {
@@ -1736,7 +1736,7 @@ components:
         in: query,
         required: false,
         description: Legacy subpixel toggle,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     SvgEmbedParam:
       {
@@ -1744,7 +1744,7 @@ components:
         in: query,
         required: false,
         description: Embed raster overlay in SVG,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     SvgPrecParam:
       {
@@ -1752,7 +1752,7 @@ components:
         in: query,
         required: false,
         description: SVG shape precision mode,
-        schema: { $ref: '#/components/schemas/SvgPrecision' },
+        schema: { $ref: "#/components/schemas/SvgPrecision" },
       }
     SvgVecParam:
       {
@@ -1760,7 +1760,7 @@ components:
         in: query,
         required: false,
         description: Force true-vector SVG export path,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     TempDitherParam:
       {
@@ -1768,7 +1768,7 @@ components:
         in: query,
         required: false,
         description: Temporal dithering mode,
-        schema: { $ref: '#/components/schemas/AnimationTemporalDitherMode' },
+        schema: { $ref: "#/components/schemas/AnimationTemporalDitherMode" },
       }
     ThresholdParam:
       {
@@ -1776,7 +1776,7 @@ components:
         in: query,
         required: false,
         description: Overlay threshold level,
-        schema: { type: string, pattern: '^([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$' },
+        schema: { type: string, pattern: "^([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$" },
       }
     TimingParam:
       {
@@ -1784,7 +1784,7 @@ components:
         in: query,
         required: false,
         description: Timing pattern style,
-        schema: { $ref: '#/components/schemas/TimingStyle' },
+        schema: { $ref: "#/components/schemas/TimingStyle" },
       }
     WebpQParam:
       {
@@ -1792,7 +1792,7 @@ components:
         in: query,
         required: false,
         description: WebP quality,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     WmBlendParam:
       {
@@ -1800,7 +1800,7 @@ components:
         in: query,
         required: false,
         description: Watermark blend mode,
-        schema: { $ref: '#/components/schemas/WatermarkBlend' },
+        schema: { $ref: "#/components/schemas/WatermarkBlend" },
       }
     WmEnParam:
       {
@@ -1808,7 +1808,7 @@ components:
         in: query,
         required: false,
         description: Enable watermark,
-        schema: { type: string, enum: ['0', '1'] },
+        schema: { type: string, enum: ["0", "1"] },
       }
     WmImgParam:
       {
@@ -1824,7 +1824,7 @@ components:
         in: query,
         required: false,
         description: Watermark kind,
-        schema: { $ref: '#/components/schemas/WatermarkKind' },
+        schema: { $ref: "#/components/schemas/WatermarkKind" },
       }
     WmOpacityParam:
       {
@@ -1832,7 +1832,7 @@ components:
         in: query,
         required: false,
         description: Watermark opacity percentage,
-        schema: { $ref: '#/components/schemas/Percent0To100String' },
+        schema: { $ref: "#/components/schemas/Percent0To100String" },
       }
     WmPosParam:
       {
@@ -1840,7 +1840,7 @@ components:
         in: query,
         required: false,
         description: Watermark position,
-        schema: { $ref: '#/components/schemas/WatermarkPosition' },
+        schema: { $ref: "#/components/schemas/WatermarkPosition" },
       }
     WmTextParam:
       {
@@ -1853,25 +1853,25 @@ components:
   schemas:
     BinaryFlag:
       type: string
-      enum: ['0', '1']
+      enum: ["0", "1"]
     HexColor6:
       type: string
-      pattern: '^[0-9A-Fa-f]{6}$'
+      pattern: "^[0-9A-Fa-f]{6}$"
     AnyIntegerString:
       type: string
-      pattern: '^-?[0-9]+$'
+      pattern: "^-?[0-9]+$"
     NonNegativeIntegerString:
       type: string
-      pattern: '^(0|[1-9][0-9]*)$'
+      pattern: "^(0|[1-9][0-9]*)$"
     PositiveIntegerString:
       type: string
-      pattern: '^[1-9][0-9]*$'
+      pattern: "^[1-9][0-9]*$"
     Percent0To100String:
       type: string
-      pattern: '^(100|[1-9]?[0-9])$'
+      pattern: "^(100|[1-9]?[0-9])$"
     SignedPercentString:
       type: string
-      pattern: '^-?(100|[1-9]?[0-9])$'
+      pattern: "^-?(100|[1-9]?[0-9])$"
     FractionString:
       type: string
       pattern: '^(0(\.[0-9]+)?|1(\.0+)?)$'
@@ -1886,13 +1886,13 @@ components:
       pattern: '^([1-9](\.[0-9]+)?|1[0-9](\.[0-9]+)?|20(\.0+)?|21(\.0+)?)$'
     AnimFrames:
       type: string
-      pattern: '^([1-9]|[1-5][0-9]|60)$'
+      pattern: "^([1-9]|[1-5][0-9]|60)$"
     AnimSpeed:
       type: string
-      pattern: '^([1-9][0-9]{1,2}|1000)$'
+      pattern: "^([1-9][0-9]{1,2}|1000)$"
     GifColors:
       type: string
-      pattern: '^([2-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-6])$'
+      pattern: "^([2-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-6])$"
     AlignmentStyle:
       type: string
       enum: [match_finder, square, rounded, circle]
@@ -1980,10 +1980,10 @@ components:
       pattern: '^([0-9A-Fa-f]{6},(0(\.[0-9]+)?|1(\.0+)?))(,[0-9A-Fa-f]{6},(0(\.[0-9]+)?|1(\.0+)?))*$'
     HexColorPalette:
       type: string
-      pattern: '^[0-9A-Fa-f]{6}(,[0-9A-Fa-f]{6})*$'
+      pattern: "^[0-9A-Fa-f]{6}(,[0-9A-Fa-f]{6})*$"
     LanguageTag:
       type: string
-      pattern: '^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$'
+      pattern: "^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
     OverlayFramePick:
       type: string
       enum: [all, every_n, max_frames, duration_limit]
@@ -2025,13 +2025,13 @@ components:
         - type: string
           enum: [none, keep, restore_previous, restore_background]
         - type: string
-          pattern: '^[0-3]$'
+          pattern: "^[0-3]$"
     MaskPatternInput:
       oneOf:
         - type: string
           enum: [auto]
         - type: string
-          pattern: '^[0-7]$'
+          pattern: "^[0-7]$"
     BackgroundRenderRequest:
       type: object
       additionalProperties: false

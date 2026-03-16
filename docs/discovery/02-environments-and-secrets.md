@@ -7,6 +7,7 @@ Document environments, secret sources, and remediation needs.
 ## Fill in
 
 ### Environments
+
 - local : confirmed
 - dev : confirmed
 - staging : not used
@@ -15,6 +16,7 @@ Document environments, secret sources, and remediation needs.
 - other : not used
 
 ### Secret sources
+
 - GitHub secrets : confirmed
 - systemd Environment : confirmed
 - local env files : confirmed
@@ -25,6 +27,7 @@ Document environments, secret sources, and remediation needs.
 - others : not used
 
 ### Redaction review
+
 - Tracked secrets found: confirmed
 - Files/locations: confirmed
 - Remediation performed: confirmed
@@ -32,6 +35,7 @@ Document environments, secret sources, and remediation needs.
 - Owners: confirmed
 
 ### Rules
+
 - no secrets in git: confirmed
 - no secrets in docs uploaded to ChatGPT: confirmed
 - no secrets in logs: confirmed

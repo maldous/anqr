@@ -14,20 +14,15 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-
     "typecheck": "NODE_OPTIONS='--max-old-space-size=2048' tsc --noEmit",
-
-    "lint": "oxlint -c oxlint.json src/ packages/ apps/",
-    "lint:fix": "oxlint -c oxlint.json --fix src/ packages/ apps/",
+    "lint": "oxlint -c oxlint.json .",
+    "lint:fix": "oxlint -c oxlint.json --fix .",
     "lint:boundaries": "eslint src/",
-
-    "format": "oxfmt --write src/ packages/ apps/",
-    "format:check": "oxfmt --check src/ packages/ apps/",
-
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "depcruise": "depcruise src --config .dependency-cruiser.cjs",
     "cspell": "cspell \"src/**/*.{ts,tsx}\" \"docs/**/*.md\" --no-progress",
     "knip": "knip",
-
     "test": "playwright test",
     "test:unit": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100%",
     "test:basic": "playwright test --project=basic",
@@ -36,43 +31,33 @@
     "test:permutations": "playwright test --project=permutations",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-
     "test:appium": "wdio run wdio.conf.ts",
     "test:appium:android": "APPIUM_PLATFORM=android wdio run wdio.conf.ts",
     "test:appium:ios": "APPIUM_PLATFORM=ios wdio run wdio.conf.ts",
-
     "audit:ast": "node scripts/audit-ast-density.mjs",
     "sonar:export": "bash scripts/sonar-export.sh",
     "sonar:audit": "node scripts/ops/sonar-linear-audit.mjs",
     "sonar:scan": "SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
-
     "harness:quick": "node scripts/ops/harness-report.mjs quick",
     "harness:continuous": "node scripts/ops/harness-report.mjs continuous",
     "harness:full": "node scripts/ops/harness-report.mjs full",
-
     "guardian:run": "node scripts/ops/linear-guardian.mjs",
     "guardian:dry-run": "node scripts/ops/linear-guardian.mjs --dry-run",
-
     "queue:check": "node scripts/ops/symphony-queue-control.mjs --check",
     "queue:feed": "node scripts/ops/symphony-queue-control.mjs --feed",
     "queue:enforce": "node scripts/ops/symphony-queue-control.mjs --enforce",
     "queue:all": "node scripts/ops/symphony-queue-control.mjs --all",
     "queue:all:dry-run": "node scripts/ops/symphony-queue-control.mjs --all --dry-run",
     "queue:continuous": "node scripts/ops/symphony-queue-control.mjs --all",
-
     "symphony:run": "node scripts/ops/symphony-runner.mjs --once",
     "symphony:run:dry-run": "node scripts/ops/symphony-runner.mjs --once --dry-run",
     "symphony:status": "node scripts/ops/symphony-runner.mjs --status",
-
     "email:ingest": "node scripts/ops/email-ingest.mjs",
     "email:ingest:dry-run": "node scripts/ops/email-ingest.mjs --dry-run",
-
     "notify:test": "node -e \"import('./scripts/ops/lib/notify.mjs').then(m => { const r = m.sendNotification({ subject: 'Test notification', body: 'This is a test from ANQR ops notification system.\\nTimestamp: ' + new Date().toISOString(), severity: 'info' }); console.log(r); })\"",
-
     "nightly": "node scripts/ops/nightly-ops-pass.mjs",
     "nightly:dry-run": "node scripts/ops/nightly-ops-pass.mjs --dry-run",
     "quality": "npm run typecheck && npm run lint && npm run depcruise && npm run test:unit",
-
     "prepare": "lefthook install"
   },
   "dependencies": {

@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
-import path from 'node:path';
-import process from 'node:process';
-import { Project, SyntaxKind } from 'ts-morph';
+import path from "node:path";
+import process from "node:process";
+import { Project, SyntaxKind } from "ts-morph";
 
-const DEFAULT_GLOBS = ['src/**/*.{ts,tsx,d.ts}'];
+const DEFAULT_GLOBS = [
+  "**/*.{ts,tsx,d.ts}",
+  "!**/node_modules/**",
+];
 const DEFAULT_THRESHOLD = 1;
 
-process.stdout.on('error', (error) => {
-  if (error?.code === 'EPIPE') {
+process.stdout.on("error", (error) => {
+  if (error?.code === "EPIPE") {
     process.exit(0);
   }
   throw error;
@@ -23,14 +26,14 @@ const parseArgs = (argv) => {
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    if (arg === '--json') {
+    if (arg === "--json") {
       options.json = true;
       continue;
     }
-    if (arg === '--threshold') {
+    if (arg === "--threshold") {
       const raw = argv[i + 1];
       if (raw === undefined) {
-        throw new Error('--threshold requires a numeric value');
+        throw new Error("--threshold requires a numeric value");
       }
       const parsed = Number.parseInt(raw, 10);
       if (!Number.isFinite(parsed) || parsed < 0) {
@@ -46,13 +49,14 @@ const parseArgs = (argv) => {
   return options;
 };
 
-const normalizePath = (filePath) => path.relative(process.cwd(), filePath).replaceAll('\\', '/');
+const normalizePath = (filePath) => path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 
 const isFunctionLikeInitializer = (initializer) =>
   initializer?.getKind() === SyntaxKind.ArrowFunction ||
   initializer?.getKind() === SyntaxKind.FunctionExpression;
 
-const isClassLikeInitializer = (initializer) => initializer?.getKind() === SyntaxKind.ClassExpression;
+const isClassLikeInitializer = (initializer) =>
+  initializer?.getKind() === SyntaxKind.ClassExpression;
 
 const isObjectLikeInitializer = (initializer) =>
   initializer?.getKind() === SyntaxKind.ObjectLiteralExpression;
@@ -73,7 +77,7 @@ const describeVariableDeclaration = (declaration) => {
 
   if (isFunctionLikeInitializer(initializer)) {
     return {
-      kind: 'variable.arrow_function',
+      kind: "variable.arrow_function",
       name,
       line: declaration.getStartLineNumber(),
     };
@@ -81,7 +85,7 @@ const describeVariableDeclaration = (declaration) => {
 
   if (isClassLikeInitializer(initializer)) {
     return {
-      kind: 'variable.class_expression',
+      kind: "variable.class_expression",
       name,
       line: declaration.getStartLineNumber(),
     };
@@ -89,7 +93,7 @@ const describeVariableDeclaration = (declaration) => {
 
   if (isIifeInitializer(initializer)) {
     return {
-      kind: 'variable.iife',
+      kind: "variable.iife",
       name,
       line: declaration.getStartLineNumber(),
     };
@@ -97,7 +101,7 @@ const describeVariableDeclaration = (declaration) => {
 
   if (isObjectLikeInitializer(initializer)) {
     return {
-      kind: 'variable.object_literal',
+      kind: "variable.object_literal",
       name,
       line: declaration.getStartLineNumber(),
     };
@@ -113,23 +117,23 @@ const collectHeavyNodes = (sourceFile) => {
     switch (statement.getKind()) {
       case SyntaxKind.FunctionDeclaration: {
         heavyNodes.push({
-          kind: 'function',
-          name: statement.getName() ?? '<anonymous>',
+          kind: "function",
+          name: statement.getName() ?? "<anonymous>",
           line: statement.getStartLineNumber(),
         });
         break;
       }
       case SyntaxKind.ClassDeclaration: {
         heavyNodes.push({
-          kind: 'class',
-          name: statement.getName() ?? '<anonymous>',
+          kind: "class",
+          name: statement.getName() ?? "<anonymous>",
           line: statement.getStartLineNumber(),
         });
         break;
       }
       case SyntaxKind.InterfaceDeclaration: {
         heavyNodes.push({
-          kind: 'interface',
+          kind: "interface",
           name: statement.getName(),
           line: statement.getStartLineNumber(),
         });
@@ -137,7 +141,7 @@ const collectHeavyNodes = (sourceFile) => {
       }
       case SyntaxKind.TypeAliasDeclaration: {
         heavyNodes.push({
-          kind: 'type',
+          kind: "type",
           name: statement.getName(),
           line: statement.getStartLineNumber(),
         });
@@ -145,7 +149,7 @@ const collectHeavyNodes = (sourceFile) => {
       }
       case SyntaxKind.EnumDeclaration: {
         heavyNodes.push({
-          kind: 'enum',
+          kind: "enum",
           name: statement.getName(),
           line: statement.getStartLineNumber(),
         });
@@ -153,7 +157,7 @@ const collectHeavyNodes = (sourceFile) => {
       }
       case SyntaxKind.ModuleDeclaration: {
         heavyNodes.push({
-          kind: 'module',
+          kind: "module",
           name: statement.getName(),
           line: statement.getStartLineNumber(),
         });
@@ -183,15 +187,15 @@ const formatEntry = (entry) => {
   const summary = Object.entries(grouped)
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([kind, count]) => `${kind}:${count}`)
-    .join(', ');
+    .join(", ");
 
-  return `${String(entry.count).padStart(3, ' ')} ${entry.path}  ${summary}`;
+  return `${String(entry.count).padStart(3, " ")} ${entry.path}  ${summary}`;
 };
 
 const main = () => {
   const options = parseArgs(process.argv.slice(2));
   const project = new Project({
-    tsConfigFilePath: path.join(process.cwd(), 'tsconfig.json'),
+    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     skipAddingFilesFromTsConfig: true,
   });
 

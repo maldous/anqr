@@ -10,6 +10,8 @@
   email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
   quality install hooks clean
 
+fix: lint-fix format
+
 dev:
 	npm run dev
 

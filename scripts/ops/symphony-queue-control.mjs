@@ -1,37 +1,8 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-/**
- * symphony-queue-control.mjs — Symphony queue management
- *
- * Enforces execution constraints for local-only Ollama operation:
- *   - Backlog-to-project feeder (Backlog → Todo when queue < target_min)
- *   - Drain overflow (Todo → Backlog when queue > target_max)
- *   - Max concurrent enforcement (only 1 In Progress at a time)
- *   - Stuck work detection (In Progress beyond task timeout)
- *   - Stale execution escalation (In Progress beyond stale threshold)
- *
- * Usage:
- *   LINEAR_API_KEY=... node scripts/ops/symphony-queue-control.mjs --check
- *   LINEAR_API_KEY=... node scripts/ops/symphony-queue-control.mjs --feed
- *   LINEAR_API_KEY=... node scripts/ops/symphony-queue-control.mjs --drain
- *   LINEAR_API_KEY=... node scripts/ops/symphony-queue-control.mjs --enforce
- *   LINEAR_API_KEY=... node scripts/ops/symphony-queue-control.mjs --all
- *   LINEAR_API_KEY=... node scripts/ops/symphony-queue-control.mjs --all --dry-run
- *
- * Exit code:
- *   0 = queue control pass completed
- *   1 = error communicating with Linear
- */
-
-import { fileURLToPath } from 'node:url';
-import {
-  listIssuesByState,
-  updateIssue,
-  addComment,
-  STATES,
-} from './linear-client.mjs';
-
+import { fileURLToPath } from "node:url";
+import { listIssuesByState, updateIssue, addComment, STATES } from "./linear-client.mjs";
 import {
   TARGET_MIN,
   TARGET_MAX,
@@ -39,25 +10,32 @@ import {
   STALE_THRESHOLD_MS,
   TASK_TIMEOUT_MS,
   QUEUE_STATES,
-} from './symphony-config.mjs';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+} from "./symphony-config.mjs";
+import {
+  canExecuteIssue,
+  canFeedIssue,
+  getIssueState,
+  leaseIsActive,
+  releaseLease,
+  recordTransition,
+  setCooldown,
+} from "./symphony-state.mjs";
 
 const actions = [];
+const RECOVERY_GRACE_MS = Number(process.env.ANQR_SYMPHONY_RECOVERY_GRACE_MS || 5 * 60 * 1000);
 
 function logAction(type, detail) {
   actions.push({ type, detail, ts: new Date().toISOString() });
   const icons = {
-    feed: '📥', drain: '📤', demote: '⬇️', stuck: '🔧',
-    stale: '⏰', info: 'ℹ️', concurrent: '🔒',
+    feed: "📥",
+    drain: "📤",
+    stale: "⏰",
+    info: "ℹ️",
+    concurrent: "🔒",
+    recover: "🩹",
+    skip: "⏭️",
   };
-  console.log(`${icons[type] || '•'} ${type}: ${detail}`);
-}
-
-function isAutomatable(issue) {
-  return !issue.title.includes('[HUMAN]');
+  console.log(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 
 function issueAge(issue, field) {
@@ -68,10 +46,6 @@ function minutesAgo(issue, field) {
   return Math.floor(issueAge(issue, field) / 60_000);
 }
 
-// ---------------------------------------------------------------------------
-// Queue state snapshot
-// ---------------------------------------------------------------------------
-
 export async function getQueueSnapshot() {
   const [backlog, todo, inProgress] = await Promise.all([
     listIssuesByState(QUEUE_STATES.feedSource),
@@ -79,9 +53,11 @@ export async function getQueueSnapshot() {
     listIssuesByState(QUEUE_STATES.activeStates),
   ]);
 
-  const backlogAuto = backlog.filter(isAutomatable);
-  const todoAuto = todo.filter(isAutomatable);
-  const inProgressAuto = inProgress.filter(isAutomatable);
+  const backlogAuto = backlog.filter((issue) => canFeedIssue(issue));
+  const todoAuto = todo.filter((issue) => canExecuteIssue(issue));
+  const inProgressAuto = inProgress.filter(
+    (issue) => canExecuteIssue(issue) || leaseIsActive(getIssueState(issue.identifier)),
+  );
 
   return {
     backlog: { all: backlog, automatable: backlogAuto },
@@ -93,219 +69,235 @@ export async function getQueueSnapshot() {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Check: report queue health
-// ---------------------------------------------------------------------------
-
 function printQueueHealth(snap) {
-  console.log('[queue-control] Queue health snapshot\n');
-  console.log(`  Backlog (automatable): ${snap.backlog.automatable.length} / ${snap.backlog.all.length} total`);
-  console.log(`  Todo (automatable):    ${snap.todo.automatable.length} / ${snap.todo.all.length} total`);
-  console.log(`  In Progress (auto):    ${snap.inProgress.automatable.length} / ${snap.inProgress.all.length} total`);
-  console.log(`  Queue depth (ready+active): ${snap.queueDepth}`);
-  console.log('');
-  console.log(`  target_min=${TARGET_MIN}  target_max=${TARGET_MAX}  max_concurrent=${MAX_CONCURRENT_AGENTS}`);
-
-  const issues = [];
-  if (snap.queueDepth < TARGET_MIN) issues.push(`queue below target_min (${snap.queueDepth}<${TARGET_MIN})`);
-  if (snap.queueDepth > TARGET_MAX) issues.push(`queue above target_max (${snap.queueDepth}>${TARGET_MAX})`);
-  if (snap.activeDepth > MAX_CONCURRENT_AGENTS) issues.push(`concurrent agents exceed max (${snap.activeDepth}>${MAX_CONCURRENT_AGENTS})`);
-
-  if (issues.length > 0) {
-    console.log(`\n  ⚠️  Issues: ${issues.join('; ')}`);
-  } else {
-    console.log('\n  ✅ Queue healthy');
-  }
+  console.log("[queue-control] Queue health snapshot\n");
+  console.log(
+    `  Backlog (feed-eligible): ${snap.backlog.automatable.length} / ${snap.backlog.all.length} total`,
+  );
+  console.log(
+    `  Todo (runnable):         ${snap.todo.automatable.length} / ${snap.todo.all.length} total`,
+  );
+  console.log(
+    `  In Progress (managed):   ${snap.inProgress.automatable.length} / ${snap.inProgress.all.length} total`,
+  );
+  console.log(`  Queue depth:             ${snap.queueDepth}`);
+  console.log(
+    `\n  target_min=${TARGET_MIN}  target_max=${TARGET_MAX}  max_concurrent=${MAX_CONCURRENT_AGENTS}`,
+  );
 }
 
-// ---------------------------------------------------------------------------
-// Feed: promote Backlog → Todo when queue < target_min
-// ---------------------------------------------------------------------------
-
-export async function feedQueue(snap, dryRun) {
-  const deficit = TARGET_MIN - snap.queueDepth;
-
+export async function feedQueue(snap = null, dryRun = false) {
+  const live = snap || (await getQueueSnapshot());
+  const deficit = TARGET_MIN - live.queueDepth;
   if (deficit <= 0) {
-    logAction('info', `Queue depth ${snap.queueDepth} >= target_min ${TARGET_MIN} — no feeding needed`);
+    logAction(
+      "info",
+      `Queue depth ${live.queueDepth} >= target_min ${TARGET_MIN} — no feeding needed`,
+    );
     return;
   }
 
-  const candidates = snap.backlog.automatable
-    .sort((a, b) => a.priority - b.priority);
-
+  const candidates = [...live.backlog.automatable].sort(
+    (a, b) => (a.priority ?? 99) - (b.priority ?? 99),
+  );
   const toFeed = candidates.slice(0, deficit);
-
   if (toFeed.length === 0) {
-    logAction('info', 'No automatable backlog issues to feed');
+    logAction("info", "No feed-eligible backlog issues");
     return;
   }
 
   for (const issue of toFeed) {
     if (dryRun) {
-      logAction('feed', `[DRY RUN] Would promote ${issue.identifier} to Todo: ${issue.title}`);
-    } else {
-      await updateIssue(issue.id, { stateId: STATES.todo });
-      logAction('feed', `Promoted ${issue.identifier} to Todo: ${issue.title}`);
+      logAction("feed", `[DRY RUN] Would promote ${issue.identifier} to Todo: ${issue.title}`);
+      continue;
     }
+    await updateIssue(issue.id, { stateId: STATES.todo });
+    recordTransition(issue.identifier, {
+      actor: "queue-control",
+      reason: "feed",
+      from: "Backlog",
+      to: "Todo",
+    });
+    logAction("feed", `Promoted ${issue.identifier} to Todo: ${issue.title}`);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Drain: demote overflow Todo → Backlog when queue > target_max
-// ---------------------------------------------------------------------------
-
-async function drainOverflow(snap, dryRun) {
-  const excess = snap.queueDepth - TARGET_MAX;
-
+async function drainOverflow(snap = null, dryRun = false) {
+  const live = snap || (await getQueueSnapshot());
+  const excess = live.queueDepth - TARGET_MAX;
   if (excess <= 0) {
-    logAction('info', `Queue depth ${snap.queueDepth} <= target_max ${TARGET_MAX} — no draining needed`);
+    logAction(
+      "info",
+      `Queue depth ${live.queueDepth} <= target_max ${TARGET_MAX} — no draining needed`,
+    );
     return;
   }
 
-  const candidates = snap.todo.automatable
-    .sort((a, b) => b.priority - a.priority);
-
+  const candidates = [...live.todo.automatable].sort(
+    (a, b) => (b.priority ?? 99) - (a.priority ?? 99),
+  );
   const toDrain = candidates.slice(0, excess);
-
   for (const issue of toDrain) {
     if (dryRun) {
-      logAction('drain', `[DRY RUN] Would demote ${issue.identifier} to Backlog: ${issue.title}`);
-    } else {
-      await updateIssue(issue.id, { stateId: STATES.backlog });
-      await addComment(issue.id, '📤 **Demoted to Backlog** — queue overflow (exceeded target_max). Will be re-promoted when capacity is available.');
-      logAction('drain', `Demoted ${issue.identifier} to Backlog: ${issue.title}`);
+      logAction("drain", `[DRY RUN] Would demote ${issue.identifier} to Backlog: ${issue.title}`);
+      continue;
     }
+    await updateIssue(issue.id, { stateId: STATES.backlog });
+    await addComment(issue.id, "📤 **Demoted to Backlog** — queue overflow (target_max exceeded).");
+    recordTransition(issue.identifier, {
+      actor: "queue-control",
+      reason: "drain_overflow",
+      from: "Todo",
+      to: "Backlog",
+    });
+    logAction("drain", `Demoted ${issue.identifier} to Backlog: ${issue.title}`);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Enforce: max concurrent agents
-// ---------------------------------------------------------------------------
-
-async function enforceMaxConcurrent(snap, dryRun) {
-  const active = snap.inProgress.automatable;
-
+async function enforceMaxConcurrent(snap = null, dryRun = false) {
+  const live = snap || (await getQueueSnapshot());
+  const active = [...live.inProgress.all].sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
   if (active.length <= MAX_CONCURRENT_AGENTS) {
-    logAction('info', `${active.length} active agent(s) <= max ${MAX_CONCURRENT_AGENTS} — OK`);
+    logAction("info", `${active.length} active issue(s) <= max ${MAX_CONCURRENT_AGENTS} — OK`);
     return;
   }
 
-  const sorted = active.sort((a, b) => a.priority - b.priority);
-  const keep = sorted.slice(0, MAX_CONCURRENT_AGENTS);
-  const demote = sorted.slice(MAX_CONCURRENT_AGENTS);
-
-  for (const issue of keep) {
-    logAction('info', `Keeping ${issue.identifier} in progress (P${issue.priority}): ${issue.title}`);
-  }
+  const keep = active.slice(0, MAX_CONCURRENT_AGENTS);
+  const demote = active.slice(MAX_CONCURRENT_AGENTS);
+  keep.forEach((issue) =>
+    logAction("info", `Keeping ${issue.identifier} in progress: ${issue.title}`),
+  );
 
   for (const issue of demote) {
-    if (dryRun) {
-      logAction('concurrent', `[DRY RUN] Would demote ${issue.identifier} to Todo (P${issue.priority}): ${issue.title}`);
-    } else {
-      await updateIssue(issue.id, { stateId: STATES.todo });
-      await addComment(issue.id, `🔒 **Moved back to Todo** — max_concurrent_agents=${MAX_CONCURRENT_AGENTS} exceeded. Only one agent may execute at a time.`);
-      logAction('concurrent', `Demoted ${issue.identifier} to Todo: ${issue.title}`);
+    const state = getIssueState(issue.identifier);
+    const hasActiveLease = leaseIsActive(state);
+    const staleEnough = issueAge(issue, "updatedAt") > RECOVERY_GRACE_MS;
+    if (hasActiveLease || !staleEnough) {
+      logAction(
+        "skip",
+        `Leaving ${issue.identifier} In Progress — ${hasActiveLease ? "active lease" : "recently updated"}`,
+      );
+      continue;
     }
+    if (dryRun) {
+      logAction("concurrent", `[DRY RUN] Would demote ${issue.identifier} to Todo: ${issue.title}`);
+      continue;
+    }
+    await updateIssue(issue.id, { stateId: STATES.todo });
+    await addComment(
+      issue.id,
+      `🔒 **Moved back to Todo** — max_concurrent_agents=${MAX_CONCURRENT_AGENTS} exceeded and no active lease was present.`,
+    );
+    recordTransition(issue.identifier, {
+      actor: "queue-control",
+      reason: "max_concurrent_reclaim",
+      from: "In Progress",
+      to: "Todo",
+    });
+    logAction("concurrent", `Demoted ${issue.identifier} to Todo: ${issue.title}`);
   }
 }
 
-// ---------------------------------------------------------------------------
-// Enforce: stuck work detection (In Progress > task timeout)
-// ---------------------------------------------------------------------------
-
-async function detectStuckWork(snap, dryRun) {
-  const active = snap.inProgress.automatable;
-  const stuck = active.filter((i) => issueAge(i, 'updatedAt') > TASK_TIMEOUT_MS);
-
-  if (stuck.length === 0) {
-    logAction('info', 'No stuck work detected');
+async function detectStuckWork(snap = null, dryRun = false) {
+  const live = snap || (await getQueueSnapshot());
+  const active = live.inProgress.all;
+  if (active.length === 0) {
+    logAction("info", "No active work detected");
     return;
   }
 
-  for (const issue of stuck) {
-    const age = minutesAgo(issue, 'updatedAt');
-    const isStale = issueAge(issue, 'updatedAt') > STALE_THRESHOLD_MS;
-
-    if (isStale) {
-      if (dryRun) {
-        logAction('stale', `[DRY RUN] Would escalate+demote ${issue.identifier}: stale ${age}min (${issue.title})`);
-      } else {
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        await addComment(issue.id, `⏰ **Stale execution — moved to Todo** — no update for ${age} minutes (threshold: ${STALE_THRESHOLD_MS / 60_000}min). Needs re-evaluation or decomposition.`);
-        logAction('stale', `Escalated+demoted ${issue.identifier}: stale ${age}min`);
-      }
-    } else {
-      if (dryRun) {
-        logAction('stuck', `[DRY RUN] Would flag ${issue.identifier}: stuck ${age}min (${issue.title})`);
-      } else {
-        await addComment(issue.id, `🔧 **Stuck detection** — no update for ${age} minutes (task timeout: ${TASK_TIMEOUT_MS / 60_000}min). Consider splitting into smaller subtasks.`);
-        logAction('stuck', `Flagged ${issue.identifier}: stuck ${age}min`);
-      }
+  for (const issue of active) {
+    const ageMs = issueAge(issue, "updatedAt");
+    if (ageMs <= TASK_TIMEOUT_MS) continue;
+    const age = minutesAgo(issue, "updatedAt");
+    const state = getIssueState(issue.identifier);
+    const hasActiveLease = leaseIsActive(state);
+    if (hasActiveLease) {
+      logAction(
+        "skip",
+        `Lease still active for ${issue.identifier} — not recovering (${age}min stale)`,
+      );
+      continue;
     }
+    if (dryRun) {
+      logAction(
+        "recover",
+        `[DRY RUN] Would recover ${issue.identifier} from In Progress to Todo (${age}min stale)`,
+      );
+      continue;
+    }
+    releaseLease(issue.identifier);
+    await updateIssue(issue.id, { stateId: STATES.todo });
+    await addComment(
+      issue.id,
+      `⏰ **Recovered from stale execution** — no active lease and no update for ${age} minutes. Returned to Todo.`,
+    );
+    setCooldown(issue.identifier, 5 * 60 * 1000, "stale_recovery");
+    recordTransition(issue.identifier, {
+      actor: "queue-control",
+      reason: ageMs > STALE_THRESHOLD_MS ? "stale_recovery" : "task_timeout_recovery",
+      from: "In Progress",
+      to: "Todo",
+    });
+    logAction("recover", `Recovered ${issue.identifier}: ${age}min stale`);
   }
 }
-
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
 
 async function main() {
   const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run');
-  const doCheck = args.includes('--check');
-  const doFeed = args.includes('--feed');
-  const doDrain = args.includes('--drain');
-  const doEnforce = args.includes('--enforce');
-  const doAll = args.includes('--all');
+  const dryRun = args.includes("--dry-run");
+  const doCheck = args.includes("--check");
+  const doFeed = args.includes("--feed");
+  const doDrain = args.includes("--drain");
+  const doEnforce = args.includes("--enforce");
+  const doAll = args.includes("--all");
 
   if (!doCheck && !doFeed && !doDrain && !doEnforce && !doAll) {
-    console.error('Usage: symphony-queue-control.mjs --check|--feed|--drain|--enforce|--all [--dry-run]');
+    console.error(
+      "Usage: symphony-queue-control.mjs --check|--feed|--drain|--enforce|--all [--dry-run]",
+    );
     process.exit(2);
   }
 
-  console.log(`[queue-control]${dryRun ? ' (DRY RUN)' : ''} starting\n`);
-
-  const snap = await getQueueSnapshot();
+  console.log(`[queue-control]${dryRun ? " (DRY RUN)" : ""} starting\n`);
 
   if (doCheck || doAll) {
-    printQueueHealth(snap);
-    console.log('');
+    printQueueHealth(await getQueueSnapshot());
+    console.log("");
   }
-
   if (doFeed || doAll) {
-    console.log('[queue-control] === Feed ===');
-    await feedQueue(snap, dryRun);
-    console.log('');
+    console.log("[queue-control] === Feed ===");
+    await feedQueue(null, dryRun);
+    console.log("");
   }
-
   if (doDrain || doAll) {
-    console.log('[queue-control] === Drain ===');
-    await drainOverflow(snap, dryRun);
-    console.log('');
+    console.log("[queue-control] === Drain ===");
+    await drainOverflow(null, dryRun);
+    console.log("");
   }
-
   if (doEnforce || doAll) {
-    console.log('[queue-control] === Enforce concurrent ===');
-    await enforceMaxConcurrent(snap, dryRun);
-    console.log('');
-
-    console.log('[queue-control] === Detect stuck work ===');
-    await detectStuckWork(snap, dryRun);
-    console.log('');
+    console.log("[queue-control] === Enforce concurrent ===");
+    await enforceMaxConcurrent(null, dryRun);
+    console.log("");
+    console.log("[queue-control] === Detect stuck work ===");
+    await detectStuckWork(null, dryRun);
+    console.log("");
   }
 
-  printSummary();
-  process.exit(0);
-}
-
-function printSummary() {
   const counts = {};
-  for (const a of actions) {
-    counts[a.type] = (counts[a.type] || 0) + 1;
-  }
-  const parts = Object.entries(counts).map(([k, v]) => `${k}=${v}`);
-  console.log(`[queue-control] Summary: ${parts.join(', ') || 'no actions'}`);
+  for (const action of actions) counts[action.type] = (counts[action.type] || 0) + 1;
+  console.log(
+    `[queue-control] Summary: ${
+      Object.entries(counts)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(", ") || "no actions"
+    }`,
+  );
 }
 
-// Only run CLI when executed directly, not when imported as a library
-if (process.argv[1] === fileURLToPath(import.meta.url)) main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(`[queue-control] Fatal: ${err.message}`);
+    process.exit(1);
+  });
+}

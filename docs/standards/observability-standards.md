@@ -19,15 +19,15 @@
 
 ```ts
 export type TelemetryContext = {
-  serviceName: string
-  serviceVersion: string
-  release: string
-  environment: 'local' | 'dev' | 'staging' | 'prod'
-  runtime: 'web' | 'api' | 'android' | 'ios' | 'worker' | 'local-harness'
-  traceId?: string
-  spanId?: string
-  sessionId?: string
-  userIdHash?: string
-  feature?: string
-}
+  serviceName: string;
+  serviceVersion: string;
+  release: string;
+  environment: "local" | "dev" | "staging" | "prod";
+  runtime: "web" | "api" | "android" | "ios" | "worker" | "local-harness";
+  traceId?: string;
+  spanId?: string;
+  sessionId?: string;
+  userIdHash?: string;
+  feature?: string;
+};
 ```

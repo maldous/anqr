@@ -69,15 +69,15 @@ Linear (Todo issues)
 
 ## Execution Constraints
 
-| Parameter | Value | Reason |
-|---|---|---|
-| `max_concurrent_agents` | 1 | Ollama is single-slot |
-| `target_min` | 1 | Minimum queue depth |
-| `target_max` | 2 | Maximum queue depth |
-| `RUNNER_MAX_TURNS` | 600 | Max tool-calling rounds per issue |
-| `RUNNER_MAX_EXECUTION_MS` | 7,200,000 (120 min) | Hard wall-time timeout |
-| `RUNNER_MAX_RETRIES` | 2 | Attempts before demotion to Backlog |
-| `RUNNER_AUTO_PUSH` | false | Git push disabled by default |
+| Parameter                 | Value               | Reason                              |
+| ------------------------- | ------------------- | ----------------------------------- |
+| `max_concurrent_agents`   | 1                   | Ollama is single-slot               |
+| `target_min`              | 1                   | Minimum queue depth                 |
+| `target_max`              | 2                   | Maximum queue depth                 |
+| `RUNNER_MAX_TURNS`        | 600                 | Max tool-calling rounds per issue   |
+| `RUNNER_MAX_EXECUTION_MS` | 7,200,000 (120 min) | Hard wall-time timeout              |
+| `RUNNER_MAX_RETRIES`      | 2                   | Attempts before demotion to Backlog |
+| `RUNNER_AUTO_PUSH`        | false               | Git push disabled by default        |
 
 ## Issue Sizing Rules
 
@@ -127,12 +127,12 @@ These must be marked `[HUMAN]` and excluded from the automation queue.
 
 ## Descriptor Taxonomy
 
-| Prefix | Meaning |
-|---|---|
-| `[CHILD]` | Auto-created child of a parent issue |
-| `[HUMAN]` | Requires human/manual action, excluded from automation |
-| `[LOCAL-SLICE]` | Ollama-sized slice of larger work |
-| `[Sonar]` | SonarQube finding — one issue per finding, auto-created by sonar-linear-sync |
+| Prefix          | Meaning                                                                      |
+| --------------- | ---------------------------------------------------------------------------- |
+| `[CHILD]`       | Auto-created child of a parent issue                                         |
+| `[HUMAN]`       | Requires human/manual action, excluded from automation                       |
+| `[LOCAL-SLICE]` | Ollama-sized slice of larger work                                            |
+| `[Sonar]`       | SonarQube finding — one issue per finding, auto-created by sonar-linear-sync |
 
 ## Queue Control
 
@@ -140,24 +140,24 @@ The queue controller (`scripts/ops/symphony-queue-control.mjs`) enforces executi
 
 ### Operations
 
-| Operation | Trigger | Action |
-|---|---|---|
-| **Feed** | `queueDepth < target_min` | Promote highest-priority Backlog → Todo |
-| **Drain** | `queueDepth > target_max` | Demote lowest-priority Todo → Backlog with comment |
-| **Concurrent** | `inProgress > max_concurrent_agents` | Keep highest-priority, demote rest to Todo |
-| **Stuck** | In Progress > 5min without update | Comment with split recommendation |
-| **Stale** | In Progress > 30min without update | Move to Todo with escalation comment |
+| Operation      | Trigger                              | Action                                             |
+| -------------- | ------------------------------------ | -------------------------------------------------- |
+| **Feed**       | `queueDepth < target_min`            | Promote highest-priority Backlog → Todo            |
+| **Drain**      | `queueDepth > target_max`            | Demote lowest-priority Todo → Backlog with comment |
+| **Concurrent** | `inProgress > max_concurrent_agents` | Keep highest-priority, demote rest to Todo         |
+| **Stuck**      | In Progress > 5min without update    | Comment with split recommendation                  |
+| **Stale**      | In Progress > 30min without update   | Move to Todo with escalation comment               |
 
 ### Configuration
 
 All parameters are centralized in `scripts/ops/symphony-config.mjs`:
 
 ```javascript
-TARGET_MIN = 1
-TARGET_MAX = 2
-MAX_CONCURRENT_AGENTS = 1
-STALE_THRESHOLD_MS = 180 * 60 * 1000  // 180 min
-TASK_TIMEOUT_MS = 125 * 60 * 1000     // 125 min
+TARGET_MIN = 1;
+TARGET_MAX = 2;
+MAX_CONCURRENT_AGENTS = 1;
+STALE_THRESHOLD_MS = 180 * 60 * 1000; // 180 min
+TASK_TIMEOUT_MS = 125 * 60 * 1000; // 125 min
 ```
 
 ### Usage
@@ -211,6 +211,7 @@ The shared module `scripts/ops/lib/sonar-linear-sync.mjs` provides `syncSonarToL
 Each Linear issue title follows the format: `[Sonar] <message> (<file>:<line>)`
 
 Each Linear issue description contains:
+
 - `<!-- sonar-key:UUID -->` marker (for dedup)
 - Rule, severity, type, file, line, effort
 - Link to SonarQube issue detail
@@ -219,12 +220,12 @@ Each Linear issue description contains:
 
 The nightly sonar audit (`scripts/ops/sonar-linear-audit.mjs`) runs after sonar-scanner in the nightly pipeline:
 
-| Parameter | Value | Reason |
-|---|---|---|
-| `priority` | 1 (Urgent) | Sonar findings must be resolved before other work |
-| `resolveStale` | true | Close Linear issues whose findings disappeared |
-| `requeueToTodo` | true | Move stuck issues (Backlog, In Progress, etc.) back to Todo |
-| Exit code | 0 = clean, 1 = findings, 2 = config error | Blocking gate in nightly pipeline |
+| Parameter       | Value                                     | Reason                                                      |
+| --------------- | ----------------------------------------- | ----------------------------------------------------------- |
+| `priority`      | 1 (Urgent)                                | Sonar findings must be resolved before other work           |
+| `resolveStale`  | true                                      | Close Linear issues whose findings disappeared              |
+| `requeueToTodo` | true                                      | Move stuck issues (Backlog, In Progress, etc.) back to Todo |
+| Exit code       | 0 = clean, 1 = findings, 2 = config error | Blocking gate in nightly pipeline                           |
 
 The nightly audit also **promotes** existing issues: if the runner created an issue at P2 (High) during the day, the nightly promotes it to P1 (Urgent) with an explanatory comment.
 
@@ -234,11 +235,11 @@ Notifications include counts for: created, promoted, requeued, resolved.
 
 After each successful commit, the Symphony runner runs sonar-scanner and syncs findings:
 
-| Parameter | Value | Reason |
-|---|---|---|
-| `priority` | 2 (High) | New findings discovered during the day |
-| `resolveStale` | true | Close collateral issues (fixing one finding may resolve another) |
-| `requeueToTodo` | false | Requeue is nightly-only behavior |
+| Parameter       | Value    | Reason                                                           |
+| --------------- | -------- | ---------------------------------------------------------------- |
+| `priority`      | 2 (High) | New findings discovered during the day                           |
+| `resolveStale`  | true     | Close collateral issues (fixing one finding may resolve another) |
+| `requeueToTodo` | false    | Requeue is nightly-only behavior                                 |
 
 The post-commit scan is non-blocking — failures are logged but don't affect the current issue's completion. Notifications are sent when collateral issues are resolved.
 
@@ -259,11 +260,11 @@ This ensures the runner prioritizes code quality fixes before feature work.
 
 Sonar-scanner spawns both a JVM process and an internal Node.js process for JS/TS analysis. Memory must be carefully managed within the systemd cgroup:
 
-| Component | Cap | Set by |
-|---|---|---|
-| systemd cgroup | 4 GB | `MemoryMax=4G` in service unit |
-| Node.js (runner) | 512 MB | `NODE_OPTIONS=--max-old-space-size=512` in service env |
-| Java (sonar-scanner) | 256 MB | `SONAR_SCANNER_OPTS="-Xms128m -Xmx256m"` in execSync env |
+| Component                | Cap       | Set by                                                   |
+| ------------------------ | --------- | -------------------------------------------------------- |
+| systemd cgroup           | 4 GB      | `MemoryMax=4G` in service unit                           |
+| Node.js (runner)         | 512 MB    | `NODE_OPTIONS=--max-old-space-size=512` in service env   |
+| Java (sonar-scanner)     | 256 MB    | `SONAR_SCANNER_OPTS="-Xms128m -Xmx256m"` in execSync env |
 | Node.js (sonar internal) | unlimited | `NODE_OPTIONS=""` in execSync env (clears inherited cap) |
 
 The `NODE_OPTIONS=""` override is critical: without it, sonar-scanner's internal Node.js inherits the 512MB cap from the service environment and OOM-kills during JS/TS analysis.
@@ -383,28 +384,29 @@ journalctl --user -u anqr-symphony-runner.service --since today
 
 Legacy lesson: PATH under systemd differs from interactive shells. The service unit sets explicit paths:
 
-| Variable | Value | Reason |
-|---|---|---|
-| `PATH` | includes nvm Node bin | nvm not on default systemd PATH |
-| `HOME` | `/home/user` | required for nvm and npm |
-| `NODE_PATH` | nvm lib/node_modules | global module resolution |
-| `OLLAMA_API_BASE` | `http://localhost:11434` | Ollama default |
-| `LINEAR_API_KEY` | from `anqr-ops.env` | secrets kept outside repo |
-| `NODE_OPTIONS` | `--max-old-space-size=512` | caps Node.js heap within cgroup budget |
-| `SONAR_TOKEN` | from `anqr-ops.env` | SonarQube authentication |
-| `SONAR_HOST_URL` | `http://localhost:9000` | local SonarQube instance |
+| Variable          | Value                      | Reason                                 |
+| ----------------- | -------------------------- | -------------------------------------- |
+| `PATH`            | includes nvm Node bin      | nvm not on default systemd PATH        |
+| `HOME`            | `/home/user`               | required for nvm and npm               |
+| `NODE_PATH`       | nvm lib/node_modules       | global module resolution               |
+| `OLLAMA_API_BASE` | `http://localhost:11434`   | Ollama default                         |
+| `LINEAR_API_KEY`  | from `anqr-ops.env`        | secrets kept outside repo              |
+| `NODE_OPTIONS`    | `--max-old-space-size=512` | caps Node.js heap within cgroup budget |
+| `SONAR_TOKEN`     | from `anqr-ops.env`        | SonarQube authentication               |
+| `SONAR_HOST_URL`  | `http://localhost:9000`    | local SonarQube instance               |
 
 ### Notification Channels
 
-| Channel | Flag | Behavior |
-|---|---|---|
+| Channel  | Flag               | Behavior                                      |
+| -------- | ------------------ | --------------------------------------------- |
 | `stdout` | `--channel=stdout` | Always available, captured by systemd journal |
-| `email` | `--channel=email` | Send via msmtp to matthew.aldous@gmail.com |
-| `all` | `--channel=all` | Both stdout and email (default for nightly) |
+| `email`  | `--channel=email`  | Send via msmtp to matthew.aldous@gmail.com    |
+| `all`    | `--channel=all`    | Both stdout and email (default for nightly)   |
 
 Nightly reports are sent via email and archived to `reports/archive/`. They are **not** posted to Linear issues — issue comments grow unboundedly and become unreadable.
 
 The Symphony runner also sends email notifications when:
+
 - An issue moves to In Progress (agent starting)
 - Agent execution errors occur
 - Validation fails
@@ -425,32 +427,32 @@ The guardian is deterministic, not AI-driven:
 
 ## Files
 
-| File | Purpose | Implemented in |
-|---|---|---|
-| `scripts/ops/harness-report.mjs` | Deterministic checks | ANQ-371 (Phase 3) |
-| `scripts/ops/linear-guardian.mjs` | Rule-based issue management | ANQ-366 (Phase 4) |
-| `scripts/ops/linear-client.mjs` | Linear API helpers | ANQ-366 (Phase 4) |
-| `scripts/ops/ollama-local-audit.mjs` | Model health verification | ANQ-370 (Phase 2) |
-| `scripts/ops/litellm-config.yaml` | Local model aliases | ANQ-370 (Phase 2) |
-| `scripts/ops/model-injector-proxy.py` | Request normalization | ANQ-370 (Phase 2) |
-| `scripts/ops/symphony-config.mjs` | Centralized queue/execution config | ANQ-368 (Phase 5) |
-| `scripts/ops/symphony-queue-control.mjs` | Queue feeder, drain, enforcement | ANQ-368 (Phase 5) |
-| `scripts/ops/nightly-ops-pass.mjs` | Nightly orchestration | ANQ-367 (Phase 6) |
-| `scripts/ops/notify.mjs` | Notification dispatch | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-nightly.service` | systemd user service unit | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-nightly.timer` | systemd nightly timer (02:00) | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-queue-feeder.service` | systemd queue maintenance + backup feed | ANQ-373, ANQ-376 |
-| `services/systemd/anqr-queue-feeder.timer` | systemd queue maintenance timer (15min) | ANQ-373, ANQ-376 |
-| `scripts/ops/symphony-runner.mjs` | Execution orchestrator (self-feeding) | ANQ-374, ANQ-376 |
-| `scripts/ops/symphony-agent.mjs` | Tool-calling AI agent | ANQ-374 |
-| `scripts/ops/symphony-credit-gate.mjs` | Provider cascade (credit gate) | ANQ-374 |
-| `scripts/ops/symphony/WORKFLOW.md` | Agent system prompt (versioned) | ANQ-374 |
-| `services/systemd/anqr-symphony-runner.service` | systemd runner service | ANQ-374 |
-| `services/systemd/anqr-symphony-runner.timer` | systemd runner timer (2min) | ANQ-374 |
-| `scripts/ops/lib/notify.mjs` | Email notification helper (msmtp + rate limiting) | ANQ-377 |
-| `scripts/ops/email-ingest.mjs` | Email ingest (mbsync + notmuch → Linear issues) | ANQ-377 |
-| `services/systemd/anqr-email-ingest.service` | systemd email ingest service | ANQ-377 |
-| `services/systemd/anqr-email-ingest.timer` | systemd email ingest timer (5min) | ANQ-377 |
-| `services/systemd/anqr-ops.env` | Environment template for secrets | ANQ-367 (Phase 6) |
-| `scripts/ops/lib/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (shared module) | ANQ-378 |
-| `scripts/ops/sonar-linear-audit.mjs` | Nightly sonar audit (blocking, P1, resolve/promote/requeue) | ANQ-378 |
+| File                                            | Purpose                                                     | Implemented in    |
+| ----------------------------------------------- | ----------------------------------------------------------- | ----------------- |
+| `scripts/ops/harness-report.mjs`                | Deterministic checks                                        | ANQ-371 (Phase 3) |
+| `scripts/ops/linear-guardian.mjs`               | Rule-based issue management                                 | ANQ-366 (Phase 4) |
+| `scripts/ops/linear-client.mjs`                 | Linear API helpers                                          | ANQ-366 (Phase 4) |
+| `scripts/ops/ollama-local-audit.mjs`            | Model health verification                                   | ANQ-370 (Phase 2) |
+| `scripts/ops/litellm-config.yaml`               | Local model aliases                                         | ANQ-370 (Phase 2) |
+| `scripts/ops/model-injector-proxy.py`           | Request normalization                                       | ANQ-370 (Phase 2) |
+| `scripts/ops/symphony-config.mjs`               | Centralized queue/execution config                          | ANQ-368 (Phase 5) |
+| `scripts/ops/symphony-queue-control.mjs`        | Queue feeder, drain, enforcement                            | ANQ-368 (Phase 5) |
+| `scripts/ops/nightly-ops-pass.mjs`              | Nightly orchestration                                       | ANQ-367 (Phase 6) |
+| `scripts/ops/notify.mjs`                        | Notification dispatch                                       | ANQ-367 (Phase 6) |
+| `services/systemd/anqr-nightly.service`         | systemd user service unit                                   | ANQ-367 (Phase 6) |
+| `services/systemd/anqr-nightly.timer`           | systemd nightly timer (02:00)                               | ANQ-367 (Phase 6) |
+| `services/systemd/anqr-queue-feeder.service`    | systemd queue maintenance + backup feed                     | ANQ-373, ANQ-376  |
+| `services/systemd/anqr-queue-feeder.timer`      | systemd queue maintenance timer (15min)                     | ANQ-373, ANQ-376  |
+| `scripts/ops/symphony-runner.mjs`               | Execution orchestrator (self-feeding)                       | ANQ-374, ANQ-376  |
+| `scripts/ops/symphony-agent.mjs`                | Tool-calling AI agent                                       | ANQ-374           |
+| `scripts/ops/symphony-credit-gate.mjs`          | Provider cascade (credit gate)                              | ANQ-374           |
+| `scripts/ops/symphony/WORKFLOW.md`              | Agent system prompt (versioned)                             | ANQ-374           |
+| `services/systemd/anqr-symphony-runner.service` | systemd runner service                                      | ANQ-374           |
+| `services/systemd/anqr-symphony-runner.timer`   | systemd runner timer (2min)                                 | ANQ-374           |
+| `scripts/ops/lib/notify.mjs`                    | Email notification helper (msmtp + rate limiting)           | ANQ-377           |
+| `scripts/ops/email-ingest.mjs`                  | Email ingest (mbsync + notmuch → Linear issues)             | ANQ-377           |
+| `services/systemd/anqr-email-ingest.service`    | systemd email ingest service                                | ANQ-377           |
+| `services/systemd/anqr-email-ingest.timer`      | systemd email ingest timer (5min)                           | ANQ-377           |
+| `services/systemd/anqr-ops.env`                 | Environment template for secrets                            | ANQ-367 (Phase 6) |
+| `scripts/ops/lib/sonar-linear-sync.mjs`         | SonarQube ↔ Linear per-finding sync (shared module)         | ANQ-378           |
+| `scripts/ops/sonar-linear-audit.mjs`            | Nightly sonar audit (blocking, P1, resolve/promote/requeue) | ANQ-378           |

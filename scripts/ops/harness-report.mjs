@@ -21,57 +21,67 @@
  *   node scripts/ops/harness-report.mjs full
  */
 
-import { execSync } from 'node:child_process';
-import { existsSync, statSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { execSync } from "node:child_process";
+import { existsSync, statSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
+import { resolve, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const ROOT = resolve(__dirname, '..', '..');
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const ROOT = resolve(__dirname, "..", "..");
 
-const OLLAMA_BASE = process.env.OLLAMA_API_BASE || 'http://localhost:11434';
-const PINNED_MODEL = 'qwen3.5:35b-a3b-32t';
+const OLLAMA_BASE = process.env.OLLAMA_API_BASE || "http://localhost:11434";
+const PINNED_MODEL = "qwen3.5:35b-a3b-32t";
 const PING_TIMEOUT_MS = 5_000;
 const DOCS_FRESHNESS_DAYS = 30;
 
 const PROFILES = {
-  quick: ['repo-structure', 'typecheck', 'lint', 'cspell-coverage', 'ast-density'],
-  continuous: ['repo-structure', 'ollama-health', 'litellm-routing'],
+  quick: ["repo-structure", "typecheck", "lint", "cspell-coverage", "ast-density"],
+  continuous: ["repo-structure", "ollama-health", "litellm-routing"],
   full: [
-    'repo-structure',
-    'typecheck',
-    'lint',
-    'test-unit',
-    'depcruise',
-    'cspell-coverage',
-    'ast-density',
-    'docs-freshness',
-    'ollama-health',
-    'litellm-routing',
-    'sonar-audit',
+    "repo-structure",
+    "typecheck",
+    "lint",
+    "test-unit",
+    "depcruise",
+    "cspell-coverage",
+    "ast-density",
+    "docs-freshness",
+    "ollama-health",
+    "litellm-routing",
+    "sonar-audit",
   ],
 };
 
-const REQUIRED_DIRS = [
-  'src',
-  'docs',
-  'scripts/ops',
-  'reports',
-];
+const REQUIRED_DIRS = ["src", "docs", "scripts/ops", "reports"];
 
 const REQUIRED_FILES = [
-  'tsconfig.json',
-  'package.json',
-  'vite.config.ts',
-  '.dependency-cruiser.cjs',
-  'oxlint.json',
+  "tsconfig.json",
+  "package.json",
+  "vite.config.ts",
+  ".dependency-cruiser.cjs",
+  "oxlint.json",
 ];
 
 const ALLOWED_ROOT_DIRS = new Set([
-  'apps', 'packages', 'src', 'tests', 'tools', 'netlify',
-  'android', 'ios', 'docs', 'scripts', 'services', 'reports',
-  'node_modules', '.git', 'dist', 'coverage', 'public',
-  'test-results', 'playwright-report',
+  "apps",
+  "packages",
+  "src",
+  "tests",
+  "tools",
+  "netlify",
+  "android",
+  "ios",
+  "docs",
+  "scripts",
+  "services",
+  "reports",
+  "node_modules",
+  ".git",
+  "dist",
+  "coverage",
+  "public",
+  "test-results",
+  "playwright-report",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -98,16 +108,17 @@ function checkRepoStructure() {
   const topLevel = readdirSync(ROOT, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
-  const unexpected = topLevel.filter((d) => !ALLOWED_ROOT_DIRS.has(d) && !d.startsWith('.'));
+  const unexpected = topLevel.filter((d) => !ALLOWED_ROOT_DIRS.has(d) && !d.startsWith("."));
   if (unexpected.length > 0) {
-    issues.push(`unexpected root directories: ${unexpected.join(', ')}`);
+    issues.push(`unexpected root directories: ${unexpected.join(", ")}`);
   }
 
   return {
     pass: issues.length === 0,
-    detail: issues.length === 0
-      ? `All required dirs/files present, no unexpected root directories`
-      : issues.join('; '),
+    detail:
+      issues.length === 0
+        ? `All required dirs/files present, no unexpected root directories`
+        : issues.join("; "),
   };
 }
 
@@ -115,43 +126,44 @@ function checkNpmScript(scriptName, label) {
   try {
     execSync(`npm run ${scriptName}`, {
       cwd: ROOT,
-      stdio: 'pipe',
+      stdio: "pipe",
       timeout: 120_000,
-      env: { ...process.env, FORCE_COLOR: '0' },
+      env: { ...process.env, FORCE_COLOR: "0" },
     });
     return { pass: true, detail: `${label} passed` };
   } catch (err) {
-    const stderr = err.stderr ? err.stderr.toString().trim() : '';
-    const stdout = err.stdout ? err.stdout.toString().trim() : '';
+    const stderr = err.stderr ? err.stderr.toString().trim() : "";
+    const stdout = err.stdout ? err.stdout.toString().trim() : "";
     const output = stderr || stdout;
-    const lines = output.split('\n');
-    const summary = lines.length > 5
-      ? lines.slice(0, 3).join('\n') + `\n... (${lines.length - 3} more lines)`
-      : output;
+    const lines = output.split("\n");
+    const summary =
+      lines.length > 5
+        ? lines.slice(0, 3).join("\n") + `\n... (${lines.length - 3} more lines)`
+        : output;
     return { pass: false, detail: `${label} failed: ${summary || `exit code ${err.status}`}` };
   }
 }
 
 function checkTypecheck() {
-  return checkNpmScript('typecheck', 'tsc --noEmit');
+  return checkNpmScript("typecheck", "tsc --noEmit");
 }
 
 function checkLint() {
-  return checkNpmScript('lint', 'oxlint');
+  return checkNpmScript("lint", "oxlint");
 }
 
 function checkTestUnit() {
-  return checkNpmScript('test:unit', 'vitest');
+  return checkNpmScript("test:unit", "vitest");
 }
 
 function checkDepcruise() {
-  return checkNpmScript('depcruise', 'dependency-cruiser');
+  return checkNpmScript("depcruise", "dependency-cruiser");
 }
 
 function checkDocsFreshness() {
-  const docsDir = resolve(ROOT, 'docs');
+  const docsDir = resolve(ROOT, "docs");
   if (!existsSync(docsDir)) {
-    return { pass: false, detail: 'docs/ directory missing' };
+    return { pass: false, detail: "docs/ directory missing" };
   }
 
   const staleFiles = [];
@@ -162,7 +174,7 @@ function checkDocsFreshness() {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
         walk(full);
-      } else if (entry.name.endsWith('.md')) {
+      } else if (entry.name.endsWith(".md")) {
         const mtime = statSync(full).mtimeMs;
         if (mtime < cutoff) {
           const rel = full.slice(ROOT.length + 1);
@@ -180,10 +192,10 @@ function checkDocsFreshness() {
   }
 
   const shown = staleFiles.slice(0, 5);
-  const suffix = staleFiles.length > 5 ? ` ... and ${staleFiles.length - 5} more` : '';
+  const suffix = staleFiles.length > 5 ? ` ... and ${staleFiles.length - 5} more` : "";
   return {
     pass: false,
-    detail: `${staleFiles.length} stale docs (>${DOCS_FRESHNESS_DAYS}d): ${shown.join(', ')}${suffix}`,
+    detail: `${staleFiles.length} stale docs (>${DOCS_FRESHNESS_DAYS}d): ${shown.join(", ")}${suffix}`,
   };
 }
 
@@ -206,7 +218,10 @@ async function checkOllamaHealth() {
     if (found) {
       return { pass: true, detail: `Ollama v${data.version} running, ${PINNED_MODEL} available` };
     }
-    return { pass: false, detail: `Ollama v${data.version} running but ${PINNED_MODEL} not found. Available: ${models.join(', ') || 'none'}` };
+    return {
+      pass: false,
+      detail: `Ollama v${data.version} running but ${PINNED_MODEL} not found. Available: ${models.join(", ") || "none"}`,
+    };
   } catch (err) {
     return { pass: false, detail: `Ollama unreachable at ${OLLAMA_BASE}: ${err.message}` };
   }
@@ -214,49 +229,56 @@ async function checkOllamaHealth() {
 
 function checkAstDensity() {
   try {
-    const output = execSync('node scripts/audit-ast-density.mjs --threshold 1', {
-      cwd: ROOT, timeout: 120_000, stdio: 'pipe', encoding: 'utf-8',
-      env: { ...process.env, FORCE_COLOR: '0' },
+    const output = execSync("node scripts/audit-ast-density.mjs --threshold 1", {
+      cwd: ROOT,
+      timeout: 120_000,
+      stdio: "pipe",
+      encoding: "utf-8",
+      env: { ...process.env, FORCE_COLOR: "0" },
     });
     if (output.trim().length === 0) {
-      return { pass: true, detail: 'All files within density threshold (≤1 top-level declaration)' };
+      return {
+        pass: true,
+        detail: "All files within density threshold (≤1 top-level declaration)",
+      };
     }
-    const lines = output.trim().split('\n');
+    const lines = output.trim().split("\n");
     const fileSummary = lines
       .slice(0, 5)
       .map((l) => l.trim().split(/\s+/)[1])
-      .join(', ');
-    const suffix = lines.length > 5 ? ` ... and ${lines.length - 5} more` : '';
+      .join(", ");
+    const suffix = lines.length > 5 ? ` ... and ${lines.length - 5} more` : "";
     return {
       pass: false,
       detail: `${lines.length} files exceed density threshold: ${fileSummary}${suffix}`,
     };
   } catch (err) {
-    const stderr = (err.stderr || '').toString().trim();
+    const stderr = (err.stderr || "").toString().trim();
     return { pass: false, detail: `AST density audit error: ${stderr.slice(0, 500)}` };
   }
 }
 
 async function checkSonarAudit() {
   const SONAR_TOKEN = process.env.SONAR_TOKEN;
-  const SONAR_HOST = process.env.SONAR_HOST_URL || 'http://localhost:9000';
+  const SONAR_HOST = process.env.SONAR_HOST_URL || "http://localhost:9000";
 
   if (!SONAR_TOKEN) {
-    return { pass: true, detail: 'SONAR_TOKEN not set — skipped' };
+    return { pass: true, detail: "SONAR_TOKEN not set — skipped" };
   }
 
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
-    const authHeader = `Basic ${Buffer.from(SONAR_TOKEN + ':').toString('base64')}`;
+    const authHeader = `Basic ${Buffer.from(SONAR_TOKEN + ":").toString("base64")}`;
     const headers = { Authorization: authHeader };
 
     const statusRes = await fetch(`${SONAR_HOST}/api/system/status`, {
-      signal: controller.signal, headers,
+      signal: controller.signal,
+      headers,
     });
     clearTimeout(timer);
     const status = await statusRes.json();
-    if (status.status !== 'UP') {
+    if (status.status !== "UP") {
       return { pass: true, detail: `SonarQube status: ${status.status} — skipped` };
     }
 
@@ -267,10 +289,9 @@ async function checkSonarAudit() {
     const issuesData = await issuesRes.json();
     const totalIssues = issuesData.total || 0;
 
-    const hotRes = await fetch(
-      `${SONAR_HOST}/api/hotspots/search?projectKey=anqr&ps=1`,
-      { headers },
-    );
+    const hotRes = await fetch(`${SONAR_HOST}/api/hotspots/search?projectKey=anqr&ps=1`, {
+      headers,
+    });
     const hotData = await hotRes.json();
     const totalHotspots = hotData.paging?.total || 0;
 
@@ -281,9 +302,9 @@ async function checkSonarAudit() {
     const measData = await measRes.json();
     const measures = (measData.component?.measures || [])
       .map((m) => `${m.metric}=${m.value}`)
-      .join(', ');
+      .join(", ");
 
-    const detail = `Issues: ${totalIssues}, Hotspots: ${totalHotspots}${measures ? ` | ${measures}` : ''}`;
+    const detail = `Issues: ${totalIssues}, Hotspots: ${totalHotspots}${measures ? ` | ${measures}` : ""}`;
     return { pass: true, detail };
   } catch (err) {
     return { pass: true, detail: `SonarQube unreachable: ${err.message}` };
@@ -292,29 +313,34 @@ async function checkSonarAudit() {
 
 function checkCspellCoverage() {
   // cspell writes its summary to stderr — merge with 2>&1 so we can always parse it
-  const cmd = 'npx cspell --no-progress "src/**/*.{ts,tsx}" "scripts/**/*.{mjs,js}" "docs/**/*.md" 2>&1';
+  const cmd =
+    'npx cspell --no-progress "src/**/*.{ts,tsx}" "scripts/**/*.{mjs,js}" "docs/**/*.md" 2>&1';
   try {
     const output = execSync(cmd, {
-      cwd: ROOT, timeout: 120_000, stdio: 'pipe', encoding: 'utf-8',
-      env: { ...process.env, FORCE_COLOR: '0' },
+      cwd: ROOT,
+      timeout: 120_000,
+      stdio: "pipe",
+      encoding: "utf-8",
+      env: { ...process.env, FORCE_COLOR: "0" },
     });
     const summaryMatch = output.match(/Files checked:\s*(\d+)/);
-    const filesChecked = summaryMatch ? summaryMatch[1] : '?';
+    const filesChecked = summaryMatch ? summaryMatch[1] : "?";
     return { pass: true, detail: `${filesChecked} files checked, 0 spelling issues` };
   } catch (err) {
-    const output = (err.stdout || '').toString();
+    const output = (err.stdout || "").toString();
 
     const summaryMatch = output.match(/Files checked:\s*(\d+).*Issues found:\s*(\d+)\s*in\s*(\d+)/);
-    const filesChecked = summaryMatch ? summaryMatch[1] : '?';
-    const issueCount = summaryMatch ? summaryMatch[2] : '?';
-    const fileCount = summaryMatch ? summaryMatch[3] : '?';
+    const filesChecked = summaryMatch ? summaryMatch[1] : "?";
+    const issueCount = summaryMatch ? summaryMatch[2] : "?";
+    const fileCount = summaryMatch ? summaryMatch[3] : "?";
 
     const wordMatches = [...output.matchAll(/Unknown word \(([^)]+)\)/g)];
     const uniqueWords = [...new Set(wordMatches.map((m) => m[1]))].sort();
 
-    const wordSummary = uniqueWords.length <= 10
-      ? uniqueWords.join(', ')
-      : uniqueWords.slice(0, 10).join(', ') + ` ... and ${uniqueWords.length - 10} more`;
+    const wordSummary =
+      uniqueWords.length <= 10
+        ? uniqueWords.join(", ")
+        : uniqueWords.slice(0, 10).join(", ") + ` ... and ${uniqueWords.length - 10} more`;
 
     return {
       pass: false,
@@ -324,27 +350,33 @@ function checkCspellCoverage() {
 }
 
 function checkLitellmRouting() {
-  const configPath = resolve(ROOT, 'scripts/ops/litellm-config.yaml');
+  const configPath = resolve(ROOT, "scripts/ops/litellm-config.yaml");
   if (!existsSync(configPath)) {
-    return { pass: false, detail: 'litellm-config.yaml missing' };
+    return { pass: false, detail: "litellm-config.yaml missing" };
   }
 
-  const content = readFileSync(configPath, 'utf-8');
+  const content = readFileSync(configPath, "utf-8");
 
-  if (!content.includes('symphony-local')) {
-    return { pass: false, detail: 'litellm-config.yaml missing symphony-local alias' };
+  if (!content.includes("symphony-local")) {
+    return { pass: false, detail: "litellm-config.yaml missing symphony-local alias" };
   }
 
   if (!content.includes(PINNED_MODEL)) {
-    return { pass: false, detail: `litellm-config.yaml does not reference pinned model ${PINNED_MODEL}` };
+    return {
+      pass: false,
+      detail: `litellm-config.yaml does not reference pinned model ${PINNED_MODEL}`,
+    };
   }
 
-  const proxyPath = resolve(ROOT, 'scripts/ops/model-injector-proxy.py');
+  const proxyPath = resolve(ROOT, "scripts/ops/model-injector-proxy.py");
   if (!existsSync(proxyPath)) {
-    return { pass: false, detail: 'model-injector-proxy.py missing' };
+    return { pass: false, detail: "model-injector-proxy.py missing" };
   }
 
-  return { pass: true, detail: 'LiteLLM config valid, symphony-local alias present, injector proxy exists' };
+  return {
+    pass: true,
+    detail: "LiteLLM config valid, symphony-local alias present, injector proxy exists",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -352,17 +384,17 @@ function checkLitellmRouting() {
 // ---------------------------------------------------------------------------
 
 const CHECKS = {
-  'repo-structure': { fn: checkRepoStructure, async: false },
-  'typecheck': { fn: checkTypecheck, async: false },
-  'lint': { fn: checkLint, async: false },
-  'test-unit': { fn: checkTestUnit, async: false },
-  'depcruise': { fn: checkDepcruise, async: false },
-  'docs-freshness': { fn: checkDocsFreshness, async: false },
-  'ollama-health': { fn: checkOllamaHealth, async: true },
-  'litellm-routing': { fn: checkLitellmRouting, async: false },
-  'cspell-coverage': { fn: checkCspellCoverage, async: false },
-  'ast-density': { fn: checkAstDensity, async: false },
-  'sonar-audit': { fn: checkSonarAudit, async: true },
+  "repo-structure": { fn: checkRepoStructure, async: false },
+  typecheck: { fn: checkTypecheck, async: false },
+  lint: { fn: checkLint, async: false },
+  "test-unit": { fn: checkTestUnit, async: false },
+  depcruise: { fn: checkDepcruise, async: false },
+  "docs-freshness": { fn: checkDocsFreshness, async: false },
+  "ollama-health": { fn: checkOllamaHealth, async: true },
+  "litellm-routing": { fn: checkLitellmRouting, async: false },
+  "cspell-coverage": { fn: checkCspellCoverage, async: false },
+  "ast-density": { fn: checkAstDensity, async: false },
+  "sonar-audit": { fn: checkSonarAudit, async: true },
 };
 
 // ---------------------------------------------------------------------------
@@ -388,11 +420,11 @@ async function runCheck(name) {
 }
 
 async function main() {
-  const profile = process.argv[2] || 'quick';
+  const profile = process.argv[2] || "quick";
 
   if (!PROFILES[profile]) {
     console.error(`Unknown profile: ${profile}`);
-    console.error(`Available profiles: ${Object.keys(PROFILES).join(', ')}`);
+    console.error(`Available profiles: ${Object.keys(PROFILES).join(", ")}`);
     process.exit(2);
   }
 
@@ -402,10 +434,11 @@ async function main() {
   const results = [];
   for (const name of checkNames) {
     const result = await runCheck(name);
-    const icon = result.pass ? '✅' : '❌';
-    const timing = result.duration_ms > 1000
-      ? `${(result.duration_ms / 1000).toFixed(1)}s`
-      : `${result.duration_ms}ms`;
+    const icon = result.pass ? "✅" : "❌";
+    const timing =
+      result.duration_ms > 1000
+        ? `${(result.duration_ms / 1000).toFixed(1)}s`
+        : `${result.duration_ms}ms`;
     console.log(`${icon} ${result.name} (${timing}): ${result.detail}`);
     results.push(result);
   }
@@ -423,15 +456,17 @@ async function main() {
     checks: results,
   };
 
-  const reportsDir = resolve(ROOT, 'reports');
+  const reportsDir = resolve(ROOT, "reports");
   if (!existsSync(reportsDir)) {
     mkdirSync(reportsDir, { recursive: true });
   }
 
-  const reportPath = resolve(reportsDir, 'latest.json');
-  writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
+  const reportPath = resolve(reportsDir, "latest.json");
+  writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
 
-  console.log(`\n[harness-report] ${passed}/${total} passed, ${failed} failed (${(total_duration_ms / 1000).toFixed(1)}s)`);
+  console.log(
+    `\n[harness-report] ${passed}/${total} passed, ${failed} failed (${(total_duration_ms / 1000).toFixed(1)}s)`,
+  );
   console.log(`[harness-report] report written to reports/latest.json`);
 
   process.exit(failed > 0 ? 1 : 0);

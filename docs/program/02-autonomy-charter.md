@@ -307,4 +307,3 @@ However:
 
 - full history must remain recoverable
 - rollback must always be possible.
-

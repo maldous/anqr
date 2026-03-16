@@ -1,6 +1,7 @@
 # UI/UX Critical Flows
 
 ## Objective
+
 Define the journeys that matter most for launch and ongoing UX review.
 
 ---

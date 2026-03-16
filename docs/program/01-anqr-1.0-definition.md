@@ -9,25 +9,30 @@ Define the first maintained public architecture release.
 # Required launch platforms
 
 ### Web
+
 - Must function across all major modern browsers.
 - Must support full QR generation, analysis, gallery, sharing, and export capabilities.
 - Must act as the primary public interface for ANQR.
 
 ### API
+
 - Public API hosted on Netlify.
 - Currently unauthenticated and not rate limited.
 - Intended to support enterprise integrations in the future.
 - Must expose QR generation and related services reliably.
 
 ### Android
+
 - Native Android application must support the full generation and analysis pipeline.
 - Must perform reliably across a wide range of Android devices, including lower-capability hardware.
 
 ### iPhone
+
 - Native iOS application must support the same core capabilities as Android.
 - Rendering results must be consistent with the web platform and API.
 
 ### Other
+
 - No additional platforms are required for the 1.0 launch.
 
 ---
@@ -35,6 +40,7 @@ Define the first maintained public architecture release.
 # Required launch capabilities
 
 ### QR generation
+
 - Core QR generation engine must be complete and stable.
 - Must support:
   - standard QR codes
@@ -44,32 +50,39 @@ Define the first maintained public architecture release.
 - Generation logic must behave consistently across platforms.
 
 ### QR analysis
+
 - Ability to analyze QR codes for scannability and structure.
 - Must support validation and diagnostics.
 - Significant functionality already implemented.
 
 ### Gallery / showcase
+
 - System automatically generates a gallery used for demonstration and testing.
 - Gallery serves both marketing and validation purposes.
 
 ### Sharing / export
+
 - Users must be able to export generated QR codes.
 - Must integrate with major sharing targets including social media platforms.
 
 ### Monetization
+
 - Primary monetization model is advertising.
 - AdMob integration exists.
 - Google AdWords/Ads may be introduced once approval hurdles are resolved.
 
 ### Analytics
+
 - Google Analytics and other third-party analytics platforms are integrated.
 - Analytics must track usage, performance, and platform behavior.
 
 ### Observability
+
 - Sentry is used for runtime monitoring and error tracking.
 - Additional analytics platforms may supplement monitoring.
 
 ### Support / contact path
+
 - Support contact must always be available via email.
 - Primary contact channel: `email@anqr.link`
 
@@ -78,11 +91,13 @@ Define the first maintained public architecture release.
 # Explicit non-goals
 
 ### Not in 1.0
+
 No explicit exclusions have been defined at this stage.
 
 The primary focus of 1.0 is completing the core platform and establishing operational stability.
 
 ### Deferred until later
+
 Future enterprise features may be introduced later, including:
 
 - enterprise authentication
@@ -90,6 +105,7 @@ Future enterprise features may be introduced later, including:
 - advanced enterprise integrations
 
 ### Experimental only
+
 Experimental work may occur in areas such as:
 
 - advanced AI-assisted QR rendering

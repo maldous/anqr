@@ -1,24 +1,24 @@
-import boundaries from 'eslint-plugin-boundaries';
-import tseslint from 'typescript-eslint';
+import boundaries from "eslint-plugin-boundaries";
+import tseslint from "typescript-eslint";
 
 export default [
   {
     ignores: [
-      'dist/**',
-      'node_modules/**',
-      'android/**',
-      'ios/**',
-      '.github/**',
-      'coverage/**',
-      'public/**',
-      '*.generated.*',
+      "dist/**",
+      "node_modules/**",
+      "android/**",
+      "ios/**",
+      ".github/**",
+      "coverage/**",
+      "public/**",
+      "*.generated.*",
     ],
   },
   {
-    files: ['src/**/*.{ts,tsx}', 'packages/**/*.{ts,tsx}', 'apps/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
     rules: {
-      'no-var': 'error',
-      'prefer-const': 'error',
+      "no-var": "error",
+      "prefer-const": "error",
     },
   },
 
@@ -26,76 +26,76 @@ export default [
   // Complements dependency-cruiser with real-time IDE feedback.
   // Authority: docs/standards/dependency-rules.md
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}"],
     plugins: { boundaries },
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
+        ecmaVersion: "latest",
+        sourceType: "module",
       },
     },
     linterOptions: {
       noInlineConfig: true,
-      reportUnusedDisableDirectives: 'off',
+      reportUnusedDisableDirectives: "off",
     },
     settings: {
-      'import/resolver': {
+      "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
         },
       },
-      'boundaries/elements': [
-        { type: 'app', pattern: 'src/app/**' },
-        { type: 'ui', pattern: 'src/ui/**' },
-        { type: 'components', pattern: 'src/components/**' },
-        { type: 'features', pattern: 'src/features/*/**', capture: ['feature'] },
-        { type: 'state', pattern: 'src/state/**' },
-        { type: 'domain', pattern: 'src/domain/**' },
-        { type: 'platform', pattern: 'src/platform/**' },
-        { type: 'infra', pattern: 'src/infra/**' },
-        { type: 'content', pattern: 'src/content/**' },
-        { type: 'i18n', pattern: 'src/i18n/**' },
+      "boundaries/elements": [
+        { type: "app", pattern: "src/app/**" },
+        { type: "ui", pattern: "src/ui/**" },
+        { type: "components", pattern: "src/components/**" },
+        { type: "features", pattern: "src/features/*/**", capture: ["feature"] },
+        { type: "state", pattern: "src/state/**" },
+        { type: "domain", pattern: "src/domain/**" },
+        { type: "platform", pattern: "src/platform/**" },
+        { type: "infra", pattern: "src/infra/**" },
+        { type: "content", pattern: "src/content/**" },
+        { type: "i18n", pattern: "src/i18n/**" },
         // Transitional broad-bucket directories are intentionally unclassified.
         // Imports from/to store/, hooks/, lib/, data/, types/, modules/ are
         // governed by dependency-cruiser rules, not eslint-boundaries.
       ],
     },
     rules: {
-      'boundaries/element-types': [
-        'warn',
+      "boundaries/element-types": [
+        "warn",
         {
-          default: 'disallow',
+          default: "disallow",
           rules: [
             // ── app/ ────────────────────────────────────────────────
             // app → features, ui, components, state, infra, platform, content, i18n
             // app → domain kept disallowed: 1 inherited violation (visible reminder)
             {
-              from: 'app',
+              from: "app",
               allow: [
-                'app',
-                'features',
-                'ui',
-                'components',
-                'state',
-                'infra',
-                'platform',
-                'content',
-                'i18n',
+                "app",
+                "features",
+                "ui",
+                "components",
+                "state",
+                "infra",
+                "platform",
+                "content",
+                "i18n",
               ],
             },
 
             // ── ui/ ─────────────────────────────────────────────────
             // Presentation-only (architecture-standards.md).
             // infra allowed for cross-cutting telemetry/logging (zaraz, auto-testid).
-            { from: 'ui', allow: ['ui', 'infra'] },
+            { from: "ui", allow: ["ui", "infra"] },
 
             // ── components/ (transitional ui layer) ─────────────────
             // Inherited debt allowed to reduce noise — tracked in depcruise.
             // Effective guards: no state, domain, or i18n imports.
             {
-              from: 'components',
-              allow: ['components', 'ui', 'features', 'platform', 'app', 'infra', 'content'],
+              from: "components",
+              allow: ["components", "ui", "features", "platform", "app", "infra", "content"],
             },
 
             // ── features/ ───────────────────────────────────────────
@@ -103,47 +103,47 @@ export default [
             // Inherited debt: ~45 features → app (allowed to reduce noise)
             // 'features' intentionally omitted — cross-feature guard handled by capture rule below.
             {
-              from: 'features',
+              from: "features",
               allow: [
-                'ui',
-                'components',
-                'state',
-                'domain',
-                'platform',
-                'infra',
-                'content',
-                'i18n',
-                'app',
+                "ui",
+                "components",
+                "state",
+                "domain",
+                "platform",
+                "infra",
+                "content",
+                "i18n",
+                "app",
               ],
             },
             // Same feature only — no cross-feature imports
             {
-              from: [['features', { feature: '*' }]],
-              allow: [['features', { feature: '${from.feature}' }]],
+              from: [["features", { feature: "*" }]],
+              allow: [["features", { feature: "${from.feature}" }]],
             },
 
             // ── state/ ──────────────────────────────────────────────
             // Clean boundary (0 inherited violations)
-            { from: 'state', allow: ['state', 'domain', 'infra'] },
+            { from: "state", allow: ["state", "domain", "infra"] },
 
             // ── domain/ ─────────────────────────────────────────────
             // Must stay runtime-agnostic
             // domain → platform kept disallowed: 4 inherited violations (visible reminder)
-            { from: 'domain', allow: ['domain', 'infra'] },
+            { from: "domain", allow: ["domain", "infra"] },
 
             // ── platform/ ───────────────────────────────────────────
             // Clean boundary (0 inherited violations)
-            { from: 'platform', allow: ['platform', 'domain', 'infra'] },
+            { from: "platform", allow: ["platform", "domain", "infra"] },
 
             // ── infra/ ──────────────────────────────────────────────
             // Cross-cutting only, no domain logic
-            { from: 'infra', allow: ['infra'] },
+            { from: "infra", allow: ["infra"] },
 
             // ── content/ ────────────────────────────────────────────
-            { from: 'content', allow: ['content', 'i18n'] },
+            { from: "content", allow: ["content", "i18n"] },
 
             // ── i18n/ ───────────────────────────────────────────────
-            { from: 'i18n', allow: ['i18n', 'content', 'infra'] },
+            { from: "i18n", allow: ["i18n", "content", "infra"] },
           ],
         },
       ],

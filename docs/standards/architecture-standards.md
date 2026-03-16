@@ -34,11 +34,11 @@ See `docs/02-repo-skeleton.md` for the full target tree.
 - deployable application targets
 - thin shells that compose packages
 
-| Directory | Description |
-|---|---|
-| `apps/web/` | Vite SPA — primary web application |
-| `apps/api/` | API surface (future — current serverless functions live in `netlify/`) |
-| `apps/mobile/` | Capacitor mobile shell |
+| Directory      | Description                                                            |
+| -------------- | ---------------------------------------------------------------------- |
+| `apps/web/`    | Vite SPA — primary web application                                     |
+| `apps/api/`    | API surface (future — current serverless functions live in `netlify/`) |
+| `apps/mobile/` | Capacitor mobile shell                                                 |
 
 **Allowed dependencies:**
 
@@ -57,16 +57,16 @@ See `docs/02-repo-skeleton.md` for the full target tree.
 - shared reusable architecture
 - target location for code extracted from `src/`
 
-| Package | Subdirectories | Layer |
-|---|---|---|
-| `packages/domain/` | qr, render, payload, analyze, share | domain |
-| `packages/application/` | generator, analyze, gallery, onboarding, monetization | application |
-| `packages/ui/` | web, mobile, design-tokens | ui |
-| `packages/platform/` | browser, node, native, worker | platform |
-| `packages/observability/` | logging, telemetry, sentry | infra |
-| `packages/analytics/` | ga4, ads | infra |
-| `packages/testing/` | fixtures, fakes, contracts, parity, playwright | testing (non-runtime) |
-| `packages/config/` | eslint, tsconfig, depcruise, build | tooling (non-runtime) |
+| Package                   | Subdirectories                                        | Layer                 |
+| ------------------------- | ----------------------------------------------------- | --------------------- |
+| `packages/domain/`        | qr, render, payload, analyze, share                   | domain                |
+| `packages/application/`   | generator, analyze, gallery, onboarding, monetization | application           |
+| `packages/ui/`            | web, mobile, design-tokens                            | ui                    |
+| `packages/platform/`      | browser, node, native, worker                         | platform              |
+| `packages/observability/` | logging, telemetry, sentry                            | infra                 |
+| `packages/analytics/`     | ga4, ads                                              | infra                 |
+| `packages/testing/`       | fixtures, fakes, contracts, parity, playwright        | testing (non-runtime) |
+| `packages/config/`        | eslint, tsconfig, depcruise, build                    | tooling (non-runtime) |
 
 **Rules:**
 
@@ -87,11 +87,11 @@ The layer rules below govern `src/` during the transition period.
 
 - integration, smoke, and scenario tests that span multiple packages or apps
 
-| Directory | Description |
-|---|---|
-| `tests/unit/` | cross-cutting unit test bootstrap |
-| `tests/smoke/` | post-deploy smoke tests |
-| `tests/scenarios/` | multi-step integration scenarios |
+| Directory          | Description                       |
+| ------------------ | --------------------------------- |
+| `tests/unit/`      | cross-cutting unit test bootstrap |
+| `tests/smoke/`     | post-deploy smoke tests           |
+| `tests/scenarios/` | multi-step integration scenarios  |
 
 Colocated `*.spec.ts` files remain preferred for package-level and feature-level unit tests.
 
@@ -102,24 +102,24 @@ Colocated `*.spec.ts` files remain preferred for package-level and feature-level
 - local operating engine — not deployed to production
 - all automation scripts executed by systemd timers or manually
 
-| Directory / File | Description |
-|---|---|
-| `scripts/ops/symphony-runner.mjs` | execution orchestrator (picks issues, runs agent) |
-| `scripts/ops/symphony-agent.mjs` | tool-calling AI agent (Ollama) |
-| `scripts/ops/symphony-config.mjs` | centralized queue/execution config |
-| `scripts/ops/symphony-credit-gate.mjs` | provider cascade (credit gate) |
-| `scripts/ops/symphony-queue-control.mjs` | queue feeder, drain, enforcement |
-| `scripts/ops/symphony/WORKFLOW.md` | agent system prompt (versioned) |
-| `scripts/ops/linear-client.mjs` | Linear API helpers |
-| `scripts/ops/linear-guardian.mjs` | rule-based issue management |
-| `scripts/ops/harness-report.mjs` | deterministic health checks |
-| `scripts/ops/nightly-ops-pass.mjs` | nightly orchestration pipeline |
-| `scripts/ops/notify.mjs` | notification dispatch (stdout + email) |
-| `scripts/ops/lib/notify.mjs` | email helper (msmtp + rate limiting) |
-| `scripts/ops/email-ingest.mjs` | email-to-issue ingest (mbsync + notmuch) |
-| `scripts/ops/ollama-local-audit.mjs` | model health verification |
-| `scripts/ops/litellm-config.yaml` | local model aliases |
-| `scripts/ops/model-injector-proxy.py` | request normalization |
+| Directory / File                         | Description                                       |
+| ---------------------------------------- | ------------------------------------------------- |
+| `scripts/ops/symphony-runner.mjs`        | execution orchestrator (picks issues, runs agent) |
+| `scripts/ops/symphony-agent.mjs`         | tool-calling AI agent (Ollama)                    |
+| `scripts/ops/symphony-config.mjs`        | centralized queue/execution config                |
+| `scripts/ops/symphony-credit-gate.mjs`   | provider cascade (credit gate)                    |
+| `scripts/ops/symphony-queue-control.mjs` | queue feeder, drain, enforcement                  |
+| `scripts/ops/symphony/WORKFLOW.md`       | agent system prompt (versioned)                   |
+| `scripts/ops/linear-client.mjs`          | Linear API helpers                                |
+| `scripts/ops/linear-guardian.mjs`        | rule-based issue management                       |
+| `scripts/ops/harness-report.mjs`         | deterministic health checks                       |
+| `scripts/ops/nightly-ops-pass.mjs`       | nightly orchestration pipeline                    |
+| `scripts/ops/notify.mjs`                 | notification dispatch (stdout + email)            |
+| `scripts/ops/lib/notify.mjs`             | email helper (msmtp + rate limiting)              |
+| `scripts/ops/email-ingest.mjs`           | email-to-issue ingest (mbsync + notmuch)          |
+| `scripts/ops/ollama-local-audit.mjs`     | model health verification                         |
+| `scripts/ops/litellm-config.yaml`        | local model aliases                               |
+| `scripts/ops/model-injector-proxy.py`    | request normalization                             |
 
 **Rules:**
 
@@ -133,10 +133,10 @@ Colocated `*.spec.ts` files remain preferred for package-level and feature-level
 
 - serverless functions and edge functions deployed to Netlify
 
-| Directory | Description |
-|---|---|
-| `netlify/functions/` | server-side QR rendering, background processing |
-| `netlify/edge-functions/` | SEO and request-time transformations |
+| Directory                 | Description                                     |
+| ------------------------- | ----------------------------------------------- |
+| `netlify/functions/`      | server-side QR rendering, background processing |
+| `netlify/edge-functions/` | SEO and request-time transformations            |
 
 **Allowed dependencies:**
 
@@ -152,12 +152,12 @@ Target location is `apps/android/` and `apps/ios/` per `docs/02-repo-skeleton.md
 
 ### docs/
 
-| Directory | Description |
-|---|---|
-| `docs/program/` | program charter, definitions, policies |
-| `docs/discovery/` | technical discovery and analysis |
+| Directory         | Description                            |
+| ----------------- | -------------------------------------- |
+| `docs/program/`   | program charter, definitions, policies |
+| `docs/discovery/` | technical discovery and analysis       |
 | `docs/standards/` | architecture and engineering standards |
-| `docs/adr/` | architecture decision records |
+| `docs/adr/`       | architecture decision records          |
 
 ## Layer Structure
 

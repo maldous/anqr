@@ -1,6 +1,7 @@
 # Corrective Healing Policy
 
 ## Objective
+
 Define how **self-healing** (stability) and **self-improving** (evolution) changes are allowed to occur inside the ANQR autonomous system.
 
 The policy ensures that the system can operate continuously with minimal human intervention while maintaining safety, observability, and reversibility.
@@ -45,83 +46,89 @@ Self-improving changes typically generate **issues, proposals, or pull requests*
 # Allowed Automatic Corrective Actions
 
 ## Action
+
 Retry failed task
 
 - Trigger:
-Temporary failure during pipeline execution.
+  Temporary failure during pipeline execution.
 
 - Evidence:
-Execution logs and retry records.
+  Execution logs and retry records.
 
 - Rollback:
-Abort retry cycle and restore original task state.
+  Abort retry cycle and restore original task state.
 
 - Human notification:
-Only if retry attempts exceed retry limits.
+  Only if retry attempts exceed retry limits.
 
 ---
 
 ## Action
+
 Failover to alternate model/provider
 
 - Trigger:
-Provider state marked **degraded**, **blocked**, or **cooling-down**.
+  Provider state marked **degraded**, **blocked**, or **cooling-down**.
 
 - Evidence:
-Provider health monitoring and failure logs.
+  Provider health monitoring and failure logs.
 
 - Rollback:
-Return to preferred provider once healthy.
+  Return to preferred provider once healthy.
 
 - Human notification:
-If failover persists beyond expected recovery time.
+  If failover persists beyond expected recovery time.
 
 ---
 
 ## Action
+
 Automatic rollback of failed deployment
 
 - Trigger:
-Post-deployment monitoring detects failure signals.
+  Post-deployment monitoring detects failure signals.
 
 Examples:
+
 - crash spike
 - build failure
 - broken pipeline state
 
 - Evidence:
-Sentry alerts, CI results, deployment telemetry.
+  Sentry alerts, CI results, deployment telemetry.
 
 - Rollback:
-Restore last known working deployment.
+  Restore last known working deployment.
 
 - Human notification:
-Immediate notification when rollback occurs.
+  Immediate notification when rollback occurs.
 
 ---
 
 ## Action
+
 Restart failed services
 
 - Trigger:
-Worker, pipeline, or runtime process stops responding.
+  Worker, pipeline, or runtime process stops responding.
 
 - Evidence:
-System logs and health checks.
+  System logs and health checks.
 
 - Rollback:
-Return to previous stable runtime state.
+  Return to previous stable runtime state.
 
 - Human notification:
-Only if restart attempts repeatedly fail.
+  Only if restart attempts repeatedly fail.
 
 ---
 
 ## Action
+
 Create incident issue
 
 - Trigger:
-Detected failures such as:
+  Detected failures such as:
 
 - build failures
 - deployment failures
@@ -129,154 +136,163 @@ Detected failures such as:
 - monitoring alerts
 
 - Evidence:
-Logs, traces, or monitoring data attached to issue.
+  Logs, traces, or monitoring data attached to issue.
 
 - Rollback:
-Issue closed once root cause resolved.
+  Issue closed once root cause resolved.
 
 - Human notification:
-Yes, via issue tracker and email if critical.
+  Yes, via issue tracker and email if critical.
 
 ---
 
 ## Action
+
 Update issue status
 
 - Trigger:
-Work progress detected through pipeline execution.
+  Work progress detected through pipeline execution.
 
 - Evidence:
-Execution logs and commit history.
+  Execution logs and commit history.
 
 - Rollback:
-Manual issue state restoration if needed.
+  Manual issue state restoration if needed.
 
 - Human notification:
-Not required.
+  Not required.
 
 ---
 
 ## Action
+
 Guardrail enforcement
 
 - Trigger:
-Violation of defined policy such as:
+  Violation of defined policy such as:
 
 - unauthorized cost usage
 - unsafe deployment attempt
 - repeated failed tasks
 
 - Evidence:
-Policy enforcement logs.
+  Policy enforcement logs.
 
 - Rollback:
-Cancel blocked action.
+  Cancel blocked action.
 
 - Human notification:
-Yes if policy violation persists.
+  Yes if policy violation persists.
 
 ---
 
 ## Action
+
 Automated issue hygiene
 
 - Trigger:
-Issues accumulating excessive failure comments or outdated metadata.
+  Issues accumulating excessive failure comments or outdated metadata.
 
 - Evidence:
-Issue history and event logs.
+  Issue history and event logs.
 
 - Rollback:
-Issue history remains preserved through version history.
+  Issue history remains preserved through version history.
 
 - Human notification:
-Not required unless issue history indicates systemic failure.
+  Not required unless issue history indicates systemic failure.
 
 ---
 
 # Actions Requiring Approval
 
 ## Action
+
 Production deployment
 
 - Why:
-Production changes affect users and platform availability.
+  Production changes affect users and platform availability.
 
 - Approval owner:
-Operator / CEO
+  Operator / CEO
 
 - Rollback:
-Immediate rollback to previous known working release.
+  Immediate rollback to previous known working release.
 
 ---
 
 ## Action
+
 Major architecture change
 
 - Why:
-Structural changes could affect long-term maintainability or platform stability.
+  Structural changes could affect long-term maintainability or platform stability.
 
 - Approval owner:
-Operator / CEO
+  Operator / CEO
 
 - Rollback:
-Restore previous architecture through version control.
+  Restore previous architecture through version control.
 
 ---
 
 ## Action
+
 User-facing UX change
 
 - Why:
-UX changes affect how users interact with the product and may require design judgment.
+  UX changes affect how users interact with the product and may require design judgment.
 
 - Approval owner:
-Operator / CEO
+  Operator / CEO
 
 - Rollback:
-Restore previous UI behavior or layout.
+  Restore previous UI behavior or layout.
 
 ---
 
 ## Action
+
 Major pipeline redesign
 
 - Why:
-Changes to the autonomous engineering harness could destabilize the system.
+  Changes to the autonomous engineering harness could destabilize the system.
 
 - Approval owner:
-Operator / CEO
+  Operator / CEO
 
 - Rollback:
-Restore prior pipeline configuration.
+  Restore prior pipeline configuration.
 
 ---
 
 ## Action
+
 Provider or model strategy change
 
 - Why:
-Switching AI providers or models may affect reliability, cost, or behavior.
+  Switching AI providers or models may affect reliability, cost, or behavior.
 
 - Approval owner:
-Operator / CEO
+  Operator / CEO
 
 - Rollback:
-Return to previously configured providers.
+  Return to previously configured providers.
 
 ---
 
 ## Action
+
 Escalation of persistent failures
 
 - Why:
-If tasks fail repeatedly or issues accumulate excessive failure evidence, the system may be fundamentally misconfigured.
+  If tasks fail repeatedly or issues accumulate excessive failure evidence, the system may be fundamentally misconfigured.
 
 - Approval owner:
-Operator / CEO
+  Operator / CEO
 
 - Rollback:
-Restore previous working configuration and close problematic issue threads.
+  Restore previous working configuration and close problematic issue threads.
 
 ---
 

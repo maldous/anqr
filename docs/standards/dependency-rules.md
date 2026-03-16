@@ -4,29 +4,29 @@
 
 Dependencies must follow the layer direction only.
 
-| Layer | May depend on | Must not depend on |
-|---|---|---|
-| **app/** | features, ui, state, infra, platform, content | domain (directly) |
-| **ui/** | ui, narrow styling helpers | domain, platform, state, features, app |
-| **features/** | ui, state, domain, platform, infra, content | other features' implementation details |
-| **state/** | domain, infra | ui, app, platform |
-| **domain/** | other domain modules, infra abstractions | React, browser APIs, native APIs, worker APIs, app/components |
-| **platform/** | domain, infra | ui, features, app |
-| **infra/** | cross-cutting only | business/domain logic |
-| **content/** | static/generated resources only | almost no executable logic |
+| Layer         | May depend on                                 | Must not depend on                                            |
+| ------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| **app/**      | features, ui, state, infra, platform, content | domain (directly)                                             |
+| **ui/**       | ui, narrow styling helpers                    | domain, platform, state, features, app                        |
+| **features/** | ui, state, domain, platform, infra, content   | other features' implementation details                        |
+| **state/**    | domain, infra                                 | ui, app, platform                                             |
+| **domain/**   | other domain modules, infra abstractions      | React, browser APIs, native APIs, worker APIs, app/components |
+| **platform/** | domain, infra                                 | ui, features, app                                             |
+| **infra/**    | cross-cutting only                            | business/domain logic                                         |
+| **content/**  | static/generated resources only               | almost no executable logic                                    |
 
 ## Cross-root dependency direction
 
 Dependencies between root directories follow a strict direction.
 
-| Root | May depend on | Must not depend on |
-|---|---|---|
-| **apps/\*** | packages/\* | other apps, src/ (post-extraction), tools/, netlify/ |
-| **packages/\*** | other packages (following layer rules) | apps/, src/, tools/, netlify/ |
-| **netlify/\*** | packages/domain, packages/platform/node, packages/observability | apps/, src/ (post-extraction), tools/ |
-| **tests/\*** | packages/\*, apps/\* (as test subjects) | tools/ |
-| **tools/\*** | no production constraints (operational tooling) | — |
-| **src/\*** | packages/\* (progressive adoption), src/ layers (existing rules) | apps/ |
+| Root            | May depend on                                                    | Must not depend on                                   |
+| --------------- | ---------------------------------------------------------------- | ---------------------------------------------------- |
+| **apps/\***     | packages/\*                                                      | other apps, src/ (post-extraction), tools/, netlify/ |
+| **packages/\*** | other packages (following layer rules)                           | apps/, src/, tools/, netlify/                        |
+| **netlify/\***  | packages/domain, packages/platform/node, packages/observability  | apps/, src/ (post-extraction), tools/                |
+| **tests/\***    | packages/\*, apps/\* (as test subjects)                          | tools/                                               |
+| **tools/\***    | no production constraints (operational tooling)                  | —                                                    |
+| **src/\***      | packages/\* (progressive adoption), src/ layers (existing rules) | apps/                                                |
 
 During transition, `src/` may import from both `src/` layers and `packages/*`. As extraction progresses, `src/` internal imports are replaced with `packages/*` imports until `src/` is fully dissolved.
 
@@ -79,10 +79,10 @@ Unclear ownership means the file should be split.
 
 The repo carries (or will carry) both enforcement mechanisms:
 
-| Tool | Scope |
-|---|---|
+| Tool                 | Scope                                                           |
+| -------------------- | --------------------------------------------------------------- |
 | `dependency-cruiser` | Import graph, circular dependencies, forbidden dependency rules |
-| `eslint-boundaries` | Layer and folder boundary policing |
+| `eslint-boundaries`  | Layer and folder boundary policing                              |
 
 Current state:
 

@@ -23,9 +23,9 @@
  *   1 = error reading report or communicating with Linear
  */
 
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFileSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createIssue,
   updateIssue,
@@ -35,56 +35,56 @@ import {
   listIssuesByState,
   STATES,
   LABELS,
-} from './linear-client.mjs';
+} from "./linear-client.mjs";
 import {
   TARGET_MAX,
   STALE_THRESHOLD_MS,
   TITLE_PREFIX,
   REQUIRED_LABEL_IDS,
-} from './symphony-config.mjs';
+} from "./symphony-config.mjs";
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const ROOT = resolve(__dirname, '..', '..');
-const REPORT_PATH = resolve(ROOT, 'reports/latest.json');
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const ROOT = resolve(__dirname, "..", "..");
+const REPORT_PATH = resolve(ROOT, "reports/latest.json");
 
 const CHECK_METADATA = {
-  'repo-structure': {
-    summary: 'Repository structure violation detected',
+  "repo-structure": {
+    summary: "Repository structure violation detected",
     priority: 2,
     extraLabels: [],
   },
-  'typecheck': {
-    summary: 'TypeScript typecheck failure',
+  typecheck: {
+    summary: "TypeScript typecheck failure",
     priority: 2,
     extraLabels: [],
   },
-  'lint': {
-    summary: 'Lint violations detected (oxlint)',
+  lint: {
+    summary: "Lint violations detected (oxlint)",
     priority: 3,
     extraLabels: [],
   },
-  'test-unit': {
-    summary: 'Unit test failure (vitest)',
+  "test-unit": {
+    summary: "Unit test failure (vitest)",
     priority: 1,
     extraLabels: [LABELS.bug],
   },
-  'depcruise': {
-    summary: 'Dependency graph violation (dependency-cruiser)',
+  depcruise: {
+    summary: "Dependency graph violation (dependency-cruiser)",
     priority: 2,
     extraLabels: [],
   },
-  'docs-freshness': {
-    summary: 'Documentation freshness check failed',
+  "docs-freshness": {
+    summary: "Documentation freshness check failed",
     priority: 4,
     extraLabels: [],
   },
-  'ollama-health': {
-    summary: 'Ollama model health check failed',
+  "ollama-health": {
+    summary: "Ollama model health check failed",
     priority: 2,
     extraLabels: [],
   },
-  'litellm-routing': {
-    summary: 'LiteLLM routing configuration invalid',
+  "litellm-routing": {
+    summary: "LiteLLM routing configuration invalid",
     priority: 2,
     extraLabels: [],
   },
@@ -97,33 +97,33 @@ function buildIssueTitle(checkName) {
 function buildIssueBody(check, report) {
   const lines = [
     `## ${CHECK_METADATA[check.name]?.summary || check.name}`,
-    '',
+    "",
     `**Check:** \`${check.name}\``,
     `**Profile:** ${report.profile}`,
     `**Detected:** ${report.timestamp}`,
     `**Duration:** ${check.duration_ms}ms`,
-    '',
-    '### Detail',
-    '',
-    '```',
+    "",
+    "### Detail",
+    "",
+    "```",
     check.detail,
-    '```',
-    '',
-    '---',
-    '*Auto-created by linear-guardian.mjs*',
+    "```",
+    "",
+    "---",
+    "*Auto-created by linear-guardian.mjs*",
   ];
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function buildCommentBody(check, report) {
   const lines = [
     `**Still failing** as of ${report.timestamp} (profile: ${report.profile})`,
-    '',
-    '```',
+    "",
+    "```",
     check.detail,
-    '```',
+    "```",
   ];
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function isStale(issue) {
@@ -151,8 +151,8 @@ const actions = [];
 function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };
   actions.push(entry);
-  const icons = { create: '🆕', comment: '💬', hygiene: '🏷️', skip: '⏭️', stale: '⏰', info: 'ℹ️' };
-  console.log(`${icons[type] || '•'} ${type}: ${detail}`);
+  const icons = { create: "🆕", comment: "💬", hygiene: "🏷️", skip: "⏭️", stale: "⏰", info: "ℹ️" };
+  console.log(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 
 async function processFailingCheck(check, report, queueDepth, dryRun) {
@@ -167,19 +167,19 @@ async function processFailingCheck(check, report, queueDepth, dryRun) {
     const body = buildCommentBody(check, report);
 
     if (dryRun) {
-      logAction('comment', `[DRY RUN] Would comment on ${issue.identifier}: ${title}`);
+      logAction("comment", `[DRY RUN] Would comment on ${issue.identifier}: ${title}`);
     } else {
       await addComment(issue.id, body);
-      logAction('comment', `Commented on ${issue.identifier}: ${title}`);
+      logAction("comment", `Commented on ${issue.identifier}: ${title}`);
     }
 
     if (issueNeedsLabelHygiene(issue)) {
       const labels = mergedLabelIds(issue);
       if (dryRun) {
-        logAction('hygiene', `[DRY RUN] Would enforce labels on ${issue.identifier}`);
+        logAction("hygiene", `[DRY RUN] Would enforce labels on ${issue.identifier}`);
       } else {
         await updateIssue(issue.id, { labelIds: labels });
-        logAction('hygiene', `Enforced labels on ${issue.identifier}`);
+        logAction("hygiene", `Enforced labels on ${issue.identifier}`);
       }
     }
 
@@ -187,7 +187,7 @@ async function processFailingCheck(check, report, queueDepth, dryRun) {
   }
 
   if (queueDepth >= TARGET_MAX) {
-    logAction('skip', `Queue full (${queueDepth}/${TARGET_MAX}), skipping: ${title}`);
+    logAction("skip", `Queue full (${queueDepth}/${TARGET_MAX}), skipping: ${title}`);
     return;
   }
 
@@ -201,10 +201,13 @@ async function processFailingCheck(check, report, queueDepth, dryRun) {
   };
 
   if (dryRun) {
-    logAction('create', `[DRY RUN] Would create: ${title} (P${meta.priority}, ${labelIds.length} labels)`);
+    logAction(
+      "create",
+      `[DRY RUN] Would create: ${title} (P${meta.priority}, ${labelIds.length} labels)`,
+    );
   } else {
     const issue = await createIssue(input);
-    logAction('create', `Created ${issue.identifier}: ${title}`);
+    logAction("create", `Created ${issue.identifier}: ${title}`);
   }
 
   queueDepth++;
@@ -212,16 +215,22 @@ async function processFailingCheck(check, report, queueDepth, dryRun) {
 }
 
 async function checkStaleIssues(dryRun) {
-  const inProgress = await listIssuesByState(['In Progress']);
+  const inProgress = await listIssuesByState(["In Progress"]);
   const stale = inProgress.filter(isStale);
 
   for (const issue of stale) {
     const age = Math.floor((Date.now() - new Date(issue.updatedAt).getTime()) / 60_000);
     if (dryRun) {
-      logAction('stale', `[DRY RUN] Would escalate ${issue.identifier}: stale ${age}min (${issue.title})`);
+      logAction(
+        "stale",
+        `[DRY RUN] Would escalate ${issue.identifier}: stale ${age}min (${issue.title})`,
+      );
     } else {
-      await addComment(issue.id, `⏰ **Stale execution detected** — no update for ${age} minutes. Escalating.`);
-      logAction('stale', `Escalated ${issue.identifier}: stale ${age}min (${issue.title})`);
+      await addComment(
+        issue.id,
+        `⏰ **Stale execution detected** — no update for ${age} minutes. Escalating.`,
+      );
+      logAction("stale", `Escalated ${issue.identifier}: stale ${age}min (${issue.title})`);
     }
   }
 
@@ -233,46 +242,50 @@ async function checkStaleIssues(dryRun) {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
+  const dryRun = process.argv.includes("--dry-run");
 
-  console.log(`[linear-guardian]${dryRun ? ' (DRY RUN)' : ''} starting\n`);
+  console.log(`[linear-guardian]${dryRun ? " (DRY RUN)" : ""} starting\n`);
 
   if (!existsSync(REPORT_PATH)) {
     console.error(`[linear-guardian] No report found at ${REPORT_PATH}`);
-    console.error('[linear-guardian] Run harness-report.mjs first.');
+    console.error("[linear-guardian] Run harness-report.mjs first.");
     process.exit(1);
   }
 
-  const report = JSON.parse(readFileSync(REPORT_PATH, 'utf-8'));
+  const report = JSON.parse(readFileSync(REPORT_PATH, "utf-8"));
   const failures = report.checks.filter((c) => !c.pass);
 
-  console.log(`[linear-guardian] Report: ${report.profile} profile, ${report.summary.passed}/${report.summary.total} passed, ${failures.length} failures`);
+  console.log(
+    `[linear-guardian] Report: ${report.profile} profile, ${report.summary.passed}/${report.summary.total} passed, ${failures.length} failures`,
+  );
   console.log(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
 
   if (failures.length === 0) {
-    logAction('info', 'No harness failures — nothing to do');
+    logAction("info", "No harness failures — nothing to do");
     printSummary();
     process.exit(0);
   }
 
   const queue = await getQueueDepth();
   let currentDepth = queue.automatable;
-  console.log(`[linear-guardian] Queue depth: ${currentDepth} automatable / ${queue.total} total (max: ${TARGET_MAX})\n`);
+  console.log(
+    `[linear-guardian] Queue depth: ${currentDepth} automatable / ${queue.total} total (max: ${TARGET_MAX})\n`,
+  );
 
   for (const check of failures) {
     const newDepth = await processFailingCheck(check, report, currentDepth, dryRun);
-    if (typeof newDepth === 'number') {
+    if (typeof newDepth === "number") {
       currentDepth = newDepth;
     }
   }
 
-  console.log('');
+  console.log("");
   const staleCount = await checkStaleIssues(dryRun);
   if (staleCount === 0) {
-    logAction('info', 'No stale in-progress issues');
+    logAction("info", "No stale in-progress issues");
   }
 
-  console.log('');
+  console.log("");
   printSummary();
   process.exit(0);
 }
@@ -283,7 +296,7 @@ function printSummary() {
     counts[a.type] = (counts[a.type] || 0) + 1;
   }
   const parts = Object.entries(counts).map(([k, v]) => `${k}=${v}`);
-  console.log(`[linear-guardian] Summary: ${parts.join(', ') || 'no actions'}`);
+  console.log(`[linear-guardian] Summary: ${parts.join(", ") || "no actions"}`);
 }
 
 main();

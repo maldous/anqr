@@ -1,169 +1,153 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-/**
- * nightly-ops-pass.mjs — Nightly operations orchestration
- *
- * Orchestrates the full nightly pipeline:
- *   1. Run harness-report.mjs (full profile)
- *   2. AST density audit (detailed standalone output)
- *   3. Sonar scanner analysis + report export
- *   4. Sonar Linear audit (blocking — creates critical issues)
- *   5. Run symphony-queue-control.mjs (--all)
- *   6. Run linear-guardian.mjs
- *   7. Run notify.mjs
- *   8. Archive report to reports/ with timestamp
- *
- * Designed to run under systemd timer (see services/systemd/).
- *
- * Legacy lesson: PATH and runtime environment under systemd differ from
- * interactive shells. The systemd unit must set explicit PATH, HOME, and
- * NODE_PATH to avoid nightly failures.
- *
- * Usage:
- *   LINEAR_API_KEY=... node scripts/ops/nightly-ops-pass.mjs
- *   LINEAR_API_KEY=... node scripts/ops/nightly-ops-pass.mjs --dry-run
- *
- * Exit code:
- *   0 = all steps completed (some checks may have failed)
- *   1 = orchestration error
- */
+import { execSync } from "node:child_process";
+import { existsSync, copyFileSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { execSync } from 'node:child_process';
-import { existsSync, copyFileSync, mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const ROOT = resolve(__dirname, '..', '..');
-const REPORTS_DIR = resolve(ROOT, 'reports');
-const LATEST_REPORT = resolve(REPORTS_DIR, 'latest.json');
-
-const dryRun = process.argv.includes('--dry-run');
-const dryRunFlag = dryRun ? ' --dry-run' : '';
-
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const ROOT = resolve(__dirname, "..", "..");
+const REPORTS_DIR = resolve(ROOT, "reports");
+const LATEST_REPORT = resolve(REPORTS_DIR, "latest.json");
+const dryRun = process.argv.includes("--dry-run");
+const dryRunFlag = dryRun ? " --dry-run" : "";
 const steps = [];
 
-function runStep(name, command, timeout = 300_000) {
+function runStep(step) {
   const start = Date.now();
-  console.log(`\n${'='.repeat(60)}`);
-  console.log(`[nightly] Step: ${name}`);
-  console.log(`[nightly] Command: ${command}`);
-  console.log('='.repeat(60) + '\n');
+  console.log(`\n${"=".repeat(60)}`);
+  console.log(`[nightly] Step: ${step.name}`);
+  console.log(`[nightly] Command: ${step.command}`);
+  console.log("=".repeat(60) + "\n");
 
   let exitCode = 0;
+  const skipped = false;
   try {
-    execSync(command, {
+    execSync(step.command, {
       cwd: ROOT,
-      stdio: 'inherit',
-      timeout,
-      env: { ...process.env, FORCE_COLOR: '0' },
+      stdio: "inherit",
+      timeout: step.timeout || 300_000,
+      env: { ...process.env, FORCE_COLOR: "0" },
     });
   } catch (err) {
     exitCode = err.status || 1;
   }
-
-  const duration_ms = Date.now() - start;
-  const result = { name, exitCode, duration_ms };
+  const result = {
+    name: step.name,
+    exitCode,
+    duration_ms: Date.now() - start,
+    severity: step.severity,
+    skipped,
+  };
   steps.push(result);
-
-  const icon = exitCode === 0 ? '✅' : '⚠️';
-  const timing = duration_ms > 1000
-    ? `${(duration_ms / 1000).toFixed(1)}s`
-    : `${duration_ms}ms`;
-  console.log(`\n${icon} [nightly] ${name}: exit=${exitCode} (${timing})`);
-
-  return exitCode;
+  console.log(`\n${exitCode === 0 ? "✅" : "⚠️"} [nightly] ${step.name}: exit=${exitCode}`);
+  return result;
 }
 
 function archiveReport() {
-  if (!existsSync(LATEST_REPORT)) {
-    console.log('[nightly] No report to archive');
-    return;
-  }
-
-  const archiveDir = resolve(REPORTS_DIR, 'archive');
-  if (!existsSync(archiveDir)) {
-    mkdirSync(archiveDir, { recursive: true });
-  }
-
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
+  if (!existsSync(LATEST_REPORT)) return;
+  const archiveDir = resolve(REPORTS_DIR, "archive");
+  if (!existsSync(archiveDir)) mkdirSync(archiveDir, { recursive: true });
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").slice(0, 19);
   const archivePath = resolve(archiveDir, `report-${ts}.json`);
   copyFileSync(LATEST_REPORT, archivePath);
-  console.log(`[nightly] Report archived to reports/archive/report-${ts}.json`);
+  console.log(`[nightly] Report archived to ${archivePath}`);
 }
 
 function printSummary() {
-  console.log(`\n${'='.repeat(60)}`);
-  console.log('[nightly] Pipeline summary');
-  console.log('='.repeat(60));
-
-  const totalDuration = steps.reduce((sum, s) => sum + s.duration_ms, 0);
-  const passed = steps.filter((s) => s.exitCode === 0).length;
-  const failed = steps.filter((s) => s.exitCode !== 0).length;
-
+  console.log(`\n${"=".repeat(60)}`);
+  console.log("[nightly] Pipeline summary");
+  console.log("=".repeat(60));
   for (const step of steps) {
-    const icon = step.exitCode === 0 ? '✅' : '⚠️';
-    const timing = step.duration_ms > 1000
-      ? `${(step.duration_ms / 1000).toFixed(1)}s`
-      : `${step.duration_ms}ms`;
-    console.log(`  ${icon} ${step.name}: exit=${step.exitCode} (${timing})`);
+    console.log(
+      `  ${step.exitCode === 0 ? "✅" : "⚠️"} ${step.name}: exit=${step.exitCode} (${(step.duration_ms / 1000).toFixed(1)}s) [${step.severity}]`,
+    );
   }
-
-  console.log(`\n[nightly] ${passed}/${steps.length} steps clean, ${failed} with warnings (${(totalDuration / 1000).toFixed(1)}s total)`);
 }
 
 async function main() {
-  const startTime = Date.now();
-  console.log(`[nightly]${dryRun ? ' (DRY RUN)' : ''} starting at ${new Date().toISOString()}`);
-  console.log(`[nightly] project root: ${ROOT}`);
+  console.log(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+  const plan = [
+    {
+      name: "harness-report",
+      command: "node scripts/ops/harness-report.mjs full",
+      severity: "advisory",
+    },
+    {
+      name: "ast-density",
+      command:
+        'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'',
+      severity: "advisory",
+    },
+    ...(process.env.SONAR_TOKEN
+      ? [
+          {
+            name: "sonar-scan",
+            command: "NODE_OPTIONS='' SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
+            severity: "blocking",
+            timeout: 600_000,
+          },
+          { name: "sonar-export", command: "bash scripts/sonar-export.sh", severity: "blocking" },
+          ...(dryRun
+            ? []
+            : [
+                {
+                  name: "sonar-linear-audit",
+                  command: "node scripts/ops/sonar-linear-audit.mjs",
+                  severity: "blocking",
+                },
+              ]),
+        ]
+      : []),
+    {
+      name: "queue-control",
+      command: `node scripts/ops/symphony-queue-control.mjs --all${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
+      name: "guardian",
+      command: `node scripts/ops/linear-guardian.mjs${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
+      name: "notify",
+      command: `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`,
+      severity: "independent",
+    },
+  ];
 
-  // Step 1: Harness report (full profile)
-  // Exit code 1 is expected if checks fail — continue regardless
-  runStep('harness-report', 'node scripts/ops/harness-report.mjs full');
-
-  // Step 2: AST density audit (standalone — detailed output for nightly log)
-  // The script exits 0 even with violations (output on stdout), so pipe through
-  // a check that fails if any output is produced.
-  runStep('ast-density', 'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'');
-
-  // Step 3: Sonar scanner analysis + report export
-  // Sonar scanner can take 10+ minutes on a full codebase — use extended timeout
-  if (process.env.SONAR_TOKEN) {
-    runStep('sonar-scan', "NODE_OPTIONS='' SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner", 600_000);
-    runStep('sonar-export', 'bash scripts/sonar-export.sh');
-
-    // Step 4: Sonar Linear audit (blocking — creates/updates critical Linear issues)
-    if (!dryRun) {
-      runStep('sonar-linear-audit', 'node scripts/ops/sonar-linear-audit.mjs');
-    } else {
-      console.log('\n[nightly] (DRY RUN) Skipping sonar-linear-audit — would create/update Linear issues');
+  let hardFailure = false;
+  let degraded = false;
+  for (const step of plan) {
+    if (hardFailure && step.severity === "blocking") {
+      console.log(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
+      steps.push({
+        name: step.name,
+        exitCode: 99,
+        duration_ms: 0,
+        severity: step.severity,
+        skipped: true,
+      });
+      continue;
     }
-  } else {
-    console.log('\n[nightly] SONAR_TOKEN not set — skipping sonar steps');
+    const result = runStep(step);
+    if (result.exitCode !== 0) {
+      if (step.severity === "blocking") {
+        hardFailure = true;
+        degraded = true;
+      } else if (step.severity === "advisory") {
+        degraded = true;
+      }
+    }
   }
 
-  // Step 5: Queue control (feed, drain, enforce)
-  runStep('queue-control', `node scripts/ops/symphony-queue-control.mjs --all${dryRunFlag}`);
-
-  // Step 6: Guardian (process harness failures)
-  runStep('guardian', `node scripts/ops/linear-guardian.mjs${dryRunFlag}`);
-
-  // Step 7: Notify (dispatch summary)
-  runStep('notify', `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`);
-
-  // Step 8: Archive report
-  console.log(`\n${'='.repeat(60)}`);
-  console.log('[nightly] Step: archive-report');
-  console.log('='.repeat(60));
   archiveReport();
-
-  // Summary
   printSummary();
-
-  const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`\n[nightly] completed in ${totalTime}s at ${new Date().toISOString()}`);
-  process.exit(0);
+  process.exit(hardFailure || degraded ? 1 : 0);
 }
 
-main();
+main().catch((err) => {
+  console.error(`[nightly] Fatal: ${err.message}`);
+  process.exit(1);
+});

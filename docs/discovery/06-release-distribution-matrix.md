@@ -1,14 +1,15 @@
 # Release and Distribution Matrix
 
 ## Objective
+
 Define how changes move from local to users.
 
-| Target | Build path | Approval | Signing | Distribution | Rollback | Notes |
-|---|---|---|---|---|---|---|
-| Web | Local dev → GitHub push → Netlify build | Automatic for preview; Operator approval for prod | Netlify-managed deploy identity | Netlify CDN + Cloudflare edge | Redeploy previous Netlify build | PWA build via Vite; preview deploys on PRs |
-| API | Local dev → GitHub push → Netlify Functions build | Operator approval for prod | Netlify deploy identity | Netlify serverless endpoints behind Cloudflare | Redeploy previous Netlify build | Public API currently unauthenticated |
-| Android | Local dev → Capacitor build → Gradle build → APK/AAB | Operator approval before store upload | Android signing key (local keystore) | Google Play (internal → testing → production tracks) | Rollback via previous Play Store release | AdMob integration; mobile parity required |
-| iOS | Local dev → Capacitor build → Xcode build → IPA | Operator approval before TestFlight/App Store | Apple certificates + App Store Connect keys | TestFlight → App Store | Rollback via App Store previous version | TestFlight used for internal testers |
+| Target  | Build path                                           | Approval                                          | Signing                                     | Distribution                                         | Rollback                                 | Notes                                      |
+| ------- | ---------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| Web     | Local dev → GitHub push → Netlify build              | Automatic for preview; Operator approval for prod | Netlify-managed deploy identity             | Netlify CDN + Cloudflare edge                        | Redeploy previous Netlify build          | PWA build via Vite; preview deploys on PRs |
+| API     | Local dev → GitHub push → Netlify Functions build    | Operator approval for prod                        | Netlify deploy identity                     | Netlify serverless endpoints behind Cloudflare       | Redeploy previous Netlify build          | Public API currently unauthenticated       |
+| Android | Local dev → Capacitor build → Gradle build → APK/AAB | Operator approval before store upload             | Android signing key (local keystore)        | Google Play (internal → testing → production tracks) | Rollback via previous Play Store release | AdMob integration; mobile parity required  |
+| iOS     | Local dev → Capacitor build → Xcode build → IPA      | Operator approval before TestFlight/App Store     | Apple certificates + App Store Connect keys | TestFlight → App Store                               | Rollback via App Store previous version  | TestFlight used for internal testers       |
 
 ---
 

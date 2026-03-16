@@ -29,17 +29,19 @@
  *   - State files live in /run/user/ for crash recovery
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   RUNNER_OLLAMA_MODEL,
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PROVIDER_FAILURE_WINDOW_SECS,
-} from './symphony-config.mjs';
+} from "./symphony-config.mjs";
 
-const uid = process.getuid?.() ?? 1000;
-const STATE_DIR = `/run/user/${uid}/symphony-runner`;
-const FAILURE_STATE_FILE = resolve(STATE_DIR, 'provider-failures.json');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(__dirname, "../..");
+const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
+const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 
 const PROBE_TIMEOUT_MS = 5_000;
 
@@ -62,7 +64,7 @@ async function probeWithTimeout(url, options = {}) {
 
 async function probeOpenAIModels(baseUrl, model, apiKey) {
   const res = await probeWithTimeout(`${baseUrl}/models`, {
-    headers: { 'Authorization': `Bearer ${apiKey}` },
+    headers: { Authorization: `Bearer ${apiKey}` },
   });
   if (!res || !res.ok) return false;
   const text = await res.text();
@@ -79,11 +81,11 @@ async function probeGeminiModels(apiKey, model) {
 }
 
 async function probeGitHubModels(apiKey, model) {
-  const res = await probeWithTimeout('https://models.github.ai/catalog/models', {
+  const res = await probeWithTimeout("https://models.github.ai/catalog/models", {
     headers: {
-      'Accept': 'application/vnd.github+json',
-      'Authorization': `Bearer ${apiKey}`,
-      'X-GitHub-Api-Version': '2022-11-28',
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${apiKey}`,
+      "X-GitHub-Api-Version": "2022-11-28",
     },
   });
   if (!res || !res.ok) return false;
@@ -92,9 +94,7 @@ async function probeGitHubModels(apiKey, model) {
 }
 
 async function probeOllama() {
-  const res = await probeWithTimeout(
-    `${RUNNER_OLLAMA_BASE_URL.replace('/v1', '')}/api/tags`,
-  );
+  const res = await probeWithTimeout(`${RUNNER_OLLAMA_BASE_URL.replace("/v1", "")}/api/tags`);
   if (!res || !res.ok) return false;
   try {
     const data = await res.json();
@@ -111,75 +111,95 @@ async function probeOllama() {
 
 const PROVIDERS = [
   {
-    name: 'codex',
-    model: 'gpt-5.4',
-    baseUrl: 'https://api.openai.com/v1',
-    envVar: 'OPENAI_API_KEY',
+    name: "codex",
+    model: "gpt-5.4",
+    baseUrl: "https://api.openai.com/v1",
+    envVar: "OPENAI_API_KEY",
     useMaxCompletionTokens: true,
-    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+    probe(apiKey) {
+      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
+    },
   },
   {
-    name: 'groq',
-    model: 'llama-3.3-70b-versatile',
-    baseUrl: 'https://api.groq.com/openai/v1',
-    envVar: 'GROQ_TOKEN',
-    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+    name: "groq",
+    model: "llama-3.3-70b-versatile",
+    baseUrl: "https://api.groq.com/openai/v1",
+    envVar: "GROQ_TOKEN",
+    probe(apiKey) {
+      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
+    },
   },
   {
-    name: 'mistral',
-    model: 'devstral-small-2507',
-    baseUrl: 'https://api.mistral.ai/v1',
-    envVar: 'MISTRAL_TOKEN',
-    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+    name: "mistral",
+    model: "devstral-small-2507",
+    baseUrl: "https://api.mistral.ai/v1",
+    envVar: "MISTRAL_TOKEN",
+    probe(apiKey) {
+      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
+    },
   },
   {
-    name: 'gemini',
-    model: 'gemini-2.5-flash',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    envVar: 'GEMINI_TOKEN',
-    probe(apiKey) { return probeGeminiModels(apiKey, this.model); },
+    name: "gemini",
+    model: "gemini-2.5-flash",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    envVar: "GEMINI_TOKEN",
+    probe(apiKey) {
+      return probeGeminiModels(apiKey, this.model);
+    },
   },
   {
-    name: 'gemini-lite',
-    model: 'gemini-2.5-flash-lite',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    envVar: 'GEMINI_TOKEN',
-    probe(apiKey) { return probeGeminiModels(apiKey, this.model); },
+    name: "gemini-lite",
+    model: "gemini-2.5-flash-lite",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    envVar: "GEMINI_TOKEN",
+    probe(apiKey) {
+      return probeGeminiModels(apiKey, this.model);
+    },
   },
   {
-    name: 'openrouter-free',
-    model: 'meta-llama/llama-3.3-70b-instruct:free',
-    baseUrl: 'https://openrouter.ai/api/v1',
-    envVar: 'OPENROUTER_TOKEN',
-    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+    name: "openrouter-free",
+    model: "meta-llama/llama-3.3-70b-instruct:free",
+    baseUrl: "https://openrouter.ai/api/v1",
+    envVar: "OPENROUTER_TOKEN",
+    probe(apiKey) {
+      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
+    },
   },
   {
-    name: 'sambanova',
-    model: 'Meta-Llama-3.3-70B-Instruct',
-    baseUrl: 'https://api.sambanova.ai/v1',
-    envVar: 'SAMBANOVA_TOKEN',
-    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+    name: "sambanova",
+    model: "Meta-Llama-3.3-70B-Instruct",
+    baseUrl: "https://api.sambanova.ai/v1",
+    envVar: "SAMBANOVA_TOKEN",
+    probe(apiKey) {
+      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
+    },
   },
   {
-    name: 'cerebras',
-    model: 'llama3.1-8b',
-    baseUrl: 'https://api.cerebras.ai/v1',
-    envVar: 'CEREBRAS_TOKEN',
-    probe(apiKey) { return probeOpenAIModels(this.baseUrl, this.model, apiKey); },
+    name: "cerebras",
+    model: "llama3.1-8b",
+    baseUrl: "https://api.cerebras.ai/v1",
+    envVar: "CEREBRAS_TOKEN",
+    probe(apiKey) {
+      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
+    },
   },
   {
-    name: 'github-models',
-    model: 'gpt-4.1-mini',
-    baseUrl: 'https://models.github.ai/inference/v1',
-    envVar: 'GITHUB_MODELS_TOKEN',
-    probe(apiKey) { return probeGitHubModels(apiKey, this.model); },
+    name: "github-models",
+    model: "gpt-4.1-mini",
+    baseUrl: "https://models.github.ai/inference/v1",
+    envVar: "GITHUB_MODELS_TOKEN",
+    probe(apiKey) {
+      return probeGitHubModels(apiKey, this.model);
+    },
   },
   {
-    name: 'ollama-local',
+    name: "ollama-local",
     model: RUNNER_OLLAMA_MODEL,
     baseUrl: RUNNER_OLLAMA_BASE_URL,
     envVar: null,
-    probe() { return probeOllama(); },
+    probe() {
+      return probeOllama();
+    },
   },
 ];
 
@@ -195,7 +215,7 @@ function ensureStateDir() {
 
 function loadFailures() {
   try {
-    return JSON.parse(readFileSync(FAILURE_STATE_FILE, 'utf-8'));
+    return JSON.parse(readFileSync(FAILURE_STATE_FILE, "utf-8"));
   } catch {
     return {};
   }

@@ -1,6 +1,7 @@
 # Performance Budgets and SLOs
 
 ## Objective
+
 Make performance and reliability explicit.
 
 ---
@@ -8,6 +9,7 @@ Make performance and reliability explicit.
 # Product budgets
 
 ### Initial load budget
+
 - Target: ≤ 2 seconds on broadband
 - Mobile target: ≤ 3 seconds on average devices
 - Maximum acceptable: 4 seconds
@@ -18,6 +20,7 @@ Landing page must allow users to generate a QR code immediately.
 ---
 
 ### Interaction latency budget
+
 - UI response: ≤ 100 ms
 - UI update after setting change: ≤ 200 ms
 
@@ -250,4 +253,3 @@ Queue backlog:
 Provider instability:
 
 - AI provider degraded or blocked
-

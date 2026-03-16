@@ -1,6 +1,7 @@
 # Cost and Subscription Policy
 
 ## Objective
+
 Prevent uncontrolled spend and clarify when tools or subscriptions may change.
 
 ANQR is designed to operate as a **minimal-cost or zero-cost system where possible**.  
@@ -13,6 +14,7 @@ Automation may **observe, report, and propose**, but **not commit financial spen
 # Monthly Budget Ceilings
 
 ### infra
+
 Current infrastructure costs are covered by the operator and treated as fixed recurring costs.
 
 The autonomous system should monitor usage but does not need to manage the budget ceiling.
@@ -26,14 +28,15 @@ Any unexpected infrastructure increase.
 ---
 
 ### model / API spend
+
 Model usage must be monitored carefully because it can scale unexpectedly.
 
 Target:
 Prefer:
 
-1. free-tier providers  
-2. low-cost providers  
-3. local models  
+1. free-tier providers
+2. low-cost providers
+3. local models
 
 Paid model usage should remain minimal unless explicitly approved.
 
@@ -43,6 +46,7 @@ Unexpected spikes in model usage or sustained paid model use.
 ---
 
 ### ads
+
 Advertising revenue and experimentation may occur.
 
 Current spend:
@@ -56,6 +60,7 @@ Automation may propose ad strategies but cannot initiate them.
 ---
 
 ### tooling
+
 Current tooling costs are fixed recurring subscriptions paid by the operator.
 
 Target:
@@ -67,6 +72,7 @@ Any proposed paid tool adoption.
 ---
 
 ### stores / mobile
+
 App store fees and developer accounts are managed by the operator.
 
 Automation may prepare store submissions but cannot modify store subscriptions.
@@ -77,6 +83,7 @@ Any detected store fee or subscription change.
 ---
 
 ### other
+
 Any additional costs must be explicitly proposed and approved.
 
 Alert threshold:
@@ -89,6 +96,7 @@ Any unrecognized cost source.
 The autonomous system may perform:
 
 ### zero-cost changes
+
 Examples:
 
 - code changes
@@ -124,6 +132,7 @@ Examples:
 The following actions **require explicit human approval**.
 
 ### new paid subscription
+
 Examples:
 
 - new SaaS tools
@@ -272,4 +281,3 @@ Automation may:
 Automation may **never spend money directly**.
 
 All financial commitments remain under human control.
-

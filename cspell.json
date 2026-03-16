@@ -15,6 +15,13 @@
     "src/i18n/**"
   ],
   "words": [
+    "centiseconds",
+    "codegen",
+    "cooldowns",
+    "precached",
+    "Preflights",
+    "SKRS",
+    "worktree",
     "creds",
     "anqr",
     "depcruise",

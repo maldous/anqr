@@ -1,6 +1,7 @@
 # Analytics, Ads, and Attribution
 
 ## Objective
+
 Define what you measure and why.
 
 ---
@@ -8,6 +9,7 @@ Define what you measure and why.
 # Analytics goals
 
 ### Product usage
+
 Measure how often the platform is used and which capabilities matter.
 
 Metrics:
@@ -109,27 +111,27 @@ Signals:
 
 # Event catalog starters
 
-| Event | Description |
-|---|---|
-| landing_viewed | User lands on homepage |
-| generator_opened | Generator interface opened |
-| qr_render_start | QR generation initiated |
-| qr_render_success | QR successfully generated |
-| qr_render_failure | QR generation error |
-| qr_preview_viewed | Preview/validation panel opened |
-| qr_export_png | PNG export triggered |
-| qr_export_svg | SVG export triggered |
-| qr_share | Share action initiated |
-| gallery_viewed | Gallery opened |
-| gallery_example_opened | Example QR opened |
-| gallery_example_generate | Example used to generate QR |
-| premium_prompt_viewed | Premium monetization prompt shown |
-| premium_conversion | Premium feature purchased |
-| ad_impression | Ad displayed |
-| ad_click | Ad clicked |
-| feedback_opened | Feedback form opened |
-| feedback_submitted | Feedback submitted |
-| support_requested | User requested support |
+| Event                    | Description                       |
+| ------------------------ | --------------------------------- |
+| landing_viewed           | User lands on homepage            |
+| generator_opened         | Generator interface opened        |
+| qr_render_start          | QR generation initiated           |
+| qr_render_success        | QR successfully generated         |
+| qr_render_failure        | QR generation error               |
+| qr_preview_viewed        | Preview/validation panel opened   |
+| qr_export_png            | PNG export triggered              |
+| qr_export_svg            | SVG export triggered              |
+| qr_share                 | Share action initiated            |
+| gallery_viewed           | Gallery opened                    |
+| gallery_example_opened   | Example QR opened                 |
+| gallery_example_generate | Example used to generate QR       |
+| premium_prompt_viewed    | Premium monetization prompt shown |
+| premium_conversion       | Premium feature purchased         |
+| ad_impression            | Ad displayed                      |
+| ad_click                 | Ad clicked                        |
+| feedback_opened          | Feedback form opened              |
+| feedback_submitted       | Feedback submitted                |
+| support_requested        | User requested support            |
 
 ---
 

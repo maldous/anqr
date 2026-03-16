@@ -89,9 +89,17 @@ class InjectorHandler(BaseHTTPRequestHandler):
         acquired = _active_lock.acquire(blocking=False)
         if not acquired:
             log(f"REJECTED {self.path} — concurrent request blocked")
-            self._send_json(429, {
-                "error": "single-agent enforcement: another request is active",
-            })
+            self.send_response(503)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Retry-After", "15")
+            body = json.dumps({
+                "error": "local_busy",
+                "code": "LOCAL_BUSY",
+                "message": "single-agent enforcement: another request is active",
+            }).encode()
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
             return
 
         _active_request = True

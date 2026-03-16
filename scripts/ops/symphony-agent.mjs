@@ -10,6 +10,7 @@
  * Tools available to the agent:
  *   - read_file(path)                — read a project file
  *   - write_file(path, content)      — write/create a file
+ *   - delete_file(path)             — delete a file or directory
  *   - patch_file(path, search, replace) — targeted str_replace
  *   - run_command(command)           — run an allowlisted read-only command
  *   - list_directory(path)           — list directory contents
@@ -30,15 +31,31 @@
  *   - Single-slot Ollama means sequential tool calls only
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'node:fs';
-import { resolve, relative, dirname } from 'node:path';
-import { execSync } from 'node:child_process';
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  readdirSync,
+  statSync,
+  mkdirSync,
+  unlinkSync,
+  rmSync,
+} from "node:fs";
+import { resolve, relative, dirname } from "node:path";
+import { execSync } from "node:child_process";
 import {
   RUNNER_MAX_TURNS,
   RUNNER_MAX_EXECUTION_MS,
   RUNNER_MAX_OUTPUT_TOKENS,
   RUNNER_TURN_BUDGET_WARNING,
-} from './symphony-config.mjs';
+} from "./symphony-config.mjs";
+import {
+  runTypecheck,
+  runLint,
+  runCspell,
+  runAstDensity,
+  runTests,
+} from "./symphony-validation.mjs";
 
 // ---------------------------------------------------------------------------
 // Tool definitions (OpenAI function calling format)
@@ -46,128 +63,171 @@ import {
 
 const TOOL_DEFINITIONS = [
   {
-    type: 'function',
+    type: "function",
     function: {
-      name: 'read_file',
-      description: 'Read a file from the project. Returns the full file content.',
+      name: "read_file",
+      description: "Read a file from the project. Returns the full file content.",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          path: { type: 'string', description: 'File path relative to project root' },
+          path: { type: "string", description: "File path relative to project root" },
         },
-        required: ['path'],
+        required: ["path"],
       },
     },
   },
   {
-    type: 'function',
+    type: "function",
     function: {
-      name: 'write_file',
-      description: 'Write or create a file with the given content. Creates parent directories if needed.',
+      name: "write_file",
+      description:
+        "Write or create a file with the given content. Creates parent directories if needed. Do NOT use this with empty content to delete files — use delete_file instead.",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          path: { type: 'string', description: 'File path relative to project root' },
-          content: { type: 'string', description: 'Complete file content to write' },
+          path: { type: "string", description: "File path relative to project root" },
+          content: { type: "string", description: "Complete file content to write" },
         },
-        required: ['path', 'content'],
+        required: ["path", "content"],
       },
     },
   },
   {
-    type: 'function',
+    type: "function",
     function: {
-      name: 'patch_file',
-      description: 'Make a targeted edit to a file by replacing the first occurrence of a search string with a replacement string. Use this for small, precise edits.',
+      name: "delete_file",
+      description:
+        "Delete a file or directory (recursively) from the project. Use this to remove files — do NOT use write_file with empty content.",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          path: { type: 'string', description: 'File path relative to project root' },
-          search: { type: 'string', description: 'Exact string to find (first occurrence)' },
-          replace: { type: 'string', description: 'Replacement string' },
+          path: { type: "string", description: "File or directory path relative to project root" },
         },
-        required: ['path', 'search', 'replace'],
+        required: ["path"],
       },
     },
   },
   {
-    type: 'function',
+    type: "function",
     function: {
-      name: 'run_command',
-      description: 'Run a read-only shell command. Only allowlisted commands: rg, grep, cat, ls, find, head, tail, wc, tree, file, echo, pwd. No pipes, redirects, or chaining.',
+      name: "patch_file",
+      description:
+        "Make a targeted edit to a file by replacing the first occurrence of a search string with a replacement string. Use this for small, precise edits.",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          command: { type: 'string', description: 'Shell command to run' },
+          path: { type: "string", description: "File path relative to project root" },
+          search: { type: "string", description: "Exact string to find (first occurrence)" },
+          replace: { type: "string", description: "Replacement string" },
         },
-        required: ['command'],
+        required: ["path", "search", "replace"],
       },
     },
   },
   {
-    type: 'function',
+    type: "function",
     function: {
-      name: 'list_directory',
-      description: 'List files and directories at the given path.',
+      name: "run_command",
+      description:
+        "Run a read-only shell command. Only allowlisted commands: rg, grep, cat, ls, find, head, tail, wc, tree, file, echo, pwd. No pipes, redirects, or chaining.",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          path: { type: 'string', description: 'Directory path relative to project root' },
+          command: { type: "string", description: "Shell command to run" },
         },
-        required: ['path'],
+        required: ["command"],
       },
     },
   },
   {
-    type: 'function',
+    type: "function",
     function: {
-      name: 'run_typecheck',
-      description: 'Run the TypeScript compiler (tsc --noEmit) to check for type errors. Returns the compiler output. Always run this after making changes and fix any errors before calling task_complete.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'run_lint',
-      description: 'Run the linter (oxlint) to check for lint errors and warnings. Returns the linter output. Always run this after making changes and fix any errors or warnings before calling task_complete.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'run_cspell',
-      description: 'Run the spell checker (cspell) on source files. Returns any misspelled words. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'run_ast_density',
-      description: 'Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.',
-      parameters: { type: 'object', properties: {} },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'task_complete',
-      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, run_cspell, and run_ast_density first and fix any errors or warnings before calling this.',
+      name: "list_directory",
+      description: "List files and directories at the given path.",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          summary: { type: 'string', description: 'Brief summary of what was changed and why' },
+          path: { type: "string", description: "Directory path relative to project root" },
         },
-        required: ['summary'],
+        required: ["path"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_typecheck",
+      description:
+        "Run the TypeScript compiler (tsc --noEmit) to check for type errors. Returns the compiler output. Always run this after making changes and fix any errors before calling task_complete.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_lint",
+      description:
+        "Run the linter (oxlint) to check for lint errors and warnings. Returns the linter output. Always run this after making changes and fix any errors or warnings before calling task_complete.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_cspell",
+      description:
+        'Run the spell checker (cspell) on source files. Returns any misspelled words. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_ast_density",
+      description:
+        "Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_tests",
+      description:
+        "Run the unit test suite used by the runner. Always run this after making changes and fix any failures before calling task_complete.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "task_complete",
+      description:
+        "Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, run_cspell, and run_ast_density first and fix any errors or warnings before calling this.",
+      parameters: {
+        type: "object",
+        properties: {
+          summary: { type: "string", description: "Brief summary of what was changed and why" },
+        },
+        required: ["summary"],
       },
     },
   },
 ];
 
 const ALLOWED_COMMANDS = new Set([
-  'rg', 'grep', 'cat', 'ls', 'find', 'head', 'tail', 'wc', 'tree', 'file', 'echo', 'pwd',
+  "rg",
+  "grep",
+  "cat",
+  "ls",
+  "find",
+  "head",
+  "tail",
+  "wc",
+  "tree",
+  "file",
+  "echo",
+  "pwd",
 ]);
 
 const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom for large-context turns
@@ -179,10 +239,10 @@ const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom fo
 function validatePath(projectRoot, filePath) {
   const resolved = resolve(projectRoot, filePath);
   const rel = relative(projectRoot, resolved);
-  if (rel.startsWith('..') || resolve(projectRoot, rel) !== resolved) {
+  if (rel.startsWith("..") || resolve(projectRoot, rel) !== resolved) {
     throw new Error(`Path escapes project root: ${filePath}`);
   }
-  if (rel.includes('node_modules') || rel === '.git' || rel.startsWith('.git/')) {
+  if (rel.includes("node_modules") || rel === ".git" || rel.startsWith(".git/")) {
     throw new Error(`Access denied: ${filePath}`);
   }
   return resolved;
@@ -200,7 +260,7 @@ function toolReadFile(projectRoot, args) {
   if (stat.size > 100_000) {
     return `Error: File too large (${stat.size} bytes). Use run_command with head/tail for partial reads.`;
   }
-  return readFileSync(fullPath, 'utf-8');
+  return readFileSync(fullPath, "utf-8");
 }
 
 function toolWriteFile(projectRoot, args) {
@@ -209,8 +269,53 @@ function toolWriteFile(projectRoot, args) {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
-  writeFileSync(fullPath, args.content, 'utf-8');
+  writeFileSync(fullPath, args.content, "utf-8");
   return `Written: ${args.path} (${args.content.length} chars)`;
+}
+
+function toolDeleteFile(projectRoot, args) {
+  const fullPath = validatePath(projectRoot, args.path);
+  const rel = relative(projectRoot, fullPath);
+
+  // Guard: never delete the project root itself
+  if (!rel || rel === ".") {
+    return "Error: Cannot delete the project root.";
+  }
+
+  // Guard: must be inside a git working tree
+  try {
+    const gitRoot = execSync("git rev-parse --show-toplevel", {
+      cwd: projectRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    if (!fullPath.startsWith(gitRoot + "/") && fullPath !== gitRoot) {
+      return `Error: Path is outside the git repository: ${args.path}`;
+    }
+  } catch {
+    return "Error: Not inside a git repository — delete_file is disabled.";
+  }
+
+  // Guard: block deletion of top-level directories (e.g. src/, scripts/, docs/)
+  const depth = rel.split("/").length;
+  if (depth === 1 && existsSync(fullPath) && statSync(fullPath).isDirectory()) {
+    return `Error: Cannot delete top-level directory "${rel}/". Delete its contents individually instead.`;
+  }
+
+  if (!existsSync(fullPath)) {
+    return `Error: Not found: ${args.path}`;
+  }
+  const stat = statSync(fullPath);
+  if (stat.isDirectory()) {
+    try {
+      rmSync(fullPath, { recursive: true });
+      return `Deleted directory: ${args.path}`;
+    } catch (err) {
+      return `Error: Could not delete directory ${args.path}: ${err.message}`;
+    }
+  }
+  unlinkSync(fullPath);
+  return `Deleted: ${args.path}`;
 }
 
 function toolPatchFile(projectRoot, args) {
@@ -218,44 +323,44 @@ function toolPatchFile(projectRoot, args) {
   if (!existsSync(fullPath)) {
     return `Error: File not found: ${args.path}`;
   }
-  const content = readFileSync(fullPath, 'utf-8');
+  const content = readFileSync(fullPath, "utf-8");
   const idx = content.indexOf(args.search);
   if (idx === -1) {
     return `Error: Search string not found in ${args.path}. Ensure the search string is an exact match including whitespace.`;
   }
   const patched = content.slice(0, idx) + args.replace + content.slice(idx + args.search.length);
-  writeFileSync(fullPath, patched, 'utf-8');
+  writeFileSync(fullPath, patched, "utf-8");
   return `Patched: ${args.path} (replaced ${args.search.length} chars at offset ${idx})`;
 }
 
 function toolRunCommand(projectRoot, args) {
-  const cmd = (args.command || '').trim();
+  const cmd = (args.command || "").trim();
   if (/[|;&><$`]/.test(cmd)) {
-    return 'Error: Pipes, redirects, chaining, and variable expansion are not allowed.';
+    return "Error: Pipes, redirects, chaining, and variable expansion are not allowed.";
   }
   const parts = cmd.split(/\s+/);
   if (!ALLOWED_COMMANDS.has(parts[0])) {
-    return `Error: Command "${parts[0]}" is not in the allowlist. Allowed: ${[...ALLOWED_COMMANDS].join(', ')}`;
+    return `Error: Command "${parts[0]}" is not in the allowlist. Allowed: ${[...ALLOWED_COMMANDS].join(", ")}`;
   }
   try {
     const output = execSync(cmd, {
       cwd: projectRoot,
       timeout: 15_000,
       maxBuffer: 512 * 1024,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
     });
-    const trimmed = output.length > 8000 ? output.slice(0, 8000) + '\n... (truncated)' : output;
-    return trimmed || '(no output)';
+    const trimmed = output.length > 8000 ? output.slice(0, 8000) + "\n... (truncated)" : output;
+    return trimmed || "(no output)";
   } catch (err) {
-    const stderr = err.stderr ? err.stderr.slice(0, 2000) : '';
-    const stdout = err.stdout ? err.stdout.slice(0, 2000) : '';
+    const stderr = err.stderr ? err.stderr.slice(0, 2000) : "";
+    const stdout = err.stdout ? err.stdout.slice(0, 2000) : "";
     return `Command exited with code ${err.status || 1}:\n${stdout}\n${stderr}`.trim();
   }
 }
 
 function toolListDirectory(projectRoot, args) {
-  const fullPath = validatePath(projectRoot, args.path || '.');
+  const fullPath = validatePath(projectRoot, args.path || ".");
   if (!existsSync(fullPath)) {
     return `Error: Directory not found: ${args.path}`;
   }
@@ -264,100 +369,45 @@ function toolListDirectory(projectRoot, args) {
     return `Error: ${args.path} is a file, not a directory. Use read_file instead.`;
   }
   const entries = readdirSync(fullPath, { withFileTypes: true });
-  const dirs = entries.filter((e) => e.isDirectory()).map((e) => e.name + '/');
+  const dirs = entries.filter((e) => e.isDirectory()).map((e) => e.name + "/");
   const files = entries.filter((e) => e.isFile()).map((e) => e.name);
-  return [...dirs.sort(), ...files.sort()].join('\n') || '(empty directory)';
+  return [...dirs.sort(), ...files.sort()].join("\n") || "(empty directory)";
 }
 
 function toolRunTypecheck(projectRoot) {
-  try {
-    execSync('npx tsc --noEmit', {
-      cwd: projectRoot,
-      timeout: 120_000,
-      maxBuffer: 2 * 1024 * 1024,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=2048' },
-    });
-    return 'Typecheck passed — no errors.';
-  } catch (err) {
-    const stdout = (err.stdout || '').toString();
-    const stderr = (err.stderr || '').toString();
-    const output = (stdout + '\n' + stderr).trim();
-    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
-  }
+  const result = runTypecheck(projectRoot);
+  return result.pass ? "Typecheck passed — no errors." : result.detail;
 }
 
-function toolRunAstDensity(projectRoot) {
-  try {
-    const output = execSync('node scripts/audit-ast-density.mjs --threshold 1', {
-      cwd: projectRoot,
-      timeout: 120_000,
-      maxBuffer: 2 * 1024 * 1024,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    if (output.trim().length === 0) {
-      return 'AST density passed — all files have ≤1 top-level declaration.';
-    }
-    return `AST density violations (files with >1 top-level declaration):\n${output}`;
-  } catch (err) {
-    const stdout = (err.stdout || '').toString();
-    const stderr = (err.stderr || '').toString();
-    const output = (stdout + '\n' + stderr).trim();
-    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
-  }
+function toolRunAstDensity(projectRoot, changedFiles) {
+  const result = runAstDensity(projectRoot, changedFiles);
+  return result.pass ? "AST density passed — no violations." : result.detail;
 }
 
-function toolRunCspell(projectRoot) {
-  try {
-    execSync('npx cspell --no-progress "src/**/*.{ts,tsx}" "scripts/**/*.{mjs,js}" "docs/**/*.md"', {
-      cwd: projectRoot,
-      timeout: 60_000,
-      maxBuffer: 2 * 1024 * 1024,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    return 'Spell check passed — no issues.';
-  } catch (err) {
-    const stdout = (err.stdout || '').toString();
-    const stderr = (err.stderr || '').toString();
-    const output = (stdout + '\n' + stderr).trim();
-    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
-  }
+function toolRunCspell(projectRoot, changedFiles) {
+  const result = runCspell(projectRoot, changedFiles);
+  return result.pass ? "Spell check passed — no issues." : result.detail;
 }
 
 function toolRunLint(projectRoot) {
-  try {
-    const output = execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
-      cwd: projectRoot,
-      timeout: 60_000,
-      maxBuffer: 2 * 1024 * 1024,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    // oxlint exits 0 even with warnings — parse the summary line
-    const warnMatch = output.match(/Found (\d+) warning/);
-    const warningCount = warnMatch ? parseInt(warnMatch[1], 10) : 0;
-    if (warningCount > 0) {
-      return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
-    }
-    return 'Lint passed — no errors or warnings.';
-  } catch (err) {
-    const stdout = (err.stdout || '').toString();
-    const stderr = (err.stderr || '').toString();
-    const output = (stdout + '\n' + stderr).trim();
-    return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
-  }
+  const result = runLint(projectRoot);
+  return result.pass ? "Lint passed — no errors or warnings." : result.detail;
 }
 
-function executeTool(projectRoot, toolCall) {
-  const name = toolCall.function.name;
+function toolRunTests(projectRoot) {
+  const result = runTests(projectRoot);
+  return result.pass ? "Unit tests passed." : result.detail;
+}
 
-  if (name === 'run_typecheck') return toolRunTypecheck(projectRoot);
-  if (name === 'run_lint') return toolRunLint(projectRoot);
-  if (name === 'run_cspell') return toolRunCspell(projectRoot);
-  if (name === 'run_ast_density') return toolRunAstDensity(projectRoot);
+function executeTool(projectRoot, toolCall, context = {}) {
+  const name = toolCall.function.name;
+  const changedFiles = [...(context.filesChanged || [])];
+
+  if (name === "run_typecheck") return toolRunTypecheck(projectRoot);
+  if (name === "run_lint") return toolRunLint(projectRoot);
+  if (name === "run_cspell") return toolRunCspell(projectRoot, changedFiles);
+  if (name === "run_ast_density") return toolRunAstDensity(projectRoot, changedFiles);
+  if (name === "run_tests") return toolRunTests(projectRoot);
 
   let args;
   try {
@@ -367,12 +417,20 @@ function executeTool(projectRoot, toolCall) {
   }
 
   switch (name) {
-    case 'read_file': return toolReadFile(projectRoot, args);
-    case 'write_file': return toolWriteFile(projectRoot, args);
-    case 'patch_file': return toolPatchFile(projectRoot, args);
-    case 'run_command': return toolRunCommand(projectRoot, args);
-    case 'list_directory': return toolListDirectory(projectRoot, args);
-    default: return `Error: Unknown tool: ${name}`;
+    case "read_file":
+      return toolReadFile(projectRoot, args);
+    case "write_file":
+      return toolWriteFile(projectRoot, args);
+    case "delete_file":
+      return toolDeleteFile(projectRoot, args);
+    case "patch_file":
+      return toolPatchFile(projectRoot, args);
+    case "run_command":
+      return toolRunCommand(projectRoot, args);
+    case "list_directory":
+      return toolListDirectory(projectRoot, args);
+    default:
+      return `Error: Unknown tool: ${name}`;
   }
 }
 
@@ -384,12 +442,12 @@ async function callLLM(provider, messages) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = { "Content-Type": "application/json" };
     if (provider.apiKey) {
-      headers['Authorization'] = `Bearer ${provider.apiKey}`;
+      headers["Authorization"] = `Bearer ${provider.apiKey}`;
     }
     const res = await fetch(`${provider.baseUrl}/chat/completions`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify({
         model: provider.model,
@@ -405,7 +463,7 @@ async function callLLM(provider, messages) {
     });
     clearTimeout(timer);
     if (!res.ok) {
-      const body = await res.text().catch(() => '');
+      const body = await res.text().catch(() => "");
       throw new Error(`LLM API ${res.status}: ${body.slice(0, 500)}`);
     }
     return await res.json();
@@ -420,75 +478,72 @@ async function callLLM(provider, messages) {
 // ---------------------------------------------------------------------------
 
 function buildIssuePrompt(issue) {
-  const lines = [
-    `## Issue: ${issue.identifier} — ${issue.title}`,
-    '',
-  ];
+  const lines = [`## Issue: ${issue.identifier} — ${issue.title}`, ""];
 
   if (issue.description) {
-    lines.push('### Description', '', issue.description, '');
+    lines.push("### Description", "", issue.description, "");
   }
 
   const aiHints = (issue.comments?.nodes || [])
-    .filter((c) => c.body.includes('AI Hint:') || c.body.includes('AI hint:'))
+    .filter((c) => c.body.includes("AI Hint:") || c.body.includes("AI hint:"))
     .map((c) => c.body);
   if (aiHints.length > 0) {
-    lines.push('### AI Hints', '', ...aiHints, '');
+    lines.push("### AI Hints", "", ...aiHints, "");
   }
 
   lines.push(
-    '### Instructions',
-    '',
-    'Implement the changes described above. Follow these steps:',
-    '1. Read relevant files to understand the current state',
-    '2. Plan your changes',
-    '3. Make the minimal necessary changes using write_file or patch_file',
-    '4. Run run_typecheck to verify there are no type errors',
-    '5. If there are type errors, fix them and run run_typecheck again',
-    '6. Run run_lint to verify there are no lint errors or warnings',
-    '7. If there are lint errors or warnings, fix them and run run_lint again',
-    '8. Run run_cspell to verify there are no spelling errors',
+    "### Instructions",
+    "",
+    "Implement the changes described above. Follow these steps:",
+    "1. Read relevant files to understand the current state",
+    "2. Plan your changes",
+    "3. Make the minimal necessary changes using write_file, patch_file, or delete_file",
+    "4. Run run_typecheck to verify there are no type errors",
+    "5. If there are type errors, fix them and run run_typecheck again",
+    "6. Run run_lint to verify there are no lint errors or warnings",
+    "7. If there are lint errors or warnings, fix them and run run_lint again",
+    "8. Run run_cspell to verify there are no spelling errors",
     '9. If there are spelling errors, fix them or add domain-specific words to the "words" array in cspell.json',
-    '10. Run run_ast_density to verify no file has more than 1 top-level declaration',
-    '11. If there are density violations, split the file so each has at most 1 top-level declaration',
-    '12. Call task_complete with a summary of what you changed',
-    '',
-    'Keep changes minimal. Do not modify files unnecessarily.',
-    'IMPORTANT: Always run run_typecheck, run_lint, run_cspell, AND run_ast_density before calling task_complete. Fix all errors and warnings first.',
+    "10. Run run_ast_density to verify no file has more than 1 top-level declaration",
+    "11. Run run_tests to verify the unit test suite passes",
+    "12. If there are density violations or test failures, fix them before proceeding",
+    "13. Call task_complete with a summary of what you changed",
+    "",
+    "Keep changes minimal. Do not modify files unnecessarily.",
+    "IMPORTANT: Always run run_typecheck, run_lint, run_cspell, run_ast_density, AND run_tests before calling task_complete. Fix all errors and warnings first.",
   );
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 // ---------------------------------------------------------------------------
-// Main: run agent loop
+// Core tool-calling loop (shared by runAgent and continueAgent)
 // ---------------------------------------------------------------------------
 
-export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
-  const maxTurns = RUNNER_MAX_TURNS;
-  const maxMs = RUNNER_MAX_EXECUTION_MS;
-  const startTime = Date.now();
-
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: buildIssuePrompt(issue) },
-  ];
-
+async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, startTime }) {
   const filesChanged = new Set();
   let totalToolCalls = 0;
   let turn = 0;
+  const validationsAfterMutation = {
+    typecheck: false,
+    lint: false,
+    cspell: false,
+    astDensity: false,
+    tests: false,
+  };
 
   for (turn = 0; turn < maxTurns; turn++) {
     if (Date.now() - startTime > maxMs) {
       console.log(`[agent] Hard timeout reached (${maxMs}ms) at turn ${turn}`);
       return {
         completed: false,
-        summary: 'Execution timed out',
+        summary: "Execution timed out",
         turns: turn,
         toolCalls: totalToolCalls,
         filesChanged: [...filesChanged],
         timedOut: true,
         error: null,
+        messages,
       };
     }
 
@@ -507,20 +562,22 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
         filesChanged: [...filesChanged],
         timedOut: false,
         error: err.message,
+        messages,
       };
     }
 
     const choice = response.choices?.[0];
     if (!choice) {
-      console.error('[agent] No choices in LLM response');
+      console.error("[agent] No choices in LLM response");
       return {
         completed: false,
-        summary: 'No choices in LLM response',
+        summary: "No choices in LLM response",
         turns: turn,
         toolCalls: totalToolCalls,
         filesChanged: [...filesChanged],
         timedOut: false,
-        error: 'Empty LLM response',
+        error: "Empty LLM response",
+        messages,
       };
     }
 
@@ -529,10 +586,11 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       messages.push(msg);
       if (turn < maxTurns - 1) {
-        console.log('[agent] No tool calls — prompting to continue');
+        console.log("[agent] No tool calls — prompting to continue");
         messages.push({
-          role: 'user',
-          content: 'Continue implementing the changes. Use the available tools to read and modify files. Call task_complete when done.',
+          role: "user",
+          content:
+            "Continue implementing the changes. Use the available tools to read and modify files. Call task_complete when done.",
         });
         continue;
       }
@@ -547,35 +605,68 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
       totalToolCalls++;
       const toolName = toolCall.function.name;
 
-      if (toolName === 'task_complete') {
+      if (toolName === "task_complete") {
+        let parsed;
         try {
-          taskCompleteResult = JSON.parse(toolCall.function.arguments);
+          parsed = JSON.parse(toolCall.function.arguments);
         } catch {
-          taskCompleteResult = { summary: toolCall.function.arguments };
+          parsed = { summary: toolCall.function.arguments };
         }
+        const missing = Object.entries(validationsAfterMutation)
+          .filter(([, ran]) => !ran)
+          .map(([name]) => name);
+        if (missing.length > 0) {
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: `Error: task_complete rejected. You must run these validations after your last file change: ${missing.join(", ")}.`,
+          });
+          continue;
+        }
+        taskCompleteResult = parsed;
         messages.push({
-          role: 'tool',
+          role: "tool",
           tool_call_id: toolCall.id,
-          content: 'Task marked as complete.',
+          content: "Task marked as complete.",
         });
         continue;
       }
 
-      console.log(`[agent]   Tool: ${toolName}(${toolCall.function.arguments.slice(0, 100)}${toolCall.function.arguments.length > 100 ? '...' : ''})`);
+      console.log(
+        `[agent]   Tool: ${toolName}(${toolCall.function.arguments.slice(0, 100)}${toolCall.function.arguments.length > 100 ? "..." : ""})`,
+      );
 
-      const result = executeTool(projectRoot, toolCall);
+      let result;
+      try {
+        result = executeTool(projectRoot, toolCall, { filesChanged });
+      } catch (err) {
+        result = `Error: ${err.message}`;
+      }
 
-      if (toolName === 'write_file' || toolName === 'patch_file') {
+      if (toolName === "write_file" || toolName === "patch_file" || toolName === "delete_file") {
         try {
           const args = JSON.parse(toolCall.function.arguments);
           if (args.path) filesChanged.add(args.path);
-        } catch { /* ignore parse errors */ }
+        } catch {
+          /* ignore parse errors */
+        }
+        validationsAfterMutation.typecheck = false;
+        validationsAfterMutation.lint = false;
+        validationsAfterMutation.cspell = false;
+        validationsAfterMutation.astDensity = false;
+        validationsAfterMutation.tests = false;
       }
 
+      if (toolName === "run_typecheck") validationsAfterMutation.typecheck = true;
+      if (toolName === "run_lint") validationsAfterMutation.lint = true;
+      if (toolName === "run_cspell") validationsAfterMutation.cspell = true;
+      if (toolName === "run_ast_density") validationsAfterMutation.astDensity = true;
+      if (toolName === "run_tests") validationsAfterMutation.tests = true;
+
       messages.push({
-        role: 'tool',
+        role: "tool",
         tool_call_id: toolCall.id,
-        content: typeof result === 'string' ? result : JSON.stringify(result),
+        content: typeof result === "string" ? result : JSON.stringify(result),
       });
     }
 
@@ -583,12 +674,13 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
       console.log(`[agent] Task complete: ${taskCompleteResult.summary}`);
       return {
         completed: true,
-        summary: taskCompleteResult.summary || 'No summary provided',
+        summary: taskCompleteResult.summary || "No summary provided",
         turns: turn + 1,
         toolCalls: totalToolCalls,
         filesChanged: [...filesChanged],
         timedOut: false,
         error: null,
+        messages,
       };
     }
 
@@ -596,8 +688,8 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
     if (turnsRemaining === RUNNER_TURN_BUDGET_WARNING) {
       console.log(`[agent] Turn budget warning: ${turnsRemaining} turns remaining`);
       messages.push({
-        role: 'user',
-        content: `⚠️ TURN BUDGET WARNING: You have only ${turnsRemaining} turns remaining out of ${maxTurns}. Stop making new changes immediately. Run run_typecheck and run_lint to verify your work, fix any errors, then call task_complete. Do not start any new modifications.`,
+        role: "user",
+        content: `⚠️ TURN BUDGET WARNING: You have only ${turnsRemaining} turns remaining out of ${maxTurns}. Stop making new changes immediately. Run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests to verify your work, fix any errors, then call task_complete. Do not start any new modifications.`,
       });
     }
   }
@@ -605,11 +697,54 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
   console.log(`[agent] Max turns (${maxTurns}) reached`);
   return {
     completed: false,
-    summary: 'Max turns reached without task_complete',
+    summary: "Max turns reached without task_complete",
     turns: turn,
     toolCalls: totalToolCalls,
     filesChanged: [...filesChanged],
     timedOut: false,
     error: null,
+    messages,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Public: start a new agent session
+// ---------------------------------------------------------------------------
+
+export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: buildIssuePrompt(issue) },
+  ];
+  return runToolLoop({
+    provider,
+    messages,
+    projectRoot,
+    maxTurns: RUNNER_MAX_TURNS,
+    maxMs: RUNNER_MAX_EXECUTION_MS,
+    startTime: Date.now(),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Public: continue an existing session with validation feedback
+// ---------------------------------------------------------------------------
+
+export async function continueAgent({
+  provider,
+  messages,
+  projectRoot,
+  feedback,
+  maxTurns,
+  maxMs,
+}) {
+  messages.push({ role: "user", content: feedback });
+  return runToolLoop({
+    provider,
+    messages,
+    projectRoot,
+    maxTurns,
+    maxMs,
+    startTime: Date.now(),
+  });
 }
