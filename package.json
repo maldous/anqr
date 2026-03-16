@@ -29,6 +29,7 @@
     "knip": "knip",
 
     "test": "playwright test",
+    "test:unit": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100%",
     "test:basic": "playwright test --project=basic",
     "test:advanced": "playwright test --project=advanced",
     "test:professional": "playwright test --project=professional",

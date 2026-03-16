@@ -49,9 +49,6 @@ knip:
 test-unit:
 	npm run test:unit
 
-test-unit-coverage:
-	npm run test:unit:coverage
-
 test-e2e:
 	npm run test
 
