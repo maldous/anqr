@@ -35,6 +35,7 @@
     "test:appium:android": "APPIUM_PLATFORM=android wdio run wdio.conf.ts",
     "test:appium:ios": "APPIUM_PLATFORM=ios wdio run wdio.conf.ts",
     "audit:ast": "node scripts/audit-ast-density.mjs",
+    "ast:names": "node scripts/list-ast-names.mjs",
     "sonar:export": "bash scripts/sonar-export.sh",
     "sonar:audit": "node scripts/ops/sonar-linear-audit.mjs",
     "sonar:scan": "SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",

@@ -3,13 +3,8 @@
 import path from "node:path";
 import process from "node:process";
 import { Project, SyntaxKind } from "ts-morph";
-/*
-  "!netlify/functions/qr.ts",
-  "!netlify/edge-functions/seo.ts",
-  "!netlify/functions/qr-render-background.ts",
-  "!vite.config.ts",
-*/
-const DEFAULT_GLOBS = ["**/*.{ts,tsx,d.ts}", "!**/node_modules/**"];
+
+const DEFAULT_GLOBS = ["**/*.{ts,tsx,d.ts}", "!**/node_modules/**", "!**/.git/**", "!**/dist/**"];
 const DEFAULT_THRESHOLD = 1;
 
 process.stdout.on("error", (error) => {
