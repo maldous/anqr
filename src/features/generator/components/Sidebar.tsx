@@ -23,7 +23,7 @@ import {
   AccordionTrigger,
 } from '@/ui/primitives/accordion';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HighlightedLabel, SearchProvider } from '@/app/search/search-context';
+import { HighlightedLabel, SearchProvider } from '@/features/generator/search/search-context';
 import { useQRStore } from '@/store/qr-store';
 import { SectionLoadFallback } from './sidebar-section-load-fallback';
 import { OPEN_SECTIONS_STORAGE_KEY, loadStoredOpenSections } from './sidebar-open-sections';

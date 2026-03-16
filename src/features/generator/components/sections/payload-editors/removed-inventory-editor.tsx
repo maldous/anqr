@@ -1,4 +1,4 @@
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import {
   Select,
   SelectContent,

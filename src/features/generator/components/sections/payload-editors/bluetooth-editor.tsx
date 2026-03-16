@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import type { QRState } from '@/store/qr-store';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';

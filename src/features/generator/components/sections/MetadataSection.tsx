@@ -8,7 +8,7 @@ import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Switch } from '@/ui/primitives/switch';
 import { Textarea } from '@/ui/primitives/textarea';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { useQRStore } from '@/store/qr-store';
 
 // Counter for generating unique IDs for custom key-value pairs

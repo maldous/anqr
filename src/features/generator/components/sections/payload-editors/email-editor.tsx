@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { isValidEmail } from '@/modules/payload-generators';
 import type { QRState } from '@/store/qr-store';

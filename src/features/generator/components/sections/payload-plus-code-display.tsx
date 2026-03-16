@@ -1,7 +1,7 @@
 import { OpenLocationCode } from 'open-location-code';
 import { useMemo } from 'react';
 import { createLogger } from '@/infra/logging/logger';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { Label } from '@/ui/primitives/label';
 import type { PlusCodeDisplayProps } from './plus-code-display.props';
 

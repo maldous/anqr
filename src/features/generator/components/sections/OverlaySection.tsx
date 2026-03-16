@@ -13,7 +13,7 @@ import {
 } from '@/ui/primitives/select';
 import { Slider } from '@/ui/primitives/slider';
 import { Switch } from '@/ui/primitives/switch';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { getAvailableOverlayModes } from './overlay-section-manifest';
 import { OverlayPreviewPanel } from './overlay-preview-panel';
 import { OverlaySourcePicker } from './overlay-source-picker';

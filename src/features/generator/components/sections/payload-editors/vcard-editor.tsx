@@ -3,7 +3,7 @@ import { isValidEmail, isValidPhone, isValidUrl } from '@/modules/payload-genera
 import type { QRState } from '@/store/qr-store';
 import { LabeledInputField } from './labeled-input-field';
 import { ValidatedLabeledInputField } from './validated-labeled-input-field';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';

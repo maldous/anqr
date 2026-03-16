@@ -6,7 +6,7 @@ import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';
 import { Switch } from '@/ui/primitives/switch';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { trackEvent } from '@/infra/telemetry/zaraz';
 import { copyToClipboard } from '@/platform/browser/clipboard';
 import {

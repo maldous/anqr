@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
 import type { QRState } from '@/store/qr-store';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';

@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/ui/primitives/select';
 import i18n from '@/app/i18n';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { type PayloadKind, useQRStore } from '@/store/qr-store';
 import {
   AppLinkEditor,

@@ -1,4 +1,4 @@
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
 import { Input } from '@/ui/primitives/input';
 import { Label } from '@/ui/primitives/label';

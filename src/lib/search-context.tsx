@@ -1,1 +1,1 @@
-export * from '../app/search/search-context';
+export * from '../features/generator/search/search-context';

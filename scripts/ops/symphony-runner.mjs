@@ -208,7 +208,27 @@ function runLint() {
   }
 }
 
-function runValidation() {
+function runCspell(changedFiles) {
+  const CSPELL_EXTENSIONS = /\.(ts|tsx|js|mjs|md|json)$/;
+  const eligible = changedFiles.filter((f) => CSPELL_EXTENSIONS.test(f));
+  if (eligible.length === 0) {
+    return { pass: true, detail: '' };
+  }
+  try {
+    const quoted = eligible.map((f) => `"${f}"`).join(' ');
+    execSync(`npx cspell --no-progress --no-must-find-files ${quoted}`, {
+      cwd: ROOT, timeout: 60_000, stdio: 'pipe', encoding: 'utf-8',
+    });
+    return { pass: true, detail: '' };
+  } catch (err) {
+    const stdout = (err.stdout || '').toString();
+    const stderr = (err.stderr || '').toString();
+    const output = (stdout + '\n' + stderr).trim().slice(0, 2000);
+    return { pass: false, detail: output };
+  }
+}
+
+function runValidation(changedFiles) {
   const results = [];
 
   // Typecheck
@@ -218,6 +238,10 @@ function runValidation() {
   // Lint
   const lint = runLint();
   results.push({ check: 'lint', ...lint });
+
+  // Spell check (on changed files only, matching lefthook pre-commit)
+  const cspell = runCspell(changedFiles);
+  results.push({ check: 'cspell', ...cspell });
 
   // Unit tests
   try {
@@ -427,6 +451,35 @@ async function executeIssue(issue, dryRun) {
       return;
     }
     console.log('[runner] Pre-flight lint passed ✅');
+
+    console.log('[runner] Running pre-flight cspell...');
+    try {
+      execSync('npx cspell --no-progress "src/**/*.{ts,tsx}" "docs/**/*.md"', {
+        cwd: ROOT, timeout: 60_000, stdio: 'pipe', encoding: 'utf-8',
+      });
+      console.log('[runner] Pre-flight cspell passed ✅');
+    } catch (cspellErr) {
+      const cspellOut = ((cspellErr.stdout || '') + '\n' + (cspellErr.stderr || '')).toString().trim();
+      console.error('[runner] Baseline cspell failed — skipping agent execution');
+      await addComment(
+        issue.id,
+        [
+          `⛔ **Pre-flight cspell failed** — codebase has spelling errors before agent execution. Skipping to avoid wasting tokens.`,
+          '',
+          '```',
+          cspellOut.slice(0, 1500),
+          '```',
+          '',
+          'Fix the baseline spelling errors first (or add words to cspell.json). This does not count as an attempt.',
+        ].join('\n'),
+      );
+      sendNotification({
+        subject: `Symphony skipped: ${issue.identifier} — baseline cspell failed`,
+        body: `Pre-flight cspell failed for ${issue.identifier}. Agent execution skipped (attempt not consumed).\n\n${cspellOut.slice(0, 500)}\n\n${linearIssueUrl(issue.identifier)}`,
+        severity: 'warn',
+      });
+      return;
+    }
   }
 
   // Move to In Progress + post starting comment (counts toward attempt tracking)
@@ -535,7 +588,7 @@ async function executeIssue(issue, dryRun) {
 
   // Run validation
   console.log('[runner] Running validation pipeline...');
-  const validation = runValidation();
+  const validation = runValidation(changedFiles);
 
   if (validation.passed) {
     // Accept: commit + mark Done

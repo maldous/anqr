@@ -11,4 +11,4 @@ export {
 } from '@/ui/primitives/select';
 export { Slider } from '@/ui/primitives/slider';
 export { Switch } from '@/ui/primitives/switch';
-export { HighlightedLabel } from '@/app/search/search-context';
+export { HighlightedLabel } from '@/features/generator/search/search-context';

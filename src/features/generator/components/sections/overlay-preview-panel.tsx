@@ -3,7 +3,7 @@ import type { useOverlayCropDrag } from './use-overlay-crop-drag';
 import type React from 'react';
 import { Button } from '@/ui/primitives/button';
 import { DynamicTestId } from '@/infra/testing/dynamic-testid';
-import { HighlightedLabel } from '@/app/search/search-context';
+import { HighlightedLabel } from '@/features/generator/search/search-context';
 import { Label } from '@/ui/primitives/label';
 import { Slider } from '@/ui/primitives/slider';
 import { Switch } from '@/ui/primitives/switch';
