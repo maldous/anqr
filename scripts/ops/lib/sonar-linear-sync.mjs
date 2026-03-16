@@ -23,6 +23,7 @@ import {
 const FETCH_TIMEOUT_MS = 30_000;
 const SONAR_KEY_PATTERN = /<!-- sonar-key:([a-f0-9-]+) -->/;
 const OPEN_STATE_NAMES = ['Backlog', 'Todo', 'In Progress', 'In Review', 'Pending', 'Rework'];
+const PRIORITY_LABELS = { 1: 'Urgent', 2: 'High', 3: 'Medium', 4: 'Low' };
 
 function fetchWithTimeout(url, headers) {
   const ac = new AbortController();
@@ -87,7 +88,7 @@ async function findOpenSonarLinearIssues() {
     `query($filter: IssueFilter!) {
       issues(filter: $filter, first: 100) {
         nodes {
-          id identifier title description
+          id identifier title description priority
           state { name }
         }
       }
@@ -174,12 +175,32 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
 
   const currentKeys = new Set(sonarIssues.map((i) => i.key));
 
-  // Create missing Linear issues
+  // Create missing Linear issues (and promote existing ones if priority changed)
   const created = [];
   const skipped = [];
+  const promoted = [];
   for (const si of sonarIssues) {
     if (keyToLinear.has(si.key)) {
-      skipped.push({ sonar: si, linear: keyToLinear.get(si.key) });
+      const existing = keyToLinear.get(si.key);
+
+      // Promote if requested priority is higher (lower number = higher priority)
+      if (existing.priority > priority) {
+        const fromLabel = PRIORITY_LABELS[existing.priority] || `P${existing.priority}`;
+        const toLabel = PRIORITY_LABELS[priority] || `P${priority}`;
+        await updateIssue(existing.id, { priority });
+        await addComment(
+          existing.id,
+          [
+            `\u26a0\ufe0f **Promoted to ${toLabel}** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
+            '',
+            `Priority changed from ${fromLabel} to ${toLabel}. This sonar finding must be resolved before other work.`,
+          ].join('\n'),
+        );
+        console.log(`[sonar-sync] Promoted ${existing.identifier} from ${fromLabel} → ${toLabel}`);
+        promoted.push({ sonar: si, linear: existing, from: existing.priority, to: priority });
+      } else {
+        skipped.push({ sonar: si, linear: existing });
+      }
       continue;
     }
 
@@ -225,5 +246,5 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
     }
   }
 
-  return { created, skipped, resolved };
+  return { created, skipped, promoted, resolved };
 }
