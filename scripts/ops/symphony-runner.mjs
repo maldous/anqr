@@ -378,7 +378,7 @@ async function runSonarPostCommit(issueIdentifier) {
     console.log('[runner] Running post-commit sonar scan (non-blocking)...');
     execSync('sonar-scanner', {
       cwd: ROOT, timeout: 300_000, stdio: 'pipe',
-      env: { ...process.env, SONAR_TOKEN, SONAR_SCANNER_OPTS: '-Xms128m -Xmx256m' },
+      env: { ...process.env, SONAR_TOKEN, SONAR_SCANNER_OPTS: '-Xms128m -Xmx256m', NODE_OPTIONS: '' },
     });
 
     // Wait for analysis to be processed by the server
