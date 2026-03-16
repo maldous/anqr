@@ -130,7 +130,8 @@ class GoogleGTXEngine:
         self._session = requests.Session()
         self.batch_size = int(max(1, batch_size))
 
-    def normalize_target(self, target: str) -> str:
+    @staticmethod
+    def normalize_target(target: str) -> str:
         # gtx accepts BCP47-ish; keep base for most.
         return target.replace("_", "-").strip()
 
