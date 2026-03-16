@@ -185,7 +185,7 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
 
     const title = buildLinearTitle(si, projectKey);
     const description = buildLinearDescription(si, projectKey, sonarHost);
-    const issue = await createIssue({ title, description, priority });
+    const issue = await createIssue({ title, description, priority, stateId: STATES.todo });
     created.push({ sonar: si, linear: issue });
     console.log(`[sonar-sync] Created ${issue.identifier}: ${title}`);
   }
