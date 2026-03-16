@@ -128,7 +128,7 @@ const TOOL_DEFINITIONS = [
     type: 'function',
     function: {
       name: 'run_lint',
-      description: 'Run the linter (oxlint) to check for lint errors. Returns the linter output. Always run this after making changes and fix any errors before calling task_complete.',
+      description: 'Run the linter (oxlint) to check for lint errors and warnings. Returns the linter output. Always run this after making changes and fix any errors or warnings before calling task_complete.',
       parameters: { type: 'object', properties: {} },
     },
   },
@@ -136,7 +136,7 @@ const TOOL_DEFINITIONS = [
     type: 'function',
     function: {
       name: 'task_complete',
-      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck and run_lint first and fix any errors before calling this.',
+      description: 'Signal that you have finished implementing the changes. You MUST run run_typecheck and run_lint first and fix any errors or warnings before calling this.',
       parameters: {
         type: 'object',
         properties: {
@@ -272,14 +272,20 @@ function toolRunTypecheck(projectRoot) {
 
 function toolRunLint(projectRoot) {
   try {
-    execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
+    const output = execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
       cwd: projectRoot,
       timeout: 60_000,
       maxBuffer: 2 * 1024 * 1024,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
     });
-    return 'Lint passed — no errors.';
+    // oxlint exits 0 even with warnings — parse the summary line
+    const warnMatch = output.match(/Found (\d+) warning/);
+    const warningCount = warnMatch ? parseInt(warnMatch[1], 10) : 0;
+    if (warningCount > 0) {
+      return output.length > 6000 ? output.slice(0, 6000) + '\n... (truncated)' : output;
+    }
+    return 'Lint passed — no errors or warnings.';
   } catch (err) {
     const stdout = (err.stdout || '').toString();
     const stderr = (err.stderr || '').toString();
@@ -380,12 +386,12 @@ function buildIssuePrompt(issue) {
     '3. Make the minimal necessary changes using write_file or patch_file',
     '4. Run run_typecheck to verify there are no type errors',
     '5. If there are type errors, fix them and run run_typecheck again',
-    '6. Run run_lint to verify there are no lint errors',
-    '7. If there are lint errors, fix them and run run_lint again',
+    '6. Run run_lint to verify there are no lint errors or warnings',
+    '7. If there are lint errors or warnings, fix them and run run_lint again',
     '8. Call task_complete with a summary of what you changed',
     '',
     'Keep changes minimal. Do not modify files unnecessarily.',
-    'IMPORTANT: Always run run_typecheck AND run_lint before calling task_complete. Fix all errors first.',
+    'IMPORTANT: Always run run_typecheck AND run_lint before calling task_complete. Fix all errors and warnings first.',
   );
 
   return lines.join('\n');

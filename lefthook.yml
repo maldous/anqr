@@ -3,7 +3,12 @@ pre-commit:
   commands:
     oxlint:
       glob: "*.{ts,tsx,js,mjs}"
-      run: npx oxlint -c oxlint.json {staged_files}
+      run: |
+        output=$(npx oxlint -c oxlint.json {staged_files} 2>&1)
+        status=$?
+        echo "$output"
+        if [ $status -ne 0 ]; then exit $status; fi
+        if echo "$output" | grep -qE 'Found [1-9][0-9]* warning'; then exit 1; fi
     typecheck:
       run: npm run typecheck
     cspell:

@@ -190,9 +190,15 @@ function runTypecheck() {
 
 function runLint() {
   try {
-    execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
-      cwd: ROOT, timeout: 60_000, stdio: 'pipe',
+    const output = execSync('npx oxlint -c oxlint.json src/ packages/ apps/', {
+      cwd: ROOT, timeout: 60_000, stdio: 'pipe', encoding: 'utf-8',
     });
+    // oxlint exits 0 even with warnings — parse the summary line
+    const warnMatch = output.match(/Found (\d+) warning/);
+    const warningCount = warnMatch ? parseInt(warnMatch[1], 10) : 0;
+    if (warningCount > 0) {
+      return { pass: false, detail: output.trim().slice(0, 2000) };
+    }
     return { pass: true, detail: '' };
   } catch (err) {
     const stdout = (err.stdout || '').toString();
