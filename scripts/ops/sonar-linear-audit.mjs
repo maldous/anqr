@@ -63,6 +63,7 @@ async function main() {
     sonarHost: SONAR_HOST,
     priority: 1,
     resolveStale: true,
+    requeueToTodo: true,
   });
 
   console.log(`[sonar-audit] Created: ${created.length}, Promoted: ${promoted.length}, Requeued: ${requeued.length}, Existing: ${skipped.length}, Resolved: ${resolved.length}`);

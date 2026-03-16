@@ -393,15 +393,31 @@ async function runSonarPostCommit(issueIdentifier) {
 
     console.log(`[runner] Sonar found ${issues.length} issue(s) — syncing to Linear...`);
 
-    const { created, skipped } = await syncSonarToLinear({
+    const { created, skipped, resolved } = await syncSonarToLinear({
       sonarIssues: issues,
       projectKey: PROJECT_KEY,
       sonarHost: SONAR_HOST,
       priority: 2,
-      resolveStale: false,
+      resolveStale: true,
+      requeueToTodo: false,
     });
 
-    console.log(`[runner] Sonar sync: created ${created.length}, existing ${skipped.length}`);
+    console.log(`[runner] Sonar sync: created ${created.length}, existing ${skipped.length}, resolved ${resolved.length}`);
+
+    if (resolved.length > 0) {
+      const resolvedLines = resolved.map(
+        (r) => `  ${r.identifier}: ${r.title}`,
+      );
+      sendNotification({
+        subject: `Sonar scan after ${issueIdentifier}: ${resolved.length} collateral issue(s) resolved`,
+        body: [
+          `Post-commit sonar scan resolved ${resolved.length} issue(s) (finding no longer detected):`,
+          '',
+          ...resolvedLines,
+        ].join('\n'),
+        severity: 'info',
+      });
+    }
 
     if (created.length > 0) {
       const lines = created.map(

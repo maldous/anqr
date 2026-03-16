@@ -155,10 +155,12 @@ function buildLinearDescription(sonarIssue, projectKey, sonarHost) {
  * @param {string} opts.sonarHost    — SonarQube base URL
  * @param {number} opts.priority     — Linear priority (1=urgent, 2=high, etc.)
  * @param {boolean} opts.resolveStale — if true, mark Done any Linear [Sonar]
- *   issues whose SonarQube finding is no longer present (nightly only)
+ *   issues whose SonarQube finding is no longer present
+ * @param {boolean} opts.requeueToTodo — if true, move non-Todo issues back to
+ *   Todo so the runner can pick them up (nightly only)
  * @returns {{ created: Array, skipped: Array, promoted: Array, requeued: Array, resolved: Array }}
  */
-export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, priority, resolveStale }) {
+export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, priority, resolveStale, requeueToTodo }) {
   const existingLinear = await findOpenSonarLinearIssues();
 
   // Build map: sonarKey → Linear issue (for issues that have the marker)
@@ -204,7 +206,7 @@ export async function syncSonarToLinear({ sonarIssues, projectKey, sonarHost, pr
       }
 
       // Requeue to Todo if stuck in another state (nightly only)
-      if (resolveStale && existing.state.name !== 'Todo') {
+      if (requeueToTodo && existing.state.name !== 'Todo') {
         const fromState = existing.state.name;
         await updateIssue(existing.id, { stateId: STATES.todo });
         await addComment(
