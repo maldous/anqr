@@ -1,9 +1,14 @@
-.PHONY: dev build preview typecheck lint lint-fix format format-check depcruise \
-        test test-unit test-e2e cspell knip ast-density sonar sonar-audit quality clean install hooks
-
-# ──────────────────────────────────────────────
-# Development
-# ──────────────────────────────────────────────
+.PHONY: \
+  dev build preview \
+  typecheck lint lint-fix lint-boundaries format format-check depcruise cspell knip \
+  test test-unit test-unit-coverage test-e2e test-appium test-appium-android test-appium-ios \
+  audit-ast sonar-export sonar-audit \
+  harness-quick harness-continuous harness-full \
+  guardian-run guardian-dry-run \
+  queue-check queue-feed queue-enforce queue-all queue-all-dry-run queue-continuous \
+  symphony-run symphony-run-dry-run symphony-status \
+  email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
+  quality install hooks clean
 
 dev:
 	npm run dev
@@ -14,49 +19,32 @@ build:
 preview:
 	npm run preview
 
-# ──────────────────────────────────────────────
-# Quality gates
-# ──────────────────────────────────────────────
-
 typecheck:
 	npm run typecheck
 
 lint:
-	npx oxlint -c oxlint.json src/ packages/ apps/
+	npm run lint
 
 lint-fix:
-	npx oxlint -c oxlint.json --fix src/ packages/ apps/
+	npm run lint:fix
+
+lint-boundaries:
+	npm run lint:boundaries
 
 format:
-	npx oxfmt --write src/ packages/ apps/
+	npm run format
 
 format-check:
-	npx oxfmt --check src/ packages/ apps/
+	npm run format:check
 
 depcruise:
-	npx depcruise src --config .dependency-cruiser.cjs
+	npm run depcruise
 
 cspell:
-	npx cspell "src/**/*.{ts,tsx}" "docs/**/*.md" --no-progress
+	npm run cspell
 
 knip:
-	npx knip
-
-ast-density:
-	npm run audit:ast
-
-sonar:
-	SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner
-
-sonar-audit: sonar
-	npm run sonar:audit
-
-quality: typecheck lint depcruise test-unit
-	@echo "\n✅ All quality gates passed"
-
-# ──────────────────────────────────────────────
-# Testing
-# ──────────────────────────────────────────────
+	npm run knip
 
 test-unit:
 	npm run test:unit
@@ -67,21 +55,94 @@ test-unit-coverage:
 test-e2e:
 	npm run test
 
+test-appium:
+	npm run test:appium
+
+test-appium-android:
+	npm run test:appium:android
+
+test-appium-ios:
+	npm run test:appium:ios
+
 test: test-unit test-e2e
 
-# ──────────────────────────────────────────────
-# Setup
-# ──────────────────────────────────────────────
+audit-ast:
+	npm run audit:ast
+
+sonar-export:
+	npm run sonar:export
+
+sonar-audit:
+	npm run sonar:audit
+
+sonar-scan:
+	npm run sonar:scan
+
+harness-quick:
+	npm run harness:quick
+
+harness-continuous:
+	npm run harness:continuous
+
+harness-full:
+	npm run harness:full
+
+guardian-run:
+	npm run guardian:run
+
+guardian-dry-run:
+	npm run guardian:dry-run
+
+queue-check:
+	npm run queue:check
+
+queue-feed:
+	npm run queue:feed
+
+queue-enforce:
+	npm run queue:enforce
+
+queue-all:
+	npm run queue:all
+
+queue-all-dry-run:
+	npm run queue:all:dry-run
+
+queue-continuous:
+	npm run queue:continuous
+
+symphony-run:
+	npm run symphony:run
+
+symphony-run-dry-run:
+	npm run symphony:run:dry-run
+
+symphony-status:
+	npm run symphony:status
+
+email-ingest:
+	npm run email:ingest
+
+email-ingest-dry-run:
+	npm run email:ingest:dry-run
+
+notify-test:
+	npm run notify:test
+
+nightly:
+	npm run nightly
+
+nightly-dry-run:
+	npm run nightly:dry-run
+
+quality:
+	npm run quality
 
 install:
 	npm install
 
 hooks:
-	npx lefthook install
-
-# ──────────────────────────────────────────────
-# Cleanup
-# ──────────────────────────────────────────────
+	npm run prepare
 
 clean:
 	rm -rf dist coverage node_modules/.cache

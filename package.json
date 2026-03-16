@@ -14,7 +14,20 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+
     "typecheck": "NODE_OPTIONS='--max-old-space-size=2048' tsc --noEmit",
+
+    "lint": "oxlint -c oxlint.json src/ packages/ apps/",
+    "lint:fix": "oxlint -c oxlint.json --fix src/ packages/ apps/",
+    "lint:boundaries": "eslint src/",
+
+    "format": "oxfmt --write src/ packages/ apps/",
+    "format:check": "oxfmt --check src/ packages/ apps/",
+
+    "depcruise": "depcruise src --config .dependency-cruiser.cjs",
+    "cspell": "cspell \"src/**/*.{ts,tsx}\" \"docs/**/*.md\" --no-progress",
+    "knip": "knip",
+
     "test": "playwright test",
     "test:basic": "playwright test --project=basic",
     "test:advanced": "playwright test --project=advanced",
@@ -22,63 +35,43 @@
     "test:permutations": "playwright test --project=permutations",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-    "test:unit": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100% --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts'",
-    "test:unit:coverage": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100% --coverage --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts' --exclude 'tests/unit/qr-generator-dithered-scan-gate.spec.ts' --exclude 'tests/unit/qr-generator-perf-profile.spec.ts' --exclude 'tests/unit/netlify-qr-function.spec.ts' --exclude 'tests/unit/netlify-qr-function-error.spec.ts' --exclude 'tests/unit/netlify-qr-helpers.spec.ts' --exclude 'tests/unit/netlify-qr-gif-disposal.spec.ts' --exclude 'tests/unit/payload-matrix-guard.spec.ts' --exclude 'tests/unit/qr-generator-artistic-guards.spec.ts'",
-    "test:unit:perf": "NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run tests/unit/qr-generator-perf-profile.spec.ts",
-    "test:coverage:gap": "node scripts/report-code-coverage-gap.js",
-    "test:unit:watch": "NODE_OPTIONS='--no-experimental-webstorage' vitest",
-    "test:unit:ci": "npm run test:unit",
-    "test:ids": "node scripts/generate-test-ids.js",
-    "test:required": "node scripts/generate-required-tests.js",
-    "test:required:strict": "node scripts/check-required-tests.js",
-    "test:required:gap": "node scripts/report-required-gap.js",
-    "test:testid": "node scripts/audit-testid-coverage.js",
-    "test:testid:refs": "node scripts/check-testid-references.js",
-    "test:i18n": "node scripts/check-i18n-regressions.js",
-    "test:bundle:budget": "node scripts/check-bundle-budgets.mjs",
-    "test:perf:budget": "npm run build && node scripts/check-performance-budgets.mjs",
-    "audit:ast": "node scripts/audit-ast-density.mjs",
-    "sonar:audit": "node scripts/ops/sonar-linear-audit.mjs",
-    "quality:pmd": "bash scripts/check-pmd-cpd.sh",
-    "report:payload:matrix": "node scripts/generate-payload-matrix.mjs",
-    "validate:services": "node scripts/validate-third-party.mjs",
-    "check:sentry": "node scripts/check-sentry-regression.mjs",
-    "report:i18n:txt": "node scripts/check-i18n-txt.js --all",
-    "qr:art": "npx tsx scripts/run-qr-art.ts",
-    "test:signoff": "node scripts/production-signoff-check.js",
+
     "test:appium": "wdio run wdio.conf.ts",
     "test:appium:android": "APPIUM_PLATFORM=android wdio run wdio.conf.ts",
     "test:appium:ios": "APPIUM_PLATFORM=ios wdio run wdio.conf.ts",
-    "ci:reliability-gate": "node scripts/ops/reliability-gate.mjs",
-    "extract:ast": "tsx tools/refactor/extract-ast.ts",
-    "lint": "oxlint -c oxlint.json src/ packages/ apps/",
-    "lint:fix": "oxlint -c oxlint.json --fix src/ packages/ apps/",
-    "lint:boundaries": "eslint src/",
-    "depcruise": "depcruise src --config .dependency-cruiser.cjs",
-    "cspell": "cspell \"src/**/*.{ts,tsx}\" \"docs/**/*.md\" --no-progress",
-    "knip": "knip",
-    "format": "oxfmt --write src/ packages/ apps/",
+
+    "audit:ast": "node scripts/audit-ast-density.mjs",
+    "sonar:export": "bash scripts/sonar-export.sh",
+    "sonar:audit": "node scripts/ops/sonar-linear-audit.mjs",
+    "sonar:scan": "SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
+
     "harness:quick": "node scripts/ops/harness-report.mjs quick",
     "harness:continuous": "node scripts/ops/harness-report.mjs continuous",
     "harness:full": "node scripts/ops/harness-report.mjs full",
+
     "guardian:run": "node scripts/ops/linear-guardian.mjs",
     "guardian:dry-run": "node scripts/ops/linear-guardian.mjs --dry-run",
+
     "queue:check": "node scripts/ops/symphony-queue-control.mjs --check",
     "queue:feed": "node scripts/ops/symphony-queue-control.mjs --feed",
     "queue:enforce": "node scripts/ops/symphony-queue-control.mjs --enforce",
     "queue:all": "node scripts/ops/symphony-queue-control.mjs --all",
     "queue:all:dry-run": "node scripts/ops/symphony-queue-control.mjs --all --dry-run",
     "queue:continuous": "node scripts/ops/symphony-queue-control.mjs --all",
+
     "symphony:run": "node scripts/ops/symphony-runner.mjs --once",
     "symphony:run:dry-run": "node scripts/ops/symphony-runner.mjs --once --dry-run",
     "symphony:status": "node scripts/ops/symphony-runner.mjs --status",
+
     "email:ingest": "node scripts/ops/email-ingest.mjs",
     "email:ingest:dry-run": "node scripts/ops/email-ingest.mjs --dry-run",
+
     "notify:test": "node -e \"import('./scripts/ops/lib/notify.mjs').then(m => { const r = m.sendNotification({ subject: 'Test notification', body: 'This is a test from ANQR ops notification system.\\nTimestamp: ' + new Date().toISOString(), severity: 'info' }); console.log(r); })\"",
+
     "nightly": "node scripts/ops/nightly-ops-pass.mjs",
     "nightly:dry-run": "node scripts/ops/nightly-ops-pass.mjs --dry-run",
-    "format:check": "oxfmt --check src/ packages/ apps/",
     "quality": "npm run typecheck && npm run lint && npm run depcruise && npm run test:unit",
+
     "prepare": "lefthook install"
   },
   "dependencies": {
