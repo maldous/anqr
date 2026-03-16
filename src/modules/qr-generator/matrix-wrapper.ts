@@ -8,7 +8,9 @@ export class MatrixWrapper extends BaseMatrixWrapper {
     this.matrix = matrix;
   }
 
-  addData(_data: string, _mode?: string): void {}
+  addData(_data: string, _mode?: string): void {
+    return undefined;
+  }
 
   make(_maskPattern?: number): void {
     throw new Error('MatrixWrapper.make is not supported');

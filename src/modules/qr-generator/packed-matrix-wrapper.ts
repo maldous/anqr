@@ -8,7 +8,9 @@ export class PackedMatrixWrapper extends BaseMatrixWrapper {
     this.packed = packed;
   }
 
-  addData(_data: string, _mode?: string): void {}
+  addData(_data: string, _mode?: string): void {
+    return undefined;
+  }
 
   make(_maskPattern?: number): void {
     throw new Error('PackedMatrixWrapper.make is not supported');
