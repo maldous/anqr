@@ -21,7 +21,7 @@ export function base64DecodeInputStream(str: string) {
           return -1;
         }
 
-        if (c.match(/^\s$/)) continue;
+        if (/^\s$/.test(c)) continue;
 
         buffer = (buffer << 6) | base64DecodeChar(c.codePointAt(0)!);
         buflen += 6;
