@@ -64,7 +64,7 @@ export async function loadLocale(lang: string): Promise<void> {
     if (loadedLocales.has(sourceLang)) {
       const cachedData = i18n.getResourceBundle(sourceLang, 'translation');
       if (cachedData) {
-        i18n.addResourceBundle(lang, 'translation', cachedData, true, true);
+        addResourceBundle(lang, 'translation', cachedData, true, true);
       }
       loadedLocales.add(lang);
       return;
@@ -76,10 +76,10 @@ export async function loadLocale(lang: string): Promise<void> {
       throw new Error(`Locale module not found for ${sourceLang}`);
     }
     const localeData = await loader();
-    i18n.addResourceBundle(sourceLang, 'translation', localeData, true, true);
+    addResourceBundle(sourceLang, 'translation', localeData, true, true);
     loadedLocales.add(sourceLang);
     if (lang !== sourceLang) {
-      i18n.addResourceBundle(lang, 'translation', localeData, true, true);
+      addResourceBundle(lang, 'translation', localeData, true, true);
     }
     loadedLocales.add(lang);
   } catch (error) {
@@ -88,8 +88,7 @@ export async function loadLocale(lang: string): Promise<void> {
   }
 }
 
-i18n
-  .use(LanguageDetector)
+use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,

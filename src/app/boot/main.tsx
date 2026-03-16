@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import * as Sentry from '@sentry/react';
 import React, { Suspense } from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import App from '@/app/shell/AppShell';
 import '@/index.css';
 import '@/app/i18n'; // Initialize i18n
@@ -132,7 +132,7 @@ if (document.readyState === 'complete') {
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element not found');
-ReactDOM.createRoot(rootElement).render(
+createRoot(rootElement).render(
   <React.StrictMode>
     <ErrorBoundary>
       <Suspense
