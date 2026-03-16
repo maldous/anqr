@@ -3,7 +3,7 @@ import {
   createGifEncoder,
   indexGifPixels,
   isGifEncodingAvailable,
-} from "../../src/modules/animation";
+} from "../../../src/modules/animation";
 import { parseGifBackgroundColor } from "./parse-gif-background-color";
 import { prepareGifFramePixels } from "./prepare-gif-frame-pixels";
 import { buildGlobalGifPalette } from "./build-global-gif-palette";

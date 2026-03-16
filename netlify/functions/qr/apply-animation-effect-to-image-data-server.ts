@@ -4,7 +4,7 @@ import {
   applyAnimationPulse,
   applyAnimationScanline,
   applyAnimationShimmer,
-} from "../../src/modules/animation";
+} from "../../../src/modules/animation";
 import { AnimationEffectConfig } from "./animation-effect-config.types";
 import { applyAnimationWaveWithAxisServer } from "./apply-animation-wave-with-axis-server";
 

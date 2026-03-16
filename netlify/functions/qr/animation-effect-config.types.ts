@@ -1,4 +1,4 @@
-import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
+import { type AnimationEasing, type AnimationPattern } from "../../../src/modules/animation";
 import { AnimationTarget } from "./animation-target.types";
 import { AnimationWaveAxis } from "./animation-wave-axis.types";
 

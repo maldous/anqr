@@ -2,7 +2,7 @@ import {
   createGifEncoder,
   indexGifPixels,
   isGifEncodingAvailable,
-} from "../../src/modules/animation";
+} from "../../../src/modules/animation";
 import { ServerAnimationFrame } from "./server-animation-frame.types";
 import { parseGifBackgroundColor } from "./parse-gif-background-color";
 import { prepareGifFramePixels } from "./prepare-gif-frame-pixels";

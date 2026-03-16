@@ -1,4 +1,4 @@
-import { QRGenerator } from "../../src/modules/qr-generator";
+import { QRGenerator } from "../../../src/modules/qr-generator";
 import { type Canvas } from "@napi-rs/canvas";
 import { ServerAnimationFrame } from "./server-animation-frame.types";
 import { AnimationEffectConfig } from "./animation-effect-config.types";

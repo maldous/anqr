@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import pkg from "../../package.json";
+import pkg from "../../../package.json";
 import { createCanvas, ImageData as NapiImageData } from "@napi-rs/canvas";
 
 Sentry.init({

@@ -1,4 +1,4 @@
-import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
+import { type AnimationEasing, type AnimationPattern } from "../../../src/modules/animation";
 import { ECCLevel } from "./ecc-level.types";
 import { DitherKind } from "./dither-kind.types";
 import { OutputFormat } from "./output-format.types";

@@ -1,5 +1,5 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../src/modules/qr-generator";
+import { QRGenerator } from "../../../src/modules/qr-generator";
 
 export async function renderQRFrameWithFallback(
   overlayInput: Canvas,

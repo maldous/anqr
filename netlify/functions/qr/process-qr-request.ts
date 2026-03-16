@@ -1,5 +1,5 @@
-import { QRGenerator } from "../../src/modules/qr-generator";
-import { calculateOptimalVersion } from "../../src/modules/qr-encoder/encoder-api";
+import { QRGenerator } from "../../../src/modules/qr-generator";
+import { calculateOptimalVersion } from "../../../src/modules/qr-encoder/encoder-api";
 import { type Canvas } from "@napi-rs/canvas";
 import { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { computeCacheKey } from "./compute-cache-key";

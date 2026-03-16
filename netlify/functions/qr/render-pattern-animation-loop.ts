@@ -1,5 +1,5 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../src/modules/qr-generator";
+import { QRGenerator } from "../../../src/modules/qr-generator";
 import { AnimationEffectConfig } from "./animation-effect-config.types";
 import { AnimationInterpolation } from "./animation-interpolation.types";
 import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";

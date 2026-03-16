@@ -1,4 +1,4 @@
-import { type AnimationEasing, type AnimationPattern } from "../../src/modules/animation";
+import { type AnimationEasing, type AnimationPattern } from "../../../src/modules/animation";
 import { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { parseAnimationTarget } from "./parse-animation-target";
 import { parseAnimationWaveAxis } from "./parse-animation-wave-axis";

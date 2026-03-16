@@ -1,4 +1,4 @@
-import { decodeGif } from "../../src/modules/animation";
+import { decodeGif } from "../../../src/modules/animation";
 import { createCanvas } from "@napi-rs/canvas";
 import { FetchedImage } from "./fetched-image.types";
 import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const";

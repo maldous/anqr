@@ -1,6 +1,6 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../src/modules/qr-generator";
-import { type AnimationEasing } from "../../src/modules/animation";
+import { QRGenerator } from "../../../src/modules/qr-generator";
+import { type AnimationEasing } from "../../../src/modules/animation";
 import { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { ServerAnimationFrame } from "./server-animation-frame.types";
 import { ArtworkState } from "./artwork-state.types";

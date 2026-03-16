@@ -1,4 +1,4 @@
-import qrHandler from "./qr";
+import qrHandler from "../qr";
 import * as Sentry from "@sentry/node";
 import { computeCacheKey } from "./compute-cache-key";
 import { getBlobStore } from "./get-blob-store";
