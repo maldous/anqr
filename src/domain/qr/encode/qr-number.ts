@@ -17,7 +17,7 @@ export function qrNumber(data: string): QRDataSegment {
   };
 
   const charToNum = (c: string): number => {
-    if ('0' <= c && c <= '9') {
+    if (c >= '0' && c <= '9') {
       return c.codePointAt(0)! - '0'.codePointAt(0)!;
     }
     throw new Error(`illegal char :${c}`);

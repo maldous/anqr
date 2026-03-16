@@ -25,9 +25,9 @@ export function qrKanji(data: string): QRDataSegment {
       while (i + 1 < _bytes.length) {
         let c = ((0xff & _bytes[i]) << 8) | (0xff & _bytes[i + 1]);
 
-        if (0x8140 <= c && c <= 0x9ffc) {
+        if (c >= 0x8140 && c <= 0x9ffc) {
           c -= 0x8140;
-        } else if (0xe040 <= c && c <= 0xebbf) {
+        } else if (c >= 0xe040 && c <= 0xebbf) {
           c -= 0xc140;
         } else {
           throw new Error(`illegal char at ${i + 1}/${c}`);
