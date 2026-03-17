@@ -1,20 +1,23 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import compression from "vite-plugin-compression";
 import { VitePWA } from "vite-plugin-pwa";
-import { analyzeBundle } from "./analyze-bundle.const";
-import { getEnvDefines } from "./get-env-defines";
-import { isAndroidBuild } from "./is-android-build.const";
-import { oxcMinifyPlugin } from "./oxc-minify-plugin";
-import { sentryAuthToken } from "./sentry-auth-token.const";
-import { sentryOrg } from "./sentry-org.const";
-import { sentryProject } from "./sentry-project.const";
-import { sentryRelease } from "./sentry-release.const";
-import { sentryUploadEnabled } from "./sentry-upload-enabled.const";
-import { serveGalleryFiles } from "./serve-gallery-files";
+import { analyzeBundle } from "./analyze-bundle.const.ts";
+import { getEnvDefines } from "./get-env-defines.ts";
+import { isAndroidBuild } from "./is-android-build.const.ts";
+import { oxcMinifyPlugin } from "./oxc-minify-plugin.ts";
+import { sentryAuthToken } from "./sentry-auth-token.const.ts";
+import { sentryOrg } from "./sentry-org.const.ts";
+import { sentryProject } from "./sentry-project.const.ts";
+import { sentryRelease } from "./sentry-release.const.ts";
+import { sentryUploadEnabled } from "./sentry-upload-enabled.const.ts";
+import { serveGalleryFiles } from "./serve-gallery-files.ts";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const viteConfig = defineConfig({
   define: getEnvDefines(),
@@ -492,6 +495,15 @@ export const viteConfig = defineConfig({
   worker: {
     format: "es",
     plugins: () => [react()],
+    rollupOptions: {
+      output: {
+        // Inline all imports into a single self-contained worker file.
+        // Without this, Rolldown extracts shared code into a separate esm-*.js
+        // chunk whose rolldown runtime helpers import back from the worker entry,
+        // creating a circular chunk dependency.
+        inlineDynamicImports: true,
+      },
+    },
   },
   // Optimize dependencies
   optimizeDeps: {

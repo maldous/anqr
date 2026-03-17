@@ -1,4 +1,4 @@
-import { sentryRelease } from "./sentry-release.const";
+import { sentryRelease } from "./sentry-release.const.ts";
 
 export function getEnvDefines() {
   const defines: Record<string, string> = {};
