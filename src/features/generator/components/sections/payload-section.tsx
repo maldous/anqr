@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { HelpLink } from "@/ui/primitives/help-link";
+import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 import { Label } from "@/ui/primitives/label";
 import {
   Select,
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/primitives/select";
-import i18n from "@/app/i18n";
+import i18n from "@/i18n";
 import { HighlightedLabel } from "@/features/generator/search/search-context";
 import { type PayloadKind, useQRStore } from "@/store/qr-store";
 import {

@@ -22,7 +22,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/primitives/button";
-import { languages } from "@/app/i18n";
+import { languages } from "@/i18n";
 
 // Increment this version whenever you want to show the modal again to all users
 const WELCOME_VERSION = "2026.02.01";

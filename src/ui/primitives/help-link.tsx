@@ -8,7 +8,6 @@
 import { HelpCircle, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQRStore } from "@/store/qr-store";
 import { buildNavigationUrl } from "./build-help-link-navigation-url";
 import { handleTierUpgrade } from "./handle-help-link-tier-upgrade";
 import type { HelpLinkProps } from "./help-link.types";
@@ -21,14 +20,14 @@ export function HelpLink({
   requiredTier,
   title,
   className = "",
+  currentTier,
+  setTier,
+  checkPremiumAccess,
+  activatePremiumAccess,
 }: Readonly<HelpLinkProps>) {
   // Convert anchor shorthand to full href
   const resolvedHref = anchor ? `/guide#${anchor}` : href || "/guide";
   const { t, i18n } = useTranslation();
-  const setTier = useQRStore((s) => s.setTier);
-  const currentTier = useQRStore((s) => s.tier);
-  const checkPremiumAccess = useQRStore((s) => s.checkPremiumAccess);
-  const activatePremiumAccess = useQRStore((s) => s.activatePremiumAccess);
   const [loadingAd, setLoadingAd] = useState(false);
 
   // Determine the effective required tier: explicit prop takes precedence, otherwise parse from URL

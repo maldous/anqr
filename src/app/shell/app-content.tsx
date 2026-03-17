@@ -2,7 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BusyOverlay } from "@/ui/composites/busy-overlay";
-import { Header } from "@/components/header";
+import { Header } from "./header/header";
 import { MobileDivider } from "@/ui/composites/mobile-divider";
 import { Preview } from "@/features/generator/components/preview";
 import { Sidebar } from "@/features/generator/components/sidebar";

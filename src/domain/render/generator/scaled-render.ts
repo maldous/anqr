@@ -3,7 +3,7 @@
  * Handles all scaled overlay modes (dithered, blue-noise, subpixel)
  */
 
-import type { CanvasFactory } from "../../../platform/browser/canvas/canvas-factory";
+import type { CanvasFactory } from "../canvas-factory.types";
 import { createGradientFill, drawFrame, drawFrameBackground } from "./drawing";
 import { generatePixelDecisionMatrix } from "./pixel-matrix";
 import type { QRCodeInstance, QRGeneratorConfig } from "../../../modules/qr-generator/types";

@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "../../../infra/logging/logger";
-import type { CanvasFactory } from "../../../platform/browser/canvas/canvas-factory";
+import type { CanvasFactory } from "../canvas-factory.types";
 import { generateSubpixelMatrix } from "../overlay/overlay";
 import { generateDitherModeMatrix } from "./pixel-matrix-dither";
 import { generateBlueNoiseMatrix, generateDitheredMatrix } from "./pixel-matrix-dithered";

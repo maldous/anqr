@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import type { AnalyzeMessage } from "@/domain/qr/analyze/message-codes";
+import type { AnalyzeMessage } from "@/lib/analyze-message.types";
 
 export function translateAnalyzeMessage(message: AnalyzeMessage): string {
   const key =

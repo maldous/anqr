@@ -1,5 +1,5 @@
 export { DynamicTestId } from "@/infra/testing/dynamic-testid";
-export { HelpLink } from "@/ui/primitives/help-link";
+export { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 export { Input } from "@/ui/primitives/input";
 export { Label } from "@/ui/primitives/label";
 export {

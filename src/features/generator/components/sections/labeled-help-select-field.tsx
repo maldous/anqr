@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { HighlightedLabel } from "@/features/generator/search/search-context";
 import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { HelpLink } from "@/ui/primitives/help-link";
+import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 import { Label } from "@/ui/primitives/label";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/primitives/select";
 

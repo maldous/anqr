@@ -1,7 +1,7 @@
 import type { ShareConfig } from "@/modules/share-links";
 import { type AlignmentStyle, type FinderStyle, type TimingStyle } from "@/store/qr-store";
 import type { StoreState } from "@/features/generator/model/mobile-split";
-import type { ModuleStyleOption } from "@/app/routing/page-resolution";
+import type { ModuleStyleOption } from "@/domain/render/module-style-option.types";
 import type { GradientUpdate } from "./apply-render-params.types";
 
 export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: StoreState): void {

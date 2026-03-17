@@ -1,4 +1,4 @@
-import type { Tier } from "@/store/qr-store";
+import type { Tier } from "@/lib/tier";
 
 export type HelpLinkProps = {
   href?: string;
@@ -6,4 +6,8 @@ export type HelpLinkProps = {
   requiredTier?: Tier;
   title?: string;
   className?: string;
+  currentTier: Tier;
+  setTier: (tier: Tier) => void;
+  checkPremiumAccess: () => boolean;
+  activatePremiumAccess: () => void;
 };

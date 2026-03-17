@@ -1,1 +1,1 @@
-export type Tier = "basic" | "advanced" | "professional";
+export type { Tier } from "../../domain/qr/tier";

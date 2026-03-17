@@ -1,4 +1,4 @@
-import type { Tier } from "@/store/qr-store";
+import type { Tier } from "@/lib/tier";
 
 export function parseTierFromUrl(href: string): Tier | undefined {
   const regex = /[?&]tab=(basic|advanced|professional)(?:&|#|$)/;

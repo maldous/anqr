@@ -1,5 +1,5 @@
 import { Capacitor } from "@capacitor/core";
-import type { Tier } from "@/store/qr-store";
+import type { Tier } from "@/lib/tier";
 import { requestProfessionalAccess } from "./request-professional-access";
 
 export async function handleTierUpgrade(

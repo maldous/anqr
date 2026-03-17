@@ -28,19 +28,19 @@ import { useBannerHeight } from "@/ui/hooks/useBannerHeight";
 import { isRtlLanguage, languages, loadLocale } from "@/app/i18n";
 import { trackEvent } from "@/infra/telemetry/zaraz";
 import { copyToClipboard } from "@/platform/browser/clipboard";
-import { buildHeaderShareConfig } from "@/components/header/build-header-share-config";
+import { buildHeaderShareConfig } from "./build-header-share-config";
 import { prepareInterstitial } from "@/modules/platform";
 import { getShareableUrl } from "@/modules/share-links";
 import { type Tier, useQRStore } from "@/store/qr-store";
-import { resolveHeaderPage, type HeaderPage } from "@/components/header/header-resolve-page";
-import { changeTierWithAdGate } from "@/components/header/header-tier-gate";
-import { getInitialDarkMode } from "@/components/header/header-dark-mode";
-import { setupScrollObservers } from "@/components/header/header-scroll-observers";
-import { HeaderLanguageMenu } from "@/components/header/header-language-menu";
-import { HeaderMobileNav } from "@/components/header/header-mobile-nav";
-import { HeaderDesktopNav } from "@/components/header/header-desktop-nav";
-import { HeaderGalleryFilter } from "@/components/header/header-gallery-filter";
-import { HeaderMobileFooter } from "@/components/header/header-mobile-footer";
+import { resolveHeaderPage, type HeaderPage } from "./header-resolve-page";
+import { changeTierWithAdGate } from "./header-tier-gate";
+import { getInitialDarkMode } from "./header-dark-mode";
+import { setupScrollObservers } from "./header-scroll-observers";
+import { HeaderLanguageMenu } from "./header-language-menu";
+import { HeaderMobileNav } from "./header-mobile-nav";
+import { HeaderDesktopNav } from "./header-desktop-nav";
+import { HeaderGalleryFilter } from "./header-gallery-filter";
+import { HeaderMobileFooter } from "./header-mobile-footer";
 
 export function Header({
   onToggleSidebar,

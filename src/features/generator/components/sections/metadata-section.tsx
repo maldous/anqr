@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/ui/primitives/button";
 import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { HelpLink } from "@/ui/primitives/help-link";
+import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 import { Input } from "@/ui/primitives/input";
 import { Label } from "@/ui/primitives/label";
 import { Switch } from "@/ui/primitives/switch";
