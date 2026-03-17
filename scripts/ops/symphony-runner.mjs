@@ -3,7 +3,7 @@
 
 import { existsSync, readFileSync, writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
   listIssuesByState,
@@ -103,7 +103,7 @@ function isProcessAlive(pid) {
 
 function gitIsClean() {
   try {
-    const status = execSync("git status --porcelain", { cwd: ROOT, encoding: "utf-8" });
+    const status = execFileSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf-8" });
     return status.trim().length === 0;
   } catch {
     return false;
@@ -112,8 +112,8 @@ function gitIsClean() {
 
 function gitDiffNames() {
   try {
-    const diff = execSync("git diff --name-only", { cwd: ROOT, encoding: "utf-8" });
-    const untracked = execSync("git ls-files --others --exclude-standard", {
+    const diff = execFileSync("git", ["diff", "--name-only"], { cwd: ROOT, encoding: "utf-8" });
+    const untracked = execFileSync("git", ["ls-files", "--others", "--exclude-standard"], {
       cwd: ROOT,
       encoding: "utf-8",
     });
@@ -125,7 +125,7 @@ function gitDiffNames() {
 
 function gitDiffStat() {
   try {
-    return execSync("git diff --stat", { cwd: ROOT, encoding: "utf-8" }).trim();
+    return execFileSync("git", ["diff", "--stat"], { cwd: ROOT, encoding: "utf-8" }).trim();
   } catch {
     return "";
   }
@@ -133,8 +133,8 @@ function gitDiffStat() {
 
 function gitRevert() {
   try {
-    execSync("git reset --hard HEAD", { cwd: ROOT, stdio: "pipe" });
-    execSync("git clean -fd", { cwd: ROOT, stdio: "pipe" });
+    execFileSync("git", ["reset", "--hard", "HEAD"], { cwd: ROOT, stdio: "pipe" });
+    execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
     return true;
   } catch (err) {
     console.error(`[runner] Git revert failed: ${err.message}`);
@@ -168,14 +168,15 @@ function inferCommitScope(changedFiles) {
 }
 
 function sanitizeCommitSubject(title) {
-  let subject = title.trim().replace(/\.+$/, "");
+  let subject = title.trim();
+  while (subject.endsWith(".")) subject = subject.slice(0, -1);
   if (subject.length > 0) subject = subject[0].toLowerCase() + subject.slice(1);
   return subject;
 }
 
 function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   try {
-    execSync("git add -A", { cwd: ROOT, stdio: "pipe" });
+    execFileSync("git", ["add", "-A"], { cwd: ROOT, stdio: "pipe" });
     const scope = inferCommitScope(changedFiles);
     const subject = sanitizeCommitSubject(issueTitle);
     const prefix = `fix(${scope}): `;
@@ -188,7 +189,7 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
     const tmpFile = resolve(ROOT, ".git", "SYMPHONY_COMMIT_MSG");
     writeFileSync(tmpFile, msg, "utf-8");
     try {
-      execSync(`git commit -F ${JSON.stringify(tmpFile)}`, { cwd: ROOT, stdio: "pipe" });
+      execFileSync("git", ["commit", "-F", tmpFile], { cwd: ROOT, stdio: "pipe" });
     } finally {
       try {
         unlinkSync(tmpFile);
@@ -203,7 +204,7 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
 
 function gitPush() {
   try {
-    execSync("git push", { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+    execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
     return true;
   } catch (err) {
     console.error(`[runner] Git push failed: ${err.message}`);
@@ -231,7 +232,7 @@ function classifyProviderFailure(message = "") {
 }
 
 async function maybeRunPreflights() {
-  const head = execSync("git rev-parse HEAD", { cwd: ROOT, encoding: "utf-8" }).trim();
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf-8" }).trim();
   const manifestHash = validationManifestHash();
   const cachedHead = getGlobalValue("baseline.head");
   const cachedHash = getGlobalValue("baseline.manifestHash");
@@ -267,7 +268,7 @@ async function runSonarPostCommit(issueIdentifier) {
   const PROJECT_KEY = "anqr";
   if (!SONAR_TOKEN) return;
   try {
-    execSync("sonar-scanner", {
+    execFileSync("sonar-scanner", [], {
       cwd: ROOT,
       timeout: 300_000,
       stdio: "pipe",

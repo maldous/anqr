@@ -110,97 +110,16 @@ async function probeOllama() {
 // ---------------------------------------------------------------------------
 
 const PROVIDERS = [
-  {
-    name: "codex",
-    model: "gpt-5.4",
-    baseUrl: "https://api.openai.com/v1",
-    envVar: "OPENAI_API_KEY",
-    useMaxCompletionTokens: true,
-    probe(apiKey) {
-      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
-    },
-  },
-  {
-    name: "groq",
-    model: "llama-3.3-70b-versatile",
-    baseUrl: "https://api.groq.com/openai/v1",
-    envVar: "GROQ_TOKEN",
-    probe(apiKey) {
-      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
-    },
-  },
-  {
-    name: "mistral",
-    model: "devstral-small-2507",
-    baseUrl: "https://api.mistral.ai/v1",
-    envVar: "MISTRAL_TOKEN",
-    probe(apiKey) {
-      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
-    },
-  },
-  {
-    name: "gemini",
-    model: "gemini-2.5-flash",
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
-    envVar: "GEMINI_TOKEN",
-    probe(apiKey) {
-      return probeGeminiModels(apiKey, this.model);
-    },
-  },
-  {
-    name: "gemini-lite",
-    model: "gemini-2.5-flash-lite",
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
-    envVar: "GEMINI_TOKEN",
-    probe(apiKey) {
-      return probeGeminiModels(apiKey, this.model);
-    },
-  },
-  {
-    name: "openrouter-free",
-    model: "meta-llama/llama-3.3-70b-instruct:free",
-    baseUrl: "https://openrouter.ai/api/v1",
-    envVar: "OPENROUTER_TOKEN",
-    probe(apiKey) {
-      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
-    },
-  },
-  {
-    name: "sambanova",
-    model: "Meta-Llama-3.3-70B-Instruct",
-    baseUrl: "https://api.sambanova.ai/v1",
-    envVar: "SAMBANOVA_TOKEN",
-    probe(apiKey) {
-      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
-    },
-  },
-  {
-    name: "cerebras",
-    model: "llama3.1-8b",
-    baseUrl: "https://api.cerebras.ai/v1",
-    envVar: "CEREBRAS_TOKEN",
-    probe(apiKey) {
-      return probeOpenAIModels(this.baseUrl, this.model, apiKey);
-    },
-  },
-  {
-    name: "github-models",
-    model: "gpt-4.1-mini",
-    baseUrl: "https://models.github.ai/inference/v1",
-    envVar: "GITHUB_MODELS_TOKEN",
-    probe(apiKey) {
-      return probeGitHubModels(apiKey, this.model);
-    },
-  },
-  {
-    name: "ollama-local",
-    model: RUNNER_OLLAMA_MODEL,
-    baseUrl: RUNNER_OLLAMA_BASE_URL,
-    envVar: null,
-    probe() {
-      return probeOllama();
-    },
-  },
+  { name: "codex", model: "gpt-5.4", baseUrl: "https://api.openai.com/v1", envVar: "OPENAI_API_KEY", useMaxCompletionTokens: true },
+  { name: "groq", model: "llama-3.3-70b-versatile", baseUrl: "https://api.groq.com/openai/v1", envVar: "GROQ_TOKEN" },
+  { name: "mistral", model: "devstral-small-2507", baseUrl: "https://api.mistral.ai/v1", envVar: "MISTRAL_TOKEN" },
+  { name: "gemini", model: "gemini-2.5-flash", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai", envVar: "GEMINI_TOKEN", probe: (p, apiKey) => probeGeminiModels(apiKey, p.model) },
+  { name: "gemini-lite", model: "gemini-2.5-flash-lite", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai", envVar: "GEMINI_TOKEN", probe: (p, apiKey) => probeGeminiModels(apiKey, p.model) },
+  { name: "openrouter-free", model: "meta-llama/llama-3.3-70b-instruct:free", baseUrl: "https://openrouter.ai/api/v1", envVar: "OPENROUTER_TOKEN" },
+  { name: "sambanova", model: "Meta-Llama-3.3-70B-Instruct", baseUrl: "https://api.sambanova.ai/v1", envVar: "SAMBANOVA_TOKEN" },
+  { name: "cerebras", model: "llama3.1-8b", baseUrl: "https://api.cerebras.ai/v1", envVar: "CEREBRAS_TOKEN" },
+  { name: "github-models", model: "gpt-4.1-mini", baseUrl: "https://models.github.ai/inference/v1", envVar: "GITHUB_MODELS_TOKEN", probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini") },
+  { name: "ollama-local", model: RUNNER_OLLAMA_MODEL, baseUrl: RUNNER_OLLAMA_BASE_URL, envVar: null, probe: () => probeOllama() },
 ];
 
 // ---------------------------------------------------------------------------
@@ -267,7 +186,9 @@ export async function selectProvider() {
     }
 
     console.log(`[credit-gate] ${provider.name}: probing...`);
-    const available = await provider.probe(apiKey);
+    const available = provider.probe
+      ? await provider.probe(provider, apiKey)
+      : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
 
     if (available) {
       console.log(`[credit-gate] ${provider.name}: available ✅`);

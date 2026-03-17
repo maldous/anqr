@@ -42,7 +42,7 @@ import {
   rmSync,
 } from "node:fs";
 import { resolve, relative, dirname } from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import {
   RUNNER_MAX_TURNS,
   RUNNER_MAX_EXECUTION_MS,
@@ -61,158 +61,85 @@ import {
 // Tool definitions (OpenAI function calling format)
 // ---------------------------------------------------------------------------
 
+function paramTool(name, description, properties, required) {
+  return {
+    type: "function",
+    function: {
+      name,
+      description,
+      parameters: { type: "object", properties, required },
+    },
+  };
+}
+
+function noParamTool(name, description) {
+  return { type: "function", function: { name, description, parameters: { type: "object", properties: {} } } };
+}
+
+const pathParam = { path: { type: "string", description: "File path relative to project root" } };
+
 const TOOL_DEFINITIONS = [
-  {
-    type: "function",
-    function: {
-      name: "read_file",
-      description: "Read a file from the project. Returns the full file content.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "File path relative to project root" },
-        },
-        required: ["path"],
-      },
+  paramTool("read_file", "Read a file from the project. Returns the full file content.", pathParam, ["path"]),
+  paramTool(
+    "write_file",
+    "Write or create a file with the given content. Creates parent directories if needed. Do NOT use this with empty content to delete files — use delete_file instead.",
+    { ...pathParam, content: { type: "string", description: "Complete file content to write" } },
+    ["path", "content"],
+  ),
+  paramTool(
+    "delete_file",
+    "Delete a file or directory (recursively) from the project. Use this to remove files — do NOT use write_file with empty content.",
+    { path: { type: "string", description: "File or directory path relative to project root" } },
+    ["path"],
+  ),
+  paramTool(
+    "patch_file",
+    "Make a targeted edit to a file by replacing the first occurrence of a search string with a replacement string. Use this for small, precise edits.",
+    {
+      ...pathParam,
+      search: { type: "string", description: "Exact string to find (first occurrence)" },
+      replace: { type: "string", description: "Replacement string" },
     },
-  },
-  {
-    type: "function",
-    function: {
-      name: "write_file",
-      description:
-        "Write or create a file with the given content. Creates parent directories if needed. Do NOT use this with empty content to delete files — use delete_file instead.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "File path relative to project root" },
-          content: { type: "string", description: "Complete file content to write" },
-        },
-        required: ["path", "content"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "delete_file",
-      description:
-        "Delete a file or directory (recursively) from the project. Use this to remove files — do NOT use write_file with empty content.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "File or directory path relative to project root" },
-        },
-        required: ["path"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "patch_file",
-      description:
-        "Make a targeted edit to a file by replacing the first occurrence of a search string with a replacement string. Use this for small, precise edits.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "File path relative to project root" },
-          search: { type: "string", description: "Exact string to find (first occurrence)" },
-          replace: { type: "string", description: "Replacement string" },
-        },
-        required: ["path", "search", "replace"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "run_command",
-      description:
-        "Run a read-only shell command. Only allowlisted commands: rg, grep, cat, ls, find, head, tail, wc, tree, file, echo, pwd. No pipes, redirects, or chaining.",
-      parameters: {
-        type: "object",
-        properties: {
-          command: { type: "string", description: "Shell command to run" },
-        },
-        required: ["command"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "list_directory",
-      description: "List files and directories at the given path.",
-      parameters: {
-        type: "object",
-        properties: {
-          path: { type: "string", description: "Directory path relative to project root" },
-        },
-        required: ["path"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "run_typecheck",
-      description:
-        "Run the TypeScript compiler (tsc --noEmit) to check for type errors. Returns the compiler output. Always run this after making changes and fix any errors before calling task_complete.",
-      parameters: { type: "object", properties: {} },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "run_lint",
-      description:
-        "Run the linter (oxlint) to check for lint errors and warnings. Returns the linter output. Always run this after making changes and fix any errors or warnings before calling task_complete.",
-      parameters: { type: "object", properties: {} },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "run_cspell",
-      description:
-        'Run the spell checker (cspell) on source files. Returns any misspelled words. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
-      parameters: { type: "object", properties: {} },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "run_ast_density",
-      description:
-        "Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.",
-      parameters: { type: "object", properties: {} },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "run_tests",
-      description:
-        "Run the unit test suite used by the runner. Always run this after making changes and fix any failures before calling task_complete.",
-      parameters: { type: "object", properties: {} },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "task_complete",
-      description:
-        "Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, run_cspell, and run_ast_density first and fix any errors or warnings before calling this.",
-      parameters: {
-        type: "object",
-        properties: {
-          summary: { type: "string", description: "Brief summary of what was changed and why" },
-        },
-        required: ["summary"],
-      },
-    },
-  },
+    ["path", "search", "replace"],
+  ),
+  paramTool(
+    "run_command",
+    "Run a read-only shell command. Only allowlisted commands: rg, grep, cat, ls, find, head, tail, wc, tree, file, echo, pwd. No pipes, redirects, or chaining.",
+    { command: { type: "string", description: "Shell command to run" } },
+    ["command"],
+  ),
+  paramTool(
+    "list_directory",
+    "List files and directories at the given path.",
+    { path: { type: "string", description: "Directory path relative to project root" } },
+    ["path"],
+  ),
+  noParamTool(
+    "run_typecheck",
+    "Run the TypeScript compiler (tsc --noEmit) to check for type errors. Returns the compiler output. Always run this after making changes and fix any errors before calling task_complete.",
+  ),
+  noParamTool(
+    "run_lint",
+    "Run the linter (oxlint) to check for lint errors and warnings. Returns the linter output. Always run this after making changes and fix any errors or warnings before calling task_complete.",
+  ),
+  noParamTool(
+    "run_cspell",
+    'Run the spell checker (cspell) on source files. Returns any misspelled words. If a domain-specific word is flagged, add it to the "words" array in cspell.json. Always run this after making changes and fix any issues before calling task_complete.',
+  ),
+  noParamTool(
+    "run_ast_density",
+    "Run the AST density audit on source files. Each file should have at most 1 top-level declaration (function, class, type, or const). If a file exceeds the threshold, split it into smaller files. Always run this after making changes and fix any violations before calling task_complete.",
+  ),
+  noParamTool(
+    "run_tests",
+    "Run the unit test suite used by the runner. Always run this after making changes and fix any failures before calling task_complete.",
+  ),
+  paramTool(
+    "task_complete",
+    "Signal that you have finished implementing the changes. You MUST run run_typecheck, run_lint, run_cspell, and run_ast_density first and fix any errors or warnings before calling this.",
+    { summary: { type: "string", description: "Brief summary of what was changed and why" } },
+    ["summary"],
+  ),
 ];
 
 const ALLOWED_COMMANDS = new Set([
@@ -284,7 +211,7 @@ function toolDeleteFile(projectRoot, args) {
 
   // Guard: must be inside a git working tree
   try {
-    const gitRoot = execSync("git rev-parse --show-toplevel", {
+    const gitRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], {
       cwd: projectRoot,
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
@@ -343,7 +270,7 @@ function toolRunCommand(projectRoot, args) {
     return `Error: Command "${parts[0]}" is not in the allowlist. Allowed: ${[...ALLOWED_COMMANDS].join(", ")}`;
   }
   try {
-    const output = execSync(cmd, {
+    const output = execFileSync(parts[0], parts.slice(1), {
       cwd: projectRoot,
       timeout: 15_000,
       maxBuffer: 512 * 1024,
@@ -353,8 +280,8 @@ function toolRunCommand(projectRoot, args) {
     const trimmed = output.length > 8000 ? output.slice(0, 8000) + "\n... (truncated)" : output;
     return trimmed || "(no output)";
   } catch (err) {
-    const stderr = err.stderr ? err.stderr.slice(0, 2000) : "";
-    const stdout = err.stdout ? err.stdout.slice(0, 2000) : "";
+    const stderr = err.stderr ? String(err.stderr).slice(0, 2000) : "";
+    const stdout = err.stdout ? String(err.stdout).slice(0, 2000) : "";
     return `Command exited with code ${err.status || 1}:\n${stdout}\n${stderr}`.trim();
   }
 }

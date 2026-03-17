@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 
 export const VALIDATION_MANIFEST = {
@@ -38,7 +38,7 @@ export const VALIDATION_MANIFEST = {
 };
 
 export function validationManifestHash() {
-  return crypto.createHash("sha1").update(JSON.stringify(VALIDATION_MANIFEST)).digest("hex");
+  return crypto.createHash("sha256").update(JSON.stringify(VALIDATION_MANIFEST)).digest("hex");
 }
 
 function trimOutput(text, max = 6000) {
@@ -48,7 +48,7 @@ function trimOutput(text, max = 6000) {
 
 function runCommand(command, options = {}) {
   try {
-    const output = execSync(command, {
+    const output = execFileSync("/bin/sh", ["-c", command], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "pipe"],
       maxBuffer: 2 * 1024 * 1024,

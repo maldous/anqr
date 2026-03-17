@@ -8,7 +8,7 @@
   queue-check queue-feed queue-enforce queue-all queue-all-dry-run queue-continuous \
   symphony-run symphony-run-dry-run symphony-status \
   email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
-  quality install hooks clean
+  quality install hooks clean zip
 
 fix: lint-fix format
 
@@ -145,3 +145,6 @@ hooks:
 
 clean:
 	rm -rf dist coverage node_modules/.cache
+
+zip:
+	rm -f anqr.zip && zip -r apps commitlint.config.js cspell.json docs eslint.config.js index.html knip.json lefthook.yml Makefile netlify netlify.toml oxlint.json package.json packages playwright.config.ts postcss.config.mjs scripts services sonar-project.properties src tests tsconfig.json tsconfig.node.json tsconfig.node.tsbuildinfo vite-config vite.config.ts vitest.config.ts .dependency-cruiser.cjs .editorconfig .gitignore -x 'src/i18n/static/*' 'src/i18n/locales/*' 'src/content/generated/*' 'public/*' 'ios/*' 'android/*' 'reports/*' 'dist/*' 'coverage/*' 'node_modules/*' '.git/*'

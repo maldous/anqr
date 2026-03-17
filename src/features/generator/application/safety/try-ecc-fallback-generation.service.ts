@@ -19,10 +19,10 @@ export async function tryEccFallbackGeneration(params: {
   ) => Promise<AnyCanvas | null>;
   yieldForResponsiveness: () => Promise<boolean>;
   overlayEnabled: boolean;
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;
+  overlayCanvas: AnyCanvas | null;
   currentEcc: string;
-}): Promise<{ result: HTMLCanvasElement | OffscreenCanvas | null; succeeded: boolean }> {
-  let result: HTMLCanvasElement | OffscreenCanvas | null = null;
+}): Promise<{ result: AnyCanvas | null; succeeded: boolean }> {
+  let result: AnyCanvas | null = null;
   for (const ecc of params.eccToTry) {
     const fallbackConfig = {
       ...params.effectiveConfig,

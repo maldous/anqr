@@ -53,8 +53,8 @@ const replaceExt = (filePath, newExt) => `${stripCodeExtension(filePath)}${newEx
 
 const toKebab = (value) =>
   value
-    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
+    .replaceAll(/([a-z\d])([A-Z])/g, "$1-$2")
+    .replaceAll(/([A-Z]+?)([A-Z][a-z])/g, "$1-$2")
     .replaceAll(/[_.\s]+/g, "-")
     .replaceAll(/--+/g, "-")
     .replaceAll(/(?:^-+)|(?:-+$)/g, "")

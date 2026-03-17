@@ -21,7 +21,7 @@
  *   node scripts/ops/harness-report.mjs full
  */
 
-import { execSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, statSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,7 +124,7 @@ function checkRepoStructure() {
 
 function checkNpmScript(scriptName, label) {
   try {
-    execSync(`npm run ${scriptName}`, {
+    execFileSync("npm", ["run", scriptName], {
       cwd: ROOT,
       stdio: "pipe",
       timeout: 120_000,
@@ -230,7 +230,7 @@ async function checkOllamaHealth() {
 
 function checkAstDensity() {
   try {
-    const output = execSync("node scripts/audit-ast-density.mjs --threshold 1", {
+    const output = execFileSync("node", ["scripts/audit-ast-density.mjs", "--threshold", "1"], {
       cwd: ROOT,
       timeout: 120_000,
       stdio: "pipe",
@@ -314,41 +314,43 @@ async function checkSonarAudit() {
 }
 
 function checkCspellCoverage() {
-  // cspell writes its summary to stderr — merge with 2>&1 so we can always parse it
-  const cmd =
-    'npx cspell --no-progress "src/**/*.{ts,tsx}" "scripts/**/*.{mjs,js}" "docs/**/*.md" 2>&1';
-  try {
-    const output = execSync(cmd, {
+  const result = spawnSync(
+    "npx",
+    ["cspell", "--no-progress", "src/**/*.{ts,tsx}", "scripts/**/*.{mjs,js}", "docs/**/*.md"],
+    {
       cwd: ROOT,
       timeout: 120_000,
-      stdio: "pipe",
       encoding: "utf-8",
       env: { ...process.env, FORCE_COLOR: "0" },
-    });
+    },
+  );
+  const output = `${result.stdout || ""}${result.stderr || ""}`;
+
+  if (result.status === 0) {
     const summaryMatch = output.match(/Files checked:\s*(\d+)/);
     const filesChecked = summaryMatch ? summaryMatch[1] : "?";
     return { pass: true, detail: `${filesChecked} files checked, 0 spelling issues` };
-  } catch (err) {
-    const output = (err.stdout || "").toString();
-
-    const summaryMatch = output.match(/Files checked:\s*(\d+).*Issues found:\s*(\d+)\s*in\s*(\d+)/);
-    const filesChecked = summaryMatch ? summaryMatch[1] : "?";
-    const issueCount = summaryMatch ? summaryMatch[2] : "?";
-    const fileCount = summaryMatch ? summaryMatch[3] : "?";
-
-    const wordMatches = [...output.matchAll(/Unknown word \(([^)]+)\)/g)];
-    const uniqueWords = [...new Set(wordMatches.map((m) => m[1]))].sort();
-
-    const wordSummary =
-      uniqueWords.length <= 10
-        ? uniqueWords.join(", ")
-        : uniqueWords.slice(0, 10).join(", ") + ` ... and ${uniqueWords.length - 10} more`;
-
-    return {
-      pass: false,
-      detail: `${issueCount} issues in ${fileCount}/${filesChecked} files. Unknown words: ${wordSummary}`,
-    };
   }
+
+  const summaryMatch = output.match(
+    /Files checked:\s*(\d+)[\s\S]*?Issues found:\s*(\d+)\s*in\s*(\d+)/,
+  );
+  const filesChecked = summaryMatch ? summaryMatch[1] : "?";
+  const issueCount = summaryMatch ? summaryMatch[2] : "?";
+  const fileCount = summaryMatch ? summaryMatch[3] : "?";
+
+  const wordMatches = [...output.matchAll(/Unknown word \(([^)]+)\)/g)];
+  const uniqueWords = [...new Set(wordMatches.map((m) => m[1]))].sort();
+
+  const wordSummary =
+    uniqueWords.length <= 10
+      ? uniqueWords.join(", ")
+      : uniqueWords.slice(0, 10).join(", ") + ` ... and ${uniqueWords.length - 10} more`;
+
+  return {
+    pass: false,
+    detail: `${issueCount} issues in ${fileCount}/${filesChecked} files. Unknown words: ${wordSummary}`,
+  };
 }
 
 function checkLitellmRouting() {

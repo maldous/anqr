@@ -92,7 +92,7 @@ function extractTextContent(bodyParts) {
   for (const part of bodyParts) {
     if (part["content-type"] === "text/html" && typeof part.content === "string") {
       return part.content
-        .replaceAll(/<[^>]+>/g, " ")
+        .replaceAll(/<[^>]*>/g, " ")
         .replaceAll(/\s+/g, " ")
         .trim();
     }
@@ -195,7 +195,7 @@ async function main() {
       continue;
     }
 
-    const senderAddr = (email.from.match(/<([^>]+)>/)?.[1] || email.from).trim().toLowerCase();
+    const senderAddr = (email.from.match(/<([^>]*)>/)?.[1] || email.from).trim().toLowerCase();
     const senderAllowed = ALLOWED_SENDERS.some((addr) => senderAddr === addr.toLowerCase());
     if (!senderAllowed) {
       summary.rejected.push({ messageId: email.id, from: email.from, subject: email.subject });

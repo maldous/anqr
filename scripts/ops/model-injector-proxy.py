@@ -21,6 +21,7 @@ Usage:
 
 import argparse
 import json
+import os
 
 CONTENT_TYPE_JSON = "application/json"
 import sys
@@ -31,7 +32,7 @@ import urllib.error
 from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone
 
-OLLAMA_BASE = "http://localhost:11434"
+OLLAMA_BASE = os.environ.get("OLLAMA_API_BASE", "http://localhost:11434")
 PINNED_MODEL = "qwen3.5:35b-a3b-32t"
 DEFAULT_PORT = 8400
 

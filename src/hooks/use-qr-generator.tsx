@@ -75,7 +75,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [isRendering, setIsRendering] = useState(false); // Active rendering state
   const [pendingVisible, setPendingVisible] = useState(false); // Delayed pending state to avoid immediate blur while typing
   const [error, setError] = useState<string | null>(null);
-  const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(
+  const [overlayCanvas, setOverlayCanvas] = useState<AnyCanvas | null>(
     null,
   );
 
@@ -116,7 +116,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Store raw overlay canvas before preprocessing
   const [rawOverlayCanvas, setRawOverlayCanvas] = useState<
-    HTMLCanvasElement | OffscreenCanvas | null
+    AnyCanvas | null
   >(null);
 
   // Track when we're loading/parsing an overlay file (prevents busy overlay flickering)
@@ -137,12 +137,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Store generated frames for GIF export/playback outside React state to avoid
   // retaining large canvas arrays in the render tree.
-  const animationFramesRef = useRef<(HTMLCanvasElement | OffscreenCanvas)[]>([]);
+  const animationFramesRef = useRef<AnyCanvas[]>([]);
   const [animationFrameCount, setAnimationFrameCount] = useState(0);
   const [animationFramesRevision, setAnimationFramesRevision] = useState(0);
   const [isAnimationCacheReady, setIsAnimationCacheReady] = useState(false);
 
-  const replaceAnimationFrames = useCallback((frames: (HTMLCanvasElement | OffscreenCanvas)[]) => {
+  const replaceAnimationFrames = useCallback((frames: AnyCanvas[]) => {
     animationFramesRef.current = frames;
     setAnimationFrameCount(frames.length);
     setAnimationFramesRevision((rev) => rev + 1);
@@ -864,7 +864,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
    * the generator will NOT double-apply transforms.
    */
   const applyGeometricTransforms = useCallback(
-    (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): HTMLCanvasElement => {
+    (sourceCanvas: AnyCanvas): HTMLCanvasElement => {
       const source = sourceCanvas as HTMLCanvasElement;
       const needsTransform =
         overlay.rotateDeg !== 0 ||
@@ -1061,8 +1061,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
       const effectiveConfig = { ...debouncedConfig };
       const runGeneratorWithStatus = (
         cfg: QRGeneratorConfig,
-        overlaySource: HTMLCanvasElement | OffscreenCanvas | null,
-      ): Promise<HTMLCanvasElement | OffscreenCanvas | null> =>
+        overlaySource: AnyCanvas | null,
+      ): Promise<AnyCanvas | null> =>
         runGeneratorWithSlowStatus({
           cfg,
           overlaySource,
@@ -1658,10 +1658,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     const scratchPool = createScratchCanvasPool();
     const applyResultPatternStackPersistent = (
-      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      sourceCanvas: AnyCanvas,
       frameIndex: number,
       totalFrames: number,
-    ): HTMLCanvasElement | OffscreenCanvas =>
+    ): AnyCanvas =>
       applyPatternStackToCanvas(
         sourceCanvas,
         resultPatternEffects,
@@ -1671,10 +1671,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
         scratchPool.getPatternScratch,
       );
     const applyResultPatternStackEphemeral = (
-      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      sourceCanvas: AnyCanvas,
       frameIndex: number,
       totalFrames: number,
-    ): HTMLCanvasElement | OffscreenCanvas =>
+    ): AnyCanvas =>
       applyPatternStackToCanvas(
         sourceCanvas,
         resultPatternEffects,
@@ -1684,10 +1684,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
         scratchPool.getPatternScratch,
       );
     const applyModulePatternStackEphemeral = (
-      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      sourceCanvas: AnyCanvas,
       frameIndex: number,
       totalFrames: number,
-    ): HTMLCanvasElement | OffscreenCanvas =>
+    ): AnyCanvas =>
       applyPatternStackToCanvas(
         sourceCanvas,
         modulePatternEffects,
@@ -1721,9 +1721,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     // Generate QR for each frame (batch generation)
     const generateAllFrames = async () => {
-      let frames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
+      let frames: AnyCanvas[] = [];
 
-      const persistFrameCanvas = (frameCanvas: HTMLCanvasElement | OffscreenCanvas): void => {
+      const persistFrameCanvas = (frameCanvas: AnyCanvas): void => {
         frames.push(cloneCanvasSimple(frameCanvas));
       };
 
@@ -1787,9 +1787,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
       );
 
       const generateArtworkFrame = (
-        frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+        frameOverlayCanvas: AnyCanvas,
         frameIdx: number,
-      ): Promise<HTMLCanvasElement | OffscreenCanvas | null> =>
+      ): Promise<AnyCanvas | null> =>
         generateArtworkFrameStandalone({
           frameOverlayCanvas,
           frameIdx,

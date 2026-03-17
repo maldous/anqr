@@ -123,7 +123,7 @@ export async function fetchAllSonarDuplicationIssues(sonarToken, sonarHost, proj
 // Linear helpers
 // ---------------------------------------------------------------------------
 
-async function findOpenSonarLinearIssues() {
+async function findOpenLinearIssuesByTag(titleTag) {
   const result = await query(
     `query($filter: IssueFilter!) {
       issues(filter: $filter, first: 100) {
@@ -137,11 +137,75 @@ async function findOpenSonarLinearIssues() {
       filter: {
         team: { id: { eq: TEAM_ID } },
         state: { name: { in: OPEN_STATE_NAMES } },
-        title: { contains: "[Sonar]" },
+        title: { contains: titleTag },
       },
     },
   );
   return result.issues.nodes;
+}
+
+async function applyPromoteAndRequeue(
+  linearIssue,
+  priority,
+  requeueToReady,
+  logPrefix,
+  entityLabel,
+) {
+  const actions = { promoted: null, requeued: null };
+
+  if (linearIssue.priority > priority) {
+    const fromLabel = PRIORITY_LABELS[linearIssue.priority] || `P${linearIssue.priority}`;
+    const toLabel = PRIORITY_LABELS[priority] || `P${priority}`;
+    await updateIssue(linearIssue.id, { priority });
+    await addComment(
+      linearIssue.id,
+      [
+        `\u26a0\ufe0f **Promoted to ${toLabel}** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
+        "",
+        `Priority changed from ${fromLabel} to ${toLabel}. This ${entityLabel} must be resolved.`,
+      ].join("\n"),
+    );
+    console.log(`[${logPrefix}] Promoted ${linearIssue.identifier} from ${fromLabel} → ${toLabel}`);
+    actions.promoted = { from: linearIssue.priority, to: priority };
+  }
+
+  if (requeueToReady && linearIssue.state.name !== "Todo") {
+    const fromState = linearIssue.state.name;
+    await updateIssue(linearIssue.id, { stateId: STATES.todo });
+    await addComment(
+      linearIssue.id,
+      [
+        `\u21a9\ufe0f **Requeued to Todo** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
+        "",
+        `Moved from ${fromState} back to Todo so the runner can pick it up.`,
+      ].join("\n"),
+    );
+    console.log(`[${logPrefix}] Requeued ${linearIssue.identifier} from ${fromState} → Todo`);
+    actions.requeued = { fromState };
+  }
+
+  return actions;
+}
+
+async function resolveStaleLinearIssues(keyToLinear, currentKeys, logPrefix, resolveLabel) {
+  const resolved = [];
+  for (const [key, linearIssue] of keyToLinear) {
+    if (currentKeys.has(key)) continue;
+    console.log(
+      `[${logPrefix}] Resolving ${linearIssue.identifier} — ${resolveLabel} no longer present`,
+    );
+    await addComment(
+      linearIssue.id,
+      [
+        `\u2705 **${resolveLabel} resolved** — ${new Date().toISOString().slice(0, 10)}`,
+        "",
+        `This ${resolveLabel.toLowerCase()} is no longer detected. Marking as Done.`,
+      ].join("\n"),
+    );
+    await updateIssue(linearIssue.id, { stateId: STATES.done });
+    resolved.push(linearIssue);
+  }
+  return resolved;
 }
 
 function extractSonarKey(description) {
@@ -208,9 +272,8 @@ export async function syncSonarToLinear({
   resolveStale,
   requeueToReady,
 }) {
-  const existingLinear = await findOpenSonarLinearIssues();
+  const existingLinear = await findOpenLinearIssuesByTag("[Sonar]");
 
-  // Build map: sonarKey → Linear issue (for issues that have the marker)
   const keyToLinear = new Map();
   const legacyIssues = [];
   for (const li of existingLinear) {
@@ -224,7 +287,6 @@ export async function syncSonarToLinear({
 
   const currentKeys = new Set(sonarIssues.map((i) => i.key));
 
-  // Create missing Linear issues (and promote/requeue existing ones as needed)
   const created = [];
   const skipped = [];
   const promoted = [];
@@ -232,44 +294,20 @@ export async function syncSonarToLinear({
   for (const si of sonarIssues) {
     if (keyToLinear.has(si.key)) {
       const existing = keyToLinear.get(si.key);
-      let changed = false;
-
-      // Promote if requested priority is higher (lower number = higher priority)
-      if (existing.priority > priority) {
-        const fromLabel = PRIORITY_LABELS[existing.priority] || `P${existing.priority}`;
-        const toLabel = PRIORITY_LABELS[priority] || `P${priority}`;
-        await updateIssue(existing.id, { priority });
-        await addComment(
-          existing.id,
-          [
-            `\u26a0\ufe0f **Promoted to ${toLabel}** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
-            "",
-            `Priority changed from ${fromLabel} to ${toLabel}. This sonar finding must be resolved before other work.`,
-          ].join("\n"),
-        );
-        console.log(`[sonar-sync] Promoted ${existing.identifier} from ${fromLabel} → ${toLabel}`);
-        promoted.push({ sonar: si, linear: existing, from: existing.priority, to: priority });
-        changed = true;
+      const actions = await applyPromoteAndRequeue(
+        existing,
+        priority,
+        requeueToReady,
+        "sonar-sync",
+        "sonar finding",
+      );
+      if (actions.promoted) {
+        promoted.push({ sonar: si, linear: existing, ...actions.promoted });
       }
-
-      // Requeue to ready state if stuck in another state (nightly only)
-      if (requeueToReady && existing.state.name !== "Todo") {
-        const fromState = existing.state.name;
-        await updateIssue(existing.id, { stateId: STATES.todo });
-        await addComment(
-          existing.id,
-          [
-            `\u21a9\ufe0f **Requeued to Todo** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
-            "",
-            `Moved from ${fromState} back to Todo so the runner can pick it up.`,
-          ].join("\n"),
-        );
-        console.log(`[sonar-sync] Requeued ${existing.identifier} from ${fromState} → Todo`);
-        requeued.push({ linear: existing, fromState });
-        changed = true;
+      if (actions.requeued) {
+        requeued.push({ linear: existing, ...actions.requeued });
       }
-
-      if (!changed) {
+      if (!actions.promoted && !actions.requeued) {
         skipped.push({ sonar: si, linear: existing });
       }
       continue;
@@ -282,26 +320,11 @@ export async function syncSonarToLinear({
     console.log(`[sonar-sync] Created ${issue.identifier}: ${title}`);
   }
 
-  // Resolve stale issues (nightly only)
-  const resolved = [];
-  if (resolveStale) {
-    // Resolve tracked issues whose sonar key is no longer present
-    for (const [sonarKey, linearIssue] of keyToLinear) {
-      if (currentKeys.has(sonarKey)) continue;
-      console.log(`[sonar-sync] Resolving ${linearIssue.identifier} — finding no longer present`);
-      await addComment(
-        linearIssue.id,
-        [
-          `\u2705 **Sonar finding resolved** — ${new Date().toISOString().slice(0, 10)}`,
-          "",
-          "This SonarQube finding is no longer detected. Marking as Done.",
-        ].join("\n"),
-      );
-      await updateIssue(linearIssue.id, { stateId: STATES.done });
-      resolved.push(linearIssue);
-    }
+  const resolved = resolveStale
+    ? await resolveStaleLinearIssues(keyToLinear, currentKeys, "sonar-sync", "Sonar finding")
+    : [];
 
-    // Resolve legacy aggregate issues (no sonar-key marker)
+  if (resolveStale) {
     for (const linearIssue of legacyIssues) {
       console.log(`[sonar-sync] Resolving legacy issue ${linearIssue.identifier}`);
       await addComment(
@@ -323,27 +346,6 @@ export async function syncSonarToLinear({
 // ---------------------------------------------------------------------------
 // Hotspot sync
 // ---------------------------------------------------------------------------
-
-async function findOpenSonarHotspotLinearIssues() {
-  const result = await query(
-    `query($filter: IssueFilter!) {
-      issues(filter: $filter, first: 100) {
-        nodes {
-          id identifier title description priority
-          state { name }
-        }
-      }
-    }`,
-    {
-      filter: {
-        team: { id: { eq: TEAM_ID } },
-        state: { name: { in: OPEN_STATE_NAMES } },
-        title: { contains: "[SonarHotspot]" },
-      },
-    },
-  );
-  return result.issues.nodes;
-}
 
 function buildHotspotLinearTitle(hotspot, projectKey) {
   const filePath = stripProjectPrefix(hotspot.component, projectKey);
@@ -399,7 +401,7 @@ export async function syncSonarHotspotsToLinear({
   resolveStale,
   requeueToReady,
 }) {
-  const existingLinear = await findOpenSonarHotspotLinearIssues();
+  const existingLinear = await findOpenLinearIssuesByTag("[SonarHotspot]");
 
   const keyToLinear = new Map();
   for (const li of existingLinear) {
@@ -419,46 +421,20 @@ export async function syncSonarHotspotsToLinear({
   for (const sh of sonarHotspots) {
     if (keyToLinear.has(sh.key)) {
       const existing = keyToLinear.get(sh.key);
-      let changed = false;
-
-      if (existing.priority > priority) {
-        const fromLabel = PRIORITY_LABELS[existing.priority] || `P${existing.priority}`;
-        const toLabel = PRIORITY_LABELS[priority] || `P${priority}`;
-        await updateIssue(existing.id, { priority });
-        await addComment(
-          existing.id,
-          [
-            `\u26a0\ufe0f **Promoted to ${toLabel}** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
-            "",
-            `Priority changed from ${fromLabel} to ${toLabel}. This security hotspot must be reviewed.`,
-          ].join("\n"),
-        );
-        console.log(
-          `[sonar-hotspot-sync] Promoted ${existing.identifier} from ${fromLabel} → ${toLabel}`,
-        );
-        promoted.push({ hotspot: sh, linear: existing, from: existing.priority, to: priority });
-        changed = true;
+      const actions = await applyPromoteAndRequeue(
+        existing,
+        priority,
+        requeueToReady,
+        "sonar-hotspot-sync",
+        "security hotspot",
+      );
+      if (actions.promoted) {
+        promoted.push({ hotspot: sh, linear: existing, ...actions.promoted });
       }
-
-      if (requeueToReady && existing.state.name !== "Todo") {
-        const fromState = existing.state.name;
-        await updateIssue(existing.id, { stateId: STATES.todo });
-        await addComment(
-          existing.id,
-          [
-            `\u21a9\ufe0f **Requeued to Todo** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
-            "",
-            `Moved from ${fromState} back to Todo so the runner can pick it up.`,
-          ].join("\n"),
-        );
-        console.log(
-          `[sonar-hotspot-sync] Requeued ${existing.identifier} from ${fromState} → Todo`,
-        );
-        requeued.push({ linear: existing, fromState });
-        changed = true;
+      if (actions.requeued) {
+        requeued.push({ linear: existing, ...actions.requeued });
       }
-
-      if (!changed) {
+      if (!actions.promoted && !actions.requeued) {
         skipped.push({ hotspot: sh, linear: existing });
       }
       continue;
@@ -471,25 +447,14 @@ export async function syncSonarHotspotsToLinear({
     console.log(`[sonar-hotspot-sync] Created ${issue.identifier}: ${title}`);
   }
 
-  const resolved = [];
-  if (resolveStale) {
-    for (const [hotspotKey, linearIssue] of keyToLinear) {
-      if (currentKeys.has(hotspotKey)) continue;
-      console.log(
-        `[sonar-hotspot-sync] Resolving ${linearIssue.identifier} — hotspot no longer present`,
-      );
-      await addComment(
-        linearIssue.id,
-        [
-          `\u2705 **Hotspot resolved** — ${new Date().toISOString().slice(0, 10)}`,
-          "",
-          "This security hotspot is no longer detected. Marking as Done.",
-        ].join("\n"),
-      );
-      await updateIssue(linearIssue.id, { stateId: STATES.done });
-      resolved.push(linearIssue);
-    }
-  }
+  const resolved = resolveStale
+    ? await resolveStaleLinearIssues(
+        keyToLinear,
+        currentKeys,
+        "sonar-hotspot-sync",
+        "Hotspot",
+      )
+    : [];
 
   return { created, skipped, promoted, requeued, resolved };
 }
@@ -497,27 +462,6 @@ export async function syncSonarHotspotsToLinear({
 // ---------------------------------------------------------------------------
 // Duplication sync
 // ---------------------------------------------------------------------------
-
-async function findOpenSonarDuplicationLinearIssues() {
-  const result = await query(
-    `query($filter: IssueFilter!) {
-      issues(filter: $filter, first: 100) {
-        nodes {
-          id identifier title description priority
-          state { name }
-        }
-      }
-    }`,
-    {
-      filter: {
-        team: { id: { eq: TEAM_ID } },
-        state: { name: { in: OPEN_STATE_NAMES } },
-        title: { contains: "[SonarDup]" },
-      },
-    },
-  );
-  return result.issues.nodes;
-}
 
 function buildDuplicationLinearTitle(issue, projectKey) {
   const filePath = stripProjectPrefix(issue.component, projectKey);
@@ -567,7 +511,7 @@ export async function syncSonarDuplicationsToLinear({
   resolveStale,
   requeueToReady,
 }) {
-  const existingLinear = await findOpenSonarDuplicationLinearIssues();
+  const existingLinear = await findOpenLinearIssuesByTag("[SonarDup]");
 
   const keyToLinear = new Map();
   for (const li of existingLinear) {
@@ -587,44 +531,20 @@ export async function syncSonarDuplicationsToLinear({
   for (const sd of sonarDupIssues) {
     if (keyToLinear.has(sd.key)) {
       const existing = keyToLinear.get(sd.key);
-      let changed = false;
-
-      if (existing.priority > priority) {
-        const fromLabel = PRIORITY_LABELS[existing.priority] || `P${existing.priority}`;
-        const toLabel = PRIORITY_LABELS[priority] || `P${priority}`;
-        await updateIssue(existing.id, { priority });
-        await addComment(
-          existing.id,
-          [
-            `\u26a0\ufe0f **Promoted to ${toLabel}** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
-            "",
-            `Priority changed from ${fromLabel} to ${toLabel}. This duplication issue must be resolved.`,
-          ].join("\n"),
-        );
-        console.log(
-          `[sonar-dup-sync] Promoted ${existing.identifier} from ${fromLabel} → ${toLabel}`,
-        );
-        promoted.push({ duplication: sd, linear: existing, from: existing.priority, to: priority });
-        changed = true;
+      const actions = await applyPromoteAndRequeue(
+        existing,
+        priority,
+        requeueToReady,
+        "sonar-dup-sync",
+        "duplication issue",
+      );
+      if (actions.promoted) {
+        promoted.push({ duplication: sd, linear: existing, ...actions.promoted });
       }
-
-      if (requeueToReady && existing.state.name !== "Todo") {
-        const fromState = existing.state.name;
-        await updateIssue(existing.id, { stateId: STATES.todo });
-        await addComment(
-          existing.id,
-          [
-            `\u21a9\ufe0f **Requeued to Todo** by nightly audit — ${new Date().toISOString().slice(0, 10)}`,
-            "",
-            `Moved from ${fromState} back to Todo so the runner can pick it up.`,
-          ].join("\n"),
-        );
-        console.log(`[sonar-dup-sync] Requeued ${existing.identifier} from ${fromState} → Todo`);
-        requeued.push({ linear: existing, fromState });
-        changed = true;
+      if (actions.requeued) {
+        requeued.push({ linear: existing, ...actions.requeued });
       }
-
-      if (!changed) {
+      if (!actions.promoted && !actions.requeued) {
         skipped.push({ duplication: sd, linear: existing });
       }
       continue;
@@ -637,25 +557,14 @@ export async function syncSonarDuplicationsToLinear({
     console.log(`[sonar-dup-sync] Created ${issue.identifier}: ${title}`);
   }
 
-  const resolved = [];
-  if (resolveStale) {
-    for (const [dupKey, linearIssue] of keyToLinear) {
-      if (currentKeys.has(dupKey)) continue;
-      console.log(
-        `[sonar-dup-sync] Resolving ${linearIssue.identifier} — duplication no longer present`,
-      );
-      await addComment(
-        linearIssue.id,
-        [
-          `\u2705 **Duplication resolved** — ${new Date().toISOString().slice(0, 10)}`,
-          "",
-          "This duplication issue is no longer detected. Marking as Done.",
-        ].join("\n"),
-      );
-      await updateIssue(linearIssue.id, { stateId: STATES.done });
-      resolved.push(linearIssue);
-    }
-  }
+  const resolved = resolveStale
+    ? await resolveStaleLinearIssues(
+        keyToLinear,
+        currentKeys,
+        "sonar-dup-sync",
+        "Duplication",
+      )
+    : [];
 
   return { created, skipped, promoted, requeued, resolved };
 }

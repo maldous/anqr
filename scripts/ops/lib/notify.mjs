@@ -92,10 +92,11 @@ export function formatIssueLine({ identifier, title, snippet, meta = [] }) {
  * @returns {{ sent: boolean, reason?: string }}
  */
 export function sendNotification({ subject, body, severity = "info" }) {
-  const msmtpPath = spawnSync("which", ["msmtp"], { encoding: "utf-8" });
-  if (msmtpPath.status !== 0) {
+  const msmtpLookup = spawnSync("which", ["msmtp"], { encoding: "utf-8" });
+  if (msmtpLookup.status !== 0) {
     return { sent: false, reason: "msmtp not found" };
   }
+  const msmtpBin = msmtpLookup.stdout.trim();
 
   let severityTag;
   if (severity === "critical") severityTag = "[CRITICAL] ";
@@ -125,7 +126,7 @@ export function sendNotification({ subject, body, severity = "info" }) {
     `Sent by ANQR Ops at ${timestamp}`,
   ].join("\n");
 
-  const proc = spawnSync("msmtp", [RECIPIENT], {
+  const proc = spawnSync(msmtpBin, [RECIPIENT], {
     input: email,
     encoding: "utf-8",
     timeout: 30_000,
