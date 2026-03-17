@@ -17,17 +17,11 @@ export function resolveEffectTargetCanvas(
   }
 
   const ctx =
-    (result.getContext("2d", {
+    result.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    } as CanvasRenderingContext2DSettings | undefined) as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null) ??
-    (result.getContext("2d") as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null);
+    }) ??
+    result.getContext("2d");
 
   return { ctx, result };
 }

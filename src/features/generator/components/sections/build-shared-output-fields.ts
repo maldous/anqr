@@ -1,4 +1,4 @@
-import { falseIfFalse, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
+import { omitWhenEqual, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
 
 export function buildSharedOutputFields(output: {
   widthPx: number;
@@ -18,7 +18,7 @@ export function buildSharedOutputFields(output: {
     quality: undefinedIfEqual(output.quality, 0.9),
     filename: undefinedIfEqual(output.filename, "anqr-qrcode"),
     dpi: undefinedIfEqual(output.dpi, 72),
-    includeQuietZone: falseIfFalse(output.includeQuietZone),
+    includeQuietZone: omitWhenEqual(output.includeQuietZone, true),
     bgOverride: undefinedIfFalsy(output.bgOverride),
     formatExtra: undefinedIfEqual(output.formatExtra, "none"),
   };

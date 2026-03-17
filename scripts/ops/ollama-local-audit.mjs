@@ -125,4 +125,4 @@ function printSummary() {
   console.log(`\n[ollama-local-audit] ${passed}/${total} checks passed`);
 }
 
-main();
+await main();

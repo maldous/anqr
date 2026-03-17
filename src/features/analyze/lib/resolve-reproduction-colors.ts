@@ -5,10 +5,9 @@ export function resolveColors(
 ) {
   return {
     fg: isGeneratorSource ? renderState.fgColor : detectedColors?.foreground || "#000000",
-    bg: isGeneratorSource
-      ? renderState.bgTransparent
-        ? "#ffffff"
-        : renderState.bgColor
-      : detectedColors?.background || "#ffffff",
+    bg: (() => {
+      if (!isGeneratorSource) return detectedColors?.background || "#ffffff";
+      return renderState.bgTransparent ? "#ffffff" : renderState.bgColor;
+    })(),
   };
 }

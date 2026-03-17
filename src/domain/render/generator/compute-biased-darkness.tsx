@@ -11,8 +11,8 @@ export function computeBiasedDarkness(
   fixedDarkUnlocked: boolean,
 ): number {
   const centerW = moduleCenterWeight(x, y, ctx.scale);
-  const qrBias = fixedDarkUnlocked
-    ? 0
-    : (qrIsDark ? 1 : -1) * ctx.qrBitBiasStrength * centerW * (0.45 + ctx.mix * 0.8);
+  let qrBias: number;
+  if (fixedDarkUnlocked) qrBias = 0;
+  else qrBias = (qrIsDark ? 1 : -1) * ctx.qrBitBiasStrength * centerW * (0.45 + ctx.mix * 0.8);
   return clamp01(overlayDark + qrBias);
 }

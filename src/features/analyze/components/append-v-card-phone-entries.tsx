@@ -2,7 +2,7 @@ import { Phone } from "lucide-react";
 import type { DetailEntry } from "./detail-entry";
 
 export function appendVCardPhoneEntries(details: DetailEntry[], phones: string[]): void {
-  phones.forEach((phone) => {
+  for (const phone of phones) {
     const [type, number] = phone.includes(":") ? phone.split(": ") : ["Phone", phone];
     details.push({
       label: type,
@@ -16,5 +16,5 @@ export function appendVCardPhoneEntries(details: DetailEntry[], phones: string[]
       ),
       icon: <Phone className="w-3 h-3" />,
     });
-  });
+  }
 }

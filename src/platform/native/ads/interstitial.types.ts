@@ -3,4 +3,4 @@ export type InterstitialType =
   | "rewardedInterstitial"
   | "gallery"
   | "export"
-  | string;
+  | "generation";

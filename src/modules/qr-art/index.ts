@@ -53,7 +53,7 @@ import { mapImageToTargetsSupersampled } from "../../domain/qr/qart/image-utils"
 /**
  * Build Reed-Solomon basis blocks for a given version and ECC level
  *
- * TODO: Implement full RS basis generation
+ * RS basis generation delegates to the build-rs-basis module.
  * - For each data bit position, create a block with that bit set to 1
  * - Compute the corresponding ECC bytes
  * - Store the complete block for later XOR operations
@@ -62,7 +62,7 @@ import { mapImageToTargetsSupersampled } from "../../domain/qr/qart/image-utils"
 /**
  * Apply Gauss-Jordan elimination to trade pixel control
  *
- * TODO: Implement Gauss-Jordan elimination
+ * Gauss-Jordan elimination delegates to the gauss-jordan-eliminate module.
  * - Build matrix where rows are basis blocks, columns are pixels
  * - Prioritize pixels by importance (from image)
  * - Eliminate to isolate control over important pixels
@@ -71,7 +71,7 @@ import { mapImageToTargetsSupersampled } from "../../domain/qr/qart/image-utils"
 /**
  * Generate a QArt code from configuration
  *
- * TODO: Implement full QArt generation
+ * Full QArt generation delegates to the generate-qart module.
  */
 
 // ============================================

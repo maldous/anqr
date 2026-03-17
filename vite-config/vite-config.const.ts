@@ -497,11 +497,11 @@ export const viteConfig = defineConfig({
     plugins: () => [react()],
     rollupOptions: {
       output: {
-        // Inline all imports into a single self-contained worker file.
+        // Build each worker as a single self-contained file.
         // Without this, Rolldown extracts shared code into a separate esm-*.js
         // chunk whose rolldown runtime helpers import back from the worker entry,
         // creating a circular chunk dependency.
-        inlineDynamicImports: true,
+        codeSplitting: false,
       },
     },
   },

@@ -299,4 +299,4 @@ function printSummary() {
   console.log(`[linear-guardian] Summary: ${parts.join(", ") || "no actions"}`);
 }
 
-main();
+await main();

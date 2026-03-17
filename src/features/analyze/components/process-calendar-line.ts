@@ -13,16 +13,16 @@ export function processCalendarLine(
       result.summary = value;
       return false;
     case "DESCRIPTION":
-      result.description = value.replaceAll("\\n", "\n").replaceAll("\\,", ",");
+      result.description = value.replaceAll(String.raw`\n`, "\n").replaceAll(String.raw`\,`, ",");
       return false;
     case "LOCATION":
-      result.location = value.replaceAll("\\,", ",");
+      result.location = value.replaceAll(String.raw`\,`, ",");
       return false;
     case "DTSTART": {
       result.startDate = value;
       result.startFormatted = formatICalDateTime(value.replaceAll("Z", ""));
       result.isAllDay = value.length === 8;
-      const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
+      const tzMatch = /TZID=([^;:]+)/i.exec(keyPart);
       if (tzMatch) result.timezone = tzMatch[1];
       return false;
     }
@@ -34,7 +34,7 @@ export function processCalendarLine(
       result.duration = value;
       return false;
     case "ORGANIZER": {
-      const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
+      const cnMatch = /CN=([^:;]+)/i.exec(value) ?? /CN=([^:;]+)/i.exec(keyPart);
       result.organizer = cnMatch ? cnMatch[1] : value.replaceAll("mailto:", "");
       return false;
     }

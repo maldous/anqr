@@ -27,17 +27,11 @@ export async function hashCanvasContent(
       hashCanvas.height = HASH_CANVAS_SIZE;
     }
     const hashCtx =
-      (hashCanvas.getContext("2d", {
+      hashCanvas.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
-      } as CanvasRenderingContext2DSettings) as
-        | CanvasRenderingContext2D
-        | OffscreenCanvasRenderingContext2D
-        | null) ??
-      (hashCanvas.getContext("2d") as
-        | CanvasRenderingContext2D
-        | OffscreenCanvasRenderingContext2D
-        | null);
+      }) ??
+      hashCanvas.getContext("2d");
     if (!hashCtx) {
       return `${canvas.width}x${canvas.height}`;
     }

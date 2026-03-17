@@ -658,10 +658,10 @@ function showStatus() {
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  const dryRun = args.includes("--dry-run");
-  const doOnce = args.includes("--once");
-  const doStatus = args.includes("--status");
+  const args = new Set(process.argv.slice(2));
+  const dryRun = args.has("--dry-run");
+  const doOnce = args.has("--once");
+  const doStatus = args.has("--status");
   if (doStatus) {
     showStatus();
     process.exit(0);
@@ -732,4 +732,4 @@ async function main() {
   }
 }
 
-main();
+await main();

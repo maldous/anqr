@@ -25,7 +25,7 @@ export async function deliverQArtResult(params: {
   canvasRef: { current: HTMLCanvasElement | null };
   setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
   updateGenerationProgress: (stage: string, percent: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any;
   qartRequestMarked: boolean;
   qartPerfMarkPrefix: string;

@@ -14,7 +14,7 @@ export async function finalizeAnimationFrames(params: {
   content: string | undefined;
   isRunCancelled: () => boolean;
   updateGenerationProgress: (stage: string, percent: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any;
 }): Promise<(HTMLCanvasElement | OffscreenCanvas)[]> {
   let frames = params.frames;

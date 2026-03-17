@@ -45,17 +45,11 @@ export async function exportGif(
         })()
       : new OffscreenCanvas(width, height);
   const scaledCtx =
-    (scaledCanvas.getContext("2d", {
+    scaledCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    } as CanvasRenderingContext2DSettings | undefined) as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null) ??
-    (scaledCanvas.getContext("2d") as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null);
+    }) ??
+    scaledCanvas.getContext("2d");
   if (!scaledCtx) throw new Error("Could not get canvas context");
 
   // Pre-compute disposal code once (not per-frame)

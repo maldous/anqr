@@ -32,8 +32,8 @@ export function berlekampMassey(syndromes: number[]): { sigma: number[]; degree:
       b = d;
       B.length = 0;
 
-      for (let i = 0; i < T.length; i++) {
-        B.push(T[i] ?? 0);
+      for (const val of T) {
+        B.push(val ?? 0);
       }
 
       m = 1;

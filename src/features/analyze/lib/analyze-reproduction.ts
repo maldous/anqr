@@ -18,7 +18,6 @@ import {
   resolveFinalVersion,
   resolveReproductionParams,
 } from "./reproduction-encode";
-import type { ValidEncoderMode } from "./reproduction-types";
 
 const log = createLogger("ANALYZE");
 const ENABLE_ANALYZE_MATRIX_DIAGNOSTICS =
@@ -71,7 +70,7 @@ export function reproduceQRCode(params: {
   const effectiveMode = resolveEffectiveMode(
     encoderInput.kind,
     result.encodingMode,
-    modeToUse as ValidEncoderMode | undefined,
+    modeToUse,
   );
   const encodeStartMs = nowMs();
   let qrResult;

@@ -11,7 +11,7 @@ export async function tryWorkerSideRender(
   if (!canRenderInWorker() || !response.matrix) return;
   try {
     const config: QRGeneratorConfig = {
-      ...(renderConfig as unknown as QRGeneratorConfig),
+      ...(renderConfig as QRGeneratorConfig),
       typeNumber: response.version,
       overlayMode: undefined,
     };

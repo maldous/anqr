@@ -29,6 +29,20 @@ import {
   Switch,
 } from "./section-ui";
 
+function openNativeColorPicker(palette: string[], index: number): void {
+  const input = document.createElement("input");
+  input.type = "color";
+  input.value = palette[index];
+  input.onchange = (e) => {
+    const newPalette = [...palette];
+    newPalette[index] = (e.target as HTMLInputElement).value;
+    useQRStore.setState((s) => ({
+      render: { ...s.render, palette: newPalette },
+    }));
+  };
+  input.click();
+}
+
 export function RenderSection() {
   const {
     tier,
@@ -466,28 +480,13 @@ export function RenderSection() {
               <HighlightedLabel>{t("render.colorPalette")}</HighlightedLabel>
             </Label>
             <div className="flex flex-wrap gap-2">
-              {render.palette.map((color, index) => {
-                const openColorPicker = () => {
-                  const input = document.createElement("input");
-                  input.type = "color";
-                  input.value = color;
-                  input.onchange = (e) => {
-                    const newPalette = [...render.palette];
-                    newPalette[index] = (e.target as HTMLInputElement).value;
-                    useQRStore.setState((s) => ({
-                      render: { ...s.render, palette: newPalette },
-                    }));
-                  };
-                  input.click();
-                };
-
-                return (
+              {render.palette.map((color, index) => (
                   <div key={`palette-${color}-${index}`} className="flex items-center gap-1">
                     <button
                       type="button"
                       className="w-6 h-6 rounded border cursor-pointer"
                       style={{ backgroundColor: color }}
-                      onClick={openColorPicker}
+                      onClick={() => openNativeColorPicker(render.palette, index)}
                       aria-label={`Edit color ${color}`}
                     />
                     <Button
@@ -504,8 +503,7 @@ export function RenderSection() {
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                );
-              })}
+                ))}
             </div>
             <div className="flex gap-2">
               <Input

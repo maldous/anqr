@@ -164,9 +164,9 @@ async function enforceMaxConcurrent(snap = null, dryRun = false) {
 
   const keep = active.slice(0, MAX_CONCURRENT_AGENTS);
   const demote = active.slice(MAX_CONCURRENT_AGENTS);
-  keep.forEach((issue) =>
-    logAction("info", `Keeping ${issue.identifier} in progress: ${issue.title}`),
-  );
+  for (const issue of keep) {
+    logAction("info", `Keeping ${issue.identifier} in progress: ${issue.title}`);
+  }
 
   for (const issue of demote) {
     const state = getIssueState(issue.identifier);
@@ -244,13 +244,13 @@ async function detectStuckWork(snap = null, dryRun = false) {
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  const dryRun = args.includes("--dry-run");
-  const doCheck = args.includes("--check");
-  const doFeed = args.includes("--feed");
-  const doDrain = args.includes("--drain");
-  const doEnforce = args.includes("--enforce");
-  const doAll = args.includes("--all");
+  const args = new Set(process.argv.slice(2));
+  const dryRun = args.has("--dry-run");
+  const doCheck = args.has("--check");
+  const doFeed = args.has("--feed");
+  const doDrain = args.has("--drain");
+  const doEnforce = args.has("--enforce");
+  const doAll = args.has("--all");
 
   if (!doCheck && !doFeed && !doDrain && !doEnforce && !doAll) {
     console.error(
@@ -296,8 +296,10 @@ async function main() {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main().catch((err) => {
+  try {
+    await main();
+  } catch (err) {
     console.error(`[queue-control] Fatal: ${err.message}`);
     process.exit(1);
-  });
+  }
 }

@@ -1,6 +1,5 @@
 // Global state for QR generator
 declare global {
-  // eslint-disable-next-line no-var
   var __ANQR_STATE__:
     | {
         canvas?: HTMLCanvasElement | OffscreenCanvas;
@@ -14,7 +13,7 @@ declare global {
         frameDelays?: number[];
       }
     | undefined;
-  // eslint-disable-next-line no-var
+
   var adsbygoogle: Array<Record<string, unknown>> | undefined;
 }
 export {};

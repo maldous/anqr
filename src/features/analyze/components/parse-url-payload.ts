@@ -52,9 +52,9 @@ export function parseUrlPayload(payload: string): UrlParseResult {
 
     // Parse all query parameters
     const params: Array<{ key: string; value: string }> = [];
-    url.searchParams.forEach((value, key) => {
+    for (const [key, value] of url.searchParams) {
       params.push({ key, value: decodeURIComponent(value) });
-    });
+    }
     result.params = params;
   } catch {
     // Not a valid URL

@@ -14,7 +14,10 @@ export function cannyEdgeServer(
   // Apply hysteresis thresholding
   for (let i = 0; i < result.length; i += 4) {
     const magnitude = result[i];
-    const value = magnitude > highThreshold ? 255 : magnitude > lowThreshold ? 128 : 0;
+    let value: number;
+    if (magnitude > highThreshold) value = 255;
+    else if (magnitude > lowThreshold) value = 128;
+    else value = 0;
     result[i] = value;
     result[i + 1] = value;
     result[i + 2] = value;

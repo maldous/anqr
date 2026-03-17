@@ -9,7 +9,7 @@ export function AdSense({
   className = "",
   width,
   height,
-}: AdSenseProps) {
+}: Readonly<AdSenseProps>) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const adRef = useRef<HTMLModElement>(null);
   const isLoaded = useRef(false);

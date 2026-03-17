@@ -18,17 +18,19 @@ export const WCAGBadge = ({
   return (
     <div className="flex items-center gap-1.5">
       <span
-        className={`inline-flex items-center gap-1 rounded-md font-bold ${sizeClasses[size]} ${
-          meetsAAA
-            ? "bg-green-500 text-white"
-            : meetsAA
-              ? "bg-green-400 text-white"
-              : meetsAALarge
-                ? "bg-amber-500 text-white"
-                : "bg-red-500 text-white"
-        }`}
+        className={`inline-flex items-center gap-1 rounded-md font-bold ${sizeClasses[size]} ${(() => {
+          if (meetsAAA) return "bg-green-500 text-white";
+          if (meetsAA) return "bg-green-400 text-white";
+          if (meetsAALarge) return "bg-amber-500 text-white";
+          return "bg-red-500 text-white";
+        })()}`}
       >
-        {meetsAAA ? "AAA" : meetsAA ? "AA" : meetsAALarge ? "AA-L" : "Fail"}
+        {(() => {
+          if (meetsAAA) return "AAA";
+          if (meetsAA) return "AA";
+          if (meetsAALarge) return "AA-L";
+          return "Fail";
+        })()}
       </span>
       <span className={`text-muted-foreground ${size === "sm" ? "text-[10px]" : "text-xs"}`}>
         {ratio.toFixed(1)}:1

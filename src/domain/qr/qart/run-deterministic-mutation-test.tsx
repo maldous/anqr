@@ -104,11 +104,11 @@ export function runDeterministicMutationTest(
     localBitIndex: testLocalBitIndex,
     linearByte,
     linearBit,
-    vectorInterval: interval.isInSuffixInterval
-      ? "SUFFIX"
-      : interval.isInPaddingInterval
-        ? "PADDING"
-        : "UNKNOWN",
+    vectorInterval: (() => {
+      if (interval.isInSuffixInterval) return "SUFFIX";
+      if (interval.isInPaddingInterval) return "PADDING";
+      return "UNKNOWN";
+    })(),
     gapProtected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
     originalDataPreserved: true,
     validationMethod: "BYTE_EXACT_PREFIX",

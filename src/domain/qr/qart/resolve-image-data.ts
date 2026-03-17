@@ -29,10 +29,7 @@ export function resolveImageData(
     return image;
   }
   if (isCanvasLike(image)) {
-    const ctx = image.getContext("2d") as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null;
+    const ctx = image.getContext("2d");
     if (!ctx) return null;
     return ctx.getImageData(0, 0, image.width, image.height);
   }

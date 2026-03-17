@@ -5,7 +5,7 @@ import { buildShareOverlayDuotoneFields } from "./build-share-overlay-duotone-fi
 import { buildShareOverlayEccFields } from "./build-share-overlay-ecc-fields";
 import { buildShareOverlayHalftoneFields } from "./build-share-overlay-halftone-fields";
 import { buildShareOverlaySubpixelFields } from "./build-share-overlay-subpixel-fields";
-import { trueIfTrue, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
+import { omitWhenEqual, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
 
 export function buildShareOverlay(overlay: StoreState["overlay"]) {
   if (!overlay.enabled) return {};
@@ -15,13 +15,13 @@ export function buildShareOverlay(overlay: StoreState["overlay"]) {
     overlayUrl: undefinedIfFalsy(overlay.url),
     fit: undefinedIfEqual(overlay.fit, "cover"),
     rotate: undefinedIfEqual(overlay.rotateDeg, 0),
-    flipX: trueIfTrue(overlay.flipX),
-    flipY: trueIfTrue(overlay.flipY),
+    flipX: omitWhenEqual(overlay.flipX, false),
+    flipY: omitWhenEqual(overlay.flipY, false),
     preserveFinders: overlay.preserveFinders ? undefined : false,
-    preserveTiming: trueIfTrue(overlay.preserveTiming),
-    preserveAlignment: trueIfTrue(overlay.preserveAlignment),
-    protectFormatInfo: trueIfTrue(overlay.protectFormatInfo),
-    protectVersionInfo: trueIfTrue(overlay.protectVersionInfo),
+    preserveTiming: omitWhenEqual(overlay.preserveTiming, false),
+    preserveAlignment: omitWhenEqual(overlay.preserveAlignment, false),
+    protectFormatInfo: omitWhenEqual(overlay.protectFormatInfo, false),
+    protectVersionInfo: omitWhenEqual(overlay.protectVersionInfo, false),
     ...buildShareOverlayEccFields(overlay),
     ...buildShareOverlayAdjustmentFields(overlay),
     ...buildShareOverlayDitherFields(overlay),

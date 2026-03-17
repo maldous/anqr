@@ -3,7 +3,7 @@ import type { QArtModule } from "./q-art-module";
 
 export function loadQArtModule(): Promise<QArtModule> {
   if (!getQartModulePromise()) {
-    setQartModulePromise(import("@/modules/qr-art") as Promise<QArtModule>);
+    setQartModulePromise(import("@/modules/qr-art"));
   }
   return getQartModulePromise()!;
 }

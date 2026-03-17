@@ -22,7 +22,7 @@ export async function finalizeGeneratedCanvas(params: {
   isStaleRequest: () => boolean;
   setCanvas: (c: HTMLCanvasElement | OffscreenCanvas | null) => void;
   updateGenerationProgress: (stage: string, percent: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any;
   qrPackedMatrixRef: { current: { packed: Uint8Array; moduleCount: number } | null };
   setQrMatrix: (m: boolean[][] | null) => void;

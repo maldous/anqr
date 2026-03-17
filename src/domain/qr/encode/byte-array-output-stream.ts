@@ -10,8 +10,7 @@ export function byteArrayOutputStream() {
     },
 
     writeShort: (i: number): void => {
-      _bytes.push(i & 0xff);
-      _bytes.push((i >>> 8) & 0xff);
+      _bytes.push(i & 0xff, (i >>> 8) & 0xff);
     },
 
     writeBytes: (b: number[], off: number = 0, len?: number): void => {

@@ -18,19 +18,19 @@ export function applyDitherOrExtremeMode(
   const ditherB = ditherColor & 0xff;
 
   const flags = computeDitherBlendFlags(context);
-  const preserveBoost = flags.blendPresFunctionalOverlay
-    ? 1.14
-    : flags.blendPresFunctionalDither
-      ? 1.04
-      : 1;
+  let preserveBoost: number;
+  if (flags.blendPresFunctionalOverlay) preserveBoost = 1.14;
+  else if (flags.blendPresFunctionalDither) preserveBoost = 1.04;
+  else preserveBoost = 1;
   const darkBlend = flags.isExtreme
     ? Math.min(1, effectiveIntensity * 1.18 * preserveBoost)
     : Math.min(1, effectiveIntensity * 0.82 * preserveBoost);
   // Keep extreme mode dark rail significantly darker to preserve scanner contrast.
-  const darkFactor = computeDarkFactor(
-    darkBlend,
-    flags.functionalExtremeBlend ? 0.22 : flags.isExtreme ? 0.44 : 0.68,
-  );
+  let darkFloor: number;
+  if (flags.functionalExtremeBlend) darkFloor = 0.22;
+  else if (flags.isExtreme) darkFloor = 0.44;
+  else darkFloor = 0.68;
+  const darkFactor = computeDarkFactor(darkBlend, darkFloor);
   const darkR = Math.round(ditherR * darkFactor);
   const darkG = Math.round(ditherG * darkFactor);
   const darkB = Math.round(ditherB * darkFactor);

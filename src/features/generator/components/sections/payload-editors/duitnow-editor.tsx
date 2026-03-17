@@ -63,11 +63,13 @@ export const DuitnowEditor = ({
         duitnowForm.proxyValue &&
         !isValidProxyValue(duitnowForm.proxyValue, duitnowForm.proxyType) && (
           <p className="text-xs text-destructive">
-            {duitnowForm.proxyType === "MOBILE"
-              ? t("validation.invalidPhone", "Enter a valid phone number (at least 3 digits)")
-              : duitnowForm.proxyType === "NRIC"
-                ? t("validation.invalidNric", "Enter a valid NRIC (12 digits)")
-                : t("validation.invalidProxyValue", "Enter a valid proxy value")}
+            {(() => {
+              if (duitnowForm.proxyType === "MOBILE")
+                return t("validation.invalidPhone", "Enter a valid phone number (at least 3 digits)");
+              if (duitnowForm.proxyType === "NRIC")
+                return t("validation.invalidNric", "Enter a valid NRIC (12 digits)");
+              return t("validation.invalidProxyValue", "Enter a valid proxy value");
+            })()}
           </p>
         )}
     </div>

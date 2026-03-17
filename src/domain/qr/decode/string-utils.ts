@@ -24,8 +24,8 @@ export class StringUtils {
 
     // Simple heuristic: check for high bytes which would indicate non-ASCII
     let hasHighBytes = false;
-    for (let i = 0; i < bytes.length; i++) {
-      if ((bytes[i] & 0x80) !== 0) {
+    for (const byte of bytes) {
+      if ((byte & 0x80) !== 0) {
         hasHighBytes = true;
         break;
       }

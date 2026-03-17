@@ -7,7 +7,7 @@
 export function localizeQArtProgressStage(
   stage: string,
   translateQArtStage: (s: string) => string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => string,
 ): string {
   let localizedStage = translateQArtStage(stage);

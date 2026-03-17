@@ -446,7 +446,7 @@ export class QRGenerator {
       const overlayResult = await prepareUnifiedOverlayData(
         qr,
         effectiveConfig,
-        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas | null,
+        processedOverlayCanvas,
         moduleCount,
         this.createCanvas.bind(this),
       );

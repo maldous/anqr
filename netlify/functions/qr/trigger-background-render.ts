@@ -23,8 +23,6 @@ export async function triggerBackgroundRender(cacheKey: string, requestUrl: stri
   } catch (error_) {
     if (isMissingBlobsEnvironmentError(error_)) {
       markBlobStoreDisabled("missing_blob_env");
-    } else {
-      // console.error('[BLOB] sentinel ERROR:', error_);
     }
   }
   if (shouldTrigger) {
@@ -40,7 +38,6 @@ export async function triggerBackgroundRender(cacheKey: string, requestUrl: stri
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: bgUrl.toString() }),
       }).then((r) => qrFnLog("[BG:TRIGGER]", r.status));
-      // .catch((err) => console.error('[BG:TRIGGER:FAIL]', err));
     } catch {
       // Background trigger failure is non-fatal
     }

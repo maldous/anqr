@@ -1,6 +1,6 @@
 export function formatGenerationErrorMessage(
   err: unknown,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any,
 ): string {
   const rawMessage =

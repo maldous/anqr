@@ -19,7 +19,7 @@ export interface ExecuteFrameGenerationLoopParams<
     FramePostProcessContext<W> {
   frames: (HTMLCanvasElement | OffscreenCanvas)[];
   framesToProcess: AnimationFrame[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any;
   updateGenerationProgress: (stage: string, percent: number) => void;
   yieldCtrl: YieldController;

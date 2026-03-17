@@ -16,7 +16,10 @@ export function drawFrameBackground(
   const frameColor = config.frameColor || config.bgColor;
 
   // Determine border radius based on frame style
-  const defaultRadius = config.frameStyle === "sticker" ? 12 : config.frameStyle === "tag" ? 4 : 0;
+  let defaultRadius: number;
+  if (config.frameStyle === "sticker") defaultRadius = 12;
+  else if (config.frameStyle === "tag") defaultRadius = 4;
+  else defaultRadius = 0;
   const borderRadius = config.frameBorderRadius ?? defaultRadius;
 
   ctx.fillStyle = frameColor;

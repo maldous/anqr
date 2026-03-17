@@ -15,12 +15,11 @@ export function resolveReproductionParams(
     ecc: result.eccLevel || "M",
     isGeneratorSource,
     versionToUse: isGeneratorSource ? (result.version ?? qrState.version) : result.version,
-    maskToUse:
-      typeof maskFromResult === "number" && maskFromResult >= 0 && maskFromResult <= 7
-        ? maskFromResult
-        : typeof maskFromState === "number" && maskFromState >= 0
-          ? maskFromState
-          : undefined,
+    maskToUse: (() => {
+      if (typeof maskFromResult === "number" && maskFromResult >= 0 && maskFromResult <= 7) return maskFromResult;
+      if (typeof maskFromState === "number" && maskFromState >= 0) return maskFromState;
+      return undefined;
+    })(),
     modeToUse: resolveMode(isGeneratorSource, result, qrState),
   };
 }

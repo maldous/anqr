@@ -3,15 +3,17 @@ import { roundtripToFinalRaster } from "./qr-generator-helpers";
 import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
 import type { ScanGateCallbacks } from "./scan-gate-callbacks.types";
 
+type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+
 export async function runScanGateRescueLoop(
   pool: CanvasPool,
   patches: DitherAttemptPatch[],
   isPreviewScanGate: boolean,
   cb: ScanGateCallbacks,
-  lastCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+  lastCanvas: AnyCanvas | null,
 ): Promise<{
-  found: HTMLCanvasElement | OffscreenCanvas | null;
-  lastCanvas: HTMLCanvasElement | OffscreenCanvas | null;
+  found: AnyCanvas | null;
+  lastCanvas: AnyCanvas | null;
 }> {
   let tracking = lastCanvas;
   for (const patch of patches) {

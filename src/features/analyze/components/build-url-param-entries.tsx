@@ -12,13 +12,13 @@ export function buildUrlParamEntries(
       icon: <Settings className="w-3 h-3" />,
     },
   ];
-  params.slice(0, 5).forEach((param) => {
+  for (const param of params.slice(0, 5)) {
     entries.push({
       label: `  └ ${param.key}`,
       value: <span className="font-mono text-xs truncate max-w-[150px] block">{param.value}</span>,
       icon: <ChevronRight className="w-3 h-3 text-muted-foreground" />,
     });
-  });
+  }
   if (params.length > 5) {
     entries.push({
       label: "",

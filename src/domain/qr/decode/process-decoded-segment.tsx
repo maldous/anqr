@@ -12,12 +12,10 @@ export function processDecodedSegment(
 ): void {
   for (const b of seg.outBytes) state.outBytes.push(b);
 
-  const decodedLength =
-    seg.modeTag === "kanji"
-      ? seg.rawBytes.length / 2
-      : seg.modeTag === "byte"
-        ? seg.rawBytes.length
-        : seg.text.length;
+  let decodedLength: number;
+  if (seg.modeTag === "kanji") decodedLength = seg.rawBytes.length / 2;
+  else if (seg.modeTag === "byte") decodedLength = seg.rawBytes.length;
+  else decodedLength = seg.text.length;
   state.segments.push({
     index: state.segmentIndex,
     mode,

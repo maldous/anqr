@@ -65,10 +65,12 @@ import { YieldController } from "./yield-controller";
 import { yieldToMainThread } from "./yield-to-main-thread";
 import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservation-options";
 
+type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+
 export function useQRGenerator(): UseQRGeneratorResult {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
+  const [canvas, setCanvas] = useState<AnyCanvas | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isRendering, setIsRendering] = useState(false); // Active rendering state
@@ -389,7 +391,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // This allows users to type without immediate QR rendering
   const rawContent = useMemo(() => {
     // Force dependency on payload by accessing it
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const _payloadDep = payload;
     return getPayloadText();
   }, [getPayloadText, payload]);
@@ -837,7 +839,6 @@ export function useQRGenerator(): UseQRGeneratorResult {
     isOverflowBlockedRef.current = false;
     setHasOverflowError(false);
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only react to rawContent changes, not state changes
   }, [rawContent]);
 
   // Clear error and overflow tracking when debounced content, version, or ECC changes
@@ -1211,7 +1212,6 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // We only use the ref (isOverflowBlockedRef) for blocking decisions because
     // the ref is synchronously updated by the rawContent useEffect, while the
     // state update (setHasOverflowError) is async and may not be flushed yet.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generate, isAnimationCacheReady, animationFrameCount, animation.playing, hasOverflowError]);
 
   // Calculate effective frame indices based on startFrame, maxFrames, frameStep, and FPS decimation
@@ -1482,12 +1482,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
         currentFrame,
         frameIdx,
         lastRendered,
-        action:
-          lastRendered < 0 || frameIdx < lastRendered
-            ? "replay"
-            : frameIdx > lastRendered
-              ? "forward"
-              : "noop",
+        action: (() => {
+          if (lastRendered < 0 || frameIdx < lastRendered) return "replay";
+          if (frameIdx > lastRendered) return "forward";
+          return "noop";
+        })(),
       });
 
       updateCompositorToFrame(gifCompositor, frameIdx, lastRendered);
@@ -1876,7 +1875,6 @@ export function useQRGenerator(): UseQRGeneratorResult {
       setIsLoadingOverlay(false);
       clearGenerationProgress();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     effectiveFrames,
     effectiveFrameIndices,

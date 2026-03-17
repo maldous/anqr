@@ -2,9 +2,9 @@ import type { DiffusionKernelDef } from "./kernels.types";
 
 export function prepareKernel(kernel: DiffusionKernelDef): void {
   let count = 0;
-  for (let ky = 0; ky < kernel.matrix.length; ky++) {
-    for (let kx = 0; kx < kernel.matrix[ky].length; kx++) {
-      if (kernel.matrix[ky][kx] !== 0) count += 1;
+  for (const row of kernel.matrix) {
+    for (const weight of row) {
+      if (weight !== 0) count += 1;
     }
   }
 

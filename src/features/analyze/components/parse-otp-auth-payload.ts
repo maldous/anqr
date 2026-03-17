@@ -14,7 +14,7 @@ export function parseOtpAuthPayload(payload: string): Record<string, string | nu
     hasSecret: null,
   };
 
-  const match = payload.match(/^otpauth:\/\/(totp|hotp)\/([^?]+)(?:\?(.*))?$/i);
+  const match = /^otpauth:\/\/(totp|hotp)\/([^?]+)(?:\?(.*))?$/i.exec(payload);
   if (!match) return result;
 
   result.type = match[1].toUpperCase();

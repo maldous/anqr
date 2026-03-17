@@ -4,9 +4,10 @@ import type { SwissQRBillParams } from "../../modules/payload-generators/types";
  * Generate Swiss QR-bill payment code
  */
 export function generateSwissQRBill(params: SwissQRBillParams): string {
-  const lines: string[] = ["SPC", params.version || "0200", "1"];
-
-  lines.push(
+  const lines: string[] = [
+    "SPC",
+    params.version || "0200",
+    "1",
     params.creditorIBAN.replaceAll(/\s/g, "").toUpperCase(),
     params.creditorAddressType,
     params.creditorName.substring(0, 70),
@@ -24,9 +25,6 @@ export function generateSwissQRBill(params: SwissQRBillParams): string {
           "",
         ]),
     params.creditorCountry.toUpperCase(),
-  );
-
-  lines.push(
     params.ultimateCreditorAddressType || "",
     params.ultimateCreditorName?.substring(0, 70) || "",
     ...(params.ultimateCreditorAddressType === "S"
@@ -43,14 +41,8 @@ export function generateSwissQRBill(params: SwissQRBillParams): string {
           "",
         ]),
     params.ultimateCreditorCountry?.toUpperCase() || "",
-  );
-
-  lines.push(
     params.amount !== undefined && params.amount > 0 ? params.amount.toFixed(2) : "",
     params.currency,
-  );
-
-  lines.push(
     params.ultimateDebtorAddressType || "",
     params.ultimateDebtorName?.substring(0, 70) || "",
     ...(params.ultimateDebtorAddressType === "S"
@@ -67,22 +59,14 @@ export function generateSwissQRBill(params: SwissQRBillParams): string {
           "",
         ]),
     params.ultimateDebtorCountry?.toUpperCase() || "",
-  );
-
-  lines.push(
     params.referenceType,
     params.reference?.substring(0, 27) || "",
     params.unstructuredMessage?.substring(0, 140) || "",
     params.trailer || "EPD",
     params.billInformation?.substring(0, 140) || "",
-  );
-
-  if (params.alternativeProcedure1) {
-    lines.push(params.alternativeProcedure1.substring(0, 100));
-  }
-  if (params.alternativeProcedure2) {
-    lines.push(params.alternativeProcedure2.substring(0, 100));
-  }
+    ...(params.alternativeProcedure1 ? [params.alternativeProcedure1.substring(0, 100)] : []),
+    ...(params.alternativeProcedure2 ? [params.alternativeProcedure2.substring(0, 100)] : []),
+  ];
 
   return lines.join("\n");
 }

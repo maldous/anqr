@@ -64,8 +64,8 @@ export class StringEncoding {
 
     if (characterSet && StringEncoding.isDecodeFallbackSupported(characterSet)) {
       let s = "";
-      for (let i = 0; i < bytes.length; i++) {
-        let h = bytes[i].toString(16);
+      for (const byte of bytes) {
+        let h = byte.toString(16);
         if (h.length < 2) h = `0${h}`;
         s += `%${h}`;
       }
@@ -91,8 +91,8 @@ export class StringEncoding {
     const encodedURIstring = btoa(unescape(encodeURIComponent(s))); // NOSONAR: classic btoa-Unicode pattern, TextEncoder used elsewhere
     const charList = encodedURIstring.split("");
     const uintArray: number[] = [];
-    for (let i = 0; i < charList.length; i++) {
-      uintArray.push(charList[i].codePointAt(0)!);
+    for (const char of charList) {
+      uintArray.push(char.codePointAt(0)!);
     }
     return new Uint8Array(uintArray);
   }

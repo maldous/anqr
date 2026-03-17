@@ -69,13 +69,12 @@ export const CapacityByModeTable = ({
               <div className="mt-1">
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all ${
-                      cap.current / cap.capacity > 0.9
-                        ? "bg-red-500"
-                        : cap.current / cap.capacity > 0.7
-                          ? "bg-amber-500"
-                          : "bg-green-500"
-                    }`}
+                    className={`h-full transition-all ${(() => {
+                      const usage = cap.current / cap.capacity;
+                      if (usage > 0.9) return "bg-red-500";
+                      if (usage > 0.7) return "bg-amber-500";
+                      return "bg-green-500";
+                    })()}`}
                     style={{ width: `${Math.min(100, (cap.current / cap.capacity) * 100)}%` }}
                   />
                 </div>

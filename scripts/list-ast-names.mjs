@@ -20,9 +20,7 @@ const parseArgs = (argv) => {
     paths: [],
   };
 
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
-
+  for (const arg of argv) {
     if (arg === "--json") {
       options.json = true;
       continue;

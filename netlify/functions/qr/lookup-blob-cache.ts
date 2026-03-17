@@ -34,8 +34,6 @@ export async function lookupBlobCache(
   } catch (error_) {
     if (isMissingBlobsEnvironmentError(error_)) {
       markBlobStoreDisabled("missing_blob_env");
-    } else {
-      // console.error('[BLOB] cache read ERROR:', error_);
     }
   }
   return null;

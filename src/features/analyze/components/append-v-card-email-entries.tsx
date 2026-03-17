@@ -2,7 +2,7 @@ import { Mail } from "lucide-react";
 import type { DetailEntry } from "./detail-entry";
 
 export function appendVCardEmailEntries(details: DetailEntry[], emails: string[]): void {
-  emails.forEach((email) => {
+  for (const email of emails) {
     const [type, address] = email.includes(":") ? email.split(": ") : ["Email", email];
     details.push({
       label: type,
@@ -13,5 +13,5 @@ export function appendVCardEmailEntries(details: DetailEntry[], emails: string[]
       ),
       icon: <Mail className="w-3 h-3" />,
     });
-  });
+  }
 }

@@ -24,8 +24,7 @@ export function decodeKanjiDetailed(
       value += 0xc140;
     }
 
-    bytes.push((value >> 8) & 0xff);
-    bytes.push(value & 0xff);
+    bytes.push((value >> 8) & 0xff, value & 0xff);
   }
 
   let text = "";

@@ -138,9 +138,10 @@ function checkNpmScript(scriptName, label) {
     const lines = output.split("\n");
     const summary =
       lines.length > 5
-        ? lines.slice(0, 3).join("\n") + `\n... (${lines.length - 3} more lines)`
+        ? lines.slice(0, 3).join("\n") + "\n... (" + (lines.length - 3) + " more lines)"
         : output;
-    return { pass: false, detail: `${label} failed: ${summary || `exit code ${err.status}`}` };
+    const fallback = `exit code ${err.status}`;
+    return { pass: false, detail: `${label} failed: ${summary || fallback}` };
   }
 }
 
@@ -304,7 +305,8 @@ async function checkSonarAudit() {
       .map((m) => `${m.metric}=${m.value}`)
       .join(", ");
 
-    const detail = `Issues: ${totalIssues}, Hotspots: ${totalHotspots}${measures ? ` | ${measures}` : ""}`;
+    const measuresSuffix = measures ? ` | ${measures}` : "";
+    const detail = `Issues: ${totalIssues}, Hotspots: ${totalHotspots}${measuresSuffix}`;
     return { pass: true, detail };
   } catch (err) {
     return { pass: true, detail: `SonarQube unreachable: ${err.message}` };
@@ -472,4 +474,4 @@ async function main() {
   process.exit(failed > 0 ? 1 : 0);
 }
 
-main();
+await main();

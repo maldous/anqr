@@ -6,6 +6,9 @@ import { parseIntParam } from "./parse-int-param";
 import { parseMaskParam } from "./parse-mask-param";
 import { prefixHash } from "./prefix-hash";
 
+type AnimationTarget = "result" | "modules" | "both";
+type WaveAxis = "x" | "y" | "xy";
+
 /**
  * Server-safe URL parameter parsing
  * Takes a URLSearchParams object and returns a ShareConfig
@@ -129,11 +132,11 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     interpolate: params.get("interp") || undefined,
     temporalDither: params.get("tempDither") || undefined,
     pattern: params.get("animPattern") || undefined,
-    target: (params.get("animTarget") as "result" | "modules" | "both" | null) || undefined,
-    waveAxis: (params.get("animWaveAxis") as "x" | "y" | "xy" | null) || undefined,
+    target: (params.get("animTarget") as AnimationTarget | null) || undefined,
+    waveAxis: (params.get("animWaveAxis") as WaveAxis | null) || undefined,
     pattern2: params.get("animPattern2") || undefined,
-    target2: (params.get("animTarget2") as "result" | "modules" | "both" | null) || undefined,
-    waveAxis2: (params.get("animWaveAxis2") as "x" | "y" | "xy" | null) || undefined,
+    target2: (params.get("animTarget2") as AnimationTarget | null) || undefined,
+    waveAxis2: (params.get("animWaveAxis2") as WaveAxis | null) || undefined,
     moduleJitter: parseFloatParam(params.get("jitter")),
     colorCycle: params.get("colorCycle") === "1",
     seed: parseIntParam(params.get("seed")),
@@ -193,12 +196,12 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     // Animation
     animationPattern: params.get("animPattern") || undefined,
     animationTarget:
-      (params.get("animTarget") as "result" | "modules" | "both" | null) || undefined,
-    animationWaveAxis: (params.get("animWaveAxis") as "x" | "y" | "xy" | null) || undefined,
+      (params.get("animTarget") as AnimationTarget | null) || undefined,
+    animationWaveAxis: (params.get("animWaveAxis") as WaveAxis | null) || undefined,
     animationPattern2: params.get("animPattern2") || undefined,
     animationTarget2:
-      (params.get("animTarget2") as "result" | "modules" | "both" | null) || undefined,
-    animationWaveAxis2: (params.get("animWaveAxis2") as "x" | "y" | "xy" | null) || undefined,
+      (params.get("animTarget2") as AnimationTarget | null) || undefined,
+    animationWaveAxis2: (params.get("animWaveAxis2") as WaveAxis | null) || undefined,
     animationFrames: parseIntParam(params.get("animFrames")),
     animationSpeed: parseIntParam(params.get("animSpeed")),
     animationSeed: parseIntParam(params.get("animSeed")),

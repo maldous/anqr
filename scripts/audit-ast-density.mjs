@@ -25,9 +25,7 @@ const parseArgs = (argv) => {
     const arg = argv[i];
     if (arg === "--json") {
       options.json = true;
-      continue;
-    }
-    if (arg === "--threshold") {
+    } else if (arg === "--threshold") {
       const raw = argv[i + 1];
       if (raw === undefined) {
         throw new Error("--threshold requires a numeric value");
@@ -38,9 +36,9 @@ const parseArgs = (argv) => {
       }
       options.threshold = parsed;
       i += 1;
-      continue;
+    } else {
+      options.paths.push(arg);
     }
-    options.paths.push(arg);
   }
 
   return options;

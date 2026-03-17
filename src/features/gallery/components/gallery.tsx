@@ -23,7 +23,7 @@ import { markGalleryInterstitialShown } from "./mark-gallery-interstitial-shown"
 
 galleryInterstitialGuard.value = initGalleryInterstitialGuard();
 
-export function Gallery({ filter }: GalleryProps) {
+export function Gallery({ filter }: Readonly<GalleryProps>) {
   const { t, i18n } = useTranslation();
   const [expandedSections, setExpandedSections] = useState<Set<GalleryCategory>>(
     new Set(gallerySections.map((s) => s.id)),

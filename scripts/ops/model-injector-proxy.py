@@ -21,6 +21,8 @@ Usage:
 
 import argparse
 import json
+
+CONTENT_TYPE_JSON = "application/json"
 import sys
 import threading
 import time
@@ -61,7 +63,7 @@ class InjectorHandler(BaseHTTPRequestHandler):
     def _send_json(self, status, obj):
         body = json.dumps(obj).encode()
         self.send_response(status)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", CONTENT_TYPE_JSON)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -161,7 +163,7 @@ def main():
     log(f"model-injector-proxy listening on :{args.port}")
     log(f"Pinned model: {PINNED_MODEL}")
     log(f"Ollama backend: {OLLAMA_BASE}")
-    log(f"Single-agent enforcement: enabled")
+    log("Single-agent enforcement: enabled")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

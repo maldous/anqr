@@ -3,13 +3,10 @@ import { formatFrequencyText } from "./format-frequency-text";
 
 export function formatRecurrenceRule(rrule: string): string {
   const parts: Record<string, string> = {};
-  rrule
-    .replaceAll("RRULE:", "")
-    .split(";")
-    .forEach((p) => {
-      const [k, v] = p.split("=");
-      if (k && v) parts[k] = v;
-    });
+  for (const p of rrule.replaceAll("RRULE:", "").split(";")) {
+    const [k, v] = p.split("=");
+    if (k && v) parts[k] = v;
+  }
 
   const interval = parts.INTERVAL ? Number.parseInt(parts.INTERVAL, 10) : 1;
   let text = formatFrequencyText(parts.FREQ, interval, parts.BYDAY);

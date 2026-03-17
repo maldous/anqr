@@ -39,7 +39,7 @@ export function showDomToast(message: string, duration: ToastDuration): void {
   if (existing) clearTimeout(existing);
   (node as HTMLElement & { [key: string]: number | undefined })[timeoutKey] = window.setTimeout(
     () => {
-      node!.style.opacity = "0";
+      node.style.opacity = "0";
     },
     getToastDurationMs(duration),
   );

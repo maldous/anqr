@@ -358,8 +358,7 @@ export class QRDecoder {
       } else {
         assembledTwoBytes += 0xc140;
       }
-      buffer.push((assembledTwoBytes >> 8) & 0xff);
-      buffer.push(assembledTwoBytes & 0xff);
+      buffer.push((assembledTwoBytes >> 8) & 0xff, assembledTwoBytes & 0xff);
     }
     result.append(StringEncoding.decode(new Uint8Array(buffer), "SJIS"));
   }
@@ -375,8 +374,7 @@ export class QRDecoder {
       } else {
         assembledTwoBytes += 0x0a6a1;
       }
-      buffer.push((assembledTwoBytes >> 8) & 0xff);
-      buffer.push(assembledTwoBytes & 0xff);
+      buffer.push((assembledTwoBytes >> 8) & 0xff, assembledTwoBytes & 0xff);
     }
     result.append(StringEncoding.decode(new Uint8Array(buffer), "GB2312"));
   }

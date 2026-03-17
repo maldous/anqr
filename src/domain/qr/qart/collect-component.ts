@@ -17,8 +17,7 @@ export function collectComponent(
   visited[startIdx] = 1;
   queue.push(startIdx);
 
-  for (let head = 0; head < queue.length; head++) {
-    const cellIndex = queue[head];
+  for (const cellIndex of queue) {
     cells.push(cellIndex);
     const row = Math.floor(cellIndex / moduleCount);
     const col = cellIndex % moduleCount;

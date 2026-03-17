@@ -15,9 +15,9 @@ export async function renderQArtResultToCanvas(params: {
   workerPackedMatrix: Uint8Array | null;
   debouncedConfig: Record<string, unknown>;
   bitmapCanvasRef: { current: HTMLCanvasElement | null };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   updateGenerationProgress: (...args: any[]) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any;
 }): Promise<{ canvas: HTMLCanvasElement | null; usedBitmapRender: boolean }> {
   const qrArtConfig = {

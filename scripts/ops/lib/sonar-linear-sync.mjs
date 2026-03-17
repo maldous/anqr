@@ -196,8 +196,8 @@ function buildLinearDescription(sonarIssue, projectKey, sonarHost) {
  * @param {number} opts.priority     — Linear priority (1=urgent, 2=high, etc.)
  * @param {boolean} opts.resolveStale — if true, mark Done any Linear [Sonar]
  *   issues whose SonarQube finding is no longer present
- * @param {boolean} opts.requeueToTodo — if true, move non-Todo issues back to
- *   Todo so the runner can pick them up (nightly only)
+ * @param {boolean} opts.requeueToReady — if true, requeue issues to the
+ *   ready state so the runner can pick them up (nightly only)
  * @returns {{ created: Array, skipped: Array, promoted: Array, requeued: Array, resolved: Array }}
  */
 export async function syncSonarToLinear({
@@ -206,7 +206,7 @@ export async function syncSonarToLinear({
   sonarHost,
   priority,
   resolveStale,
-  requeueToTodo,
+  requeueToReady,
 }) {
   const existingLinear = await findOpenSonarLinearIssues();
 
@@ -252,8 +252,8 @@ export async function syncSonarToLinear({
         changed = true;
       }
 
-      // Requeue to Todo if stuck in another state (nightly only)
-      if (requeueToTodo && existing.state.name !== "Todo") {
+      // Requeue to ready state if stuck in another state (nightly only)
+      if (requeueToReady && existing.state.name !== "Todo") {
         const fromState = existing.state.name;
         await updateIssue(existing.id, { stateId: STATES.todo });
         await addComment(
@@ -369,7 +369,7 @@ function buildHotspotLinearDescription(hotspot, projectKey, sonarHost) {
     `**Vulnerability Probability:** ${vulnProb}`,
     `**Status:** ${hotspot.status}`,
     `**File:** \`${filePath}\``,
-    `**Lines:** ${line}${lineEnd !== line ? `-${lineEnd}` : ""}`,
+    `**Lines:** ${line}${lineEnd === line ? "" : "-" + lineEnd}`,
     "",
     `> ${hotspot.message}`,
     "",
@@ -387,8 +387,8 @@ function buildHotspotLinearDescription(hotspot, projectKey, sonarHost) {
  * @param {number} opts.priority     — Linear priority (1=urgent, 2=high, etc.)
  * @param {boolean} opts.resolveStale — if true, mark Done any Linear [SonarHotspot]
  *   issues whose SonarQube hotspot is no longer present
- * @param {boolean} opts.requeueToTodo — if true, move non-Todo issues back to
- *   Todo so the runner can pick them up (nightly only)
+ * @param {boolean} opts.requeueToReady — if true, requeue issues to the
+ *   ready state so the runner can pick them up (nightly only)
  * @returns {{ created: Array, skipped: Array, promoted: Array, requeued: Array, resolved: Array }}
  */
 export async function syncSonarHotspotsToLinear({
@@ -397,7 +397,7 @@ export async function syncSonarHotspotsToLinear({
   sonarHost,
   priority,
   resolveStale,
-  requeueToTodo,
+  requeueToReady,
 }) {
   const existingLinear = await findOpenSonarHotspotLinearIssues();
 
@@ -440,7 +440,7 @@ export async function syncSonarHotspotsToLinear({
         changed = true;
       }
 
-      if (requeueToTodo && existing.state.name !== "Todo") {
+      if (requeueToReady && existing.state.name !== "Todo") {
         const fromState = existing.state.name;
         await updateIssue(existing.id, { stateId: STATES.todo });
         await addComment(
@@ -555,8 +555,8 @@ function buildDuplicationLinearDescription(issue, projectKey, sonarHost) {
  * @param {number} opts.priority      — Linear priority (1=urgent, 2=high, etc.)
  * @param {boolean} opts.resolveStale — if true, mark Done any Linear [SonarDup]
  *   issues whose SonarQube finding is no longer present
- * @param {boolean} opts.requeueToTodo — if true, move non-Todo issues back to
- *   Todo so the runner can pick them up (nightly only)
+ * @param {boolean} opts.requeueToReady — if true, requeue issues to the
+ *   ready state so the runner can pick them up (nightly only)
  * @returns {{ created: Array, skipped: Array, promoted: Array, requeued: Array, resolved: Array }}
  */
 export async function syncSonarDuplicationsToLinear({
@@ -565,7 +565,7 @@ export async function syncSonarDuplicationsToLinear({
   sonarHost,
   priority,
   resolveStale,
-  requeueToTodo,
+  requeueToReady,
 }) {
   const existingLinear = await findOpenSonarDuplicationLinearIssues();
 
@@ -608,7 +608,7 @@ export async function syncSonarDuplicationsToLinear({
         changed = true;
       }
 
-      if (requeueToTodo && existing.state.name !== "Todo") {
+      if (requeueToReady && existing.state.name !== "Todo") {
         const fromState = existing.state.name;
         await updateIssue(existing.id, { stateId: STATES.todo });
         await addComment(

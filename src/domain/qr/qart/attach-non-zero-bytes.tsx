@@ -4,8 +4,8 @@ export function attachNonZeroBytes(vectors: RSBasisVector[]): void {
   for (const v of vectors) {
     const bits = v.blockBits;
     let nonZeroCount = 0;
-    for (let i = 0; i < bits.length; i++) {
-      if (bits[i] !== 0) nonZeroCount++;
+    for (const byte of bits) {
+      if (byte !== 0) nonZeroCount++;
     }
 
     if (nonZeroCount === 0) {

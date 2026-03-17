@@ -14,7 +14,12 @@ export function analyzeUrlEfficiency(url: string): {
     const prefixLen = hashIndex + 1;
     mixedModeBits += 4 + 16 + prefixLen * 8;
     const numLen = numericFragment.length;
-    const numBits = Math.floor(numLen / 3) * 10 + (numLen % 3 === 2 ? 7 : numLen % 3 === 1 ? 4 : 0);
+    const rem = numLen % 3;
+    let remBits: number;
+    if (rem === 2) remBits = 7;
+    else if (rem === 1) remBits = 4;
+    else remBits = 0;
+    const numBits = Math.floor(numLen / 3) * 10 + remBits;
     mixedModeBits += 4 + 14 + numBits;
   } else {
     mixedModeBits = byteModeBits;

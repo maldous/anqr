@@ -137,11 +137,32 @@ i18n.on("languageChanged", async (lng) => {
   loadFontForLanguage(lng);
 });
 
-// Pre-load detected language if not English
+// Pre-load detected language if not English (inlined to avoid wrapping in async function)
 const detectedLang = i18n.language;
 if (detectedLang && detectedLang !== "en-GB" && !loadedLocales.has(detectedLang)) {
-  loadLocale(detectedLang);
-  // Also pre-load the font for the detected language
+  try {
+    const sourceLang = LOCALE_ALIASES[detectedLang] ?? detectedLang;
+    if (loadedLocales.has(sourceLang)) {
+      const cachedData = i18n.getResourceBundle(sourceLang, "translation");
+      if (cachedData) {
+        i18n.addResourceBundle(detectedLang, "translation", cachedData, true, true);
+      }
+    } else {
+      const modulePath = `./locales/${sourceLang}.json`;
+      const loader = localeModules[modulePath];
+      if (loader) {
+        const localeData = await loader();
+        i18n.addResourceBundle(sourceLang, "translation", localeData, true, true);
+        loadedLocales.add(sourceLang);
+        if (detectedLang !== sourceLang) {
+          i18n.addResourceBundle(detectedLang, "translation", localeData, true, true);
+        }
+      }
+    }
+    loadedLocales.add(detectedLang);
+  } catch (error) {
+    log.error("Failed to load locale", { lang: detectedLang, error });
+  }
   loadFontForLanguage(detectedLang);
 }
 

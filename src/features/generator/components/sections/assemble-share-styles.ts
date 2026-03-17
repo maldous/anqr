@@ -1,5 +1,5 @@
 import type { StoreState } from "./share-config-store.types";
-import { falseIfFalse, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
+import { omitWhenEqual, undefinedIfEqual, undefinedIfFalsy } from "./share-config-field-helpers";
 import { buildShareStylesContrastFields } from "./build-share-styles-contrast-fields";
 
 export function assembleShareStyles(render: StoreState["render"]) {
@@ -18,7 +18,7 @@ export function assembleShareStyles(render: StoreState["render"]) {
     frameStyle: undefinedIfEqual(render.frameStyle, "none"),
     frameText: undefinedIfFalsy(render.frameText),
     dotRotation: undefinedIfEqual(render.dotRotationDeg, 0),
-    crispEdges: falseIfFalse(render.crispEdges),
+    crispEdges: omitWhenEqual(render.crispEdges, true),
     pixelSnap: undefinedIfEqual(render.pixelSnap, "floor"),
     perModuleColorMode: undefinedIfEqual(render.perModuleColorMode, "solid"),
     ...buildShareStylesContrastFields(render),

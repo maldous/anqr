@@ -19,6 +19,9 @@ export async function acquireCameraImage(): Promise<File> {
   let blob = await response.blob();
   blob = await downscaleCameraBlob(blob, 1920);
   const mimeType = blob.type || "image/jpeg";
-  const ext = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
+  let ext: string;
+  if (mimeType.includes("png")) ext = "png";
+  else if (mimeType.includes("webp")) ext = "webp";
+  else ext = "jpg";
   return new File([blob], `camera-${Date.now()}.${ext}`, { type: mimeType });
 }

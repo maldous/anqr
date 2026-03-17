@@ -26,9 +26,9 @@ export function processBlueNoisePixel(
   const polarityBoost = ctx.scanGateActive ? 1.18 : 1;
   const polarityBias =
     (qrIsDark ? 1 : -1) * (0.14 + ctx.intensity * 0.18) * (0.4 + centerW * 0.6) * polarityBoost;
-  const qrBias = fixedDarkUnlocked
-    ? 0
-    : (qrIsDark ? 1 : -1) * ctx.effectiveBitBias * centerW * (0.45 + ctx.intensity * 0.8);
+  let qrBias: number;
+  if (fixedDarkUnlocked) qrBias = 0;
+  else qrBias = (qrIsDark ? 1 : -1) * ctx.effectiveBitBias * centerW * (0.45 + ctx.intensity * 0.8);
   const decisionGain = (0.64 + ctx.intensity * 0.44) * (ctx.scanGateActive ? 1.04 : 1);
   const d = clamp01((overlayDark + qrBias + polarityBias) * decisionGain);
   desire[sampleIdx] = clamp01(overlayDark + (qrIsDark ? 0.12 : -0.12));

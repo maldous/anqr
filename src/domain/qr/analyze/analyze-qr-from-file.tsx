@@ -14,12 +14,11 @@ export async function analyzeQRFromFile(file: File): Promise<QRAnalysisResult> {
     return withTotalAnalysisTiming(decodeQRFromCanvas(canvasResult.canvas), startedAtMs);
   }
 
-  const errorMessage =
-    canvasResult.error === "context"
-      ? "Could not get canvas context"
-      : canvasResult.error === "load"
-        ? "Failed to load image"
-        : "Failed to read file";
+  const errorMessages: Record<string, string> = {
+    context: "Could not get canvas context",
+    load: "Failed to load image",
+  };
+  const errorMessage = errorMessages[canvasResult.error] ?? "Failed to read file";
 
   return withTotalAnalysisTiming(
     {

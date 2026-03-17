@@ -13,8 +13,8 @@ export function qr8BitByte(data: string): QRDataSegment {
     getMode: () => _mode,
     getLength: () => _bytes.length,
     write: (buffer: QRBitBuffer): void => {
-      for (let i = 0; i < _bytes.length; i += 1) {
-        buffer.put(_bytes[i], 8);
+      for (const byte of _bytes) {
+        buffer.put(byte, 8);
       }
     },
   };

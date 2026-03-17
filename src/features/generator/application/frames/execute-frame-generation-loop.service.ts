@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-// eslint-disable-next-line no-restricted-imports -- Sub-path import required to avoid circular dependency through barrel
+
 import { canvasHashCache } from "@/modules/qr-generator/cache";
 import { processAndPostProcessFrame } from "@/features/generator/application/frames/process-and-post-process-frame.service";
 import type { ExecuteFrameGenerationLoopParams } from "./execute-frame-generation-loop-params.types";

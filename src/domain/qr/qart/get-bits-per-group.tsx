@@ -1,3 +1,5 @@
 export function getBitsPerGroup(groupDigits: number): number {
-  return groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+  if (groupDigits === 3) return 10;
+  if (groupDigits === 2) return 7;
+  return 4;
 }

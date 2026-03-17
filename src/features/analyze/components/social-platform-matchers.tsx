@@ -5,7 +5,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["wa.me", "whatsapp.com", "api.whatsapp.com"],
     resolve: (_hostname, pathname) => {
-      const phoneMatch = pathname.match(/(\d+)/);
+      const phoneMatch = /(\d+)/.exec(pathname);
       const phone = phoneMatch ? phoneMatch[1] : null;
       return {
         name: "WhatsApp",
@@ -37,7 +37,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["instagram.com", "instagr.am"],
     resolve: (_hostname, pathname) => {
-      const usernameMatch = pathname.match(/^\/([^/]+)/);
+      const usernameMatch = /^\/([^/]+)/.exec(pathname);
       const username =
         usernameMatch && !["p", "reel", "stories", "explore"].includes(usernameMatch[1])
           ? usernameMatch[1]
@@ -58,7 +58,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["twitter.com", "x.com", "t.co"],
     resolve: (_hostname, pathname) => {
-      const usernameMatch = pathname.match(/^\/([^/]+)/);
+      const usernameMatch = /^\/([^/]+)/.exec(pathname);
       const username =
         usernameMatch && !["search", "explore", "home", "i", "intent"].includes(usernameMatch[1])
           ? usernameMatch[1]
@@ -130,7 +130,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["t.me", "telegram.me", "telegram.org"],
     resolve: (_hostname, pathname) => {
-      const usernameMatch = pathname.match(/^\/([^/]+)/);
+      const usernameMatch = /^\/([^/]+)/.exec(pathname);
       return {
         name: "Telegram",
         badge: (
@@ -169,7 +169,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["reddit.com", "redd.it"],
     resolve: (_hostname, pathname) => {
-      const subredditMatch = pathname.match(/^\/r\/([^/]+)/);
+      const subredditMatch = /^\/r\/([^/]+)/.exec(pathname);
       return {
         name: "Reddit",
         badge: (
@@ -232,7 +232,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["github.com", "gist.github.com"],
     resolve: (_hostname, pathname) => {
-      const repoMatch = pathname.match(/^\/([^/]+)\/([^/]+)/);
+      const repoMatch = /^\/([^/]+)\/([^/]+)/.exec(pathname);
       return {
         name: "GitHub",
         badge: (
@@ -251,7 +251,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["paypal.com", "paypal.me"],
     resolve: (hostname, pathname) => {
-      const usernameMatch = pathname.match(/^\/([^/]+)/);
+      const usernameMatch = /^\/([^/]+)/.exec(pathname);
       return {
         name: "PayPal",
         badge: (
@@ -282,7 +282,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["cash.app"],
     resolve: (_hostname, pathname) => {
-      const cashtagMatch = pathname.match(/^\/(\$[^/]+)/);
+      const cashtagMatch = /^\/(\$[^/]+)/.exec(pathname);
       return {
         name: "Cash App",
         badge: (

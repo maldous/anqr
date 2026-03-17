@@ -4,8 +4,8 @@ export function selectionTouchesInvalidGroup(
   sel: NumericSelectionMask,
   invalid: Uint8Array,
 ): boolean {
-  for (let j = 0; j < sel.groups.length; j++) {
-    if (invalid[sel.groups[j]]) return true;
+  for (const group of sel.groups) {
+    if (invalid[group]) return true;
   }
   return false;
 }

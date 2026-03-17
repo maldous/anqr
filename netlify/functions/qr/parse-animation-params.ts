@@ -32,7 +32,7 @@ export function parseAnimationParams(
   | "animationEasing"
   | "animationEasing2"
 > {
-  const validAnimationPatterns: AnimationPattern[] = [
+  const validAnimationPatterns = new Set<AnimationPattern>([
     "none",
     "pulse",
     "wave",
@@ -40,18 +40,18 @@ export function parseAnimationParams(
     "shimmer",
     "drift",
     "color_cycle",
-  ];
-  const validAnimationEasings: AnimationEasing[] = [
+  ]);
+  const validAnimationEasings = new Set<AnimationEasing>([
     "linear",
     "ease_in",
     "ease_out",
     "ease_in_out",
     "bounce",
-  ];
+  ]);
   const parsedP1 = (params.get("animPattern") || "none") as AnimationPattern;
-  const animationPattern = validAnimationPatterns.includes(parsedP1) ? parsedP1 : "none";
+  const animationPattern = validAnimationPatterns.has(parsedP1) ? parsedP1 : "none";
   const parsedP2 = (params.get("animPattern2") || "none") as AnimationPattern;
-  const animationPattern2 = validAnimationPatterns.includes(parsedP2) ? parsedP2 : "none";
+  const animationPattern2 = validAnimationPatterns.has(parsedP2) ? parsedP2 : "none";
   const animationBounce = params.get("bounce") === "1";
   const animationReverse = params.get("reverse") === "1";
   const animationTarget = parseAnimationTarget(params.get("animTarget"));
@@ -63,7 +63,7 @@ export function parseAnimationParams(
   );
   const animationSeed = Number.parseInt(params.get("animSeed") || params.get("seed") || "0", 10);
   const parsedEasing = (params.get("easing") || "linear") as AnimationEasing;
-  const animationEasing = validAnimationEasings.includes(parsedEasing) ? parsedEasing : "linear";
+  const animationEasing = validAnimationEasings.has(parsedEasing) ? parsedEasing : "linear";
   const parsedEasing2 = (params.get("easing2") || animationEasing) as AnimationEasing;
   return {
     animationPattern,
@@ -100,7 +100,7 @@ export function parseAnimationParams(
     animationSeed,
     animationSeed2: Number.parseInt(params.get("animSeed2") || String(animationSeed + 911), 10),
     animationEasing,
-    animationEasing2: validAnimationEasings.includes(parsedEasing2)
+    animationEasing2: validAnimationEasings.has(parsedEasing2)
       ? parsedEasing2
       : animationEasing,
     animationStartFrame: Number.parseInt(params.get("startF") || "0", 10),

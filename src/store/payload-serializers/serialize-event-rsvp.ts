@@ -7,13 +7,12 @@ export function serializeEventRsvp(payload: PayloadData): string {
     return generateEvent({
       summary: rsvp.summary,
       location: rsvp.location,
-      description: rsvp.description
-        ? rsvp.rsvpUrl
-          ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}`
-          : rsvp.description
-        : rsvp.rsvpUrl
-          ? `RSVP: ${rsvp.rsvpUrl}`
-          : undefined,
+      description: (() => {
+        if (rsvp.description && rsvp.rsvpUrl) return `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}`;
+        if (rsvp.description) return rsvp.description;
+        if (rsvp.rsvpUrl) return `RSVP: ${rsvp.rsvpUrl}`;
+        return undefined;
+      })(),
       start: rsvp.start,
       end: rsvp.end,
     });

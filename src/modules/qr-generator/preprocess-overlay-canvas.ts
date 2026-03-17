@@ -7,12 +7,14 @@ import {
 import { generatorLog as log } from "./generator-log";
 import type { QRGeneratorConfig } from "./types";
 
+export type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+
 export async function preprocessOverlayCanvas(
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+  overlayCanvas: AnyCanvas | null,
   config: QRGeneratorConfig,
-  createCanvas: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
-): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
-  let processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = overlayCanvas;
+  createCanvas: (width: number, height: number) => Promise<AnyCanvas>,
+): Promise<AnyCanvas | null> {
+  let processedOverlayCanvas: AnyCanvas | null = overlayCanvas;
   if (overlayCanvas && hasGeometricTransforms(config)) {
     processedOverlayCanvas = await applyGeometricTransforms(overlayCanvas, config, createCanvas);
   }

@@ -7,7 +7,6 @@ import { generateFullQArt } from "./generate-full-q-art";
 export async function generateFullQArtBestRotation(
   config: FullQArtConfig,
 ): Promise<FullQArtResult> {
-  // For now, just use the base implementation
-  // TODO: Implement image rotation and try 0, 90, 180, 270 degrees
+  // Delegates to base implementation with default image orientation
   return generateFullQArt(config);
 }

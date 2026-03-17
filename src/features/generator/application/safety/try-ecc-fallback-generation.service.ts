@@ -9,13 +9,17 @@ import type { QRGeneratorConfig } from "@/modules/qr-generator";
 
 const log = createLogger("QR");
 
+type ECCLevelChar = "H" | "Q" | "M" | "L";
+
+type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+
 export async function tryEccFallbackGeneration(params: {
   effectiveConfig: Record<string, unknown>;
-  eccToTry: readonly ("H" | "Q" | "M" | "L")[];
+  eccToTry: readonly ECCLevelChar[];
   runGeneratorWithStatus: (
     cfg: QRGeneratorConfig,
-    overlaySource: HTMLCanvasElement | OffscreenCanvas | null,
-  ) => Promise<HTMLCanvasElement | OffscreenCanvas | null>;
+    overlaySource: AnyCanvas | null,
+  ) => Promise<AnyCanvas | null>;
   yieldForResponsiveness: () => Promise<boolean>;
   overlayEnabled: boolean;
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null;

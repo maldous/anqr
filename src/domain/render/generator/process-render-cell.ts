@@ -1,6 +1,11 @@
 import { applyPixelSnap } from "./apply-pixel-snap";
 import { computeFinalModuleColor } from "./compute-final-module-color";
-import { drawStyledModule } from "./draw-styled-module";
+import {
+  drawModuleHalftone,
+  drawModuleOutline,
+  drawModuleStandard,
+  drawModuleTiming,
+} from "./draw-styled-module";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FINDER,
@@ -128,19 +133,23 @@ export function processRenderCell(
   drawX = snapped.x;
   drawY = snapped.y;
 
-  drawStyledModule(
-    rctx.moduleDrawCtx,
-    drawX,
-    drawY,
-    adjustedSize,
-    isDark,
-    isTiming,
-    drawOutlineOnly,
-    useHalftoneRendering,
-    halftoneBrightness,
-    finalModuleColor,
-    moduleFillStyle,
-    row,
-    col,
-  );
+  if (drawOutlineOnly || (rctx.moduleDrawCtx.isStrokeGapMode && isDark)) {
+    drawModuleOutline(rctx.moduleDrawCtx, drawX, drawY, adjustedSize, finalModuleColor);
+  } else if (useHalftoneRendering && !rctx.moduleDrawCtx.isFastPreview) {
+    drawModuleHalftone(
+      rctx.moduleDrawCtx,
+      drawX,
+      drawY,
+      adjustedSize,
+      isDark,
+      halftoneBrightness,
+      moduleFillStyle,
+      row,
+      col,
+    );
+  } else if (isTiming) {
+    drawModuleTiming(rctx.moduleDrawCtx, drawX, drawY, adjustedSize);
+  } else {
+    drawModuleStandard(rctx.moduleDrawCtx, drawX, drawY, adjustedSize);
+  }
 }

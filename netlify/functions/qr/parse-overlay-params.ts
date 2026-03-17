@@ -37,10 +37,12 @@ export function parseOverlayParams(
   const overlayUrl = params.get("img");
   const legacySubpixel = params.get("subpixel") === "1";
   const overlayThresholdParam = params.get("threshold");
+  let defaultOverlayMode: string | undefined;
+  if (legacySubpixel) defaultOverlayMode = "subpixel";
+  else if (overlayUrl) defaultOverlayMode = "dithered";
   return {
     overlayUrl,
-    overlayMode:
-      params.get("mode") || (legacySubpixel ? "subpixel" : overlayUrl ? "dithered" : undefined),
+    overlayMode: params.get("mode") || defaultOverlayMode,
     overlayIntensity: Math.min(
       100,
       Math.max(0, Number.parseInt(params.get("intensity") || "100", 10)),

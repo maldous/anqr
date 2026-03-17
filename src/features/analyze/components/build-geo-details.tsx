@@ -7,24 +7,26 @@ export function buildGeoDetails(payload: string): DetailEntry[] {
   const geoData = parseGeoPayload(payload);
 
   if (geoData.latitude !== null && geoData.longitude !== null) {
-    details.push({
-      label: "Latitude",
-      value: (
-        <span className="font-mono text-xs">
-          {Number(geoData.latitude).toFixed(6)}° {geoData.latHemisphere}
-        </span>
-      ),
-      icon: <MapPin className="w-3 h-3" />,
-    });
-    details.push({
-      label: "Longitude",
-      value: (
-        <span className="font-mono text-xs">
-          {Number(geoData.longitude).toFixed(6)}° {geoData.lonHemisphere}
-        </span>
-      ),
-      icon: <MapPin className="w-3 h-3" />,
-    });
+    details.push(
+      {
+        label: "Latitude",
+        value: (
+          <span className="font-mono text-xs">
+            {Number(geoData.latitude).toFixed(6)}° {geoData.latHemisphere}
+          </span>
+        ),
+        icon: <MapPin className="w-3 h-3" />,
+      },
+      {
+        label: "Longitude",
+        value: (
+          <span className="font-mono text-xs">
+            {Number(geoData.longitude).toFixed(6)}° {geoData.lonHemisphere}
+          </span>
+        ),
+        icon: <MapPin className="w-3 h-3" />,
+      },
+    );
   }
 
   if (geoData.latDms && geoData.lonDms) {

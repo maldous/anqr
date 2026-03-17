@@ -7,7 +7,7 @@ import {
 } from "@/content/gallery/gallery-items";
 import type { GalleryCardProps } from "./gallery-card.types";
 
-export function GalleryCard({ item }: GalleryCardProps) {
+export function GalleryCard({ item }: Readonly<GalleryCardProps>) {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);

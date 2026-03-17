@@ -10,9 +10,12 @@ export function parseNumberedListItems(
     const matchIndex = match.index ?? 0;
     const startOfContent = matchIndex + match[0].length;
     const nextMatch = matches[i + 1];
-    const endOfContent = nextMatch
-      ? (nextMatch.index ?? 0) + (nextMatch[0].startsWith(" ") ? 1 : 0)
-      : text.length;
+    let endOfContent: number;
+    if (nextMatch) {
+      endOfContent = (nextMatch.index ?? 0) + (nextMatch[0].startsWith(" ") ? 1 : 0);
+    } else {
+      endOfContent = text.length;
+    }
     const content = text.slice(startOfContent, endOfContent).trim();
     if (content) items.push({ num, content });
   }

@@ -92,8 +92,8 @@ function extractTextContent(bodyParts) {
   for (const part of bodyParts) {
     if (part["content-type"] === "text/html" && typeof part.content === "string") {
       return part.content
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
+        .replaceAll(/<[^>]+>/g, " ")
+        .replaceAll(/\s+/g, " ")
         .trim();
     }
   }
@@ -311,7 +311,9 @@ function writeReport(summary) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main().catch((err) => {
+  try {
+    await main();
+  } catch (err) {
     console.error(`[email-ingest] Fatal: ${err.message}`);
     const failure = { ok: false, error: err.message, at: new Date().toISOString() };
     ensureDir(REPORTS_DIR);
@@ -320,5 +322,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       JSON.stringify(failure, null, 2) + "\n",
     );
     process.exit(1);
-  });
+  }
 }

@@ -45,8 +45,7 @@ export function createStringToBytes(
         if ((b & 0xff) === b) {
           bytes.push(b);
         } else {
-          bytes.push(b >>> 8);
-          bytes.push(b & 0xff);
+            bytes.push(b >>> 8, b & 0xff);
         }
       } else {
         bytes.push(unknownChar);

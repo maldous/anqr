@@ -63,11 +63,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     strictSuffix,
     suffixMode: resolvedSuffixMode,
     strategy: "HYBRID - original data protected, suffix + padding controllable",
-    suffixPolicy: strictSuffix
-      ? resolvedSuffixMode === "numeric"
+    suffixPolicy: (() => {
+      if (!strictSuffix) return "RELAXED - suffix can contain ANY byte values (max QArt control)";
+      return resolvedSuffixMode === "numeric"
         ? "STRICT - numeric suffix digits only"
-        : "STRICT - suffix must contain only URL-safe characters"
-      : "RELAXED - suffix can contain ANY byte values (max QArt control)",
+        : "STRICT - suffix must contain only URL-safe characters";
+    })(),
   });
 
   try {

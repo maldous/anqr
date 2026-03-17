@@ -78,7 +78,7 @@ export function formatIssueLine({ identifier, title, snippet, meta = [] }) {
   }
   parts.push(`  ${url}`);
   if (snippet) {
-    const trimmed = snippet.replace(/\s+/g, " ").trim();
+    const trimmed = snippet.replaceAll(/\s+/g, " ").trim();
     const preview = trimmed.length > 600 ? `${trimmed.slice(0, 597)}...` : trimmed;
     if (preview) parts.push(`  > ${preview}`);
   }
@@ -97,8 +97,10 @@ export function sendNotification({ subject, body, severity = "info" }) {
     return { sent: false, reason: "msmtp not found" };
   }
 
-  const severityTag =
-    severity === "critical" ? "[CRITICAL] " : severity === "warn" ? "[WARN] " : "";
+  let severityTag;
+  if (severity === "critical") severityTag = "[CRITICAL] ";
+  else if (severity === "warn") severityTag = "[WARN] ";
+  else severityTag = "";
   const formattedSubject = `[ANQR] ${severityTag}${subject}`;
 
   const state = loadState();

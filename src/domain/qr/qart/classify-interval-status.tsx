@@ -15,14 +15,11 @@ export function classifyIntervalStatus(
     linearBit >= encoderLayout.paddingSafeStartBit && linearBit < encoderLayout.paddingSafeEndBit;
   const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
   const isInProtected = linearBit < encoderLayout.protectedBitEnd;
-  const status = isInSuffixInterval
-    ? "Vector is in SUFFIX safe interval (EXPECTED)"
-    : isInPaddingInterval
-      ? "Vector is in PADDING safe interval (EXPECTED)"
-      : isInGap
-        ? "Vector is in TERMINATOR GAP - BUG!"
-        : isInProtected
-          ? "Vector is in PROTECTED region - BUG!"
-          : "Vector is in UNKNOWN region - BUG!";
+  let status: string;
+  if (isInSuffixInterval) status = "Vector is in SUFFIX safe interval (EXPECTED)";
+  else if (isInPaddingInterval) status = "Vector is in PADDING safe interval (EXPECTED)";
+  else if (isInGap) status = "Vector is in TERMINATOR GAP - BUG!";
+  else if (isInProtected) status = "Vector is in PROTECTED region - BUG!";
+  else status = "Vector is in UNKNOWN region - BUG!";
   return { isInSuffixInterval, isInPaddingInterval, isInGap, isInProtected, status };
 }

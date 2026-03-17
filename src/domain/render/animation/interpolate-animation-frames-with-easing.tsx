@@ -21,10 +21,10 @@ export function interpolateAnimationFramesWithEasing(
   const framePixels = Array.from<Uint8ClampedArray | null>({ length: frames.length });
   for (let i = 0; i < frames.length; i++) {
     const frameCtx =
-      (frames[i]?.getContext("2d", {
+      frames[i]?.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
-      } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+      }) ??
       frames[i]?.getContext("2d");
     framePixels[i] = frameCtx ? frameCtx.getImageData(0, 0, width, height).data : null;
   }

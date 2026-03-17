@@ -41,8 +41,8 @@ export function initRemoteDiagnostics(): void {
   }
 
   // Expose to window for console access
-  if (typeof window !== "undefined") {
-    (window as Window & { anqrDiag?: unknown }).anqrDiag = {
+  if (typeof globalThis.window !== "undefined") {
+    (globalThis as typeof globalThis & { anqrDiag?: unknown }).anqrDiag = {
       enable: enableDiagnostics,
       disable: disableDiagnostics,
       status: () => {

@@ -49,7 +49,7 @@ function archiveReport() {
   if (!existsSync(LATEST_REPORT)) return;
   const archiveDir = resolve(REPORTS_DIR, "archive");
   if (!existsSync(archiveDir)) mkdirSync(archiveDir, { recursive: true });
-  const ts = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").slice(0, 19);
+  const ts = new Date().toISOString().replaceAll(/[:.]/g, "-").replaceAll("T", "_").slice(0, 19);
   const archivePath = resolve(archiveDir, `report-${ts}.json`);
   copyFileSync(LATEST_REPORT, archivePath);
   console.log(`[nightly] Report archived to ${archivePath}`);
@@ -147,7 +147,9 @@ async function main() {
   process.exit(hardFailure || degraded ? 1 : 0);
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(`[nightly] Fatal: ${err.message}`);
   process.exit(1);
-});
+}

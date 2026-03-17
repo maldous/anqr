@@ -83,7 +83,7 @@ const SECTIONS = [
 
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
 
-export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<SidebarProps>) {
   // Use individual selectors to avoid re-renders when unrelated state changes
   const tier = useQRStore((s) => s.tier);
   const searchQuery = useQRStore((s) => s.searchQuery);

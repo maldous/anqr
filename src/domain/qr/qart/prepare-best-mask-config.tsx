@@ -9,14 +9,10 @@ export function prepareBestMaskConfig(config: Omit<FullQArtConfig, "maskPattern"
   sharedSuffix: string;
 } {
   const targetControlPercent = config.targetControlPercent ?? 100;
-  const resolvedSuffixMode: "numeric" | "byte" =
-    config.suffixMode === "numeric"
-      ? "numeric"
-      : config.suffixMode === "byte"
-        ? "byte"
-        : /^https?:\/\//i.test(config.data)
-          ? "numeric"
-          : "byte";
+  let resolvedSuffixMode: "numeric" | "byte";
+  if (config.suffixMode === "numeric") resolvedSuffixMode = "numeric";
+  else if (config.suffixMode === "byte") resolvedSuffixMode = "byte";
+  else resolvedSuffixMode = /^https?:\/\//i.test(config.data) ? "numeric" : "byte";
 
   const requestedVersion = config.forceVersion ?? config.version;
   const controlTarget =

@@ -7,11 +7,12 @@ import { calculateModeDataBits } from "./calculate-mode-data-bits";
  */
 export function calculateSegmentBits(segments: DataSegment[], version: number): number {
   let bits = 0;
+  const vRange = version < 10 ? 0 : version < 27 ? 1 : 2;
   const lengthBitsTable = {
-    numeric: version < 10 ? 10 : version < 27 ? 12 : 14,
-    alphanumeric: version < 10 ? 9 : version < 27 ? 11 : 13,
+    numeric: [10, 12, 14][vRange],
+    alphanumeric: [9, 11, 13][vRange],
     byte: version < 10 ? 8 : 16,
-    kanji: version < 10 ? 8 : version < 27 ? 10 : 12,
+    kanji: [8, 10, 12][vRange],
   };
 
   for (const seg of segments) {

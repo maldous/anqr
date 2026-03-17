@@ -16,7 +16,7 @@ export function parseGeoPayload(payload: string): Record<string, string | number
     osmUrl: null,
   };
 
-  const match = payload.match(/^geo:([\d.-]+),([\d.-]+)(?:,([\d.-]+))?(?:\?.*u=([\d.]+))?/i);
+  const match = /^geo:([\d.-]+),([\d.-]+)(?:,([\d.-]+))?(?:\?.*u=([\d.]+))?/i.exec(payload);
   if (!match) return result;
 
   const lat = Number.parseFloat(match[1]);

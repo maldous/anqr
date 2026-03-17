@@ -31,7 +31,7 @@ export function parseEpcSepaPayload(payload: string): Record<string, string | nu
 
   // Parse amount (format: EUR123.45)
   if (lines[7]) {
-    const amountMatch = lines[7].match(/([A-Z]{3})([\d.]+)/);
+    const amountMatch = /([A-Z]{3})([\d.]+)/.exec(lines[7]);
     if (amountMatch) {
       result.currency = amountMatch[1];
       result.amount = amountMatch[2];

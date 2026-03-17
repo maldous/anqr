@@ -16,7 +16,10 @@ export function drawFrame(
 
   // Draw a visible border so the frame is distinguishable even without text.
   // This runs after quiet zone enforcement, so the border won't be erased.
-  const defaultRadius = config.frameStyle === "sticker" ? 12 : config.frameStyle === "tag" ? 4 : 0;
+  let defaultRadius: number;
+  if (config.frameStyle === "sticker") defaultRadius = 12;
+  else if (config.frameStyle === "tag") defaultRadius = 4;
+  else defaultRadius = 0;
   const borderRadius = config.frameBorderRadius ?? defaultRadius;
   const lineWidth = Math.max(1, Math.round(size / 200));
   const inset = lineWidth / 2;

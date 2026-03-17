@@ -523,7 +523,7 @@ function buildIssuePrompt(issue) {
 async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, startTime }) {
   const filesChanged = new Set();
   let totalToolCalls = 0;
-  let turn = 0;
+  let turn;
   const validationsAfterMutation = {
     typecheck: false,
     lint: false,
@@ -532,7 +532,7 @@ async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, s
     tests: false,
   };
 
-  for (turn = 0; turn < maxTurns; turn++) {
+  for (; turn < maxTurns; turn++) {
     if (Date.now() - startTime > maxMs) {
       console.log(`[agent] Hard timeout reached (${maxMs}ms) at turn ${turn}`);
       return {

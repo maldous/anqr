@@ -12,7 +12,10 @@ export function cannyEdge(
 
   for (let i = 0; i < data.length; i += 4) {
     const magnitude = data[i];
-    const value = magnitude > highThreshold ? 255 : magnitude > lowThreshold ? 128 : 0;
+    let value: number;
+    if (magnitude > highThreshold) value = 255;
+    else if (magnitude > lowThreshold) value = 128;
+    else value = 0;
     data[i] = value;
     data[i + 1] = value;
     data[i + 2] = value;

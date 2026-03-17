@@ -3,7 +3,7 @@ import type { ExporterModule } from "./exporter-module";
 
 export function loadExporterModule(): Promise<ExporterModule> {
   if (!getExporterModulePromise()) {
-    setExporterModulePromise(import("@/modules/exporter") as Promise<ExporterModule>);
+    setExporterModulePromise(import("@/modules/exporter"));
   }
   return getExporterModulePromise()!;
 }

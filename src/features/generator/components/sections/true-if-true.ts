@@ -1,3 +1,1 @@
-export function trueIfTrue(value: boolean): true | undefined {
-  return value ? true : undefined;
-}
+export { omitWhenEqual } from "./false-if-false";

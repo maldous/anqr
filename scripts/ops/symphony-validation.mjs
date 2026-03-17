@@ -106,7 +106,7 @@ export function runAstDensity(projectRoot, changedFiles = [], opts = {}) {
   const quoted = opts.fullProject ? "" : eligible.map((file) => JSON.stringify(file)).join(" ");
   if (!opts.fullProject && eligible.length === 0) return { pass: true, detail: "" };
   const result = runCommand(
-    `${VALIDATION_MANIFEST.astDensity.command}${quoted ? ` ${quoted}` : ""}`,
+    [VALIDATION_MANIFEST.astDensity.command, quoted].filter(Boolean).join(" "),
     {
       cwd: projectRoot,
       timeout: VALIDATION_MANIFEST.astDensity.timeoutMs,
@@ -147,11 +147,13 @@ export function formatValidationFeedback(validation) {
 
 export function runValidation(projectRoot, changedFiles = []) {
   const results = [];
-  results.push({ check: "typecheck", ...runTypecheck(projectRoot) });
-  results.push({ check: "lint", ...runLint(projectRoot) });
-  results.push({ check: "cspell", ...runCspell(projectRoot, changedFiles) });
-  results.push({ check: "ast-density", ...runAstDensity(projectRoot, changedFiles) });
-  results.push({ check: "test-unit", ...runTests(projectRoot) });
+  results.push(
+    { check: "typecheck", ...runTypecheck(projectRoot) },
+    { check: "lint", ...runLint(projectRoot) },
+    { check: "cspell", ...runCspell(projectRoot, changedFiles) },
+    { check: "ast-density", ...runAstDensity(projectRoot, changedFiles) },
+    { check: "test-unit", ...runTests(projectRoot) },
+  );
   return {
     passed: results.every((r) => r.pass),
     results,

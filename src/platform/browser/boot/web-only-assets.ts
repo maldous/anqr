@@ -7,7 +7,7 @@ export const loadWebOnlyBootAssets = (): void => {
   if (typeof document === "undefined") return;
   if (Capacitor.isNativePlatform()) return;
 
-  const win = window as IubendaWindow;
+  const win = globalThis as unknown as IubendaWindow;
   if (win.__anqrWebAssetsLoaded) return;
   win.__anqrWebAssetsLoaded = true;
 

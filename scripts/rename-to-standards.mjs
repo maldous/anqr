@@ -53,11 +53,11 @@ const replaceExt = (filePath, newExt) => `${stripCodeExtension(filePath)}${newEx
 
 const toKebab = (value) =>
   value
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
-    .replace(/[_.\s]+/g, "-")
-    .replace(/--+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
+    .replaceAll(/[_.\s]+/g, "-")
+    .replaceAll(/--+/g, "-")
+    .replaceAll(/(?:^-+)|(?:-+$)/g, "")
     .toLowerCase();
 
 const isCodeFile = (filePath) => {
@@ -254,7 +254,7 @@ const detectSuggestion = (root, filePath, text) => {
   const strippedLegacyStem = baseName
     .replace(/\.(type|interface|props|state)$/u, "")
     .replace(/-(type|interface|props|state)$/u, "")
-    .replace(/-(fn|type|interface)-/gu, "-");
+    .replaceAll(/-(fn|type|interface)-/gu, "-");
 
   if (
     (/\.(type|interface|props|state)$/u.test(baseName) ||

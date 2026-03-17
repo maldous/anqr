@@ -109,7 +109,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     }
 
     // Detect content type
-    const type = detectContentType(code.data!);
+    const type = detectContentType(code.data);
     const contentType = { type, label: formatContentTypeLabel(type) };
 
     // Analyze colors from the QR region
@@ -135,11 +135,11 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const qrSize = avgFinderDist + 7 * (estimatedModulePx ?? 10); // Approximate full QR size
 
-    const encodingMode = detectEncodingMode(code.data!);
+    const encodingMode = detectEncodingMode(code.data);
     const payloadBytes =
       encodingMode === "byte"
-        ? stringToLatin1Bytes(code.data!)
-        : new TextEncoder().encode(code.data!);
+        ? stringToLatin1Bytes(code.data)
+        : new TextEncoder().encode(code.data);
 
     // Success - flush and disable buffer (don't include debug log on success)
     flushLogBuffer();
@@ -162,7 +162,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     return {
       success: true,
-      payload: code.data!,
+      payload: code.data,
       payloadBytes,
       version,
       moduleCount,

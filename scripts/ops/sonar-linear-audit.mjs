@@ -71,7 +71,7 @@ async function main() {
     sonarHost: SONAR_HOST,
     priority: 1,
     resolveStale: true,
-    requeueToTodo: false,
+    requeueToReady: false,
   });
 
   // Sync security hotspots
@@ -81,7 +81,7 @@ async function main() {
     sonarHost: SONAR_HOST,
     priority: 1,
     resolveStale: true,
-    requeueToTodo: false,
+    requeueToReady: false,
   });
 
   // Sync duplication issues
@@ -91,7 +91,7 @@ async function main() {
     sonarHost: SONAR_HOST,
     priority: 2, // Duplications are lower priority than bugs and vulnerabilities
     resolveStale: true,
-    requeueToTodo: false,
+    requeueToReady: false,
   });
 
   const totalCreated =
@@ -196,7 +196,9 @@ async function main() {
   process.exit(1);
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(`[sonar-audit] Fatal: ${err.message}`);
   process.exit(2);
-});
+}

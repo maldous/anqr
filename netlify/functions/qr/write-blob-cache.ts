@@ -26,8 +26,6 @@ export async function writeBlobCache(
   } catch (error_) {
     if (isMissingBlobsEnvironmentError(error_)) {
       markBlobStoreDisabled("missing_blob_env");
-    } else {
-      // console.error('[BLOB] cache write FAILED:', error_);
     }
   }
 }

@@ -26,7 +26,7 @@ export async function executeQArtWorkerPipeline(params: {
   isStaleRequest: () => boolean;
   yieldForResponsiveness: () => Promise<boolean>;
   updateGenerationProgress: (stage: string, percent: number) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   t: (...args: any[]) => any;
   translateQArtStage: (s: string) => string;
   qartPreviewBitmapCanvasRef: { current: HTMLCanvasElement | null };

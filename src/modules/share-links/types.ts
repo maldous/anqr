@@ -8,6 +8,9 @@ import { createLogger } from "../../infra/logging/logger";
 
 const _log = createLogger("SHARE");
 
+type AnimationTarget = "result" | "modules" | "both";
+type AnimationWaveAxis = "x" | "y" | "xy";
+
 /**
  * Maximum recommended URL length for reliable sharing
  */
@@ -144,11 +147,11 @@ export interface ShareConfig {
   interpolate?: string;
   temporalDither?: string;
   pattern?: string;
-  target?: "result" | "modules" | "both";
-  waveAxis?: "x" | "y" | "xy";
+  target?: AnimationTarget;
+  waveAxis?: AnimationWaveAxis;
   pattern2?: string;
-  target2?: "result" | "modules" | "both";
-  waveAxis2?: "x" | "y" | "xy";
+  target2?: AnimationTarget;
+  waveAxis2?: AnimationWaveAxis;
   moduleJitter?: number;
   colorCycle?: boolean;
   seed?: number;
@@ -209,11 +212,11 @@ export interface ShareConfig {
 
   // Animation
   animationPattern?: string;
-  animationTarget?: "result" | "modules" | "both";
-  animationWaveAxis?: "x" | "y" | "xy";
+  animationTarget?: AnimationTarget;
+  animationWaveAxis?: AnimationWaveAxis;
   animationPattern2?: string;
-  animationTarget2?: "result" | "modules" | "both";
-  animationWaveAxis2?: "x" | "y" | "xy";
+  animationTarget2?: AnimationTarget;
+  animationWaveAxis2?: AnimationWaveAxis;
   animationFrames?: number;
   animationSpeed?: number;
   animationSeed?: number;

@@ -64,11 +64,13 @@ export function AuspaynetEditor({
             (auspaynetForm.payIdType === "MOBILE" && !isValidPhone(auspaynetForm.payId)) ||
             (auspaynetForm.payIdType === "ABN" && !isValidABN(auspaynetForm.payId))) && (
             <p className="text-xs text-destructive">
-              {auspaynetForm.payIdType === "EMAIL"
-                ? t("validation.invalidEmail", "Enter a valid email address (must contain @)")
-                : auspaynetForm.payIdType === "ABN"
-                  ? t("validation.invalidABN", "Enter a valid ABN (11 digits)")
-                  : t("validation.invalidPhone", "Enter a valid phone number (at least 3 digits)")}
+              {(() => {
+                if (auspaynetForm.payIdType === "EMAIL")
+                  return t("validation.invalidEmail", "Enter a valid email address (must contain @)");
+                if (auspaynetForm.payIdType === "ABN")
+                  return t("validation.invalidABN", "Enter a valid ABN (11 digits)");
+                return t("validation.invalidPhone", "Enter a valid phone number (at least 3 digits)");
+              })()}
             </p>
           )}
       </div>

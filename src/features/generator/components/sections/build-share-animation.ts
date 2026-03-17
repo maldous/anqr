@@ -1,12 +1,12 @@
 import type { StoreState } from "./share-config-store.types";
 import { buildShareAnimationPatternFields } from "./build-share-animation-pattern-fields";
-import { falseIfFalse, trueIfTrue, undefinedIfEqual } from "./share-config-field-helpers";
+import { omitWhenEqual, undefinedIfEqual } from "./share-config-field-helpers";
 
 export function buildShareAnimation(animation: StoreState["animation"]) {
   return {
     speed: undefinedIfEqual(animation.speedMs, 100),
-    loop: falseIfFalse(animation.loop),
-    reverse: trueIfTrue(animation.bounce),
+    loop: omitWhenEqual(animation.loop, true),
+    reverse: omitWhenEqual(animation.bounce, false),
     startFrame: undefinedIfEqual(animation.startFrame, 0),
     maxFrames: undefinedIfEqual(animation.maxFrames, 0),
     frameStep: undefinedIfEqual(animation.frameStep, 1),
@@ -14,7 +14,7 @@ export function buildShareAnimation(animation: StoreState["animation"]) {
     temporalDither: undefinedIfEqual(animation.temporalDither, "off"),
     ...buildShareAnimationPatternFields(animation),
     moduleJitter: undefinedIfEqual(animation.moduleJitterPx, 0),
-    colorCycle: trueIfTrue(animation.colorCycle),
+    colorCycle: omitWhenEqual(animation.colorCycle, false),
     seed: undefinedIfEqual(animation.seed, 0),
     animationSeed: undefinedIfEqual(animation.seed, 0),
   };

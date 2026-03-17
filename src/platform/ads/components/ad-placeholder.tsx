@@ -6,7 +6,7 @@ export function AdPlaceholder({
   height = 90,
   className = "",
   format = "auto",
-}: AdPlaceholderProps) {
+}: Readonly<AdPlaceholderProps>) {
   const widthStyle = typeof width === "number" ? `${width}px` : width;
   const isProduction = import.meta.env.PROD;
   const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === "true";

@@ -93,11 +93,8 @@ export function HeaderLanguageMenu({
                     <span>{lang.flag}</span>
                     <span>
                       {lang.nativeName}
-                      {isCurrent
-                        ? lang.code === "en-GB"
-                          ? ""
-                          : ` (${lang.name})`
-                        : ` (${t("languages." + lang.code)})`}
+                      {!isCurrent && ` (${t("languages." + lang.code)})`}
+                      {isCurrent && lang.code !== "en-GB" && ` (${lang.name})`}
                     </span>
                     {isCurrent && <Check className="h-4 w-4 ml-auto" aria-hidden="true" />}
                   </button>

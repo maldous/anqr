@@ -22,8 +22,8 @@ export function createDataURL(
 
   const base64 = base64EncodeOutputStream();
   const bytes = b.toByteArray();
-  for (let i = 0; i < bytes.length; i += 1) {
-    base64.writeByte(bytes[i]);
+  for (const byte of bytes) {
+    base64.writeByte(byte);
   }
   base64.flush();
 

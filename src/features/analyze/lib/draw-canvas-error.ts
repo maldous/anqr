@@ -12,5 +12,5 @@ export function drawCanvasError(
   ctx.fillStyle = textColor;
   ctx.font = "12px sans-serif";
   ctx.textAlign = "center";
-  lines.forEach((line, i) => ctx.fillText(line, 100, 80 + i * 20));
+  for (const [i, line] of lines.entries()) ctx.fillText(line, 100, 80 + i * 20);
 }

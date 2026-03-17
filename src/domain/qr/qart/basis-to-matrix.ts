@@ -13,9 +13,9 @@ export function basisToMatrix(vectors: RSBasisVector[], totalBits: number): bool
 
   for (const v of vectors) {
     const row: boolean[] = [];
-    for (let byteIdx = 0; byteIdx < v.blockBits.length; byteIdx++) {
+    for (const byte of v.blockBits) {
       for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
-        row.push((v.blockBits[byteIdx] & (1 << bitIdx)) !== 0);
+        row.push((byte & (1 << bitIdx)) !== 0);
       }
     }
     // Pad or truncate to totalBits

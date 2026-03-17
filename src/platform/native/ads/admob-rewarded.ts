@@ -15,8 +15,10 @@ export async function prepareRewardedAdInternal(
   };
   try {
     const key = rewardedPrepareKey(type);
-    const context =
-      type === "premium" ? "premium" : type === "rewardedInterstitial" ? undefined : "export_hd";
+    let context: string | undefined;
+    if (type === "premium") context = "premium";
+    else if (type === "rewardedInterstitial") context = undefined;
+    else context = "export_hd";
     const adId =
       type === "rewardedInterstitial"
         ? getAdUnitId("rewardedInterstitial")

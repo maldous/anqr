@@ -23,7 +23,10 @@ export function buildNumericGroupMaps(
   let groupIndex = 0;
   while (remainingDigits > 0) {
     const groupDigits = Math.min(3, remainingDigits);
-    const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+    let bitsPerGroup: number;
+    if (groupDigits === 3) bitsPerGroup = 10;
+    else if (groupDigits === 2) bitsPerGroup = 7;
+    else bitsPerGroup = 4;
     const maxVal = getNumericGroupMax(bitsPerGroup);
 
     let value = 0;

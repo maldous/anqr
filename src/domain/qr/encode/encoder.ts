@@ -138,10 +138,8 @@ export function qrcode(
   const setupPositionAdjustPattern = (): void => {
     const pos = getPatternPosition(_typeNumber);
 
-    for (let i = 0; i < pos.length; i += 1) {
-      for (let j = 0; j < pos.length; j += 1) {
-        const row = pos[i];
-        const col = pos[j];
+    for (const row of pos) {
+      for (const col of pos) {
 
         if (_modules![row][col] != null) continue;
 
@@ -245,8 +243,8 @@ export function qrcode(
     }
 
     let totalCodeCount = 0;
-    for (let i = 0; i < rsBlocks.length; i += 1) {
-      totalCodeCount += rsBlocks[i].totalCount;
+    for (const block of rsBlocks) {
+      totalCodeCount += block.totalCount;
     }
 
     return interleaveCodewords(dcdata, ecdata, maxDcCount, maxEcCount, totalCodeCount);
@@ -261,8 +259,7 @@ export function qrcode(
 
     const buffer = qrBitBuffer();
 
-    for (let i = 0; i < dataList.length; i += 1) {
-      const data = dataList[i];
+    for (const data of dataList) {
       buffer.put(data.getMode(), 4);
       buffer.put(data.getLength(), getLengthInBits(data.getMode(), typeNumber));
       data.write(buffer);
@@ -270,8 +267,8 @@ export function qrcode(
 
     // calc num max data
     let totalDataCount = 0;
-    for (let i = 0; i < rsBlocks.length; i += 1) {
-      totalDataCount += rsBlocks[i].dataCount;
+    for (const block of rsBlocks) {
+      totalDataCount += block.dataCount;
     }
 
     if (buffer.getLengthInBits() > totalDataCount * 8) {
