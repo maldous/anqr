@@ -90,18 +90,20 @@ export class StringEncoding {
   private static encodeFallback(s: string): Uint8Array {
     const encoded = encodeURIComponent(s);
     let binaryStr = "";
-    for (let i = 0; i < encoded.length; i++) {
+    let i = 0;
+    while (i < encoded.length) {
       if (encoded[i] === "%" && i + 2 < encoded.length) {
-        binaryStr += String.fromCharCode(Number.parseInt(encoded.substring(i + 1, i + 3), 16));
-        i += 2;
+        binaryStr += String.fromCodePoint(Number.parseInt(encoded.substring(i + 1, i + 3), 16));
+        i += 3;
       } else {
         binaryStr += encoded[i];
+        i += 1;
       }
     }
     const base64Str = btoa(binaryStr);
     const result = new Uint8Array(base64Str.length);
-    for (let i = 0; i < base64Str.length; i++) {
-      result[i] = base64Str.charCodeAt(i);
+    for (let j = 0; j < base64Str.length; j++) {
+      result[j] = base64Str.codePointAt(j)!;
     }
     return result;
   }

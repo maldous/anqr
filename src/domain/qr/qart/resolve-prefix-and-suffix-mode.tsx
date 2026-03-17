@@ -6,8 +6,8 @@ export function resolvePrefixAndSuffixMode(
 ): { resolvedSuffixMode: "numeric" | "byte"; prefix: string } {
   const isUrlLike = /^https?:\/\//i.test(data);
   let resolvedSuffixMode: "numeric" | "byte";
-  if (suffixMode !== "auto") resolvedSuffixMode = suffixMode;
-  else resolvedSuffixMode = isUrlLike ? "numeric" : "byte";
+  if (suffixMode === "auto") resolvedSuffixMode = isUrlLike ? "numeric" : "byte";
+  else resolvedSuffixMode = suffixMode;
 
   const hashIndex = data.indexOf("#");
   const baseUrl = hashIndex >= 0 ? data.slice(0, hashIndex) : data;

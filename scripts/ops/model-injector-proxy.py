@@ -92,7 +92,7 @@ class InjectorHandler(BaseHTTPRequestHandler):
         if not acquired:
             log(f"REJECTED {self.path} — concurrent request blocked")
             self.send_response(503)
-            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Type", CONTENT_TYPE_JSON)
             self.send_header("Retry-After", "15")
             body = json.dumps({
                 "error": "local_busy",
@@ -122,7 +122,7 @@ class InjectorHandler(BaseHTTPRequestHandler):
             req = urllib.request.Request(
                 target_url,
                 data=body,
-                headers={"Content-Type": "application/json"},
+                headers={"Content-Type": CONTENT_TYPE_JSON},
                 method="POST",
             )
 
@@ -132,7 +132,7 @@ class InjectorHandler(BaseHTTPRequestHandler):
                     elapsed = time.monotonic() - start
                     log(f"COMPLETE {self.path} — {resp.status} in {elapsed:.1f}s")
                     self.send_response(resp.status)
-                    self.send_header("Content-Type", resp.headers.get("Content-Type", "application/json"))
+                    self.send_header("Content-Type", resp.headers.get("Content-Type", CONTENT_TYPE_JSON))
                     self.send_header("Content-Length", str(len(resp_body)))
                     self.end_headers()
                     self.wfile.write(resp_body)
@@ -141,7 +141,7 @@ class InjectorHandler(BaseHTTPRequestHandler):
                 err_body = e.read()
                 log(f"ERROR {self.path} — {e.code} in {elapsed:.1f}s")
                 self.send_response(e.code)
-                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Type", CONTENT_TYPE_JSON)
                 self.send_header("Content-Length", str(len(err_body)))
                 self.end_headers()
                 self.wfile.write(err_body)

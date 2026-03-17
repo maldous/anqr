@@ -31,6 +31,7 @@ import {
 } from "../../domain/render/generator/pixel-matrix";
 import { renderModules } from "../../domain/render/generator/render-loop";
 import { generateScaledQR } from "../../domain/render/generator/scaled-render";
+import type { AnyCanvas } from "./any-canvas";
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from "./types";
 import { validateColor } from "./utils";
 import { MatrixWrapper } from "./matrix-wrapper";
@@ -105,7 +106,7 @@ export class QRGenerator {
 
   private async resolveOverlayComplexity(
     pool: CanvasPool,
-    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    overlayCanvas: AnyCanvas | null,
     isAnimatedFrame: boolean,
     overlaySignature: string,
   ): Promise<number> {
@@ -175,7 +176,7 @@ export class QRGenerator {
   /**
    * Create a canvas using the configured factory
    */
-  async createCanvas(width: number, height: number): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  async createCanvas(width: number, height: number): Promise<AnyCanvas> {
     return this.canvasFactory.createCanvas(width, height);
   }
 
@@ -238,9 +239,9 @@ export class QRGenerator {
   }
 
   private async preprocessOverlayCanvas(
-    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    overlayCanvas: AnyCanvas | null,
     config: QRGeneratorConfig,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+  ): Promise<AnyCanvas | null> {
     return preprocessOverlayCanvasStandalone(overlayCanvas, config, this.createCanvas.bind(this));
   }
 
@@ -256,7 +257,7 @@ export class QRGenerator {
     ditherPattern: boolean[][] | null,
     effectiveIntensity: number,
   ): Promise<{
-    canvas: HTMLCanvasElement | OffscreenCanvas;
+    canvas: AnyCanvas;
     ctx: CanvasRenderingContext2D;
     effectiveBgColor: string;
     size: number;
@@ -319,10 +320,10 @@ export class QRGenerator {
   private async tryScaledRenderPath(
     qr: QRCodeInstance,
     effectiveConfig: QRGeneratorConfig,
-    processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    processedOverlayCanvas: AnyCanvas | null,
     moduleCount: number,
     scale: number,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas | null> {
+  ): Promise<AnyCanvas | null> {
     if (scale <= 1 || !processedOverlayCanvas) return null;
 
     const pool = this._canvasPool;
@@ -360,8 +361,8 @@ export class QRGenerator {
 
   async generate(
     config: QRGeneratorConfig,
-    overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = null,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    overlayCanvas: AnyCanvas | null = null,
+  ): Promise<AnyCanvas> {
     if (!this.qrcode) {
       await this.loadLibrary();
     }
@@ -554,10 +555,10 @@ export class QRGenerator {
    */
   private async runDitheredScanGate(
     effectiveConfig: QRGeneratorConfig,
-    processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+    processedOverlayCanvas: AnyCanvas,
     moduleCount: number,
-    renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    renderScaled: (cfg: QRGeneratorConfig) => Promise<AnyCanvas>,
+  ): Promise<AnyCanvas> {
     const pool = this._canvasPool;
 
     const scanGateProfile = effectiveConfig.scanGateProfile ?? "full";
@@ -662,7 +663,7 @@ export class QRGenerator {
       qrFirstMode: patch.qrFirstMode ?? effectiveConfig.qrFirstMode ?? false,
     });
 
-    const runDecode = async (src: HTMLCanvasElement | OffscreenCanvas): Promise<boolean> => {
+    const runDecode = async (src: AnyCanvas): Promise<boolean> => {
       const decoded = await decodeCanvasData(src);
       return decoded?.success === true && decoded?.data === effectiveConfig.content;
     };
@@ -720,7 +721,7 @@ export class QRGenerator {
   private async runDitheredScanGateFallback(
     sgctx: ScanGateCtx,
     effectiveConfig: QRGeneratorConfig,
-    lastCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+    lastCanvas: AnyCanvas | null,
     attempts: DitherAttemptPatch[],
     isPreviewScanGate: boolean,
     isFirstAnimatedFrame: boolean,
@@ -729,10 +730,10 @@ export class QRGenerator {
     skipScanGateEscalation: boolean,
     requestedOverlayIntensity: number,
     cb: ScanGateCallbacks,
-    renderScaled: (cfg: QRGeneratorConfig) => Promise<HTMLCanvasElement | OffscreenCanvas>,
+    renderScaled: (cfg: QRGeneratorConfig) => Promise<AnyCanvas>,
     buildAttemptConfig: (patch: DitherAttemptPatch) => QRGeneratorConfig,
     rememberPatch: (patch: DitherAttemptPatch) => void,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  ): Promise<AnyCanvas> {
     const pool = this._canvasPool;
     const lastPatch = attempts[attempts.length - 1] || {};
 
@@ -799,7 +800,7 @@ export class QRGenerator {
     moduleCount: number,
     config: QRGeneratorConfig,
     storeMatrix: () => void,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  ): Promise<AnyCanvas> {
     if (moduleCount === 0) {
       throw new Error("Empty matrix provided to renderFromMatrix");
     }
@@ -894,10 +895,7 @@ export class QRGenerator {
    * @param config - Rendering configuration (same as generate())
    * @returns Rendered canvas with proper styling
    */
-  async renderFromMatrix(
-    matrix: boolean[][],
-    config: QRGeneratorConfig,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  async renderFromMatrix(matrix: boolean[][], config: QRGeneratorConfig): Promise<AnyCanvas> {
     const moduleCount = matrix.length;
     const qr = new MatrixWrapper(matrix);
     return this.renderFromPreparedMatrix(qr, moduleCount, config, () => {
@@ -912,7 +910,7 @@ export class QRGenerator {
     packedMatrix: Uint8Array,
     moduleCount: number,
     config: QRGeneratorConfig,
-  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  ): Promise<AnyCanvas> {
     if (moduleCount <= 0) {
       throw new Error("Invalid module count provided to renderFromPackedMatrix");
     }

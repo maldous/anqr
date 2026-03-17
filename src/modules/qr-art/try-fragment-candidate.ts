@@ -29,13 +29,16 @@ export function tryFragmentCandidate(
     state.cachedModuleCount = moduleCount;
   }
 
+  const targets = state.targets;
+  const importance = state.importance;
+  if (!targets || !importance) return;
   const actualVersion = version > 0 ? version : Math.ceil((moduleCount - 17) / 4);
   const { score, matchingModules, totalControllable } = evaluateQRMatch(
     (row, col) => qr.isDark(row, col),
     moduleCount,
     actualVersion,
-    state.targets!,
-    state.importance!,
+    targets,
+    importance,
   );
 
   if (score > state.bestScore) {

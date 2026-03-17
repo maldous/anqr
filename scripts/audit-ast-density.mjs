@@ -21,12 +21,14 @@ const parseArgs = (argv) => {
     paths: [],
   };
 
-  for (let i = 0; i < argv.length; i += 1) {
+  let i = 0;
+  while (i < argv.length) {
     const arg = argv[i];
     if (arg === "--json") {
       options.json = true;
     } else if (arg === "--threshold") {
-      const raw = argv[i + 1];
+      i += 1;
+      const raw = argv[i];
       if (raw === undefined) {
         throw new Error("--threshold requires a numeric value");
       }
@@ -35,10 +37,10 @@ const parseArgs = (argv) => {
         throw new Error(`Invalid threshold: ${raw}`);
       }
       options.threshold = parsed;
-      i += 1;
     } else {
       options.paths.push(arg);
     }
+    i += 1;
   }
 
   return options;

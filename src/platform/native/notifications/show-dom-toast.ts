@@ -35,12 +35,12 @@ export function showDomToast(message: string, duration: ToastDuration): void {
   node.style.opacity = "1";
 
   const timeoutKey = "__anqrToastTimeout";
-  const existing = (node as HTMLElement & { [key: string]: number | undefined })[timeoutKey];
+  const existing = (
+    node as HTMLElement & { [key: string]: ReturnType<typeof setTimeout> | undefined }
+  )[timeoutKey];
   if (existing) clearTimeout(existing);
-  (node as HTMLElement & { [key: string]: number | undefined })[timeoutKey] = window.setTimeout(
-    () => {
+  (node as HTMLElement & { [key: string]: ReturnType<typeof setTimeout> | undefined })[timeoutKey] =
+    globalThis.setTimeout(() => {
       node.style.opacity = "0";
-    },
-    getToastDurationMs(duration),
-  );
+    }, getToastDurationMs(duration));
 }

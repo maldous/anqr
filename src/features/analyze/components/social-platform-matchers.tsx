@@ -113,7 +113,7 @@ export const SOCIAL_PLATFORM_MATCHERS: SocialPlatformMatcher[] = [
   {
     hostPatterns: ["tiktok.com", "vm.tiktok.com"],
     resolve: (_hostname, pathname) => {
-      const usernameMatch = pathname.match(/^\/@([^/]+)/);
+      const usernameMatch = /^\/@([^/]+)/.exec(pathname);
       return {
         name: "TikTok",
         badge: (
