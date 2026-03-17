@@ -409,10 +409,7 @@ export const viteConfig = defineConfig({
           ) {
             return "shared-infra";
           }
-          if (
-            id.includes("/content/gallery/") &&
-            !id.includes("gallery-showcase.generated")
-          ) {
+          if (id.includes("/content/gallery/") && !id.includes("gallery-showcase.generated")) {
             return "shared-gallery-data";
           }
           // Lazy-loaded page components
