@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
-import { isNonEmpty, isValidMerchantId } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
+import { isNonEmpty, isValidMerchantId } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
 import type { TWQRForm } from "../payload-section-types";
 import { ValidatedTextField } from "./validated-text-field";
 

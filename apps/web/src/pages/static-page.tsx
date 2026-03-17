@@ -6,8 +6,8 @@
 import { Loader2, Menu } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { PageDefinition } from "@/i18n/static";
-import { getStaticContentAsync } from "@/i18n/static";
+import type { PageDefinition } from "../i18n/static";
+import { getStaticContentAsync } from "../i18n/static";
 import { StaticPageAdRail } from "./static-page-ad-rail";
 import { StaticPageArticle } from "./static-page-article";
 import { StaticPageContentHeader } from "./static-page-content-header";

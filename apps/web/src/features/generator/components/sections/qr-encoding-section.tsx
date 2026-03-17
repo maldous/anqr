@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { calculateOptimalVersion } from "@/modules/qr-encoder";
+import { calculateOptimalVersion } from "../../../../../../../packages/domain/qr/src/qr-encoder/calculate-optimal-version";
 import {
   type CharacterEncoding,
   type ECCLevel,
   type EncodingMode,
   type MaskPattern,
   useQRStore,
-} from "@/store/qr-store";
+} from "../../../../state/qr-store";
 import { LabeledHelpSelectField } from "./labeled-help-select-field";
 import {
   DynamicTestId,

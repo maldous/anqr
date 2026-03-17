@@ -1,9 +1,9 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import type { QRState } from "@/store/qr-store";
-import { Label } from "@/ui/primitives/label";
-import { Switch } from "@/ui/primitives/switch";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
+import type { QRState } from "../../../../../state/qr-store";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Switch } from "../../../../../../../../packages/ui/web/src/primitives/switch";
 import { ValidatedUrlField } from "./validated-url-field";
 
 export const UrlEditor = ({

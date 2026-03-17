@@ -1,1 +1,1 @@
-export * from "@/infra/logging/logger";
+export * from "../../../../packages/observability/logging/src/logger";

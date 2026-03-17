@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
-import { isValidAccountNumber, isValidBankBin } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { isValidAccountNumber, isValidBankBin } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import type { VietQRForm } from "../payload-section-types";
 
 export const VietqrEditor = ({

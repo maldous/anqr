@@ -1,13 +1,13 @@
 import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { DynamicTestId } from "../../../lib/dynamic-testid";
 import { useTranslation } from "react-i18next";
-import { AdUnit } from "@/platform/ads/components/ad-unit";
-import { BusyOverlay } from "@/ui/composites/busy-overlay";
-import { useQRGeneratorContext } from "@/hooks/useQRGenerator";
-import { getContrastRatio, parseColor } from "@/domain/render/color/color";
-import { meetsContrastAA, meetsContrastAAA } from "@/domain/render/color/contrast";
-import { useQRStore } from "@/store/qr-store";
+import { AdUnit } from "../../../../../../packages/analytics/ads/src/components/ad-unit";
+import { BusyOverlay } from "../../../../../../packages/ui/web/src/composites/busy-overlay";
+import { useQRGeneratorContext } from "../../../../../../packages/application/generator/src/hooks/useQRGenerator";
+import { getContrastRatio, parseColor } from "../../../../../../packages/domain/render/src/color/color";
+import { meetsContrastAA, meetsContrastAAA } from "../../../../../../packages/domain/render/src/color/contrast";
+import { useQRStore } from "../../../state/qr-store";
 import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from "./preview-status";
 import type { PreviewProps, RenderState } from "./preview-types";
 

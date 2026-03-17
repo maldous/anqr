@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { QRState } from "@/store/qr-store";
+import type { QRState } from "../../../../../state/qr-store";
 import { CityAmountFields } from "./city-amount-fields";
 import { MerchantNameField } from "./merchant-name-field";
 import { ValidatedTextField } from "./validated-text-field";

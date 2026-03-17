@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { Input } from "../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui/primitives/select";
-import { Slider } from "@/ui/primitives/slider";
-import { Switch } from "@/ui/primitives/switch";
+} from "../../../../../../../packages/ui/web/src/primitives/select";
+import { Slider } from "../../../../../../../packages/ui/web/src/primitives/slider";
+import { Switch } from "../../../../../../../packages/ui/web/src/primitives/switch";
 import { HighlightedLabel } from "../../search/search-context";
 import { getAvailableOverlayModes } from "./overlay-section-manifest";
 import { OverlayPreviewPanel } from "./overlay-preview-panel";
@@ -29,7 +29,7 @@ import {
   type OrderedMatrix,
   type OverlayMode,
   useQRStore,
-} from "@/store/qr-store";
+} from "../../../../state/qr-store";
 
 export function OverlaySection() {
   const {

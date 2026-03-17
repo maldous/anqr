@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
-import { isValidMerchantId } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
+import { isValidMerchantId } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
 import type { QRISForm } from "../payload-section-types";
 import { MerchantCityAmountEditor } from "./merchant-city-amount-editor";
 

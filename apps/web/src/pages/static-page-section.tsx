@@ -1,5 +1,5 @@
-import type { PageSection } from "@/i18n/static";
-import { Button } from "@/ui/primitives/button";
+import type { PageSection } from "../i18n/static";
+import { Button } from "../../../../packages/ui/web/src/primitives/button";
 import { getImageUrl } from "./static-page-image-url";
 import { renderTextWithLinks } from "./static-page-text";
 

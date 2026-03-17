@@ -1,4 +1,4 @@
-import { generateVietQR } from "@/modules/payload-generators";
+import { generateVietQR } from "../../../../../packages/domain/payload/src/payload-generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeVietQR(payload: PayloadData): string {

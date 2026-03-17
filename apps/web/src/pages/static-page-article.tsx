@@ -1,4 +1,4 @@
-import type { PageDefinition } from "@/i18n/static";
+import type { PageDefinition } from "../i18n/static";
 import { ContactEmailLink, ContactRedditLink } from "./static-page-shell-parts";
 import { StaticPageArticleFooter } from "./static-page-article-footer";
 import { StaticPageSection } from "./static-page-section";

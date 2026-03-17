@@ -1,8 +1,8 @@
 import { OpenLocationCode } from "open-location-code";
 import { useMemo } from "react";
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "../../../../../../../packages/observability/logging/src/logger";
 import { HighlightedLabel } from "../../search/search-context";
-import { Label } from "@/ui/primitives/label";
+import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
 import type { PlusCodeDisplayProps } from "./plus-code-display.types";
 
 const log = createLogger("PAYLOAD");

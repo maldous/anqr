@@ -1,17 +1,17 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { isValidUrl } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
+import { isValidUrl } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui/primitives/select";
+} from "../../../../../../../../packages/ui/web/src/primitives/select";
 
 export const AppLinkEditor = ({
   payload,

@@ -15,16 +15,16 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AdUnit } from "@/platform/ads/components/ad-unit";
+import { AdUnit } from "../../../../../../packages/analytics/ads/src/components/ad-unit";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/ui/primitives/accordion";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+} from "../../../../../../packages/ui/web/src/primitives/accordion";
+import { DynamicTestId } from "../../../lib/dynamic-testid";
 import { HighlightedLabel, SearchProvider } from "../search/search-context";
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore } from "../../../state/qr-store";
 import { SectionLoadFallback } from "./sidebar-section-load-fallback";
 import { OPEN_SECTIONS_STORAGE_KEY, loadStoredOpenSections } from "./sidebar-open-sections";
 import { getAvailableKeywords } from "./sidebar-keywords";

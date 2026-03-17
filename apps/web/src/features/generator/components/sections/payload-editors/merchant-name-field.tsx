@@ -1,5 +1,5 @@
-import { isNonEmpty } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
+import { isNonEmpty } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
 import { ValidatedTextField } from "./validated-text-field";
 
 export function MerchantNameField({

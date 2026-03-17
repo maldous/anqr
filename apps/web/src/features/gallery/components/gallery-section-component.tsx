@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { GallerySection } from "@/content/gallery/gallery-items";
+import type { GallerySection } from "../../../content/gallery/gallery-items";
 import { HorizontalAd } from "./horizontal-ad";
 import { DynamicIcon } from "./gallery-icon-registry";
 import { GalleryCard } from "./gallery-card";

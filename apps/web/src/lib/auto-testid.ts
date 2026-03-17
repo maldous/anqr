@@ -1,1 +1,1 @@
-export * from "@/infra/testing/auto-testid";
+export { initAutoDynamicTestIds } from "./dynamic-testid";

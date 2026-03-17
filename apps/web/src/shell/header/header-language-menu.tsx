@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { isRtlLanguage, languages } from "../../i18n";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../../packages/ui/web/src/primitives/button";
 
 export function HeaderLanguageMenu({
   langMenuOpen,

@@ -1,11 +1,11 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { isValidEmail } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
-import { Textarea } from "@/ui/primitives/textarea";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
+import { isValidEmail } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Textarea } from "../../../../../../../../packages/ui/web/src/primitives/textarea";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";
 
 export const EmailEditor = ({

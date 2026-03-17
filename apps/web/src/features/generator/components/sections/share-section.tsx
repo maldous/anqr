@@ -1,21 +1,21 @@
 import { Check, Code, Copy, Link, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
-import { Switch } from "@/ui/primitives/switch";
+import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { DynamicTestId } from "../../../../lib/dynamic-testid";
+import { Input } from "../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
+import { Switch } from "../../../../../../../packages/ui/web/src/primitives/switch";
 import { HighlightedLabel } from "../../search/search-context";
-import { trackEvent } from "@/infra/telemetry/zaraz";
-import { copyToClipboard } from "@/platform/browser/clipboard";
+import { trackEvent } from "../../../../../../../packages/observability/telemetry/src/zaraz";
+import { copyToClipboard } from "../../../../../../../packages/platform/browser/src/clipboard";
 import {
   generateImageEmbed,
   generateMarkdownEmbed,
   getShareableUrl,
   getSocialShareUrls,
-} from "@/modules/share-links";
-import { useQRStore } from "@/store/qr-store";
+} from "../../../../../../../packages/domain/share/src";
+import { useQRStore } from "../../../../state/qr-store";
 import { buildShareConfig } from "./share-section-config";
 
 export function ShareSection() {

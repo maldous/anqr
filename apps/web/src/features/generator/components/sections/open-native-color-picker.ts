@@ -1,4 +1,4 @@
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore } from "../../../../state/qr-store";
 
 export function openNativeColorPicker(palette: string[], index: number): void {
   const input = document.createElement("input");

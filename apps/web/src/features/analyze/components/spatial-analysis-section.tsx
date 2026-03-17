@@ -1,6 +1,6 @@
 import { Grid3x3, Ruler, ScanLine, Square } from "lucide-react";
 import type { TFunction } from "i18next";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import { StatusBadge } from "./status-badge";

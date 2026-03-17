@@ -1,6 +1,6 @@
 import { Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../packages/ui/web/src/primitives/button";
 
 export function ContactEmailLink() {
   const { t } = useTranslation();

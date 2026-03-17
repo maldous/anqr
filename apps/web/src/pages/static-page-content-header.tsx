@@ -1,4 +1,4 @@
-import { AdUnit } from "@/platform/ads/components/ad-unit";
+import { AdUnit } from "../../../../packages/analytics/ads/src/components/ad-unit";
 import { Breadcrumb } from "./static-page-shell-parts";
 import type { StaticPageType } from "./static-page-types.types";
 

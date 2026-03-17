@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore } from "../../../../state/qr-store";
 import { LabeledTestIdSelectField } from "./labeled-testid-select-field";
 import {
   DynamicTestId,

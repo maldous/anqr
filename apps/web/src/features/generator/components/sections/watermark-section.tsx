@@ -1,8 +1,8 @@
 import { Upload, X } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
-import { useQRStore } from "@/store/qr-store";
+import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { useQRStore } from "../../../../state/qr-store";
 import { LabeledTestIdSelectField } from "./labeled-testid-select-field";
 import {
   DynamicTestId,

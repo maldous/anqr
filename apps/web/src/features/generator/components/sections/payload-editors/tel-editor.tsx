@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
-import { isValidPhone } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
+import { isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";
 
 export const TelEditor = ({

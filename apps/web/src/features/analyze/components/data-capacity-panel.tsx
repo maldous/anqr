@@ -2,8 +2,8 @@ import { AlertTriangle, Database } from "lucide-react";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import { ProgressBar } from "./progress-bar";
-import { capacityBadgeClass } from "@/features/analyze/lib/formatters";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { capacityBadgeClass } from "../../../../../../packages/application/analyze/src/formatters";
+import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
 
 export function DataCapacityPanel({
   dataCapacity,

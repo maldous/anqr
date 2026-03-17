@@ -1,4 +1,4 @@
-import type { OverlayMode } from "@/store/qr-store";
+import type { OverlayMode } from "../../../../state/qr-store";
 
 export const BASIC_OVERLAY_MODES: Array<{ value: OverlayMode; labelKey: string }> = [
   { value: "center", labelKey: "overlay.centerLogo" },

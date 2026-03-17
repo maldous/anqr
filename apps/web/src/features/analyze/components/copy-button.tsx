@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Check, ClipboardCopy } from "lucide-react";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
 
 export const CopyButton = ({
   text,

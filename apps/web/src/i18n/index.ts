@@ -10,7 +10,7 @@
 import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "../../../../packages/observability/logging/src/logger";
 import { BROWSER_TO_GOOGLE_PLAY } from "./browser-language-map";
 import { languages } from "./languages";
 import { loadFontForLanguage } from "./load-font-for-language";

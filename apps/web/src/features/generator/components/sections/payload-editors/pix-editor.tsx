@@ -1,9 +1,9 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import type { QRState } from "@/store/qr-store";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
+import type { QRState } from "../../../../../state/qr-store";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import type { PIXForm } from "../payload-section-types";
 import { ValidatedTextField } from "./validated-text-field";
 

@@ -2,7 +2,7 @@ import { Binary, Grid3x3, Settings } from "lucide-react";
 import { CollapsibleSection } from "./collapsible-section";
 import { HexDumpView } from "./hex-dump-view";
 import { ModuleMatrixView } from "./module-matrix-view";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
 
 export function AnalyzeDataGrid({ result }: Readonly<{ result: QRAnalysisResult }>) {
   return (

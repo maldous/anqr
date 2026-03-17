@@ -12,8 +12,8 @@ import {
   Shield,
   Type,
 } from "lucide-react";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import { DynamicTestId } from "../../../lib/dynamic-testid";
+import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
 import { WCAGBadge } from "./wcag-badge";
 import { CONTENT_TYPE_ICONS } from "./content-type-icons";
 

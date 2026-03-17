@@ -1,4 +1,4 @@
-import type { PayloadKind } from "@/store/qr-store";
+import type { PayloadKind } from "../../../../state/qr-store";
 
 export const LANGUAGE_PAYMENT_MAP: Record<string, PayloadKind[]> = {
   "en-GB": ["epc_sepa"],

@@ -1,5 +1,5 @@
 import type { useTranslation } from "react-i18next";
-import type { QRState } from "@/store/qr-store";
+import type { QRState } from "../../../../state/qr-store";
 import type { PaymentFormStates } from "./payment-form-states.types";
 
 export type EditorProps = PaymentFormStates & {

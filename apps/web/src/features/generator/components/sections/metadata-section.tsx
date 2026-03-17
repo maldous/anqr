@@ -1,15 +1,15 @@
 import { Plus, X } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
-import { Switch } from "@/ui/primitives/switch";
-import { Textarea } from "@/ui/primitives/textarea";
+import { Input } from "../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
+import { Switch } from "../../../../../../../packages/ui/web/src/primitives/switch";
+import { Textarea } from "../../../../../../../packages/ui/web/src/primitives/textarea";
 import { HighlightedLabel } from "../../search/search-context";
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore } from "../../../../state/qr-store";
 
 // Counter for generating unique IDs for custom key-value pairs
 let kvIdCounter = 0;

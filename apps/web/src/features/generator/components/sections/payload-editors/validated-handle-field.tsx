@@ -1,5 +1,5 @@
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 
 export function ValidatedHandleField({
   label,

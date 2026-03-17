@@ -1,7 +1,7 @@
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
 import { HexColorField } from "./hex-color-field";
 import {
   type AlignmentStyle,
@@ -12,7 +12,7 @@ import {
   type ModuleStyle,
   type TimingStyle,
   useQRStore,
-} from "@/store/qr-store";
+} from "../../../../state/qr-store";
 import { LabeledHelpSelectField } from "./labeled-help-select-field";
 import { openNativeColorPicker } from "./open-native-color-picker";
 import {

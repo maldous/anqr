@@ -1,7 +1,7 @@
 import { ChevronRight, Link, Loader2 } from "lucide-react";
 import type { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
-import { Input } from "@/ui/primitives/input";
+import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
+import { Input } from "../../../../../../packages/ui/web/src/primitives/input";
 
 export function UrlInputCard({
   t,

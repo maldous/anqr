@@ -1,3 +1,3 @@
-import { type useQRStore } from "@/store/qr-store";
+import { type useQRStore } from "../../../../state/qr-store";
 
 export type StoreState = ReturnType<typeof useQRStore.getState>;

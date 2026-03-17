@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { QRState } from "@/store/qr-store";
+import type { QRState } from "../../../../../state/qr-store";
 
 export interface PayloadTextEditorProps {
   payload: QRState["payload"];

@@ -1,4 +1,4 @@
-import { generateEthereumEIP681 } from "@/modules/payload-generators";
+import { generateEthereumEIP681 } from "../../../../../packages/domain/payload/src/payload-generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeEthereumEIP681(payload: PayloadData): string {

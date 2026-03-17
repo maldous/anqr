@@ -1,6 +1,6 @@
 import { Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../packages/ui/web/src/primitives/button";
 import { REDDIT_URL } from "./reddit-url.const";
 
 export function ContactRedditLink() {

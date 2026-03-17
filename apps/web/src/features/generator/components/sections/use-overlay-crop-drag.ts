@@ -3,7 +3,7 @@ import type React from "react";
 import { getContainedImageRect, type ContainedImageRect } from "./overlay-image-utils";
 import { computeResizedCropRegion } from "./overlay-crop-utils";
 import type { CropDragMode } from "./overlay-crop-types";
-import type { useQRStore } from "@/store/qr-store";
+import type { useQRStore } from "../../../../state/qr-store";
 
 export function useOverlayCropDrag(
   overlay: ReturnType<typeof useQRStore.getState>["overlay"],

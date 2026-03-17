@@ -1,1 +1,1 @@
-export * from "@/infra/telemetry/logger-remote";
+export * from "../../../../packages/observability/telemetry/src/logger-remote";

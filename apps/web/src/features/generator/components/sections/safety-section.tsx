@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { type SafetyMode, useQRStore } from "@/store/qr-store";
+import { type SafetyMode, useQRStore } from "../../../../state/qr-store";
 import {
   DynamicTestId,
   HelpLink,

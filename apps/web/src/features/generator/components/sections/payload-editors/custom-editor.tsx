@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
-import type { QRState } from "@/store/qr-store";
-import { Label } from "@/ui/primitives/label";
-import { Textarea } from "@/ui/primitives/textarea";
+import type { QRState } from "../../../../../state/qr-store";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Textarea } from "../../../../../../../../packages/ui/web/src/primitives/textarea";
 
 export const CustomEditor = ({
   payload,

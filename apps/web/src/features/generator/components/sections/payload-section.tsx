@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Label } from "@/ui/primitives/label";
+import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
 import {
   Select,
   SelectContent,
@@ -11,10 +11,10 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/ui/primitives/select";
-import { i18n } from "@/i18n";
+} from "../../../../../../../packages/ui/web/src/primitives/select";
+import { i18n } from "../../../../i18n";
 import { HighlightedLabel } from "../../search/search-context";
-import { type PayloadKind, useQRStore } from "@/store/qr-store";
+import { type PayloadKind, useQRStore } from "../../../../state/qr-store";
 import {
   AppLinkEditor,
   AuspaynetEditor,

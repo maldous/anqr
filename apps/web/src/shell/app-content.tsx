@@ -1,20 +1,20 @@
 import { Capacitor } from "@capacitor/core";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BusyOverlay } from "@/ui/composites/busy-overlay";
+import { BusyOverlay } from "../../../../packages/ui/web/src/composites/busy-overlay";
 import { Header } from "./header/header";
-import { MobileDivider } from "@/ui/composites/mobile-divider";
-import { Preview } from "@/features/generator/components/preview";
-import { Sidebar } from "@/features/generator/components/sidebar";
+import { MobileDivider } from "../../../../packages/ui/web/src/composites/mobile-divider";
+import { Preview } from "../features/generator/components/preview";
+import { Sidebar } from "../features/generator/components/sidebar";
 import type { StaticPageType } from "../pages/static-page";
-import { TooltipProvider } from "@/ui/primitives/tooltip";
-import type { GalleryCategory } from "@/content/gallery/gallery-manifest";
-import { useBannerHeight } from "@/ui/hooks/useBannerHeight";
-import { useQRGeneratorContext } from "@/hooks/useQRGenerator";
+import { TooltipProvider } from "../../../../packages/ui/web/src/primitives/tooltip";
+import type { GalleryCategory } from "../content/gallery/gallery-manifest";
+import { useBannerHeight } from "../../../../packages/ui/web/src/hooks/useBannerHeight";
+import { useQRGeneratorContext } from "../../../../packages/application/generator/src/hooks/useQRGenerator";
 import { isRtlLanguage, loadLocale } from "../i18n";
-import { showNativeToast } from "@/modules/platform";
-import { parseUrlParams } from "@/modules/share-links";
-import { useQRStore } from "@/store/qr-store";
+import { showNativeToast } from "../../../../packages/platform/native/src";
+import { parseUrlParams } from "../../../../packages/domain/share/src";
+import { useQRStore } from "../state/qr-store";
 import { type PageView, getPageFromLocation } from "../routing/page-resolution";
 import { updateCanonicalUrl, updateHreflangLinks } from "../seo/head-links";
 import {
@@ -22,9 +22,9 @@ import {
   MAX_MOBILE_SPLIT,
   MIN_MOBILE_SPLIT,
   MOBILE_SPLIT_STORAGE_KEY,
-} from "@/features/generator/model/mobile-split";
-import { applyTierAndPayloadParams } from "@/features/generator/application/url-import/apply-payload-params";
-import { applyQrEncodingParams } from "@/features/generator/application/url-import/apply-encoding-params";
+} from "../features/generator/model/mobile-split";
+import { applyTierAndPayloadParams } from "../../../../packages/application/generator/src/url-import/apply-payload-params";
+import { applyQrEncodingParams } from "../../../../packages/application/generator/src/url-import/apply-encoding-params";
 import {
   applyDitheringParams,
   applyEccIntensityLimits,
@@ -32,13 +32,13 @@ import {
   applyRenderColorAndPaletteStyles,
   applyRenderEyeAndFrameStyles,
   applySubpixelAndHalftoneParams,
-} from "@/features/generator/application/url-import/apply-render-params";
+} from "../../../../packages/application/generator/src/url-import/apply-render-params";
 import {
   applyOverlayAdvancedParams,
   applyOverlayPreprocessingParams,
   applyOverlayTransformParams,
   applyWatermarkParams,
-} from "@/features/generator/application/url-import/apply-overlay-params";
+} from "../../../../packages/application/generator/src/url-import/apply-overlay-params";
 import {
   applyAnimationBasicParams,
   applyAnimationPatternParams,
@@ -47,7 +47,7 @@ import {
   applyOutputBasicParams,
   applyQaAndAutoParams,
   applySafetyParams,
-} from "@/features/generator/application/url-import/apply-animation-output-and-safety-params";
+} from "../../../../packages/application/generator/src/url-import/apply-animation-output-and-safety-params";
 import { Analyze } from "./analyze";
 import type { CapacitorAppPlugin } from "./capacitor-app-plugin";
 import { Gallery } from "./gallery";

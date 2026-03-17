@@ -1,4 +1,4 @@
-import type { PayloadKind } from "@/store/qr-store";
+import type { PayloadKind } from "../../../../state/qr-store";
 import { GLOBAL_PAYMENT_METHODS } from "./global-payment-methods.const";
 import { LANGUAGE_PAYMENT_MAP } from "./language-payment-map.const";
 

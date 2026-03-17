@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import type { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
 
 export function AnalyzeErrorDisplay({
   error,

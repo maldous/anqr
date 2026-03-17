@@ -1,8 +1,8 @@
 import type { TFunction } from "i18next";
-import { isNonEmpty, isValidFpsId } from "@/modules/payload-generators";
-import type { QRState } from "@/store/qr-store";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { isNonEmpty, isValidFpsId } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import type { QRState } from "../../../../../state/qr-store";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import type { HKQRForm } from "../payload-section-types";
 
 export const HkqrEditor = ({

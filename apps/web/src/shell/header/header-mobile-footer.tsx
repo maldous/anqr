@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Check, Download, Share2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
+import { Button } from "../../../../../packages/ui/web/src/primitives/button";
 
 export function HeaderMobileFooter({
   handleShare,

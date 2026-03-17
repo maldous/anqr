@@ -13,25 +13,25 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { Button } from "../../../../../packages/ui/web/src/primitives/button";
+import { DynamicTestId } from "../../lib/dynamic-testid";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui/primitives/select";
-import { Tabs, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
-import { type GalleryCategory } from "@/content/gallery/gallery-manifest";
-import { useBannerHeight } from "@/ui/hooks/useBannerHeight";
+} from "../../../../../packages/ui/web/src/primitives/select";
+import { Tabs, TabsList, TabsTrigger } from "../../../../../packages/ui/web/src/primitives/tabs";
+import { type GalleryCategory } from "../../content/gallery/gallery-manifest";
+import { useBannerHeight } from "../../../../../packages/ui/web/src/hooks/useBannerHeight";
 import { isRtlLanguage, languages, loadLocale } from "../../i18n";
-import { trackEvent } from "@/infra/telemetry/zaraz";
-import { copyToClipboard } from "@/platform/browser/clipboard";
+import { trackEvent } from "../../../../../packages/observability/telemetry/src/zaraz";
+import { copyToClipboard } from "../../../../../packages/platform/browser/src/clipboard";
 import { buildHeaderShareConfig } from "./build-header-share-config";
-import { prepareInterstitial } from "@/modules/platform";
-import { getShareableUrl } from "@/modules/share-links";
-import { type Tier, useQRStore } from "@/store/qr-store";
+import { prepareInterstitial } from "../../../../../packages/platform/native/src";
+import { getShareableUrl } from "../../../../../packages/domain/share/src";
+import { type Tier, useQRStore } from "../../state/qr-store";
 import { resolveHeaderPage, type HeaderPage } from "./header-resolve-page";
 import { changeTierWithAdGate } from "./header-tier-gate";
 import { getInitialDarkMode } from "./header-dark-mode";

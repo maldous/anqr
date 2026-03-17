@@ -3,18 +3,14 @@ import * as Sentry from "@sentry/react";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "../shell/app-shell.types";
-import "@/index.css";
+import "../index.css";
 import "../i18n"; // Initialize i18n
 import { ErrorBoundary } from "../shell/error-boundary";
-import { initAutoDynamicTestIds } from "@/infra/testing/auto-testid";
-import { createLogger } from "@/infra/logging/logger";
-import { initRemoteDiagnostics } from "@/infra/telemetry/logger-remote";
-import {
-  initializeAdMob,
-  loadWebOnlyBootAssets,
-  prepareAllAds,
-  showBannerAd,
-} from "@/modules/platform";
+import { initAutoDynamicTestIds } from "../lib/auto-testid";
+import { createLogger } from "../../../../packages/observability/logging/src/logger";
+import { initRemoteDiagnostics } from "../../../../packages/observability/telemetry/src/logger-remote";
+import { initializeAdMob, prepareAllAds, showBannerAd } from "../../../../packages/platform/native/src";
+import { loadWebOnlyBootAssets } from "../../../../packages/platform/browser/src/boot/web-only-assets";
 
 const log = createLogger("MAIN");
 

@@ -14,7 +14,7 @@
  */
 import { create } from "zustand";
 // Import gradient types from core types (canonical source)
-import type { GradientStop, GradientType } from "@/modules/core";
+import type { GradientStop, GradientType } from "../../../../packages/domain/render/src/color/gradient.types";
 // Import payload generator types and functions from payload-generators module
 import {
   type CryptoHelper,
@@ -27,7 +27,7 @@ import {
   type UrlHelper,
   type VCardHelper,
   type WifiHelper,
-} from "@/modules/payload-generators";
+} from "../../../../packages/domain/payload/src/payload-generators";
 import type {
   AlignmentStyle,
   AnimationPatternType,
@@ -101,8 +101,8 @@ export type {
   VCardVersion,
   WifiAuth,
   WifiHelper,
-} from "@/modules/payload-generators";
-export type { GradientStop, GradientType } from "@/modules/core";
+} from "../../../../packages/domain/payload/src/payload-generators";
+export type { GradientStop, GradientType } from "../../../../packages/domain/render/src/color/gradient.types";
 
 // Main QR Store State
 export interface QRState {

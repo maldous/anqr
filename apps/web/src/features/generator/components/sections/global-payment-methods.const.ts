@@ -1,4 +1,4 @@
-import type { PayloadKind } from "@/store/qr-store";
+import type { PayloadKind } from "../../../../state/qr-store";
 
 export const GLOBAL_PAYMENT_METHODS: PayloadKind[] = [
   "crypto",

@@ -1,4 +1,4 @@
-import type { PageSection } from "@/i18n/static";
+import type { PageSection } from "../i18n/static";
 import type { TocGroup } from "./static-page-types";
 
 export function buildGuideToc(sections: PageSection[], t: (key: string) => string): TocGroup[] {

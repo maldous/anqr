@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { QRState } from "@/store/qr-store";
+import type { QRState } from "../../../../../state/qr-store";
 import { LabeledInputField } from "./labeled-input-field";
 
 export const BizcardEditor = ({

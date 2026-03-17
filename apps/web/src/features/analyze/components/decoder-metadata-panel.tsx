@@ -1,5 +1,5 @@
 import { Binary, Database, Hash, Layers, Settings, Shield } from "lucide-react";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import {
@@ -9,7 +9,7 @@ import {
   formatDecoderNumBits,
   formatDecoderOrientation,
   formatDecoderVersion,
-} from "@/features/analyze/lib/formatters";
+} from "../../../../../../packages/application/analyze/src/formatters";
 
 export const DecoderMetadataPanel = ({
   decoderMetadata,

@@ -1,4 +1,4 @@
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "../../../../../packages/observability/logging/src/logger";
 import { contentCache } from "./static-content-cache";
 import { staticModules } from "./static-modules";
 import type { PageDefinition, StaticPageType } from "./types";

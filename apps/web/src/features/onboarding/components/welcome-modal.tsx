@@ -1,4 +1,4 @@
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { DynamicTestId } from "../../../lib/dynamic-testid";
 /**
  * WelcomeModal Component
  *
@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/primitives/button";
-import { languages } from "@/i18n";
+import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
+import { languages } from "../../../i18n";
 
 // Increment this version whenever you want to show the modal again to all users
 const WELCOME_VERSION = "2026.02.01";

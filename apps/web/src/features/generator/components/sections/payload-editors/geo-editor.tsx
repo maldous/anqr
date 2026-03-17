@@ -1,8 +1,8 @@
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidLatitude, isValidLongitude } from "@/modules/payload-generators";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { isValidLatitude, isValidLongitude } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import { PlusCodeDisplay } from "../payload-plus-code-display";
 import type { EditorProps } from "../payload-editor.types";
 import { runLookup } from "../run-geo-lookup";

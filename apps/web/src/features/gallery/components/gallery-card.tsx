@@ -4,7 +4,7 @@ import {
   buildGalleryRenderImageUrl,
   buildGalleryUrl,
   getGalleryImagePath,
-} from "@/content/gallery/gallery-items";
+} from "../../../content/gallery/gallery-items";
 import type { GalleryCardProps } from "./gallery-card.types";
 
 export function GalleryCard({ item }: Readonly<GalleryCardProps>) {

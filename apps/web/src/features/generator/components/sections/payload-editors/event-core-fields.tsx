@@ -1,10 +1,10 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { DateTimePicker } from "@/ui/primitives/date-time-picker";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
-import { Textarea } from "@/ui/primitives/textarea";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
+import { DateTimePicker } from "../../../../../../../../packages/ui/web/src/primitives/date-time-picker";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Textarea } from "../../../../../../../../packages/ui/web/src/primitives/textarea";
 
 export function EventCoreFields({
   summary,

@@ -1,13 +1,13 @@
-import { isValidABN, isValidEmail, isValidPhone } from "@/modules/payload-generators";
-import { Input } from "@/ui/primitives/input";
-import { Label } from "@/ui/primitives/label";
+import { isValidABN, isValidEmail, isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui/primitives/select";
+} from "../../../../../../../../packages/ui/web/src/primitives/select";
 import type { EditorProps } from "../payload-editor.types";
 import type { AusPayNetForm } from "../payload-section-types";
 

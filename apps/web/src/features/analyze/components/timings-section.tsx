@@ -2,7 +2,7 @@ import { BarChart3, Code2, Download, Palette, ScanLine, Settings, Timer } from "
 import type { TFunction } from "i18next";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
-import { formatMilliseconds, hasAnyTimingData } from "@/features/analyze/lib/formatters";
+import { formatMilliseconds, hasAnyTimingData } from "../../../../../../packages/application/analyze/src/formatters";
 
 export const TimingsSection = ({
   combinedTimings,

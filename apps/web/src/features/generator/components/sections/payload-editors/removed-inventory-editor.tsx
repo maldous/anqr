@@ -5,8 +5,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui/primitives/select";
-import { Label } from "@/ui/primitives/label";
+} from "../../../../../../../../packages/ui/web/src/primitives/select";
+import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import { LabeledInputField } from "./labeled-input-field";
 import { PayloadFormShell } from "./payload-form-shell";
 import type { PayloadTextEditorProps } from "./payload-text-editor.types";
