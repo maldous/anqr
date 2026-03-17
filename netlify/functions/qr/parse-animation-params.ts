@@ -100,9 +100,7 @@ export function parseAnimationParams(
     animationSeed,
     animationSeed2: Number.parseInt(params.get("animSeed2") || String(animationSeed + 911), 10),
     animationEasing,
-    animationEasing2: validAnimationEasings.has(parsedEasing2)
-      ? parsedEasing2
-      : animationEasing,
+    animationEasing2: validAnimationEasings.has(parsedEasing2) ? parsedEasing2 : animationEasing,
     animationStartFrame: Number.parseInt(params.get("startF") || "0", 10),
     animationMaxFrames: Number.parseInt(params.get("maxF") || "0", 10),
     animationFrameStep: Number.parseInt(params.get("stepF") || "1", 10),

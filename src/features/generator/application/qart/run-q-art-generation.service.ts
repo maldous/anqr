@@ -44,7 +44,7 @@ export async function runQArtGeneration(params: {
     c: HTMLCanvasElement | OffscreenCanvas,
     content: string | undefined,
   ) => void;
-  setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
+  setQartPerfSnapshot: (s: QArtPerfSnapshot) => void;
   requestId: number;
 }): Promise<{ handled: boolean }> {
   const qartModule = await loadQArtModule();
@@ -100,7 +100,7 @@ export async function runQArtGeneration(params: {
       setQrMatrix: params.setQrMatrix,
       effectiveConfig: params.effectiveConfig,
       runValidationIfNeeded: params.runValidationIfNeeded,
-      setQArtPerfSnapshot: params.setQArtPerfSnapshot,
+      setQartPerfSnapshot: params.setQartPerfSnapshot,
       setIsRendering: params.setIsRendering,
       setIsLoading: params.setIsLoading,
       clearGenerationProgress: params.clearGenerationProgress,

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/primitives/select";
-import i18n from "@/i18n";
+import { i18n } from "@/i18n";
 import { HighlightedLabel } from "@/features/generator/search/search-context";
 import { type PayloadKind, useQRStore } from "@/store/qr-store";
 import {

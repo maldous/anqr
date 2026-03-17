@@ -42,8 +42,6 @@ export function parseCoreQRParams(
   const outputHeight = Math.min(MAX_SERVER_IMAGE_SIZE, Math.max(50, heightParam ?? sizeParam));
   const size = Math.max(outputWidth, outputHeight);
   const charsetParam = params.get("charset") || "default";
-  const lang = params.get("lang") || undefined;
-  void lang; // NOSONAR - intentional void to suppress floating promise
   return {
     data: params.get("data") || "",
     isFullRender: params.get("_fullRender") === "1",

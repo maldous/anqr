@@ -16,7 +16,8 @@ export function resolveReproductionParams(
     isGeneratorSource,
     versionToUse: isGeneratorSource ? (result.version ?? qrState.version) : result.version,
     maskToUse: (() => {
-      if (typeof maskFromResult === "number" && maskFromResult >= 0 && maskFromResult <= 7) return maskFromResult;
+      if (typeof maskFromResult === "number" && maskFromResult >= 0 && maskFromResult <= 7)
+        return maskFromResult;
       if (typeof maskFromState === "number" && maskFromState >= 0) return maskFromState;
       return undefined;
     })(),

@@ -140,7 +140,6 @@ export function qrcode(
 
     for (const row of pos) {
       for (const col of pos) {
-
         if (_modules![row][col] != null) continue;
 
         fillAlignmentModule(row, col);

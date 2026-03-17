@@ -118,10 +118,7 @@ export class FinderPatternFinder {
     return currentState;
   }
 
-  private static advanceFinderLightPixel(
-    currentState: number,
-    stateCount: Int32Array,
-  ): number {
+  private static advanceFinderLightPixel(currentState: number, stateCount: Int32Array): number {
     if ((currentState & 1) !== 0) {
       stateCount[currentState]++;
       return currentState;

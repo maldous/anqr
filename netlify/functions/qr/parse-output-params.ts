@@ -44,16 +44,6 @@ export function parseOutputParams(
 > {
   const explicitFormat = params.get("format");
   const gifPaletteSize = params.get("gifPal");
-  const _jpegQuality = Math.min(100, Math.max(0, Number.parseInt(params.get("jpegQ") || "92", 10)));
-  const gifQuantizer = params.get("gifQuant") || undefined;
-  const gifDither = params.get("gifDith") || undefined;
-  const gifTransparentColor = params.get("gifTrans") ? `#${params.get("gifTrans")}` : undefined;
-  const svgTrueVector = params.get("svgVec") === "1";
-  void _jpegQuality; // NOSONAR - intentional void to suppress floating promise
-  void gifQuantizer; // NOSONAR - intentional void to suppress floating promise
-  void gifDither; // NOSONAR - intentional void to suppress floating promise
-  void gifTransparentColor; // NOSONAR - intentional void to suppress floating promise
-  void svgTrueVector; // NOSONAR - intentional void to suppress floating promise
   return {
     explicitFormat,
     outputFormat: (explicitFormat || DEFAULT_OUTPUT_FORMAT) as OutputFormat,

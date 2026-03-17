@@ -67,11 +67,7 @@ export function reproduceQRCode(params: {
     });
   }
 
-  const effectiveMode = resolveEffectiveMode(
-    encoderInput.kind,
-    result.encodingMode,
-    modeToUse,
-  );
+  const effectiveMode = resolveEffectiveMode(encoderInput.kind, result.encodingMode, modeToUse);
   const encodeStartMs = nowMs();
   let qrResult;
   try {

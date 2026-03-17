@@ -128,7 +128,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [generationProgress, setGenerationProgress] = useState<GenerationProgressState | null>(
     null,
   );
-  const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null); // NOSONAR: setter name matches domain acronym QArt
+  const [qartPerfSnapshot, setQartPerfSnapshot] = useState<QArtPerfSnapshot | null>(null);
   const qartPreviewBitmapCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // QR matrix for vector SVG export
@@ -1092,7 +1092,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           qartPreviewBitmapCanvasRef,
           effectiveConfig,
           runValidationIfNeeded,
-          setQArtPerfSnapshot,
+          setQartPerfSnapshot,
           requestId,
         });
         if (qartResult.handled) return;

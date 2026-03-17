@@ -48,8 +48,7 @@ export async function exportGif(
     scaledCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    }) ??
-    scaledCanvas.getContext("2d");
+    }) ?? scaledCanvas.getContext("2d");
   if (!scaledCtx) throw new Error("Could not get canvas context");
 
   // Pre-compute disposal code once (not per-frame)

@@ -194,12 +194,10 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
 
     // Animation
     animationPattern: params.get("animPattern") || undefined,
-    animationTarget:
-      (params.get("animTarget") as AnimationTarget | null) || undefined,
+    animationTarget: (params.get("animTarget") as AnimationTarget | null) || undefined,
     animationWaveAxis: (params.get("animWaveAxis") as AnimationWaveAxis | null) || undefined,
     animationPattern2: params.get("animPattern2") || undefined,
-    animationTarget2:
-      (params.get("animTarget2") as AnimationTarget | null) || undefined,
+    animationTarget2: (params.get("animTarget2") as AnimationTarget | null) || undefined,
     animationWaveAxis2: (params.get("animWaveAxis2") as AnimationWaveAxis | null) || undefined,
     animationFrames: parseIntParam(params.get("animFrames")),
     animationSpeed: parseIntParam(params.get("animSpeed")),

@@ -24,11 +24,6 @@ export function parseProtectionParams(
   | "autoPickEcc"
   | "autoReduceIntensity"
 > {
-  void params.get("qaContrast"); // NOSONAR - intentional void to suppress floating promise
-  void params.get("qaBlur"); // NOSONAR - intentional void to suppress floating promise
-  void params.get("qaNoise"); // NOSONAR - intentional void to suppress floating promise
-  void params.get("qaRot"); // NOSONAR - intentional void to suppress floating promise
-  void params.get("qaHeatmap"); // NOSONAR - intentional void to suppress floating promise
   return {
     preserveFinders: params.get("keepFinders") !== "0",
     preserveTiming: params.get("keepTiming") === "1",

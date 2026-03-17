@@ -20,8 +20,7 @@ export function resolveEffectTargetCanvas(
     result.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    }) ??
-    result.getContext("2d");
+    }) ?? result.getContext("2d");
 
   return { ctx, result };
 }

@@ -9,8 +9,7 @@ export function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas)
     canvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    }) ??
-    canvas.getContext("2d");
+    }) ?? canvas.getContext("2d");
   if (!ctx) {
     throw new Error("Unable to read overlay pixels for QR-Art worker");
   }

@@ -24,8 +24,7 @@ export function interpolateAnimationFramesWithEasing(
       frames[i]?.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
-      }) ??
-      frames[i]?.getContext("2d");
+      }) ?? frames[i]?.getContext("2d");
     framePixels[i] = frameCtx ? frameCtx.getImageData(0, 0, width, height).data : null;
   }
 

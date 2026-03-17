@@ -65,7 +65,10 @@ export const DuitnowEditor = ({
           <p className="text-xs text-destructive">
             {(() => {
               if (duitnowForm.proxyType === "MOBILE")
-                return t("validation.invalidPhone", "Enter a valid phone number (at least 3 digits)");
+                return t(
+                  "validation.invalidPhone",
+                  "Enter a valid phone number (at least 3 digits)",
+                );
               if (duitnowForm.proxyType === "NRIC")
                 return t("validation.invalidNric", "Enter a valid NRIC (12 digits)");
               return t("validation.invalidProxyValue", "Enter a valid proxy value");

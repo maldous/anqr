@@ -48,8 +48,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     canvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    }) ??
-    canvas.getContext("2d");
+    }) ?? canvas.getContext("2d");
   if (!_ctx) {
     throw new Error("Failed to get 2D context for GIF compositor canvas");
   }
@@ -68,8 +67,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     patchCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    }) ??
-    patchCanvas.getContext("2d");
+    }) ?? patchCanvas.getContext("2d");
   const patchImageDataCache: Array<ImageData | null> = Array.from(
     { length: frames.length },
     () => null,
@@ -151,13 +149,13 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     const f = frames[i];
     const { left, top, width: w, height: h } = f.dims;
 
+    let disposalAction = "none";
+    if (f.disposalType === 2) disposalAction = "clearRect";
+    else if (f.disposalType === 3) disposalAction = "restorePrevious";
     log.trace("compositor: dispose", {
       frame: i,
-      disposalType: f.disposalType,      action: (() => {
-        if (f.disposalType === 2) return "clearRect";
-        if (f.disposalType === 3) return "restorePrevious";
-        return "none";
-      })(), // NOSONAR: flat 3-way map, not deep nesting
+      disposalType: f.disposalType,
+      action: disposalAction,
     });
 
     switch (f.disposalType) {

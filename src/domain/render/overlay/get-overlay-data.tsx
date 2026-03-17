@@ -37,8 +37,7 @@ export async function getOverlayData(
     scaledCanvas.getContext("2d", {
       willReadFrequently: true,
       desynchronized: true,
-    }) ??
-    scaledCanvas.getContext("2d");
+    }) ?? scaledCanvas.getContext("2d");
   if (!ctx) {
     return emptyData;
   }

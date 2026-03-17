@@ -30,8 +30,7 @@ export async function hashCanvasContent(
       hashCanvas.getContext("2d", {
         willReadFrequently: true,
         desynchronized: true,
-      }) ??
-      hashCanvas.getContext("2d");
+      }) ?? hashCanvas.getContext("2d");
     if (!hashCtx) {
       return `${canvas.width}x${canvas.height}`;
     }

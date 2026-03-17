@@ -46,7 +46,7 @@ export async function deliverQArtResult(params: {
     c: HTMLCanvasElement | OffscreenCanvas,
     content: string | undefined,
   ) => void;
-  setQArtPerfSnapshot: (s: QArtPerfSnapshot) => void;
+  setQartPerfSnapshot: (s: QArtPerfSnapshot) => void;
   setIsRendering: (v: boolean) => void;
   setIsLoading: (v: boolean) => void;
   clearGenerationProgress: () => void;
@@ -73,7 +73,7 @@ export async function deliverQArtResult(params: {
     qartComputeMs: params.qartComputeMs,
     qartResultSource: params.qartResultSource,
   });
-  params.setQArtPerfSnapshot({
+  params.setQartPerfSnapshot({
     source: params.qartResultSource,
     computeMs: params.qartComputeMs,
     renderMs: qartRenderMs,

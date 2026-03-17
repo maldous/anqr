@@ -88,12 +88,21 @@ export class StringEncoding {
   }
 
   private static encodeFallback(s: string): Uint8Array {
-    const encodedURIstring = btoa(unescape(encodeURIComponent(s))); // NOSONAR: classic btoa-Unicode pattern, TextEncoder used elsewhere
-    const charList = encodedURIstring.split("");
-    const uintArray: number[] = [];
-    for (const char of charList) {
-      uintArray.push(char.codePointAt(0)!);
+    const encoded = encodeURIComponent(s);
+    let binaryStr = "";
+    for (let i = 0; i < encoded.length; i++) {
+      if (encoded[i] === "%" && i + 2 < encoded.length) {
+        binaryStr += String.fromCharCode(Number.parseInt(encoded.substring(i + 1, i + 3), 16));
+        i += 2;
+      } else {
+        binaryStr += encoded[i];
+      }
     }
-    return new Uint8Array(uintArray);
+    const base64Str = btoa(binaryStr);
+    const result = new Uint8Array(base64Str.length);
+    for (let i = 0; i < base64Str.length; i++) {
+      result[i] = base64Str.charCodeAt(i);
+    }
+    return result;
   }
 }

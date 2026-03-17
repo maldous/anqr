@@ -36,13 +36,13 @@ export function StaticPageSection({
       ref={hasToc ? (el) => registerSectionRef?.(slug, el) : undefined}
       className={(() => {
         if (!hasToc) return "space-y-4";
-        const mainHeadingClass = isMainHeading ? "mt-8 pt-6 border-t border-border first:mt-0 first:pt-0 first:border-t-0" : "";
+        const mainHeadingClass = isMainHeading
+          ? "mt-8 pt-6 border-t border-border first:mt-0 first:pt-0 first:border-t-0"
+          : "";
         return `space-y-3 sm:space-y-4 scroll-mt-20 ${mainHeadingClass}`;
       })()}
     >
-      {!hasToc && (
-        <h2 className="text-xl font-semibold text-foreground">{section.heading}</h2>
-      )}
+      {!hasToc && <h2 className="text-xl font-semibold text-foreground">{section.heading}</h2>}
       {hasToc && isMainHeading && (
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
           <a

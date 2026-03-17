@@ -468,29 +468,29 @@ export function RenderSection() {
             </Label>
             <div className="flex flex-wrap gap-2">
               {render.palette.map((color, index) => (
-                  <div key={`palette-${color}-${index}`} className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      className="w-6 h-6 rounded border cursor-pointer"
-                      style={{ backgroundColor: color }}
-                      onClick={() => openNativeColorPicker(render.palette, index)}
-                      aria-label={`Edit color ${color}`}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => {
-                        const newPalette = render.palette.filter((_, i) => i !== index);
-                        useQRStore.setState((s) => ({
-                          render: { ...s.render, palette: newPalette },
-                        }));
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
+                <div key={`palette-${color}-${index}`} className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    className="w-6 h-6 rounded border cursor-pointer"
+                    style={{ backgroundColor: color }}
+                    onClick={() => openNativeColorPicker(render.palette, index)}
+                    aria-label={`Edit color ${color}`}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      const newPalette = render.palette.filter((_, i) => i !== index);
+                      useQRStore.setState((s) => ({
+                        render: { ...s.render, palette: newPalette },
+                      }));
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
             <div className="flex gap-2">
               <Input
