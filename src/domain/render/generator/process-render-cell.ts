@@ -1,11 +1,9 @@
 import { applyPixelSnap } from "./apply-pixel-snap";
 import { computeFinalModuleColor } from "./compute-final-module-color";
-import {
-  drawModuleHalftone,
-  drawModuleOutline,
-  drawModuleStandard,
-  drawModuleTiming,
-} from "./draw-styled-module";
+import { drawModuleHalftone } from "./draw-module-halftone";
+import { drawModuleOutline } from "./draw-module-outline";
+import { drawModuleStandard } from "./draw-module-standard";
+import { drawModuleTiming } from "./draw-module-timing";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FINDER,

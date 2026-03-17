@@ -4,18 +4,15 @@
  * Notes: Try generating with fallback ECC levels.
  */
 
+import type { AnyCanvas } from "@/modules/qr-generator/any-canvas";
 import { createLogger } from "@/infra/logging/logger";
 import type { QRGeneratorConfig } from "@/modules/qr-generator";
 
 const log = createLogger("QR");
 
-type ECCLevelChar = "H" | "Q" | "M" | "L";
-
-type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
-
 export async function tryEccFallbackGeneration(params: {
   effectiveConfig: Record<string, unknown>;
-  eccToTry: readonly ECCLevelChar[];
+  eccToTry: readonly ("H" | "Q" | "M" | "L")[];
   runGeneratorWithStatus: (
     cfg: QRGeneratorConfig,
     overlaySource: AnyCanvas | null,

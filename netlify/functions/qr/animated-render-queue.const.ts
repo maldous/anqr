@@ -1,7 +1,5 @@
-let animatedRenderQueue: Promise<void> = Promise.resolve();
-export function getAnimatedRenderQueue(): Promise<void> {
-  return animatedRenderQueue;
-}
-export function setAnimatedRenderQueue(value: Promise<void>): void {
-  animatedRenderQueue = value;
-}
+let _queue: Promise<void> = Promise.resolve();
+export const animatedRenderQueue = {
+  get(): Promise<void> { return _queue; },
+  set(value: Promise<void>): void { _queue = value; },
+};

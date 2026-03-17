@@ -4,12 +4,8 @@
  */
 export type { EmbedOptions } from "./embed-options";
 
-import { createLogger } from "../../infra/logging/logger";
-
-const _log = createLogger("SHARE");
-
-type AnimationTarget = "result" | "modules" | "both";
-type AnimationWaveAxis = "x" | "y" | "xy";
+import type { AnimationTarget } from "../../store/types/animation-target";
+import type { AnimationWaveAxis } from "../../store/types/animation-wave-axis";
 
 /**
  * Maximum recommended URL length for reliable sharing

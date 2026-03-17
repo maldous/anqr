@@ -1,7 +1,5 @@
-let blobStoreDisabledLogged = false;
-export function getBlobStoreDisabledLogged(): boolean {
-  return blobStoreDisabledLogged;
-}
-export function setBlobStoreDisabledLogged(value: boolean): void {
-  blobStoreDisabledLogged = value;
-}
+let _logged = false;
+export const blobStoreDisabledLogged = {
+  get(): boolean { return _logged; },
+  set(value: boolean): void { _logged = value; },
+};

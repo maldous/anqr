@@ -6,8 +6,9 @@ import {
 } from "../../domain/render/overlay/overlay";
 import { generatorLog as log } from "./generator-log";
 import type { QRGeneratorConfig } from "./types";
+import type { AnyCanvas } from "./any-canvas";
 
-export type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+export type { AnyCanvas };
 
 export async function preprocessOverlayCanvas(
   overlayCanvas: AnyCanvas | null,

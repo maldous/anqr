@@ -1,6 +1,5 @@
+import type { AnyCanvas } from "@/modules/qr-generator/any-canvas";
 import type { QRGeneratorConfig } from "@/modules/qr-generator";
-
-type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
 
 export interface SafetyRunnerParams {
   clearGenerationProgress: () => void;

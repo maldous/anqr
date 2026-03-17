@@ -14,6 +14,7 @@ import {
   useQRStore,
 } from "@/store/qr-store";
 import { LabeledHelpSelectField } from "./labeled-help-select-field";
+import { openNativeColorPicker } from "./open-native-color-picker";
 import {
   DynamicTestId,
   HelpLink,
@@ -28,20 +29,6 @@ import {
   Slider,
   Switch,
 } from "./section-ui";
-
-function openNativeColorPicker(palette: string[], index: number): void {
-  const input = document.createElement("input");
-  input.type = "color";
-  input.value = palette[index];
-  input.onchange = (e) => {
-    const newPalette = [...palette];
-    newPalette[index] = (e.target as HTMLInputElement).value;
-    useQRStore.setState((s) => ({
-      render: { ...s.render, palette: newPalette },
-    }));
-  };
-  input.click();
-}
 
 export function RenderSection() {
   const {

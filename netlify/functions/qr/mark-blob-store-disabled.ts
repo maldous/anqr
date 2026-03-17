@@ -1,13 +1,10 @@
-import {
-  getBlobStoreDisabledLogged,
-  setBlobStoreDisabledLogged,
-} from "./blob-store-disabled-logged.const";
-import { setBlobStoreDisabled } from "./blob-store-disabled.const";
+import { blobStoreDisabledLogged } from "./blob-store-disabled-logged.const";
+import { blobStoreDisabled } from "./blob-store-disabled.const";
 import { qrFnLog } from "./qr-fn-log";
 
 export function markBlobStoreDisabled(reason: string): void {
-  setBlobStoreDisabled(true);
-  if (getBlobStoreDisabledLogged()) return;
-  setBlobStoreDisabledLogged(true);
+  blobStoreDisabled.set(true);
+  if (blobStoreDisabledLogged.get()) return;
+  blobStoreDisabledLogged.set(true);
   qrFnLog("[BLOB] cache disabled", { reason });
 }

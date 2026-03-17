@@ -64,8 +64,7 @@ import { useDebounce } from "./use-debounce";
 import { YieldController } from "./yield-controller";
 import { yieldToMainThread } from "./yield-to-main-thread";
 import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservation-options";
-
-type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+import type { AnyCanvas } from "@/modules/qr-generator/any-canvas";
 
 export function useQRGenerator(): UseQRGeneratorResult {
   const { t } = useTranslation();

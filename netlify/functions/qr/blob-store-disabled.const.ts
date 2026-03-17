@@ -1,7 +1,5 @@
-let blobStoreDisabled = false;
-export function getBlobStoreDisabled(): boolean {
-  return blobStoreDisabled;
-}
-export function setBlobStoreDisabled(value: boolean): void {
-  blobStoreDisabled = value;
-}
+let _disabled = false;
+export const blobStoreDisabled = {
+  get(): boolean { return _disabled; },
+  set(value: boolean): void { _disabled = value; },
+};

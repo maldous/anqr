@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { IS_TEST_RUNTIME } from "./is-test-runtime.const";
-import { getBlobStoreDisabled } from "./blob-store-disabled.const";
+import { blobStoreDisabled } from "./blob-store-disabled.const";
 import { DEFAULT_NETLIFY_SITE_ID } from "./default-netlify-site-id.const";
 import { QR_CACHE_STORE } from "./qr-cache-store.const";
 import { isMissingBlobsEnvironmentError } from "./is-missing-blobs-environment-error";
@@ -8,7 +8,7 @@ import { markBlobStoreDisabled } from "./mark-blob-store-disabled";
 
 export function getBlobStoreOrNull() {
   if (IS_TEST_RUNTIME) return null;
-  if (getBlobStoreDisabled()) return null;
+  if (blobStoreDisabled.get()) return null;
   try {
     const token = process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
     const siteID =
