@@ -1,10 +1,2 @@
-export { Arrays } from "./arrays";
-export { arraycopy } from "./arraycopy";
-export { Integer } from "./integer";
-export { Float } from "./float";
-export { Long } from "./long";
-export { StringBuilder } from "./string-builder";
-export { CharacterSetECI } from "./character-set-eci";
-export { StringEncoding } from "./string-encoding";
-export { StringUtils } from "./string-utils";
-export { currentTimeMillis } from "./current-time-millis";
+// Shim — canonical location: packages/domain/qr/src/decode/util.ts
+export * from "../../../../packages/domain/qr/src/decode/util";

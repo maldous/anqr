@@ -1,5 +1,2 @@
-export { LuminanceSource } from "./luminance-source";
-export { InvertedLuminanceSource } from "./inverted-luminance-source";
-export { RGBALuminanceSource } from "./rgba-luminance-source";
-export { Binarizer } from "./abstract-binarizer";
-export { BinaryBitmap } from "./binary-bitmap";
+// Shim — canonical location: packages/domain/qr/src/decode/luminance.ts
+export * from "../../../../packages/domain/qr/src/decode/luminance";

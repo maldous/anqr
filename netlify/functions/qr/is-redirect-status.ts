@@ -1,3 +1,2 @@
-export function isRedirectStatus(status: number): boolean {
-  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
-}
+// Shim
+export * from "../../../../packages/platform/node/src/server/is-redirect-status";

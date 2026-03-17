@@ -1,5 +1,2 @@
-import { qartModulePromiseState } from "./qart-module-promise-state";
-
-export function getQartModulePromise() {
-  return qartModulePromiseState.current;
-}
+// Shim
+export * from "../../packages/application/generator/src/hooks/get-qart-module-promise";

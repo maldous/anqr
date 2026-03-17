@@ -1,3 +1,2 @@
-export { getComplementary } from "./get-complementary";
-export { getAnalogous } from "./get-analogous";
-export { getTriadic } from "./get-triadic";
+// Shim — canonical location: packages/domain/render/src/color/harmony.ts
+export * from "../../../../packages/domain/render/src/color/harmony";

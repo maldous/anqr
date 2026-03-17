@@ -1,7 +1,2 @@
-export function escapeHtml(str: string): string {
-  return str
-    .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
+// Shim
+export * from "../../../apps/web/src/seo/escape-html";

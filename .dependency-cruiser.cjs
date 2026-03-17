@@ -130,6 +130,47 @@ module.exports = {
       from: { path: "^(packages|apps)/" },
       to: { path: "^tools/" },
     },
+    {
+      name: "no-harness-in-packages",
+      severity: "error",
+      comment: "Packages and apps must not import from scripts/ops/.",
+      from: { path: "^(packages|apps)/" },
+      to: { path: "^scripts/ops/" },
+    },
+
+    // ── Apps must not import src/ once packages exist ─────────────────
+    {
+      name: "apps-no-src-imports",
+      severity: "warn",
+      comment:
+        "Apps must not import from src/ once a package equivalent exists. " +
+        "Transitional: warn during migration.",
+      from: { path: "^apps/" },
+      to: { path: "^src/" },
+    },
+
+    // ── Packages must not import src/ ────────────────────────────────
+    {
+      name: "packages-no-src-imports",
+      severity: "error",
+      comment:
+        "Packages must not import from the transitional src/ root. " +
+        "Transitional exception for un-extracted source categories (domain/, modules/, store/, lib/).",
+      from: { path: "^packages/" },
+      to: {
+        path: "^src/",
+        pathNot: "^src/(domain/|modules/|store/|lib/|infra/|platform/|features/)",
+      },
+    },
+
+    // ── Netlify may import only approved package layers ──────────────
+    {
+      name: "netlify-no-app-imports",
+      severity: "error",
+      comment: "Netlify handlers must not import from app targets.",
+      from: { path: "^netlify/" },
+      to: { path: "^apps/" },
+    },
 
     // ── Forbidden broad bucket names (architecture-standards.md) ────
     {
@@ -341,11 +382,12 @@ module.exports = {
     {
       name: "no-deep-package-imports",
       severity: "error",
-      comment: "Never deep-import another package internals (ai-agent-rules.md).",
-      from: { path: "^packages/[^/]+/[^/]+/" },
+      comment:
+        "Never deep-import another package's internals (ai-agent-rules.md). Intra-package imports are allowed.",
+      from: { path: "^packages/([^/]+/[^/]+)/" },
       to: {
         path: "^packages/[^/]+/[^/]+/",
-        pathNot: "^packages/[^/]+/[^/]+/index\\.",
+        pathNot: ["^packages/$1/", "^packages/[^/]+/[^/]+/(index|src/index)\\."],
       },
     },
     {

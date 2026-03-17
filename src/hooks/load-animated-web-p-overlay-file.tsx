@@ -1,1 +1,2 @@
-export { loadAnimatedWebPOverlayFile } from "@/features/generator/application/input/load-animated-web-p-overlay-file.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/load-animated-web-p-overlay-file";

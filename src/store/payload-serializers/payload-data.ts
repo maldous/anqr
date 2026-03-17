@@ -1,1 +1,2 @@
-export type { PayloadData } from "../types/payload-data";
+// Shim
+export * from "../../../apps/web/src/state/payload-serializers/payload-data";

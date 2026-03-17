@@ -1,10 +1,2 @@
-export interface PayNowParams {
-  type: "mobile" | "uen" | "nric";
-  value: string;
-  amount?: number;
-  reference?: string;
-  editable: boolean;
-  expiryDate?: string;
-  merchantName?: string;
-  merchantCity?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/pay-now-params";

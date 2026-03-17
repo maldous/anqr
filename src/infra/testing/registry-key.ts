@@ -1,1 +1,2 @@
-export const REGISTRY_KEY = "__ANQR_DYNAMIC_TESTID_REGISTRY__";
+// Shim
+export * from "../../../packages/testing/contracts/src/registry-key";

@@ -1,1 +1,2 @@
-export const MAX_OVERLAY_REDIRECTS = 5;
+// Shim
+export * from "../../../../packages/domain/render/src/server/max-overlay-redirects.const";

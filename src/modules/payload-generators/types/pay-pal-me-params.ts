@@ -1,5 +1,2 @@
-export interface PayPalMeParams {
-  username: string;
-  amount?: number;
-  currencyCode?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/pay-pal-me-params";

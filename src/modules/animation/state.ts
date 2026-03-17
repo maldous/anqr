@@ -1,3 +1,2 @@
-export { createAnimationState } from "./create-animation-state";
-export { getNextFrame } from "./get-next-frame";
-export { advanceAnimation } from "./advance-animation";
+// Shim
+export * from "../../../packages/domain/render/src/animation/state";

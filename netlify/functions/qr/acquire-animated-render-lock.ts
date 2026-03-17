@@ -1,18 +1,2 @@
-import { animatedRenderQueue } from "./animated-render-queue.const";
-
-export async function acquireAnimatedRenderLock(): Promise<() => void> {
-  let release: (() => void) | null = null;
-  const waitTurn = animatedRenderQueue.get();
-  animatedRenderQueue.set(
-    new Promise<void>((resolve) => {
-      release = resolve;
-    }),
-  );
-  await waitTurn;
-  return () => {
-    if (release) {
-      release();
-      release = null;
-    }
-  };
-}
+// Shim
+export * from "../../../../packages/platform/node/src/server/acquire-animated-render-lock";

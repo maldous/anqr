@@ -1,15 +1,2 @@
-export interface PreservationDiff {
-  id: string;
-  title: string;
-  description: string;
-  heroPriority: number;
-  intensity: number;
-  finders: boolean;
-  timing: boolean;
-  alignment: boolean;
-  formatInfo: boolean;
-  versionInfo: boolean;
-  finderDither: number;
-  blendPres: boolean;
-  blendMode?: "overlay" | "dither";
-}
+// Shim
+export * from "../../../../apps/web/src/content/gallery/gallery-scan-scenario-types/preservation-diff";

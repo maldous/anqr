@@ -1,1 +1,2 @@
-export { finalizeGeneratedCanvas } from "@/features/generator/application/generation/finalize-generated-canvas.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/finalize-generated-canvas";

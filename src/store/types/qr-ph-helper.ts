@@ -1,7 +1,2 @@
-export interface QRPhHelper {
-  accountNumber: string;
-  merchantName: string;
-  merchantCity: string;
-  amount?: number;
-  reference?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/qr-ph-helper";

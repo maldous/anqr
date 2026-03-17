@@ -1,8 +1,2 @@
-export type TestIdProps = {
-  "data-testid"?: string;
-  id?: string;
-  name?: string;
-  title?: string;
-  placeholder?: string;
-  "aria-label"?: string;
-};
+// Shim
+export * from "../../../packages/testing/contracts/src/test-id.types";

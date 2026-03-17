@@ -1,7 +1,2 @@
-import type { QArtModule } from "./q-art-module";
-
-export const qartModulePromiseState: {
-  current: Promise<QArtModule> | null;
-} = {
-  current: null,
-};
+// Shim
+export * from "../../packages/application/generator/src/hooks/qart-module-promise-state";

@@ -1,3 +1,4 @@
+// Shim
 /**
  * Overlay Module
  * Image processing for QR code overlays

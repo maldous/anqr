@@ -1,1 +1,2 @@
-export type { Tier } from "../../domain/qr/tier";
+// Shim
+export * from "../../../apps/web/src/state/types/tier";

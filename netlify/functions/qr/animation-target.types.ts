@@ -1,1 +1,2 @@
-export type AnimationTarget = "result" | "modules" | "both";
+// Shim
+export * from "../../../../packages/domain/render/src/server/animation-target.types";

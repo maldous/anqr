@@ -1,11 +1,2 @@
-export type ScenarioFeatureGroup =
-  | "overlay"
-  | "preservation"
-  | "render"
-  | "encoding"
-  | "animation"
-  | "output"
-  | "watermark"
-  | "preprocessing"
-  | "dithering"
-  | "qr-art";
+// Shim
+export * from "../../../../apps/web/src/content/gallery/gallery-scan-scenario-types/scenario-feature-group";

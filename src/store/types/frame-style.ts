@@ -1,1 +1,2 @@
-export type FrameStyle = "none" | "rounded_frame" | "sticker" | "tag";
+// Shim
+export * from "../../../apps/web/src/state/types/frame-style";

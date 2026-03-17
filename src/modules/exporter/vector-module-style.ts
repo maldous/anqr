@@ -1,1 +1,2 @@
-export type VectorModuleStyle = "square" | "rounded" | "dots" | "diamond" | "connected";
+// Shim
+export * from "../../../packages/domain/render/src/exporter/vector-module-style";

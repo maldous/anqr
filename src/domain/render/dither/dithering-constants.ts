@@ -1,11 +1,2 @@
-export { HISTOGRAM_BUCKETS } from "./histogram-buckets";
-export { BUCKET_SHIFT } from "./bucket-shift";
-export { DARK_REGION_END } from "./dark-region-end";
-export { LIGHT_REGION_START } from "./light-region-start";
-export { MIN_PEAK_RATIO } from "./min-peak-ratio";
-export { MAX_VALLEY_RATIO } from "./max-valley-ratio";
-export { MIN_PEAK_SEPARATION } from "./min-peak-separation";
-export { DARK_DESIRE_MIN } from "./dark-desire-min";
-export { DARK_DESIRE_MAX } from "./dark-desire-max";
-export { LIGHT_DESIRE_MIN } from "./light-desire-min";
-export { LIGHT_DESIRE_MAX } from "./light-desire-max";
+// Shim — canonical location: packages/domain/render/src/dither/dithering-constants.ts
+export * from "../../../../packages/domain/render/src/dither/dithering-constants";

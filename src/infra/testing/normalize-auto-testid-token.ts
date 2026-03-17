@@ -1,1 +1,2 @@
-export { normalizeToken } from "./normalize-token";
+// Shim
+export * from "../../../packages/testing/contracts/src/normalize-auto-testid-token";

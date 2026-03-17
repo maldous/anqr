@@ -1,2 +1,2 @@
-export { DynamicTestId } from "./dynamic-test-id";
-export { useDynamicTestId } from "./use-dynamic-test-id";
+// Shim
+export * from "../../../packages/testing/contracts/src/dynamic-testid";

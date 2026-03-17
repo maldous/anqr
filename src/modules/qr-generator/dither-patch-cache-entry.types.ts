@@ -1,6 +1,2 @@
-import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
-
-export type DitherPatchCacheEntry = {
-  patch: DitherAttemptPatch;
-  updatedAt: number;
-};
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/dither-patch-cache-entry.types";

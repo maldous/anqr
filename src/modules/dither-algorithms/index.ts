@@ -1,3 +1,4 @@
+// Shim
 /**
  * Dithering Algorithms Module
  * Comprehensive implementation of all dithering algorithms

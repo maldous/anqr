@@ -1,7 +1,2 @@
-import type { QRBitBuffer } from "./qr-bit-buffer";
-
-export interface QRDataSegment {
-  getMode: () => number;
-  getLength: () => number;
-  write: (buffer: QRBitBuffer) => void;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/qr-data-segment";

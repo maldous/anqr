@@ -1,17 +1,2 @@
-/**
- * QR Generator Overlay Processing Module
- * Re-exports from split module files
- */
-
-import { createLogger } from "../../../infra/logging/logger";
-
-const _log = createLogger("GENERATE");
-
-export { getOverlayData, loadImageDataRGB } from "./overlay-data";
-export { generateSubpixelMatrix, getSubpixelOverlayData } from "./overlay-subpixel";
-export {
-  applyGeometricTransforms,
-  hasGeometricTransforms,
-  hasPreprocessingOptions,
-  preprocessOverlay,
-} from "./overlay-transforms";
+// Shim — canonical location: packages/domain/render/src/overlay/overlay.ts
+export * from "../../../../packages/domain/render/src/overlay/overlay";

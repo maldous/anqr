@@ -1,3 +1,3 @@
-export { createShiftJISEncoder } from "./create-shift-jis-encoder";
-export { canEncodeAsShiftJIS } from "./can-encode-as-shift-jis";
-export { default } from "./default-export";
+// Shim — canonical location: packages/domain/qr/src/encode/shift-jis.ts
+export * from "../../../../packages/domain/qr/src/encode/shift-jis";
+export { default } from "../../../../packages/domain/qr/src/encode/shift-jis";

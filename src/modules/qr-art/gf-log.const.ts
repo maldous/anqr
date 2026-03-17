@@ -1,1 +1,2 @@
-export const GF_LOG = new Uint8Array(256);
+// Shim
+export * from "../../../packages/domain/qr/src/qr-art/gf-log.const";

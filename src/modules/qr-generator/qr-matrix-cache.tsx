@@ -1,4 +1,2 @@
-import { MemoCache } from "./memo-cache";
-import type { QRMatrixCacheEntry } from "./cache.types";
-
-export const qrMatrixCache = new MemoCache<QRMatrixCacheEntry>(30);
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/qr-matrix-cache";

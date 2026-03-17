@@ -1,3 +1,2 @@
-import { OutputFormat } from "./output-format.types";
-
-export const DEFAULT_OUTPUT_FORMAT: OutputFormat = "gif";
+// Shim
+export * from "../../../../packages/domain/render/src/server/default-output-format.const";

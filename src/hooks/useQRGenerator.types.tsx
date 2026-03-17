@@ -1,1 +1,2 @@
-export type { UseQRGeneratorResult } from "@/features/generator/hooks/hooks-result.types";
+// Shim
+export * from "../../packages/application/generator/src/hooks/useQRGenerator.types";

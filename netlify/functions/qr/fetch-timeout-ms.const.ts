@@ -1,4 +1,2 @@
-export const FETCH_TIMEOUT_MS = Math.max(
-  1000,
-  Number.parseInt(process.env.ANQR_OVERLAY_FETCH_TIMEOUT_MS || "60000", 10),
-);
+// Shim
+export * from "../../../../packages/domain/render/src/server/fetch-timeout-ms.const";

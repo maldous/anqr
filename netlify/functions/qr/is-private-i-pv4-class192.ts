@@ -1,6 +1,2 @@
-export function isPrivateIPv4Class192(b: number, c: number): boolean {
-  if (b === 168) return true;
-  if (b === 0 && c === 0) return true;
-  if (b === 0 && c === 2) return true;
-  return false;
-}
+// Shim
+export * from "../../../../packages/platform/node/src/server/is-private-i-pv4-class192";

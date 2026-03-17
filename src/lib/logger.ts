@@ -1,1 +1,2 @@
-export * from "../infra/logging/logger";
+// Shim
+export * from "../../apps/web/src/lib/logger";

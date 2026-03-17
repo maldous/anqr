@@ -448,12 +448,7 @@ export async function syncSonarHotspotsToLinear({
   }
 
   const resolved = resolveStale
-    ? await resolveStaleLinearIssues(
-        keyToLinear,
-        currentKeys,
-        "sonar-hotspot-sync",
-        "Hotspot",
-      )
+    ? await resolveStaleLinearIssues(keyToLinear, currentKeys, "sonar-hotspot-sync", "Hotspot")
     : [];
 
   return { created, skipped, promoted, requeued, resolved };
@@ -558,12 +553,7 @@ export async function syncSonarDuplicationsToLinear({
   }
 
   const resolved = resolveStale
-    ? await resolveStaleLinearIssues(
-        keyToLinear,
-        currentKeys,
-        "sonar-dup-sync",
-        "Duplication",
-      )
+    ? await resolveStaleLinearIssues(keyToLinear, currentKeys, "sonar-dup-sync", "Duplication")
     : [];
 
   return { created, skipped, promoted, requeued, resolved };

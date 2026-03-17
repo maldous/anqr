@@ -1,1 +1,2 @@
-export type ModuleStyle = "square" | "rounded" | "dots" | "diamond" | "connected";
+// Shim
+export * from "../../../apps/web/src/state/types/module-style";

@@ -1,1 +1,2 @@
-export type QRErrorCorrectionLevelChar = "L" | "M" | "Q" | "H";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/qr-error-correction-level-char";

@@ -1,9 +1,2 @@
-export function isGifLikeImageParam(value: string | null | undefined): boolean {
-  const raw = String(value || "").trim();
-  if (!raw) return false;
-  try {
-    return new URL(raw).pathname.toLowerCase().endsWith(".gif");
-  } catch {
-    return raw.toLowerCase().split("?")[0].endsWith(".gif");
-  }
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/is-gif-like-image-param";

@@ -1,1 +1,2 @@
-export const BASE_URL = "https://anqr.link";
+// Shim
+export * from "../../../apps/web/src/seo/base-url.const";

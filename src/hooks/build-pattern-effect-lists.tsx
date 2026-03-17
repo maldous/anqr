@@ -1,1 +1,2 @@
-export { buildPatternEffectLists } from "@/features/generator/application/frames/build-pattern-effect-lists.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/build-pattern-effect-lists";

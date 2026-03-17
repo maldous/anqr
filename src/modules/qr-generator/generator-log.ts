@@ -1,3 +1,2 @@
-import { createLogger } from "../../infra/logging/logger";
-
-export const generatorLog = createLogger("GENERATE");
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/generator-log";

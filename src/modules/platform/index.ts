@@ -1,3 +1,4 @@
+// Shim
 /**
  * Platform Module
  * Platform-specific adapters for Capacitor plugins (AdMob, MediaStore)

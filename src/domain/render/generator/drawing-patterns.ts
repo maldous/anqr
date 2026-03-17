@@ -1,3 +1,2 @@
-export { drawFinderPatternComplete } from "./draw-finder-pattern-complete";
-export { drawAlignmentPattern } from "./draw-alignment-pattern";
-export { drawTimingModule } from "./draw-timing-module";
+// Shim — canonical location: packages/domain/render/src/generator/drawing-patterns.ts
+export * from "../../../../packages/domain/render/src/generator/drawing-patterns";

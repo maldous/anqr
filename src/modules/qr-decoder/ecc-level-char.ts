@@ -1,1 +1,2 @@
-export type ECCLevelChar = "L" | "M" | "Q" | "H";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-decoder/ecc-level-char";

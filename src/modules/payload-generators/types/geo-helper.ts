@@ -1,5 +1,2 @@
-export interface GeoHelper {
-  lat: number;
-  lon: number;
-  query?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/geo-helper";

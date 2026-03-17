@@ -1,5 +1,2 @@
-export interface RSBasisBlock {
-  dataBitIndex: number;
-  blockData: Uint8Array;
-  affectedPixels: number[];
-}
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-art/types/rs-basis-block";

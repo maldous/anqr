@@ -1,1 +1,2 @@
-export type MaskPattern = "auto" | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+// Shim
+export * from "../../../apps/web/src/state/types/mask-pattern";

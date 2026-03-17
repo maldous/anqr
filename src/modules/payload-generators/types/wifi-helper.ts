@@ -1,12 +1,2 @@
-import type { WifiAuth } from "./wifi-auth";
-
-export interface WifiHelper {
-  ssid: string;
-  auth: WifiAuth;
-  password?: string;
-  hidden: boolean;
-  eapIdentity?: string;
-  eapAnonymous?: string;
-  eapPhase2?: string;
-  eapCaCert?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/wifi-helper";

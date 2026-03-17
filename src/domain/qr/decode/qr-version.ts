@@ -1,9 +1,2 @@
-export { ErrorCorrectionLevelValue } from "./error-correction-level-value";
-export { ErrorCorrectionLevel } from "./error-correction-level";
-export { ModeValue } from "./mode-value";
-export { Mode } from "./mode";
-export { ECB } from "./ecb";
-export { ECBlocks } from "./ec-blocks";
-export { Version } from "./version";
-export { FormatInformation } from "./format-information";
-export { DataMask } from "./data-mask";
+// Shim — canonical location: packages/domain/qr/src/decode/qr-version.ts
+export * from "../../../../packages/domain/qr/src/decode/qr-version";

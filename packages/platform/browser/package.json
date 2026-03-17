@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/platform-browser",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/platform-browser",
+  "type": "module"
+}

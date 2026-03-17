@@ -1,13 +1,2 @@
-export interface OverlayFilterOptions {
-  brightness: number;
-  contrast: number;
-  gamma: number;
-  saturation: number;
-  hue: number;
-  invert: boolean;
-  blur: number;
-  sharpen: number;
-  posterize: number;
-  threshold?: number;
-  edge: "off" | "sobel" | "canny";
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/overlay-filter-options.types";

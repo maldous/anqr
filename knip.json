@@ -5,9 +5,21 @@
     "scripts/**/*.{js,mjs,ts}",
     "tools/**/*.ts",
     "netlify/functions/**/*.{ts,mts}",
-    "netlify/edge-functions/**/*.{ts,mts}"
+    "netlify/edge-functions/**/*.{ts,mts}",
+    "packages/**/src/index.ts",
+    "apps/**/src/main.{ts,tsx}"
   ],
   "project": ["src/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
+  "workspaces": {
+    "apps/*": {
+      "entry": ["src/main.{ts,tsx}", "src/index.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/*/*": {
+      "entry": ["src/index.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    }
+  },
   "ignore": ["**/*.generated.*", "**/*.d.ts"],
   "ignoreDependencies": [
     "@capacitor/android",

@@ -1,1 +1,2 @@
-export { createArtworkFrameState } from "@/features/generator/application/frames/create-artwork-frame-state.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/create-artwork-frame.types";

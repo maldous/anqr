@@ -1,1 +1,2 @@
-export { loadFileAsCanvas } from "@/features/generator/application/input/load-file-as-canvas.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/load-file-as-canvas";

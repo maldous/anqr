@@ -1,3 +1,4 @@
+// Shim
 /**
  * QR Specification Module
  * QR code domain knowledge - constants, patterns, and encoding rules

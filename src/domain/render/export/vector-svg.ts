@@ -1,2 +1,2 @@
-export { exportVectorSvg } from "./export-vector-svg";
-export { downloadVectorSvg } from "./download-vector-svg";
+// Shim — canonical location: packages/domain/render/src/export/vector-svg.ts
+export * from "../../../../packages/domain/render/src/export/vector-svg";

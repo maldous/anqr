@@ -1,1 +1,2 @@
-export type OrderedMatrix = "bayer2" | "bayer4" | "bayer8" | "clustered_dot" | "void_cluster";
+// Shim
+export * from "../../../packages/domain/render/src/dither-algorithms/ordered-matrix";

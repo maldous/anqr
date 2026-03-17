@@ -1,1 +1,2 @@
-export const blueNoiseTileCache = new Map<string, Float32Array>();
+// Shim
+export * from "../../../packages/domain/render/src/dither-algorithms/blue-noise-tile-cache";

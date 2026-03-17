@@ -1,4 +1,2 @@
-export interface CalendarSubHelper {
-  url: string;
-  calendarName?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/calendar-sub-helper";

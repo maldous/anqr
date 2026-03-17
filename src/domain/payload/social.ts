@@ -1,3 +1,2 @@
-export { generateSocialProfile } from "./generate-social-profile";
-export { generateMessagingLink } from "./generate-messaging-link";
-export { generateAppDeepLink } from "./generate-app-deep-link";
+// Shim — canonical location: packages/domain/payload/src/social.ts
+export * from "../../../packages/domain/payload/src/social";

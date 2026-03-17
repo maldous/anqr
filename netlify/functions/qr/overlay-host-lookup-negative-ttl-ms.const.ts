@@ -1,1 +1,2 @@
-export const OVERLAY_HOST_LOOKUP_NEGATIVE_TTL_MS = 10_000;
+// Shim
+export * from "../../../../packages/domain/render/src/server/overlay-host-lookup-negative-ttl-ms.const";

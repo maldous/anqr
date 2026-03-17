@@ -1,1 +1,2 @@
-export { finalizeAnimationFrames } from "@/features/generator/application/frames/finalize-animation-frames.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/finalize-animation-frames";

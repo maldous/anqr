@@ -1,10 +1,2 @@
-export interface QArtPixel {
-  row: number;
-  col: number;
-  isStructural: boolean;
-  isData: boolean;
-  bitIndex: number;
-  controllable: boolean;
-  targetValue: boolean;
-  importance: number;
-}
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-art/types/qart-pixel";

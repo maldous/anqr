@@ -1,2 +1,3 @@
-export * from "../../i18n";
-export { i18n } from "../../i18n";
+// Shim
+export * from "../../../apps/web/src/i18n";
+export { i18n } from "../../../apps/web/src/i18n";

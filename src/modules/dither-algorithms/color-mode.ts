@@ -1,1 +1,2 @@
-export type ColorMode = "bw" | "grayscale" | "color";
+// Shim
+export * from "../../../packages/domain/render/src/dither-algorithms/color-mode";

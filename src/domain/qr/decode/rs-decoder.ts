@@ -1,2 +1,2 @@
-export { correctRSBlock } from "./correct-rs-block";
-export { correctRSCodewords } from "./correct-rs-codewords";
+// Shim — canonical location: packages/domain/qr/src/decode/rs-decoder.ts
+export * from "../../../../packages/domain/qr/src/decode/rs-decoder";

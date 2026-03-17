@@ -1,1 +1,2 @@
-export type ColorMode = "color" | "grayscale" | "bw";
+// Shim
+export * from "../../../apps/web/src/state/types/color-mode";

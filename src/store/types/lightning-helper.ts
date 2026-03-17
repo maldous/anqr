@@ -1,3 +1,2 @@
-export interface LightningHelper {
-  invoice: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/lightning-helper";

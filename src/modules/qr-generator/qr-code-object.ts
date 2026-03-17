@@ -1,4 +1,2 @@
-export interface QRCodeObject {
-  isDark(row: number, col: number): boolean;
-  getModuleCount(): number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/qr-code-object";

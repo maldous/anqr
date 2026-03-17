@@ -1,1 +1,2 @@
-export type QArtModule = typeof import("@/modules/qr-art");
+// Shim
+export * from "../../../../../packages/application/generator/src/qart/qart-module";

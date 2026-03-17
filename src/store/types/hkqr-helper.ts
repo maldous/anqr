@@ -1,6 +1,2 @@
-export interface HKQRHelper {
-  fpsId?: string;
-  merchantName: string;
-  merchantCity?: string;
-  amount?: number;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/hkqr-helper";

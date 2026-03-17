@@ -1,1 +1,2 @@
-export type CanonicalFixtureId = "tsunami" | "king" | "logo" | "test" | "santa" | "dance";
+// Shim
+export * from "../../../../apps/web/src/content/gallery/gallery-scan-scenario-types/canonical-fixture-id";

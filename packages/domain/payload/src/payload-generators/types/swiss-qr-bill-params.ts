@@ -1,0 +1,35 @@
+export interface SwissQRBillParams {
+  version?: "0200" | "0201";
+  coding?: 1;
+  creditorIBAN: string;
+  creditorAddressType: "S" | "K";
+  creditorName: string;
+  creditorStreet?: string;
+  creditorBuildingNumber?: string;
+  creditorPostalCode?: string;
+  creditorCity?: string;
+  creditorCountry: string;
+  ultimateCreditorAddressType?: "S" | "K";
+  ultimateCreditorName?: string;
+  ultimateCreditorStreet?: string;
+  ultimateCreditorBuildingNumber?: string;
+  ultimateCreditorPostalCode?: string;
+  ultimateCreditorCity?: string;
+  ultimateCreditorCountry?: string;
+  amount?: number;
+  currency: "CHF" | "EUR";
+  ultimateDebtorAddressType?: "S" | "K";
+  ultimateDebtorName?: string;
+  ultimateDebtorStreet?: string;
+  ultimateDebtorBuildingNumber?: string;
+  ultimateDebtorPostalCode?: string;
+  ultimateDebtorCity?: string;
+  ultimateDebtorCountry?: string;
+  referenceType: "QRR" | "SCOR" | "NON";
+  reference?: string;
+  unstructuredMessage?: string;
+  trailer?: "EPD";
+  billInformation?: string;
+  alternativeProcedure1?: string;
+  alternativeProcedure2?: string;
+}

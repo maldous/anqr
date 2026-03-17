@@ -1,1 +1,2 @@
-export type ECCLevel = "L" | "M" | "Q" | "H";
+// Shim
+export * from "../../../../packages/domain/render/src/server/ecc-level.types";

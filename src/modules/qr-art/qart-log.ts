@@ -1,3 +1,2 @@
-import { createLogger } from "../../infra/logging/logger";
-
-export const qartLog = createLogger("QART");
+// Shim
+export * from "../../../packages/domain/qr/src/qr-art/qart-log";

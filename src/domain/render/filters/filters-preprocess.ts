@@ -1,3 +1,2 @@
-export { detectBimodalBW } from "./detect-bimodal-bw";
-export { softenBWImage } from "./soften-bw-image";
-export { preprocessImageData } from "./preprocess-image-data";
+// Shim — canonical location: packages/domain/render/src/filters/filters-preprocess.ts
+export * from "../../../../packages/domain/render/src/filters/filters-preprocess";

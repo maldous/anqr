@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/analytics-ga4",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/analytics-ga4",
+  "type": "module"
+}

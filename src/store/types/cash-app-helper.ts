@@ -1,4 +1,2 @@
-export interface CashAppHelper {
-  cashtag: string;
-  amount?: number;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/cash-app-helper";

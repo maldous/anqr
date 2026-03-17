@@ -1,1 +1,2 @@
-export type VectorTimingStyle = "match_module" | "solid" | "dashed";
+// Shim
+export * from "../../../packages/domain/render/src/exporter/vector-timing-style";

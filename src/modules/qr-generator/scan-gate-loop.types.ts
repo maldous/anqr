@@ -1,7 +1,2 @@
-import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
-
-export interface ScanGateLoopState {
-  bestBaseDecodable: HTMLCanvasElement | OffscreenCanvas | null;
-  bestBaseDecodablePatch: DitherAttemptPatch | null;
-  prevEdgeImprint: number | null;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/scan-gate-loop.types";

@@ -1,5 +1,2 @@
-import { overlayHostnameSafetyCache } from "./overlay-hostname-safety-cache.const";
-
-export function _clearOverlayHostnameSafetyCache(): void {
-  overlayHostnameSafetyCache.clear();
-}
+// Shim
+export * from "../../../../packages/platform/node/src/server/clear-overlay-hostname-safety-cache";

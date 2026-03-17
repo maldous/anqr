@@ -1,1 +1,2 @@
-export * from "../infra/telemetry/zaraz";
+// Shim
+export * from "../../apps/web/src/lib/zaraz";

@@ -1,1 +1,2 @@
-export type ValidEncoderMode = "numeric" | "alphanumeric" | "byte" | "kanji" | "auto";
+// Shim
+export * from "../../../../packages/application/analyze/src/valid-encoder-mode";

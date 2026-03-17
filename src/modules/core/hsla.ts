@@ -1,5 +1,2 @@
-import type { HSL } from "./hsl";
-
-export interface HSLA extends HSL {
-  a: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/core/hsla";

@@ -1,10 +1,2 @@
-/**
- * QR Generator Edge Detection Filters
- * Re-exports from overlay module (canonical source)
- */
-
-import { createLogger } from "../../../infra/logging/logger";
-
-const _log = createLogger("GENERATE");
-
-export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from "../../../modules/overlay";
+// Shim — canonical location: packages/domain/render/src/filters/filters-edge.ts
+export * from "../../../../packages/domain/render/src/filters/filters-edge";

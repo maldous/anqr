@@ -1,1 +1,2 @@
-export const SERVER_MAX_ANIMATION_FRAMES = 64;
+// Shim
+export * from "../../../../packages/domain/render/src/server/server-max-animation-frames.const";

@@ -1,1 +1,2 @@
-export const QR_CACHE_STORE = "qr-cache";
+// Shim
+export * from "../../../../packages/platform/node/src/server/qr-cache-store.const";

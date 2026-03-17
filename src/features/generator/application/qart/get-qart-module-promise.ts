@@ -1,6 +1,2 @@
-import type { QArtModule } from "./qart-shared-types";
-import { qartSharedState } from "./qart-shared-state-store";
-
-export function getQartModulePromise(): Promise<QArtModule> | null {
-  return qartSharedState.modulePromise;
-}
+// Shim
+export * from "../../../../../packages/application/generator/src/qart/get-qart-module-promise";

@@ -1,8 +1,2 @@
-export type AnimationPattern =
-  | "none"
-  | "pulse"
-  | "wave"
-  | "scanline"
-  | "shimmer"
-  | "drift"
-  | "color_cycle";
+// Shim
+export * from "../../../packages/domain/render/src/animation/animation-pattern";

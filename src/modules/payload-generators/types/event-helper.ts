@@ -1,9 +1,2 @@
-export interface EventHelper {
-  summary?: string;
-  location?: string;
-  description?: string;
-  start?: string;
-  end?: string;
-  tz?: string;
-  rrule?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/event-helper";

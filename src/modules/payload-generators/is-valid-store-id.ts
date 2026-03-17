@@ -1,6 +1,2 @@
-/**
- * Validate Japan store ID (non-empty)
- */
-export function isValidStoreId(storeId: string): boolean {
-  return storeId.trim().length >= 1;
-}
+// Shim
+export * from "../../../packages/domain/payload/src/payload-generators/is-valid-store-id";

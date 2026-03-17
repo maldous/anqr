@@ -1,6 +1,2 @@
-import type { RGB } from "./rgb";
-
-export interface DitherResult {
-  matrix: boolean[][];
-  colors: RGB[][];
-}
+// Shim
+export * from "../../../packages/domain/render/src/dither-algorithms/dither-result";

@@ -1,3 +1,2 @@
-export function getModuleCount(version: number): number {
-  return version * 4 + 17;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-art/get-module-count";

@@ -1,7 +1,2 @@
-export interface TimingDiagnostics {
-  decodeMs?: number | null;
-  totalAnalysisMs?: number | null;
-  encodeMs?: number | null;
-  renderMs?: number | null;
-  exportMs?: number | null;
-}
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/timing-diagnostics";

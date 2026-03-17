@@ -1,0 +1,191 @@
+apply plugin: 'com.android.application'
+apply plugin: 'jacoco'
+
+android {
+    namespace = "link.anqr.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    // Enable BuildConfig generation (required in AGP 8.0+)
+    buildFeatures {
+        buildConfig = true
+    }
+    
+    defaultConfig {
+        applicationId "link.anqr.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 69
+        versionName "1.0.69"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Enable vector drawable support for smaller APK
+        vectorDrawables.useSupportLibrary = true
+        
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+            // Don't compress already-compressed web assets (they're minified JS/CSS)
+            noCompress 'js', 'css', 'html', 'json', 'woff', 'woff2', 'ttf'
+        }
+        
+        // Resource configuration - only include necessary densities and languages
+        resConfigs "en", "ar", "bn", "es", "gu", "hi", "id", "ja", "kn", "ko", "ml", "mr", "ms", "pa", "pt", "ru", "ta", "te", "th", "tl", "vi", "zh"
+    }
+    signingConfigs {
+        release {
+            storeFile file('release-key.keystore')
+            storePassword 'anqr2025'
+            keyAlias 'anqr'
+            keyPassword 'anqr2025'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            // Enable R8 code shrinking and obfuscation for smaller APK and Play Store compliance
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+        }
+        debug {
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+    
+    // Generate mapping file for Play Store crash deobfuscation
+    applicationVariants.all { variant ->
+        if (variant.buildType.name == 'release') {
+            variant.outputs.all {
+                outputFileName = "anqr-${variant.versionName}-${variant.buildType.name}.apk"
+            }
+        }
+    }
+    
+    // ABI splits - DISABLED for AAB builds (AAB handles this automatically)
+    // Enable only if building APKs directly instead of AAB
+    splits {
+        abi {
+            enable false  // AAB handles ABI splitting automatically
+            reset()
+            include "armeabi-v7a", "arm64-v8a"
+            universalApk false
+        }
+    }
+    
+    // Bundle configuration for AAB optimization (Play Store delivery)
+    bundle {
+        language {
+            enableSplit = false  // Keep all languages (app handles i18n in JS)
+        }
+        density {
+            enableSplit = true  // Split by screen density - reduces download size
+        }
+        abi {
+            enableSplit = true  // Split by CPU architecture - major size savings
+        }
+    }
+    
+    // Packaging options - exclude unnecessary files
+    packagingOptions {
+        resources {
+            excludes += [
+                'META-INF/LICENSE',
+                'META-INF/LICENSE.txt', 
+                'META-INF/NOTICE',
+                'META-INF/NOTICE.txt',
+                'META-INF/DEPENDENCIES',
+                'META-INF/*.kotlin_module',
+                'META-INF/versions/**',
+                'kotlin/**',
+                'DebugProbesKt.bin'
+            ]
+        }
+        // Deduplicate native libraries from plugins
+        jniLibs {
+            pickFirsts += ['**/libc++_shared.so']
+        }
+    }
+    
+    // Lint options for cleaner builds
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+    implementation 'com.google.android.gms:play-services-ads:24.7.0'
+    implementation platform('com.google.firebase:firebase-bom:34.8.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    
+    // iubenda CMP SDK for GDPR/CCPA consent management
+    implementation "net.consentmanager.sdkv3:cmsdkv3:3.6.0"
+    
+    // Sentry SDK for crash reporting and error tracking
+    implementation 'io.sentry:sentry-android:8.10.0'
+    // Sentry NDK integration for native crash stack traces
+    implementation 'io.sentry:sentry-android-ndk:8.10.0'
+}
+
+apply plugin: 'com.google.gms.google-services'
+
+apply from: 'capacitor.build.gradle'
+
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+tasks.register("jacocoTestReport", JacocoReport) {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    def javaClasses = fileTree(
+        dir: "$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes",
+        excludes: [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*'
+        ]
+    )
+    def kotlinClasses = fileTree(
+        dir: "$buildDir/tmp/kotlin-classes/debug",
+        excludes: [
+            '**/R.class',
+            '**/R$*.class',
+            '**/BuildConfig.*',
+            '**/Manifest*.*'
+        ]
+    )
+
+    classDirectories.setFrom(files(javaClasses, kotlinClasses))
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(fileTree(dir: buildDir, includes: [
+        "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
+        "jacoco/testDebugUnitTest.exec",
+        "outputs/code_coverage/debugAndroidTest/connected/**/*.ec"
+    ]))
+}

@@ -1,10 +1,2 @@
-export interface PngMetadata {
-  title?: string;
-  author?: string;
-  description?: string;
-  copyright?: string;
-  creationTime?: string;
-  software?: string;
-  comment?: string;
-  [key: string]: string | undefined;
-}
+// Shim
+export * from "../../../packages/domain/render/src/exporter/png-metadata.types";

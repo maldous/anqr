@@ -1,1 +1,2 @@
-export { runGeneratorWithSlowStatus } from "@/features/generator/application/safety/run-generator-with-slow-status.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/run-generator-with-slow-status";

@@ -1,7 +1,2 @@
-import type { ExporterModule } from "./exporter-module";
-
-export const exporterModulePromiseState: {
-  current: Promise<ExporterModule> | null;
-} = {
-  current: null,
-};
+// Shim
+export * from "../../packages/application/generator/src/hooks/exporter-module-promise-state";

@@ -1,1 +1,2 @@
-export type AnimationTarget = "result" | "modules" | "both";
+// Shim
+export * from "../../../apps/web/src/state/types/animation-target";

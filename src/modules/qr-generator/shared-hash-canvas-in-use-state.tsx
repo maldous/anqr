@@ -1,5 +1,2 @@
-export const sharedHashCanvasInUseState: {
-  current: boolean;
-} = {
-  current: false,
-};
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/shared-hash-canvas-in-use-state";

@@ -1,3 +1,2 @@
-export function isNumericSlot(value: string | undefined | null): value is string {
-  return !!value && /^\d+$/.test(value);
-}
+// Shim
+export * from "../../../../packages/analytics/ads/src/components/numeric-slot";

@@ -1,14 +1,2 @@
-import { type Canvas } from "@napi-rs/canvas";
-import { AnimationInterpolation } from "./animation-interpolation.types";
-import { interpolateOverlayFramesServer } from "./interpolate-overlay-frames-server";
-
-export function applyFrameInterpolation(
-  currentCanvas: Canvas,
-  previousCanvas: Canvas | null,
-  interpolationMode: AnimationInterpolation,
-): Canvas {
-  if ((interpolationMode === "crossfade" || interpolationMode === "morph") && previousCanvas) {
-    return interpolateOverlayFramesServer(previousCanvas, currentCanvas, interpolationMode, 0.5);
-  }
-  return currentCanvas;
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/apply-frame-interpolation";

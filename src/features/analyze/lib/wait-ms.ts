@@ -1,5 +1,2 @@
-export function waitMs(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
+// Shim
+export * from "../../../../packages/application/analyze/src/wait-ms";

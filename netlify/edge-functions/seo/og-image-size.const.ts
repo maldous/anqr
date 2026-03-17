@@ -1,1 +1,2 @@
-export const OG_IMAGE_SIZE = 600;
+// Shim
+export * from "../../../apps/web/src/seo/og-image-size.const";

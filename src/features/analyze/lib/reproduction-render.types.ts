@@ -1,6 +1,2 @@
-export interface ReproductionRenderState {
-  fgColor: string;
-  bgColor: string;
-  bgTransparent: boolean;
-  modulePx: number;
-}
+// Shim
+export * from "../../../../packages/application/analyze/src/reproduction-render.types";

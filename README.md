@@ -1,60 +1,109 @@
-# ANQR 1.0 Bootstrap + Operating Doctrine Pack
+# ANQR 1.0 design-by-contract migration bundle
 
-This pack is the starting point for ANQR 1.0.
+This bundle is the contract-first migration control surface for moving ANQR from the current `src/` monolith into `apps/` and `packages/`, while also hardening harness engineering as a first-class bounded system under `scripts/ops/`.
 
-It is **doctrine-first**, not code-first.
+## Read these files in this exact order
 
-ANQR 1.0 is treated as:
+1. `README.md`
+2. `migration/00-reading-order.md`
+3. `migration/01-root-inventory.md`
+4. `migration/02-root-config-changes.md`
+5. `migration/03-target-layout.md`
+6. `migration/04-src-to-target-mapping.md`
+7. `migration/05-harness-engineering.md`
+8. `migration/06-netlify-and-api-migration.md`
+9. `migration/07-native-public-docs-and-runtime-state.md`
+10. `migration/08-quality-gates-and-evidence.md`
+11. `migration/09-compatibility-shims.md`
+12. `migration/10-sequenced-run-sheet.md`
+13. `migration/11-done-criteria.md`
+14. `migration/AI-EXECUTION-PROMPT.md`
 
-- the product platform
-- the local harness/orchestrator
-- the governance layer
-- the corrective-healing loop
-- the learning/improvement loop
-- the launch and growth operating system
+After that, read the contract `README.md` file at every root and leaf target that you are about to touch.
 
-## Repository strategy
+## Non-negotiable architecture rules
 
-- `master` = frozen legacy v0
-- `refactor/anqr-architecture` = extraction/reference
-- `main` = clean ANQR 1.0 foundation
+- `apps/*` are thin delivery shells.
+- `packages/*/*` are the reusable contract-owned architecture.
+- `src/` is transitional and must be dissolved by ownership seam.
+- `scripts/ops/` is the canonical harness runtime. Do not create a competing runtime root.
+- `netlify/` remains the deployed serverless surface until `apps/api/` is ready, but handlers must be thinned to package composition.
+- `android/` and `ios/` remain transitional native build scaffolds until deliberately converged into `apps/android/` and `apps/ios/`.
+- No generic sink folders.
+- No deep imports across package boundaries.
+- No product runtime imports from `scripts/ops/`.
+- No production code imports from `packages/testing/`.
+- No direct `src/` imports from `apps/*` once a package equivalent exists.
 
-## Operating strategy
+## Current top-level repository surface considered by this bundle
 
-- email first
-- voice later
-- human-supervised autonomy
-- self-healing and self-improving
-- product and harness scored separately
+- `android`
+- `apps`
+- `docs`
+- `ios`
+- `netlify`
+- `packages`
+- `public`
+- `reports`
+- `scripts`
+- `services`
+- `src`
+- `test-results`
+- `tests`
+- `vite-config`
 
-## What this pack contains
+## Current root configuration files considered by this bundle
 
-- `docs/program/*` — operating doctrine and business/autonomy rules
-- `docs/discovery/*` — control templates that must be completed before bootstrap
-- `docs/standards/*` — engineering standards for the new foundation
-- `docs/00-chatgpt-project-setup.md` — exact ChatGPT Project setup steps
-- `docs/01-bootstrap-actions.md` — exact actions to take in order
-- `docs/02-repo-skeleton.md` — initial repo tree
-- `docs/03-linear-reboot-plan.md` — how to handle legacy vs 1.0 work in Linear
+- `commitlint.config.js`
+- `cspell.json`
+- `eslint.config.js`
+- `index.html`
+- `knip.json`
+- `lefthook.yml`
+- `Makefile`
+- `netlify.toml`
+- `oxlint.json`
+- `package.json`
+- `package-lock.json`
+- `playwright.config.ts`
+- `postcss.config.mjs`
+- `README.md`
+- `sonar-project.properties`
+- `tsconfig.json`
+- `tsconfig.node.json`
+- `tsconfig.node.tsbuildinfo`
+- `vite.config.ts`
+- `vitest.config.ts`
 
-## Hard rule
+## Current source pressure points
 
-Do **not** start coding `main` before:
+- `src/domain/*` remains the largest extraction body.
+- `src/features/generator/*` contains the densest application-orchestration split.
+- `src/modules/*`, `src/store/*`, and `src/lib/*` are legacy broad-bucket pressure zones that must be dissolved rather than preserved.
+- `netlify/functions/qr/*` is large and must become a thin composition layer over `packages/domain/*`, `packages/platform/node`, and `packages/observability/*`.
+- `scripts/ops/*` is already the live harness and must be contract-separated internally instead of replaced.
 
-1. the doctrine pack exists in the repo
-2. the discovery/control docs are at least first-pass filled in
-3. secrets/config redaction review has been performed
-4. AI authority boundaries are explicitly written down
+## Required validation command set after each major migration phase
 
-## First commit scope for `main`
+```bash
+npm run typecheck
+npm run lint
+npm run depcruise
+npm run test:unit
+npm run harness:quick
+```
 
-The first meaningful commit on `main` should contain only:
+Run the broader checks at phase boundaries:
 
-- this doctrine pack
-- repo/workspace scaffolding
-- lint/typecheck/depcruise/testing scaffolding
-- no migrated product code
+```bash
+npm run harness:full
+npm run nightly:dry-run
+npm run queue:check
+npm run cspell
+```
 
-## Next action
+## Intent of this bundle
 
-Open `docs/01-bootstrap-actions.md` and follow it in order.
+This bundle does **not** perform the migration by itself.
+
+It lays down the target directories, contract files, package manifests, tsconfig templates, and exact migration doctrine so that another AI can execute the change-set without inventing architecture or skipping roots.

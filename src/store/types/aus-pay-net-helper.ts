@@ -1,10 +1,2 @@
-export interface AusPayNetHelper {
-  payId?: string;
-  payIdType?: "EMAIL" | "MOBILE" | "ABN" | "ORG";
-  bsb?: string;
-  accountNumber?: string;
-  merchantName?: string;
-  merchantCity?: string;
-  amount?: number;
-  reference?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/aus-pay-net-helper";

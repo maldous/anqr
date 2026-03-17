@@ -1,4 +1,3 @@
-export type { AnimationPattern, InterpolationMode } from "./animation-patterns.types";
-export { generateAnimationPatternFrames } from "./generate-animation-pattern-frames";
-export { interpolateAnimationFramesWithEasing } from "./interpolate-animation-frames-with-easing";
-export { default } from "./default-export";
+// Shim — canonical location: packages/domain/render/src/animation/animation-patterns.ts
+export * from "../../../../packages/domain/render/src/animation/animation-patterns";
+export { default } from "../../../../packages/domain/render/src/animation/animation-patterns";

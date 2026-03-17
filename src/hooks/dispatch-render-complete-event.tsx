@@ -1,7 +1,2 @@
-export function dispatchRenderCompleteEvent(success: boolean, errorMessage?: string): void {
-  document.dispatchEvent(
-    new CustomEvent("anqr:render-complete", {
-      detail: { success, error: success ? null : (errorMessage ?? null) },
-    }),
-  );
-}
+// Shim
+export * from "../../packages/application/generator/src/hooks/dispatch-render-complete-event";

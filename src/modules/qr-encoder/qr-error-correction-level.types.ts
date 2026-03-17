@@ -1,4 +1,2 @@
-import type { QRErrorCorrectionLevel } from "./qr-error-correction-level";
-
-export type QRErrorCorrectionLevelType =
-  (typeof QRErrorCorrectionLevel)[keyof typeof QRErrorCorrectionLevel];
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/qr-error-correction-level.types";

@@ -1,2 +1,2 @@
-export { updateHreflangLinks } from "./update-hreflang-links";
-export { updateCanonicalUrl } from "./update-canonical-url";
+// Shim
+export * from "../../../apps/web/src/seo/head-links";

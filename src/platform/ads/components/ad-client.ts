@@ -1,1 +1,2 @@
-export const AD_CLIENT = "ca-pub-XXXXXXXXXXXXXXXX";
+// Shim
+export * from "../../../../packages/analytics/ads/src/components/ad-client";

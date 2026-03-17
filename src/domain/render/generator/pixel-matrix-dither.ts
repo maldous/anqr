@@ -1,2 +1,2 @@
-export { normalizeColors } from "./normalize-colors";
-export { generateDitherModeMatrix } from "./generate-dither-mode-matrix";
+// Shim — canonical location: packages/domain/render/src/generator/pixel-matrix-dither.ts
+export * from "../../../../packages/domain/render/src/generator/pixel-matrix-dither";

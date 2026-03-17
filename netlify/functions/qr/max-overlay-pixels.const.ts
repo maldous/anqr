@@ -1,1 +1,2 @@
-export const MAX_OVERLAY_PIXELS = 10 * 1024 * 1024;
+// Shim
+export * from "../../../../packages/domain/render/src/server/max-overlay-pixels.const";

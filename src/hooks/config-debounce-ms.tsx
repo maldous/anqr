@@ -1,2 +1,2 @@
-// ~60fps frame budget
-export const CONFIG_DEBOUNCE_MS = 150;
+// Shim
+export * from "../../packages/application/generator/src/hooks/config-debounce-ms";

@@ -1,0 +1,9 @@
+ANQR is a QR code generator. No login or account is required.
+
+To test:
+1. Open the app
+2. Enter any text or URL in the payload field
+3. A QR code is generated instantly
+4. Tap Export to save or share the QR code
+
+All QR code generation happens locally on the device. The app displays AdMob advertisements.

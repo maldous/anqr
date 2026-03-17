@@ -1,7 +1,2 @@
-import { type Canvas } from "@napi-rs/canvas";
-
-export interface FetchedImage {
-  canvas: Canvas;
-  arrayBuffer: ArrayBuffer;
-  isAnimatedGif: boolean;
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/fetched-image.types";

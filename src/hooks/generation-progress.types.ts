@@ -1,4 +1,2 @@
-export type GenerationProgressState = {
-  stage: string;
-  percent: number;
-};
+// Shim
+export * from "../../packages/application/generator/src/hooks/generation-progress.types";

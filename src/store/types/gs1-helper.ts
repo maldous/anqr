@@ -1,7 +1,2 @@
-export interface GS1Helper {
-  gtin: string;
-  serial?: string;
-  batch?: string;
-  expiry?: string;
-  resolver: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/gs1-helper";

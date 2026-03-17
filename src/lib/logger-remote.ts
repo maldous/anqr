@@ -1,1 +1,2 @@
-export * from "../infra/telemetry/logger-remote";
+// Shim
+export * from "../../apps/web/src/lib/logger-remote";

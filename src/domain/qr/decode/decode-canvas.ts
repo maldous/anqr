@@ -1,22 +1,2 @@
-/**
- * Decode from Canvas
- * Decode QR code from canvas element
- */
-
-import { createLogger } from "../../../infra/logging/logger";
-
-const _log = createLogger("DECODER");
-
-import { decodeQR } from "./decoder-adapter";
-import type { DecodeResult } from "../../../modules/qr-decoder/types";
-
-/**
- * Decode a QR code from a canvas element
- */
-export function decodeFromCanvas(canvas: HTMLCanvasElement): DecodeResult | null {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  return decodeQR(imageData, { inversionAttempts: "attemptBoth" });
-}
+// Shim — canonical location: packages/domain/qr/src/decode/decode-canvas.ts
+export * from "../../../../packages/domain/qr/src/decode/decode-canvas";

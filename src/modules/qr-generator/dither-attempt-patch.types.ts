@@ -1,9 +1,2 @@
-export type DitherAttemptPatch = {
-  darkMinOccupancy?: number;
-  lightMaxOccupancy?: number;
-  optimizeIterations?: number;
-  overlayIntensity?: number;
-  qrBitBiasStrength?: number;
-  qrFirstMode?: boolean;
-  preserveFinders?: boolean;
-};
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/dither-attempt-patch.types";

@@ -1,1 +1,2 @@
-export { handleEmptyContent } from "@/features/generator/application/generation/handle-empty-content.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/handle-empty-content";

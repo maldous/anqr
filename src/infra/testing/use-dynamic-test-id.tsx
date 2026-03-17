@@ -1,14 +1,2 @@
-import React from "react";
-import { baseFromProps } from "./base-from-props";
-import type { TestIdProps } from "./test-id.types";
-import { DynamicTestId } from "./dynamic-test-id";
-
-export function useDynamicTestId(props: TestIdProps, fallbackPrefix: string): string {
-  const reactId = React.useId();
-  const sourceKeyRef = React.useRef<string>(`src-${reactId}`);
-
-  return React.useMemo(() => {
-    const base = baseFromProps(props, fallbackPrefix, reactId);
-    return DynamicTestId.resolve(base, sourceKeyRef.current);
-  }, [props, fallbackPrefix, reactId]);
-}
+// Shim
+export * from "../../../packages/testing/contracts/src/use-dynamic-test-id";

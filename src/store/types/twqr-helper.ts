@@ -1,7 +1,2 @@
-export interface TWQRHelper {
-  merchantId: string;
-  merchantName: string;
-  merchantCity?: string;
-  taxId?: string;
-  amount?: number;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/twqr-helper";

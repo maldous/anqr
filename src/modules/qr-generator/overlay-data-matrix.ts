@@ -1,3 +1,2 @@
-import type { OverlayData } from "./types";
-
-export type OverlayDataMatrix = OverlayData;
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/overlay-data-matrix";

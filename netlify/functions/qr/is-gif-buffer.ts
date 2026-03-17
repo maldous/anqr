@@ -1,5 +1,2 @@
-import { isGifSignature } from "../../../src/modules/animation";
-
-export function isGifBuffer(buffer: ArrayBuffer): boolean {
-  return isGifSignature(buffer);
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/is-gif-buffer";

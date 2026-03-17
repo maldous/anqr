@@ -1,1 +1,2 @@
-export type VectorFinderStyle = "square" | "rounded" | "circle";
+// Shim
+export * from "../../../packages/domain/render/src/exporter/vector-finder-style";

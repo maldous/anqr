@@ -1,1 +1,2 @@
-export type WatermarkBlend = "normal" | "multiply" | "screen" | "overlay" | "soft-light";
+// Shim
+export * from "../../../../packages/domain/render/src/server/watermark-blend.types";

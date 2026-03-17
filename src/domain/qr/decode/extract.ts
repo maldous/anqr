@@ -1,8 +1,2 @@
-export { calculateLocation } from "./calculate-location";
-export { extractModuleMatrix } from "./extract-module-matrix";
-
-// Re-export from canonical source
-export {
-  getModuleCountForVersion as getModuleCountFromVersion,
-  getVersionFromModuleCount,
-} from "../../../modules/qr-spec";
+// Shim — canonical location: packages/domain/qr/src/decode/extract.ts
+export * from "../../../../packages/domain/qr/src/decode/extract";

@@ -1,3 +1,4 @@
+// Shim
 /**
  * QR Analyzer Module
  * Provides QR code analysis, scanning, validation, and safety checking

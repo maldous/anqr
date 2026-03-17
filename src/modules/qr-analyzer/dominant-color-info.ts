@@ -1,5 +1,2 @@
-export interface DominantColorInfo {
-  color: string;
-  percentage: number;
-  rgb: { r: number; g: number; b: number };
-}
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/dominant-color-info";

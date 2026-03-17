@@ -1,3 +1,4 @@
+// Shim
 /**
  * Animation Module
  * Handles GIF and WebP animation parsing, frame management, animation patterns, and temporal effects

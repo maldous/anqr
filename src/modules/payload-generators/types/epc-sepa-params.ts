@@ -1,8 +1,2 @@
-export interface EPCSepaParams {
-  name: string;
-  iban: string;
-  bic?: string;
-  amount?: number;
-  reference?: string;
-  text?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/epc-sepa-params";

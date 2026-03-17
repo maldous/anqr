@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/ui-mobile",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/ui-mobile",
+  "type": "module"
+}

@@ -1,8 +1,2 @@
-export interface VietQRParams {
-  bankBin: string;
-  accountNumber: string;
-  accountName?: string;
-  amount?: number;
-  description?: string;
-  serviceCode?: "QRPUSH" | "QRIBFTTA" | "QRIBFTTC";
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/viet-qr-params";

@@ -1,2 +1,2 @@
-export { exportGif } from "./export-gif";
-export { downloadGif } from "./download-gif";
+// Shim — canonical location: packages/domain/render/src/export/gif-export.ts
+export * from "../../../../packages/domain/render/src/export/gif-export";

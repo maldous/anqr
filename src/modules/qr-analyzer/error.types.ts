@@ -1,1 +1,2 @@
-export type ErrorType = "no_qr_detected" | "cors_blocked" | "decode_error" | "unknown";
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/error.types";

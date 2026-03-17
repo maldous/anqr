@@ -1,3 +1,4 @@
+// Shim
 /**
  * Exporter Module
  * File export functionality for PNG, GIF, SVG, and vector SVG

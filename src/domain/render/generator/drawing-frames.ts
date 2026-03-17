@@ -1,3 +1,2 @@
-export { drawFrameBackground } from "./draw-frame-background";
-export { drawFrame } from "./draw-frame";
-export { drawCenterLogo } from "./draw-center-logo";
+// Shim — canonical location: packages/domain/render/src/generator/drawing-frames.ts
+export * from "../../../../packages/domain/render/src/generator/drawing-frames";

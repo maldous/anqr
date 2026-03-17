@@ -1,1 +1,2 @@
-export { handleGeneratePreChecks } from "@/features/generator/application/generation/handle-generate-pre-checks.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/handle-generate-pre-checks";

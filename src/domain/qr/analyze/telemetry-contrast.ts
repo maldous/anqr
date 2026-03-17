@@ -1,3 +1,2 @@
-export type { ContrastReport } from "./telemetry-contrast.types";
-export { calculateContrastStats } from "./calculate-contrast-stats";
-export { checkContrastCompliance } from "./check-contrast-compliance";
+// Shim — canonical location: packages/domain/qr/src/analyze/telemetry-contrast.ts
+export * from "../../../../packages/domain/qr/src/analyze/telemetry-contrast";

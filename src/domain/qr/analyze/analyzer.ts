@@ -1,4 +1,2 @@
-export { analyzeQRFromCanvas } from "./analyze-qr-from-canvas";
-export { analyzeQRFromFile } from "./analyze-qr-from-file";
-export { analyzeQRFromUrl } from "./analyze-qr-from-url";
-export { analyzeQRCode } from "./analyze-qr-code";
+// Shim — canonical location: packages/domain/qr/src/analyze/analyzer.ts
+export * from "../../../../packages/domain/qr/src/analyze/analyzer";

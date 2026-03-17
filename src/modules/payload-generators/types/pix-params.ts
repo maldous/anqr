@@ -1,10 +1,2 @@
-export interface PIXParams {
-  key: string;
-  name?: string;
-  city?: string;
-  amount?: number;
-  txid?: string;
-  description?: string;
-  postalCode?: string;
-  url?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/pix-params";

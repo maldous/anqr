@@ -1,13 +1,2 @@
-/*
- * Generated scaffold from split manifest.
- * Source: src/hooks/useQRGenerator.ts
- * Notes: Sanitize QR generator config to plain object.
- */
-
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
-import { clonePlainSerializable } from "@/features/generator/application/generation/clone-plain-serializable.service";
-
-export function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unknown> {
-  const sanitized = clonePlainSerializable(config);
-  return (sanitized && typeof sanitized === "object" ? sanitized : {}) as Record<string, unknown>;
-}
+// Shim
+export * from "../../../../../packages/application/generator/src/generation/sanitize-q-art-render-config.service";

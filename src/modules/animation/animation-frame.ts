@@ -1,5 +1,2 @@
-export interface AnimationFrame {
-  canvas: HTMLCanvasElement | OffscreenCanvas;
-  delay: number;
-  disposalType: number;
-}
+// Shim
+export * from "../../../packages/domain/render/src/animation/animation-frame";

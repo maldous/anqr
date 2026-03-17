@@ -1,3 +1,2 @@
-import { createLogger } from "../../infra/logging/logger";
-
-export const log = createLogger("ANIMATION");
+// Shim
+export * from "../../../packages/domain/render/src/animation/log";

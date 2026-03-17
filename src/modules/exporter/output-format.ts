@@ -1,1 +1,2 @@
-export type OutputFormat = "png" | "webp" | "gif" | "svg" | "jpeg";
+// Shim
+export * from "../../../packages/domain/render/src/exporter/output-format";

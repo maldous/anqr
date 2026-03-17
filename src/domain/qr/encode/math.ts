@@ -1,4 +1,2 @@
-export { glog } from "./glog";
-export { gexp } from "./gexp";
-export { qrPolynomial } from "./qr-polynomial";
-export { QRMath } from "./qr-math";
+// Shim — canonical location: packages/domain/qr/src/encode/math.ts
+export * from "../../../../packages/domain/qr/src/encode/math";

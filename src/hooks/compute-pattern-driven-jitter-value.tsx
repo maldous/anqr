@@ -1,1 +1,2 @@
-export { computePatternDrivenJitterValue } from "@/features/generator/application/frames/compute-pattern-driven-jitter-value.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/compute-pattern-driven-jitter-value";

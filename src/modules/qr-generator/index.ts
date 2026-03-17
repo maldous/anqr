@@ -1,3 +1,4 @@
+// Shim
 /**
  * QR Generator Module
  * Re-exports from split module files

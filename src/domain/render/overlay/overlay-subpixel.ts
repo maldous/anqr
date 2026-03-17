@@ -1,2 +1,2 @@
-export { getSubpixelOverlayData } from "./get-subpixel-overlay-data";
-export { generateSubpixelMatrix } from "./generate-subpixel-matrix";
+// Shim — canonical location: packages/domain/render/src/overlay/overlay-subpixel.ts
+export * from "../../../../packages/domain/render/src/overlay/overlay-subpixel";

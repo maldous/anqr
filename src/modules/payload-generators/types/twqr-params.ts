@@ -1,7 +1,2 @@
-export interface TWQRParams {
-  merchantId: string;
-  merchantName: string;
-  merchantCity?: string;
-  amount?: number;
-  taxId?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/twqr-params";

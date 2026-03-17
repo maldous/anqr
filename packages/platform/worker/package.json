@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/platform-worker",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/platform-worker",
+  "type": "module"
+}

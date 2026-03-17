@@ -1,4 +1,2 @@
-export interface DiffusionKernel {
-  offsets: Array<{ dx: number; dy: number; weight: number }>;
-  divisor: number;
-}
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-generator/types/diffusion-kernel";

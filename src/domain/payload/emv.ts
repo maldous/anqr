@@ -1,3 +1,2 @@
-export { EMVQRBuilder } from "./emvqr-builder";
-export { parseEMVQR } from "./parse-emvqr";
-export { validateEMVQRCRC } from "./validate-emvqrcrc";
+// Shim — canonical location: packages/domain/payload/src/emv.ts
+export * from "../../../packages/domain/payload/src/emv";

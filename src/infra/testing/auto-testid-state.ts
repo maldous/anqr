@@ -1,3 +1,2 @@
-export const autoTestIdState = {
-  counter: 0,
-};
+// Shim
+export * from "../../../packages/testing/contracts/src/auto-testid-state";

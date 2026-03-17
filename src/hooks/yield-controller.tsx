@@ -1,1 +1,2 @@
-export { YieldController } from "@/features/generator/application/generation/generation-class-yieldcontroller";
+// Shim
+export * from "../../packages/application/generator/src/hooks/yield-controller";

@@ -1,1 +1,2 @@
-export type EncodingMode = "auto" | "numeric" | "alphanumeric" | "byte" | "kanji" | "mixed";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/encoding-mode";

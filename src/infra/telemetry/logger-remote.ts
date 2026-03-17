@@ -1,4 +1,2 @@
-export { enableDiagnostics } from "./enable-diagnostics";
-export { disableDiagnostics } from "./disable-diagnostics";
-export { getDiagnosticsStatus } from "./get-diagnostics-status";
-export { initRemoteDiagnostics } from "./init-remote-diagnostics";
+// Shim — canonical location: packages/observability/telemetry/src/logger-remote.ts
+export * from "../../../packages/observability/telemetry/src/logger-remote";

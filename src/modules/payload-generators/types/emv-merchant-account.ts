@@ -1,5 +1,2 @@
-export interface EMVMerchantAccount {
-  tag: number;
-  gui: string;
-  data: Array<{ tag: string; value: string }>;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/emv-merchant-account";

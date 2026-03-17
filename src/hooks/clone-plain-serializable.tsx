@@ -1,1 +1,2 @@
-export { clonePlainSerializable } from "@/features/generator/application/generation/clone-plain-serializable.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/clone-plain-serializable";

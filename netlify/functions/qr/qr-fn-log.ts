@@ -1,7 +1,2 @@
-import { QR_FN_DIAGNOSTICS } from "./qr-fn-diagnostics";
-
-export function qrFnLog(..._args: unknown[]): void {
-  if (QR_FN_DIAGNOSTICS) {
-    // Diagnostics logging intentionally stubbed out
-  }
-}
+// Shim
+export * from "../../../../packages/platform/node/src/server/qr-fn-log";

@@ -1,17 +1,2 @@
-export type {
-  ImageProperties,
-  DominantColor,
-  ColorInfo,
-  UrlDetails,
-  ContentType,
-  ContentAnalysis,
-} from "./analyzer-content.types";
-export { averageColor } from "./average-color";
-export { calculateContrastRatio } from "./calculate-contrast-ratio";
-export { calculateImageProperties } from "./calculate-image-properties";
-export { detectContentType } from "./detect-content-type";
-export { extractDominantColors } from "./extract-dominant-colors";
-export { parseUrlDetails } from "./parse-url-details";
-
-// Re-export rgbToHex from core
-export { rgbToHex } from "../../render/color/color";
+// Shim — canonical location: packages/domain/qr/src/analyze/analyzer-content.ts
+export * from "../../../../packages/domain/qr/src/analyze/analyzer-content";

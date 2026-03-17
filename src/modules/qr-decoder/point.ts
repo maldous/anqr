@@ -1,4 +1,2 @@
-export interface Point {
-  x: number;
-  y: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-decoder/point";

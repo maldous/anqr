@@ -1,8 +1,2 @@
-export interface AppLinkHelper {
-  platform: "universal" | "android" | "ios" | "custom";
-  scheme?: string;
-  host?: string;
-  path?: string;
-  package?: string;
-  fallbackUrl?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/app-link-helper";

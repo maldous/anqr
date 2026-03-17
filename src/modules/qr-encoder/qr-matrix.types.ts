@@ -1,5 +1,2 @@
-export interface QRMatrix {
-  modules: boolean[][];
-  size: number;
-  version: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/qr-matrix.types";

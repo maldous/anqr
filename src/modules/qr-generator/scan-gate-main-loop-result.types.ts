@@ -1,4 +1,2 @@
-export interface ScanGateMainLoopResult {
-  earlyReturn: HTMLCanvasElement | OffscreenCanvas | null;
-  lastCanvas: HTMLCanvasElement | OffscreenCanvas | null;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/scan-gate-main-loop-result.types";

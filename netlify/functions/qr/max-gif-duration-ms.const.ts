@@ -1,1 +1,2 @@
-export const MAX_GIF_DURATION_MS = 10000;
+// Shim
+export * from "../../../../packages/domain/render/src/server/max-gif-duration-ms.const";

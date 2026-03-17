@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/observability-sentry",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/observability-sentry",
+  "type": "module"
+}

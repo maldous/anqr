@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/config-depcruise",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/config-depcruise",
+  "type": "module"
+}

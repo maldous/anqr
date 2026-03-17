@@ -1,7 +1,2 @@
-/**
- * Validate generic account number (at least 4 digits)
- */
-export function isValidAccountNumber(accNum: string): boolean {
-  const digits = accNum.replaceAll(/\D/g, "");
-  return digits.length >= 4;
-}
+// Shim
+export * from "../../../packages/domain/payload/src/payload-generators/is-valid-account-number";

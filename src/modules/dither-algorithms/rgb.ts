@@ -1,5 +1,2 @@
-export interface RGB {
-  r: number;
-  g: number;
-  b: number;
-}
+// Shim
+export * from "../../../packages/domain/render/src/dither-algorithms/rgb";

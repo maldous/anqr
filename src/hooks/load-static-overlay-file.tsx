@@ -1,1 +1,2 @@
-export { loadStaticOverlayFile } from "@/features/generator/application/input/load-static-overlay-file.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/load-static-overlay-file";

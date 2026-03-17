@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/platform-node",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/platform-node",
+  "type": "module"
+}

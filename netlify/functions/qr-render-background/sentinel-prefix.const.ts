@@ -1,1 +1,2 @@
-export const SENTINEL_PREFIX = "rendering:";
+// Shim
+export * from "../../../../packages/platform/node/src/server/bg-sentinel-prefix.const";

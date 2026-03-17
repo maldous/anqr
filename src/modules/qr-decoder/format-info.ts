@@ -1,4 +1,2 @@
-export interface FormatInfo {
-  eccLevel: number;
-  maskPattern: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-decoder/format-info";

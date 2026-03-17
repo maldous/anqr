@@ -1,1 +1,2 @@
-export type FitMode = "cover" | "contain" | "stretch";
+// Shim
+export * from "../../../apps/web/src/state/types/fit-mode";

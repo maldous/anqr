@@ -1,4 +1,2 @@
-export interface DataSegment {
-  data: string;
-  mode: "numeric" | "alphanumeric" | "byte" | "kanji";
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/data-segment.types";

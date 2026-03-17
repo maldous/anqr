@@ -1,5 +1,2 @@
-export { convertToImageApiUrl } from "./convert-to-image-api-url";
-export { generateImageEmbed } from "./generate-image-embed";
-export { generateIframeEmbed } from "./generate-iframe-embed";
-export { generateMarkdownEmbed } from "./generate-markdown-embed";
-export { generateBBCodeEmbed } from "./generate-bb-code-embed";
+// Shim — canonical location: packages/domain/share/src/embed.ts
+export * from "../../../packages/domain/share/src/embed";

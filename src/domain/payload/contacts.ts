@@ -1,3 +1,2 @@
-export { generateVCard } from "./generate-v-card";
-export { generateMeCard } from "./generate-me-card";
-export { generateBizCard } from "./generate-biz-card";
+// Shim — canonical location: packages/domain/payload/src/contacts.ts
+export * from "../../../packages/domain/payload/src/contacts";

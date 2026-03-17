@@ -1,1 +1,2 @@
-export const GF_EXP = new Uint8Array(512);
+// Shim
+export * from "../../../packages/domain/qr/src/qr-art/gf-exp.const";

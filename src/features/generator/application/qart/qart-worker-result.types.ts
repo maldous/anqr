@@ -1,3 +1,2 @@
-import type { QArtModule } from "./qart-module";
-
-export type QArtWorkerResult = Awaited<ReturnType<QArtModule["generateQArtInWorker"]>>;
+// Shim
+export * from "../../../../../packages/application/generator/src/qart/qart-worker-result.types";

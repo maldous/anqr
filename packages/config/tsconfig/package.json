@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/config-tsconfig",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/config-tsconfig",
+  "type": "module"
+}

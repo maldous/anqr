@@ -1,1 +1,2 @@
-export type OverlayType = "static" | "gif" | "apng" | "webp_anim" | "video";
+// Shim
+export * from "../../../apps/web/src/state/types/overlay.types";

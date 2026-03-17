@@ -1,1 +1,2 @@
-export type TimingStyle = "match_module" | "solid" | "dashed";
+// Shim
+export * from "../../../apps/web/src/state/types/timing-style";

@@ -1,1 +1,2 @@
-export type WatermarkPosition = "center" | "corners" | "edges" | "behind" | "quiet_zone";
+// Shim
+export * from "../../../../packages/domain/render/src/server/watermark-position.types";

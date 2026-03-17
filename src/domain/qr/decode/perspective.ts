@@ -1,4 +1,2 @@
-export { PerspectiveTransform } from "./perspective-transform";
-export { GridSampler } from "./grid-sampler";
-export { DefaultGridSampler } from "./default-grid-sampler";
-export { MathUtils } from "./math-utils";
+// Shim — canonical location: packages/domain/qr/src/decode/perspective.ts
+export * from "../../../../packages/domain/qr/src/decode/perspective";

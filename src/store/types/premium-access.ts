@@ -1,4 +1,2 @@
-export interface PremiumAccess {
-  active: boolean;
-  expiresAt: number | null;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/premium-access";

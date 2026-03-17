@@ -1,1 +1,2 @@
-export { completeAnimationGeneration } from "@/features/generator/application/frames/complete-animation-generation.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/complete-animation-generation";

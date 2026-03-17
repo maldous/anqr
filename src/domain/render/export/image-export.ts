@@ -1,2 +1,2 @@
-export { exportImage } from "./export-image";
-export { downloadImage } from "./download-image";
+// Shim — canonical location: packages/domain/render/src/export/image-export.ts
+export * from "../../../../packages/domain/render/src/export/image-export";

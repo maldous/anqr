@@ -1,5 +1,2 @@
-export const FINDER_POSITIONS = [
-  { row: 0, col: 0 },
-  { row: 0, col: -7 },
-  { row: -7, col: 0 },
-] as const;
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/finder-positions.const";

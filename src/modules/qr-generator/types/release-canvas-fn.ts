@@ -1,1 +1,2 @@
-export type ReleaseCanvasFn = (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-generator/types/release-canvas-fn";

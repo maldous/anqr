@@ -1,6 +1,2 @@
-import type { FinderPattern } from "./finder-pattern";
-
-export interface FinderPatternResult {
-  patterns: FinderPattern[];
-  threshold: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-decoder/finder-pattern-result";

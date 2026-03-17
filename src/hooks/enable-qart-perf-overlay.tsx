@@ -1,1 +1,2 @@
-export const ENABLE_QART_PERF_OVERLAY = false;
+// Shim
+export * from "../../packages/application/generator/src/hooks/enable-qart-perf-overlay";

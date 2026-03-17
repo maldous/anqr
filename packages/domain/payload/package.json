@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/domain-payload",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/domain-payload",
+  "type": "module"
+}

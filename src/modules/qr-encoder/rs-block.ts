@@ -1,4 +1,2 @@
-export interface RSBlock {
-  totalCount: number;
-  dataCount: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/rs-block";

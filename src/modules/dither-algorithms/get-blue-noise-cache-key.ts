@@ -1,3 +1,2 @@
-export function getBlueNoiseCacheKey(size: number, seed: number): string {
-  return `${size}:${seed}`;
-}
+// Shim
+export * from "../../../packages/domain/render/src/dither-algorithms/get-blue-noise-cache-key";

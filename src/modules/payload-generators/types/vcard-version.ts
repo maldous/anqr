@@ -1,1 +1,2 @@
-export type VCardVersion = "2.1" | "3.0" | "4.0";
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/vcard-version";

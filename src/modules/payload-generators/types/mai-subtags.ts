@@ -1,3 +1,2 @@
-export const MAI_SUBTAGS = {
-  GLOBALLY_UNIQUE_ID: "00",
-} as const;
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/mai-subtags";

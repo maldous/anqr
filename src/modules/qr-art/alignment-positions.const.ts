@@ -1,1 +1,2 @@
-export { ALIGNMENT_POSITIONS } from "@/domain/qr/spec/alignment-positions";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-art/alignment-positions.const";

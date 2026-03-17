@@ -1,2 +1,2 @@
-export { generateEvent } from "./generate-event";
-export { generateCalendarSubscription } from "./generate-calendar-subscription";
+// Shim — canonical location: packages/domain/payload/src/calendar.ts
+export * from "../../../packages/domain/payload/src/calendar";

@@ -1,6 +1,2 @@
-export interface MatrixShiftSummary {
-  dr: number;
-  dc: number;
-  diffCount: number;
-  diffPct: number;
-}
+// Shim
+export * from "../../../../packages/application/analyze/src/matrix-shift-summary.types";

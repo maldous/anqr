@@ -1,2 +1,2 @@
-export { orderedDither } from "./ordered-dither";
-export { bayerDither } from "./bayer-dither";
+// Shim — canonical location: packages/domain/render/src/dither/ordered.ts
+export * from "../../../../packages/domain/render/src/dither/ordered";

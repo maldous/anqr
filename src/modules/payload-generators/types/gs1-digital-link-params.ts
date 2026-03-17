@@ -1,7 +1,2 @@
-export interface GS1DigitalLinkParams {
-  gtin: string;
-  baseUrl?: string;
-  lot?: string;
-  ser?: string;
-  expiry?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/gs1-digital-link-params";

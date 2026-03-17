@@ -1,3 +1,2 @@
-export interface LightningParams {
-  invoice: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/lightning-params";

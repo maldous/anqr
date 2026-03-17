@@ -1,1 +1,2 @@
-export type EncodingMode = "auto" | "numeric" | "alphanumeric" | "byte" | "kanji";
+// Shim
+export * from "../../../apps/web/src/state/types/encoding-mode";

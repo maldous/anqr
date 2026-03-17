@@ -1,6 +1,2 @@
-import { ensureElementTestId } from "./ensure-element-testid";
-
-export function assignInTree(root: ParentNode, selector: string): void {
-  const elements = root.querySelectorAll(selector);
-  for (const el of elements) ensureElementTestId(el);
-}
+// Shim
+export * from "../../../packages/testing/contracts/src/assign-auto-testid-in-tree";

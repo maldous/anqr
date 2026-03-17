@@ -1,3 +1,2 @@
-export { ditherPatchSignature } from "./dither-patch-signature";
-export { decodeCanvasData } from "./decode-canvas-data";
-export { clearQuietZone } from "./clear-quiet-zone";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/qr-generator-decode-helpers";

@@ -1,0 +1,164 @@
+require 'json'
+
+default_platform(:ios)
+
+BUILD_OUTPUT = "build"
+PROJECT_ROOT = File.expand_path("../../..", __dir__)
+API_KEY_PATH = File.join(__dir__, "api_key.json")
+
+def load_api_key
+  data = JSON.parse(File.read(API_KEY_PATH))
+  app_store_connect_api_key(
+    key_id: data["key_id"],
+    issuer_id: data["issuer_id"],
+    key_content: data["key"],
+    is_key_content_base64: data["is_key_content_base64"] || false,
+    in_house: data["in_house"] || false
+  )
+end
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+  end
+
+  desc "Sync Capacitor web assets to the iOS project"
+  lane :sync do
+    sh("cd #{PROJECT_ROOT} && npm run build")
+    sh("cd #{PROJECT_ROOT} && npx cap sync ios")
+  end
+
+  desc "Build debug app for simulator"
+  lane :build do
+    sync
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Debug",
+      destination: "generic/platform=iOS Simulator",
+      skip_codesigning: true,
+      skip_archive: true,
+      derived_data_path: "#{BUILD_OUTPUT}/DerivedData"
+    )
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    sync
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "App.xcodeproj"
+    )
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_OUTPUT,
+      output_name: "ANQR.ipa",
+      clean: true
+    )
+    api_key = load_api_key
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Push a new release build to the App Store"
+  lane :release do
+    sync
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "App.xcodeproj"
+    )
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_OUTPUT,
+      output_name: "ANQR.ipa",
+      clean: true
+    )
+    api_key = load_api_key
+    upload_to_app_store(
+      api_key: api_key,
+      submit_for_review: false,
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Upload metadata to App Store Connect via Spaceship API (bypasses deliver first-version bug)"
+  lane :metadata do
+    api_key = load_api_key
+    app_id = CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier) || "link.anqr.app"
+    app = Spaceship::ConnectAPI::App.find(app_id)
+    UI.user_error!("App not found in App Store Connect") unless app
+
+    metadata_path = File.join(__dir__, "metadata", "en-US")
+
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("No editable iOS version found in App Store Connect") unless version
+
+    loc = version.get_app_store_version_localizations.find { |l| l.locale == "en-US" }
+    UI.user_error!("No en-US localization found") unless loc
+
+    file_map = {
+      "description" => :description, "keywords" => :keywords, "support_url" => :support_url,
+      "marketing_url" => :marketing_url, "promotional_text" => :promotional_text
+    }
+    attrs = {}
+    file_map.each do |file, key|
+      path = File.join(metadata_path, "#{file}.txt")
+      attrs[key] = File.read(path).strip if File.exist?(path)
+    end
+
+    release_notes_path = File.join(metadata_path, "release_notes.txt")
+    if File.exist?(release_notes_path)
+      attrs[:whats_new] = File.read(release_notes_path).strip
+    end
+
+    UI.message("Updating version localization: #{attrs.keys.join(', ')}")
+    loc.update(attributes: {
+      description: attrs[:description],
+      keywords: attrs[:keywords],
+      supportUrl: attrs[:support_url],
+      marketingUrl: attrs[:marketing_url],
+      promotionalText: attrs[:promotional_text],
+      whatsNew: attrs[:whats_new]
+    }.compact)
+    UI.success("Version localization updated for en-US")
+
+    copyright_path = File.join(metadata_path, "copyright.txt")
+    if File.exist?(copyright_path)
+      copyright_val = File.read(copyright_path).strip
+      UI.message("Setting version copyright: #{copyright_val}")
+      version.update(attributes: { copyright: copyright_val })
+      UI.success("Version copyright updated")
+    end
+
+    UI.success("All metadata uploaded successfully")
+  end
+
+  desc "Build a signed release archive (no upload)"
+  lane :archive do
+    sync
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "App.xcodeproj"
+    )
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_OUTPUT,
+      output_name: "ANQR.ipa",
+      clean: true
+    )
+  end
+end

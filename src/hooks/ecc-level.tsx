@@ -1,3 +1,2 @@
-import type { QRGeneratorConfig } from "../domain/render/generator";
-
-export type EccLevel = QRGeneratorConfig["errorCorrection"];
+// Shim
+export * from "../../packages/application/generator/src/hooks/ecc-level";

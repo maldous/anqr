@@ -1,1 +1,2 @@
-export const CONFIG_SETTLE_DEBOUNCE_MS = 300;
+// Shim
+export * from "../../packages/application/generator/src/hooks/config-settle-debounce-ms";

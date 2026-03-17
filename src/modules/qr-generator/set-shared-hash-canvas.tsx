@@ -1,5 +1,2 @@
-import { sharedHashCanvasState } from "./shared-hash-canvas-state";
-
-export function setSharedHashCanvas(value: HTMLCanvasElement | OffscreenCanvas | null) {
-  sharedHashCanvasState.current = value;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/set-shared-hash-canvas";

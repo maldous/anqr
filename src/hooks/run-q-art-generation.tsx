@@ -1,1 +1,2 @@
-export { runQArtGeneration } from "@/features/generator/application/qart/run-q-art-generation.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/run-q-art-generation";

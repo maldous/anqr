@@ -1,1 +1,2 @@
-export const QR_FN_DIAGNOSTICS = process.env.ANQR_QR_FN_DIAGNOSTICS === "1";
+// Shim
+export * from "../../../../packages/platform/node/src/server/qr-fn-diagnostics";

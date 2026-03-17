@@ -1,6 +1,2 @@
-import type { RGB } from "./rgb";
-
-export interface RGBWithMeta extends RGB {
-  halftone?: boolean;
-  sizeRatio?: number;
-}
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-generator/types/rgb-with-meta";

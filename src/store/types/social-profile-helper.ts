@@ -1,12 +1,2 @@
-export interface SocialProfileHelper {
-  platform:
-    | "linkedin"
-    | "twitter"
-    | "instagram"
-    | "facebook"
-    | "tiktok"
-    | "youtube"
-    | "github"
-    | "other";
-  username: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/social-profile-helper";

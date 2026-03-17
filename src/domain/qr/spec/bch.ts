@@ -1,2 +1,2 @@
-export { getBCHTypeInfo } from "./get-bch-type-info";
-export { getBCHTypeNumber } from "./get-bch-type-number";
+// Shim — canonical location: packages/domain/qr/src/spec/bch.ts
+export * from "../../../../packages/domain/qr/src/spec/bch";

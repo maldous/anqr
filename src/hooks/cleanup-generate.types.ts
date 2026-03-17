@@ -1,1 +1,2 @@
-export { cleanupGenerateState } from "@/features/generator/application/generation/cleanup-generate-state.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/cleanup-generate.types";

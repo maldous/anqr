@@ -1,2 +1,2 @@
-export { getSharedHashCanvasInUse } from "./get-shared-hash-canvas-in-use";
-export { setSharedHashCanvasInUse } from "./set-shared-hash-canvas-in-use";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/shared-hash-canvas-in-use";

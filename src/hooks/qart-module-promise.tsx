@@ -1,2 +1,2 @@
-export { getQartModulePromise } from "./get-qart-module-promise";
-export { setQartModulePromise } from "./set-qart-module-promise";
+// Shim
+export * from "../../packages/application/generator/src/hooks/qart-module-promise";

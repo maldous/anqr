@@ -1,5 +1,2 @@
-/**
- * Shared type definitions for exporter module.
- */
-
-export type ExporterModule = typeof import("@/modules/exporter");
+// Shim
+export * from "../../../../../packages/application/generator/src/export/export-shared-types";

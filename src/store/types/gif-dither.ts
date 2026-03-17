@@ -1,1 +1,2 @@
-export type GifDither = "off" | "floyd" | "ordered";
+// Shim
+export * from "../../../apps/web/src/state/types/gif-dither";

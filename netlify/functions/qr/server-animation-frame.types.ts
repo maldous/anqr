@@ -1,7 +1,2 @@
-import { type Canvas } from "@napi-rs/canvas";
-
-export interface ServerAnimationFrame {
-  canvas: Canvas;
-  delay: number; // milliseconds
-  disposalType: number;
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/server-animation-frame.types";

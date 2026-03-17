@@ -1,11 +1,2 @@
-export interface EthereumHelper {
-  targetAddress: string;
-  chainId?: number;
-  value?: string;
-  gas?: number;
-  gasLimit?: number;
-  gasPrice?: string;
-  tokenAddress?: string;
-  tokenValue?: string;
-  functionName?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/ethereum-helper";

@@ -1,1 +1,2 @@
-export type SafetyMode = "off" | "balanced" | "strict";
+// Shim
+export * from "../../../apps/web/src/state/types/safety-mode";

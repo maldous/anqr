@@ -1,1 +1,2 @@
-export { applyPatternStackToCanvas } from "@/features/generator/application/frames/apply-pattern-stack-to-canvas.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/apply-pattern-stack-to-canvas";

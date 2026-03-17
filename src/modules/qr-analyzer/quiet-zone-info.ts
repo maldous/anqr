@@ -1,7 +1,2 @@
-export interface QuietZoneInfo {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-  adequate: boolean;
-}
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/quiet-zone-info";

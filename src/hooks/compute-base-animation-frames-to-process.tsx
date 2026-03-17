@@ -1,1 +1,2 @@
-export { computeBaseAnimationFramesToProcess } from "@/features/generator/application/frames/compute-base-animation-frames-to-process.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/compute-base-animation-frames-to-process";

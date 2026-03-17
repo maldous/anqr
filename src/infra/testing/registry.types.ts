@@ -1,4 +1,2 @@
-export type RegistryState = {
-  usedBySource: Map<string, string>;
-  countsByBase: Map<string, number>;
-};
+// Shim
+export * from "../../../packages/testing/contracts/src/registry.types";

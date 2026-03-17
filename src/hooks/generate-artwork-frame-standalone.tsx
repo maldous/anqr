@@ -1,1 +1,2 @@
-export { generateArtworkFrameStandalone } from "@/features/generator/application/frames/generate-artwork-frame-standalone.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/generate-artwork-frame-standalone";

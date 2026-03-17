@@ -1,4 +1,2 @@
-export const formatDecoderNumBits = (numBits: number | null) => {
-  if (numBits === null) return <span className="text-muted-foreground">N/A</span>;
-  return `${numBits} bits`;
-};
+// Shim
+export * from "../../../../packages/application/analyze/src/format-decoder-num-bits";

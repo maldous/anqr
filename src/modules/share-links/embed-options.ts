@@ -1,7 +1,2 @@
-export interface EmbedOptions {
-  width?: number;
-  height?: number;
-  responsive?: boolean;
-  showBorder?: boolean;
-  includeLink?: boolean;
-}
+// Shim
+export * from "../../../packages/domain/share/src/share-links/embed-options";

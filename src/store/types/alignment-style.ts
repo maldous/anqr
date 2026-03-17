@@ -1,1 +1,2 @@
-export type AlignmentStyle = "match_finder" | "square" | "rounded" | "circle";
+// Shim
+export * from "../../../apps/web/src/state/types/alignment-style";

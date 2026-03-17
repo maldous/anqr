@@ -1,1 +1,2 @@
-export { computeSafetyAdjustments } from "@/features/generator/application/safety/compute-safety-adjustments.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/compute-safety-adjustments";

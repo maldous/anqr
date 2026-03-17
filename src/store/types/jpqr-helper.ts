@@ -1,6 +1,2 @@
-export interface JPQRHelper {
-  storeId: string;
-  merchantName: string;
-  merchantCity?: string;
-  amount?: number;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/jpqr-helper";

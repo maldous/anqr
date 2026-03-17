@@ -1,3 +1,4 @@
+// Shim
 /**
  * QR Decoder - Consolidated decoder implementation
  * High-quality QR code decoding with multiple fallback strategies

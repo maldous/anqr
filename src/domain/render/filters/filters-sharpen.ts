@@ -1,10 +1,2 @@
-/**
- * QR Generator Sharpen Filters
- * Re-exports from overlay module (canonical source)
- */
-
-import { createLogger } from "../../../infra/logging/logger";
-
-const _log = createLogger("GENERATE");
-
-export { sharpen as applySharpen } from "../../../modules/overlay";
+// Shim — canonical location: packages/domain/render/src/filters/filters-sharpen.ts
+export * from "../../../../packages/domain/render/src/filters/filters-sharpen";

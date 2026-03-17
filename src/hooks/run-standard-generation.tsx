@@ -1,1 +1,2 @@
-export { runStandardGeneration } from "@/features/generator/application/generation/run-standard-generation.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/run-standard-generation";

@@ -1,4 +1,2 @@
-export interface GradientStop {
-  pos: number;
-  color: string;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/core/gradient-stop";

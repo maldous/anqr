@@ -1,1 +1,2 @@
-export * from "../infra/testing/auto-testid";
+// Shim
+export * from "../../apps/web/src/lib/auto-testid";

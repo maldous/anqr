@@ -1,3 +1,2 @@
-export type { MediaStoreWriterPlugin } from "./media-store.types";
-export { MediaStoreWriter } from "./media-store-writer";
-export { saveBase64ToDocuments } from "./save-base64-to-documents";
+// Shim — canonical location: packages/platform/native/src/media-store/media-store.ts
+export * from "../../../../packages/platform/native/src/media-store/media-store";

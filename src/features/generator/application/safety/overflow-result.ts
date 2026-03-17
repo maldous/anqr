@@ -1,4 +1,2 @@
-export interface OverflowResult {
-  result: HTMLCanvasElement | OffscreenCanvas | null;
-  succeeded: boolean;
-}
+// Shim
+export * from "../../../../../packages/application/generator/src/safety/overflow-result";

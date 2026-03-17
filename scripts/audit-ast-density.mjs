@@ -49,8 +49,6 @@ const parseArgs = (argv) => {
   return options;
 };
 
-
-
 const describeVariableDeclaration = (declaration) => {
   const initializer = declaration.getInitializer();
   const name = declaration.getName();

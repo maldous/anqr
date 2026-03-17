@@ -1,1 +1,2 @@
-export type OutputFormat = "png" | "webp" | "gif" | "svg";
+// Shim
+export * from "../../../apps/web/src/state/types/output-format";

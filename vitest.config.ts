@@ -10,7 +10,14 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "happy-dom",
-    include: ["tests/unit/**/*.spec.ts", "tests/unit/**/*.test.ts"],
+    include: [
+      "tests/unit/**/*.spec.ts",
+      "tests/unit/**/*.test.ts",
+      "packages/**/*.spec.ts",
+      "packages/**/*.test.ts",
+      "apps/**/*.spec.ts",
+      "apps/**/*.test.ts",
+    ],
     exclude: ["node_modules", "dist", "android", "ios"],
     coverage: {
       provider: "v8",

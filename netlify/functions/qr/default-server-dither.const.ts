@@ -1,3 +1,2 @@
-import { DitherKind } from "./dither-kind.types";
-
-export const DEFAULT_SERVER_DITHER: DitherKind = "ordered_bayer";
+// Shim
+export * from "../../../../packages/domain/render/src/server/default-server-dither.const";

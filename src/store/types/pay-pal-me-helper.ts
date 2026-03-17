@@ -1,5 +1,2 @@
-export interface PayPalMeHelper {
-  username: string;
-  amount?: number;
-  currencyCode?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/pay-pal-me-helper";

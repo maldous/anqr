@@ -1,20 +1,2 @@
-import type { ContentType } from "./content.types";
-
-export interface ContentTypeDetails {
-  type: ContentType;
-  label: string;
-  url?: string;
-  protocol?: string;
-  wifiSsid?: string;
-  wifiAuth?: string;
-  contactName?: string;
-  phoneNumber?: string;
-  emailAddress?: string;
-  cryptoCurrency?: string;
-  cryptoAddress?: string;
-  amount?: string;
-  hasUtmParams?: boolean;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-}
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/content-details.types";

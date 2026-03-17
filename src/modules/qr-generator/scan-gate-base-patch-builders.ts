@@ -1,3 +1,2 @@
-export { buildScanGateBaseAttempts } from "./build-scan-gate-base-attempts";
-export { buildScanGateDecodeRescuePatches } from "./build-scan-gate-decode-rescue-patches";
-export { buildScanGateFinderRescuePatches } from "./build-scan-gate-finder-rescue-patches";
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/scan-gate-base-patch-builders";

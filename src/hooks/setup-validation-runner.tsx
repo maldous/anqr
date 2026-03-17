@@ -1,1 +1,2 @@
-export { setupValidationRunner } from "@/features/generator/application/generation/setup-validation-runner.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/setup-validation-runner";

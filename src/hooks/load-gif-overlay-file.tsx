@@ -1,1 +1,2 @@
-export { loadGifOverlayFile } from "@/features/generator/application/input/load-gif-overlay-file.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/load-gif-overlay-file";

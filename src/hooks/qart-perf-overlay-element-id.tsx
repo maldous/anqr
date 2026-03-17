@@ -1,1 +1,2 @@
-export const QART_PERF_OVERLAY_ELEMENT_ID = "anqr-qart-perf-overlay";
+// Shim
+export * from "../../packages/application/generator/src/hooks/qart-perf-overlay-element-id";

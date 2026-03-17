@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/testing-fakes",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/testing-fakes",
+  "type": "module"
+}

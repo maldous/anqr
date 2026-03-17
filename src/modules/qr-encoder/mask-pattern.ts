@@ -1,1 +1,2 @@
-export type MaskPattern = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | -1;
+// Shim
+export * from "../../../packages/domain/qr/src/qr-encoder/mask-pattern";

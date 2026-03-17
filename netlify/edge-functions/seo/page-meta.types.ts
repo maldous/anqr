@@ -1,5 +1,2 @@
-export interface PageMeta {
-  title: string;
-  description: string;
-  ogImageUrl?: string;
-}
+// Shim
+export * from "../../../apps/web/src/seo/page-meta.types";

@@ -1,3 +1,2 @@
-// Barrel: state/qr-generator.store — re-exports from canonical store
-export { useQRStore } from "../store/qr-store";
-export type { QRState } from "../store/qr-store";
+// Shim
+export * from "../../apps/web/src/state/qr-store";

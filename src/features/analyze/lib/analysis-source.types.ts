@@ -1,1 +1,2 @@
-export type AnalysisSourceType = "file" | "url" | "camera" | "generator" | null;
+// Shim
+export * from "../../../../packages/application/analyze/src/analysis-source.types";

@@ -1,1 +1,2 @@
-export type AnimationPatternType = "none" | "pulse" | "wave" | "scanline" | "shimmer" | "drift";
+// Shim
+export * from "../../../apps/web/src/state/types/animation-pattern.types";

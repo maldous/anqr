@@ -1,5 +1,2 @@
-export interface MessagingHelper {
-  platform: "whatsapp" | "telegram" | "signal" | "viber" | "line" | "messenger";
-  identifier: string;
-  message?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/messaging-helper";

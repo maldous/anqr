@@ -1,8 +1,2 @@
-export interface FragmentSearchResult {
-  fragment: string;
-  url: string;
-  score: number;
-  matchingModules: number;
-  totalControllable: number;
-  matchPercentage: number;
-}
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-art/types/fragment-search-result";

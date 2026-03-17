@@ -1,1 +1,2 @@
-export type WifiAuth = "WPA" | "WPA2" | "WPA3" | "WEP" | "nopass";
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/wifi-auth";

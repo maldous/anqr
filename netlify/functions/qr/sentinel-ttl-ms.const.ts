@@ -1,1 +1,2 @@
-export const SENTINEL_TTL_MS = 600_000;
+// Shim
+export * from "../../../../packages/platform/node/src/server/sentinel-ttl-ms.const";

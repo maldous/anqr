@@ -1,5 +1,2 @@
-export { clamp } from "./clamp";
-export { clamp01 } from "./clamp01";
-export { createSeededRandom } from "./create-seeded-random";
-export { lerp } from "./lerp";
-export { createRNG } from "./create-rng";
+// Shim — canonical location: packages/domain/render/src/primitives/math.ts
+export * from "../../../../packages/domain/render/src/primitives/math";

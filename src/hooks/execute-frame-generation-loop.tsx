@@ -1,1 +1,2 @@
-export { executeFrameGenerationLoop } from "@/features/generator/application/frames/execute-frame-generation-loop.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/execute-frame-generation-loop";

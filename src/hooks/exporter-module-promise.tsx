@@ -1,2 +1,2 @@
-export { getExporterModulePromise } from "./get-exporter-module-promise";
-export { setExporterModulePromise } from "./set-exporter-module-promise";
+// Shim
+export * from "../../packages/application/generator/src/hooks/exporter-module-promise";

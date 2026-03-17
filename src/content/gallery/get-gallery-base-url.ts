@@ -1,3 +1,2 @@
-export function getGalleryBaseUrl(): string {
-  return "https://anqr.link";
-}
+// Shim
+export * from "../../../apps/web/src/content/gallery/get-gallery-base-url";

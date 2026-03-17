@@ -1,1 +1,2 @@
-export { reproduceQRCode } from "./analyze-reproduction";
+// Shim
+export * from "../../../../packages/application/analyze/src/reproduction-render";

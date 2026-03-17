@@ -1,5 +1,2 @@
-import { exporterModulePromiseState } from "./exporter-module-promise-state";
-
-export function getExporterModulePromise() {
-  return exporterModulePromiseState.current;
-}
+// Shim
+export * from "../../packages/application/generator/src/hooks/get-exporter-module-promise";

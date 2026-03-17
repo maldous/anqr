@@ -1,6 +1,2 @@
-import type { TelHelper } from "./types";
-
-/** Generate telephone URI */
-export function generateTel(params: TelHelper): string {
-  return `tel:${params.number.replaceAll(/\s+/g, "")}`;
-}
+// Shim
+export * from "../../../packages/domain/payload/src/payload-generators/generate-tel";

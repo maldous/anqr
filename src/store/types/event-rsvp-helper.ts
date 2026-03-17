@@ -1,9 +1,2 @@
-export interface EventRsvpHelper {
-  summary?: string;
-  location?: string;
-  description?: string;
-  start?: string;
-  end?: string;
-  organizerEmail?: string;
-  rsvpUrl?: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/event-rsvp-helper";

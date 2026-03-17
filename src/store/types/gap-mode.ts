@@ -1,1 +1,2 @@
-export type GapMode = "none" | "inset" | "stroke" | "negative_space";
+// Shim
+export * from "../../../apps/web/src/state/types/gap-mode";

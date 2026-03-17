@@ -1,4 +1,2 @@
-export interface CloudLinkHelper {
-  service: "gdrive" | "dropbox" | "onedrive" | "icloud" | "box" | "other";
-  url: string;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/cloud-link-helper";

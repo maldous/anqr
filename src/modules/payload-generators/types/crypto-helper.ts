@@ -1,6 +1,2 @@
-export interface CryptoHelper {
-  type: string;
-  address: string;
-  amount?: number;
-  label?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/crypto-helper";

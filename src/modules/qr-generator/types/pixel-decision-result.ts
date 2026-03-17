@@ -1,3 +1,2 @@
-import type { PixelDecisionMatrix } from "./pixel-decision-matrix";
-
-export type PixelDecisionResult = PixelDecisionMatrix;
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-generator/types/pixel-decision-result";

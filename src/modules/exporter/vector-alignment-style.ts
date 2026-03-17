@@ -1,1 +1,2 @@
-export type VectorAlignmentStyle = "match_finder" | "square" | "rounded" | "circle";
+// Shim
+export * from "../../../packages/domain/render/src/exporter/vector-alignment-style";

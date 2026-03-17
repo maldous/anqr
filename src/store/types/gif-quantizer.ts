@@ -1,1 +1,2 @@
-export type GifQuantizer = "median_cut" | "neuquant" | "octree";
+// Shim
+export * from "../../../apps/web/src/state/types/gif-quantizer";

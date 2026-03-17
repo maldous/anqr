@@ -1,3 +1,2 @@
-export type { AnalysisStats } from "./telemetry-stats.types";
-export { calculateAnalysisStats } from "./calculate-analysis-stats";
-export { aggregateStats } from "./aggregate-stats";
+// Shim — canonical location: packages/domain/qr/src/analyze/telemetry-stats.ts
+export * from "../../../../packages/domain/qr/src/analyze/telemetry-stats";

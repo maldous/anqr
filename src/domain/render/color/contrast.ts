@@ -1,3 +1,2 @@
-export { meetsContrastAA } from "./meets-contrast-aa";
-export { meetsContrastAAA } from "./meets-contrast-aaa";
-export { adjustForContrast } from "./adjust-for-contrast";
+// Shim — canonical location: packages/domain/render/src/color/contrast.ts
+export * from "../../../../packages/domain/render/src/color/contrast";

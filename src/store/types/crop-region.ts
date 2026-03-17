@@ -1,5 +1,2 @@
-export interface CropRegion {
-  x: number;
-  y: number;
-  size: number;
-}
+// Shim
+export * from "../../../apps/web/src/state/types/crop-region";

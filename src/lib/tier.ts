@@ -1,1 +1,2 @@
-export type Tier = "basic" | "advanced" | "professional";
+// Shim
+export * from "../../apps/web/src/lib/tier";

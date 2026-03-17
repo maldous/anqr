@@ -1,5 +1,2 @@
-import { sharedHashCanvasState } from "./shared-hash-canvas-state";
-
-export function getSharedHashCanvas() {
-  return sharedHashCanvasState.current;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/get-shared-hash-canvas";

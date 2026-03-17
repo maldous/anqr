@@ -1,0 +1,1 @@
+export const REGISTRY_KEY = "__ANQR_DYNAMIC_TESTID_REGISTRY__";

@@ -1,2 +1,2 @@
-export { getOverlayData } from "./get-overlay-data";
-export { loadImageDataRGB } from "./load-image-data-rgb";
+// Shim — canonical location: packages/domain/render/src/overlay/overlay-data.ts
+export * from "../../../../packages/domain/render/src/overlay/overlay-data";

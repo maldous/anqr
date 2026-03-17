@@ -1,1 +1,2 @@
-export { downloadSvgFormat } from "@/features/generator/application/export/download-svg-format.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/download-svg-format";

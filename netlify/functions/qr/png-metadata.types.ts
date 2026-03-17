@@ -1,8 +1,2 @@
-export interface PngMetadata {
-  title?: string;
-  author?: string;
-  description?: string;
-  copyright?: string;
-  creationTime?: string;
-  software?: string;
-}
+// Shim
+export * from "../../../../packages/domain/render/src/server/png-metadata.types";

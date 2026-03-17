@@ -1,1 +1,2 @@
-export type WatermarkKind = "text" | "image" | "pattern";
+// Shim
+export * from "../../../../packages/domain/render/src/server/watermark-kind.types";

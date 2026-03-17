@@ -1,3 +1,4 @@
+// Shim
 /**
  * QR Encoder Module
  * Our own QR code generator - zero external dependencies

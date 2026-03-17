@@ -1,2 +1,2 @@
-export { isAnimatedWebP } from "./is-animated-web-p";
-export { detectImageFormat } from "./detect-image-format";
+// Shim — canonical location: packages/domain/render/src/animation/format-detection.ts
+export * from "../../../../packages/domain/render/src/animation/format-detection";

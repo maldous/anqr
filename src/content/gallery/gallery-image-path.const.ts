@@ -1,1 +1,2 @@
-export const GALLERY_IMAGE_PATH = "/gallery";
+// Shim
+export * from "../../../apps/web/src/content/gallery/gallery-image-path.const";

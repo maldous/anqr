@@ -2,6 +2,15 @@
   "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json",
   "version": "0.2",
   "language": "en",
+  "files": [
+    "src/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "apps/**/*.{ts,tsx}",
+    "scripts/**/*.mjs",
+    "docs/**/*.md",
+    "migration/**/*.md",
+    "**/*.json"
+  ],
   "ignorePaths": [
     "node_modules",
     "dist",

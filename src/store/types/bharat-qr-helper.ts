@@ -1,1 +1,2 @@
-export type { BharatQRParams as BharatQRHelper } from "@/modules/payload-generators/types/bharat-qr-params";
+// Shim
+export * from "../../../apps/web/src/state/types/bharat-qr-helper";

@@ -2,9 +2,15 @@ import path from "node:path";
 import process from "node:process";
 import { SyntaxKind } from "ts-morph";
 
-export const DEFAULT_GLOBS = ["**/*.{ts,tsx,d.ts}", "!**/node_modules/**", "!**/.git/**", "!**/dist/**"];
+export const DEFAULT_GLOBS = [
+  "**/*.{ts,tsx,d.ts}",
+  "!**/node_modules/**",
+  "!**/.git/**",
+  "!**/dist/**",
+];
 
-export const normalizePath = (filePath) => path.relative(process.cwd(), filePath).replaceAll("\\", "/");
+export const normalizePath = (filePath) =>
+  path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 
 export const isFunctionLikeInitializer = (initializer) =>
   initializer?.getKind() === SyntaxKind.ArrowFunction ||

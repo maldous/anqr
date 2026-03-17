@@ -1,9 +1,2 @@
-let _logged = false;
-export const blobStoreDisabledLogged = {
-  get(): boolean {
-    return _logged;
-  },
-  set(value: boolean): void {
-    _logged = value;
-  },
-};
+// Shim
+export * from "../../../../packages/platform/node/src/server/blob-store-disabled-logged.const";

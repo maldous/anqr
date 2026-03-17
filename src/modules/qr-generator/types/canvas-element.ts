@@ -1,1 +1,2 @@
-export type CanvasElement = HTMLCanvasElement | OffscreenCanvas;
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-generator/types/canvas-element";

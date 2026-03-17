@@ -1,5 +1,2 @@
-export interface DetectedColors {
-  foreground: string;
-  background: string;
-  contrastRatio: number;
-}
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/detected-colors";

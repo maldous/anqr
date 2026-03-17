@@ -1,0 +1,12 @@
+export type { BitPixelMapping, RSBlockInfo, ECCLevel } from "./bit-mapping.types";
+export { getModuleCount } from "./get-module-count";
+export { getRSBlockInfo } from "./get-rs-block-info";
+export { getTotalDataBytes } from "./get-total-data-bytes";
+export { getTotalCodewords } from "./get-total-codewords";
+export { pixelToIndex } from "./pixel-to-index";
+export { indexToPixel } from "./index-to-pixel";
+export { buildBitPixelMap } from "./build-bit-pixel-map";
+export { getDataPixelIndices } from "./get-data-pixel-indices";
+export { buildPixelToBitMap } from "./build-pixel-to-bit-map";
+export { buildBitToMappingMap } from "./build-bit-to-mapping-map";
+export { clearBitMappingCache } from "./clear-bit-mapping-cache";

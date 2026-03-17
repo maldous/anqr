@@ -1,5 +1,2 @@
-import { sharedHashCanvasInUseState } from "./shared-hash-canvas-in-use-state";
-
-export function setSharedHashCanvasInUse(value: boolean) {
-  sharedHashCanvasInUseState.current = value;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/set-shared-hash-canvas-in-use";

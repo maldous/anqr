@@ -1,5 +1,2 @@
-export interface HSL {
-  h: number;
-  s: number;
-  l: number;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/core/hsl";

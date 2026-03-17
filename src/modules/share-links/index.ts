@@ -1,3 +1,4 @@
+// Shim
 /**
  * Share Links Module
  * URL parameter handling, embed code generation, and social sharing

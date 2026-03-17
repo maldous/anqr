@@ -1,3 +1,2 @@
-export function isTimingPattern(row: number, col: number): boolean {
-  return row === 6 || col === 6;
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-art/is-timing-pattern";

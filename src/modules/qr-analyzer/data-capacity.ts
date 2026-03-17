@@ -1,6 +1,2 @@
-export interface DataCapacity {
-  used: number;
-  total: number;
-  percentage: number;
-  overflow: boolean;
-}
+// Shim
+export * from "../../../packages/domain/analyze/src/qr-analyzer/data-capacity";

@@ -1,1 +1,2 @@
-export { downloadAnimatedGifFormat } from "@/features/generator/application/export/download-animated-gif-format.service";
+// Shim
+export * from "../../packages/application/generator/src/hooks/download-animated-gif-format";

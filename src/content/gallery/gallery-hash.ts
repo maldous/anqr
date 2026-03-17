@@ -1,8 +1,2 @@
-export function hashFnv1a(input: string): string {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.codePointAt(i)!;
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(36);
-}
+// Shim
+export * from "../../../apps/web/src/content/gallery/gallery-hash";

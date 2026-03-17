@@ -1,1 +1,2 @@
-export type ModuleStyleOption = "square" | "rounded" | "dots" | "diamond" | "connected";
+// Shim
+export * from "../../apps/web/src/lib/module-style-option.types";

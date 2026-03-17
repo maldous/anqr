@@ -1,5 +1,2 @@
-export interface VectorGradient {
-  type: "none" | "linear" | "radial" | "conic";
-  stops: Array<{ pos: number; color: string }>;
-  angle?: number;
-}
+// Shim
+export * from "../../../packages/domain/render/src/exporter/vector-gradient";

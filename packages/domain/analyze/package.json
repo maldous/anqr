@@ -1,0 +1,7 @@
+{
+  "name": "@anqr/domain-analyze",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Contract-first placeholder for @anqr/domain-analyze",
+  "type": "module"
+}

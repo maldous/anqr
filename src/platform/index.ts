@@ -1,3 +1,4 @@
+// Shim
 // Barrel: platform
 export {
   prepareInterstitial,

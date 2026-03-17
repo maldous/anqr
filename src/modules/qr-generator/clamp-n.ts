@@ -1,3 +1,2 @@
-export function clampN(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
+// Shim
+export * from "../../../packages/domain/qr/src/qr-generator/clamp-n";

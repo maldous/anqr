@@ -1,1 +1,2 @@
-export const MAX_OVERLAY_BYTES = 5 * 1024 * 1024;
+// Shim
+export * from "../../../../packages/domain/render/src/server/max-overlay-bytes.const";

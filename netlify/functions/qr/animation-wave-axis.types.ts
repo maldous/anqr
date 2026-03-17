@@ -1,1 +1,2 @@
-export type AnimationWaveAxis = "x" | "y" | "xy";
+// Shim
+export * from "../../../../packages/domain/render/src/server/animation-wave-axis.types";

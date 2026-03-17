@@ -1,7 +1,2 @@
-export interface QRPhParams {
-  accountNumber: string;
-  merchantName: string;
-  merchantCity: string;
-  amount?: number;
-  reference?: string;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/qr-ph-params";

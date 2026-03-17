@@ -1,4 +1,2 @@
-export interface CashAppParams {
-  cashtag: string;
-  amount?: number;
-}
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/cash-app-params";

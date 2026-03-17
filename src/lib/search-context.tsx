@@ -1,1 +1,2 @@
-export { SearchContext } from "@/app/search/search-context-instance";
+// Shim
+export * from "../../apps/web/src/lib/search-context";

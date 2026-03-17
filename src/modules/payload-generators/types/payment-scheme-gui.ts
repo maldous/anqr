@@ -1,17 +1,2 @@
-export const PAYMENT_SCHEME_GUI = {
-  PIX: "br.gov.bcb.pix",
-  PAYNOW: "SG.PAYNOW",
-  PROMPTPAY_MOBILE: "A000000677010111",
-  PROMPTPAY_TAX_ID: "A000000677010112",
-  PROMPTPAY_EWALLET: "A000000677010114",
-  PROMPTPAY_BILLPAY: "A000000677010113",
-  QRIS: "ID.CO.QRIS.WWW",
-  DUITNOW: "MY.COM.DUITNOW",
-  QRPH: "PH.PPMI.P2M",
-  VIETQR: "VN.VIETQR",
-  BHARATQR: "IN.NPCI.BHARATQR",
-  HKFPS: "HK.COM.HKICL",
-  TWQR: "TW.FI.TWQR",
-  JPQR: "JP.OR.JPQR",
-  AUSPAYNET: "AU.COM.NPPA",
-} as const;
+// Shim
+export * from "../../../../packages/domain/payload/src/payload-generators/types/payment-scheme-gui";

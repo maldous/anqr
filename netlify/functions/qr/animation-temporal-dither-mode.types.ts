@@ -1,1 +1,2 @@
-export type AnimationTemporalDitherMode = "off" | "blue_noise" | "flicker_safe";
+// Shim
+export * from "../../../../packages/domain/render/src/server/animation-temporal-dither-mode.types";

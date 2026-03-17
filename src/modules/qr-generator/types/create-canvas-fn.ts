@@ -1,4 +1,2 @@
-export type CreateCanvasFn = (
-  width: number,
-  height: number,
-) => Promise<HTMLCanvasElement | OffscreenCanvas>;
+// Shim
+export * from "../../../../packages/domain/qr/src/qr-generator/types/create-canvas-fn";

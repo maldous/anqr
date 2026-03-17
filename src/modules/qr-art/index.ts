@@ -1,3 +1,4 @@
+// Shim
 /**
  * QArt Module - Artistic QR Code Generation
  *
