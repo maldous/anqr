@@ -1,11 +1,6 @@
 import { useQRStore } from "@/store/qr-store";
 import { HelpLink } from "@/ui/primitives/help-link";
-import type { HelpLinkProps } from "@/ui/primitives/help-link.types";
-
-type ConnectedHelpLinkProps = Omit<
-  HelpLinkProps,
-  "currentTier" | "setTier" | "checkPremiumAccess" | "activatePremiumAccess"
->;
+import type { ConnectedHelpLinkProps } from "./connected-help-link.types";
 
 export function ConnectedHelpLink(props: Readonly<ConnectedHelpLinkProps>) {
   const currentTier = useQRStore((s) => s.tier);
