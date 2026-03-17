@@ -1,8 +1,13 @@
 import type { ReactNode } from "react";
-import { HighlightedLabel } from "@/features/generator/search/search-context";
-import { DynamicTestId } from "@/infra/testing/dynamic-testid";
-import { Label } from "@/ui/primitives/label";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/primitives/select";
+import {
+  DynamicTestId,
+  HighlightedLabel,
+  Label,
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "./section-ui";
 
 export function LabeledTestIdSelectField({
   contentTestId,

@@ -386,6 +386,35 @@ export const viteConfig = defineConfig({
           if (id.includes("node_modules/lucide-react")) {
             return "vendor-icons";
           }
+          // ── Shared code across lazy-load boundaries ─────────────────
+          // These modules are used by both the main entry bundle and
+          // lazy-loaded sections/pages. Extracting them into dedicated
+          // chunks prevents circular chunk dependencies (index ↔ lazy).
+          if (id.includes("/store/")) return "shared-store";
+          if (
+            id.includes("/ui/primitives/") ||
+            (id.includes("/lib/") && !id.includes("node_modules"))
+          ) {
+            return "shared-ui";
+          }
+          if (
+            id.includes("/features/generator/search/") ||
+            id.includes("/infra/") ||
+            (id.includes("/platform/") && !id.includes("/modules/")) ||
+            id.includes("/app/i18n") ||
+            id.includes("/modules/share-links") ||
+            id.includes("/domain/share/") ||
+            id.includes("/build-share-") ||
+            id.includes("/share-section-config")
+          ) {
+            return "shared-infra";
+          }
+          if (
+            id.includes("/content/gallery/") &&
+            !id.includes("gallery-showcase.generated")
+          ) {
+            return "shared-gallery-data";
+          }
           // Lazy-loaded page components
           if (id.includes("/components/Gallery")) {
             return "app-gallery";

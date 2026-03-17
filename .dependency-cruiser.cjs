@@ -5,15 +5,32 @@ module.exports = {
     {
       name: "no-circular",
       severity: "error",
-      comment: "Circular dependencies lead to hard-to-reason-about code.",
+      comment:
+        "Circular dependencies lead to hard-to-reason-about code. " +
+        "Library-internal worker/plugin cycles (Sentry SDK, Capacitor AdMob) " +
+        "are excluded via viaOnly — they are unavoidable third-party artifacts.",
       from: {},
-      to: { circular: true },
+      to: {
+        circular: true,
+        viaOnly: { pathNot: "dist/assets/(esm|worker|validation-worker|web)-" },
+      },
     },
     {
       name: "no-orphans",
       severity: "info",
       comment: "Orphan modules are not reachable from any entry point.",
-      from: { orphan: true, pathNot: ["\\.(spec|test)\\.", "\\.d\\.ts$", "\\.gitkeep$"] },
+      from: {
+        orphan: true,
+        pathNot: [
+          "\\.(spec|test)\\.",
+          "\\.d\\.ts$",
+          "\\.gitkeep$",
+          "^dist/",
+          "^scripts/",
+          "(^|/)\\..+\\.c?[jt]s$",
+          "^[^/]+\\.config\\.",
+        ],
+      },
       to: {},
     },
 
