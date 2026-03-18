@@ -11,7 +11,7 @@ import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/modules/overlay";
 import { prepareInterstitial, showInterstitial } from "@/modules/platform";
 import { type ValidationResult, terminateValidationWorker } from "@/modules/qr-analyzer";
 import { INTRINSICALLY_SCALED_OVERLAY_MODES, type QRGeneratorConfig } from "@/modules/qr-generator";
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore, type QRState } from "@/store/qr-store";
 import type { UseQRGeneratorResult } from "./useQRGenerator.types";
 import { applyCropTransform } from "./apply-crop-transform";
 import { applyFitTransform } from "./apply-fit-transform";
@@ -290,21 +290,21 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // Get all relevant state from store
   // Subscribe to payload to trigger re-renders when payload changes
   // This is critical - without this dependency, config won't update when payload changes
-  const payload = useQRStore((s) => s.payload);
-  const qr = useQRStore((s) => s.qr);
-  const render = useQRStore((s) => s.render);
-  const overlay = useQRStore((s) => s.overlay);
+  const payload = useQRStore((s: QRState) => s.payload);
+  const qr = useQRStore((s: QRState) => s.qr);
+  const render = useQRStore((s: QRState) => s.render);
+  const overlay = useQRStore((s: QRState) => s.overlay);
 
-  const watermark = useQRStore((s) => s.watermark);
-  const output = useQRStore((s) => s.output);
-  const animation = useQRStore((s) => s.animation);
-  const _setAnimationPlaying = useQRStore((s) => s.setAnimationPlaying);
-  const setQrCharacterEncoding = useQRStore((s) => s.setQrCharacterEncoding);
-  const safety = useQRStore((s) => s.safety);
-  const metadata = useQRStore((s) => s.metadata);
-  const auto = useQRStore((s) => s.auto);
-  const getPayloadText = useQRStore((s) => s.getPayloadText);
-  const _setOverlayIntensity = useQRStore((s) => s.setOverlayIntensity);
+  const watermark = useQRStore((s: QRState) => s.watermark);
+  const output = useQRStore((s: QRState) => s.output);
+  const animation = useQRStore((s: QRState) => s.animation);
+  const _setAnimationPlaying = useQRStore((s: QRState) => s.setAnimationPlaying);
+  const setQrCharacterEncoding = useQRStore((s: QRState) => s.setQrCharacterEncoding);
+  const safety = useQRStore((s: QRState) => s.safety);
+  const metadata = useQRStore((s: QRState) => s.metadata);
+  const auto = useQRStore((s: QRState) => s.auto);
+  const getPayloadText = useQRStore((s: QRState) => s.getPayloadText);
+  const _setOverlayIntensity = useQRStore((s: QRState) => s.setOverlayIntensity);
 
   // Auto-pick ECC based on content length and overlay usage
   const autoPickedEcc = useMemo(() => {

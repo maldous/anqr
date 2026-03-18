@@ -1,10 +1,10 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore, type QRState } from "@/store/qr-store";
 
 export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   if (params.maxOverlayIntensityL !== undefined) {
     const intensityL = params.maxOverlayIntensityL;
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -16,7 +16,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   }
   if (params.maxOverlayIntensityM !== undefined) {
     const intensityM = params.maxOverlayIntensityM;
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -28,7 +28,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   }
   if (params.maxOverlayIntensityQ !== undefined) {
     const intensityQ = params.maxOverlayIntensityQ;
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -40,7 +40,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   }
   if (params.maxOverlayIntensityH !== undefined) {
     const intensityH = params.maxOverlayIntensityH;
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -51,5 +51,5 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
     }));
   }
   if (params.gifDisposal)
-    useQRStore.setState((s) => ({ output: { ...s.output, gifDisposal: params.gifDisposal! } }));
+    useQRStore.setState((s: QRState) => ({ output: { ...s.output, gifDisposal: params.gifDisposal! } }));
 }

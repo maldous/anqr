@@ -1,1 +1,1 @@
-export type { Tier } from "@/lib/tier";
+export type Tier = "basic" | "advanced" | "professional";

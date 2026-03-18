@@ -1,8 +1,8 @@
 import type { ShareConfig } from "@/modules/share-links";
 import { useQRStore } from "@/store/qr-store";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyAnimationBasicParams(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyAnimationBasicParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.speed !== undefined) store.setAnimationSpeedMs(params.speed);
   if (params.loop === false) store.setAnimationLoop(false);
   if (params.reverse) store.setAnimationBounce(true);

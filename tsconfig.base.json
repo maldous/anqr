@@ -10,6 +10,155 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@/features/generator/application/*": [
+        "./packages/application/generator/src/*"
+      ],
+      "@/features/generator/hooks/*": [
+        "./apps/web/src/features/generator/hooks/*"
+      ],
+      "@/features/generator/model/*": [
+        "./apps/web/src/features/generator/model/*"
+      ],
+      "@/domain/qr/analyze/*": [
+        "./packages/domain/qr/src/analyze/*"
+      ],
+      "@/domain/qr/encode/*": [
+        "./packages/domain/qr/src/encode/*"
+      ],
+      "@/domain/qr/qart/*": [
+        "./packages/domain/qr/src/qr-art/*"
+      ],
+      "@/domain/qr/spec/*": [
+        "./packages/domain/qr/src/spec/*"
+      ],
+      "@/domain/render/animation": [
+        "./packages/domain/render/src/animation/index.ts"
+      ],
+      "@/domain/render/*": [
+        "./packages/domain/render/src/*"
+      ],
+      "@/platform/browser/canvas/*": [
+        "./packages/platform/browser/src/canvas/*"
+      ],
+      "@/platform/browser/io": [
+        "./packages/platform/browser/src/io/index.ts"
+      ],
+      "@/platform/browser/io/*": [
+        "./packages/platform/browser/src/io/*"
+      ],
+      "@/infra/logging/logger": [
+        "./packages/observability/logging/src/logger.ts"
+      ],
+      "@/infra/telemetry/zaraz": [
+        "./packages/observability/telemetry/src/zaraz.ts"
+      ],
+      "@/infra/testing/dynamic-testid": [
+        "./packages/ui/web/src/dynamic-testid.tsx"
+      ],
+      "@/lib/utils": [
+        "./packages/ui/web/src/utils.ts"
+      ],
+      "@/lib/tier": [
+        "./packages/ui/web/src/tier.ts"
+      ],
+      "@/lib/analyze-message-code": [
+        "./apps/web/src/lib/analyze-message-code.ts"
+      ],
+      "@/lib/analyze-message.types": [
+        "./apps/web/src/lib/analyze-message.types.ts"
+      ],
+      "@/lib/module-style-option.types": [
+        "./packages/domain/render/src/module-style-option.types.ts"
+      ],
+      "@/modules/animation": [
+        "./packages/domain/render/src/animation/compat.ts"
+      ],
+      "@/modules/animation/*": [
+        "./packages/domain/render/src/animation/*"
+      ],
+      "@/modules/core/types": [
+        "./packages/domain/qr/src/core/types.ts"
+      ],
+      "@/modules/dither-algorithms": [
+        "./packages/domain/render/src/dither-algorithms/index.ts"
+      ],
+      "@/modules/dither-algorithms/*": [
+        "./packages/domain/render/src/dither-algorithms/*"
+      ],
+      "@/modules/exporter/*": [
+        "./packages/domain/render/src/exporter/*"
+      ],
+      "@/modules/overlay": [
+        "./packages/domain/render/src/overlay/compat.ts"
+      ],
+      "@/modules/overlay/*": [
+        "./packages/domain/render/src/overlay/*"
+      ],
+      "@/modules/payload-generators": [
+        "./packages/domain/payload/src/payload-generators/index.ts"
+      ],
+      "@/modules/payload-generators/*": [
+        "./packages/domain/payload/src/payload-generators/*"
+      ],
+      "@/modules/platform": [
+        "./packages/platform/native/src/index.ts"
+      ],
+      "@/modules/qr-analyzer": [
+        "./packages/domain/analyze/src/qr-analyzer/index.ts"
+      ],
+      "@/modules/qr-analyzer/*": [
+        "./packages/domain/analyze/src/qr-analyzer/*"
+      ],
+      "@/modules/qr-decoder": [
+        "./packages/domain/qr/src/decode/index.ts"
+      ],
+      "@/modules/qr-decoder/*": [
+        "./packages/domain/qr/src/qr-decoder/*"
+      ],
+      "@/modules/qr-encoder": [
+        "./packages/domain/qr/src/qr-encoder/index.ts"
+      ],
+      "@/modules/qr-encoder/*": [
+        "./packages/domain/qr/src/qr-encoder/*"
+      ],
+      "@/modules/qr-generator": [
+        "./packages/domain/qr/src/qr-generator/index.ts"
+      ],
+      "@/modules/qr-generator/*": [
+        "./packages/domain/qr/src/qr-generator/*"
+      ],
+      "@/modules/qr-spec": [
+        "./packages/domain/qr/src/qr-spec/index.ts"
+      ],
+      "@/modules/qr-spec/*": [
+        "./packages/domain/qr/src/qr-spec/*"
+      ],
+      "@/modules/share-links": [
+        "./packages/domain/share/src/share-links/index.ts"
+      ],
+      "@/modules/share-links/*": [
+        "./packages/domain/share/src/share-links/*"
+      ],
+      "@/store/qr-store": [
+        "./apps/web/src/state/qr-store.ts"
+      ],
+      "@/store/types/*": [
+        "./apps/web/src/state/types/*"
+      ],
+      "@/modules/exporter": [
+        "./packages/domain/render/src/exporter/index.ts"
+      ],
+      "@/modules/qr-art": [
+        "./packages/domain/qr/src/qr-art/index.ts"
+      ],
+      "@/lib/logger": [
+        "./packages/observability/logging/src/logger.ts"
+      ],
+      "@/modules/qr-art/*": [
+        "./packages/domain/qr/src/qr-art/*"
+      ]
+    }
   }
 }

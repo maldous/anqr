@@ -5,9 +5,9 @@ import {
   type DiffusionKernel,
   type OrderedMatrix,
 } from "@/store/qr-store";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyDitheringParams(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyDitheringParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.ditherKind) store.setOverlayDitherKind(params.ditherKind as DitherKind);
   if (params.diffusionKernel)
     store.setOverlayDiffusionKernel(params.diffusionKernel as DiffusionKernel);

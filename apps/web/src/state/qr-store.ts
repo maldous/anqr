@@ -14,7 +14,7 @@
  */
 import { create } from "zustand";
 // Import gradient types from core types (canonical source)
-import type { GradientStop, GradientType } from "../../../../packages/domain/render/src/color/gradient.types";
+import type { GradientStop, GradientType } from "@/modules/core";
 // Import payload generator types and functions from payload-generators module
 import {
   type CryptoHelper,
@@ -27,7 +27,7 @@ import {
   type UrlHelper,
   type VCardHelper,
   type WifiHelper,
-} from "../../../../packages/domain/payload/src/payload-generators";
+} from "@/modules/payload-generators";
 import type {
   AlignmentStyle,
   AnimationPatternType,
@@ -101,8 +101,8 @@ export type {
   VCardVersion,
   WifiAuth,
   WifiHelper,
-} from "../../../../packages/domain/payload/src/payload-generators";
-export type { GradientStop, GradientType } from "../../../../packages/domain/render/src/color/gradient.types";
+} from "@/modules/payload-generators";
+export type { GradientStop, GradientType } from "@/modules/core";
 
 // Main QR Store State
 export interface QRState {
@@ -364,6 +364,8 @@ export interface QRState {
   setAnimationStartFrame: (frame: number) => void;
   setAnimationMaxFrames: (frames: number) => void;
   setAnimationFrameStep: (step: number) => void;
+  setAnimationInterpolate: (mode: "none" | "crossfade" | "morph") => void;
+  setAnimationTemporalDither: (mode: "off" | "blue_noise" | "flicker_safe") => void;
 
   // === OUTPUT ===
   output: {
@@ -918,6 +920,10 @@ export const useQRStore = create<QRState>((set, get) => ({
     set((s) => ({ animation: { ...s.animation, startFrame } })),
   setAnimationMaxFrames: (maxFrames) => set((s) => ({ animation: { ...s.animation, maxFrames } })),
   setAnimationFrameStep: (frameStep) => set((s) => ({ animation: { ...s.animation, frameStep } })),
+  setAnimationInterpolate: (interpolate) =>
+    set((s) => ({ animation: { ...s.animation, interpolate } })),
+  setAnimationTemporalDither: (temporalDither) =>
+    set((s) => ({ animation: { ...s.animation, temporalDither } })),
 
   // Output defaults
   output: {

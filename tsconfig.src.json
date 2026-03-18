@@ -3,11 +3,18 @@
   "compilerOptions": {
     "noEmit": true,
     "jsx": "react-jsx",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
-  "include": ["src", "src/types"]
+  "include": [
+    "src",
+    "src/types"
+  ]
 }

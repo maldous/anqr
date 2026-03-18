@@ -1,1 +1,1 @@
-export * from "./app/boot/main";
+import "../apps/web/src/boot/main";

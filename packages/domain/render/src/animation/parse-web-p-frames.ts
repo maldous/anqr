@@ -23,7 +23,8 @@ export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFra
 
     for (let i = 0; i < frameCount; i++) {
       const result = await decoder.decode({ frameIndex: i });
-      const { image, duration } = result;
+      const { image } = result;
+      const duration = image.duration;
 
       const canvas = document.createElement("canvas");
       canvas.width = image.displayWidth;

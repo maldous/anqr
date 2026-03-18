@@ -1,8 +1,8 @@
 import type { ShareConfig } from "@/modules/share-links";
 import { useQRStore } from "@/store/qr-store";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyQrEncodingParams(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyQrEncodingParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.ec) store.setQrEcc(params.ec as "L" | "M" | "Q" | "H");
   if (params.version) store.setQrVersion(params.version);
   if (params.size) store.setRenderModulePx(params.size);

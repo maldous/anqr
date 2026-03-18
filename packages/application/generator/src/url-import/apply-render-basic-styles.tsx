@@ -1,10 +1,10 @@
 import type { ShareConfig } from "@/modules/share-links";
 import { type AlignmentStyle, type FinderStyle, type TimingStyle } from "@/store/qr-store";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore } from "./store-contract.types";
 import type { ModuleStyleOption } from "@/domain/render/module-style-option.types";
-import type { GradientUpdate } from "./apply-render-params.types";
+import type { UrlImportGradientUpdate } from "./store-contract.types";
 
-export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.fg) store.setRenderFgColor(params.fg);
   if (params.bg) store.setRenderBgColor(params.bg);
   if (params.transparent) store.setRenderBgTransparent(true);
@@ -17,7 +17,7 @@ export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: Stor
     store.setRenderGapMode(params.gapMode as "none" | "inset" | "stroke" | "negative_space");
   if (params.cornerRadius !== undefined) store.setRenderCornerRadius(params.cornerRadius);
   if (params.gradientType) {
-    const gradientUpdate: GradientUpdate = {
+    const gradientUpdate: UrlImportGradientUpdate = {
       type: params.gradientType as "none" | "linear" | "radial" | "conic",
     };
     if (params.gradientStops && params.gradientStops.length > 0) {

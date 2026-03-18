@@ -1,32 +1,32 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore } from "@/store/qr-store";
+import { useQRStore, type QRState } from "@/store/qr-store";
 
 export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
   if (params.eccAwareEnabled)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, eccAwareEnabled: true } }));
+    useQRStore.setState((s: QRState) => ({ overlay: { ...s.overlay, eccAwareEnabled: true } }));
   if (params.eccAwareRiskBudget !== undefined)
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       overlay: { ...s.overlay, eccAwareRiskBudget: params.eccAwareRiskBudget! },
     }));
   if (params.eccAwareWeightMap)
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       overlay: {
         ...s.overlay,
         eccAwareWeightMap: params.eccAwareWeightMap as typeof s.overlay.eccAwareWeightMap,
       },
     }));
   if (params.overlayType)
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       overlay: { ...s.overlay, type: params.overlayType as typeof s.overlay.type },
     }));
   if (params.overlayFramePick)
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       overlay: { ...s.overlay, framePick: params.overlayFramePick as typeof s.overlay.framePick },
     }));
   if (params.cropEnabled)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, cropEnabled: true } }));
+    useQRStore.setState((s: QRState) => ({ overlay: { ...s.overlay, cropEnabled: true } }));
   if (params.cropX !== undefined || params.cropY !== undefined || params.cropSize !== undefined) {
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       overlay: {
         ...s.overlay,
         cropRegion: {
@@ -38,11 +38,11 @@ export function applyOverlayAdvancedParams(params: Partial<ShareConfig>): void {
     }));
   }
   if (params.gifUseFrameDelays === false)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifUseFrameDelays: false } }));
+    useQRStore.setState((s: QRState) => ({ overlay: { ...s.overlay, gifUseFrameDelays: false } }));
   if (params.gifMaxFps !== undefined)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifMaxFps: params.gifMaxFps! } }));
+    useQRStore.setState((s: QRState) => ({ overlay: { ...s.overlay, gifMaxFps: params.gifMaxFps! } }));
   if (params.gifDisposalHandling)
-    useQRStore.setState((s) => ({
+    useQRStore.setState((s: QRState) => ({
       overlay: {
         ...s.overlay,
         gifDisposalHandling: params.gifDisposalHandling as typeof s.overlay.gifDisposalHandling,

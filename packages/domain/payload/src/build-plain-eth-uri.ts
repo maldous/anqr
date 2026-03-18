@@ -18,7 +18,7 @@ export function buildPlainEthURI(params: EthereumEIP681Params): string {
 
   if (params.functionParams) {
     for (const [key, value] of Object.entries(params.functionParams)) {
-      queryParams.set(key, value);
+      queryParams.set(key, String(value));
     }
   }
 

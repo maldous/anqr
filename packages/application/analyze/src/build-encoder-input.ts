@@ -14,7 +14,8 @@ export function buildEncoderInput(
   let data = "";
   const chunk = 0x8000;
   for (let i = 0; i < bytes.length; i += chunk) {
-    data += String.fromCodePoint(...Array.from(bytes.slice(i, i + chunk)));
+    const slice = bytes.slice(i, i + chunk);
+    for (const byte of slice) data += String.fromCodePoint(byte);
   }
   return { kind: "bytes", data };
 }

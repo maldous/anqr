@@ -13,7 +13,7 @@ export function useBannerHeight(): number {
     if (Capacitor.isNativePlatform()) {
       // Set initial estimate for adaptive banner (~50-60px on most devices)
       setBannerHeight(60);
-      const unsubscribe = onBannerHeightChange((height) => {
+      const unsubscribe = onBannerHeightChange((height: number) => {
         setBannerHeight(height);
       });
       return unsubscribe;

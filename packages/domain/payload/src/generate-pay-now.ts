@@ -11,14 +11,14 @@ export function generatePayNow(params: PayNowParams): string {
     .setPayloadFormatIndicator()
     .setPointOfInitiation(!params.amount);
 
-  const proxyTypeCode = {
+  const proxyTypeCode: Record<PayNowParams["type"], string> = {
     mobile: "0",
     uen: "2",
     nric: "1",
-  }[params.type];
+  };
 
   const maiData: Array<{ tag: string; value: string }> = [
-    { tag: "01", value: proxyTypeCode },
+    { tag: "01", value: proxyTypeCode[params.type] },
     { tag: "02", value: params.value },
     { tag: "03", value: params.editable ? "1" : "0" },
   ];

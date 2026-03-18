@@ -10,7 +10,7 @@ export function generatePromptPay(params: PromptPayParams): string {
     .setPayloadFormatIndicator()
     .setPointOfInitiation(!params.amount);
 
-  const aidMap = {
+  const aidMap: Record<PromptPayParams["type"], string> = {
     mobile: PAYMENT_SCHEME_GUI.PROMPTPAY_MOBILE,
     id: PAYMENT_SCHEME_GUI.PROMPTPAY_TAX_ID,
     ewallet: PAYMENT_SCHEME_GUI.PROMPTPAY_EWALLET,

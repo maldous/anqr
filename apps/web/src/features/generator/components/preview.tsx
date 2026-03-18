@@ -7,7 +7,7 @@ import { BusyOverlay } from "../../../../../../packages/ui/web/src/composites/bu
 import { useQRGeneratorContext } from "../../../../../../packages/application/generator/src/hooks/useQRGenerator";
 import { getContrastRatio, parseColor } from "../../../../../../packages/domain/render/src/color/color";
 import { meetsContrastAA, meetsContrastAAA } from "../../../../../../packages/domain/render/src/color/contrast";
-import { useQRStore } from "../../../state/qr-store";
+import { useQRStore, type QRState } from "../../../state/qr-store";
 import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from "./preview-status";
 import type { PreviewProps, RenderState } from "./preview-types";
 
@@ -82,9 +82,9 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
   const noiseCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Use individual selectors to avoid re-renders when unrelated state changes
-  const render = useQRStore((s) => s.render);
-  const safety = useQRStore((s) => s.safety);
-  const qa = useQRStore((s) => s.qa);
+  const render = useQRStore((s: QRState) => s.render);
+  const safety = useQRStore((s: QRState) => s.safety);
+  const qa = useQRStore((s: QRState) => s.qa);
 
   // Reset showWarnings when safetyWarnings change
   useEffect(() => {
@@ -338,7 +338,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                       <div className="flex-1">
                         <p className="text-xs font-medium text-amber-800">{t("sections.safety")}</p>
                         <ul className="text-xs text-amber-700 mt-1 space-y-0.5">
-                          {safetyWarnings.map((warning) => (
+                          {safetyWarnings.map((warning: string) => (
                             <li key={warning}>• {warning}</li>
                           ))}
                         </ul>

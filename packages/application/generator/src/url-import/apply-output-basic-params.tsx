@@ -1,8 +1,8 @@
 import type { ShareConfig } from "@/modules/share-links";
 import { useQRStore } from "@/store/qr-store";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyOutputBasicParams(params: Partial<ShareConfig>, store: StoreState): void {
+export function applyOutputBasicParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.format) store.setOutputFormat(params.format as "png" | "webp" | "gif" | "svg");
   if (params.width !== undefined) store.setOutputWidth(params.width);
   if (params.height !== undefined) store.setOutputHeight(params.height);

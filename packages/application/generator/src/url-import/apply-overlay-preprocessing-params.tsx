@@ -1,9 +1,9 @@
 import type { ShareConfig } from "@/modules/share-links";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore } from "./store-contract.types";
 
 export function applyOverlayPreprocessingParams(
   params: Partial<ShareConfig>,
-  store: StoreState,
+  store: UrlImportStore,
 ): void {
   if (params.colorMode) store.setOverlayColorMode(params.colorMode as "color" | "grayscale" | "bw");
   if (params.brightness !== undefined) store.setOverlayBrightness(params.brightness);

@@ -1,9 +1,8 @@
 import type { ShareConfig } from "@/modules/share-links";
-import type { Tier } from "@/store/qr-store";
-import type { StoreState } from "@/features/generator/model/mobile-split";
+import type { UrlImportStore, UrlImportTier } from "./store-contract.types";
 
-export function applyTierAndPayloadParams(params: Partial<ShareConfig>, store: StoreState): void {
-  let requiredTier: Tier = "basic";
+export function applyTierAndPayloadParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
+  let requiredTier: UrlImportTier = "basic";
   if (params.mode || params.overlayUrl || params.intensity !== undefined) {
     requiredTier = "advanced";
   }

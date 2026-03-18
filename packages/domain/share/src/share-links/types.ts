@@ -4,8 +4,8 @@
  */
 export type { EmbedOptions } from "./embed-options";
 
-import type { AnimationTarget } from "@/store/types/animation-target";
-import type { AnimationWaveAxis } from "@/store/types/animation-wave-axis";
+import type { AnimationTarget } from "../animation-target.types";
+import type { AnimationWaveAxis } from "../animation-wave-axis.types";
 
 /**
  * Maximum recommended URL length for reliable sharing

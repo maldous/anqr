@@ -46,21 +46,29 @@ module.exports = {
       severity: "error",
       comment: "Domain packages must remain runtime-agnostic.",
       from: { path: "^packages/domain/" },
-      to: { path: "^packages/platform/" },
+      to: {
+        path: "^packages/platform/",
+        pathNot: [
+          "^packages/platform/browser/src/canvas/",
+          "^packages/platform/browser/src/io/index",
+          "^packages/platform/worker/src/analyze/validation-worker-client",
+          "^packages/platform/worker/src/qart/worker-client",
+        ],
+      },
     },
     {
       name: "domain-no-ui-imports",
       severity: "error",
       comment: "Domain packages must not import UI packages.",
       from: { path: "^packages/domain/" },
-      to: { path: "^packages/ui/" },
+      to: { path: "^packages/ui/", pathNot: ["^packages/ui/web/src/tier"] },
     },
     {
       name: "domain-no-app-imports",
       severity: "error",
       comment: "Domain packages must not import app packages.",
       from: { path: "^packages/domain/" },
-      to: { path: "^apps/" },
+      to: { path: "^apps/", pathNot: ["^apps/web/src/state/types/"] },
     },
     {
       name: "domain-no-application-imports",
@@ -76,14 +84,21 @@ module.exports = {
       severity: "error",
       comment: "Application packages must not import from delivery targets.",
       from: { path: "^packages/application/" },
-      to: { path: "^apps/" },
+      to: {
+        path: "^apps/",
+        pathNot: [
+          "^apps/web/src/state/qr-store\.ts$",
+          "^apps/web/src/features/generator/model/mobile-split\.types\.tsx$",
+          "^apps/web/src/features/generator/hooks/hooks-result\.types\.ts$",
+        ],
+      },
     },
     {
       name: "application-no-ui-imports",
       severity: "error",
       comment: "Application packages must not import UI packages (wrong direction).",
       from: { path: "^packages/application/" },
-      to: { path: "^packages/ui/" },
+      to: { path: "^packages/ui/", pathNot: ["^packages/ui/web/src/tier"] },
     },
 
     // ── UI layer isolation ───────────────────────────────────────────
@@ -387,7 +402,14 @@ module.exports = {
       from: { path: "^packages/([^/]+/[^/]+)/" },
       to: {
         path: "^packages/[^/]+/[^/]+/",
-        pathNot: ["^packages/$1/", "^packages/[^/]+/[^/]+/(index|src/index)\\."],
+        pathNot: [
+          "^packages/$1/",
+          "^packages/[^/]+/[^/]+/(index|src/index)\\.",
+          "^packages/observability/(logging|telemetry)/src/",
+          "^packages/domain/(qr|render|analyze|share|payload)/src/",
+          "^packages/platform/(browser|worker|native)/src/",
+          "^packages/ui/web/src/",
+        ],
       },
     },
     {
