@@ -1,2 +1,6 @@
 export type { AnalyzeMessageCode } from "./analyze-message-code";
-export type { AnalyzeMessage } from "@/lib/analyze-message.types";
+
+export interface AnalyzeMessage {
+  code: import("./analyze-message-code").AnalyzeMessageCode;
+  params?: Record<string, string | number | boolean | null>;
+}

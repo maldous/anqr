@@ -78,6 +78,9 @@
       "@/modules/animation/*": [
         "./packages/domain/render/src/animation/*"
       ],
+      "@/modules/core": [
+        "./packages/domain/qr/src/core/types.ts"
+      ],
       "@/modules/core/types": [
         "./packages/domain/qr/src/core/types.ts"
       ],
