@@ -1,12 +1,10 @@
-import { Camera as CameraIcon, Image as ImageIcon, Link, Loader2, Upload } from "lucide-react";
-import type { useOverlaySourceActions } from "./use-overlay-source-actions";
+import { Button, Input, Label } from "@/ui/web";
 import { Capacitor } from "@capacitor/core";
+import { Camera as CameraIcon, Image as ImageIcon, Link, Loader2, Upload } from "lucide-react";
 import type React from "react";
-import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import { GALLERY_IMAGES } from "./overlay-section-manifest";
+import type { useOverlaySourceActions } from "./use-overlay-source-actions";
 
 export function OverlaySourcePicker({
   fileInputRef,

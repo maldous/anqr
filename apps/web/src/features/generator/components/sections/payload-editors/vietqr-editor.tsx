@@ -1,11 +1,10 @@
-import type { TFunction } from "i18next";
 import {
-  isValidAccountNumber,
-  isValidBankBin,
+    isValidAccountNumber,
+    isValidBankBin,
 } from "@/application/generator";
+import { Input, Label } from "@/ui/web";
+import type { TFunction } from "i18next";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import type { VietQRForm } from "../payload-section-types";
 
 export const VietqrEditor = ({

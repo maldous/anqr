@@ -1,16 +1,15 @@
+import { AdUnit } from "@/analytics/ads";
+import {
+    getContrastRatio,
+    meetsContrastAA,
+    meetsContrastAAA,
+    parseColor, useQRGeneratorContext
+} from "@/application/generator";
+import { BusyOverlay } from "@/ui/web";
 import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DynamicTestId } from "../../../lib/dynamic-testid";
 import { useTranslation } from "react-i18next";
-import { AdUnit } from "@/analytics/ads";
-import { useQRGeneratorContext } from "@/application/generator";
-import { BusyOverlay } from "@/ui/web";
-import {
-  getContrastRatio,
-  meetsContrastAA,
-  meetsContrastAAA,
-  parseColor,
-} from "@/application/generator";
+import { DynamicTestId } from "../../../lib/dynamic-testid";
 import { useQRStore, type QRState } from "../../../state/qr-store";
 import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from "./preview-status";
 import type { PreviewProps, RenderState } from "./preview-types";

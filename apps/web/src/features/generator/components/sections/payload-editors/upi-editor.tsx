@@ -1,8 +1,7 @@
+import { isValidUpiVpa } from "@/application/generator";
+import { Input, Label } from "@/ui/web";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidUpiVpa } from "@/application/generator";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 
 export function UpiEditor({

@@ -19,12 +19,16 @@ import type {
   OutputFormat as UrlImportOutputFormat,
   OverlayMode,
   PayloadKind as UrlImportPayloadKind,
-  SafetyMode,
   TimingStyle,
   ColorMode,
 } from "@/contracts/generator";
 import type { ModuleStyleOption } from "@/domain/render";
 import type { UrlHelper } from "@/domain/payload/generators";
+import type {
+  GeneratorAutoState,
+  GeneratorMetadataState,
+  GeneratorSafetyState,
+} from "../shared/store-sections.types";
 import type { UrlImportTier } from "./url-import-tier.types";
 
 interface UrlImportPatchableState {
@@ -103,26 +107,8 @@ interface UrlImportPatchableState {
     opacity: number;
     blend: string;
   };
-  metadata: {
-    title: string;
-    author: string;
-    copyright: string;
-    license: string;
-    description: string;
-    creationTime: boolean;
-    customKv: Array<{ k: string; v: string }>;
-  };
-  safety: {
-    mode: SafetyMode;
-    minModulePx: number;
-    minQuietZoneModules: number;
-    lockFinders: boolean;
-    lockTiming: boolean;
-    lockAlign: boolean;
-    lockFormat: boolean;
-    lockVersion: boolean;
-    maxOverlayIntensityByEcc: Record<"L" | "M" | "Q" | "H", number>;
-  };
+  metadata: GeneratorMetadataState;
+  safety: GeneratorSafetyState;
   qa: {
     contrastCheck: boolean;
     simulateBlurPx: number;
@@ -130,11 +116,7 @@ interface UrlImportPatchableState {
     simulateRotationDeg: number;
     showHeatmap: boolean;
   };
-  auto: {
-    pickVersion: boolean;
-    pickEcc: boolean;
-    reduceIntensityUntilSafe: boolean;
-  };
+  auto: GeneratorAutoState;
 }
 
 type UrlImportStateUpdater =

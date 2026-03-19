@@ -1,16 +1,14 @@
 import {
-  isValidABN,
-  isValidEmail,
-  isValidPhone,
+    isValidABN,
+    isValidEmail,
+    isValidPhone,
 } from "@/application/generator";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Input, Label, Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 import type { AusPayNetForm } from "../payload-section-types";

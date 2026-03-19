@@ -47,7 +47,7 @@ export async function renderServerQROutput(
     p.gifMaxFps,
   );
   if (overlayResult instanceof Response) {
-    throw new Error("Unexpected response from loadAndPreprocessOverlay");
+    throw new TypeError("Unexpected response from loadAndPreprocessOverlay");
   }
 
   const { overlayCanvas, overlayFrames, hasAnimatedOverlay } = overlayResult;

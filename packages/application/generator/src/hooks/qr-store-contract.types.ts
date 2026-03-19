@@ -11,11 +11,15 @@ import type {
   GradientType,
   OrderedMatrix,
   OverlayMode,
-  SafetyMode,
   TimingStyle,
   ColorMode,
 } from "@/contracts/generator";
 import type { ModuleStyleOption } from "@/domain/render";
+import type {
+  GeneratorAutoState,
+  GeneratorMetadataState,
+  GeneratorSafetyState,
+} from "../shared/store-sections.types";
 
 interface CropRegion {
   x: number;
@@ -173,31 +177,9 @@ export interface QRGeneratorStoreState {
     moduleJitterPx: number;
     colorCycle: boolean;
   };
-  safety: {
-    mode: SafetyMode;
-    minModulePx: number;
-    minQuietZoneModules: number;
-    lockFinders: boolean;
-    lockTiming: boolean;
-    lockAlign: boolean;
-    lockFormat: boolean;
-    lockVersion: boolean;
-    maxOverlayIntensityByEcc: Record<"L" | "M" | "Q" | "H", number>;
-  };
-  metadata: {
-    title: string;
-    author: string;
-    copyright: string;
-    license: string;
-    description: string;
-    creationTime: boolean;
-    customKv: Array<{ k: string; v: string }>;
-  };
-  auto: {
-    pickVersion: boolean;
-    pickEcc: boolean;
-    reduceIntensityUntilSafe: boolean;
-  };
+  safety: GeneratorSafetyState;
+  metadata: GeneratorMetadataState;
+  auto: GeneratorAutoState;
   setAnimationPlaying: (playing: boolean) => void;
   setQrCharacterEncoding: (encoding: CharacterEncoding) => void;
   getPayloadText: () => string;

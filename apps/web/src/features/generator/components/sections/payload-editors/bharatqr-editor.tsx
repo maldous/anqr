@@ -1,8 +1,7 @@
-import type { TFunction } from "i18next";
 import { isValidUpiVpa } from "@/application/generator";
+import { Input, Label } from "@/ui/web";
+import type { TFunction } from "i18next";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import type { BharatQRForm } from "../payload-section-types";
 import { CityAmountFields } from "./city-amount-fields";
 

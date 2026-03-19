@@ -1,46 +1,44 @@
-import { Capacitor } from "@capacitor/core";
-import {
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Menu,
-  Moon,
-  PanelLeft,
-  Play,
-  Share2,
-  Sun,
-} from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/web";
-import { DynamicTestId } from "../../lib/dynamic-testid";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/ui/web";
-import { Tabs, TabsList, TabsTrigger } from "@/ui/web";
-import { type GalleryCategory } from "../../content/gallery/gallery-manifest";
-import { isRtlLanguage, languages, loadLocale } from "../../i18n";
+import { getShareableUrl } from "@/application/generator";
 import { trackEvent } from "@/infra/telemetry/zaraz";
 import { copyToClipboard } from "@/platform/browser";
 import { prepareInterstitial } from "@/platform/native";
+import {
+    Button, Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue, Tabs, TabsList, TabsTrigger
+} from "@/ui/web";
+import { Capacitor } from "@capacitor/core";
+import {
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    Download,
+    Menu,
+    Moon,
+    PanelLeft,
+    Play,
+    Share2,
+    Sun,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { type GalleryCategory } from "../../content/gallery/gallery-manifest";
+import { isRtlLanguage, languages, loadLocale } from "../../i18n";
+import { DynamicTestId } from "../../lib/dynamic-testid";
+import { useQRStore, type Tier } from "../../state/qr-store";
+import { useBannerHeight } from "../use-banner-height";
 import { buildHeaderShareConfig } from "./build-header-share-config";
-import { getShareableUrl } from "@/application/generator";
-import { type Tier, useQRStore } from "../../state/qr-store";
-import { resolveHeaderPage, type HeaderPage } from "./header-resolve-page";
-import { changeTierWithAdGate } from "./header-tier-gate";
 import { getInitialDarkMode } from "./header-dark-mode";
-import { setupScrollObservers } from "./header-scroll-observers";
-import { HeaderLanguageMenu } from "./header-language-menu";
-import { HeaderMobileNav } from "./header-mobile-nav";
 import { HeaderDesktopNav } from "./header-desktop-nav";
 import { HeaderGalleryFilter } from "./header-gallery-filter";
+import { HeaderLanguageMenu } from "./header-language-menu";
 import { HeaderMobileFooter } from "./header-mobile-footer";
-import { useBannerHeight } from "../use-banner-height";
+import { HeaderMobileNav } from "./header-mobile-nav";
+import { resolveHeaderPage, type HeaderPage } from "./header-resolve-page";
+import { setupScrollObservers } from "./header-scroll-observers";
+import { changeTierWithAdGate } from "./header-tier-gate";
 
 export function Header({
   onToggleSidebar,

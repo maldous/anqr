@@ -1,5 +1,6 @@
 import type { QrGenerateAdvancedInput } from "@/contracts/mcp";
 import { buildBasicServerQRRequestParams, type ServerQRRequestParams } from "@/application/generator/server";
+import { normalizeHexColor } from "./normalize-hex-color";
 
 export function buildAdvancedServerQRRequestParams(
   input: QrGenerateAdvancedInput,
@@ -41,12 +42,12 @@ export function buildAdvancedServerQRRequestParams(
   params.gradientStops =
     input.gradientStops?.map((stop) => ({
       pos: stop.pos,
-      color: stop.color.startsWith("#") ? stop.color : `#${stop.color}`,
+      color: normalizeHexColor(stop.color),
     })) ?? params.gradientStops;
   params.alignmentStyle = input.alignmentStyle ?? params.alignmentStyle;
   params.timingStyle = input.timingStyle ?? params.timingStyle;
   params.palette =
-    input.palette?.map((color) => (color.startsWith("#") ? color : `#${color}`)) ?? params.palette;
+    input.palette?.map(normalizeHexColor) ?? params.palette;
   params.paletteMode = input.paletteMode ?? params.paletteMode;
   params.preserveFinders = input.preserveFinders ?? params.preserveFinders;
   params.preserveTiming = input.preserveTiming ?? params.preserveTiming;
@@ -93,9 +94,7 @@ export function buildAdvancedServerQRRequestParams(
   params.subpixelCenterRule = input.subpixelCenterRule ?? params.subpixelCenterRule;
   params.subpixelNeutralColor =
     input.subpixelNeutralColor
-      ? input.subpixelNeutralColor.startsWith("#")
-        ? input.subpixelNeutralColor
-        : `#${input.subpixelNeutralColor}`
+      ? normalizeHexColor(input.subpixelNeutralColor)
       : params.subpixelNeutralColor;
   params.subpixelFinderOverride = input.subpixelFinderOverride ?? params.subpixelFinderOverride;
   params.halftoneCell = input.halftoneCell ?? params.halftoneCell;
@@ -172,12 +171,9 @@ export function buildAdvancedServerQRRequestParams(
 
   params.webpQuality = input.webpQuality ?? params.webpQuality;
   params.gifColors = input.gifColors ?? params.gifColors;
-  params.bgOverride =
-    input.bgOverride !== undefined
-      ? input.bgOverride.startsWith("#")
-        ? input.bgOverride
-        : `#${input.bgOverride}`
-      : params.bgOverride;
+  if (input.bgOverride !== undefined) {
+    params.bgOverride = normalizeHexColor(input.bgOverride);
+  }
   params.formatExtra = input.formatExtra ?? params.formatExtra;
   params.filename = input.filename ?? params.filename;
   params.includeQuietZone = input.includeQuietZone ?? params.includeQuietZone;

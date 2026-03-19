@@ -1,17 +1,15 @@
-import type { TFunction } from "i18next";
-import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { isValidUrl } from "@/application/generator";
-import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Input, Label, Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/ui/web";
+import type { TFunction } from "i18next";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
+import type { QRState } from "../../../../../state/qr-store";
+import { HighlightedLabel } from "../../../search/search-context";
 
 export const AppLinkEditor = ({
   payload,

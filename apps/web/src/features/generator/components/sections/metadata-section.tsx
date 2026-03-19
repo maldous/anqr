@@ -1,15 +1,11 @@
+import { Button, Input, Label, Switch, Textarea } from "@/ui/web";
 import { Plus, X } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
-import { Switch } from "@/ui/web";
-import { Textarea } from "@/ui/web";
-import { HighlightedLabel } from "../../search/search-context";
 import { useQRStore } from "../../../../state/qr-store";
+import { HighlightedLabel } from "../../search/search-context";
+import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 
 // Counter for generating unique IDs for custom key-value pairs
 let kvIdCounter = 0;

@@ -1,10 +1,7 @@
+import { DateTimePicker, Input, Label, Textarea } from "@/ui/web";
 import type { TFunction } from "i18next";
-import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { DateTimePicker } from "@/ui/web";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
-import { Textarea } from "@/ui/web";
+import { HighlightedLabel } from "../../../search/search-context";
 
 export function EventCoreFields({
   summary,

@@ -1,35 +1,31 @@
+import {
+    Input, Label, Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue, Slider, Switch
+} from "@/ui/web";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/ui/web";
-import { Slider } from "@/ui/web";
-import { Switch } from "@/ui/web";
+    type ColorMode,
+    type DiffusionKernel,
+    type DitherKind,
+    type FitMode,
+    type OrderedMatrix,
+    type OverlayMode,
+    useQRStore,
+} from "../../../../state/qr-store";
 import { HighlightedLabel } from "../../search/search-context";
-import { getAvailableOverlayModes } from "./overlay-section-manifest";
-import { OverlayPreviewPanel } from "./overlay-preview-panel";
-import { OverlaySourcePicker } from "./overlay-source-picker";
-import { computeCropOverlayStyle, resolveImagePreview } from "./overlay-image-utils";
+import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 import { isAllPreservationsEnabled } from "./overlay-crop-utils";
+import { computeCropOverlayStyle, resolveImagePreview } from "./overlay-image-utils";
+import { OverlayPreviewPanel } from "./overlay-preview-panel";
+import { getAvailableOverlayModes } from "./overlay-section-manifest";
+import { OverlaySourcePicker } from "./overlay-source-picker";
 import { useOverlayCropDrag } from "./use-overlay-crop-drag";
 import { useOverlaySourceActions } from "./use-overlay-source-actions";
-import {
-  type ColorMode,
-  type DiffusionKernel,
-  type DitherKind,
-  type FitMode,
-  type OrderedMatrix,
-  type OverlayMode,
-  useQRStore,
-} from "../../../../state/qr-store";
 
 export function OverlaySection() {
   const {

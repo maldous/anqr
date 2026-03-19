@@ -1,2 +1,4 @@
 // Scaffold only. This package has no runtime API until monetization application extraction begins.
-export {};
+export interface ReservedMonetizationScaffold {
+  readonly __reservedMonetizationScaffold: "reserved";
+}

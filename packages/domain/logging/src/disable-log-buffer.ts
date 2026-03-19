@@ -1,1 +1,3 @@
-export function disableLogBuffer(): void {}
+export function disableLogBuffer(): void {
+  return;
+}

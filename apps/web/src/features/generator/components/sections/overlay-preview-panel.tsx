@@ -1,18 +1,15 @@
+import { Button, Label, Slider, Switch } from "@/ui/web";
 import { X } from "lucide-react";
-import type { useOverlayCropDrag } from "./use-overlay-crop-drag";
 import type React from "react";
-import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { HighlightedLabel } from "../../search/search-context";
-import { Label } from "@/ui/web";
-import { Slider } from "@/ui/web";
-import { Switch } from "@/ui/web";
 import type { useQRStore } from "../../../../state/qr-store";
+import { HighlightedLabel } from "../../search/search-context";
 import { buildCropInteractionProps } from "./build-crop-interaction-props";
 import { CropOverlayIndicator } from "./crop-overlay-indicator";
 import type { CropOverlayStyle } from "./crop-overlay-style.types";
 import { handlePreviewImageLoad } from "./handle-preview-image-load";
 import type { PreviewImageSize } from "./preview-image-size.types";
+import type { useOverlayCropDrag } from "./use-overlay-crop-drag";
 
 export function OverlayPreviewPanel({
   overlay,

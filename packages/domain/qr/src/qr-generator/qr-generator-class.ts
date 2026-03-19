@@ -3,6 +3,18 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
+import type { CanvasFactory } from "@/domain/render/canvas";
+import { curveIntensity } from "@/domain/render/intensity";
+import {
+  createGradientFill,
+  drawCenterLogo,
+  drawFrame,
+  drawFrameBackground,
+  generateScaledQR,
+  getScaleFactor,
+  prepareUnifiedOverlayData,
+  renderModules,
+} from "@/domain/render/qr-render";
 import type { GradientConfig } from "@/domain/share";
 import {
   calculateOptimalVersion,
@@ -11,22 +23,18 @@ import {
   resetStringToBytes,
 } from "../qr-encoder";
 import { verifyQRStructure } from "../qr-spec";
-import { qrMatrixCache } from "./cache";
-import type { CanvasFactory } from "@/domain/render/canvas";
-import { createGradientFill, drawCenterLogo, drawFrame, drawFrameBackground } from "@/domain/render/qr-render";
-import { curveIntensity } from "@/domain/render/intensity";
-import { preprocessOverlayCanvas as preprocessOverlayCanvasStandalone } from "./preprocess-overlay-canvas";
-import {
-  generateScaledQR,
-  getScaleFactor,
-  prepareUnifiedOverlayData,
-  renderModules,
-} from "@/domain/render/qr-render";
 import type { AnyCanvas } from "./any-canvas";
-import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from "./types";
-import { validateColor } from "./utils";
+import { buildEffectiveConfig } from "./build-effective-config";
+import { qrMatrixCache } from "./cache";
+import { CanvasPool } from "./canvas-pool";
+import type { DitherPatchCacheEntry } from "./dither-patch-cache-entry.types";
+import { drawStructuralPatterns } from "./draw-structural-patterns";
+import { findOldestCacheKey } from "./find-oldest-cache-key";
+import { generatorLog as log } from "./generator-log";
 import { MatrixWrapper } from "./matrix-wrapper";
+import type { OverlayComplexityCacheEntry } from "./overlay-complexity-cache-entry.types";
 import { PackedMatrixWrapper } from "./packed-matrix-wrapper";
+import { preprocessOverlayCanvas as preprocessOverlayCanvasStandalone } from "./preprocess-overlay-canvas";
 import {
   buildFixedVisualPolicy,
   buildOverlayFamilyKey,
@@ -40,27 +48,22 @@ import {
   ditherPatchSignature,
 } from "./qr-generator-helpers";
 import {
-  type DitherAttemptPatch,
-  type ScanGateCallbacks,
-  type ScanGateCtx,
-  buildDitherAttemptList,
-  runScanGateMainLoop,
-  runScanGateQRFirstFallback,
-  runScanGateRescueLoop,
+    type DitherAttemptPatch,
+    type ScanGateCallbacks,
+    type ScanGateCtx,
+    buildDitherAttemptList,
+    runScanGateMainLoop,
+    runScanGateQRFirstFallback,
+    runScanGateRescueLoop,
 } from "./qr-generator-scan-gate";
 import {
-  buildScanGateBaseAttempts,
-  buildScanGateDecodeRescuePatches,
-  buildScanGateFinderRescuePatches,
-  isAggressiveScanPatch,
+    buildScanGateBaseAttempts,
+    buildScanGateDecodeRescuePatches,
+    buildScanGateFinderRescuePatches,
+    isAggressiveScanPatch,
 } from "./qr-generator-scan-gate-patches";
-import type { DitherPatchCacheEntry } from "./dither-patch-cache-entry.types";
-import { generatorLog as log } from "./generator-log";
-import { buildEffectiveConfig } from "./build-effective-config";
-import { drawStructuralPatterns } from "./draw-structural-patterns";
-import { findOldestCacheKey } from "./find-oldest-cache-key";
-import type { OverlayComplexityCacheEntry } from "./overlay-complexity-cache-entry.types";
-import { CanvasPool } from "./canvas-pool";
+import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from "./types";
+import { validateColor } from "./utils";
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 

@@ -1,8 +1,7 @@
-import type { TFunction } from "i18next";
 import { isValidLightningInvoice } from "@/application/generator";
+import { Label, Textarea } from "@/ui/web";
+import type { TFunction } from "i18next";
 import type { QRState } from "../../../../../state/qr-store";
-import { Label } from "@/ui/web";
-import { Textarea } from "@/ui/web";
 import type { LightningForm } from "../payload-section-types";
 
 export const LightningEditor = ({

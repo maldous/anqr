@@ -1,5 +1,4 @@
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
+import { Input, Label } from "@/ui/web";
 
 export function CityAmountFields({
   cityLabel,

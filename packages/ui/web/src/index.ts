@@ -14,3 +14,4 @@ export type { HelpLinkProps } from "./primitives/help-link.types";
 export * from "./primitives/date-time-picker";
 export * from "./composites/busy-overlay";
 export * from "./composites/mobile-divider";
+export * from "./dynamic-testid";

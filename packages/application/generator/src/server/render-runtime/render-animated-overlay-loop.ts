@@ -1,4 +1,3 @@
-import { type Canvas } from "@napi-rs/canvas";
 import { QRGenerator } from "@/domain/qr/generator";
 import type {
   AnimationEffectConfig,
@@ -10,16 +9,13 @@ import type {
   WatermarkOptions,
 } from "@/domain/render/server";
 import {
-  applyAnimationEffectsToCanvasServer,
-  applyFrameInterpolation,
-  applyModuleAnimationToConfigServer,
-  applyResultEffectsForFrameHelper,
   qrFnLog,
   scaleAndWatermarkFrame,
   sleep,
 } from "@/domain/render/server";
 
 import { generateArtworkFrame } from "./generate-artwork-frame";
+import { renderFrameSequence } from "./render-frame-sequence";
 import { renderQRFrameWithFallback } from "./render-qr-frame-with-fallback";
 
 export async function renderAnimatedOverlayLoop(
@@ -57,8 +53,6 @@ export async function renderAnimatedOverlayLoop(
     renderScalePerModule: animRenderScale,
     renderScaleMinimum: 1,
   };
-  let previousRawModuleInput: Canvas | null = null;
-  let previousRenderedOutput: Canvas | null = null;
   const tAnimStart = Date.now();
   qrFnLog("[ANIMATION] starting animated overlay", {
     frames: overlayFrames.length,
@@ -70,90 +64,63 @@ export async function renderAnimatedOverlayLoop(
     resultEffects: resultAnimationEffects.length,
   });
 
-  const result: ServerAnimationFrame[] = [];
-  for (let i = 0; i < overlayFrames.length; i++) {
-    const tFrame = Date.now();
-    const overlayFrame = overlayFrames[i];
-    let moduleOverlayInput = isArtworkMode
-      ? overlayFrame.canvas
-      : applyAnimationEffectsToCanvasServer(
-          overlayFrame.canvas,
-          moduleAnimationEffects,
-          i,
-          overlayFrames.length,
-        );
-
-    const rawModuleInput = moduleOverlayInput;
-    moduleOverlayInput = applyFrameInterpolation(
-      moduleOverlayInput,
-      previousRawModuleInput,
-      animationInterpolate,
-    );
-    previousRawModuleInput = rawModuleInput;
-
-    const frameConfig = applyModuleAnimationToConfigServer(
-      animConfig as Record<string, unknown>,
-      moduleAnimationEffects,
-      i,
-      overlayFrames.length,
-      animationModuleJitter,
-    ) as typeof config;
-
-    let frameCanvas = await renderQRFrameWithFallback(
-      moduleOverlayInput,
-      i,
-      isArtworkMode,
-      (target, idx, normalize) =>
-        generateArtworkFrame(
-          target,
-          idx,
-          normalize,
-          artworkState,
-          data,
-          ec,
-          version,
-          maskPattern,
-          config,
-          qrGenerator,
-        ),
-      qrGenerator,
-      frameConfig,
-    );
-
-    frameCanvas = applyResultEffectsForFrameHelper(
-      frameCanvas,
-      i,
-      overlayFrames.length,
-      resultAnimationEffects,
-      animationTemporalDither,
-      animationSeed,
-      isArtworkMode,
-    );
-    frameCanvas = applyFrameInterpolation(
-      frameCanvas,
-      previousRenderedOutput,
-      animationInterpolate,
-    );
-    previousRenderedOutput = frameCanvas;
-
-    if (i > 0 && i % 3 === 0) {
-      await sleep(1);
-    }
-    if (i % 10 === 0 || i === overlayFrames.length - 1) {
-      qrFnLog("[ANIMATION] frame progress", {
-        frame: i + 1,
-        total: overlayFrames.length,
-        frameMs: Date.now() - tFrame,
-        elapsedMs: Date.now() - tAnimStart,
-      });
-    }
-
-    result.push({
+  const result = await renderFrameSequence({
+    frames: overlayFrames,
+    isArtworkMode,
+    moduleAnimationEffects,
+    resultAnimationEffects,
+    animationInterpolate,
+    animationTemporalDither,
+    animationSeed,
+    animationModuleJitter,
+    config: animConfig as Record<string, unknown>,
+    getModuleInput: (overlayFrame) => {
+      const tFrame = Date.now();
+      (globalThis as Record<string, unknown>).__ANQR_FRAME_START__ = tFrame;
+      return isArtworkMode ? overlayFrame.canvas : overlayFrame.canvas;
+    },
+    renderFrame: async (moduleOverlayInput, i, frameConfig) => {
+      const overlayFrame = overlayFrames[i];
+      const tFrame = (globalThis as Record<string, unknown>).__ANQR_FRAME_START__ as number | undefined;
+      const frameCanvas = await renderQRFrameWithFallback(
+        moduleOverlayInput ?? overlayFrame.canvas,
+        i,
+        isArtworkMode,
+        (target, idx, normalize) =>
+          generateArtworkFrame(
+            target,
+            idx,
+            normalize,
+            artworkState,
+            data,
+            ec,
+            version,
+            maskPattern,
+            config,
+            qrGenerator,
+          ),
+        qrGenerator,
+        frameConfig,
+      );
+      if (i > 0 && i % 3 === 0) {
+        await sleep(1);
+      }
+      if (i % 10 === 0 || i === overlayFrames.length - 1) {
+        qrFnLog("[ANIMATION] frame progress", {
+          frame: i + 1,
+          total: overlayFrames.length,
+          frameMs: Date.now() - (tFrame ?? Date.now()),
+          elapsedMs: Date.now() - tAnimStart,
+        });
+      }
+      return frameCanvas;
+    },
+    finalizeFrame: (frameCanvas, overlayFrame) => ({
       canvas: scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts),
       delay: overlayFrame.delay,
       disposalType: gifDisposalCode,
-    });
-  }
+    }),
+  });
   qrFnLog("[ANIMATION] all frames rendered", {
     frames: result.length,
     totalMs: Date.now() - tAnimStart,

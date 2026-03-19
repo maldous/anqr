@@ -23,7 +23,10 @@ export {
 } from "./drawing";
 export { computeDarkFactor } from "./compute-dark-factor";
 export { computeLightBlend } from "./compute-light-blend";
+export { applyPaletteColor } from "./apply-palette-color";
+export { applyPerModuleColor } from "./apply-per-module-color";
 export { alignmentCache } from "./alignment-cache";
+export { ensureContrast } from "./ensure-contrast";
 export { getAlignmentPositionsCached } from "./pattern-helpers";
 export { clearBaseMatrixCache, curveIntensity } from "./pixel-matrix-utils";
 export { getScaleFactor, prepareUnifiedOverlayData } from "./pixel-matrix";

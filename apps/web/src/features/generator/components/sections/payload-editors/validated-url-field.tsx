@@ -1,7 +1,6 @@
-import { HighlightedLabel } from "../../../search/search-context";
 import { isValidUrl } from "@/application/generator";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
+import { Input, Label } from "@/ui/web";
+import { HighlightedLabel } from "../../../search/search-context";
 
 export function ValidatedUrlField({
   label,

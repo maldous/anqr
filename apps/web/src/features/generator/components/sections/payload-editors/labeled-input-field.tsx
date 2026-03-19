@@ -1,7 +1,6 @@
+import { Input, Label } from "@/ui/web";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 
 export function LabeledInputField({
   label,

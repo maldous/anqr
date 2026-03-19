@@ -9,14 +9,11 @@ import type {
   WatermarkOptions,
 } from "@/domain/render/server";
 import {
-  applyAnimationEffectsToCanvasServer,
-  applyFrameInterpolation,
-  applyModuleAnimationToConfigServer,
-  applyResultEffectsForFrameHelper,
   scaleAndWatermarkFrame,
 } from "@/domain/render/server";
 
 import { generateArtworkFrame } from "./generate-artwork-frame";
+import { renderFrameSequence } from "./render-frame-sequence";
 import { renderQRFrameWithFallback } from "./render-qr-frame-with-fallback";
 
 export async function renderPatternAnimationLoop(
@@ -40,76 +37,41 @@ export async function renderPatternAnimationLoop(
   outputHeight: number,
   watermarkOpts: WatermarkOptions | null,
 ): Promise<Canvas[]> {
-  const result: Canvas[] = [];
-  let previousRawModuleInput: Canvas | null = null;
-  let previousRenderedOutput: Canvas | null = null;
-  for (let i = 0; i < totalAnimFrames; i++) {
-    let moduleOverlayInput = overlayCanvas;
-    if (moduleOverlayInput && moduleAnimationEffects.length > 0 && !isArtworkMode) {
-      moduleOverlayInput = applyAnimationEffectsToCanvasServer(
-        moduleOverlayInput,
-        moduleAnimationEffects,
+  return renderFrameSequence({
+    frames: Array.from({ length: totalAnimFrames }, (_, frameIndex) => frameIndex),
+    isArtworkMode,
+    moduleAnimationEffects,
+    resultAnimationEffects,
+    animationInterpolate,
+    animationTemporalDither,
+    animationSeed,
+    animationModuleJitter,
+    config,
+    getModuleInput: () => overlayCanvas,
+    renderFrame: (moduleOverlayInput, i, frameConfig) => {
+      const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
+      return renderQRFrameWithFallback(
+        artworkTarget,
         i,
-        totalAnimFrames,
+        isArtworkMode && !!artworkTarget,
+        (target, idx, normalize) =>
+          generateArtworkFrame(
+            target,
+            idx,
+            normalize,
+            artworkState,
+            data,
+            ec,
+            version,
+            maskPattern,
+            config,
+            qrGenerator,
+          ),
+        qrGenerator,
+        frameConfig,
       );
-    }
-
-    if (moduleOverlayInput) {
-      moduleOverlayInput = applyFrameInterpolation(
-        moduleOverlayInput,
-        previousRawModuleInput,
-        animationInterpolate,
-      );
-      previousRawModuleInput = moduleOverlayInput;
-    }
-
-    const frameConfig = applyModuleAnimationToConfigServer(
-      config as Record<string, unknown>,
-      moduleAnimationEffects,
-      i,
-      totalAnimFrames,
-      animationModuleJitter,
-    ) as typeof config;
-
-    const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
-    let frameCanvas = await renderQRFrameWithFallback(
-      artworkTarget,
-      i,
-      isArtworkMode && !!artworkTarget,
-      (target, idx, normalize) =>
-        generateArtworkFrame(
-          target,
-          idx,
-          normalize,
-          artworkState,
-          data,
-          ec,
-          version,
-          maskPattern,
-          config,
-          qrGenerator,
-        ),
-      qrGenerator,
-      frameConfig as Record<string, unknown>,
-    );
-
-    frameCanvas = applyResultEffectsForFrameHelper(
-      frameCanvas,
-      i,
-      totalAnimFrames,
-      resultAnimationEffects,
-      animationTemporalDither,
-      animationSeed,
-      isArtworkMode,
-    );
-    frameCanvas = applyFrameInterpolation(
-      frameCanvas,
-      previousRenderedOutput,
-      animationInterpolate,
-    );
-    previousRenderedOutput = frameCanvas;
-
-    result.push(scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts));
-  }
-  return result;
+    },
+    finalizeFrame: (frameCanvas) =>
+      scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts),
+  });
 }

@@ -1,8 +1,7 @@
+import { Label, Textarea } from "@/ui/web";
 import type { TFunction } from "i18next";
-import { HighlightedLabel } from "../../../search/search-context";
 import type { QRState } from "../../../../../state/qr-store";
-import { Label } from "@/ui/web";
-import { Textarea } from "@/ui/web";
+import { HighlightedLabel } from "../../../search/search-context";
 
 export const CustomEditor = ({
   payload,

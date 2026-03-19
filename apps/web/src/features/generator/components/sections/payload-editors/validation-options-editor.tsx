@@ -1,10 +1,9 @@
-import type { TFunction } from "i18next";
 import { ECC_CAPACITIES_BYTE } from "@/application/analyze";
-import { HighlightedLabel } from "../../../search/search-context";
-import type { QRState } from "../../../../../state/qr-store";
+import { Label, Switch } from "@/ui/web";
+import type { TFunction } from "i18next";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { Label } from "@/ui/web";
-import { Switch } from "@/ui/web";
+import type { QRState } from "../../../../../state/qr-store";
+import { HighlightedLabel } from "../../../search/search-context";
 
 export const ValidationOptionsEditor = ({
   getPayloadText,

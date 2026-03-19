@@ -50,6 +50,31 @@ paginate_hotspots() {
   done
 }
 
+fetch_hotspot_details() {
+  local in_jsonl="$1"
+  local out="$2"
+  : > "$out"
+  while IFS= read -r hotspot; do
+    [ -z "$hotspot" ] && continue
+    key="$(echo "$hotspot" | jq -r '.key // empty')"
+    [ -z "$key" ] && continue
+    req "/api/hotspots/show?hotspot=$key" | jq -c '.' >> "$out"
+  done < "$in_jsonl"
+}
+
+paginate_duplication_files() {
+  local out="$1"
+  : > "$out"
+  p=1
+  while true; do
+    json="$(req "/api/measures/component_tree?component=$PROJECT&metricKeys=duplicated_lines,duplicated_blocks,duplicated_lines_density&qualifiers=FIL&ps=$PS&p=$p")"
+    n="$(echo "$json" | jq '.components | length // 0')"
+    echo "$json" | jq -c '.components[]? | select(.measures != null and (.measures | length) > 0)' >> "$out"
+    [ "$n" -lt "$PS" ] && break
+    p=$((p+1))
+  done
+}
+
 echo "Exporting SonarQube data for $PROJECT"
 
 paginate_issues ""                         "$TMP/issues_all.jsonl"
@@ -58,8 +83,10 @@ paginate_issues "softwareQualities=SECURITY"         "$TMP/issues_security.jsonl
 paginate_issues "softwareQualities=MAINTAINABILITY"  "$TMP/issues_maintainability.jsonl"
 paginate_issues "inNewCodePeriod=true"               "$TMP/issues_new_code.jsonl"
 paginate_hotspots "$TMP/hotspots.jsonl"
+fetch_hotspot_details "$TMP/hotspots.jsonl" "$TMP/hotspot_details.jsonl"
+paginate_duplication_files "$TMP/duplication_files.jsonl"
 
-req "/api/measures/component?component=$PROJECT&metricKeys=bugs,vulnerabilities,code_smells,security_hotspots,ncloc,coverage,duplicated_lines_density,reliability_rating,security_rating,sqale_rating" \
+req "/api/measures/component?component=$PROJECT&metricKeys=bugs,vulnerabilities,code_smells,security_hotspots,ncloc,coverage,duplicated_lines,duplicated_blocks,duplicated_lines_density,reliability_rating,security_rating,sqale_rating" \
   > "$TMP/measures.json"
 
 # ---- assemble WITHOUT arg explosion
@@ -70,6 +97,8 @@ jq -n \
   --slurpfile main "$TMP/issues_maintainability.jsonl" \
   --slurpfile new "$TMP/issues_new_code.jsonl" \
   --slurpfile hot "$TMP/hotspots.jsonl" \
+  --slurpfile hotDetails "$TMP/hotspot_details.jsonl" \
+  --slurpfile dupFiles "$TMP/duplication_files.jsonl" \
   --slurpfile measures "$TMP/measures.json" \
   --arg project "$PROJECT" \
   --arg generated "$(date -Iseconds)" \
@@ -92,7 +121,15 @@ jq -n \
       maintainability: $main,
       new_code: $new
     },
-    hotspots: $hot
+    hotspots: {
+      total: ($hot | length),
+      list: $hot,
+      details: $hotDetails
+    },
+    duplication: {
+      summary: ($measures[0].component.measures | map(select(.metric | startswith("duplicated_")))),
+      files: $dupFiles
+    }
   }' > "$OUT"
 
 rm -rf "$TMP"

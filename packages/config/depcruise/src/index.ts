@@ -1,2 +1,4 @@
 // Scaffold only. This package has no runtime API until shared depcruise config extraction begins.
-export {};
+export interface ReservedDepcruiseScaffold {
+  readonly __reservedDepcruiseScaffold: "reserved";
+}

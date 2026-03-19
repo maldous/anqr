@@ -1,9 +1,7 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "@/domain/qr/generator";
-import type { QRGeneratorConfig } from "@/domain/qr/generator";
+import { QRGenerator, type QRGeneratorConfig } from "@/domain/qr/generator";
 import { generateFullQArt, generateFullQArtOptimal } from "@/domain/qr/qart";
-import type { ArtworkState } from "@/domain/render/server";
-import type { ECCLevel } from "@/domain/render/server";
+import type { ArtworkState, ECCLevel } from "@/domain/render/server";
 
 export async function generateArtworkFrame(
   targetCanvas: Canvas,

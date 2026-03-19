@@ -11,6 +11,7 @@ export type { AnimationEasing } from "./animation-easing.types";
 export type { AnimationInterpolation } from "./animation-interpolation.types";
 export type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 export type { ColorMode } from "./color-mode.types";
+export type { DecoderMetadata } from "./decoder-metadata.types";
 export type { GradientConfig } from "./gradient-config.types";
 export type { GradientStop } from "./gradient-stop.types";
 export type { GradientType } from "./gradient-type.types";

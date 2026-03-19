@@ -1,8 +1,6 @@
 import type { AnimationTarget } from "../animation-target.types";
 import type { AnimationWaveAxis } from "../animation-wave-axis.types";
-import type { EmbedOptions } from "./embed-options";
-
-export type { EmbedOptions };
+export type { EmbedOptions } from "./embed-options";
 
 export interface ShareConfig {
   data?: string;

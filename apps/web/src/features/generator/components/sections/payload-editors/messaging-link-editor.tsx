@@ -1,14 +1,12 @@
-import type { TFunction } from "i18next";
-import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import {
-  generateMessagingLink,
-  isValidPhone,
+    generateMessagingLink,
+    isValidPhone,
 } from "@/application/generator";
+import { Input, Label, Textarea } from "@/ui/web";
+import type { TFunction } from "i18next";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
-import { Textarea } from "@/ui/web";
+import { HighlightedLabel } from "../../../search/search-context";
 import { PlatformSelectField } from "./platform-select-field";
 
 export const MessagingLinkEditor = ({

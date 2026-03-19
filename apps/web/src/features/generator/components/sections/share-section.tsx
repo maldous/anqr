@@ -1,21 +1,18 @@
+import {
+    generateImageEmbed,
+    generateMarkdownEmbed,
+    getShareableUrl,
+    getSocialShareUrls,
+} from "@/application/generator";
+import { trackEvent } from "@/infra/telemetry/zaraz";
+import { copyToClipboard } from "@/platform/browser";
+import { Button, Input, Label, Switch } from "@/ui/web";
 import { Check, Code, Copy, Link, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
-import { Switch } from "@/ui/web";
-import { HighlightedLabel } from "../../search/search-context";
-import { trackEvent } from "@/infra/telemetry/zaraz";
-import { copyToClipboard } from "@/platform/browser";
-import {
-  generateImageEmbed,
-  generateMarkdownEmbed,
-  getShareableUrl,
-  getSocialShareUrls,
-} from "@/application/generator";
 import { useQRStore } from "../../../../state/qr-store";
+import { HighlightedLabel } from "../../search/search-context";
 import { buildShareConfig } from "./share-section-config";
 
 export function ShareSection() {

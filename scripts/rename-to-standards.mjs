@@ -18,28 +18,35 @@ const parseArgs = (argv) => {
     dirs: [...DEFAULT_DIRS],
   };
 
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
+  let index = 0;
+  while (index < argv.length) {
+    const arg = argv[index];
     if (arg === "--apply") {
       options.apply = true;
+      index += 1;
       continue;
     }
     if (arg === "--json") {
       options.json = true;
+      index += 1;
       continue;
     }
     if (arg === "--root") {
-      const nextArg = argv[++i];
+      const nextArg = argv[index + 1];
       options.root = path.resolve(nextArg);
+      index += 2;
       continue;
     }
     if (arg === "--dirs") {
-      const nextArg = argv[++i];
+      const nextArg = argv[index + 1];
       options.dirs = nextArg
         .split(",")
         .map((part) => part.trim())
         .filter(Boolean);
+      index += 2;
+      continue;
     }
+    index += 1;
   }
 
   return options;

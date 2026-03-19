@@ -1,13 +1,12 @@
+import {
+    isValidLatitude,
+    isValidLongitude,
+} from "@/application/generator";
+import { Input, Label } from "@/ui/web";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import {
-  isValidLatitude,
-  isValidLongitude,
-} from "@/application/generator";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
-import { PlusCodeDisplay } from "../payload-plus-code-display";
 import type { EditorProps } from "../payload-editor.types";
+import { PlusCodeDisplay } from "../payload-plus-code-display";
 import { runLookup } from "../run-geo-lookup";
 
 export function GeoEditor({

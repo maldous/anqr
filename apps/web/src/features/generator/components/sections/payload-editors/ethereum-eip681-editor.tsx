@@ -1,15 +1,13 @@
-import type { TFunction } from "i18next";
 import { isValidEthereumAddress } from "@/application/generator";
-import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Input, Label, Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/ui/web";
+import type { TFunction } from "i18next";
+import type { QRState } from "../../../../../state/qr-store";
 import type { EthereumForm } from "../payload-section-types";
 
 export const EthereumEip681Editor = ({

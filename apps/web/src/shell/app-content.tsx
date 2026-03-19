@@ -1,58 +1,56 @@
+import {
+    applyAnimationBasicParams,
+    applyAnimationPatternParams,
+    applyDitheringParams,
+    applyEccIntensityLimits,
+    applyMetadataParams,
+    applyOutputAdvancedParams,
+    applyOutputBasicParams,
+    applyOverlayAdvancedParams,
+    applyOverlayPreprocessingParams,
+    applyOverlayTransformParams,
+    applyQaAndAutoParams,
+    applyQrEncodingParams,
+    applyRenderBasicStyles,
+    applyRenderColorAndPaletteStyles,
+    applyRenderEyeAndFrameStyles,
+    applySafetyParams,
+    applySubpixelAndHalftoneParams,
+    applyTierAndPayloadParams,
+    applyWatermarkParams,
+    parseUrlParams,
+    type UrlImportStore,
+    useQRGeneratorContext,
+} from "@/application/generator";
+import { showNativeToast } from "@/platform/native";
+import { BusyOverlay, MobileDivider, TooltipProvider } from "@/ui/web";
 import { Capacitor } from "@capacitor/core";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  applyAnimationBasicParams,
-  applyAnimationPatternParams,
-  applyDitheringParams,
-  applyEccIntensityLimits,
-  applyMetadataParams,
-  applyOutputAdvancedParams,
-  applyOutputBasicParams,
-  applyOverlayAdvancedParams,
-  applyOverlayPreprocessingParams,
-  applyOverlayTransformParams,
-  applyQaAndAutoParams,
-  applyQrEncodingParams,
-  applyRenderBasicStyles,
-  applyRenderColorAndPaletteStyles,
-  applyRenderEyeAndFrameStyles,
-  applySafetyParams,
-  applySubpixelAndHalftoneParams,
-  applyTierAndPayloadParams,
-  applyWatermarkParams,
-  type UrlImportStore,
-  useQRGeneratorContext,
-} from "@/application/generator";
-import { showNativeToast } from "@/platform/native";
-import { BusyOverlay } from "@/ui/web";
-import { Header } from "./header/header";
-import { MobileDivider } from "@/ui/web";
+import type { GalleryCategory } from "../content/gallery/gallery-manifest";
 import { Preview } from "../features/generator/components/preview";
 import { Sidebar } from "../features/generator/components/sidebar";
-import type { StaticPageType } from "../pages/static-page";
-import { TooltipProvider } from "@/ui/web";
-import type { GalleryCategory } from "../content/gallery/gallery-manifest";
-import { isRtlLanguage, loadLocale } from "../i18n";
-import { parseUrlParams } from "@/application/generator";
-import { useQRStore } from "../state/qr-store";
-import { type PageView, getPageFromLocation } from "../routing/page-resolution";
-import { updateCanonicalUrl, updateHreflangLinks } from "../seo/head-links";
 import {
-  DEFAULT_MOBILE_SPLIT,
-  MAX_MOBILE_SPLIT,
-  MIN_MOBILE_SPLIT,
-  MOBILE_SPLIT_STORAGE_KEY,
+    DEFAULT_MOBILE_SPLIT,
+    MAX_MOBILE_SPLIT,
+    MIN_MOBILE_SPLIT,
+    MOBILE_SPLIT_STORAGE_KEY,
 } from "../features/generator/model/mobile-split";
+import { isRtlLanguage, loadLocale } from "../i18n";
+import type { StaticPageType } from "../pages/static-page";
+import { getPageFromLocation, type PageView } from "../routing/page-resolution";
+import { trimRoutePath } from "../routing/trim-route-path";
+import { updateCanonicalUrl, updateHreflangLinks } from "../seo/head-links";
+import { useQRStore } from "../state/qr-store";
 import { Analyze } from "./analyze";
 import type { CapacitorAppPlugin } from "./capacitor-app-plugin";
 import { Gallery } from "./gallery";
+import { Header } from "./header/header";
+import { LazyLoadFallback } from "./lazy-load-fallback";
 import { log } from "./log";
 import { StaticPage } from "./static-page";
-import { trimRoutePath } from "../routing/trim-route-path";
 import { useBannerHeight } from "./use-banner-height";
 import { WelcomeModal } from "./welcome-modal";
-import { LazyLoadFallback } from "./lazy-load-fallback";
 
 export function AppContent() {
   const { t, i18n } = useTranslation();

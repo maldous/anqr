@@ -1,71 +1,70 @@
+import {
+    Label, Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue
+} from "@/ui/web";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Label } from "@/ui/web";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/ui/web";
 import { i18n } from "../../../../i18n";
-import { HighlightedLabel } from "../../search/search-context";
+import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { type PayloadKind, useQRStore } from "../../../../state/qr-store";
-import {
-  AppLinkEditor,
-  AuspaynetEditor,
-  BharatqrEditor,
-  BizcardEditor,
-  BluetoothEditor,
-  CashappEditor,
-  CalendarSubscriptionEditor,
-  CryptoEditor,
-  CustomEditor,
-  DuitnowEditor,
-  EmvGenericEditor,
-  EmailEditor,
-  EpcSepaEditor,
-  EthereumEip681Editor,
-  EventEditor,
-  EventRsvpEditor,
-  GeoEditor,
-  Gs1DigitalLinkEditor,
-  HkqrEditor,
-  JpqrEditor,
-  LightningEditor,
-  MecardEditor,
-  MessagingLinkEditor,
-  PaynowEditor,
-  PixEditor,
-  PlainTextEditor,
-  PaypalMeEditor,
-  PromptpayEditor,
-  QrisEditor,
-  QrphEditor,
-  RemovedOtpauthEditor,
-  RemovedInventoryEditor,
-  RemovedTicketingEditor,
-  ShortLinkEditor,
-  SocialProfileEditor,
-  SmsEditor,
-  SwissQrBillEditor,
-  TelEditor,
-  TwqrEditor,
-  UtmLinkEditor,
-  UrlEditor,
-  ValidationOptionsEditor,
-  VietqrEditor,
-  VcardEditor,
-  WifiEditor,
-  UpiEditor,
-} from "./payload-editors";
-import { getAvailablePayments } from "./payload-payment-config";
+import { HighlightedLabel } from "../../search/search-context";
+import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 import { PAYLOAD_CATEGORY_KEYS } from "./payload-category-keys";
 import type { EditorProps } from "./payload-editor.types";
+import {
+    AppLinkEditor,
+    AuspaynetEditor,
+    BharatqrEditor,
+    BizcardEditor,
+    BluetoothEditor,
+    CalendarSubscriptionEditor,
+    CashappEditor,
+    CryptoEditor,
+    CustomEditor,
+    DuitnowEditor,
+    EmailEditor,
+    EmvGenericEditor,
+    EpcSepaEditor,
+    EthereumEip681Editor,
+    EventEditor,
+    EventRsvpEditor,
+    GeoEditor,
+    Gs1DigitalLinkEditor,
+    HkqrEditor,
+    JpqrEditor,
+    LightningEditor,
+    MecardEditor,
+    MessagingLinkEditor,
+    PaynowEditor,
+    PaypalMeEditor,
+    PixEditor,
+    PlainTextEditor,
+    PromptpayEditor,
+    QrisEditor,
+    QrphEditor,
+    RemovedInventoryEditor,
+    RemovedOtpauthEditor,
+    RemovedTicketingEditor,
+    ShortLinkEditor,
+    SmsEditor,
+    SocialProfileEditor,
+    SwissQrBillEditor,
+    TelEditor,
+    TwqrEditor,
+    UpiEditor,
+    UrlEditor,
+    UtmLinkEditor,
+    ValidationOptionsEditor,
+    VcardEditor,
+    VietqrEditor,
+    WifiEditor,
+} from "./payload-editors";
+import { getAvailablePayments } from "./payload-payment-config";
 import { usePaymentFormStates, usePaymentFormSync } from "./payload-payment-form-hooks";
 export function PayloadSection() {
   const {

@@ -1,16 +1,15 @@
-import type { TFunction } from "i18next";
 import {
-  isValidEmail,
-  isValidPhone,
-  isValidUrl,
+    isValidEmail,
+    isValidPhone,
+    isValidUrl,
 } from "@/application/generator";
+import { Input, Label } from "@/ui/web";
+import type { TFunction } from "i18next";
+import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import type { QRState } from "../../../../../state/qr-store";
+import { HighlightedLabel } from "../../../search/search-context";
 import { LabeledInputField } from "./labeled-input-field";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";
-import { HighlightedLabel } from "../../../search/search-context";
-import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 
 export const VcardEditor = ({
   payload,

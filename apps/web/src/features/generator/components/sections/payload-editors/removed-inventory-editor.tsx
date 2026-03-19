@@ -1,12 +1,12 @@
-import { HighlightedLabel } from "../../../search/search-context";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Label,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/ui/web";
-import { Label } from "@/ui/web";
+import { HighlightedLabel } from "../../../search/search-context";
 import { LabeledInputField } from "./labeled-input-field";
 import { PayloadFormShell } from "./payload-form-shell";
 import type { PayloadTextEditorProps } from "./payload-text-editor.types";

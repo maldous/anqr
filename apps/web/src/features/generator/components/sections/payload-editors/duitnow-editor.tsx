@@ -1,18 +1,16 @@
-import type { TFunction } from "i18next";
 import {
-  isNonEmpty,
-  isValidProxyValue,
+    isNonEmpty,
+    isValidProxyValue,
 } from "@/application/generator";
-import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Input, Label, Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/ui/web";
+import type { TFunction } from "i18next";
+import type { QRState } from "../../../../../state/qr-store";
 import type { DuitNowForm } from "../payload-section-types";
 
 export const DuitnowEditor = ({

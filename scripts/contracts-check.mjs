@@ -131,16 +131,15 @@ async function main() {
         if (isSchemaCarrying) {
           const lines = content.split("\n");
           for (const line of lines) {
-            if (/^\s*import\s+(?!type\b)/.test(line) && !allowedSchemaImportSources.test(line)) {
+            const hasRuntimeImport = /^\s*import\s+(?!type\b)/.test(line);
+            if (hasRuntimeImport && !allowedSchemaImportSources.test(line)) {
               errors.push(
                 `${relativePath}: schema-carrying contracts may only import runtime values from zod, @ts-rest/core, or tslib`,
               );
             }
           }
-        } else {
-          if (/^\s*import\s+(?!type\b)/m.test(content)) {
-            errors.push(`${relativePath}: contract files must use type-only imports`);
-          }
+        } else if (/^\s*import\s+(?!type\b)/m.test(content)) {
+          errors.push(`${relativePath}: contract files must use type-only imports`);
         }
       }
 
@@ -155,10 +154,8 @@ async function main() {
         if (/\bexport\s+(?:let|var)\b/.test(content)) {
           errors.push(`${relativePath}: only export const is allowed in schema-carrying contracts`);
         }
-      } else {
-        if (/\bexport\s+(?:const|let|var)\b/.test(content)) {
-          errors.push(`${relativePath}: runtime value exports do not belong in contracts`);
-        }
+      } else if (/\bexport\s+(?:const|let|var)\b/.test(content)) {
+        errors.push(`${relativePath}: runtime value exports do not belong in contracts`);
       }
     }
   }

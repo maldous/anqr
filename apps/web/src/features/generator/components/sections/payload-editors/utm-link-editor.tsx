@@ -1,6 +1,5 @@
+import { Input, Label } from "@/ui/web";
 import { HighlightedLabel } from "../../../search/search-context";
-import { Input } from "@/ui/web";
-import { Label } from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 import { ValidatedUrlField } from "./validated-url-field";
 
