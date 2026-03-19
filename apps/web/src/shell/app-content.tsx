@@ -275,7 +275,7 @@ export function AppContent() {
   useEffect(() => {
     if (getPageFromLocation() !== "editor") return;
     const params = parseUrlParams();
-    const store = useQRStore.getState();
+    const store = { ...useQRStore.getState(), patchState: useQRStore.setState };
 
     if (params.lang) i18n.changeLanguage(params.lang);
 
@@ -283,21 +283,21 @@ export function AppContent() {
     applyQrEncodingParams(params, store);
     applyRenderBasicStyles(params, store);
     applyRenderEyeAndFrameStyles(params, store);
-    applyRenderColorAndPaletteStyles(params);
+    applyRenderColorAndPaletteStyles(params, store);
     applyOverlayTransformParams(params, store);
-    applyOverlayAdvancedParams(params);
+    applyOverlayAdvancedParams(params, store);
     applyOverlayPreprocessingParams(params, store);
     applyDitheringParams(params, store);
-    applySubpixelAndHalftoneParams(params);
+    applySubpixelAndHalftoneParams(params, store);
     applyAnimationBasicParams(params, store);
-    applyAnimationPatternParams(params);
+    applyAnimationPatternParams(params, store);
     applyOutputBasicParams(params, store);
-    applyOutputAdvancedParams(params);
-    applySafetyParams(params);
-    applyQaAndAutoParams(params);
-    applyWatermarkParams(params);
-    applyMetadataParams(params);
-    applyEccIntensityLimits(params);
+    applyOutputAdvancedParams(params, store);
+    applySafetyParams(params, store);
+    applyQaAndAutoParams(params, store);
+    applyWatermarkParams(params, store);
+    applyMetadataParams(params, store);
+    applyEccIntensityLimits(params, store);
 
     if (params.overlayUrl) loadOverlayFromUrl(params.overlayUrl, store);
   }, [loadOverlayFromUrl, i18n]);

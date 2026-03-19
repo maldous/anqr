@@ -1,11 +1,11 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../../src/modules/qr-generator";
-import { type AnimationEasing } from "../../../src/modules/animation";
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
-import { ServerAnimationFrame } from "./server-animation-frame.types";
-import { ArtworkState } from "./artwork-state.types";
-import { WatermarkOptions } from "./watermark-options.types";
-import { AnimationEffectConfig } from "./animation-effect-config.types";
+import { QRGenerator } from "@/modules/qr-generator";
+import { type AnimationEasing } from "@/modules/animation";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ServerAnimationFrame } from "./server-animation-frame.types";
+import type { ArtworkState } from "./artwork-state.types";
+import type { WatermarkOptions } from "./watermark-options.types";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
 import { buildAnimationEffectArrays } from "./build-animation-effect-arrays";
 import { renderAnimatedOverlayLoop } from "./render-animated-overlay-loop";
 import { generatePatternFramesServer } from "./generate-pattern-frames-server";

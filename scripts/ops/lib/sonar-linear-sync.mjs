@@ -9,7 +9,6 @@
  * On each sync, existing markers are compared against current findings
  * to skip duplicates and (optionally) resolve stale issues.
  */
-/* eslint-disable no-console */
 
 import { query, createIssue, updateIssue, addComment, TEAM_ID, STATES } from "../linear-client.mjs";
 

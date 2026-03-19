@@ -12,12 +12,6 @@ const _log = createLogger("GENERATE");
 // Main generator
 export const GENERATOR_API = ["QRGenerator", "generateScaledQR", "renderModules"] as const;
 
-// Canvas factory
-export const CANVAS_FACTORY_API = [
-  "defaultBrowserCanvasFactory",
-  "blueNoiseCanvasFactory",
-] as const;
-
 // Drawing functions
 export const DRAWING_API = [
   "createGradientFill",
@@ -136,7 +130,6 @@ export const TYPES = [
 // All public exports
 export const PUBLIC_API = [
   ...GENERATOR_API,
-  ...CANVAS_FACTORY_API,
   ...DRAWING_API,
   ...OVERLAY_API,
   ...PIXEL_MATRIX_API,

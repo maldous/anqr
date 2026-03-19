@@ -1,7 +1,7 @@
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 import * as React from "react";
-import { useDynamicTestId } from "@/infra/testing/dynamic-testid";
-import { cn } from "@/lib/utils";
+import { useDynamicTestId } from "../dynamic-testid";
+import { cn } from "../utils";
 
 const Switch = React.forwardRef<
   React.ComponentRef<typeof SwitchPrimitives.Root>,

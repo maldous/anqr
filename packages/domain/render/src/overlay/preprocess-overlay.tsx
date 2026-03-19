@@ -1,5 +1,5 @@
 import { preprocessImageData } from "../filters/filters-preprocess";
-import type { CreateCanvasFn, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { CreateCanvasFn, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { hasPreprocessingOptions } from "./has-preprocessing-options";
 import { log } from "./log";
 

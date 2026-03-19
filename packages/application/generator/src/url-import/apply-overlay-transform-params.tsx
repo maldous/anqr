@@ -1,8 +1,11 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type OverlayMode } from "@/store/qr-store";
+import type { OverlayMode } from "./qr-state-compat.types";
 import type { UrlImportStore } from "./store-contract.types";
 
-export function applyOverlayTransformParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
+export function applyOverlayTransformParams(
+  params: Partial<ShareConfig>,
+  store: UrlImportStore,
+): void {
   if (params.mode) store.setOverlayMode(params.mode as OverlayMode);
   if (params.intensity !== undefined) store.setOverlayIntensity(params.intensity);
   if (params.fit) store.setOverlayFit(params.fit as "cover" | "contain" | "stretch");
@@ -13,7 +16,7 @@ export function applyOverlayTransformParams(params: Partial<ShareConfig>, store:
   if (params.preserveTiming) store.setOverlayPreserveTiming(true);
   if (params.preserveAlignment) store.setOverlayPreserveAlignment(true);
   if (params.protectFormatInfo)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, protectFormatInfo: true } }));
+    store.patchState((s) => ({ overlay: { ...s.overlay, protectFormatInfo: true } }));
   if (params.protectVersionInfo)
-    useQRStore.setState((s) => ({ overlay: { ...s.overlay, protectVersionInfo: true } }));
+    store.patchState((s) => ({ overlay: { ...s.overlay, protectVersionInfo: true } }));
 }

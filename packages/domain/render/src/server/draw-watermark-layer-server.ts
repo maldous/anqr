@@ -1,5 +1,5 @@
 import { type Canvas, type SKRSContext2D } from "@napi-rs/canvas";
-import { WatermarkOptions } from "./watermark-options.types";
+import type { WatermarkOptions } from "./watermark-options.types";
 import { createTextWatermark } from "./create-text-watermark";
 import { applyBlendMode } from "./apply-blend-mode";
 import { getWatermarkPositions } from "./get-watermark-positions";

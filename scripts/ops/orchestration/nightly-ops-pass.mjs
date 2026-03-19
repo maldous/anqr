@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 
 import { execFileSync } from "node:child_process";
 import { existsSync, copyFileSync, mkdirSync } from "node:fs";

@@ -1,4 +1,4 @@
-import type { OverlayData } from "@/modules/qr-generator/types";
+import type { OverlayData } from "@/domain/render/qr-generator-shared";
 
 export function isPackedOverlayData(
   overlayData: OverlayData | null | undefined,

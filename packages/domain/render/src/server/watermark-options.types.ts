@@ -1,7 +1,7 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { WatermarkKind } from "./watermark-kind.types";
-import { WatermarkPosition } from "./watermark-position.types";
-import { WatermarkBlend } from "./watermark-blend.types";
+import type { WatermarkKind } from "./watermark-kind.types";
+import type { WatermarkPosition } from "./watermark-position.types";
+import type { WatermarkBlend } from "./watermark-blend.types";
 
 export interface WatermarkOptions {
   enabled: boolean;

@@ -5,7 +5,7 @@
 
 import { createLogger } from "../../../../observability/logging/src";
 import { rgbToGray } from "../color/color";
-import type { QRGeneratorConfig, RGBWithMeta } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig, RGBWithMeta } from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");
 

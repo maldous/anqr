@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-import { validateInWorker } from "@/modules/qr-analyzer";
+import { validateInWorker } from "@/platform/worker";
 import { cloneCanvasFrame } from "./clone-canvas-frame.service";
 
 const log = createLogger("QR");

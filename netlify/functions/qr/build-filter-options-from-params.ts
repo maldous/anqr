@@ -1,5 +1,5 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
-import { OverlayFilterOptions } from "./overlay-filter-options.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { OverlayFilterOptions } from "./overlay-filter-options.types";
 
 export function buildFilterOptionsFromParams(p: ParsedHandlerParams): OverlayFilterOptions {
   return {

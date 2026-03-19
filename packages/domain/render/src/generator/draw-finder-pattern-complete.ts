@@ -1,5 +1,5 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
-import { validateColor } from "@/modules/qr-generator/utils";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
+import { validateColor } from "@/domain/render/color/validate-color";
 import { drawFinderRing } from "./draw-finder-ring";
 
 /**

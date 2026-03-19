@@ -1,4 +1,4 @@
-import { quantizeGifPalette } from "../../../src/modules/animation";
+import { quantizeGifPalette } from "@/modules/animation";
 import { ensureGifPaletteAnchors } from "./ensure-gif-palette-anchors";
 
 export function buildGlobalGifPalette(

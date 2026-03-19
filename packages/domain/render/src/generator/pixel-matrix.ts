@@ -15,7 +15,7 @@ import type {
   PixelDecisionResult,
   QRCodeInstance,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 
 export { generateDitherModeMatrix, normalizeColors } from "./pixel-matrix-dither";
 export { generateBlueNoiseMatrix, generateDitheredMatrix } from "./pixel-matrix-dithered";

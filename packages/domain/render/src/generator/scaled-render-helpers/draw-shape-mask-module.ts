@@ -1,5 +1,5 @@
 import { drawModule } from "../drawing";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export function drawShapeMaskModule(
   maskCtx: CanvasRenderingContext2D,

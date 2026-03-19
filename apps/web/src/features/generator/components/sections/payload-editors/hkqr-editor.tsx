@@ -1,5 +1,8 @@
 import type { TFunction } from "i18next";
-import { isNonEmpty, isValidFpsId } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import {
+  isNonEmpty,
+  isValidFpsId,
+} from "../../../../../../../../packages/domain/payload/src/payload-generators";
 import type { QRState } from "../../../../../state/qr-store";
 import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
 import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";

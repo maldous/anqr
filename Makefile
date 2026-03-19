@@ -72,8 +72,8 @@ audit-ast:
 sonar-export:
 	npm run sonar:export
 
-sonar-audit:
-	npm run sonar:audit
+sonar-mail:
+	npm run sonar:mail
 
 sonar-scan:
 	npm run sonar:scan

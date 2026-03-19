@@ -1,5 +1,5 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { OverlayFilterOptions } from "./overlay-filter-options.types";
+import type { OverlayFilterOptions } from "./overlay-filter-options.types";
 import { cropOverlayServer } from "./crop-overlay-server";
 import { rotateOverlayServer } from "./rotate-overlay-server";
 import { flipOverlayServer } from "./flip-overlay-server";

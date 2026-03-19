@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { detectBimodalBW } from "./detect-bimodal-bw";
 import { softenBWImage } from "./soften-bw-image";
 import { log } from "./log";

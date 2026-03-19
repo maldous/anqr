@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 import { roundtripToFinalRaster } from "./qr-generator-helpers";
 import type { DitherAttemptPatch } from "./dither-attempt-patch.types";
 import type { ScanGateCallbacks } from "./scan-gate-callbacks.types";

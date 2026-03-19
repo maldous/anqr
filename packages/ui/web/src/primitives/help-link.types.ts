@@ -1,4 +1,4 @@
-import type { Tier } from "@/lib/tier";
+import type { Tier } from "./tier.types";
 
 export type HelpLinkProps = {
   href?: string;

@@ -1,6 +1,6 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { MAX_SERVER_IMAGE_SIZE } from "./max-server-image-size.const";
-import { ECCLevel } from "./ecc-level.types";
+import type { ECCLevel } from "./ecc-level.types";
 import { parseMaskPattern } from "./parse-mask-pattern";
 
 export function parseCoreQRParams(

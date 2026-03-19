@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 
 /**
  * ollama-local-audit.mjs — Local Ollama model availability and health

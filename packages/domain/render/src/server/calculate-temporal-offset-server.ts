@@ -1,4 +1,4 @@
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 
 export function calculateTemporalOffsetServer(
   frameIndex: number,

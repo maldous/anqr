@@ -1,7 +1,7 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { OutputFormat } from "./output-format.types";
-import { OverlayFilterOptions } from "./overlay-filter-options.types";
-import { OverlayLoadResult } from "./overlay-load-result.types";
+import type { OutputFormat } from "./output-format.types";
+import type { OverlayFilterOptions } from "./overlay-filter-options.types";
+import type { OverlayLoadResult } from "./overlay-load-result.types";
 import { fetchImageWithBuffer } from "./fetch-image-with-buffer";
 import { qrFnLog } from "./qr-fn-log";
 import { CORS_HEADERS } from "./cors-headers.const";

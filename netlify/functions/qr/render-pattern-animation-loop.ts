@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/render-pattern-animation-loop";
+export * from "../../../packages/domain/render/src/server/render-pattern-animation-loop";

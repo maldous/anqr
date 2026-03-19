@@ -1,42 +1,45 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applySubpixelAndHalftoneParams(params: Partial<ShareConfig>): void {
+export function applySubpixelAndHalftoneParams(
+  params: Partial<ShareConfig>,
+  store: UrlImportStore,
+): void {
   if (params.subpixelGridSize)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: { ...s.overlay, subpixelGridSize: params.subpixelGridSize as "2x2" | "3x3" | "4x4" },
     }));
   if (params.subpixelCenterRule)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: {
         ...s.overlay,
         subpixelCenterRule: params.subpixelCenterRule as "strict" | "halftone_center",
       },
     }));
   if (params.subpixelNeutralColor)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: { ...s.overlay, subpixelNeutralColor: params.subpixelNeutralColor! },
     }));
   if (params.subpixelFinderOverride)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: {
         ...s.overlay,
         subpixelFinderOverride: params.subpixelFinderOverride as "solid" | "stylized",
       },
     }));
   if (params.halftoneCell)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: { ...s.overlay, halftoneCell: params.halftoneCell as "per_module" | "n×n" },
     }));
   if (params.halftoneDotShape)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: {
         ...s.overlay,
         halftoneDotShape: params.halftoneDotShape as "circle" | "square" | "line",
       },
     }));
   if (params.brightnessCurve)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: {
         ...s.overlay,
         brightnessCurve: params.brightnessCurve as "linear" | "s-curve" | "gamma",
@@ -44,7 +47,7 @@ export function applySubpixelAndHalftoneParams(params: Partial<ShareConfig>): vo
     }));
   if (params.duotoneColor1) {
     const color1 = params.duotoneColor1;
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: {
         ...s.overlay,
         duotoneColors: [color1, s.overlay.duotoneColors[1]],
@@ -53,7 +56,7 @@ export function applySubpixelAndHalftoneParams(params: Partial<ShareConfig>): vo
   }
   if (params.duotoneColor2) {
     const color2 = params.duotoneColor2;
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       overlay: {
         ...s.overlay,
         duotoneColors: [s.overlay.duotoneColors[0], color2],

@@ -1,4 +1,4 @@
-import { AnimationEffectConfig } from "./animation-effect-config.types";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
 import { computeAnimationProgress } from "./compute-animation-progress";
 
 export function applyModuleAnimationToConfigServer(

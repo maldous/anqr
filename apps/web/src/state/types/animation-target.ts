@@ -1,1 +1,1 @@
-export type AnimationTarget = "result" | "modules" | "both";
+export type { AnimationTarget } from "../../../../../packages/domain/share/src/animation-target.types";

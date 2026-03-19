@@ -1,4 +1,4 @@
-import type { OverlayData, RGBWithMeta } from "@/modules/qr-generator/types";
+import type { OverlayData, RGBWithMeta } from "@/domain/render/qr-generator-shared";
 import { unpackOverlayColor } from "./unpack-overlay-color";
 import { getOverlayColorPacked } from "./get-overlay-color-packed";
 

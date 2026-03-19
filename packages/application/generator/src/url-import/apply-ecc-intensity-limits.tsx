@@ -1,10 +1,10 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
+export function applyEccIntensityLimits(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.maxOverlayIntensityL !== undefined) {
     const intensityL = params.maxOverlayIntensityL;
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -16,7 +16,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   }
   if (params.maxOverlayIntensityM !== undefined) {
     const intensityM = params.maxOverlayIntensityM;
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -28,7 +28,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   }
   if (params.maxOverlayIntensityQ !== undefined) {
     const intensityQ = params.maxOverlayIntensityQ;
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -40,7 +40,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
   }
   if (params.maxOverlayIntensityH !== undefined) {
     const intensityH = params.maxOverlayIntensityH;
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: {
         ...s.safety,
         maxOverlayIntensityByEcc: {
@@ -51,5 +51,7 @@ export function applyEccIntensityLimits(params: Partial<ShareConfig>): void {
     }));
   }
   if (params.gifDisposal)
-    useQRStore.setState((s: QRState) => ({ output: { ...s.output, gifDisposal: params.gifDisposal! } }));
+    store.patchState((s) => ({
+      output: { ...s.output, gifDisposal: params.gifDisposal! },
+    }));
 }

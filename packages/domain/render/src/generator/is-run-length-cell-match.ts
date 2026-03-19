@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-generator/types";
+import type { QRCodeInstance } from "@/domain/render/qr-generator-shared";
 
 export function isRunLengthCellMatch(
   qr: QRCodeInstance,

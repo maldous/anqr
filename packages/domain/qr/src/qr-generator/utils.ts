@@ -1,6 +1,6 @@
 export { validateColor } from "./validate-color";
 export { hashString } from "./hash-string";
-export { hashCanvasContent } from "./hash-canvas-content";
+export { hashCanvasContent } from "../../../render/src/overlay/hash-canvas-content";
 
 /**
  * Calculate contrast ratio between two colors (WCAG formula)

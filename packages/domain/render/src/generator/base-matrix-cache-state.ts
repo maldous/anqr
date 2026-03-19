@@ -1,5 +1,4 @@
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
-import type { RGBWithMeta } from "@/modules/qr-generator/types";
+import type { QRCodeObject, RGBWithMeta } from "@/domain/render/qr-generator-shared";
 
 export const baseMatrixCacheState = {
   qr: null as QRCodeObject | null,

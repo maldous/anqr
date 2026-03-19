@@ -1,5 +1,5 @@
 import type { FilterOptions } from "@/modules/overlay";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { applyColorAdjustmentFilters } from "./apply-color-adjustment-filters";
 import { applyEffectFilters } from "./apply-effect-filters";
 

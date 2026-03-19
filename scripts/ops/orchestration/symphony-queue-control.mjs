@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-console */
 
 import { fileURLToPath } from "node:url";
 import { listIssuesByState, updateIssue, addComment, STATES } from "../linear-client.mjs";

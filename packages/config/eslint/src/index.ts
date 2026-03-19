@@ -1,2 +1,2 @@
 // Awaiting physical migration — will own shared ESLint configuration
-export {};
+export const ESLINT_CONFIG_PLACEHOLDER = true;

@@ -1,9 +1,9 @@
-import { type AnimationEasing, type AnimationPattern } from "../../../src/modules/animation";
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import { type AnimationEasing, type AnimationPattern } from "@/modules/animation";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { parseAnimationTarget } from "./parse-animation-target";
 import { parseAnimationWaveAxis } from "./parse-animation-wave-axis";
-import { AnimationInterpolation } from "./animation-interpolation.types";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type { AnimationInterpolation } from "./animation-interpolation.types";
+import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 
 export function parseAnimationParams(
   params: URLSearchParams,
@@ -31,6 +31,9 @@ export function parseAnimationParams(
   | "animationSeed2"
   | "animationEasing"
   | "animationEasing2"
+  | "animationStartFrame"
+  | "animationMaxFrames"
+  | "animationFrameStep"
 > {
   const validAnimationPatterns = new Set<AnimationPattern>([
     "none",

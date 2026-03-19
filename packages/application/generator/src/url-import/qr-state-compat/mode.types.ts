@@ -1,0 +1,21 @@
+export type SafetyMode = "off" | "balanced" | "strict";
+
+export type OverlayMode =
+  | "center"
+  | "blend"
+  | "halftone"
+  | "halftone-dithered"
+  | "mosaic"
+  | "gapfill"
+  | "brightness"
+  | "duotone"
+  | "subpixel"
+  | "dithered"
+  | "blue-noise"
+  | "pixelate"
+  | "outline"
+  | "wave"
+  | "subpixel-size"
+  | "dither"
+  | "extreme"
+  | "artwork";

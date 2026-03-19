@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 import compression from "vite-plugin-compression";
 import { VitePWA } from "vite-plugin-pwa";
 import { analyzeBundle } from "./analyze-bundle.const.ts";
+import { buildTsconfigAliases } from "./build-tsconfig-aliases.ts";
 import { getEnvDefines } from "./get-env-defines.ts";
 import { isAndroidBuild } from "./is-android-build.const.ts";
 import { oxcMinifyPlugin } from "./oxc-minify-plugin.ts";
@@ -18,6 +19,10 @@ import { sentryUploadEnabled } from "./sentry-upload-enabled.const.ts";
 import { serveGalleryFiles } from "./serve-gallery-files.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const repoRoot = path.resolve(__dirname, "..");
+
+const tsconfigAliases = buildTsconfigAliases(repoRoot);
 
 export const viteConfig = defineConfig({
   define: getEnvDefines(),
@@ -321,9 +326,13 @@ export const viteConfig = defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "../src"),
-    },
+    alias: [
+      ...tsconfigAliases,
+      {
+        find: "@",
+        replacement: path.resolve(repoRoot, "src"),
+      },
+    ],
   },
   build: {
     // Enable source maps for Sentry (they're deleted after upload)

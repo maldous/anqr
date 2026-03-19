@@ -7,7 +7,6 @@ import { createLogger } from "../../../../observability/logging/src";
 import { buildQRFirstMatrix } from "./build-qr-first-matrix";
 import { computeDitheredModuleValue } from "./compute-dithered-module-value";
 import { detectBWFromOverlayData } from "./detect-bw-from-overlay-data";
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
 import { distributeError } from "./dithering-error";
 import { enforceModuleConstraints } from "./enforce-module-constraints-matrix";
 import { initErrorMatrix } from "./init-error-matrix";
@@ -15,7 +14,7 @@ import { getDiffusionKernel } from "./dithering-kernels";
 import { getOverlayBrightness } from "../overlay/overlay-data-packed";
 import { shouldLockModule } from "../overlay/should-lock-module";
 import { curveIntensity } from "../generator/pixel-matrix-utils";
-import type { OverlayData, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { OverlayData, QRCodeObject, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 const log = createLogger("GENERATE");
 

@@ -137,7 +137,6 @@ i18n.on("languageChanged", async (lng) => {
   loadFontForLanguage(lng);
 });
 
-// Pre-load detected language if not English
 const detectedLang = i18n.language;
 if (detectedLang && detectedLang !== "en-GB" && !loadedLocales.has(detectedLang)) {
   await loadLocale(detectedLang);

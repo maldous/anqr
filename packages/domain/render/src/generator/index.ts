@@ -9,14 +9,11 @@ export type {
   PixelDecisionMatrix,
   PixelDecisionResult,
   RGBWithMeta,
-  RGB,
   Canvas2DContext,
   CanvasElement,
-  DiffusionKernel,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 export { INTRINSICALLY_SCALED_OVERLAY_MODES } from "@/modules/qr-generator/types";
-export { QRGenerator } from "@/modules/qr-generator/qr-generator-class";
-export { canvasHashCache } from "@/modules/qr-generator/canvas-hash-cache";
+export { QRGenerator, canvasHashCache } from "@/modules/qr-generator";
 export type { OverlayModeResult } from "./render-modes.types";
 export { computeDarkFactor } from "./compute-dark-factor";
 export { computeLightBlend } from "./compute-light-blend";

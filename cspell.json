@@ -24,6 +24,8 @@
     "src/i18n/**"
   ],
   "words": [
+    "Lngs",
+    "nonnode",
     "centiseconds",
     "codegen",
     "cooldowns",

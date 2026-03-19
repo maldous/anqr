@@ -1,2 +1,2 @@
 // Awaiting physical migration — will own test fakes and doubles
-export {};
+export const TESTING_FAKES_PLACEHOLDER = true;

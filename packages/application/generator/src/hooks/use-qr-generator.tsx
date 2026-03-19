@@ -8,11 +8,16 @@ import {
 } from "@/modules/animation";
 import { isTemporalDitherActive, type TemporalDitherMode } from "@/modules/dither-algorithms";
 import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/modules/overlay";
-import { prepareInterstitial, showInterstitial } from "@/modules/platform";
-import { type ValidationResult, terminateValidationWorker } from "@/modules/qr-analyzer";
-import { INTRINSICALLY_SCALED_OVERLAY_MODES, type QRGeneratorConfig } from "@/modules/qr-generator";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import { prepareInterstitial, showInterstitial } from "../../../../platform/native/src";
+import type { ValidationResult } from "@/modules/qr-analyzer";
+import { terminateValidationWorker } from "@/platform/worker";
+import {
+  INTRINSICALLY_SCALED_OVERLAY_MODES,
+  type AnyCanvas,
+  type QRGeneratorConfig,
+} from "@/modules/qr-generator";
 import type { UseQRGeneratorResult } from "./useQRGenerator.types";
+import type { UseQRStoreHook } from "./use-qr-store-hook.types";
 import { applyCropTransform } from "./apply-crop-transform";
 import { applyFitTransform } from "./apply-fit-transform";
 import { applyPatternStackToCanvas } from "./apply-pattern-stack-to-canvas";
@@ -64,9 +69,31 @@ import { useDebounce } from "./use-debounce";
 import { YieldController } from "./yield-controller";
 import { yieldToMainThread } from "./yield-to-main-thread";
 import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservation-options";
-import type { AnyCanvas } from "@/modules/qr-generator/any-canvas";
 
-export function useQRGenerator(): UseQRGeneratorResult {
+async function waitForDoubleAnimationFrame(): Promise<void> {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+function isRequestStale(
+  generationRequestIdRef: { current: number },
+  requestId: number,
+): boolean {
+  return generationRequestIdRef.current !== requestId;
+}
+
+async function yieldForRequestResponsiveness(
+  generationRequestIdRef: { current: number },
+  requestId: number,
+): Promise<boolean> {
+  await yieldToMainThread(16);
+  return isRequestStale(generationRequestIdRef, requestId);
+}
+
+export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<AnyCanvas | null>(null);
@@ -290,21 +317,21 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // Get all relevant state from store
   // Subscribe to payload to trigger re-renders when payload changes
   // This is critical - without this dependency, config won't update when payload changes
-  const payload = useQRStore((s: QRState) => s.payload);
-  const qr = useQRStore((s: QRState) => s.qr);
-  const render = useQRStore((s: QRState) => s.render);
-  const overlay = useQRStore((s: QRState) => s.overlay);
+  const payload = useStore((s) => s.payload);
+  const qr = useStore((s) => s.qr);
+  const render = useStore((s) => s.render);
+  const overlay = useStore((s) => s.overlay);
 
-  const watermark = useQRStore((s: QRState) => s.watermark);
-  const output = useQRStore((s: QRState) => s.output);
-  const animation = useQRStore((s: QRState) => s.animation);
-  const _setAnimationPlaying = useQRStore((s: QRState) => s.setAnimationPlaying);
-  const setQrCharacterEncoding = useQRStore((s: QRState) => s.setQrCharacterEncoding);
-  const safety = useQRStore((s: QRState) => s.safety);
-  const metadata = useQRStore((s: QRState) => s.metadata);
-  const auto = useQRStore((s: QRState) => s.auto);
-  const getPayloadText = useQRStore((s: QRState) => s.getPayloadText);
-  const _setOverlayIntensity = useQRStore((s: QRState) => s.setOverlayIntensity);
+  const watermark = useStore((s) => s.watermark);
+  const output = useStore((s) => s.output);
+  const animation = useStore((s) => s.animation);
+  const _setAnimationPlaying = useStore((s) => s.setAnimationPlaying);
+  const setQrCharacterEncoding = useStore((s) => s.setQrCharacterEncoding);
+  const safety = useStore((s) => s.safety);
+  const metadata = useStore((s) => s.metadata);
+  const auto = useStore((s) => s.auto);
+  const getPayloadText = useStore((s) => s.getPayloadText);
+  const _setOverlayIntensity = useStore((s) => s.setOverlayIntensity);
 
   // Auto-pick ECC based on content length and overlay usage
   const autoPickedEcc = useMemo(() => {
@@ -1003,7 +1030,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     activeQArtRequestAbortRef.current = qartAbortController;
 
     const requestId = ++generationRequestIdRef.current;
-    const isStaleRequest = (): boolean => generationRequestIdRef.current !== requestId;
+    const isStaleRequest = (): boolean => isRequestStale(generationRequestIdRef, requestId);
 
     const trimmedContent = debouncedConfig.content?.trim() || "";
     const emptyCheck = handleEmptyContent({
@@ -1025,12 +1052,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // CRITICAL: Yield to browser to allow React to render the loading state
     // before starting expensive QR generation. Without this, the busy overlay
     // may not appear because the heavy computation blocks the UI thread.
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        // Double-RAF ensures the browser has completed painting
-        requestAnimationFrame(() => resolve());
-      });
-    });
+    await waitForDoubleAnimationFrame();
 
     if (isStaleRequest()) return;
     setIsRendering(true);
@@ -1038,10 +1060,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
       t("preview.busy.buildingQrStructure", "Building the QR structure..."),
       14,
     );
-    const yieldForResponsiveness = async (): Promise<boolean> => {
-      await yieldToMainThread(16);
-      return isStaleRequest();
-    };
+    const yieldForResponsiveness = (): Promise<boolean> =>
+      yieldForRequestResponsiveness(generationRequestIdRef, requestId);
     const runValidationIfNeeded = setupValidationRunner({
       requestId,
       animationFrameCount,

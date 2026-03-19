@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useDynamicTestId } from "@/infra/testing/dynamic-testid";
-import { cn } from "@/lib/utils";
+import { useDynamicTestId } from "../dynamic-testid";
+import { cn } from "../utils";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 

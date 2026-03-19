@@ -1,7 +1,8 @@
-import { QRGenerator } from "../../../src/modules/qr-generator";
-import { calculateOptimalVersion } from "../../../src/modules/qr-encoder/encoder-api";
+import { QRGenerator } from "@/modules/qr-generator";
+import { calculateOptimalVersion } from "@/modules/qr-encoder";
+import type { CanvasFactory } from "@/domain/render/canvas-factory.types";
 import { type Canvas } from "@napi-rs/canvas";
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { computeCacheKey } from "./compute-cache-key";
 import { qrFnLog } from "./qr-fn-log";
 import { lookupBlobCache } from "./lookup-blob-cache";
@@ -10,14 +11,14 @@ import { computeModuleSize } from "./compute-module-size";
 import { buildQRGeneratorConfig } from "./build-qr-generator-config";
 import { buildFilterOptionsFromParams } from "./build-filter-options-from-params";
 import { loadAndPreprocessOverlay } from "./load-and-preprocess-overlay";
-import { ArtworkState } from "./artwork-state.types";
+import type { ArtworkState } from "./artwork-state.types";
 import { renderInitialQRCode } from "./render-initial-qr-code";
 import { loadWatermarkImage } from "./load-watermark-image";
 import { buildWatermarkOpts } from "./build-watermark-opts";
 import { applyWatermarkServer } from "./apply-watermark-server";
 import { scaleToOutputDimensions } from "./scale-to-output-dimensions";
 import { buildPngMetadata } from "./build-png-metadata";
-import { ServerAnimationFrame } from "./server-animation-frame.types";
+import type { ServerAnimationFrame } from "./server-animation-frame.types";
 import { generateGifAnimationFrames } from "./generate-gif-animation-frames";
 import { encodeOutputImage } from "./encode-output-image";
 import { handleCacheAndResponse } from "./handle-cache-and-response";
@@ -32,11 +33,16 @@ export async function processQRRequest(
   const cachedResponse = await lookupBlobCache(cacheKey, p.skipCache);
   if (cachedResponse) return cachedResponse;
 
-  const qrGenerator = new QRGenerator(nodeCanvasFactory);
+  const qrGenerator = new QRGenerator(nodeCanvasFactory as unknown as CanvasFactory);
   const estimatedVersion = calculateOptimalVersion(p.data, p.ec);
   const estimatedModuleCount = estimatedVersion * 4 + 17;
   const totalMargin = p.margin + p.borderModulesExtra;
-  const moduleSize = computeModuleSize(p.modulePxParam, p.size, totalMargin, estimatedModuleCount);
+  const moduleSize = computeModuleSize(
+    p.modulePxParam ?? undefined,
+    p.size,
+    totalMargin,
+    estimatedModuleCount,
+  );
 
   const config = buildQRGeneratorConfig(p, moduleSize);
   const filterOptions = buildFilterOptionsFromParams(p);

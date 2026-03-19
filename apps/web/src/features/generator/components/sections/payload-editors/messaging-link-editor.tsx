@@ -1,7 +1,10 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { generateMessagingLink, isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import {
+  generateMessagingLink,
+  isValidPhone,
+} from "../../../../../../../../packages/domain/payload/src/payload-generators";
 import type { QRState } from "../../../../../state/qr-store";
 import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
 import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";

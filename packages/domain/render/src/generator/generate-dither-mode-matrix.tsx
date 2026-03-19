@@ -1,11 +1,11 @@
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
 import { applyDitherToMatrix } from "../dither/dithering-matrix";
 import { getOverlayData } from "../overlay/overlay-data";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
+  QRCodeObject,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 import { normalizeColors } from "./normalize-colors";
 
 /**

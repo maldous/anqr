@@ -1,8 +1,9 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../../src/modules/qr-generator";
-import { generateFullQArt, generateFullQArtOptimal } from "../../../src/modules/qr-art";
-import { ArtworkState } from "./artwork-state.types";
-import { ECCLevel } from "./ecc-level.types";
+import { QRGenerator } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import { generateFullQArt, generateFullQArtOptimal } from "@/modules/qart";
+import type { ArtworkState } from "./artwork-state.types";
+import type { ECCLevel } from "./ecc-level.types";
 
 export async function generateArtworkFrame(
   targetCanvas: Canvas,
@@ -63,5 +64,8 @@ export async function generateArtworkFrame(
     });
   }
 
-  return (await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig)) as Canvas;
+  return (await qrGenerator.renderFromMatrix(
+    qartResult.matrix,
+    qrArtConfig as unknown as QRGeneratorConfig,
+  )) as unknown as Canvas;
 }

@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import type { DitherBackdropParams } from "../scaled-render-types";
 import { parseColor } from "../../color/color";
 import { curveIntensity } from "../pixel-matrix-utils";

@@ -4,5 +4,6 @@
  */
 
 import { QRGenerator } from "@/modules/qr-generator";
+import { defaultBrowserCanvasFactory } from "@/platform/browser";
 
-export const qrGenerator = new QRGenerator();
+export const qrGenerator = new QRGenerator(defaultBrowserCanvasFactory);

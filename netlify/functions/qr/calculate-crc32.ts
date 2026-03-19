@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/calculate-crc32";
+export * from "../../../packages/domain/render/src/server/calculate-crc32";

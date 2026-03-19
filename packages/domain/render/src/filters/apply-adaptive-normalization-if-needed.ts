@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { log } from "./log";
 import { computeOverlayToneStats } from "./compute-overlay-tone-stats";
 import { applyAdaptiveColorNormalization } from "./apply-adaptive-color-normalization";

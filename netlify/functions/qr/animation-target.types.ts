@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/animation-target.types";
+export * from "../../../packages/domain/share/src/animation-target.types";

@@ -1,5 +1,5 @@
 import { shouldForceScaledBinaryModule } from "./should-force-scaled-binary-module";
-import type { QRCodeInstance } from "@/modules/qr-generator/types";
+import type { QRCodeInstance } from "@/domain/render/qr-generator-shared";
 import type { ScaledPreserveFlags } from "../scaled-render-types";
 
 export function drawScaledStrictFunctionOverlay(

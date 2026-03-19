@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 
 export async function simulateScenarioDecode(
   pool: CanvasPool,

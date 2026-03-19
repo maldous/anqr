@@ -4,7 +4,7 @@ import type {
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 import { bitsToMatrix } from "./bits-to-matrix";
 import type { BlueNoisePixelCtx } from "./blue-noise-pixel-ctx";
 import { buildStrictConstraintConfig } from "./build-strict-constraint-config";

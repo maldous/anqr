@@ -6,7 +6,7 @@ import { CalendarIcon, Clock } from "lucide-react";
 import * as React from "react";
 import { Calendar } from "./calendar";
 import { Input } from "./input";
-import { cn } from "@/lib/utils";
+import { cn } from "../utils";
 
 export type { DateTimePickerProps } from "./date-time-picker.types";
 import type { DateTimePickerProps } from "./date-time-picker.types";

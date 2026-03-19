@@ -9,7 +9,11 @@ import { ErrorBoundary } from "../shell/error-boundary";
 import { initAutoDynamicTestIds } from "../lib/auto-testid";
 import { createLogger } from "../../../../packages/observability/logging/src/logger";
 import { initRemoteDiagnostics } from "../../../../packages/observability/telemetry/src/logger-remote";
-import { initializeAdMob, prepareAllAds, showBannerAd } from "../../../../packages/platform/native/src";
+import {
+  initializeAdMob,
+  prepareAllAds,
+  showBannerAd,
+} from "../../../../packages/platform/native/src";
 import { loadWebOnlyBootAssets } from "../../../../packages/platform/browser/src/boot/web-only-assets";
 
 const log = createLogger("MAIN");

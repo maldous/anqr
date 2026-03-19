@@ -3,7 +3,7 @@ import type {
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 import { bitsToMatrix } from "./bits-to-matrix";
 import { buildDitherResolvedConfig } from "./build-dither-resolved-config";
 import { computeDitherThreshold } from "./compute-dither-threshold";

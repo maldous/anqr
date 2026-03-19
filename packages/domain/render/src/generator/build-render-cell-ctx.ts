@@ -1,4 +1,4 @@
-import type { RenderModulesOptions } from "@/modules/qr-generator/types";
+import type { RenderModulesOptions } from "@/domain/render/qr-generator-shared";
 import type { ModuleDrawContext } from "./module-draw-context.types";
 import type { RenderCellCtx } from "./render-cell-ctx.types";
 

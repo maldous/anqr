@@ -1,5 +1,5 @@
-import { AnimationEffectConfig } from "./animation-effect-config.types";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
+import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 import { hasAnimationEffect } from "./has-animation-effect";
 
 export function buildAnimationEffectArrays(

@@ -9,7 +9,7 @@
  *  - Loop-invariant computations hoisted out of the double loop
  */
 
-import { registerCacheCleanup } from "@/modules/qr-generator/cache";
+import { registerCacheCleanup } from "./register-cache-cleanup";
 import { buildRenderCellCtx } from "./build-render-cell-ctx";
 import { computeModuleGap } from "./compute-module-gap";
 import { processRenderCell } from "./process-render-cell";
@@ -19,11 +19,11 @@ import {
   getCachedFunctionalMap,
   renderModulesFastPath,
 } from "./render-loop-fast-path";
-import type { RenderModulesOptions } from "@/modules/qr-generator/types";
+import type { RenderModulesOptions } from "@/domain/render/qr-generator-shared";
 import type { ModuleDrawContext } from "./module-draw-context.types";
 import type { RenderCellCtx } from "./render-cell-ctx.types";
 import type { RenderCellState } from "./render-cell.types";
-import { validateColor } from "@/modules/qr-generator/utils";
+import { validateColor } from "@/domain/render/color/validate-color";
 export { clearFunctionalMapCache } from "./render-loop-fast-path";
 
 // Register with central cache clearer (avoids circular import from cache.ts)

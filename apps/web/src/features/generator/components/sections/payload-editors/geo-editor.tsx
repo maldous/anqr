@@ -1,6 +1,9 @@
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidLatitude, isValidLongitude } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import {
+  isValidLatitude,
+  isValidLongitude,
+} from "../../../../../../../../packages/domain/payload/src/payload-generators";
 import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
 import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import { PlusCodeDisplay } from "../payload-plus-code-display";

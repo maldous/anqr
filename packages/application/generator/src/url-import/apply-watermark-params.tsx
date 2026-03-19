@@ -1,28 +1,30 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyWatermarkParams(params: Partial<ShareConfig>): void {
+export function applyWatermarkParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.watermarkEnabled)
-    useQRStore.setState((s: QRState) => ({ watermark: { ...s.watermark, enabled: true } }));
+    store.patchState((s) => ({ watermark: { ...s.watermark, enabled: true } }));
   if (params.watermarkKind)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       watermark: { ...s.watermark, kind: params.watermarkKind as typeof s.watermark.kind },
     }));
   if (params.watermarkText)
-    useQRStore.setState((s: QRState) => ({ watermark: { ...s.watermark, text: params.watermarkText! } }));
+    store.patchState((s) => ({
+      watermark: { ...s.watermark, text: params.watermarkText! },
+    }));
   if (params.watermarkPosition)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       watermark: {
         ...s.watermark,
         position: params.watermarkPosition as typeof s.watermark.position,
       },
     }));
   if (params.watermarkOpacity !== undefined)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       watermark: { ...s.watermark, opacity: params.watermarkOpacity! },
     }));
   if (params.watermarkBlend)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       watermark: { ...s.watermark, blend: params.watermarkBlend as typeof s.watermark.blend },
     }));
 }

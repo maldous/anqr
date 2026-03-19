@@ -5,8 +5,14 @@ import { useTranslation } from "react-i18next";
 import { AdUnit } from "../../../../../../packages/analytics/ads/src/components/ad-unit";
 import { BusyOverlay } from "../../../../../../packages/ui/web/src/composites/busy-overlay";
 import { useQRGeneratorContext } from "../../../../../../packages/application/generator/src/hooks/useQRGenerator";
-import { getContrastRatio, parseColor } from "../../../../../../packages/domain/render/src/color/color";
-import { meetsContrastAA, meetsContrastAAA } from "../../../../../../packages/domain/render/src/color/contrast";
+import {
+  getContrastRatio,
+  parseColor,
+} from "../../../../../../packages/domain/render/src/color/color";
+import {
+  meetsContrastAA,
+  meetsContrastAAA,
+} from "../../../../../../packages/domain/render/src/color/contrast";
 import { useQRStore, type QRState } from "../../../state/qr-store";
 import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from "./preview-status";
 import type { PreviewProps, RenderState } from "./preview-types";

@@ -1,4 +1,4 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { qrFnLog } from "./qr-fn-log";
 import { writeBlobCache } from "./write-blob-cache";
 import { triggerBackgroundRender } from "./trigger-background-render";

@@ -1,6 +1,6 @@
-import { decodeGif } from "../../../src/modules/animation";
+import { decodeGif } from "@/modules/animation";
 import { createCanvas } from "@napi-rs/canvas";
-import { ServerAnimationFrame } from "./server-animation-frame.types";
+import type { ServerAnimationFrame } from "./server-animation-frame.types";
 import { MAX_GIF_FRAMES } from "./max-gif-frames.const";
 import { MAX_GIF_DURATION_MS } from "./max-gif-duration-ms.const";
 

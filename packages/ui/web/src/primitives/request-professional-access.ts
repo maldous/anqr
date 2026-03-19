@@ -1,5 +1,5 @@
-import { prepareRewardedAd, showRewardedAd } from "@/modules/platform";
-import { createLogger } from "@/infra/logging/logger";
+import { prepareRewardedAd, showRewardedAd } from "../../../../platform/native/src";
+import { createLogger } from "../../../../observability/logging/src";
 
 const log = createLogger("HELP");
 

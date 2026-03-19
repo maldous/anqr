@@ -12,5 +12,3 @@ export * from "./primitives/tooltip";
 export * from "./primitives/help-link";
 export * from "./composites/busy-overlay";
 export * from "./composites/mobile-divider";
-
-export type { Tier } from "./tier";

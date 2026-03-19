@@ -3,7 +3,12 @@ import { HighlightedLabel } from "../../search/search-context";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
 import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "../../../../../../../packages/ui/web/src/primitives/select";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "../../../../../../../packages/ui/web/src/primitives/select";
 
 export function LabeledHelpSelectField({
   anchor,

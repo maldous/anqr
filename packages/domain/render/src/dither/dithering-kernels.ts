@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import type { DiffusionKernel } from "@/modules/qr-generator/types";
+import type { DiffusionKernel } from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");
 

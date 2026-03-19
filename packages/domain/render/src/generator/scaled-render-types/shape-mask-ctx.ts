@@ -1,4 +1,4 @@
-import type { QRCodeInstance, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRCodeInstance, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export interface ShapeMaskCtx {
   ctx: CanvasRenderingContext2D;

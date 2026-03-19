@@ -4,7 +4,6 @@
  * Sends email notifications via msmtp with rate limiting and deduplication.
  * Used by nightly-ops-pass, symphony-runner, and email-ingest scripts.
  */
-/* eslint-disable no-console */
 
 import fs from "node:fs";
 import path from "node:path";

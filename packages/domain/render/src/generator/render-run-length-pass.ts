@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-generator/types";
+import type { QRCodeInstance } from "@/domain/render/qr-generator-shared";
 import { isRunLengthCellMatch } from "./is-run-length-cell-match";
 import type { RunLengthCanvasContext } from "./run-length-canvas-context.types";
 

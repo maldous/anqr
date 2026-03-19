@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 import { resolveImageSource } from "./resolve-image-source";
 
 export async function roundtripToFinalRaster(

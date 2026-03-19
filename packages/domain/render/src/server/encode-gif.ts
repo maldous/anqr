@@ -4,7 +4,7 @@ import {
   indexGifPixels,
   isGifEncodingAvailable,
   quantizeGifPalette,
-} from "../../../src/modules/animation";
+} from "@/modules/animation";
 import { prepareGifFramePixels } from "./prepare-gif-frame-pixels";
 import { parseGifBackgroundColor } from "./parse-gif-background-color";
 import { ensureGifPaletteAnchors } from "./ensure-gif-palette-anchors";

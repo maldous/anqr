@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/decimate-frames-to-max-count";
+export * from "../../../packages/domain/render/src/server/decimate-frames-to-max-count";

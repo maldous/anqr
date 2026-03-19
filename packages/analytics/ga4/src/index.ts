@@ -1,2 +1,2 @@
 // Awaiting physical migration — will own GA4 analytics integration
-export {};
+export const GA4_ANALYTICS_PLACEHOLDER = true;

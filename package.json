@@ -41,7 +41,7 @@
     "audit:ast": "node scripts/audit-ast-density.mjs",
     "ast:names": "node scripts/list-ast-names.mjs",
     "sonar:export": "bash scripts/sonar-export.sh",
-    "sonar:audit": "node scripts/ops/sonar-linear-audit.mjs",
+    "sonar:mail": "node scripts/ops/sonar-linear-mail.mjs",
     "sonar:scan": "SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
     "harness:quick": "node scripts/ops/harness-report.mjs quick",
     "harness:continuous": "node scripts/ops/harness-report.mjs continuous",

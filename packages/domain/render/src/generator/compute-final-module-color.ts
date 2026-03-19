@@ -3,7 +3,7 @@ import {
   applyPerModuleColor,
   ensureContrast,
 } from "@/modules/qr-generator/color";
-import type { OverlayData, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { OverlayData, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export function computeFinalModuleColor(
   baseColor: string,

@@ -1,6 +1,9 @@
 import { Grid3x3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { gallerySectionManifest, type GalleryCategory } from "../../content/gallery/gallery-manifest";
+import {
+  gallerySectionManifest,
+  type GalleryCategory,
+} from "../../content/gallery/gallery-manifest";
 import { DynamicIcon } from "./dynamic-icon";
 
 export function HeaderGalleryFilter({

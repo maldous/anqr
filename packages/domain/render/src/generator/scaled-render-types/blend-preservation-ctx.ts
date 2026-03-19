@@ -1,4 +1,4 @@
-import type { RGB } from "@/modules/qr-generator/types";
+import type { RGB } from "@/domain/render/qr-generator-shared";
 
 export interface BlendPreservationCtx {
   ctx: CanvasRenderingContext2D;

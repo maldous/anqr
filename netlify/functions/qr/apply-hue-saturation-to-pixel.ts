@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/apply-hue-saturation-to-pixel";
+export * from "../../../packages/domain/render/src/server/apply-hue-saturation-to-pixel";

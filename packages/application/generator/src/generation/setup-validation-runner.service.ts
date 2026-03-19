@@ -6,7 +6,7 @@
 
 import { createLogger } from "@/infra/logging/logger";
 import type { ValidationResult } from "@/domain/qr/analyze/scanner";
-import { validateInWorker } from "@/modules/qr-analyzer";
+import { validateInWorker } from "@/platform/worker";
 
 const log = createLogger("QR");
 

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/platform/node/src/server/get-blob-store-or-null";
+export * from "../../../packages/platform/node/src/server/get-blob-store-or-null";

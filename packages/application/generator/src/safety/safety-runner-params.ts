@@ -1,5 +1,4 @@
-import type { AnyCanvas } from "@/modules/qr-generator/any-canvas";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { AnyCanvas, QRGeneratorConfig } from "@/modules/qr-generator";
 
 export interface SafetyRunnerParams {
   clearGenerationProgress: () => void;

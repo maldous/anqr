@@ -1,5 +1,5 @@
 import { DEVICE_RENDER_SCALE_CAP } from "./device-render-scale-cap.const";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export function getScaleFactor(overlayMode: string | undefined, config: QRGeneratorConfig): number {
   const isFastPreview = config.fastPreview === true;

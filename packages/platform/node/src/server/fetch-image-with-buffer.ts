@@ -1,4 +1,4 @@
-import { FetchedImage } from "./fetched-image.types";
+import type { FetchedImage } from "./fetched-image.types";
 import { validateAndFetchOverlay } from "./validate-and-fetch-overlay";
 import { streamResponseBody } from "./stream-response-body";
 import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const";

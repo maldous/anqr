@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/build-png-metadata";
+export * from "../../../packages/domain/render/src/server/build-png-metadata";

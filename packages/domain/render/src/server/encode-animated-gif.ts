@@ -1,9 +1,5 @@
 import { type Canvas } from "@napi-rs/canvas";
-import {
-  createGifEncoder,
-  indexGifPixels,
-  isGifEncodingAvailable,
-} from "../../../src/modules/animation";
+import { createGifEncoder, indexGifPixels, isGifEncodingAvailable } from "@/modules/animation";
 import { parseGifBackgroundColor } from "./parse-gif-background-color";
 import { prepareGifFramePixels } from "./prepare-gif-frame-pixels";
 import { buildGlobalGifPalette } from "./build-global-gif-palette";

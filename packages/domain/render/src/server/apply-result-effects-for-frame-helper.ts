@@ -1,6 +1,6 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { AnimationEffectConfig } from "./animation-effect-config.types";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
+import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 import { applyAnimationEffectsToCanvasServer } from "./apply-animation-effects-to-canvas-server";
 import { calculateTemporalOffsetServer } from "./calculate-temporal-offset-server";
 import { applyTemporalNoiseToCanvasServer } from "./apply-temporal-noise-to-canvas-server";

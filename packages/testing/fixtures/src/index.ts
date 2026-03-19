@@ -1,2 +1,2 @@
 // Awaiting physical migration — will own shared test fixtures
-export {};
+export const TESTING_FIXTURES_PLACEHOLDER = true;

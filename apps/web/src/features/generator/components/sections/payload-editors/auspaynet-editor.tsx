@@ -1,4 +1,8 @@
-import { isValidABN, isValidEmail, isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import {
+  isValidABN,
+  isValidEmail,
+  isValidPhone,
+} from "../../../../../../../../packages/domain/payload/src/payload-generators";
 import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
 import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
 import {

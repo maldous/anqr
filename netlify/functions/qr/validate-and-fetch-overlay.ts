@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/platform/node/src/server/validate-and-fetch-overlay";
+export * from "../../../packages/platform/node/src/server/validate-and-fetch-overlay";

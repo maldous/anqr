@@ -1,4 +1,5 @@
 export type { UseQRGeneratorResult } from "./useQRGenerator.types";
+export type { UseQRStoreHook } from "./use-qr-store-hook.types";
 export { resolveOverlayPreservationOptions } from "./resolve-overlay-preservation-options";
 export { useQRGenerator } from "./use-qr-generator";
 export { QRGeneratorProvider } from "./qr-generator-provider";

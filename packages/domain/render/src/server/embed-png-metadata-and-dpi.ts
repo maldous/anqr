@@ -1,4 +1,4 @@
-import { PngMetadata } from "./png-metadata.types";
+import type { PngMetadata } from "./png-metadata.types";
 import { createPngPhysChunk } from "./create-png-phys-chunk";
 import { createPngTextChunk } from "./create-png-text-chunk";
 

@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 import { computeScanGateRasterMetrics, roundtripToFinalRaster } from "./qr-generator-helpers";
 import { runRobustnessScenarios } from "./run-robustness-scenarios";
 import type { ScanGateCtx } from "./scan-gate-ctx.types";

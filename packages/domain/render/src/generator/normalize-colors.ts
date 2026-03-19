@@ -1,5 +1,5 @@
 import { getOverlayColor } from "../overlay/overlay-data-packed";
-import type { OverlayData, RGBWithMeta } from "@/modules/qr-generator/types";
+import type { OverlayData, RGBWithMeta } from "@/domain/render/qr-generator-shared";
 
 /**
  * Normalize colors to RGB format

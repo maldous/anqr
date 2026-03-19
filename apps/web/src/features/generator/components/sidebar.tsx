@@ -83,6 +83,20 @@ const SECTIONS = [
 
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
 
+function isSectionVisibleForTier(section: (typeof SECTIONS)[number], tier: string): boolean {
+  if (section.tier === "basic") return true;
+  if (section.tier === "advanced") return tier === "advanced" || tier === "professional";
+  return tier === "professional";
+}
+
+function filterStillVisibleSections(prev: string[], tier: string): string[] {
+  const stillVisible = prev.filter((sectionId) => {
+    const section = SECTIONS.find((s) => s.id === sectionId);
+    return section ? isSectionVisibleForTier(section, tier) : false;
+  });
+  return stillVisible.length > 0 ? stillVisible : ["payload"];
+}
+
 export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<SidebarProps>) {
   // Use individual selectors to avoid re-renders when unrelated state changes
   const tier = useQRStore((s) => s.tier);
@@ -156,8 +170,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
   // Filter sections by tier and search
   const visibleSections = SECTIONS.filter((section) => {
     // Tier filter
-    if (section.tier === "advanced" && tier === "basic") return false;
-    if (section.tier === "professional" && tier !== "professional") return false;
+    if (!isSectionVisibleForTier(section, tier)) return false;
 
     // Search filter - check section label AND keywords available at current tier
     if (searchQuery) {
@@ -177,8 +190,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
       const query = searchQuery.toLowerCase();
       const matchingSections = SECTIONS.filter((section) => {
         // Check tier first
-        if (section.tier === "advanced" && tier === "basic") return false;
-        if (section.tier === "professional" && tier !== "professional") return false;
+        if (!isSectionVisibleForTier(section, tier)) return false;
 
         const translatedLabel = t(section.labelKey);
         const labelMatch = translatedLabel.toLowerCase().includes(query);
@@ -198,20 +210,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
   // When tier changes, keep currently open sections that are still visible,
   // and add any newly available sections if user upgraded
   useEffect(() => {
-    setOpenSections((prev) => {
-      // Keep sections that are still visible at the new tier
-      const stillVisible = prev.filter((sectionId) => {
-        const section = SECTIONS.find((s) => s.id === sectionId);
-        if (!section) return false;
-        if (section.tier === "basic") return true;
-        if (section.tier === "advanced") return tier === "advanced" || tier === "professional";
-        if (section.tier === "professional") return tier === "professional";
-        return false;
-      });
-
-      // If nothing is open after filtering, default to payload
-      return stillVisible.length > 0 ? stillVisible : ["payload"];
-    });
+    setOpenSections((prev) => filterStillVisibleSections(prev, tier));
   }, [tier]);
 
   const renderSection = (sectionId: string) => {

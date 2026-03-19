@@ -3,7 +3,7 @@ import type {
   OverlayData,
   QRCodeInstance,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 import { generateDitheredMatrix } from "./generate-dithered-matrix";
 import { aggregateModuleHalftoneData } from "./aggregate-module-halftone-data";
 import { clamp01 } from "./clamp01";

@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 import { clampN } from "./clamp-n";
 
 export async function computeOverlayComplexity(

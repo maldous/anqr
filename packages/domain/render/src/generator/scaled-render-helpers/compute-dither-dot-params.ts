@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import type { DitherDotParams } from "../scaled-render-types";
 
 export function computeDitherDotParams(

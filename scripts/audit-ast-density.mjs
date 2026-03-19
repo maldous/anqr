@@ -156,6 +156,11 @@ const collectHeavyNodes = (sourceFile) => {
   return heavyNodes;
 };
 
+const isPureTypeDeclarationFile = (entry) =>
+  entry.path.endsWith(".types.ts") &&
+  entry.nodes.length > 0 &&
+  entry.nodes.every((node) => node.kind === "interface" || node.kind === "type");
+
 const formatEntry = (entry) => {
   const grouped = entry.nodes.reduce((acc, node) => {
     acc[node.kind] = (acc[node.kind] ?? 0) + 1;
@@ -189,6 +194,7 @@ const main = () => {
         nodes,
       };
     })
+    .filter((entry) => !isPureTypeDeclarationFile(entry))
     .filter((entry) => entry.count > options.threshold)
     .sort((a, b) => b.count - a.count || a.path.localeCompare(b.path));
 

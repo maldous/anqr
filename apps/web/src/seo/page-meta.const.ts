@@ -1,4 +1,4 @@
-import { PageMeta } from "./page-meta.types";
+import type { PageMeta } from "./page-meta.types";
 
 export const PAGE_META: Record<string, PageMeta> = {
   "/": {

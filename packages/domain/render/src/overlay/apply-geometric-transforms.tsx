@@ -1,4 +1,4 @@
-import type { CreateCanvasFn, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { CreateCanvasFn, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { hasGeometricTransforms } from "./has-geometric-transforms";
 
 /**

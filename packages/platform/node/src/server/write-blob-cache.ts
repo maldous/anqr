@@ -17,7 +17,8 @@ export async function writeBlobCache(
     });
     const store = getBlobStoreOrNull();
     if (store) {
-      await store.set(cacheKey, new Blob([outputBuffer]), {
+      const blobBytes = new Uint8Array(outputBuffer);
+      await store.set(cacheKey, new Blob([blobBytes]), {
         metadata: { contentType, generatedAt: new Date().toISOString() },
       });
       await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});

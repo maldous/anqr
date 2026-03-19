@@ -1,5 +1,5 @@
 import { drawModule } from "./drawing-primitives";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 /**
  * Draw a timing pattern module

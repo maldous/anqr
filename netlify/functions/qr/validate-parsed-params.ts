@@ -1,4 +1,4 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { CORS_HEADERS } from "./cors-headers.const";
 import { MAX_DATA_LENGTH } from "./max-data-length.const";
 

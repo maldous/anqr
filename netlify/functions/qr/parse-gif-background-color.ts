@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/parse-gif-background-color";
+export * from "../../../packages/domain/render/src/server/parse-gif-background-color";

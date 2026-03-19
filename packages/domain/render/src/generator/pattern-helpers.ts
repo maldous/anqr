@@ -5,7 +5,7 @@
  */
 
 import { getAlignmentPatternCenters } from "@/modules/qr-spec";
-import { alignmentCache } from "@/modules/qr-generator/cache";
+import { alignmentCache } from "./alignment-cache";
 
 // Re-export from qr-spec (canonical source)
 export { isFormatInfo, isVersionInfo } from "@/modules/qr-spec";

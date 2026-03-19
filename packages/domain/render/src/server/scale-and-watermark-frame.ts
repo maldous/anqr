@@ -1,5 +1,5 @@
 import { type Canvas, createCanvas } from "@napi-rs/canvas";
-import { WatermarkOptions } from "./watermark-options.types";
+import type { WatermarkOptions } from "./watermark-options.types";
 import { applyWatermarkServer } from "./apply-watermark-server";
 
 export function scaleAndWatermarkFrame(

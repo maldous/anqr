@@ -1,4 +1,4 @@
-import type { ApplyOverlayModeOptions } from "@/modules/qr-generator/types";
+import type { ApplyOverlayModeOptions } from "@/domain/render/qr-generator-shared";
 import type { OverlayModeResult } from "./render-modes.types";
 import { applyArtworkMode } from "./apply-artwork-mode";
 import { applyBlendMode } from "./apply-blend-mode";

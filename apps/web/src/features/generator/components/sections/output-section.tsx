@@ -1,5 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { type GifDither, type GifQuantizer, type OutputFormat, useQRStore } from "../../../../state/qr-store";
+import {
+  type GifDither,
+  type GifQuantizer,
+  type OutputFormat,
+  useQRStore,
+} from "../../../../state/qr-store";
 import {
   DynamicTestId,
   HelpLink,

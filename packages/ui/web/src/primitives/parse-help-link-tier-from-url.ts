@@ -1,4 +1,4 @@
-import type { Tier } from "@/lib/tier";
+import type { Tier } from "./tier.types";
 
 export function parseTierFromUrl(href: string): Tier | undefined {
   const regex = /[?&]tab=(basic|advanced|professional)(?:&|#|$)/;

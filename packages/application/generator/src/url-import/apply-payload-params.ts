@@ -1,7 +1,10 @@
 import type { ShareConfig } from "@/modules/share-links";
 import type { UrlImportStore, UrlImportTier } from "./store-contract.types";
 
-export function applyTierAndPayloadParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
+export function applyTierAndPayloadParams(
+  params: Partial<ShareConfig>,
+  store: UrlImportStore,
+): void {
   let requiredTier: UrlImportTier = "basic";
   if (params.mode || params.overlayUrl || params.intensity !== undefined) {
     requiredTier = "advanced";

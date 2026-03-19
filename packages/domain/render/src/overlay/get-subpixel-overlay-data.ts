@@ -1,5 +1,5 @@
 import { rgbToGray } from "../color/color";
-import type { CreateCanvasFn, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { CreateCanvasFn, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 /**
  * Generate subpixel matrix for overlay modes

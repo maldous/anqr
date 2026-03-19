@@ -1,21 +1,24 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyQaAndAutoParams(params: Partial<ShareConfig>): void {
-  if (params.qaContrastCheck)
-    useQRStore.setState((s: QRState) => ({ qa: { ...s.qa, contrastCheck: true } }));
+export function applyQaAndAutoParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
+  if (params.qaContrastCheck) store.patchState((s) => ({ qa: { ...s.qa, contrastCheck: true } }));
   if (params.qaSimulateBlur !== undefined)
-    useQRStore.setState((s: QRState) => ({ qa: { ...s.qa, simulateBlurPx: params.qaSimulateBlur! } }));
+    store.patchState((s) => ({
+      qa: { ...s.qa, simulateBlurPx: params.qaSimulateBlur! },
+    }));
   if (params.qaSimulateNoise !== undefined)
-    useQRStore.setState((s: QRState) => ({ qa: { ...s.qa, simulateNoise: params.qaSimulateNoise! } }));
+    store.patchState((s) => ({
+      qa: { ...s.qa, simulateNoise: params.qaSimulateNoise! },
+    }));
   if (params.qaSimulateRotation !== undefined)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       qa: { ...s.qa, simulateRotationDeg: params.qaSimulateRotation! },
     }));
-  if (params.qaShowHeatmap) useQRStore.setState((s: QRState) => ({ qa: { ...s.qa, showHeatmap: true } }));
+  if (params.qaShowHeatmap) store.patchState((s) => ({ qa: { ...s.qa, showHeatmap: true } }));
   if (params.autoPickVersion === false)
-    useQRStore.setState((s: QRState) => ({ auto: { ...s.auto, pickVersion: false } }));
-  if (params.autoPickEcc) useQRStore.setState((s: QRState) => ({ auto: { ...s.auto, pickEcc: true } }));
+    store.patchState((s) => ({ auto: { ...s.auto, pickVersion: false } }));
+  if (params.autoPickEcc) store.patchState((s) => ({ auto: { ...s.auto, pickEcc: true } }));
   if (params.autoReduceIntensity)
-    useQRStore.setState((s: QRState) => ({ auto: { ...s.auto, reduceIntensityUntilSafe: true } }));
+    store.patchState((s) => ({ auto: { ...s.auto, reduceIntensityUntilSafe: true } }));
 }

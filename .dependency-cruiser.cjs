@@ -49,10 +49,8 @@ module.exports = {
       to: {
         path: "^packages/platform/",
         pathNot: [
-          "^packages/platform/browser/src/canvas/",
           "^packages/platform/browser/src/io/index",
-          "^packages/platform/worker/src/analyze/validation-worker-client",
-          "^packages/platform/worker/src/qart/worker-client",
+          "^packages/platform/node/src/server/(with-gif-encode-lock|qr-fn-log|fetch-image-with-buffer|fetch-image-as-canvas)\\.ts$",
         ],
       },
     },
@@ -61,14 +59,14 @@ module.exports = {
       severity: "error",
       comment: "Domain packages must not import UI packages.",
       from: { path: "^packages/domain/" },
-      to: { path: "^packages/ui/", pathNot: ["^packages/ui/web/src/tier"] },
+      to: { path: "^packages/ui/" },
     },
     {
       name: "domain-no-app-imports",
       severity: "error",
       comment: "Domain packages must not import app packages.",
       from: { path: "^packages/domain/" },
-      to: { path: "^apps/", pathNot: ["^apps/web/src/state/types/"] },
+      to: { path: "^apps/" },
     },
     {
       name: "domain-no-application-imports",
@@ -87,9 +85,7 @@ module.exports = {
       to: {
         path: "^apps/",
         pathNot: [
-          "^apps/web/src/state/qr-store\.ts$",
-          "^apps/web/src/features/generator/model/mobile-split\.types\.tsx$",
-          "^apps/web/src/features/generator/hooks/hooks-result\.types\.ts$",
+          "^apps/web/src/state/qr-store\\.ts$",
         ],
       },
     },
@@ -98,7 +94,7 @@ module.exports = {
       severity: "error",
       comment: "Application packages must not import UI packages (wrong direction).",
       from: { path: "^packages/application/" },
-      to: { path: "^packages/ui/", pathNot: ["^packages/ui/web/src/tier"] },
+      to: { path: "^packages/ui/" },
     },
 
     // ── UI layer isolation ───────────────────────────────────────────
@@ -133,7 +129,7 @@ module.exports = {
       name: "no-test-package-in-production",
       severity: "error",
       comment: "Production code must not import from testing packages.",
-      from: { path: "^(packages/(domain|application|ui|platform)|apps)/" },
+      from: { path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify|src)/" },
       to: { path: "^packages/testing/" },
     },
 
@@ -141,41 +137,41 @@ module.exports = {
     {
       name: "no-tools-in-packages",
       severity: "error",
-      comment: "Packages and apps must not import from tools/harness.",
-      from: { path: "^(packages|apps)/" },
+      comment: "Production runtime code must not import from tools/harness.",
+      from: { path: "^(packages|apps|netlify|src)/" },
       to: { path: "^tools/" },
     },
     {
       name: "no-harness-in-packages",
       severity: "error",
-      comment: "Packages and apps must not import from scripts/ops/.",
-      from: { path: "^(packages|apps)/" },
+      comment: "Production runtime code must not import from scripts/ops/.",
+      from: { path: "^(packages|apps|netlify|src)/" },
       to: { path: "^scripts/ops/" },
     },
 
     // ── Apps must not import src/ once packages exist ─────────────────
     {
       name: "apps-no-src-imports",
-      severity: "warn",
-      comment:
-        "Apps must not import from src/ once a package equivalent exists. " +
-        "Transitional: warn during migration.",
+      severity: "error",
+      comment: "Apps must not import from the transitional src/ root.",
       from: { path: "^apps/" },
       to: { path: "^src/" },
+    },
+    {
+      name: "apps-no-app-imports",
+      severity: "error",
+      comment: "Apps must not import from other apps.",
+      from: { path: "^apps/([^/]+)/" },
+      to: { path: "^apps/([^/]+)/", pathNot: "^apps/$1/" },
     },
 
     // ── Packages must not import src/ ────────────────────────────────
     {
       name: "packages-no-src-imports",
       severity: "error",
-      comment:
-        "Packages must not import from the transitional src/ root. " +
-        "Transitional exception for un-extracted source categories (domain/, modules/, store/, lib/).",
+      comment: "Packages must not import from the transitional src/ root.",
       from: { path: "^packages/" },
-      to: {
-        path: "^src/",
-        pathNot: "^src/(domain/|modules/|store/|lib/|infra/|platform/|features/)",
-      },
+      to: { path: "^src/" },
     },
 
     // ── Netlify may import only approved package layers ──────────────
@@ -185,6 +181,37 @@ module.exports = {
       comment: "Netlify handlers must not import from app targets.",
       from: { path: "^netlify/" },
       to: { path: "^apps/" },
+    },
+    {
+      name: "netlify-no-src-imports",
+      severity: "error",
+      comment: "Netlify handlers must not import from the transitional src/ root.",
+      from: { path: "^netlify/" },
+      to: { path: "^src/" },
+    },
+    {
+      name: "netlify-no-disallowed-package-layers",
+      severity: "error",
+      comment:
+        "Netlify may depend only on packages/domain, packages/platform/node, and packages/observability.",
+      from: { path: "^netlify/" },
+      to: {
+        path: "^packages/(application|ui|analytics|testing|config)/",
+      },
+    },
+    {
+      name: "netlify-no-nonnode-platform-imports",
+      severity: "error",
+      comment: "Netlify must not import browser, worker, or native platform adapters.",
+      from: { path: "^netlify/" },
+      to: { path: "^packages/platform/(browser|worker|native)/" },
+    },
+    {
+      name: "runtime-no-config-package-imports",
+      severity: "error",
+      comment: "Runtime code must not import non-runtime config packages.",
+      from: { path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify|src)/" },
+      to: { path: "^packages/config/" },
     },
 
     // ── Forbidden broad bucket names (architecture-standards.md) ────
@@ -398,17 +425,21 @@ module.exports = {
       name: "no-deep-package-imports",
       severity: "error",
       comment:
-        "Never deep-import another package's internals (ai-agent-rules.md). Intra-package imports are allowed.",
+        "Never deep-import another package's internals (ai-agent-rules.md). " +
+        "Intra-package imports are allowed. Sub-module barrels (src/*/index.ts) are allowed.",
       from: { path: "^packages/([^/]+/[^/]+)/" },
       to: {
         path: "^packages/[^/]+/[^/]+/",
         pathNot: [
           "^packages/$1/",
           "^packages/[^/]+/[^/]+/(index|src/index)\\.",
-          "^packages/observability/(logging|telemetry)/src/",
-          "^packages/domain/(qr|render|analyze|share|payload)/src/",
-          "^packages/platform/(browser|worker|native)/src/",
-          "^packages/ui/web/src/",
+          // Sub-module barrels (one level deep under src/)
+          "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
+          // domain/qr ↔ domain/render ↔ domain/analyze: tightly coupled domain siblings
+          // (qr-generator facade re-exports render internals; qr/analyze consumes analyzer types)
+          "^packages/domain/(qr|render|analyze)/src/",
+          // Render server compatibility shims during node/server extraction
+          "^packages/platform/node/src/server/(with-gif-encode-lock|qr-fn-log|fetch-image-with-buffer|fetch-image-as-canvas)\\.ts$",
         ],
       },
     },

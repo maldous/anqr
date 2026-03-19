@@ -1,4 +1,4 @@
-import type { OverlayData } from "@/modules/qr-generator/types";
+import type { OverlayData } from "@/domain/render/qr-generator-shared";
 import { isPackedOverlayData } from "./is-packed-overlay-data";
 import type { LegacyOverlayData } from "./legacy-overlay-data";
 import { packOverlayColor } from "./pack-overlay-color";

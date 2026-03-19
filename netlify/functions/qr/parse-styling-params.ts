@@ -1,4 +1,4 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { parseGradientStops } from "./parse-gradient-stops";
 
 export function parseStylingParams(

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/node-canvas-factory.const";
+export * from "../../../packages/domain/render/src/server/node-canvas-factory.const";

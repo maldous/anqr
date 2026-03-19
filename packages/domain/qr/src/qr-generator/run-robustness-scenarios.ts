@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 import { simulateScenarioDecode } from "./qr-generator-helpers";
 
 export async function runRobustnessScenarios(

@@ -9,7 +9,7 @@ import { getQartModulePromise } from "./qart-shared.types";
 export function terminateQArtWorkerIfLoaded(): void {
   const qartPromise = getQartModulePromise();
   if (!qartPromise) return;
-  void qartPromise
+  qartPromise
     .then((qartModule) => {
       qartModule.terminateQArtWorker();
     })

@@ -1,26 +1,33 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applyOutputAdvancedParams(params: Partial<ShareConfig>): void {
-  if (params.svgTrueVector) useQRStore.getState().setOutputSvgTrueVector(true);
+export function applyOutputAdvancedParams(
+  params: Partial<ShareConfig>,
+  store: UrlImportStore,
+): void {
+  if (params.svgTrueVector) store.setOutputSvgTrueVector(true);
   if (params.dpi !== undefined)
-    useQRStore.setState((s: QRState) => ({ output: { ...s.output, dpi: params.dpi! } }));
+    store.patchState((s) => ({ output: { ...s.output, dpi: params.dpi! } }));
   if (params.includeQuietZone === false)
-    useQRStore.setState((s: QRState) => ({ output: { ...s.output, includeQuietZone: false } }));
+    store.patchState((s) => ({ output: { ...s.output, includeQuietZone: false } }));
   if (params.bgOverride)
-    useQRStore.setState((s: QRState) => ({ output: { ...s.output, bgOverride: params.bgOverride! } }));
+    store.patchState((s) => ({
+      output: { ...s.output, bgOverride: params.bgOverride! },
+    }));
   if (params.gifTransparentColor)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       output: { ...s.output, gifTransparentColor: params.gifTransparentColor! },
     }));
   if (params.svgShapePrecision)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       output: { ...s.output, svgShapePrecision: params.svgShapePrecision as "pixel" | "precise" },
     }));
   if (params.svgEmbedRasterOverlay === false)
-    useQRStore.setState((s: QRState) => ({ output: { ...s.output, svgEmbedRasterOverlay: false } }));
+    store.patchState((s) => ({
+      output: { ...s.output, svgEmbedRasterOverlay: false },
+    }));
   if (params.formatExtra)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       output: { ...s.output, formatExtra: params.formatExtra as "none" | "eps" | "animated_webp" },
     }));
 }

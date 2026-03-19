@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/blur-server";
+export * from "../../../packages/domain/render/src/server/blur-server";

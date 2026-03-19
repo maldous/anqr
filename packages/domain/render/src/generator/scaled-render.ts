@@ -6,7 +6,7 @@
 import type { CanvasFactory } from "../canvas-factory.types";
 import { createGradientFill, drawFrame, drawFrameBackground } from "./drawing";
 import { generatePixelDecisionMatrix } from "./pixel-matrix";
-import type { QRCodeInstance, QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRCodeInstance, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { buildScaledPreserveFlags } from "./scaled-render-helpers/build-scaled-preserve-flags";
 import { classifyScaledOverlayMode } from "./scaled-render-helpers/classify-scaled-overlay-mode";
 import { computeDitherBackdropParams } from "./scaled-render-helpers/compute-dither-backdrop-params";
@@ -27,7 +27,7 @@ import {
   getScaledFunctionalMap,
 } from "./scaled-render-helpers/scaled-structure";
 import type { ContrastBoostFlags } from "./scaled-render-types";
-import { validateColor } from "@/modules/qr-generator/utils";
+import { validateColor } from "@/domain/render/color/validate-color";
 import { hash01 } from "./hash01";
 import { scaledRenderLog as log } from "./scaled-render-log";
 

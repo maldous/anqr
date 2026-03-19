@@ -1,7 +1,8 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../../src/modules/qr-generator";
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
-import { ArtworkState } from "./artwork-state.types";
+import { QRGenerator } from "@/modules/qr-generator";
+import type { AnyCanvas, QRGeneratorConfig } from "@/modules/qr-generator";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ArtworkState } from "./artwork-state.types";
 import { generateArtworkFrame } from "./generate-artwork-frame";
 
 export async function renderInitialQRCode(
@@ -37,8 +38,14 @@ export async function renderInitialQRCode(
         error: error_ instanceof Error ? error_.message : String(error_),
       });
       */
-      return await qrGenerator.generate(config, overlayCanvas);
+      return (await qrGenerator.generate(
+        config as unknown as QRGeneratorConfig,
+        overlayCanvas as unknown as AnyCanvas,
+      )) as unknown as Canvas;
     }
   }
-  return await qrGenerator.generate(config, overlayCanvas);
+  return (await qrGenerator.generate(
+    config as unknown as QRGeneratorConfig,
+    overlayCanvas as unknown as AnyCanvas,
+  )) as unknown as Canvas;
 }

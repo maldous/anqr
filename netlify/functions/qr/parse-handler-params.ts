@@ -1,4 +1,4 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { parseCoreQRParams } from "./parse-core-qr-params";
 import { parseStylingParams } from "./parse-styling-params";
 import { parseProtectionParams } from "./parse-protection-params";

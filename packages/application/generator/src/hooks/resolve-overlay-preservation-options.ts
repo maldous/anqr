@@ -1,1 +1,1 @@
-export { resolveOverlayPreservationOptions } from "@/features/generator/application/generation/resolve-overlay-preservation-options.service";
+export { resolveOverlayPreservationOptions } from "../generation/resolve-overlay-preservation-options.service";

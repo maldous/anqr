@@ -1,6 +1,5 @@
-import { registerCacheCleanup } from "@/modules/qr-generator/cache";
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
-import type { RGBWithMeta } from "@/modules/qr-generator/types";
+import { registerCacheCleanup } from "./register-cache-cleanup";
+import type { QRCodeObject, RGBWithMeta } from "@/domain/render/qr-generator-shared";
 import { baseMatrixCacheState } from "./base-matrix-cache-state";
 import { buildBaseMatrix } from "./build-base-matrix";
 import { clearBaseMatrixCache } from "./clear-base-matrix-cache";

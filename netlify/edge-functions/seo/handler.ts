@@ -1,5 +1,5 @@
 import type { Context } from "https://edge.netlify.com";
-import { PageMeta } from "./page-meta.types";
+import type { PageMeta } from "./page-meta.types";
 import { truncate } from "./truncate";
 import { buildOgImageUrl } from "./build-og-image-url";
 import { BASE_URL } from "./base-url.const";

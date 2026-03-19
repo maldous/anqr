@@ -1,9 +1,9 @@
-import { ParsedHandlerParams } from "./parsed-handler-params.types";
+import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { DEFAULT_OUTPUT_FORMAT } from "./default-output-format.const";
-import { OutputFormat } from "./output-format.types";
-import { WatermarkKind } from "./watermark-kind.types";
-import { WatermarkPosition } from "./watermark-position.types";
-import { WatermarkBlend } from "./watermark-blend.types";
+import type { OutputFormat } from "./output-format.types";
+import type { WatermarkKind } from "./watermark-kind.types";
+import type { WatermarkPosition } from "./watermark-position.types";
+import type { WatermarkBlend } from "./watermark-blend.types";
 import { parseGifDisposalCode } from "./parse-gif-disposal-code";
 
 export function parseOutputParams(

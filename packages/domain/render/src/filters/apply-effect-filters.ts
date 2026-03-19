@@ -1,5 +1,5 @@
 import type { FilterOptions } from "@/modules/overlay";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export function applyEffectFilters(config: QRGeneratorConfig, filterOptions: FilterOptions): void {
   if (config.filterThreshold !== undefined && config.filterThreshold > 0)

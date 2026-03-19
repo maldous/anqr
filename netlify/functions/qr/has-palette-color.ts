@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/has-palette-color";
+export * from "../../../packages/domain/render/src/server/has-palette-color";

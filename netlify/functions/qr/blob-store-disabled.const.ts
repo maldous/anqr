@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/platform/node/src/server/blob-store-disabled.const";
+export * from "../../../packages/platform/node/src/server/blob-store-disabled.const";

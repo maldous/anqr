@@ -4,8 +4,8 @@ import {
   applyAnimationPulse,
   applyAnimationScanline,
   applyAnimationShimmer,
-} from "../../../src/modules/animation";
-import { AnimationEffectConfig } from "./animation-effect-config.types";
+} from "@/modules/animation";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
 import { applyAnimationWaveWithAxisServer } from "./apply-animation-wave-with-axis-server";
 
 export function applyAnimationEffectToImageDataServer(

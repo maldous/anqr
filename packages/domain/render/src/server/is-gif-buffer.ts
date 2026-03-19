@@ -1,4 +1,4 @@
-import { isGifSignature } from "../../../src/modules/animation";
+import { isGifSignature } from "@/modules/animation";
 
 export function isGifBuffer(buffer: ArrayBuffer): boolean {
   return isGifSignature(buffer);

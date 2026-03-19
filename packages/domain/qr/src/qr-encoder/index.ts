@@ -30,7 +30,12 @@ export {
   type QROptions,
 } from "./encoder-api";
 export { gexp, glog, QRMath, qrPolynomial } from "../encode/math";
-export { base64EncodeOutputStream, byteArrayOutputStream, createDataURL, gifImage } from "../encode/output";
+export {
+  base64EncodeOutputStream,
+  byteArrayOutputStream,
+  createDataURL,
+  gifImage,
+} from "../encode/output";
 export { getRSBlocks, QRRSBlock } from "../encode/rs-blocks";
 export { canEncodeAsShiftJIS, createShiftJISEncoder } from "../encode/shift-jis";
 export {

@@ -1,7 +1,7 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { OutputFormat } from "./output-format.types";
-import { ServerAnimationFrame } from "./server-animation-frame.types";
-import { PngMetadata } from "./png-metadata.types";
+import type { OutputFormat } from "./output-format.types";
+import type { ServerAnimationFrame } from "./server-animation-frame.types";
+import type { PngMetadata } from "./png-metadata.types";
 import { withGifEncodeLock } from "./with-gif-encode-lock";
 import { encodeAnimatedGifWithDelays } from "./encode-animated-gif-with-delays";
 import { qrFnLog } from "./qr-fn-log";

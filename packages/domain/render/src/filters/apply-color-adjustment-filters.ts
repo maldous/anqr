@@ -1,5 +1,5 @@
 import type { FilterOptions } from "@/modules/overlay";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 /**
  * Build FilterOptions from QR generator config.

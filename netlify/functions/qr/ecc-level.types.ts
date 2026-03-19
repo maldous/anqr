@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/ecc-level.types";
+export * from "../../../packages/domain/render/src/server/ecc-level.types";

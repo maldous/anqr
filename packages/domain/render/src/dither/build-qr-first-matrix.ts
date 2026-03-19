@@ -1,4 +1,4 @@
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
+import type { QRCodeObject } from "@/domain/render/qr-generator-shared";
 
 export function buildQRFirstMatrix(qr: QRCodeObject, moduleCount: number): boolean[][] {
   const result: boolean[][] = [];

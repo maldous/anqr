@@ -1,4 +1,4 @@
-import { FetchedImage } from "./fetched-image.types";
+import type { FetchedImage } from "./fetched-image.types";
 import { readLocalOverlayFile } from "./read-local-overlay-file";
 import { _isPrivateHostname } from "./is-private-hostname";
 import { FETCH_TIMEOUT_MS } from "./fetch-timeout-ms.const";

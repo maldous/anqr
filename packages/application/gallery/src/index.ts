@@ -1,2 +1,2 @@
 // Awaiting physical migration from src/features/gallery/
-export {};
+export const GALLERY_APPLICATION_PLACEHOLDER = true;

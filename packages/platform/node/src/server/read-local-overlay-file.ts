@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { FetchedImage } from "./fetched-image.types";
+import type { FetchedImage } from "./fetched-image.types";
 import { resolveValidatedLocalOverlayPath } from "./resolve-validated-local-overlay-path";
 import { decodeOverlayBuffer } from "./decode-overlay-buffer";
 

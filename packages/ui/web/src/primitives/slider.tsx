@@ -1,8 +1,8 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Minus, Plus } from "lucide-react";
 import * as React from "react";
-import { useDynamicTestId } from "@/infra/testing/dynamic-testid";
-import { cn } from "@/lib/utils";
+import { useDynamicTestId } from "../dynamic-testid";
+import { cn } from "../utils";
 
 const Slider = React.forwardRef<
   React.ComponentRef<typeof SliderPrimitive.Root>,

@@ -1,6 +1,6 @@
-import { decodeGif } from "../../../src/modules/animation";
+import { decodeGif } from "@/modules/animation";
 import { createCanvas } from "@napi-rs/canvas";
-import { FetchedImage } from "./fetched-image.types";
+import type { FetchedImage } from "./fetched-image.types";
 import { MAX_OVERLAY_BYTES } from "./max-overlay-bytes.const";
 import { isGifBuffer } from "./is-gif-buffer";
 import { nodeCanvasFactory } from "./node-canvas-factory.const";

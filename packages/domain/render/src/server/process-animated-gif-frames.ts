@@ -1,6 +1,6 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { FetchedImage } from "./fetched-image.types";
-import { ServerAnimationFrame } from "./server-animation-frame.types";
+import type { FetchedImage } from "./fetched-image.types";
+import type { ServerAnimationFrame } from "./server-animation-frame.types";
 import { parseGifFramesServer } from "./parse-gif-frames-server";
 import { qrFnLog } from "./qr-fn-log";
 import { SERVER_MAX_ANIMATION_FRAMES } from "./server-max-animation-frames.const";

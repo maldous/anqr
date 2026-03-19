@@ -1,5 +1,4 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore } from "@/store/qr-store";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applyOutputBasicParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
@@ -12,7 +11,7 @@ export function applyOutputBasicParams(params: Partial<ShareConfig>, store: UrlI
   if (params.gifQuantizer)
     store.setOutputGifQuantizer(params.gifQuantizer as "median_cut" | "neuquant" | "octree");
   if (params.gifDither)
-    useQRStore.setState((s) => ({
+    store.patchState((s) => ({
       output: { ...s.output, gifDither: params.gifDither as typeof s.output.gifDither },
     }));
 }

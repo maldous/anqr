@@ -12,11 +12,7 @@ import {
 } from "@/modules/qr-encoder";
 import { verifyQRStructure } from "@/modules/qr-spec";
 import { qrMatrixCache } from "./cache";
-import {
-  type CanvasFactory,
-  CanvasPool,
-  defaultBrowserCanvasFactory,
-} from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasFactory } from "@/domain/render/canvas-factory.types";
 import {
   createGradientFill,
   drawCenterLogo,
@@ -69,6 +65,7 @@ import { buildEffectiveConfig } from "./build-effective-config";
 import { drawStructuralPatterns } from "./draw-structural-patterns";
 import { findOldestCacheKey } from "./find-oldest-cache-key";
 import type { OverlayComplexityCacheEntry } from "./overlay-complexity-cache-entry.types";
+import { CanvasPool } from "./canvas-pool";
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -122,9 +119,9 @@ export class QRGenerator {
    * Create a QR generator instance
    * @param canvasFactory - Optional canvas factory for non-browser environments
    */
-  constructor(canvasFactory: CanvasFactory | null = null) {
+  constructor(canvasFactory: CanvasFactory) {
     this.qrcode = qrcode;
-    this.canvasFactory = canvasFactory || defaultBrowserCanvasFactory;
+    this.canvasFactory = canvasFactory;
     this._canvasPool = new CanvasPool(this.canvasFactory);
   }
 

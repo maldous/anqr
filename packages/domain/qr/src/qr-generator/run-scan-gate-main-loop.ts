@@ -1,4 +1,4 @@
-import type { CanvasPool } from "@/platform/browser/canvas/canvas-factory";
+import type { CanvasPool } from "./canvas-pool";
 import { evaluateDecodeScenarios } from "./evaluate-decode-scenarios";
 import { processEvaluatedAttempt } from "./process-evaluated-attempt";
 import type { DitherAttemptPatch } from "./dither-attempt-patch.types";

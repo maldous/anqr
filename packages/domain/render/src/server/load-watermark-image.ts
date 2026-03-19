@@ -1,5 +1,5 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { WatermarkKind } from "./watermark-kind.types";
+import type { WatermarkKind } from "./watermark-kind.types";
 import { fetchImageAsCanvas } from "./fetch-image-as-canvas";
 
 export async function loadWatermarkImage(
@@ -12,7 +12,7 @@ export async function loadWatermarkImage(
     (watermarkKind === "image" || watermarkKind === "pattern") &&
     watermarkImageUrl
   ) {
-    return fetchImageAsCanvas(watermarkImageUrl);
+    return (await fetchImageAsCanvas(watermarkImageUrl)) as unknown as Canvas | null;
   }
   return null;
 }

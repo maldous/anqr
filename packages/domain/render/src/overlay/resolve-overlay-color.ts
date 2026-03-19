@@ -1,4 +1,4 @@
-import type { RGBWithMeta } from "@/modules/qr-generator/types";
+import type { RGBWithMeta } from "@/domain/render/qr-generator-shared";
 
 export function resolveOverlayColor(
   overlayColor: { r: number; g: number; b: number } | undefined,

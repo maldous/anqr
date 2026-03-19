@@ -1,27 +1,28 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type SafetyMode, type QRState } from "@/store/qr-store";
+import type { SafetyMode } from "./qr-state-compat.types";
+import type { UrlImportStore } from "./store-contract.types";
 
-export function applySafetyParams(params: Partial<ShareConfig>): void {
+export function applySafetyParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.safetyMode)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: { ...s.safety, mode: params.safetyMode as SafetyMode },
     }));
   if (params.safetyMinModulePx !== undefined)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: { ...s.safety, minModulePx: params.safetyMinModulePx! },
     }));
   if (params.safetyMinQuietZone !== undefined)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       safety: { ...s.safety, minQuietZoneModules: params.safetyMinQuietZone! },
     }));
   if (params.lockFinders === false)
-    useQRStore.setState((s: QRState) => ({ safety: { ...s.safety, lockFinders: false } }));
+    store.patchState((s) => ({ safety: { ...s.safety, lockFinders: false } }));
   if (params.lockTiming === false)
-    useQRStore.setState((s: QRState) => ({ safety: { ...s.safety, lockTiming: false } }));
+    store.patchState((s) => ({ safety: { ...s.safety, lockTiming: false } }));
   if (params.lockAlign === false)
-    useQRStore.setState((s: QRState) => ({ safety: { ...s.safety, lockAlign: false } }));
+    store.patchState((s) => ({ safety: { ...s.safety, lockAlign: false } }));
   if (params.lockFormat === false)
-    useQRStore.setState((s: QRState) => ({ safety: { ...s.safety, lockFormat: false } }));
+    store.patchState((s) => ({ safety: { ...s.safety, lockFormat: false } }));
   if (params.lockVersion === false)
-    useQRStore.setState((s: QRState) => ({ safety: { ...s.safety, lockVersion: false } }));
+    store.patchState((s) => ({ safety: { ...s.safety, lockVersion: false } }));
 }

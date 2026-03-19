@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import { saveBase64ToDocuments, showNativeToast } from "@/modules/platform";
+import { saveBase64ToDocuments, showNativeToast } from "../../../../platform/native/src";
 
 const _log = createLogger("DOWNLOAD");
 

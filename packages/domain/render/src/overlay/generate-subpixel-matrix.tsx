@@ -1,11 +1,11 @@
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
 import { curveIntensity } from "../generator/pixel-matrix-utils";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
+  QRCodeObject,
   QRGeneratorConfig,
   RGBWithMeta,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 import { log } from "./log";
 import { parseGridSize } from "./parse-grid-size";
 import { parseHexColor } from "./parse-hex-color";

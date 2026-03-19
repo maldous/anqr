@@ -1,11 +1,11 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "../../../src/modules/qr-generator";
-import { AnimationEffectConfig } from "./animation-effect-config.types";
-import { AnimationInterpolation } from "./animation-interpolation.types";
-import { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
-import { ArtworkState } from "./artwork-state.types";
-import { ECCLevel } from "./ecc-level.types";
-import { WatermarkOptions } from "./watermark-options.types";
+import { QRGenerator } from "@/modules/qr-generator";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
+import type { AnimationInterpolation } from "./animation-interpolation.types";
+import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type { ArtworkState } from "./artwork-state.types";
+import type { ECCLevel } from "./ecc-level.types";
+import type { WatermarkOptions } from "./watermark-options.types";
 import { applyAnimationEffectsToCanvasServer } from "./apply-animation-effects-to-canvas-server";
 import { applyFrameInterpolation } from "./apply-frame-interpolation";
 import { applyModuleAnimationToConfigServer } from "./apply-module-animation-to-config-server";

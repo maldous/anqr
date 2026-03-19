@@ -1,5 +1,4 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore } from "@/store/qr-store";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applyQrEncodingParams(params: Partial<ShareConfig>, store: UrlImportStore): void {
@@ -12,9 +11,9 @@ export function applyQrEncodingParams(params: Partial<ShareConfig>, store: UrlIm
       params.encodingMode as "auto" | "numeric" | "alphanumeric" | "byte" | "kanji",
     );
   if (params.borderModulesExtra !== undefined)
-    useQRStore.setState((s) => ({
+    store.patchState((s) => ({
       qr: { ...s.qr, borderModulesExtra: params.borderModulesExtra! },
     }));
   if (params.quietZoneMinEnforce === false)
-    useQRStore.setState((s) => ({ qr: { ...s.qr, quietZoneMinEnforce: false } }));
+    store.patchState((s) => ({ qr: { ...s.qr, quietZoneMinEnforce: false } }));
 }

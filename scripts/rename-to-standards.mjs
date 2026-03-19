@@ -29,17 +29,16 @@ const parseArgs = (argv) => {
       continue;
     }
     if (arg === "--root") {
-      options.root = path.resolve(argv[i + 1]);
-      i += 1;
+      const nextArg = argv[++i];
+      options.root = path.resolve(nextArg);
       continue;
     }
     if (arg === "--dirs") {
-      options.dirs = argv[i + 1]
+      const nextArg = argv[++i];
+      options.dirs = nextArg
         .split(",")
         .map((part) => part.trim())
         .filter(Boolean);
-      i += 1;
-      continue;
     }
   }
 

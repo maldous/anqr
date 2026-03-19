@@ -1,4 +1,4 @@
-import { ServerAnimationFrame } from "./server-animation-frame.types";
+import type { ServerAnimationFrame } from "./server-animation-frame.types";
 import { decimateFramesToMaxCount } from "./decimate-frames-to-max-count";
 
 export function decimateFramesToMaxFps(

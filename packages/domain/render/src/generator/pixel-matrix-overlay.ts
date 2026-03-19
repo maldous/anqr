@@ -4,7 +4,6 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
 import { applyDitherToMatrix } from "../dither/dithering-matrix";
 import { getOverlayData } from "../overlay/overlay-data";
 import { generateHalftoneDitheredOverlayData } from "./pixel-matrix-dithered";
@@ -13,8 +12,9 @@ import type {
   CreateCanvasFn,
   OverlayData,
   QRCodeInstance,
+  QRCodeObject,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");
 

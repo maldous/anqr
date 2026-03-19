@@ -1,8 +1,7 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { type AlignmentStyle, type FinderStyle, type TimingStyle } from "@/store/qr-store";
-import type { UrlImportStore } from "./store-contract.types";
+import type { AlignmentStyle, FinderStyle, TimingStyle } from "./qr-state-compat.types";
 import type { ModuleStyleOption } from "@/domain/render/module-style-option.types";
-import type { UrlImportGradientUpdate } from "./store-contract.types";
+import type { UrlImportGradientUpdate, UrlImportStore } from "./store-contract.types";
 
 export function applyRenderBasicStyles(params: Partial<ShareConfig>, store: UrlImportStore): void {
   if (params.fg) store.setRenderFgColor(params.fg);

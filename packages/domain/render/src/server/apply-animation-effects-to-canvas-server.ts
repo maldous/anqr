@@ -1,5 +1,5 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { AnimationEffectConfig } from "./animation-effect-config.types";
+import type { AnimationEffectConfig } from "./animation-effect-config.types";
 import { hasAnimationEffect } from "./has-animation-effect";
 import { applyPatternToFrameServer } from "./apply-pattern-to-frame-server";
 

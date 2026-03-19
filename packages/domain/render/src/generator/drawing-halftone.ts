@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { drawHalftoneDot } from "./draw-halftone-dot";
 import { parseHalftoneCell } from "./parse-halftone-cell";
 

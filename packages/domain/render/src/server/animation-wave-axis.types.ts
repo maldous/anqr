@@ -1,1 +1,1 @@
-export type AnimationWaveAxis = "x" | "y" | "xy";
+export type { AnimationWaveAxis } from "../../../share/src";

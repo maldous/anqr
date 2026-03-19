@@ -6,7 +6,6 @@ export type { ModuleStyleOption } from "./module-style-option.types";
 export * from "./generator";
 export * from "./animation";
 export * from "./overlay";
+export * from "./filters";
 export * from "./dither-algorithms";
 export * from "./exporter";
-export type { ModuleStyleOption } from "./module-style-option.types";
-export type { CanvasFactory } from "./canvas-factory.types";

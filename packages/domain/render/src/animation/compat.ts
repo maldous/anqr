@@ -15,7 +15,12 @@ export {
 } from "./animation-patterns";
 export { applyAnimationPattern } from "./apply-animation-pattern";
 export { applyColorCycle } from "./color-cycle";
-export { calculateCompositorFps, calculateSourceFps, decimateCompositorFrames, decimateFramesToFps } from "./decimation";
+export {
+  calculateCompositorFps,
+  calculateSourceFps,
+  decimateCompositorFrames,
+  decimateFramesToFps,
+} from "./decimation";
 export { detectImageFormat, isAnimatedWebP } from "./format-detection";
 export {
   createGifEncoder,
@@ -43,4 +48,10 @@ export {
 } from "./shared-patterns";
 export { advanceAnimation, createAnimationState, getNextFrame } from "./state";
 export { applyTemporalDither } from "./temporal-dither";
-export type { AnimationFrame, AnimationOptions, AnimationPattern, AnimationState, GifCompositor } from "./types";
+export type {
+  AnimationFrame,
+  AnimationOptions,
+  AnimationPattern,
+  AnimationState,
+  GifCompositor,
+} from "./types";

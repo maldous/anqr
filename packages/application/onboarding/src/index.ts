@@ -1,2 +1,2 @@
 // Awaiting physical migration from src/features/onboarding/
-export {};
+export const ONBOARDING_APPLICATION_PLACEHOLDER = true;

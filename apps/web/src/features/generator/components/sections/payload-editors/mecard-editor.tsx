@@ -1,5 +1,8 @@
 import type { TFunction } from "i18next";
-import { isValidEmail, isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import {
+  isValidEmail,
+  isValidPhone,
+} from "../../../../../../../../packages/domain/payload/src/payload-generators";
 import type { QRState } from "../../../../../state/qr-store";
 import { LabeledInputField } from "./labeled-input-field";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";

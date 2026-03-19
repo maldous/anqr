@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/platform/node/src/server/is-private-i-pv4-subnet";
+export * from "../../../packages/platform/node/src/server/is-private-i-pv4-subnet";

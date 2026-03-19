@@ -4,14 +4,14 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import type { QRCodeObject } from "@/modules/qr-generator/cache";
 import { getOverlayData } from "../overlay/overlay-data";
 import { normalizeColors } from "./pixel-matrix-dither";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
+  QRCodeObject,
   QRGeneratorConfig,
-} from "@/modules/qr-generator/types";
+} from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");
 

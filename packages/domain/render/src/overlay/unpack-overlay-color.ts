@@ -1,4 +1,4 @@
-import type { RGBWithMeta } from "@/modules/qr-generator/types";
+import type { RGBWithMeta } from "@/domain/render/qr-generator-shared";
 import { COLOR_PRESENT_FLAG } from "./color-present-flag";
 
 export function unpackOverlayColor(packed: number): RGBWithMeta | null {

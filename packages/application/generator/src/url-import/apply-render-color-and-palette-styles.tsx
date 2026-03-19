@@ -1,10 +1,13 @@
 import type { ShareConfig } from "@/modules/share-links";
-import { useQRStore, type QRState } from "@/store/qr-store";
+import type { UrlImportStore } from "./store-contract.types";
 import { log } from "./log";
 
-export function applyRenderColorAndPaletteStyles(params: Partial<ShareConfig>): void {
+export function applyRenderColorAndPaletteStyles(
+  params: Partial<ShareConfig>,
+  store: UrlImportStore,
+): void {
   if (params.perModuleColorMode)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       render: {
         ...s.render,
         perModuleColorMode: params.perModuleColorMode as
@@ -16,9 +19,9 @@ export function applyRenderColorAndPaletteStyles(params: Partial<ShareConfig>): 
       },
     }));
   if (params.contrastGuard)
-    useQRStore.setState((s: QRState) => ({ render: { ...s.render, contrastGuard: true } }));
+    store.patchState((s) => ({ render: { ...s.render, contrastGuard: true } }));
   if (params.minContrastRatio !== undefined)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       render: { ...s.render, minContrastRatio: params.minContrastRatio! },
     }));
   if (params.palette) {
@@ -30,14 +33,14 @@ export function applyRenderColorAndPaletteStyles(params: Partial<ShareConfig>): 
         paletteArray = params.palette.split(",").map((c) => (c.startsWith("#") ? c : `#${c}`));
       }
       if (Array.isArray(paletteArray) && paletteArray.length > 0) {
-        useQRStore.setState((s: QRState) => ({ render: { ...s.render, palette: paletteArray } }));
+        store.patchState((s) => ({ render: { ...s.render, palette: paletteArray } }));
       }
     } catch (e) {
       log.warn("Failed to parse palette", { error: e });
     }
   }
   if (params.paletteMode)
-    useQRStore.setState((s: QRState) => ({
+    store.patchState((s) => ({
       render: {
         ...s.render,
         paletteMode: params.paletteMode as

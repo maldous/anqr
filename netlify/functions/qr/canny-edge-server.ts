@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/domain/render/src/server/canny-edge-server";
+export * from "../../../packages/domain/render/src/server/canny-edge-server";

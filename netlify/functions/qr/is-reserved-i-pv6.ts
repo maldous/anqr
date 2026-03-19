@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../../packages/platform/node/src/server/is-reserved-i-pv6";
+export * from "../../../packages/platform/node/src/server/is-reserved-i-pv6";

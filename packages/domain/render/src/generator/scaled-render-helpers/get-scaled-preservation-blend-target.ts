@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-generator/types";
+import type { QRCodeInstance } from "@/domain/render/qr-generator-shared";
 import type { PixelColor } from "../scaled-render-types";
 import { adjustLumaPreserveChroma } from "./adjust-luma-preserve-chroma";
 import { sampleScaledModuleOverlayColor } from "./sample-scaled-module-overlay-color";
