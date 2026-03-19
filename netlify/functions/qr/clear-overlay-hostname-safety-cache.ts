@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/clear-overlay-hostname-safety-cache";
+export { _clearOverlayHostnameSafetyCache } from "@/platform/node/server/netlify-qr";

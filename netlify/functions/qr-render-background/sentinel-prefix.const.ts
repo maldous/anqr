@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/bg-sentinel-prefix.const";
+export { SENTINEL_PREFIX } from "@/platform/node/server/netlify-qr-render-background";

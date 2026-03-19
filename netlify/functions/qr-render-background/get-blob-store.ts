@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/bg-get-blob-store";
+export { getBlobStore } from "@/platform/node/server/netlify-qr-render-background";

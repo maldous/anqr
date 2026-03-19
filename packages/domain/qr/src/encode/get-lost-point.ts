@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "../qr-encoder/types";
+import type { QRCodeInstance } from "./types";
 import { penaltyLevel1AdjacentModules } from "./penalty-level1-adjacent-modules";
 import { penaltyLevel2Blocks } from "./penalty-level2-blocks";
 import { penaltyLevel3FinderLike } from "./penalty-level3-finder-like";

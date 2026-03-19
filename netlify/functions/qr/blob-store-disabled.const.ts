@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/blob-store-disabled.const";
+export { blobStoreDisabled } from "@/platform/node/server/netlify-qr";

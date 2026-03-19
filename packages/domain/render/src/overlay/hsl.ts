@@ -1,1 +1,1 @@
-export type { HSL } from "@/contracts/generator";
+export type { HSL } from "@/domain/share";

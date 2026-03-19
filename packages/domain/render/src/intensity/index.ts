@@ -1,1 +1,1 @@
-export { curveIntensity } from "../generator/curve-overlay-intensity";
+export { curveIntensity } from "./curve-intensity";

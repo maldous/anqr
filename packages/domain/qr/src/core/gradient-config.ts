@@ -1,1 +1,1 @@
-export type { GradientConfig } from "@/contracts/generator";
+export type { GradientConfig } from "@/domain/share";

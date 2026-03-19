@@ -18,14 +18,9 @@ module.exports = {
     {
       name: "no-circular",
       severity: "error",
-      comment:
-        "Circular dependencies lead to hard-to-reason-about code. " +
-        "Library-internal worker/plugin cycles in generated assets are excluded.",
+      comment: "Circular dependencies lead to hard-to-reason-about code.",
       from: {},
-      to: {
-        circular: true,
-        viaOnly: { pathNot: "dist/assets/(esm|worker|validation-worker|web)-" },
-      },
+      to: { circular: true },
     },
     {
       name: "no-orphans",
@@ -42,7 +37,6 @@ module.exports = {
           "(^|/)\\..+\\.c?[jt]s$",
           "^[^/]+\\.config\\.",
           "^packages/(ui/mobile|ui/design-tokens|testing/(playwright|parity|fixtures|fakes)|config/(tsconfig|eslint|depcruise|build)|application/(onboarding|monetization|gallery)|analytics/ga4)/src/index\\.ts$",
-          "^apps/(mobile|api)/src/index\\.ts$",
           "^netlify/functions/qr/(sleep|non-cache-params\\.const|is-test-runtime\\.const|default-netlify-site-id\\.const)\\.ts$",
           "^apps/web/src/seo/(truncate|escape-html|config\\.const)\\.ts$",
         ],
@@ -128,11 +122,25 @@ module.exports = {
       to: { path: "^(tools|scripts)/" },
     },
     {
+      name: "packages-no-src-imports",
+      severity: "error",
+      comment: "Packages must not import from the transitional src/ root.",
+      from: { path: "^packages/" },
+      to: { path: "^src/" },
+    },
+    {
       name: "domain-no-platform-imports",
       severity: "error",
       comment: "Domain packages must remain runtime-agnostic.",
       from: { path: "^packages/domain/" },
       to: { path: "^packages/platform/" },
+    },
+    {
+      name: "domain-no-contract-imports",
+      severity: "error",
+      comment: "Strict purity: domain packages must not depend on boundary DTO/schema language.",
+      from: { path: "^packages/domain/" },
+      to: { path: "^packages/contracts/" },
     },
     {
       name: "domain-no-ui-imports",
@@ -170,6 +178,13 @@ module.exports = {
       to: { path: "^packages/analytics/" },
     },
     {
+      name: "domain-no-netlify-imports",
+      severity: "error",
+      comment: "Domain packages must not import Netlify delivery code.",
+      from: { path: "^packages/domain/" },
+      to: { path: "^netlify/" },
+    },
+    {
       name: "application-no-platform-imports",
       severity: "error",
       comment: "Application packages must depend on ports/contracts rather than platform adapters.",
@@ -205,6 +220,13 @@ module.exports = {
       to: { path: "^packages/analytics/" },
     },
     {
+      name: "application-no-netlify-imports",
+      severity: "error",
+      comment: "Application packages must not import Netlify delivery code.",
+      from: { path: "^packages/application/" },
+      to: { path: "^netlify/" },
+    },
+    {
       name: "ui-no-platform-imports",
       severity: "error",
       comment: "UI packages must not import platform adapters directly.",
@@ -226,11 +248,32 @@ module.exports = {
       to: { path: "^packages/domain/" },
     },
     {
+      name: "ui-no-netlify-imports",
+      severity: "error",
+      comment: "UI packages must not import Netlify delivery code.",
+      from: { path: "^packages/ui/" },
+      to: { path: "^netlify/" },
+    },
+    {
       name: "platform-no-app-imports",
       severity: "error",
       comment: "Platform packages must not import delivery targets.",
       from: { path: "^packages/platform/" },
       to: { path: "^apps/" },
+    },
+    {
+      name: "platform-no-netlify-imports",
+      severity: "error",
+      comment: "Platform packages must not import Netlify delivery code.",
+      from: { path: "^packages/platform/" },
+      to: { path: "^netlify/" },
+    },
+    {
+      name: "apps-no-src-imports",
+      severity: "error",
+      comment: "Apps must not import from the transitional src/ root.",
+      from: { path: "^apps/" },
+      to: { path: "^src/" },
     },
     {
       name: "apps-no-app-imports",
@@ -245,6 +288,20 @@ module.exports = {
       comment: "Apps must not import domain directly.",
       from: { path: "^apps/" },
       to: { path: "^packages/domain/" },
+    },
+    {
+      name: "apps-no-netlify-imports",
+      severity: "error",
+      comment: "Apps must not import Netlify delivery code.",
+      from: { path: "^apps/" },
+      to: { path: "^netlify/" },
+    },
+    {
+      name: "netlify-no-src-imports",
+      severity: "error",
+      comment: "Netlify handlers must not import from the transitional src/ root.",
+      from: { path: "^netlify/" },
+      to: { path: "^src/" },
     },
     {
       name: "netlify-no-app-imports",
@@ -304,13 +361,11 @@ module.exports = {
       to: { path: "^scripts/ops/" },
     },
     {
-      name: "no-package-entrypoint-cycles",
+      name: "no-package-cycles",
       severity: "error",
       scope: "folder",
-      comment:
-        "Package public entrypoints must not participate in folder-level cycles. " +
-        "This catches package-to-package cycles without flagging internal folder structure.",
-      from: { path: "^packages/[^/]+/[^/]+/src/index\\.ts$" },
+      comment: "Packages must not participate in folder-level cycles.",
+      from: { path: "^packages/[^/]+/[^/]+/" },
       to: { circular: true },
     },
     {
@@ -347,14 +402,14 @@ module.exports = {
       name: "netlify-no-deep-package-imports",
       severity: "error",
       comment:
-        "Netlify delivery code must consume packages via stable public entrypoints, one-level barrels, or explicit server entry files only.",
+        "Netlify delivery code must consume packages via stable public entrypoints, one-level barrels, or explicit server public subpaths only.",
       from: { path: "^netlify/" },
       to: {
         path: "^packages/[^/]+/[^/]+/",
         pathNot: [
           "^packages/[^/]+/[^/]+/(index|src/index)\\.",
           "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
-          "^packages/[^/]+/[^/]+/src/server/[^/]+\\.",
+          "^packages/[^/]+/[^/]+/src/server/[^/]+/index\\.",
         ],
       },
     },
@@ -389,7 +444,7 @@ module.exports = {
   ],
   options: {
     includeOnly: {
-      path: ["^packages/", "^apps/", "^netlify/"],
+      path: ["^packages/", "^apps/web/", "^netlify/"],
     },
     doNotFollow: {
       path: "node_modules",

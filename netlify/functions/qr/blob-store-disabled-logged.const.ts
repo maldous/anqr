@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/blob-store-disabled-logged.const";
+export { blobStoreDisabledLogged } from "@/platform/node/server/netlify-qr";

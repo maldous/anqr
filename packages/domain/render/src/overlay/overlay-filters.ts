@@ -21,7 +21,5 @@ export { getBrightnessMap } from "./get-brightness-map";
 export { getRGBMap } from "./get-rgb-map";
 export { applyColorMode } from "./apply-color-mode";
 export { applyFilters } from "./apply-filters";
-
-// Re-export core functions for backwards compatibility
 export { clamp, clamp01 } from "../primitives/math";
 export { hslToRgb, rgbToGray, rgbToHsl } from "../color/color";

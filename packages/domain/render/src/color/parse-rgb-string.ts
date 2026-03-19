@@ -1,4 +1,4 @@
-import type { RGBA } from "@/contracts/generator";
+import type { RGBA } from "@/domain/share";
 
 /** Parse rgb() or rgba() string */
 export function parseRgbString(str: string): RGBA {

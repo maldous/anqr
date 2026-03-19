@@ -1,4 +1,4 @@
-import type { VectorModuleStyle, VectorTimingStyle } from "../exporter/types";
+import type { VectorModuleStyle, VectorTimingStyle } from "../export-shared/types";
 import { generateModulePath } from "./generate-module-path";
 
 /**

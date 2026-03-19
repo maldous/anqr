@@ -1,5 +1,5 @@
-import type { ExportConfig, ExportResult } from "../exporter/types";
-import { escapeXml } from "../exporter/utils";
+import type { ExportConfig, ExportResult } from "../export-shared/types";
+import { escapeXml } from "../export-shared/utils";
 import { canvasToPngDataUrl } from "./canvas-to-png-data-url";
 import { resolveExportConfig } from "./resolve-export-config";
 

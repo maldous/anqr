@@ -1,1 +1,1 @@
-export type { SafetyMode } from "@/contracts/generator";
+export type SafetyMode = "off" | "balanced" | "strict";

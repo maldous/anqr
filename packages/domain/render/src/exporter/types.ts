@@ -1,11 +1,13 @@
-export { getDefaultExportConfig } from "./default-export-config";
-export type { ExportConfig } from "./export-config";
-export type { ExportResult } from "./export-result";
-export type { OutputFormat } from "./output-format";
-export type { PngMetadata } from "./png-metadata.types";
-export type { VectorAlignmentStyle } from "./vector-alignment-style";
-export type { VectorFinderStyle } from "./vector-finder-style";
-export type { VectorGradient } from "./vector-gradient";
-export type { VectorModuleStyle } from "./vector-module-style";
-export type { VectorSvgConfig } from "./vector-svg-config";
-export type { VectorTimingStyle } from "./vector-timing-style";
+export { getDefaultExportConfig } from "../export-shared/types";
+export type {
+  ExportConfig,
+  ExportResult,
+  OutputFormat,
+  PngMetadata,
+  VectorAlignmentStyle,
+  VectorFinderStyle,
+  VectorGradient,
+  VectorModuleStyle,
+  VectorSvgConfig,
+  VectorTimingStyle,
+} from "../export-shared/types";

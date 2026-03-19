@@ -6,7 +6,7 @@ import {
   analyzeQRCode,
   analyzeQRFromFile,
   analyzeQRFromUrl,
-} from "@/domain/analyze";
+} from "@/domain/qr/analyze";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import { cloneCanvasLike } from "./canvas-analysis-helpers";
 import { closeBitmapSource } from "./close-bitmap-source";

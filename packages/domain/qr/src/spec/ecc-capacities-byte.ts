@@ -1,4 +1,4 @@
-import type { ECCLevel } from "../qr-spec/types";
+import type { ECCLevel } from "./ecc-level";
 
 // ============================================
 // DATA CAPACITY TABLES

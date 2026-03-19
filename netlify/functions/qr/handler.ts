@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/node";
-import { acquireAnimatedRenderLock } from "@/platform/node/server/acquire-animated-render-lock";
-import { shouldSerializeAnimatedRender } from "@/platform/node/server/should-serialize-animated-render";
+import { acquireAnimatedRenderLock, shouldSerializeAnimatedRender } from "@/platform/node/server/netlify-qr";
 import { CORS_HEADERS } from "./cors-headers.const";
 import { parseHandlerParams } from "./parse-handler-params";
 import { validateParsedParams } from "./validate-parsed-params";

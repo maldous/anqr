@@ -1,4 +1,4 @@
-import { curveIntensity } from "../generator/pixel-matrix-utils";
+import { curveIntensity } from "@/domain/render/intensity";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,

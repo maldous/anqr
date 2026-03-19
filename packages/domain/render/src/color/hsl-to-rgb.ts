@@ -1,4 +1,4 @@
-import type { RGB } from "@/contracts/generator";
+import type { RGB } from "@/domain/share";
 
 /** Convert HSL to RGB */
 export function hslToRgb(h: number, s: number, l: number): RGB {

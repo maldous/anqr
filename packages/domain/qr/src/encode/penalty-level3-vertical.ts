@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "../qr-encoder/types";
+import type { QRCodeInstance } from "./types";
 
 export function penaltyLevel3Vertical(qrcode: QRCodeInstance, moduleCount: number): number {
   let penalty = 0;

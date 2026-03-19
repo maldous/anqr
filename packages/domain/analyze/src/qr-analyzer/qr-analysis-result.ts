@@ -1,6 +1,6 @@
 import type { DataCapacity } from "./data-capacity";
-import type { DecoderMetadata } from "@/contracts/analyze";
-import type { ECCLevel } from "@/contracts/analyze";
+import type { DecoderMetadata } from "./decoder-metadata";
+import type { ECCLevel } from "./ecc-level";
 import type { DetectedColors } from "./detected-colors";
 import type { DominantColorInfo } from "./dominant-color-info";
 import type { ErrorType } from "./error.types";

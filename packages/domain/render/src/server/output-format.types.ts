@@ -1,3 +1,3 @@
-import type { OutputFormat as GeneratorOutputFormat } from "@/contracts/generator";
+import type { OutputFormat as GeneratorOutputFormat } from "@/domain/share";
 
 export type OutputFormat = Extract<GeneratorOutputFormat, "png" | "webp" | "gif">;

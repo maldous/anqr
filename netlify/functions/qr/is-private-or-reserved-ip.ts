@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-private-or-reserved-ip";
+export { isPrivateOrReservedIP } from "@/platform/node/server/netlify-qr";

@@ -1,1 +1,1 @@
-export type { WatermarkKind } from "@/contracts/generator";
+export type { WatermarkKind } from "@/domain/share";

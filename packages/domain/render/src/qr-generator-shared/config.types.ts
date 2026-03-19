@@ -1,4 +1,4 @@
-import type { GradientConfig } from "@/contracts/generator";
+import type { GradientConfig } from "@/domain/share";
 
 export interface QRGeneratorConfig {
   content: string;

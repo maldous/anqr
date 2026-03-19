@@ -5,7 +5,7 @@ import {
   exportSvg,
   exportVectorSvg,
 } from "@/domain/render/exporter";
-import type { ExporterModule } from "./exporter-module";
+import type { ExporterModule } from "../export/exporter-module.types";
 import { getDownloadRuntime } from "../runtime/generator-runtime";
 
 export const browserExporterModule: ExporterModule = {

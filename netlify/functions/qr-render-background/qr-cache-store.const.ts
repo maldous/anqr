@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/bg-qr-cache-store.const";
+export { QR_CACHE_STORE } from "@/platform/node/server/netlify-qr-render-background";

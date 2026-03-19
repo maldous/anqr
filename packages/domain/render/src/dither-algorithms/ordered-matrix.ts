@@ -1,1 +1,1 @@
-export type { OrderedMatrix } from "@/contracts/generator";
+export type { OrderedMatrix } from "@/domain/share";

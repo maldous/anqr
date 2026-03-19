@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-private-hostname";
+export { _isPrivateHostname } from "@/platform/node/server/netlify-qr";

@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-missing-blobs-environment-error";
+export { isMissingBlobsEnvironmentError } from "@/platform/node/server/netlify-qr";

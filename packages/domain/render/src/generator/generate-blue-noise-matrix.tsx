@@ -1,4 +1,4 @@
-import type { CanvasFactory } from "../canvas-factory.types";
+import type { CanvasFactory } from "../canvas";
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,

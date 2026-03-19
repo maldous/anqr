@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-private-i-pv4";
+export { isPrivateIPv4 } from "@/platform/node/server/netlify-qr";

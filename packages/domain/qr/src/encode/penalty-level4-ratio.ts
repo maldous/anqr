@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "../qr-encoder/types";
+import type { QRCodeInstance } from "./types";
 
 // LEVEL4: Dark/light ratio deviation from 50%
 export function penaltyLevel4Ratio(qrcode: QRCodeInstance, moduleCount: number): number {

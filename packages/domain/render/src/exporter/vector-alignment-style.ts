@@ -1,1 +1,1 @@
-export type VectorAlignmentStyle = "match_finder" | "square" | "rounded" | "circle";
+export type { VectorAlignmentStyle } from "../export-shared/vector-alignment-style";

@@ -5,7 +5,7 @@
  * Both encoder and decoder should import from here
  */
 
-import { QRMaskPattern } from "../qr-spec/types";
+import { QRMaskPattern } from "./qr-mask-pattern";
 
 /**
  * Get mask function for a mask pattern (0-7)

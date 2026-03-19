@@ -1,1 +1,1 @@
-export type { AnimationTemporalDitherMode } from "@/contracts/generator";
+export type { AnimationTemporalDitherMode } from "@/domain/share";

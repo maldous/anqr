@@ -1,1 +1,6 @@
-export type { StructuralAnalysis } from "@/contracts/analyze";
+export interface StructuralAnalysis {
+  hasFinderPatterns: boolean;
+  hasTimingPatterns: boolean;
+  hasAlignmentPatterns: boolean;
+  alignmentPatternCount: number;
+}

@@ -30,9 +30,11 @@ import { rotateOverlayServer } from "@/platform/node/server";
 import { sharpenServer } from "@/platform/node/server";
 import { sobelEdgeServer } from "@/platform/node/server";
 import { thresholdServer } from "@/platform/node/server";
-import { _clearOverlayHostnameSafetyCache } from "@/platform/node/server/clear-overlay-hostname-safety-cache";
-import { _isPrivateHostname } from "@/platform/node/server/is-private-hostname";
-import { isPrivateOrReservedIP } from "@/platform/node/server/is-private-or-reserved-ip";
+import {
+  _clearOverlayHostnameSafetyCache,
+  _isPrivateHostname,
+  isPrivateOrReservedIP,
+} from "@/platform/node/server/netlify-qr";
 
 export const __test = {
   nodeCanvasFactory,

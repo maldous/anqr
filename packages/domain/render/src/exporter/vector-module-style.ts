@@ -1,1 +1,1 @@
-export type VectorModuleStyle = "square" | "rounded" | "dots" | "diamond" | "connected";
+export type { VectorModuleStyle } from "../export-shared/vector-module-style";

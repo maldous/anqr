@@ -13,7 +13,7 @@ import { initErrorMatrix } from "./init-error-matrix";
 import { getDiffusionKernel } from "./dithering-kernels";
 import { getOverlayBrightness } from "../overlay/overlay-data-packed";
 import { shouldLockModule } from "../overlay/should-lock-module";
-import { curveIntensity } from "../generator/pixel-matrix-utils";
+import { curveIntensity } from "@/domain/render/intensity";
 import type { OverlayData, QRCodeObject, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 const log = createLogger("GENERATE");

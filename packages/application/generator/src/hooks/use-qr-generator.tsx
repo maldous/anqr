@@ -6,7 +6,7 @@ import {
   type GifCompositor,
   resolveAnimationFrameDelay,
 } from "@/domain/render/animation";
-import { isTemporalDitherActive, type TemporalDitherMode } from "@/domain/render/dither-algorithms";
+import { isTemporalDitherActive, type TemporalDitherMode } from "@/domain/render/dither";
 import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/domain/render/overlay";
 import type { ValidationResult } from "@/contracts/analyze";
 import {

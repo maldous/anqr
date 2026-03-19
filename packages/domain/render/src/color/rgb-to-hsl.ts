@@ -1,4 +1,4 @@
-import type { HSL } from "@/contracts/generator";
+import type { HSL } from "@/domain/share";
 import { resolveHslHue } from "./resolve-hsl-hue";
 
 /** Convert RGB to HSL */

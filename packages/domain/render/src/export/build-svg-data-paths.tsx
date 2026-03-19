@@ -4,7 +4,7 @@ import {
   isFinderPattern,
   isTimingPattern,
 } from "@/domain/qr/spec";
-import type { VectorModuleStyle } from "../exporter/types";
+import type { VectorModuleStyle } from "../export-shared/types";
 import { generateModulePath } from "./generate-module-path";
 
 export function buildSvgDataPaths(

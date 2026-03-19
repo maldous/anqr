@@ -7,4 +7,4 @@ import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("GENERATE");
 
-export { sharpen as applySharpen } from "../overlay/overlay-filters";
+export { sharpen as applySharpen } from "./overlay-filters";

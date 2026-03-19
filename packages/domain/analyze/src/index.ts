@@ -1,1 +1,2 @@
-export * from "./qr-analyzer";
+export { buildAnalysisExportData } from "./qr-analyzer";
+export type * from "./qr-analyzer";

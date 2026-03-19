@@ -3,7 +3,7 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
-import type { GradientConfig } from "@/contracts/generator";
+import type { GradientConfig } from "@/domain/share";
 import {
   calculateOptimalVersion,
   getCompatibleMode,

@@ -1,6 +1,6 @@
 import { parseColor } from "./parse-color";
 import { rgbToGray } from "./rgb-to-gray";
-import type { RGB } from "@/contracts/generator";
+import type { RGB } from "@/domain/share";
 
 export function isDark(color: string | RGB): boolean {
   const parsed = typeof color === "string" ? parseColor(color) : color;

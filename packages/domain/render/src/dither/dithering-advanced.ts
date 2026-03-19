@@ -6,7 +6,7 @@
 import { createLogger } from "@/domain/logging";
 import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms";
 import { getOverlayBrightness } from "../overlay/overlay-data-packed";
-import { curveIntensity } from "../generator/pixel-matrix-utils";
+import { curveIntensity } from "@/domain/render/intensity";
 import type {
   CreateCanvasFn,
   OverlayData,

@@ -6,7 +6,7 @@ import { clearBaseMatrixCache } from "./clear-base-matrix-cache";
 
 export { clearBaseMatrixCache } from "./clear-base-matrix-cache";
 export { getScaleFactor } from "./resolve-render-scale";
-export { curveIntensity } from "./curve-overlay-intensity";
+export { curveIntensity } from "../intensity";
 export { getEffectiveIntensity } from "./get-effective-overlay-intensity";
 
 registerCacheCleanup(clearBaseMatrixCache);

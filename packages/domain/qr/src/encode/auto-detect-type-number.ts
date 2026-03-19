@@ -1,7 +1,7 @@
 import { qrBitBuffer } from "./bit-buffer";
 import { getRSBlocks } from "./rs-blocks";
 import { getLengthInBits } from "./utils";
-import type { QRDataSegment } from "../qr-encoder/types";
+import type { QRDataSegment } from "./types";
 
 export function autoDetectTypeNumber(
   errorCorrectionLevel: number,

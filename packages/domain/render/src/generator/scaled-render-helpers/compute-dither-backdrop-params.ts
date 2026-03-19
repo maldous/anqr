@@ -1,7 +1,7 @@
 import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import type { DitherBackdropParams } from "../scaled-render-types";
 import { parseColor } from "../../color/color";
-import { curveIntensity } from "../pixel-matrix-utils";
+import { curveIntensity } from "@/domain/render/intensity";
 
 export function computeDitherBackdropParams(
   config: QRGeneratorConfig,

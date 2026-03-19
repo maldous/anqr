@@ -1,9 +1,8 @@
-import {
-  applyPaletteColor,
-  applyPerModuleColor,
-  ensureContrast,
-} from "@/domain/qr/color";
 import type { OverlayData, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
+
+import { applyPaletteColor } from "./apply-palette-color";
+import { applyPerModuleColor } from "./apply-per-module-color";
+import { ensureContrast } from "./ensure-contrast";
 
 export function computeFinalModuleColor(
   baseColor: string,

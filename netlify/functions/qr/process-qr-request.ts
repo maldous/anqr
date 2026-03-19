@@ -1,7 +1,6 @@
 import { renderServerQROutput } from "@/application/generator/server";
 import { nodeCanvasFactory } from "@/platform/node/server";
-import { computeCacheKey } from "@/platform/node/server/compute-cache-key";
-import { lookupBlobCache } from "@/platform/node/server/lookup-blob-cache";
+import { computeCacheKey, lookupBlobCache } from "@/platform/node/server/netlify-qr";
 import { qrFnLog } from "@/platform/node";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { buildQRGeneratorConfig } from "./build-qr-generator-config";

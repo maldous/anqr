@@ -1,1 +1,1 @@
-export type { ECCLevel } from "@/contracts/generator";
+export type { ECCLevel } from "@/domain/qr/spec";

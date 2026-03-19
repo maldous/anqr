@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/sentinel-prefix.const";
+export { SENTINEL_PREFIX } from "@/platform/node/server/netlify-qr";

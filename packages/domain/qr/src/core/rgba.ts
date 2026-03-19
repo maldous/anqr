@@ -1,1 +1,1 @@
-export type { RGBA } from "@/contracts/generator";
+export type { RGBA } from "@/domain/share";

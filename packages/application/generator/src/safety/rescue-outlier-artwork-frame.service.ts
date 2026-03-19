@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/domain/logging";
-import type { QArtModule, QArtWorkerResult } from "../qart/qart-shared-types";
+import type { QArtModule, QArtWorkerResult } from "../shared/qart.types";
 
 const log = createLogger("QR");
 

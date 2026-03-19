@@ -7,7 +7,7 @@ import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("ENCODER");
 
-import type { QRBitBuffer } from "../qr-encoder/types";
+import type { QRBitBuffer } from "./types";
 
 /**
  * Create a new bit buffer for QR data encoding

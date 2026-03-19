@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/bg-compute-cache-key";
+export { computeCacheKey } from "@/platform/node/server/netlify-qr-render-background";

@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-redirect-status";
+export { isRedirectStatus } from "@/platform/node/server/netlify-qr";

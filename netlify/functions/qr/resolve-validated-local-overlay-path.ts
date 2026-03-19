@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/resolve-validated-local-overlay-path";
+export { resolveValidatedLocalOverlayPath } from "@/platform/node/server/netlify-qr";

@@ -3,10 +3,11 @@ module.exports = {
   allowedSeverity: "error",
   allowed: [
     {
-      from: { path: "^packages/contracts/" },
+      from: { path: "^packages/contracts/([^/]+)/" },
       to: {
         path: [
-          "^packages/contracts/",
+          "^packages/contracts/$1/",
+          "^packages/contracts/[^/]+/(index|src/index)\\.",
           "^node_modules/tslib/",
         ],
       },

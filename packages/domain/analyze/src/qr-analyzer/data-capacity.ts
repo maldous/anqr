@@ -1,1 +1,6 @@
-export type { DataCapacity } from "@/contracts/analyze";
+export interface DataCapacity {
+  used: number;
+  total: number;
+  percentage: number;
+  overflow: boolean;
+}

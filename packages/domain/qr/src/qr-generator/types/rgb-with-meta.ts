@@ -1,1 +1,1 @@
-export type { RGBWithMeta } from "@/contracts/generator";
+export type { RGBWithMeta } from "../../generator-types/rgb-with-meta";

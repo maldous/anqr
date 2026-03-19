@@ -1,4 +1,4 @@
-import type { RGB } from "@/contracts/generator";
+import type { RGB } from "@/domain/share";
 
 // ============================================
 // COLOR PARSING

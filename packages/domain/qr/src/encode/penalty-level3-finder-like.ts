@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "../qr-encoder/types";
+import type { QRCodeInstance } from "./types";
 import { penaltyLevel3Horizontal } from "./penalty-level3-horizontal";
 import { penaltyLevel3Vertical } from "./penalty-level3-vertical";
 

@@ -1,1 +1,1 @@
-export type OutputFormat = "png" | "webp" | "gif" | "svg" | "jpeg";
+export type { OutputFormat } from "../export-shared/output-format";

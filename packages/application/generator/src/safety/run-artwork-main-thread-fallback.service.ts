@@ -4,7 +4,7 @@
  * Notes: Run QArt on main thread as worker fallback.
  */
 
-import type { FullQArtPipelineResult, QArtModule } from "../qart/qart-shared-types";
+import type { FullQArtPipelineResult, QArtModule } from "../shared/qart.types";
 import { toFullQArtPipelineResult } from "./to-full-qart-pipeline-result";
 
 export async function runArtworkMainThreadFallback(params: {

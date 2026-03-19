@@ -1,1 +1,1 @@
-export type { ECCLevel } from "@/contracts/analyze";
+export type ECCLevel = "L" | "M" | "Q" | "H";

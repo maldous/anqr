@@ -1,1 +1,20 @@
-export type { ContentType } from "@/contracts/analyze";
+export type ContentType =
+  | "url"
+  | "wifi"
+  | "vcard"
+  | "mecard"
+  | "email"
+  | "tel"
+  | "sms"
+  | "geo"
+  | "crypto_bitcoin"
+  | "crypto_ethereum"
+  | "crypto_other"
+  | "epc_sepa"
+  | "upi"
+  | "emv_qr"
+  | "swiss_qr_bill"
+  | "calendar_event"
+  | "otp_auth"
+  | "plain_text"
+  | "unknown";

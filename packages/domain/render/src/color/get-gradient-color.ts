@@ -1,5 +1,5 @@
 import { parseColor } from "./color";
-import type { RGB } from "@/contracts/generator";
+import type { RGB } from "@/domain/share";
 import type { GradientConfig } from "./gradient-config";
 
 // ============================================

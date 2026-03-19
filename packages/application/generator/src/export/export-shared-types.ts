@@ -1,5 +1,1 @@
-/**
- * Shared type definitions for exporter module.
- */
-
-export type { ExporterModule } from "../hooks/exporter-module";
+export type { ExporterModule } from "./exporter-module.types";

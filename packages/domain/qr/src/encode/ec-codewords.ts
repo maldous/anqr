@@ -1,6 +1,6 @@
 import { qrPolynomial } from "./math";
 import { getErrorCorrectPolynomial } from "./utils";
-import type { QRBitBuffer as QRBitBufferType } from "../qr-encoder/types";
+import type { QRBitBuffer as QRBitBufferType } from "./types";
 export { interleaveCodewords } from "./interleave-codewords";
 
 export function computeBlockECData(

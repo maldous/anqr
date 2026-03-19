@@ -6,16 +6,15 @@ import {
   buildPngMetadata,
   buildWatermarkOpts,
   encodeOutputImage,
-  generateGifAnimationFrames,
   loadAndPreprocessOverlay,
   loadWatermarkImage,
-  renderInitialQRCode,
   scaleToOutputDimensions,
   type ServerAnimationFrame,
 } from "@/domain/render/server";
 import { calculateOptimalVersion } from "@/domain/qr/encode";
 import { QRGenerator } from "@/domain/qr/generator";
 import type { OverlayFilterOptions } from "./overlay-filter-options.types";
+import { generateGifAnimationFrames, renderInitialQRCode } from "./render-runtime";
 import type { ServerQRRequestParams } from "./server-qr-request-params.types";
 
 export async function renderServerQROutput(

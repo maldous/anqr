@@ -1,5 +1,1 @@
-export { BAYER_2 } from "./bayer-2";
-export { BAYER_4 } from "./bayer-4";
-export { BAYER_8 } from "./bayer-8";
-export { CLUSTERED_DOT } from "./clustered-dot";
-export { VOID_CLUSTER } from "./void-cluster";
+export { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from "../dither-algorithms/matrices";

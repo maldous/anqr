@@ -1,1 +1,1 @@
-export type { WatermarkBlend } from "@/contracts/generator";
+export type { WatermarkBlend } from "@/domain/share";

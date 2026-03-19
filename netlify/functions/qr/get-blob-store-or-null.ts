@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/get-blob-store-or-null";
+export { getBlobStoreOrNull } from "@/platform/node/server/netlify-qr";

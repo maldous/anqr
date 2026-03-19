@@ -1,4 +1,4 @@
-import { analyzeQRCode } from "@/domain/analyze";
+import { analyzeQRCode } from "@/domain/qr/analyze";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import {
   cloneCanvasLike,

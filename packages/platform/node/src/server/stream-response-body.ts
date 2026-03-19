@@ -1,1 +1,1 @@
-export { streamResponseBody } from "../../../../../netlify/functions/qr/stream-response-body";
+export { streamResponseBody } from "@/domain/render/server";

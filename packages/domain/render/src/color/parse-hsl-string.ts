@@ -1,4 +1,4 @@
-import type { HSLA } from "@/contracts/generator";
+import type { HSLA } from "@/domain/share";
 
 /** Parse hsl() or hsla() string */
 export function parseHslString(str: string): HSLA {

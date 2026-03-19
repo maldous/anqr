@@ -1,5 +1,4 @@
-import { triggerBackgroundRender } from "@/platform/node/server/trigger-background-render";
-import { writeBlobCache } from "@/platform/node/server/write-blob-cache";
+import { triggerBackgroundRender, writeBlobCache } from "@/platform/node/server/netlify-qr";
 import { qrFnLog } from "@/platform/node";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { buildFinalResponse } from "./build-final-response";

@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/domain/logging";
-import type { CanvasFactory } from "../canvas-factory.types";
+import type { CanvasFactory } from "../canvas";
 import { generateSubpixelMatrix } from "../overlay/overlay";
 import { generateDitherModeMatrix } from "./pixel-matrix-dither";
 import { generateBlueNoiseMatrix, generateDitheredMatrix } from "./pixel-matrix-dithered";

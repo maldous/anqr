@@ -1,4 +1,4 @@
-import type { VectorModuleStyle } from "../exporter/types";
+import type { VectorModuleStyle } from "../export-shared/types";
 
 /**
  * Generate SVG path for a single module with styling

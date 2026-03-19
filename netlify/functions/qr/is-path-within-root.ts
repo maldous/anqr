@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-path-within-root";
+export { isPathWithinRoot } from "@/platform/node/server/netlify-qr";

@@ -7,4 +7,4 @@ import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("GENERATE");
 
-export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from "../overlay/overlay-filters";
+export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from "./overlay-filters";

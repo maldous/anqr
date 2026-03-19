@@ -1,4 +1,4 @@
-import type { VectorGradient } from "../exporter/types";
+import type { VectorGradient } from "../export-shared/types";
 
 /**
  * Generate gradient definition for SVG

@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/fetch-overlay-with-validated-redirects";
+export { fetchOverlayWithValidatedRedirects } from "@/platform/node/server/netlify-qr";

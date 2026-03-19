@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/is-reserved-i-pv6";
+export { isReservedIPv6 } from "@/platform/node/server/netlify-qr";

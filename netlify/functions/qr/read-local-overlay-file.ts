@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/read-local-overlay-file";
+export { readLocalOverlayFile } from "@/platform/node/server/netlify-qr";

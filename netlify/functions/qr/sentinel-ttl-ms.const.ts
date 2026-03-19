@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/sentinel-ttl-ms.const";
+export { SENTINEL_TTL_MS } from "@/platform/node/server/netlify-qr";

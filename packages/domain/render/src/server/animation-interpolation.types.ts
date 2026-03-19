@@ -1,1 +1,1 @@
-export type { AnimationInterpolation } from "@/contracts/generator";
+export type { AnimationInterpolation } from "@/domain/share";

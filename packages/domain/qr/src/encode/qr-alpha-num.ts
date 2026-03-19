@@ -1,5 +1,5 @@
-import type { QRBitBuffer, QRDataSegment } from "../qr-encoder/types";
-import { QRMode } from "../qr-encoder/types";
+import type { QRBitBuffer, QRDataSegment } from "./types";
+import { QRMode } from "./types";
 
 /**
  * Alphanumeric mode encoder (0-9, A-Z, space, $%*+-./:)

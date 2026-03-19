@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/bg-non-cache-params.const";
+export { NON_CACHE_PARAMS } from "@/platform/node/server/netlify-qr-render-background";

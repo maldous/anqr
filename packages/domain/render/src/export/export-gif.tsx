@@ -1,7 +1,7 @@
 import { createGifEncoder, indexGifPixels, quantizeGifPalette } from "../animation";
 import { getCanvas2DContext } from "@/domain/render/canvas";
 import { withGifEncodeLock } from "../animation/gif-lock";
-import type { ExportConfig, ExportResult } from "../exporter/types";
+import type { ExportConfig, ExportResult } from "../export-shared/types";
 import { log } from "./log";
 import { renderFrameToScaledCtx } from "./render-frame-to-scaled-ctx";
 import { resolveExportConfig } from "./resolve-export-config";

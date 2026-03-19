@@ -1,1 +1,1 @@
-export type { AnimationEasing } from "@/contracts/generator";
+export type { AnimationEasing } from "@/domain/share";

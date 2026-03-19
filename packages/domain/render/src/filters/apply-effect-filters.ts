@@ -1,4 +1,4 @@
-import type { FilterOptions } from "../overlay/overlay-filters.types";
+import type { FilterOptions } from "./overlay-filters.types";
 import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export function applyEffectFilters(config: QRGeneratorConfig, filterOptions: FilterOptions): void {

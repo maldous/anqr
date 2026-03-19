@@ -1,4 +1,4 @@
-import type { RGB } from "@/contracts/generator";
+import type { RGB } from "@/domain/share";
 import { srgbToLinear01 } from "./srgb-to-linear01";
 import { linearToSrgb8 } from "./linear-to-srgb8";
 

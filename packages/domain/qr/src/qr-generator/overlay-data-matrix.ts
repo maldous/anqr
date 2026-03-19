@@ -1,3 +1,1 @@
-import type { OverlayData } from "./types";
-
-export type OverlayDataMatrix = OverlayData;
+export type { OverlayDataMatrix } from "../cache/overlay-data-matrix";

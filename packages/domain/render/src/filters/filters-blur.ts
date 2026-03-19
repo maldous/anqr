@@ -7,4 +7,4 @@ import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("GENERATE");
 
-export { blur as applyBoxBlur } from "../overlay/overlay-filters";
+export { blur as applyBoxBlur } from "./overlay-filters";

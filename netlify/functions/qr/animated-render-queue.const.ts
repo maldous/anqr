@@ -1,2 +1,2 @@
 // Shim
-export * from "@/platform/node/server/animated-render-queue.const";
+export { animatedRenderQueue } from "@/platform/node/server/netlify-qr";

@@ -1,4 +1,4 @@
-import type { RGB } from "@/contracts/generator";
+import type { RGB } from "@/domain/share";
 
 export function screenBlend(top: RGB, bottom: RGB): RGB {
   return {

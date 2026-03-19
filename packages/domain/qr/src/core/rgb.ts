@@ -1,1 +1,1 @@
-export type { RGB } from "@/contracts/generator";
+export type { RGB } from "@/domain/share";

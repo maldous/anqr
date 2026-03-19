@@ -1,1 +1,1 @@
-export type { HSLA } from "@/contracts/generator";
+export type { HSLA } from "@/domain/share";

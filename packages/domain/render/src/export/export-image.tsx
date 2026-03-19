@@ -1,6 +1,5 @@
 import { embedPngDpi, embedPngMetadata } from "./png-metadata";
-import type { ExportConfig, ExportResult } from "../exporter/types";
-import type { PngMetadata } from "../exporter/png-metadata.types";
+import type { ExportConfig, ExportResult, PngMetadata } from "../export-shared/types";
 import { log } from "./log";
 import { resolveExportConfig } from "./resolve-export-config";
 

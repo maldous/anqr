@@ -15,7 +15,7 @@ export {
   type QRInstance,
   type QRMatrix,
   type QROptions,
-} from "../qr-encoder/encoder-api";
+} from "./encoder-api";
 export {
   createStringToBytes,
   getStringToBytes,

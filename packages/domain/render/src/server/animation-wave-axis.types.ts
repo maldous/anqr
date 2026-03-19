@@ -1,1 +1,1 @@
-export type { AnimationWaveAxis } from "@/contracts/generator";
+export type { AnimationWaveAxis } from "@/domain/share";
