@@ -1,4 +1,4 @@
-import { isNonEmpty } from "@/domain/payload/generators";
+import { isNonEmpty } from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import { ValidatedTextField } from "./validated-text-field";
 

@@ -1,4 +1,4 @@
-import { generateBharatQR } from "@/domain/payload/generators";
+import { generateBharatQR } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeBharatQR(payload: PayloadData): string {

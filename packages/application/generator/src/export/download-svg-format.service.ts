@@ -4,7 +4,7 @@
  * Notes: Download QR code as SVG format.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { ExporterModule } from "./export-shared-types";
 import { expandPackedQArtMatrix } from "../generation/expand-packed-q-art-matrix.service";
 

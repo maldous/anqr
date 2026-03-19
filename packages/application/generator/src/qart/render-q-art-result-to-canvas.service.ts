@@ -7,7 +7,7 @@
 import type { FullQArtPipelineResult } from "./qart-shared-types";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { imageBitmapToCanvas } from "../generation/image-bitmap-to-canvas.service";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function renderQArtResultToCanvas(params: {
   fullQArtResult: FullQArtPipelineResult;
@@ -41,14 +41,14 @@ export async function renderQArtResultToCanvas(params: {
     return { canvas: canvas, usedBitmapRender: true };
   }
   if (params.workerPackedMatrix && (params.fullQArtResult.moduleCount ?? 0) > 0) {
-    const canvas = (await qrGenerator.renderFromPackedMatrix(
+    const canvas = (await getQRGenerator().renderFromPackedMatrix(
       params.workerPackedMatrix,
       params.fullQArtResult.moduleCount ?? 0,
       qrArtConfig,
     )) as HTMLCanvasElement;
     return { canvas, usedBitmapRender: false };
   }
-  const canvas = (await qrGenerator.renderFromMatrix(
+  const canvas = (await getQRGenerator().renderFromMatrix(
     params.fullQArtResult.matrix ?? [],
     qrArtConfig,
   )) as HTMLCanvasElement;

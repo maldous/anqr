@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/build-global-gif-palette";
+export * from "@/platform/node/server";

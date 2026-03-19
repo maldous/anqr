@@ -1,5 +1,5 @@
 import { Capacitor } from "@capacitor/core";
-import type { Tier } from "@/domain/qr";
+import type { Tier } from "@/application/generator";
 import { createLogger } from "@/lib/logger";
 import { trackEvent } from "@/infra/telemetry/zaraz";
 import { prepareInterstitial, showInterstitial } from "@/platform/native";

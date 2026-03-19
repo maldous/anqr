@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/ensure-gif-palette-anchors";
+export * from "@/platform/node/server";

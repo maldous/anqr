@@ -1,16 +1,14 @@
 import { getQartModulePromise, setQartModulePromise } from "./qart-module-promise";
 import type { QArtModule } from "./q-art-module";
+import { getQArtWorkerRuntime } from "../runtime/generator-runtime";
 
 export function loadQArtModule(): Promise<QArtModule> {
   if (!getQartModulePromise()) {
     setQartModulePromise(
-      Promise.all([import("@/domain/qr/qart"), import("@/platform/worker")]).then(
-        ([qartModule, workerModule]) => ({
+      import("@/domain/qr/qart").then((qartModule) => ({
           ...qartModule,
-          generateQArtInWorker: workerModule.generateQArtInWorker,
-          terminateQArtWorker: workerModule.terminateQArtWorker,
-        }),
-      ),
+          ...getQArtWorkerRuntime(),
+        })),
     );
   }
   return getQartModulePromise()!;

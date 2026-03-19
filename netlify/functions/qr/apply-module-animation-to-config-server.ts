@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-module-animation-to-config-server";
+export * from "@/platform/node/server";

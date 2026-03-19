@@ -4,7 +4,7 @@
  * Notes: Top-level QArt generation entry point.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { loadQArtModule } from "./qart-shared.types";
 import type { QArtPerfSnapshot } from "../generation/generation-perfsnap.types";
 import { deliverQArtResult } from "./deliver-q-art-result.service";

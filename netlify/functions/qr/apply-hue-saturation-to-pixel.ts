@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-hue-saturation-to-pixel";
+export * from "@/platform/node/server";

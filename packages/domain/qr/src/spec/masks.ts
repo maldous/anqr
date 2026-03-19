@@ -22,7 +22,7 @@ import { QRMaskPattern } from "../qr-spec/types";
  * @param maskPattern Mask pattern number (0-7)
  * @returns Function that returns true if the module at (i, j) should be flipped */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("SPEC");
 

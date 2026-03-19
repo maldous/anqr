@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/hsl-to-rgb-tuple-server";
+export * from "@/platform/node/server";

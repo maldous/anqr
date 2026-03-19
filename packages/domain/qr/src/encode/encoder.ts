@@ -3,7 +3,7 @@
  * Main factory function for creating QR codes
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { autoDetectTypeNumber } from "./auto-detect-type-number";
 import { qrBitBuffer } from "./bit-buffer";
 import { composeSvgAccessibilityAttr } from "./compose-svg-accessibility-attr";

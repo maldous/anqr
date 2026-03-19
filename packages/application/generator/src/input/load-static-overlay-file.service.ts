@@ -4,7 +4,7 @@
  * Notes: Load static image for overlay.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { AnimationFrame, GifCompositor } from "@/domain/render/animation";
 import { loadFileAsCanvas } from "./load-file-as-canvas.service";
 

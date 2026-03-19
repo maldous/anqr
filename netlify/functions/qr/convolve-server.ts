@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/convolve-server";
+export * from "@/platform/node/server";

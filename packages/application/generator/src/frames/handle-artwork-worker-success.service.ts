@@ -4,7 +4,7 @@
  * Notes: Handle successful artwork worker result.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QArtModule, QArtWorkerResult } from "../qart/qart-shared-types";
 import { renderArtworkWorkerBitmap } from "./render-artwork-worker-bitmap.service";
 import { renderArtworkWorkerMatrix } from "./render-artwork-worker-matrix.service";

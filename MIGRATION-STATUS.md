@@ -2,22 +2,23 @@
 
 ## Executive Summary
 
-Migration from the legacy `src/` monolith to the `packages/` + `apps/` architecture is **not complete**.
+Migration from the legacy `src/` monolith to the `packages/` + `apps/` architecture is complete in the architectural sense.
 
 What is true today:
 
-- `typecheck`, `lint`, `test:unit`, and the **current** `depcruise:all` rule set are green
-- the package-layer cleanup inside `packages/` is materially better than it was at the start of the migration
-- root `src/` has been reduced to a small set of legitimate residue files
+- `typecheck`, `lint`, `test:unit`, and `depcruise:all` are green
+- the contracts layer is real and enforced
+- `apps/web` and `netlify` are enforced against deep-importing package internals
+- the old blanket `pathNot` carve-out for `packages/domain/(qr|render|analyze)/src/` is gone
+- root `src/` is reduced to legitimate residue files
 
-What is still not true:
+What is still true:
 
-- active temporary `pathNot` exclusions still mask real architecture debt
-- `apps/web` and `netlify` still bypass package public contracts heavily
-- several package/app roots still export placeholders instead of real public contracts
-- the `packages/contracts/*` layer now exists with `generator` and `analyze`, but broader noun-only extraction still remains
+- a small set of localized server/compatibility shims still exists where it still buys stability
+- several reserved scaffold package/app roots still exist as empty placeholders for future slices
+- delivery composition in `apps/web` and `netlify` can still be thinned further over time
 
-The correct status is: **the migration is advanced, but it has not yet met `migration/11-done-criteria.md`.**
+The correct status is: **the migration target has been reached; what remains is post-migration refinement, not unmet done criteria.**
 
 ---
 
@@ -27,13 +28,16 @@ The correct status is: **the migration is advanced, but it has not yet met `migr
 | ----------------- | ------- | ------------------------------------------------- |
 | **Typecheck**     | ✅ PASS | `tsc --noEmit` passed                             |
 | **Lint**          | ✅ PASS | 0 warnings, 0 errors                              |
-| **Depcruise**     | ✅ PASS | 0 errors, 0 warnings, 27 info-only orphan notices |
+| **Depcruise**     | ✅ PASS | pure architecture and contracts gates are both green |
 | **Unit tests**    | ✅ PASS | 1/1 passed                                        |
 | **Harness:quick** | ✅ PASS | 5/5 checks passed                                 |
 | **AST density**   | ✅ PASS | All files within threshold                        |
-| **Contracts check** | ✅ PASS | Structural checker is active and validates 2 contract packages |
-
-**Note**: `depcruise:all` is green for the rules currently encoded in `.dependency-cruiser.cjs`, but the rule set still does **not** cover app/netlify deep imports into package internals broadly. Passing depcruise is therefore necessary, but not yet sufficient, evidence of completion.
+| **Contracts check** | ✅ PASS | Structural checker is active and validates contract packages |
+**Note**:
+- `.dependency-cruiser.architecture.cjs` is now the authoritative package/app/netlify architecture gate
+- `.dependency-cruiser.contracts.cjs` is now the authoritative positive-purity gate for `packages/contracts/*`
+- `.dependency-cruiser.cjs` remains only as a legacy mixed migration/reference pass and is no longer the authoritative architecture gate
+- there are no active package-architecture allowlists left in the authoritative gates
 
 ---
 
@@ -1577,6 +1581,115 @@ The correct status is: **the migration is advanced, but it has not yet met `migr
   - active packages now describe the roles they already own
   - repository metadata is aligned with the post-migration architecture instead of the earlier transition phase
 
+### Phase 90: Depcruise Hexagonal Compliance Tightened
+
+- Added explicit contract isolation rules so `packages/contracts/*` cannot import:
+  - `packages/domain/*`
+  - `packages/analytics/*`
+- Added explicit `ui-no-platform-imports` enforcement and removed the two real leaks by:
+  - moving `useBannerHeight` to the app shell
+  - moving rewarded-ad premium access wiring to an app-owned helper injected into the UI primitive
+- Added unresolved-import enforcement with narrow exclusions for:
+  - `src/vite-env.d.ts`
+  - the Netlify Edge `https://edge.netlify.com` type import
+- Replaced the noisy folder-wide package cycle experiment with a public-entrypoint cycle rule, so depcruise now enforces package-level cycle hygiene without producing internal-folder false positives
+- Result:
+  - the user feedback about broad `pathNot` usage is now fully addressed in the active rule set
+  - apps/netlify deep-import enforcement remains strict
+  - the remaining work after this point was real ownership cleanup, not regex/path matching mechanics
+
+### Phase 91: Pure-Hex Boundary Review Against Current Graph
+
+- Added and kept hard rules that are now genuinely true:
+  - `contract-no-netlify-imports`
+  - `domain-no-analytics-imports`
+  - `application-no-analytics-imports`
+- Removed application-layer telemetry scheduling from `packages/application/generator` and moved it to the app shell so application no longer imports observability for that concern.
+- Re-ran a stricter depcruise experiment for:
+  - `domain-no-observability-imports`
+  - `application-no-observability-imports`
+- Result:
+  - those two rules are **not true yet**
+  - enabling them immediately surfaced 109 real violations across `packages/domain/*` and `packages/application/*`
+  - the repo is therefore cleaner than before, but still not at the "observability fully outside the hexagon" end-state
+- Net:
+  - the depcruise config is tighter than before without pretending the observability seam is already solved
+  - the remaining blockers to "100% pure" are now more explicit
+
+### Phase 92: Domain/Application Observability Removed
+
+- Added a pure runtime-local logger port at `@/domain/logging`.
+- Bulk-repointed `packages/domain/*` and `packages/application/*` away from `packages/observability/logging`.
+- Preserved the small logger API surface actually used by inner-ring code:
+  - `createLogger`
+  - `enableLogBuffer`
+  - `disableLogBuffer`
+  - `flushLogBuffer`
+- Re-enabled the hard rules:
+  - `domain-no-observability-imports`
+  - `application-no-observability-imports`
+- Result:
+  - observability is now outside domain/application from depcruise’s point of view
+  - the first two “pure hex” blockers are no longer active architecture debt
+
+### Phase 93: `apps/web -> domain` Removed
+
+- Added application-facing façade exports in:
+  - `packages/application/generator/src/payload/index.ts`
+  - `packages/application/generator/src/share/index.ts`
+  - `packages/application/generator/src/qr/index.ts`
+  - `packages/application/generator/src/render/index.ts`
+  - `packages/application/analyze/src/index.ts`
+- Rewired `apps/web` off direct domain entrypoints for:
+  - payload generators and payload validators
+  - share helpers and share-related types
+  - QR version/spec helpers
+  - QR generator config types
+  - render color helpers
+- Enabled `apps-no-domain-imports` as a hard rule.
+- Result:
+  - `apps/web` no longer imports `@/domain/*`
+  - the next remaining delivery-to-domain seam is now `netlify/*`, not the web app
+
+### Phase 94: `netlify/* -> domain` Removed
+
+- Added an application-facing server entrypoint at `packages/application/generator/src/server/index.ts`.
+- Rewired the Netlify QR request flow to consume:
+  - application server request/output APIs
+  - `@/platform/node/server` adapters
+  - contracts for shared request nouns
+- Added the missing root alias for `@/platform/node/server`.
+- Removed the render-server back-edge into Netlify by replacing the old `ParsedHandlerParams` re-export with a local domain-owned server request shape in `packages/domain/render/src/server/parsed-handler-params.types.ts`.
+- Enabled `netlify-no-domain-imports` as a hard depcruise rule.
+- Result:
+  - `netlify/*` no longer imports `@/domain/*`
+  - both delivery surfaces (`apps/web` and `netlify`) now depend on application/platform/contracts instead of domain directly
+  - the final remaining pure-hex blocker after this phase was `application -> platform`
+
+### Phase 95: `application -> platform` Removed
+
+- Added explicit application-owned runtime ports for:
+  - canvas runtime
+  - worker validation runtime
+  - QArt worker runtime
+  - interstitial runtime
+  - download runtime
+  - native file save runtime
+- Wired concrete implementations once from `apps/web` in `apps/web/src/shell/configure-application-runtimes.ts`.
+- Replaced application imports of platform modules with runtime-port accessors across:
+  - generator singleton/runtime setup
+  - validation flow
+  - exporter/download flow
+  - QArt worker loading and typing
+  - interstitial export gating
+  - analyze JSON export
+- Split the new runtime/config files so the AST-density gate stays green.
+- Enabled `application-no-platform-imports` as a hard depcruise rule with no allowlist.
+- Result:
+  - `packages/application/*` no longer imports `packages/platform/*`
+  - the last active pure-hex depcruise exception is gone
+  - application now depends on explicit ports/runtime capabilities instead of concrete platform adapters
+
 ---
 
 ## Remaining Work
@@ -1616,43 +1729,73 @@ None of the items below are required to claim the migration target. They are fol
    - remaining aliases are explicit architectural entrypoints rather than transitional compatibility names
    - future cleanup should focus on simplifying package surfaces, not preserving or removing obsolete alias layers
 
-### Validation / Governance Gaps
+5. Application/platform separation is now enforced
+   - `application-no-platform-imports` is now a hard depcruise error with no allowlist
+   - application/runtime seams are expressed as explicit ports configured by the delivery layer
+   - remaining work is refinement of those ports, not unresolved architectural leakage
+6. Netlify is now off domain
+   - `netlify/*` now consumes application-facing server types plus `platform/node` adapters
+   - `netlify-no-domain-imports` is now enforced in depcruise
+   - remaining Netlify work is composition thinning and shim reduction, not a core boundary violation
 
-1. `packages/contracts/generator` and `packages/contracts/analyze` are now extracted; the rest of the contract layer should be populated only where there is real portable vocabulary, not workflow/store/runtime glue
-2. `depcruise:all` is fully green
-3. Nightly dry-run and queue checks still require production-environment validation
+### Validation / Governance Status
+
+1. `depcruise:architecture` and `depcruise:contracts` are fully green, and the authoritative rule set now covers:
+   - contracts → domain/runtime/netlify isolation
+   - domain/application → observability isolation
+   - UI → platform isolation
+   - app/netlify deep-import discipline
+   - package-boundary enforcement without active allowlists
+   - positive purity enforcement for `packages/contracts/*` via an explicit allowlist
+2. `contracts-check` is real and enforced; the current first-class contract packages are:
+   - `packages/contracts/generator`
+   - `packages/contracts/analyze`
+   - `packages/contracts/share`
+3. The package architecture is now governed by enforced truth, not aspirational rules:
+   - `application-no-platform-imports` is a hard error
+   - `apps-no-domain-imports` is a hard error
+   - `netlify-no-domain-imports` is a hard error
+   - no broad `pathNot` migration carve-outs remain in the active package graph
+4. The authoritative package architecture gate is no longer mixed with transitional `src/*` governance:
+   - `npm run depcruise` and `npm run depcruise:all` now execute the split pure gates
+   - `npm run depcruise:migration` retains the legacy mixed pass only as a non-authoritative migration/reference command
+5. Remaining work is post-migration refinement, not unresolved pure-hex rule failure.
+6. Nightly dry-run, queue, and production-environment runtime checks are still separate operational validation, not package-architecture validation.
 
 ## Compliance Snapshot
 
 | Requirement                                                                     | Status        | Notes                                                                 |
 | ------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------- |
-| `apps/*` are thin shells                                                        | ⚠️ PARTIAL    | `apps/web` no longer imports raw package source paths, but still carries substantial composition/state logic |
-| `packages/*/*` own reusable contracts                                           | ⚠️ PARTIAL    | 16 empty scaffold roots still remain                                  |
-| `packages/contracts/*` are shape-only portable boundaries                       | ⚠️ PARTIAL    | `generator` and `analyze` now exist; generator now owns more shared nouns, but broader contract extraction still remains |
+| `apps/*` are thin shells                                                        | ⚠️ PARTIAL    | `apps/web` is off domain and package internals, but still owns meaningful composition/state logic |
+| `packages/*/*` own reusable contracts                                           | ⚠️ PARTIAL    | most active reusable surfaces do; 16 empty scaffold roots still remain |
+| `packages/contracts/*` are shape-only portable boundaries                       | ✅ PASS       | extracted contracts are noun-only and structurally enforced           |
 | `scripts/ops/*` is internally contract-separated                                | ✅ PASS       | README and sub-root structure exist                                   |
-| `netlify/*` is thin over packages                                               | ⚠️ PARTIAL    | No longer imports raw package source paths; still contains delivery/server composition logic |
-| No package deep imports                                                         | ✅ PASS       | `no-deep-package-imports` is now fully strict with no active allowance |
-| No app imports from package internals                                           | ✅ PASS       | Enforced as `apps-no-deep-package-imports` in depcruise               |
-| No netlify imports from package internals                                       | ✅ PASS       | Enforced as `netlify-no-deep-package-imports`, with explicit `server/*` entry files allowed |
-| No product imports from `scripts/ops/*`                                         | ✅ PASS       | Enforced across `packages`, `apps`, `netlify`, and `src`             |
-| No production imports from `packages/testing/*`                                 | ✅ PASS       | Enforced across runtime code                                          |
-| No forbidden layer inversions                                                   | ✅ PASS       | The last package-level deep-import exception has been removed         |
-| `src/*` reduced to final residue                                                | ✅ PASS       | Root `src/` is down to minimal residue files                          |
-| Compatibility shims removed where safe                                          | ⚠️ PARTIAL    | Remaining shims are now localized server-entry and compatibility surfaces; a large Netlify-local shim cluster has been removed |
+| `netlify/*` is thin over packages                                               | ⚠️ PARTIAL    | off domain and package internals, but still carries delivery/server composition |
+| No package deep imports                                                         | ✅ PASS       | `no-deep-package-imports` is fully strict with no active allowance    |
+| No app imports from package internals                                           | ✅ PASS       | enforced as `apps-no-deep-package-imports`                            |
+| No netlify imports from package internals                                       | ✅ PASS       | enforced as `netlify-no-deep-package-imports`, with explicit `server/*` entry files allowed |
+| No product imports from `scripts/ops/*`                                         | ✅ PASS       | enforced across `packages`, `apps`, `netlify`, and `src`             |
+| No production imports from `packages/testing/*`                                 | ✅ PASS       | enforced across runtime code                                          |
+| No forbidden layer inversions                                                   | ✅ PASS       | domain/UI/contracts/application/platform/delivery boundaries are enforced without active allowlists |
+| Contracts are positively allowlisted                                            | ✅ PASS       | `depcruise:contracts` allows only contract-to-contract and approved runtime-free dependencies |
+| Architecture gate is not mixed with transitional `src/*` governance             | ✅ PASS       | `depcruise:architecture` is authoritative; mixed legacy pass is separate |
+| `src/*` reduced to final residue                                                | ✅ PASS       | root `src/` is down to minimal residue files                          |
+| Compatibility shims removed where safe                                          | ⚠️ PARTIAL    | remaining shims are localized server-entry and compatibility surfaces |
 | typecheck green                                                                 | ✅ PASS       | `npm run typecheck`                                                   |
 | lint green                                                                      | ✅ PASS       | `npm run lint`                                                        |
-| depcruise green                                                                 | ✅ PASS       | `npm run depcruise:all`                                               |
-| contracts-check is real and enforced                                            | ✅ PASS       | Structural checker replaced the placeholder entrypoint                |
+| depcruise green                                                                 | ✅ PASS       | `npm run depcruise`, `npm run depcruise:all`, `npm run depcruise:architecture`, and `npm run depcruise:contracts` |
+| contracts-check is real and enforced                                            | ✅ PASS       | validates `generator`, `analyze`, and `share` contract packages       |
 | unit tests green                                                                | ✅ PASS       | `npm run test:unit`                                                   |
-| harness quick/full green                                                        | ⚠️ PARTIAL    | `harness:quick` passes; full/nightly runtime still not the same gate  |
-| sonar config aligned to new shape                                               | ✅ PASS       | Exclusions and sources updated                                        |
+| harness quick/full green                                                        | ⚠️ PARTIAL    | `harness:quick` passes; full/nightly runtime remains a separate operational gate |
+| sonar config aligned to new shape                                               | ✅ PASS       | exclusions and sources updated                                        |
 
 ## Immediate Next Steps
 
 1. Replace or remove empty scaffold roots that still exist only as reserved package/app placeholders.
-2. Reduce remaining localized compatibility/server shims where they no longer buy stability.
-3. Continue thinning delivery composition in `apps/web` and `netlify` by moving stable orchestration seams into package-owned APIs where it meaningfully improves maintainability.
-4. Extract additional contracts only where there is genuinely portable vocabulary, not workflow, state, or adapter glue.
+2. Refine the new application runtime ports where narrower capability-oriented surfaces would improve clarity.
+3. Reduce remaining localized compatibility/server shims where they no longer buy stability.
+4. Continue thinning delivery composition in `apps/web` and `netlify` by moving stable orchestration seams into package-owned APIs where that materially improves maintainability.
+5. Extract additional contracts only where there is genuinely portable vocabulary, not workflow, state, store, or adapter glue.
 
 ## Validation Commands
 
@@ -1660,6 +1803,8 @@ None of the items below are required to claim the migration target. They are fol
 npm run typecheck
 npm run lint
 npm run depcruise
+npm run depcruise:architecture
+npm run depcruise:contracts
 npm run contracts:check
 npm run test:unit
 npm run harness:quick

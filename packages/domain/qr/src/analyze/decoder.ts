@@ -7,7 +7,7 @@ import {
   createLogger,
   enableLogBuffer,
   flushLogBuffer,
-} from "../../../../observability/logging/src";
+} from "@/domain/logging";
 import { decodeQR } from "../decode";
 import { detectContentType, extractDominantColors } from "./analyzer-content";
 import { analyzeColors } from "./analyze-colors";

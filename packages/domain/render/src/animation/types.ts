@@ -2,7 +2,7 @@
  * Animation Types
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("ANIMATION");
 export type { AnimationFrame } from "./animation-frame";

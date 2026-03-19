@@ -6,7 +6,7 @@
 
 import type { QArtWorkerResult } from "../qart/qart-shared-types";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function renderArtworkWorkerMatrix(params: {
   workerResult: QArtWorkerResult;
@@ -18,7 +18,7 @@ export async function renderArtworkWorkerMatrix(params: {
     typeNumber: params.workerResult.version,
     overlayMode: undefined,
   } as QRGeneratorConfig;
-  return await qrGenerator.renderFromPackedMatrix(
+  return await getQRGenerator().renderFromPackedMatrix(
     params.workerResult.matrix,
     params.workerResult.moduleCount,
     qrArtConfig,

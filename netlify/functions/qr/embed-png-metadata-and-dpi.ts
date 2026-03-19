@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/embed-png-metadata-and-dpi";
+export * from "@/platform/node/server";

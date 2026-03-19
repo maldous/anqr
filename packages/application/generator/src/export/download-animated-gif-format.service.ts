@@ -4,7 +4,7 @@
  * Notes: Download QR code as animated GIF.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { ExporterModule } from "./export-shared-types";
 import type { AnimationFrame } from "@/domain/render/animation";
 

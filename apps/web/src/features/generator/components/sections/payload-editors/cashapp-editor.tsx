@@ -1,4 +1,4 @@
-import { isValidCashtag } from "@/domain/payload/generators";
+import { isValidCashtag } from "@/application/generator";
 import type { EditorProps } from "../payload-editor.types";
 import { OptionalAmountField } from "./optional-amount-field";
 import { ValidatedHandleField } from "./validated-handle-field";

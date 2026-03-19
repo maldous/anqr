@@ -33,9 +33,8 @@ import { Sidebar } from "../features/generator/components/sidebar";
 import type { StaticPageType } from "../pages/static-page";
 import { TooltipProvider } from "@/ui/web";
 import type { GalleryCategory } from "../content/gallery/gallery-manifest";
-import { useBannerHeight } from "@/ui/web";
 import { isRtlLanguage, loadLocale } from "../i18n";
-import { parseUrlParams } from "@/domain/share";
+import { parseUrlParams } from "@/application/generator";
 import { useQRStore } from "../state/qr-store";
 import { type PageView, getPageFromLocation } from "../routing/page-resolution";
 import { updateCanonicalUrl, updateHreflangLinks } from "../seo/head-links";
@@ -51,6 +50,7 @@ import { Gallery } from "./gallery";
 import { log } from "./log";
 import { StaticPage } from "./static-page";
 import { trimRoutePath } from "../routing/trim-route-path";
+import { useBannerHeight } from "./use-banner-height";
 import { WelcomeModal } from "./welcome-modal";
 import { LazyLoadFallback } from "./lazy-load-fallback";
 

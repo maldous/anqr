@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/max-overlay-pixels.const";
+export * from "@/platform/node/server";

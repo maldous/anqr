@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { dispatchPixelRender } from "./dispatch-pixel-render";
 import type { PixelGridCtx } from "../scaled-render-types";
 

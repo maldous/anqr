@@ -1,4 +1,4 @@
-import { generateEMVMPM } from "@/domain/payload/generators";
+import { generateEMVMPM } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeEMVGeneric(payload: PayloadData): string {

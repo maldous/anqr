@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { checkTimingPosition } from "./check-timing-position";
 
 const qrDecoderLog = createLogger("DECODER");

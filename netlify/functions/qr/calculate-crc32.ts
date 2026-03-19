@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/calculate-crc32";
+export * from "@/platform/node/server";

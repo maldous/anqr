@@ -10,4 +10,8 @@ export type HelpLinkProps = {
   setTier: (tier: Tier) => void;
   checkPremiumAccess: () => boolean;
   activatePremiumAccess: () => void;
+  requestProfessionalAccess?: (
+    activatePremiumAccess: () => void,
+    setLoadingAd: (loading: boolean) => void,
+  ) => Promise<boolean>;
 };

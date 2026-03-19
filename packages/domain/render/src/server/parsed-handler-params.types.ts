@@ -1,1 +1,46 @@
-export type { ParsedHandlerParams } from "../../../../../netlify/functions/qr/parsed-handler-params.types";
+import type { AnimationEasing, AnimationPattern } from "../animation";
+import type { AnimationInterpolation } from "./animation-interpolation.types";
+import type { AnimationTarget } from "./animation-target.types";
+import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type { AnimationWaveAxis } from "./animation-wave-axis.types";
+import type { ECCLevel } from "./ecc-level.types";
+import type { OutputFormat } from "./output-format.types";
+import type { WatermarkBlend } from "./watermark-blend.types";
+import type { WatermarkKind } from "./watermark-kind.types";
+import type { WatermarkPosition } from "./watermark-position.types";
+
+export interface ParsedHandlerParams {
+  animationBounce: boolean;
+  animationBounce2: boolean;
+  animationColorCycle: boolean;
+  animationColorCycle2: boolean;
+  animationEasing: AnimationEasing;
+  animationEasing2: AnimationEasing;
+  animationFrames: number;
+  animationInterpolate: AnimationInterpolation;
+  animationModuleJitter: number;
+  animationPattern: AnimationPattern;
+  animationPattern2: AnimationPattern;
+  animationReverse: boolean;
+  animationReverse2: boolean;
+  animationSeed: number;
+  animationTarget: AnimationTarget;
+  animationTarget2: AnimationTarget;
+  animationTemporalDither: AnimationTemporalDitherMode;
+  animationWaveAxis: AnimationWaveAxis;
+  animationWaveAxis2: AnimationWaveAxis;
+  data: string;
+  ec: ECCLevel;
+  maskPattern: "auto" | number;
+  outputFormat: OutputFormat;
+  outputHeight: number;
+  outputWidth: number;
+  overlayMode?: string;
+  version: number;
+  watermarkBlend: WatermarkBlend;
+  watermarkEnabled: boolean;
+  watermarkKind: WatermarkKind;
+  watermarkOpacity: number;
+  watermarkPosition: WatermarkPosition;
+  watermarkText: string;
+}

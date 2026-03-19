@@ -4,7 +4,7 @@
  * Notes: Load watermark image for animation frames.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { loadFileAsCanvas } from "../input/load-file-as-canvas.service";
 
 const log = createLogger("QR");

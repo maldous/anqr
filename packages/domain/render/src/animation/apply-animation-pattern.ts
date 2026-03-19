@@ -3,7 +3,7 @@
  * Apply visual effects to animation frames
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { createCanvasLike } from "./create-canvas-like";
 import { resetCanvas2D } from "./reset-canvas-2d";
 import { resolveEffectBounds } from "./resolve-effect-bounds";

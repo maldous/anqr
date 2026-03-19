@@ -4,7 +4,7 @@
  * Notes: Pre-generation overflow and block checks.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { checkOverflowContentChanged } from "./check-overflow-content-changed.service";
 
 const log = createLogger("QR");

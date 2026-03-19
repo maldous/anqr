@@ -1,8 +1,8 @@
 import { Capacitor } from "@capacitor/core";
 import { buildAnalysisExportData } from "@/domain/analyze";
-import { saveFileNative } from "@/platform/browser/io";
 import { nowMs } from "./formatters";
 import type { ExportAnalysisJSONParams } from "./analysis-runtime.types";
+import { getAnalyzePlatformRuntime } from "./analyze-platform-runtime";
 
 export function exportAnalysisJSON(params: ExportAnalysisJSONParams): void {
   const { result, uiTimings, analysisSource, actualUsedVersion, setUiTimings } = params;
@@ -27,7 +27,7 @@ export function exportAnalysisJSON(params: ExportAnalysisJSONParams): void {
   setUiTimings((prev) => ({ ...prev, exportMs }));
   const filename = `qr-analysis-${Date.now()}.json`;
   if (Capacitor.isNativePlatform()) {
-    void saveFileNative(filename, blob);
+    void getAnalyzePlatformRuntime().saveFileNative(filename, blob);
     return;
   }
   const url = URL.createObjectURL(blob);

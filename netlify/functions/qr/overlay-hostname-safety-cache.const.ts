@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/overlay-hostname-safety-cache.const";
+export * from "@/platform/node/server";

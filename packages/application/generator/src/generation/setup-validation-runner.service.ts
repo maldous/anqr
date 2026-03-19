@@ -4,9 +4,9 @@
  * Notes: Setup post-generation validation runner.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { ValidationResult } from "@/contracts/analyze";
-import { validateInWorker } from "@/platform/worker";
+import { getValidationWorkerRuntime } from "../runtime/generator-runtime";
 
 const log = createLogger("QR");
 
@@ -40,7 +40,8 @@ export function setupValidationRunner(params: {
         params.setIsValidating(false);
         return;
       }
-      validateInWorker(renderedCanvas, expectedContent, 2)
+      getValidationWorkerRuntime()
+        .validateInWorker(renderedCanvas, expectedContent, 2)
         .then((validationResult) => {
           if (params.generationRequestIdRef.current === validationRequestId) {
             params.setValidation(validationResult);

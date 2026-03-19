@@ -3,7 +3,7 @@
  * Create and manage animation loop handlers
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { advanceAnimation, createAnimationState } from "./state";
 import type { AnimationFrame, AnimationOptions, AnimationState } from "../animation/types";
 

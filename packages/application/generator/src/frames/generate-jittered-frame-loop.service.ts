@@ -6,7 +6,7 @@
 
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { YieldController } from "../generation/generation-class-yieldcontroller";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function generateJitteredFrameLoop(params: {
   previewScanConfigBase: QRGeneratorConfig;
@@ -31,7 +31,7 @@ export async function generateJitteredFrameLoop(params: {
       frameIndex: i,
       moduleJitterPx: params.computeJitter(i, params.frameCount),
     };
-    const qrFrame = await qrGenerator.generate(frameConfig, null);
+    const qrFrame = await getQRGenerator().generate(frameConfig, null);
     if (qrFrame) {
       collected.push(params.applyResultPersistent(qrFrame, i, params.frameCount));
     }

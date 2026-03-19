@@ -4,7 +4,7 @@
  * Notes: Rescue outlier artwork frame with quality retry.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QArtModule, QArtWorkerResult } from "../qart/qart-shared-types";
 
 const log = createLogger("QR");

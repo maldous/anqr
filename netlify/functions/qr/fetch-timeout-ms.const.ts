@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/fetch-timeout-ms.const";
+export * from "@/platform/node/server";

@@ -1,5 +1,5 @@
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function renderGeneratedFrame(
   params: Readonly<{
@@ -24,5 +24,5 @@ export async function renderGeneratedFrame(
 
   return params.isArtworkMode
     ? await params.generateArtworkFrame(params.frame, params.frameIdx)
-    : await qrGenerator.generate(frameConfig, params.frame);
+    : await getQRGenerator().generate(frameConfig, params.frame);
 }

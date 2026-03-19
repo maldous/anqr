@@ -4,7 +4,7 @@
  * Notes: Handle QR content overflow with ECC fallback.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { buildEccFallbackSequence } from "./build-ecc-fallback-sequence.service";
 import { tryEccFallbackGeneration } from "./try-ecc-fallback-generation.service";
 import type { OverflowResult } from "./overflow-result";

@@ -6,7 +6,7 @@
 
 import { drawToDisplayCanvas } from "./draw-to-display-canvas.service";
 import { applyWatermarkToCanvas } from "./apply-watermark-to-canvas.service";
-import { qrGenerator } from "./generation-singleton";
+import { getQRGenerator } from "./generation-singleton";
 
 export async function finalizeGeneratedCanvas(params: {
   result: HTMLCanvasElement | OffscreenCanvas | null;
@@ -45,7 +45,7 @@ export async function finalizeGeneratedCanvas(params: {
     92,
   );
 
-  const matrixData = qrGenerator.getLastMatrix();
+  const matrixData = getQRGenerator().getLastMatrix();
   if (matrixData) {
     params.qrPackedMatrixRef.current = null;
     params.setQrMatrix(matrixData.matrix);

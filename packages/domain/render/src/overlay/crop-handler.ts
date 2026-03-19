@@ -3,7 +3,7 @@
  * for selecting regions from non-square images
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("OVERLAY");
 

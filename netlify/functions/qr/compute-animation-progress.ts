@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/compute-animation-progress";
+export * from "@/platform/node/server";

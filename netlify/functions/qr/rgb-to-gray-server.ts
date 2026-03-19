@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/rgb-to-gray-server";
+export * from "@/platform/node/server";

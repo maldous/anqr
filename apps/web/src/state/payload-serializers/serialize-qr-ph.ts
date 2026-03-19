@@ -1,4 +1,4 @@
-import { generateQRPh } from "@/domain/payload/generators";
+import { generateQRPh } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeQRPh(payload: PayloadData): string {

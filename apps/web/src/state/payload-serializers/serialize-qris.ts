@@ -1,4 +1,4 @@
-import { generateQRIS } from "@/domain/payload/generators";
+import { generateQRIS } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeQRIS(payload: PayloadData): string {

@@ -4,11 +4,11 @@
  * Notes: Handle main thread fallback for artwork frame.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import type { FullQArtPipelineResult, QArtModule } from "../qart/qart-shared-types";
 import type { ArtworkFrameState } from "./frames-artworkstate.types";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 import { runArtworkMainThreadFallback } from "../safety/run-artwork-main-thread-fallback.service";
 
 const log = createLogger("QR");
@@ -50,7 +50,7 @@ export async function handleArtworkMainThreadFallbackForFrame(params: {
     typeNumber: fullResult.version ?? 0,
     overlayMode: undefined,
   } as QRGeneratorConfig;
-  const rendered = await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig);
+  const rendered = await getQRGenerator().renderFromMatrix(qartResult.matrix, qrArtConfig);
   params.rememberSuccessfulFrame(rendered, qartResult.matchPercentage);
   return rendered;
 }

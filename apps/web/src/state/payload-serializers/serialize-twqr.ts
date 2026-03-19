@@ -1,4 +1,4 @@
-import { generateTWQR } from "@/domain/payload/generators";
+import { generateTWQR } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeTWQR(payload: PayloadData): string {

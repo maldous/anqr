@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import {
   isValidAccountNumber,
   isValidBankBin,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import { Input } from "@/ui/web";
 import { Label } from "@/ui/web";

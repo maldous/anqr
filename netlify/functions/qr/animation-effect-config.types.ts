@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/animation-effect-config.types";
+export * from "@/platform/node/server";

@@ -9,7 +9,7 @@
  * the failure is upstream (format/mask selection, traversal, or function-module skipping).
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { expandBlockDefinitions, deinterleaveBlocks } from "./analyze-rootability-input";
 import { berlekampMassey, chienRootCount, computeSyndromes } from "./compute-rootability";
 import { getGFExp, initGF } from "./rs-rootability-gf";

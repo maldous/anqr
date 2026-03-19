@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { QRLocationCorners } from "./decoder-types";
 import { sampleModulePixel } from "./sample-module-pixel";
 

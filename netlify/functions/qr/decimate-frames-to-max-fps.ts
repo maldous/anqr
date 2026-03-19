@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/decimate-frames-to-max-fps";
+export * from "@/platform/node/server";

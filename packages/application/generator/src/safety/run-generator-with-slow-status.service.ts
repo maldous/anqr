@@ -5,7 +5,7 @@
  */
 
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function runGeneratorWithSlowStatus(params: {
   cfg: QRGeneratorConfig;
@@ -27,7 +27,7 @@ export async function runGeneratorWithSlowStatus(params: {
     }
   }, 900);
   try {
-    return await qrGenerator.generate(params.cfg, params.overlaySource);
+    return await getQRGenerator().generate(params.cfg, params.overlaySource);
   } finally {
     if (slowRenderTimer) {
       clearTimeout(slowRenderTimer);

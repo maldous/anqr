@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { isValidLightningInvoice } from "@/domain/payload/generators";
+import { isValidLightningInvoice } from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import { Label } from "@/ui/web";
 import { Textarea } from "@/ui/web";

@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { readCodewords } from "./decode";
 import { unmaskMatrix } from "./format";
 import { correctRSCodewords } from "./rs-decoder";

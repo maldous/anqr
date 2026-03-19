@@ -3,7 +3,7 @@
  * Decode QR code from canvas element
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("DECODER");
 

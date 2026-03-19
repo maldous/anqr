@@ -6,7 +6,7 @@
 
 import type { AnimationFrame } from "@/domain/render/animation";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function generatePatternOnlyFrames(params: {
   previewScanConfigBase: QRGeneratorConfig;
@@ -19,7 +19,7 @@ export async function generatePatternOnlyFrames(params: {
     tf: number,
   ) => HTMLCanvasElement | OffscreenCanvas;
 }): Promise<AnimationFrame[] | null> {
-  const baseQR = await qrGenerator.generate(params.previewScanConfigBase, null);
+  const baseQR = await getQRGenerator().generate(params.previewScanConfigBase, null);
   if (!baseQR || params.isRunCancelled()) return null;
   return Array.from({ length: params.frameCount }, (_, i) => ({
     canvas: params.applyResultPersistent(baseQR, i, params.frameCount),

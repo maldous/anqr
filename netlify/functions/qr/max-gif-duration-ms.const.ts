@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/max-gif-duration-ms.const";
+export * from "@/platform/node/server";

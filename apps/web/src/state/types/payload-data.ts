@@ -36,7 +36,7 @@ import type {
   UrlHelper,
   VCardHelper,
   WifiHelper,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 
 export interface PayloadData {
   kind: PayloadKind;

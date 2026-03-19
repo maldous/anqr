@@ -14,7 +14,7 @@ import {
   generateMarkdownEmbed,
   getShareableUrl,
   getSocialShareUrls,
-} from "@/domain/share";
+} from "@/application/generator";
 import { useQRStore } from "../../../../state/qr-store";
 import { buildShareConfig } from "./share-section-config";
 

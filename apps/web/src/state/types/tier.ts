@@ -1,1 +1,1 @@
-export type { Tier } from "@/domain/qr";
+export type { Tier } from "@/application/generator";

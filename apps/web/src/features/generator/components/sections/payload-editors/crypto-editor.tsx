@@ -1,6 +1,6 @@
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidCryptoAddress } from "@/domain/payload/generators";
+import { isValidCryptoAddress } from "@/application/generator";
 import { Input } from "@/ui/web";
 import { Label } from "@/ui/web";
 import {

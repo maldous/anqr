@@ -3,7 +3,7 @@
  * True pixel-level dithering for high-quality overlay integration
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { rgbToGray } from "../color/color";
 import type { QRGeneratorConfig, RGBWithMeta } from "@/domain/render/qr-generator-shared";
 

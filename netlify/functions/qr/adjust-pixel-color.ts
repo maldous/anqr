@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/adjust-pixel-color";
+export * from "@/platform/node/server";

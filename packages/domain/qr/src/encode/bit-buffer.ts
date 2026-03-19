@@ -3,7 +3,7 @@
  * Buffer for building QR code data bit stream
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("ENCODER");
 

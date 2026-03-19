@@ -4,7 +4,7 @@
  * Notes: Invoke artwork worker for a single frame.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QArtModule, QArtWorkerResult } from "../qart/qart-shared-types";
 import { handleArtworkMainThreadFallbackForFrame } from "./handle-artwork-main-thread-fallback-for-frame.service";
 import type { ArtworkFrameState } from "./frames-artworkstate.types";

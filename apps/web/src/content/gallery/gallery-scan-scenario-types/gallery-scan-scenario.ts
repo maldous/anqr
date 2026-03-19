@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/domain/qr/generator";
+import type { QRGeneratorConfig } from "@/application/generator";
 import type { ScenarioFeatureGroup } from "./scenario-feature-group";
 
 export interface GalleryScanScenario {

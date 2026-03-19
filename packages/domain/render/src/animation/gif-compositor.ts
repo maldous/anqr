@@ -2,7 +2,7 @@
  * GIF Compositor - Optimal patch-only decode
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { getOrCreatePatchImageData } from "./get-or-create-patch-image-data";
 import { getGifFrameStats } from "./gif-frame-stats";
 

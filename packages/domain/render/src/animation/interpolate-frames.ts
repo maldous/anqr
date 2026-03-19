@@ -3,7 +3,7 @@
  * Interpolate between animation frames
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { getCanvas2DContext } from "@/domain/render/canvas";
 import { createCanvasLike } from "./create-canvas-like";
 import { crossfadeIntoContext } from "./crossfade-into-context";

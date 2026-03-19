@@ -1,4 +1,4 @@
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { getCanvas2DContext } from "@/domain/render/canvas";
 import { acquireHashCanvas } from "./acquire-hash-canvas";
 import { canvasHashCache } from "./canvas-hash-cache";

@@ -3,7 +3,7 @@
  * Advanced dithering algorithms with blue noise support
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms";
 import { getOverlayBrightness } from "../overlay/overlay-data-packed";
 import { curveIntensity } from "../generator/pixel-matrix-utils";

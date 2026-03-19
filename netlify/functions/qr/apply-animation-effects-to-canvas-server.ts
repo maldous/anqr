@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-animation-effects-to-canvas-server";
+export * from "@/platform/node/server";

@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import {
   isNonEmpty,
   isValidMerchantId,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import type { TWQRForm } from "../payload-section-types";
 import { ValidatedTextField } from "./validated-text-field";

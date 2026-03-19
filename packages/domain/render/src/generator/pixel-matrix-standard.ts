@@ -3,7 +3,7 @@
  * Standard overlay mode pixel matrix generation
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { getOverlayData } from "../overlay/overlay-data";
 import { normalizeColors } from "./pixel-matrix-dither";
 import type {

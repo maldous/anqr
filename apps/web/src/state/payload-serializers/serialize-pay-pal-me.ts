@@ -1,4 +1,4 @@
-import { generatePayPalMe } from "@/domain/payload/generators";
+import { generatePayPalMe } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializePayPalMe(payload: PayloadData): string {

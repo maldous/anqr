@@ -3,7 +3,7 @@ import type {
   WatermarkBlend,
   WatermarkKind,
 } from "@/contracts/generator";
-import type { WatermarkPosition } from "@/domain/render/server/watermark-position.types";
+import type { WatermarkPosition } from "@/platform/node/server";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { DEFAULT_OUTPUT_FORMAT } from "./default-output-format.const";
 import { parseGifDisposalCode } from "./parse-gif-disposal-code";

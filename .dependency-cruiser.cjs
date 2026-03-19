@@ -3,6 +3,25 @@ module.exports = {
   forbidden: [
     // ── Structural integrity ──────────────────────────────────────────
     {
+      name: "not-to-unresolvable",
+      severity: "error",
+      comment: "All imports must resolve cleanly.",
+      from: {
+        pathNot: [
+          "^src/vite-env\\.d\\.ts$",
+          "^netlify/edge-functions/seo/handler\\.ts$",
+        ],
+      },
+      to: { couldNotResolve: true },
+    },
+    {
+      name: "no-duplicate-dep-types",
+      severity: "warn",
+      comment: "Avoid mixing dependency types for the same target.",
+      from: {},
+      to: { moreThanOneDependencyType: true },
+    },
+    {
       name: "no-circular",
       severity: "error",
       comment:
@@ -46,6 +65,13 @@ module.exports = {
 
     // ── Contract layer isolation ────────────────────────────────────
     {
+      name: "contract-no-domain-imports",
+      severity: "error",
+      comment: "Contract packages must not import domain runtime packages.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/domain/" },
+    },
+    {
       name: "contract-no-platform-imports",
       severity: "error",
       comment: "Contract packages must not import platform adapters or runtime-specific infrastructure.",
@@ -67,11 +93,25 @@ module.exports = {
       to: { path: "^apps/" },
     },
     {
+      name: "contract-no-netlify-imports",
+      severity: "error",
+      comment: "Contract packages must not import Netlify delivery code.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^netlify/" },
+    },
+    {
       name: "contract-no-application-imports",
       severity: "error",
       comment: "Contract packages must not import orchestration or use-case code.",
       from: { path: "^packages/contracts/" },
       to: { path: "^packages/application/" },
+    },
+    {
+      name: "contract-no-analytics-imports",
+      severity: "error",
+      comment: "Contract packages must not import analytics or runtime instrumentation.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/analytics/" },
     },
     {
       name: "contract-no-observability-imports",
@@ -138,8 +178,29 @@ module.exports = {
       from: { path: "^packages/domain/" },
       to: { path: "^packages/application/" },
     },
+    {
+      name: "domain-no-observability-imports",
+      severity: "error",
+      comment: "Domain packages must not import logging, telemetry, or monitoring code.",
+      from: { path: "^packages/domain/" },
+      to: { path: "^packages/observability/" },
+    },
+    {
+      name: "domain-no-analytics-imports",
+      severity: "error",
+      comment: "Domain packages must not import analytics packages.",
+      from: { path: "^packages/domain/" },
+      to: { path: "^packages/analytics/" },
+    },
 
     // ── Application layer isolation ──────────────────────────────────
+    {
+      name: "application-no-platform-imports",
+      severity: "error",
+      comment: "Application packages must depend on ports/contracts rather than platform adapters.",
+      from: { path: "^packages/application/" },
+      to: { path: "^packages/platform/" },
+    },
     {
       name: "application-no-app-imports",
       severity: "error",
@@ -154,8 +215,29 @@ module.exports = {
       from: { path: "^packages/application/" },
       to: { path: "^packages/ui/" },
     },
+    {
+      name: "application-no-observability-imports",
+      severity: "error",
+      comment: "Application packages must not import logging, telemetry, or monitoring code.",
+      from: { path: "^packages/application/" },
+      to: { path: "^packages/observability/" },
+    },
+    {
+      name: "application-no-analytics-imports",
+      severity: "error",
+      comment: "Application packages must not import analytics packages.",
+      from: { path: "^packages/application/" },
+      to: { path: "^packages/analytics/" },
+    },
 
     // ── UI layer isolation ───────────────────────────────────────────
+    {
+      name: "ui-no-platform-imports",
+      severity: "error",
+      comment: "UI packages must not import platform adapters directly.",
+      from: { path: "^packages/ui/" },
+      to: { path: "^packages/platform/" },
+    },
     {
       name: "ui-no-app-imports",
       severity: "error",
@@ -222,6 +304,13 @@ module.exports = {
       from: { path: "^apps/([^/]+)/" },
       to: { path: "^apps/([^/]+)/", pathNot: "^apps/$1/" },
     },
+    {
+      name: "apps-no-domain-imports",
+      severity: "error",
+      comment: "Apps must not import domain directly; go through application/contracts/ui/platform.",
+      from: { path: "^apps/" },
+      to: { path: "^packages/domain/" },
+    },
 
     // ── Packages must not import src/ ────────────────────────────────
     {
@@ -248,13 +337,20 @@ module.exports = {
       to: { path: "^src/" },
     },
     {
+      name: "netlify-no-domain-imports",
+      severity: "error",
+      comment: "Netlify handlers must depend on application-facing entrypoints, not domain directly.",
+      from: { path: "^netlify/" },
+      to: { path: "^packages/domain/" },
+    },
+    {
       name: "netlify-no-disallowed-package-layers",
       severity: "error",
       comment:
-        "Netlify may depend only on packages/domain, packages/platform/node, and packages/observability.",
+        "Netlify may depend only on application-facing code, contracts, platform/node, and delivery-owned observability.",
       from: { path: "^netlify/" },
       to: {
-        path: "^packages/(application|ui|analytics|testing|config)/",
+        path: "^packages/(ui|analytics|testing|config)/",
       },
     },
     {
@@ -479,6 +575,16 @@ module.exports = {
     // Package encapsulation & dependency hygiene
     // ══════════════════════════════════════════════════════════════════
 
+    {
+      name: "no-package-entrypoint-cycles",
+      severity: "error",
+      scope: "folder",
+      comment:
+        "Package public entrypoints must not participate in folder-level cycles. " +
+        "This catches package-to-package cycles without flagging internal folder structure.",
+      from: { path: "^packages/[^/]+/[^/]+/src/index\\.ts$" },
+      to: { circular: true },
+    },
     {
       name: "no-deep-package-imports",
       severity: "error",

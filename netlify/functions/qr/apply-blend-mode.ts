@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-blend-mode";
+export * from "@/platform/node/server";

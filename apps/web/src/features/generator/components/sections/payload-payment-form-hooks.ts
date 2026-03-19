@@ -5,7 +5,7 @@ import {
   generatePIX,
   generatePromptPay,
   generateUPI,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 import type { PayloadKind, QRState } from "../../../../state/qr-store";
 import type {
   AusPayNetForm,

@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/crop-overlay-server";
+export * from "@/platform/node/server";

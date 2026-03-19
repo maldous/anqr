@@ -1,7 +1,5 @@
-type QArtDomainModule = typeof import("@/domain/qr/qart");
-type QArtWorkerModule = Pick<
-  typeof import("@/platform/worker"),
-  "generateQArtInWorker" | "terminateQArtWorker"
->;
+import type { QArtWorkerRuntime } from "../runtime/generator-runtime.types";
 
-export type QArtModule = QArtDomainModule & QArtWorkerModule;
+type QArtDomainModule = typeof import("@/domain/qr/qart");
+
+export type QArtModule = QArtDomainModule & QArtWorkerRuntime;

@@ -4,7 +4,7 @@
  * Notes: Load animated WebP file for overlay.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { parseAnimatedImage, type AnimationFrame, type GifCompositor } from "@/domain/render/animation";
 import { handleOverlayLoadFallback } from "./handle-overlay-load-fallback.service";
 

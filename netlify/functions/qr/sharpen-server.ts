@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/sharpen-server";
+export * from "@/platform/node/server";

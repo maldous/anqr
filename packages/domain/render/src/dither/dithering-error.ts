@@ -3,7 +3,7 @@
  * Error distribution for dithering algorithms
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { DiffusionKernel } from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");

@@ -1,4 +1,4 @@
-import { generateHKQR } from "@/domain/payload/generators";
+import { generateHKQR } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeHKQR(payload: PayloadData): string {

@@ -7,7 +7,7 @@
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { cloneCanvasFrame } from "./clone-canvas-frame.service";
 import type { ArtworkFrameState } from "./frames-artworkstate.types";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export function makeArtworkFrameHelpers(params: {
   artworkState: ArtworkFrameState;
@@ -35,7 +35,7 @@ export function makeArtworkFrameHelpers(params: {
     }
   };
   const fallbackGenerate = () =>
-    qrGenerator.generate(
+    getQRGenerator().generate(
       {
         ...params.previewScanConfigBase,
         frameIndex: params.frameIdx,

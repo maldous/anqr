@@ -3,7 +3,7 @@
  * Matrix-based dithering for QR modules with QR scannability protection
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { buildQRFirstMatrix } from "./build-qr-first-matrix";
 import { computeDitheredModuleValue } from "./compute-dithered-module-value";
 import { detectBWFromOverlayData } from "./detect-bw-from-overlay-data";

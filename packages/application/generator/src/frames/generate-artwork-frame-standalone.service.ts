@@ -4,7 +4,7 @@
  * Notes: Generate artwork frame in standalone mode.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QArtModule } from "../qart/qart-shared-types";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { makeArtworkFrameHelpers } from "./make-artwork-frame-helpers.service";

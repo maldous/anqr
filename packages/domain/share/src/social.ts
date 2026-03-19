@@ -3,7 +3,7 @@
  * Generates social media share URLs
  */
 
-import { createLogger } from "../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("SHARE");
 

@@ -24,6 +24,7 @@ export function HelpLink({
   setTier,
   checkPremiumAccess,
   activatePremiumAccess,
+  requestProfessionalAccess,
 }: Readonly<HelpLinkProps>) {
   // Convert anchor shorthand to full href
   const resolvedHref = anchor ? `/guide#${anchor}` : href || "/guide";
@@ -45,6 +46,7 @@ export function HelpLink({
           checkPremiumAccess,
           activatePremiumAccess,
           setLoadingAd,
+          requestProfessionalAccess,
         );
         if (!proceed) return;
       }
@@ -59,6 +61,7 @@ export function HelpLink({
       setTier,
       checkPremiumAccess,
       activatePremiumAccess,
+      requestProfessionalAccess,
       i18n.language,
     ],
   );

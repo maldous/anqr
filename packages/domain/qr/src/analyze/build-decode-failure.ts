@@ -1,4 +1,4 @@
-import { disableLogBuffer, flushLogBuffer } from "../../../../observability/logging/src";
+import { disableLogBuffer, flushLogBuffer } from "@/domain/logging";
 import type { ErrorType, QRAnalysisResult } from "@/domain/analyze/types";
 import { elapsedMs } from "./elapsed-ms";
 

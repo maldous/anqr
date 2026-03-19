@@ -1,6 +1,6 @@
 import { mapImageToTargetsSupersampled } from "./image-utils";
 import { type ECCLevel, qrcode } from "../qr-encoder";
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { evaluateQRMatch } from "./evaluate-qr-match";
 import type { FragmentSearchState } from "./fragment-search.types";
 

@@ -3,7 +3,7 @@
  * Re-exports from the canonical content module
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("ANALYZER");
 

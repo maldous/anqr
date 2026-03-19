@@ -1,4 +1,4 @@
-import { generateGS1DigitalLink } from "@/domain/payload/generators";
+import { generateGS1DigitalLink } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeGS1DigitalLink(payload: PayloadData): string {

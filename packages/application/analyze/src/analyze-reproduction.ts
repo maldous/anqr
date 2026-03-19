@@ -1,4 +1,4 @@
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import { getStringToBytes, setStringToBytes } from "@/domain/qr/encode";
 import { nowMs } from "./formatters";

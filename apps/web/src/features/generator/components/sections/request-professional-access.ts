@@ -1,5 +1,5 @@
-import { prepareRewardedAd, showRewardedAd } from "../../../../platform/native/src";
-import { createLogger } from "../../../../observability/logging/src";
+import { prepareRewardedAd, showRewardedAd } from "@/platform/native";
+import { createLogger } from "@/lib/logger";
 
 const log = createLogger("HELP");
 
@@ -20,6 +20,7 @@ export async function requestProfessionalAccess(
     setLoadingAd(false);
     return false;
   }
+
   setLoadingAd(false);
   prepareRewardedAd("premium");
   return true;

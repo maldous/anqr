@@ -6,7 +6,7 @@
 /**
  * Escape XML special characters */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("EXPORT");
 

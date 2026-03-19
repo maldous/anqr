@@ -4,7 +4,7 @@
  * Notes: Execute the main frame generation loop.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 
 import { canvasHashCache } from "@/domain/render/overlay";
 import { processAndPostProcessFrame } from "./process-and-post-process-frame.service";

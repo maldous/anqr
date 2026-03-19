@@ -4,7 +4,7 @@ import {
   ECC_CAPACITIES_ALPHANUMERIC,
   ECC_CAPACITIES_BYTE,
   ECC_CAPACITIES_NUMERIC,
-} from "@/domain/qr/spec";
+} from "@/application/analyze";
 
 export const CapacityByModeTable = ({
   version,

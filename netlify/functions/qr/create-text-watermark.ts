@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/create-text-watermark";
+export * from "@/platform/node/server";

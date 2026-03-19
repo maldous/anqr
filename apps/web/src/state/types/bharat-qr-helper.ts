@@ -1,1 +1,1 @@
-export type { BharatQRParams as BharatQRHelper } from "@/domain/payload/generators";
+export type { BharatQRParams as BharatQRHelper } from "@/application/generator";

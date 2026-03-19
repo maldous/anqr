@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { DecodeResult } from "../qr-decoder/types";
 import { DecodeHintType } from "./result-types";
 import { tryDecodeWithGlobalBinarizer } from "./try-decode-with-global-binarizer";

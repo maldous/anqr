@@ -24,13 +24,12 @@ import {
 } from "@/ui/web";
 import { Tabs, TabsList, TabsTrigger } from "@/ui/web";
 import { type GalleryCategory } from "../../content/gallery/gallery-manifest";
-import { useBannerHeight } from "@/ui/web";
 import { isRtlLanguage, languages, loadLocale } from "../../i18n";
 import { trackEvent } from "@/infra/telemetry/zaraz";
 import { copyToClipboard } from "@/platform/browser";
 import { prepareInterstitial } from "@/platform/native";
 import { buildHeaderShareConfig } from "./build-header-share-config";
-import { getShareableUrl } from "@/domain/share";
+import { getShareableUrl } from "@/application/generator";
 import { type Tier, useQRStore } from "../../state/qr-store";
 import { resolveHeaderPage, type HeaderPage } from "./header-resolve-page";
 import { changeTierWithAdGate } from "./header-tier-gate";
@@ -41,6 +40,7 @@ import { HeaderMobileNav } from "./header-mobile-nav";
 import { HeaderDesktopNav } from "./header-desktop-nav";
 import { HeaderGalleryFilter } from "./header-gallery-filter";
 import { HeaderMobileFooter } from "./header-mobile-footer";
+import { useBannerHeight } from "../use-banner-height";
 
 export function Header({
   onToggleSidebar,

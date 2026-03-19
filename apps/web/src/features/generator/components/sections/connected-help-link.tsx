@@ -1,6 +1,7 @@
 import { useQRStore } from "../../../../state/qr-store";
 import { HelpLink } from "@/ui/web";
 import type { ConnectedHelpLinkProps } from "./connected-help-link.types";
+import { requestProfessionalAccess } from "./request-professional-access";
 
 export function ConnectedHelpLink(props: Readonly<ConnectedHelpLinkProps>) {
   const currentTier = useQRStore((s) => s.tier);
@@ -15,6 +16,7 @@ export function ConnectedHelpLink(props: Readonly<ConnectedHelpLinkProps>) {
       setTier={setTier}
       checkPremiumAccess={checkPremiumAccess}
       activatePremiumAccess={activatePremiumAccess}
+      requestProfessionalAccess={requestProfessionalAccess}
     />
   );
 }

@@ -1,4 +1,4 @@
-import { generateDuitNow } from "@/domain/payload/generators";
+import { generateDuitNow } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeDuitNow(payload: PayloadData): string {

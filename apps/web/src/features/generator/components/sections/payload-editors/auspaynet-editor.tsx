@@ -2,7 +2,7 @@ import {
   isValidABN,
   isValidEmail,
   isValidPhone,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 import { Input } from "@/ui/web";
 import { Label } from "@/ui/web";
 import {

@@ -2,7 +2,7 @@
  * Error Diffusion Kernels
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { DiffusionKernel } from "../dither-algorithms/types";
 import { prepareKernel } from "./prepare-kernel";
 

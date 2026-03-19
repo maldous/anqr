@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/rotate-overlay-server";
+export * from "@/platform/node/server";

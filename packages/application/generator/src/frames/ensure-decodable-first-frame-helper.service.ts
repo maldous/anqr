@@ -4,8 +4,8 @@
  * Notes: Ensure first animation frame is decodable.
  */
 
-import { createLogger } from "@/infra/logging/logger";
-import { validateInWorker } from "@/platform/worker";
+import { createLogger } from "@/domain/logging";
+import { getValidationWorkerRuntime } from "../runtime/generator-runtime";
 import { cloneCanvasFrame } from "./clone-canvas-frame.service";
 
 const log = createLogger("QR");
@@ -16,6 +16,7 @@ export async function ensureDecodableFirstFrameHelper(
 ): Promise<void> {
   if (frames.length <= 1) return;
   if (!expectedContent) return;
+  const { validateInWorker } = getValidationWorkerRuntime();
   const firstFrameValidation = await validateInWorker(frames[0], expectedContent, 1);
   if (firstFrameValidation.valid) return;
   const candidates: number[] = [];

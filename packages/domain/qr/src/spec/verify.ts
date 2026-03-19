@@ -10,7 +10,7 @@
  * - It checks only a few scan-critical invariants.
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { isAlternatingCol } from "./is-alternating-col";
 import { isAlternatingLine } from "./is-alternating-line";
 import { isFinderCoreCorrect } from "./is-finder-core-correct";

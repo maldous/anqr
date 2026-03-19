@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/create-png-text-chunk";
+export * from "@/platform/node/server";

@@ -3,7 +3,7 @@
  * Halftone pattern rendering for artistic QR effects
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { drawHalftoneDot } from "./draw-halftone-dot";
 import { parseHalftoneCell } from "./parse-halftone-cell";

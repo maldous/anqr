@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/preprocess-overlay-canvas";
+export * from "@/platform/node/server";

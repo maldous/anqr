@@ -5,7 +5,7 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("SPEC");
 

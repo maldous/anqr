@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/threshold-server";
+export * from "@/platform/node/server";

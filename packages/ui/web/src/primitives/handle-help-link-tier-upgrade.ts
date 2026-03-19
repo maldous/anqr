@@ -1,6 +1,5 @@
 import { Capacitor } from "@capacitor/core";
 import type { Tier } from "./tier.types";
-import { requestProfessionalAccess } from "./request-professional-access";
 
 export async function handleTierUpgrade(
   effectiveTier: Tier,
@@ -9,6 +8,10 @@ export async function handleTierUpgrade(
   checkPremiumAccess: () => boolean,
   activatePremiumAccess: () => void,
   setLoadingAd: (loading: boolean) => void,
+  requestProfessionalAccess?: (
+    activatePremiumAccess: () => void,
+    setLoadingAd: (loading: boolean) => void,
+  ) => Promise<boolean>,
 ): Promise<boolean> {
   const tierOrder: Tier[] = ["basic", "advanced", "professional"];
   const currentIndex = tierOrder.indexOf(currentTier);
@@ -18,6 +21,7 @@ export async function handleTierUpgrade(
 
   if (effectiveTier === "professional" && Capacitor.isNativePlatform()) {
     if (!checkPremiumAccess()) {
+      if (!requestProfessionalAccess) return false;
       const granted = await requestProfessionalAccess(activatePremiumAccess, setLoadingAd);
       if (!granted) return false;
     }

@@ -3,7 +3,7 @@ import { HighlightedLabel } from "../../../search/search-context";
 import {
   isValidLatitude,
   isValidLongitude,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 import { Input } from "@/ui/web";
 import { Label } from "@/ui/web";
 import { PlusCodeDisplay } from "../payload-plus-code-display";

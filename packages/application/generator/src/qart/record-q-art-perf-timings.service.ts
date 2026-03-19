@@ -4,7 +4,7 @@
  * Notes: Record QArt performance timings.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { safeMark } from "../generation/safe-mark.service";
 import { safeMeasure } from "../generation/safe-measure.service";
 

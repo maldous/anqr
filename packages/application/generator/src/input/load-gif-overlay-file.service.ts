@@ -4,7 +4,7 @@
  * Notes: Load GIF file for overlay.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { createGifCompositor } from "@/domain/render/animation";
 import type { AnimationFrame, GifCompositor } from "@/domain/render/animation";
 import { handleOverlayLoadFallback } from "./handle-overlay-load-fallback.service";

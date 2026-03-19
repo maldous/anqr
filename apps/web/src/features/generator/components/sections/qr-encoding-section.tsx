@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { calculateOptimalVersion } from "@/domain/qr/encode";
+import { calculateOptimalVersion } from "@/application/generator";
 import {
   type CharacterEncoding,
   type ECCLevel,

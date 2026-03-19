@@ -4,7 +4,7 @@
  * Notes: Handle generation error with overflow detection.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { buildOverflowHandlingParams } from "./build-overflow-handling-params";
 import { handleOverflowError } from "./handle-overflow-error.service";
 import type { SafetyRunnerParams } from "./safety-runner-params";

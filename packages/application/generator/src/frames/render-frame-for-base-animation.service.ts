@@ -7,7 +7,7 @@
 import { calculateTemporalOffset, type TemporalDitherMode } from "@/domain/render/dither";
 import type { AnimationFrame } from "@/domain/render/animation";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function renderFrameForBaseAnimation(params: {
   hasPattern: boolean;
@@ -29,5 +29,5 @@ export async function renderFrameForBaseAnimation(params: {
       ? calculateTemporalOffset(params.frameIdx, params.temporalMode, params.animationSeed)
       : 0,
   };
-  return await qrGenerator.generate(frameConfig, null);
+  return await getQRGenerator().generate(frameConfig, null);
 }

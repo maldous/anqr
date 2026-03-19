@@ -8,9 +8,7 @@ import {
 } from "@/domain/render/animation";
 import { isTemporalDitherActive, type TemporalDitherMode } from "@/domain/render/dither-algorithms";
 import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/domain/render/overlay";
-import { prepareInterstitial, showInterstitial } from "../../../../platform/native/src";
 import type { ValidationResult } from "@/contracts/analyze";
-import { terminateValidationWorker } from "@/platform/worker";
 import {
   INTRINSICALLY_SCALED_OVERLAY_MODES,
   type AnyCanvas,
@@ -61,7 +59,6 @@ import { QART_PERF_OVERLAY_ELEMENT_ID } from "./qart-perf-overlay-element-id";
 import { runGeneratorWithSlowStatus } from "./run-generator-with-slow-status";
 import { runQArtGeneration } from "./run-q-art-generation";
 import { runStandardGeneration } from "./run-standard-generation";
-import { scheduleTrackEvent } from "./schedule-track-event";
 import { setupValidationRunner } from "./setup-validation-runner";
 import { terminateQArtWorkerIfLoaded } from "./terminate-q-art-worker-if-loaded";
 import { updateCompositorToFrame } from "./update-compositor-to-frame";
@@ -72,8 +69,15 @@ import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservatio
 import { isRequestStale } from "./is-request-stale";
 import { waitForDoubleAnimationFrame } from "./wait-for-double-animation-frame";
 import { yieldForRequestResponsiveness } from "./yield-for-request-responsiveness";
+import {
+  getInterstitialRuntime,
+  getValidationWorkerRuntime,
+} from "../runtime/generator-runtime";
 
-export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
+export function useQRGenerator(
+  useStore: UseQRStoreHook,
+  scheduleTrackEvent: (eventName: string, payload?: Record<string, string | number | boolean>) => void,
+): UseQRGeneratorResult {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<AnyCanvas | null>(null);
@@ -240,7 +244,7 @@ export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
       activeQArtRequestAbortRef.current = null;
       activeAnimationRequestAbortRef.current?.abort();
       activeAnimationRequestAbortRef.current = null;
-      terminateValidationWorker();
+      getValidationWorkerRuntime().terminateValidationWorker();
       terminateQArtWorkerIfLoaded();
     };
   }, []);
@@ -1531,7 +1535,7 @@ export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
 
   // Prepare interstitial ad on mount (so it's ready when user downloads)
   useEffect(() => {
-    prepareInterstitial("export");
+    getInterstitialRuntime().prepareInterstitial("export");
   }, []);
 
   // Download function with output scaling
@@ -1545,7 +1549,7 @@ export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
 
     try {
       // Show interstitial ad BEFORE download on native platforms
-      await showInterstitial("export");
+      await getInterstitialRuntime().showInterstitial("export");
       scheduleTrackEvent("export", { format: output.format });
       const exporter = await loadExporterModule();
 

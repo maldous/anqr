@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { isValidUpiVpa } from "@/domain/payload/generators";
+import { isValidUpiVpa } from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import { Input } from "@/ui/web";
 import { Label } from "@/ui/web";

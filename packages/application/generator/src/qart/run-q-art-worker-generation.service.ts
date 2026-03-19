@@ -4,7 +4,7 @@
  * Notes: Run QArt generation via worker.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { FullQArtPipelineResult, QArtModule } from "./qart-shared-types";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { readCanvasImageData } from "../generation/read-canvas-image-data.service";

@@ -1,4 +1,4 @@
-import { generateAusPayNet } from "@/domain/payload/generators";
+import { generateAusPayNet } from "@/application/generator";
 import type { PayloadData } from "./payload-data";
 
 export function serializeAusPayNet(payload: PayloadData): string {

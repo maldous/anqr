@@ -3,7 +3,7 @@
  *
  * Type Alignment with Modules:
  * - Gradient types (GradientStop, GradientType): from @/contracts/generator
- * - Payload types (UrlHelper, VCardHelper, etc.): from @/domain/payload/generators
+ * - Payload types (UrlHelper, VCardHelper, etc.): from @/application/generator
  * - QR encoding types (ECCLevel, EncodingMode): align with the domain QR encode/spec boundary (with UI extensions)
  * - Overlay types (OverlayMode, ColorMode, FitMode): align with the render overlay public/compat surface
  * - Dither types (DitherKind, DiffusionKernel): align with the render dither boundary
@@ -27,7 +27,7 @@ import {
   type UrlHelper,
   type VCardHelper,
   type WifiHelper,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 import type {
   AlignmentStyle,
   AnimationPatternType,
@@ -101,7 +101,7 @@ export type {
   VCardVersion,
   WifiAuth,
   WifiHelper,
-} from "@/domain/payload/generators";
+} from "@/application/generator";
 export type { GradientStop, GradientType } from "@/contracts/generator";
 
 // Main QR Store State

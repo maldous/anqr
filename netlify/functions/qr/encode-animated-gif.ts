@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/encode-animated-gif";
+export * from "@/platform/node/server";

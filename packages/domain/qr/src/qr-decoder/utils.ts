@@ -3,7 +3,7 @@
  * Shared helper functions for QR decoding
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("DECODER");
 

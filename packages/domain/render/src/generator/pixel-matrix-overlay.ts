@@ -3,7 +3,7 @@
  * Unified overlay data preparation
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { applyDitherToMatrix } from "../dither/dithering-matrix";
 import { getOverlayData } from "../overlay/overlay-data";
 import { generateHalftoneDitheredOverlayData } from "./pixel-matrix-dithered";

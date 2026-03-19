@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-pattern-to-frame-server";
+export * from "@/platform/node/server";

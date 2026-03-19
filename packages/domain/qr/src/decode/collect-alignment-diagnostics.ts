@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { getAlignmentPatternCenters } from "../qr-spec";
 import { overlapsFinderRegion } from "./overlaps-finder-region";
 import { scoreAlignmentCenter } from "./score-alignment-center";

@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-frame-interpolation";
+export * from "@/platform/node/server";

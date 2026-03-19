@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { ECC_CAPACITIES_BYTE } from "@/domain/qr/spec";
+import { ECC_CAPACITIES_BYTE } from "@/application/analyze";
 import { HighlightedLabel } from "../../../search/search-context";
 import type { QRState } from "../../../../../state/qr-store";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";

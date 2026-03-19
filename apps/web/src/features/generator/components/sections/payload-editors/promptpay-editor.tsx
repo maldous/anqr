@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { isValidPhone } from "@/domain/payload/generators";
+import { isValidPhone } from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import { Label } from "@/ui/web";
 import {

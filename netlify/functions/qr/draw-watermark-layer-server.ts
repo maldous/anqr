@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/draw-watermark-layer-server";
+export * from "@/platform/node/server";

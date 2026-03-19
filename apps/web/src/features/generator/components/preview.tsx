@@ -10,7 +10,7 @@ import {
   meetsContrastAA,
   meetsContrastAAA,
   parseColor,
-} from "@/domain/render/color";
+} from "@/application/generator";
 import { useQRStore, type QRState } from "../../../state/qr-store";
 import { computeBusyPercent, computeBusyStageLabel, computeRenderingState } from "./preview-status";
 import type { PreviewProps, RenderState } from "./preview-types";

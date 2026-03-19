@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import type { AnalysisSourceType } from "./analyze-runtime";
 import type { ReproductionQrState, ReproductionRenderState } from "./reproduction-types";

@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/default-output-format.const";
+export * from "@/platform/node/server";

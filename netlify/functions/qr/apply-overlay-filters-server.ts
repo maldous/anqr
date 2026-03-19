@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/apply-overlay-filters-server";
+export * from "@/platform/node/server";

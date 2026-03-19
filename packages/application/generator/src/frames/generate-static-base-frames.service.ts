@@ -6,7 +6,7 @@
 
 import type { AnimationFrame } from "@/domain/render/animation";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export async function generateStaticBaseFrames(params: {
   previewScanConfigBase: QRGeneratorConfig;
@@ -14,7 +14,7 @@ export async function generateStaticBaseFrames(params: {
   speedMs: number;
   isRunCancelled: () => boolean;
 }): Promise<AnimationFrame[] | null> {
-  const staticBaseQR = await qrGenerator.generate(params.previewScanConfigBase, null);
+  const staticBaseQR = await getQRGenerator().generate(params.previewScanConfigBase, null);
   if (!staticBaseQR || params.isRunCancelled()) return null;
   return Array.from({ length: params.frameCount }, () => ({
     canvas: staticBaseQR,

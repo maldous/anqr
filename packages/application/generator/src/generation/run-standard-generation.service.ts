@@ -4,7 +4,7 @@
  * Notes: Run standard QR generation with error handling.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { buildOverflowHandlingParams } from "../safety/build-overflow-handling-params";
 import { handleGenerationError } from "../safety/handle-generation-error.service";

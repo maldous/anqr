@@ -4,7 +4,7 @@
  * Re-exports from split module files
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { CanvasFactory } from "../canvas-factory.types";
 import { generateSubpixelMatrix } from "../overlay/overlay";
 import { generateDitherModeMatrix } from "./pixel-matrix-dither";

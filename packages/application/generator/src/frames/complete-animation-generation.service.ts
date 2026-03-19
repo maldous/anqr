@@ -4,7 +4,7 @@
  * Notes: Complete animation generation and dispatch events.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import { drawToDisplayCanvas } from "../generation/draw-to-display-canvas.service";
 
 const log = createLogger("QR");

@@ -3,7 +3,7 @@
  * Apply color cycling effect to animation frames
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import { resolveEffectTargetCanvas } from "../resolve-effect-target-canvas";
 import { clampToByte } from "./clamp-to-byte";
 

@@ -4,7 +4,7 @@
  * Notes: Update QR matrix state from QArt result.
  */
 
-import { qrGenerator } from "../generation/generation-singleton";
+import { getQRGenerator } from "../generation/generation-singleton";
 
 export function updateQrMatrixFromResult(params: {
   usedWorkerBitmapRender: boolean;
@@ -27,7 +27,7 @@ export function updateQrMatrixFromResult(params: {
     params.setQrMatrix(null);
     return;
   }
-  const matrixData = qrGenerator.getLastMatrix();
+  const matrixData = getQRGenerator().getLastMatrix();
   if (matrixData) {
     params.qrPackedMatrixRef.current = null;
     params.setQrMatrix(matrixData.matrix);

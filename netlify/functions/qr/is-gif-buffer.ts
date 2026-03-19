@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/is-gif-buffer";
+export * from "@/platform/node/server";

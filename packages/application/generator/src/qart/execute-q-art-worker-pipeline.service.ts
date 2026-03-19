@@ -4,7 +4,7 @@
  * Notes: Full QArt worker pipeline orchestration.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { FullQArtPipelineResult, QArtModule } from "./qart-shared-types";
 import { localizeQArtProgressStage } from "../generation/localize-q-art-progress-stage.service";
 import { getQArtSearchAttempts } from "../generation/get-q-art-search-attempts.service";

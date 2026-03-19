@@ -1,2 +1,2 @@
 // Shim
-export * from "@/domain/render/server/png-metadata.types";
+export * from "@/platform/node/server";

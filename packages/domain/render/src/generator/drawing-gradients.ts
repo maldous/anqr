@@ -3,7 +3,7 @@
  * Gradient creation and application for QR modules
  */
 
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");

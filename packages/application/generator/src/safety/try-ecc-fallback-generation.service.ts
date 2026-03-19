@@ -4,7 +4,7 @@
  * Notes: Try generating with fallback ECC levels.
  */
 
-import { createLogger } from "@/infra/logging/logger";
+import { createLogger } from "@/domain/logging";
 import type { AnyCanvas, QRGeneratorConfig } from "@/domain/qr/generator";
 
 const log = createLogger("QR");

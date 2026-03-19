@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../observability/logging/src";
+import { createLogger } from "@/domain/logging";
 import type { DecodeResult } from "../qr-decoder/types";
 import { GlobalHistogramBinarizer } from "./binarizer";
 import { NotFoundException } from "./exceptions";

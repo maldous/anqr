@@ -4,6 +4,11 @@
  */
 
 import { QRGenerator } from "@/domain/qr/generator";
-import { defaultBrowserCanvasFactory } from "@/platform/browser";
+import { getGeneratorCanvasFactory } from "../runtime/generator-runtime";
 
-export const qrGenerator = new QRGenerator(defaultBrowserCanvasFactory);
+let qrGenerator: QRGenerator | null = null;
+
+export function getQRGenerator(): QRGenerator {
+  qrGenerator ??= new QRGenerator(getGeneratorCanvasFactory());
+  return qrGenerator;
+}
