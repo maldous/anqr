@@ -7,6 +7,9 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const contractsRoot = path.join(repoRoot, "packages", "contracts");
 const forbiddenNamePattern =
   /(store|state|adapter|factory|helper|apply|patch|compat|workflow|service|import)/i;
+const schemaCarryingPackages = new Set(["api", "mcp"]);
+const allowedSchemaImportSources =
+  /^\s*import\s+(?!type\b).*from\s+["'](zod|@ts-rest\/core|tslib|\.{1,2}\/[^"']+)["']/;
 const errors = [];
 
 async function pathExists(targetPath) {
@@ -71,6 +74,7 @@ async function main() {
     const readmePath = path.join(packageDir, "README.md");
     const srcDir = path.join(packageDir, "src");
     const indexPath = path.join(srcDir, "index.ts");
+    const isSchemaCarrying = schemaCarryingPackages.has(packageName);
 
     if (!(await fileExists(readmePath))) {
       errors.push(`${path.relative(repoRoot, packageDir)}: missing README.md`);
@@ -122,17 +126,39 @@ async function main() {
       if (/\bexport\s+default\b/.test(content)) {
         errors.push(`${relativePath}: default exports are forbidden in contracts`);
       }
-      if (!isIndex && /^\s*import\s+(?!type\b)/m.test(content)) {
-        errors.push(`${relativePath}: contract files must use type-only imports`);
+
+      if (!isIndex) {
+        if (isSchemaCarrying) {
+          const lines = content.split("\n");
+          for (const line of lines) {
+            if (/^\s*import\s+(?!type\b)/.test(line) && !allowedSchemaImportSources.test(line)) {
+              errors.push(
+                `${relativePath}: schema-carrying contracts may only import runtime values from zod, @ts-rest/core, or tslib`,
+              );
+            }
+          }
+        } else {
+          if (/^\s*import\s+(?!type\b)/m.test(content)) {
+            errors.push(`${relativePath}: contract files must use type-only imports`);
+          }
+        }
       }
+
       if (/\bexport\s+(?:async\s+)?function\b/.test(content)) {
         errors.push(`${relativePath}: helper functions do not belong in contracts`);
       }
       if (/\bexport\s+class\b/.test(content)) {
         errors.push(`${relativePath}: classes do not belong in contracts`);
       }
-      if (/\bexport\s+(?:const|let|var)\b/.test(content)) {
-        errors.push(`${relativePath}: runtime value exports do not belong in contracts`);
+
+      if (isSchemaCarrying) {
+        if (/\bexport\s+(?:let|var)\b/.test(content)) {
+          errors.push(`${relativePath}: only export const is allowed in schema-carrying contracts`);
+        }
+      } else {
+        if (/\bexport\s+(?:const|let|var)\b/.test(content)) {
+          errors.push(`${relativePath}: runtime value exports do not belong in contracts`);
+        }
       }
     }
   }

@@ -153,6 +153,21 @@ Content-Type = "application/yaml; charset=utf-8"
 Access-Control-Allow-Origin = "*"
 Cross-Origin-Resource-Policy = "cross-origin"
 
+[[headers]]
+for = "/api/contract/qr"
+[headers.values]
+Cache-Control = "no-store"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
+Access-Control-Allow-Methods = "GET, OPTIONS"
+Access-Control-Allow-Headers = "Content-Type"
+
+[[headers]]
+for = "/api/mcp"
+[headers.values]
+Cache-Control = "no-store"
+X-Robots-Tag = "noindex, nofollow, noarchive"
+
 # Service Worker files - no cache to ensure updates propagate
 [[headers]]
 for = "/sw.js"
@@ -184,6 +199,17 @@ from = "/api/qr"
 to = "/.netlify/functions/qr"
 status = 200
 headers = { Cross-Origin-Resource-Policy = "cross-origin" }
+
+[[redirects]]
+from = "/api/contract/qr"
+to = "/.netlify/functions/api-qr"
+status = 200
+headers = { Cross-Origin-Resource-Policy = "cross-origin", Access-Control-Allow-Origin = "*" }
+
+[[redirects]]
+from = "/api/mcp"
+to = "/.netlify/functions/mcp"
+status = 200
 
 # Legacy endpoint - redirect to new path for backward compatibility
 [[redirects]]

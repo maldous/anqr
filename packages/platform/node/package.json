@@ -3,5 +3,16 @@
   "version": "0.0.0-contract",
   "private": true,
   "description": "Node and server adapter package for ANQR",
-  "type": "module"
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts",
+    "./server/netlify-qr": "./src/server/netlify-qr/index.ts",
+    "./server/netlify-qr-render-background": "./src/server/netlify-qr-render-background/index.ts",
+    "./mcp": "./src/mcp/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./rate-limit": "./src/rate-limit/index.ts",
+    "./security": "./src/security/index.ts"
+  }
 }

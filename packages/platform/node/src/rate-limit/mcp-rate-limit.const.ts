@@ -1,0 +1,1 @@
+export const MCP_RATE_LIMIT_WINDOW_MS = 60_000;

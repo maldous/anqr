@@ -45,6 +45,20 @@ module.exports = {
     },
 
     {
+      name: "contract-api-no-mcp-imports",
+      severity: "error",
+      comment: "API contracts must not import MCP contracts (parallel delivery surfaces).",
+      from: { path: "^packages/contracts/api/" },
+      to: { path: "^packages/contracts/mcp/" },
+    },
+    {
+      name: "contract-mcp-no-api-imports",
+      severity: "error",
+      comment: "MCP contracts must not import API contracts (parallel delivery surfaces).",
+      from: { path: "^packages/contracts/mcp/" },
+      to: { path: "^packages/contracts/api/" },
+    },
+    {
       name: "contract-no-domain-imports",
       severity: "error",
       comment: "Contract packages must not import domain runtime packages.",
@@ -381,6 +395,21 @@ module.exports = {
           "^packages/$1/",
           "^packages/[^/]+/[^/]+/(index|src/index)\\.",
           "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
+        ],
+      },
+    },
+    {
+      name: "platform-node-entrypoint-only",
+      severity: "error",
+      comment:
+        "Consumers must use declared @anqr/platform-node public entrypoints only, not arbitrary internal submodule barrels.",
+      from: { path: "^(packages|apps|netlify)/", pathNot: "^packages/platform/node/" },
+      to: {
+        path: "^packages/platform/node/src/",
+        pathNot: [
+          "^packages/platform/node/(index|src/index)\\.",
+          "^packages/platform/node/src/(index|server/index|mcp/index|auth/index|rate-limit/index|security/index)\\.",
+          "^packages/platform/node/src/server/(netlify-qr|netlify-qr-render-background)/index\\.",
         ],
       },
     },

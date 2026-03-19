@@ -1,0 +1,223 @@
+{
+  "openapi": "3.0.2",
+  "paths": {
+    "/api/contract/qr": {
+      "get": {
+        "summary": "Generate a QR code image",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "description": "Content to encode into the QR code",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Square output size in pixels",
+            "schema": {
+              "type": "integer",
+              "minimum": 50,
+              "maximum": 4096
+            }
+          },
+          {
+            "name": "errorCorrection",
+            "in": "query",
+            "description": "Error correction level: L, M, Q, or H",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "L",
+                "M",
+                "Q",
+                "H"
+              ]
+            }
+          },
+          {
+            "name": "foreground",
+            "in": "query",
+            "description": "Foreground color as a 6-digit hex value without #",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{6}$"
+            }
+          },
+          {
+            "name": "background",
+            "in": "query",
+            "description": "Background color as a 6-digit hex value without #",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{6}$"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Output format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "png",
+                "svg"
+              ]
+            }
+          },
+          {
+            "name": "margin",
+            "in": "query",
+            "description": "Quiet-zone margin in modules",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20,
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ],
+                      "description": "Success discriminator"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "enum": [
+                            "png",
+                            "svg"
+                          ],
+                          "description": "Returned image format"
+                        },
+                        "mimeType": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "MIME type for the encoded content"
+                        },
+                        "encoding": {
+                          "type": "string",
+                          "enum": [
+                            "base64"
+                          ],
+                          "description": "Payload encoding"
+                        },
+                        "content": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Base64-encoded image payload"
+                        }
+                      },
+                      "required": [
+                        "format",
+                        "mimeType",
+                        "encoding",
+                        "content"
+                      ],
+                      "description": "Generated QR image payload"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Human-readable error message"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Stable machine-readable error code when available"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": 400,
+                      "maximum": 599,
+                      "description": "HTTP status code associated with the error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "500",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Human-readable error message"
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Stable machine-readable error code when available"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": 400,
+                      "maximum": 599,
+                      "description": "HTTP status code associated with the error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "info": {
+    "title": "ANQR QR API",
+    "version": "1.0.0",
+    "description": "Contract-backed QR generation API hosted at https://anqr.link."
+  },
+  "servers": [
+    {
+      "url": "https://anqr.link"
+    }
+  ]
+}

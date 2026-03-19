@@ -139,7 +139,7 @@ quality:
 	npm run quality
 
 install:
-	npm install
+	npm install --legacy-peer-deps
 
 hooks:
 	npm run prepare

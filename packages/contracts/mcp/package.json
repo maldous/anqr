@@ -1,0 +1,11 @@
+{
+  "name": "@anqr/contracts-mcp",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "MCP tool, resource, and prompt contracts for ANQR",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

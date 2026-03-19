@@ -1,0 +1,11 @@
+{
+  "name": "@anqr/contracts-core",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "Portable core boundary types shared across all ANQR delivery surfaces",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

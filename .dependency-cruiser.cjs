@@ -65,6 +65,20 @@ module.exports = {
 
     // ── Contract layer isolation ────────────────────────────────────
     {
+      name: "contract-api-no-mcp-imports",
+      severity: "error",
+      comment: "API contracts must not import MCP contracts (parallel delivery surfaces).",
+      from: { path: "^packages/contracts/api/" },
+      to: { path: "^packages/contracts/mcp/" },
+    },
+    {
+      name: "contract-mcp-no-api-imports",
+      severity: "error",
+      comment: "MCP contracts must not import API contracts (parallel delivery surfaces).",
+      from: { path: "^packages/contracts/mcp/" },
+      to: { path: "^packages/contracts/api/" },
+    },
+    {
       name: "contract-no-domain-imports",
       severity: "error",
       comment: "Contract packages must not import domain runtime packages.",

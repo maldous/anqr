@@ -1,0 +1,11 @@
+{
+  "name": "@anqr/contracts-api",
+  "version": "0.0.0-contract",
+  "private": true,
+  "description": "HTTP API route contracts for ANQR defined with ts-rest",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
