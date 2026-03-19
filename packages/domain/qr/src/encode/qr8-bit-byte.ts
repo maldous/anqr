@@ -1,6 +1,6 @@
 import { stringToBytesFn } from "./string-bytes";
-import type { QRBitBuffer, QRDataSegment } from "@/modules/qr-encoder/types";
-import { QRMode } from "@/modules/qr-encoder/types";
+import type { QRBitBuffer, QRDataSegment } from "../qr-encoder/types";
+import { QRMode } from "../qr-encoder/types";
 
 /**
  * 8-bit byte mode encoder

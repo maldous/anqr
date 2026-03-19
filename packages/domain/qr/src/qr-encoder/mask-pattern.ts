@@ -1,1 +1,3 @@
-export type MaskPattern = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | -1;
+import type { MaskPattern as BaseMaskPattern } from "@/contracts/generator";
+
+export type MaskPattern = Exclude<BaseMaskPattern, "auto"> | -1;

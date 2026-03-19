@@ -3,9 +3,6 @@
  * Common utility functions for file export
  */
 
-// Re-export from browser-io (canonical source)
-export { canvasToBlob, downloadUrl, saveFileNative } from "@/platform/browser/io";
-
 /**
  * Escape XML special characters */
 

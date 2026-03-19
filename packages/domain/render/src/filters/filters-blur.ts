@@ -7,4 +7,4 @@ import { createLogger } from "../../../../observability/logging/src";
 
 const _log = createLogger("GENERATE");
 
-export { blur as applyBoxBlur } from "@/modules/overlay";
+export { blur as applyBoxBlur } from "../overlay/overlay-filters";

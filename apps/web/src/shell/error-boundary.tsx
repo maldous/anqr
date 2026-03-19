@@ -6,7 +6,7 @@
  */
 
 import { Component, type ErrorInfo } from "react";
-import { createLogger } from "../../../../packages/observability/logging/src/logger";
+import { createLogger } from "@/lib/logger";
 import { ErrorFallbackUI } from "./error-fallback-ui";
 import type { ErrorBoundaryProps } from "./error-boundary-props.types";
 import type { ErrorBoundaryState } from "./error-boundary-state.types";

@@ -1,4 +1,4 @@
-import type { EmbedOptions } from "@/modules/share-links/types";
+import type { EmbedOptions } from "./share-links/types";
 import { convertToImageApiUrl } from "./convert-to-image-api-url";
 
 /**

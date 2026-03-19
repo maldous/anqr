@@ -1,4 +1,4 @@
-import type { CryptoHelper } from "@/modules/payload-generators/types";
+import type { CryptoHelper } from "./payload-generators/types";
 
 /**
  * Generate cryptocurrency payment URI (BIP-21 for Bitcoin, etc.)

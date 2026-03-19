@@ -2,6 +2,6 @@
   "name": "@anqr/config-build",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/config-build",
+  "description": "Reserved workspace scaffold for future config-build extraction",
   "type": "module"
 }

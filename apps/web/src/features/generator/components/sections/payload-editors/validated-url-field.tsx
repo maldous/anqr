@@ -1,7 +1,7 @@
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidUrl } from "../../../../../../../../packages/domain/payload/src/payload-generators";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { isValidUrl } from "@/domain/payload/generators";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 
 export function ValidatedUrlField({
   label,

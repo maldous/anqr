@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/is-redirect-status";
+export * from "@/platform/node/server/is-redirect-status";

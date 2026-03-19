@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-encoder/types";
+import type { QRCodeInstance } from "../qr-encoder/types";
 import { count2x2DarkModules } from "./count2x2-dark-modules";
 
 // LEVEL2: 2x2 blocks of same color

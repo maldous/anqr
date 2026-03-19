@@ -1,4 +1,4 @@
-import { QRErrorCorrectionLevel } from "@/modules/qr-encoder/types";
+import { QRErrorCorrectionLevel } from "../qr-encoder/types";
 import type { ECCLevel } from "./bit-mapping.types";
 
 /**

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/has-animation-effect";
+export * from "@/domain/render/server/has-animation-effect";

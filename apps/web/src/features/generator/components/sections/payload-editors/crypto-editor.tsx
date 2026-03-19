@@ -1,15 +1,15 @@
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidCryptoAddress } from "../../../../../../../../packages/domain/payload/src/payload-generators";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { isValidCryptoAddress } from "@/domain/payload/generators";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../../../../../packages/ui/web/src/primitives/select";
+} from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 
 export function CryptoEditor({

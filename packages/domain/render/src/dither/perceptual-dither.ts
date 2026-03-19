@@ -1,4 +1,4 @@
-import type { DitherResult } from "@/modules/dither-algorithms/types";
+import type { DitherResult } from "../dither-algorithms/types";
 import { resolveDiffusionDitherOptions } from "./diffusion-dither-options";
 import type { PerceptualDitherOptions } from "./perceptual-dither-options";
 import { quantizePerceptualPixel } from "./quantize-perceptual-pixel";

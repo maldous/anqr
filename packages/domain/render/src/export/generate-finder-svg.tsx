@@ -1,6 +1,6 @@
 import { generateStyledRingSvg } from "./generate-styled-ring-svg";
 import { generateStyledCenterShapeSvg } from "./generate-styled-center-shape-svg";
-import type { VectorFinderStyle } from "@/modules/exporter/types";
+import type { VectorFinderStyle } from "../exporter/types";
 
 /**
  * Generate SVG for finder pattern with styling

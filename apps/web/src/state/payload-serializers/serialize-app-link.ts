@@ -1,4 +1,4 @@
-import { generateAppDeepLink } from "../../../../../packages/domain/payload/src/payload-generators";
+import { generateAppDeepLink } from "@/domain/payload/generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeAppLink(payload: PayloadData): string {

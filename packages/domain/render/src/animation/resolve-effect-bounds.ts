@@ -1,4 +1,4 @@
-import type { AnimationOptions } from "@/modules/animation/types";
+import type { AnimationOptions } from "../animation/types";
 
 export function resolveEffectBounds(
   canvas: HTMLCanvasElement | OffscreenCanvas,

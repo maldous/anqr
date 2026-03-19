@@ -1,4 +1,4 @@
-import { QRGenerator } from "@/domain/render/generator";
+import { QRGenerator } from "@/domain/qr/generator";
 import { defaultBrowserCanvasFactory } from "@/platform/browser";
 
 // Singleton QR generator instance

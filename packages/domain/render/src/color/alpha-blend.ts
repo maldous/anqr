@@ -1,4 +1,4 @@
-import type { RGBA } from "@/modules/core/types";
+import type { RGBA } from "@/contracts/generator";
 
 export function alphaBlend(top: RGBA, bottom: RGBA): RGBA {
   const outA = top.a + bottom.a * (1 - top.a);

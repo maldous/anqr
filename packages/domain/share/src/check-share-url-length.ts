@@ -1,4 +1,4 @@
-import { MAX_SHARE_URL_LENGTH } from "@/modules/share-links/types";
+import { MAX_SHARE_URL_LENGTH } from "./share-links/types";
 
 /**
  * Check if a share URL exceeds recommended length limits.

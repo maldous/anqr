@@ -1,4 +1,4 @@
-import { QRGeneratorProvider } from "../../../../packages/application/generator/src/hooks/useQRGenerator";
+import { QRGeneratorProvider } from "@/application/generator";
 import { useQRStore } from "../state/qr-store";
 import { AppContent } from "./app-content";
 

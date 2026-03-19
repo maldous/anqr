@@ -1,1 +1,1 @@
-export { isGifLikeImageParam } from "../../../../domain/render/src/server/is-gif-like-image-param";
+export { isGifLikeImageParam } from "@/domain/render/server";

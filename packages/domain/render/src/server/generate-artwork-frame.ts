@@ -1,7 +1,7 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "@/modules/qr-generator";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
-import { generateFullQArt, generateFullQArtOptimal } from "@/modules/qart";
+import { QRGenerator } from "@/domain/qr/generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
+import { generateFullQArt, generateFullQArtOptimal } from "@/domain/qr/qart";
 import type { ArtworkState } from "./artwork-state.types";
 import type { ECCLevel } from "./ecc-level.types";
 

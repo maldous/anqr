@@ -1,6 +1,7 @@
-import { createGifEncoder, indexGifPixels, quantizeGifPalette } from "@/modules/animation";
+import { createGifEncoder, indexGifPixels, quantizeGifPalette } from "../animation";
+import { getCanvas2DContext } from "@/domain/render/canvas";
 import { withGifEncodeLock } from "../animation/gif-lock";
-import type { ExportConfig, ExportResult } from "@/modules/exporter/types";
+import type { ExportConfig, ExportResult } from "../exporter/types";
 import { log } from "./log";
 import { renderFrameToScaledCtx } from "./render-frame-to-scaled-ctx";
 import { resolveExportConfig } from "./resolve-export-config";
@@ -44,11 +45,10 @@ export async function exportGif(
           return canvas;
         })()
       : new OffscreenCanvas(width, height);
-  const scaledCtx =
-    scaledCanvas.getContext("2d", {
-      willReadFrequently: true,
-      desynchronized: true,
-    }) ?? scaledCanvas.getContext("2d");
+  const scaledCtx = getCanvas2DContext(scaledCanvas, {
+    willReadFrequently: true,
+    desynchronized: true,
+  });
   if (!scaledCtx) throw new Error("Could not get canvas context");
 
   // Pre-compute disposal code once (not per-frame)

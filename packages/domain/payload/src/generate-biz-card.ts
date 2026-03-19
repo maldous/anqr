@@ -1,4 +1,4 @@
-import type { BizCardParams } from "@/modules/payload-generators/types";
+import type { BizCardParams } from "./payload-generators/types";
 
 /** Generate BizCard format (older format, simple) */
 export function generateBizCard(params: BizCardParams): string {

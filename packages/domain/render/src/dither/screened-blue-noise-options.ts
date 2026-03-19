@@ -1,4 +1,4 @@
-import type { ColorMode } from "@/modules/dither-algorithms/types";
+import type { ColorMode } from "../dither-algorithms/types";
 
 /** Options for screened blue noise dithering */
 export interface ScreenedBlueNoiseOptions {

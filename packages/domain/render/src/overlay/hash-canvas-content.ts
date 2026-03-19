@@ -1,4 +1,5 @@
 import { createLogger } from "@/infra/logging/logger";
+import { getCanvas2DContext } from "@/domain/render/canvas";
 import { acquireHashCanvas } from "./acquire-hash-canvas";
 import { canvasHashCache } from "./canvas-hash-cache";
 import { HASH_CANVAS_SIZE } from "./hash-canvas-size";
@@ -21,11 +22,10 @@ export async function hashCanvasContent(
       hashCanvas.height = HASH_CANVAS_SIZE;
     }
 
-    const hashCtx =
-      hashCanvas.getContext("2d", {
-        willReadFrequently: true,
-        desynchronized: true,
-      }) ?? hashCanvas.getContext("2d");
+    const hashCtx = getCanvas2DContext(hashCanvas, {
+      willReadFrequently: true,
+      desynchronized: true,
+    });
     if (!hashCtx) {
       return `${canvas.width}x${canvas.height}`;
     }

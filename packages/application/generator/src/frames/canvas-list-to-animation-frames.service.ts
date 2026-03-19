@@ -4,7 +4,7 @@
  * Notes: Convert canvas list to AnimationFrame array.
  */
 
-import type { AnimationFrame } from "@/modules/animation";
+import type { AnimationFrame } from "@/domain/render/animation";
 
 export function canvasListToAnimationFrames(
   canvases: (HTMLCanvasElement | OffscreenCanvas)[],

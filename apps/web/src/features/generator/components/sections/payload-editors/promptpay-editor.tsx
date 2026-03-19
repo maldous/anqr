@@ -1,16 +1,16 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { isValidPhone } from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Label } from "@/ui/web";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../../../../../packages/ui/web/src/primitives/select";
+} from "@/ui/web";
 import type { PromptPayForm } from "../payload-section-types";
 import { OptionalAmountField } from "./optional-amount-field";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";

@@ -1,4 +1,1 @@
-export interface GradientStop {
-  pos: number;
-  color: string;
-}
+export type { GradientStop } from "@/contracts/generator";

@@ -2,6 +2,6 @@
   "name": "@anqr/config-eslint",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/config-eslint",
+  "description": "Reserved workspace scaffold for future config-eslint extraction",
   "type": "module"
 }

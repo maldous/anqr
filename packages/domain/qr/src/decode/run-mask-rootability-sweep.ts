@@ -2,7 +2,7 @@ import { createLogger } from "../../../../observability/logging/src";
 import { readCodewords } from "./decode";
 import { unmaskMatrix } from "./format";
 import { rsRootabilityFor } from "./rs-rootability";
-import type { ECCLevelChar } from "@/modules/qr-decoder/types";
+import type { ECCLevelChar } from "../qr-decoder/types";
 
 const qrDecoderLog = createLogger("DECODER");
 

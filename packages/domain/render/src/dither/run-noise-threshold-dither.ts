@@ -1,4 +1,4 @@
-import type { ColorMode, DitherResult } from "@/modules/dither-algorithms/types";
+import type { ColorMode, DitherResult } from "../dither-algorithms/types";
 import { noiseThresholdDither } from "./noise-threshold-dither";
 
 export function runNoiseThresholdDither(

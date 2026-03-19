@@ -1,9 +1,11 @@
+import type {
+  OutputFormat,
+  WatermarkBlend,
+  WatermarkKind,
+} from "@/contracts/generator";
+import type { WatermarkPosition } from "@/domain/render/server/watermark-position.types";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { DEFAULT_OUTPUT_FORMAT } from "./default-output-format.const";
-import type { OutputFormat } from "./output-format.types";
-import type { WatermarkKind } from "./watermark-kind.types";
-import type { WatermarkPosition } from "./watermark-position.types";
-import type { WatermarkBlend } from "./watermark-blend.types";
 import { parseGifDisposalCode } from "./parse-gif-disposal-code";
 
 export function parseOutputParams(

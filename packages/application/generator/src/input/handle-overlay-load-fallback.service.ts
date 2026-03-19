@@ -1,5 +1,5 @@
 import { loadFileAsCanvas } from "./load-file-as-canvas.service";
-import type { AnimationFrame } from "@/modules/animation";
+import type { AnimationFrame } from "@/domain/render/animation";
 
 export function handleOverlayLoadFallback(
   file: File,

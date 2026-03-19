@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../lib/dynamic-testid";
 import {
   Select,
@@ -21,16 +21,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../../packages/ui/web/src/primitives/select";
-import { Tabs, TabsList, TabsTrigger } from "../../../../../packages/ui/web/src/primitives/tabs";
+} from "@/ui/web";
+import { Tabs, TabsList, TabsTrigger } from "@/ui/web";
 import { type GalleryCategory } from "../../content/gallery/gallery-manifest";
-import { useBannerHeight } from "../../../../../packages/ui/web/src/hooks/useBannerHeight";
+import { useBannerHeight } from "@/ui/web";
 import { isRtlLanguage, languages, loadLocale } from "../../i18n";
-import { trackEvent } from "../../../../../packages/observability/telemetry/src/zaraz";
-import { copyToClipboard } from "../../../../../packages/platform/browser/src/clipboard";
+import { trackEvent } from "@/infra/telemetry/zaraz";
+import { copyToClipboard } from "@/platform/browser";
+import { prepareInterstitial } from "@/platform/native";
 import { buildHeaderShareConfig } from "./build-header-share-config";
-import { prepareInterstitial } from "../../../../../packages/platform/native/src";
-import { getShareableUrl } from "../../../../../packages/domain/share/src";
+import { getShareableUrl } from "@/domain/share";
 import { type Tier, useQRStore } from "../../state/qr-store";
 import { resolveHeaderPage, type HeaderPage } from "./header-resolve-page";
 import { changeTierWithAdGate } from "./header-tier-gate";

@@ -1,1 +1,1 @@
-export { completeAnimationGeneration } from "@/features/generator/application/frames/complete-animation-generation.service";
+export { completeAnimationGeneration } from "../frames/complete-animation-generation.service";

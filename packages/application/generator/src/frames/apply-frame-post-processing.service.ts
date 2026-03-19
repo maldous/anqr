@@ -4,7 +4,7 @@
  * Notes: Apply post-processing to animation frame.
  */
 
-import { applyColorCycle } from "@/domain/render/animation/color-cycle";
+import { applyColorCycle } from "@/domain/render/animation";
 import { cloneCanvasSimple } from "./clone-canvas-simple.service";
 import type { PatternEffect } from "./frames-patterneffect.types";
 import { applyWatermarkToCanvas } from "../generation/apply-watermark-to-canvas.service";

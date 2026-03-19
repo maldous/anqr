@@ -1,4 +1,4 @@
-import type { SwissQRBillParams } from "@/modules/payload-generators/types";
+import type { SwissQRBillParams } from "./payload-generators/types";
 
 /**
  * Generate Swiss QR-bill payment code

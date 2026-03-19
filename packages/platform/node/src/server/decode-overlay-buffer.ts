@@ -1,1 +1,1 @@
-export { decodeOverlayBuffer } from "../../../../domain/render/src/server/decode-overlay-buffer";
+export { decodeOverlayBuffer } from "@/domain/render/server";

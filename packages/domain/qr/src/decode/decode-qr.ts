@@ -5,7 +5,7 @@
 
 import { invertImageData } from "./invert-image-data";
 import { tryDecode } from "./try-decode-qr";
-import type { DecodeResult } from "@/modules/qr-decoder/types";
+import type { DecodeResult } from "../qr-decoder/types";
 
 /**
  * Decode a QR code from ImageData

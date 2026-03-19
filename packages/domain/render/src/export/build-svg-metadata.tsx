@@ -1,5 +1,5 @@
-import type { VectorSvgConfig } from "@/modules/exporter/types";
-import { escapeXml } from "@/modules/exporter/utils";
+import type { VectorSvgConfig } from "../exporter/types";
+import { escapeXml } from "../exporter/utils";
 
 export function buildSvgMetadata(metadata: VectorSvgConfig["metadata"]): string {
   if (!metadata) return "";

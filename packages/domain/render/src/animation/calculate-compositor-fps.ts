@@ -1,4 +1,4 @@
-import type { GifCompositor } from "@/modules/animation/types";
+import type { GifCompositor } from "../animation/types";
 
 /**
  * Calculate FPS from a GIF compositor

@@ -1,8 +1,8 @@
 import { Capacitor } from "@capacitor/core";
-import type { Tier } from "../../../../../packages/domain/qr/src/tier";
-import { createLogger } from "../../../../../packages/observability/logging/src/logger";
-import { trackEvent } from "../../../../../packages/observability/telemetry/src/zaraz";
-import { prepareInterstitial, showInterstitial } from "../../../../../packages/platform/native/src";
+import type { Tier } from "@/domain/qr";
+import { createLogger } from "@/lib/logger";
+import { trackEvent } from "@/infra/telemetry/zaraz";
+import { prepareInterstitial, showInterstitial } from "@/platform/native";
 
 const log = createLogger("HEADER");
 

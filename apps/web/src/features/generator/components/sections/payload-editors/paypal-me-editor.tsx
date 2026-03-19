@@ -1,4 +1,4 @@
-import { isValidPayPalUsername } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { isValidPayPalUsername } from "@/domain/payload/generators";
 import type { EditorProps } from "../payload-editor.types";
 import { OptionalAmountField } from "./optional-amount-field";
 import { ValidatedHandleField } from "./validated-handle-field";

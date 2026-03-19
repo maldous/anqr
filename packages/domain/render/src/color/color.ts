@@ -29,4 +29,4 @@ export { isDark } from "./is-dark";
 export { getTextColor } from "./get-text-color";
 
 // Re-export types for convenience
-export type { HSL, HSLA, RGB, RGBA } from "@/modules/core/types";
+export type { HSL, HSLA, RGB, RGBA } from "@/contracts/generator";

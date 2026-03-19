@@ -1,5 +1,5 @@
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 
 export function OptionalAmountField({
   label,

@@ -1,5 +1,5 @@
-import type { FormatInfo } from "@/modules/qr-decoder/types";
-import { ECC_LEVEL_MAP } from "@/modules/qr-decoder/types";
+import type { FormatInfo } from "../qr-decoder/types";
+import { ECC_LEVEL_MAP } from "../qr-decoder/types";
 import { findBestFormatMatch } from "./find-best-format-match";
 import { initFormatTable } from "./init-format-table";
 import { qrDecoderLog } from "./qr-decoder-log";

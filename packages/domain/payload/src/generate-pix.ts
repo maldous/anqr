@@ -1,6 +1,6 @@
 import { EMVQRBuilder } from "./emv";
-import type { PIXParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { PIXParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate PIX QR code (Brazil)

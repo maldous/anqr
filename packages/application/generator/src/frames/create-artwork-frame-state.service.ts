@@ -4,7 +4,7 @@
  * Notes: Create initial artwork frame state.
  */
 
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import type { ArtworkFrameState } from "./frames-artworkstate.types";
 import { readCanvasImageData } from "../generation/read-canvas-image-data.service";
 import { sanitizeQArtRenderConfig } from "../generation/sanitize-q-art-render-config.service";

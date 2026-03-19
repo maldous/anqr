@@ -1,4 +1,4 @@
-import { MODE_ALPHANUMERIC, MODE_BYTE, MODE_KANJI, MODE_NUMERIC } from "@/modules/qr-decoder/types";
+import { MODE_ALPHANUMERIC, MODE_BYTE, MODE_KANJI, MODE_NUMERIC } from "../qr-decoder/types";
 
 /**
  * Get the number of bits for character count indicator

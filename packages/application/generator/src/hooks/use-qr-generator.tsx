@@ -5,17 +5,17 @@ import {
   decimateCompositorFrames,
   type GifCompositor,
   resolveAnimationFrameDelay,
-} from "@/modules/animation";
-import { isTemporalDitherActive, type TemporalDitherMode } from "@/modules/dither-algorithms";
-import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/modules/overlay";
+} from "@/domain/render/animation";
+import { isTemporalDitherActive, type TemporalDitherMode } from "@/domain/render/dither-algorithms";
+import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from "@/domain/render/overlay";
 import { prepareInterstitial, showInterstitial } from "../../../../platform/native/src";
-import type { ValidationResult } from "@/modules/qr-analyzer";
+import type { ValidationResult } from "@/contracts/analyze";
 import { terminateValidationWorker } from "@/platform/worker";
 import {
   INTRINSICALLY_SCALED_OVERLAY_MODES,
   type AnyCanvas,
   type QRGeneratorConfig,
-} from "@/modules/qr-generator";
+} from "@/domain/qr/generator";
 import type { UseQRGeneratorResult } from "./useQRGenerator.types";
 import type { UseQRStoreHook } from "./use-qr-store-hook.types";
 import { applyCropTransform } from "./apply-crop-transform";
@@ -69,29 +69,9 @@ import { useDebounce } from "./use-debounce";
 import { YieldController } from "./yield-controller";
 import { yieldToMainThread } from "./yield-to-main-thread";
 import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservation-options";
-
-async function waitForDoubleAnimationFrame(): Promise<void> {
-  await new Promise<void>((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => resolve());
-    });
-  });
-}
-
-function isRequestStale(
-  generationRequestIdRef: { current: number },
-  requestId: number,
-): boolean {
-  return generationRequestIdRef.current !== requestId;
-}
-
-async function yieldForRequestResponsiveness(
-  generationRequestIdRef: { current: number },
-  requestId: number,
-): Promise<boolean> {
-  await yieldToMainThread(16);
-  return isRequestStale(generationRequestIdRef, requestId);
-}
+import { isRequestStale } from "./is-request-stale";
+import { waitForDoubleAnimationFrame } from "./wait-for-double-animation-frame";
+import { yieldForRequestResponsiveness } from "./yield-for-request-responsiveness";
 
 export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
   const { t } = useTranslation();
@@ -1061,7 +1041,7 @@ export function useQRGenerator(useStore: UseQRStoreHook): UseQRGeneratorResult {
       14,
     );
     const yieldForResponsiveness = (): Promise<boolean> =>
-      yieldForRequestResponsiveness(generationRequestIdRef, requestId);
+      yieldForRequestResponsiveness(generationRequestIdRef, requestId, yieldToMainThread);
     const runValidationIfNeeded = setupValidationRunner({
       requestId,
       animationFrameCount,

@@ -15,19 +15,20 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AdUnit } from "../../../../../../packages/analytics/ads/src/components/ad-unit";
+import { AdUnit } from "@/analytics/ads";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../../../../../../packages/ui/web/src/primitives/accordion";
+} from "@/ui/web";
 import { DynamicTestId } from "../../../lib/dynamic-testid";
 import { HighlightedLabel, SearchProvider } from "../search/search-context";
 import { useQRStore } from "../../../state/qr-store";
+import { filterStillVisibleSections } from "./filter-still-visible-sections";
+import { getVisibleSectionIds } from "./get-visible-section-ids";
 import { SectionLoadFallback } from "./sidebar-section-load-fallback";
 import { OPEN_SECTIONS_STORAGE_KEY, loadStoredOpenSections } from "./sidebar-open-sections";
-import { getAvailableKeywords } from "./sidebar-keywords";
 import type { SidebarProps } from "./sidebar-types";
 
 const PayloadSection = lazy(() =>
@@ -82,20 +83,6 @@ const SECTIONS = [
 ];
 
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
-
-function isSectionVisibleForTier(section: (typeof SECTIONS)[number], tier: string): boolean {
-  if (section.tier === "basic") return true;
-  if (section.tier === "advanced") return tier === "advanced" || tier === "professional";
-  return tier === "professional";
-}
-
-function filterStillVisibleSections(prev: string[], tier: string): string[] {
-  const stillVisible = prev.filter((sectionId) => {
-    const section = SECTIONS.find((s) => s.id === sectionId);
-    return section ? isSectionVisibleForTier(section, tier) : false;
-  });
-  return stillVisible.length > 0 ? stillVisible : ["payload"];
-}
 
 export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<SidebarProps>) {
   // Use individual selectors to avoid re-renders when unrelated state changes
@@ -168,36 +155,14 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
   };
 
   // Filter sections by tier and search
-  const visibleSections = SECTIONS.filter((section) => {
-    // Tier filter
-    if (!isSectionVisibleForTier(section, tier)) return false;
-
-    // Search filter - check section label AND keywords available at current tier
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const translatedLabel = t(section.labelKey);
-      const labelMatch = translatedLabel.toLowerCase().includes(query);
-      const keywords = getAvailableKeywords(section.id, tier);
-      const keywordMatch = keywords.some((keyword) => keyword.toLowerCase().includes(query));
-      return labelMatch || keywordMatch;
-    }
-    return true;
-  });
+  const visibleSectionIds = getVisibleSectionIds(SECTIONS, tier, searchQuery, t);
+  const visibleSections = SECTIONS.filter((section) => visibleSectionIds.includes(section.id));
 
   // Auto-expand sections that match the search
   useEffect(() => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const matchingSections = SECTIONS.filter((section) => {
-        // Check tier first
-        if (!isSectionVisibleForTier(section, tier)) return false;
-
-        const translatedLabel = t(section.labelKey);
-        const labelMatch = translatedLabel.toLowerCase().includes(query);
-        const keywords = getAvailableKeywords(section.id, tier);
-        const keywordMatch = keywords.some((keyword) => keyword.toLowerCase().includes(query));
-        return labelMatch || keywordMatch;
-      }).map((s) => s.id);
+      const matchingSections = getVisibleSectionIds(SECTIONS, tier, query, t);
 
       if (matchingSections.length > 0) {
         setOpenSections(matchingSections);
@@ -210,7 +175,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: Readonly<
   // When tier changes, keep currently open sections that are still visible,
   // and add any newly available sections if user upgraded
   useEffect(() => {
-    setOpenSections((prev) => filterStillVisibleSections(prev, tier));
+    setOpenSections((prev) => filterStillVisibleSections(SECTIONS, prev, tier));
   }, [tier]);
 
   const renderSection = (sectionId: string) => {

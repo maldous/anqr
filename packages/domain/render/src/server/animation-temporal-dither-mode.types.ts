@@ -1,1 +1,1 @@
-export type AnimationTemporalDitherMode = "off" | "blue_noise" | "flicker_safe";
+export type { AnimationTemporalDitherMode } from "@/contracts/generator";

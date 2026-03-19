@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-import type { AnimationFrame, GifCompositor } from "@/modules/animation";
+import type { AnimationFrame, GifCompositor } from "@/domain/render/animation";
 import { loadFileAsCanvas } from "./load-file-as-canvas.service";
 
 const log = createLogger("QR");

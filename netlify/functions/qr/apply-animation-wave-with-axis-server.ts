@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/apply-animation-wave-with-axis-server";
+export * from "@/domain/render/server/apply-animation-wave-with-axis-server";

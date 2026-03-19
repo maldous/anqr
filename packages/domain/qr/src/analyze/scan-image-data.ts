@@ -1,4 +1,4 @@
-import { decodeQR } from "@/modules/qr-decoder";
+import { decodeQR } from "../decode";
 import type { ScanResult } from "./scanner.types";
 
 /**

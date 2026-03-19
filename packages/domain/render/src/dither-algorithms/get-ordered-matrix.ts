@@ -4,7 +4,7 @@ import {
   BAYER_8,
   CLUSTERED_DOT,
   VOID_CLUSTER,
-} from "@/domain/render/dither/matrices";
+} from "../dither/matrices";
 import type { OrderedMatrix } from "./types";
 
 /** Get ordered dithering matrix by name */

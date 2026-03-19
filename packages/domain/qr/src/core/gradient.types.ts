@@ -1,1 +1,1 @@
-export type GradientType = "none" | "linear" | "radial" | "conic";
+export type { GradientType } from "@/contracts/generator";

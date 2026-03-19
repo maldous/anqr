@@ -14,7 +14,7 @@ export {
   cannyEdge as applyCannyEdge,
   sharpen as applySharpen,
   sobelEdge as applySobelEdge,
-} from "@/modules/overlay";
+} from "../overlay/overlay-filters";
 
 // QR-specific preprocessing (kept in qr-generator)
 export {

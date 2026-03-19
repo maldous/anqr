@@ -1,5 +1,5 @@
 import { type Canvas, createCanvas } from "@napi-rs/canvas";
-import { type AnimationEasing, type AnimationPattern } from "@/modules/animation";
+import { type AnimationEasing, type AnimationPattern } from "../animation";
 import type { AnimationWaveAxis } from "./animation-wave-axis.types";
 import { computeAnimationProgress } from "./compute-animation-progress";
 import { applyAnimationEffectToImageDataServer } from "./apply-animation-effect-to-image-data-server";

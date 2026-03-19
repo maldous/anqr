@@ -1,4 +1,4 @@
-import type { OTPAuthParams } from "@/modules/payload-generators/types";
+import type { OTPAuthParams } from "./payload-generators/types";
 
 /** Generate OTPAuth URI (TOTP/HOTP) */
 export function generateOTPAuth(params: OTPAuthParams): string {

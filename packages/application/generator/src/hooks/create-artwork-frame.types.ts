@@ -1,1 +1,1 @@
-export { createArtworkFrameState } from "@/features/generator/application/frames/create-artwork-frame-state.service";
+export { createArtworkFrameState } from "../frames/create-artwork-frame-state.service";

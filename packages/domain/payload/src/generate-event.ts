@@ -1,5 +1,5 @@
-import type { EventHelper } from "@/modules/payload-generators/types";
-import { escapeValue, formatICalDate } from "@/modules/payload-generators/utils";
+import type { EventHelper } from "./payload-generators/types";
+import { escapeValue, formatICalDate } from "./payload-generators/utils";
 
 /** Generate iCalendar VEVENT string per RFC 5545
  * Optimized for QR code size - uses minimal required fields

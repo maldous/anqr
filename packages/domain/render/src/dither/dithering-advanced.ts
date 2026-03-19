@@ -4,7 +4,7 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import { generateBlueNoiseTile, sampleBlueNoise } from "@/modules/dither-algorithms";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms";
 import { getOverlayBrightness } from "../overlay/overlay-data-packed";
 import { curveIntensity } from "../generator/pixel-matrix-utils";
 import type {

@@ -6,7 +6,7 @@
 
 import { createLogger } from "@/infra/logging/logger";
 import type { FullQArtPipelineResult, QArtModule } from "./qart-shared-types";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { readCanvasImageData } from "../generation/read-canvas-image-data.service";
 import { sanitizeQArtRenderConfig } from "../generation/sanitize-q-art-render-config.service";
 

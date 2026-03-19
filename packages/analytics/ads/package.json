@@ -2,6 +2,6 @@
   "name": "@anqr/analytics-ads",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/analytics-ads",
+  "description": "Ads and monetization presentation package for ANQR",
   "type": "module"
 }

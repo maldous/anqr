@@ -14,4 +14,4 @@ export { extractDominantColors } from "./extract-dominant-colors";
 export { parseUrlDetails } from "./parse-url-details";
 
 // Re-export rgbToHex from core
-export { rgbToHex } from "@/domain/render/color/color";
+export { rgbToHex } from "@/domain/render/color";

@@ -1,4 +1,4 @@
-import type { AnimationFrame } from "@/modules/animation";
+import type { AnimationFrame } from "@/domain/render/animation";
 import type { YieldController } from "../generation/generation-class-yieldcontroller";
 import type { FramePostProcessContext } from "./frame-post-process-context.types";
 import type { FrameRenderContext } from "./frame-render-context.types";

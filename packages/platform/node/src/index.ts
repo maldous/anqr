@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own Node.js platform abstractions for netlify/api
-export const NODE_PLATFORM_PLACEHOLDER = true;
+// Canonical public API for @anqr/platform-node
+export * from "./server";

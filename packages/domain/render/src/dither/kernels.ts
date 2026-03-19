@@ -3,7 +3,7 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import type { DiffusionKernel } from "@/modules/dither-algorithms/types";
+import type { DiffusionKernel } from "../dither-algorithms/types";
 import { prepareKernel } from "./prepare-kernel";
 
 const _log = createLogger("DITHER");

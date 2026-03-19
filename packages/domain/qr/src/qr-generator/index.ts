@@ -9,7 +9,7 @@ export {
   registerCacheCleanup,
 } from "./cache";
 export type { QRCodeObject, QRMatrixCacheEntry, OverlayDataMatrix } from "./cache";
-export type { CanvasFactory } from "@/domain/render/canvas-factory.types";
+export type { CanvasFactory } from "@/domain/render/canvas";
 export { CanvasPool } from "./canvas-pool";
 export {
   applyPaletteColor,
@@ -24,7 +24,7 @@ export {
   applyTrueDither,
   distributeError,
   getDiffusionKernel,
-} from "../../../render/src/dither/dithering";
+} from "@/domain/render/dither";
 export {
   createGradientFill,
   drawAlignmentPattern,
@@ -37,7 +37,7 @@ export {
   drawModule,
   drawTimingModule,
   roundRect,
-} from "../../../render/src/generator/drawing";
+} from "@/domain/render/qr-render";
 export { getEccWeight, isEccSafeToModify } from "../spec/ecc";
 export {
   applyBoxBlur,
@@ -46,7 +46,7 @@ export {
   applySobelEdge,
   preprocessImageData,
   preprocessImageData as applyFiltersManual,
-} from "../../../render/src/filters/filters";
+} from "@/domain/render/filters";
 export {
   applyGeometricTransforms,
   generateSubpixelMatrix,
@@ -56,27 +56,24 @@ export {
   hasPreprocessingOptions,
   loadImageDataRGB,
   preprocessOverlay,
-} from "../../../render/src/overlay/overlay";
-export {
-  getAlignmentPositionsCached,
-  isFormatInfo,
-  isVersionInfo,
-} from "../../../render/src/generator/pattern-helpers";
+} from "@/domain/render/overlay";
+export { getAlignmentPositionsCached } from "@/domain/render/qr-render";
+export { isFormatInfo, isVersionInfo } from "@/domain/qr/spec";
 export {
   generatePixelDecisionMatrix,
   getScaleFactor,
   prepareUnifiedOverlayData,
-} from "../../../render/src/generator/pixel-matrix";
-export { clearBaseMatrixCache } from "../../../render/src/generator/pixel-matrix-utils";
+} from "@/domain/render/qr-render";
+export { clearBaseMatrixCache } from "@/domain/render/generator";
 export { QRGenerator } from "./qr-generator-class";
-export { clearFunctionalMapCache, renderModules } from "../../../render/src/generator/render-loop";
-export type { OverlayModeResult } from "../../../render/src/generator/render-modes";
+export { clearFunctionalMapCache, renderModules } from "@/domain/render/qr-render";
+export type { OverlayModeResult } from "@/domain/render/generator";
 export {
   applyQROverlayMode,
   computeDarkFactor,
   computeLightBlend,
-} from "../../../render/src/generator/render-modes";
-export { generateScaledQR } from "../../../render/src/generator/scaled-render";
+} from "@/domain/render/generator";
+export { generateScaledQR } from "@/domain/render/qr-render";
 export type { AnyCanvas } from "./any-canvas";
 export type {
   ApplyOverlayModeOptions,

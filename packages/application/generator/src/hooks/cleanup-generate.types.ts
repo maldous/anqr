@@ -1,1 +1,1 @@
-export { cleanupGenerateState } from "@/features/generator/application/generation/cleanup-generate-state.service";
+export { cleanupGenerateState } from "../generation/cleanup-generate-state.service";

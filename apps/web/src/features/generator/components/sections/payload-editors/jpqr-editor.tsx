@@ -2,10 +2,10 @@ import type { TFunction } from "i18next";
 import {
   isNonEmpty,
   isValidStoreId,
-} from "../../../../../../../../packages/domain/payload/src/payload-generators";
+} from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import type { JPQRForm } from "../payload-section-types";
 import { ValidatedTextField } from "./validated-text-field";
 

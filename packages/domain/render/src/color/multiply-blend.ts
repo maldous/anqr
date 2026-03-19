@@ -1,4 +1,4 @@
-import type { RGB } from "@/modules/core/types";
+import type { RGB } from "@/contracts/generator";
 
 export function multiplyBlend(top: RGB, bottom: RGB): RGB {
   return {

@@ -4,7 +4,7 @@ import type { QArtModule } from "./q-art-module";
 export function loadQArtModule(): Promise<QArtModule> {
   if (!getQartModulePromise()) {
     setQartModulePromise(
-      Promise.all([import("@/modules/qart"), import("@/platform/worker")]).then(
+      Promise.all([import("@/domain/qr/qart"), import("@/platform/worker")]).then(
         ([qartModule, workerModule]) => ({
           ...qartModule,
           generateQArtInWorker: workerModule.generateQArtInWorker,

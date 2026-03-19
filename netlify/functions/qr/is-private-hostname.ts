@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/is-private-hostname";
+export * from "@/platform/node/server/is-private-hostname";

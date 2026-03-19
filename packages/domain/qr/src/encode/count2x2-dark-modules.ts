@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-encoder/types";
+import type { QRCodeInstance } from "../qr-encoder/types";
 
 export function count2x2DarkModules(qrcode: QRCodeInstance, row: number, col: number): number {
   let count = 0;

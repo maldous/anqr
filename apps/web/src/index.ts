@@ -1,2 +1,2 @@
-// Transitional web delivery shell — re-exports from src/ until physical migration
+// Web delivery entrypoint
 export * from "./boot/main";

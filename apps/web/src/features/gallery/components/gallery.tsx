@@ -5,13 +5,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AdUnit } from "../../../../../../packages/analytics/ads/src/components/ad-unit";
+import { AdUnit } from "@/analytics/ads";
+import { prepareInterstitial, showInterstitial } from "@/platform/native";
 import { type GalleryCategory, gallerySections } from "../../../content/gallery/gallery-items";
-import { trackEvent } from "../../../../../../packages/observability/telemetry/src/zaraz";
-import {
-  prepareInterstitial,
-  showInterstitial,
-} from "../../../../../../packages/platform/native/src";
+import { trackEvent } from "@/infra/telemetry/zaraz";
 import {
   GuideLinks,
   HorizontalAd,

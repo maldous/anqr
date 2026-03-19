@@ -1,4 +1,4 @@
-import type { ShareConfig } from "@/modules/share-links";
+import type { ShareConfig } from "@/contracts/share";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applySubpixelAndHalftoneParams(

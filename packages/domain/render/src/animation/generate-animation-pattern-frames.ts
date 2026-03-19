@@ -1,3 +1,4 @@
+import { getCanvas2DContext } from "@/domain/render/canvas";
 import type { AnimationPattern } from "./animation-patterns.types";
 import { applyPatternToImageData } from "./apply-pattern-to-image-data";
 
@@ -21,7 +22,10 @@ export function generateAnimationPatternFrames(
     const canvas = document.createElement("canvas");
     canvas.width = sourceCanvas.width;
     canvas.height = sourceCanvas.height;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = getCanvas2DContext(canvas);
+    if (!ctx) {
+      throw new Error("Could not get 2D context from output canvas");
+    }
     ctx.drawImage(sourceCanvas, 0, 0);
     return [canvas];
   }
@@ -31,12 +35,10 @@ export function generateAnimationPatternFrames(
   const height = sourceCanvas.height;
 
   // Get source image data
-  const sourceCtx =
-    (sourceCanvas.getContext("2d", {
-      willReadFrequently: true,
-      desynchronized: true,
-    } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-    sourceCanvas.getContext("2d");
+  const sourceCtx = getCanvas2DContext(sourceCanvas, {
+    willReadFrequently: true,
+    desynchronized: true,
+  });
   if (!sourceCtx) {
     throw new Error("Could not get 2D context from source canvas");
   }
@@ -49,7 +51,10 @@ export function generateAnimationPatternFrames(
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = getCanvas2DContext(canvas);
+    if (!ctx) {
+      throw new Error("Could not get 2D context from frame canvas");
+    }
 
     // Copy source data into a reusable frame buffer.
     framePixels.set(sourcePixels);

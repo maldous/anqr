@@ -1,6 +1,6 @@
 import { createLogger } from "@/infra/logging/logger";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
-import { getStringToBytes, setStringToBytes } from "@/modules/qr-encoder";
+import type { QRAnalysisResult } from "@/contracts/analyze";
+import { getStringToBytes, setStringToBytes } from "@/domain/qr/encode";
 import { nowMs } from "./formatters";
 import {
   computeCanvasSizing,

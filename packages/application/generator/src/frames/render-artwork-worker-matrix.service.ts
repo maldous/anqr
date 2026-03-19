@@ -5,7 +5,7 @@
  */
 
 import type { QArtWorkerResult } from "../qart/qart-shared-types";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { qrGenerator } from "../generation/generation-singleton";
 
 export async function renderArtworkWorkerMatrix(params: {

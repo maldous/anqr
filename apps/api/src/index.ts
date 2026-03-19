@@ -1,2 +1,2 @@
-// Transitional API delivery shell — awaiting handler composition over packages
-export const API_APP_PLACEHOLDER = true;
+// Scaffold only. This delivery root has no runtime API until API shell composition begins.
+export {};

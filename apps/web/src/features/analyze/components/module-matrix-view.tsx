@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { Check, ClipboardCopy, ZoomIn, ZoomOut } from "lucide-react";
-import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 
 export const ModuleMatrixView = ({
   matrix,

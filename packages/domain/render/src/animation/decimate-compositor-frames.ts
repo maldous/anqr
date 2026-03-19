@@ -1,4 +1,4 @@
-import type { GifCompositor } from "@/modules/animation/types";
+import type { GifCompositor } from "../animation/types";
 import { calculateCompositorFps } from "./calculate-compositor-fps";
 
 /**

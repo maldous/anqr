@@ -1,7 +1,7 @@
 import { Binary, Database, Shield, Type } from "lucide-react";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
-import { formatRsErrorCorrection } from "../../../../../../packages/application/analyze/src/formatters";
+import { formatRsErrorCorrection } from "@/application/analyze";
 
 export function EncodingPanel({
   encodingMode,

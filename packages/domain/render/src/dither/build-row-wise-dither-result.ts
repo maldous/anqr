@@ -1,4 +1,4 @@
-import type { DitherResult, RGB } from "@/modules/dither-algorithms/types";
+import type { DitherResult, RGB } from "../dither-algorithms/types";
 
 export function buildRowWiseDitherResult(
   params: Readonly<{

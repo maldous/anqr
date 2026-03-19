@@ -1,15 +1,15 @@
 import type { TFunction } from "i18next";
-import { isValidEthereumAddress } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { isValidEthereumAddress } from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../../../../../../packages/ui/web/src/primitives/select";
+} from "@/ui/web";
 import type { EthereumForm } from "../payload-section-types";
 
 export const EthereumEip681Editor = ({

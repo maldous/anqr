@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/max-data-length.const";
+export * from "@/domain/render/server/max-data-length.const";

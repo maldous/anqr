@@ -2,6 +2,6 @@
   "name": "@anqr/platform-worker",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/platform-worker",
+  "description": "Worker adapter package for ANQR",
   "type": "module"
 }

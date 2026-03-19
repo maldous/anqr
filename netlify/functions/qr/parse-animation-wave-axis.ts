@@ -1,4 +1,4 @@
-import type { AnimationWaveAxis } from "./animation-wave-axis.types";
+import type { AnimationWaveAxis } from "@/contracts/generator";
 
 export function parseAnimationWaveAxis(
   value: string | null | undefined,

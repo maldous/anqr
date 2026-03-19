@@ -1,4 +1,4 @@
-import { clamp01 } from "@/modules/dither-algorithms/utils";
+import { clamp01 } from "../dither-algorithms/utils";
 import type { DiffusionPixelResult } from "./diffusion-pixel-result";
 
 export function quantizeDiffusionStepPixel(params: {

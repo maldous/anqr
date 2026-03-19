@@ -7,7 +7,7 @@ import { createLogger } from "../../../../observability/logging/src";
 
 const _log = createLogger("ENCODER");
 
-import type { QRBitBuffer } from "@/modules/qr-encoder/types";
+import type { QRBitBuffer } from "../qr-encoder/types";
 
 /**
  * Create a new bit buffer for QR data encoding

@@ -17,7 +17,7 @@ import { getGFExp, initGF } from "./rs-rootability-gf";
 const _log = createLogger("DECODER");
 
 import { RS_BLOCKS } from "./decode";
-import type { ECCLevelChar } from "@/modules/qr-decoder/types";
+import type { ECCLevelChar } from "../qr-decoder/types";
 
 export type { RSRootabilityBlockResult } from "./rs-rootability.types";
 import type { RSRootabilityBlockResult } from "./rs-rootability.types";

@@ -1,4 +1,4 @@
-import type { ExportConfig } from "@/modules/exporter/types";
+import type { ExportConfig } from "../exporter/types";
 
 export function resolveExportConfig(
   config: Partial<ExportConfig>,

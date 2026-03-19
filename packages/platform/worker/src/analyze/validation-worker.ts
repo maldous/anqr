@@ -7,7 +7,7 @@
  *   Worker → Main: { id, result: ValidationResult }
  */
 
-import { decodeQR } from "@/modules/qr-decoder";
+import { decodeQR } from "@/domain/qr/decode";
 import type { ValidateRequest } from "./validate-request";
 import type { ValidationResult } from "./validation-worker-result";
 

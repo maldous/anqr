@@ -1,4 +1,4 @@
-import type { EthereumEIP681Params } from "@/modules/payload-generators/types";
+import type { EthereumEIP681Params } from "./payload-generators/types";
 import { appendGasParams } from "./append-gas-params";
 
 export function buildTokenTransferURI(params: EthereumEIP681Params): string {

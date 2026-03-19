@@ -7,4 +7,4 @@ import { createLogger } from "../../../../observability/logging/src";
 
 const _log = createLogger("GENERATE");
 
-export { sharpen as applySharpen } from "@/modules/overlay";
+export { sharpen as applySharpen } from "../overlay/overlay-filters";

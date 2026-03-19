@@ -1,4 +1,4 @@
-import type { FormatInfo } from "@/modules/qr-decoder/types";
+import type { FormatInfo } from "../qr-decoder/types";
 import { hammingDistance } from "./hamming-distance";
 import { FORMAT_INFO_DECODE_TABLE } from "./format-info-decode-table";
 

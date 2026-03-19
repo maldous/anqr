@@ -3,30 +3,25 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
-import type { GradientConfig } from "../core/types";
+import type { GradientConfig } from "@/contracts/generator";
 import {
   calculateOptimalVersion,
   getCompatibleMode,
   qrcode,
   resetStringToBytes,
-} from "@/modules/qr-encoder";
-import { verifyQRStructure } from "@/modules/qr-spec";
+} from "../qr-encoder";
+import { verifyQRStructure } from "../qr-spec";
 import { qrMatrixCache } from "./cache";
-import type { CanvasFactory } from "@/domain/render/canvas-factory.types";
-import {
-  createGradientFill,
-  drawCenterLogo,
-  drawFrame,
-  drawFrameBackground,
-} from "@/domain/render/generator/drawing";
+import type { CanvasFactory } from "@/domain/render/canvas";
+import { createGradientFill, drawCenterLogo, drawFrame, drawFrameBackground } from "@/domain/render/qr-render";
+import { curveIntensity } from "@/domain/render/intensity";
 import { preprocessOverlayCanvas as preprocessOverlayCanvasStandalone } from "./preprocess-overlay-canvas";
 import {
-  curveIntensity,
+  generateScaledQR,
   getScaleFactor,
   prepareUnifiedOverlayData,
-} from "@/domain/render/generator/pixel-matrix";
-import { renderModules } from "@/domain/render/generator/render-loop";
-import { generateScaledQR } from "@/domain/render/generator/scaled-render";
+  renderModules,
+} from "@/domain/render/qr-render";
 import type { AnyCanvas } from "./any-canvas";
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from "./types";
 import { validateColor } from "./utils";

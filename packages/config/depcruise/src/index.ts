@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own shared dependency-cruiser configuration
-export const DEPCRUISE_CONFIG_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until shared depcruise config extraction begins.
+export {};

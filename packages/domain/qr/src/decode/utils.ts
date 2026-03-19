@@ -1,2 +1,2 @@
 // Barrel: domain/qr/decode/utils
-export { pointDistance } from "@/modules/qr-decoder/utils";
+export { pointDistance } from "../qr-decoder/utils";

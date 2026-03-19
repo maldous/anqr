@@ -1,4 +1,4 @@
-import { createLogger } from "../../../../packages/observability/logging/src/logger";
+import { createLogger } from "@/lib/logger";
 import { LANGUAGE_FONT_MAP } from "./language-font-map";
 
 const log = createLogger("I18N");

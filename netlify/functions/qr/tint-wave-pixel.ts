@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/tint-wave-pixel";
+export * from "@/domain/render/server/tint-wave-pixel";

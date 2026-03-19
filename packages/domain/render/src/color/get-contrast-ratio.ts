@@ -1,4 +1,4 @@
-import type { RGB } from "@/modules/core/types";
+import type { RGB } from "@/contracts/generator";
 import { getRelativeLuminance } from "./get-relative-luminance";
 
 /** Calculate WCAG contrast ratio between two colors */

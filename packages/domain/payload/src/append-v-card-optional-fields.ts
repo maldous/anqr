@@ -1,5 +1,5 @@
-import type { VCardHelper } from "@/modules/payload-generators/types";
-import { escapeValue } from "@/modules/payload-generators/utils";
+import type { VCardHelper } from "./payload-generators/types";
+import { escapeValue } from "./payload-generators/utils";
 
 export function appendVCardOptionalFields(lines: string[], params: VCardHelper): void {
   if (params.adr) {

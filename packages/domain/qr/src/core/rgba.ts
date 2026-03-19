@@ -1,5 +1,1 @@
-import type { RGB } from "./rgb";
-
-export interface RGBA extends RGB {
-  a: number;
-}
+export type { RGBA } from "@/contracts/generator";

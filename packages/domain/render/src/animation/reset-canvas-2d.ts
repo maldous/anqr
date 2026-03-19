@@ -1,7 +1,9 @@
+import { getCanvas2DContext } from "@/domain/render/canvas";
+
 export function resetCanvas2D(
   canvas: HTMLCanvasElement | OffscreenCanvas,
 ): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null {
-  const ctx = canvas.getContext("2d");
+  const ctx = getCanvas2DContext(canvas);
   if (!ctx) return null;
   if ("setTransform" in ctx && typeof ctx.setTransform === "function") {
     ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -1,6 +1,6 @@
-import type { TemporalDitherMode } from "@/domain/render/dither/temporal";
-import type { AnimationFrame, GifCompositor } from "@/modules/animation";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { TemporalDitherMode } from "@/domain/render/dither";
+import type { AnimationFrame, GifCompositor } from "@/domain/render/animation";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import type { createScratchCanvasPool } from "./create-scratch-canvas-pool.service";
 import type { PatternEffect } from "./frames-patterneffect.types";
 

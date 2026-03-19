@@ -1,3 +1,3 @@
-import { createLogger } from "../../../../../../../packages/observability/logging/src/logger";
+import { createLogger } from "@/lib/logger";
 
 export const overlayLog = createLogger("OVERLAY");

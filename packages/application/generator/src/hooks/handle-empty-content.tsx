@@ -1,1 +1,1 @@
-export { handleEmptyContent } from "@/features/generator/application/generation/handle-empty-content.service";
+export { handleEmptyContent } from "../generation/handle-empty-content.service";

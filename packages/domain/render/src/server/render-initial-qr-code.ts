@@ -1,6 +1,6 @@
 import { type Canvas } from "@napi-rs/canvas";
-import { QRGenerator } from "@/modules/qr-generator";
-import type { AnyCanvas, QRGeneratorConfig } from "@/modules/qr-generator";
+import { QRGenerator } from "@/domain/qr/generator";
+import type { AnyCanvas, QRGeneratorConfig } from "@/domain/qr/generator";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import type { ArtworkState } from "./artwork-state.types";
 import { generateArtworkFrame } from "./generate-artwork-frame";

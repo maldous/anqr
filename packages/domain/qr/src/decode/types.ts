@@ -8,4 +8,4 @@ export type {
   ECCLevelChar,
   FormatInfo,
   DecodedSegmentInfo,
-} from "@/modules/qr-decoder/types";
+} from "../qr-decoder/types";

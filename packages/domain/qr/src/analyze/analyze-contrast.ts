@@ -1,4 +1,4 @@
-import { getContrastRatio, parseColor } from "@/domain/render/color/color";
+import { getContrastRatio, parseColor } from "@/domain/render/color";
 import type { ContrastReport } from "./safety.types";
 
 /**

@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-encoder/types";
+import type { QRCodeInstance } from "../qr-encoder/types";
 
 /**
  * Count how many of the 8 neighbors around (row, col) share the same dark/light value.

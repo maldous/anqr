@@ -1,4 +1,4 @@
-import type { ValidationResult } from "@/modules/qr-analyzer";
+import type { ValidationResult } from "@/contracts/analyze";
 
 export interface UseQRGeneratorResult {
   canvasRef: React.RefObject<HTMLCanvasElement>;

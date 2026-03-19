@@ -1,5 +1,5 @@
-import type { ColorMode } from "@/modules/dither-algorithms/types";
-import { rgbToGray } from "@/modules/dither-algorithms/utils";
+import type { ColorMode } from "../dither-algorithms/types";
+import { rgbToGray } from "../dither-algorithms/utils";
 import type { BlueNoisePixelResult } from "./blue-noise-pixel-result";
 
 export function quantizeBlueNoisePixel(

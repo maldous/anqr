@@ -1,4 +1,4 @@
-import type { EPCSepaParams } from "@/modules/payload-generators/types";
+import type { EPCSepaParams } from "./payload-generators/types";
 
 /**
  * Generate EPC/SEPA payment QR code (EU bank transfer)

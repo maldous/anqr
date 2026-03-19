@@ -1,5 +1,5 @@
-export { downloadGif, exportGif } from "../export/gif-export";
-export { downloadImage, exportImage } from "../export/image-export";
+export { exportGif } from "../export/gif-export";
+export { exportImage } from "../export/image-export";
 export {
   calculateCrc32,
   createPngPhysChunk,
@@ -7,7 +7,7 @@ export {
   embedPngDpi,
   embedPngMetadata,
 } from "../export/png-metadata";
-export { downloadSvg, exportSvg } from "../export/svg-export";
+export { exportSvg } from "../export/svg-export";
 export type {
   ExportConfig,
   ExportResult,
@@ -21,5 +21,5 @@ export type {
   VectorTimingStyle,
 } from "./types";
 export { getDefaultExportConfig } from "./types";
-export { canvasToBlob, downloadUrl, escapeXml, saveFileNative } from "./utils";
-export { downloadVectorSvg, exportVectorSvg } from "../export/vector-svg";
+export { escapeXml } from "./utils";
+export { exportVectorSvg } from "../export/vector-svg";

@@ -1,6 +1,6 @@
 import { EMVQRBuilder } from "./emv";
-import type { TWQRParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { TWQRParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate TWQR code (Taiwan)

@@ -1,5 +1,5 @@
 import { Capacitor } from "@capacitor/core";
-import { buildAnalysisExportData } from "@/modules/qr-analyzer";
+import { buildAnalysisExportData } from "@/domain/analyze";
 import { saveFileNative } from "@/platform/browser/io";
 import { nowMs } from "./formatters";
 import type { ExportAnalysisJSONParams } from "./analysis-runtime.types";

@@ -4,8 +4,8 @@
  * Falls back to main-thread validation if the Worker fails to initialize.
  */
 
-import type { ValidationResult } from "@/domain/qr/analyze/scanner";
-import { validateQRCodeRobust } from "@/domain/qr/analyze/scanner";
+import type { ValidationResult } from "@/contracts/analyze";
+import { validateQRCodeRobust } from "@/domain/qr/analyze";
 import type { CanvasContext } from "./canvas-context.types";
 import type { CanvasLike } from "./canvas-like.types";
 import { ensureWorker } from "./ensure-validation-worker";

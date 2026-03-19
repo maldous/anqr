@@ -3,9 +3,9 @@ import { HighlightedLabel } from "../../../search/search-context";
 import {
   isValidLatitude,
   isValidLongitude,
-} from "../../../../../../../../packages/domain/payload/src/payload-generators";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+} from "@/domain/payload/generators";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import { PlusCodeDisplay } from "../payload-plus-code-display";
 import type { EditorProps } from "../payload-editor.types";
 import { runLookup } from "../run-geo-lookup";

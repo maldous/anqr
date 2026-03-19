@@ -1,5 +1,5 @@
-import type { ColorMode, DitherResult } from "@/modules/dither-algorithms/types";
-import { clamp01 } from "@/modules/dither-algorithms/utils";
+import type { ColorMode, DitherResult } from "../dither-algorithms/types";
+import { clamp01 } from "../dither-algorithms/utils";
 import { runNoiseThresholdDither } from "./run-noise-threshold-dither";
 
 /** Apply Gaussian noise dithering */

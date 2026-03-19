@@ -1,4 +1,4 @@
-import type { RGB } from "@/modules/dither-algorithms/types";
+import type { RGB } from "../dither-algorithms/types";
 
 export function initDitherResults(
   width: number,

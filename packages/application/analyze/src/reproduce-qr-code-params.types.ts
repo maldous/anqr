@@ -1,4 +1,4 @@
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import type { ReproductionQrState } from "./reproduction-qr.types";
 import type { ReproductionRenderState } from "./reproduction-render.types";
 

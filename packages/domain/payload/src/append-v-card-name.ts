@@ -1,5 +1,5 @@
-import type { VCardHelper } from "@/modules/payload-generators/types";
-import { escapeValue } from "@/modules/payload-generators/utils";
+import type { VCardHelper } from "./payload-generators/types";
+import { escapeValue } from "./payload-generators/utils";
 
 // N: must come BEFORE FN: for better parser compatibility
 // Many real-world parsers are order-dependent and ignore N if FN comes first

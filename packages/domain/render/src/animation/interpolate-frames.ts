@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
+import { getCanvas2DContext } from "@/domain/render/canvas";
 import { createCanvasLike } from "./create-canvas-like";
 import { crossfadeIntoContext } from "./crossfade-into-context";
 import { getMorphScratch } from "./get-morph-scratch";
@@ -44,18 +45,14 @@ export function interpolateFrames(
         break;
       }
 
-      const ctx1 =
-        (frame1.getContext("2d", {
-          willReadFrequently: true,
-          desynchronized: true,
-        } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-        frame1.getContext("2d");
-      const ctx2 =
-        (frame2.getContext("2d", {
-          willReadFrequently: true,
-          desynchronized: true,
-        } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
-        frame2.getContext("2d");
+      const ctx1 = getCanvas2DContext(frame1, {
+        willReadFrequently: true,
+        desynchronized: true,
+      });
+      const ctx2 = getCanvas2DContext(frame2, {
+        willReadFrequently: true,
+        desynchronized: true,
+      });
       if (!(ctx1 && ctx2)) {
         ctx.drawImage(frame1 as HTMLCanvasElement, 0, 0);
         break;

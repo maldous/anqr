@@ -3,7 +3,7 @@ import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import { ECC_DESCRIPTIONS } from "./ecc-descriptions";
 import { MASK_DESCRIPTIONS } from "./mask-descriptions";
-import type { ECCLevel } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { ECCLevel } from "@/contracts/analyze";
 
 export function QrStructurePanel({
   version,

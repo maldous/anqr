@@ -4,7 +4,7 @@
  * Notes: Advance GIF compositor to target frame.
  */
 
-import type { GifCompositor } from "@/modules/animation";
+import type { GifCompositor } from "@/domain/render/animation";
 
 export function updateCompositorToFrame(
   gifCompositor: GifCompositor,

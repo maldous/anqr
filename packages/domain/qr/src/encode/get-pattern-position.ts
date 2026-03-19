@@ -1,4 +1,4 @@
-import { getAlignmentPositions as getPatternPositionFromSpec } from "@/modules/qr-spec";
+import { getAlignmentPositions as getPatternPositionFromSpec } from "../qr-spec";
 
 /**
  * Get alignment pattern positions for a version

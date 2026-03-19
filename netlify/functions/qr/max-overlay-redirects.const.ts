@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/max-overlay-redirects.const";
+export * from "@/domain/render/server/max-overlay-redirects.const";

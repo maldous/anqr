@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/apply-animation-effects-to-canvas-server";
+export * from "@/domain/render/server/apply-animation-effects-to-canvas-server";

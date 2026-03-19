@@ -1,10 +1,10 @@
 import { Binary, Globe, Hash, Type } from "lucide-react";
-import type { ECCLevel } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { ECCLevel } from "@/contracts/analyze";
 import {
   ECC_CAPACITIES_ALPHANUMERIC,
   ECC_CAPACITIES_BYTE,
   ECC_CAPACITIES_NUMERIC,
-} from "../../../../../../packages/domain/qr/src/spec/constants";
+} from "@/domain/qr/spec";
 
 export const CapacityByModeTable = ({
   version,

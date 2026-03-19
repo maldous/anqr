@@ -1,4 +1,4 @@
-import type { EthereumEIP681Params } from "@/modules/payload-generators/types";
+import type { EthereumEIP681Params } from "./payload-generators/types";
 
 /**
  * Generate Ethereum transaction request URI (EIP-681)

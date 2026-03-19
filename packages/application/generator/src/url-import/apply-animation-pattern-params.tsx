@@ -1,9 +1,9 @@
-import type { ShareConfig } from "@/modules/share-links";
+import type { ShareConfig } from "@/contracts/share";
 import type {
   AnimationPatternType,
   AnimationTarget,
   AnimationWaveAxis,
-} from "./qr-state-compat.types";
+} from "@/contracts/generator";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applyAnimationPatternParams(

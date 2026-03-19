@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/rotate-overlay-server";
+export * from "@/domain/render/server/rotate-overlay-server";

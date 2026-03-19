@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/encode-gif";
+export * from "@/domain/render/server/encode-gif";

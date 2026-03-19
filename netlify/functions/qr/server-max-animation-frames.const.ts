@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/server-max-animation-frames.const";
+export * from "@/domain/render/server/server-max-animation-frames.const";

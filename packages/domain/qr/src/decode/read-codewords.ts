@@ -1,4 +1,4 @@
-import { getVersionFromModuleCount } from "@/modules/qr-spec";
+import { getVersionFromModuleCount } from "../qr-spec";
 import type { CodewordBuildState } from "./codeword-build.types";
 import { processCodewordModule } from "./process-codeword-module";
 import { qrDecoderLog } from "./qr-decoder-log";

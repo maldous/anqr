@@ -1,13 +1,13 @@
 import { Plus, X } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { ConnectedHelpLink as HelpLink } from "./connected-help-link";
-import { Input } from "../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
-import { Switch } from "../../../../../../../packages/ui/web/src/primitives/switch";
-import { Textarea } from "../../../../../../../packages/ui/web/src/primitives/textarea";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
+import { Switch } from "@/ui/web";
+import { Textarea } from "@/ui/web";
 import { HighlightedLabel } from "../../search/search-context";
 import { useQRStore } from "../../../../state/qr-store";
 

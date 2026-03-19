@@ -1,6 +1,6 @@
-import { blendColors, parseColor } from "@/domain/render/color/color";
-import { getOverlayBrightness, getOverlayColor } from "@/domain/render/overlay/overlay-data-packed";
-import { curveIntensity } from "@/domain/render/generator/pixel-matrix-utils";
+import { blendColors, parseColor } from "@/domain/render/color";
+import { curveIntensity } from "@/domain/render/intensity";
+import { getOverlayBrightness, getOverlayColor } from "@/domain/render/overlay";
 import type { QRGeneratorConfig, OverlayData } from "./types";
 
 /**

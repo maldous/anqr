@@ -1,4 +1,4 @@
-import type { ContentType } from "@/modules/qr-analyzer/types";
+import type { ContentType } from "@/domain/analyze/types";
 
 export function formatContentTypeLabel(type: ContentType): string {
   const labels: Record<ContentType, string> = {

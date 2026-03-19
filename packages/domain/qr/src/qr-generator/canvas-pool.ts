@@ -1,4 +1,4 @@
-import type { CanvasFactory } from "@/domain/render/canvas-factory.types";
+import type { CanvasFactory } from "@/domain/render/canvas";
 
 /**
  * Canvas pool for reusing canvas objects across render calls.

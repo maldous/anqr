@@ -1,4 +1,4 @@
-import { generateEvent } from "../../../../../packages/domain/payload/src/payload-generators";
+import { generateEvent } from "@/domain/payload/generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeEventRsvp(payload: PayloadData): string {

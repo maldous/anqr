@@ -4,12 +4,13 @@
  * Notes: Read pixel data from canvas for QR-Art worker.
  */
 
+import { getCanvas2DContext } from "@/domain/render/canvas";
+
 export function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas): ImageData {
-  const ctx =
-    canvas.getContext("2d", {
-      willReadFrequently: true,
-      desynchronized: true,
-    }) ?? canvas.getContext("2d");
+  const ctx = getCanvas2DContext(canvas, {
+    willReadFrequently: true,
+    desynchronized: true,
+  });
   if (!ctx) {
     throw new Error("Unable to read overlay pixels for QR-Art worker");
   }

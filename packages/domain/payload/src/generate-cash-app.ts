@@ -1,4 +1,4 @@
-import type { CashAppParams } from "@/modules/payload-generators/types";
+import type { CashAppParams } from "./payload-generators/types";
 
 /**
  * Generate Cash App ($cashtag) payment link

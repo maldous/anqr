@@ -1,4 +1,4 @@
-import type { ContentTypeDetails } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { ContentTypeDetails } from "@/contracts/analyze";
 import { buildDefaultDetails } from "./build-default-details";
 import { buildPlainTextDetails } from "./build-plain-text-details";
 import { DETAIL_BUILDERS } from "./detail-builders";

@@ -1,4 +1,4 @@
-import { applyFilters, copyImageData } from "@/modules/overlay";
+import { applyFilters, copyImageData } from "../overlay/overlay-filters";
 import { applyCannyEdge, applySobelEdge } from "./filters-edge";
 import type { QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 import { applyAdaptiveNormalizationIfNeeded } from "./apply-adaptive-normalization-if-needed";

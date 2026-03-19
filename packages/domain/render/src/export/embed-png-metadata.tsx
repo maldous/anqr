@@ -1,4 +1,4 @@
-import type { PngMetadata } from "@/modules/exporter/png-metadata.types";
+import type { PngMetadata } from "../exporter/png-metadata.types";
 import { log } from "./log";
 import { createPngTextChunk } from "./create-png-text-chunk";
 

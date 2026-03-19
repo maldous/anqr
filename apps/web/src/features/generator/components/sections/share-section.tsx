@@ -1,20 +1,20 @@
 import { Check, Code, Copy, Link, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { Input } from "../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
-import { Switch } from "../../../../../../../packages/ui/web/src/primitives/switch";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
+import { Switch } from "@/ui/web";
 import { HighlightedLabel } from "../../search/search-context";
-import { trackEvent } from "../../../../../../../packages/observability/telemetry/src/zaraz";
-import { copyToClipboard } from "../../../../../../../packages/platform/browser/src/clipboard";
+import { trackEvent } from "@/infra/telemetry/zaraz";
+import { copyToClipboard } from "@/platform/browser";
 import {
   generateImageEmbed,
   generateMarkdownEmbed,
   getShareableUrl,
   getSocialShareUrls,
-} from "../../../../../../../packages/domain/share/src";
+} from "@/domain/share";
 import { useQRStore } from "../../../../state/qr-store";
 import { buildShareConfig } from "./share-section-config";
 

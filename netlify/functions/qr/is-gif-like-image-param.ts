@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/is-gif-like-image-param";
+export * from "@/domain/render/server/is-gif-like-image-param";

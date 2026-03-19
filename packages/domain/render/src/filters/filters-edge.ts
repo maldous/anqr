@@ -7,4 +7,4 @@ import { createLogger } from "../../../../observability/logging/src";
 
 const _log = createLogger("GENERATE");
 
-export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from "@/modules/overlay";
+export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from "../overlay/overlay-filters";

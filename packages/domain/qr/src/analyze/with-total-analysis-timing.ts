@@ -1,4 +1,4 @@
-import type { QRAnalysisResult } from "@/modules/qr-analyzer/types";
+import type { QRAnalysisResult } from "@/domain/analyze/types";
 import { nowMs } from "./now-ms";
 
 export function withTotalAnalysisTiming(

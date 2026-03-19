@@ -30,6 +30,29 @@ Dependencies between root directories follow a strict direction.
 
 During transition, `src/` may import from both `src/` layers and `packages/*`. As extraction progresses, `src/` internal imports are replaced with `packages/*` imports until `src/` is fully dissolved.
 
+## Contract package rule
+
+`packages/contracts/*` defines shape only.
+
+Good contract contents:
+
+- request/result DTOs
+- options, payload, error, event, and style-mode types
+- public type barrels
+
+Not contracts:
+
+- stores or store aliases
+- patch/update/import workflows
+- helper functions or default factories
+- runtime validation with side effects
+- adapters or runtime-specific bindings
+
+Required dependency direction:
+
+- application/state/platform/apps/tests -> contracts
+- contracts -X-> application/state/platform/apps
+
 **Practical rule of thumb:**
 
 - Import downward/inward, never upward/outward

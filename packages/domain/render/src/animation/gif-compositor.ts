@@ -9,7 +9,7 @@ import { getGifFrameStats } from "./gif-frame-stats";
 const log = createLogger("ANIMATION");
 
 import { decodeGif } from "./gif-codec";
-import type { GifCompositor } from "@/modules/animation/types";
+import type { GifCompositor } from "../animation/types";
 
 /**
  * Create a GIF compositor from an ArrayBuffer.

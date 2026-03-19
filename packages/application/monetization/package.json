@@ -2,6 +2,6 @@
   "name": "@anqr/application-monetization",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/application-monetization",
+  "description": "Reserved workspace scaffold for future application-monetization extraction",
   "type": "module"
 }

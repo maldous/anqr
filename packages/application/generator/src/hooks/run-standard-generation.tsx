@@ -1,1 +1,1 @@
-export { runStandardGeneration } from "@/features/generator/application/generation/run-standard-generation.service";
+export { runStandardGeneration } from "../generation/run-standard-generation.service";

@@ -1,10 +1,10 @@
 import type { TFunction } from "i18next";
+import { ECC_CAPACITIES_BYTE } from "@/domain/qr/spec";
 import { HighlightedLabel } from "../../../search/search-context";
-import { ECC_CAPACITIES_BYTE } from "../../../../../../../../packages/domain/qr/src/spec/constants";
 import type { QRState } from "../../../../../state/qr-store";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
-import { Switch } from "../../../../../../../../packages/ui/web/src/primitives/switch";
+import { Label } from "@/ui/web";
+import { Switch } from "@/ui/web";
 
 export const ValidationOptionsEditor = ({
   getPayloadText,

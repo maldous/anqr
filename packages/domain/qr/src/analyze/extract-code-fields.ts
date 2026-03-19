@@ -1,4 +1,4 @@
-import type { ECCLevel } from "@/modules/qr-analyzer/types";
+import type { ECCLevel } from "@/domain/analyze/types";
 
 export function extractCodeFields(code: {
   eccLevel?: ECCLevel | null;

@@ -1,1 +1,1 @@
-export type { Tier } from "../../../../../packages/domain/qr/src/tier";
+export type { Tier } from "@/domain/qr";

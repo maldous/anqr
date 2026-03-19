@@ -1,3 +1,4 @@
+import { getCanvas2DContext } from "@/domain/render/canvas";
 import { hashCanvasContent } from "./hash-canvas-content";
 import { overlayDataCache } from "./overlay-data-cache";
 import { packOverlayColor } from "./overlay-data-packed";
@@ -33,11 +34,10 @@ export async function getOverlayData(
 
   // Scale overlay to module count
   const scaledCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const ctx =
-    scaledCanvas.getContext("2d", {
-      willReadFrequently: true,
-      desynchronized: true,
-    }) ?? scaledCanvas.getContext("2d");
+  const ctx = getCanvas2DContext(scaledCanvas, {
+    willReadFrequently: true,
+    desynchronized: true,
+  });
   if (!ctx) {
     return emptyData;
   }

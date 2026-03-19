@@ -1,4 +1,4 @@
-import { ALPHANUMERIC_CHARS } from "@/modules/qr-decoder/types";
+import { ALPHANUMERIC_CHARS } from "../qr-decoder/types";
 import { qrDecoderLog } from "./qr-decoder-log";
 import { BitStream } from "./bit-stream";
 

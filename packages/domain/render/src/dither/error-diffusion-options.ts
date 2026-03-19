@@ -1,4 +1,4 @@
-import type { ColorMode, DiffusionKernel } from "@/modules/dither-algorithms/types";
+import type { ColorMode, DiffusionKernel } from "../dither-algorithms/types";
 
 /** Options for error diffusion dithering */
 export interface ErrorDiffusionOptions {

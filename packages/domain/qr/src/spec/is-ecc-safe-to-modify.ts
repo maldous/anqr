@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator/types";
+import type { QRGeneratorConfig } from "@/domain/qr/generator-types";
 import { getEccWeight } from "./get-ecc-weight";
 
 /**

@@ -1,4 +1,4 @@
-import type { GradientConfig } from "@/modules/core/types";
+import type { GradientConfig } from "@/contracts/generator";
 
 export interface QRGeneratorConfig {
   content: string;

@@ -1,4 +1,4 @@
-import { type AnimationEasing, applyAnimationEasing } from "@/modules/animation";
+import { type AnimationEasing, applyAnimationEasing } from "../animation";
 
 export function computeAnimationProgress(
   frameIndex: number,

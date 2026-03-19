@@ -1,4 +1,4 @@
-import type { DecodeResult, DecoderMetadata, ECCLevelChar } from "@/modules/qr-decoder/types";
+import type { DecodeResult, DecoderMetadata, ECCLevelChar } from "../qr-decoder/types";
 import { type Result, ResultMetadataType } from "./result-types";
 import { detectEncodingMode } from "./adapter-detect-encoding-mode";
 

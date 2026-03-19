@@ -1,5 +1,5 @@
 import { EMVQRBuilder } from "./emv";
-import type { EMVMPMParams } from "@/modules/payload-generators/types";
+import type { EMVMPMParams } from "./payload-generators/types";
 import { buildEMVAdditionalData } from "./build-emv-additional-data";
 import { resolveTipValue } from "./resolve-tip-value";
 

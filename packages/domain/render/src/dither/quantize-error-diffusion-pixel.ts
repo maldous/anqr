@@ -1,5 +1,5 @@
-import type { ColorMode } from "@/modules/dither-algorithms/types";
-import { rgbToGray } from "@/modules/dither-algorithms/utils";
+import type { ColorMode } from "../dither-algorithms/types";
+import { rgbToGray } from "../dither-algorithms/utils";
 import type { QuantizedPixelResult } from "./quantized-pixel-result";
 import { quantizeDiffusionStepPixel } from "./quantize-diffusion-step-pixel";
 import { quantizeDiffusionThresholdPixel } from "./quantize-diffusion-threshold-pixel";

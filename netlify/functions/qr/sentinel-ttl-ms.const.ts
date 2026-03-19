@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/sentinel-ttl-ms.const";
+export * from "@/platform/node/server/sentinel-ttl-ms.const";

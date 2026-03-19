@@ -1,4 +1,4 @@
-import type { GS1DigitalLinkParams } from "@/modules/payload-generators/types";
+import type { GS1DigitalLinkParams } from "./payload-generators/types";
 
 /** Generate GS1 Digital Link URI */
 export function generateGS1DigitalLink(params: GS1DigitalLinkParams): string {

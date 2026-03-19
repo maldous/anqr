@@ -1,4 +1,4 @@
-import { MODE_TERMINATOR } from "@/modules/qr-decoder/types";
+import { MODE_TERMINATOR } from "../qr-decoder/types";
 import type { DecodedDataResult } from "./decode.types";
 import { BitStream } from "./bit-stream";
 import type { DecodeLoopState } from "./decode-loop.types";

@@ -1,7 +1,7 @@
 import { EMVQRBuilder } from "./emv";
 import { finalizeEmvPayment } from "./finalize-emv-payment";
-import type { PayNowParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { PayNowParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate PayNow QR code (Singapore)

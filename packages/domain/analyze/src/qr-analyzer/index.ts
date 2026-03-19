@@ -1,19 +1,23 @@
-export { analyzeQRCode } from "../../../qr/src/analyze/analyze-qr-code";
-export { analyzeQRFromFile } from "../../../qr/src/analyze/analyze-qr-from-file";
-export { analyzeQRFromUrl } from "../../../qr/src/analyze/analyze-qr-from-url";
+export {
+  analyzeQRCode,
+  analyzeQRFromFile,
+  analyzeQRFromUrl,
+} from "@/domain/qr/analyze";
 export { buildAnalysisExportData } from "./export";
-export type { QRAnalysisResult } from "./qr-analysis-result";
-export type { ECCLevel } from "./ecc-level";
-export type { ValidationResult } from "../../../qr/src/analyze/scanner.types";
-export type { DecoderMetadata } from "@/modules/qr-decoder/types";
-export type { ContentType } from "./content.types";
-export type { DataCapacity } from "./data-capacity";
-export type { DetectedColors } from "./detected-colors";
-export type { DominantColorInfo } from "./dominant-color-info";
-export type { ErrorType } from "./error.types";
-export type { GeometryDiagnostics } from "./geometry-diagnostics";
-export type { ImageProperties } from "./image-properties";
-export type { ContentTypeDetails } from "./content-details.types";
-export type { QuietZoneInfo } from "./quiet-zone-info";
-export type { StructuralAnalysis } from "./structural-analysis";
-export type { TimingDiagnostics } from "./timing-diagnostics";
+export type {
+  ContentType,
+  ContentTypeDetails,
+  DataCapacity,
+  DecoderMetadata,
+  DetectedColors,
+  DominantColorInfo,
+  ECCLevel,
+  ErrorType,
+  GeometryDiagnostics,
+  ImageProperties,
+  QRAnalysisResult,
+  QuietZoneInfo,
+  StructuralAnalysis,
+  TimingDiagnostics,
+} from "@/contracts/analyze";
+export type { ValidationResult } from "@/domain/qr/analyze";

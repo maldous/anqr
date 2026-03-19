@@ -1,5 +1,5 @@
 import type React from "react";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import type { AnalysisSourceType } from "./analysis-source.types";
 
 export interface AnalysisStateSetters {

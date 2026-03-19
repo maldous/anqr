@@ -1,5 +1,5 @@
 import { parseColor } from "./color";
-import type { RGB } from "@/modules/core/types";
+import type { RGB } from "@/contracts/generator";
 import type { GradientConfig } from "./gradient-config";
 
 // ============================================

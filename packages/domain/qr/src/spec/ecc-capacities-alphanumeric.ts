@@ -1,4 +1,4 @@
-import type { ECCLevel } from "@/modules/qr-spec/types";
+import type { ECCLevel } from "../qr-spec/types";
 
 /** ECC capacity (alphanumeric characters) per version */
 export const ECC_CAPACITIES_ALPHANUMERIC: Record<ECCLevel, number[]> = {

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/composite-artwork-overlay-server";
+export * from "@/domain/render/server/composite-artwork-overlay-server";

@@ -4,7 +4,7 @@
  * Notes: Return type interface for useQRGenerator.
  */
 
-import type { ValidationResult } from "../../../../../../packages/domain/qr/src/analyze/scanner";
+import type { ValidationResult } from "@/contracts/analyze";
 
 export interface UseQRGeneratorResult {
   canvasRef: React.RefObject<HTMLCanvasElement>;

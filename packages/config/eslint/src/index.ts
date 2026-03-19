@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own shared ESLint configuration
-export const ESLINT_CONFIG_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until shared ESLint config extraction begins.
+export {};

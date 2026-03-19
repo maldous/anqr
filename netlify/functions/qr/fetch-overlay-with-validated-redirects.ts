@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/fetch-overlay-with-validated-redirects";
+export * from "@/platform/node/server/fetch-overlay-with-validated-redirects";

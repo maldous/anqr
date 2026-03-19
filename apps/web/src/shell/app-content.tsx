@@ -1,19 +1,41 @@
 import { Capacitor } from "@capacitor/core";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { BusyOverlay } from "../../../../packages/ui/web/src/composites/busy-overlay";
+import {
+  applyAnimationBasicParams,
+  applyAnimationPatternParams,
+  applyDitheringParams,
+  applyEccIntensityLimits,
+  applyMetadataParams,
+  applyOutputAdvancedParams,
+  applyOutputBasicParams,
+  applyOverlayAdvancedParams,
+  applyOverlayPreprocessingParams,
+  applyOverlayTransformParams,
+  applyQaAndAutoParams,
+  applyQrEncodingParams,
+  applyRenderBasicStyles,
+  applyRenderColorAndPaletteStyles,
+  applyRenderEyeAndFrameStyles,
+  applySafetyParams,
+  applySubpixelAndHalftoneParams,
+  applyTierAndPayloadParams,
+  applyWatermarkParams,
+  type UrlImportStore,
+  useQRGeneratorContext,
+} from "@/application/generator";
+import { showNativeToast } from "@/platform/native";
+import { BusyOverlay } from "@/ui/web";
 import { Header } from "./header/header";
-import { MobileDivider } from "../../../../packages/ui/web/src/composites/mobile-divider";
+import { MobileDivider } from "@/ui/web";
 import { Preview } from "../features/generator/components/preview";
 import { Sidebar } from "../features/generator/components/sidebar";
 import type { StaticPageType } from "../pages/static-page";
-import { TooltipProvider } from "../../../../packages/ui/web/src/primitives/tooltip";
+import { TooltipProvider } from "@/ui/web";
 import type { GalleryCategory } from "../content/gallery/gallery-manifest";
-import { useBannerHeight } from "../../../../packages/ui/web/src/hooks/useBannerHeight";
-import { useQRGeneratorContext } from "../../../../packages/application/generator/src/hooks/useQRGenerator";
+import { useBannerHeight } from "@/ui/web";
 import { isRtlLanguage, loadLocale } from "../i18n";
-import { showNativeToast } from "../../../../packages/platform/native/src";
-import { parseUrlParams } from "../../../../packages/domain/share/src";
+import { parseUrlParams } from "@/domain/share";
 import { useQRStore } from "../state/qr-store";
 import { type PageView, getPageFromLocation } from "../routing/page-resolution";
 import { updateCanonicalUrl, updateHreflangLinks } from "../seo/head-links";
@@ -23,31 +45,6 @@ import {
   MIN_MOBILE_SPLIT,
   MOBILE_SPLIT_STORAGE_KEY,
 } from "../features/generator/model/mobile-split";
-import { applyTierAndPayloadParams } from "../../../../packages/application/generator/src/url-import/apply-payload-params";
-import { applyQrEncodingParams } from "../../../../packages/application/generator/src/url-import/apply-encoding-params";
-import {
-  applyDitheringParams,
-  applyEccIntensityLimits,
-  applyRenderBasicStyles,
-  applyRenderColorAndPaletteStyles,
-  applyRenderEyeAndFrameStyles,
-  applySubpixelAndHalftoneParams,
-} from "../../../../packages/application/generator/src/url-import/apply-render-params";
-import {
-  applyOverlayAdvancedParams,
-  applyOverlayPreprocessingParams,
-  applyOverlayTransformParams,
-  applyWatermarkParams,
-} from "../../../../packages/application/generator/src/url-import/apply-overlay-params";
-import {
-  applyAnimationBasicParams,
-  applyAnimationPatternParams,
-  applyMetadataParams,
-  applyOutputAdvancedParams,
-  applyOutputBasicParams,
-  applyQaAndAutoParams,
-  applySafetyParams,
-} from "../../../../packages/application/generator/src/url-import/apply-animation-output-and-safety-params";
 import { Analyze } from "./analyze";
 import type { CapacitorAppPlugin } from "./capacitor-app-plugin";
 import { Gallery } from "./gallery";
@@ -230,7 +227,10 @@ export function AppContent() {
   // Load overlay image from URL
   // Takes store reference to avoid subscribing component to store changes
   const loadOverlayFromUrl = useCallback(
-    async (url: string, store: ReturnType<typeof useQRStore.getState>) => {
+    async (
+      url: string,
+      store: Pick<ReturnType<typeof useQRStore.getState>, "setOverlayUrl" | "setOverlayFile" | "setOverlayEnabled">,
+    ) => {
       // On native platforms, bundled assets (public/) are available locally.
       // Convert remote anqr.link URLs to local paths to avoid cross-origin issues.
       let fetchUrl = url;
@@ -275,7 +275,10 @@ export function AppContent() {
   useEffect(() => {
     if (getPageFromLocation() !== "editor") return;
     const params = parseUrlParams();
-    const store = { ...useQRStore.getState(), patchState: useQRStore.setState };
+    const store: UrlImportStore = {
+      ...useQRStore.getState(),
+      patchState: useQRStore.setState as UrlImportStore["patchState"],
+    };
 
     if (params.lang) i18n.changeLanguage(params.lang);
 

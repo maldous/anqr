@@ -1,4 +1,4 @@
-import { useQRGenerator } from "../../../../../../packages/application/generator/src/hooks/useQRGenerator";
+import { useQRGenerator } from "@/application/generator";
 import { useQRStore } from "../../../state/qr-store";
 import { createElement, type ReactNode } from "react";
 import { QRGeneratorContext } from "./qr-generator-context";

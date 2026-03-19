@@ -2,7 +2,7 @@ import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
   type TemporalDitherMode,
-} from "@/domain/render/dither/temporal";
+} from "@/domain/render/dither";
 
 export function applyFrameTemporalNoise(params: {
   animationSeed: number;

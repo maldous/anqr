@@ -13,7 +13,7 @@ import {
   Wallet,
   Wifi,
 } from "lucide-react";
-import type { ContentType } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { ContentType } from "@/contracts/analyze";
 
 export const CONTENT_TYPE_ICONS: Record<ContentType, React.ReactNode> = {
   url: <Globe className="w-4 h-4" />,

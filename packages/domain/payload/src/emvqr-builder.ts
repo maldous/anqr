@@ -1,5 +1,5 @@
-import { EMV_TAGS, MAI_SUBTAGS, POI_METHOD } from "@/modules/payload-generators/types";
-import { crc16CCITT, utf8ByteLength } from "@/modules/payload-generators/utils";
+import { EMV_TAGS, MAI_SUBTAGS, POI_METHOD } from "./payload-generators/types";
+import { crc16CCITT, utf8ByteLength } from "./payload-generators/utils";
 
 /**
  * EMV QR Code Builder class for Merchant-Presented Mode

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/animated-render-queue.const";
+export * from "@/platform/node/server/animated-render-queue.const";

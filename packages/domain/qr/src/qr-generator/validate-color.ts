@@ -1,1 +1,1 @@
-export { validateColor } from "@/domain/render/color/validate-color";
+export { validateColor } from "@/domain/render/color";

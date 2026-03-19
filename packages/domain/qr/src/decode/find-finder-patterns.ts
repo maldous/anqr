@@ -1,4 +1,4 @@
-import type { FinderPattern, FinderPatternResult } from "@/modules/qr-decoder/types";
+import type { FinderPattern, FinderPatternResult } from "../qr-decoder/types";
 import { grayAt } from "./gray-at";
 import { qrDecoderLog } from "./qr-decoder-log";
 import { refineFinderPatternCenter } from "./refine-finder-pattern-center";

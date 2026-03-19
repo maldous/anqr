@@ -6,6 +6,7 @@ Migration is done only when all of the following are true.
 
 - `apps/*` are thin shells
 - `packages/*/*` own reusable contracts
+- `packages/contracts/*` exist only for portable boundary definitions
 - `scripts/ops/*` is internally contract-separated
 - `netlify/*` is thin over packages
 - no new broad buckets exist
@@ -29,6 +30,7 @@ Migration is done only when all of the following are true.
 - typecheck green
 - lint green
 - depcruise green
+- contracts-check green and non-placeholder
 - unit tests green
 - harness quick/full green
 - nightly dry-run acceptable

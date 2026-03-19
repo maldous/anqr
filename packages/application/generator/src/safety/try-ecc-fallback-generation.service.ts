@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-import type { AnyCanvas, QRGeneratorConfig } from "@/modules/qr-generator";
+import type { AnyCanvas, QRGeneratorConfig } from "@/domain/qr/generator";
 
 const log = createLogger("QR");
 

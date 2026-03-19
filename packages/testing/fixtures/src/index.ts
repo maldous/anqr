@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own shared test fixtures
-export const TESTING_FIXTURES_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until shared fixture extraction begins.
+export {};

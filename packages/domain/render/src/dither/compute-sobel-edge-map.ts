@@ -1,4 +1,4 @@
-import { rgbToGray } from "@/modules/dither-algorithms/utils";
+import { rgbToGray } from "../dither-algorithms/utils";
 
 export function computeSobelEdgeMap(
   imageData: Float32Array[],

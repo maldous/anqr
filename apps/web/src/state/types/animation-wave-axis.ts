@@ -1,1 +1,1 @@
-export type { AnimationWaveAxis } from "../../../../../packages/domain/share/src/animation-wave-axis.types";
+export type { AnimationWaveAxis } from "@/domain/share";

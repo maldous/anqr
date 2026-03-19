@@ -1,4 +1,4 @@
-import { drawFinderPatternComplete } from "@/domain/render/generator/drawing";
+import { drawFinderPatternComplete } from "@/domain/render/qr-render";
 import { fillSkipMaskRect } from "./fill-skip-mask-rect";
 import { FINDER_POSITIONS } from "./finder-positions.const";
 import type { QRGeneratorConfig } from "./types";

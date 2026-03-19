@@ -6,8 +6,8 @@ import {
   analyzeQRCode,
   analyzeQRFromFile,
   analyzeQRFromUrl,
-  type QRAnalysisResult,
-} from "@/modules/qr-analyzer";
+} from "@/domain/analyze";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import { cloneCanvasLike } from "./canvas-analysis-helpers";
 import { closeBitmapSource } from "./close-bitmap-source";
 import { loadCameraImageFromBlob } from "./load-camera-image-from-blob";

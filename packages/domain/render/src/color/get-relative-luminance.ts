@@ -1,4 +1,4 @@
-import type { RGB } from "@/modules/core/types";
+import type { RGB } from "@/contracts/generator";
 import { parseColor } from "./parse-color";
 import { BLACK } from "./black";
 import { rgbToLumaLinear } from "./rgb-to-luma-linear";

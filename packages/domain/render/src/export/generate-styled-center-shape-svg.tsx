@@ -1,4 +1,4 @@
-import type { VectorFinderStyle } from "@/modules/exporter/types";
+import type { VectorFinderStyle } from "../exporter/types";
 
 export function generateStyledCenterShapeSvg(
   x: number,

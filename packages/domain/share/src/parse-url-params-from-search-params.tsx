@@ -1,6 +1,6 @@
 import type { AnimationTarget } from "./animation-target.types";
 import type { AnimationWaveAxis } from "./animation-wave-axis.types";
-import { type ShareConfig } from "@/modules/share-links/types";
+import type { ShareConfig } from "./share-links/types";
 import { parseBlendMode } from "./parse-blend-mode";
 import { parseFloatParam } from "./parse-float-param";
 import { parseGradientStopsParam } from "./parse-gradient-stops-param";

@@ -2,8 +2,8 @@ import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import type { QRState } from "../../../../../state/qr-store";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
-import { Textarea } from "../../../../../../../../packages/ui/web/src/primitives/textarea";
+import { Label } from "@/ui/web";
+import { Textarea } from "@/ui/web";
 
 export const PlainTextEditor = ({
   payload,

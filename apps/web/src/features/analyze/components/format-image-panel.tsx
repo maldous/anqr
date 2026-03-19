@@ -11,7 +11,7 @@ import type { useTranslation } from "react-i18next";
 import { CollapsibleSection } from "./collapsible-section";
 import { DetailRow } from "./detail-row";
 import { ECC_DESCRIPTIONS } from "./ecc-descriptions";
-import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 
 export function FormatImagePanel({
   result,

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/decode-overlay-buffer";
+export * from "@/domain/render/server/decode-overlay-buffer";

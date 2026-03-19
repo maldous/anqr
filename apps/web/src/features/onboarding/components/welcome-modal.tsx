@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { languages } from "../../../i18n";
 
 // Increment this version whenever you want to show the modal again to all users

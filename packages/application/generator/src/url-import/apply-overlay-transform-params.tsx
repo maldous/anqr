@@ -1,5 +1,5 @@
-import type { ShareConfig } from "@/modules/share-links";
-import type { OverlayMode } from "./qr-state-compat.types";
+import type { ShareConfig } from "@/contracts/share";
+import type { OverlayMode } from "@/contracts/generator";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applyOverlayTransformParams(

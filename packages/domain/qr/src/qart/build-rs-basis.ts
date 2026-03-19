@@ -1,4 +1,4 @@
-import type { ECCLevel } from "@/modules/qr-encoder";
+import type { ECCLevel } from "../qr-encoder";
 import type { RSBasisBlock } from "./rs-basis-block";
 import { qartLog } from "./qart-log";
 

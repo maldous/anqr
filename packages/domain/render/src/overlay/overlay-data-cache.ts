@@ -1,4 +1,3 @@
-import { MemoCache } from "../../../qr/src/qr-generator/memo-cache";
-import type { OverlayDataMatrix } from "../../../qr/src/qr-generator/cache.types";
+import { MemoCache, type OverlayDataMatrix } from "@/domain/qr/cache";
 
 export const overlayDataCache = new MemoCache<OverlayDataMatrix>(20);

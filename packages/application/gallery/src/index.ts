@@ -1,2 +1,2 @@
-// Awaiting physical migration from src/features/gallery/
-export const GALLERY_APPLICATION_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until gallery application extraction begins.
+export {};

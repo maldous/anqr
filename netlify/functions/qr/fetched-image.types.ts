@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/fetched-image.types";
+export * from "@/domain/render/server/fetched-image.types";

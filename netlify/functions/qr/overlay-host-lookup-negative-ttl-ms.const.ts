@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/overlay-host-lookup-negative-ttl-ms.const";
+export * from "@/domain/render/server/overlay-host-lookup-negative-ttl-ms.const";

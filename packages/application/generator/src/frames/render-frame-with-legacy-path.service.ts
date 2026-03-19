@@ -4,9 +4,9 @@
  * Notes: Render frame via legacy rendering path.
  */
 
-import { type TemporalDitherMode } from "@/domain/render/dither/temporal";
-import type { AnimationFrame } from "@/modules/animation";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { TemporalDitherMode } from "@/domain/render/dither";
+import type { AnimationFrame } from "@/domain/render/animation";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import type { PatternEffect } from "./frames-patterneffect.types";
 import { applyFrameTemporalNoise } from "./apply-frame-temporal-noise";
 import { renderGeneratedFrame } from "./render-generated-frame";

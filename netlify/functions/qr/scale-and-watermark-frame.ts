@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/scale-and-watermark-frame";
+export * from "@/domain/render/server/scale-and-watermark-frame";

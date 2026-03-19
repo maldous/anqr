@@ -1,4 +1,4 @@
-import type { MeCardHelper } from "@/modules/payload-generators/types";
+import type { MeCardHelper } from "./payload-generators/types";
 
 /** Generate MeCard string (Japanese format, more compact than vCard) */
 export function generateMeCard(params: MeCardHelper): string {

@@ -1,4 +1,4 @@
-import { createQRInstance } from "@/modules/qr-encoder";
+import { createQRInstance } from "@/domain/qr/encode";
 
 export function buildRegenMatrix(
   qr: ReturnType<typeof createQRInstance>,

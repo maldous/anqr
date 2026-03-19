@@ -1,4 +1,4 @@
-import type { DitherResult } from "@/modules/dither-algorithms/types";
+import type { DitherResult } from "../dither-algorithms/types";
 import { copyImageToPixels } from "./copy-image-to-pixels";
 import type { DiffusionPixelResult } from "./diffusion-pixel-result";
 import type { DiffusionKernelDef } from "./kernels.types";

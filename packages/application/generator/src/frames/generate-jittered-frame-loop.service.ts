@@ -4,7 +4,7 @@
  * Notes: Generate jittered animation frame loop.
  */
 
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { YieldController } from "../generation/generation-class-yieldcontroller";
 import { qrGenerator } from "../generation/generation-singleton";
 

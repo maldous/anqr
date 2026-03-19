@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { CopyButton } from "./copy-button";
 
 export const HexDumpView = ({

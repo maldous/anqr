@@ -1,6 +1,6 @@
 import { HighlightedLabel } from "../../../search/search-context";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 import { ValidatedUrlField } from "./validated-url-field";
 

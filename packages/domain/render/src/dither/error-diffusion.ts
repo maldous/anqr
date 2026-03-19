@@ -1,6 +1,6 @@
 export { distributeErrorWithKernel } from "./distribute-error-with-kernel";
 
-import type { DitherResult } from "@/modules/dither-algorithms/types";
+import type { DitherResult } from "../dither-algorithms/types";
 import { resolveDiffusionDitherOptions } from "./diffusion-dither-options";
 import type { ErrorDiffusionOptions } from "./error-diffusion-options";
 import { quantizeErrorDiffusionPixel } from "./quantize-error-diffusion-pixel";

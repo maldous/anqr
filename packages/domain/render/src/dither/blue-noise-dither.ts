@@ -1,5 +1,5 @@
-import type { DitherResult } from "@/modules/dither-algorithms/types";
-import { generateBlueNoiseTile, sampleBlueNoise } from "@/modules/dither-algorithms/utils";
+import type { DitherResult } from "../dither-algorithms/types";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms/utils";
 import type { BlueNoiseOptions } from "./blue-noise-options";
 import { buildRowWiseDitherResult } from "./build-row-wise-dither-result";
 import { quantizeBlueNoisePixel } from "./quantize-blue-noise-pixel";

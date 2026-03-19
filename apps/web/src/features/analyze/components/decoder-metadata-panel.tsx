@@ -1,7 +1,4 @@
 import { Binary, Database, Hash, Layers, Settings, Shield } from "lucide-react";
-import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
-import { CollapsibleSection } from "./collapsible-section";
-import { DetailRow } from "./detail-row";
 import {
   formatDecoderErrors,
   formatDecoderErasures,
@@ -9,7 +6,10 @@ import {
   formatDecoderNumBits,
   formatDecoderOrientation,
   formatDecoderVersion,
-} from "../../../../../../packages/application/analyze/src/formatters";
+} from "@/application/analyze";
+import type { QRAnalysisResult } from "@/contracts/analyze";
+import { CollapsibleSection } from "./collapsible-section";
+import { DetailRow } from "./detail-row";
 
 export const DecoderMetadataPanel = ({
   decoderMetadata,

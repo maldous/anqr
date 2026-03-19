@@ -1,11 +1,11 @@
 import type { TFunction } from "i18next";
 import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { isValidPhone } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { isValidPhone } from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
-import { Textarea } from "../../../../../../../../packages/ui/web/src/primitives/textarea";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
+import { Textarea } from "@/ui/web";
 
 export const SmsEditor = ({
   payload,

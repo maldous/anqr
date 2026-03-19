@@ -1,4 +1,4 @@
-import type { QRCodeInstance } from "@/modules/qr-encoder/types";
+import type { QRCodeInstance } from "../qr-encoder/types";
 import { countSameNeighbors } from "./count-same-neighbors";
 
 // LEVEL1: Same color in a row/column (5+ consecutive)

@@ -2,6 +2,6 @@
   "name": "@anqr/app-api",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/app-api",
+  "description": "Reserved workspace scaffold for future api delivery composition",
   "type": "module"
 }

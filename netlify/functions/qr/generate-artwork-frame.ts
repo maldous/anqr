@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/generate-artwork-frame";
+export * from "@/domain/render/server/generate-artwork-frame";

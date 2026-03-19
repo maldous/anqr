@@ -13,6 +13,8 @@ apps/
   ios/
 
 packages/
+  contracts/
+    generator/
   domain/
     qr/
     render/
@@ -87,6 +89,7 @@ Only delivery composition:
 
 Only reusable owned contracts:
 
+- portable contract definitions
 - domain rules
 - application orchestration
 - UI primitives/composites
@@ -95,6 +98,22 @@ Only reusable owned contracts:
 - analytics facades
 - testing fixtures/fakes/contracts/parity harnesses
 - shared build/config packages
+
+### `packages/contracts/*`
+
+Only portable boundary definitions:
+
+- request/result DTOs
+- options, payload, error, and style-mode types
+- public contract barrels
+
+Forbidden:
+
+- stores or runtime state containers
+- import/update/patch/workflow orchestration
+- helpers, factories, services, and adapters
+- compatibility shims
+- platform/runtime bindings
 
 ### `scripts/ops/*`
 

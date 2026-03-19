@@ -1,5 +1,4 @@
-import { drawAlignmentPattern } from "@/domain/render/generator/drawing";
-import { getAlignmentPositionsCached } from "@/domain/render/generator/pattern-helpers";
+import { drawAlignmentPattern, getAlignmentPositionsCached } from "@/domain/render/qr-render";
 import { fillSkipMaskRect } from "./fill-skip-mask-rect";
 import type { QRGeneratorConfig } from "./types";
 

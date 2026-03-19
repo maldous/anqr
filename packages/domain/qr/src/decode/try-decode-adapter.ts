@@ -6,7 +6,7 @@ import { invertImageData } from "./invert-image-data";
 import { BinaryBitmap } from "./luminance";
 import { Reader } from "./reader";
 import { DecodeHintType } from "./result-types";
-import type { DecodeResult } from "@/modules/qr-decoder/types";
+import type { DecodeResult } from "../qr-decoder/types";
 import { qrDecoderLog } from "./decoder-log";
 
 export function tryDecode(

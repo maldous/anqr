@@ -8,4 +8,4 @@ import { createLogger } from "../../../../observability/logging/src";
 const _log = createLogger("ANALYZER");
 
 export { detectContentType } from "./analyzer-content";
-export type { ContentType, ContentTypeDetails } from "@/modules/qr-analyzer/types";
+export type { ContentType, ContentTypeDetails } from "@/domain/analyze/types";

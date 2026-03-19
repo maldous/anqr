@@ -1,4 +1,4 @@
-import { generateFullQArt, generateFullQArtOptimal } from "@/domain/qr/qart/generate";
+import { generateFullQArt, generateFullQArtOptimal } from "@/domain/qr/qart";
 import type {
   QArtWorkerGenerateRequest,
   QArtWorkerMessage,

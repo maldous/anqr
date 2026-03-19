@@ -1,4 +1,4 @@
-import { isFinderPattern } from "@/domain/qr/spec/qr-patterns";
+import { isFinderPattern } from "@/domain/qr/spec";
 import type { RGBWithMeta } from "@/domain/render/qr-generator-shared";
 import { isFinderSeparator } from "./is-finder-separator";
 import { shouldLockModule } from "./should-lock-module";

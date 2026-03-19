@@ -31,7 +31,7 @@ export const METADATA_API = [
 ] as const;
 
 // Utilities (re-exported from browser-io)
-export const UTILS_API = ["canvasToBlob", "downloadUrl", "escapeXml", "saveFileNative"] as const;
+export const UTILS_API = ["escapeXml"] as const;
 
 // Config helpers
 export const CONFIG_API = ["getDefaultExportConfig"] as const;

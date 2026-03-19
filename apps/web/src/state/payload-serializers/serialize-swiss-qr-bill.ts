@@ -1,4 +1,4 @@
-import { generateSwissQRBill } from "../../../../../packages/domain/payload/src/payload-generators";
+import { generateSwissQRBill } from "@/domain/payload/generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeSwissQRBill(payload: PayloadData): string {

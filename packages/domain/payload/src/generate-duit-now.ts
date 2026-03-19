@@ -1,7 +1,7 @@
 import { EMVQRBuilder } from "./emv";
 import { finalizeEmvPayment } from "./finalize-emv-payment";
-import type { DuitNowParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { DuitNowParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate DuitNow QR code (Malaysia)

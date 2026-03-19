@@ -1,4 +1,4 @@
-import { MODE_ALPHANUMERIC, MODE_BYTE, MODE_KANJI, MODE_NUMERIC } from "@/modules/qr-decoder/types";
+import { MODE_ALPHANUMERIC, MODE_BYTE, MODE_KANJI, MODE_NUMERIC } from "../qr-decoder/types";
 import { qrDecoderLog } from "./qr-decoder-log";
 import { decodeNumeric } from "./decode-numeric";
 import { decodeAlphanumeric } from "./decode-alphanumeric";

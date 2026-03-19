@@ -1,4 +1,4 @@
-import type { ECCLevel } from "@/modules/qr-analyzer";
+import type { ECCLevel } from "@/contracts/analyze";
 import type { ValidEncoderMode } from "./valid-encoder-mode";
 
 export interface ReproductionParams {

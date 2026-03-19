@@ -1,7 +1,1 @@
-import type { QRLocation } from "./qr-location";
-
-export interface ScanResult {
-  data: string | null;
-  location: QRLocation | null;
-  binaryData?: Uint8Array;
-}
+export type { ScanResult } from "@/contracts/analyze";

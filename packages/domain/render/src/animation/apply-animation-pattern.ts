@@ -10,7 +10,7 @@ import { resolveEffectBounds } from "./resolve-effect-bounds";
 
 const _log = createLogger("ANIMATION");
 
-import type { AnimationOptions, AnimationPattern } from "@/modules/animation/types";
+import type { AnimationOptions, AnimationPattern } from "../animation/types";
 
 /**
  * Apply animation pattern to a frame

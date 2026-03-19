@@ -7,14 +7,10 @@ import "../index.css";
 import "../i18n"; // Initialize i18n
 import { ErrorBoundary } from "../shell/error-boundary";
 import { initAutoDynamicTestIds } from "../lib/auto-testid";
-import { createLogger } from "../../../../packages/observability/logging/src/logger";
-import { initRemoteDiagnostics } from "../../../../packages/observability/telemetry/src/logger-remote";
-import {
-  initializeAdMob,
-  prepareAllAds,
-  showBannerAd,
-} from "../../../../packages/platform/native/src";
-import { loadWebOnlyBootAssets } from "../../../../packages/platform/browser/src/boot/web-only-assets";
+import { initRemoteDiagnostics } from "@/infra/telemetry/zaraz";
+import { createLogger } from "@/lib/logger";
+import { loadWebOnlyBootAssets } from "@/platform/browser";
+import { initializeAdMob, prepareAllAds, showBannerAd } from "@/platform/native";
 
 const log = createLogger("MAIN");
 

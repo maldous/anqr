@@ -13,7 +13,7 @@ import {
   Type,
 } from "lucide-react";
 import { DynamicTestId } from "../../../lib/dynamic-testid";
-import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import { WCAGBadge } from "./wcag-badge";
 import { CONTENT_TYPE_ICONS } from "./content-type-icons";
 

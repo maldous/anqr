@@ -1,4 +1,4 @@
-import type { VCardHelper } from "@/modules/payload-generators/types";
+import type { VCardHelper } from "./payload-generators/types";
 import { appendVCardContactInfo } from "./append-v-card-contact-info";
 import { appendVCardName } from "./append-v-card-name";
 import { appendVCardOptionalFields } from "./append-v-card-optional-fields";

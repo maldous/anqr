@@ -1,4 +1,4 @@
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import type { ImportToGeneratorSetters } from "./analysis-runtime.types";
 
 export function importAnalysisToGenerator(

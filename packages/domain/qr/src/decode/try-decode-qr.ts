@@ -6,7 +6,7 @@ import { calculateLocation, extractModuleMatrix } from "./extract";
 import { getECCLevelChar, readFormatInfo } from "./format";
 import { findFinderPatterns, selectFinderPatterns } from "./locate";
 import { runMaskRootabilitySweep } from "./run-mask-rootability-sweep";
-import type { DecodeResult } from "@/modules/qr-decoder/types";
+import type { DecodeResult } from "../qr-decoder/types";
 import { qrDecoderLog } from "./decoder-log";
 
 export function tryDecode(imageData: ImageData): DecodeResult | null {

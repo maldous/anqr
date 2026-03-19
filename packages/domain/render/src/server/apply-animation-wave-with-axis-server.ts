@@ -1,4 +1,4 @@
-import { applyAnimationWave } from "@/modules/animation";
+import { applyAnimationWave } from "../animation";
 import type { AnimationWaveAxis } from "./animation-wave-axis.types";
 import { hslToRgbTupleServer } from "./hsl-to-rgb-tuple-server";
 import { tintWavePixel } from "./tint-wave-pixel";

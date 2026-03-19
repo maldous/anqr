@@ -3,7 +3,7 @@
  * Extracted from useQRGenerator.ts for use by split scaffold files.
  */
 
-import { QRGenerator } from "@/modules/qr-generator";
+import { QRGenerator } from "@/domain/qr/generator";
 import { defaultBrowserCanvasFactory } from "@/platform/browser";
 
 export const qrGenerator = new QRGenerator(defaultBrowserCanvasFactory);

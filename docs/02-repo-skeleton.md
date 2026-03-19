@@ -11,6 +11,8 @@ apps/
   ios/
 
 packages/
+  contracts/
+    generator/
   domain/
     qr/
     render/
@@ -74,5 +76,6 @@ tests/
 
 - `apps/*` are delivery targets
 - `packages/*` are the reusable architecture
+- `packages/contracts/*` are portable shape-only boundaries
 - `scripts/ops/*` is the local operating engine (systemd timers, CLI scripts)
 - `docs/*` is canonical governance and doctrine

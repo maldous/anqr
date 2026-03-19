@@ -2,6 +2,6 @@
   "name": "@anqr/domain-share",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/domain-share",
+  "description": "Share-link and embed domain package for ANQR",
   "type": "module"
 }

@@ -29,6 +29,10 @@ module.exports = {
           "^scripts/",
           "(^|/)\\..+\\.c?[jt]s$",
           "^[^/]+\\.config\\.",
+          "^packages/(ui/mobile|ui/design-tokens|testing/(playwright|parity|fixtures|fakes)|config/(tsconfig|eslint|depcruise|build)|application/(onboarding|monetization|gallery)|analytics/ga4)/src/index\\.ts$",
+          "^apps/(mobile|api)/src/index\\.ts$",
+          "^netlify/functions/qr/(sleep|non-cache-params\\.const|is-test-runtime\\.const|default-netlify-site-id\\.const)\\.ts$",
+          "^apps/web/src/seo/(truncate|escape-html|config\\.const)\\.ts$",
         ],
       },
       to: {},
@@ -40,19 +44,78 @@ module.exports = {
     // on the current src/ structure — that is intentional.
     // ══════════════════════════════════════════════════════════════════
 
+    // ── Contract layer isolation ────────────────────────────────────
+    {
+      name: "contract-no-platform-imports",
+      severity: "error",
+      comment: "Contract packages must not import platform adapters or runtime-specific infrastructure.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/platform/" },
+    },
+    {
+      name: "contract-no-ui-imports",
+      severity: "error",
+      comment: "Contract packages must not import UI or presentation code.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/ui/" },
+    },
+    {
+      name: "contract-no-app-imports",
+      severity: "error",
+      comment: "Contract packages must not import app shells or delivery targets.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^apps/" },
+    },
+    {
+      name: "contract-no-application-imports",
+      severity: "error",
+      comment: "Contract packages must not import orchestration or use-case code.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/application/" },
+    },
+    {
+      name: "contract-no-observability-imports",
+      severity: "error",
+      comment: "Contract packages must not import logging, telemetry, or monitoring code.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/observability/" },
+    },
+    {
+      name: "contract-no-config-imports",
+      severity: "error",
+      comment: "Contract packages must not depend on runtime config or environment resolution.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/config/" },
+    },
+    {
+      name: "contract-no-test-imports",
+      severity: "error",
+      comment: "Contract packages must not import test helpers, fixtures, or mocks.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^packages/testing/" },
+    },
+    {
+      name: "contract-no-tools-imports",
+      severity: "error",
+      comment: "Contract packages must not import tools, scripts, generators, or harness code.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^(tools|scripts)/" },
+    },
+    {
+      name: "contract-no-src-imports",
+      severity: "error",
+      comment: "Contract packages must not import from the transitional src/ root.",
+      from: { path: "^packages/contracts/" },
+      to: { path: "^src/" },
+    },
+
     // ── Domain layer isolation (architecture-standards.md rule 5) ─────
     {
       name: "domain-no-platform-imports",
       severity: "error",
       comment: "Domain packages must remain runtime-agnostic.",
       from: { path: "^packages/domain/" },
-      to: {
-        path: "^packages/platform/",
-        pathNot: [
-          "^packages/platform/browser/src/io/index",
-          "^packages/platform/node/src/server/(with-gif-encode-lock|qr-fn-log|fetch-image-with-buffer|fetch-image-as-canvas)\\.ts$",
-        ],
-      },
+      to: { path: "^packages/platform/" },
     },
     {
       name: "domain-no-ui-imports",
@@ -82,12 +145,7 @@ module.exports = {
       severity: "error",
       comment: "Application packages must not import from delivery targets.",
       from: { path: "^packages/application/" },
-      to: {
-        path: "^apps/",
-        pathNot: [
-          "^apps/web/src/state/qr-store\\.ts$",
-        ],
-      },
+      to: { path: "^apps/" },
     },
     {
       name: "application-no-ui-imports",
@@ -435,13 +493,60 @@ module.exports = {
           "^packages/[^/]+/[^/]+/(index|src/index)\\.",
           // Sub-module barrels (one level deep under src/)
           "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
-          // domain/qr ↔ domain/render ↔ domain/analyze: tightly coupled domain siblings
-          // (qr-generator facade re-exports render internals; qr/analyze consumes analyzer types)
-          "^packages/domain/(qr|render|analyze)/src/",
-          // Render server compatibility shims during node/server extraction
-          "^packages/platform/node/src/server/(with-gif-encode-lock|qr-fn-log|fetch-image-with-buffer|fetch-image-as-canvas)\\.ts$",
         ],
       },
+    },
+    {
+      name: "apps-no-deep-package-imports",
+      severity: "error",
+      comment:
+        "Apps must consume packages via stable public entrypoints or one-level submodule barrels only.",
+      from: { path: "^apps/" },
+      to: {
+        path: "^packages/[^/]+/[^/]+/",
+        pathNot: [
+          "^packages/[^/]+/[^/]+/(index|src/index)\\.",
+          "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
+        ],
+      },
+    },
+    {
+      name: "netlify-no-deep-package-imports",
+      severity: "error",
+      comment:
+        "Netlify delivery code must consume packages via stable public entrypoints, one-level barrels, or explicit server entry files only.",
+      from: { path: "^netlify/" },
+      to: {
+        path: "^packages/[^/]+/[^/]+/",
+        pathNot: [
+          "^packages/[^/]+/[^/]+/(index|src/index)\\.",
+          "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
+          "^packages/[^/]+/[^/]+/src/server/[^/]+\\.",
+        ],
+      },
+    },
+    {
+      name: "contract-entrypoint-only",
+      severity: "error",
+      comment: "Only contract package root entrypoints may be imported by external consumers.",
+      from: { path: "^(packages/(application|domain|ui|platform|observability|analytics|testing|config)/|apps/|netlify/|src/)" },
+      to: {
+        path: "^packages/contracts/([^/]+)/src/",
+        pathNot: [
+          "^packages/contracts/[^/]+/(index|src/index)\\.",
+        ],
+      },
+    },
+    {
+      name: "contract-no-orphans",
+      severity: "error",
+      comment: "Every contract module must be reachable from a declared public entrypoint.",
+      from: {
+        orphan: true,
+        path: "^packages/contracts/",
+        pathNot: ["\\.d\\.ts$"],
+      },
+      to: {},
     },
     {
       name: "no-dev-deps-in-src",

@@ -1,4 +1,4 @@
-import type { LightningParams } from "@/modules/payload-generators/types";
+import type { LightningParams } from "./payload-generators/types";
 
 /**
  * Generate Lightning Network invoice URI (BOLT11)

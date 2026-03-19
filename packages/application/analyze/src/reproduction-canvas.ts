@@ -1,4 +1,4 @@
-import { createQRInstance } from "@/modules/qr-encoder";
+import { createQRInstance } from "@/domain/qr/encode";
 import { nowMs } from "./now-ms";
 import { renderQRModules } from "./render-qr-modules";
 export { computeMarginModules } from "./compute-margin-modules";

@@ -4,7 +4,7 @@
  * Notes: Apply pattern effect stack to canvas.
  */
 
-import { applyAnimationPattern } from "@/domain/render/animation/apply-animation-pattern";
+import { applyAnimationPattern } from "@/domain/render/animation";
 import { cloneCanvasSimple } from "./clone-canvas-simple.service";
 import type { PatternEffect } from "./frames-patterneffect.types";
 

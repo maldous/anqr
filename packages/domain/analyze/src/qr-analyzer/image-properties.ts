@@ -1,6 +1,1 @@
-export interface ImageProperties {
-  width: number;
-  height: number;
-  aspectRatio: number;
-  estimatedQrSizePx: number;
-}
+export type { ImageProperties } from "@/contracts/analyze";

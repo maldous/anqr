@@ -1,5 +1,5 @@
-import type { ColorMode, DitherResult } from "@/modules/dither-algorithms/types";
-import { rgbToGray } from "@/modules/dither-algorithms/utils";
+import type { ColorMode, DitherResult } from "../dither-algorithms/types";
+import { rgbToGray } from "../dither-algorithms/utils";
 import { buildBinaryDitherResult } from "./build-binary-dither-result";
 
 /** Adaptive threshold dithering - uses local mean for threshold */

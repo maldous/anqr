@@ -1,4 +1,4 @@
-import type { HelpLinkProps } from "../../../../../../../packages/ui/web/src/primitives/help-link.types";
+import type { HelpLinkProps } from "@/ui/web";
 
 export type ConnectedHelpLinkProps = Omit<
   HelpLinkProps,

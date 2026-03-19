@@ -8,7 +8,7 @@ import { createLogger } from "../../../../observability/logging/src";
 const _log = createLogger("DECODER");
 
 import { decodeQR } from "./decoder-adapter";
-import type { DecodeResult } from "@/modules/qr-decoder/types";
+import type { DecodeResult } from "../qr-decoder/types";
 
 /**
  * Decode a QR code from a canvas element

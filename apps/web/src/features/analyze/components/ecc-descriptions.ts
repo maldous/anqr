@@ -1,4 +1,4 @@
-import type { ECCLevel } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import type { ECCLevel } from "@/contracts/analyze";
 
 export const ECC_DESCRIPTIONS: Record<ECCLevel, { recovery: string; description: string }> = {
   L: { recovery: "~7%", description: "Low - suitable for clean environments" },

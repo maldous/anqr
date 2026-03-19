@@ -1,5 +1,5 @@
-import type { FinderPattern, Point, QRLocation } from "@/modules/qr-decoder/types";
-import { pointDistance } from "@/modules/qr-decoder/utils";
+import type { FinderPattern, Point, QRLocation } from "../qr-decoder/types";
+import { pointDistance } from "../qr-decoder/utils";
 import { qrDecoderLog } from "./qr-decoder-log";
 
 /**

@@ -1,4 +1,4 @@
-import type { AnimationTarget } from "./animation-target.types";
+import type { AnimationTarget } from "@/contracts/generator";
 
 export function parseAnimationTarget(
   value: string | null | undefined,

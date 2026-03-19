@@ -1,14 +1,16 @@
-import { type AnimationEasing, type AnimationPattern } from "@/modules/animation";
-import type { ECCLevel } from "./ecc-level.types";
-import type { DitherKind } from "./dither-kind.types";
-import type { OutputFormat } from "./output-format.types";
-import type { WatermarkKind } from "./watermark-kind.types";
-import type { WatermarkPosition } from "./watermark-position.types";
-import type { WatermarkBlend } from "./watermark-blend.types";
-import type { AnimationTarget } from "./animation-target.types";
-import type { AnimationWaveAxis } from "./animation-wave-axis.types";
-import type { AnimationInterpolation } from "./animation-interpolation.types";
-import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
+import type {
+  AnimationInterpolation,
+  AnimationTarget,
+  AnimationTemporalDitherMode,
+  AnimationWaveAxis,
+  DitherKind,
+  ECCLevel,
+  OutputFormat,
+  WatermarkBlend,
+  WatermarkKind,
+} from "@/contracts/generator";
+import { type AnimationEasing, type AnimationPattern } from "@/domain/render/animation";
+import type { WatermarkPosition } from "@/domain/render/server/watermark-position.types";
 
 export interface ParsedHandlerParams {
   data: string;

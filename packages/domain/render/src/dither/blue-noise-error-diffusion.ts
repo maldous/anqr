@@ -1,6 +1,6 @@
 import { DIFFUSION_KERNELS } from "./kernels";
-import type { DitherResult } from "@/modules/dither-algorithms/types";
-import { generateBlueNoiseTile, sampleBlueNoise } from "@/modules/dither-algorithms/utils";
+import type { DitherResult } from "../dither-algorithms/types";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms/utils";
 import type { BlueNoiseErrorDiffusionOptions } from "./blue-noise-error-diffusion-options";
 import { copyImageToPixels } from "./copy-image-to-pixels";
 import { quantizeBNEDPixel } from "./quantize-bned-pixel";

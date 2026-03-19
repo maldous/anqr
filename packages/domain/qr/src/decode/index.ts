@@ -5,5 +5,5 @@ export type {
   DecodeResult,
   FinderPatternResult,
   DecodedSegmentInfo,
-} from "@/modules/qr-decoder/types";
+} from "../qr-decoder/types";
 export type { DecodedDataResult, DecodedEncodingMode } from "./decode.types";

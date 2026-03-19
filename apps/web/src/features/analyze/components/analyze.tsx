@@ -6,15 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AdUnit } from "../../../../../../packages/analytics/ads/src/components/ad-unit";
-import { type QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
-import { AnalyzeErrorDisplay } from "./analyze-error-display";
-import { AnalyzeHero } from "./analyze-hero";
-import { AnalyzeInputCards } from "./analyze-input-cards";
-import { AnalyzeResultDetails } from "./analyze-result-details";
-import { AnalyzeResultsHeader } from "./analyze-results-header";
-import { AnalyzeWarnings } from "./analyze-warnings";
-import { useQRStore } from "../../../state/qr-store";
+import { AdUnit } from "@/analytics/ads";
 import {
   analyzeGeneratorCanvasRobustImpl,
   exportAnalysisJSON,
@@ -22,8 +14,16 @@ import {
   type AnalysisSourceType,
   type AnalysisStateSetters,
   useAnalysisInputHandlers,
-} from "../../../../../../packages/application/analyze/src/analyze-runtime";
-import { useReproductionEffect } from "../../../../../../packages/application/analyze/src/reproduction-hook";
+  useReproductionEffect,
+} from "@/application/analyze";
+import type { QRAnalysisResult } from "@/contracts/analyze";
+import { AnalyzeErrorDisplay } from "./analyze-error-display";
+import { AnalyzeHero } from "./analyze-hero";
+import { AnalyzeInputCards } from "./analyze-input-cards";
+import { AnalyzeResultDetails } from "./analyze-result-details";
+import { AnalyzeResultsHeader } from "./analyze-results-header";
+import { AnalyzeWarnings } from "./analyze-warnings";
+import { useQRStore } from "../../../state/qr-store";
 
 export function Analyze({
   onNavigate,

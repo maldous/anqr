@@ -1,10 +1,10 @@
 import { ArrowRight, Eye, Palette } from "lucide-react";
-import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import { wcagComplianceClass } from "@/application/analyze";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import { CollapsibleSection } from "./collapsible-section";
 import { ColorSwatch } from "./color-swatch";
 import { DetailRow } from "./detail-row";
 import { WCAGBadge } from "./wcag-badge";
-import { wcagComplianceClass } from "../../../../../../packages/application/analyze/src/formatters";
 
 export const ColorsWcagSection = ({
   detectedColors,

@@ -1,5 +1,5 @@
 import { BAYER_2, BAYER_4, BAYER_8 } from "./matrices";
-import type { DitherResult } from "@/modules/dither-algorithms/types";
+import type { DitherResult } from "../dither-algorithms/types";
 import { orderedDither } from "./ordered-dither";
 
 /** Apply Bayer ordered dithering */

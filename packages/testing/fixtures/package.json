@@ -2,6 +2,6 @@
   "name": "@anqr/testing-fixtures",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/testing-fixtures",
+  "description": "Reserved workspace scaffold for future testing-fixtures extraction",
   "type": "module"
 }

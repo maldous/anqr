@@ -1,4 +1,4 @@
-import { rgbToLumaLinear } from "@/domain/render/color/color";
+import { rgbToLumaLinear } from "@/domain/render/color";
 
 export function computeSobelContribution(
   imageData: ImageData,

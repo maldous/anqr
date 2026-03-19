@@ -3,14 +3,14 @@ import {
   isValidEmail,
   isValidPhone,
   isValidUrl,
-} from "../../../../../../../../packages/domain/payload/src/payload-generators";
+} from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
 import { LabeledInputField } from "./labeled-input-field";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";
 import { HighlightedLabel } from "../../../search/search-context";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 
 export const VcardEditor = ({
   payload,

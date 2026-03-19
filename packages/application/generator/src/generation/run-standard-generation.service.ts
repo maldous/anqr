@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { buildOverflowHandlingParams } from "../safety/build-overflow-handling-params";
 import { handleGenerationError } from "../safety/handle-generation-error.service";
 import type { SafetyRunnerParams } from "../safety/safety-runner-params";

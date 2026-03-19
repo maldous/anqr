@@ -14,5 +14,4 @@ export type {
   CanvasElement,
   DiffusionKernel,
 } from "@/domain/render/qr-generator-shared";
-export { INTRINSICALLY_SCALED_OVERLAY_MODES } from "@/modules/qr-generator/types";
 export type { OverlayModeResult } from "./render-modes.types";

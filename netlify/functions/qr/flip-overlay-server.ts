@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/flip-overlay-server";
+export * from "@/domain/render/server/flip-overlay-server";

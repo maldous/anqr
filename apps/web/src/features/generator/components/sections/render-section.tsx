@@ -1,14 +1,14 @@
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
+import type { GradientType } from "@/contracts/generator";
 import { HexColorField } from "./hex-color-field";
 import {
   type AlignmentStyle,
   type FinderStyle,
   type FrameStyle,
   type GapMode,
-  type GradientType,
   type ModuleStyle,
   type TimingStyle,
   useQRStore,

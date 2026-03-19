@@ -1,4 +1,4 @@
-import type { AnimationFrame } from "@/modules/animation/types";
+import type { AnimationFrame } from "../animation/types";
 
 /**
  * Resolve frame delay for preview/export playback.

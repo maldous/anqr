@@ -1,6 +1,6 @@
 import { EMVQRBuilder } from "./emv";
-import type { QRPhParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { QRPhParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate QR Ph code (Philippines)

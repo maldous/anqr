@@ -1,4 +1,4 @@
-import type { RGBA } from "@/modules/core/types";
+import type { RGBA } from "@/contracts/generator";
 import { parseHex } from "./parse-hex";
 
 /** Parse hex color string with alpha to RGBA */

@@ -1,9 +1,11 @@
-import { type AnimationEasing, type AnimationPattern } from "@/modules/animation";
+import type {
+  AnimationInterpolation,
+  AnimationTemporalDitherMode,
+} from "@/contracts/generator";
+import { type AnimationEasing, type AnimationPattern } from "@/domain/render/animation";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { parseAnimationTarget } from "./parse-animation-target";
 import { parseAnimationWaveAxis } from "./parse-animation-wave-axis";
-import type { AnimationInterpolation } from "./animation-interpolation.types";
-import type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.types";
 
 export function parseAnimationParams(
   params: URLSearchParams,

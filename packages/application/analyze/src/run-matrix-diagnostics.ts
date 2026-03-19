@@ -1,5 +1,5 @@
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
-import { createQRInstance } from "@/modules/qr-encoder";
+import type { QRAnalysisResult } from "@/contracts/analyze";
+import { createQRInstance } from "@/domain/qr/encode";
 import type { MatrixDiagnostics } from "./matrix-diagnostics.types";
 import { buildOriginalMatrix } from "./build-original-matrix";
 import { buildRegenMatrix } from "./build-regen-matrix";

@@ -8,7 +8,7 @@ import {
   enableLogBuffer,
   flushLogBuffer,
 } from "../../../../observability/logging/src";
-import { decodeQR } from "@/modules/qr-decoder";
+import { decodeQR } from "../decode";
 import { detectContentType, extractDominantColors } from "./analyzer-content";
 import { analyzeColors } from "./analyze-colors";
 import { analyzeQuietZone } from "./analyze-quiet-zone";
@@ -26,7 +26,7 @@ import {
   extractVersionInfo,
   formatContentTypeLabel,
 } from "./decoder-helpers";
-import type { QRAnalysisResult } from "@/modules/qr-analyzer/types";
+import type { QRAnalysisResult } from "@/domain/analyze/types";
 
 const qrAnalyzerLog = createLogger("ANALYZER");
 

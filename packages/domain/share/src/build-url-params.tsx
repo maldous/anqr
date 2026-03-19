@@ -1,4 +1,4 @@
-import { type ShareConfig } from "@/modules/share-links/types";
+import type { ShareConfig } from "./share-links/types";
 import { buildAnimationParams } from "./build-animation-params";
 import { buildColorParams } from "./build-color-params";
 import { buildDitheringParams } from "./build-dithering-params";

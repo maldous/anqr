@@ -1,4 +1,4 @@
-import type { ECCLevel } from "@/modules/qr-analyzer";
+import type { ECCLevel } from "@/contracts/analyze";
 import type { ValidEncoderMode } from "./reproduction-types";
 import { tryCreateQr } from "./try-create-qr";
 

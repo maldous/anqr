@@ -1,2 +1,2 @@
-// Transitional mobile delivery shell — awaiting Capacitor composition migration
-export const MOBILE_APP_PLACEHOLDER = true;
+// Scaffold only. This delivery root has no runtime API until mobile shell composition begins.
+export {};

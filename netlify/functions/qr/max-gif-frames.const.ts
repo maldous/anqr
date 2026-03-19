@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/max-gif-frames.const";
+export * from "@/domain/render/server/max-gif-frames.const";

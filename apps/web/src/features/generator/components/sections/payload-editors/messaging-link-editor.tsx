@@ -4,11 +4,11 @@ import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import {
   generateMessagingLink,
   isValidPhone,
-} from "../../../../../../../../packages/domain/payload/src/payload-generators";
+} from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
-import { Textarea } from "../../../../../../../../packages/ui/web/src/primitives/textarea";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
+import { Textarea } from "@/ui/web";
 import { PlatformSelectField } from "./platform-select-field";
 
 export const MessagingLinkEditor = ({

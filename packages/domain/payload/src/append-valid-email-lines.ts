@@ -1,4 +1,4 @@
-import { isValidEmail } from "@/modules/payload-generators/utils";
+import { isValidEmail } from "./payload-generators/utils";
 import { formatEmailLine } from "./format-email-line";
 
 export function appendValidEmailLines(lines: string[], emails: string[], version: string): void {

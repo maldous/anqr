@@ -1,2 +1,2 @@
-// Awaiting physical migration from vite-config/
-export const BUILD_CONFIG_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until shared build-config extraction begins.
+export {};

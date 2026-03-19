@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/parse-gif-disposal-code";
+export * from "@/domain/render/server/parse-gif-disposal-code";

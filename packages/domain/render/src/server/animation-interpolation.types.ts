@@ -1,1 +1,1 @@
-export type AnimationInterpolation = "none" | "crossfade" | "morph";
+export type { AnimationInterpolation } from "@/contracts/generator";

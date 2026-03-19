@@ -2,10 +2,10 @@ import { Camera as CameraIcon, Image as ImageIcon, Link, Loader2, Upload } from 
 import type { useOverlaySourceActions } from "./use-overlay-source-actions";
 import { Capacitor } from "@capacitor/core";
 import type React from "react";
-import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
-import { Input } from "../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../packages/ui/web/src/primitives/label";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import { GALLERY_IMAGES } from "./overlay-section-manifest";
 
 export function OverlaySourcePicker({

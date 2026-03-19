@@ -1,1 +1,1 @@
-export { generateArtworkFrameStandalone } from "@/features/generator/application/frames/generate-artwork-frame-standalone.service";
+export { generateArtworkFrameStandalone } from "../frames/generate-artwork-frame-standalone.service";

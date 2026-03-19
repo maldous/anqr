@@ -6,7 +6,7 @@
 
 import { createLogger } from "@/infra/logging/logger";
 
-import { canvasHashCache } from "@/modules/qr-generator/cache";
+import { canvasHashCache } from "@/domain/render/overlay";
 import { processAndPostProcessFrame } from "./process-and-post-process-frame.service";
 import type { ExecuteFrameGenerationLoopParams } from "./execute-frame-generation-loop-params.types";
 

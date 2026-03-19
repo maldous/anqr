@@ -1,4 +1,4 @@
-import type { UPIParams } from "@/modules/payload-generators/types";
+import type { UPIParams } from "./payload-generators/types";
 
 /**
  * Generate UPI payment URI (India)

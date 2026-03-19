@@ -1,4 +1,4 @@
-import { QRMode } from "@/modules/qr-encoder/types";
+import { QRMode } from "../qr-encoder/types";
 import { getLengthInBits } from "../encode/utils";
 import { type ECCLevel, getRSBlockInfo } from "./bit-mapping";
 import type { OptimalVersionAndSuffix } from "./rs-basis.types";

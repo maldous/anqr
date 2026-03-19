@@ -2,6 +2,6 @@
   "name": "@anqr/application-onboarding",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/application-onboarding",
+  "description": "Reserved workspace scaffold for future application-onboarding extraction",
   "type": "module"
 }

@@ -1,4 +1,5 @@
-import { analyzeQRCode, type QRAnalysisResult } from "@/modules/qr-analyzer";
+import { analyzeQRCode } from "@/domain/analyze";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import {
   cloneCanvasLike,
   scanCachedFramesForQR,

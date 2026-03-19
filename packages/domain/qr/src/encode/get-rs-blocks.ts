@@ -1,4 +1,4 @@
-import type { RSBlock } from "@/modules/qr-encoder/types";
+import type { RSBlock } from "../qr-encoder/types";
 import { createRSBlock } from "./create-rs-block";
 import { getRsBlockTable } from "./get-rs-block-table";
 

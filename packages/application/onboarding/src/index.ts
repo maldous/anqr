@@ -1,2 +1,2 @@
-// Awaiting physical migration from src/features/onboarding/
-export const ONBOARDING_APPLICATION_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until onboarding application extraction begins.
+export {};

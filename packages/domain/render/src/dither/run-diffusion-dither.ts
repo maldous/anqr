@@ -1,4 +1,4 @@
-import type { DitherResult } from "@/modules/dither-algorithms/types";
+import type { DitherResult } from "../dither-algorithms/types";
 import { distributeErrorWithKernel } from "./distribute-error-with-kernel";
 import { getScanParams } from "./get-scan-params";
 import { initDitherResults } from "./init-dither-results";

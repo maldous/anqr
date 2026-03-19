@@ -1,4 +1,4 @@
-import { generateCashApp } from "../../../../../packages/domain/payload/src/payload-generators";
+import { generateCashApp } from "@/domain/payload/generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeCashApp(payload: PayloadData): string {

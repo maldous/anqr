@@ -1,4 +1,4 @@
-import { createQRInstance } from "@/modules/qr-encoder";
+import { createQRInstance } from "@/domain/qr/encode";
 
 export function renderQRModules(
   ctx: CanvasRenderingContext2D,

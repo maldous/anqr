@@ -4,7 +4,7 @@
  * Notes: Apply watermark overlay to generated canvas.
  */
 
-import { applyWatermark, type WatermarkPosition } from "@/domain/render/overlay/watermark";
+import { applyWatermark, type WatermarkPosition } from "@/domain/render/overlay";
 import { loadFileAsCanvas } from "../input/load-file-as-canvas.service";
 
 export async function applyWatermarkToCanvas<

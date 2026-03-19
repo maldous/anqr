@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/node";
+import { acquireAnimatedRenderLock } from "@/platform/node/server/acquire-animated-render-lock";
+import { shouldSerializeAnimatedRender } from "@/platform/node/server/should-serialize-animated-render";
 import { CORS_HEADERS } from "./cors-headers.const";
 import { parseHandlerParams } from "./parse-handler-params";
 import { validateParsedParams } from "./validate-parsed-params";
-import { shouldSerializeAnimatedRender } from "./should-serialize-animated-render";
-import { acquireAnimatedRenderLock } from "./acquire-animated-render-lock";
 import { processQRRequest } from "./process-qr-request";
 
 export async function handler(request: Request) {

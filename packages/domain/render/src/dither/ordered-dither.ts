@@ -1,5 +1,5 @@
-import type { DitherResult } from "@/modules/dither-algorithms/types";
-import { clamp01, rgbToGray } from "@/modules/dither-algorithms/utils";
+import type { DitherResult } from "../dither-algorithms/types";
+import { clamp01, rgbToGray } from "../dither-algorithms/utils";
 import { buildRowWiseDitherResult } from "./build-row-wise-dither-result";
 
 /** Apply ordered (threshold) dithering */

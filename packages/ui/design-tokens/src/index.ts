@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own design tokens, theme variables, and shared CSS
-export const DESIGN_TOKENS_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until design-token extraction begins.
+export {};

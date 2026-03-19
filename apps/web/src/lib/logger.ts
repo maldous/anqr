@@ -1,1 +1,1 @@
-export * from "../../../../packages/observability/logging/src/logger";
+export * from "@/lib/logger";

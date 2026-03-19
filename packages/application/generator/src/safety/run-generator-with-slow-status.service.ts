@@ -4,7 +4,7 @@
  * Notes: Run generator with slow-render status feedback.
  */
 
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { qrGenerator } from "../generation/generation-singleton";
 
 export async function runGeneratorWithSlowStatus(params: {

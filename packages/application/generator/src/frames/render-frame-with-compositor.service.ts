@@ -4,9 +4,9 @@
  * Notes: Render frame using GIF compositor.
  */
 
-import type { GifCompositor } from "@/modules/animation";
-import { type TemporalDitherMode } from "@/domain/render/dither/temporal";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { GifCompositor } from "@/domain/render/animation";
+import type { TemporalDitherMode } from "@/domain/render/dither";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { applyFrameTemporalNoise } from "./apply-frame-temporal-noise";
 import { renderGeneratedFrame } from "./render-generated-frame";
 

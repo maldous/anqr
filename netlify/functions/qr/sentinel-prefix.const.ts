@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/sentinel-prefix.const";
+export * from "@/platform/node/server/sentinel-prefix.const";

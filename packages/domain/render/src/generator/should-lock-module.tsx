@@ -4,7 +4,7 @@ import {
   isFormatInfo,
   isTimingPattern,
   isVersionInfo,
-} from "@/domain/qr/spec/qr-patterns";
+} from "@/domain/qr/spec";
 import type { QRGeneratorConfig } from "./types";
 import { isFinderModuleOrSeparator } from "./is-finder-module-or-separator";
 

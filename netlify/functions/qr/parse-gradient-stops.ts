@@ -1,6 +1,8 @@
-export function parseGradientStops(stopsParam: string): Array<{ pos: number; color: string }> {
+import type { GradientStop } from "@/contracts/generator";
+
+export function parseGradientStops(stopsParam: string): GradientStop[] {
   const parts = stopsParam.split(",");
-  const stops: Array<{ pos: number; color: string }> = [];
+  const stops: GradientStop[] = [];
 
   for (let i = 0; i < parts.length - 1; i += 2) {
     const color = `#${parts[i]}`;

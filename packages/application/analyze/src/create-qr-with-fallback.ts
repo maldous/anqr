@@ -1,5 +1,5 @@
-import type { ECCLevel } from "@/modules/qr-analyzer";
-import { optimizeSegments } from "@/modules/qr-encoder";
+import type { ECCLevel } from "@/contracts/analyze";
+import { optimizeSegments } from "@/domain/qr/encode";
 import type { ValidEncoderMode } from "./reproduction-types";
 import { createQrWithVersionFallback } from "./create-qr-with-version-fallback";
 import { tryCreateQr } from "./try-create-qr";

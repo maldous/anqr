@@ -1,5 +1,5 @@
-import type { ShareConfig } from "@/modules/share-links";
-import type { DitherKind, DiffusionKernel, OrderedMatrix } from "./qr-state-compat.types";
+import type { ShareConfig } from "@/contracts/share";
+import type { DiffusionKernel, DitherKind, OrderedMatrix } from "@/contracts/generator";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applyDitheringParams(params: Partial<ShareConfig>, store: UrlImportStore): void {

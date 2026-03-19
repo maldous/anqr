@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-import type { ValidationResult } from "@/domain/qr/analyze/scanner";
+import type { ValidationResult } from "@/contracts/analyze";
 import { validateInWorker } from "@/platform/worker";
 
 const log = createLogger("QR");

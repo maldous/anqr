@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/clear-overlay-hostname-safety-cache";
+export * from "@/platform/node/server/clear-overlay-hostname-safety-cache";

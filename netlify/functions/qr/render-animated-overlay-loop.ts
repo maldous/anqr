@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/render-animated-overlay-loop";
+export * from "@/domain/render/server/render-animated-overlay-loop";

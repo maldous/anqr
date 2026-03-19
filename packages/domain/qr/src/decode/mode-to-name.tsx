@@ -6,7 +6,7 @@ import {
   MODE_KANJI,
   MODE_NUMERIC,
   MODE_TERMINATOR,
-} from "@/modules/qr-decoder/types";
+} from "../qr-decoder/types";
 
 /**
  * Helper to convert mode indicator to mode name

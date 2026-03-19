@@ -1,5 +1,5 @@
 import { DIFFUSION_KERNELS } from "./kernels";
-import type { ColorMode, DiffusionKernel } from "@/modules/dither-algorithms/types";
+import type { ColorMode, DiffusionKernel } from "../dither-algorithms/types";
 
 export function resolveDiffusionDitherOptions(options: {
   colorMode?: ColorMode;

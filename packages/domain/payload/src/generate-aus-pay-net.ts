@@ -1,7 +1,7 @@
 import { EMVQRBuilder } from "./emv";
 import { finalizeEmvPayment } from "./finalize-emv-payment";
-import type { AusPayNetParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { AusPayNetParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate AusPayNet/NPP PayID QR code (Australia)

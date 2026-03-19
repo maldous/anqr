@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/convolve-server";
+export * from "@/domain/render/server/convolve-server";

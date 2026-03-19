@@ -1,4 +1,4 @@
-import { decodeQR } from "@/modules/qr-decoder";
+import { decodeQR } from "../decode";
 
 export async function decodeCanvasData(
   c: HTMLCanvasElement | OffscreenCanvas,

@@ -1,5 +1,1 @@
-export interface HSL {
-  h: number;
-  s: number;
-  l: number;
-}
+export type { HSL } from "@/contracts/generator";

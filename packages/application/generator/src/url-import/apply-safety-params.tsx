@@ -1,5 +1,5 @@
-import type { ShareConfig } from "@/modules/share-links";
-import type { SafetyMode } from "./qr-state-compat.types";
+import type { ShareConfig } from "@/contracts/share";
+import type { SafetyMode } from "@/contracts/generator";
 import type { UrlImportStore } from "./store-contract.types";
 
 export function applySafetyParams(params: Partial<ShareConfig>, store: UrlImportStore): void {

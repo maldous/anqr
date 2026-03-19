@@ -2,8 +2,8 @@ import { Capacitor } from "@capacitor/core";
 import { AlertTriangle, CheckCircle, Download, Info, Upload, XCircle } from "lucide-react";
 import type React from "react";
 import type { useTranslation } from "react-i18next";
-import { Button } from "../../../../../../packages/ui/web/src/primitives/button";
-import type { QRAnalysisResult } from "../../../../../../packages/domain/analyze/src/qr-analyzer/types";
+import { Button } from "@/ui/web";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 
 export function AnalyzeResultsHeader({
   result,

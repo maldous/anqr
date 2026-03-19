@@ -8,7 +8,7 @@ import { decodeQR as customDecodeQR } from "./decode-qr";
 import { DecodeHintType } from "./result-types";
 import { tryDecode } from "./try-decode-adapter";
 import { tryGlobalBinarizerStrategies } from "./try-global-binarizer-strategies";
-import type { DecodeResult } from "@/modules/qr-decoder/types";
+import type { DecodeResult } from "../qr-decoder/types";
 
 /**
  * Decode QR code with aggressive fallback strategies

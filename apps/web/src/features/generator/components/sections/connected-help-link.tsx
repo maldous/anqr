@@ -1,5 +1,5 @@
 import { useQRStore } from "../../../../state/qr-store";
-import { HelpLink } from "../../../../../../../packages/ui/web/src/primitives/help-link";
+import { HelpLink } from "@/ui/web";
 import type { ConnectedHelpLinkProps } from "./connected-help-link.types";
 
 export function ConnectedHelpLink(props: Readonly<ConnectedHelpLinkProps>) {

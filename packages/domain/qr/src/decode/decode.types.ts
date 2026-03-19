@@ -1,4 +1,4 @@
-import { type DecodedSegmentInfo } from "@/modules/qr-decoder/types";
+import { type DecodedSegmentInfo } from "../qr-decoder/types";
 import type { DecodedEncodingMode } from "./decoded-encoding-mode";
 export type { DecodedEncodingMode } from "./decoded-encoding-mode";
 

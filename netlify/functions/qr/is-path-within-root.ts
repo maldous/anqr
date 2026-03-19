@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/is-path-within-root";
+export * from "@/platform/node/server/is-path-within-root";

@@ -1,1 +1,1 @@
-export { buildPatternEffectLists } from "@/features/generator/application/frames/build-pattern-effect-lists.service";
+export { buildPatternEffectLists } from "../frames/build-pattern-effect-lists.service";

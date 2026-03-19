@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/calculate-temporal-offset-server";
+export * from "@/domain/render/server/calculate-temporal-offset-server";

@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own shared tsconfig base configurations
-export const TSCONFIG_CONFIG_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until shared tsconfig extraction begins.
+export {};

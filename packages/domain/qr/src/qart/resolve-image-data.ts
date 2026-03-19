@@ -1,3 +1,5 @@
+import { getCanvas2DContext } from "@/domain/render/canvas";
+
 export function resolveImageData(
   image: ImageData | HTMLCanvasElement | OffscreenCanvas,
 ): ImageData | null {
@@ -29,7 +31,7 @@ export function resolveImageData(
     return image;
   }
   if (isCanvasLike(image)) {
-    const ctx = image.getContext("2d");
+    const ctx = getCanvas2DContext(image);
     if (!ctx) return null;
     return ctx.getImageData(0, 0, image.width, image.height);
   }

@@ -1,6 +1,6 @@
 import { generateStyledRingSvg } from "./generate-styled-ring-svg";
 import { generateStyledCenterShapeSvg } from "./generate-styled-center-shape-svg";
-import type { VectorAlignmentStyle, VectorFinderStyle } from "@/modules/exporter/types";
+import type { VectorAlignmentStyle, VectorFinderStyle } from "../exporter/types";
 
 /**
  * Generate SVG for alignment pattern with styling

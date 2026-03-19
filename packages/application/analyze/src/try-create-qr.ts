@@ -1,5 +1,5 @@
-import type { ECCLevel } from "@/modules/qr-analyzer";
-import { createQRInstance } from "@/modules/qr-encoder";
+import type { ECCLevel } from "@/contracts/analyze";
+import { createQRInstance } from "@/domain/qr/encode";
 import type { ValidEncoderMode } from "./reproduction-types";
 import { buildMaskPatternOption } from "./build-mask-pattern-option";
 

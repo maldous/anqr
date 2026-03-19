@@ -3,7 +3,7 @@ import { qartSharedState } from "./qart-shared-state-store";
 
 export function loadQArtModule(): Promise<QArtModule> {
   qartSharedState.modulePromise ??= Promise.all([
-    import("@/modules/qart"),
+    import("@/domain/qr/qart"),
     import("@/platform/worker"),
   ]).then(([qartModule, workerModule]) => ({
     ...qartModule,

@@ -1,4 +1,4 @@
-import type { DiffusionKernel, DitherKind, OrderedMatrix } from "@/modules/dither-algorithms";
+import type { DiffusionKernel, DitherKind, OrderedMatrix } from "../dither-algorithms";
 
 export interface OverlayDitherOptions {
   enabled?: boolean;

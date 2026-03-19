@@ -1,4 +1,4 @@
-import { getRelativeLuminance, parseColor } from "@/domain/render/color/color";
+import { getRelativeLuminance, parseColor } from "@/domain/render/color";
 import { getContrastRatio } from "./utils";
 import { log } from "./log";
 

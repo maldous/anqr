@@ -1,1 +1,1 @@
-export { loadStaticOverlayFile } from "@/features/generator/application/input/load-static-overlay-file.service";
+export { loadStaticOverlayFile } from "../input/load-static-overlay-file.service";

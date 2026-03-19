@@ -2,7 +2,7 @@ import {
   applyPaletteColor,
   applyPerModuleColor,
   ensureContrast,
-} from "@/modules/qr-generator/color";
+} from "@/domain/qr/color";
 import type { OverlayData, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
 
 export function computeFinalModuleColor(

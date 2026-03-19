@@ -1,5 +1,1 @@
-import type { HSL } from "./hsl";
-
-export interface HSLA extends HSL {
-  a: number;
-}
+export type { HSLA } from "@/contracts/generator";

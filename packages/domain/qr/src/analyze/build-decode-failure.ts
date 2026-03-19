@@ -1,5 +1,5 @@
 import { disableLogBuffer, flushLogBuffer } from "../../../../observability/logging/src";
-import type { ErrorType, QRAnalysisResult } from "@/modules/qr-analyzer/types";
+import type { ErrorType, QRAnalysisResult } from "@/domain/analyze/types";
 import { elapsedMs } from "./elapsed-ms";
 
 export function buildDecodeFailure(

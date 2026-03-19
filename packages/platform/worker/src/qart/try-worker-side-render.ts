@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import type { QArtWorkerResultPayload } from "./worker-protocol";
 import { canRenderInWorker } from "./worker-render-guards";
 import { workerRenderer } from "./worker-canvas-factory";

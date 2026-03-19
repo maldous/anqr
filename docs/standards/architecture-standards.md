@@ -59,6 +59,7 @@ See `docs/02-repo-skeleton.md` for the full target tree.
 
 | Package                   | Subdirectories                                        | Layer                 |
 | ------------------------- | ----------------------------------------------------- | --------------------- |
+| `packages/contracts/`     | generator                                             | contracts             |
 | `packages/domain/`        | qr, render, payload, analyze, share                   | domain                |
 | `packages/application/`   | generator, analyze, gallery, onboarding, monetization | application           |
 | `packages/ui/`            | web, mobile, design-tokens                            | ui                    |
@@ -72,6 +73,31 @@ See `docs/02-repo-skeleton.md` for the full target tree.
 
 - inter-package dependencies follow the same layer rules as `src/`
 - each package exposes a narrow public API via its root `index.ts`
+
+### packages/contracts/
+
+**Purpose:**
+
+- portable, stable boundary definitions
+- shared language across app, worker, node, web, and tests
+
+**Allowed dependencies:**
+
+- other contract packages through their root entrypoints
+- narrow domain-owned type surfaces when the domain package is the canonical owner
+
+**Must not:**
+
+- contain stores, UI state, or delivery-specific state adapters
+- contain import/update/patch/workflow orchestration
+- contain helpers, factories, services, or runtime adapters
+- depend on application, ui, platform, apps, config, testing, or operational tooling
+
+**Naming rule:**
+
+- contracts are nouns
+- contracts describe shape, not behavior
+- filenames should read like boundary language, not workflow steps
 
 ### src/ (transitional)
 

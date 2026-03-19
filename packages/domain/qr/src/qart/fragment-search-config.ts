@@ -1,4 +1,4 @@
-import type { ECCLevel } from "@/modules/qr-encoder";
+import type { ECCLevel } from "../qr-encoder";
 
 export interface FragmentSearchConfig {
   baseUrl: string;

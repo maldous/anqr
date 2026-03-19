@@ -4,7 +4,7 @@
  * Notes: Apply interpolation between animation frames.
  */
 
-import { interpolateFrames } from "@/domain/render/animation/interpolate-frames";
+import { interpolateFrames } from "@/domain/render/animation";
 
 export async function applyInterpolationToFrames(
   frames: (HTMLCanvasElement | OffscreenCanvas)[],

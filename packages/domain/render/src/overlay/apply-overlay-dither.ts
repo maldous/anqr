@@ -1,4 +1,4 @@
-import { applyDither } from "@/modules/dither-algorithms";
+import { applyDither } from "../dither-algorithms";
 import type { OverlayDitherOptions } from "./processor.types";
 
 export function applyOverlayDither(imageData: ImageData, options: OverlayDitherOptions): ImageData {

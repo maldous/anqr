@@ -1,4 +1,4 @@
-import type { QRGeneratorConfig } from "@/domain/render/generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { clonePlainSerializable } from "./clone-plain-serializable";
 
 export function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unknown> {

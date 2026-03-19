@@ -1,6 +1,6 @@
 import { EMVQRBuilder } from "./emv";
-import type { BharatQRParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { BharatQRParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 /**
  * Generate BharatQR code (India)

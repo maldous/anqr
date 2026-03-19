@@ -1,2 +1,2 @@
-// Awaiting physical migration — will own migration parity assertions
-export const TESTING_PARITY_PLACEHOLDER = true;
+// Scaffold only. This package has no runtime API until parity helper extraction begins.
+export {};

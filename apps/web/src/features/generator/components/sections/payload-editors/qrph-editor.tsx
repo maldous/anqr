@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { isValidAccountNumber } from "../../../../../../../../packages/domain/payload/src/payload-generators";
+import { isValidAccountNumber } from "@/domain/payload/generators";
 import type { QRState } from "../../../../../state/qr-store";
 import type { QRPhForm } from "../payload-section-types";
 import { MerchantCityAmountEditor } from "./merchant-city-amount-editor";

@@ -1,4 +1,4 @@
-type QArtDomainModule = typeof import("@/modules/qart");
+type QArtDomainModule = typeof import("@/domain/qr/qart");
 type QArtWorkerModule = Pick<
   typeof import("@/platform/worker"),
   "generateQArtInWorker" | "terminateQArtWorker"

@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/hue2rgb-server";
+export * from "@/domain/render/server/hue2rgb-server";

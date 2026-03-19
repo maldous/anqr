@@ -1,6 +1,6 @@
 import { EMVQRBuilder } from "./emv";
-import type { QRISParams } from "@/modules/payload-generators/types";
-import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "@/modules/payload-generators/types";
+import type { QRISParams } from "./payload-generators/types";
+import { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from "./payload-generators/types";
 
 // ============================================
 // NATIONAL EMV PAYMENT SCHEME GENERATORS

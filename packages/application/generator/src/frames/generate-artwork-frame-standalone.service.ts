@@ -6,7 +6,7 @@
 
 import { createLogger } from "@/infra/logging/logger";
 import type { QArtModule } from "../qart/qart-shared-types";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import { makeArtworkFrameHelpers } from "./make-artwork-frame-helpers.service";
 import { handleArtworkWorkerSuccess } from "./handle-artwork-worker-success.service";
 import { invokeArtworkWorkerForFrame } from "./invoke-artwork-worker-for-frame.service";

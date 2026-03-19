@@ -1,1 +1,1 @@
-export { setupValidationRunner } from "@/features/generator/application/generation/setup-validation-runner.service";
+export { setupValidationRunner } from "../generation/setup-validation-runner.service";

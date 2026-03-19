@@ -1,3 +1,3 @@
-import type { QRState } from "@/store/qr-store";
+import type { QRGeneratorStoreState } from "./qr-store-contract.types";
 
-export type UseQRStoreHook = <U>(selector: (state: QRState) => U) => U;
+export type UseQRStoreHook = <U>(selector: (state: QRGeneratorStoreState) => U) => U;

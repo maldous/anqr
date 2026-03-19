@@ -4,8 +4,8 @@
  */
 
 import { createLogger } from "../../../../observability/logging/src";
-import { advanceAnimation, createAnimationState } from "@/modules/animation/state";
-import type { AnimationFrame, AnimationOptions, AnimationState } from "@/modules/animation/types";
+import { advanceAnimation, createAnimationState } from "./state";
+import type { AnimationFrame, AnimationOptions, AnimationState } from "../animation/types";
 
 const _log = createLogger("ANIMATION");
 

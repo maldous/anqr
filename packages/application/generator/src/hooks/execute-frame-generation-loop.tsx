@@ -1,1 +1,1 @@
-export { executeFrameGenerationLoop } from "@/features/generator/application/frames/execute-frame-generation-loop.service";
+export { executeFrameGenerationLoop } from "../frames/execute-frame-generation-loop.service";

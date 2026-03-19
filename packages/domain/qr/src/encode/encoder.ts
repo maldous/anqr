@@ -18,8 +18,8 @@ import type {
   QRCodeInstance,
   QRDataSegment,
   QRErrorCorrectionLevelChar,
-} from "@/modules/qr-encoder/types";
-import { QRErrorCorrectionLevel } from "@/modules/qr-encoder/types";
+} from "../qr-encoder/types";
+import { QRErrorCorrectionLevel } from "../qr-encoder/types";
 import {
   getBCHTypeInfo,
   getBCHTypeNumber,

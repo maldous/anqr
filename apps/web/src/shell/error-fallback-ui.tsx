@@ -1,6 +1,6 @@
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 
 export function ErrorFallbackUI({
   error,

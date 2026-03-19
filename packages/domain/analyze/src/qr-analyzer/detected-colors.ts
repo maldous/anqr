@@ -1,5 +1,1 @@
-export interface DetectedColors {
-  foreground: string;
-  background: string;
-  contrastRatio: number;
-}
+export type { DetectedColors } from "@/contracts/analyze";

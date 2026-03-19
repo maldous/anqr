@@ -1,3 +1,4 @@
+import { getCanvas2DContext } from "@/domain/render/canvas";
 import type { CanvasPool } from "./canvas-pool";
 import { resolveImageSource } from "./resolve-image-source";
 
@@ -27,7 +28,7 @@ export async function roundtripToFinalRaster(
     out = await pool.acquire(src.width, src.height);
     out.width = src.width;
     out.height = src.height;
-    const outCtx = out.getContext("2d");
+    const outCtx = getCanvas2DContext(out);
     if (!outCtx) {
       pool.release(out);
       return src;

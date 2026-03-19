@@ -1,5 +1,5 @@
 import { createLogger } from "../../../../observability/logging/src";
-import type { DecodeResult } from "@/modules/qr-decoder/types";
+import type { DecodeResult } from "../qr-decoder/types";
 import { GlobalHistogramBinarizer } from "./binarizer";
 import { NotFoundException } from "./exceptions";
 import { createLuminanceSource } from "./create-luminance-source";

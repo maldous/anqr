@@ -1,0 +1,46 @@
+import type { ContentTypeDetails } from "./content-type-details.contract";
+import type { DataCapacity } from "./data-capacity.contract";
+import type { DecoderMetadata } from "./decoder-metadata.contract";
+import type { DetectedColors } from "./detected-colors.contract";
+import type { DominantColorInfo } from "./dominant-color-info.contract";
+import type { ECCLevel } from "./ecc-level.contract";
+import type { ErrorType } from "./error-type.contract";
+import type { GeometryDiagnostics } from "./geometry-diagnostics.contract";
+import type { ImageProperties } from "./image-properties.contract";
+import type { QuietZoneInfo } from "./quiet-zone-info.contract";
+import type { StructuralAnalysis } from "./structural-analysis.contract";
+import type { TimingDiagnostics } from "./timing-diagnostics.contract";
+
+export interface QRAnalysisResult {
+  success: boolean;
+  error?: string;
+  errorType?: ErrorType;
+  warnings?: string[];
+  confidence?: "low" | "medium" | "high";
+  payload?: string;
+  payloadBytes?: Uint8Array;
+  version: number | null;
+  moduleCount: number;
+  eccLevel: ECCLevel | null;
+  maskPattern: number | null;
+  encodingMode: "numeric" | "alphanumeric" | "byte" | "kanji" | "mixed" | "unknown" | null;
+  errorsCorrected: number | null;
+  erasures?: number | null;
+  orientation?: number | null;
+  numBits?: number | null;
+  structuredAppendSequence?: number | null;
+  structuredAppendParity?: number | null;
+  contentType?: ContentTypeDetails;
+  detectedColors?: DetectedColors;
+  dominantColors?: DominantColorInfo[];
+  estimatedModulePx: number | null;
+  quietZone?: QuietZoneInfo;
+  dataCapacity?: DataCapacity;
+  structuralAnalysis?: StructuralAnalysis;
+  imageProperties?: ImageProperties;
+  geometry?: GeometryDiagnostics;
+  timing?: TimingDiagnostics;
+  moduleMatrix?: boolean[][];
+  debugLog?: string;
+  decoderMetadata?: DecoderMetadata;
+}

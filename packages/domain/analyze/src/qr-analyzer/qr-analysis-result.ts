@@ -1,8 +1,8 @@
 import type { DataCapacity } from "./data-capacity";
-import type { DecoderMetadata } from "@/modules/qr-decoder/types";
+import type { DecoderMetadata } from "@/contracts/analyze";
+import type { ECCLevel } from "@/contracts/analyze";
 import type { DetectedColors } from "./detected-colors";
 import type { DominantColorInfo } from "./dominant-color-info";
-import type { ECCLevel } from "./ecc-level";
 import type { ErrorType } from "./error.types";
 import type { GeometryDiagnostics } from "./geometry-diagnostics";
 import type { ImageProperties } from "./image-properties";

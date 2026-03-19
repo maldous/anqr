@@ -1,3 +1,5 @@
+import { getCanvas2DContext } from "./canvas";
+
 export function resolveEffectTargetCanvas(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   targetCanvas?: HTMLCanvasElement | OffscreenCanvas,
@@ -16,11 +18,10 @@ export function resolveEffectTargetCanvas(
     result = new OffscreenCanvas(canvas.width, canvas.height);
   }
 
-  const ctx =
-    result.getContext("2d", {
-      willReadFrequently: true,
-      desynchronized: true,
-    }) ?? result.getContext("2d");
+  const ctx = getCanvas2DContext(result, {
+    willReadFrequently: true,
+    desynchronized: true,
+  });
 
   return { ctx, result };
 }

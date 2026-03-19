@@ -1,4 +1,4 @@
-import { QRErrorCorrectionLevel } from "@/modules/qr-encoder/types";
+import { QRErrorCorrectionLevel } from "../qr-encoder/types";
 import { RS_BLOCK_TABLE } from "./rs-block-table";
 
 export function getRsBlockTable(

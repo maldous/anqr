@@ -1,1 +1,1 @@
-export type WatermarkKind = "text" | "image" | "pattern";
+export type { WatermarkKind } from "@/contracts/generator";

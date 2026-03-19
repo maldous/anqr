@@ -1,1 +1,1 @@
-export { runQArtGeneration } from "@/features/generator/application/qart/run-q-art-generation.service";
+export { runQArtGeneration } from "../qart/run-q-art-generation.service";

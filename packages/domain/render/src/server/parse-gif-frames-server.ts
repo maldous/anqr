@@ -1,4 +1,4 @@
-import { decodeGif } from "@/modules/animation";
+import { decodeGif } from "../animation";
 import { createCanvas } from "@napi-rs/canvas";
 import type { ServerAnimationFrame } from "./server-animation-frame.types";
 import { MAX_GIF_FRAMES } from "./max-gif-frames.const";

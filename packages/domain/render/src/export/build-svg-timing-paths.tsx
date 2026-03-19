@@ -1,4 +1,4 @@
-import type { VectorModuleStyle, VectorTimingStyle } from "@/modules/exporter/types";
+import type { VectorModuleStyle, VectorTimingStyle } from "../exporter/types";
 import { generateTimingModulePath } from "./generate-timing-module-path";
 
 export function buildSvgTimingPaths(

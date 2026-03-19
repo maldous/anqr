@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/is-missing-blobs-environment-error";
+export * from "@/platform/node/server/is-missing-blobs-environment-error";

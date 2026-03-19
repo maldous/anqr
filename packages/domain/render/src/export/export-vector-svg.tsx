@@ -1,4 +1,4 @@
-import type { ExportResult, VectorSvgConfig } from "@/modules/exporter/types";
+import type { ExportResult, VectorSvgConfig } from "../exporter/types";
 import { buildSvgDataPaths } from "./build-svg-data-paths";
 import { buildSvgMetadata } from "./build-svg-metadata";
 import { buildSvgTimingPaths } from "./build-svg-timing-paths";

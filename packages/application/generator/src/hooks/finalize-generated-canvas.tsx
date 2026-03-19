@@ -1,1 +1,1 @@
-export { finalizeGeneratedCanvas } from "@/features/generator/application/generation/finalize-generated-canvas.service";
+export { finalizeGeneratedCanvas } from "../generation/finalize-generated-canvas.service";

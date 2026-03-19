@@ -1,1 +1,1 @@
-export type { CanvasFactory } from "@/domain/render/canvas-factory.types";
+export type { CanvasFactory } from "@/domain/render/canvas";

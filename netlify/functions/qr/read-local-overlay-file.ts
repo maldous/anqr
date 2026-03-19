@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/read-local-overlay-file";
+export * from "@/platform/node/server/read-local-overlay-file";

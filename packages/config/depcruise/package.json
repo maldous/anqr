@@ -2,6 +2,6 @@
   "name": "@anqr/config-depcruise",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/config-depcruise",
+  "description": "Reserved workspace scaffold for future config-depcruise extraction",
   "type": "module"
 }

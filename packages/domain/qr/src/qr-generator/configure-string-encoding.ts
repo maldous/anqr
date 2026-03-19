@@ -1,4 +1,4 @@
-import { createShiftJISEncoder, resetStringToBytes, setStringToBytes } from "@/modules/qr-encoder";
+import { createShiftJISEncoder, resetStringToBytes, setStringToBytes } from "../qr-encoder";
 
 export function configureStringEncoding(encoding: string): void {
   if (encoding === "utf8") {

@@ -1,1 +1,3 @@
-export type EncodingMode = "auto" | "numeric" | "alphanumeric" | "byte" | "kanji" | "mixed";
+import type { EncodingMode as BaseEncodingMode } from "@/contracts/generator";
+
+export type EncodingMode = BaseEncodingMode | "mixed";

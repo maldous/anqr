@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/platform/node/src/server/is-private-i-pv4-first-octet";
+export * from "@/platform/node/server/is-private-i-pv4-first-octet";

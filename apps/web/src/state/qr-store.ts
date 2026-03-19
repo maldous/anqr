@@ -2,19 +2,19 @@
  * QR Store - Central state management for ANQR
  *
  * Type Alignment with Modules:
- * - Gradient types (GradientStop, GradientType): from @/modules/core
- * - Payload types (UrlHelper, VCardHelper, etc.): from @/modules/payload-generators
- * - QR encoding types (ECCLevel, EncodingMode): align with @/modules/qr-spec (with UI extensions)
- * - Overlay types (OverlayMode, ColorMode, FitMode): align with @/modules/overlay
- * - Dither types (DitherKind, DiffusionKernel): align with @/modules/dither-algorithms
- * - Output types (OutputFormat, GifQuantizer): align with @/modules/exporter
+ * - Gradient types (GradientStop, GradientType): from @/contracts/generator
+ * - Payload types (UrlHelper, VCardHelper, etc.): from @/domain/payload/generators
+ * - QR encoding types (ECCLevel, EncodingMode): align with the domain QR encode/spec boundary (with UI extensions)
+ * - Overlay types (OverlayMode, ColorMode, FitMode): align with the render overlay public/compat surface
+ * - Dither types (DitherKind, DiffusionKernel): align with the render dither boundary
+ * - Output types (OutputFormat, GifQuantizer): align with the render exporter boundary
  *
  * Note: Some types are defined locally with UI-specific extensions (e.g., 'auto' for MaskPattern)
  * that are not part of the core module types.
  */
 import { create } from "zustand";
-// Import gradient types from core types (canonical source)
-import type { GradientStop, GradientType } from "@/modules/core";
+// Import gradient types from contracts (canonical source)
+import type { GradientStop, GradientType } from "@/contracts/generator";
 // Import payload generator types and functions from payload-generators module
 import {
   type CryptoHelper,
@@ -27,7 +27,7 @@ import {
   type UrlHelper,
   type VCardHelper,
   type WifiHelper,
-} from "@/modules/payload-generators";
+} from "@/domain/payload/generators";
 import type {
   AlignmentStyle,
   AnimationPatternType,
@@ -101,8 +101,8 @@ export type {
   VCardVersion,
   WifiAuth,
   WifiHelper,
-} from "@/modules/payload-generators";
-export type { GradientStop, GradientType } from "@/modules/core";
+} from "@/domain/payload/generators";
+export type { GradientStop, GradientType } from "@/contracts/generator";
 
 // Main QR Store State
 export interface QRState {

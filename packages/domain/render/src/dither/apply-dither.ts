@@ -16,8 +16,8 @@ import { CLUSTERED_DOT, VOID_CLUSTER } from "./matrices";
 import { gaussianNoiseDither, triangularNoiseDither, whiteNoiseDither } from "./noise";
 import { bayerDither, orderedDither } from "./ordered";
 import { temporalBlueNoiseDither } from "./temporal";
-import type { DitherOptions, DitherResult } from "@/modules/dither-algorithms/types";
-import { imageDataToFloat } from "@/modules/dither-algorithms/utils";
+import type { DitherOptions, DitherResult } from "../dither-algorithms/types";
+import { imageDataToFloat } from "../dither-algorithms/utils";
 
 /** Apply dithering based on kind */
 export function applyDither(imageData: ImageData, options: DitherOptions): DitherResult {

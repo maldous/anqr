@@ -1,6 +1,6 @@
+import type { DitherKind } from "@/contracts/generator";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { DEFAULT_SERVER_DITHER } from "./default-server-dither.const";
-import type { DitherKind } from "./dither-kind.types";
 
 export function parseDitherParams(
   params: URLSearchParams,

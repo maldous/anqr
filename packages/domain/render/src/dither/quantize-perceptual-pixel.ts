@@ -1,4 +1,4 @@
-import type { ColorMode } from "@/modules/dither-algorithms/types";
+import type { ColorMode } from "../dither-algorithms/types";
 import type { DiffusionPixelResult } from "./diffusion-pixel-result";
 import { quantizeDiffusionStepPixel } from "./quantize-diffusion-step-pixel";
 import { quantizeDiffusionThresholdPixel } from "./quantize-diffusion-threshold-pixel";

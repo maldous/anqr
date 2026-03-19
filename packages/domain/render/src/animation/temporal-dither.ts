@@ -10,9 +10,9 @@ const _log = createLogger("ANIMATION");
 
 import {
   applyTemporalNoiseToCanvas,
-  calculateTemporalOffset,
-  type TemporalDitherMode,
-} from "@/modules/dither-algorithms";
+} from "../dither/apply-temporal-noise-to-canvas";
+import { calculateTemporalOffset } from "../dither/calculate-temporal-offset";
+import type { TemporalDitherMode } from "../dither/temporal.types";
 
 /**
  * Apply temporal dithering for animation frames

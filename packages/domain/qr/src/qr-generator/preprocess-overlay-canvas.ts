@@ -3,7 +3,7 @@ import {
   hasGeometricTransforms,
   hasPreprocessingOptions,
   preprocessOverlay,
-} from "@/domain/render/overlay/overlay";
+} from "@/domain/render/overlay";
 import { generatorLog as log } from "./generator-log";
 import type { QRGeneratorConfig } from "./types";
 import type { AnyCanvas } from "./any-canvas";

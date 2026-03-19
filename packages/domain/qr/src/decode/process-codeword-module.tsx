@@ -1,4 +1,4 @@
-import { isStructuralModule } from "@/modules/qr-spec";
+import { isStructuralModule } from "../qr-spec";
 import { categorizeSkippedModule } from "./categorize-skipped-module";
 import type { CodewordBuildState } from "./codeword-build.types";
 

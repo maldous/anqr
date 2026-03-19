@@ -2,6 +2,6 @@
   "name": "@anqr/domain-qr",
   "version": "0.0.0-contract",
   "private": true,
-  "description": "Contract-first placeholder for @anqr/domain-qr",
+  "description": "QR encoding, decoding, generation, and spec domain package for ANQR",
   "type": "module"
 }

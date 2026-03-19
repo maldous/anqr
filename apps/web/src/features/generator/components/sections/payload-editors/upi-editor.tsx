@@ -1,8 +1,8 @@
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";
-import { isValidUpiVpa } from "../../../../../../../../packages/domain/payload/src/payload-generators";
-import { Input } from "../../../../../../../../packages/ui/web/src/primitives/input";
-import { Label } from "../../../../../../../../packages/ui/web/src/primitives/label";
+import { isValidUpiVpa } from "@/domain/payload/generators";
+import { Input } from "@/ui/web";
+import { Label } from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 
 export function UpiEditor({

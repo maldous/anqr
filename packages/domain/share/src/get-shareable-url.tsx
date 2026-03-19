@@ -1,4 +1,4 @@
-import { type ShareConfig } from "@/modules/share-links/types";
+import type { ShareConfig } from "./share-links/types";
 import { buildUrlParams } from "./build-url-params";
 
 /**

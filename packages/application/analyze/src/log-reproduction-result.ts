@@ -1,4 +1,4 @@
-import type { QRAnalysisResult } from "@/modules/qr-analyzer";
+import type { QRAnalysisResult } from "@/contracts/analyze";
 import type { MatrixDiagnostics } from "./matrix-diagnostics.types";
 import type { ValidEncoderMode } from "./reproduction-types";
 

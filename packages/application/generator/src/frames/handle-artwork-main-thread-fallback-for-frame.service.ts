@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@/infra/logging/logger";
-import type { QRGeneratorConfig } from "@/modules/qr-generator";
+import type { QRGeneratorConfig } from "@/domain/qr/generator";
 import type { FullQArtPipelineResult, QArtModule } from "../qart/qart-shared-types";
 import type { ArtworkFrameState } from "./frames-artworkstate.types";
 import { qrGenerator } from "../generation/generation-singleton";

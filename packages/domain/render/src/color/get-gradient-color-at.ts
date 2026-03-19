@@ -1,4 +1,4 @@
-import type { RGB } from "@/modules/core/types";
+import type { RGB } from "@/contracts/generator";
 import type { GradientStop } from "./gradient.types";
 import { getGradientColor } from "./get-gradient-color";
 

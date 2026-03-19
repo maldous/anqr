@@ -1,1 +1,1 @@
-export type EncodingMode = "auto" | "numeric" | "alphanumeric" | "byte" | "kanji";
+export type { EncodingMode } from "@/contracts/generator";

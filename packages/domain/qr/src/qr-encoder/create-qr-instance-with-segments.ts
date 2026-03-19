@@ -1,4 +1,4 @@
-import { qrcode } from "@/domain/qr/encode/encoder";
+import { qrcode } from "../encode/encoder";
 import type { QRErrorCorrectionLevelChar } from "./types";
 import type { DataSegment, ECCLevel, QROptions, QRInstance } from "./encoder-api.types";
 import { toEncoderModeToken } from "./to-encoder-mode-token";

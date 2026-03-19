@@ -6,7 +6,7 @@ import {
   generateMessagingLink,
   generateSocialProfile,
   generateVCard,
-} from "../../../../../packages/domain/payload/src/payload-generators";
+} from "@/domain/payload/generators";
 import type { PayloadKind } from "../types";
 import { applyPayloadTransforms } from "./apply-payload-transforms";
 import type { PayloadData } from "./payload-data";

@@ -1,5 +1,5 @@
 import { createLogger } from "@/infra/logging/logger";
-import type { ValidationResult } from "@/domain/qr/analyze/scanner";
+import type { ValidationResult } from "@/contracts/analyze";
 import { validationWorkerState } from "./validation-worker-state";
 
 const log = createLogger("SCANNER");

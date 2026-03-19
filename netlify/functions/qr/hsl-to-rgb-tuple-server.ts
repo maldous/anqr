@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/hsl-to-rgb-tuple-server";
+export * from "@/domain/render/server/hsl-to-rgb-tuple-server";

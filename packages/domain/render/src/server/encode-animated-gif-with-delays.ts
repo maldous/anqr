@@ -1,4 +1,4 @@
-import { createGifEncoder, indexGifPixels, isGifEncodingAvailable } from "@/modules/animation";
+import { createGifEncoder, indexGifPixels, isGifEncodingAvailable } from "../animation";
 import type { ServerAnimationFrame } from "./server-animation-frame.types";
 import { parseGifBackgroundColor } from "./parse-gif-background-color";
 import { prepareGifFramePixels } from "./prepare-gif-frame-pixels";

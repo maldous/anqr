@@ -1,4 +1,4 @@
-import type { QRPolynomial } from "@/modules/qr-encoder/types";
+import type { QRPolynomial } from "../qr-encoder/types";
 import { gexp } from "./gexp";
 import { glog } from "./glog";
 

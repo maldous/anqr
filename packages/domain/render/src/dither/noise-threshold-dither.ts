@@ -1,5 +1,5 @@
-import type { ColorMode, DitherResult } from "@/modules/dither-algorithms/types";
-import { createRNG } from "@/modules/dither-algorithms/utils";
+import type { ColorMode, DitherResult } from "../dither-algorithms/types";
+import { createRNG } from "../dither-algorithms/utils";
 import { buildBinaryDitherResult } from "./build-binary-dither-result";
 
 export function noiseThresholdDither(

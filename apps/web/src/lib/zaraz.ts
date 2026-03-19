@@ -1,1 +1,1 @@
-export * from "../../../../packages/observability/telemetry/src/zaraz";
+export * from "@/infra/telemetry/zaraz";

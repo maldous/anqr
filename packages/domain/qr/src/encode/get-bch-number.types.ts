@@ -1,1 +1,1 @@
-export { getBCHTypeNumber } from "@/modules/qr-spec";
+export { getBCHTypeNumber } from "../qr-spec";

@@ -3,8 +3,8 @@ import {
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
-} from "@/modules/qr-spec";
-import type { VectorModuleStyle } from "@/modules/exporter/types";
+} from "@/domain/qr/spec";
+import type { VectorModuleStyle } from "../exporter/types";
 import { generateModulePath } from "./generate-module-path";
 
 export function buildSvgDataPaths(

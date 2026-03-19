@@ -1,2 +1,2 @@
 // Shim
-export * from "../../../packages/domain/render/src/server/process-animated-gif-frames";
+export * from "@/domain/render/server/process-animated-gif-frames";

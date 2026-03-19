@@ -1,5 +1,1 @@
-export interface RGB {
-  r: number;
-  g: number;
-  b: number;
-}
+export type { RGB } from "@/contracts/generator";

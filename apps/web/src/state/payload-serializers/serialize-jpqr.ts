@@ -1,4 +1,4 @@
-import { generateJPQR } from "../../../../../packages/domain/payload/src/payload-generators";
+import { generateJPQR } from "@/domain/payload/generators";
 import type { PayloadData } from "./payload-data";
 
 export function serializeJPQR(payload: PayloadData): string {

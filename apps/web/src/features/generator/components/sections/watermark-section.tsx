@@ -1,7 +1,7 @@
 import { Upload, X } from "lucide-react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "../../../../../../../packages/ui/web/src/primitives/button";
+import { Button } from "@/ui/web";
 import { useQRStore } from "../../../../state/qr-store";
 import { LabeledTestIdSelectField } from "./labeled-testid-select-field";
 import {

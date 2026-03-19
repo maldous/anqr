@@ -1,5 +1,5 @@
-import type { VCardHelper } from "@/modules/payload-generators/types";
-import { escapeValue, isValidUrl } from "@/modules/payload-generators/utils";
+import type { VCardHelper } from "./payload-generators/types";
+import { escapeValue, isValidUrl } from "./payload-generators/utils";
 import { appendValidTelLines } from "./append-valid-tel-lines";
 import { appendValidEmailLines } from "./append-valid-email-lines";
 

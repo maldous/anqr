@@ -1,4 +1,4 @@
-import type { Point, QRLocation } from "@/modules/qr-decoder/types";
+import type { Point, QRLocation } from "../qr-decoder/types";
 import { qrDecoderLog } from "./qr-decoder-log";
 import { sampleSinglePixel } from "./sample-single-pixel";
 import { validateFinderRegion } from "./validate-finder-region";
