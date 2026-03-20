@@ -10,3 +10,4 @@ play-store-key.json
 AuthKey_*.p8
 scripts/ops/__pycache__/
 reports/symphony/state.json
+scripts/reports/
