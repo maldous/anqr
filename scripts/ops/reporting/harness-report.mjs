@@ -355,21 +355,21 @@ function checkCspellCoverage() {
 }
 
 function checkLitellmRouting() {
-  const configPath = resolve(ROOT, "scripts/ops/litellm-config.yaml");
+  const configPath = resolve(ROOT, "scripts/ops/integrations/model/litellm-config.yaml");
   if (!existsSync(configPath)) {
-    return { pass: false, detail: "litellm-config.yaml missing" };
+    return { pass: false, detail: "integrations/model/litellm-config.yaml missing" };
   }
 
   const content = readFileSync(configPath, "utf-8");
 
   if (!content.includes("symphony-local")) {
-    return { pass: false, detail: "litellm-config.yaml missing symphony-local alias" };
+    return { pass: false, detail: "integrations/model/litellm-config.yaml missing symphony-local alias" };
   }
 
   if (!content.includes(PINNED_MODEL)) {
     return {
       pass: false,
-      detail: `litellm-config.yaml does not reference pinned model ${PINNED_MODEL}`,
+      detail: `integrations/model/litellm-config.yaml does not reference pinned model ${PINNED_MODEL}`,
     };
   }
 
@@ -380,7 +380,7 @@ function checkLitellmRouting() {
 
   return {
     pass: true,
-    detail: "LiteLLM config valid, symphony-local alias present, injector proxy exists",
+    detail: "Integration-owned LiteLLM config is valid, symphony-local alias present, injector proxy exists",
   };
 }
 

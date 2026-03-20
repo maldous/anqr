@@ -64,7 +64,7 @@ Linear (Todo issues)
 **Pinned model:** `qwen3.5:35b-a3b-32t` (Qwen 3.5 MoE, 36B, Q4_K_M)
 **Credit gate:** `scripts/ops/symphony-credit-gate.mjs` (Ollama-first, extensible)
 
-- LiteLLM config: `scripts/ops/litellm-config.yaml`
+- LiteLLM config: `scripts/ops/integrations/model/litellm-config.yaml`
 - Health audit: `scripts/ops/ollama-local-audit.mjs`
 
 ## Execution Constraints

@@ -143,9 +143,9 @@ Colocated `*.spec.ts` files remain preferred for package-level and feature-level
 | `scripts/ops/notify.mjs`                 | notification dispatch (stdout + email)            |
 | `scripts/ops/lib/notify.mjs`             | email helper (msmtp + rate limiting)              |
 | `scripts/ops/email-ingest.mjs`           | email-to-issue ingest (mbsync + notmuch)          |
-| `scripts/ops/ollama-local-audit.mjs`     | model health verification                         |
-| `scripts/ops/litellm-config.yaml`        | local model aliases                               |
-| `scripts/ops/model-injector-proxy.py`    | request normalization                             |
+| `scripts/ops/ollama-local-audit.mjs`     | root compatibility shim for model health verification |
+| `scripts/ops/integrations/model/litellm-config.yaml` | local model aliases                    |
+| `scripts/ops/model-injector-proxy.py`    | root compatibility shim for request normalization |
 
 **Rules:**
 

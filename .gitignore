@@ -8,3 +8,4 @@ sonar-report.json
 .env
 play-store-key.json
 AuthKey_*.p8
+scripts/ops/__pycache__/
