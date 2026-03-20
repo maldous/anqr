@@ -13,6 +13,7 @@ This section is the canonical harness doctrine for ANQR 1.0 foundation work.
 7. [07-secrets-redaction-and-operator-access.md](/home/user/src/anqr/docs/harness/07-secrets-redaction-and-operator-access.md)
 8. [08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
 9. [09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
+10. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
 
 ## Scope
 

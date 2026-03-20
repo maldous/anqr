@@ -80,3 +80,12 @@ Use simple relative sizing:
 - `XL`
 
 Break down `XL` work before active execution where practical.
+
+## Bootstrap artifacts
+
+Use the concrete bootstrap inputs under [workspace](/home/user/src/anqr/docs/harness/workspace):
+
+- [README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
+- [linear-workspace.manifest.json](/home/user/src/anqr/docs/harness/workspace/linear-workspace.manifest.json)
+- [bootstrap-checklist.md](/home/user/src/anqr/docs/harness/workspace/bootstrap-checklist.md)
+- [issue-template.md](/home/user/src/anqr/docs/harness/workspace/issue-template.md)

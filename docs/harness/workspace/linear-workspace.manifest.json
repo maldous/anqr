@@ -1,0 +1,130 @@
+{
+  "workspaceName": "ANQR 1.0",
+  "model": "hybrid",
+  "description": "Fresh Linear bootstrap for ANQR 1.0 foundation work. Projects represent streams or package families; concrete ownership is tracked by labels.",
+  "projects": [
+    {
+      "name": "Foundation & Governance",
+      "description": "Bootstrap doctrine, migration control, and repo-level governance."
+    },
+    {
+      "name": "Documentation & Doctrine",
+      "description": "Canonical docs, archive policy, and operating-model rewrite work."
+    },
+    {
+      "name": "Harness & Automation",
+      "description": "scripts/ops, systemd runtime, queue control, runner, and automation health."
+    },
+    {
+      "name": "Web Experience",
+      "description": "apps/web delivery, UX, i18n, content, and browser-facing user flows."
+    },
+    {
+      "name": "API & MCP Delivery",
+      "description": "Netlify HTTP API, MCP delivery, contracts, route policy, and deployment hardening."
+    },
+    {
+      "name": "QR Engine & Core Packages",
+      "description": "contracts, domain, application, platform, and reusable QR package work."
+    },
+    {
+      "name": "Mobile Convergence",
+      "description": "android, ios, apps/mobile, and the truth of the mobile 1.0 claim."
+    },
+    {
+      "name": "Observability & Reliability",
+      "description": "Sentry, runtime correctness, alarms, error budgets, and hardening."
+    },
+    {
+      "name": "Release Readiness",
+      "description": "Launch gating, release proof, rollout readiness, and signoff coordination."
+    },
+    {
+      "name": "Growth / SEO / Discoverability",
+      "description": "SEO, sitemap, attribution, public discovery, and growth surfaces."
+    },
+    {
+      "name": "Compliance / Privacy",
+      "description": "legal surfaces, privacy posture, consent, and compliance-owned tasks."
+    },
+    {
+      "name": "Incidents / Ops",
+      "description": "operator incidents, postmortems, and urgent runtime work."
+    }
+  ],
+  "labels": [
+    "pkg:contracts",
+    "pkg:domain",
+    "pkg:application",
+    "pkg:platform",
+    "pkg:ui",
+    "pkg:analytics",
+    "pkg:observability",
+    "pkg:config",
+    "pkg:testing",
+    "app:web",
+    "app:api",
+    "app:mobile",
+    "runtime:netlify",
+    "runtime:harness",
+    "runtime:mobile",
+    "runtime:android",
+    "runtime:ios",
+    "docs",
+    "release",
+    "incident",
+    "human-only",
+    "sonar"
+  ],
+  "states": [
+    {
+      "name": "Backlog",
+      "usage": "Not yet ready for active execution."
+    },
+    {
+      "name": "Todo",
+      "usage": "Ready for execution."
+    },
+    {
+      "name": "In Progress",
+      "usage": "Actively being worked."
+    },
+    {
+      "name": "In Review",
+      "usage": "Awaiting evidence review or merge validation."
+    },
+    {
+      "name": "Blocked",
+      "usage": "Externally blocked."
+    },
+    {
+      "name": "Human Review",
+      "usage": "Needs a human decision for secrets, approvals, legal, store, billing, or launch-claim changes."
+    },
+    {
+      "name": "Done",
+      "usage": "Completed with evidence."
+    },
+    {
+      "name": "Canceled",
+      "usage": "Superseded or intentionally dropped with explanation."
+    }
+  ],
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL"
+  ],
+  "rules": {
+    "humanOnlyTriggers": [
+      "secret rotation or secret disclosure risk",
+      "store signing or store submission",
+      "billing or paid spend approval",
+      "prod auth/privacy or legal changes",
+      "launch-claim expansion or reduction"
+    ],
+    "evidenceRequiredForDone": true,
+    "xlMustBeSplitWhenPractical": true
+  }
+}

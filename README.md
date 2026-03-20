@@ -735,13 +735,13 @@ Incidents / Ops
 
 ```text
 Backlog
-Ready
 Todo
 In Progress
-Blocked
 In Review
+Blocked
+Human Review
 Done
-Archived
+Canceled
 ```
 
 ### 8.4 Required labels
@@ -939,14 +939,14 @@ Phase 1 exit criteria:
 
 ### Phase 2 — Bootstrap the fresh workspace
 
-- [ ] create or reset the Linear workspace according to Section 8
-- [ ] create the required projects
-- [ ] create the required labels
-- [ ] define state usage rules
-- [ ] define issue sizing rules
-- [ ] define human-only routing
-- [ ] import/export only the Linear history that must survive
-- [ ] publish the workspace governance doc
+- [x] create or reset the Linear workspace according to Section 8
+- [x] create the required projects
+- [x] create the required labels
+- [x] define state usage rules
+- [x] define issue sizing rules
+- [x] define human-only routing
+- [x] import/export only the Linear history that must survive
+- [x] publish the workspace governance doc
 
 ### Phase 3 — Classify and stabilize the harness runtime
 
@@ -1282,12 +1282,11 @@ Use this exact structure.
 
 This is the correct immediate order from here.
 
-1. create the fresh Linear workspace using the hybrid model
-2. classify and operationalize the harness runtime
-3. continue current-platform product work under the new doctrine surface
-4. complete API/MCP perimeter and deployment hardening
-5. rebuild launch-grade verification around the current claim
-6. resolve the mobile claim truthfully before any 1.0 launch claim expansion
+1. classify and operationalize the harness runtime
+2. continue current-platform product work under the new doctrine surface
+3. complete API/MCP perimeter and deployment hardening
+4. rebuild launch-grade verification around the current claim
+5. resolve the mobile claim truthfully before any 1.0 launch claim expansion
 
 ---
 
