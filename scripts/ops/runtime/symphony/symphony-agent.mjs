@@ -457,7 +457,7 @@ function buildIssuePrompt(issue) {
 async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, startTime }) {
   const filesChanged = new Set();
   let totalToolCalls = 0;
-  let turn;
+  let turn = 0;
   const validationsAfterMutation = {
     typecheck: false,
     lint: false,
