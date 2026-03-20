@@ -1,4 +1,5 @@
 export type DitherKind =
+  | "none"
   | "error_diffusion"
   | "ordered_bayer"
   | "ordered_clustered"

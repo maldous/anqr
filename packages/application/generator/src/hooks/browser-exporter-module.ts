@@ -1,10 +1,5 @@
 import { Capacitor } from "@capacitor/core";
-import {
-  exportGif,
-  exportImage,
-  exportSvg,
-  exportVectorSvg,
-} from "@/domain/render/exporter";
+import { exportGif, exportImage, exportSvg, exportVectorSvg } from "@/domain/render/exporter";
 import type { ExporterModule } from "../export/exporter-module.types";
 import { getDownloadRuntime } from "../runtime/generator-runtime";
 

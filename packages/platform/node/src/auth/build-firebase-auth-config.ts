@@ -13,8 +13,7 @@ export function buildFirebaseAuthConfig(projectId: string): McpAuthConfig {
       process.env.MCP_JWT_ISSUER ||
       process.env.AUTH_JWT_ISSUER ||
       `https://securetoken.google.com/${normalizedProjectId}`,
-    audience:
-      process.env.MCP_JWT_AUDIENCE || process.env.AUTH_JWT_AUDIENCE || normalizedProjectId,
+    audience: process.env.MCP_JWT_AUDIENCE || process.env.AUTH_JWT_AUDIENCE || normalizedProjectId,
     requiredScope: process.env.MCP_JWT_SCOPE || process.env.AUTH_JWT_SCOPE,
   };
 }

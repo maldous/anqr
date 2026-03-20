@@ -1,9 +1,11 @@
 import {
-    Input, Label, Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/ui/web";
 import type { EditorProps } from "../payload-editor.types";
 import type { EMVGenericForm } from "../payload-section-types";

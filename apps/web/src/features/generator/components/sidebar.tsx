@@ -16,12 +16,7 @@ import {
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdUnit } from "@/analytics/ads";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/ui/web";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/ui/web";
 import { DynamicTestId } from "../../../lib/dynamic-testid";
 import { HighlightedLabel, SearchProvider } from "../search/search-context";
 import { useQRStore } from "../../../state/qr-store";

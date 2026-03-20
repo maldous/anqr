@@ -1,8 +1,5 @@
 import type { WatermarkBlend } from "./watermark.types";
-
-type BlendTarget = {
-  globalCompositeOperation: string;
-};
+import type { BlendTarget } from "./set-global-blend-mode.types";
 
 export function setGlobalBlendMode(target: BlendTarget, blend: WatermarkBlend): void {
   switch (blend) {

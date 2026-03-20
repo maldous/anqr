@@ -46,7 +46,9 @@ async function collectFiles(rootPath) {
 
 async function main() {
   if (!(await pathExists(contractsRoot))) {
-    console.log("contracts-check: packages/contracts/ does not exist yet; structural checks skipped.");
+    console.log(
+      "contracts-check: packages/contracts/ does not exist yet; structural checks skipped.",
+    );
     return;
   }
 
@@ -64,7 +66,9 @@ async function main() {
   }
 
   if (actualPackageDirs.length === 0) {
-    console.log("contracts-check: no packages/contracts/* workspace packages yet; structural checks skipped.");
+    console.log(
+      "contracts-check: no packages/contracts/* workspace packages yet; structural checks skipped.",
+    );
     return;
   }
 
@@ -95,7 +99,9 @@ async function main() {
       errors.push(`${path.relative(repoRoot, packageJsonPath)}: sideEffects must be false`);
     }
     if (!packageJson.exports || !packageJson.exports["."]) {
-      errors.push(`${path.relative(repoRoot, packageJsonPath)}: exports["."] must point at the public entrypoint`);
+      errors.push(
+        `${path.relative(repoRoot, packageJsonPath)}: exports["."] must point at the public entrypoint`,
+      );
     }
     const expectedName = `@anqr/contracts-${packageName}`;
     if (packageJson.name !== expectedName) {

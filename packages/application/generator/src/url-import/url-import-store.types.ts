@@ -122,7 +122,9 @@ interface UrlImportPatchableState {
 type UrlImportStateUpdater =
   | UrlImportPatchableState
   | Partial<UrlImportPatchableState>
-  | ((state: UrlImportPatchableState) => UrlImportPatchableState | Partial<UrlImportPatchableState>);
+  | ((
+      state: UrlImportPatchableState,
+    ) => UrlImportPatchableState | Partial<UrlImportPatchableState>);
 
 export interface UrlImportStore {
   setTier: (tier: UrlImportTier) => void;

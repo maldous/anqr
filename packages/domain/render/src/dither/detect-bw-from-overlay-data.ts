@@ -7,8 +7,7 @@ import {
   MIN_PEAK_RATIO,
   MIN_PEAK_SEPARATION,
 } from "./dithering-constants";
-import { getOverlayBrightness } from "../overlay/overlay-data-packed";
-import type { OverlayData } from "@/domain/render/qr-generator-shared";
+import { getOverlayBrightness, type OverlayData } from "@/domain/render/qr-generator-shared";
 
 export function detectBWFromOverlayData(overlayData: OverlayData, moduleCount: number): boolean {
   const histogram = new Int32Array(HISTOGRAM_BUCKETS);

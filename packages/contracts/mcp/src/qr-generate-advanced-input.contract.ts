@@ -129,8 +129,22 @@ export type QrGenerateAdvancedInput = {
   readonly autoPickVersion?: boolean;
   readonly autoPickEcc?: boolean;
   readonly autoReduceIntensity?: boolean;
-  readonly animationPattern?: "none" | "pulse" | "wave" | "scanline" | "shimmer" | "drift" | "color_cycle";
-  readonly animationPattern2?: "none" | "pulse" | "wave" | "scanline" | "shimmer" | "drift" | "color_cycle";
+  readonly animationPattern?:
+    | "none"
+    | "pulse"
+    | "wave"
+    | "scanline"
+    | "shimmer"
+    | "drift"
+    | "color_cycle";
+  readonly animationPattern2?:
+    | "none"
+    | "pulse"
+    | "wave"
+    | "scanline"
+    | "shimmer"
+    | "drift"
+    | "color_cycle";
   readonly animationFrames?: number;
   readonly animationSpeed?: number;
   readonly animationLoop?: boolean;

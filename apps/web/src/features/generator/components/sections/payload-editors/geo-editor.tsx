@@ -1,7 +1,4 @@
-import {
-    isValidLatitude,
-    isValidLongitude,
-} from "@/application/generator";
+import { isValidLatitude, isValidLongitude } from "@/application/generator";
 import { Input, Label } from "@/ui/web";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";

@@ -5,7 +5,8 @@ export function getClientKey(request: Request): string {
     if (firstIp) return firstIp;
   }
 
-  const realIp = request.headers.get("x-nf-client-connection-ip") || request.headers.get("client-ip");
+  const realIp =
+    request.headers.get("x-nf-client-connection-ip") || request.headers.get("client-ip");
   if (realIp) return realIp;
 
   return "unknown-client";

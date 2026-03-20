@@ -20,10 +20,10 @@ Contains typed MCP tool input/output schemas, resource descriptors, and prompt a
 
 ## Registered schemas
 
-| Schema | Purpose |
-|--------|---------|
+| Schema                  | Purpose                                     |
+| ----------------------- | ------------------------------------------- |
 | `qrGenerateInputSchema` | Input schema for the `generate_qr` MCP tool |
-| `McpToolDescriptor` | Generic tool descriptor interface |
+| `McpToolDescriptor`     | Generic tool descriptor interface           |
 
 ## Dependency rules
 

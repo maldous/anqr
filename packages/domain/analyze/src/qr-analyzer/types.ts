@@ -1,6 +1,4 @@
-export type {
-  ContentType,
-} from "./content.types";
+export type { ContentType } from "./content.types";
 export type { ContentTypeDetails } from "./content-details.types";
 export type { DataCapacity } from "./data-capacity";
 export type { DecoderMetadata } from "./decoder-metadata";

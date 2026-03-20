@@ -810,43 +810,54 @@ spend-money
 
 Every AI or operator completion note must use this format.
 
-~~~md
+````md
 ## Summary
+
 <what changed>
 
 ## Scope class
+
 - docs-harness / current-platform / launch-convergence / operational-external
 
 ## Touched paths
+
 - <path>
 
 ## Decisions made
+
 - <decision>
 
 ## Commands run
+
 ```bash
 <command 1>
 <command 2>
 ```
 
 ## Results
+
 - PASS/FAIL: <command> -> <result>
 
 ## Changed files
+
 - <file>
 
 ## Commit
+
 - <hash>
 
 ## Artifacts
+
 - screenshots / logs / traces / request-response samples / device proof
 
 ## Risk / rollback
+
 - <note>
 
 ## Follow-up
+
 - <next work>
-~~~
+````
 
 ### 9.1 When extra artifacts are mandatory
 
@@ -1215,31 +1226,38 @@ npm run symphony:status
 
 Use this exact structure.
 
-~~~md
+````md
 ## Task
+
 <one bounded objective>
 
 ## Scope class
+
 - docs-harness / current-platform / launch-convergence / operational-external
 
 ## Required context
+
 - README.md
 - AGENTS.md
 - docs/README.md
 - relevant docs/runbooks/issues
 
 ## Touched paths
+
 - <path>
 
 ## Constraints
+
 - architecture / privacy / cost / human-only / launch-claim constraints
 
 ## Verification
+
 ```bash
 <commands>
 ```
 
 ## Expected evidence
+
 - summary
 - decisions
 - results
@@ -1250,12 +1268,13 @@ Use this exact structure.
 - follow-ups
 
 ## Escalate if
+
 - paid spend is required
 - prod auth/privacy posture changes are required
 - store/signing work is required
 - operator secret access is required
 - launch scope is being reduced or expanded
-~~~
+````
 
 ---
 

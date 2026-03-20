@@ -11,10 +11,14 @@ import { distributeError } from "./dithering-error";
 import { enforceModuleConstraints } from "./enforce-module-constraints-matrix";
 import { initErrorMatrix } from "./init-error-matrix";
 import { getDiffusionKernel } from "./dithering-kernels";
-import { getOverlayBrightness } from "../overlay/overlay-data-packed";
-import { shouldLockModule } from "../overlay/should-lock-module";
 import { curveIntensity } from "@/domain/render/intensity";
-import type { OverlayData, QRCodeObject, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
+import {
+  getOverlayBrightness,
+  shouldLockModule,
+  type OverlayData,
+  type QRCodeObject,
+  type QRGeneratorConfig,
+} from "@/domain/render/qr-generator-shared";
 
 const log = createLogger("GENERATE");
 

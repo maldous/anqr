@@ -7,10 +7,7 @@ module.exports = {
       severity: "error",
       comment: "All imports must resolve cleanly.",
       from: {
-        pathNot: [
-          "^src/vite-env\\.d\\.ts$",
-          "^netlify/edge-functions/seo/handler\\.ts$",
-        ],
+        pathNot: ["^src/vite-env\\.d\\.ts$", "^netlify/edge-functions/seo/handler\\.ts$"],
       },
       to: { couldNotResolve: true },
     },
@@ -88,7 +85,8 @@ module.exports = {
     {
       name: "contract-no-platform-imports",
       severity: "error",
-      comment: "Contract packages must not import platform adapters or runtime-specific infrastructure.",
+      comment:
+        "Contract packages must not import platform adapters or runtime-specific infrastructure.",
       from: { path: "^packages/contracts/" },
       to: { path: "^packages/platform/" },
     },
@@ -283,7 +281,9 @@ module.exports = {
       name: "no-test-package-in-production",
       severity: "error",
       comment: "Production code must not import from testing packages.",
-      from: { path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify|src)/" },
+      from: {
+        path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify|src)/",
+      },
       to: { path: "^packages/testing/" },
     },
 
@@ -321,7 +321,8 @@ module.exports = {
     {
       name: "apps-no-domain-imports",
       severity: "error",
-      comment: "Apps must not import domain directly; go through application/contracts/ui/platform.",
+      comment:
+        "Apps must not import domain directly; go through application/contracts/ui/platform.",
       from: { path: "^apps/" },
       to: { path: "^packages/domain/" },
     },
@@ -353,7 +354,8 @@ module.exports = {
     {
       name: "netlify-no-domain-imports",
       severity: "error",
-      comment: "Netlify handlers must depend on application-facing entrypoints, not domain directly.",
+      comment:
+        "Netlify handlers must depend on application-facing entrypoints, not domain directly.",
       from: { path: "^netlify/" },
       to: { path: "^packages/domain/" },
     },
@@ -378,7 +380,9 @@ module.exports = {
       name: "runtime-no-config-package-imports",
       severity: "error",
       comment: "Runtime code must not import non-runtime config packages.",
-      from: { path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify|src)/" },
+      from: {
+        path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify|src)/",
+      },
       to: { path: "^packages/config/" },
     },
 
@@ -649,12 +653,12 @@ module.exports = {
       name: "contract-entrypoint-only",
       severity: "error",
       comment: "Only contract package root entrypoints may be imported by external consumers.",
-      from: { path: "^(packages/(application|domain|ui|platform|observability|analytics|testing|config)/|apps/|netlify/|src/)" },
+      from: {
+        path: "^(packages/(application|domain|ui|platform|observability|analytics|testing|config)/|apps/|netlify/|src/)",
+      },
       to: {
         path: "^packages/contracts/([^/]+)/src/",
-        pathNot: [
-          "^packages/contracts/[^/]+/(index|src/index)\\.",
-        ],
+        pathNot: ["^packages/contracts/[^/]+/(index|src/index)\\."],
       },
     },
     {

@@ -1,10 +1,12 @@
 import { isValidCryptoAddress } from "@/application/generator";
 import {
-    Input, Label, Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/ui/web";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../../search/search-context";

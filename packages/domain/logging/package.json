@@ -1,7 +1,7 @@
 {
   "name": "@anqr/domain-logging",
   "private": true,
-  "type": "module",
   "description": "Pure runtime-local logging port for domain/application packages.",
+  "type": "module",
   "sideEffects": false
 }

@@ -36,7 +36,9 @@
       "@/domain/render/server": ["./packages/domain/render/src/server/index.ts"],
       "@/domain/render/exporter": ["./packages/domain/render/src/exporter/index.ts"],
       "@/domain/render/exporter/*": ["./packages/domain/render/src/exporter/*"],
-      "@/domain/render/dither-algorithms": ["./packages/domain/render/src/dither-algorithms/index.ts"],
+      "@/domain/render/dither-algorithms": [
+        "./packages/domain/render/src/dither-algorithms/index.ts"
+      ],
       "@/domain/render/dither-algorithms/*": ["./packages/domain/render/src/dither-algorithms/*"],
       "@/domain/analyze": ["./packages/domain/analyze/src/index.ts"],
       "@/domain/analyze/types": ["./packages/domain/analyze/src/types/index.ts"],

@@ -1,8 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-  qrCapabilitiesResourceSchema,
-  qrCapabilitiesResourceUri,
-} from "@/contracts/mcp";
+import { qrCapabilitiesResourceSchema, qrCapabilitiesResourceUri } from "@/contracts/mcp";
 import { QR_CAPABILITIES } from "./qr-capabilities-resource";
 
 export function registerQrCapabilitiesResource(server: McpServer): void {

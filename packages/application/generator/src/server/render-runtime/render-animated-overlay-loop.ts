@@ -8,11 +8,7 @@ import type {
   ServerAnimationFrame,
   WatermarkOptions,
 } from "@/domain/render/server";
-import {
-  qrFnLog,
-  scaleAndWatermarkFrame,
-  sleep,
-} from "@/domain/render/server";
+import { qrFnLog, scaleAndWatermarkFrame, sleep } from "@/domain/render/server";
 
 import { generateArtworkFrame } from "./generate-artwork-frame";
 import { renderFrameSequence } from "./render-frame-sequence";
@@ -74,16 +70,18 @@ export async function renderAnimatedOverlayLoop(
     animationSeed,
     animationModuleJitter,
     config: animConfig as Record<string, unknown>,
-    getModuleInput: (overlayFrame) => {
+    getModuleInput: ({ canvas }) => {
       const tFrame = Date.now();
       (globalThis as Record<string, unknown>).__ANQR_FRAME_START__ = tFrame;
-      return isArtworkMode ? overlayFrame.canvas : overlayFrame.canvas;
+      return canvas;
     },
     renderFrame: async (moduleOverlayInput, i, frameConfig) => {
-      const overlayFrame = overlayFrames[i];
-      const tFrame = (globalThis as Record<string, unknown>).__ANQR_FRAME_START__ as number | undefined;
+      const tFrame = (globalThis as Record<string, unknown>).__ANQR_FRAME_START__ as
+        | number
+        | undefined;
+      const sourceOverlay = moduleOverlayInput ?? overlayFrames[i].canvas;
       const frameCanvas = await renderQRFrameWithFallback(
-        moduleOverlayInput ?? overlayFrame.canvas,
+        sourceOverlay,
         i,
         isArtworkMode,
         (target, idx, normalize) =>

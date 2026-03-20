@@ -1,10 +1,13 @@
 import { isValidSSID } from "@/application/generator";
 import {
-    Input, Label, Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue, Switch
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
 } from "@/ui/web";
 import type { TFunction } from "i18next";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";

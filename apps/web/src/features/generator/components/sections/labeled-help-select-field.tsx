@@ -1,9 +1,4 @@
-import {
-    Label, Select,
-    SelectContent,
-    SelectTrigger,
-    SelectValue
-} from "@/ui/web";
+import { Label, Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/web";
 import type { ReactNode } from "react";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import { HighlightedLabel } from "../../search/search-context";

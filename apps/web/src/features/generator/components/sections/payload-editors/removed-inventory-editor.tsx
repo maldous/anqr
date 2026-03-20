@@ -1,11 +1,4 @@
-import {
-    Label,
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/ui/web";
+import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/web";
 import { HighlightedLabel } from "../../../search/search-context";
 import { LabeledInputField } from "./labeled-input-field";
 import { PayloadFormShell } from "./payload-form-shell";

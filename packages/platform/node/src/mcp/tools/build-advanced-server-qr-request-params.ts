@@ -1,5 +1,8 @@
 import type { QrGenerateAdvancedInput } from "@/contracts/mcp";
-import { buildBasicServerQRRequestParams, type ServerQRRequestParams } from "@/application/generator/server";
+import {
+  buildBasicServerQRRequestParams,
+  type ServerQRRequestParams,
+} from "@/application/generator/server";
 import { normalizeHexColor } from "./normalize-hex-color";
 
 export function buildAdvancedServerQRRequestParams(
@@ -46,8 +49,7 @@ export function buildAdvancedServerQRRequestParams(
     })) ?? params.gradientStops;
   params.alignmentStyle = input.alignmentStyle ?? params.alignmentStyle;
   params.timingStyle = input.timingStyle ?? params.timingStyle;
-  params.palette =
-    input.palette?.map(normalizeHexColor) ?? params.palette;
+  params.palette = input.palette?.map(normalizeHexColor) ?? params.palette;
   params.paletteMode = input.paletteMode ?? params.paletteMode;
   params.preserveFinders = input.preserveFinders ?? params.preserveFinders;
   params.preserveTiming = input.preserveTiming ?? params.preserveTiming;
@@ -78,7 +80,8 @@ export function buildAdvancedServerQRRequestParams(
   params.overlayRotate = input.overlayRotate ?? params.overlayRotate;
   params.overlayFlipX = input.overlayFlipX ?? params.overlayFlipX;
   params.overlayFlipY = input.overlayFlipY ?? params.overlayFlipY;
-  params.ditherKind = input.ditherKind ?? params.ditherKind;
+  params.ditherKind =
+    (input.ditherKind as ServerQRRequestParams["ditherKind"] | undefined) ?? params.ditherKind;
   params.diffusionKernel = input.diffusionKernel ?? params.diffusionKernel;
   params.ditherStrength = input.ditherStrength ?? params.ditherStrength;
   params.finderDitherStrength = input.finderDitherStrength ?? params.finderDitherStrength;
@@ -92,10 +95,9 @@ export function buildAdvancedServerQRRequestParams(
   params.subpixelGridSize = input.subpixelGridSize ?? params.subpixelGridSize;
   params.subpixelGridNum = input.subpixelGridNum ?? params.subpixelGridNum;
   params.subpixelCenterRule = input.subpixelCenterRule ?? params.subpixelCenterRule;
-  params.subpixelNeutralColor =
-    input.subpixelNeutralColor
-      ? normalizeHexColor(input.subpixelNeutralColor)
-      : params.subpixelNeutralColor;
+  params.subpixelNeutralColor = input.subpixelNeutralColor
+    ? normalizeHexColor(input.subpixelNeutralColor)
+    : params.subpixelNeutralColor;
   params.subpixelFinderOverride = input.subpixelFinderOverride ?? params.subpixelFinderOverride;
   params.halftoneCell = input.halftoneCell ?? params.halftoneCell;
   params.halftoneDotShape = input.halftoneDotShape ?? params.halftoneDotShape;

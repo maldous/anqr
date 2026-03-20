@@ -33,12 +33,7 @@
             "description": "Error correction level: L, M, Q, or H",
             "schema": {
               "type": "string",
-              "enum": [
-                "L",
-                "M",
-                "Q",
-                "H"
-              ]
+              "enum": ["L", "M", "Q", "H"]
             }
           },
           {
@@ -65,10 +60,7 @@
             "description": "Output format",
             "schema": {
               "type": "string",
-              "enum": [
-                "png",
-                "svg"
-              ]
+              "enum": ["png", "svg"]
             }
           },
           {
@@ -93,9 +85,7 @@
                   "properties": {
                     "ok": {
                       "type": "boolean",
-                      "enum": [
-                        true
-                      ],
+                      "enum": [true],
                       "description": "Success discriminator"
                     },
                     "data": {
@@ -103,10 +93,7 @@
                       "properties": {
                         "format": {
                           "type": "string",
-                          "enum": [
-                            "png",
-                            "svg"
-                          ],
+                          "enum": ["png", "svg"],
                           "description": "Returned image format"
                         },
                         "mimeType": {
@@ -116,9 +103,7 @@
                         },
                         "encoding": {
                           "type": "string",
-                          "enum": [
-                            "base64"
-                          ],
+                          "enum": ["base64"],
                           "description": "Payload encoding"
                         },
                         "content": {
@@ -127,19 +112,11 @@
                           "description": "Base64-encoded image payload"
                         }
                       },
-                      "required": [
-                        "format",
-                        "mimeType",
-                        "encoding",
-                        "content"
-                      ],
+                      "required": ["format", "mimeType", "encoding", "content"],
                       "description": "Generated QR image payload"
                     }
                   },
-                  "required": [
-                    "ok",
-                    "data"
-                  ]
+                  "required": ["ok", "data"]
                 }
               }
             }
@@ -168,9 +145,7 @@
                       "description": "HTTP status code associated with the error"
                     }
                   },
-                  "required": [
-                    "error"
-                  ]
+                  "required": ["error"]
                 }
               }
             }
@@ -199,9 +174,7 @@
                       "description": "HTTP status code associated with the error"
                     }
                   },
-                  "required": [
-                    "error"
-                  ]
+                  "required": ["error"]
                 }
               }
             }

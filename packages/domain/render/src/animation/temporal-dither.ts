@@ -8,9 +8,7 @@ import { createLogger } from "@/domain/logging";
 
 const _log = createLogger("ANIMATION");
 
-import {
-  applyTemporalNoiseToCanvas,
-} from "../dither/apply-temporal-noise-to-canvas";
+import { applyTemporalNoiseToCanvas } from "../dither/apply-temporal-noise-to-canvas";
 import { calculateTemporalOffset } from "../dither/calculate-temporal-offset";
 import type { TemporalDitherMode } from "../dither/temporal.types";
 

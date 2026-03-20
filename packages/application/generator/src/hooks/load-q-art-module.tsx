@@ -6,9 +6,9 @@ export function loadQArtModule(): Promise<QArtModule> {
   if (!getQartModulePromise()) {
     setQartModulePromise(
       import("@/domain/qr/qart").then((qartModule) => ({
-          ...qartModule,
-          ...getQArtWorkerRuntime(),
-        })),
+        ...qartModule,
+        ...getQArtWorkerRuntime(),
+      })),
     );
   }
   return getQartModulePromise()!;

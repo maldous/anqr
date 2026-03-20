@@ -48,19 +48,19 @@ import {
   ditherPatchSignature,
 } from "./qr-generator-helpers";
 import {
-    type DitherAttemptPatch,
-    type ScanGateCallbacks,
-    type ScanGateCtx,
-    buildDitherAttemptList,
-    runScanGateMainLoop,
-    runScanGateQRFirstFallback,
-    runScanGateRescueLoop,
+  type DitherAttemptPatch,
+  type ScanGateCallbacks,
+  type ScanGateCtx,
+  buildDitherAttemptList,
+  runScanGateMainLoop,
+  runScanGateQRFirstFallback,
+  runScanGateRescueLoop,
 } from "./qr-generator-scan-gate";
 import {
-    buildScanGateBaseAttempts,
-    buildScanGateDecodeRescuePatches,
-    buildScanGateFinderRescuePatches,
-    isAggressiveScanPatch,
+  buildScanGateBaseAttempts,
+  buildScanGateDecodeRescuePatches,
+  buildScanGateFinderRescuePatches,
+  isAggressiveScanPatch,
 } from "./qr-generator-scan-gate-patches";
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from "./types";
 import { validateColor } from "./utils";

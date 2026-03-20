@@ -24,5 +24,4 @@ export { extractOverlayRGBData } from "./extract-overlay-rgb-data";
 export { applyCanvasBlendMode } from "./apply-canvas-blend-mode";
 export { processOverlay } from "./process-overlay";
 
-// Re-export types from dither-algorithms for convenience
-export type { DiffusionKernel, DitherKind, OrderedMatrix } from "../dither-algorithms";
+export type { DiffusionKernel, DitherKind, OrderedMatrix } from "./overlay-dither.types";

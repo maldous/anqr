@@ -2,6 +2,7 @@ export type { AlignmentStyle } from "./alignment-style.contract";
 export type { AnimationEasing } from "./animation-easing.contract";
 export type { AnimationInterpolation } from "./animation-interpolation.contract";
 export type { AnimationPatternType } from "./animation-pattern.contract";
+export type { AnimationPattern } from "./animation-pattern-alias.contract";
 export type { AnimationTarget } from "./animation-target.contract";
 export type { AnimationTemporalDitherMode } from "./animation-temporal-dither-mode.contract";
 export type { AnimationWaveAxis } from "./animation-wave-axis.contract";

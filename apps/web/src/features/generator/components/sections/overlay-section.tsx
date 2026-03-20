@@ -1,21 +1,25 @@
 import {
-    Input, Label, Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue, Slider, Switch
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Slider,
+  Switch,
 } from "@/ui/web";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DynamicTestId } from "../../../../lib/dynamic-testid";
 import {
-    type ColorMode,
-    type DiffusionKernel,
-    type DitherKind,
-    type FitMode,
-    type OrderedMatrix,
-    type OverlayMode,
-    useQRStore,
+  type ColorMode,
+  type DiffusionKernel,
+  type DitherKind,
+  type FitMode,
+  type OrderedMatrix,
+  type OverlayMode,
+  useQRStore,
 } from "../../../../state/qr-store";
 import { HighlightedLabel } from "../../search/search-context";
 import { ConnectedHelpLink as HelpLink } from "./connected-help-link";

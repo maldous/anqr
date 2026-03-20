@@ -6,6 +6,7 @@ export type {
   ReleaseCanvasFn,
 } from "./canvas.types";
 export type { RGB, RGBWithMeta } from "./color.types";
+export type { LegacyOverlayData } from "./legacy-overlay-data.types";
 export type { OverlayData, OverlayModeResult, ApplyOverlayModeOptions } from "./overlay.types";
 export type {
   QRCodeInstance,
@@ -16,3 +17,7 @@ export type {
   PixelDecisionResult,
 } from "./qr.types";
 export type { DiffusionKernel } from "./dither.types";
+export { getOverlayBrightness } from "./get-overlay-brightness";
+export { isFinderSeparator } from "./is-finder-separator";
+export { isPackedOverlayData } from "./is-packed-overlay-data";
+export { shouldLockModule } from "./should-lock-module";

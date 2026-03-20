@@ -8,9 +8,7 @@ import type {
   ECCLevel,
   WatermarkOptions,
 } from "@/domain/render/server";
-import {
-  scaleAndWatermarkFrame,
-} from "@/domain/render/server";
+import { scaleAndWatermarkFrame } from "@/domain/render/server";
 
 import { generateArtworkFrame } from "./generate-artwork-frame";
 import { renderFrameSequence } from "./render-frame-sequence";

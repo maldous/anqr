@@ -1,7 +1,4 @@
-import {
-    isValidAccountNumber,
-    isValidBankBin,
-} from "@/application/generator";
+import { isValidAccountNumber, isValidBankBin } from "@/application/generator";
 import { Input, Label } from "@/ui/web";
 import type { TFunction } from "i18next";
 import type { QRState } from "../../../../../state/qr-store";

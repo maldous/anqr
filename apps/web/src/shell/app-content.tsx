@@ -1,26 +1,26 @@
 import {
-    applyAnimationBasicParams,
-    applyAnimationPatternParams,
-    applyDitheringParams,
-    applyEccIntensityLimits,
-    applyMetadataParams,
-    applyOutputAdvancedParams,
-    applyOutputBasicParams,
-    applyOverlayAdvancedParams,
-    applyOverlayPreprocessingParams,
-    applyOverlayTransformParams,
-    applyQaAndAutoParams,
-    applyQrEncodingParams,
-    applyRenderBasicStyles,
-    applyRenderColorAndPaletteStyles,
-    applyRenderEyeAndFrameStyles,
-    applySafetyParams,
-    applySubpixelAndHalftoneParams,
-    applyTierAndPayloadParams,
-    applyWatermarkParams,
-    parseUrlParams,
-    type UrlImportStore,
-    useQRGeneratorContext,
+  applyAnimationBasicParams,
+  applyAnimationPatternParams,
+  applyDitheringParams,
+  applyEccIntensityLimits,
+  applyMetadataParams,
+  applyOutputAdvancedParams,
+  applyOutputBasicParams,
+  applyOverlayAdvancedParams,
+  applyOverlayPreprocessingParams,
+  applyOverlayTransformParams,
+  applyQaAndAutoParams,
+  applyQrEncodingParams,
+  applyRenderBasicStyles,
+  applyRenderColorAndPaletteStyles,
+  applyRenderEyeAndFrameStyles,
+  applySafetyParams,
+  applySubpixelAndHalftoneParams,
+  applyTierAndPayloadParams,
+  applyWatermarkParams,
+  parseUrlParams,
+  type UrlImportStore,
+  useQRGeneratorContext,
 } from "@/application/generator";
 import { showNativeToast } from "@/platform/native";
 import { BusyOverlay, MobileDivider, TooltipProvider } from "@/ui/web";
@@ -31,10 +31,10 @@ import type { GalleryCategory } from "../content/gallery/gallery-manifest";
 import { Preview } from "../features/generator/components/preview";
 import { Sidebar } from "../features/generator/components/sidebar";
 import {
-    DEFAULT_MOBILE_SPLIT,
-    MAX_MOBILE_SPLIT,
-    MIN_MOBILE_SPLIT,
-    MOBILE_SPLIT_STORAGE_KEY,
+  DEFAULT_MOBILE_SPLIT,
+  MAX_MOBILE_SPLIT,
+  MIN_MOBILE_SPLIT,
+  MOBILE_SPLIT_STORAGE_KEY,
 } from "../features/generator/model/mobile-split";
 import { isRtlLanguage, loadLocale } from "../i18n";
 import type { StaticPageType } from "../pages/static-page";
@@ -227,7 +227,10 @@ export function AppContent() {
   const loadOverlayFromUrl = useCallback(
     async (
       url: string,
-      store: Pick<ReturnType<typeof useQRStore.getState>, "setOverlayUrl" | "setOverlayFile" | "setOverlayEnabled">,
+      store: Pick<
+        ReturnType<typeof useQRStore.getState>,
+        "setOverlayUrl" | "setOverlayFile" | "setOverlayEnabled"
+      >,
     ) => {
       // On native platforms, bundled assets (public/) are available locally.
       // Convert remote anqr.link URLs to local paths to avoid cross-origin issues.

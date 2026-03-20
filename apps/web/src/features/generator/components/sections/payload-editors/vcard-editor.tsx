@@ -1,8 +1,4 @@
-import {
-    isValidEmail,
-    isValidPhone,
-    isValidUrl,
-} from "@/application/generator";
+import { isValidEmail, isValidPhone, isValidUrl } from "@/application/generator";
 import { Input, Label } from "@/ui/web";
 import type { TFunction } from "i18next";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";

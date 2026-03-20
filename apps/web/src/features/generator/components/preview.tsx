@@ -1,9 +1,10 @@
 import { AdUnit } from "@/analytics/ads";
 import {
-    getContrastRatio,
-    meetsContrastAA,
-    meetsContrastAAA,
-    parseColor, useQRGeneratorContext
+  getContrastRatio,
+  meetsContrastAA,
+  meetsContrastAAA,
+  parseColor,
+  useQRGeneratorContext,
 } from "@/application/generator";
 import { BusyOverlay } from "@/ui/web";
 import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from "lucide-react";

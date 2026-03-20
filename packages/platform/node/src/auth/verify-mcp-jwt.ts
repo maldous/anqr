@@ -9,8 +9,7 @@ export async function verifyMcpJwt(token: string, config: McpAuthConfig): Promis
     return false;
   }
 
-  const jwks =
-    jwksCache.get(config.jwksUrl) || createRemoteJWKSet(new URL(config.jwksUrl));
+  const jwks = jwksCache.get(config.jwksUrl) || createRemoteJWKSet(new URL(config.jwksUrl));
   jwksCache.set(config.jwksUrl, jwks);
   const verification = await jwtVerify(token, jwks, {
     issuer: config.issuer,

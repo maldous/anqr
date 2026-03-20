@@ -1,11 +1,5 @@
 import { isValidPhone } from "@/application/generator";
-import {
-    Label, Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from "@/ui/web";
+import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/ui/web";
 import type { TFunction } from "i18next";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";
 import type { QRState } from "../../../../../state/qr-store";

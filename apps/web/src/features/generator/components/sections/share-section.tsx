@@ -1,8 +1,8 @@
 import {
-    generateImageEmbed,
-    generateMarkdownEmbed,
-    getShareableUrl,
-    getSocialShareUrls,
+  generateImageEmbed,
+  generateMarkdownEmbed,
+  getShareableUrl,
+  getSocialShareUrls,
 } from "@/application/generator";
 import { trackEvent } from "@/infra/telemetry/zaraz";
 import { copyToClipboard } from "@/platform/browser";

@@ -1,10 +1,4 @@
-import {
-  BAYER_2,
-  BAYER_4,
-  BAYER_8,
-  CLUSTERED_DOT,
-  VOID_CLUSTER,
-} from "./matrices";
+import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from "./matrices";
 import type { OrderedMatrix } from "./types";
 
 /** Get ordered dithering matrix by name */

@@ -23,9 +23,9 @@ export async function auditMcpRequest(
   });
 
   if (outcome === "error" || outcome === "unauthorized" || outcome === "rate_limited") {
-    mcpLog.warn("MCP request audit", context);
+    mcpLog.warn("MCP request audit", context as unknown as Record<string, unknown>);
     return;
   }
 
-  mcpLog.info("MCP request audit", context);
+  mcpLog.info("MCP request audit", context as unknown as Record<string, unknown>);
 }

@@ -4,8 +4,7 @@
  */
 
 import { createLogger } from "@/domain/logging";
-import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms";
-import { getOverlayBrightness } from "../overlay/overlay-data-packed";
+import { generateBlueNoiseTile, sampleBlueNoise } from "../dither-algorithms/utils";
 import { curveIntensity } from "@/domain/render/intensity";
 import type {
   CreateCanvasFn,
@@ -13,6 +12,7 @@ import type {
   QRCodeObject,
   QRGeneratorConfig,
 } from "@/domain/render/qr-generator-shared";
+import { getOverlayBrightness } from "@/domain/render/qr-generator-shared";
 
 const _log = createLogger("GENERATE");
 

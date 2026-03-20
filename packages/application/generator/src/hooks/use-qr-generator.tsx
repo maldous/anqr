@@ -69,14 +69,14 @@ import { resolveOverlayPreservationOptions } from "./resolve-overlay-preservatio
 import { isRequestStale } from "./is-request-stale";
 import { waitForDoubleAnimationFrame } from "./wait-for-double-animation-frame";
 import { yieldForRequestResponsiveness } from "./yield-for-request-responsiveness";
-import {
-  getInterstitialRuntime,
-  getValidationWorkerRuntime,
-} from "../runtime/generator-runtime";
+import { getInterstitialRuntime, getValidationWorkerRuntime } from "../runtime/generator-runtime";
 
 export function useQRGenerator(
   useStore: UseQRStoreHook,
-  scheduleTrackEvent: (eventName: string, payload?: Record<string, string | number | boolean>) => void,
+  scheduleTrackEvent: (
+    eventName: string,
+    payload?: Record<string, string | number | boolean>,
+  ) => void,
 ): UseQRGeneratorResult {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);

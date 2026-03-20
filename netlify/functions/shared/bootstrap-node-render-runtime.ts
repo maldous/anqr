@@ -1,11 +1,7 @@
 import * as Sentry from "@sentry/node";
 import pkg from "../../../package.json";
 import { createCanvas, ImageData as NapiImageData } from "@napi-rs/canvas";
-
-type BootstrapOptions = {
-  sentryDsn?: string;
-  environment?: string;
-};
+import type { BootstrapOptions } from "./bootstrap-node-render-runtime.types";
 
 export function bootstrapNodeRenderRuntime(options: BootstrapOptions = {}): void {
   const sentryDsn = options.sentryDsn;
@@ -15,7 +11,11 @@ export function bootstrapNodeRenderRuntime(options: BootstrapOptions = {}): void
       sendDefaultPii: true,
       release: `anqr@${pkg.version}`,
       tracesSampleRate: 0.1,
-      environment: options.environment || process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "production",
+      environment:
+        options.environment ||
+        process.env.SENTRY_ENVIRONMENT ||
+        process.env.NODE_ENV ||
+        "production",
     });
   }
 

@@ -1,7 +1,4 @@
-import {
-    generateMessagingLink,
-    isValidPhone,
-} from "@/application/generator";
+import { generateMessagingLink, isValidPhone } from "@/application/generator";
 import { Input, Label, Textarea } from "@/ui/web";
 import type { TFunction } from "i18next";
 import { DynamicTestId } from "../../../../../lib/dynamic-testid";

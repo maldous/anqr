@@ -1,7 +1,4 @@
-import {
-    isNonEmpty,
-    isValidFpsId,
-} from "@/application/generator";
+import { isNonEmpty, isValidFpsId } from "@/application/generator";
 import { Input, Label } from "@/ui/web";
 import type { TFunction } from "i18next";
 import type { QRState } from "../../../../../state/qr-store";

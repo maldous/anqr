@@ -1,8 +1,5 @@
 import type { TFunction } from "i18next";
-import {
-  isValidEmail,
-  isValidPhone,
-} from "@/application/generator";
+import { isValidEmail, isValidPhone } from "@/application/generator";
 import type { QRState } from "../../../../../state/qr-store";
 import { LabeledInputField } from "./labeled-input-field";
 import { ValidatedLabeledInputField } from "./validated-labeled-input-field";

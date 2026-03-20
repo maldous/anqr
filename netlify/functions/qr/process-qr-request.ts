@@ -15,7 +15,10 @@ export async function processQRRequest(
   const cachedResponse = await lookupBlobCache(cacheKey, p.skipCache);
   if (cachedResponse) return cachedResponse;
 
-  const { outputBuffer, contentType } = await renderConfiguredServerQROutput(p, nodeCanvasFactory);
+  const { outputBuffer, contentType } = await renderConfiguredServerQROutput(
+    p,
+    nodeCanvasFactory as unknown as Parameters<typeof renderConfiguredServerQROutput>[1],
+  );
 
   return handleCacheAndResponse(p, outputBuffer, contentType, cacheKey, requestUrl);
 }

@@ -2,11 +2,7 @@ import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { useCallback, useState } from "react";
 import type React from "react";
 import type { useTranslation } from "react-i18next";
-import {
-  analyzeQRCode,
-  analyzeQRFromFile,
-  analyzeQRFromUrl,
-} from "@/domain/qr/analyze";
+import { analyzeQRCode, analyzeQRFromFile, analyzeQRFromUrl } from "@/domain/qr/analyze";
 import type { QRAnalysisResult } from "@/contracts/analyze";
 import { cloneCanvasLike } from "./canvas-analysis-helpers";
 import { closeBitmapSource } from "./close-bitmap-source";

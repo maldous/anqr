@@ -2,12 +2,7 @@
  * QR Decoder - uses our own decoder (no external dependencies)
  */
 
-import {
-  disableLogBuffer,
-  createLogger,
-  enableLogBuffer,
-  flushLogBuffer,
-} from "@/domain/logging";
+import { disableLogBuffer, createLogger, enableLogBuffer, flushLogBuffer } from "@/domain/logging";
 import { decodeQR } from "../decode";
 import { detectContentType, extractDominantColors } from "./analyzer-content";
 import { analyzeColors } from "./analyze-colors";

@@ -6,14 +6,14 @@ Portable, stable boundary definitions shared across runtimes.
 
 ## Package structure
 
-| Package | Purpose | May import |
-|---------|---------|------------|
-| `contracts/core` | Result envelopes, error shapes, cross-cutting portable nouns | nothing (standalone) |
-| `contracts/generator` | QR generation option/config vocabulary | contracts/core |
-| `contracts/analyze` | QR analysis result vocabulary | contracts/core |
-| `contracts/share` | Share/embed vocabulary | contracts/core |
-| `contracts/api` | ts-rest HTTP route contracts, Zod request/response schemas | contracts/core + domain vocab contracts + zod + @ts-rest/core |
-| `contracts/mcp` | MCP tool/resource/prompt schemas | contracts/core + domain vocab contracts + zod |
+| Package               | Purpose                                                      | May import                                                    |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| `contracts/core`      | Result envelopes, error shapes, cross-cutting portable nouns | nothing (standalone)                                          |
+| `contracts/generator` | QR generation option/config vocabulary                       | contracts/core                                                |
+| `contracts/analyze`   | QR analysis result vocabulary                                | contracts/core                                                |
+| `contracts/share`     | Share/embed vocabulary                                       | contracts/core                                                |
+| `contracts/api`       | ts-rest HTTP route contracts, Zod request/response schemas   | contracts/core + domain vocab contracts + zod + @ts-rest/core |
+| `contracts/mcp`       | MCP tool/resource/prompt schemas                             | contracts/core + domain vocab contracts + zod                 |
 
 ## Key isolation rules
 

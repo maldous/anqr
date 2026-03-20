@@ -5,7 +5,11 @@
  */
 
 import { createLogger } from "@/domain/logging";
-import { parseAnimatedImage, type AnimationFrame, type GifCompositor } from "@/domain/render/animation";
+import {
+  parseAnimatedImage,
+  type AnimationFrame,
+  type GifCompositor,
+} from "@/domain/render/animation";
 import { handleOverlayLoadFallback } from "./handle-overlay-load-fallback.service";
 
 const log = createLogger("QR");

@@ -6,6 +6,6 @@ export interface BasicServerQRRequest {
   errorCorrection?: "L" | "M" | "Q" | "H";
   foreground?: string;
   background?: string;
-  format?: Extract<OutputFormat, "png" | "svg">;
+  format?: OutputFormat;
   margin?: number;
 }

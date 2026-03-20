@@ -137,10 +137,4 @@ i18n.on("languageChanged", async (lng) => {
   loadFontForLanguage(lng);
 });
 
-const detectedLang = i18n.language;
-if (detectedLang && detectedLang !== "en-GB" && !loadedLocales.has(detectedLang)) {
-  await loadLocale(detectedLang);
-  loadFontForLanguage(detectedLang);
-}
-
 export { default as i18n } from "i18next";

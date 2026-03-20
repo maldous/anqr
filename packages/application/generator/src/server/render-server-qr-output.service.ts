@@ -51,7 +51,7 @@ export async function renderServerQROutput(
   }
 
   const { overlayCanvas, overlayFrames, hasAnimatedOverlay } = overlayResult;
-  p.outputFormat = overlayResult.outputFormat;
+  p.outputFormat = overlayResult.outputFormat as ServerQRRequestParams["outputFormat"];
 
   const artworkState: ArtworkState = { lockedMask: -1, lockedVersion: p.version };
   let canvas = await renderInitialQRCode(

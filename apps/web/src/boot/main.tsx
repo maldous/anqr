@@ -4,13 +4,13 @@ import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "../shell/app-shell.types";
 import "../index.css";
-import "../i18n"; // Initialize i18n
 import { ErrorBoundary } from "../shell/error-boundary";
+import { preloadDetectedLocale } from "../i18n/preload-detected-locale";
 import { initAutoDynamicTestIds } from "../lib/auto-testid";
 import { initRemoteDiagnostics } from "@/infra/telemetry/zaraz";
 import { createLogger } from "@/lib/logger";
 import { loadWebOnlyBootAssets } from "@/platform/browser";
-import { initializeAdMob, prepareAllAds, showBannerAd } from "@/platform/native";
+import { initAds } from "./init-ads";
 
 const log = createLogger("MAIN");
 
@@ -97,52 +97,36 @@ Sentry.init({
 initRemoteDiagnostics();
 log.info("App starting", { environment: isCapacitor ? "capacitor" : "web" });
 
-// Initialize AdMob for native apps after a short delay to ensure Capacitor bridge is ready
-// This is more reliable than calling at module load time
-const initAds = async () => {
-  try {
-    // Delay to ensure Capacitor bridge is fully initialized and WebView has stabilized.
-    // Longer delay in dev/test to reduce memory pressure on resource-constrained simulators.
-    const initDelay = import.meta.env.DEV ? 3000 : 1000;
-    await new Promise((resolve) => setTimeout(resolve, initDelay));
-    const initialized = await initializeAdMob();
-    if (initialized) {
-      await prepareAllAds();
-      // Delay before showing the banner ad — the banner spawns a separate
-      // WebContent process; give the main view time to finish first paint.
-      const bannerDelay = import.meta.env.DEV ? 5000 : 2000;
-      await new Promise((resolve) => setTimeout(resolve, bannerDelay));
-      await showBannerAd("bottom");
-    }
-  } catch (error) {
-    log.error("AdMob initialization error", { error });
-  }
-};
-
 // Start ad initialization after DOM is ready
 if (document.readyState === "complete") {
-  initAds();
+  void initAds(log);
 } else {
-  globalThis.addEventListener("load", initAds, { once: true });
+  globalThis.addEventListener("load", () => void initAds(log), { once: true });
 }
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center bg-background">
-            <div className="animate-pulse text-muted-foreground">Loading...</div>
-          </div>
-        }
-      >
-        <App />
-      </Suspense>
-    </ErrorBoundary>
-  </React.StrictMode>,
-);
+const appRoot = rootElement;
+
+function renderApp(): void {
+  ReactDOM.createRoot(appRoot).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+              <div className="animate-pulse text-muted-foreground">Loading...</div>
+            </div>
+          }
+        >
+          <App />
+        </Suspense>
+      </ErrorBoundary>
+    </React.StrictMode>,
+  );
+}
+
+void preloadDetectedLocale().finally(renderApp);
 
 // Ensure every interactive element has a unique dynamic test id.
 initAutoDynamicTestIds();

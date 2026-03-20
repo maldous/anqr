@@ -1,8 +1,4 @@
-import type {
-  OutputFormat,
-  WatermarkBlend,
-  WatermarkKind,
-} from "@/contracts/generator";
+import type { OutputFormat, WatermarkBlend, WatermarkKind } from "@/contracts/generator";
 import type { WatermarkPosition } from "@/platform/node/server";
 import type { ParsedHandlerParams } from "./parsed-handler-params.types";
 import { DEFAULT_OUTPUT_FORMAT } from "./default-output-format.const";

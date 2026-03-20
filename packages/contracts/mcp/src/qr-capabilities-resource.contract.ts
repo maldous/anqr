@@ -29,13 +29,19 @@ export const qrCapabilitiesResourceSchema = z.object({
   overlay: z
     .object({
       httpsOnly: z.literal(true).describe("Overlay fetching is restricted to HTTPS URLs"),
-      privateNetworkBlocked: z.literal(true).describe("Private, loopback, link-local, and metadata networks are blocked"),
-      redirectsRevalidated: z.literal(true).describe("Every redirect hop is revalidated before fetching"),
+      privateNetworkBlocked: z
+        .literal(true)
+        .describe("Private, loopback, link-local, and metadata networks are blocked"),
+      redirectsRevalidated: z
+        .literal(true)
+        .describe("Every redirect hop is revalidated before fetching"),
       maxBytes: z.number().int().min(1).describe("Maximum overlay payload size in bytes"),
       timeoutMs: z.number().int().min(1).describe("Overlay fetch timeout in milliseconds"),
     })
     .describe("Overlay-fetch safety policy"),
-  safety: z.array(z.string().describe("Human-readable safety guarantee")).describe("Safety guarantees enforced by the MCP QR tools"),
+  safety: z
+    .array(z.string().describe("Human-readable safety guarantee"))
+    .describe("Safety guarantees enforced by the MCP QR tools"),
 });
 
 export type QrCapabilitiesResource = z.infer<typeof qrCapabilitiesResourceSchema>;

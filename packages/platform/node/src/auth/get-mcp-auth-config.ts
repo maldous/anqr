@@ -11,16 +11,21 @@ export function getMcpAuthConfig(): McpAuthConfig {
     process.env.MCP_FIREBASE_PROJECT_ID ||
     process.env.AUTH_FIREBASE_PROJECT_ID ||
     process.env.FIREBASE_PROJECT_ID;
+  const hasFirebaseProjectId =
+    typeof firebaseProjectId === "string" && firebaseProjectId.length > 0;
+  const useFirebase = mode === "firebase" || (!mode && hasFirebaseProjectId);
+  const useJwks = (mode === "jwks" || !mode) && typeof jwksUrl === "string";
+  const useBearer = mode === "bearer" || (!mode && bearerTokens.length > 0);
 
-  if (mode === "firebase" || (!mode && firebaseProjectId)) {
-    return buildFirebaseAuthConfig(firebaseProjectId || "anqr-link");
+  if (useFirebase) {
+    return buildFirebaseAuthConfig(hasFirebaseProjectId ? firebaseProjectId : "anqr-link");
   }
 
-  if (mode === "jwks" || (!mode && jwksUrl)) {
-    return buildJwksAuthConfig(jwksUrl);
+  if (useJwks) {
+    return buildJwksAuthConfig(jwksUrl as string);
   }
 
-  if (mode === "bearer" || (!mode && bearerTokens.length > 0)) {
+  if (useBearer) {
     return {
       mode: "bearer",
       bearerTokens,

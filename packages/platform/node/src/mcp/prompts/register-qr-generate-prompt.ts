@@ -13,10 +13,13 @@ export function registerQrGeneratePrompt(server: McpServer): void {
     async (args) => {
       const promptArgs = args as QrGeneratePromptArgs;
       const format = promptArgs.format ?? "png";
-      const sampleData = promptArgs.data ? `Source data: ${promptArgs.data}` : "Source data: <provide data>";
+      const sampleData = promptArgs.data
+        ? `Source data: ${promptArgs.data}`
+        : "Source data: <provide data>";
 
       return {
-        description: "Guidance for constructing a safe generate_qr or generate_qr_advanced MCP tool call.",
+        description:
+          "Guidance for constructing a safe generate_qr or generate_qr_advanced MCP tool call.",
         messages: [
           {
             role: "user",

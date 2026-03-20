@@ -5,7 +5,7 @@ export {
   isTemporalDitherActive,
   type TemporalDitherMode,
   temporalBlueNoiseDither,
-} from "../dither-algorithms";
+} from "../dither";
 export { createAnimationLoop } from "./animation-loop";
 export {
   type AnimationPattern as PatternType,

@@ -1,5 +1,8 @@
-import type { QRCodeObject, QRGeneratorConfig } from "@/domain/render/qr-generator-shared";
-import { shouldLockModule } from "../overlay/should-lock-module";
+import {
+  shouldLockModule,
+  type QRCodeObject,
+  type QRGeneratorConfig,
+} from "@/domain/render/qr-generator-shared";
 
 export function enforceModuleConstraints(
   qr: QRCodeObject,

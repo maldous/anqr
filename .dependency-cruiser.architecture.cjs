@@ -68,7 +68,8 @@ module.exports = {
     {
       name: "contract-no-platform-imports",
       severity: "error",
-      comment: "Contract packages must not import platform adapters or runtime-specific infrastructure.",
+      comment:
+        "Contract packages must not import platform adapters or runtime-specific infrastructure.",
       from: { path: "^packages/contracts/" },
       to: { path: "^packages/platform/" },
     },
@@ -327,7 +328,8 @@ module.exports = {
     {
       name: "netlify-no-domain-imports",
       severity: "error",
-      comment: "Netlify handlers must depend on application-facing entrypoints, not domain directly.",
+      comment:
+        "Netlify handlers must depend on application-facing entrypoints, not domain directly.",
       from: { path: "^netlify/" },
       to: { path: "^packages/domain/" },
     },
@@ -350,14 +352,18 @@ module.exports = {
       name: "no-test-package-in-production",
       severity: "error",
       comment: "Production code must not import from testing packages.",
-      from: { path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify)/" },
+      from: {
+        path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify)/",
+      },
       to: { path: "^packages/testing/" },
     },
     {
       name: "runtime-no-config-package-imports",
       severity: "error",
       comment: "Runtime code must not import non-runtime config packages.",
-      from: { path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify)/" },
+      from: {
+        path: "^(packages/(domain|application|ui|platform|observability|analytics)|apps|netlify)/",
+      },
       to: { path: "^packages/config/" },
     },
     {
@@ -446,7 +452,9 @@ module.exports = {
       name: "contract-entrypoint-only",
       severity: "error",
       comment: "Only contract package root entrypoints may be imported by external consumers.",
-      from: { path: "^(packages/(application|domain|ui|platform|observability|analytics|testing|config)/|apps/|netlify/)" },
+      from: {
+        path: "^(packages/(application|domain|ui|platform|observability|analytics|testing|config)/|apps/|netlify/)",
+      },
       to: {
         path: "^packages/contracts/([^/]+)/src/",
         pathNot: ["^packages/contracts/[^/]+/(index|src/index)\\."],

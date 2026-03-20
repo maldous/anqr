@@ -1,38 +1,100 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": [
-    "src/main.tsx",
-    "scripts/**/*.{js,mjs,ts}",
-    "tools/**/*.ts",
-    "netlify/functions/**/*.{ts,mts}",
-    "netlify/edge-functions/**/*.{ts,mts}",
-    "packages/**/src/index.ts",
-    "apps/**/src/main.{ts,tsx}"
+  "ignoreWorkspaces": [
+    "apps/api",
+    "apps/mobile",
+    "packages/application/gallery",
+    "packages/application/monetization",
+    "packages/application/onboarding",
+    "packages/analytics/ga4",
+    "packages/config/build",
+    "packages/config/depcruise",
+    "packages/config/eslint",
+    "packages/config/tsconfig",
+    "packages/testing/contracts",
+    "packages/testing/fakes",
+    "packages/testing/fixtures",
+    "packages/testing/parity",
+    "packages/testing/playwright",
+    "packages/ui/design-tokens",
+    "packages/ui/mobile"
   ],
-  "project": ["src/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
-  "workspaces": {
-    "apps/*": {
-      "entry": ["src/main.{ts,tsx}", "src/index.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx}"]
-    },
-    "packages/*/*": {
-      "entry": ["src/index.{ts,tsx}"],
-      "project": ["src/**/*.{ts,tsx}"]
-    }
-  },
-  "ignore": ["**/*.generated.*", "**/*.d.ts"],
   "ignoreDependencies": [
     "@capacitor/android",
-    "@capacitor/ios",
     "@capacitor/cli",
-    "autoprefixer",
-    "lefthook",
+    "@capacitor/ios",
     "appium",
     "appium-uiautomator2-driver",
-    "appium-xcuitest-driver"
+    "appium-xcuitest-driver",
+    "autoprefixer",
+    "lefthook"
   ],
-  "paths": {
-    "@/*": ["./src/*"]
+  "ignoreBinaries": ["oxlint.json", "sonar-scanner"],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/**/*.{js,mjs,ts}",
+        "netlify/functions/**/*.ts",
+        "netlify/edge-functions/**/*.ts",
+        "apps/web/src/boot/main.tsx",
+        "apps/web/src/index.ts",
+        "packages/**/src/index.ts",
+        "packages/**/src/*/index.ts"
+      ],
+      "project": [
+        "scripts/**/*.{js,mjs,ts}",
+        "netlify/**/*.{ts,mts}",
+        "apps/web/src/**/*.{ts,tsx}",
+        "packages/**/*.{ts,tsx}"
+      ],
+      "paths": {
+        "@/analytics/*": ["packages/analytics/*/src/index.ts", "packages/analytics/*/src/*"],
+        "@/application/*": ["packages/application/*/src/index.ts", "packages/application/*/src/*"],
+        "@/contracts/*": ["packages/contracts/*/src/index.ts", "packages/contracts/*/src/*"],
+        "@/domain/*": ["packages/domain/*/src/index.ts", "packages/domain/*/src/*"],
+        "@/platform/*": ["packages/platform/*/src/index.ts", "packages/platform/*/src/*"],
+        "@/ui/*": ["packages/ui/*/src/index.ts", "packages/ui/*/src/*"],
+        "@/infra/*": [
+          "packages/observability/*/src/index.ts",
+          "packages/observability/*/src/*",
+          "packages/ui/web/src/*"
+        ],
+        "@/lib/*": [
+          "apps/web/src/lib/*",
+          "packages/observability/logging/src/*",
+          "packages/ui/web/src/*",
+          "packages/domain/render/src/*"
+        ],
+        "@/*": ["src/*"]
+      },
+      "ignore": [
+        "src/**",
+        "apps/android/**",
+        "apps/ios/**",
+        "apps/web/src/content/gallery/**",
+        "apps/web/src/i18n/locales/**",
+        "apps/web/src/i18n/static/**",
+        "packages/application/gallery/**",
+        "packages/application/monetization/**",
+        "packages/application/onboarding/**",
+        "packages/analytics/ga4/**",
+        "packages/config/**",
+        "packages/testing/**",
+        "packages/ui/design-tokens/**",
+        "packages/ui/mobile/**",
+        "**/*.d.ts",
+        "**/*.generated.*"
+      ]
+    },
+    "apps/web": {
+      "entry": ["src/boot/main.tsx", "src/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": ["src/content/gallery/**", "src/i18n/locales/**", "src/i18n/static/**"]
+    },
+    "packages/*/*": {
+      "entry": ["src/index.{ts,tsx}", "src/*/index.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    }
   },
   "vitest": {
     "config": ["vitest.config.ts"],

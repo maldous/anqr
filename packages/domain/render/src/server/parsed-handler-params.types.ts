@@ -24,6 +24,7 @@ export interface ParsedHandlerParams {
   animationReverse: boolean;
   animationReverse2: boolean;
   animationSeed: number;
+  animationSeed2: number;
   animationTarget: AnimationTarget;
   animationTarget2: AnimationTarget;
   animationTemporalDither: AnimationTemporalDitherMode;
@@ -33,6 +34,7 @@ export interface ParsedHandlerParams {
   ec: ECCLevel;
   maskPattern: "auto" | number;
   outputFormat: OutputFormat;
+  gifDisposalCode: number;
   outputHeight: number;
   outputWidth: number;
   overlayMode?: string;

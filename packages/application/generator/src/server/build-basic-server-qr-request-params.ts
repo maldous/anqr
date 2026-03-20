@@ -1,7 +1,9 @@
 import type { ServerQRRequestParams } from "./server-qr-request-params.types";
 import type { BasicServerQRRequest } from "./basic-server-qr-request.types";
 
-export function buildBasicServerQRRequestParams(input: BasicServerQRRequest): ServerQRRequestParams {
+export function buildBasicServerQRRequestParams(
+  input: BasicServerQRRequest,
+): ServerQRRequestParams {
   const data = input.data;
   const size = input.size ?? 400;
   const ec = input.errorCorrection ?? "H";
@@ -123,15 +125,15 @@ export function buildBasicServerQRRequestParams(input: BasicServerQRRequest): Se
     animationBounce: false,
     animationReverse: false,
     animationColorCycle: false,
-    animationTarget: "data",
-    animationWaveAxis: "horizontal",
+    animationTarget: "result",
+    animationWaveAxis: "y",
     animationBounce2: false,
     animationReverse2: false,
     animationColorCycle2: false,
-    animationTarget2: "data",
-    animationWaveAxis2: "horizontal",
-    animationInterpolate: "linear",
-    animationTemporalDither: "none",
+    animationTarget2: "result",
+    animationWaveAxis2: "x",
+    animationInterpolate: "none",
+    animationTemporalDither: "off",
     animationModuleJitter: 0,
     animationFrames: 30,
     animationSpeed: 1,

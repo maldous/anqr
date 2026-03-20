@@ -11,7 +11,9 @@ export async function handler(request: Request): Promise<Response> {
   }
 
   const url = new URL(request.url);
-  const parsedQuery = qrApiContract.generateQR.query.safeParse(Object.fromEntries(url.searchParams.entries()));
+  const parsedQuery = qrApiContract.generateQR.query.safeParse(
+    Object.fromEntries(url.searchParams.entries()),
+  );
   if (!parsedQuery.success) {
     return Response.json(createErrorBody("Invalid query parameters", 400, "INVALID_QUERY"), {
       status: 400,
@@ -20,7 +22,10 @@ export async function handler(request: Request): Promise<Response> {
 
   try {
     const format = parsedQuery.data.format ?? "png";
-    const { outputBuffer, contentType } = await renderBasicServerQROutput(parsedQuery.data, nodeCanvasFactory);
+    const { outputBuffer, contentType } = await renderBasicServerQROutput(
+      parsedQuery.data,
+      nodeCanvasFactory as unknown as Parameters<typeof renderBasicServerQROutput>[1],
+    );
     const responseBody = qrApiSuccessSchema.parse({
       ok: true,
       data: {

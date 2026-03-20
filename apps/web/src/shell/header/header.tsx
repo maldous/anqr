@@ -3,24 +3,28 @@ import { trackEvent } from "@/infra/telemetry/zaraz";
 import { copyToClipboard } from "@/platform/browser";
 import { prepareInterstitial } from "@/platform/native";
 import {
-    Button, Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue, Tabs, TabsList, TabsTrigger
+  Button,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tabs,
+  TabsList,
+  TabsTrigger,
 } from "@/ui/web";
 import { Capacitor } from "@capacitor/core";
 import {
-    Check,
-    ChevronLeft,
-    ChevronRight,
-    Download,
-    Menu,
-    Moon,
-    PanelLeft,
-    Play,
-    Share2,
-    Sun,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Menu,
+  Moon,
+  PanelLeft,
+  Play,
+  Share2,
+  Sun,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
