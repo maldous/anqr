@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-20T23:27:36.353Z",
+  "updatedAt": "2026-03-20T23:32:37.585Z",
   "hostId": "foo",
   "issues": {
     "ANQ-661": {
@@ -36,12 +36,46 @@
         }
       ],
       "notes": {}
+    },
+    "ANQ-376": {
+      "issueIdentifier": "ANQ-376",
+      "source": null,
+      "human_only": false,
+      "retry_count": 1,
+      "retry_exhausted": false,
+      "cooldown_until": null,
+      "blocked_reason": null,
+      "last_failure_reason": null,
+      "last_failure_signature": null,
+      "last_run_id": "run-1774049547604-4179869",
+      "last_attempt_at": "2026-03-20T23:32:35.193Z",
+      "external_keys": [],
+      "lease": {
+        "owner": "runner",
+        "nonce": "run-1774049547604-4179869:ANQ-376:1774049555193",
+        "run_id": "run-1774049547604-4179869",
+        "acquired_at": "2026-03-20T23:32:35.193Z",
+        "heartbeat_at": "2026-03-20T23:32:37.585Z",
+        "expires_at": "2026-03-20T23:52:37.585Z"
+      },
+      "transitions": [
+        {
+          "at": "2026-03-20T23:32:36.015Z",
+          "host": "foo",
+          "actor": "runner",
+          "reason": "start_attempt",
+          "from": "Todo",
+          "to": "In Progress",
+          "runId": "run-1774049547604-4179869"
+        }
+      ],
+      "notes": {}
     }
   },
   "global": {
-    "baseline.head": "642e5a20765ea40a745382a28ec2525dd3337743",
+    "baseline.head": "2fc88d877df7cf49eec4961cc766046259684d92",
     "baseline.manifestHash": "05e6c9c50a5fc9059eb4c40f5f4193cfbe1e12ffd0e4924639763358c0cfbcd5",
     "baseline.pass": true,
-    "baseline.checkedAt": "2026-03-20T23:27:34.418Z"
+    "baseline.checkedAt": "2026-03-20T23:32:34.479Z"
   }
 }
