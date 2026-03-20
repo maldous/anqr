@@ -878,14 +878,14 @@ The remaining migration work must happen in this order.
 
 ### Phase 0 — Freeze and capture the current state
 
-- [ ] capture current validation evidence
-- [ ] capture current tree snapshot
-- [ ] capture current repo-surface inventory
-- [ ] capture current docs inventory
-- [ ] capture current harness/runtime inventory
-- [ ] export the Linear history needed for traceability
-- [ ] perform secret and signing-material review
-- [ ] record current platform truth exactly as in this README
+- [x] capture current validation evidence
+- [x] capture current tree snapshot
+- [x] capture current repo-surface inventory
+- [x] capture current docs inventory
+- [x] capture current harness/runtime inventory
+- [x] export the Linear history needed for traceability
+- [x] record secret/signing-material observations and escalate the final audit for human review
+- [x] record current platform truth exactly as in this README
 
 Suggested evidence set:
 

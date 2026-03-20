@@ -28,7 +28,7 @@ QUALITY_MOBILE_TARGETS := \
   symphony-run symphony-run-dry-run symphony-status \
   email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
   quality quality-fast quality-release quality-harness quality-mobile quality-full \
-  install hooks clean zip \
+  install hooks bootstrap clean zip \
   typecheck-all lint-all depcruise-all contracts-check verify-migration
 
 help: ## Show grouped Makefile targets
@@ -201,6 +201,41 @@ install: ## Install dependencies
 
 hooks: ## Install git hooks
 	npm run prepare
+
+bootstrap: ## Extract bootstrap.zip secrets into local working locations
+	@test -f bootstrap.zip || (echo "bootstrap.zip not found"; exit 1)
+	@echo "Extracting bootstrap secrets..."
+	@rm -rf /tmp/anqr-bootstrap
+	@unzip -o -P anqr bootstrap.zip -d /tmp/anqr-bootstrap >/dev/null
+	@cp /tmp/anqr-bootstrap/.env .env
+	@mkdir -p ~/.ssh
+	@chmod 700 ~/.ssh
+	@cp /tmp/anqr-bootstrap/ssh/* ~/.ssh/
+	@chmod 600 ~/.ssh/id_ed25519 ~/.ssh/id_ed25519_github_private ~/.ssh/id_ed25519_public
+	@chmod 644 ~/.ssh/*.pub ~/.ssh/config
+	@mkdir -p ~/.config/symphony
+	@cp /tmp/anqr-bootstrap/harness/symphony.env ~/.config/symphony/anqr.env
+	@mkdir -p ~/.config/systemd/user
+	@cp /tmp/anqr-bootstrap/harness/ops.env ~/.config/systemd/user/anqr-ops.env
+	@cp /tmp/anqr-bootstrap/signing/play-store-key.json . 2>/dev/null || true
+	@cp /tmp/anqr-bootstrap/signing/AuthKey_*.p8 . 2>/dev/null || true
+	@mkdir -p android/app
+	@cp /tmp/anqr-bootstrap/signing/release-key.keystore android/app/ 2>/dev/null || true
+	@cp /tmp/anqr-bootstrap/email/.mbsyncrc ~/ 2>/dev/null || true
+	@cp /tmp/anqr-bootstrap/email/.msmtprc ~/ 2>/dev/null || true
+	@chmod 600 ~/.msmtprc 2>/dev/null || true
+	@cp /tmp/anqr-bootstrap/email/.notmuch-config ~/ 2>/dev/null || true
+	@rm -rf /tmp/anqr-bootstrap
+	@echo ""
+	@echo "Bootstrap complete."
+	@echo "  Project: .env installed"
+	@echo "  SSH: keys installed to ~/.ssh/"
+	@echo "  Harness: ~/.config/symphony/anqr.env"
+	@echo "  Systemd: ~/.config/systemd/user/anqr-ops.env"
+	@echo "  Signing: play-store-key.json, AuthKey, release-key.keystore"
+	@echo "  Email: ~/.mbsyncrc, ~/.msmtprc, ~/.notmuch-config"
+	@echo ""
+	@echo "Load env vars with: set -a; source .env; set +a"
 
 clean: ## Remove build and cache artifacts
 	rm -rf dist coverage node_modules/.cache

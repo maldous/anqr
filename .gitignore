@@ -5,3 +5,6 @@ test-results/
 .jscpd-report/
 .jscpd-low-report/
 sonar-report.json
+.env
+play-store-key.json
+AuthKey_*.p8

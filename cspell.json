@@ -24,7 +24,9 @@
     ".git",
     "src/i18n/**",
     "apps/web/src/i18n/**",
-    "apps/web/src/content/gallery/**"
+    "apps/web/src/content/gallery/**",
+    "reports/linear-history-export.json",
+    "reports/phase-0-evidence.md"
   ],
   "words": [
     "CODEBUFF",
