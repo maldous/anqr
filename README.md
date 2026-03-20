@@ -282,7 +282,7 @@ netlify/*               canonical delivery surface           current API/MCP per
 scripts/ops/*           canonical harness/ops surface        operationally canonical, outside depcruise app/package claim
 services/systemd/*      canonical harness runtime surface    operationally canonical, outside depcruise app/package claim
 public/*                canonical static/public surface      assets and public generated artifacts only
-docs/*                  canonical knowledge surface target   useful today, disordered, must be rebooted cleanly
+docs/*                  canonical knowledge surface          active doctrine and reference surface
 src/*                   transitional residue                 never regains architecture authority
 apps/api                reserved/deferred                   not a claimed runtime for 1.0 foundation
 apps/mobile             partially real transitional          shared mobile shell candidate
@@ -292,7 +292,7 @@ android/*               partially real canonical candidate   preferred native An
 ios/*                   partially real canonical candidate   preferred native iOS candidate if mobile stays in scope
 tests/*                 intentional rebuild surface          do not import legacy wholesale
 reports/*               generated evidence/output           not a source-of-truth authoring surface
-migration/*             active only until cutoff            becomes archive-only after Phase 1 exit
+migration/*             archive-only historical context      preserved for history, no longer live doctrine
 ```
 
 ### 2.3 Architecture gates vs operational canon
@@ -340,17 +340,17 @@ That is a **target decision for convergence**, not a claim that the convergence 
 ```text
 README.md                         exists now and is canonical bootstrap control surface
 MCP-MIGRATION.md                  exists now and is the preserved migration ledger
-docs/README.md                    exists now but must be rewritten
+docs/README.md                    exists now and is canonical docs entrypoint
 docs/standards/*                  exists now and should largely survive
 docs/discovery/*                  exists now and should be reviewed and rewritten as needed
 docs/program/*                    exists now and should be reviewed and rewritten as needed
 docs/workflows/*                  exists now and should be reviewed and rewritten as needed
 docs/api/*                        exists now and should be reviewed/generated as needed
 docs/adr/*                        exists now and should survive where still valid
-migration/*                       exists now but is temporary active doctrine only until cutoff
+migration/*                       exists now as archive-only historical context
 ```
 
-### 3.2 Missing today but required during foundation
+### 3.2 Foundation bootstrap surfaces now present
 
 ```text
 AGENTS.md
@@ -906,27 +906,27 @@ npm run symphony:status
 
 This is the highest-priority foundation work.
 
-- [ ] keep `README.md` as root bootstrap handbook
-- [ ] create `AGENTS.md`
-- [ ] create optional `CLAUDE.md` thin shim
-- [ ] create `.codex/*` thin bootstrap
-- [ ] create `CODEBUFF.md` thin bootstrap
-- [ ] rewrite `docs/README.md`
-- [ ] create `docs/harness/00-index.md`
-- [ ] create `docs/harness/01-operating-model.md`
-- [ ] create `docs/harness/02-runtime-and-services.md`
-- [ ] create `docs/harness/03-workspace-governance.md`
-- [ ] create `docs/harness/04-provider-routing.md`
-- [ ] create `docs/harness/05-quality-gates.md`
-- [ ] create `docs/harness/06-evidence-and-reporting.md`
-- [ ] create `docs/harness/07-secrets-redaction-and-operator-access.md`
-- [ ] create `docs/harness/08-runbooks.md`
-- [ ] create `docs/harness/09-archive-policy.md`
-- [ ] create `docs/archive/README.md`
-- [ ] create `docs/generated/README.md`
-- [ ] create or rewrite `docs/program/01-anqr-1.0-definition.md`
-- [ ] cross-link all canonical docs
-- [ ] mark `migration/*` archive-only once the cutoff rule is satisfied
+- [x] keep `README.md` as root bootstrap handbook
+- [x] create `AGENTS.md`
+- [x] create optional `CLAUDE.md` thin shim
+- [x] create `.codex/*` thin bootstrap
+- [x] create `CODEBUFF.md` thin bootstrap
+- [x] rewrite `docs/README.md`
+- [x] create `docs/harness/00-index.md`
+- [x] create `docs/harness/01-operating-model.md`
+- [x] create `docs/harness/02-runtime-and-services.md`
+- [x] create `docs/harness/03-workspace-governance.md`
+- [x] create `docs/harness/04-provider-routing.md`
+- [x] create `docs/harness/05-quality-gates.md`
+- [x] create `docs/harness/06-evidence-and-reporting.md`
+- [x] create `docs/harness/07-secrets-redaction-and-operator-access.md`
+- [x] create `docs/harness/08-runbooks.md`
+- [x] create `docs/harness/09-archive-policy.md`
+- [x] create `docs/archive/README.md`
+- [x] create `docs/generated/README.md`
+- [x] create or rewrite `docs/program/01-anqr-1.0-definition.md`
+- [x] cross-link all canonical docs
+- [x] mark `migration/*` archive-only once the cutoff rule is satisfied
 
 Phase 1 exit criteria:
 
@@ -1282,14 +1282,12 @@ Use this exact structure.
 
 This is the correct immediate order from here.
 
-1. finish the documentation reboot
-2. create `AGENTS.md` and the thin tool bootstraps
-3. create `docs/harness/*`
-4. export/preserve the required Linear history
-5. create the fresh Linear workspace using the hybrid model
-6. classify and document the harness runtime
-7. only then continue current-platform product work
-8. resolve the mobile claim truthfully before any 1.0 launch claim expansion
+1. create the fresh Linear workspace using the hybrid model
+2. classify and operationalize the harness runtime
+3. continue current-platform product work under the new doctrine surface
+4. complete API/MCP perimeter and deployment hardening
+5. rebuild launch-grade verification around the current claim
+6. resolve the mobile claim truthfully before any 1.0 launch claim expansion
 
 ---
 

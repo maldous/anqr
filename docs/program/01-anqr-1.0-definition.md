@@ -1,203 +1,93 @@
 # ANQR 1.0 Definition
 
+This is the single canonical launch-scope definition for ANQR 1.0.
+
+## Current truthful claim
+
+The currently claimable 1.0 surface is:
+
+- `apps/web`
+- `netlify/*` for public HTTP QR API and MCP
+
+Not currently claimable:
+
+- `apps/api`
+- Android
+- iPhone
+
+Mobile may later be added to the 1.0 claim, but it is not part of the truthful launch claim today.
+
 ## Objective
 
-Define the first maintained public architecture release.
+Ship the first maintained public ANQR release on the new package architecture, with:
 
----
+- strict package-boundary governance
+- explicit contracts
+- truthful public web and Netlify delivery
+- a stable engineering/harness operating model
 
-# Required launch platforms
+## Required launch capabilities for the current claim
 
-### Web
+- QR generation
+  - standard QR
+  - advanced styling where currently supported
+  - animation and overlays through the current guarded server/runtime surface
+- QR analysis
+  - structural and scannability diagnostics in the current product surface
+- sharing and export
+  - current web and Netlify-supported sharing/export flows
+- public API
+  - documented HTTP QR generation surface
+- MCP
+  - public anonymous/default posture with perimeter controls
 
-- Must function across all major modern browsers.
-- Must support full QR generation, analysis, gallery, sharing, and export capabilities.
-- Must act as the primary public interface for ANQR.
+## Required supporting capabilities
 
-### API
+- OpenAPI and MCP documentation kept in sync with the actual public surfaces
+- observability and analytics preserved where still in scope
+- support contact and launch/public information kept truthful
 
-- Public API hosted on Netlify.
-- Currently unauthenticated and not rate limited.
-- Intended to support enterprise integrations in the future.
-- Must expose QR generation and related services reliably.
+## Deferred or conditional capabilities
 
-### Android
+- mobile launch
+- authenticated MCP/API posture
+- enterprise-only integrations
+- any future `apps/api` promotion
+- testing expansion beyond the current intentional rebuild strategy
 
-- Native Android application must support the full generation and analysis pipeline.
-- Must perform reliably across a wide range of Android devices, including lower-capability hardware.
+## Non-goals for the current claim
 
-### iPhone
+- pretending `apps/api` is live
+- claiming Android or iPhone launch-readiness because roots exist
+- copying legacy structures wholesale without current architectural ownership
 
-- Native iOS application must support the same core capabilities as Android.
-- Rendering results must be consistent with the web platform and API.
+## Launch bar
 
-### Other
+### Functional
 
-- No additional platforms are required for the 1.0 launch.
+- current web and Netlify QR generation works truthfully
+- API and MCP surfaces match their contracts and docs
+- current in-scope share/export/analyze flows remain intact
 
----
+### Quality
 
-# Required launch capabilities
+- required current-platform gates are green
+- package architecture remains enforced
+- contracts remain explicit and clean
 
-### QR generation
+### Reliability
 
-- Core QR generation engine must be complete and stable.
-- Must support:
-  - standard QR codes
-  - animated QR codes
-  - image overlays
-  - advanced customization
-- Generation logic must behave consistently across platforms.
+- output is stable and scannable for the supported current-platform surface
+- guarded remote asset handling remains enforced for overlays and related fetches
 
-### QR analysis
+### Performance
 
-- Ability to analyze QR codes for scannability and structure.
-- Must support validation and diagnostics.
-- Significant functionality already implemented.
+- web and Netlify delivery remain within current visible performance budgets
+- no unbounded regressions are introduced in core generation or delivery
 
-### Gallery / showcase
+### Documentation
 
-- System automatically generates a gallery used for demonstration and testing.
-- Gallery serves both marketing and validation purposes.
-
-### Sharing / export
-
-- Users must be able to export generated QR codes.
-- Must integrate with major sharing targets including social media platforms.
-
-### Monetization
-
-- Primary monetization model is advertising.
-- AdMob integration exists.
-- Google AdWords/Ads may be introduced once approval hurdles are resolved.
-
-### Analytics
-
-- Google Analytics and other third-party analytics platforms are integrated.
-- Analytics must track usage, performance, and platform behavior.
-
-### Observability
-
-- Sentry is used for runtime monitoring and error tracking.
-- Additional analytics platforms may supplement monitoring.
-
-### Support / contact path
-
-- Support contact must always be available via email.
-- Primary contact channel: `email@anqr.link`
-
----
-
-# Explicit non-goals
-
-### Not in 1.0
-
-No explicit exclusions have been defined at this stage.
-
-The primary focus of 1.0 is completing the core platform and establishing operational stability.
-
-### Deferred until later
-
-Future enterprise features may be introduced later, including:
-
-- enterprise authentication
-- API rate limiting
-- advanced enterprise integrations
-
-### Experimental only
-
-Experimental work may occur in areas such as:
-
-- advanced AI-assisted QR rendering
-- experimental overlay or animation techniques
-- new rendering optimizations
-
-These are not required for the 1.0 milestone.
-
----
-
-# Launch bar
-
-## Functional launch bar
-
-- Core QR generation functionality must be complete.
-- QR analysis must be operational.
-- Sharing and export must function across supported platforms.
-- Gallery generation must operate automatically.
-- The system should achieve **100% test coverage where possible**.
-
-Code structure requirements:
-
-- Extremely low cognitive complexity.
-- One AST type per file architecture.
-- Sonar checks passing except for limited maintainability warnings.
-
-Additional code quality tooling includes:
-
-- Sonar
-- ZenGrip
-- DeepSource
-
-Third-party analytics and observability services will be used to verify operational correctness.
-
----
-
-## Quality launch bar
-
-- QR codes generated by:
-  - web
-  - API
-  - Android
-  - iPhone
-
-must render **identically**.
-
-There must be no platform-specific differences in QR generation results.
-
----
-
-## Performance launch bar
-
-Performance requirements include:
-
-- Efficient QR rendering on mobile devices.
-- Acceptable rendering speed on both Android and iPhone devices.
-- Reasonable performance on lower-capability devices.
-
-QR generation must not take excessive time to render.
-
----
-
-## Reliability launch bar
-
-The system must ensure:
-
-- deterministic QR generation results
-- stable output over time
-- accurate encoding of payload data
-
-Generated QR codes must be readable by the majority of mobile scanning applications.
-
-The platform should also provide options that:
-
-- enforce high scannability
-- validate overlay and animation safety
-- ensure compatibility across mobile devices.
-
----
-
-## UX launch bar
-
-User experience goals include:
-
-- modern 2026 design patterns
-- intuitive interface across devices
-- device-appropriate UX behavior
-
-UX evaluation may include:
-
-- A/B testing
-- user feedback
-- iterative refinement
-
-The platform should feel native and appropriate on both desktop and mobile environments.
+- launch truth lives in one place
+- harness doctrine is documented
+- evidence expectations are documented
+- archive vs live doctrine is explicit
