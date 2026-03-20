@@ -958,7 +958,7 @@ Phase 1 exit criteria:
 - [x] document env sources and redaction rules
 - [x] document degraded-mode behavior
 - [x] document port expectations truthfully
-- [ ] decide what remains blocking versus advisory
+- [x] decide what remains blocking versus advisory
 
 Required inventory to classify:
 

@@ -22,7 +22,7 @@ export const STALE_THRESHOLD_MS = 180 * 60 * 1000; // 180 min (1.5x max executio
 export const TASK_TIMEOUT_MS = 125 * 60 * 1000; // 125 min (just past max execution)
 
 export const TITLE_PREFIX = "Harness";
-export const REQUIRED_LABEL_IDS = [LABELS.reliability];
+export const REQUIRED_LABEL_IDS = [LABELS.harness];
 
 export const QUEUE_STATES = {
   feedSource: ["Backlog"],

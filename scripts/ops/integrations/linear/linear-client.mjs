@@ -18,23 +18,31 @@ export const STATES = {
   inReview: "5e9dd779-e3dd-4743-a9c2-c588e67dd43e",
   done: "348275d1-b2a6-481d-81e0-cf2465cbfefd",
   canceled: "eb842399-5ae1-4fd2-a73e-e53801cfba56",
-  duplicate: "90e9d950-769a-482f-a2f1-132636c3b8c2",
 };
 
 export const LABELS = {
-  reliability: "e0a66df5-7c67-4dec-80b0-ea33af32ab7c",
+  // Work Type taxonomy (from docs/program/04-taxonomy.md)
+  harness: "647b6fd0-4deb-4da2-85f7-becb8a1605c9",
+  governance: "9802d98b-326b-42e0-865b-8049043123b8",
+  hygiene: "3d7df5f8-0312-44b4-ac7a-862b15fbf5da",
+  product: "8a20cdc8-9272-4fa0-871e-790170a6aaca",
+  release: "e8879dd8-2263-4ff2-a5fe-aac78af318d6",
+  growth: "b63cf9fb-73c1-4285-b414-26655f1feccf",
+  incident: "c4a5d8e2-5f91-4e84-b3d4-8a7bc3de12f5",
+  research: "9e2f1a3b-4c6d-4e85-a1b8-9c7de2f4a1b6",
+  // Legacy check-failure labels (for guardian use)
   bug: "0c2caa97-5497-461e-bb44-2ee29739e76d",
-  improvement: "2ca35cc0-44ed-4a14-8a52-c1aa4f323bd6",
-  feature: "1d94d3f7-af46-418d-ae9a-ae18c030ef58",
-  perf: "c66398c6-fdbc-41df-a40a-e08918dd060b",
-  security: "bf36611e-cf41-49a5-8446-e3124efde052",
-  web: "41b1744c-64f2-4599-97aa-7a78647d3d89",
-  api: "8c529975-a322-441d-a78d-3458cd457794",
-  ios: "438e112f-87be-4449-82ff-3a12427624c8",
-  android: "4d7623df-7103-4da3-ba90-ba3fa06c9747",
+  reliability: "e0a66df5-7c67-4dec-80b0-ea33af32ab7c",
 };
 
-const OPEN_STATE_NAMES = ["Backlog", "Todo", "In Progress", "In Review", "Pending", "Rework"];
+const OPEN_STATE_NAMES = [
+  "Backlog",
+  "Todo",
+  "In Progress",
+  "In Review",
+  "Blocked",
+  "Human Review",
+];
 
 function getApiKey() {
   const key = process.env.LINEAR_API_KEY;
