@@ -950,14 +950,14 @@ Phase 1 exit criteria:
 
 ### Phase 3 — Classify and stabilize the harness runtime
 
-- [ ] classify all `scripts/ops/*` surfaces as required / optional / archival
-- [ ] classify all `services/systemd/*` units as required / optional / archival
-- [ ] document the maintained control flow:
+- [x] classify all `scripts/ops/*` surfaces as required / optional / archival
+- [x] classify all `services/systemd/*` units as required / optional / archival
+- [x] document the maintained control flow:
   - harness-report -> guardian -> queue control -> runner -> notify
-- [ ] document provider routing and fallback
-- [ ] document env sources and redaction rules
-- [ ] document degraded-mode behavior
-- [ ] document port expectations truthfully
+- [x] document provider routing and fallback
+- [x] document env sources and redaction rules
+- [x] document degraded-mode behavior
+- [x] document port expectations truthfully
 - [ ] decide what remains blocking versus advisory
 
 Required inventory to classify:
