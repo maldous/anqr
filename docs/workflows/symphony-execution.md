@@ -197,7 +197,7 @@ SonarQube static analysis is integrated into both the nightly pipeline and the S
 
 ### Per-Finding Issue Sync
 
-The shared module `scripts/ops/lib/sonar-linear-sync.mjs` provides `syncSonarToLinear()` which:
+The canonical module `scripts/ops/integrations/sonar/sonar-linear-sync.mjs` provides `syncSonarToLinear()` which:
 
 1. **Fetches** all open SonarQube issues (paginated, via `/api/issues/search`)
 2. **Fetches** all open `[Sonar]` Linear issues (via GraphQL)
@@ -454,5 +454,5 @@ The guardian is deterministic, not AI-driven:
 | `services/systemd/anqr-email-ingest.service`    | systemd email ingest service                                | ANQ-377           |
 | `services/systemd/anqr-email-ingest.timer`      | systemd email ingest timer (5min)                           | ANQ-377           |
 | `services/systemd/anqr-ops.env`                 | Environment template for secrets                            | ANQ-367 (Phase 6) |
-| `scripts/ops/lib/sonar-linear-sync.mjs`         | SonarQube ↔ Linear per-finding sync (shared module)         | ANQ-378           |
-| `scripts/ops/sonar-linear-audit.mjs`            | Nightly sonar audit (blocking, P1, resolve/promote/requeue) | ANQ-378           |
+| `scripts/ops/integrations/sonar/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (canonical module) | ANQ-378 |
+| `scripts/ops/sonar-linear-audit.mjs`            | Nightly sonar audit root compatibility shim                 | ANQ-378           |
