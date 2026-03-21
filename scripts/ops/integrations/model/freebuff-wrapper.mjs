@@ -280,15 +280,25 @@ async function main() {
     result = await runWithPty({ ...opts, task });
   }
 
-  // Write report
+  // Write report - ensure output is a properly formatted string
+  let outputStr = "";
+  if (result.output) {
+    if (typeof result.output === "string") {
+      outputStr = result.output;
+    } else if (typeof result.output === "object") {
+      outputStr = JSON.stringify(result.output, null, 2);
+    } else {
+      outputStr = String(result.output);
+    }
+  }
   const report = {
     timestamp: new Date().toISOString(),
     task: task.slice(0, 500),
     project: opts.project,
     exitCode: result.exitCode,
     method: result.method || "unknown",
-    outputLength: result.output?.length || 0,
-    output: result.output?.slice(-5000),
+    outputLength: outputStr.length,
+    output: outputStr.slice(-5000),
     error: result.error,
   };
 
@@ -299,7 +309,6 @@ async function main() {
 
   if (result.exitCode === 0) {
     console.log("[freebuff] Completed successfully");
-    const outputStr = result.output ? String(result.output) : "";
     console.log("[freebuff] Output:", outputStr.slice(0, 500) || "(no output)");
     process.exit(0);
   } else {
