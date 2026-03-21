@@ -186,15 +186,16 @@ async function runWithPty(opts) {
   const inputFile = path.join(tmpDir, `freebuff-input-${Date.now()}.txt`);
   const outputFile = path.join(tmpDir, `freebuff-output-${Date.now()}.log`);
 
-  // Write input to file (file redirection works with script TTY)
+  // Write input to file
   fs.writeFileSync(inputFile, prompt + "\n");
 
-  // Use script command with file redirection (< inputFile)
-  // This properly sends EOF when the file ends
-  const scriptCmd = `script -q -c 'freebuff --cwd "${project}"' ${outputFile} < ${inputFile}`;
+  // Use the shell script wrapper - this works better than direct spawn
+  // Note: __dirname here is PROJECT_ROOT due to path resolution, so use the correct path
+  const scriptDir = path.join(PROJECT_ROOT, "scripts", "ops", "integrations", "model");
+  const scriptPath = path.join(scriptDir, "freebuff-pty.sh");
 
   return new Promise((resolve) => {
-    const child = spawn("bash", ["-c", scriptCmd], {
+    const child = spawn(scriptPath, [inputFile, outputFile, project], {
       cwd: project,
       stdio: ["pipe", "pipe", "pipe"],
     });
