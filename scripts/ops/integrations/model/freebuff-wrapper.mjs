@@ -231,7 +231,7 @@ async function runWithCodebuff(opts) {
     const ptyResult = await runWithPty(opts);
     return {
       exitCode: ptyResult.exitCode,
-      output: ptyResult.stdout || "",
+      output: ptyResult.stdout || ptyResult.output || "",
       error: ptyResult.stderr,
       method: "pty",
     };
@@ -299,7 +299,7 @@ async function main() {
 
   if (result.exitCode === 0) {
     console.log("[freebuff] Completed successfully");
-    const outputStr = typeof result.output === "string" ? result.output : JSON.stringify(result.output);
+    const outputStr = result.output ? String(result.output) : "";
     console.log("[freebuff] Output:", outputStr.slice(0, 500) || "(no output)");
     process.exit(0);
   } else {
