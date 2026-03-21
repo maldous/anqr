@@ -98,6 +98,7 @@
     "@capacitor/filesystem": "^8.1.0",
     "@capacitor/ios": "^8.2.0",
     "@capacitor/splash-screen": "^8.0.0",
+    "@codebuff/sdk": "^0.10.7",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@napi-rs/canvas": "^0.1.90",
     "@netlify/blobs": "^10.7.0",

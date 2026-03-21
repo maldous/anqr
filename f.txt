@@ -1,0 +1,80 @@
+# Freebuff Integration Summary
+
+## What is Freebuff?
+- Freebuff (https://github.com/CodebuffAI/codebuff/tree/main/freebuff) is an AI coding agent from Codebuff
+- It's an interactive terminal-based coding assistant
+- Version installed: v0.0.22
+- Uses internal model selection (MiniMax M2.5 for coding, Gemini for research)
+
+## Goal
+Add freebuff as an AI agent to use in the ANQR harness for automated code execution tasks.
+
+## What Was Tried
+
+### 1. Research Phase
+- Investigated freebuff's documentation and CLI options
+- Checked freebuff --help for non-interactive modes
+- Examined the freebuff binary to understand its interface
+
+### 2. Wrapper Script Creation
+Created `scripts/ops/integrations/model/freebuff-wrapper.mjs` with:
+- Command-line argument parsing (--task, --issue-id, --project, --timeout)
+- Freebuff availability checking
+- Report generation to `reports/freebuff/`
+- StdIn-based task submission approach
+
+### 3. Testing Approach
+- Ran wrapper with simple task: "List the files in the src directory"
+- Freebuff started and displayed banner, then timed out after 45 seconds
+- Checked generated report - showed freebuff started but stdin was never consumed
+
+### 4. Debugging
+- Tested freebuff with piped input: `echo "list files" | freebuff` 
+- Verified freebuff binary has no --help output
+- Examined freebuff binary structure
+
+## Key Learning
+
+### Critical Finding: Freebuff is purely interactive
+- Freebuff requires a TTY (pseudo-terminal) to function
+- It has NO non-interactive mode or CLI flags for automated task submission
+- The stdin pipe approach does NOT work because freebuff reads from TTY, not stdin
+- Detection logic looking for ">" prompt in stdout never triggered
+
+### Why StdIn Approach Fails
+- Freebuff expects to be run in an interactive terminal
+- When run without a TTY (e.g., via spawn with stdio: ["pipe"]), it doesn't enter interactive mode
+- The task prompt is sent to stdin but freebuff never reads it
+
+## Current Status
+
+### Working
+- Freebuff binary is installed and reachable at /home/user/.config/manicode/freebuff
+- Wrapper script syntax is valid
+- Reports are written correctly to reports/freebuff/
+- Freebuff starts and displays initial banner
+
+### Not Working
+- Task submission via stdin - freebuff doesn't consume the task
+- Automated/non-interactive execution
+
+## Potential Solutions (Not Implemented)
+
+1. **Knowledge File Approach**: Write task to {project}/knowledge.md before running freebuff, then run freebuff manually in terminal
+
+2. **PTY Integration**: Use node-pty to create a pseudo-terminal for freebuff (requires native dependency installation)
+
+3. **Manual/Human-in-the-loop**: Use freebuff directly in terminal for harness tasks
+
+4. **Accept as Availability Checker**: Make wrapper just verify freebuff is installed, not attempt automated execution
+
+## Files Created/Modified
+
+- Created: scripts/ops/integrations/model/freebuff-wrapper.mjs
+- Modified: cspell.json (added "freebuff" and "Freebuff" to words)
+- Committed: "feat(harness): add freebuff wrapper for external AI agent integration"
+- Committed: "docs(harness): clarify freebuff wrapper limitations"
+
+## Conclusion
+
+Freebuff cannot be easily integrated into an automated harness because it lacks non-interactive execution capabilities. It's designed as a human-in-the-loop coding assistant, not an API-controllable agent. For harness use, either a different approach (PTY, knowledge files) or a different tool is needed.
