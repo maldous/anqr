@@ -396,6 +396,8 @@
     "yieldcontroller",
     "yourname",
     "youtu",
+    "freebuff",
+    "Freebuff",
     "YYYYMMDDTH"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
