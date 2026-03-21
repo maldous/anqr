@@ -4,7 +4,7 @@
  * freebuff-wrapper.mjs — Freebuff SDK wrapper for harness integration
  *
  * Uses @codebuff/sdk for programmatic AI agent execution in the harness.
- * Provides a clean API for running Codebuff agents on coding tasks.
+ * Falls back to PTY (interactive CLI) when rate limited.
  *
  * Usage:
  *   node freebuff-wrapper.mjs --task "description of task" [--project /path/to/project]
@@ -20,6 +20,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { CodebuffClient } from "@codebuff/sdk";
 
@@ -81,7 +82,21 @@ function checkSdkAvailable() {
   }
 }
 
-async function runWithCodebuff(opts) {
+function buildEnhancedPrompt(task) {
+  return [
+    task,
+    "",
+    "IMPORTANT: After completing the task, run these validations:",
+    "1. Run 'npm run typecheck' - fix any type errors",
+    "2. Run 'npm run lint' - fix any lint errors",
+    "3. Run 'npm run test' - ensure tests pass",
+    "",
+    "When done, summarize what you changed.",
+  ].join("\n");
+}
+
+// SDK-based execution
+async function runWithSdk(opts) {
   const { task, project, timeout } = opts;
   const apiKey = getApiKey();
 
@@ -90,27 +105,13 @@ async function runWithCodebuff(opts) {
     cwd: project,
   });
 
-  // Build enhanced prompt with validation instructions
-  const enhancedPrompt = [
-    task,
-    "",
-    "IMPORTANT: After completing the task, run these validations:",
-    "1. Run 'npm run typecheck' - fix any type errors",
-    "2. Run 'npm run lint' - fix any lint errors", 
-    "3. Run 'npm run test' - ensure tests pass",
-    "",
-    "When done, summarize what you changed.",
-  ].join("\n");
-
-  // Create timeout promise
+  const enhancedPrompt = buildEnhancedPrompt(task);
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error(`Timeout after ${timeout}ms`)), timeout);
   });
 
-  let events = [];
   try {
-    // Run the agent with event handling
-    events = [];
+    const events = [];
     const result = await Promise.race([
       client.run({
         agent: "codebuff/base@latest",
@@ -126,17 +127,117 @@ async function runWithCodebuff(opts) {
     return {
       exitCode: 0,
       output: result.output || "",
-      events: events.slice(-20), // Last 20 events
+      events: events.slice(-20),
       error: null,
+      method: "sdk",
     };
   } catch (err) {
+    const errStr = err.message || "";
+    // Check for rate limit - need to fallback to PTY
+    if (errStr.includes("rate_limit") || errStr.includes("429") || errStr.includes("session limit")) {
+      return { shouldFallback: true, error: err.message };
+    }
+
     return {
       exitCode: 1,
       output: "",
-      events: events.slice(-20),
+      events: [],
       error: err.message,
+      method: "sdk",
     };
   }
+}
+
+// PTY-based execution (fallback when rate limited)
+async function runWithPty(opts) {
+  const { task, project, timeout } = opts;
+
+  const prompt = buildEnhancedPrompt(task);
+  const tmpDir = "/tmp";
+  const inputFile = path.join(tmpDir, `freebuff-input-${Date.now()}.txt`);
+  const outputFile = path.join(tmpDir, `freebuff-output-${Date.now()}.log`);
+
+  fs.writeFileSync(inputFile, prompt + "\n");
+
+  // Use script command to create pseudo-TTY for freebuff
+  const scriptCmd = `script -q -c "freebuff --cwd ${project}" ${outputFile} < ${inputFile}`;
+
+  return new Promise((resolve) => {
+    const child = spawn("bash", ["-c", scriptCmd], {
+      cwd: project,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    let stderr = "";
+
+    child.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("close", (code) => {
+      let stdout = "";
+      try {
+        if (fs.existsSync(outputFile)) {
+          stdout = fs.readFileSync(outputFile, "utf-8");
+        }
+      } catch {
+        // Ignore
+      }
+
+      try {
+        fs.unlinkSync(inputFile);
+        fs.unlinkSync(outputFile);
+      } catch {
+        // Ignore
+      }
+
+      resolve({
+        exitCode: code,
+        stdout: stdout.slice(-10000),
+        stderr: stderr.slice(-5000),
+        method: "pty",
+      });
+    });
+
+    child.on("error", (err) => {
+      resolve({
+        exitCode: 1,
+        stdout: "",
+        stderr: err.message,
+        method: "pty",
+      });
+    });
+
+    setTimeout(() => {
+      child.kill("SIGTERM");
+      resolve({
+        exitCode: 124,
+        stdout: "",
+        stderr: `Timeout after ${timeout}ms`,
+        method: "pty",
+      });
+    }, timeout);
+  });
+}
+
+// Main execution with fallback
+async function runWithCodebuff(opts) {
+  // Try SDK first
+  const sdkResult = await runWithSdk(opts);
+
+  // If rate limited, fallback to PTY
+  if (sdkResult.shouldFallback) {
+    console.log("[freebuff] Rate limited by SDK - falling back to PTY approach...");
+    const ptyResult = await runWithPty(opts);
+    return {
+      exitCode: ptyResult.exitCode,
+      output: ptyResult.stdout || "",
+      error: ptyResult.stderr,
+      method: "pty",
+    };
+  }
+
+  return sdkResult;
 }
 
 async function main() {
@@ -149,14 +250,6 @@ async function main() {
     console.error("Required: CODEBUFF_API_KEY environment variable");
     process.exit(1);
   }
-
-  // Check availability
-  const sdkCheck = checkSdkAvailable();
-  if (!sdkCheck.available) {
-    console.error(`[freebuff] ERROR: ${sdkCheck.reason}`);
-    process.exit(1);
-  }
-  console.log(`[freebuff] SDK available, using Codebuff agent`);
 
   // Validate project exists
   if (!fs.existsSync(opts.project)) {
@@ -173,7 +266,19 @@ async function main() {
   console.log(`[freebuff] Starting task (timeout: ${opts.timeout}ms)...`);
   console.log(`[freebuff] Project: ${opts.project}`);
 
-  const result = await runWithCodebuff({ ...opts, task });
+  // Check availability and choose execution method
+  const sdkCheck = checkSdkAvailable();
+  let result;
+
+  if (sdkCheck.available) {
+    console.log(`[freebuff] SDK available, using Codebuff agent`);
+    result = await runWithCodebuff({ ...opts, task });
+  } else {
+    // SDK not available - use PTY directly
+    console.log(`[freebuff] SDK not available: ${sdkCheck.reason}`);
+    console.log("[freebuff] Using PTY approach...");
+    result = await runWithPty({ ...opts, task });
+  }
 
   // Write report
   const report = {
@@ -181,10 +286,10 @@ async function main() {
     task: task.slice(0, 500),
     project: opts.project,
     exitCode: result.exitCode,
+    method: result.method || "unknown",
     outputLength: result.output?.length || 0,
     output: result.output?.slice(-5000),
     error: result.error,
-    eventCount: result.events?.length || 0,
   };
 
   ensureDir(REPORTS_DIR);
