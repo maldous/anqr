@@ -4,15 +4,21 @@
  * freebuff-wrapper.mjs — Freebuff CLI wrapper for harness integration
  *
  * Invokes freebuff CLI as an external code execution agent for the harness.
- * Freebuff is an AI coding agent that runs in the terminal.
+ * Freebuff is an interactive AI coding agent that runs in the terminal.
+ *
+ * IMPORTANT: Freebuff requires interactive TTY input. This wrapper attempts to
+ * provide tasks via stdin, but for reliable operation, use the knowledge.md
+ * approach: write task to {project}/knowledge.md and run freebuff separately.
  *
  * Usage:
  *   node freebuff-wrapper.mjs --task "description of task" [--project /path/to/project]
  *   node freebuff-wrapper.mjs --issue-id ANQ-123 [--project /path/to/project]
+ *   node freebuff-wrapper.mjs --knowledge-mode [--project /path/to/project]
  *
  * Exit codes:
  *   0 = Success
  *   1 = Failure (freebuff error, timeout, etc.)
+ *   124 = Timeout
  */
 
 import fs from "node:fs";
