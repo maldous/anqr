@@ -36,12 +36,13 @@ function ensureDir(dir) {
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const opts = { task: null, issueId: null, project: PROJECT_ROOT, timeout: TIMEOUT_MS };
+  const opts = { task: null, issueId: null, project: PROJECT_ROOT, timeout: TIMEOUT_MS, forcePty: false };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--task" && args[i + 1]) opts.task = args[++i];
     else if (args[i] === "--issue-id" && args[i + 1]) opts.issueId = args[++i];
     else if (args[i] === "--project" && args[i + 1]) opts.project = args[++i];
     else if (args[i] === "--timeout" && args[i + 1]) opts.timeout = parseInt(args[++i], 10) || TIMEOUT_MS;
+    else if (args[i] === "--pty" || args[i] === "--force-pty") opts.forcePty = true;
   }
   return opts;
 }
@@ -185,10 +186,12 @@ async function runWithPty(opts) {
   const inputFile = path.join(tmpDir, `freebuff-input-${Date.now()}.txt`);
   const outputFile = path.join(tmpDir, `freebuff-output-${Date.now()}.log`);
 
+  // Write input to file (file redirection works with script TTY)
   fs.writeFileSync(inputFile, prompt + "\n");
 
-  // Use script command to create pseudo-TTY for freebuff
-  const scriptCmd = `script -q -c "freebuff --cwd ${project}" ${outputFile} < ${inputFile}`;
+  // Use script command with file redirection (< inputFile)
+  // This properly sends EOF when the file ends
+  const scriptCmd = `script -q -c 'freebuff --cwd "${project}"' ${outputFile} < ${inputFile}`;
 
   return new Promise((resolve) => {
     const child = spawn("bash", ["-c", scriptCmd], {
@@ -212,6 +215,7 @@ async function runWithPty(opts) {
         // Ignore
       }
 
+      // Cleanup
       try {
         fs.unlinkSync(inputFile);
         fs.unlinkSync(outputFile);
@@ -274,8 +278,9 @@ async function main() {
   if (!opts.task && !opts.issueId) {
     console.error("Usage: freebuff-wrapper.mjs --task 'description' [--project /path]");
     console.error("       freebuff-wrapper.mjs --issue-id ANQ-123 [--project /path]");
+    console.error("       freebuff-wrapper.mjs --task 'description' --pty  # Force PTY mode");
     console.error("");
-    console.error("Required: CODEBUFF_API_KEY environment variable");
+    console.error("Required: CODEBUFF_API_KEY environment variable (unless using --pty)");
     process.exit(1);
   }
 
@@ -294,18 +299,23 @@ async function main() {
   console.log(`[freebuff] Starting task (timeout: ${opts.timeout}ms)...`);
   console.log(`[freebuff] Project: ${opts.project}`);
 
-  // Check availability and choose execution method
-  const sdkCheck = checkSdkAvailable();
+  // Choose execution method - PTY or SDK
   let result;
 
-  if (sdkCheck.available) {
-    console.log(`[freebuff] SDK available, using Codebuff agent`);
-    result = await runWithCodebuff({ ...opts, task });
-  } else {
-    // SDK not available - use PTY directly
-    console.log(`[freebuff] SDK not available: ${sdkCheck.reason}`);
+  if (opts.forcePty) {
+    console.log("[freebuff] Force PTY mode requested");
     console.log("[freebuff] Using PTY approach...");
     result = await runWithPty({ ...opts, task });
+  } else {
+    const sdkCheck = checkSdkAvailable();
+    if (!sdkCheck.available) {
+      console.log(`[freebuff] SDK not available: ${sdkCheck.reason}`);
+      console.log("[freebuff] Using PTY approach...");
+      result = await runWithPty({ ...opts, task });
+    } else {
+      console.log(`[freebuff] SDK available, using Codebuff agent`);
+      result = await runWithCodebuff({ ...opts, task });
+    }
   }
 
   // Write report - ensure output is a properly formatted string
