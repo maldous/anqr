@@ -124,9 +124,31 @@ async function runWithSdk(opts) {
       timeoutPromise,
     ]);
 
+    // Check if the result contains an error (SDK returns error in output instead of throwing)
+    const output = result.output;
+    const resultStr = typeof output === "string" ? output : JSON.stringify(output);
+    
+    // Check for rate limit patterns to fallback to PTY
+    if (resultStr.includes("rate_limit") || resultStr.includes("429") || 
+        resultStr.includes("session limit") || resultStr.includes("Too Many Requests") ||
+        resultStr.includes("rate_limit_exceeded") || resultStr.includes("Failed after")) {
+      return { shouldFallback: true, error: resultStr.slice(0, 500) };
+    }
+    
+    // Check for other errors
+    if (resultStr.includes("error")) {
+      return {
+        exitCode: 1,
+        output: resultStr,
+        events: events.slice(-20),
+        error: resultStr.slice(0, 500),
+        method: "sdk",
+      };
+    }
+
     return {
       exitCode: 0,
-      output: result.output || "",
+      output: resultStr,
       events: events.slice(-20),
       error: null,
       method: "sdk",
