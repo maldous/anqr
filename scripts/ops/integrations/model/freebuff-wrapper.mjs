@@ -133,8 +133,14 @@ async function runWithSdk(opts) {
     };
   } catch (err) {
     const errStr = err.message || "";
-    // Check for rate limit - need to fallback to PTY
-    if (errStr.includes("rate_limit") || errStr.includes("429") || errStr.includes("session limit")) {
+    const errType = err.constructor?.name || "";
+    
+    // Check for rate limit or retry errors - need to fallback to PTY
+    // SDK throws RetryError after exhausting retries on rate limits
+    if (errStr.includes("rate_limit") || errStr.includes("429") || 
+        errStr.includes("session limit") || errStr.includes("Too Many Requests") ||
+        errStr.includes("rate_limit_exceeded") ||
+        errType === "RetryError" || errStr.includes("RetryError")) {
       return { shouldFallback: true, error: err.message };
     }
 
