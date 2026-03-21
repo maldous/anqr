@@ -1,0 +1,14 @@
+{
+  "initialLoad": {
+    "broadband": 2000,
+    "mobile": 3000
+  },
+  "uiResponse": 100,
+  "qrGeneration": {
+    "standard": 200,
+    "styled": 500,
+    "animated": 1000
+  },
+  "mobileMemory": 200,
+  "crashRate": 0.5
+}
