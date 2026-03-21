@@ -20,7 +20,7 @@ import {
 } from "../../symphony-state.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = path.resolve(__dirname, "../../../..");
+const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
 const REPORTS_DIR = path.join(PROJECT_ROOT, "reports", "email-ingest");
 
 const INGEST_EMAIL = process.env.ANQR_INGEST_EMAIL || "email@anqr.link";
@@ -63,32 +63,20 @@ function indexMail() {
 function searchUnprocessed() {
   const proc = run("notmuch", ["search", "--output=messages", "--", NOTMUCH_QUERY]);
   if (proc.status !== 0) return [];
-  return (proc.stdout || "").trim().split("\n").filter(Boolean);
-}
-
-function extractMessages(data) {
-  const messages = [];
-  if (Array.isArray(data)) {
-    for (const item of data) {
-      if (item && typeof item === "object" && !Array.isArray(item) && item.id && item.headers)
-        messages.push(item);
-      else if (Array.isArray(item)) messages.push(...extractMessages(item));
-    }
-  }
-  return messages;
-}
+  return (proc.stdout || "").trim().split("\n").filter(Boolean);}
 
 function extractTextContent(bodyParts) {
-  if (!Array.isArray(bodyParts)) return "";
-  for (const part of bodyParts) {
+  // notmuch JSON body uses numeric string keys: body['0'], body['1'], etc.
+  const parts = Array.isArray(bodyParts) ? bodyParts : Object.values(bodyParts || {});
+  for (const part of parts) {
     if (part["content-type"] === "text/plain" && typeof part.content === "string")
       return part.content;
-    if (Array.isArray(part.content)) {
+    if (part.content && typeof part.content === "object") {
       const text = extractTextContent(part.content);
       if (text) return text;
     }
   }
-  for (const part of bodyParts) {
+  for (const part of parts) {
     if (part["content-type"] === "text/html" && typeof part.content === "string") {
       return part.content
         .replaceAll(/<[^>]*>/g, " ")
@@ -104,9 +92,12 @@ function getMessageContent(messageId) {
   if (proc.status !== 0) return null;
   try {
     const data = JSON.parse(proc.stdout);
-    const messages = extractMessages(data);
-    if (messages.length === 0) return null;
-    const msg = messages[0];
+    // notmuch show --format=json returns: [[{thread: {0: msg, 1: msg}}, ...], []]
+    // The message is at data[0]['0']['0']
+    if (!data || !data[0] || !data[0]['0'] || !data[0]['0']['0']) {
+      return null;
+    }
+    const msg = data[0]['0']['0'];
     return {
       id: msg.id,
       subject: msg.headers?.Subject || "",
