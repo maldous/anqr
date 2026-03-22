@@ -183,12 +183,17 @@ function buildEnhancedPrompt(task) {
 }
 
 function isRateLimitError(errStr) {
+  const s = errStr.toLowerCase();
   return (
-    errStr.includes("429") ||
-    errStr.includes("rate_limit") ||
-    errStr.includes("Too Many Requests") ||
-    errStr.includes("session limit") ||
-    errStr.includes("rate_limit_exceeded")
+    s.includes("429") ||
+    s.includes("rate_limit") ||
+    s.includes("too many requests") ||
+    s.includes("session limit") ||
+    s.includes("rate_limit_exceeded") ||
+    s.includes("weekly limit") ||
+    s.includes("limit resets") ||
+    s.includes("continue with credits") ||
+    s.includes("subscription")
   );
 }
 
@@ -203,12 +208,12 @@ function isAuthError(errStr) {
 }
 
 function isRetryableError(err) {
-  const errStr = err.message || "";
+  const errStr = (err.message || "").toLowerCase();
   return (
     isRateLimitError(errStr) ||
-    errStr.includes("RetryError") ||
-    errStr.includes("Timeout") ||
-    errStr.includes("ETIMEDOUT")
+    errStr.includes("retryerror") ||
+    errStr.includes("timeout") ||
+    errStr.includes("etimedout")
   );
 }
 
