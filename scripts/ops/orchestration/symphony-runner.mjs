@@ -342,9 +342,10 @@ async function executeIssue(issue, dryRun = false) {
       issue.id,
       `🚫 **Max retries exceeded** (${RUNNER_MAX_RETRIES}). Moved to Backlog and blocked from automatic re-feed until explicitly reset.`,
     );
-    // Track retry exhausted as provider failure (use last provider)
-    if (provider?.name) {
-      recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+    // Track retry exhausted as provider failure (use last tried provider)
+    const lastProvider = state.lastProvider || triedProviders[triedProviders.length - 1];
+    if (lastProvider) {
+      recordLinearCompletion(lastProvider, { completed: false, priority: issue.priority });
     }
     return "skip";
   }
