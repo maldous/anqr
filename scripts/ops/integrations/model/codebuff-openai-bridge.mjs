@@ -236,51 +236,52 @@ async function invokeCodebuff({ messages, cwd }) {
       const output = result.output;
       const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
+      // Suppress SDK error dumps by catching them at the output level
+      if (resultStr.includes("Symbol(vercel.ai.error)")) {
+        const errorMatch = resultStr.match(/"message":"([^"]+)"/);
+        const cleanError = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
+        throw new Error(cleanError);
+      }
+
       // Check for rate limit in output (not just errors)
       if (isRateLimitError(resultStr)) {
+        const resetMatch = resultStr.match(/(\d+)\s*(day|hour|minute)/);
+        const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
         lastError = resultStr.slice(0, 500);
-        console.log(`[bridge] Rate limited on ${attempt.label}, trying next...`);
+        console.log(`[bridge] ⏸️  Rate limited on ${attempt.label}${resetInfo}`);
         continue;
       }
       if (isAuthError(resultStr)) {
         lastError = resultStr.slice(0, 500);
-        console.warn(`[bridge] Auth error on ${attempt.label}, skipping.`);
+        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}`);
         continue;
       }
 
+      console.log(`[bridge] ✅ Success on ${attempt.label}`);
       return {
         text: resultStr,
         account: attempt.label,
       };
     } catch (err) {
-      // Extract error details with better logging
+      // Extract error details
       const errStr = err.message || String(err);
-      const errName = err.name || "Error";
-      const errCode = err.code || err.statusCode || "";
-      
-      // Log the full error for debugging
-      console.error(`[bridge] Caught error on ${attempt.label}:`);
-      console.error(`[bridge]   Type: ${errName}`);
-      console.error(`[bridge]   Code: ${errCode}`);
-      console.error(`[bridge]   Message: ${errStr}`);
-      if (err.cause) {
-        console.error(`[bridge]   Cause: ${err.cause}`);
-      }
+      lastError = errStr;
 
       if (isAuthError(errStr)) {
-        lastError = errStr;
-        console.warn(`[bridge] Auth error detected, skipping to next key.`);
+        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}`);
         continue;
       }
 
       if (isRateLimitError(errStr)) {
-        lastError = errStr;
-        console.log(`[bridge] Rate limit detected, rotating to next key...`);
+        // Extract reset time if available
+        const resetMatch = errStr.match(/(\d+)\s*(day|hour|minute)/);
+        const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
+        console.log(`[bridge] ⏸️  Rate limited on ${attempt.label}${resetInfo}`);
         continue;
       }
 
-      // Non-retryable error - re-throw
-      console.error(`[bridge] Non-retryable error - stopping attempts.`);
+      // Non-retryable error - log concisely and re-throw
+      console.error(`[bridge] ❌ Fatal error on ${attempt.label}: ${errStr.slice(0, 200)}`);
       throw err;
     }
   }
@@ -368,17 +369,28 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
       const output = result.output || "";
       const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
+      // Suppress SDK error dumps by catching them at the output level
+      if (resultStr.includes("Symbol(vercel.ai.error)")) {
+        const errorMatch = resultStr.match(/"message":"([^"]+)"/);
+        const cleanError = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
+        throw new Error(cleanError);
+      }
+
       // Check for rate limit in output (not just errors)
       if (isRateLimitError(resultStr)) {
+        const resetMatch = resultStr.match(/(\d+)\s*(day|hour|minute)/);
+        const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
         lastError = resultStr.slice(0, 500);
-        console.log(`[bridge] Rate limited on ${attempt.label}, trying next...`);
+        console.log(`[bridge] ⏸️  Rate limited on ${attempt.label}${resetInfo}`);
         continue;
       }
       if (isAuthError(resultStr)) {
         lastError = resultStr.slice(0, 500);
-        console.warn(`[bridge] Auth error on ${attempt.label}, skipping.`);
+        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}`);
         continue;
       }
+
+      console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
       // Success - send any remaining output
       if (typeof output === "string" && output.length > 0) {
@@ -422,34 +434,25 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         account: attempt.label,
       };
     } catch (err) {
-      // Extract error details with better logging
+      // Extract error details
       const errStr = err.message || String(err);
-      const errName = err.name || "Error";
-      const errCode = err.code || err.statusCode || "";
-      
-      // Log the full error for debugging
-      console.error(`[bridge] Streaming error on ${attempt.label}:`);
-      console.error(`[bridge]   Type: ${errName}`);
-      console.error(`[bridge]   Code: ${errCode}`);
-      console.error(`[bridge]   Message: ${errStr}`);
-      if (err.cause) {
-        console.error(`[bridge]   Cause: ${err.cause}`);
-      }
+      lastError = errStr;
 
       if (isAuthError(errStr)) {
-        lastError = errStr;
-        console.warn(`[bridge] Auth error detected, skipping to next key.`);
+        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}`);
         continue;
       }
 
       if (isRateLimitError(errStr)) {
-        lastError = errStr;
-        console.log(`[bridge] Rate limit detected, rotating to next key...`);
+        // Extract reset time if available
+        const resetMatch = errStr.match(/(\d+)\s*(day|hour|minute)/);
+        const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
+        console.log(`[bridge] ⏸️  Rate limited on ${attempt.label}${resetInfo}`);
         continue;
       }
 
-      // Non-retryable error - re-throw
-      console.error(`[bridge] Non-retryable streaming error - stopping attempts.`);
+      // Non-retryable error - log concisely and re-throw
+      console.error(`[bridge] ❌ Fatal streaming error on ${attempt.label}: ${errStr.slice(0, 200)}`);
       throw err;
     }
   }
