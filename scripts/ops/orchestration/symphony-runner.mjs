@@ -489,7 +489,7 @@ async function executeIssue(issue, dryRun = false) {
       } catch { /* best effort logging */ }
 
       if (isExternallyCompleted) {
-        // Mark as completed externally - move to Done, not back to Todo
+        // Issue was completed externally (by human or another process) - move to Done
         await updateIssue(issue.id, { stateId: STATES.done });
         await addComment(
           issue.id,
