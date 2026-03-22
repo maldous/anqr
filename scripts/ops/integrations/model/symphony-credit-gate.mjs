@@ -110,12 +110,12 @@ const SCORE_WEIGHTS = {
   
   // Linear issue metrics (55% total)
   linearCompletionRate: 0.15, // 15% - Linear issues completed vs failed
-  linearComplexitySuccess: 0.10, // 10% - success rate on complex (high priority) issues
+  linearComplexitySuccess: 0.1, // 10% - success rate on complex (high priority) issues
   linearSimpleSuccess: 0.05,  // 5% - success rate on simple issues
   
   // Estimate-based complexity metrics (25%)
-  estimateSuccessRate: 0.10,  // 10% - completion rate on large (8+) estimate issues
-  estimateEfficiency: 0.10,   // 10% - avg completed estimate vs attempted
+  estimateSuccessRate: 0.1,  // 10% - completion rate on large (8+) estimate issues
+  estimateEfficiency: 0.1,   // 10% - avg completed estimate vs attempted
   estimateThroughput: 0.05,   // 5% - total estimate points completed
 };
 
@@ -922,11 +922,70 @@ export function logProviderStats() {
 export async function selectProvider() {
   ensureStateDir();
 
+  // First: try providers in dynamic ranking order if we have enough data
+  const ranked = getRankedProviders();
+  if (ranked.length > 0) {
+    for (const { name } of ranked) {
+      const provider = PROVIDERS.find(p => p.name === name);
+      if (!provider) continue;
+
+      // Get API key: first try env var, then try loadToken function
+      let apiKey = provider.envVar ? process.env[provider.envVar] : null;
+      if (!apiKey && provider.loadToken) {
+        apiKey = await provider.loadToken();
+      }
+
+      if (provider.envVar && !apiKey) {
+        console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
+        continue;
+      }
+
+      if (isRecentlyFailed(provider.name)) {
+        console.log(`[credit-gate] ${provider.name}: skipped (recently failed)`);
+        continue;
+      }
+
+      // SDK-based providers (like Codebuff) don't need HTTP probing
+      if (provider.requiresSdk) {
+        console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
+        clearProviderFailure(provider.name);
+        recordProviderSelection(provider.name);
+        return {
+          name: provider.name,
+          model: provider.model,
+          baseUrl: provider.baseUrl,
+          apiKey: apiKey || null,
+          requiresSdk: true,
+          cwd: PROJECT_ROOT,
+        };
+      }
+
+      console.log(`[credit-gate] ${provider.name}: probing...`);
+      const available = provider.probe
+        ? await provider.probe(provider, apiKey)
+        : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
+
+      if (available) {
+        console.log(`[credit-gate] ${provider.name}: available ✅`);
+        clearProviderFailure(provider.name);
+        recordProviderSelection(provider.name);
+        return {
+          name: provider.name,
+          model: provider.model,
+          baseUrl: provider.baseUrl,
+          apiKey: apiKey || null,
+          useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
+        };
+      }
+
+      console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
+    }
+  }
+
+  // Fallback: use fixed PROVIDERS order for providers with insufficient data or none ranked
   for (const provider of PROVIDERS) {
     // Get API key: first try env var, then try loadToken function
     let apiKey = provider.envVar ? process.env[provider.envVar] : null;
-    
-    // If no env var and loadToken function exists, try loading token
     if (!apiKey && provider.loadToken) {
       apiKey = await provider.loadToken();
     }
