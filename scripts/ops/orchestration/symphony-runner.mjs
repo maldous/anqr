@@ -105,7 +105,8 @@ function isProcessAlive(pid) {
 
 function gitIsClean() {
   try {
-    const status = execFileSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf-8" });
+    // Only consider tracked file modifications; ignore untracked files
+    const status = execFileSync("git", ["diff", "--name-only"], { cwd: ROOT, encoding: "utf-8" });
     return status.trim().length === 0;
   } catch {
     return false;
@@ -921,6 +922,9 @@ async function main() {
         excludeIds.add(issue.id);
         continue;
       }
+      // After completing an issue (success or handled outcome), feed queue to eliminate idle gap
+      const snap = await getQueueSnapshot();
+      if (snap.queueDepth < TARGET_MIN) await feedQueue(snap, false);
       executed = true;
     }
 
