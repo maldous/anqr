@@ -771,6 +771,30 @@ async function main() {
       );
     }
 
+    if (!dryRun) {
+      // FIRST: Clean up expired leases and recover stuck In Progress issues BEFORE picking new work
+      const { findExpiredLeases } = await import("../symphony-state.mjs");
+      const expiredLeases = findExpiredLeases();
+      for (const { issueIdentifier } of expiredLeases) {
+        console.log(`[runner] Clearing expired lease for ${issueIdentifier}`);
+        const { releaseLease } = await import("../symphony-state.mjs");
+        releaseLease(issueIdentifier);
+      }
+      
+      // Now check for stuck In Progress issues - recover them to Todo so they can be picked up
+      const snap = await getQueueSnapshot();
+      if (snap.inProgress.all.length > 0) {
+        console.log(`[runner] Checking for stuck In Progress issues...`);
+        const { detectStuckWork } = await import("./symphony-queue-control.mjs");
+        await detectStuckWork(snap, false);
+      }
+      
+      // Now check if we need to feed more issues from Backlog
+      const freshSnap = await getQueueSnapshot();
+      if (freshSnap.queueDepth < TARGET_MIN) await feedQueue(freshSnap, false);
+    }
+
+    // SECOND: Pick and execute issues (now with recovered issues in Todo)
     const excludeIds = new Set();
     let executed = false;
     while (!executed) {
@@ -782,29 +806,6 @@ async function main() {
         continue;
       }
       executed = true;
-    }
-
-    if (!dryRun) {
-      // First clean up expired leases and recover stuck In Progress issues
-      const { findExpiredLeases } = await import("../symphony-state.mjs");
-      const expiredLeases = findExpiredLeases();
-      for (const { issueIdentifier } of expiredLeases) {
-        console.log(`[runner] Clearing expired lease for ${issueIdentifier}`);
-        const { releaseLease } = await import("../symphony-state.mjs");
-        releaseLease(issueIdentifier);
-      }
-      
-      // Now check for stuck In Progress issues
-      const snap = await getQueueSnapshot();
-      if (snap.inProgress.all.length > 0) {
-        console.log(`[runner] Checking for stuck In Progress issues...`);
-        const { detectStuckWork } = await import("./symphony-queue-control.mjs");
-        await detectStuckWork(snap, false);
-      }
-      
-      // Now check if we need to feed more issues
-      const freshSnap = await getQueueSnapshot();
-      if (freshSnap.queueDepth < TARGET_MIN) await feedQueue(freshSnap, false);
     }
 
     console.log(`[runner] Completed at ${new Date().toISOString()}`);
