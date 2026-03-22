@@ -69,7 +69,7 @@ export async function createIssue(input) {
     `mutation($input: IssueCreateInput!) {
       issueCreate(input: $input) {
         success
-        issue { id identifier title description state { name } labels { nodes { name } } }
+        issue { id identifier title description priority estimate state { name } labels { nodes { name } } }
       }
     }`,
     { input: { teamId: TEAM_ID, ...input } },
@@ -83,7 +83,7 @@ export async function updateIssue(issueId, input) {
     `mutation($id: String!, $input: IssueUpdateInput!) {
       issueUpdate(id: $id, input: $input) {
         success
-        issue { id identifier title description priority state { name } labels { nodes { id name } } }
+        issue { id identifier title description priority estimate state { name } labels { nodes { id name } } }
       }
     }`,
     { id: issueId, input },
@@ -97,7 +97,7 @@ async function findOpenIssues(filterExtras) {
     `query($filter: IssueFilter!) {
       issues(filter: $filter, first: 100) {
         nodes {
-          id identifier title description priority
+          id identifier title description priority estimate
           state { name }
           labels { nodes { id name } }
           createdAt updatedAt
@@ -200,7 +200,7 @@ export async function getIssueDetail(identifier) {
   const result = await query(
     `query($id: String!) {
       issue(id: $id) {
-        id identifier title description priority
+        id identifier title description priority estimate
         state { name }
         labels { nodes { id name } }
         comments { nodes { id body createdAt } }

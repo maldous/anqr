@@ -345,7 +345,7 @@ async function executeIssue(issue, dryRun = false) {
     // Track retry exhausted as provider failure (use last provider from state or triedProviders)
     const lastProvider = state.lastProvider || triedProviders[triedProviders.length - 1];
     if (lastProvider) {
-      recordLinearCompletion(lastProvider, { completed: false, priority: issue.priority });
+      recordLinearCompletion(lastProvider, { completed: false, priority: issue.priority, estimate: issue.estimate });
     }
     return "skip";
   }
@@ -409,7 +409,7 @@ async function executeIssue(issue, dryRun = false) {
         });
         // Track all tried providers as failed
         for (const prov of triedProviders) {
-          recordLinearCompletion(prov, { completed: false, priority: issue.priority });
+          recordLinearCompletion(prov, { completed: false, priority: issue.priority, estimate: issue.estimate });
         }
         return "done";
       }
@@ -465,7 +465,7 @@ async function executeIssue(issue, dryRun = false) {
         });
         // Track local busy as provider failure
         if (provider?.name) {
-          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
         }
         return "done";
       }
@@ -485,7 +485,7 @@ async function executeIssue(issue, dryRun = false) {
       });
       // Track all providers failed
       for (const prov of triedProviders) {
-        recordLinearCompletion(prov, { completed: false, priority: issue.priority });
+        recordLinearCompletion(prov, { completed: false, priority: issue.priority, estimate: issue.estimate });
       }
       return "done";
     }    let changedFiles = gitDiffNames();      if (changedFiles.length === 0) {
@@ -549,7 +549,7 @@ async function executeIssue(issue, dryRun = false) {
           console.log(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
           // Track continuation exhausted as failure
           if (provider?.name) {
-            recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+            recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
           }
           return "done";
         }
@@ -580,7 +580,7 @@ async function executeIssue(issue, dryRun = false) {
         });
         // Track Linear issue completion (externally completed - issue was resolved one way or another)
         if (provider?.name) {
-          recordLinearCompletion(provider.name, { completed: true, priority: issue.priority });
+          recordLinearCompletion(provider.name, { completed: true, priority: issue.priority, estimate: issue.estimate });
           recordProviderSuccess(provider.name);
         }
         // Clear any cooldown so it doesn't get re-queued
@@ -609,7 +609,7 @@ async function executeIssue(issue, dryRun = false) {
         console.log(`[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`);
         // Track active subgoals without messages as failure
         if (provider?.name) {
-          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
         }
         return "done";
       }
@@ -630,7 +630,7 @@ async function executeIssue(issue, dryRun = false) {
       });
       // Track failure (no files changed = failed)
       if (provider?.name) {
-        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
       }
       return "done";
     }
@@ -691,7 +691,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
         });
         // Track validation failure (exhausted)
         if (provider?.name) {
-          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
         }
       } else {
         setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed");
@@ -715,7 +715,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
         });
         // Track Linear issue failure
         if (provider?.name) {
-          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
         }
       }
       return "done";
@@ -739,7 +739,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
       });
       // Track git commit failure
       if (provider?.name) {
-        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
       }
       return "done";
     }
@@ -796,7 +796,8 @@ ${String(r.detail).slice(0, 1000)}\n`,
       const isDone = finalStateId === STATES.done;
       recordLinearCompletion(provider.name, { 
         completed: isDone, 
-        priority: issue.priority 
+        priority: issue.priority,
+        estimate: issue.estimate,
       });
       if (isDone) {
         recordProviderSuccess(provider.name);

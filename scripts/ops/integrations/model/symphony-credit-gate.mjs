@@ -85,21 +85,38 @@ const PROVIDER_STATS = {
   linearMediumPriorityTotal: {},   // { providerName: count } - medium priority attempted
   linearLowPrioritySuccess: {},    // { providerName: count } - low priority completed
   linearLowPriorityTotal: {},      // { providerName: count } - low priority attempted
-  totalTokensProcessed: {}, // { providerName: total } - all tokens across all jobs
+  
+  // Estimate-based complexity tracking
+  totalEstimatePoints: {},  // { providerName: total } - sum of all estimates worked on
+  avgEstimatePoints: {},    // { providerName: computed } - average estimate
+  completedEstimatePoints: {}, // { providerName: total } - sum of estimates for completed issues
+  
+  // Complexity breakdown by estimate ranges
+  smallIssuesCompleted: {},    // { providerName: count } - estimate 1-2
+  smallIssuesTotal: {},        // { providerName: count }
+  mediumIssuesCompleted: {},   // { providerName: count } - estimate 3-5
+  mediumIssuesTotal: {},       // { providerName: count }
+  largeIssuesCompleted: {},    // { providerName: count } - estimate 8+
+  largeIssuesTotal: {},        // { providerName: count }
 };
 
 // Scoring weights (customizable)
 const SCORE_WEIGHTS = {
-  successRate: 0.20,           // 20% - general success rate
-  avgDuration: 0.10,          // 10% - faster is better (normalized)
-  validationRate: 0.15,       // 15% - passes validation
-  volume: 0.10,               // 10% - more usage = more data
+  successRate: 0.15,           // 15% - general success rate
+  avgDuration: 0.08,          // 8% - faster is better (normalized)
+  validationRate: 0.12,       // 12% - passes validation
+  volume: 0.05,               // 5% - more usage = more data
   recency: 0.05,              // 5% - recent usage weighted higher
   
-  // Linear issue metrics (40% total)
-  linearCompletionRate: 0.20, // 20% - Linear issues completed vs failed
+  // Linear issue metrics (55% total)
+  linearCompletionRate: 0.15, // 15% - Linear issues completed vs failed
   linearComplexitySuccess: 0.10, // 10% - success rate on complex (high priority) issues
-  linearSimpleSuccess: 0.10,  // 10% - success rate on simple issues
+  linearSimpleSuccess: 0.05,  // 5% - success rate on simple issues
+  
+  // Estimate-based complexity metrics (25%)
+  estimateSuccessRate: 0.10,  // 10% - completion rate on large (8+) estimate issues
+  estimateEfficiency: 0.10,   // 10% - avg completed estimate vs attempted
+  estimateThroughput: 0.05,   // 5% - total estimate points completed
 };
 
 // Minimum selections before provider is ranked
@@ -521,13 +538,15 @@ export function recordProviderFailureCount(providerName) {
 /**
  * Record a Linear issue completion for a provider
  * @param {string} providerName - Provider name
- * @param {object} completion - { completed: boolean, priority: number }
+ * @param {object} completion - { completed: boolean, priority: number, estimate: number }
  *   - completed: true if issue was successfully completed (Done), false if failed/external
  *   - priority: Linear priority (0 = highest/urgent, 4 = lowest)
+ *   - estimate: story points (1, 2, 3, 5, 8, 13, etc.)
  */
-export function recordLinearCompletion(providerName, { completed, priority = 4 }) {
+export function recordLinearCompletion(providerName, { completed, priority = 4, estimate }) {
   const stats = loadStats();
   const p = typeof priority === 'number' ? priority : 4; // Default to low priority
+  const est = typeof estimate === 'number' ? estimate : 0;
   
   if (completed) {
     stats.linearCompleted[providerName] = (stats.linearCompleted[providerName] || 0) + 1;
@@ -537,22 +556,53 @@ export function recordLinearCompletion(providerName, { completed, priority = 4 }
   
   // Track by priority complexity
   if (p <= HIGH_PRIORITY_THRESHOLD) {
-    // High complexity: P0, P1
     stats.linearHighPriorityTotal[providerName] = (stats.linearHighPriorityTotal[providerName] || 0) + 1;
     if (completed) {
       stats.linearHighPrioritySuccess[providerName] = (stats.linearHighPrioritySuccess[providerName] || 0) + 1;
     }
   } else if (p <= MEDIUM_PRIORITY_THRESHOLD) {
-    // Medium complexity: P2, P3
     stats.linearMediumPriorityTotal[providerName] = (stats.linearMediumPriorityTotal[providerName] || 0) + 1;
     if (completed) {
       stats.linearMediumPrioritySuccess[providerName] = (stats.linearMediumPrioritySuccess[providerName] || 0) + 1;
     }
   } else {
-    // Low complexity: P4
     stats.linearLowPriorityTotal[providerName] = (stats.linearLowPriorityTotal[providerName] || 0) + 1;
     if (completed) {
       stats.linearLowPrioritySuccess[providerName] = (stats.linearLowPrioritySuccess[providerName] || 0) + 1;
+    }
+  }
+  
+  // Track estimate-based complexity
+  if (est > 0) {
+    stats.totalEstimatePoints[providerName] = (stats.totalEstimatePoints[providerName] || 0) + est;
+    const totalAttempts = stats.linearCompleted[providerName] + stats.linearFailed[providerName];
+    stats.avgEstimatePoints[providerName] = totalAttempts > 0 
+      ? Math.round(stats.totalEstimatePoints[providerName] / totalAttempts) 
+      : 0;
+    
+    if (completed) {
+      stats.completedEstimatePoints[providerName] = (stats.completedEstimatePoints[providerName] || 0) + est;
+    }
+    
+    // Track by estimate size ranges
+    if (est <= 2) {
+      // Small: 1-2 points
+      stats.smallIssuesTotal[providerName] = (stats.smallIssuesTotal[providerName] || 0) + 1;
+      if (completed) {
+        stats.smallIssuesCompleted[providerName] = (stats.smallIssuesCompleted[providerName] || 0) + 1;
+      }
+    } else if (est <= 5) {
+      // Medium: 3-5 points
+      stats.mediumIssuesTotal[providerName] = (stats.mediumIssuesTotal[providerName] || 0) + 1;
+      if (completed) {
+        stats.mediumIssuesCompleted[providerName] = (stats.mediumIssuesCompleted[providerName] || 0) + 1;
+      }
+    } else {
+      // Large: 8+ points
+      stats.largeIssuesTotal[providerName] = (stats.largeIssuesTotal[providerName] || 0) + 1;
+      if (completed) {
+        stats.largeIssuesCompleted[providerName] = (stats.largeIssuesCompleted[providerName] || 0) + 1;
+      }
     }
   }
   
@@ -663,6 +713,19 @@ function calculateProviderScore(providerName, stats) {
   const lowTotal = stats.linearLowPriorityTotal[providerName] || 0;
   const lowPrioritySuccessRate = lowTotal > 0 ? lowSuccess / lowTotal : 0.5;
   
+  // 10. Large Issue (8+ points) Success Rate (0-1)
+  const largeCompleted = stats.largeIssuesCompleted[providerName] || 0;
+  const largeTotal = stats.largeIssuesTotal[providerName] || 0;
+  const largeIssueSuccessRate = largeTotal > 0 ? largeCompleted / largeTotal : 0.5;
+  
+  // 11. Estimate Efficiency - ratio of completed estimate points to attempted
+  const totalEst = stats.totalEstimatePoints[providerName] || 0;
+  const completedEst = stats.completedEstimatePoints[providerName] || 0;
+  const estimateEfficiency = totalEst > 0 ? completedEst / totalEst : 0.5;
+  
+  // 12. Estimate Throughput - log scale of total completed estimate points
+  const estimateThroughput = Math.min(1, Math.log10(completedEst + 1) / 4); // Maxes at 10k points
+  
   // Weighted combination
   const score = (
     (successRate * SCORE_WEIGHTS.successRate) +
@@ -672,8 +735,11 @@ function calculateProviderScore(providerName, stats) {
     (recencyScore * SCORE_WEIGHTS.recency) +
     (linearCompletionRate * SCORE_WEIGHTS.linearCompletionRate) +
     (highPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) +
-    (mediumPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) + // Use same weight for medium
-    (lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess)
+    (mediumPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) +
+    (lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess) +
+    (largeIssueSuccessRate * SCORE_WEIGHTS.estimateSuccessRate) +
+    (estimateEfficiency * SCORE_WEIGHTS.estimateEfficiency) +
+    (estimateThroughput * SCORE_WEIGHTS.estimateThroughput)
   );
   
   return Math.round(score * 100) / 100; // 2 decimal places
@@ -743,6 +809,20 @@ export function getProviderStats() {
       ? ((lowSuccess / lowTotal) * 100).toFixed(1) + '%' 
       : 'N/A';
     
+    // Estimate-based metrics
+    const totalEst = stats.totalEstimatePoints[name] || 0;
+    const completedEst = stats.completedEstimatePoints[name] || 0;
+    const avgEst = stats.avgEstimatePoints[name] || 0;
+    const estEfficiency = totalEst > 0 
+      ? ((completedEst / totalEst) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
+    const largeCompleted = stats.largeIssuesCompleted[name] || 0;
+    const largeTotal = stats.largeIssuesTotal[name] || 0;
+    const largeRate = largeTotal > 0 
+      ? ((largeCompleted / largeTotal) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
     result[name] = {
       // Basic counts
       selections: selected,
@@ -779,6 +859,15 @@ export function getProviderStats() {
       linearLowPrioritySuccess: lowSuccess,
       linearLowPriorityTotal: lowTotal,
       lowPrioritySuccessRate: lowPriorityRate,
+      
+      // Estimate-based metrics
+      totalEstimatePoints: totalEst,
+      completedEstimatePoints: completedEst,
+      avgEstimatePoints: avgEst,
+      estimateEfficiency: estEfficiency,
+      largeIssuesCompleted: largeCompleted,
+      largeIssuesTotal: largeTotal,
+      largeIssueSuccessRate: largeRate,
       
       // Score
       score: stats.score[name] !== null ? stats.score[name] : 'pending', // null = not enough data
