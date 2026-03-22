@@ -198,6 +198,69 @@ function suppressSDKErrors(fn) {
   };
 }
 
+// Parse agent response to detect subgoals and continuation needs
+function parseAgentResponse(resultStr) {
+  try {
+    // Try to parse as JSON first (structured response)
+    let parsed = null;
+    try {
+      parsed = JSON.parse(resultStr);
+    } catch {
+      // Not JSON, check string directly
+    }
+
+    // Check for structured lastMessage with update_subgoal
+    if (parsed && parsed.type === 'lastMessage' && parsed.value) {
+      const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
+      for (const msg of messages) {
+        if (msg.role === 'assistant' && Array.isArray(msg.content)) {
+          const hasSubgoals = msg.content.some(item => 
+            item.toolName === 'update_subgoal' || item.toolName === 'add_subgoal'
+          );
+          if (hasSubgoals) {
+            return {
+              needsContinuation: true,
+              hasSubgoals: true,
+              subgoalInfo: JSON.stringify(msg.content, null, 2)
+            };
+          }
+        }
+      }
+    }
+
+    // Fallback: check string directly for update_subgoal tool calls
+    if (resultStr.includes('"toolName":"update_subgoal"') || resultStr.includes('"toolName":"add_subgoal"')) {
+      return {
+        needsContinuation: true,
+        hasSubgoals: true,
+        subgoalInfo: null
+      };
+    }
+    
+    // Check for other continuation signals (tool calls without end_turn)
+    if (resultStr.includes('"type":"tool-call"') && !resultStr.includes('end_turn')) {
+      return {
+        needsContinuation: true,
+        hasSubgoals: false,
+        subgoalInfo: null
+      };
+    }
+    
+    return {
+      needsContinuation: false,
+      hasSubgoals: false,
+      subgoalInfo: null
+    };
+  } catch (err) {
+    console.warn(`[bridge] parseAgentResponse error: ${err.message}`);
+    return {
+      needsContinuation: false,
+      hasSubgoals: false,
+      subgoalInfo: null
+    };
+  }
+}
+
 // Try each API key until one works (non-streaming) - with full key rotation
 async function invokeCodebuff({ messages, cwd }) {
   const apiKeys = getAllApiKeys();
@@ -278,9 +341,15 @@ async function invokeCodebuff({ messages, cwd }) {
       }
 
       console.log(`[bridge] ✅ Success on ${attempt.label}`);
+      
+      // Parse response to detect continuation needs
+      const parseResult = parseAgentResponse(resultStr);
+      
       return {
         text: resultStr,
         account: attempt.label,
+        needsContinuation: parseResult.needsContinuation,
+        hasSubgoals: parseResult.hasSubgoals,
       };
     } catch (err) {
       // Extract error details - suppress verbose SDK dumps
@@ -598,9 +667,15 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      // Only log start for new requests (not continuations)
-      if (issueContext && messages.length <= 2) {
+      // Determine if this is a new request or continuation
+      const isNewRequest = messages.length <= 2;
+      const isContinuation = messages.length > 2;
+
+      // Log start for new requests
+      if (issueContext && isNewRequest) {
         console.log(`[bridge] 🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
+      } else if (issueContext && isContinuation) {
+        console.log(`[bridge] 🔄 Continuing: ${issueContext.identifier}`);
       }
 
       console.log(
@@ -635,7 +710,10 @@ const server = http.createServer(async (req, res) => {
           res.write("data: [DONE]\n\n");
           res.end();
 
-          // Don't log completion here - symphony-agent will log based on actual completion
+          // Log completion with issue context if available
+          if (issueContext) {
+            console.log(`[bridge] ✅ Completed: ${issueContext.identifier}`);
+          }
         } catch (streamError) {
           // Send error as SSE event before closing
           console.error(`[bridge] Streaming error: ${streamError.message}`);
@@ -665,7 +743,19 @@ const server = http.createServer(async (req, res) => {
           cwd: DEFAULT_CWD,
         });
 
-        // Don't log completion here - symphony-agent will log based on actual completion
+        // Log completion with issue context if available
+        if (issueContext) {
+          if (result.needsContinuation) {
+            if (result.hasSubgoals) {
+              console.log(`[bridge] 🔄 More work needed: ${issueContext.identifier} (has active subgoals)`);
+              console.log(`[bridge]    Subgoal details detected - continuation required`);
+            } else {
+              console.log(`[bridge] 🔄 More work needed: ${issueContext.identifier} (pending tool calls)`);
+            }
+          } else {
+            console.log(`[bridge] ✅ Completed: ${issueContext.identifier}`);
+          }
+        }
 
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
