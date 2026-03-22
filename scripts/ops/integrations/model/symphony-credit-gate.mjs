@@ -212,8 +212,6 @@ const PROVIDERS = [
     model: "openclaw:main",
     baseUrl: "http://127.0.0.1:18789/v1",
     envVar: "OPENCLAW_TOKEN",
-    // Token loaded from ~/.openclaw/openclaw.json gateway.auth.token
-    // Can override with OPENCLAW_TOKEN env var
     loadToken: () => {
       const openclawConfig = join(process.env.HOME || process.env.USERPROFILE || "", ".openclaw", "openclaw.json");
       try {
