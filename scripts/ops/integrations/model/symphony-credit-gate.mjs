@@ -525,8 +525,9 @@ export function recordProviderFailureCount(providerName) {
  *   - completed: true if issue was successfully completed (Done), false if failed/external
  *   - priority: Linear priority (0 = highest/urgent, 4 = lowest)
  */
-export function recordLinearCompletion(providerName, { completed, priority }) {
+export function recordLinearCompletion(providerName, { completed, priority = 4 }) {
   const stats = loadStats();
+  const p = typeof priority === 'number' ? priority : 4; // Default to low priority
   
   if (completed) {
     stats.linearCompleted[providerName] = (stats.linearCompleted[providerName] || 0) + 1;
@@ -535,13 +536,13 @@ export function recordLinearCompletion(providerName, { completed, priority }) {
   }
   
   // Track by priority complexity
-  if (priority <= HIGH_PRIORITY_THRESHOLD) {
+  if (p <= HIGH_PRIORITY_THRESHOLD) {
     // High complexity: P0, P1
     stats.linearHighPriorityTotal[providerName] = (stats.linearHighPriorityTotal[providerName] || 0) + 1;
     if (completed) {
       stats.linearHighPrioritySuccess[providerName] = (stats.linearHighPrioritySuccess[providerName] || 0) + 1;
     }
-  } else if (priority <= MEDIUM_PRIORITY_THRESHOLD) {
+  } else if (p <= MEDIUM_PRIORITY_THRESHOLD) {
     // Medium complexity: P2, P3
     stats.linearMediumPriorityTotal[providerName] = (stats.linearMediumPriorityTotal[providerName] || 0) + 1;
     if (completed) {
@@ -652,7 +653,12 @@ function calculateProviderScore(providerName, stats) {
   const highTotal = stats.linearHighPriorityTotal[providerName] || 0;
   const highPrioritySuccessRate = highTotal > 0 ? highSuccess / highTotal : 0.5;
   
-  // 8. Low Priority (Simple) Issue Success Rate (0-1)
+  // 8. Medium Priority Issue Success Rate (0-1)
+  const mediumSuccess = stats.linearMediumPrioritySuccess[providerName] || 0;
+  const mediumTotal = stats.linearMediumPriorityTotal[providerName] || 0;
+  const mediumPrioritySuccessRate = mediumTotal > 0 ? mediumSuccess / mediumTotal : 0.5;
+  
+  // 9. Low Priority (Simple) Issue Success Rate (0-1)
   const lowSuccess = stats.linearLowPrioritySuccess[providerName] || 0;
   const lowTotal = stats.linearLowPriorityTotal[providerName] || 0;
   const lowPrioritySuccessRate = lowTotal > 0 ? lowSuccess / lowTotal : 0.5;
@@ -666,6 +672,7 @@ function calculateProviderScore(providerName, stats) {
     (recencyScore * SCORE_WEIGHTS.recency) +
     (linearCompletionRate * SCORE_WEIGHTS.linearCompletionRate) +
     (highPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) +
+    (mediumPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) + // Use same weight for medium
     (lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess)
   );
   
@@ -724,6 +731,12 @@ export function getProviderStats() {
       ? ((highSuccess / highTotal) * 100).toFixed(1) + '%' 
       : 'N/A';
     
+    const medSuccess = stats.linearMediumPrioritySuccess[name] || 0;
+    const medTotal = stats.linearMediumPriorityTotal[name] || 0;
+    const medPriorityRate = medTotal > 0 
+      ? ((medSuccess / medTotal) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
     const lowSuccess = stats.linearLowPrioritySuccess[name] || 0;
     const lowTotal = stats.linearLowPriorityTotal[name] || 0;
     const lowPriorityRate = lowTotal > 0 
@@ -760,6 +773,9 @@ export function getProviderStats() {
       linearHighPrioritySuccess: highSuccess,
       linearHighPriorityTotal: highTotal,
       highPrioritySuccessRate: highPriorityRate,
+      linearMediumPrioritySuccess: medSuccess,
+      linearMediumPriorityTotal: medTotal,
+      mediumPrioritySuccessRate: medPriorityRate,
       linearLowPrioritySuccess: lowSuccess,
       linearLowPriorityTotal: lowTotal,
       lowPrioritySuccessRate: lowPriorityRate,
