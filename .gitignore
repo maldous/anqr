@@ -9,6 +9,7 @@ reports/symphony/state.json
 .scannerwork/
 dist/
 node_modules/
+reports/
 scripts/ops/__pycache__/
 scripts/reports/
 test-results/
