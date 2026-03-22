@@ -125,6 +125,24 @@ const PROVIDERS = [
     requiresSdk: true,
   },
   {
+    name: "openclaw",
+    model: "openclaw:main",
+    baseUrl: "http://127.0.0.1:18789/v1",
+    envVar: "OPENCLAW_TOKEN",
+    // Token loaded from ~/.openclaw/openclaw.json gateway.auth.token
+    // Can override with OPENCLAW_TOKEN env var
+    loadToken: () => {
+      const openclawConfig = path.join(process.env.HOME || process.env.USERPROFILE || "", ".openclaw", "openclaw.json");
+      try {
+        if (existsSync(openclawConfig)) {
+          const config = JSON.parse(readFileSync(openclawConfig, "utf-8"));
+          return config.gateway?.auth?.token || null;
+        }
+      } catch {}
+      return null;
+    },
+  },
+  {
     name: "groq",
     model: "llama-3.3-70b-versatile",
     baseUrl: "https://api.groq.com/openai/v1",
@@ -393,7 +411,13 @@ export async function selectProvider() {
   ensureStateDir();
 
   for (const provider of PROVIDERS) {
-    const apiKey = provider.envVar ? process.env[provider.envVar] : null;
+    // Get API key: first try env var, then try loadToken function
+    let apiKey = provider.envVar ? process.env[provider.envVar] : null;
+    
+    // If no env var and loadToken function exists, try loading token
+    if (!apiKey && provider.loadToken) {
+      apiKey = await provider.loadToken();
+    }
 
     if (provider.envVar && !apiKey) {
       console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
