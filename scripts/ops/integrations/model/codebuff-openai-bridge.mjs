@@ -34,7 +34,7 @@ const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
 const PORT = process.env.CODEBUFF_BRIDGE_PORT || 4318;
 const API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
 const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
-const TIMEOUT_MS = 5 * 60 * 1000;
+const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runner timeout
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
 
@@ -378,7 +378,13 @@ async function invokeCodebuff({ messages, cwd }) {
       
       // Parse response to detect continuation needs
       const parseResult = parseAgentResponse(resultStr);
-      
+
+      // Log continuation signals
+      if (parseResult.needsContinuation) {
+        const contMsg = parseResult.hasSubgoals ? " (active subgoals)" : "";
+        console.log(`[bridge] 🔄 Agent indicates continuation needed${contMsg}`);
+      }
+
       return {
         text: resultStr,
         account: attempt.label,
@@ -567,6 +573,12 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
 
       // Parse response to detect continuation needs (same as non-streaming)
       const parseResult = parseAgentResponse(resultStr);
+
+      // Log continuation signals
+      if (parseResult.needsContinuation) {
+        const contMsg = parseResult.hasSubgoals ? " (active subgoals)" : "";
+        console.log(`[bridge] 🔄 Agent indicates continuation needed${contMsg}`);
+      }
 
       return {
         text: fullText || resultStr,

@@ -418,7 +418,9 @@
     "gemma",
     "cognitivecomputations",
     "nousresearch",
-    "hermes"
+    "hermes",
+    "slos",
+    "traceparent"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

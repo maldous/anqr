@@ -44,15 +44,50 @@ const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
 const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 
-// Provider selection statistics
+// Provider selection statistics - comprehensive metrics
 const PROVIDER_STATS = {
-  selections: {},   // { providerName: count }
-  successes: {},    // { providerName: count }
-  failures: {},     // { providerName: count }
-  lastSelected: {}, // { providerName: timestamp }
-  lastSuccess: {},  // { providerName: timestamp }
-  lastFailure: {},  // { providerName: timestamp }
+  // Basic counts
+  selections: {},     // { providerName: count }
+  successes: {},      // { providerName: count }
+  failures: {},       // { providerName: count }
+  
+  // Timing metrics (in ms)
+  totalDuration: {},  // { providerName: total_ms }
+  avgDuration: {},    // { providerName: computed }
+  minDuration: {},    // { providerName: min_ms }
+  maxDuration: {},    // { providerName: max_ms }
+  
+  // Token metrics
+  totalInputTokens: {},   // { providerName: count }
+  totalOutputTokens: {},  // { providerName: count }
+  avgInputTokens: {},     // { providerName: computed }
+  avgOutputTokens: {},    // { providerName: computed }
+  
+  // Quality metrics
+  validationPasses: {},   // { providerName: count } - passed validation
+  validationFailures: {}, // { providerName: count } - failed validation
+  
+  // Timestamps
+  lastSelected: {},   // { providerName: timestamp }
+  lastSuccess: {},    // { providerName: timestamp }
+  lastFailure: {},    // { providerName: timestamp }
+  firstUsed: {},      // { providerName: timestamp }
+  
+  // Score (dynamic ranking)
+  score: {},          // { providerName: computed score }
 };
+
+// Scoring weights (customizable)
+const SCORE_WEIGHTS = {
+  successRate: 0.30,      // 30% - success rate
+  avgDuration: 0.20,     // 20% - faster is better (normalized)
+  validationRate: 0.25,  // 25% - passes validation
+  volume: 0.15,          // 15% - more usage = more data
+  recency: 0.10,         // 10% - recent usage weighted higher
+};
+
+// Minimum selections before provider is ranked
+const MIN_SELECTIONS_FOR_RANKING = 3;
 
 const PROBE_TIMEOUT_MS = 5_000;
 
@@ -443,6 +478,9 @@ export function recordProviderSelection(providerName) {
   const stats = loadStats();
   stats.selections[providerName] = (stats.selections[providerName] || 0) + 1;
   stats.lastSelected[providerName] = Date.now();
+  if (!stats.firstUsed[providerName]) {
+    stats.firstUsed[providerName] = Date.now();
+  }
   saveStats(stats);
 }
 
@@ -460,23 +498,168 @@ export function recordProviderFailureCount(providerName) {
   saveStats(stats);
 }
 
+/**
+ * Record detailed metrics after a provider completes a job
+ * @param {string} providerName - Provider name
+ * @param {object} metrics - { durationMs, inputTokens, outputTokens, validationPassed }
+ */
+export function recordProviderMetrics(providerName, { durationMs, inputTokens, outputTokens, validationPassed }) {
+  const stats = loadStats();
+  
+  // Timing
+  stats.totalDuration[providerName] = (stats.totalDuration[providerName] || 0) + durationMs;
+  const selections = stats.selections[providerName] || 0;
+  stats.avgDuration[providerName] = selections > 0 
+    ? Math.round(stats.totalDuration[providerName] / selections) 
+    : 0;
+  
+  const prevMin = stats.minDuration[providerName];
+  stats.minDuration[providerName] = prevMin ? Math.min(prevMin, durationMs) : durationMs;
+  
+  const prevMax = stats.maxDuration[providerName];
+  stats.maxDuration[providerName] = prevMax ? Math.max(prevMax, durationMs) : durationMs;
+  
+  // Tokens
+  stats.totalInputTokens[providerName] = (stats.totalInputTokens[providerName] || 0) + (inputTokens || 0);
+  stats.totalOutputTokens[providerName] = (stats.totalOutputTokens[providerName] || 0) + (outputTokens || 0);
+  stats.avgInputTokens[providerName] = selections > 0 
+    ? Math.round(stats.totalInputTokens[providerName] / selections) 
+    : 0;
+  stats.avgOutputTokens[providerName] = selections > 0 
+    ? Math.round(stats.totalOutputTokens[providerName] / selections) 
+    : 0;
+  
+  // Validation
+  if (validationPassed) {
+    stats.validationPasses[providerName] = (stats.validationPasses[providerName] || 0) + 1;
+  } else {
+    stats.validationFailures[providerName] = (stats.validationFailures[providerName] || 0) + 1;
+  }
+  
+  // Recalculate score
+  stats.score[providerName] = calculateProviderScore(providerName, stats);
+  
+  saveStats(stats);
+}
+
+/**
+ * Calculate dynamic score for a provider based on metrics
+ */
+function calculateProviderScore(providerName, stats) {
+  const selections = stats.selections[providerName] || 0;
+  
+  // Not enough data yet
+  if (selections < MIN_SELECTIONS_FOR_RANKING) {
+    return null; // Not ranked yet
+  }
+  
+  const successes = stats.successes[providerName] || 0;
+  const avgDuration = stats.avgDuration[providerName] || 0;
+  const validationPasses = stats.validationPasses[providerName] || 0;
+  const validationFailures = stats.validationFailures[providerName] || 0;
+  const lastSelected = stats.lastSelected[providerName] || 0;
+  
+  // 1. Success Rate (0-1)
+  const successRate = selections > 0 ? successes / selections : 0;
+  
+  // 2. Avg Duration (normalized - lower is better, invert)
+  // Use a baseline of 60s as "slow", anything faster gets higher score
+  const durationScore = avgDuration > 0 ? Math.max(0, 1 - (avgDuration / 60000)) : 0.5;
+  
+  // 3. Validation Rate (0-1)
+  const totalValidations = validationPasses + validationFailures;
+  const validationRate = totalValidations > 0 ? validationPasses / totalValidations : 0.5;
+  
+  // 4. Volume (normalized - use log scale to prevent dominance)
+  const volumeScore = Math.min(1, Math.log10(selections + 1) / 3); // Maxes at 1000 selections
+  
+  // 5. Recency (0-1 - more recent = higher)
+  const now = Date.now();
+  const ageMs = now - lastSelected;
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+  const recencyScore = Math.max(0, 1 - (ageDays / 30)); // Decay over 30 days
+  
+  // Weighted combination
+  const score = (
+    (successRate * SCORE_WEIGHTS.successRate) +
+    (durationScore * SCORE_WEIGHTS.avgDuration) +
+    (validationRate * SCORE_WEIGHTS.validationRate) +
+    (volumeScore * SCORE_WEIGHTS.volume) +
+    (recencyScore * SCORE_WEIGHTS.recency)
+  );
+  
+  return Math.round(score * 100) / 100; // 2 decimal places
+}
+
+/**
+ * Get providers sorted by dynamic score (best first)
+ */
+export function getRankedProviders() {
+  const stats = loadStats();
+  const ranked = [];
+  
+  for (const name of Object.keys(stats.selections)) {
+    const score = stats.score[name];
+    if (score !== null && score !== undefined) {
+      ranked.push({ name, score });
+    }
+  }
+  
+  // Sort by score descending
+  ranked.sort((a, b) => b.score - a.score);
+  
+  // Add rank position
+  return ranked.map((item, index) => ({ ...item, rank: index + 1 }));
+}
+
 export function getProviderStats() {
   const stats = loadStats();
-  // Calculate success rates
   const result = {};
   for (const name of Object.keys(stats.selections)) {
     const selected = stats.selections[name] || 0;
     const success = stats.successes[name] || 0;
     const fail = stats.failures[name] || 0;
     const rate = selected > 0 ? ((success / selected) * 100).toFixed(1) : 0;
+    
+    // Calculate validation rate
+    const validationPasses = stats.validationPasses[name] || 0;
+    const validationFailures = stats.validationFailures[name] || 0;
+    const totalValidations = validationPasses + validationFailures;
+    const validationRate = totalValidations > 0 
+      ? ((validationPasses / totalValidations) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
     result[name] = {
+      // Basic counts
       selections: selected,
       successes: success,
       failures: fail,
       successRate: `${rate}%`,
+      
+      // Timing
+      avgDurationMs: stats.avgDuration[name] || 0,
+      minDurationMs: stats.minDuration[name] || null,
+      maxDurationMs: stats.maxDuration[name] || null,
+      
+      // Tokens
+      avgInputTokens: stats.avgInputTokens[name] || 0,
+      avgOutputTokens: stats.avgOutputTokens[name] || 0,
+      totalInputTokens: stats.totalInputTokens[name] || 0,
+      totalOutputTokens: stats.totalOutputTokens[name] || 0,
+      
+      // Validation
+      validationPasses,
+      validationFailures,
+      validationRate,
+      
+      // Score
+      score: stats.score[name] !== null ? stats.score[name] : 'pending', // null = not enough data
+      
+      // Timestamps
       lastSelected: stats.lastSelected[name] ? new Date(stats.lastSelected[name]).toISOString() : null,
       lastSuccess: stats.lastSuccess[name] ? new Date(stats.lastSuccess[name]).toISOString() : null,
       lastFailure: stats.lastFailure[name] ? new Date(stats.lastFailure[name]).toISOString() : null,
+      firstUsed: stats.firstUsed[name] ? new Date(stats.firstUsed[name]).toISOString() : null,
     };
   }
   return result;
@@ -488,10 +671,22 @@ export function resetProviderStats() {
 
 // Log stats summary (for debugging/monitoring)
 export function logProviderStats() {
+  const ranked = getRankedProviders();
   const stats = getProviderStats();
-  console.log(`[credit-gate] 📊 Provider Statistics:`);
+  
+  console.log(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
+  if (ranked.length > 0) {
+    for (const { rank, name, score } of ranked) {
+      const data = stats[name];
+      console.log(`[credit-gate]   #${rank} ${name}: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`);
+    }
+  } else {
+    console.log(`[credit-gate]   (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`);
+  }
+  
+  console.log(`[credit-gate] 📈 Provider Details:`);
   for (const [name, data] of Object.entries(stats).sort((a, b) => b[1].selections - a[1].selections)) {
-    console.log(`[credit-gate]   ${name}: ${data.selections} selections, ${data.successes} success, ${data.failures} fail, ${data.successRate} rate`);
+    console.log(`[credit-gate]   ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`);
   }
 }
 

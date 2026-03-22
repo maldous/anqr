@@ -603,6 +603,7 @@ async function runToolLoop({
 }) {
   const filesChanged = new Set();
   let totalToolCalls = 0;
+  let consecutiveNoToolCalls = 0;
   let turn = 0;
   const validationsAfterMutation = {
     typecheck: false,
@@ -664,6 +665,20 @@ async function runToolLoop({
     const msg = choice.message;
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
+      consecutiveNoToolCalls++;
+      if (consecutiveNoToolCalls >= 5) {
+        console.log("[agent] Too many consecutive turns without tool calls — aborting");
+        return {
+          completed: false,
+          summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls`,
+          turns: turn + 1,
+          toolCalls: totalToolCalls,
+          filesChanged: [...filesChanged],
+          timedOut: false,
+          error: null,
+          messages,
+        };
+      }
       messages.push(msg);
 
       // Handle autonomous agents (like Codebuff) that complete in one run
@@ -793,6 +808,8 @@ async function runToolLoop({
         continue;
       }
       break;
+    } else {
+      consecutiveNoToolCalls = 0;
     }
 
     messages.push(msg);
