@@ -47,57 +47,57 @@ const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 // Provider selection statistics - comprehensive metrics
 const PROVIDER_STATS = {
   // Basic counts
-  selections: {},     // { providerName: count }
-  successes: {},      // { providerName: count }
-  failures: {},       // { providerName: count }
+  selections: {},
+  successes: {},
+  failures: {},
   
   // Timing metrics (in ms)
-  totalDuration: {},  // { providerName: total_ms }
-  avgDuration: {},    // { providerName: computed }
-  minDuration: {},    // { providerName: min_ms }
-  maxDuration: {},    // { providerName: max_ms }
+  totalDuration: {},
+  avgDuration: {},
+  minDuration: {},
+  maxDuration: {},
   
   // Token metrics
-  totalInputTokens: {},   // { providerName: count }
-  totalOutputTokens: {},  // { providerName: count }
-  avgInputTokens: {},     // { providerName: computed }
-  avgOutputTokens: {},    // { providerName: computed }
+  totalInputTokens: {},
+  totalOutputTokens: {},
+  avgInputTokens: {},
+  avgOutputTokens: {},
   
   // Quality metrics
-  validationPasses: {},   // { providerName: count } - passed validation
-  validationFailures: {}, // { providerName: count } - failed validation
+  validationPasses: {},
+  validationFailures: {},
   
   // Timestamps
-  lastSelected: {},   // { providerName: timestamp }
-  lastSuccess: {},    // { providerName: timestamp }
-  lastFailure: {},    // { providerName: timestamp }
-  firstUsed: {},      // { providerName: timestamp }
+  lastSelected: {},
+  lastSuccess: {},
+  lastFailure: {},
+  firstUsed: {},
   
   // Score (dynamic ranking)
-  score: {},          // { providerName: computed score }
+  score: {},
   
   // Linear issue completion metrics (per complexity level)
-  linearCompleted: {},      // { providerName: count } - issues marked Done
-  linearFailed: {},         // { providerName: count } - issues that failed/completed externally
-  linearHighPrioritySuccess: {},  // { providerName: count } - high priority (P0-P1) completed
-  linearHighPriorityTotal: {},    // { providerName: count } - high priority attempted
-  linearMediumPrioritySuccess: {}, // { providerName: count } - medium priority completed
-  linearMediumPriorityTotal: {},   // { providerName: count } - medium priority attempted
-  linearLowPrioritySuccess: {},    // { providerName: count } - low priority completed
-  linearLowPriorityTotal: {},      // { providerName: count } - low priority attempted
+  linearCompleted: {},
+  linearFailed: {},
+  linearHighPrioritySuccess: {},
+  linearHighPriorityTotal: {},
+  linearMediumPrioritySuccess: {},
+  linearMediumPriorityTotal: {},
+  linearLowPrioritySuccess: {},
+  linearLowPriorityTotal: {},
   
   // Estimate-based complexity tracking
-  totalEstimatePoints: {},  // { providerName: total } - sum of all estimates worked on
-  avgEstimatePoints: {},    // { providerName: computed } - average estimate
-  completedEstimatePoints: {}, // { providerName: total } - sum of estimates for completed issues
+  totalEstimatePoints: {},
+  avgEstimatePoints: {},
+  completedEstimatePoints: {},
   
   // Complexity breakdown by estimate ranges
-  smallIssuesCompleted: {},    // { providerName: count } - estimate 1-2
-  smallIssuesTotal: {},        // { providerName: count }
-  mediumIssuesCompleted: {},   // { providerName: count } - estimate 3-5
-  mediumIssuesTotal: {},       // { providerName: count }
-  largeIssuesCompleted: {},    // { providerName: count } - estimate 8+
-  largeIssuesTotal: {},        // { providerName: count }
+  smallIssuesCompleted: {},
+  smallIssuesTotal: {},
+  mediumIssuesCompleted: {},
+  mediumIssuesTotal: {},
+  largeIssuesCompleted: {},
+  largeIssuesTotal: {},
 };
 
 // Scoring weights (customizable)
