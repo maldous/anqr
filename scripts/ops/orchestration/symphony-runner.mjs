@@ -468,19 +468,57 @@ async function executeIssue(issue, dryRun = false) {
 
     let changedFiles = gitDiffNames();
     if (changedFiles.length === 0) {
-      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes");
-      await updateIssue(issue.id, { stateId: STATES.todo });
-      await addComment(
-        issue.id,
-        `⚠️ **No file changes produced**. Returned to Todo with cooldown.\n\nAgent summary: ${agentResult.summary}`,
-      );
-      recordTransition(issue.identifier, {
-        actor: "runner",
-        reason: "no_file_changes",
-        from: "In Progress",
-        to: "Todo",
-        runId: RUN_ID,
-      });
+      // Check if work was completed externally (by human or another process)
+      // by checking if the issue has been resolved/closed externally
+      const isExternallyCompleted =
+        detail?.state?.name === "Done" ||
+        detail?.state?.name === "Canceled" ||
+        agentResult.summary?.toLowerCase().includes("already") ||
+        agentResult.summary?.toLowerCase().includes("completed") ||
+        agentResult.summary?.toLowerCase().includes("external") ||
+        agentResult.summary?.toLowerCase().includes("human") ||
+        agentResult.summary?.toLowerCase().includes("no longer needed");
+
+      // Document external completion in a log file for audit trail
+      const externalLogPath = resolve(ROOT, "reports", "symphony", "external-completions.log");
+      const externalLogEntry = `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}\n  Agent: ${agentResult.summary?.slice(0, 200)}\n  Externally completed: ${isExternallyCompleted}\n`;
+      try {
+        const dir = resolve(ROOT, "reports", "symphony");
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+        appendFileSync(externalLogPath, externalLogEntry);
+      } catch { /* best effort logging */ }
+
+      if (isExternallyCompleted) {
+        // Mark as completed externally - move to Done, not back to Todo
+        await updateIssue(issue.id, { stateId: STATES.done });
+        await addComment(
+          issue.id,
+          `✅ **Completed externally** — no file changes detected, but issue was resolved externally (by human or another process). Marked as Done.`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "completed_externally",
+          from: "In Progress",
+          to: "Done",
+          runId: RUN_ID,
+        });
+        // Clear any cooldown so it doesn't get re-queued
+        clearCooldown(issue.identifier);
+      } else {
+        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes");
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        await addComment(
+          issue.id,
+          `⚠️ **No file changes produced**. Returned to Todo with cooldown.\n\nAgent summary: ${agentResult.summary}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "no_file_changes",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+      }
       return "done";
     }
 
