@@ -470,14 +470,7 @@ async function executeIssue(issue, dryRun = false) {
     if (changedFiles.length === 0) {
       // Check if agent is still planning/working via sub-goals - don't return to Todo if still active
       const messages = agentResult.messages || [];
-      const hasActiveSubGoals = messages.some((m) => {
-        // Check for update_subgoal tool calls more specifically
-        const toolCalls = m.tool_calls || m.function_call || [];
-        const toolNames = Array.isArray(toolCalls) 
-          ? toolCalls.map((t) => t.function?.name || t.name || t).join(" ").toLowerCase()
-          : String(toolCalls).toLowerCase();
-        return toolNames.includes("update_subgoal") || toolNames.includes("sub_goal");
-      });
+      const hasActiveSubGoals = messages.some((m) => m.toolName === "update_subgoal");
       
       // Check if work was completed externally (by human or another process)
       // by checking if the issue has been resolved/closed externally
