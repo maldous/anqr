@@ -24,15 +24,22 @@ Integrations and support:
 - `scripts/ops/lib/notify.mjs`
 - `scripts/ops/sonar-linear-mail.mjs`
 - `scripts/ops/symphony-credit-gate.mjs`
+- `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 
 Restructured copies under subdirectories may exist. The root entrypoints remain the stable operator contract until a deliberate cleanup replaces them.
 
 ## Systemd units
 
+Scheduled automation:
+
 - `anqr-symphony-runner.service` / `.timer`
 - `anqr-queue-feeder.service` / `.timer`
 - `anqr-nightly.service` / `.timer`
 - `anqr-email-ingest.service` / `.timer`
+
+Long-running services:
+
+- `anqr-codebuff-bridge.service` — OpenAI-compatible HTTP gateway for Codebuff SDK
 
 Shared environment:
 
@@ -58,4 +65,8 @@ Optional local support:
 - product runtime ports belong to `apps/web`, Netlify, and mobile if later claimed
 - harness runtime ports are operator-only and may be absent on reduced developer machines
 
-Port truth must be documented in follow-up runbooks instead of inferred.
+Documented harness ports:
+
+- `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
+
+Additional port truth must be documented in follow-up runbooks instead of inferred.

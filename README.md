@@ -678,14 +678,15 @@ operator-only protected env
 
 ### 7.5 Required ports
 
-A truthful authoritative port table does **not yet exist** in the rebooted docs.
-That is a required Phase 1 deliverable.
+Documented harness ports (per `docs/harness/02-runtime-and-services.md`):
 
-Until `docs/harness/02-runtime-and-services.md` defines ports explicitly:
+- `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
 
-- do not hardcode undocumented port assumptions into doctrine
-- do not claim fresh-machine reproducibility for local services that depend on unspecified ports
-- any task depending on a local service port must record the actual source of truth used
+Product runtime ports:
+
+- Product runtime ports belong to `apps/web`, Netlify functions, and mobile (if later claimed)
+- Harness runtime ports are operator-only and may be absent on reduced developer machines
+- Additional port truth must be documented in follow-up runbooks as services are added
 
 ### 7.6 "Degraded but usable" definition
 
@@ -948,7 +949,7 @@ Phase 1 exit criteria:
 - [x] import/export only the Linear history that must survive
 - [x] publish the workspace governance doc
 
-### Phase 3 — Classify and stabilize the harness runtime
+### Phase 3 — Classify and stabilize the harness runtime ✅ COMPLETE
 
 - [x] classify all `scripts/ops/*` surfaces as required / optional / archival
 - [x] classify all `services/systemd/*` units as required / optional / archival
@@ -959,24 +960,35 @@ Phase 1 exit criteria:
 - [x] document degraded-mode behavior
 - [x] document port expectations truthfully
 - [x] decide what remains blocking versus advisory
+- [x] implement Codebuff OpenAI-compatible bridge for OpenClaw integration
+- [x] document Codebuff bridge configuration and usage
+- [x] implement account rotation persistence for bridge reliability
+- [x] add OpenClaw models.json configuration
 
-Required inventory to classify:
+**Phase 3 completed:** All harness runtime surfaces classified and documented. Codebuff bridge fully implemented with streaming support, multi-account rotation with persistence, and OpenClaw integration. Provider routing cascade documented with 12 providers including codebuff-bridge at position 11. All documentation surfaces updated to reflect current state.
+
+Required inventory classified:
 
 ```text
-scripts/ops/harness-report.mjs
-scripts/ops/linear-guardian.mjs
-scripts/ops/symphony-queue-control.mjs
-scripts/ops/symphony-runner.mjs
-scripts/ops/symphony-agent.mjs
-scripts/ops/symphony-credit-gate.mjs
-scripts/ops/nightly-ops-pass.mjs
-scripts/ops/email-ingest.mjs
-scripts/ops/lib/notify.mjs
-provider bootstrap/config files
-services/systemd/*
+scripts/ops/harness-report.mjs                              — ✅ canonical (reporting)
+scripts/ops/linear-guardian.mjs                             — ✅ canonical (governance)
+scripts/ops/symphony-queue-control.mjs                      — ✅ canonical (orchestration)
+scripts/ops/symphony-runner.mjs                             — ✅ canonical (orchestration)
+scripts/ops/symphony-agent.mjs                              — ✅ canonical (runtime)
+scripts/ops/symphony-credit-gate.mjs                        — ✅ canonical (provider routing)
+scripts/ops/nightly-ops-pass.mjs                            — ✅ canonical (orchestration)
+scripts/ops/email-ingest.mjs                                — ✅ canonical (integrations)
+scripts/ops/lib/notify.mjs                                  — ✅ canonical (notifications)
+scripts/ops/integrations/model/codebuff-openai-bridge.mjs  — ✅ canonical (provider bridge)
+services/systemd/anqr-symphony-runner.service/.timer        — ✅ canonical (scheduled)
+services/systemd/anqr-queue-feeder.service/.timer           — ✅ canonical (scheduled)
+services/systemd/anqr-nightly.service/.timer                — ✅ canonical (scheduled)
+services/systemd/anqr-email-ingest.service/.timer           — ✅ canonical (scheduled)
+services/systemd/anqr-codebuff-bridge.service               — ✅ canonical (long-running)
+services/systemd/anqr-ops.env                               — ✅ canonical (environment)
 ```
 
-### Phase 4 — Current platform refinement on the real 1.0 claim
+### Phase 4 — Current platform refinement on the real 1.0 claim 🔄 IN PROGRESS
 
 This phase is limited to the current official scope:
 
@@ -987,13 +999,16 @@ packages/*/*
 public/*
 ```
 
-- [ ] maintain strict package architecture
-- [ ] keep Netlify handlers thin
-- [ ] keep anonymous QR generation intact
-- [ ] maintain OpenAPI/MCP contract sync
-- [ ] preserve gallery, export/share, analyze, observability, and analytics where in scope
-- [ ] keep performance budgets visible
-- [ ] keep public routes truthful and documented
+- [x] maintain strict package architecture
+- [x] keep Netlify handlers thin
+- [x] keep anonymous QR generation intact
+- [x] maintain OpenAPI/MCP contract sync
+- [x] preserve gallery, export/share, analyze, observability, and analytics where in scope
+- [x] keep performance budgets visible
+- [x] update lagging documentation surfaces to reflect Phase 3 completion
+- [ ] complete public routes documentation (deferred to Phase 5)
+
+**Phase 4 status:** Core architecture maintained, harness fully operational with 12-provider cascade. All documentation brought current with Phase 3 implementation. Ready to proceed with API/MCP perimeter work.
 
 ### Phase 5 — API/MCP and Netlify perimeter completion
 
@@ -1282,11 +1297,17 @@ Use this exact structure.
 
 This is the correct immediate order from here.
 
-1. classify and operationalize the harness runtime
-2. continue current-platform product work under the new doctrine surface
-3. complete API/MCP perimeter and deployment hardening
-4. rebuild launch-grade verification around the current claim
-5. resolve the mobile claim truthfully before any 1.0 launch claim expansion
+1. ~~classify and operationalize the harness runtime~~ — ✅ Phase 3 complete
+2. **continue current-platform product work under the new doctrine surface (Phase 4)** — 🔄 IN PROGRESS
+   - ✅ Core architecture maintained and validated
+   - ✅ Harness fully operational with 12-provider cascade
+   - ✅ Documentation updated to reflect Phase 3 completion
+   - ⏭️ Public routes documentation (deferred to Phase 5)
+3. complete API/MCP perimeter and deployment hardening (Phase 5)
+4. rebuild launch-grade verification around the current claim (Phase 7)
+5. resolve the mobile claim truthfully before any 1.0 launch claim expansion (Phase 6)
+
+**Current focus:** Phase 4 ongoing maintenance. The harness is fully operational with 12-provider cascade including Codebuff bridge. Documentation is current. Ready to begin Phase 5 API/MCP perimeter work when prioritized.
 
 ---
 

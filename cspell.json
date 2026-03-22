@@ -405,7 +405,9 @@
     "YYYYMMDDTH",
     "subgoal",
     "subgoals",
-    "retryerror"
+    "retryerror",
+    "openclaw",
+    "chatcmpl"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

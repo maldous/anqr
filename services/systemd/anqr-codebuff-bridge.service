@@ -1,7 +1,7 @@
 # anqr-codebuff-bridge.service — Codebuff OpenAI-compatible API bridge
 #
 # Exposes Codebuff SDK as an OpenAI-compatible HTTP server for OpenClaw.
-# Endpoints: /v1/models, /v1/chat/completions, /health
+# Endpoints: /v1/models, /v1/chat/completions, /chat/completions, /health
 #
 # Install as user service:
 #   cp services/systemd/anqr-codebuff-bridge.service ~/.config/systemd/user/

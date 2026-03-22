@@ -25,7 +25,7 @@ QUALITY_MOBILE_TARGETS := \
   harness-quick harness-continuous harness-full \
   guardian-run guardian-dry-run \
   queue-check queue-feed queue-enforce queue-all queue-all-dry-run queue-continuous \
-  symphony-run symphony-run-dry-run symphony-status \
+  symphony-run symphony-run-dry-run symphony-status codebuff-bridge \
   email-ingest email-ingest-dry-run notify-test nightly nightly-dry-run \
   quality quality-fast quality-release quality-harness quality-mobile quality-full \
   install hooks bootstrap clean zip \
@@ -168,6 +168,9 @@ symphony-run-dry-run: ## Dry-run the symphony runner
 
 symphony-status: ## Show symphony status
 	npm run symphony:status
+
+codebuff-bridge: ## Start the Codebuff OpenAI-compatible bridge
+	node scripts/ops/integrations/model/codebuff-openai-bridge.mjs
 
 email-ingest: ## Run email ingest
 	npm run email:ingest
