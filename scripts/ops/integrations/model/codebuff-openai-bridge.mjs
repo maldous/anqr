@@ -253,21 +253,34 @@ async function invokeCodebuff({ messages, cwd }) {
         account: attempt.label,
       };
     } catch (err) {
-      const errStr = err.message || "";
+      // Extract error details with better logging
+      const errStr = err.message || String(err);
+      const errName = err.name || "Error";
+      const errCode = err.code || err.statusCode || "";
+      
+      // Log the full error for debugging
+      console.error(`[bridge] Caught error on ${attempt.label}:`);
+      console.error(`[bridge]   Type: ${errName}`);
+      console.error(`[bridge]   Code: ${errCode}`);
+      console.error(`[bridge]   Message: ${errStr}`);
+      if (err.cause) {
+        console.error(`[bridge]   Cause: ${err.cause}`);
+      }
 
       if (isAuthError(errStr)) {
         lastError = errStr;
-        console.warn(`[bridge] Auth error on ${attempt.label}, skipping.`);
+        console.warn(`[bridge] Auth error detected, skipping to next key.`);
         continue;
       }
 
       if (isRateLimitError(errStr)) {
         lastError = errStr;
-        console.log(`[bridge] ${errStr} on ${attempt.label}, trying next...`);
+        console.log(`[bridge] Rate limit detected, rotating to next key...`);
         continue;
       }
 
       // Non-retryable error - re-throw
+      console.error(`[bridge] Non-retryable error - stopping attempts.`);
       throw err;
     }
   }
@@ -409,21 +422,34 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         account: attempt.label,
       };
     } catch (err) {
-      const errStr = err.message || "";
+      // Extract error details with better logging
+      const errStr = err.message || String(err);
+      const errName = err.name || "Error";
+      const errCode = err.code || err.statusCode || "";
+      
+      // Log the full error for debugging
+      console.error(`[bridge] Streaming error on ${attempt.label}:`);
+      console.error(`[bridge]   Type: ${errName}`);
+      console.error(`[bridge]   Code: ${errCode}`);
+      console.error(`[bridge]   Message: ${errStr}`);
+      if (err.cause) {
+        console.error(`[bridge]   Cause: ${err.cause}`);
+      }
 
       if (isAuthError(errStr)) {
         lastError = errStr;
-        console.warn(`[bridge] Auth error on ${attempt.label}, skipping.`);
+        console.warn(`[bridge] Auth error detected, skipping to next key.`);
         continue;
       }
 
       if (isRateLimitError(errStr)) {
         lastError = errStr;
-        console.log(`[bridge] ${errStr} on ${attempt.label}, trying next...`);
+        console.log(`[bridge] Rate limit detected, rotating to next key...`);
         continue;
       }
 
       // Non-retryable error - re-throw
+      console.error(`[bridge] Non-retryable streaming error - stopping attempts.`);
       throw err;
     }
   }
@@ -634,13 +660,32 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
 // Start server
-server.listen(PORT, "127.0.0.1", () => {
+server.listen(PORT, "127.0.0.1", async () => {
   const apiKeys = getAllApiKeys();
-  console.log(`Codebuff bridge listening on http://127.0.0.1:${PORT}/v1`);
-  console.log(`  Model: ${MODEL_ID}`);
-  console.log(`  API keys configured: ${apiKeys.length}`);
-  console.log(`  Auth: Bearer ${API_KEY}`);
-  console.log(`  Streaming: enabled`);
+  console.log(`[bridge] ========================================`);
+  console.log(`[bridge] Codebuff OpenAI Bridge Starting`);
+  console.log(`[bridge] ========================================`);
+  console.log(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
+  console.log(`[bridge] Model: ${MODEL_ID}`);
+  console.log(`[bridge] API keys configured: ${apiKeys.length}`);
+  console.log(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
+  console.log(`[bridge] Streaming: enabled`);
+  console.log(`[bridge] Working directory: ${DEFAULT_CWD}`);
+  
+  // Validate keys on startup
+  if (apiKeys.length > 0) {
+    console.log(`[bridge] Validating API keys...`);
+    const accounts = await validateApiKeys(apiKeys);
+    if (accounts.length === 0) {
+      console.warn(`[bridge] WARNING: No valid API keys found!`);
+    }
+  } else {
+    console.warn(`[bridge] WARNING: No CODEBUFF_API_KEY* environment variables found!`);
+  }
+  
+  console.log(`[bridge] ========================================`);
+  console.log(`[bridge] Ready to accept requests`);
+  console.log(`[bridge] ========================================`);
 });
 
 // Export for testing
