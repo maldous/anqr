@@ -407,7 +407,18 @@
     "subgoals",
     "retryerror",
     "openclaw",
-    "chatcmpl"
+    "chatcmpl",
+    "nemotron",
+    "stepfun",
+    "arcee",
+    "trinity",
+    "minimax",
+    "liquid",
+    "mistralai",
+    "gemma",
+    "cognitivecomputations",
+    "nousresearch",
+    "hermes"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

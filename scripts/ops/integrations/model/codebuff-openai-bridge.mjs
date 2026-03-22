@@ -856,10 +856,10 @@ const server = http.createServer(async (req, res) => {
           },
         });
       }
+    } else {
+      // 404 for other routes
+      sendJson(res, 404, { error: { message: "Not found" } });
     }
-
-    // 404 for other routes
-    sendJson(res, 404, { error: { message: "Not found" } });
   } catch (error) {
     console.error(`[bridge] Error: ${error.message}`);
     sendJson(res, 500, {
