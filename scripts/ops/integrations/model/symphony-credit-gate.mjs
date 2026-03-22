@@ -75,19 +75,39 @@ const PROVIDER_STATS = {
   
   // Score (dynamic ranking)
   score: {},          // { providerName: computed score }
+  
+  // Linear issue completion metrics (per complexity level)
+  linearCompleted: {},      // { providerName: count } - issues marked Done
+  linearFailed: {},         // { providerName: count } - issues that failed/completed externally
+  linearHighPrioritySuccess: {},  // { providerName: count } - high priority (P0-P1) completed
+  linearHighPriorityTotal: {},    // { providerName: count } - high priority attempted
+  linearMediumPrioritySuccess: {}, // { providerName: count } - medium priority completed
+  linearMediumPriorityTotal: {},   // { providerName: count } - medium priority attempted
+  linearLowPrioritySuccess: {},    // { providerName: count } - low priority completed
+  linearLowPriorityTotal: {},      // { providerName: count } - low priority attempted
+  totalTokensProcessed: {}, // { providerName: total } - all tokens across all jobs
 };
 
 // Scoring weights (customizable)
 const SCORE_WEIGHTS = {
-  successRate: 0.30,      // 30% - success rate
-  avgDuration: 0.20,     // 20% - faster is better (normalized)
-  validationRate: 0.25,  // 25% - passes validation
-  volume: 0.15,          // 15% - more usage = more data
-  recency: 0.10,         // 10% - recent usage weighted higher
+  successRate: 0.20,           // 20% - general success rate
+  avgDuration: 0.10,          // 10% - faster is better (normalized)
+  validationRate: 0.15,       // 15% - passes validation
+  volume: 0.10,               // 10% - more usage = more data
+  recency: 0.05,              // 5% - recent usage weighted higher
+  
+  // Linear issue metrics (40% total)
+  linearCompletionRate: 0.20, // 20% - Linear issues completed vs failed
+  linearComplexitySuccess: 0.10, // 10% - success rate on complex (high priority) issues
+  linearSimpleSuccess: 0.10,  // 10% - success rate on simple issues
 };
 
 // Minimum selections before provider is ranked
 const MIN_SELECTIONS_FOR_RANKING = 3;
+
+// Priority thresholds for complexity classification
+const HIGH_PRIORITY_THRESHOLD = 2;  // P0, P1 = high complexity
+const MEDIUM_PRIORITY_THRESHOLD = 4; // P2, P3 = medium complexity
 
 const PROBE_TIMEOUT_MS = 5_000;
 
@@ -499,6 +519,48 @@ export function recordProviderFailureCount(providerName) {
 }
 
 /**
+ * Record a Linear issue completion for a provider
+ * @param {string} providerName - Provider name
+ * @param {object} completion - { completed: boolean, priority: number }
+ *   - completed: true if issue was successfully completed (Done), false if failed/external
+ *   - priority: Linear priority (0 = highest/urgent, 4 = lowest)
+ */
+export function recordLinearCompletion(providerName, { completed, priority }) {
+  const stats = loadStats();
+  
+  if (completed) {
+    stats.linearCompleted[providerName] = (stats.linearCompleted[providerName] || 0) + 1;
+  } else {
+    stats.linearFailed[providerName] = (stats.linearFailed[providerName] || 0) + 1;
+  }
+  
+  // Track by priority complexity
+  if (priority <= HIGH_PRIORITY_THRESHOLD) {
+    // High complexity: P0, P1
+    stats.linearHighPriorityTotal[providerName] = (stats.linearHighPriorityTotal[providerName] || 0) + 1;
+    if (completed) {
+      stats.linearHighPrioritySuccess[providerName] = (stats.linearHighPrioritySuccess[providerName] || 0) + 1;
+    }
+  } else if (priority <= MEDIUM_PRIORITY_THRESHOLD) {
+    // Medium complexity: P2, P3
+    stats.linearMediumPriorityTotal[providerName] = (stats.linearMediumPriorityTotal[providerName] || 0) + 1;
+    if (completed) {
+      stats.linearMediumPrioritySuccess[providerName] = (stats.linearMediumPrioritySuccess[providerName] || 0) + 1;
+    }
+  } else {
+    // Low complexity: P4
+    stats.linearLowPriorityTotal[providerName] = (stats.linearLowPriorityTotal[providerName] || 0) + 1;
+    if (completed) {
+      stats.linearLowPrioritySuccess[providerName] = (stats.linearLowPrioritySuccess[providerName] || 0) + 1;
+    }
+  }
+  
+  // Recalculate score
+  stats.score[providerName] = calculateProviderScore(providerName, stats);
+  saveStats(stats);
+}
+
+/**
  * Record detailed metrics after a provider completes a job
  * @param {string} providerName - Provider name
  * @param {object} metrics - { durationMs, inputTokens, outputTokens, validationPassed }
@@ -579,13 +641,32 @@ function calculateProviderScore(providerName, stats) {
   const ageDays = ageMs / (1000 * 60 * 60 * 24);
   const recencyScore = Math.max(0, 1 - (ageDays / 30)); // Decay over 30 days
   
+  // 6. Linear Issue Completion Rate (0-1)
+  const linearCompleted = stats.linearCompleted[providerName] || 0;
+  const linearFailed = stats.linearFailed[providerName] || 0;
+  const linearTotal = linearCompleted + linearFailed;
+  const linearCompletionRate = linearTotal > 0 ? linearCompleted / linearTotal : 0.5;
+  
+  // 7. High Priority (Complex) Issue Success Rate (0-1)
+  const highSuccess = stats.linearHighPrioritySuccess[providerName] || 0;
+  const highTotal = stats.linearHighPriorityTotal[providerName] || 0;
+  const highPrioritySuccessRate = highTotal > 0 ? highSuccess / highTotal : 0.5;
+  
+  // 8. Low Priority (Simple) Issue Success Rate (0-1)
+  const lowSuccess = stats.linearLowPrioritySuccess[providerName] || 0;
+  const lowTotal = stats.linearLowPriorityTotal[providerName] || 0;
+  const lowPrioritySuccessRate = lowTotal > 0 ? lowSuccess / lowTotal : 0.5;
+  
   // Weighted combination
   const score = (
     (successRate * SCORE_WEIGHTS.successRate) +
     (durationScore * SCORE_WEIGHTS.avgDuration) +
     (validationRate * SCORE_WEIGHTS.validationRate) +
     (volumeScore * SCORE_WEIGHTS.volume) +
-    (recencyScore * SCORE_WEIGHTS.recency)
+    (recencyScore * SCORE_WEIGHTS.recency) +
+    (linearCompletionRate * SCORE_WEIGHTS.linearCompletionRate) +
+    (highPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) +
+    (lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess)
   );
   
   return Math.round(score * 100) / 100; // 2 decimal places
@@ -629,6 +710,26 @@ export function getProviderStats() {
       ? ((validationPasses / totalValidations) * 100).toFixed(1) + '%' 
       : 'N/A';
     
+    // Calculate Linear completion rates
+    const linearCompleted = stats.linearCompleted[name] || 0;
+    const linearFailed = stats.linearFailed[name] || 0;
+    const linearTotal = linearCompleted + linearFailed;
+    const linearCompletionRate = linearTotal > 0 
+      ? ((linearCompleted / linearTotal) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
+    const highSuccess = stats.linearHighPrioritySuccess[name] || 0;
+    const highTotal = stats.linearHighPriorityTotal[name] || 0;
+    const highPriorityRate = highTotal > 0 
+      ? ((highSuccess / highTotal) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
+    const lowSuccess = stats.linearLowPrioritySuccess[name] || 0;
+    const lowTotal = stats.linearLowPriorityTotal[name] || 0;
+    const lowPriorityRate = lowTotal > 0 
+      ? ((lowSuccess / lowTotal) * 100).toFixed(1) + '%' 
+      : 'N/A';
+    
     result[name] = {
       // Basic counts
       selections: selected,
@@ -651,6 +752,17 @@ export function getProviderStats() {
       validationPasses,
       validationFailures,
       validationRate,
+      
+      // Linear issue completion (by complexity)
+      linearCompleted,
+      linearFailed,
+      linearCompletionRate,
+      linearHighPrioritySuccess: highSuccess,
+      linearHighPriorityTotal: highTotal,
+      highPrioritySuccessRate: highPriorityRate,
+      linearLowPrioritySuccess: lowSuccess,
+      linearLowPriorityTotal: lowTotal,
+      lowPrioritySuccessRate: lowPriorityRate,
       
       // Score
       score: stats.score[name] !== null ? stats.score[name] : 'pending', // null = not enough data

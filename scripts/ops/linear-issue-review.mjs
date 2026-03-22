@@ -156,6 +156,10 @@ const SCOPE_UPDATES = {
     comment:
       "**Scope review (architecture alignment):** Verify against current symphony-runner.mjs — runner already uses 2-min timer with queue feeding. Update acceptance criteria to match current runner behavior and identify any remaining gap.",
   },
+  "ANQ-673": {
+    comment:
+      "**Scope review (observability enhancement):** The codebuff-openai-bridge should provide more detailed logging for request lifecycle and subgoal handling. Implementation: log subgoal details when detected, include issue context in logs, and ensure continuation signals are clearly visible. Improves observability for runner operations.",
+  },
   "ANQ-362": {
     comment:
       "**Scope review (architecture alignment):** Updated target paths — colocated tests should be in `packages/domain/*/src/` and `packages/application/*/src/`, not the old `src/domain/` paths. Still 0 colocated .spec.ts files exist. vitest config exists at repo root.",
