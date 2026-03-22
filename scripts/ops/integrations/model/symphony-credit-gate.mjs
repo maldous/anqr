@@ -126,7 +126,7 @@ const MIN_SELECTIONS_FOR_RANKING = 3;
 const HIGH_PRIORITY_THRESHOLD = 2;  // P0, P1 = high complexity
 const MEDIUM_PRIORITY_THRESHOLD = 4; // P2, P3 = medium complexity
 
-const PROBE_TIMEOUT_MS = 5_000;
+const PROBE_TIMEOUT_MS = 5000;
 
 // ---------------------------------------------------------------------------
 // Probe helpers
