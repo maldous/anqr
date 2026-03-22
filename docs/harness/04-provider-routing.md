@@ -46,7 +46,7 @@ The Codebuff bridge (`scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 
 ### Configuration
 
-- **Base URL**: `http://127.0.0.1:4318`
+- **Base URL**: `http://127.0.0.1:4318/v1`
 - **Auth**: Bearer token (default: `local-bridge`)
 - **Model ID**: `codebuff/base@latest`
 - **Working directory**: Project root (configurable via `CODEBUFF_BRIDGE_CWD`)
@@ -87,13 +87,13 @@ The bridge supports:
 
 ### OpenClaw integration
 
-Configure OpenClaw to use the bridge via `.openclaw/models.json`:
+Configure OpenClaw to use the bridge by adding the following to your `~/.openclaw/openclaw.json` configuration:
 
 ```json
 {
   "providers": {
     "codebuff-bridge": {
-      "baseUrl": "http://127.0.0.1:4318",
+      "baseUrl": "http://127.0.0.1:4318/v1",
       "apiKey": "local-bridge",
       "api": "openai-completions",
       "models": [

@@ -30,7 +30,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   RUNNER_OLLAMA_MODEL,
@@ -215,7 +215,7 @@ const PROVIDERS = [
     // Token loaded from ~/.openclaw/openclaw.json gateway.auth.token
     // Can override with OPENCLAW_TOKEN env var
     loadToken: () => {
-      const openclawConfig = path.join(process.env.HOME || process.env.USERPROFILE || "", ".openclaw", "openclaw.json");
+      const openclawConfig = join(process.env.HOME || process.env.USERPROFILE || "", ".openclaw", "openclaw.json");
       try {
         if (existsSync(openclawConfig)) {
           const config = JSON.parse(readFileSync(openclawConfig, "utf-8"));
@@ -438,6 +438,13 @@ const PROVIDERS = [
     baseUrl: "https://models.github.ai/inference/v1",
     envVar: "GITHUB_MODELS_TOKEN",
     probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini"),
+  },
+  {
+    name: "codebuff-bridge",
+    model: "codebuff/base@latest",
+    baseUrl: "http://127.0.0.1:4318/v1",
+    envVar: "CODEBUFF_BRIDGE_API_KEY",
+    probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
   },
   {
     name: "ollama-local",
