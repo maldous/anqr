@@ -404,7 +404,8 @@
     "Freebuff",
     "YYYYMMDDTH",
     "subgoal",
-    "subgoals"
+    "subgoals",
+    "retryerror"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

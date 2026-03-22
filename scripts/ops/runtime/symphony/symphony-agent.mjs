@@ -67,17 +67,19 @@ import {
 import { CodebuffClient } from "@codebuff/sdk";
 
 function isRateLimitError(errStr) {
+  const s = errStr.toLowerCase();
   return (
-    errStr.includes("429") ||
-    errStr.includes("rate_limit") ||
-    errStr.includes("Too Many Requests") ||
-    errStr.includes("session limit") ||
-    errStr.includes("rate_limit_exceeded") ||
-    errStr.includes("Failed after") ||
-    errStr.includes("AI_RetryError") ||
-    errStr.includes("RetryError") ||
-    errStr.includes("weekly limit") ||
-    errStr.includes("Subscription")
+    s.includes("429") ||
+    s.includes("rate_limit") ||
+    s.includes("too many requests") ||
+    s.includes("session limit") ||
+    s.includes("rate_limit_exceeded") ||
+    s.includes("failed after") ||
+    s.includes("retryerror") ||
+    s.includes("weekly limit") ||
+    s.includes("subscription") ||
+    s.includes("limit resets") ||
+    s.includes("continue with credits")
   );
 }
 
@@ -454,8 +456,13 @@ async function callLLM(provider, messages, taskDescription) {
         const resultStr = typeof output === "string" ? output : JSON.stringify(output);
         const errorStr = result.error || "";
 
+        console.log(`[agent] Codebuff result: exitCode=${result.exitCode}, hasOutput=${resultStr.length > 0}, hasError=${!!errorStr}`);
+
         // Check both output and error for rate limit indicators
         const hasRateLimit = isRateLimitError(resultStr) || isRateLimitError(errorStr);
+        if (hasRateLimit) {
+          console.log(`[agent] Rate limit detected in resultStr=${resultStr.slice(0, 200)}`);
+        }
 
         // Also check if all attempts were exhausted - this means SDK already tried everything internally
         // and failed. If it says "accounts exhausted", all our keys are rate limited, so fail entirely.
@@ -471,8 +478,9 @@ async function callLLM(provider, messages, taskDescription) {
         }
 
         if (hasRateLimit) {
-          console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
+          console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next key...`);
           lastError = resultStr || errorStr;
+          console.log(`[agent] Continue to next attempt in loop (index ${attempts.indexOf(attempt) + 1}/${attempts.length})`);
           continue;
         }
 
