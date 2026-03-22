@@ -8,29 +8,33 @@ Use the cheapest truthful route that satisfies the task while preserving evidenc
 
 ## Current provider cascade
 
-The harness uses a credit-gate to select providers in priority order. Providers are tried sequentially until one succeeds:
+The harness uses a credit-gate (`symphony-credit-gate.mjs`) to select providers in priority order. Providers are tried sequentially until one succeeds:
 
-| #   | Provider        | Type | Model                                  | Env Key(s)                                   | SDK     |
-| --- | --------------- | ---- | -------------------------------------- | -------------------------------------------- | ------- |
-| 1   | codex           | HTTP | gpt-5.4                                | `OPENAI_API_KEY`                             | No      |
-| 2   | groq            | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
-| 3   | mistral         | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
-| 4   | gemini          | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
-| 5   | gemini-lite     | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`                               | No      |
-| 6   | openrouter-free | HTTP | meta-llama/llama-3.3-70b-instruct:free | `OPENROUTER_TOKEN`                           | No      |
-| 7   | sambanova       | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
-| 8   | cerebras        | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
-| 9   | github-models   | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`                        | No      |
-| 10  | **codebuff**    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
-| 11  | codebuff-bridge | HTTP | codebuff/base@latest                   | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
-| 12  | ollama-local    | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
+| #   | Provider                  | Type | Model                              | Env Key(s) / Source                          | SDK     |
+| --- | ------------------------- | ---- | ---------------------------------- | -------------------------------------------- | ------- |
+| 1   | codex                     | HTTP | gpt-5.4                            | `OPENAI_API_KEY`                             | No      |
+| 2   | codebuff                  | SDK  | codebuff/base@latest               | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
+| 3   | openclaw                  | HTTP | openclaw:main                      | Token from `~/.openclaw/openclaw.json`       | No      |
+| 4   | groq                      | HTTP | llama-3.3-70b-versatile            | `GROQ_TOKEN`                                 | No      |
+| 5   | mistral                   | HTTP | devstral-small-2507                | `MISTRAL_TOKEN`                              | No      |
+| 6   | gemini                    | HTTP | gemini-2.5-flash                   | `GEMINI_TOKEN`                               | No      |
+| 7   | gemini-lite               | HTTP | gemini-2.5-flash-lite              | `GEMINI_TOKEN`                               | No      |
+| 8   | openrouter-nemotron-super | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`                       | No      |
+| 9-35| openrouter-free (27 models) | HTTP | Various free tier models          | `OPENROUTER_TOKEN`                           | No      |
+| 36  | sambanova                 | HTTP | Meta-Llama-3.3-70B-Instruct        | `SAMBANOVA_TOKEN`                            | No      |
+| 37  | cerebras                  | HTTP | llama3.1-8b                        | `CEREBRAS_TOKEN`                             | No      |
+| 38  | github-models             | HTTP | gpt-4.1-mini                       | `GITHUB_MODELS_TOKEN`                        | No      |
+| 39  | codebuff-bridge           | HTTP | codebuff/base@latest               | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
+| 40  | ollama-local              | HTTP | qwen3.5:35b-a3b-32t                | `OLLAMA_API_BASE`                            | No      |
 
 ### Provider notes
 
 - **codex** (position 1): Primary provider, uses OpenAI credits
-- **codebuff** (position 10): Autonomous agent via @codebuff/sdk, supports multi-account rotation for rate-limit fallback
-- **codebuff-bridge** (position 11): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration
-- **ollama-local** (position 12): Local fallback when all remote providers fail
+- **codebuff** (position 2): Autonomous agent via @codebuff/sdk, supports multi-account rotation for rate-limit fallback
+- **openclaw** (position 3): Local AI gateway at `http://127.0.0.1:18789/v1`, token loaded from `~/.openclaw/openclaw.json`
+- **openrouter-free** (positions 8-35): 27 free tier models ranked by quality score (nemotron-3-super-120b-a12b is best at 0.655)
+- **codebuff-bridge** (position 39): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration
+- **ollama-local** (position 40): Local fallback when all remote providers fail
 
 ## SDK-based providers
 
@@ -165,6 +169,71 @@ Format:
 ```
 
 Where values are Unix timestamps. The credit-gate automatically cleans up old entries when checking for recent failures.
+
+## Provider Metrics and Dynamic Scoring
+
+The credit-gate tracks comprehensive provider metrics to enable dynamic provider ranking based on actual performance:
+
+### Metrics tracked
+
+**Basic metrics:**
+- Selections (count), successes, failures, success rate (%)
+
+**Timing metrics:**
+- Average, min, max duration (ms)
+
+**Token metrics:**
+- Total/average input and output tokens
+
+**Validation metrics:**
+- Validation passes/failures, validation rate (%)
+
+**Linear issue metrics (by priority):**
+- Completed/failed issues, high/medium/low priority success rates
+
+**Estimate-based complexity (story points):**
+- Total/completed/average estimate points
+- Small (1-2 pts), medium (3-5 pts), large (8+ pts) issue completion rates
+
+### Scoring algorithm
+
+| Weight | Metric Category |
+| ------ | ---------------- |
+| 15%    | Success rate (general) |
+| 8%     | Average duration (faster = better) |
+| 12%    | Validation rate |
+| 5%     | Volume (usage count) |
+| 5%     | Recency (recent = better) |
+| 15%    | Linear issue completion rate |
+| 10%    | High priority issue success |
+| 5%     | Low priority issue success |
+| 10%    | Large estimate issue (8+) success |
+| 10%    | Estimate efficiency (completed/attempted) |
+| 5%     | Estimate throughput (total completed points) |
+
+**Minimum 3 selections required before a provider is ranked.**
+
+### State file
+
+```
+reports/symphony/provider-stats.json
+```
+
+### Usage
+
+```javascript
+import { recordLinearCompletion, getProviderStats, getRankedProviders } from './symphony-credit-gate.mjs';
+
+// Record issue completion with complexity metrics
+recordLinearCompletion(providerName, { completed: true, priority: issue.priority, estimate: issue.estimate });
+
+// Get providers sorted by dynamic score
+const ranked = getRankedProviders();
+```
+
+### Legacy issue fallback
+
+For issues without estimates, the system auto-assigns based on priority: P0=5, P1=4, P2=3, P3=2, P4=1 (minimum 1 point).
 
 ## Required behavior
 

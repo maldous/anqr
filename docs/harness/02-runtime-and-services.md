@@ -68,5 +68,6 @@ Optional local support:
 Documented harness ports:
 
 - `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
+- `18789` — OpenClaw gateway (local AI agent, /v1/chat/completions)
 
 Additional port truth must be documented in follow-up runbooks instead of inferred.
