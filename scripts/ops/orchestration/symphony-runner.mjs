@@ -785,14 +785,23 @@ async function main() {
     }
 
     if (!dryRun) {
-      // First recover any stuck In Progress issues before checking queue depth
+      // First clean up expired leases and recover stuck In Progress issues
+      const { findExpiredLeases } = await import("../symphony-state.mjs");
+      const expiredLeases = findExpiredLeases();
+      for (const { issueIdentifier } of expiredLeases) {
+        console.log(`[runner] Clearing expired lease for ${issueIdentifier}`);
+        const { releaseLease } = await import("../symphony-state.mjs");
+        releaseLease(issueIdentifier);
+      }
+      
+      // Now check for stuck In Progress issues
       const snap = await getQueueSnapshot();
       if (snap.inProgress.all.length > 0) {
         console.log(`[runner] Checking for stuck In Progress issues...`);
-        // Import and run stuck work detection
         const { detectStuckWork } = await import("./symphony-queue-control.mjs");
         await detectStuckWork(snap, false);
       }
+      
       // Now check if we need to feed more issues
       const freshSnap = await getQueueSnapshot();
       if (freshSnap.queueDepth < TARGET_MIN) await feedQueue(freshSnap, false);
