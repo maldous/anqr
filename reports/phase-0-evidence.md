@@ -76,23 +76,23 @@ npm run symphony:status
 
 ### 1.1 Product validation commands
 
-| # | Command | Result | Details |
-|---|---------|--------|---------|
-| 1 | `npm run typecheck` | ✅ PASS | `tsc --noEmit` completed with no errors |
-| 2 | `npm run lint` | ✅ PASS | oxlint: 0 warnings, 0 errors (4554 files, 93 rules, 32 threads) |
-| 3 | `npm run depcruise:all` | ✅ PASS | architecture: 4486 modules, 8886 deps, 0 violations; contracts: 95 modules, 156 deps, 0 violations |
-| 4 | `npm run contracts:check` | ✅ PASS | 6 contract packages validated |
-| 5 | `npm run audit:ast` | ✅ PASS | All files within density threshold |
-| 6 | `npm run openapi:generate` | ✅ PASS | Generated `docs/api/qr-api.openapi.json` |
-| 7 | `npm run test:unit` | ✅ PASS | 1 test file, 1 test passed (vitest v4.1.0, 224ms) |
+| #   | Command                    | Result  | Details                                                                                            |
+| --- | -------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| 1   | `npm run typecheck`        | ✅ PASS | `tsc --noEmit` completed with no errors                                                            |
+| 2   | `npm run lint`             | ✅ PASS | oxlint: 0 warnings, 0 errors (4554 files, 93 rules, 32 threads)                                    |
+| 3   | `npm run depcruise:all`    | ✅ PASS | architecture: 4486 modules, 8886 deps, 0 violations; contracts: 95 modules, 156 deps, 0 violations |
+| 4   | `npm run contracts:check`  | ✅ PASS | 6 contract packages validated                                                                      |
+| 5   | `npm run audit:ast`        | ✅ PASS | All files within density threshold                                                                 |
+| 6   | `npm run openapi:generate` | ✅ PASS | Generated `docs/api/qr-api.openapi.json`                                                           |
+| 7   | `npm run test:unit`        | ✅ PASS | 1 test file, 1 test passed (vitest v4.1.0, 224ms)                                                  |
 
 ### 1.2 Harness/ops validation commands
 
-| # | Command | Result | Details |
-|---|---------|--------|---------|
-| 8 | `npm run harness:quick` | ✅ PASS | 5/5 checks passed (repo-structure, typecheck, lint, cspell-coverage, ast-density) in 6.8s |
-| 9 | `npm run queue:all:dry-run` | ✅ PASS | Dry run completed (no output = no errors) |
-| 10 | `npm run symphony:status` | ✅ PASS | Lock: available, Git clean: ✅, LINEAR_API_KEY: ✅ |
+| #   | Command                     | Result  | Details                                                                                   |
+| --- | --------------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| 8   | `npm run harness:quick`     | ✅ PASS | 5/5 checks passed (repo-structure, typecheck, lint, cspell-coverage, ast-density) in 6.8s |
+| 9   | `npm run queue:all:dry-run` | ✅ PASS | Dry run completed (no output = no errors)                                                 |
+| 10  | `npm run symphony:status`   | ✅ PASS | Lock: available, Git clean: ✅, LINEAR_API_KEY: ✅                                        |
 
 ### 1.3 Harness quick report detail
 
@@ -472,16 +472,16 @@ services/systemd/anqr-ops.env             — harness environment variables
 
 ## 9. Phase 0 Checklist Status
 
-| # | Item | Status |
-|---|------|--------|
-| 1 | Capture current validation evidence | ✅ Done — all 10 commands passed |
-| 2 | Capture current tree snapshot | ✅ Done — see Section 2 |
-| 3 | Capture current repo-surface inventory | ✅ Done — see Section 3 |
-| 4 | Capture current docs inventory | ✅ Done — see Section 4 |
-| 5 | Capture current harness/runtime inventory | ✅ Done — see Section 5 |
-| 6 | Export Linear history for traceability | ✅ Done — 275 issues exported to `reports/linear-history-export.json` |
-| 7 | Perform secret and signing-material review | ⚠️ Observation recorded — full audit requires human review |
-| 8 | Record current platform truth | ✅ Done — see Section 6 |
+| #   | Item                                       | Status                                                                |
+| --- | ------------------------------------------ | --------------------------------------------------------------------- |
+| 1   | Capture current validation evidence        | ✅ Done — all 10 commands passed                                      |
+| 2   | Capture current tree snapshot              | ✅ Done — see Section 2                                               |
+| 3   | Capture current repo-surface inventory     | ✅ Done — see Section 3                                               |
+| 4   | Capture current docs inventory             | ✅ Done — see Section 4                                               |
+| 5   | Capture current harness/runtime inventory  | ✅ Done — see Section 5                                               |
+| 6   | Export Linear history for traceability     | ✅ Done — 275 issues exported to `reports/linear-history-export.json` |
+| 7   | Perform secret and signing-material review | ⚠️ Observation recorded — full audit requires human review            |
+| 8   | Record current platform truth              | ✅ Done — see Section 6                                               |
 
 ---
 

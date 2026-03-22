@@ -64,21 +64,21 @@ When Codebuff is used as the AI provider, execution reports are written to `repo
 
 ### Metrics captured
 
-| Field | Description |
-|-------|-------------|
-| timestamp | ISO 8601 timestamp of execution start |
-| task | Truncated task description (500 char max) |
-| project | Absolute path to the project directory |
-| exitCode | 0 = success, 1 = failure, 124 = timeout |
-| method | Always "sdk" for Codebuff executions |
-| account | Which account succeeded (e.g., "user@example.com (paid)") |
-| outputLength | Length of the output string |
-| output | Last 5000 characters of the agent's summary output |
-| error | Error message if failed, null if successful |
+| Field        | Description                                               |
+| ------------ | --------------------------------------------------------- |
+| timestamp    | ISO 8601 timestamp of execution start                     |
+| task         | Truncated task description (500 char max)                 |
+| project      | Absolute path to the project directory                    |
+| exitCode     | 0 = success, 1 = failure, 124 = timeout                   |
+| method       | Always "sdk" for Codebuff executions                      |
+| account      | Which account succeeded (e.g., "user@example.com (paid)") |
+| outputLength | Length of the output string                               |
+| output       | Last 5000 characters of the agent's summary output        |
+| error        | Error message if failed, null if successful               |
 
 ### Account rotation tracking
 
-When multiple CODEBUFF_API_KEY* environment variables are configured, the report captures which account succeeded. This enables:
+When multiple CODEBUFF_API_KEY\* environment variables are configured, the report captures which account succeeded. This enables:
 
 - Identifying which account was used (paid vs free mode)
 - Tracking rate-limit rotation effectiveness
@@ -86,11 +86,11 @@ When multiple CODEBUFF_API_KEY* environment variables are configured, the report
 
 ### Failure modes
 
-| exitCode | Meaning | Evidence |
-|----------|---------|----------|
-| 0 | Success | Check `output` for summary of changes |
-| 1 | Error | Check `error` for failure message |
-| 124 | Timeout | Check `output` for partial progress (if any) |
+| exitCode | Meaning | Evidence                                     |
+| -------- | ------- | -------------------------------------------- |
+| 0        | Success | Check `output` for summary of changes        |
+| 1        | Error   | Check `error` for failure message            |
+| 124      | Timeout | Check `output` for partial progress (if any) |
 
 ### Evidence extraction
 

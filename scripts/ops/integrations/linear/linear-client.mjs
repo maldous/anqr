@@ -35,14 +35,7 @@ export const LABELS = {
   reliability: "e0a66df5-7c67-4dec-80b0-ea33af32ab7c",
 };
 
-const OPEN_STATE_NAMES = [
-  "Backlog",
-  "Todo",
-  "In Progress",
-  "In Review",
-  "Blocked",
-  "Human Review",
-];
+const OPEN_STATE_NAMES = ["Backlog", "Todo", "In Progress", "In Review", "Blocked", "Human Review"];
 
 function getApiKey() {
   const key = process.env.LINEAR_API_KEY;

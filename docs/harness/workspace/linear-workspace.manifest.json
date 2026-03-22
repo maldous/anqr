@@ -110,12 +110,7 @@
       "usage": "Superseded or intentionally dropped with explanation."
     }
   ],
-  "sizes": [
-    "S",
-    "M",
-    "L",
-    "XL"
-  ],
+  "sizes": ["S", "M", "L", "XL"],
   "rules": {
     "humanOnlyTriggers": [
       "secret rotation or secret disclosure risk",

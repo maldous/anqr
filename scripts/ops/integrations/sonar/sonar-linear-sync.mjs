@@ -21,14 +21,7 @@ import {
 
 const FETCH_TIMEOUT_MS = 30_000;
 const SONAR_KEY_PATTERN = /<!-- sonar-key:([a-f0-9-]+) -->/;
-const OPEN_STATE_NAMES = [
-  "Backlog",
-  "Todo",
-  "In Progress",
-  "In Review",
-  "Blocked",
-  "Human Review",
-];
+const OPEN_STATE_NAMES = ["Backlog", "Todo", "In Progress", "In Review", "Blocked", "Human Review"];
 const PRIORITY_LABELS = { 1: "Urgent", 2: "High", 3: "Medium", 4: "Low" };
 
 function fetchWithTimeout(url, headers) {

@@ -10,19 +10,19 @@ Use the cheapest truthful route that satisfies the task while preserving evidenc
 
 The harness uses a credit-gate to select providers in priority order. Providers are tried sequentially until one succeeds:
 
-| # | Provider | Type | Model | Env Key(s) | SDK |
-|---|----------|------|-------|------------|-----|
-| 1 | codex | HTTP | gpt-4.1 | `OPENAI_API_KEY` | No |
-| 2 | groq | HTTP | llama-3.3-70b | `GROQ_TOKEN` | No |
-| 3 | mistral | HTTP | mistral-large-latest | `MISTRAL_TOKEN` | No |
-| 4 | gemini | HTTP | gemini-2.0-flash | `GEMINI_TOKEN` | No |
-| 5 | gemini-lite | HTTP | gemini-2.0-flash-lite | `GOOGLE_GEMINI_API_KEY` | No |
-| 6 | openrouter-free | HTTP | openrouter/auto | `OPENROUTER_TOKEN` | No |
-| 7 | sambanova | HTTP | Samba-3.1-Euphoria | `SAMBANOVA_TOKEN` | No |
-| 8 | cerebras | HTTP | amber-3 | `CEREBRAS_TOKEN` | No |
-| 9 | github-models | HTTP | gpt-4.1-mini | `GITHUB_MODELS_TOKEN` | No |
-| 10 | **codebuff** | SDK | codebuff/base@latest | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
-| 11 | ollama-local | HTTP | qwen3.5:35b-a3b-32t | `OLLAMA_API_BASE` | No |
+| #   | Provider        | Type | Model                                  | Env Key(s)                                   | SDK     |
+| --- | --------------- | ---- | -------------------------------------- | -------------------------------------------- | ------- |
+| 1   | codex           | HTTP | gpt-5.4                                | `OPENAI_API_KEY`                             | No      |
+| 2   | groq            | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
+| 3   | mistral         | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
+| 4   | gemini          | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
+| 5   | gemini-lite     | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`                               | No      |
+| 6   | openrouter-free | HTTP | meta-llama/llama-3.3-70b-instruct:free | `OPENROUTER_TOKEN`                           | No      |
+| 7   | sambanova       | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
+| 8   | cerebras        | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
+| 9   | github-models   | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`                        | No      |
+| 10  | **codebuff**    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
+| 11  | ollama-local    | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
 
 ### Provider notes
 
@@ -60,14 +60,14 @@ The credit-gate tracks provider failures to avoid repeatedly trying broken provi
 
 The runner classifies failures to determine cooldown behavior:
 
-| Failure type | Classification | Action |
-|--------------|----------------|--------|
-| 429 (rate limit) | quota | Record failure, cooldown applied |
-| insufficient_quota | quota | Record failure, cooldown applied |
-| rate_limit | quota | Record failure, cooldown applied |
-| accounts exhausted (Codebuff) | quota | Record failure, cooldown applied |
-| LLM call failed | provider | Record failure, cooldown applied |
-| Other errors | other | May retry immediately |
+| Failure type                  | Classification | Action                           |
+| ----------------------------- | -------------- | -------------------------------- |
+| 429 (rate limit)              | quota          | Record failure, cooldown applied |
+| insufficient_quota            | quota          | Record failure, cooldown applied |
+| rate_limit                    | quota          | Record failure, cooldown applied |
+| accounts exhausted (Codebuff) | quota          | Record failure, cooldown applied |
+| LLM call failed               | provider       | Record failure, cooldown applied |
+| Other errors                  | other          | May retry immediately            |
 
 ### State file
 
@@ -78,6 +78,7 @@ reports/symphony/provider-failures.json
 ```
 
 Format:
+
 ```json
 {
   "groq": 1774140700,

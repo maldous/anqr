@@ -7,8 +7,8 @@ The live doctrine surface is:
 - [README.md](/home/user/src/anqr/README.md)
 - [AGENTS.md](/home/user/src/anqr/AGENTS.md)
 - [docs/README.md](/home/user/src/anqr/docs/README.md)
-- [docs/program/*](/home/user/src/anqr/docs/program)
-- [docs/harness/*](/home/user/src/anqr/docs/harness)
+- [docs/program/\*](/home/user/src/anqr/docs/program)
+- [docs/harness/\*](/home/user/src/anqr/docs/harness)
 
 ## Archive-only surfaces
 

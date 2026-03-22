@@ -9,19 +9,19 @@ Every harness check is classified as **blocking** or **advisory**.
 - **Blocking** checks must pass before merge or promotion. Failure prevents work from proceeding.
 - **Advisory** checks are reported and tracked but do not block merge or promotion.
 
-| Check | Classification | Reason |
-|---|---|---|
-| `repo-structure` | blocking | Foundational — repo cannot function without required dirs/files |
-| `typecheck` | blocking | Code correctness — TypeScript must compile |
-| `lint` | blocking | Code quality — oxlint violations are merge-blocking |
-| `test-unit` | blocking | Correctness — unit tests must pass |
-| `depcruise` | blocking | Architecture — dependency boundaries must hold |
-| `ast-density` | blocking | Architecture — one top-level declaration per file is enforced |
-| `cspell-coverage` | advisory | Spelling issues are tracked but do not block product work |
-| `docs-freshness` | advisory | Stale docs are flagged for review, not merge-blocking |
-| `ollama-health` | advisory | Environment-dependent — only relevant when local AI routing is active |
-| `litellm-routing` | advisory | Environment-dependent — only relevant when provider routing is active |
-| `sonar-audit` | advisory | Quality insight — informational, not a merge gate |
+| Check             | Classification | Reason                                                                |
+| ----------------- | -------------- | --------------------------------------------------------------------- |
+| `repo-structure`  | blocking       | Foundational — repo cannot function without required dirs/files       |
+| `typecheck`       | blocking       | Code correctness — TypeScript must compile                            |
+| `lint`            | blocking       | Code quality — oxlint violations are merge-blocking                   |
+| `test-unit`       | blocking       | Correctness — unit tests must pass                                    |
+| `depcruise`       | blocking       | Architecture — dependency boundaries must hold                        |
+| `ast-density`     | blocking       | Architecture — one top-level declaration per file is enforced         |
+| `cspell-coverage` | advisory       | Spelling issues are tracked but do not block product work             |
+| `docs-freshness`  | advisory       | Stale docs are flagged for review, not merge-blocking                 |
+| `ollama-health`   | advisory       | Environment-dependent — only relevant when local AI routing is active |
+| `litellm-routing` | advisory       | Environment-dependent — only relevant when provider routing is active |
+| `sonar-audit`     | advisory       | Quality insight — informational, not a merge gate                     |
 
 The guardian (`linear-guardian.mjs`) creates issues for all failing checks regardless of classification.
 Blocking failures prevent the runner from picking up new work until resolved.

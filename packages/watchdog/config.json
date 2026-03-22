@@ -1,1 +1,8 @@
-{"failureDetectionTarget": 120, "automaticRecoveryAttempt": 300, "stuckPipelineTimeout": 300, "deadServiceTimeout": 300, "retryQueueOverflowTimeout": 300, "alertThreshold": 3}
+{
+  "failureDetectionTarget": 120,
+  "automaticRecoveryAttempt": 300,
+  "stuckPipelineTimeout": 300,
+  "deadServiceTimeout": 300,
+  "retryQueueOverflowTimeout": 300,
+  "alertThreshold": 3
+}

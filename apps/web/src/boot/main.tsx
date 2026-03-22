@@ -126,7 +126,8 @@ function renderApp(): void {
   );
 }
 
-void preloadDetectedLocale().finally(renderApp);
+await preloadDetectedLocale();
+renderApp();
 
 // Ensure every interactive element has a unique dynamic test id.
 initAutoDynamicTestIds();

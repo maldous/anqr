@@ -1,5 +1,5 @@
-import { Logger } from './logger';
-import { Redactor } from './redactor';
+import { Logger } from "./logger";
+import { Redactor } from "./redactor";
 
 export class StructuredLogger {
   private logger: Logger;

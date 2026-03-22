@@ -363,7 +363,10 @@ function checkLitellmRouting() {
   const content = readFileSync(configPath, "utf-8");
 
   if (!content.includes("symphony-local")) {
-    return { pass: false, detail: "integrations/model/litellm-config.yaml missing symphony-local alias" };
+    return {
+      pass: false,
+      detail: "integrations/model/litellm-config.yaml missing symphony-local alias",
+    };
   }
 
   if (!content.includes(PINNED_MODEL)) {
@@ -380,7 +383,8 @@ function checkLitellmRouting() {
 
   return {
     pass: true,
-    detail: "Integration-owned LiteLLM config is valid, symphony-local alias present, injector proxy exists",
+    detail:
+      "Integration-owned LiteLLM config is valid, symphony-local alias present, injector proxy exists",
   };
 }
 

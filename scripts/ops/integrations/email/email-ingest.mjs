@@ -63,7 +63,8 @@ function indexMail() {
 function searchUnprocessed() {
   const proc = run("notmuch", ["search", "--output=messages", "--", NOTMUCH_QUERY]);
   if (proc.status !== 0) return [];
-  return (proc.stdout || "").trim().split("\n").filter(Boolean);}
+  return (proc.stdout || "").trim().split("\n").filter(Boolean);
+}
 
 function extractTextContent(bodyParts) {
   // notmuch JSON body uses numeric string keys: body['0'], body['1'], etc.
@@ -94,10 +95,10 @@ function getMessageContent(messageId) {
     const data = JSON.parse(proc.stdout);
     // notmuch show --format=json returns: [[{thread: {0: msg, 1: msg}}, ...], []]
     // The message is at data[0]['0']['0']
-    if (!data || !data[0] || !data[0]['0'] || !data[0]['0']['0']) {
+    if (!data || !data[0] || !data[0]["0"] || !data[0]["0"]["0"]) {
       return null;
     }
-    const msg = data[0]['0']['0'];
+    const msg = data[0]["0"]["0"];
     return {
       id: msg.id,
       subject: msg.headers?.Subject || "",

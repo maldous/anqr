@@ -45,11 +45,25 @@ function ensureDir(dir) {
 function parseArgs() {
   const args = process.argv.slice(2);
   const opts = { task: null, issueId: null, project: PROJECT_ROOT, timeout: TIMEOUT_MS };
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--task" && args[i + 1]) opts.task = args[++i];
-    else if (args[i] === "--issue-id" && args[i + 1]) opts.issueId = args[++i];
-    else if (args[i] === "--project" && args[i + 1]) opts.project = args[++i];
-    else if (args[i] === "--timeout" && args[i + 1]) opts.timeout = parseInt(args[++i], 10) || TIMEOUT_MS;
+  const argCount = args.length;
+  let idx = 0;
+  while (idx < argCount) {
+    const current = args[idx];
+    if (current === "--task" && idx + 1 < argCount) {
+      opts.task = args[idx + 1];
+      idx += 2;
+    } else if (current === "--issue-id" && idx + 1 < argCount) {
+      opts.issueId = args[idx + 1];
+      idx += 2;
+    } else if (current === "--project" && idx + 1 < argCount) {
+      opts.project = args[idx + 1];
+      idx += 2;
+    } else if (current === "--timeout" && idx + 1 < argCount) {
+      opts.timeout = Number.parseInt(args[idx + 1], 10) || TIMEOUT_MS;
+      idx += 2;
+    } else {
+      idx += 1;
+    }
   }
   return opts;
 }
@@ -69,7 +83,7 @@ function getAllApiKeys() {
   const envPath = path.join(PROJECT_ROOT, ".env");
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, "utf-8");
-    const regex = /CODEBUFF_API_KEY\d*=(?:"([^"]+)"|([^\s\n]+))/g;
+    const regex = /CODEBUFF_API_KEY\d*=(?:"([^"]+)"|([^\s]+))/g;
     let match;
     while ((match = regex.exec(envContent)) !== null) {
       const key = match[1] || match[2];
@@ -134,13 +148,19 @@ function checkSdkAvailable() {
     // Check if SDK is installed
     const pkgPath = path.join(PROJECT_ROOT, "node_modules", "@codebuff", "sdk", "package.json");
     if (!fs.existsSync(pkgPath)) {
-      return { available: false, reason: "@codebuff/sdk not installed - run: npm install @codebuff/sdk" };
+      return {
+        available: false,
+        reason: "@codebuff/sdk not installed - run: npm install @codebuff/sdk",
+      };
     }
 
     // Check for API keys
     const keys = getAllApiKeys();
     if (keys.length === 0) {
-      return { available: false, reason: "No CODEBUFF_API_KEY* found - get keys from codebuff.com/api-keys" };
+      return {
+        available: false,
+        reason: "No CODEBUFF_API_KEY* found - get keys from codebuff.com/api-keys",
+      };
     }
 
     return { available: true, apiKeys: keys };
@@ -163,43 +183,53 @@ function buildEnhancedPrompt(task) {
 }
 
 function isRateLimitError(errStr) {
-  return errStr.includes("429") ||
+  return (
+    errStr.includes("429") ||
     errStr.includes("rate_limit") ||
     errStr.includes("Too Many Requests") ||
     errStr.includes("session limit") ||
-    errStr.includes("rate_limit_exceeded");
+    errStr.includes("rate_limit_exceeded")
+  );
 }
 
 function isAuthError(errStr) {
-  return errStr.includes("401") ||
+  return (
+    errStr.includes("401") ||
     errStr.includes("403") ||
     errStr.includes("Unauthorized") ||
     errStr.includes("Forbidden") ||
-    errStr.includes("Authentication failed");
+    errStr.includes("Authentication failed")
+  );
 }
 
 function isRetryableError(err) {
   const errStr = err.message || "";
-  return isRateLimitError(errStr) ||
+  return (
+    isRateLimitError(errStr) ||
     errStr.includes("RetryError") ||
     errStr.includes("Timeout") ||
-    errStr.includes("ETIMEDOUT");
+    errStr.includes("ETIMEDOUT")
+  );
 }
 
 function buildAttemptPlan(apiKeys, accounts) {
   const attempts = [];
 
   for (let i = 0; i < apiKeys.length; i++) {
-    const acct = accounts.find((a) => apiKeys[a.index] === apiKeys[i]);
+    const acct = accounts.find((a) => a.index === i);
     const email = acct ? acct.email : `key ${i + 1}`;
+    const apiKey = apiKeys[i];
 
     // First key: try paid mode first, then free mode
     if (i === 0) {
-      attempts.push({ apiKey: apiKeys[i], costMode: undefined, label: `${email} (paid)` });
-      attempts.push({ apiKey: apiKeys[i], costMode: "free", label: `${email} (free)` });
+      attempts.push({ apiKey, costMode: undefined, label: `${email} (paid)` });
     } else {
       // Additional keys: free mode only
-      attempts.push({ apiKey: apiKeys[i], costMode: "free", label: `${email} (free)` });
+      attempts.push({ apiKey, costMode: "free", label: `${email} (free)` });
+    }
+    // Always add free mode attempt for first key
+    if (i === 0) {
+      attempts.push({ apiKey, costMode: "free", label: `${email} (free)` });
     }
   }
 
@@ -226,7 +256,9 @@ async function runWithSdk(opts) {
 
   // Build ordered attempt plan: paid first, then free across all keys
   const attempts = buildAttemptPlan(apiKeys, accounts);
-  console.log(`[codebuff] Attempt plan (${attempts.length} attempts): ${attempts.map((a) => a.label).join(" → ")}`);
+  console.log(
+    `[codebuff] Attempt plan (${attempts.length} attempts): ${attempts.map((a) => a.label).join(" → ")}`,
+  );
 
   const enhancedPrompt = buildEnhancedPrompt(task);
   const timeoutPromise = new Promise((_, reject) => {
@@ -268,10 +300,7 @@ async function runWithSdk(opts) {
         runOpts.costMode = attempt.costMode;
       }
 
-      const result = await Promise.race([
-        client.run(runOpts),
-        timeoutPromise,
-      ]);
+      const result = await Promise.race([client.run(runOpts), timeoutPromise]);
 
       const output = result.output;
       // output is typically a string with the agent's response
@@ -345,7 +374,9 @@ async function main() {
     console.error("Optional: CODEBUFF_API_KEY2 from a DIFFERENT account for free-mode fallback");
     console.error("Get your API key from: codebuff.com/api-keys");
     console.error("");
-    console.error("Execution order: CODEBUFF_API_KEY paid → CODEBUFF_API_KEY free → CODEBUFF_API_KEY2 free");
+    console.error(
+      "Execution order: CODEBUFF_API_KEY paid → CODEBUFF_API_KEY free → CODEBUFF_API_KEY2 free",
+    );
     process.exit(1);
   }
 
@@ -412,11 +443,21 @@ async function main() {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main().catch((err) => {
+// Run main if executed directly
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  await main().catch((err) => {
     console.error(`[codebuff] Fatal: ${err.message}`);
     process.exit(1);
   });
 }
 
-export { runWithSdk, checkSdkAvailable, validateApiKeys, getAllApiKeys, buildAttemptPlan };
+export {
+  runWithSdk,
+  checkSdkAvailable,
+  validateApiKeys,
+  getAllApiKeys,
+  buildAttemptPlan,
+  REPORTS_DIR,
+  PROJECT_ROOT,
+};

@@ -2,13 +2,15 @@
 
 /**
  * linear-all.mjs — Fetch all backlog issues from Linear with pagination
- * 
+ *
  * Usage:
  *   LINEAR_API_KEY=your_key LINEAR_TEAM_ID=your_team_id node scripts/ops/linear-all.mjs
- *   
+ *
  * Or with default team from linear-client.mjs:
  *   LINEAR_API_KEY=your_key node scripts/ops/linear-all.mjs
  */
+
+import { fileURLToPath } from "node:url";
 
 const API_KEY = process.env.LINEAR_API_KEY;
 const TEAM_ID = process.env.LINEAR_TEAM_ID || "01534c1e-4041-474d-a81e-24f917f33912";
@@ -72,9 +74,7 @@ async function main() {
     all.push(...page.nodes);
     pageNum++;
 
-    console.log(
-      `Page ${pageNum}: +${page.nodes.length} issues (total: ${all.length})`,
-    );
+    console.log(`Page ${pageNum}: +${page.nodes.length} issues (total: ${all.length})`);
 
     if (!page.pageInfo.hasNextPage) break;
     after = page.pageInfo.endCursor;
@@ -90,22 +90,21 @@ async function main() {
   }
 
   console.log("By project:");
-  for (const [project, count] of Object.entries(byProject).sort(
-    (a, b) => b[1] - a[1],
-  )) {
+  for (const [project, count] of Object.entries(byProject).sort((a, b) => b[1] - a[1])) {
     console.log(`  ${project}: ${count}`);
   }
 
   // Save full data
-  const fs = await import("fs");
-  fs.writeFileSync(
-    "/tmp/linear-all-backlog.json",
-    JSON.stringify(all, null, 2),
-  );
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync("/tmp/linear-all-backlog.json", JSON.stringify(all, null, 2));
   console.log("\nSaved to /tmp/linear-all-backlog.json");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Run main if executed directly
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  await main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

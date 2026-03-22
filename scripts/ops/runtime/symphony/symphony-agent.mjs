@@ -39,8 +39,9 @@ import {
   mkdirSync,
   unlinkSync,
   rmSync,
+  mkdirSync as mkDirSync,
 } from "node:fs";
-import { resolve, relative, dirname } from "node:path";
+import { resolve, relative, dirname, join as pathJoin } from "node:path";
 import { execFileSync } from "node:child_process";
 import {
   RUNNER_MAX_TURNS,
@@ -55,55 +56,15 @@ import {
   runAstDensity,
   runTests,
 } from "../../symphony-validation.mjs";
-import { CodebuffClient, WEBSITE_URL } from "@codebuff/sdk";
+import {
+  getAllApiKeys,
+  validateApiKeys,
+  buildAttemptPlan,
+  REPORTS_DIR,
+  PROJECT_ROOT,
+} from "../../integrations/model/codebuff-sdk-runner.mjs";
 
-let _codebuffAccounts = null;
-
-async function resolveKeyAccount(apiKey) {
-  try {
-    const url = new URL("/api/v1/me?fields=id,email", WEBSITE_URL);
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return { id: data.id, email: data.email };
-  } catch {
-    return null;
-  }
-}
-
-async function getCodebuffAccounts() {
-  if (_codebuffAccounts) return _codebuffAccounts;
-
-  const keys = [];
-  for (const key of Object.keys(process.env).sort()) {
-    if (key.startsWith("CODEBUFF_API_KEY") && !key.endsWith("_FILE")) {
-      const value = process.env[key];
-      if (value) keys.push(value);
-    }
-  }
-
-  if (keys.length === 0) {
-    throw new Error("No CODEBUFF_API_KEY* found");
-  }
-
-  // Validate all keys and get account info
-  const results = await Promise.allSettled(keys.map((k) => resolveKeyAccount(k)));
-  const accounts = [];
-  for (let i = 0; i < keys.length; i++) {
-    const result = results[i];
-    const info = result.status === "fulfilled" ? result.value : null;
-    if (info) {
-      accounts.push({ index: i, ...info, apiKey: keys[i] });
-    }
-  }
-
-  _codebuffAccounts = accounts;
-  return accounts;
-}
+import { CodebuffClient } from "@codebuff/sdk";
 
 function isRateLimitError(errStr) {
   return (
@@ -431,34 +392,45 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // LLM API call
 // ---------------------------------------------------------------------------
 
-async function callLLM(provider, messages) {
+async function callLLM(provider, messages, taskDescription) {
   // Handle Codebuff SDK-based provider (autonomous agent, completes in one run)
   if (provider.requiresSdk) {
-    const accounts = await getCodebuffAccounts();
+    const apiKeys = getAllApiKeys();
+    if (apiKeys.length === 0) {
+      throw new Error("No CODEBUFF_API_KEY* found");
+    }
+
+    // Validate keys and get accounts (shared logic)
+    const accounts = await validateApiKeys(apiKeys);
     if (accounts.length === 0) {
       throw new Error("No valid CODEBUFF_API_KEY* accounts found");
     }
 
+    // Build attempt plan using shared function
+    const attempts = buildAttemptPlan(apiKeys, accounts);
+
     // Build prompt from messages for Codebuff
     const prompt = messages
-      .map((m) => `${m.role === "system" ? "System:" : m.role === "user" ? "User:" : "Assistant:"} ${m.content}`)
+      .map((m) => {
+        let roleLabel;
+        if (m.role === "system") {
+          roleLabel = "System:";
+        } else if (m.role === "user") {
+          roleLabel = "User:";
+        } else {
+          roleLabel = "Assistant:";
+        }
+        return `${roleLabel} ${m.content}`;
+      })
       .join("\n\n");
 
-    // Try each account in sequence (paid first, then free mode across accounts)
-    const attempts = [];
-    // First account: try paid mode, then free mode
-    attempts.push({ apiKey: accounts[0].apiKey, costMode: undefined, label: `${accounts[0].email} (paid)` });
-    attempts.push({ apiKey: accounts[0].apiKey, costMode: "free", label: `${accounts[0].email} (free)` });
-    // Additional accounts: free mode only
-    for (let i = 1; i < accounts.length; i++) {
-      attempts.push({ apiKey: accounts[i].apiKey, costMode: "free", label: `${accounts[i].email} (free)` });
-    }
+    let lastError = null;
 
     for (const attempt of attempts) {
       try {
         const client = new CodebuffClient({
           apiKey: attempt.apiKey,
-          cwd: provider.cwd || process.cwd(),
+          cwd: provider.cwd || PROJECT_ROOT,
         });
 
         const runOpts = {
@@ -478,8 +450,29 @@ async function callLLM(provider, messages) {
 
         if (isRateLimitError(resultStr)) {
           console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
+          lastError = resultStr;
           continue;
         }
+
+        // Write report artifact (shared path)
+        const report = {
+          timestamp: new Date().toISOString(),
+          task: taskDescription?.slice(0, 500) || "Symphony agent run",
+          project: provider.cwd || PROJECT_ROOT,
+          exitCode: 0,
+          method: "sdk",
+          account: attempt.label,
+          outputLength: resultStr.length,
+          output: resultStr.slice(-5000),
+          error: null,
+        };
+
+        if (!existsSync(REPORTS_DIR)) {
+          mkDirSync(REPORTS_DIR, { recursive: true });
+        }
+        const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
+        writeFileSync(reportFile, JSON.stringify(report, null, 2) + "\n");
+        console.log(`[agent] Codebuff report written to: ${reportFile}`);
 
         // Success - return as autonomous completion
         return {
@@ -497,11 +490,36 @@ async function callLLM(provider, messages) {
         const errStr = err.message || "";
         if (isRateLimitError(errStr)) {
           console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
+          lastError = errStr;
           continue;
         }
         // Non-rate-limit error - fail immediately
         throw err;
       }
+    }
+
+    // All attempts failed - write failure report
+    const failureReport = {
+      timestamp: new Date().toISOString(),
+      task: taskDescription?.slice(0, 500) || "Symphony agent run",
+      project: provider.cwd || PROJECT_ROOT,
+      exitCode: 1,
+      method: "sdk",
+      account: "all accounts exhausted",
+      outputLength: 0,
+      output: "",
+      error: `All ${attempts.length} attempts failed: ${lastError}`,
+    };
+
+    try {
+      if (!existsSync(REPORTS_DIR)) {
+        mkDirSync(REPORTS_DIR, { recursive: true });
+      }
+      const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
+      writeFileSync(reportFile, JSON.stringify(failureReport, null, 2) + "\n");
+      console.log(`[agent] Codebuff failure report written to: ${reportFile}`);
+    } catch {
+      // Ignore report write errors
     }
 
     throw new Error("All codebuff accounts exhausted");
@@ -589,7 +607,15 @@ function buildIssuePrompt(issue) {
 // Core tool-calling loop (shared by runAgent and continueAgent)
 // ---------------------------------------------------------------------------
 
-async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, startTime }) {
+async function runToolLoop({
+  provider,
+  messages,
+  projectRoot,
+  maxTurns,
+  maxMs,
+  startTime,
+  taskDescription,
+}) {
   const filesChanged = new Set();
   let totalToolCalls = 0;
   let turn = 0;
@@ -620,7 +646,7 @@ async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, s
 
     let response;
     try {
-      response = await callLLM(provider, messages);
+      response = await callLLM(provider, messages, taskDescription);
     } catch (err) {
       console.error(`[agent] LLM call failed: ${err.message}`);
       return {
@@ -664,17 +690,17 @@ async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, s
         // - "All X attempts failed: Timeout after XXXms" - timeout error
         // - "accounts exhausted" - all accounts rate limited
         // - "All codebuff" - all attempts failed
-        const isFailure = (
-          /All \d+ attempts failed/i.test(content) ||
-          /accounts exhausted/i.test(content) ||
-          /Timeout after \d+ms/i.test(content) ||
-          (/error/i.test(content) && !content.includes("Typecheck passed") && !content.includes("Lint passed"))
-        ) && (
+        const isFailure =
+          (/All \d+ attempts failed/i.test(content) ||
+            /accounts exhausted/i.test(content) ||
+            /Timeout after \d+ms/i.test(content) ||
+            (/error/i.test(content) &&
+              !content.includes("Typecheck passed") &&
+              !content.includes("Lint passed"))) &&
           // Exclude success patterns (be specific to avoid false negatives)
           !content.includes("✅") &&
           !content.includes("Successfully") &&
-          !content.includes("passed")
-        );
+          !content.includes("passed");
 
         if (isFailure) {
           console.log("[agent] Autonomous agent reported failure");
@@ -836,6 +862,7 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
     { role: "system", content: systemPrompt },
     { role: "user", content: buildIssuePrompt(issue) },
   ];
+  const taskDescription = issue ? `${issue.identifier}: ${issue.title}` : "Symphony agent run";
   return runToolLoop({
     provider,
     messages,
@@ -843,6 +870,7 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
     maxTurns: RUNNER_MAX_TURNS,
     maxMs: RUNNER_MAX_EXECUTION_MS,
     startTime: Date.now(),
+    taskDescription,
   });
 }
 
@@ -857,6 +885,7 @@ export async function continueAgent({
   feedback,
   maxTurns,
   maxMs,
+  taskDescription,
 }) {
   messages.push({ role: "user", content: feedback });
   return runToolLoop({
@@ -866,5 +895,6 @@ export async function continueAgent({
     maxTurns,
     maxMs,
     startTime: Date.now(),
+    taskDescription: taskDescription || "Symphony agent continuation",
   });
 }

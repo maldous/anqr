@@ -427,32 +427,32 @@ The guardian is deterministic, not AI-driven:
 
 ## Files
 
-| File                                            | Purpose                                                     | Implemented in    |
-| ----------------------------------------------- | ----------------------------------------------------------- | ----------------- |
-| `scripts/ops/harness-report.mjs`                | Deterministic checks                                        | ANQ-371 (Phase 3) |
-| `scripts/ops/linear-guardian.mjs`               | Rule-based issue management                                 | ANQ-366 (Phase 4) |
-| `scripts/ops/linear-client.mjs`                 | Linear API helpers                                          | ANQ-366 (Phase 4) |
-| `scripts/ops/ollama-local-audit.mjs`            | Model health verification                                   | ANQ-370 (Phase 2) |
-| `scripts/ops/litellm-config.yaml`               | Local model aliases                                         | ANQ-370 (Phase 2) |
-| `scripts/ops/model-injector-proxy.py`           | Request normalization                                       | ANQ-370 (Phase 2) |
-| `scripts/ops/symphony-config.mjs`               | Centralized queue/execution config                          | ANQ-368 (Phase 5) |
-| `scripts/ops/symphony-queue-control.mjs`        | Queue feeder, drain, enforcement                            | ANQ-368 (Phase 5) |
-| `scripts/ops/nightly-ops-pass.mjs`              | Nightly orchestration                                       | ANQ-367 (Phase 6) |
-| `scripts/ops/notify.mjs`                        | Notification dispatch                                       | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-nightly.service`         | systemd user service unit                                   | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-nightly.timer`           | systemd nightly timer (02:00)                               | ANQ-367 (Phase 6) |
-| `services/systemd/anqr-queue-feeder.service`    | systemd queue maintenance + backup feed                     | ANQ-373, ANQ-376  |
-| `services/systemd/anqr-queue-feeder.timer`      | systemd queue maintenance timer (15min)                     | ANQ-373, ANQ-376  |
-| `scripts/ops/symphony-runner.mjs`               | Execution orchestrator (self-feeding)                       | ANQ-374, ANQ-376  |
-| `scripts/ops/symphony-agent.mjs`                | Tool-calling AI agent                                       | ANQ-374           |
-| `scripts/ops/symphony-credit-gate.mjs`          | Provider cascade (credit gate)                              | ANQ-374           |
-| `scripts/ops/symphony/WORKFLOW.md`              | Agent system prompt (versioned)                             | ANQ-374           |
-| `services/systemd/anqr-symphony-runner.service` | systemd runner service                                      | ANQ-374           |
-| `services/systemd/anqr-symphony-runner.timer`   | systemd runner timer (2min)                                 | ANQ-374           |
-| `scripts/ops/lib/notify.mjs`                    | Email notification helper (msmtp + rate limiting)           | ANQ-377           |
-| `scripts/ops/email-ingest.mjs`                  | Email ingest (mbsync + notmuch → Linear issues)             | ANQ-377           |
-| `services/systemd/anqr-email-ingest.service`    | systemd email ingest service                                | ANQ-377           |
-| `services/systemd/anqr-email-ingest.timer`      | systemd email ingest timer (5min)                           | ANQ-377           |
-| `services/systemd/anqr-ops.env`                 | Environment template for secrets                            | ANQ-367 (Phase 6) |
-| `scripts/ops/integrations/sonar/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (canonical module) | ANQ-378 |
-| `scripts/ops/sonar-linear-audit.mjs`            | Nightly sonar audit root compatibility shim                 | ANQ-378           |
+| File                                                   | Purpose                                                | Implemented in    |
+| ------------------------------------------------------ | ------------------------------------------------------ | ----------------- |
+| `scripts/ops/harness-report.mjs`                       | Deterministic checks                                   | ANQ-371 (Phase 3) |
+| `scripts/ops/linear-guardian.mjs`                      | Rule-based issue management                            | ANQ-366 (Phase 4) |
+| `scripts/ops/linear-client.mjs`                        | Linear API helpers                                     | ANQ-366 (Phase 4) |
+| `scripts/ops/ollama-local-audit.mjs`                   | Model health verification                              | ANQ-370 (Phase 2) |
+| `scripts/ops/litellm-config.yaml`                      | Local model aliases                                    | ANQ-370 (Phase 2) |
+| `scripts/ops/model-injector-proxy.py`                  | Request normalization                                  | ANQ-370 (Phase 2) |
+| `scripts/ops/symphony-config.mjs`                      | Centralized queue/execution config                     | ANQ-368 (Phase 5) |
+| `scripts/ops/symphony-queue-control.mjs`               | Queue feeder, drain, enforcement                       | ANQ-368 (Phase 5) |
+| `scripts/ops/nightly-ops-pass.mjs`                     | Nightly orchestration                                  | ANQ-367 (Phase 6) |
+| `scripts/ops/notify.mjs`                               | Notification dispatch                                  | ANQ-367 (Phase 6) |
+| `services/systemd/anqr-nightly.service`                | systemd user service unit                              | ANQ-367 (Phase 6) |
+| `services/systemd/anqr-nightly.timer`                  | systemd nightly timer (02:00)                          | ANQ-367 (Phase 6) |
+| `services/systemd/anqr-queue-feeder.service`           | systemd queue maintenance + backup feed                | ANQ-373, ANQ-376  |
+| `services/systemd/anqr-queue-feeder.timer`             | systemd queue maintenance timer (15min)                | ANQ-373, ANQ-376  |
+| `scripts/ops/symphony-runner.mjs`                      | Execution orchestrator (self-feeding)                  | ANQ-374, ANQ-376  |
+| `scripts/ops/symphony-agent.mjs`                       | Tool-calling AI agent                                  | ANQ-374           |
+| `scripts/ops/symphony-credit-gate.mjs`                 | Provider cascade (credit gate)                         | ANQ-374           |
+| `scripts/ops/symphony/WORKFLOW.md`                     | Agent system prompt (versioned)                        | ANQ-374           |
+| `services/systemd/anqr-symphony-runner.service`        | systemd runner service                                 | ANQ-374           |
+| `services/systemd/anqr-symphony-runner.timer`          | systemd runner timer (2min)                            | ANQ-374           |
+| `scripts/ops/lib/notify.mjs`                           | Email notification helper (msmtp + rate limiting)      | ANQ-377           |
+| `scripts/ops/email-ingest.mjs`                         | Email ingest (mbsync + notmuch → Linear issues)        | ANQ-377           |
+| `services/systemd/anqr-email-ingest.service`           | systemd email ingest service                           | ANQ-377           |
+| `services/systemd/anqr-email-ingest.timer`             | systemd email ingest timer (5min)                      | ANQ-377           |
+| `services/systemd/anqr-ops.env`                        | Environment template for secrets                       | ANQ-367 (Phase 6) |
+| `scripts/ops/integrations/sonar/sonar-linear-sync.mjs` | SonarQube ↔ Linear per-finding sync (canonical module) | ANQ-378           |
+| `scripts/ops/sonar-linear-audit.mjs`                   | Nightly sonar audit root compatibility shim            | ANQ-378           |
