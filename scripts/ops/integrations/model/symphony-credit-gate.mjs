@@ -557,11 +557,8 @@ export async function selectProvider() {
     console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
   }
 
-  // Log stats after selection attempt (regardless of outcome)
-  // Only log when run as main script, not when imported as module
-  if (require.main === module || process.argv[1]?.includes('symphony-credit-gate')) {
-    logProviderStats();
-  }
+  // Note: logProviderStats() can be called explicitly by callers for monitoring
+  // Removed auto-logging to avoid ESM import side effects
 
   return null;
 }
