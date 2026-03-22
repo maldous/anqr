@@ -141,6 +141,11 @@ const PROVIDERS = [
       } catch {}
       return null;
     },
+    // Custom probe - just check if gateway is responding
+    probe: async () => {
+      const res = await probeWithTimeout("http://127.0.0.1:18789/v1/models");
+      return res?.ok || false;
+    },
   },
   {
     name: "groq",
