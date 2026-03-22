@@ -42,6 +42,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../..");
 const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
 const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
+const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
+
+// Provider selection statistics
+const PROVIDER_STATS = {
+  selections: {},   // { providerName: count }
+  successes: {},    // { providerName: count }
+  failures: {},     // { providerName: count }
+  lastSelected: {}, // { providerName: timestamp }
+  lastSuccess: {},  // { providerName: timestamp }
+  lastFailure: {},  // { providerName: timestamp }
+};
 
 const PROBE_TIMEOUT_MS = 5_000;
 
@@ -409,6 +420,82 @@ export function clearProviderFailure(providerName) {
 }
 
 // ---------------------------------------------------------------------------
+// Provider selection monitoring
+// ---------------------------------------------------------------------------
+
+function loadStats() {
+  try {
+    if (existsSync(STATS_FILE)) {
+      const data = JSON.parse(readFileSync(STATS_FILE, "utf-8"));
+      // Merge with defaults to handle new fields
+      return { ...PROVIDER_STATS, ...data };
+    }
+  } catch {}
+  return { ...PROVIDER_STATS };
+}
+
+function saveStats(stats) {
+  ensureStateDir();
+  writeFileSync(STATS_FILE, JSON.stringify(stats, null, 2));
+}
+
+export function recordProviderSelection(providerName) {
+  const stats = loadStats();
+  stats.selections[providerName] = (stats.selections[providerName] || 0) + 1;
+  stats.lastSelected[providerName] = Date.now();
+  saveStats(stats);
+}
+
+export function recordProviderSuccess(providerName) {
+  const stats = loadStats();
+  stats.successes[providerName] = (stats.successes[providerName] || 0) + 1;
+  stats.lastSuccess[providerName] = Date.now();
+  saveStats(stats);
+}
+
+export function recordProviderFailureCount(providerName) {
+  const stats = loadStats();
+  stats.failures[providerName] = (stats.failures[providerName] || 0) + 1;
+  stats.lastFailure[providerName] = Date.now();
+  saveStats(stats);
+}
+
+export function getProviderStats() {
+  const stats = loadStats();
+  // Calculate success rates
+  const result = {};
+  for (const name of Object.keys(stats.selections)) {
+    const selected = stats.selections[name] || 0;
+    const success = stats.successes[name] || 0;
+    const fail = stats.failures[name] || 0;
+    const rate = selected > 0 ? ((success / selected) * 100).toFixed(1) : 0;
+    result[name] = {
+      selections: selected,
+      successes: success,
+      failures: fail,
+      successRate: `${rate}%`,
+      lastSelected: stats.lastSelected[name] ? new Date(stats.lastSelected[name]).toISOString() : null,
+      lastSuccess: stats.lastSuccess[name] ? new Date(stats.lastSuccess[name]).toISOString() : null,
+      lastFailure: stats.lastFailure[name] ? new Date(stats.lastFailure[name]).toISOString() : null,
+    };
+  }
+  return result;
+}
+
+export function resetProviderStats() {
+  saveStats(PROVIDER_STATS);
+}
+
+// Log stats summary (for debugging/monitoring)
+export function logProviderStats() {
+  const stats = getProviderStats();
+  console.log(`[credit-gate] 📊 Provider Statistics:`);
+  for (const [name, data] of Object.entries(stats).sort((a, b) => b[1].selections - a[1].selections)) {
+    console.log(`[credit-gate]   ${name}: ${data.selections} selections, ${data.successes} success, ${data.failures} fail, ${data.successRate} rate`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main: select best available provider
 // ---------------------------------------------------------------------------
 
@@ -438,6 +525,7 @@ export async function selectProvider() {
     if (provider.requiresSdk) {
       console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
       clearProviderFailure(provider.name);
+      recordProviderSelection(provider.name);
       return {
         name: provider.name,
         model: provider.model,
@@ -456,6 +544,7 @@ export async function selectProvider() {
     if (available) {
       console.log(`[credit-gate] ${provider.name}: available ✅`);
       clearProviderFailure(provider.name);
+      recordProviderSelection(provider.name);
       return {
         name: provider.name,
         model: provider.model,
