@@ -444,13 +444,26 @@ async function callLLM(provider, messages, taskDescription) {
 
         const result = await client.run(runOpts);
 
-        // Check for rate limit in result
+        // Check for rate limit in result - look at result.error or output
         const output = result.output;
         const resultStr = typeof output === "string" ? output : JSON.stringify(output);
+        const errorStr = result.error || "";
 
-        if (isRateLimitError(resultStr)) {
+        // Check both output and error for rate limit indicators
+        const hasRateLimit = isRateLimitError(resultStr) || isRateLimitError(errorStr);
+
+        // Also check if all attempts were exhausted - this is a failure
+        const allFailed = /All \d+ attempts failed/i.test(resultStr) || /accounts exhausted/i.test(resultStr);
+
+        if (hasRateLimit) {
           console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
-          lastError = resultStr;
+          lastError = resultStr || errorStr;
+          continue;
+        }
+
+        if (allFailed) {
+          console.log(`[agent] Codebuff all accounts failed on ${attempt.label}, trying next...`);
+          lastError = resultStr || errorStr;
           continue;
         }
 

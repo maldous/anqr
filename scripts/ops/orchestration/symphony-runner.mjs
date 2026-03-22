@@ -468,16 +468,28 @@ async function executeIssue(issue, dryRun = false) {
 
     let changedFiles = gitDiffNames();
     if (changedFiles.length === 0) {
+      // Check if agent is still planning/working via sub-goals - don't return to Todo if still active
+      const messages = agentResult.messages || [];
+      const hasActiveSubGoals = messages.some((m) => {
+        // Check for update_subgoal tool calls more specifically
+        const toolCalls = m.tool_calls || m.function_call || [];
+        const toolNames = Array.isArray(toolCalls) 
+          ? toolCalls.map((t) => t.function?.name || t.name || t).join(" ").toLowerCase()
+          : String(toolCalls).toLowerCase();
+        return toolNames.includes("update_subgoal") || toolNames.includes("sub_goal");
+      });
+      
       // Check if work was completed externally (by human or another process)
       // by checking if the issue has been resolved/closed externally
+      const summary = agentResult.summary?.toLowerCase() || "";
       const isExternallyCompleted =
         detail?.state?.name === "Done" ||
         detail?.state?.name === "Canceled" ||
-        agentResult.summary?.toLowerCase().includes("already") ||
-        agentResult.summary?.toLowerCase().includes("completed") ||
-        agentResult.summary?.toLowerCase().includes("external") ||
-        agentResult.summary?.toLowerCase().includes("human") ||
-        agentResult.summary?.toLowerCase().includes("no longer needed");
+        summary.includes("already") ||
+        summary.includes("completed") ||
+        summary.includes("external") ||
+        summary.includes("human") ||
+        summary.includes("no longer needed");
 
       // Document external completion in a log file for audit trail
       const externalLogPath = resolve(ROOT, "reports", "symphony", "external-completions.log");
@@ -504,22 +516,42 @@ async function executeIssue(issue, dryRun = false) {
         });
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
-      } else {
-        // Unknown reason for no changes - return to Todo with cooldown for manual review
-        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes");
-        await updateIssue(issue.id, { stateId: STATES.todo });
+        return "done";
+      }
+      
+      if (hasActiveSubGoals) {
+        // Agent is still planning/working via sub-goals - stay in progress, clear cooldown
         await addComment(
           issue.id,
-          `⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`,
+          `🔄 **Agent still planning** — sub-goals detected, continuing work in next turn.\n\nCurrent plan:\n${agentResult.summary}`,
         );
+        clearCooldown(issue.identifier);
+        // Return to Todo but with no cooldown so it can be picked up immediately
+        await updateIssue(issue.id, { stateId: STATES.todo });
         recordTransition(issue.identifier, {
           actor: "runner",
-          reason: "no_file_changes",
+          reason: "sub_goal_continuing",
           from: "In Progress",
           to: "Todo",
           runId: RUN_ID,
         });
+        return "done";
       }
+      
+      // Unknown reason for no changes - return to Todo with cooldown for manual review
+      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes");
+      await updateIssue(issue.id, { stateId: STATES.todo });
+      await addComment(
+        issue.id,
+        `⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`,
+      );
+      recordTransition(issue.identifier, {
+        actor: "runner",
+        reason: "no_file_changes",
+        from: "In Progress",
+        to: "Todo",
+        runId: RUN_ID,
+      });
       return "done";
     }
 
