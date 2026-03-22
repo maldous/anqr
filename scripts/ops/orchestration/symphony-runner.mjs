@@ -452,7 +452,9 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
       break;
-    }      if (!agentResult) {
+    }
+
+    if (!agentResult) {
       setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "all_providers_failed");
       await updateIssue(issue.id, { stateId: STATES.todo });
       await addComment(issue.id, `❌ **All providers failed**. Returned to Todo with cooldown.`);
@@ -661,6 +663,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
           to: "Backlog",
           runId: RUN_ID,
         });
+        // Track validation failure (exhausted)
+        if (provider?.name) {
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+        }
       } else {
         setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed");
         await updateIssue(issue.id, { stateId: STATES.todo });
@@ -705,6 +711,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
         to: "Todo",
         runId: RUN_ID,
       });
+      // Track git commit failure
+      if (provider?.name) {
+        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+      }
       return "done";
     }
 
