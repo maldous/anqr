@@ -47,6 +47,7 @@
     "harness:quick": "node scripts/ops/harness-report.mjs quick",
     "harness:continuous": "node scripts/ops/harness-report.mjs continuous",
     "harness:full": "node scripts/ops/harness-report.mjs full",
+    "harness:doctor": "node scripts/ops/harness-doctor.mjs",
     "guardian:run": "node scripts/ops/linear-guardian.mjs",
     "guardian:dry-run": "node scripts/ops/linear-guardian.mjs --dry-run",
     "queue:check": "node scripts/ops/symphony-queue-control.mjs --check",

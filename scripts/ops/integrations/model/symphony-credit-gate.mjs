@@ -168,6 +168,13 @@ const PROVIDERS = [
     probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini"),
   },
   {
+    name: "codebuff",
+    model: "codebuff/base@latest",
+    baseUrl: "codebuff",
+    envVar: "CODEBUFF_API_KEY",
+    requiresSdk: true,
+  },
+  {
     name: "ollama-local",
     model: RUNNER_OLLAMA_MODEL,
     baseUrl: RUNNER_OLLAMA_BASE_URL,
@@ -237,6 +244,20 @@ export async function selectProvider() {
     if (isRecentlyFailed(provider.name)) {
       console.log(`[credit-gate] ${provider.name}: skipped (recently failed)`);
       continue;
+    }
+
+    // SDK-based providers (like Codebuff) don't need HTTP probing
+    if (provider.requiresSdk) {
+      console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
+      clearProviderFailure(provider.name);
+      return {
+        name: provider.name,
+        model: provider.model,
+        baseUrl: provider.baseUrl,
+        apiKey: apiKey || null,
+        requiresSdk: true,
+        cwd: PROJECT_ROOT,
+      };
     }
 
     console.log(`[credit-gate] ${provider.name}: probing...`);

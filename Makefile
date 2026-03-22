@@ -8,7 +8,7 @@ QUALITY_RELEASE_TARGETS := \
 	quality-fast test-basic test-advanced sonar-scan sonar-export
 
 QUALITY_HARNESS_TARGETS := \
-	harness-quick harness-full guardian-dry-run queue-check queue-all-dry-run \
+	harness-quick harness-full harness-doctor guardian-dry-run queue-check queue-all-dry-run \
 	symphony-status nightly-dry-run
 
 QUALITY_MOBILE_TARGETS := \
@@ -133,6 +133,9 @@ harness-continuous: ## Run the continuous harness report
 harness-full: ## Run the full harness report
 	npm run harness:full
 
+harness-doctor: ## Run harness runtime diagnostics
+	npm run harness:doctor
+
 guardian-run: ## Run the Linear guardian
 	npm run guardian:run
 
@@ -241,7 +244,7 @@ clean: ## Remove build and cache artifacts
 	rm -rf dist coverage node_modules/.cache
 
 zip: ## Create a source archive excluding generated/runtime artifacts
-	rm -f anqr.zip && zip -r apps commitlint.config.js cspell.json docs eslint.config.js index.html knip.json lefthook.yml Makefile netlify netlify.toml oxlint.json package.json packages playwright.config.ts postcss.config.mjs scripts services sonar-project.properties src tests tsconfig.json tsconfig.node.json tsconfig.node.tsbuildinfo vite-config vite.config.ts vitest.config.ts .dependency-cruiser.cjs .editorconfig .gitignore -x 'src/i18n/static/*' 'src/i18n/locales/*' 'src/content/generated/*' 'public/*' 'ios/*' 'android/*' 'reports/*' 'dist/*' 'coverage/*' 'node_modules/*' '.git/*'
+	rm -f anqr.zip && zip -r anqr.zip AGENTS.md CLAUDE.md CODEBUFF.md README.md MCP-MIGRATION.md commitlint.config.js cspell.json docs eslint.config.js index.html knip.json lefthook.yml Makefile netlify netlify.toml oxlint.json package.json packages playwright.config.ts postcss.config.mjs scripts services sonar-project.properties src tests tsconfig.json tsconfig.base.json tsconfig.node.json tsconfig.node.tsbuildinfo tsconfig.src.json tsconfig.apps.json tsconfig.packages.json tsconfig.harness.json tsconfig.netlify.json tsconfig.tests.json vite-config vite.config.ts vitest.config.ts .dependency-cruiser.cjs .dependency-cruiser.architecture.cjs .dependency-cruiser.contracts.cjs .editorconfig .gitignore -x 'src/i18n/static/*' 'src/i18n/locales/*' 'src/content/generated/*' 'public/*' 'ios/*' 'android/*' 'reports/*' 'dist/*' 'coverage/*' 'node_modules/*' '.git/*'
 
 verify-migration: ## Run the legacy migration verification bundle
 	npm run typecheck:all && npm run lint:all && npm run depcruise:all && npm run test:unit && npm run harness:quick

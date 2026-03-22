@@ -55,6 +55,65 @@ import {
   runAstDensity,
   runTests,
 } from "../../symphony-validation.mjs";
+import { CodebuffClient, WEBSITE_URL } from "@codebuff/sdk";
+
+let _codebuffAccounts = null;
+
+async function resolveKeyAccount(apiKey) {
+  try {
+    const url = new URL("/api/v1/me?fields=id,email", WEBSITE_URL);
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return { id: data.id, email: data.email };
+  } catch {
+    return null;
+  }
+}
+
+async function getCodebuffAccounts() {
+  if (_codebuffAccounts) return _codebuffAccounts;
+
+  const keys = [];
+  for (const key of Object.keys(process.env).sort()) {
+    if (key.startsWith("CODEBUFF_API_KEY") && !key.endsWith("_FILE")) {
+      const value = process.env[key];
+      if (value) keys.push(value);
+    }
+  }
+
+  if (keys.length === 0) {
+    throw new Error("No CODEBUFF_API_KEY* found");
+  }
+
+  // Validate all keys and get account info
+  const results = await Promise.allSettled(keys.map((k) => resolveKeyAccount(k)));
+  const accounts = [];
+  for (let i = 0; i < keys.length; i++) {
+    const result = results[i];
+    const info = result.status === "fulfilled" ? result.value : null;
+    if (info) {
+      accounts.push({ index: i, ...info, apiKey: keys[i] });
+    }
+  }
+
+  _codebuffAccounts = accounts;
+  return accounts;
+}
+
+function isRateLimitError(errStr) {
+  return (
+    errStr.includes("429") ||
+    errStr.includes("rate_limit") ||
+    errStr.includes("Too Many Requests") ||
+    errStr.includes("session limit") ||
+    errStr.includes("rate_limit_exceeded")
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Tool definitions (OpenAI function calling format)
@@ -373,6 +432,82 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // ---------------------------------------------------------------------------
 
 async function callLLM(provider, messages) {
+  // Handle Codebuff SDK-based provider (autonomous agent, completes in one run)
+  if (provider.requiresSdk) {
+    const accounts = await getCodebuffAccounts();
+    if (accounts.length === 0) {
+      throw new Error("No valid CODEBUFF_API_KEY* accounts found");
+    }
+
+    // Build prompt from messages for Codebuff
+    const prompt = messages
+      .map((m) => `${m.role === "system" ? "System:" : m.role === "user" ? "User:" : "Assistant:"} ${m.content}`)
+      .join("\n\n");
+
+    // Try each account in sequence (paid first, then free mode across accounts)
+    const attempts = [];
+    // First account: try paid mode, then free mode
+    attempts.push({ apiKey: accounts[0].apiKey, costMode: undefined, label: `${accounts[0].email} (paid)` });
+    attempts.push({ apiKey: accounts[0].apiKey, costMode: "free", label: `${accounts[0].email} (free)` });
+    // Additional accounts: free mode only
+    for (let i = 1; i < accounts.length; i++) {
+      attempts.push({ apiKey: accounts[i].apiKey, costMode: "free", label: `${accounts[i].email} (free)` });
+    }
+
+    for (const attempt of attempts) {
+      try {
+        const client = new CodebuffClient({
+          apiKey: attempt.apiKey,
+          cwd: provider.cwd || process.cwd(),
+        });
+
+        const runOpts = {
+          agent: provider.model,
+          prompt,
+          maxAgentSteps: 100,
+        };
+        if (attempt.costMode) {
+          runOpts.costMode = attempt.costMode;
+        }
+
+        const result = await client.run(runOpts);
+
+        // Check for rate limit in result
+        const output = result.output;
+        const resultStr = typeof output === "string" ? output : JSON.stringify(output);
+
+        if (isRateLimitError(resultStr)) {
+          console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
+          continue;
+        }
+
+        // Success - return as autonomous completion
+        return {
+          choices: [
+            {
+              message: {
+                role: "assistant",
+                content: resultStr,
+                tool_calls: [],
+              },
+            },
+          ],
+        };
+      } catch (err) {
+        const errStr = err.message || "";
+        if (isRateLimitError(errStr)) {
+          console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
+          continue;
+        }
+        // Non-rate-limit error - fail immediately
+        throw err;
+      }
+    }
+
+    throw new Error("All codebuff accounts exhausted");
+  }
+
+  // Standard HTTP-based provider
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -519,6 +654,57 @@ async function runToolLoop({ provider, messages, projectRoot, maxTurns, maxMs, s
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       messages.push(msg);
+
+      // Handle autonomous agents (like Codebuff) that complete in one run
+      // They return a summary in content without tool calls
+      if (provider.requiresSdk && msg.content && msg.content.trim().length > 0) {
+        const content = msg.content;
+
+        // Refined failure detection based on actual Codebuff outputs:
+        // - "All X attempts failed: Timeout after XXXms" - timeout error
+        // - "accounts exhausted" - all accounts rate limited
+        // - "All codebuff" - all attempts failed
+        const isFailure = (
+          /All \d+ attempts failed/i.test(content) ||
+          /accounts exhausted/i.test(content) ||
+          /Timeout after \d+ms/i.test(content) ||
+          (/error/i.test(content) && !content.includes("Typecheck passed") && !content.includes("Lint passed"))
+        ) && (
+          // Exclude success patterns (be specific to avoid false negatives)
+          !content.includes("✅") &&
+          !content.includes("Successfully") &&
+          !content.includes("passed")
+        );
+
+        if (isFailure) {
+          console.log("[agent] Autonomous agent reported failure");
+          return {
+            completed: false,
+            summary: `Autonomous agent failed: ${content.slice(0, 500)}`,
+            turns: turn + 1,
+            toolCalls: totalToolCalls,
+            filesChanged: [...filesChanged],
+            timedOut: content.includes("Timeout"),
+            error: content.slice(0, 500),
+            messages,
+          };
+        }
+
+        console.log("[agent] Autonomous agent completed in single run");
+        // Extract summary from content - Codebuff returns a summary of changes
+        const summary = content.slice(0, 1000);
+        return {
+          completed: true,
+          summary: summary,
+          turns: turn + 1,
+          toolCalls: totalToolCalls,
+          filesChanged: [...filesChanged],
+          timedOut: false,
+          error: null,
+          messages,
+        };
+      }
+
       if (turn < maxTurns - 1) {
         console.log("[agent] No tool calls — prompting to continue");
         messages.push({
