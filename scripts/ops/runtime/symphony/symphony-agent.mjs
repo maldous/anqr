@@ -666,11 +666,12 @@ async function runToolLoop({
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       consecutiveNoToolCalls++;
-      if (consecutiveNoToolCalls >= 5) {
+      if (consecutiveNoToolCalls >= 3) {
         console.log("[agent] Too many consecutive turns without tool calls — aborting");
+        const snippet = msg.content?.slice(0, 150).replace(/\n/g, ' ') || '(empty)';
         return {
           completed: false,
-          summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls`,
+          summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls. Last: ${snippet}`,
           turns: turn + 1,
           toolCalls: totalToolCalls,
           filesChanged: [...filesChanged],
