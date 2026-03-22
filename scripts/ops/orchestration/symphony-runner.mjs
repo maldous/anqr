@@ -25,7 +25,7 @@ import {
   RUNNER_STUCK_THRESHOLD_MS,
 } from "../symphony-config.mjs";
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
-import { selectProvider, recordProviderFailure } from "../symphony-credit-gate.mjs";
+import { selectProvider, recordProviderFailure, recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
 import { runAgent, continueAgent } from "../symphony-agent.mjs";
 import {
   fetchAllSonarIssues,
@@ -452,9 +452,7 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
       break;
-    }
-
-    if (!agentResult) {
+    }      if (!agentResult) {
       setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "all_providers_failed");
       await updateIssue(issue.id, { stateId: STATES.todo });
       await addComment(issue.id, `❌ **All providers failed**. Returned to Todo with cooldown.`);
@@ -465,6 +463,10 @@ async function executeIssue(issue, dryRun = false) {
         to: "Todo",
         runId: RUN_ID,
       });
+      // Track all providers failed
+      for (const prov of triedProviders) {
+        recordLinearCompletion(prov, { completed: false, priority: issue.priority });
+      }
       return "done";
     }    let changedFiles = gitDiffNames();      if (changedFiles.length === 0) {
       // Check if agent needs continuation (has active subgoals)
@@ -552,6 +554,11 @@ async function executeIssue(issue, dryRun = false) {
           to: "Done",
           runId: RUN_ID,
         });
+        // Track Linear issue completion (externally completed - issue was resolved one way or another)
+        if (provider?.name) {
+          recordLinearCompletion(provider.name, { completed: true, priority: issue.priority });
+          recordProviderSuccess(provider.name);
+        }
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
         console.log(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (externally)`);
@@ -593,6 +600,10 @@ async function executeIssue(issue, dryRun = false) {
         to: "Todo",
         runId: RUN_ID,
       });
+      // Track failure (no files changed = failed)
+      if (provider?.name) {
+        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+      }
       return "done";
     }
 
@@ -670,6 +681,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
           to: "Todo",
           runId: RUN_ID,
         });
+        // Track Linear issue failure
+        if (provider?.name) {
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+        }
       }
       return "done";
     }
@@ -739,6 +754,18 @@ ${String(r.detail).slice(0, 1000)}\n`,
       to: finalStateName,
       runId: RUN_ID,
     });
+    
+    // Track Linear issue completion (success = done state)
+    if (provider?.name) {
+      const isDone = finalStateId === STATES.done;
+      recordLinearCompletion(provider.name, { 
+        completed: isDone, 
+        priority: issue.priority 
+      });
+      if (isDone) {
+        recordProviderSuccess(provider.name);
+      }
+    }
     
     // Log completion with issue context
     console.log(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title}`);
