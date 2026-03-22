@@ -8,15 +8,16 @@
  *
  * Cascade order (best-to-worst):
  *   1. Codex (OpenAI)  — cloud, gpt-5.4 (when credits available)
- *   2. Groq            — free cloud, fast, llama-3.3-70b-versatile
- *   3. Mistral         — free experimental tier, devstral-small-2507
- *   4. Gemini          — free cloud tier, gemini-2.5-flash
- *   5. Gemini Lite     — separate quota, gemini-2.5-flash-lite
- *   6. OpenRouter FREE — free :free models, llama-3.3-70b-instruct
- *   7. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
- *   8. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
- *   9. GitHub Models   — free, gpt-4.1-mini
- *  10. Ollama local    — local fallback, qwen3.5:35b-a3b-32t
+ *   2. Codebuff        — cloud, codebuff/base (programmatic SDK)
+ *   3. Groq            — free cloud, fast, llama-3.3-70b-versatile
+ *   4. Mistral         — free experimental tier, devstral-small-2507
+ *   5. Gemini          — free cloud tier, gemini-2.5-flash
+ *   6. Gemini Lite     — separate quota, gemini-2.5-flash-lite
+ *   7. OpenRouter FREE — free :free models, llama-3.3-70b-instruct
+ *   8. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
+ *   9. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
+ *  10. GitHub Models   — free, gpt-4.1-mini
+ *  11. Ollama local    — local fallback, qwen3.5:35b-a3b-32t
  *
  * All probes use lightweight /v1/models listings (not generation requests)
  * to preserve free-tier quotas.
@@ -117,6 +118,13 @@ const PROVIDERS = [
     useMaxCompletionTokens: true,
   },
   {
+    name: "codebuff",
+    model: "codebuff/base@latest",
+    baseUrl: "codebuff",
+    envVar: "CODEBUFF_API_KEY",
+    requiresSdk: true,
+  },
+  {
     name: "groq",
     model: "llama-3.3-70b-versatile",
     baseUrl: "https://api.groq.com/openai/v1",
@@ -166,13 +174,6 @@ const PROVIDERS = [
     baseUrl: "https://models.github.ai/inference/v1",
     envVar: "GITHUB_MODELS_TOKEN",
     probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini"),
-  },
-  {
-    name: "codebuff",
-    model: "codebuff/base@latest",
-    baseUrl: "codebuff",
-    envVar: "CODEBUFF_API_KEY",
-    requiresSdk: true,
   },
   {
     name: "ollama-local",
