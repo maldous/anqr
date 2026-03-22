@@ -72,7 +72,12 @@ function isRateLimitError(errStr) {
     errStr.includes("rate_limit") ||
     errStr.includes("Too Many Requests") ||
     errStr.includes("session limit") ||
-    errStr.includes("rate_limit_exceeded")
+    errStr.includes("rate_limit_exceeded") ||
+    errStr.includes("Failed after") ||
+    errStr.includes("AI_RetryError") ||
+    errStr.includes("RetryError") ||
+    errStr.includes("weekly limit") ||
+    errStr.includes("Subscription")
   );
 }
 
