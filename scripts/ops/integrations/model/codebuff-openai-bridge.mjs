@@ -557,22 +557,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         }
       }
 
-      // Send final chunk with finish_reason
-      const finalChunk = {
-        id: completionId,
-        object: "chat.completion.chunk",
-        created,
-        model: MODEL_ID,
-        choices: [
-          {
-            index: 0,
-            delta: {},
-            finish_reason: "stop",
-          },
-        ],
-      };
-      onChunk(finalChunk);
-
+      // NOTE: Final chunk is sent by HTTP handler after we return continuation info
       // Log summary of tools used
       if (toolsUsed.size > 0) {
         console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(', ')}`);
@@ -580,9 +565,14 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
       }
 
+      // Parse response to detect continuation needs (same as non-streaming)
+      const parseResult = parseAgentResponse(resultStr);
+
       return {
         text: fullText || resultStr,
         account: attempt.label,
+        needsContinuation: parseResult.needsContinuation,
+        hasSubgoals: parseResult.hasSubgoals,
       };
     } catch (err) {
       // Extract error details - suppress verbose SDK dumps
@@ -746,8 +736,10 @@ const server = http.createServer(async (req, res) => {
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
 
+        let streamResult = null;
+        
         try {
-          await invokeCodebuffStream({
+          streamResult = await invokeCodebuffStream({
             messages,
             cwd: DEFAULT_CWD,
             completionId,
@@ -758,14 +750,38 @@ const server = http.createServer(async (req, res) => {
             },
           });
 
+          // Determine finish_reason based on whether agent wants to continue
+          let finishReason = "stop";
+          if (streamResult?.needsContinuation) {
+            finishReason = "length";  // Signal more work needed
+            if (streamResult.hasSubgoals) {
+              console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (active subgoals)`);
+            } else {
+              console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (pending work)`);
+            }
+          } else if (issueContext) {
+            console.log(`[bridge] ✅ Finished: ${issueContext.identifier}`);
+          }
+
+          // Send final chunk with appropriate finish_reason
+          const finalChunk = {
+            id: completionId,
+            object: "chat.completion.chunk",
+            created,
+            model,
+            choices: [
+              {
+                index: 0,
+                delta: {},
+                finish_reason: finishReason,
+              },
+            ],
+          };
+          res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+
           // Send [DONE] marker
           res.write("data: [DONE]\n\n");
           res.end();
-
-          // Log completion with issue context and one-line summary
-          if (issueContext) {
-            console.log(`[bridge] ✅ Finished: ${issueContext.identifier}`);
-          }
         } catch (streamError) {
           // Send error as SSE event before closing
           console.error(`[bridge] Streaming error: ${streamError.message}`);
@@ -796,14 +812,21 @@ const server = http.createServer(async (req, res) => {
         });
 
         // Log completion with issue context and one-line summary
-        if (issueContext) {
-          if (result.needsContinuation) {
-            if (result.hasSubgoals) {
-              console.log(`[bridge] 🔄 Continuing: ${issueContext.identifier} (active subgoals)`);
-            } else {
-              console.log(`[bridge] 🔄 Continuing: ${issueContext.identifier} (pending work)`);
-            }
+        let finishReason = "stop";
+        
+        if (result.needsContinuation) {
+          // Agent has indicated it needs to continue with more work (via update_subgoal)
+          // Do NOT send finish_reason: "stop" - that tells the caller to end the conversation
+          // Send "length" to indicate more content is available, or null to let caller decide
+          finishReason = "length";  // Signal that agent wants to continue
+          
+          if (result.hasSubgoals) {
+            console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (active subgoals - continuation required)`);
           } else {
+            console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (pending tool calls)`);
+          }
+        } else {
+          if (issueContext) {
             // Extract first line of summary for logging
             const summary = result.text || "";
             const firstLine = summary.split('\n')[0].trim().slice(0, 100) || '(no summary)';
@@ -819,7 +842,7 @@ const server = http.createServer(async (req, res) => {
           choices: [
             {
               index: 0,
-              finish_reason: "stop",
+              finish_reason: finishReason,
               message: {
                 role: "assistant",
                 content: result.text ?? "",
