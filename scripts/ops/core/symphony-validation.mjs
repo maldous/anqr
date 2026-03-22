@@ -10,7 +10,7 @@ export const VALIDATION_MANIFEST = {
     fullProject: true,
   },
   lint: {
-    command: "npx oxlint -c oxlint.json src/ packages/ apps/ scripts/ packages/domain/",
+    command: "npx oxlint -c oxlint.json src/ packages/ apps/ scripts/",
     timeoutMs: 60_000,
     fullProject: true,
   },
