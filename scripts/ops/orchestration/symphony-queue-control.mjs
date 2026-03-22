@@ -197,7 +197,7 @@ async function enforceMaxConcurrent(snap = null, dryRun = false) {
   }
 }
 
-async function detectStuckWork(snap = null, dryRun = false) {
+export async function detectStuckWork(snap = null, dryRun = false) {
   const live = snap || (await getQueueSnapshot());
   const active = live.inProgress.all;
   if (active.length === 0) {
