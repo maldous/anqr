@@ -928,6 +928,12 @@ async function main() {
       executed = true;
     }
 
+    // After processing (whether an issue was executed or not), feed to keep queue topped up and eliminate idle gap
+    if (!dryRun) {
+      const finalSnap = await getQueueSnapshot();
+      if (finalSnap.queueDepth < TARGET_MIN) await feedQueue(finalSnap, false);
+    }
+
     if (!executed) {
       console.log(`[runner] No eligible issues found for execution`);
     }
