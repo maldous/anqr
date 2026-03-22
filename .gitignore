@@ -3,6 +3,7 @@ sonar-report.json
 play-store-key.json
 reports/symphony/state.json
 .codebuff-bridge-state.json
+.openclaw/workspace-state.json
 .env
 .jscpd-low-report/
 .jscpd-report/
