@@ -342,6 +342,10 @@ async function executeIssue(issue, dryRun = false) {
       issue.id,
       `🚫 **Max retries exceeded** (${RUNNER_MAX_RETRIES}). Moved to Backlog and blocked from automatic re-feed until explicitly reset.`,
     );
+    // Track retry exhausted as provider failure (use last provider)
+    if (provider?.name) {
+      recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+    }
     return "skip";
   }
 
@@ -399,6 +403,10 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
+        // Track all tried providers as failed
+        for (const prov of triedProviders) {
+          recordLinearCompletion(prov, { completed: false, priority: issue.priority });
+        }
         return "done";
       }
 
@@ -449,6 +457,10 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
+        // Track local busy as provider failure
+        if (provider?.name) {
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+        }
         return "done";
       }
       break;
@@ -529,6 +541,10 @@ async function executeIssue(issue, dryRun = false) {
             runId: RUN_ID,
           });
           console.log(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
+          // Track continuation exhausted as failure
+          if (provider?.name) {
+            recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+          }
           return "done";
         }
       }
@@ -585,6 +601,10 @@ async function executeIssue(issue, dryRun = false) {
           runId: RUN_ID,
         });
         console.log(`[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`);
+        // Track active subgoals without messages as failure
+        if (provider?.name) {
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority });
+        }
         return "done";
       }
       
