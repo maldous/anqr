@@ -546,7 +546,10 @@ export function recordProviderFailureCount(providerName) {
 export function recordLinearCompletion(providerName, { completed, priority = 4, estimate }) {
   const stats = loadStats();
   const p = typeof priority === 'number' ? priority : 4; // Default to low priority
-  const est = typeof estimate === 'number' ? estimate : 0;
+  // Auto-assign estimate based on priority if not provided (fallback for legacy issues)
+  const est = typeof estimate === 'number' && estimate > 0 
+    ? estimate 
+    : Math.max(1, 5 - p); // Default: P0=5, P1=4, P2=3, P3=2, P4=1
   
   if (completed) {
     stats.linearCompleted[providerName] = (stats.linearCompleted[providerName] || 0) + 1;
