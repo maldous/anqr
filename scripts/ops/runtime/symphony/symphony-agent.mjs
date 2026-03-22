@@ -56,15 +56,12 @@ import {
   runAstDensity,
   runTests,
 } from "../../symphony-validation.mjs";
-import {
-  getAllApiKeys,
-  validateApiKeys,
-  buildAttemptPlan,
-  REPORTS_DIR,
-  PROJECT_ROOT,
-} from "../../integrations/model/codebuff-sdk-runner.mjs";
+import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
 
-import { CodebuffClient } from "@codebuff/sdk";
+// Bridge configuration - unify with codebuff-openai-bridge
+const BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
+const BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
+const BRIDGE_MODEL = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 
 function isRateLimitError(errStr) {
   const s = errStr.toLowerCase();
@@ -400,166 +397,117 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // ---------------------------------------------------------------------------
 
 async function callLLM(provider, messages, taskDescription) {
-  // Handle Codebuff SDK-based provider (autonomous agent, completes in one run)
+  // Handle Codebuff via HTTP bridge (unified with OpenClaw)
   if (provider.requiresSdk) {
-    const apiKeys = getAllApiKeys();
-    if (apiKeys.length === 0) {
-      throw new Error("No CODEBUFF_API_KEY* found");
-    }
+    // Use the HTTP bridge instead of direct SDK
+    // The bridge handles key rotation, rate limiting, and continuation detection
+    console.log(`[agent] Using bridge: ${BRIDGE_URL}`);
+    
+    // Convert internal message format to OpenAI-style for bridge
+    const bridgeMessages = messages.map((m) => {
+      const content = typeof m.content === "string" ? m.content : JSON.stringify(m.content);
+      return { role: m.role, content };
+    });
 
-    // Validate keys and get accounts (shared logic)
-    const accounts = await validateApiKeys(apiKeys);
-    if (accounts.length === 0) {
-      throw new Error("No valid CODEBUFF_API_KEY* accounts found");
-    }
-
-    // Build attempt plan using shared function
-    const attempts = buildAttemptPlan(apiKeys, accounts);
-
-    // Build prompt from messages for Codebuff
-    const prompt = messages
-      .map((m) => {
-        let roleLabel;
-        if (m.role === "system") {
-          roleLabel = "System:";
-        } else if (m.role === "user") {
-          roleLabel = "User:";
-        } else {
-          roleLabel = "Assistant:";
-        }
-        return `${roleLabel} ${m.content}`;
-      })
-      .join("\n\n");
-
-    let lastError = null;
-
-    for (const attempt of attempts) {
-      try {
-        const client = new CodebuffClient({
-          apiKey: attempt.apiKey,
-          cwd: provider.cwd || PROJECT_ROOT,
-        });
-
-        const runOpts = {
-          agent: provider.model,
-          prompt,
-          maxAgentSteps: 100,
-        };
-        if (attempt.costMode) {
-          runOpts.costMode = attempt.costMode;
-        }
-
-        const result = await client.run(runOpts);
-
-        // Check for rate limit in result - look at result.error or output
-        const output = result.output;
-        const resultStr = typeof output === "string" ? output : JSON.stringify(output);
-        const errorStr = result.error || "";
-
-        console.log(`[agent] Codebuff result: exitCode=${result.exitCode}, hasOutput=${resultStr.length > 0}, hasError=${!!errorStr}`);
-
-        // Check both output and error for rate limit indicators
-        const hasRateLimit = isRateLimitError(resultStr) || isRateLimitError(errorStr);
-        if (hasRateLimit) {
-          console.log(`[agent] Rate limit detected in resultStr=${resultStr.slice(0, 200)}`);
-        }
-
-        // Also check if all attempts were exhausted - this means SDK already tried everything internally
-        // and failed. If it says "accounts exhausted", all our keys are rate limited, so fail entirely.
-        const allFailed = /All \d+ attempts failed/i.test(resultStr) || /accounts exhausted/i.test(resultStr);
-        const accountsExhausted = /accounts exhausted/i.test(resultStr);
-
-        if (accountsExhausted) {
-          // All our API keys are rate limited - no point trying more, fail entirely
-          console.log(`[agent] Codebuff all accounts exhausted, giving up.`);
-          lastError = resultStr || errorStr;
-          // Don't continue - break out and fail
-          break;
-        }
-
-        if (hasRateLimit) {
-          console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next key...`);
-          lastError = resultStr || errorStr;
-          console.log(`[agent] Continue to next attempt in loop (index ${attempts.indexOf(attempt) + 1}/${attempts.length})`);
-          continue;
-        }
-
-        if (allFailed) {
-          // All SDK internal attempts failed - try next key in our loop
-          console.log(`[agent] Codebuff SDK failed on ${attempt.label}, trying next key...`);
-          lastError = resultStr || errorStr;
-          continue;
-        }
-
-        // Write report artifact (shared path)
-        const report = {
-          timestamp: new Date().toISOString(),
-          task: taskDescription?.slice(0, 500) || "Symphony agent run",
-          project: provider.cwd || PROJECT_ROOT,
-          exitCode: 0,
-          method: "sdk",
-          account: attempt.label,
-          outputLength: resultStr.length,
-          output: resultStr.slice(-5000),
-          error: null,
-        };
-
-        if (!existsSync(REPORTS_DIR)) {
-          mkDirSync(REPORTS_DIR, { recursive: true });
-        }
-        const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
-        writeFileSync(reportFile, JSON.stringify(report, null, 2) + "\n");
-        console.log(`[agent] Codebuff report written to: ${reportFile}`);
-
-        // Success - return as autonomous completion
-        return {
-          choices: [
-            {
-              message: {
-                role: "assistant",
-                content: resultStr,
-                tool_calls: [],
-              },
-            },
-          ],
-        };
-      } catch (err) {
-        const errStr = err.message || "";
-        if (isRateLimitError(errStr)) {
-          console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
-          lastError = errStr;
-          continue;
-        }
-        // Non-rate-limit error - fail immediately
-        throw err;
-      }
-    }
-
-    // All attempts failed - write failure report
-    const failureReport = {
-      timestamp: new Date().toISOString(),
-      task: taskDescription?.slice(0, 500) || "Symphony agent run",
-      project: provider.cwd || PROJECT_ROOT,
-      exitCode: 1,
-      method: "sdk",
-      account: "all accounts exhausted",
-      outputLength: 0,
-      output: "",
-      error: `All ${attempts.length} attempts failed: ${lastError}`,
-    };
+    const controller = new AbortController();
+    const timeoutMs = 5 * 60 * 1000; // 5 min
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
+      const res = await fetch(`${BRIDGE_URL}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${BRIDGE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: BRIDGE_MODEL,
+          messages: bridgeMessages,
+          stream: false,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`Bridge API ${res.status}: ${body.slice(0, 500)}`);
+      }
+
+      const result = await res.json();
+      
+      // The bridge returns completion tokens but we need to detect if agent wants continuation
+      // Check finish_reason - if "length", agent has more work to do
+      const needsContinuation = result.choices?.[0]?.finish_reason === "length";
+      
+      // Return in same format as SDK for compatibility
+      const content = result.choices?.[0]?.message?.content || "";
+      
+      // Write report artifact
+      const report = {
+        timestamp: new Date().toISOString(),
+        task: taskDescription?.slice(0, 500) || "Symphony agent run",
+        project: provider.cwd || PROJECT_ROOT,
+        exitCode: 0,
+        method: "bridge-http",
+        outputLength: content.length,
+        output: content.slice(-5000),
+        needsContinuation,
+        error: null,
+      };
+
       if (!existsSync(REPORTS_DIR)) {
         mkDirSync(REPORTS_DIR, { recursive: true });
       }
       const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
-      writeFileSync(reportFile, JSON.stringify(failureReport, null, 2) + "\n");
-      console.log(`[agent] Codebuff failure report written to: ${reportFile}`);
-    } catch {
-      // Ignore report write errors
-    }
+      writeFileSync(reportFile, JSON.stringify(report, null, 2) + "\n");
+      console.log(`[agent] Codebuff bridge report written to: ${reportFile}`);
 
-    throw new Error("All codebuff accounts exhausted");
+      return {
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content,
+              tool_calls: [],
+            },
+          },
+        ],
+        needsContinuation,  // Pass through for continuation logic
+      };
+    } catch (err) {
+      clearTimeout(timer);
+      const errStr = err.message || "";
+      
+      // Check for rate limits
+      if (isRateLimitError(errStr)) {
+        console.log(`[agent] Bridge rate limited: ${errStr.slice(0, 200)}`);
+      }
+      
+      // Write failure report
+      const failureReport = {
+        timestamp: new Date().toISOString(),
+        task: taskDescription?.slice(0, 500) || "Symphony agent run",
+        project: provider.cwd || PROJECT_ROOT,
+        exitCode: 1,
+        method: "bridge-http",
+        outputLength: 0,
+        output: "",
+        error: errStr.slice(0, 500),
+      };
+
+      try {
+        if (!existsSync(REPORTS_DIR)) {
+          mkDirSync(REPORTS_DIR, { recursive: true });
+        }
+        const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
+        writeFileSync(reportFile, JSON.stringify(failureReport, null, 2) + "\n");
+      } catch {
+        // Ignore
+      }
+
+      throw err;
+    }
   }
 
   // Standard HTTP-based provider
