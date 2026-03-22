@@ -505,11 +505,12 @@ async function executeIssue(issue, dryRun = false) {
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
       } else {
+        // Unknown reason for no changes - return to Todo with cooldown for manual review
         setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes");
         await updateIssue(issue.id, { stateId: STATES.todo });
         await addComment(
           issue.id,
-          `⚠️ **No file changes produced**. Returned to Todo with cooldown.\n\nAgent summary: ${agentResult.summary}`,
+          `⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`,
         );
         recordTransition(issue.identifier, {
           actor: "runner",
