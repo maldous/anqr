@@ -141,9 +141,11 @@ const PROVIDERS = [
       } catch {}
       return null;
     },
-    // Custom probe - just check if gateway is responding
-    probe: async () => {
-      const res = await probeWithTimeout("http://127.0.0.1:18789/v1/models");
+    // Custom probe - check if gateway responds with auth
+    probe: async (p, apiKey) => {
+      const res = await probeWithTimeout("http://127.0.0.1:18789/v1/models", {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
       return res?.ok || false;
     },
   },
