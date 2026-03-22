@@ -758,12 +758,11 @@ async function runToolLoop({
         let hasActiveSubgoals = false;
         let subgoalSummary = [];
         
-        // Extract JSON metadata blocks at end of response
-        // Pattern: {"type":"...", ...} at end of string
-        const jsonMetaMatch = content.match(/\{"type":"(lastMessage|subgoal)"[^]*\}\s*$/s);
-        if (jsonMetaMatch) {
-          cleanContent = content.slice(0, jsonMetaMatch.index).trim();
-          const metadataStr = jsonMetaMatch[0];
+        // Look for lastMessage metadata anywhere in content (not just at end)
+        // Use a more flexible regex that can handle nested structures
+        const lastMessageMatch = content.match(/\{"type":"lastMessage","value":\[.*?\]\}/s);
+        if (lastMessageMatch) {
+          const metadataStr = lastMessageMatch[0];
           
           try {
             const metadata = JSON.parse(metadataStr);
@@ -774,27 +773,35 @@ async function runToolLoop({
               for (const msg of msgs) {
                 if (msg.content && Array.isArray(msg.content)) {
                   for (const item of msg.content) {
-                    if (item.toolName === "update_subgoal" && item.input) {
+                    if ((item.toolName === "update_subgoal" || item.toolName === "add_subgoal") && item.input) {
                       const input = item.input;
                       const status = input.status || 'UNKNOWN';
+                      const objective = input.objective || '';
                       const log = input.log || '';
                       
                       // Log subgoal update
-                      console.log(`[agent] Subgoal ${input.id}: ${status} - ${log.slice(0, 120)}`);
+                      console.log(`[agent] Subgoal ${input.id}: ${status} - ${objective.slice(0, 80)}`);
+                      if (log) {
+                        console.log(`[agent]   Log: ${log.slice(0, 120)}`);
+                      }
                       
                       // Track active subgoals (IN_PROGRESS means work is ongoing)
                       if (status === 'IN_PROGRESS' || status === 'NOT_STARTED') {
                         hasActiveSubgoals = true;
-                        subgoalSummary.push(`${input.id}: ${log.slice(0, 100)}`);
+                        const desc = objective || log || 'unknown task';
+                        subgoalSummary.push(`Subgoal ${input.id} (${status}): ${desc.slice(0, 100)}`);
                       }
                     }
                   }
                 }
               }
             }
-          } catch {
-            console.log("[agent] Could not parse metadata JSON, ignoring");
+          } catch (err) {
+            console.log(`[agent] Could not parse metadata JSON: ${err.message}`);
           }
+          
+          // Remove metadata from clean content
+          cleanContent = content.replace(lastMessageMatch[0], '').trim();
         }
         
         // If there are active subgoals, this is NOT completion - it's ongoing work
@@ -802,7 +809,7 @@ async function runToolLoop({
           console.log(`[agent] Active subgoals detected - work is ongoing, not complete`);
           return {
             completed: false,
-            summary: `Ongoing work with active subgoals:\n${subgoalSummary.join('\n')}`,
+            summary: `Agent created subgoals - work is ongoing:\n${subgoalSummary.join('\n')}`,
             turns: turn + 1,
             toolCalls: totalToolCalls,
             filesChanged: [...filesChanged],

@@ -293,11 +293,30 @@ async function runWithSdk(opts) {
 
     try {
       const events = [];
+      const toolsUsed = new Set();
+      
       const runOpts = {
         agent: "codebuff/base@latest",
         prompt: enhancedPrompt,
         handleEvent: (event) => {
           events.push(event);
+          
+          // Log and track tool usage
+          if (event && event.type === 'tool-call') {
+            const toolName = event.toolName || event.name || 'unknown';
+            toolsUsed.add(toolName);
+            console.log(`[codebuff] 🔧 Tool used: ${toolName}`);
+          }
+          // Log agent thinking/reasoning
+          if (event && event.type === 'reasoning') {
+            const preview = event.content?.slice(0, 100) || '';
+            console.log(`[codebuff] 🤔 Reasoning: ${preview}...`);
+          }
+          // Log output from agent
+          if (event && event.type === 'output') {
+            const preview = event.content?.slice(0, 80) || '';
+            console.log(`[codebuff] 📤 Output: ${preview}${event.content?.length > 80 ? '...' : ''}`);
+          }
         },
         maxAgentSteps: 50,
       };
@@ -306,6 +325,13 @@ async function runWithSdk(opts) {
       }
 
       const result = await Promise.race([client.run(runOpts), timeoutPromise]);
+
+      // Log summary of tools used
+      if (toolsUsed.size > 0) {
+        console.log(`[codebuff] 📊 Tools used: ${Array.from(toolsUsed).join(', ')}`);
+      } else {
+        console.log(`[codebuff] 📊 Tools used: none (text-only mode)`);
+      }
 
       const output = result.output;
       // output is typically a string with the agent's response

@@ -178,9 +178,10 @@ function isAuthError(errStr) {
   );
 }
 
-// Suppress verbose SDK error dumps
+// Suppress verbose SDK error dumps and warnings
 function suppressSDKErrors(fn) {
   const originalError = console.error;
+  const originalWarn = console.warn;
   return async (...args) => {
     console.error = (...errArgs) => {
       const errStr = String(errArgs[0] || '');
@@ -190,10 +191,20 @@ function suppressSDKErrors(fn) {
       }
       originalError(...errArgs);
     };
+    console.warn = (...warnArgs) => {
+      const warnStr = String(warnArgs[0] || '');
+      // Suppress tools.profile allowlist warnings - these are SDK internal notices
+      // about tools that are unavailable in current runtime/model config
+      if (warnStr.includes('tools.profile') && warnStr.includes('allowlist contains unknown entries')) {
+        return;
+      }
+      originalWarn(...warnArgs);
+    };
     try {
       return await fn(...args);
     } finally {
       console.error = originalError;
+      console.warn = originalWarn;
     }
   };
 }
@@ -297,6 +308,8 @@ async function invokeCodebuff({ messages, cwd }) {
     }
 
     try {
+      const toolsUsed = new Set();
+      
       const client = new CodebuffClient({
         apiKey: attempt.apiKey,
         cwd: cwd || DEFAULT_CWD,
@@ -305,7 +318,21 @@ async function invokeCodebuff({ messages, cwd }) {
       const runOpts = {
         agent: MODEL_ID,
         prompt,
-        handleEvent: () => {},
+        handleEvent: (event) => {
+          // Track and log tool usage
+          if (event && event.type === 'tool-call') {
+            const toolName = event.toolName || event.name || 'unknown';
+            if (!toolsUsed.has(toolName)) {
+              toolsUsed.add(toolName);
+              console.log(`[bridge] 🔧 Tool used: ${toolName}`);
+            }
+          }
+          // Log agent reasoning
+          if (event && event.type === 'reasoning') {
+            const preview = event.content?.slice(0, 80) || '';
+            console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
+          }
+        },
         maxAgentSteps: 50,
       };
 
@@ -341,6 +368,13 @@ async function invokeCodebuff({ messages, cwd }) {
       }
 
       console.log(`[bridge] ✅ Success on ${attempt.label}`);
+      
+      // Log summary of tools used
+      if (toolsUsed.size > 0) {
+        console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(', ')}`);
+      } else {
+        console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
+      }
       
       // Parse response to detect continuation needs
       const parseResult = parseAgentResponse(resultStr);
@@ -422,6 +456,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
 
     try {
       let fullText = "";
+      const toolsUsed = new Set();
 
       const client = new CodebuffClient({
         apiKey: attempt.apiKey,
@@ -432,6 +467,19 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         agent: MODEL_ID,
         prompt,
         handleEvent: (event) => {
+          // Track and log tool usage
+          if (event && event.type === 'tool-call') {
+            const toolName = event.toolName || event.name || 'unknown';
+            if (!toolsUsed.has(toolName)) {
+              toolsUsed.add(toolName);
+              console.log(`[bridge] 🔧 Tool used: ${toolName}`);
+            }
+          }
+          // Log agent reasoning
+          if (event && event.type === 'reasoning') {
+            const preview = event.content?.slice(0, 80) || '';
+            console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
+          }
           // Stream any output events as they come in
           if (event && event.type === "output" && event.content) {
             fullText += event.content;
@@ -524,6 +572,13 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         ],
       };
       onChunk(finalChunk);
+
+      // Log summary of tools used
+      if (toolsUsed.size > 0) {
+        console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(', ')}`);
+      } else {
+        console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
+      }
 
       return {
         text: fullText || resultStr,
@@ -669,13 +724,10 @@ const server = http.createServer(async (req, res) => {
 
       // Determine if this is a new request or continuation
       const isNewRequest = messages.length <= 2;
-      const isContinuation = messages.length > 2;
 
-      // Log start for new requests
+      // Log start for new requests (only on first message)
       if (issueContext && isNewRequest) {
         console.log(`[bridge] 🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
-      } else if (issueContext && isContinuation) {
-        console.log(`[bridge] 🔄 Continuing: ${issueContext.identifier}`);
       }
 
       console.log(
@@ -710,9 +762,9 @@ const server = http.createServer(async (req, res) => {
           res.write("data: [DONE]\n\n");
           res.end();
 
-          // Log completion with issue context if available
+          // Log completion with issue context and one-line summary
           if (issueContext) {
-            console.log(`[bridge] ✅ Completed: ${issueContext.identifier}`);
+            console.log(`[bridge] ✅ Finished: ${issueContext.identifier}`);
           }
         } catch (streamError) {
           // Send error as SSE event before closing
@@ -743,17 +795,19 @@ const server = http.createServer(async (req, res) => {
           cwd: DEFAULT_CWD,
         });
 
-        // Log completion with issue context if available
+        // Log completion with issue context and one-line summary
         if (issueContext) {
           if (result.needsContinuation) {
             if (result.hasSubgoals) {
-              console.log(`[bridge] 🔄 More work needed: ${issueContext.identifier} (has active subgoals)`);
-              console.log(`[bridge]    Subgoal details detected - continuation required`);
+              console.log(`[bridge] 🔄 Continuing: ${issueContext.identifier} (active subgoals)`);
             } else {
-              console.log(`[bridge] 🔄 More work needed: ${issueContext.identifier} (pending tool calls)`);
+              console.log(`[bridge] 🔄 Continuing: ${issueContext.identifier} (pending work)`);
             }
           } else {
-            console.log(`[bridge] ✅ Completed: ${issueContext.identifier}`);
+            // Extract first line of summary for logging
+            const summary = result.text || "";
+            const firstLine = summary.split('\n')[0].trim().slice(0, 100) || '(no summary)';
+            console.log(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
           }
         }
 
