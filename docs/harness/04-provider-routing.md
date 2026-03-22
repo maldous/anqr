@@ -250,6 +250,7 @@ Provider routing currently depends on:
 - systemd env files (anqr-ops.env)
 - provider tokens present in the operator environment
 - failure state file (reports/symphony/provider-failures.json)
+- provider stats file (reports/symphony/provider-stats.json)
 
 ## Non-goals
 
