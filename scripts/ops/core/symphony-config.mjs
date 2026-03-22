@@ -18,8 +18,8 @@ export const TARGET_MIN = 1;
 export const TARGET_MAX = 2;
 export const MAX_CONCURRENT_AGENTS = 1;
 
-export const STALE_THRESHOLD_MS = 180 * 60 * 1000; // 180 min (1.5x max execution)
-export const TASK_TIMEOUT_MS = 125 * 60 * 1000; // 125 min (just past max execution)
+export const STALE_THRESHOLD_MS = 30 * 60 * 1000; // 30 min — after this in In Progress, consider stuck
+export const TASK_TIMEOUT_MS = 20 * 60 * 1000; // 20 min — tasks should complete within this time
 
 export const TITLE_PREFIX = "Harness";
 export const REQUIRED_LABEL_IDS = [LABELS.harness];
