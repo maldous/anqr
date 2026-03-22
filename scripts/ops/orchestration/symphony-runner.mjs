@@ -48,6 +48,7 @@ import {
   recordTransition,
   setGlobalValue,
   getGlobalValue,
+  patchIssueState,
 } from "../symphony-state.mjs";
 import {
   runValidation,
@@ -342,8 +343,8 @@ async function executeIssue(issue, dryRun = false) {
       issue.id,
       `🚫 **Max retries exceeded** (${RUNNER_MAX_RETRIES}). Moved to Backlog and blocked from automatic re-feed until explicitly reset.`,
     );
-    // Track retry exhausted as provider failure (use last provider from state or triedProviders)
-    const lastProvider = state.lastProvider || triedProviders[triedProviders.length - 1];
+    // Track retry exhausted as provider failure (use last provider from state)
+    const lastProvider = state.lastProvider;
     if (lastProvider) {
       recordLinearCompletion(lastProvider, { completed: false, priority: issue.priority, estimate: issue.estimate });
     }
@@ -387,9 +388,6 @@ async function executeIssue(issue, dryRun = false) {
     let provider = null;
     let agentResult = null;
     const triedProviders = [];
-    
-    // Import setIssueValue for provider tracking (used in retry_exhausted)
-    const { setIssueValue } = await import("../symphony-state.mjs");
 
     while (triedProviders.length < 12) {
       provider = await selectProvider();
@@ -415,8 +413,11 @@ async function executeIssue(issue, dryRun = false) {
       }
 
       triedProviders.push(provider.name);
-      // Store in state for retry tracking across runner invocations
-      setIssueValue(issue.identifier, "lastProvider", provider.name);
+      // Store provider in state for retry tracking across runner invocations
+      const currentState = getIssueState(issue.identifier);
+      patchIssueState(issue.identifier, {
+        notes: { ...currentState.notes, lastProvider: provider.name }
+      });
       if (startingCommentId) {
         await updateComment(
           startingCommentId,
