@@ -753,9 +753,69 @@ async function runToolLoop({
           };
         }
 
-        console.log("[agent] Autonomous agent completed in single run");
-        // Extract summary from content - Codebuff returns a summary of changes
-        const summary = content.slice(0, 1000);
+        // Parse and handle JSON metadata blocks (subgoals, lastMessage, etc.)
+        let cleanContent = content;
+        let hasActiveSubgoals = false;
+        let subgoalSummary = [];
+        
+        // Extract JSON metadata blocks at end of response
+        // Pattern: {"type":"...", ...} at end of string
+        const jsonMetaMatch = content.match(/\{"type":"(lastMessage|subgoal)"[^]*\}\s*$/s);
+        if (jsonMetaMatch) {
+          cleanContent = content.slice(0, jsonMetaMatch.index).trim();
+          const metadataStr = jsonMetaMatch[0];
+          
+          try {
+            const metadata = JSON.parse(metadataStr);
+            
+            // Handle subgoal updates from Codebuff
+            if (metadata.type === "lastMessage" && metadata.value) {
+              const msgs = Array.isArray(metadata.value) ? metadata.value : [metadata.value];
+              for (const msg of msgs) {
+                if (msg.content && Array.isArray(msg.content)) {
+                  for (const item of msg.content) {
+                    if (item.toolName === "update_subgoal" && item.input) {
+                      const input = item.input;
+                      const status = input.status || 'UNKNOWN';
+                      const log = input.log || '';
+                      
+                      // Log subgoal update
+                      console.log(`[agent] Subgoal ${input.id}: ${status} - ${log.slice(0, 120)}`);
+                      
+                      // Track active subgoals (IN_PROGRESS means work is ongoing)
+                      if (status === 'IN_PROGRESS' || status === 'NOT_STARTED') {
+                        hasActiveSubgoals = true;
+                        subgoalSummary.push(`${input.id}: ${log.slice(0, 100)}`);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch {
+            console.log("[agent] Could not parse metadata JSON, ignoring");
+          }
+        }
+        
+        // If there are active subgoals, this is NOT completion - it's ongoing work
+        if (hasActiveSubgoals) {
+          console.log(`[agent] Active subgoals detected - work is ongoing, not complete`);
+          return {
+            completed: false,
+            summary: `Ongoing work with active subgoals:\n${subgoalSummary.join('\n')}`,
+            turns: turn + 1,
+            toolCalls: totalToolCalls,
+            filesChanged: [...filesChanged],
+            timedOut: false,
+            error: null,
+            messages,
+            needsContinuation: true,
+          };
+        }
+        
+        // No active subgoals - agent actually completed
+        console.log("[agent] Autonomous agent completed - no active subgoals");
+        const summary = cleanContent.slice(0, 1000);
         return {
           completed: true,
           summary: summary,

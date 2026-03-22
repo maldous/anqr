@@ -464,13 +464,10 @@ async function executeIssue(issue, dryRun = false) {
         runId: RUN_ID,
       });
       return "done";
-    }
-
-    let changedFiles = gitDiffNames();
+    }    let changedFiles = gitDiffNames();
     if (changedFiles.length === 0) {
-      // Check if agent is still planning/working via sub-goals - don't return to Todo if still active
-      const messages = agentResult.messages || [];
-      const hasActiveSubGoals = messages.some((m) => m.toolName === "update_subgoal");
+      // Check if agent needs continuation (has active subgoals)
+      const needsContinuation = agentResult.needsContinuation === true;
       
       // Check if work was completed externally (by human or another process)
       // by checking if the issue has been resolved/closed externally
@@ -509,25 +506,26 @@ async function executeIssue(issue, dryRun = false) {
         });
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
+        console.log(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (externally)`);
         return "done";
       }
       
-      if (hasActiveSubGoals) {
-        // Agent is still planning/working via sub-goals - stay in progress, clear cooldown
+      if (needsContinuation) {
+        // Agent has active subgoals - return to Todo with NO cooldown for immediate pickup
         await addComment(
           issue.id,
-          `🔄 **Agent still planning** — sub-goals detected, continuing work in next turn.\n\nCurrent plan:\n${agentResult.summary}`,
+          `🔄 **Agent continuing work** — active subgoals detected.\n\n${agentResult.summary}`,
         );
         clearCooldown(issue.identifier);
-        // Return to Todo but with no cooldown so it can be picked up immediately
         await updateIssue(issue.id, { stateId: STATES.todo });
         recordTransition(issue.identifier, {
           actor: "runner",
-          reason: "sub_goal_continuing",
+          reason: "active_subgoals_continuing",
           from: "In Progress",
           to: "Todo",
           runId: RUN_ID,
         });
+        console.log(`[runner] 🔄 Continuing: ${issue.identifier} — ${issue.title} (active subgoals)`);
         return "done";
       }
       
@@ -691,6 +689,9 @@ ${String(r.detail).slice(0, 1000)}\n`,
       to: finalStateName,
       runId: RUN_ID,
     });
+    
+    // Log completion with issue context
+    console.log(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title}`);
 
     if (!RUNNER_AUTO_PUSH) {
       await addComment(
@@ -808,7 +809,10 @@ async function main() {
       executed = true;
     }
 
-    console.log(`[runner] Completed at ${new Date().toISOString()}`);
+    if (!executed) {
+      console.log(`[runner] No eligible issues found for execution`);
+    }
+    console.log(`[runner] Run completed at ${new Date().toISOString()}`);
     process.exit(0);
   } catch (err) {
     console.error(`[runner] Fatal error: ${err.message}`);

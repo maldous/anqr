@@ -178,6 +178,26 @@ function isAuthError(errStr) {
   );
 }
 
+// Suppress verbose SDK error dumps
+function suppressSDKErrors(fn) {
+  const originalError = console.error;
+  return async (...args) => {
+    console.error = (...errArgs) => {
+      const errStr = String(errArgs[0] || '');
+      // Only suppress Vercel AI SDK error dumps
+      if (errStr.includes('Symbol(vercel.ai.error)')) {
+        return;
+      }
+      originalError(...errArgs);
+    };
+    try {
+      return await fn(...args);
+    } finally {
+      console.error = originalError;
+    }
+  };
+}
+
 // Try each API key until one works (non-streaming) - with full key rotation
 async function invokeCodebuff({ messages, cwd }) {
   const apiKeys = getAllApiKeys();
@@ -231,7 +251,7 @@ async function invokeCodebuff({ messages, cwd }) {
         runOpts.costMode = attempt.costMode;
       }
 
-      const result = await Promise.race([client.run(runOpts), timeoutPromise]);
+      const result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), timeoutPromise]))();
 
       const output = result.output;
       const resultStr = typeof output === "string" ? output : JSON.stringify(output);
@@ -263,25 +283,32 @@ async function invokeCodebuff({ messages, cwd }) {
         account: attempt.label,
       };
     } catch (err) {
-      // Extract error details
+      // Extract error details - suppress verbose SDK dumps
       const errStr = err.message || String(err);
+      const errJson = err.responseBody ? JSON.parse(err.responseBody) : null;
       lastError = errStr;
 
+      // Extract human-readable error message
+      const cleanMessage = errJson?.message || errStr;
+
       if (isAuthError(errStr)) {
-        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}`);
+        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}: ${cleanMessage.slice(0, 150)}`);
         continue;
       }
 
       if (isRateLimitError(errStr)) {
         // Extract reset time if available
-        const resetMatch = errStr.match(/(\d+)\s*(day|hour|minute)/);
+        const resetMatch = cleanMessage.match(/(\d+)\s*(day|hour|minute)/);
         const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
         console.log(`[bridge] ⏸️  Rate limited on ${attempt.label}${resetInfo}`);
+        if (errJson?.message) {
+          console.log(`[bridge]    Reason: ${errJson.message}`);
+        }
         continue;
       }
 
       // Non-retryable error - log concisely and re-throw
-      console.error(`[bridge] ❌ Fatal error on ${attempt.label}: ${errStr.slice(0, 200)}`);
+      console.error(`[bridge] ❌ Fatal error on ${attempt.label}: ${cleanMessage.slice(0, 200)}`);
       throw err;
     }
   }
@@ -364,7 +391,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         runOpts.costMode = attempt.costMode;
       }
 
-      const result = await Promise.race([client.run(runOpts), timeoutPromise]);
+      const result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), timeoutPromise]))();
 
       const output = result.output || "";
       const resultStr = typeof output === "string" ? output : JSON.stringify(output);
@@ -434,25 +461,32 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         account: attempt.label,
       };
     } catch (err) {
-      // Extract error details
+      // Extract error details - suppress verbose SDK dumps
       const errStr = err.message || String(err);
+      const errJson = err.responseBody ? JSON.parse(err.responseBody) : null;
       lastError = errStr;
 
+      // Extract human-readable error message
+      const cleanMessage = errJson?.message || errStr;
+
       if (isAuthError(errStr)) {
-        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}`);
+        console.warn(`[bridge] ❌ Auth failed on ${attempt.label}: ${cleanMessage.slice(0, 150)}`);
         continue;
       }
 
       if (isRateLimitError(errStr)) {
         // Extract reset time if available
-        const resetMatch = errStr.match(/(\d+)\s*(day|hour|minute)/);
+        const resetMatch = cleanMessage.match(/(\d+)\s*(day|hour|minute)/);
         const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
         console.log(`[bridge] ⏸️  Rate limited on ${attempt.label}${resetInfo}`);
+        if (errJson?.message) {
+          console.log(`[bridge]    Reason: ${errJson.message}`);
+        }
         continue;
       }
 
       // Non-retryable error - log concisely and re-throw
-      console.error(`[bridge] ❌ Fatal streaming error on ${attempt.label}: ${errStr.slice(0, 200)}`);
+      console.error(`[bridge] ❌ Fatal streaming error on ${attempt.label}: ${cleanMessage.slice(0, 200)}`);
       throw err;
     }
   }
@@ -551,6 +585,24 @@ const server = http.createServer(async (req, res) => {
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
 
+      // Extract issue context from user messages
+      const userMessages = messages.filter(m => m.role === 'user');
+      let issueContext = null;
+      for (const msg of userMessages) {
+        const content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
+        // Look for issue identifier pattern (e.g., "ANQ-123")
+        const issueMatch = content.match(/##\s*Issue:\s*([A-Z]+-\d+)\s*[—-]\s*([^\n]+)/);
+        if (issueMatch) {
+          issueContext = { identifier: issueMatch[1], title: issueMatch[2].trim() };
+          break;
+        }
+      }
+
+      // Only log start for new requests (not continuations)
+      if (issueContext && messages.length <= 2) {
+        console.log(`[bridge] 🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
+      }
+
       console.log(
         `[bridge] Chat completion request: model=${model}, messages=${messages.length}, stream=${stream}`,
       );
@@ -583,7 +635,7 @@ const server = http.createServer(async (req, res) => {
           res.write("data: [DONE]\n\n");
           res.end();
 
-          console.log(`[bridge] Streaming completed`);
+          // Don't log completion here - symphony-agent will log based on actual completion
         } catch (streamError) {
           // Send error as SSE event before closing
           console.error(`[bridge] Streaming error: ${streamError.message}`);
@@ -612,6 +664,8 @@ const server = http.createServer(async (req, res) => {
           messages,
           cwd: DEFAULT_CWD,
         });
+
+        // Don't log completion here - symphony-agent will log based on actual completion
 
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
