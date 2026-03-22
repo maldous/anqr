@@ -457,8 +457,18 @@ async function callLLM(provider, messages, taskDescription) {
         // Check both output and error for rate limit indicators
         const hasRateLimit = isRateLimitError(resultStr) || isRateLimitError(errorStr);
 
-        // Also check if all attempts were exhausted - this is a failure
+        // Also check if all attempts were exhausted - this means SDK already tried everything internally
+        // and failed. If it says "accounts exhausted", all our keys are rate limited, so fail entirely.
         const allFailed = /All \d+ attempts failed/i.test(resultStr) || /accounts exhausted/i.test(resultStr);
+        const accountsExhausted = /accounts exhausted/i.test(resultStr);
+
+        if (accountsExhausted) {
+          // All our API keys are rate limited - no point trying more, fail entirely
+          console.log(`[agent] Codebuff all accounts exhausted, giving up.`);
+          lastError = resultStr || errorStr;
+          // Don't continue - break out and fail
+          break;
+        }
 
         if (hasRateLimit) {
           console.log(`[agent] Codebuff rate limited on ${attempt.label}, trying next...`);
@@ -467,7 +477,8 @@ async function callLLM(provider, messages, taskDescription) {
         }
 
         if (allFailed) {
-          console.log(`[agent] Codebuff all accounts failed on ${attempt.label}, trying next...`);
+          // All SDK internal attempts failed - try next key in our loop
+          console.log(`[agent] Codebuff SDK failed on ${attempt.label}, trying next key...`);
           lastError = resultStr || errorStr;
           continue;
         }
