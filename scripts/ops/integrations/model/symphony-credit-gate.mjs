@@ -557,5 +557,8 @@ export async function selectProvider() {
     console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
   }
 
+  // Log stats after selection attempt (regardless of outcome)
+  logProviderStats();
+
   return null;
 }
