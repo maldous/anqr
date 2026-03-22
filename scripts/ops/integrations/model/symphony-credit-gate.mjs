@@ -878,7 +878,7 @@ export function getProviderStats() {
       largeIssueSuccessRate: largeRate,
       
       // Score
-      score: stats.score[name] !== null ? stats.score[name] : 'pending', // null = not enough data
+      score: stats.score[name] === null ? 'pending' : stats.score[name], // null = not enough data
       
       // Timestamps
       lastSelected: stats.lastSelected[name] ? new Date(stats.lastSelected[name]).toISOString() : null,
