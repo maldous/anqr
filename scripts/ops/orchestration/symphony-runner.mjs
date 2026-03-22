@@ -464,8 +464,7 @@ async function executeIssue(issue, dryRun = false) {
         runId: RUN_ID,
       });
       return "done";
-    }    let changedFiles = gitDiffNames();
-    if (changedFiles.length === 0) {
+    }    let changedFiles = gitDiffNames();      if (changedFiles.length === 0) {
       // Check if agent needs continuation (has active subgoals)
       const needsContinuation = agentResult.needsContinuation === true;
       
@@ -480,6 +479,53 @@ async function executeIssue(issue, dryRun = false) {
         summary.includes("external") ||
         summary.includes("human") ||
         summary.includes("no longer needed");
+
+      // If agent needs continuation with active subgoals, continue the work
+      // instead of returning to Todo for a fresh start
+      if (needsContinuation && agentResult.messages && agentResult.messages.length > 0) {
+        console.log(`[runner] 🔄 Agent has active subgoals - continuing with previous session...`);
+        heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
+        
+        try {
+          const continueResult = await continueAgent({
+            provider,
+            messages: agentResult.messages,
+            projectRoot: ROOT,
+            feedback: "Continue working on the active subgoals. Complete the remaining tasks and call task_complete when done. Make sure to run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests before calling task_complete.",
+            maxTurns: RUNNER_MAX_TURNS,
+            maxMs: RUNNER_MAX_EXECUTION_MS,
+          });
+          agentResult = continueResult;
+          changedFiles = gitDiffNames();
+        } catch (err) {
+          console.error(`[runner] Continuation failed: ${err.message}`);
+          // Fall through to handle as no changes
+        }
+        
+        // Check result after continuation
+        if (changedFiles.length > 0) {
+          // Continuation produced changes - proceed to validation
+          console.log(`[runner] ✅ Continuation produced changes: ${changedFiles.length} files`);
+        } else if (agentResult.needsContinuation) {
+          // Still needs continuation after second attempt - return to Todo with cooldown
+          // to avoid infinite loop
+          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "continuation_exhausted");
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(
+            issue.id,
+            `🔄 **Continuation exhausted** — agent still has active subgoals after second attempt. Returned to Todo with cooldown for manual review.`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "continuation_exhausted",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
+          console.log(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
+          return "done";
+        }
+      }
 
       // Document external completion in a log file for audit trail
       const externalLogPath = resolve(ROOT, "reports", "symphony", "external-completions.log");
@@ -510,22 +556,24 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
       
-      if (needsContinuation) {
-        // Agent has active subgoals - return to Todo with NO cooldown for immediate pickup
+      // Note: needsContinuation is now handled above with continueAgent call
+      // This block is kept as fallback for cases where messages weren't available
+      if (agentResult.needsContinuation === true && !agentResult.messages) {
+        // No messages available for continuation - return to Todo
         await addComment(
           issue.id,
-          `🔄 **Agent continuing work** — active subgoals detected.\n\n${agentResult.summary}`,
+          `🔄 **Agent continuing work** — active subgoals detected (no prior messages available for continuation).\n\n${agentResult.summary}`,
         );
         clearCooldown(issue.identifier);
         await updateIssue(issue.id, { stateId: STATES.todo });
         recordTransition(issue.identifier, {
           actor: "runner",
-          reason: "active_subgoals_continuing",
+          reason: "active_subgoals_no_messages",
           from: "In Progress",
           to: "Todo",
           runId: RUN_ID,
         });
-        console.log(`[runner] 🔄 Continuing: ${issue.identifier} — ${issue.title} (active subgoals)`);
+        console.log(`[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`);
         return "done";
       }
       
