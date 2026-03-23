@@ -107,6 +107,7 @@
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@napi-rs/canvas": "^0.1.90",
     "@netlify/blobs": "^10.7.0",
+    "@openai/codex-sdk": "^0.116.0",
     "@openrouter/ai-sdk-provider": "^2.3.3",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-label": "^2.1.8",

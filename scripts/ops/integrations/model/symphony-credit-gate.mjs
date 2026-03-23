@@ -32,6 +32,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Codex } from "@openai/codex-sdk";
 import {
   RUNNER_OLLAMA_MODEL,
   RUNNER_OLLAMA_BASE_URL,
@@ -52,6 +53,7 @@ const PROVIDER_STATS = {
   failures: {},
 
   // Timing metrics (in ms)
+  metricSamples: {},
   totalDuration: {},
   avgDuration: {},
   minDuration: {},
@@ -127,6 +129,8 @@ const HIGH_PRIORITY_THRESHOLD = 2; // P0, P1 = high complexity
 const MEDIUM_PRIORITY_THRESHOLD = 4; // P2, P3 = medium complexity
 
 const PROBE_TIMEOUT_MS = 5000;
+const CODEX_PROBE_TIMEOUT_MS = 20000;
+const CODEX_SUCCESS_WINDOW_MS = 5 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // Probe helpers
@@ -152,6 +156,39 @@ async function probeOpenAIModels(baseUrl, model, apiKey) {
   if (!res || !res.ok) return false;
   const text = await res.text();
   return text.includes(model);
+}
+
+async function probeCodexSdk(model) {
+  const stats = loadStats();
+  const lastSuccess = stats.lastSuccess.codex;
+  if (lastSuccess && Date.now() - lastSuccess < CODEX_SUCCESS_WINDOW_MS) {
+    return true;
+  }
+
+  const codex = new Codex({
+    env: process.env,
+  });
+  const thread = codex.startThread({
+    model: model || undefined,
+    workingDirectory: PROJECT_ROOT,
+    sandboxMode: "read-only",
+    approvalPolicy: "never",
+    webSearchEnabled: false,
+    networkAccessEnabled: false,
+  });
+
+  const probe = thread.run("Reply with exactly: ok");
+  const result = await Promise.race([
+    probe,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Codex SDK probe timed out")), CODEX_PROBE_TIMEOUT_MS),
+    ),
+  ]);
+
+  const finalResponse = String(result?.finalResponse || "")
+    .trim()
+    .toLowerCase();
+  return finalResponse.includes("ok");
 }
 
 async function probeGeminiModels(apiKey, model) {
@@ -195,10 +232,11 @@ async function probeOllama() {
 const PROVIDERS = [
   {
     name: "codex",
-    model: "gpt-5.4",
-    baseUrl: "https://api.openai.com/v1",
-    envVar: "OPENAI_API_KEY",
-    useMaxCompletionTokens: true,
+    model: process.env.CODEX_MODEL || "gpt-5-codex",
+    baseUrl: "codex-sdk",
+    envVar: null,
+    driver: "codex-sdk",
+    probe: (provider) => probeCodexSdk(provider.model),
   },
   {
     name: "codebuff",
@@ -640,12 +678,13 @@ export function recordProviderMetrics(
   { durationMs, inputTokens, outputTokens, validationPassed },
 ) {
   const stats = loadStats();
+  stats.metricSamples[providerName] = (stats.metricSamples[providerName] || 0) + 1;
+  const metricSamples = stats.metricSamples[providerName];
 
   // Timing
   stats.totalDuration[providerName] = (stats.totalDuration[providerName] || 0) + durationMs;
-  const selections = stats.selections[providerName] || 0;
   stats.avgDuration[providerName] =
-    selections > 0 ? Math.round(stats.totalDuration[providerName] / selections) : 0;
+    metricSamples > 0 ? Math.round(stats.totalDuration[providerName] / metricSamples) : 0;
 
   const prevMin = stats.minDuration[providerName];
   stats.minDuration[providerName] = prevMin ? Math.min(prevMin, durationMs) : durationMs;
@@ -659,9 +698,9 @@ export function recordProviderMetrics(
   stats.totalOutputTokens[providerName] =
     (stats.totalOutputTokens[providerName] || 0) + (outputTokens || 0);
   stats.avgInputTokens[providerName] =
-    selections > 0 ? Math.round(stats.totalInputTokens[providerName] / selections) : 0;
+    metricSamples > 0 ? Math.round(stats.totalInputTokens[providerName] / metricSamples) : 0;
   stats.avgOutputTokens[providerName] =
-    selections > 0 ? Math.round(stats.totalOutputTokens[providerName] / selections) : 0;
+    metricSamples > 0 ? Math.round(stats.totalOutputTokens[providerName] / metricSamples) : 0;
 
   // Validation
   if (validationPassed) {
@@ -938,6 +977,13 @@ function matchesAllowedNames(provider, allowedNames) {
   return allowedNames.has(provider.name);
 }
 
+function matchesExcludedNames(provider, excludedNames) {
+  if (!excludedNames || excludedNames.size === 0) {
+    return false;
+  }
+  return excludedNames.has(provider.name);
+}
+
 const PREFERRED_PROVIDER_ORDER = ["codex"];
 
 async function resolveProviderApiKey(provider) {
@@ -955,6 +1001,7 @@ function toSelectedProvider(provider, apiKey) {
     baseUrl: provider.baseUrl,
     apiKey: apiKey || null,
     requiresSdk: provider.requiresSdk || false,
+    driver: provider.driver || null,
     cwd: provider.requiresSdk ? PROJECT_ROOT : undefined,
     useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
   };
@@ -1002,10 +1049,18 @@ export async function selectProvider(options = {}) {
     Array.isArray(options.allowedNames) && options.allowedNames.length > 0
       ? new Set(options.allowedNames)
       : null;
+  const excludedNames =
+    Array.isArray(options.excludeNames) && options.excludeNames.length > 0
+      ? new Set(options.excludeNames)
+      : null;
 
   for (const providerName of PREFERRED_PROVIDER_ORDER) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
-    if (!provider || !matchesAllowedNames(provider, allowedNames)) {
+    if (
+      !provider ||
+      !matchesAllowedNames(provider, allowedNames) ||
+      matchesExcludedNames(provider, excludedNames)
+    ) {
       continue;
     }
     const selected = await tryProvider(provider);
@@ -1019,7 +1074,11 @@ export async function selectProvider(options = {}) {
   if (ranked.length > 0) {
     for (const { name } of ranked) {
       const provider = PROVIDERS.find((p) => p.name === name);
-      if (!provider || !matchesAllowedNames(provider, allowedNames)) {
+      if (
+        !provider ||
+        !matchesAllowedNames(provider, allowedNames) ||
+        matchesExcludedNames(provider, excludedNames)
+      ) {
         continue;
       }
       const selected = await tryProvider(provider);
@@ -1031,7 +1090,10 @@ export async function selectProvider(options = {}) {
 
   // Fallback: use fixed PROVIDERS order for providers with insufficient data or none ranked
   for (const provider of PROVIDERS) {
-    if (!matchesAllowedNames(provider, allowedNames)) {
+    if (
+      !matchesAllowedNames(provider, allowedNames) ||
+      matchesExcludedNames(provider, excludedNames)
+    ) {
       continue;
     }
     const selected = await tryProvider(provider);

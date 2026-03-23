@@ -40,6 +40,7 @@ import {
   selectProvider,
   recordProviderFailure,
   recordProviderFailureCount,
+  recordProviderMetrics,
   recordProviderSuccess,
   getProviderStats,
   getRankedProviders,
@@ -57,6 +58,7 @@ import { z } from "zod";
 
 // Local Codebuff SDK
 import { CodebuffClient } from "@codebuff/sdk";
+import { Codex } from "@openai/codex-sdk";
 
 // --------------------------------------------------------------------------
 // Console warning suppression
@@ -151,6 +153,77 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
   }
 }
 
+async function invokeWithCodex(provider, messages, options = {}) {
+  const { stream = false, onChunk } = options;
+  const codex = new Codex({
+    env: process.env,
+  });
+  const thread = codex.startThread({
+    model: provider.model || undefined,
+    workingDirectory: process.cwd(),
+    sandboxMode: "workspace-write",
+    approvalPolicy: "never",
+    webSearchEnabled: false,
+    networkAccessEnabled: true,
+  });
+
+  const prompt = messages
+    .map((message) => {
+      const role = (message.role || "user").toUpperCase();
+      const content =
+        typeof message.content === "string" ? message.content : JSON.stringify(message.content);
+      return `${role}:\n${content}`;
+    })
+    .join("\n\n");
+
+  if (stream) {
+    const streamed = await thread.runStreamed(prompt);
+    let fullText = "";
+    let usage = null;
+    const emittedByItem = new Map();
+
+    for await (const event of streamed.events) {
+      if ((event.type === "item.updated" || event.type === "item.completed") && event.item) {
+        if (event.item.type === "agent_message") {
+          const prior = emittedByItem.get(event.item.id) || "";
+          const next = event.item.text || "";
+          const delta = next.startsWith(prior) ? next.slice(prior.length) : next;
+          emittedByItem.set(event.item.id, next);
+          if (delta && onChunk) {
+            onChunk({ type: "text", text: delta });
+          }
+          fullText = next;
+        }
+      } else if (event.type === "turn.completed") {
+        usage = event.usage;
+      }
+    }
+
+    return {
+      text: fullText,
+      providerName: provider.name,
+      usage: usage
+        ? {
+            promptTokens: usage.input_tokens + usage.cached_input_tokens,
+            completionTokens: usage.output_tokens,
+          }
+        : undefined,
+    };
+  }
+
+  const result = await thread.run(prompt);
+  return {
+    text: result.finalResponse || "",
+    providerName: provider.name,
+    usage: result.usage
+      ? {
+          promptTokens: result.usage.input_tokens + result.usage.cached_input_tokens,
+          completionTokens: result.usage.output_tokens,
+        }
+      : undefined,
+  };
+}
+
 // --------------------------------------------------------------------------
 // Tool definitions
 // --------------------------------------------------------------------------
@@ -183,12 +256,14 @@ async function readFileTool({ path: filePath, offset, lines }) {
   try {
     let content = fs.readFileSync(filePath, "utf-8");
     const totalLines = content.split("\n").length;
+    const hasOffset = typeof offset === "number";
+    const hasLineCount = typeof lines === "number";
 
     // Handle offset and lines parameters
-    if (offset !== undefined || lines !== undefined) {
+    if (hasOffset || hasLineCount) {
       const lineArray = content.split("\n");
-      const startLine = offset || 0;
-      const endLine = lines !== undefined ? startLine + lines : lineArray.length;
+      const startLine = hasOffset ? offset : 0;
+      const endLine = hasLineCount ? startLine + lines : lineArray.length;
       content = lineArray.slice(startLine, endLine).join("\n");
 
       return {
@@ -267,131 +342,96 @@ const tools = {
  * Map credit-gate providers to AI SDK instances
  * Returns null for providers that need special handling (like codebuff)
  */
+const OPENROUTER_PROVIDER_NAME_SET = new Set([
+  "openrouter-nemotron-super",
+  "openrouter",
+  "openrouter-free",
+  "openrouter-nemotron-nano-30b",
+  "openrouter-qwen3-next-80b",
+  "openrouter-step3-5-flash",
+  "openrouter-trinity-mini",
+  "openrouter-nemotron-nano-9b",
+  "openrouter-minimax-m2.5",
+  "openrouter-qwen3-coder",
+  "openrouter-lfm-2.5-thinking",
+  "openrouter-lfm-2.5-instruct",
+  "openrouter-nemotron-nano-12b-vl",
+  "openrouter-trinity-large",
+  "openrouter-mistral-small-3.1",
+  "openrouter-llama-3.3-70b",
+  "openrouter-qwen3-4b",
+  "openrouter-gpt-oss-120b",
+  "openrouter-gpt-oss-20b",
+  "openrouter-llama-3.2-3b",
+  "openrouter-dolphin-mistral",
+  "openrouter-gemma-3-27b",
+  "openrouter-glm-4.5-air",
+  "openrouter-gemma-3n-e2b",
+  "openrouter-gemma-3-4b",
+  "openrouter-gemma-3n-e4b",
+  "openrouter-gemma-3-12b",
+  "openrouter-hermes-3-405b",
+]);
+
+function createOpenAiCompatibleModel(model, apiKey, baseURL, fallbackApiKey) {
+  return createOpenAI({
+    baseURL,
+    apiKey: apiKey || fallbackApiKey,
+  })(model);
+}
+
 function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
 
-  // Create the appropriate AI SDK model based on provider
-  switch (name) {
-    // Codebuff - handled separately in invokeWithAI
-    case "codebuff":
-      return null; // Special case - use CodebuffClient directly
-
-    // Groq
-    case "groq":
-      return groq(model);
-
-    // Google Gemini
-    case "gemini":
-    case "gemini-lite":
-      return google(model);
-
-    // OpenRouter (multiple models via OpenRouter API)
-    case "openrouter-nemotron-super":
-    case "openrouter":
-    case "openrouter-free":
-    case "openrouter-nemotron-nano-30b":
-    case "openrouter-qwen3-next-80b":
-    case "openrouter-step3-5-flash":
-    case "openrouter-trinity-mini":
-    case "openrouter-nemotron-nano-9b":
-    case "openrouter-minimax-m2.5":
-    case "openrouter-qwen3-coder":
-    case "openrouter-lfm-2.5-thinking":
-    case "openrouter-lfm-2.5-instruct":
-    case "openrouter-nemotron-nano-12b-vl":
-    case "openrouter-trinity-large":
-    case "openrouter-mistral-small-3.1":
-    case "openrouter-llama-3.3-70b":
-    case "openrouter-qwen3-4b":
-    case "openrouter-gpt-oss-120b":
-    case "openrouter-gpt-oss-20b":
-    case "openrouter-llama-3.2-3b":
-    case "openrouter-dolphin-mistral":
-    case "openrouter-gemma-3-27b":
-    case "openrouter-glm-4.5-air":
-    case "openrouter-gemma-3n-e2b":
-    case "openrouter-gemma-3-4b":
-    case "openrouter-gemma-3n-e4b":
-    case "openrouter-gemma-3-12b":
-    case "openrouter-hermes-3-405b":
-      const openrouter = createOpenRouter({ apiKey });
-      return openrouter(model);
-
-    // OpenClaw - local gateway
-    case "openclaw":
-      const openclaw = createOpenAI({
-        baseURL: baseUrl,
-        apiKey: apiKey || "local",
-      });
-      return openclaw(model);
-
-    // Mistral - use OpenAI-compatible API
-    case "mistral":
-      const mistral = createOpenAI({
-        baseURL: "https://api.mistral.ai/v1",
-        apiKey,
-      });
-      return mistral(model);
-
-    // Codex (OpenAI) - use OpenAI-compatible API
-    case "codex":
-      const codex = createOpenAI({
-        baseURL: baseUrl || "https://api.openai.com/v1",
-        apiKey,
-      });
-      return codex(model);
-
-    // SambaNova
-    case "sambanova":
-      const sambanova = createOpenAI({
-        baseURL: baseUrl || "https://api.sambanova.ai/v1",
-        apiKey,
-      });
-      return sambanova(model);
-
-    // Cerebras
-    case "cerebras":
-      const cerebras = createOpenAI({
-        baseURL: baseUrl || "https://api.cerebras.ai/v1",
-        apiKey,
-      });
-      return cerebras(model);
-
-    // GitHub Models
-    case "github-models":
-      const githubModels = createOpenAI({
-        baseURL: baseUrl || "https://models.github.ai/inference/v1",
-        apiKey,
-      });
-      return githubModels(model);
-
-    // Codebuff Bridge (local HTTP)
-    case "codebuff-bridge":
-      const codebuffBridge = createOpenAI({
-        baseURL: baseUrl || "http://127.0.0.1:4318/v1",
-        apiKey,
-      });
-      return codebuffBridge(model);
-
-    // Ollama local
-    case "ollama-local":
-      const ollamaLocal = createOpenAI({
-        baseURL: baseUrl || "http://127.0.0.1:11434/v1",
-        apiKey: apiKey || "ollama",
-      });
-      return ollamaLocal(model);
-
-    // Default - try OpenAI-compatible (baseUrl required)
-    default:
-      if (!baseUrl) {
-        throw new Error(`Provider ${name} not supported - no baseUrl for default fallback`);
-      }
-      const defaultProvider = createOpenAI({
-        baseURL: baseUrl,
-        apiKey,
-      });
-      return defaultProvider(model);
+  if (name === "codebuff") {
+    return null;
   }
+  if (name === "groq") {
+    return groq(model);
+  }
+  if (name === "gemini" || name === "gemini-lite") {
+    return google(model);
+  }
+  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
+    return createOpenRouter({ apiKey })(model);
+  }
+  if (name === "mistral") {
+    return createOpenAiCompatibleModel(model, apiKey, "https://api.mistral.ai/v1");
+  }
+  if (name === "codex") {
+    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.openai.com/v1");
+  }
+  if (name === "sambanova") {
+    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.sambanova.ai/v1");
+  }
+  if (name === "cerebras") {
+    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "https://api.cerebras.ai/v1");
+  }
+  if (name === "github-models") {
+    return createOpenAiCompatibleModel(
+      model,
+      apiKey,
+      baseUrl || "https://models.github.ai/inference/v1",
+    );
+  }
+  if (name === "codebuff-bridge") {
+    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "http://127.0.0.1:4318/v1");
+  }
+  if (name === "ollama-local") {
+    return createOpenAiCompatibleModel(
+      model,
+      apiKey,
+      baseUrl || "http://127.0.0.1:11434/v1",
+      "ollama",
+    );
+  }
+  if (name === "openclaw") {
+    return createOpenAiCompatibleModel(model, apiKey, baseUrl, "local");
+  }
+  if (!baseUrl) {
+    throw new Error(`Provider ${name} not supported - no baseUrl for default fallback`);
+  }
+  return createOpenAiCompatibleModel(model, apiKey, baseUrl);
 }
 
 // --------------------------------------------------------------------------
@@ -575,6 +615,8 @@ function isRetryableError(err) {
   const errStr = String(err).toLowerCase();
   return (
     errStr.includes("429") ||
+    errStr.includes("quota") ||
+    errStr.includes("insufficient_quota") ||
     errStr.includes("rate_limit") ||
     errStr.includes("timeout") ||
     errStr.includes("503") ||
@@ -590,6 +632,30 @@ function isRetryableError(err) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function buildSelectionOptions(route, excludedNames = []) {
+  return {
+    allowedNames: route.allowedNames,
+    excludeNames: excludedNames,
+  };
+}
+
+function toProviderMetricsUsage(usage = {}) {
+  return {
+    inputTokens: usage?.promptTokens || usage?.inputTokens || 0,
+    outputTokens: usage?.completionTokens || usage?.outputTokens || 0,
+  };
+}
+
+function recordSuccessfulMetrics(providerName, startedAt, usage, validationPassed = true) {
+  const { inputTokens, outputTokens } = toProviderMetricsUsage(usage);
+  recordProviderMetrics(providerName, {
+    durationMs: Date.now() - startedAt,
+    inputTokens,
+    outputTokens,
+    validationPassed,
+  });
 }
 
 /**
@@ -626,6 +692,9 @@ async function invokeWithAI(provider, messages, options = {}) {
   // Handle codebuff specially - use SDK directly
   if (provider.name === "codebuff") {
     return invokeWithCodebuff(provider, messages, options);
+  }
+  if (provider.driver === "codex-sdk" || provider.name === "codex") {
+    return invokeWithCodex(provider, messages, options);
   }
 
   // Create the provider model
@@ -696,8 +765,9 @@ async function invokeWithAI(provider, messages, options = {}) {
  * Invoke with automatic fallback through all providers (non-streaming)
  */
 async function invokeWithFallback(messages, route) {
+  const triedProviders = [];
   // Get provider from credit-gate
-  let provider = await selectProvider({ allowedNames: route.allowedNames });
+  let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
   if (!provider) {
     throw new Error(
@@ -719,6 +789,7 @@ async function invokeWithFallback(messages, route) {
   }
 
   console.log(`[symphony-bridge] Selected provider: ${provider.name} (${provider.model})`);
+  triedProviders.push(provider.name);
 
   // Track exploration
   if (provider.name !== lastSelectedProvider) {
@@ -731,10 +802,12 @@ async function invokeWithFallback(messages, route) {
   }
 
   try {
+    const startedAt = Date.now();
     const result = await invokeWithAI(provider, messages, { stream: false });
 
     console.log(`[symphony-bridge] ✅ Success with ${provider.name}`);
     recordProviderSuccess(provider.name);
+    recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -746,7 +819,7 @@ async function invokeWithFallback(messages, route) {
       usage: result.usage,
       providerName: provider.name,
       attempts: 1,
-      triedProviders: [provider.name],
+      triedProviders: [...triedProviders],
     };
   } catch (err) {
     const errStr = String(err);
@@ -758,20 +831,23 @@ async function invokeWithFallback(messages, route) {
     }
 
     // Try fallback
-    provider = await selectProvider({ allowedNames: route.allowedNames });
+    provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
     if (!provider) {
       throw new Error(`All providers failed. Last error: ${errStr}`);
     }
 
     console.log(`[symphony-bridge] Retrying with fallback: ${provider.name}`);
+    triedProviders.push(provider.name);
     BRIDGE_METRICS.totalFallbacks++;
     await sleep(FALLBACK_DELAY_MS);
 
     try {
+      const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: false });
       console.log(`[symphony-bridge] ✅ Fallback success with ${provider.name}`);
       recordProviderSuccess(provider.name);
+      recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
       requestCount++;
       if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -783,7 +859,7 @@ async function invokeWithFallback(messages, route) {
         usage: result.usage,
         providerName: provider.name,
         attempts: 2,
-        triedProviders: [provider.name],
+        triedProviders: [...triedProviders],
       };
     } catch (error_) {
       const retryStr = String(error_);
@@ -803,7 +879,8 @@ async function invokeWithFallback(messages, route) {
  * Invoke with streaming and automatic fallback
  */
 async function invokeWithFallbackStream(messages, route, onChunk) {
-  let provider = await selectProvider({ allowedNames: route.allowedNames });
+  const triedProviders = [];
+  let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
   if (!provider) {
     throw new Error(
@@ -812,12 +889,15 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
   }
 
   console.log(`[symphony-bridge] Streaming selected provider: ${provider.name}`);
+  triedProviders.push(provider.name);
 
   try {
+    const startedAt = Date.now();
     const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
     console.log(`[symphony-bridge] ✅ Streaming success with ${provider.name}`);
     recordProviderSuccess(provider.name);
+    recordSuccessfulMetrics(provider.name, startedAt);
 
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -828,7 +908,7 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
       text: result.text,
       providerName: provider.name,
       attempts: 1,
-      triedProviders: [provider.name],
+      triedProviders: [...triedProviders],
     };
   } catch (err) {
     const errStr = String(err);
@@ -841,21 +921,24 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
 
     // Try fallback
     for (let retry = 0; retry < 2; retry++) {
-      provider = await selectProvider({ allowedNames: route.allowedNames });
+      provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
       if (!provider) {
         throw new Error(`Streaming providers failed. Last error: ${errStr}`);
       }
 
       console.log(`[symphony-bridge] Streaming fallback (attempt ${retry + 2}): ${provider.name}`);
+      triedProviders.push(provider.name);
       BRIDGE_METRICS.totalFallbacks++;
       await sleep(FALLBACK_DELAY_MS);
 
       try {
+        const startedAt = Date.now();
         const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
         console.log(`[symphony-bridge] ✅ Streaming fallback success with ${provider.name}`);
         recordProviderSuccess(provider.name);
+        recordSuccessfulMetrics(provider.name, startedAt);
 
         requestCount++;
         if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -866,7 +949,7 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
           text: result.text,
           providerName: provider.name,
           attempts: retry + 2,
-          triedProviders: [provider.name],
+          triedProviders: [...triedProviders],
         };
       } catch (error_) {
         const retryStr = String(error_);
