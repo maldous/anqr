@@ -38,6 +38,10 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runner timeout
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
+// Re-validation interval - check keys at least 4 times a day (every 6 hours)
+const REVALIDATION_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+let lastRevalidationTime = Date.now();
+
 // Pre-computed at startup - validated accounts and attempt plan
 let STARTUP_ACCOUNTS = [];
 let STARTUP_ATTEMPTS = [];
@@ -645,6 +649,7 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
 }
 
 // Get pre-selected winner (computed at startup)
+// Also checks if re-validation is needed (e.g., after paid rate limit cooldown)
 function getWinner() {
   if (!STARTUP_INITIALIZED) {
     throw new Error("Bridge not initialized - startup validation not complete");
@@ -652,11 +657,48 @@ function getWinner() {
   if (!STARTUP_WINNER) {
     throw new Error("No winner selected - startup tests not complete");
   }
+
+  // Check if we need to re-validate the winner (time-based or after rate limit)
+  const timeSinceLastRevalidation = Date.now() - lastRevalidationTime;
+  const needsRevalidation = timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS;
+
+  if (needsRevalidation) {
+    console.log(`[bridge] 🔄 Re-validation needed: ${Math.round(timeSinceLastRevalidation/3600000)}h since last check`);
+    console.log(`[bridge] 🔄 Will re-test API keys to find the best available one`);
+  }
+
   return STARTUP_WINNER;
+}
+
+// Re-validate and potentially switch to a better key
+async function revalidateAndSelectWinner() {
+  const apiKeys = getAllApiKeys();
+  if (apiKeys.length === 0) {
+    console.warn(`[bridge] No API keys available for re-validation`);
+    return;
+  }
+
+  console.log(`[bridge] 🔄 Re-validating ${apiKeys.length} API keys...`);
+  lastRevalidationTime = Date.now();
+
+  // Test all keys again to find the best available one
+  await testAllKeysAndSelectWinner(apiKeys);
+
+  if (STARTUP_WINNER) {
+    console.log(`[bridge] 🔄 Re-validation complete: selected ${STARTUP_WINNER.label}`);
+  }
 }
 
 // Use pre-warmed winner directly (fast path - no parallel fallback)
 async function invokeCodebuff({ messages, cwd }) {
+  const timeSinceLastRevalidation = Date.now() - lastRevalidationTime;
+  
+  // Check if re-validation is needed before using the winner
+  if (timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS) {
+    console.log(`[bridge] ⏰ Time-based re-validation triggered`);
+    await revalidateAndSelectWinner();
+  }
+
   const winner = getWinner();
   console.log(`[bridge] Using pre-warmed winner: ${winner.label}`);
 
@@ -813,6 +855,14 @@ async function trySingleAccountStream(
 
 // Use pre-warmed winner directly for streaming (fast path - no parallel fallback)
 async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created }) {
+  const timeSinceLastRevalidation = Date.now() - lastRevalidationTime;
+  
+  // Check if re-validation is needed before using the winner
+  if (timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS) {
+    console.log(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
+    await revalidateAndSelectWinner();
+  }
+
   const winner = getWinner();
   console.log(`[bridge] Streaming: Using pre-warmed winner: ${winner.label}`);
 

@@ -39,6 +39,7 @@ import {
   getProviderStats,
   getRankedProviders,
   logProviderStats,
+  clearProviderFailure,
 } from "./symphony-credit-gate.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -68,6 +69,13 @@ const FALLBACK_DELAY_MS = 1000;
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
 let requestCount = 0;
+
+// Provider exploration - ensure all providers are tried at least once per day
+const EXPLORATION_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const EXPLORATION_MIN_PROBES = 3; // Try at least 3 different providers per day
+let lastExplorationTime = Date.now();
+let explorationProbesThisPeriod = 0;
+let lastSelectedProvider = null;
 
 // --------------------------------------------------------------------------
 // Provider cascade wrapper with auto-fallback
@@ -194,7 +202,28 @@ async function invokeWithFallback(messages) {
     throw new Error("No providers available - check env vars and provider failures");
   }
 
+  // Check if we need to force exploration (discover new providers)
+  const timeSinceLastExploration = Date.now() - lastExplorationTime;
+  const needsExploration = timeSinceLastExploration > EXPLORATION_INTERVAL_MS || 
+    explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
+
+  // If exploration needed, clear failures for untested providers to allow probing
+  if (needsExploration && lastSelectedProvider) {
+    console.log(`[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`);
+    clearProviderFailure(lastSelectedProvider); // Clear last provider to allow retry
+  }
+
   console.log(`[symphony-bridge] Selected provider: ${provider.name} (${provider.model})`);
+
+  // Track exploration
+  if (provider.name !== lastSelectedProvider) {
+    explorationProbesThisPeriod++;
+    lastSelectedProvider = provider.name;
+    if (timeSinceLastExploration > EXPLORATION_INTERVAL_MS) {
+      lastExplorationTime = Date.now();
+      explorationProbesThisPeriod = 1; // Reset counter
+    }
+  }
 
   try {
     const result = await tryProvider(provider, messages);
@@ -663,6 +692,10 @@ function logBridgeStats() {
 
   // Also log credit-gate stats
   logProviderStats();
+
+  // Check exploration status
+  const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
+  console.log(`[symphony-bridge] 🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`);
 }
 
 // --------------------------------------------------------------------------
