@@ -134,22 +134,42 @@ function isRateLimitError(errStr) {
   );
 }
 
-// Test API key functionality at startup with a minimal request
-async function testApiKey(apiKey, index) {
-  const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
+// Check if error is a payment required error (should NOT be considered "working")
+// Returns: { isPaymentError: boolean, isFreeAccount: boolean, resetInfo: string }
+function checkPaymentRequiredError(errStr) {
+  const s = errStr.toLowerCase();
+  const has402 = s.includes("402") || s.includes("payment required") || s.includes("out of credits") || s.includes("add credits") || s.includes("insufficient credits");
+  const isFreeAccount = s.includes("free credits reset");
+  const resetMatch = errStr.match(/resets in (\d+ \w+)/);
+  const resetInfo = resetMatch ? ` (resets in ${resetMatch[1]})` : "";
+  
+  return {
+    isPaymentError: has402,
+    isFreeAccount,
+    resetInfo
+  };
+}
+
+// Test API key in a specific mode (paid or free)
+async function testApiKeyInMode(apiKey, index, costMode) {
   const client = new CodebuffClient({
     apiKey,
     cwd: DEFAULT_CWD,
   });
 
+  const runOpts = {
+    agent: MODEL_ID,
+    prompt: "Say 'ok' if you can read this.",
+    maxAgentSteps: 1,
+  };
+  
+  if (costMode) {
+    runOpts.costMode = costMode;
+  }
+
   try {
-    // Try a minimal run with very low steps to verify key works
     const result = await Promise.race([
-      client.run({
-        agent: MODEL_ID,
-        prompt: "Say 'ok' if you can read this.",
-        maxAgentSteps: 1,
-      }),
+      client.run(runOpts),
       new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 30_000)),
     ]);
 
@@ -162,49 +182,122 @@ async function testApiKey(apiKey, index) {
       outputStr.includes("Unauthorized") ||
       outputStr.includes("Authentication failed")
     ) {
-      console.warn(`[bridge] Key ${index + 1} (${masked}): FAILED - auth error`);
-      return false;
+      return { success: false, error: "auth" };
     }
 
-    // Check for rate limit errors - these should NOT be considered "working"
+    // Check for rate limit errors
     if (isRateLimitError(outputStr)) {
-      const resetMatch = outputStr.match(/resets in (\d+ \w+)/);
-      const resetInfo = resetMatch ? ` (resets in ${resetMatch[1]})` : "";
-      console.warn(`[bridge] Key ${index + 1} (${masked}): FAILED - rate limited${resetInfo}`);
-      return false;
+      return { success: false, error: "rate_limit" };
     }
 
-    console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working`);
-    return true;
+    // Check for payment required errors
+    const paymentCheck = checkPaymentRequiredError(outputStr);
+    if (paymentCheck.isPaymentError) {
+      return { 
+        success: false, 
+        error: "payment_required",
+        isFreeAccount: paymentCheck.isFreeAccount 
+      };
+    }
+
+    return { success: true };
   } catch (err) {
     const errStr = err.message || String(err);
 
     // Check for auth errors
     if (errStr.includes("401") || errStr.includes("Unauthorized") || errStr.includes("auth")) {
-      console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
-      return false;
+      return { success: false, error: "auth" };
     }
 
     // Check for rate limit errors
     if (isRateLimitError(errStr)) {
-      const resetMatch = errStr.match(/resets in (\d+ \w+)/);
-      const resetInfo = resetMatch ? ` (resets in ${resetMatch[1]})` : "";
-      console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited${resetInfo}`);
-      return false;
+      return { success: false, error: "rate_limit" };
     }
 
-    // Timeout means the key is NOT working (can't complete even a simple request)
+    // Check for payment required errors
+    const paymentCheck = checkPaymentRequiredError(errStr);
+    if (paymentCheck.isPaymentError) {
+      return { 
+        success: false, 
+        error: "payment_required",
+        isFreeAccount: paymentCheck.isFreeAccount 
+      };
+    }
+
+    // Timeout means the key is NOT working
     if (errStr.toLowerCase().includes("timeout")) {
-      console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ timed out`);
-      return false;
+      return { success: false, error: "timeout" };
     }
 
-    // Other errors might mean the key is valid but slow
-    console.log(
-      `[bridge] Key ${index + 1} (${masked}): ⚠️  test completed (${errStr.slice(0, 50)})`,
-    );
-    return true; // Assume working if not an auth, rate limit, or timeout
+    // Other errors - assume working
+    return { success: true };
   }
+}
+
+// Test API key - two-phase: try paid mode first, then free mode if needed
+// Returns: { works: boolean, mode: "paid" | "free" | null }
+async function testApiKey(apiKey, index) {
+  const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
+  
+  // Phase 1: Test in paid mode (no costMode)
+  console.log(`[bridge] Key ${index + 1} (${masked}): Testing paid mode...`);
+  const paidResult = await testApiKeyInMode(apiKey, index, undefined);
+  
+  if (paidResult.success) {
+    console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (paid mode)`);
+    return { works: true, mode: "paid" };
+  }
+  
+  if (paidResult.error === "auth") {
+    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
+    return { works: false, mode: null };
+  }
+  
+  if (paidResult.error === "rate_limit") {
+    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited`);
+    return { works: false, mode: null };
+  }
+  
+  if (paidResult.error === "payment_required" && !paidResult.isFreeAccount) {
+    // Paid account out of credits - try free mode
+    console.log(`[bridge] Key ${index + 1} (${masked}): Paid mode failed, testing free mode...`);
+    const freeResult = await testApiKeyInMode(apiKey, index, "free");
+    
+    if (freeResult.success) {
+      console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+      return { works: true, mode: "free" };
+    }
+    
+    // Free mode also failed
+    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free)`);
+    return { works: false, mode: null };
+  }
+  
+  if (paidResult.error === "payment_required" && paidResult.isFreeAccount) {
+    // This IS a free account - no paid credits, test free mode
+    console.log(`[bridge] Key ${index + 1} (${masked}): Free account, testing free mode...`);
+    const freeResult = await testApiKeyInMode(apiKey, index, "free");
+    
+    if (freeResult.success) {
+      console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+      return { works: true, mode: "free" };
+    }
+    
+    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ free mode also failed`);
+    return { works: false, mode: null };
+  }
+  
+  // Other error - try free mode as fallback
+  console.log(`[bridge] Key ${index + 1} (${masked}): Paid mode error, testing free mode...`);
+  const fallbackResult = await testApiKeyInMode(apiKey, index, "free");
+  
+  if (fallbackResult.success) {
+    console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+    return { works: true, mode: "free" };
+  }
+  
+  console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ both modes failed`);
+  return { works: false, mode: null };
 }
 
 // Test ALL keys in parallel at startup and determine the winning key
@@ -214,32 +307,65 @@ async function testAllKeysAndSelectWinner(apiKeys) {
   // Test ALL keys in parallel at startup
   const results = await Promise.allSettled(apiKeys.map((key, i) => testApiKey(key, i)));
 
-  // Check if paid (index 0) works
-  const paidWorks = results[0]?.status === "fulfilled" && results[0]?.value === true;
-
-  if (paidWorks) {
-    console.log(`[bridge] 🎯 Winner: paid key (will use directly on requests)`);
-    STARTUP_WINNER = {
-      apiKey: apiKeys[0],
-      costMode: undefined,
-      label: "paid (pre-warmed)",
-      isPaid: true,
-    };
-    return;
+  // Find the best working key - prefer paid mode, then free mode
+  let bestWinner = null;
+  
+  // First pass: look for paid mode keys
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i]?.status === "fulfilled" ? results[i]?.value : null;
+    if (result?.works && result?.mode === "paid") {
+      bestWinner = {
+        index: i,
+        apiKey: apiKeys[i],
+        costMode: undefined, // Use paid mode (no costMode)
+        mode: "paid"
+      };
+      break; // Found a paid key - use it
+    }
+  }
+  
+  // Second pass: if no paid key, look for free mode keys
+  if (!bestWinner) {
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i]?.status === "fulfilled" ? results[i]?.value : null;
+      if (result?.works && result?.mode === "free") {
+        bestWinner = {
+          index: i,
+          apiKey: apiKeys[i],
+          costMode: "free",
+          mode: "free"
+        };
+        break; // Found a free key - use it
+      }
+    }
   }
 
-  // Paid doesn't work - find first working free key
-  for (let i = 1; i < results.length; i++) {
-    if (results[i]?.status === "fulfilled" && results[i]?.value === true) {
-      console.log(`[bridge] 🎯 Winner: free key ${i} (will use directly on requests)`);
-      STARTUP_WINNER = {
-        apiKey: apiKeys[i],
-        costMode: "free",
-        label: `free key ${i} (pre-warmed)`,
-        isPaid: false,
-      };
-      return;
+  if (bestWinner) {
+    if (bestWinner.mode === "paid") {
+      console.log(`[bridge] 🎯 Winner: paid key ${bestWinner.index + 1} (will use directly on requests)`);
+    } else {
+      console.log(`[bridge] 🎯 Winner: free key ${bestWinner.index + 1} (will use directly on requests)`);
     }
+    STARTUP_WINNER = {
+      apiKey: bestWinner.apiKey,
+      costMode: bestWinner.costMode,
+      label: bestWinner.mode === "paid" ? `paid key ${bestWinner.index + 1} (pre-warmed)` : `free key ${bestWinner.index + 1} (pre-warmed)`,
+      isPaid: bestWinner.mode === "paid",
+    };
+    
+    // Update STARTUP_ATTEMPTS with the tested modes for proper fallback handling
+    for (let i = 0; i < STARTUP_ATTEMPTS.length; i++) {
+      const testResult = results[i]?.status === "fulfilled" ? results[i]?.value : null;
+      if (testResult?.works) {
+        STARTUP_ATTEMPTS[i].costMode = testResult.mode === "paid" ? undefined : "free";
+        STARTUP_ATTEMPTS[i].isPaid = testResult.mode === "paid";
+      } else {
+        // Key doesn't work - mark as unusable
+        STARTUP_ATTEMPTS[i].costMode = testResult?.mode === "free" ? "free" : undefined;
+        STARTUP_ATTEMPTS[i].isPaid = false;
+      }
+    }
+    return;
   }
 
   // All keys failed - fallback to paid (will fail at runtime)
