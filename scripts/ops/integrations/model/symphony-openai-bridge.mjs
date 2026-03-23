@@ -126,12 +126,10 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
       try {
         if (!event) return;
 
-        if (event.type === "text") {
-          // SDK delivers complete text per step here; handleStreamChunk covers token-by-token deltas
-          if (event.text && onChunk) {
-            onChunk({ type: "text", text: event.text });
-          }
-        } else if (event.type === "tool_call") {
+        // Text events are delivered via handleStreamChunk (token-by-token); skip to avoid duplication
+        if (event.type === "text") return;
+
+        if (event.type === "tool_call") {
           const toolName = event.toolName || "unknown";
           const input = event.input || {};
 
@@ -655,7 +653,7 @@ const MAX_TOOL_ITERATIONS = 1000; // Maximum tool call loops
 const FALLBACK_DELAY_MS = 1000;
 
 // Codebuff SDK internal tools — log only, don't stream to client
-const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "end_turn", "lookup_agent_info"]);
+const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "set_output", "end_turn", "lookup_agent_info"]);
 
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
