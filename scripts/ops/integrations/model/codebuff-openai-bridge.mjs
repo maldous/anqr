@@ -1146,13 +1146,11 @@ const server = http.createServer(async (req, res) => {
               `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending tool calls)`,
             );
           }
-        } else {
-          if (issueContext) {
-            // Extract first line of summary for logging
-            const summary = result.text || "";
-            const firstLine = summary.split("\n")[0].trim().slice(0, 100) || "(no summary)";
-            console.log(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
-          }
+        } else if (issueContext) {
+          // Extract first line of summary for logging
+          const summary = result.text || "";
+          const firstLine = summary.split("\n")[0].trim().slice(0, 100) || "(no summary)";
+          console.log(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
 
         // Extract actual text content, filtering out tool-call metadata
