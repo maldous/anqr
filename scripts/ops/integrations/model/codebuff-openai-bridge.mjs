@@ -1041,7 +1041,12 @@ const server = http.createServer(async (req, res) => {
             const { text: textContent } = extractTextFromResponse(streamResult.text);
             if (textContent) {
               // Only send if we didn't already stream during execution (avoid duplicates)
-              if (!streamResult.hadStreamingChunks) {
+              if (streamResult.hadStreamingChunks) {
+                // Already streamed during execution - log what was filtered
+                console.log(
+                  `[bridge] 📝 Filtered content (already streamed: ${streamResult.hadStreamingChunks})`,
+                );
+              } else {
                 const contentChunk = {
                   id: completionId,
                   object: "chat.completion.chunk",
@@ -1056,11 +1061,6 @@ const server = http.createServer(async (req, res) => {
                   ],
                 };
                 res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
-              } else {
-                // Already streamed during execution - log what was filtered
-                console.log(
-                  `[bridge] 📝 Filtered content (already streamed: ${streamResult.hadStreamingChunks})`,
-                );
               }
             }
           }
