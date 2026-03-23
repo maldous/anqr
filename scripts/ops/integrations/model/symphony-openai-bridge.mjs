@@ -50,6 +50,7 @@ import {
 import { createAI } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { groq } from "@ai-sdk/groq";
+import { google } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 // --------------------------------------------------------------------------
@@ -184,38 +185,59 @@ function createProviderModel(provider) {
   
   // Create the appropriate AI SDK model based on provider
   switch (name) {
+    // Groq
     case "groq":
       return groq(model);
+    
+    // Google Gemini
+    case "gemini":
+      // gemini-2.5-flash and variants
+      return google(model);
+    case "gemini-lite":
+      // gemini-2.5-flash-lite
+      return google(model);
+    
+    // OpenRouter (multiple models via OpenRouter API)
     case "openrouter-nemotron-super":
     case "openrouter":
-      // Use OpenRouter with the specific model
       const openrouter = createOpenRouter({ apiKey });
       return openrouter(model);
+    
+    // Codebuff - requires SDK, skip for now
     case "codebuff":
-      // Codebuff uses the codebuff-bridge at port 4318
-      // For now, skip - it requires SDK
       return null;
+    
+    // OpenClaw - local gateway
     case "openclaw":
-      // OpenClaw uses local gateway
       const openclaw = openai({
         baseURL: baseUrl,
         apiKey: apiKey || "local",
       });
       return openclaw(model);
-    case "gemini":
-    case "gemini-lite":
-      // These might need special handling - skip for now
-      return null;
+    
+    // Mistral - use OpenAI-compatible API
     case "mistral":
-      // Mistral might need custom setup - skip for now
-      return null;
+      const mistral = openai({
+        baseURL: "https://api.mistral.ai/v1",
+        apiKey,
+      });
+      return mistral(model);
+    
+    // Codex (OpenAI) - use OpenAI-compatible API
+    case "codex":
+      const codex = openai({
+        baseURL: baseUrl || "https://api.openai.com/v1",
+        apiKey,
+      });
+      return codex(model);
+    
+    // Default - try OpenAI-compatible
     default:
-      // Default to OpenAI-compatible
-      const openaiProvider = openai({
+      const defaultProvider = openai({
         baseURL: baseUrl,
         apiKey,
       });
-      return openaiProvider(model);
+      return defaultProvider(model);
   }
 }
 

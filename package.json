@@ -93,6 +93,7 @@
     "prepare": "lefthook install"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.52",
     "@ai-sdk/groq": "^3.0.31",
     "@ai-sdk/openai": "^3.0.47",
     "@capacitor-community/admob": "^8.0.0",
