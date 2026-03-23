@@ -3,10 +3,12 @@
 /**
  * symphony-openai-bridge.mjs — OpenAI-compatible HTTP gateway for Symphony provider cascade
  *
- * Exposes symphony's credit-gate provider selection and auto-fallback as an
- * OpenAI-compatible API for OpenClaw integration.
+ * Uses AI SDK for provider communication and tool execution, with credit-gate
+ * for provider selection and auto-fallback.
  *
  * Features:
+ *   - AI SDK for all provider communication
+ *   - Actual tool execution (read, exec, glob)
  *   - Automatic provider selection via symphony-credit-gate
  *   - Auto-fallback on rate limits, errors, or unavailability
  *   - Tracks provider failures (6-min cooldown after failure)
@@ -32,6 +34,8 @@
 import http from "node:http";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import fs from "node:fs";
+import { execSync } from "node:child_process";
 import {
   selectProvider,
   recordProviderFailure,
@@ -41,138 +45,183 @@ import {
   logProviderStats,
   clearProviderFailure,
 } from "./symphony-credit-gate.mjs";
-import { XMLParser } from "fast-xml-parser";
 
-// XML parser for filtering tool-call metadata
-const xmlParser = new XMLParser({
-  ignoreAttributes: false,
-  attributeNamePrefix: "@_",
-  textNodeName: "#text",
-});
+// AI SDK imports
+import { createAI } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { groq } from "@ai-sdk/groq";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-// Recursively extract text from XML AST, excluding tool_call and tool_result nodes
-function extractTextFromXml(obj) {
-  if (typeof obj === 'string' || typeof obj === 'number') {
-    return String(obj);
+// --------------------------------------------------------------------------
+// Tool definitions
+// --------------------------------------------------------------------------
+
+/**
+ * Execute a shell command and return the output
+ */
+async function execTool({ command, cwd }) {
+  try {
+    const result = execSync(command, {
+      cwd: cwd || process.cwd(),
+      encoding: "utf-8",
+      timeout: 60000,
+      maxBuffer: 10 * 1024 * 1024, // 10MB
+    });
+    return { output: result, exitCode: 0 };
+  } catch (error) {
+    return {
+      output: error.stdout || error.message,
+      exitCode: error.status || 1,
+      error: error.message,
+    };
   }
-  
-  if (Array.isArray(obj)) {
-    return obj.map(item => extractTextFromXml(item)).filter(Boolean).join('\n');
-  }
-  
-  if (obj && typeof obj === 'object') {
-    // Skip tool_call and tool_result wrapper nodes entirely
-    const keys = Object.keys(obj);
-    if (keys.includes('tool_call') || keys.includes('tool_result')) {
-      // Skip these nodes - don't extract any content from them
-      return '';
-    }
-    
-    // For other objects, extract all text values
-    let textParts = [];
-    for (const key of Object.keys(obj)) {
-      // Skip XML declaration and attributes
-      if (key.startsWith('?xml') || key.startsWith('@_')) continue;
-      textParts.push(extractTextFromXml(obj[key]));
-    }
-    return textParts.filter(Boolean).join('\n');
-  }
-  
-  return '';
 }
 
-// Helper to extract text from AI SDK-style responses and filter out tool-call metadata
-// This prevents raw tool-call content from being exposed to clients like OpenClaw
-function extractTextFromMessage(msg, filterToolCalls = true) {
-  if (!msg || msg.role !== "assistant") return null;
-
-  const content = msg.content;
-
-  // If content is a string, check if it contains tool-call metadata and filter it
-  if (typeof content === "string") {
-    // Check for tool-call patterns (both JSON and XML format)
-    const hasToolCall = filterToolCalls && (
-      content.includes('"toolCallId"') || 
-      content.includes('<tool_call') || 
-      content.includes('</tool_call>') ||
-      content.includes('<tool-result') ||
-      content.includes('<function=') ||
-      content.includes('toolCallId')
-    );
+/**
+ * Read a file from the filesystem
+ */
+async function readFileTool({ path: filePath, offset, lines }) {
+  try {
+    let content = fs.readFileSync(filePath, "utf-8");
+    const totalLines = content.split("\n").length;
     
-    if (hasToolCall) {
-      // Try to parse as JSON first
-      try {
-        const parsed = JSON.parse(content);
-        // Recursively process the parsed content as an array
-        if (Array.isArray(parsed)) {
-          return extractTextFromMessage({ role: "assistant", content: parsed }, filterToolCalls);
-        }
-      } catch {
-        // Not JSON - parse as XML and extract text nodes only
-        try {
-          const parsed = xmlParser.parse(content);
-          // Extract only text content, excluding tool_call and tool_result nodes
-          const text = extractTextFromXml(parsed);
-          if (text) return text.trim();
-        } catch {
-          // XML parsing failed, fall back to line-based filtering
-        }
-        
-        // Fallback: line-based filtering for XML content
-        const lines = content.split('\n');
-        const filteredLines = lines.filter(line => {
-          const trimmed = line.trim();
-          // Skip lines that are XML tags related to tool calls
-          if (trimmed.startsWith('<tool_call') || trimmed.startsWith('</tool_call') ||
-              trimmed.startsWith('<tool_result') || trimmed.startsWith('</tool_result') ||
-              trimmed.startsWith('<function=') || trimmed.startsWith('</function') ||
-              trimmed.startsWith('<parameter=') || trimmed.startsWith('</parameter')) {
-            return false;
-          }
-          return true;
-        });
-        return filteredLines.join('\n').trim() || null;
-      }
+    // Handle offset and lines parameters
+    if (offset !== undefined || lines !== undefined) {
+      const lineArray = content.split("\n");
+      const startLine = offset || 0;
+      const endLine = lines !== undefined ? startLine + lines : lineArray.length;
+      content = lineArray.slice(startLine, endLine).join("\n");
+      
+      return {
+        content,
+        totalLines,
+        truncated: endLine < totalLines,
+        range: { start: startLine, end: endLine },
+      };
     }
-    return content;
+    
+    // If content is large, truncate it
+    if (content.length > 100000) {
+      return {
+        content: content.slice(0, 100000) + "\n... (truncated)",
+        totalLines,
+        truncated: true,
+      };
+    }
+    
+    return { content, totalLines };
+  } catch (error) {
+    return { error: error.message };
   }
-
-  // If content is an array, extract text parts, filtering out tool-calls
-  if (Array.isArray(content)) {
-    const textParts = [];
-
-    for (const part of content) {
-      if (!part) continue;
-
-      const partType = part.type || "unknown";
-
-      // Skip tool-call parts if filtering is enabled
-      if (filterToolCalls && (part.type === "tool-call" || part.toolCallId)) {
-        continue;
-      }
-
-      // Extract text from various part types
-      if (partType === "text") {
-        const text = part.text || part.content || "";
-        if (text) textParts.push(text);
-      } else if (partType === "reasoning") {
-        const reasoning = part.reasoning || part.content || "";
-        if (reasoning) textParts.push(reasoning);
-      } else {
-        // Unknown type - try common fields
-        const text = part.text || part.content || part.result || "";
-        if (text) textParts.push(typeof text === "string" ? text : JSON.stringify(text));
-      }
-    }
-
-    if (textParts.length > 0) {
-      return textParts.join("\n");
-    }
-  }
-
-  return null;
 }
+
+/**
+ * List files matching a pattern
+ */
+async function globTool({ pattern, cwd }) {
+  try {
+    const baseDir = cwd || process.cwd();
+    // Simple glob implementation using find
+    const command = `find "${baseDir}" -type f -name "${pattern}" 2>/dev/null | head -100`;
+    const result = execSync(command, { encoding: "utf-8", timeout: 10000 });
+    const files = result.split("\n").filter(Boolean);
+    return { files, count: files.length };
+  } catch (error) {
+    return { error: error.message, files: [] };
+  }
+}
+
+// Available tools for the AI SDK
+const tools = {
+  exec: {
+    description: "Execute a shell command and return the output",
+    parameters: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "Shell command to execute" },
+        cwd: { type: "string", description: "Working directory for the command" },
+      },
+      required: ["command"],
+    },
+    execute: execTool,
+  },
+  read: {
+    description: "Read a file from the filesystem",
+    parameters: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the file to read" },
+        offset: { type: "number", description: "Line offset to start reading from" },
+        lines: { type: "number", description: "Number of lines to read" },
+      },
+      required: ["path"],
+    },
+    execute: readFileTool,
+  },
+  glob: {
+    description: "Find files matching a glob pattern",
+    parameters: {
+      type: "object",
+      properties: {
+        pattern: { type: "string", description: "Glob pattern (e.g., '*.ts')" },
+        cwd: { type: "string", description: "Directory to search in" },
+      },
+      required: ["pattern"],
+    },
+    execute: globTool,
+  },
+};
+
+// --------------------------------------------------------------------------
+// Provider mapping
+// --------------------------------------------------------------------------
+
+/**
+ * Map credit-gate providers to AI SDK instances
+ */
+function createProviderModel(provider) {
+  const { name, model, baseUrl, apiKey } = provider;
+  
+  // Create the appropriate AI SDK model based on provider
+  switch (name) {
+    case "groq":
+      return groq(model);
+    case "openrouter-nemotron-super":
+    case "openrouter":
+      // Use OpenRouter with the specific model
+      const openrouter = createOpenRouter({ apiKey });
+      return openrouter(model);
+    case "codebuff":
+      // Codebuff uses the codebuff-bridge at port 4318
+      // For now, skip - it requires SDK
+      return null;
+    case "openclaw":
+      // OpenClaw uses local gateway
+      const openclaw = openai({
+        baseURL: baseUrl,
+        apiKey: apiKey || "local",
+      });
+      return openclaw(model);
+    case "gemini":
+    case "gemini-lite":
+      // These might need special handling - skip for now
+      return null;
+    case "mistral":
+      // Mistral might need custom setup - skip for now
+      return null;
+    default:
+      // Default to OpenAI-compatible
+      const openaiProvider = openai({
+        baseURL: baseUrl,
+        apiKey,
+      });
+      return openaiProvider(model);
+  }
+}
+
+// --------------------------------------------------------------------------
+// Bridge state
+// --------------------------------------------------------------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -181,7 +230,6 @@ const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
 
 // Accept multiple valid tokens - configured via env var or default
-// SYMPHONY_BRIDGE_ACCEPTED_TOKENS: comma-separated list of accepted tokens
 const additionalTokens = (process.env.SYMPHONY_BRIDGE_ACCEPTED_TOKENS || "")
   .split(",")
   .map((t) => t.trim())
@@ -193,9 +241,7 @@ if (VALID_TOKENS.size > 1) {
   console.log(`[symphony-bridge] Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
-const TIMEOUT_MS = 12 * 60 * 1000; // 12 min timeout (to match codebuff-bridge's 10min wait)
-
-// Delay between fallback attempts
+const MAX_TOOL_ITERATIONS = 10; // Maximum tool call loops
 const FALLBACK_DELAY_MS = 1000;
 
 // Periodic stats logging interval (every 10 requests)
@@ -203,19 +249,25 @@ const STATS_LOG_INTERVAL = 10;
 let requestCount = 0;
 
 // Provider exploration - ensure all providers are tried at least once per day
-const EXPLORATION_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
-const EXPLORATION_MIN_PROBES = 3; // Try at least 3 different providers per day
+const EXPLORATION_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const EXPLORATION_MIN_PROBES = 3;
 let lastExplorationTime = Date.now();
 let explorationProbesThisPeriod = 0;
 let lastSelectedProvider = null;
 
 // --------------------------------------------------------------------------
-// Provider cascade wrapper with auto-fallback
+// Tool execution helper
 // --------------------------------------------------------------------------
 
 /**
- * Build prompt from OpenAI-style messages
+ * Execute a tool call and return the result
  */
+
+
+// --------------------------------------------------------------------------
+// AI SDK invoke with tool execution
+// --------------------------------------------------------------------------
+
 /**
  * Check if error is a temporary failure worth retrying
  */
@@ -241,185 +293,192 @@ function sleep(ms) {
 }
 
 /**
- * Try a single provider with the given messages
+ * Convert OpenAI-style messages to AI SDK format
  */
-async function tryProvider(provider, messages) {
-  const { name, model, baseUrl, apiKey, requiresSdk } = provider;
-
-  // Handle SDK providers - redirect to HTTP bridge equivalents
-  // Note: codebuff-bridge waits up to 10min for paid account before trying free
-  let effectiveModel = model;
-  let effectiveBaseUrl = baseUrl;
-  let effectiveApiKey = apiKey;
-
-  if (requiresSdk) {
-    // Map SDK provider names to their HTTP bridge equivalents
-    const SDK_TO_HTTP = {
-      codebuff: {
-        name: "codebuff-bridge",
-        model: "codebuff/base",
-        baseUrl: "http://127.0.0.1:4318/v1",
-        apiKey: "local-bridge",
-      },
-    };
-
-    const httpBridge = SDK_TO_HTTP[name];
-    if (httpBridge) {
-      console.log(
-        `[symphony-bridge] SDK provider '${name}' redirected to HTTP bridge (may take up to 10min)`,
-      );
-      effectiveModel = httpBridge.model;
-      effectiveBaseUrl = httpBridge.baseUrl;
-      effectiveApiKey = httpBridge.apiKey;
-    } else {
-      throw new Error(`SDK provider '${name}' has no HTTP bridge available`);
+function convertMessages(messages) {
+  return messages.map((msg) => {
+    const converted = { role: msg.role };
+    
+    if (typeof msg.content === "string") {
+      converted.content = msg.content;
+    } else if (Array.isArray(msg.content)) {
+      // Handle multi-part messages
+      const parts = msg.content.map((part) => {
+        if (part.type === "text") {
+          return { type: "text", text: part.text };
+        }
+        // Handle other part types
+        return part;
+      });
+      converted.content = parts;
     }
-  }
-
-  const url = `${effectiveBaseUrl}/chat/completions`;
-
-  let response;
-  try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${effectiveApiKey}`,
-      },
-      body: JSON.stringify({
-        model: effectiveModel,
-        messages: messages,
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-  } catch (error_) {
-    console.log(`[symphony-bridge] Fetch exception: ${error_.message}, URL: ${url}`);
-    throw new Error(`Fetch failed: ${fetchErr.message}`);
-  }
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "Unknown error");
-    throw new Error(`${response.status} ${response.statusText}: ${errorText.slice(0, 200)}`);
-  }
-
-  const data = await response.json();
-
-  // Check for rate limit in response
-  if (data.error?.code === "rate_limit" || data.error?.type?.includes("rate_limit")) {
-    throw new Error(`429 rate limit: ${data.error.message || "Rate limited"}`);
-  }
-
-  // Check for continuation signal from downstream (e.g., codebuff-bridge with active subgoals)
-  const finishReason = data.choices?.[0]?.finish_reason;
-  const needsContinuation = finishReason === "length";
-
-  if (needsContinuation) {
-    console.log(
-      `[symphony-bridge] 🔄 Downstream signals continuation needed (finish_reason=length)`,
-    );
-  }
-
-  return { data, providerName: name, needsContinuation };
+    
+    return converted;
+  });
 }
 
 /**
- * Invoke with automatic fallback through all providers
+ * Invoke AI SDK with a provider, handling tool execution
+ */
+async function invokeWithAI(provider, messages, options = {}) {
+  const { stream = false, onChunk } = options;
+  
+  // Create the provider model
+  const model = createProviderModel(provider);
+  
+  if (!model) {
+    throw new Error(`Provider ${provider.name} not supported with AI SDK`);
+  }
+  
+  console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})`);
+  
+  // Create AI instance with the model and tools
+  const ai = createAI({
+    model,
+    tools,
+  });
+  
+  // Convert messages to AI SDK format
+  const aiMessages = convertMessages(messages);
+  
+  if (stream) {
+    // Streaming with tool execution
+    const result = await ai.streamText({
+      messages: aiMessages,
+      maxSteps: MAX_TOOL_ITERATIONS,
+    });
+    
+    // Process the stream
+    let fullText = "";
+    
+    for await (const chunk of result.textStream) {
+      fullText += chunk;
+      
+      // Send chunk to callback
+      if (onChunk) {
+        onChunk({
+          type: "text",
+          text: chunk,
+        });
+      }
+    }
+    
+    // Note: streamText handles tool execution automatically in maxSteps mode
+    console.log(`[symphony-bridge] Streaming completed`);
+    
+    return {
+      text: fullText,
+      providerName: provider.name,
+    };
+  } else {
+    // Non-streaming with tool execution
+    const result = await ai.generateText({
+      messages: aiMessages,
+      maxSteps: MAX_TOOL_ITERATIONS,
+    });
+    
+    const text = result.text || "";
+    
+    console.log(`[symphony-bridge] Completion done`);
+    
+    return {
+      text,
+      providerName: provider.name,
+      usage: result.usage,
+    };
+  }
+}
+
+/**
+ * Invoke with automatic fallback through all providers (non-streaming)
  */
 async function invokeWithFallback(messages) {
-  // Get provider from credit-gate (handles fallback logic internally)
+  // Get provider from credit-gate
   let provider = await selectProvider();
-
+  
   if (!provider) {
     throw new Error("No providers available - check env vars and provider failures");
   }
-
-  // Check if we need to force exploration (discover new providers)
+  
+  // Check exploration
   const timeSinceLastExploration = Date.now() - lastExplorationTime;
   const needsExploration = timeSinceLastExploration > EXPLORATION_INTERVAL_MS || 
     explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
-
-  // If exploration needed, clear failures for untested providers to allow probing
+  
   if (needsExploration && lastSelectedProvider) {
     console.log(`[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`);
-    clearProviderFailure(lastSelectedProvider); // Clear last provider to allow retry
+    clearProviderFailure(lastSelectedProvider);
   }
-
+  
   console.log(`[symphony-bridge] Selected provider: ${provider.name} (${provider.model})`);
-
+  
   // Track exploration
   if (provider.name !== lastSelectedProvider) {
     explorationProbesThisPeriod++;
     lastSelectedProvider = provider.name;
     if (timeSinceLastExploration > EXPLORATION_INTERVAL_MS) {
       lastExplorationTime = Date.now();
-      explorationProbesThisPeriod = 1; // Reset counter
+      explorationProbesThisPeriod = 1;
     }
   }
-
+  
   try {
-    const result = await tryProvider(provider, messages);
-
-    // Success - record and return
+    const result = await invokeWithAI(provider, messages, { stream: false });
+    
     console.log(`[symphony-bridge] ✅ Success with ${provider.name}`);
     recordProviderSuccess(provider.name);
-
-    // Log periodic stats
+    
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
       logBridgeStats();
     }
-
+    
     return {
-      ...result,
+      text: result.text,
+      usage: result.usage,
       providerName: provider.name,
       attempts: 1,
       triedProviders: [provider.name],
     };
   } catch (err) {
     const errStr = String(err);
-
-    // Record failure so credit-gate knows to skip this provider next time
     console.log(`[symphony-bridge] ❌ ${provider.name} failed: ${errStr.slice(0, 100)}`);
-
+    
     if (isRetryableError(err)) {
       recordProviderFailure(provider.name);
     }
-
-    // Try one more time with a fresh provider selection
-    // The credit-gate will skip the failed provider and pick the next best
+    
+    // Try fallback
     provider = await selectProvider();
-
+    
     if (!provider) {
       throw new Error(`All providers failed. Last error: ${errStr}`);
     }
-
-    console.log(`[symphony-bridge] Retrying with fallback: ${provider.name} (${provider.model})`);
+    
+    console.log(`[symphony-bridge] Retrying with fallback: ${provider.name}`);
     BRIDGE_METRICS.totalFallbacks++;
     await sleep(FALLBACK_DELAY_MS);
-
+    
     try {
-      const result = await tryProvider(provider, messages);
+      const result = await invokeWithAI(provider, messages, { stream: false });
       console.log(`[symphony-bridge] ✅ Fallback success with ${provider.name}`);
       recordProviderSuccess(provider.name);
-
-      // Log periodic stats
+      
       requestCount++;
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
       }
-
+      
       return {
-        ...result,
+        text: result.text,
+        usage: result.usage,
         providerName: provider.name,
         attempts: 2,
         triedProviders: [provider.name],
       };
     } catch (error_) {
       const retryStr = String(error_);
-      console.log(
-        `[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`,
-      );
+      console.log(`[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`);
       if (isRetryableError(error_)) {
         recordProviderFailure(provider.name);
       }
@@ -432,271 +491,77 @@ async function invokeWithFallback(messages) {
  * Invoke with streaming and automatic fallback
  */
 async function invokeWithFallbackStream(messages, onChunk) {
-  // Get provider from credit-gate (handles fallback logic internally)
   let provider = await selectProvider();
-
+  
   if (!provider) {
     throw new Error("No providers available - check env vars and provider failures");
   }
-
-  console.log(
-    `[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`,
-  );
-
+  
+  console.log(`[symphony-bridge] Streaming selected provider: ${provider.name}`);
+  
   try {
-    const { name, model, baseUrl, apiKey, requiresSdk } = provider;
-
-    // For SDK providers, redirect to HTTP bridge equivalents
-    let effectiveBaseUrl = baseUrl;
-    let effectiveApiKey = apiKey;
-    let effectiveModel = model;
-
-    if (requiresSdk) {
-      const SDK_TO_HTTP = {
-        codebuff: {
-          baseUrl: "http://127.0.0.1:4318/v1",
-          apiKey: "local-bridge",
-          model: "codebuff/base",
-        },
-      };
-      const httpBridge = SDK_TO_HTTP[name];
-      if (httpBridge) {
-        console.log(`[symphony-bridge] Streaming: SDK '${name}' redirected to HTTP bridge`);
-        effectiveBaseUrl = httpBridge.baseUrl;
-        effectiveApiKey = httpBridge.apiKey;
-        effectiveModel = httpBridge.model;
-      }
-    }
-
-    const url = `${effectiveBaseUrl}/chat/completions`;
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${effectiveApiKey}`,
-      },
-      body: JSON.stringify({
-        model: effectiveModel,
-        messages: messages,
-        stream: true,
-      }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Unknown error");
-      throw new Error(`${response.status} ${response.statusText}: ${errorText.slice(0, 200)}`);
-    }
-
-    // Handle streaming response
-    if (!response.body) {
-      throw new Error("No response body");
-    }
-
-    let fullText = "";
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n");
-
-      for (const line of lines) {
-        if (!line.trim() || !line.startsWith("data: ")) continue;
-
-        const data = line.slice(6);
-        if (data === "[DONE]") continue;
-
-        try {
-          const parsed = JSON.parse(data);
-          // Filter out tool-call metadata from the content before sending to client
-          if (parsed.choices?.[0]?.delta?.content) {
-            const content = parsed.choices[0].delta.content;
-            // Check if content contains tool-call metadata (JSON or XML format)
-            if (content && typeof content === "string" && (content.includes('"toolCallId"') || content.includes('<tool_call'))) {
-              // Try to parse as JSON and extract text parts, filtering out tool-call JSON
-              const filtered = extractTextFromMessage({ role: "assistant", content }, true);
-              fullText += filtered || "";
-              // Only send if there's actual text content
-              if (filtered) {
-                parsed.choices[0].delta.content = filtered;
-                onChunk(parsed);
-              }
-            } else {
-              // No tool-call metadata, send as-is
-              fullText += content;
-              onChunk(parsed);
-            }
-          }
-        } catch {
-          // Skip non-parseable lines
-        }
-      }
-    }
-
+    const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
+    
     console.log(`[symphony-bridge] ✅ Streaming success with ${provider.name}`);
     recordProviderSuccess(provider.name);
-
-    // Log periodic stats
+    
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
       logBridgeStats();
     }
-
+    
     return {
-      text: fullText,
+      text: result.text,
       providerName: provider.name,
       attempts: 1,
       triedProviders: [provider.name],
     };
   } catch (err) {
     const errStr = String(err);
-
     console.log(`[symphony-bridge] ❌ Streaming ${provider.name} failed: ${errStr.slice(0, 100)}`);
-
+    
     if (isRetryableError(err)) {
       recordProviderFailure(provider.name);
     }
-
-    // Try fallback - up to 2 more attempts
+    
+    // Try fallback
     for (let retry = 0; retry < 2; retry++) {
       provider = await selectProvider();
-
+      
       if (!provider) {
         throw new Error(`Streaming providers failed. Last error: ${errStr}`);
       }
-
+      
       console.log(`[symphony-bridge] Streaming fallback (attempt ${retry + 2}): ${provider.name}`);
       BRIDGE_METRICS.totalFallbacks++;
       await sleep(FALLBACK_DELAY_MS);
-
+      
       try {
-        const { name, model, baseUrl, apiKey, requiresSdk } = provider;
-
-        // For SDK providers, redirect to HTTP bridge equivalents
-        let effBaseUrl = baseUrl;
-        let effApiKey = apiKey;
-        let effModel = model;
-
-        if (requiresSdk) {
-          const SDK_TO_HTTP = {
-            codebuff: {
-              baseUrl: "http://127.0.0.1:4318/v1",
-              apiKey: "local-bridge",
-              model: "codebuff/base",
-            },
-          };
-          const httpBridge = SDK_TO_HTTP[name];
-          if (httpBridge) {
-            console.log(
-              `[symphony-bridge] Streaming fallback: SDK '${name}' redirected to HTTP bridge`,
-            );
-            effBaseUrl = httpBridge.baseUrl;
-            effApiKey = httpBridge.apiKey;
-            effModel = httpBridge.model;
-          }
-        }
-
-        const url = `${effBaseUrl}/chat/completions`;
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${effApiKey}`,
-          },
-          body: JSON.stringify({
-            model: effModel,
-            messages: messages,
-            stream: true,
-          }),
-          signal: AbortSignal.timeout(TIMEOUT_MS),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text().catch(() => "Unknown error");
-          throw new Error(`${response.status} ${response.statusText}: ${errorText.slice(0, 200)}`);
-        }
-
-        if (!response.body) {
-          throw new Error("No response body");
-        }
-
-        let fullText = "";
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
-
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith("data: ")) continue;
-
-            const data = line.slice(6);
-            if (data === "[DONE]") continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              // Filter out tool-call metadata from the content before sending to client
-              if (parsed.choices?.[0]?.delta?.content) {
-                const content = parsed.choices[0].delta.content;
-                // Check if content contains tool-call metadata (JSON or XML format)
-                if (content && typeof content === "string" && (content.includes('"toolCallId"') || content.includes('<tool_call'))) {
-                  // Try to parse as JSON and extract text parts, filtering out tool-call JSON
-                  const filtered = extractTextFromMessage({ role: "assistant", content }, true);
-                  fullText += filtered || "";
-                  // Only send if there's actual text content
-                  if (filtered) {
-                    parsed.choices[0].delta.content = filtered;
-                    onChunk(parsed);
-                  }
-                } else {
-                  // No tool-call metadata, send as-is
-                  fullText += content;
-                  onChunk(parsed);
-                }
-              }
-            } catch {
-              // Skip non-parseable lines
-            }
-          }
-        }
-
+        const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
+        
         console.log(`[symphony-bridge] ✅ Streaming fallback success with ${provider.name}`);
         recordProviderSuccess(provider.name);
-
-        // Log periodic stats
+        
         requestCount++;
         if (requestCount % STATS_LOG_INTERVAL === 0) {
           logBridgeStats();
         }
-
+        
         return {
-          text: fullText,
+          text: result.text,
           providerName: provider.name,
           attempts: retry + 2,
           triedProviders: [provider.name],
         };
       } catch (error_) {
         const retryStr = String(error_);
-        console.log(
-          `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`,
-        );
+        console.log(`[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`);
         if (isRetryableError(error_)) {
           recordProviderFailure(provider.name);
         }
-        // Continue to next retry
       }
     }
-
+    
     throw new Error(`All streaming providers failed. Last error: ${errStr}`);
   }
 }
@@ -744,13 +609,15 @@ function parseBody(req) {
 function checkAuth(req) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  // Accept: valid tokens, tokens starting with "local-", or no token (for local OpenClaw integration)
   const isValid = VALID_TOKENS.has(token) || token.startsWith("local-") || token === "";
   console.log(`[symphony-bridge] Auth check: received token="${token}", valid=${isValid}`);
   return isValid;
 }
 
-// Bridge-specific metrics tracking
+// --------------------------------------------------------------------------
+// Metrics
+// --------------------------------------------------------------------------
+
 const BRIDGE_METRICS = {
   totalRequests: 0,
   streamingRequests: 0,
@@ -762,50 +629,33 @@ const BRIDGE_METRICS = {
   maxResponseTimeMs: null,
   totalTokensIn: 0,
   totalTokensOut: 0,
+  totalToolCalls: 0,
   requestsByProvider: {},
   errorsByType: {},
   lastStatsLog: Date.now(),
 };
 
-function recordBridgeMetrics({
-  provider,
-  durationMs,
-  isStream,
-  tokensIn,
-  tokensOut,
-  isError,
-  errorType,
-}) {
+function recordBridgeMetrics({ provider, durationMs, isStream, tokensIn, tokensOut, toolCalls, isError, errorType }) {
   BRIDGE_METRICS.totalRequests++;
   if (isStream) {
     BRIDGE_METRICS.streamingRequests++;
   } else {
     BRIDGE_METRICS.nonStreamingRequests++;
   }
-
-  // Response time tracking
+  
   BRIDGE_METRICS.totalResponseTimeMs = (BRIDGE_METRICS.totalResponseTimeMs || 0) + durationMs;
-  BRIDGE_METRICS.avgResponseTimeMs = Math.round(
-    BRIDGE_METRICS.totalResponseTimeMs / BRIDGE_METRICS.totalRequests,
-  );
-  BRIDGE_METRICS.minResponseTimeMs = BRIDGE_METRICS.minResponseTimeMs
-    ? Math.min(BRIDGE_METRICS.minResponseTimeMs, durationMs)
-    : durationMs;
-  BRIDGE_METRICS.maxResponseTimeMs = BRIDGE_METRICS.maxResponseTimeMs
-    ? Math.max(BRIDGE_METRICS.maxResponseTimeMs, durationMs)
-    : durationMs;
-
-  // Tokens
+  BRIDGE_METRICS.avgResponseTimeMs = Math.round(BRIDGE_METRICS.totalResponseTimeMs / BRIDGE_METRICS.totalRequests);
+  BRIDGE_METRICS.minResponseTimeMs = BRIDGE_METRICS.minResponseTimeMs ? Math.min(BRIDGE_METRICS.minResponseTimeMs, durationMs) : durationMs;
+  BRIDGE_METRICS.maxResponseTimeMs = BRIDGE_METRICS.maxResponseTimeMs ? Math.max(BRIDGE_METRICS.maxResponseTimeMs, durationMs) : durationMs;
+  
   BRIDGE_METRICS.totalTokensIn += tokensIn || 0;
   BRIDGE_METRICS.totalTokensOut += tokensOut || 0;
-
-  // Provider tracking
+  BRIDGE_METRICS.totalToolCalls += toolCalls || 0;
+  
   if (provider) {
-    BRIDGE_METRICS.requestsByProvider[provider] =
-      (BRIDGE_METRICS.requestsByProvider[provider] || 0) + 1;
+    BRIDGE_METRICS.requestsByProvider[provider] = (BRIDGE_METRICS.requestsByProvider[provider] || 0) + 1;
   }
-
-  // Errors
+  
   if (isError && errorType) {
     BRIDGE_METRICS.totalErrors++;
     BRIDGE_METRICS.errorsByType[errorType] = (BRIDGE_METRICS.errorsByType[errorType] || 0) + 1;
@@ -815,68 +665,46 @@ function recordBridgeMetrics({
 function logBridgeStats() {
   const now = Date.now();
   const elapsed = Math.round((now - BRIDGE_METRICS.lastStatsLog) / 1000);
-
+  
   console.log(`[symphony-bridge] 📊 Bridge Stats (last ${elapsed}s):`);
-  console.log(
-    `[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`,
-  );
-  console.log(
-    `[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks}`,
-  );
-  console.log(
-    `[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`,
-  );
-  console.log(
-    `[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`,
-  );
-
-  // Top providers
-  const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  console.log(`[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`);
+  console.log(`[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks} | Tool calls: ${BRIDGE_METRICS.totalToolCalls}`);
+  console.log(`[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`);
+  console.log(`[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`);
+  
+  const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider).sort((a, b) => b[1] - a[1]).slice(0, 5);
   if (topProviders.length > 0) {
-    console.log(
-      `[symphony-bridge]   Top providers: ${topProviders.map(([k, v]) => `${k}:${v}`).join(", ")}`,
-    );
+    console.log(`[symphony-bridge]   Top providers: ${topProviders.map(([k, v]) => `${k}:${v}`).join(", ")}`);
   }
-
-  // Top errors
-  const topErrors = Object.entries(BRIDGE_METRICS.errorsByType)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
+  
+  const topErrors = Object.entries(BRIDGE_METRICS.errorsByType).sort((a, b) => b[1] - a[1]).slice(0, 3);
   if (topErrors.length > 0) {
-    console.log(
-      `[symphony-bridge]   Top errors: ${topErrors.map(([k, v]) => `${k}:${v}`).join(", ")}`,
-    );
+    console.log(`[symphony-bridge]   Top errors: ${topErrors.map(([k, v]) => `${k}:${v}`).join(", ")}`);
   }
-
+  
   BRIDGE_METRICS.lastStatsLog = now;
-
-  // Also log credit-gate stats
   logProviderStats();
-
-  // Check exploration status
+  
   const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
   console.log(`[symphony-bridge] 🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`);
 }
 
-// --------------------------------------------------------------------------
+// -------------------------------------------------------------------------->
 // Main request handler
-// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------<
 
 const server = http.createServer(async (req, res) => {
   console.log(`[symphony-bridge] ===== REQUEST =====`);
   console.log(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
-
+  
   try {
-    // Auth check (skip for health check and model list)
     const skipAuth = req.url === "/health" || req.url === "/v1/models";
     if (!skipAuth && !checkAuth(req)) {
       console.log(`[symphony-bridge] Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
     }
-
-    // GET /v1/models - Return model IDs matching OpenClaw's provider format
+    
+    // GET /v1/models
     if (req.method === "GET" && req.url === "/v1/models") {
       return sendJson(res, 200, {
         object: "list",
@@ -890,54 +718,44 @@ const server = http.createServer(async (req, res) => {
         ],
       });
     }
-
-    // GET /health (no auth required)
+    
+    // GET /health
     if (req.method === "GET" && req.url === "/health") {
       const stats = getProviderStats();
       const providerCount = Object.keys(stats).length;
-
+      
       return sendJson(res, 200, {
         status: "ok",
         model: MODEL_ID,
         providersConfigured: providerCount,
-        rankedProviders: getRankedProviders()
-          .slice(0, 5)
-          .map((p) => ({
-            name: p.name,
-            score: p.score,
-          })),
+        rankedProviders: getRankedProviders().slice(0, 5).map((p) => ({ name: p.name, score: p.score })),
+        tools: Object.keys(tools),
       });
     }
-
-    // GET /v1/metrics - View bridge metrics
+    
+    // GET /v1/metrics
     if (req.method === "GET" && req.url === "/v1/metrics") {
       return sendJson(res, 200, {
-        bridge: {
-          ...BRIDGE_METRICS,
-          uptimeSeconds: Math.round((Date.now() - process.startTime) / 1000),
-        },
+        bridge: { ...BRIDGE_METRICS, uptimeSeconds: Math.round((Date.now() - process.startTime) / 1000) },
         creditGate: getProviderStats(),
       });
     }
-
-    // GET /stats - View provider statistics (alias for /v1/metrics)
+    
+    // GET /v1/stats
     if (req.method === "GET" && req.url === "/v1/stats") {
       const stats = getProviderStats();
       const ranked = getRankedProviders();
-
-      return sendJson(res, 200, {
-        rankedProviders: ranked,
-        providerStats: stats,
-      });
+      
+      return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats });
     }
-
+    
     // POST /v1/chat/completions
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
       const model = body.model || MODEL_ID;
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
-
+      
       // Extract issue context
       const userMessages = messages.filter((m) => m.role === "user");
       let issueContext = null;
@@ -949,19 +767,15 @@ const server = http.createServer(async (req, res) => {
           break;
         }
       }
-
+      
       if (issueContext) {
-        console.log(
-          `[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
-        );
+        console.log(`[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`);
       }
-
-      console.log(
-        `[symphony-bridge] Chat completion: model=${model}, messages=${messages.length}, stream=${stream}`,
-      );
-
+      
+      console.log(`[symphony-bridge] Chat completion: model=${model}, messages=${messages.length}, stream=${stream}`);
+      
       const startTime = Date.now();
-
+      
       if (stream) {
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
@@ -969,117 +783,85 @@ const server = http.createServer(async (req, res) => {
           Connection: "keep-alive",
           "X-Accel-Buffering": "no",
         });
-
+        
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
-
-        // Track if downstream signaled continuation needed
-        let needsContinuation = false;
-
+        
         try {
           const result = await invokeWithFallbackStream(messages, (chunk) => {
-            // Check if this chunk contains finish_reason from downstream
-            const chunkFinish = chunk.choices?.[0]?.finish_reason;
-            if (chunkFinish === "length") {
-              needsContinuation = true;
-              console.log(`[symphony-bridge] 🔄 Streaming downstream signals continuation`);
+            if (chunk.type === "text") {
+              const chunkData = {
+                id: completionId,
+                object: "chat.completion.chunk",
+                created,
+                model,
+                choices: [{ index: 0, delta: { content: chunk.text }, finish_reason: null }],
+              };
+              res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
             }
-            res.write(`data: ${JSON.stringify(chunk)}\n\n`);
           });
-
-          // Send final chunk - check if continuation was signaled
+          
+          // Send final chunk
           const finalChunk = {
             id: completionId,
             object: "chat.completion.chunk",
             created,
             model,
-            choices: [
-              {
-                index: 0,
-                delta: {},
-                finish_reason: needsContinuation ? "length" : "stop",
-              },
-            ],
+            choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
           };
-          if (needsContinuation) {
-            console.log(
-              `[symphony-bridge] 🔄 Forwarding continuation to caller (finish_reason=length)`,
-            );
-          }
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
           res.end();
-
+          
           if (issueContext) {
-            console.log(
-              `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
-            );
+            console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`);
           }
-
-          // Record streaming metrics
+          
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
             provider: result.providerName,
             durationMs,
             isStream: true,
-            tokensIn: messages.length * 50,
-            tokensOut: result.text?.length ? Math.round(result.text.length / 4) : 0,
             isError: false,
           });
         } catch (streamError) {
           console.error(`[symphony-bridge] Streaming error: ${streamError.message}`);
-
+          
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
-            provider: result?.providerName || "unknown",
+            provider: "unknown",
             durationMs,
             isStream: true,
             isError: true,
             errorType: streamError.message?.slice(0, 50) || "unknown",
           });
+          
           const errorChunk = {
             id: completionId,
             object: "chat.completion.chunk",
             created,
             model,
-            choices: [
-              {
-                index: 0,
-                delta: { content: `\n[Error: ${streamError.message}]` },
-                finish_reason: "stop",
-              },
-            ],
+            choices: [{ index: 0, delta: { content: `\n[Error: ${streamError.message}]` }, finish_reason: "stop" }],
           };
           res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
           res.end();
         }
-
+        
         return;
       } else {
         // Non-streaming
         const result = await invokeWithFallback(messages);
-
-        // Filter the message content to remove tool-call metadata
-        const message = result.data.choices?.[0]?.message;
-        let filteredContent = null;
-        if (message?.content) {
-          filteredContent = extractTextFromMessage({ role: "assistant", content: message.content }, true);
-        }
-
+        
         if (issueContext) {
-          const messageContent = filteredContent || result.data.choices?.[0]?.message?.content;
-          const firstLine = messageContent
-            ? messageContent.split("\n")[0].trim().slice(0, 100)
-            : "(no content)";
-          const finishedMessage = `[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`;
-          console.log(finishedMessage);
+          const firstLine = result.text ? result.text.split("\n")[0].trim().slice(0, 100) : "(no content)";
+          console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
-
+        
         const durationMs = Date.now() - startTime;
-        const tokensIn = result.data?.usage?.prompt_tokens || 0;
-        const tokensOut = result.data?.usage?.completion_tokens || 0;
-
+        const tokensIn = result.usage?.promptTokens || 0;
+        const tokensOut = result.usage?.completionTokens || 0;
+        
         recordBridgeMetrics({
           provider: result.providerName,
           durationMs,
@@ -1088,16 +870,24 @@ const server = http.createServer(async (req, res) => {
           tokensOut,
           isError: false,
         });
-
-        // Return filtered response
-        const responseData = { ...result.data };
-        if (filteredContent !== null) {
-          responseData.choices[0].message.content = filteredContent;
-        }
-
+        
         return sendJson(res, 200, {
-          ...responseData,
+          id: `chatcmpl-${Date.now()}`,
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
           model,
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: result.text },
+              finish_reason: "stop",
+            },
+          ],
+          usage: {
+            prompt_tokens: tokensIn,
+            completion_tokens: tokensOut,
+            total_tokens: tokensIn + tokensOut,
+          },
           _symphony_provider: result.providerName,
           _symphony_attempts: result.attempts,
           _symphony_tried: result.triedProviders,
@@ -1118,9 +908,9 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-// --------------------------------------------------------------------------
+// -------------------------------------------------------------------------->
 // Graceful shutdown
-// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------<
 
 function shutdown(signal) {
   console.log(`\n[symphony-bridge] Received ${signal}, shutting down...`);
@@ -1134,9 +924,9 @@ function shutdown(signal) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
-// --------------------------------------------------------------------------
+// -------------------------------------------------------------------------->
 // Start server
-// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------<
 
 server.listen(PORT, "127.0.0.1", () => {
   console.log(`[symphony-bridge] ========================================`);
@@ -1147,10 +937,11 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log(`[symphony-bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
   console.log(`[symphony-bridge] Streaming: enabled`);
   console.log(`[symphony-bridge] Auto-fallback: enabled (credit-gate)`);
+  console.log(`[symphony-bridge] Tools available: ${Object.keys(tools).join(", ")}`);
   console.log(`[symphony-bridge] ========================================`);
   console.log(`[symphony-bridge] Ready to accept requests`);
   console.log(`[symphony-bridge] ========================================`);
 });
 
 // Export for testing
-export { invokeWithFallback, invokeWithFallbackStream, MODEL_ID };
+export { invokeWithFallback, invokeWithFallbackStream, MODEL_ID, tools };
