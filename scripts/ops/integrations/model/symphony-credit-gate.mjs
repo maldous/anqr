@@ -301,7 +301,7 @@ const PROVIDERS = [
   },
   {
     name: "mistral",
-    model: "devstral-small-2507",
+    model: "mistral-small-latest",
     baseUrl: "https://api.mistral.ai/v1",
     envVar: "MISTRAL_TOKEN",
   },

@@ -55,8 +55,8 @@ import {
 // AI SDK imports
 import { generateText, streamText, tool, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { groq } from "@ai-sdk/groq";
-import { google } from "@ai-sdk/google";
+import { createGroq } from "@ai-sdk/groq";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
 
@@ -587,7 +587,10 @@ function createOpenAiCompatibleModel(model, apiKey, baseURL, fallbackApiKey) {
   return createOpenAI({
     baseURL,
     apiKey: apiKey || fallbackApiKey,
-  })(model);
+    compatibility: "compatible",
+  // .chat() forces /v1/chat/completions — required for non-OpenAI providers
+  // (AI SDK v6 defaults to /v1/responses which third-party APIs don't support)
+  }).chat(model);
 }
 
 function createProviderModel(provider) {
@@ -597,10 +600,10 @@ function createProviderModel(provider) {
     return null;
   }
   if (name === "groq") {
-    return groq(model);
+    return createGroq({ apiKey })(model);
   }
   if (name === "gemini" || name === "gemini-lite") {
-    return google(model);
+    return createGoogleGenerativeAI({ apiKey })(model);
   }
   if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
     return createOpenRouter({ apiKey })(model);
