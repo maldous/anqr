@@ -51,8 +51,17 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
   // If content is a string, check if it contains tool-call metadata and filter it
   if (typeof content === "string") {
-    // Check for tool-call patterns (both JSON and XML format)
-    if (filterToolCalls && (content.includes('"toolCallId"') || content.includes('<tool_call'))) {
+    // Check for tool-call patterns (both JSON and XML format) - be comprehensive
+    const hasToolCall = filterToolCalls && (
+      content.includes('"toolCallId"') || 
+      content.includes('<tool_call') || 
+      content.includes('</tool_call>') ||
+      content.includes('<tool-result') ||
+      content.includes('tool_call') ||
+      content.includes('toolCallId')
+    );
+    
+    if (hasToolCall) {
       // Try to parse as JSON and extract text parts
       try {
         const parsed = JSON.parse(content);
@@ -64,9 +73,15 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
         // Not JSON - try to extract text by removing XML tool_call tags
         // This is a fallback for XML-format tool calls
         let text = content;
-        // Remove tool_call XML tags and their contents
+        // Remove tool_call XML tags and their contents (comprehensive patterns)
         text = text.replace(/<tool_call\s+[^>]*>[\s\S]*?<\/tool_call>/gi, '');
         text = text.replace(/<tool_result\s+[^>]*>[\s\S]*?<\/tool_result>/gi, '');
+        text = text.replace(/<tool-call\s+[^>]*>[\s\S]*?<\/tool-call>/gi, '');
+        text = text.replace(/<toolName[\s>][\s\S]*?<\/toolName>/gi, '');
+        text = text.replace(/<argument[\s>][\s\S]*?<\/argument>/gi, '');
+        // Also remove standalone tool_call-like XML fragments
+        text = text.replace(/<tool_call[^>]*\/?>/gi, '');
+        text = text.replace(/<\/tool_call>/gi, '');
         text = text.trim();
         return text || null;
       }
