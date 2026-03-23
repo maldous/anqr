@@ -47,7 +47,7 @@ import {
 } from "./symphony-credit-gate.mjs";
 
 // AI SDK imports
-import { createAI } from "ai";
+import { generateText, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { groq } from "@ai-sdk/groq";
 import { google } from "@ai-sdk/google";
@@ -429,19 +429,15 @@ async function invokeWithAI(provider, messages, options = {}) {
   
   console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})`);
   
-  // Create AI instance with the model and tools
-  const ai = createAI({
-    model,
-    tools,
-  });
-  
   // Convert messages to AI SDK format
   const aiMessages = convertMessages(messages);
   
   if (stream) {
     // Streaming with tool execution
-    const result = await ai.streamText({
+    const result = await streamText({
+      model,
       messages: aiMessages,
+      tools,
       maxSteps: MAX_TOOL_ITERATIONS,
     });
     
@@ -469,8 +465,10 @@ async function invokeWithAI(provider, messages, options = {}) {
     };
   } else {
     // Non-streaming with tool execution
-    const result = await ai.generateText({
+    const result = await generateText({
+      model,
       messages: aiMessages,
+      tools,
       maxSteps: MAX_TOOL_ITERATIONS,
     });
     
@@ -771,12 +769,14 @@ function logBridgeStats() {
   
   const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider).sort((a, b) => b[1] - a[1]).slice(0, 5);
   if (topProviders.length > 0) {
-    console.log(`[symphony-bridge]   Top providers: ${topProviders.map(([k, v]) => `${k}:${v}`).join(", ")}`);
+    const providerStrings = topProviders.map(([k, v]) => k + ':' + v);
+    console.log(`[symphony-bridge]   Top providers: ${providerStrings.join(", ")}`);
   }
   
   const topErrors = Object.entries(BRIDGE_METRICS.errorsByType).sort((a, b) => b[1] - a[1]).slice(0, 3);
   if (topErrors.length > 0) {
-    console.log(`[symphony-bridge]   Top errors: ${topErrors.map(([k, v]) => `${k}:${v}`).join(", ")}`);
+    const errorStrings = topErrors.map(([k, v]) => k + ':' + v);
+    console.log(`[symphony-bridge]   Top errors: ${errorStrings.join(", ")}`);
   }
   
   BRIDGE_METRICS.lastStatsLog = now;
