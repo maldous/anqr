@@ -776,12 +776,21 @@ const server = http.createServer(async (req, res) => {
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
 
+        // Track if downstream signaled continuation needed
+        let needsContinuation = false;
+
         try {
           const result = await invokeWithFallbackStream(messages, (chunk) => {
+            // Check if this chunk contains finish_reason from downstream
+            const chunkFinish = chunk.choices?.[0]?.finish_reason;
+            if (chunkFinish === "length") {
+              needsContinuation = true;
+              console.log(`[symphony-bridge] 🔄 Streaming downstream signals continuation`);
+            }
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
           });
 
-          // Send final chunk
+          // Send final chunk - check if continuation was signaled
           const finalChunk = {
             id: completionId,
             object: "chat.completion.chunk",
@@ -791,10 +800,13 @@ const server = http.createServer(async (req, res) => {
               {
                 index: 0,
                 delta: {},
-                finish_reason: "stop",
+                finish_reason: needsContinuation ? "length" : "stop",
               },
             ],
           };
+          if (needsContinuation) {
+            console.log(`[symphony-bridge] 🔄 Forwarding continuation to caller (finish_reason=length)`);
+          }
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
           res.end();

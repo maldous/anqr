@@ -326,7 +326,10 @@ function suppressSDKErrors(fn) {
 }
 
 // Extract actual text content from Codebuff/Vercel AI SDK response
+// Also returns whether the response contains active subgoals (for continuation detection)
 function extractTextFromResponse(resultStr) {
+  let hasActiveSubgoals = false;
+
   try {
     const parsed = JSON.parse(resultStr);
 
@@ -334,25 +337,39 @@ function extractTextFromResponse(resultStr) {
     if (parsed?.type === "lastMessage" && parsed?.value) {
       const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
       for (const msg of messages) {
+        // Check for active subgoals in the message
+        if (msg.content && Array.isArray(msg.content)) {
+          for (const item of msg.content) {
+            const toolName = item.toolName || item.name;
+            if (toolName === "update_subgoal" || toolName === "add_subgoal") {
+              const status = (item.input?.status || item.args?.status || "").toUpperCase();
+              if (status === "IN_PROGRESS" || status === "NOT_STARTED") {
+                hasActiveSubgoals = true;
+              }
+            }
+          }
+        }
+
         const text = extractTextFromMessage(msg);
-        if (text) return text;
+        if (text) return { text, hasActiveSubgoals };
       }
     }
 
     // Handle direct message format: { role: "assistant", content: "..." }
     const text = extractTextFromMessage(parsed);
-    if (text) return text;
+    if (text) return { text, hasActiveSubgoals: false };
 
     // If we can't parse it, return the raw string
-    return resultStr;
+    return { text: resultStr, hasActiveSubgoals: false };
   } catch {
     // Not JSON, return as-is
-    return resultStr;
+    return { text: resultStr, hasActiveSubgoals: false };
   }
 }
 
 // Extract text from a single message object using AI SDK utilities for robustness
-function extractTextFromMessage(msg) {
+// Optionally filter out tool-call parts for cleaner output to clients
+function extractTextFromMessage(msg, filterToolCalls = true) {
   if (!msg || msg.role !== "assistant") return null;
 
   const content = msg.content;
@@ -372,6 +389,13 @@ function extractTextFromMessage(msg) {
       if (!part) continue;
 
       const partType = part.type || "unknown";
+
+      // Skip tool-call parts if filtering is enabled (for cleaner client output)
+      if (filterToolCalls && (isToolUIPart(part) || part.type === "tool-call")) {
+        console.log(`[bridge] 📝 Part: tool-call (filtered out)`);
+        continue;
+      }
+
       partTypes.push(partType);
 
       // Use AI SDK utilities for robust type checking
@@ -389,9 +413,6 @@ function extractTextFromMessage(msg) {
           textParts.push(reasoning);
           console.log(`[bridge] 📝 Part: reasoning (${reasoning.length} chars)`);
         }
-      } else if (isToolUIPart(part)) {
-        // Tool calls/results - skip as they don't contain user-visible text
-        console.log(`[bridge] 📝 Part: tool (skipped)`);
       } else if (isDataUIPart(part)) {
         // Data parts - skip
         console.log(`[bridge] 📝 Part: data (skipped)`);
@@ -963,7 +984,7 @@ const server = http.createServer(async (req, res) => {
             !streamResult.hadStreamingChunks
           ) {
             // Extract actual text content from the JSON response
-            const textContent = extractTextFromResponse(streamResult.text);
+            const { text: textContent } = extractTextFromResponse(streamResult.text);
             if (textContent) {
               const contentChunk = {
                 id: completionId,
