@@ -53,6 +53,78 @@ import { groq } from "@ai-sdk/groq";
 import { google } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
+// Local Codebuff SDK
+import { CodebuffClient } from "@codebuff/sdk";
+
+
+
+// --------------------------------------------------------------------------
+// Codebuff invoke (special handling)
+// --------------------------------------------------------------------------
+
+/**
+ * Invoke with Codebuff SDK directly (bypasses AI SDK)
+ */
+async function invokeWithCodebuff(provider, messages, options = {}) {
+  const { stream = false, onChunk } = options;
+  const { apiKey, model } = provider;
+  
+  console.log(`[symphony-bridge] Using Codebuff SDK directly`);
+  
+  const client = new CodebuffClient({
+    apiKey,
+    cwd: process.cwd(),
+  });
+  
+  // Build prompt from messages - combine all user messages
+  const userMessages = messages.filter(m => m.role === 'user');
+  const systemMessages = messages.filter(m => m.role === 'system');
+  
+  let prompt = '';
+  if (systemMessages.length > 0) {
+    prompt += systemMessages.map(m => 
+      typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+    ).join('\n\n') + '\n\n';
+  }
+  prompt += userMessages.map(m => 
+    typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+  ).join('\n\n');
+  
+  if (stream) {
+    // Codebuff doesn't support streaming, so we run and simulate
+    const result = await client.run({
+      agent: model || 'codebuff/base',
+      prompt,
+      maxAgentSteps: MAX_TOOL_ITERATIONS,
+    });
+    
+    const text = result?.text || result?.output || '';
+    
+    // Yield text in chunks
+    for (let i = 0; i < text.length; i += 50) {
+      const chunk = text.slice(i, i + 50);
+      onChunk({ type: 'text', text: chunk });
+    }
+    
+    return {
+      text,
+      providerName: provider.name,
+    };
+  } else {
+    const result = await client.run({
+      agent: model || 'codebuff/base',
+      prompt,
+      maxAgentSteps: MAX_TOOL_ITERATIONS,
+    });
+    
+    return {
+      text: result?.text || result?.output || '',
+      providerName: provider.name,
+      usage: { promptTokens: 0, completionTokens: 0 },
+    };
+  }
+}
+
 // --------------------------------------------------------------------------
 // Tool definitions
 // --------------------------------------------------------------------------
@@ -179,22 +251,24 @@ const tools = {
 
 /**
  * Map credit-gate providers to AI SDK instances
+ * Returns null for providers that need special handling (like codebuff)
  */
 function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
   
   // Create the appropriate AI SDK model based on provider
   switch (name) {
+    // Codebuff - handled separately in invokeWithAI
+    case "codebuff":
+      return null; // Special case - use CodebuffClient directly
+    
     // Groq
     case "groq":
       return groq(model);
     
     // Google Gemini
     case "gemini":
-      // gemini-2.5-flash and variants
-      return google(model);
     case "gemini-lite":
-      // gemini-2.5-flash-lite
       return google(model);
     
     // OpenRouter (multiple models via OpenRouter API)
@@ -202,10 +276,6 @@ function createProviderModel(provider) {
     case "openrouter":
       const openrouter = createOpenRouter({ apiKey });
       return openrouter(model);
-    
-    // Codebuff - requires SDK, skip for now
-    case "codebuff":
-      return null;
     
     // OpenClaw - local gateway
     case "openclaw":
@@ -344,6 +414,11 @@ function convertMessages(messages) {
  */
 async function invokeWithAI(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
+  
+  // Handle codebuff specially - use SDK directly
+  if (provider.name === "codebuff") {
+    return invokeWithCodebuff(provider, messages, options);
+  }
   
   // Create the provider model
   const model = createProviderModel(provider);
