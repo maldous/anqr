@@ -931,121 +931,113 @@ export function logProviderStats() {
 // Main: select best available provider
 // ---------------------------------------------------------------------------
 
-export async function selectProvider() {
+function matchesAllowedNames(provider, allowedNames) {
+  if (!allowedNames || allowedNames.size === 0) {
+    return true;
+  }
+  return allowedNames.has(provider.name);
+}
+
+const PREFERRED_PROVIDER_ORDER = ["codex"];
+
+async function resolveProviderApiKey(provider) {
+  let apiKey = provider.envVar ? process.env[provider.envVar] : null;
+  if (!apiKey && provider.loadToken) {
+    apiKey = await provider.loadToken();
+  }
+  return apiKey;
+}
+
+function toSelectedProvider(provider, apiKey) {
+  return {
+    name: provider.name,
+    model: provider.model,
+    baseUrl: provider.baseUrl,
+    apiKey: apiKey || null,
+    requiresSdk: provider.requiresSdk || false,
+    cwd: provider.requiresSdk ? PROJECT_ROOT : undefined,
+    useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
+  };
+}
+
+async function tryProvider(provider) {
+  const apiKey = await resolveProviderApiKey(provider);
+
+  if (provider.envVar && !apiKey) {
+    console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
+    return null;
+  }
+
+  if (isRecentlyFailed(provider.name)) {
+    console.log(`[credit-gate] ${provider.name}: skipped (recently failed)`);
+    return null;
+  }
+
+  if (provider.requiresSdk) {
+    console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
+    clearProviderFailure(provider.name);
+    recordProviderSelection(provider.name);
+    return toSelectedProvider(provider, apiKey);
+  }
+
+  console.log(`[credit-gate] ${provider.name}: probing...`);
+  const available = provider.probe
+    ? await provider.probe(provider, apiKey)
+    : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
+
+  if (!available) {
+    console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
+    return null;
+  }
+
+  console.log(`[credit-gate] ${provider.name}: available ✅`);
+  clearProviderFailure(provider.name);
+  recordProviderSelection(provider.name);
+  return toSelectedProvider(provider, apiKey);
+}
+
+export async function selectProvider(options = {}) {
   ensureStateDir();
+  const allowedNames =
+    Array.isArray(options.allowedNames) && options.allowedNames.length > 0
+      ? new Set(options.allowedNames)
+      : null;
+
+  for (const providerName of PREFERRED_PROVIDER_ORDER) {
+    const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
+    if (!provider || !matchesAllowedNames(provider, allowedNames)) {
+      continue;
+    }
+    const selected = await tryProvider(provider);
+    if (selected) {
+      return selected;
+    }
+  }
 
   // First: try providers in dynamic ranking order if we have enough data
   const ranked = getRankedProviders();
   if (ranked.length > 0) {
     for (const { name } of ranked) {
       const provider = PROVIDERS.find((p) => p.name === name);
-      if (!provider) continue;
-
-      // Get API key: first try env var, then try loadToken function
-      let apiKey = provider.envVar ? process.env[provider.envVar] : null;
-      if (!apiKey && provider.loadToken) {
-        apiKey = await provider.loadToken();
-      }
-
-      if (provider.envVar && !apiKey) {
-        console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
+      if (!provider || !matchesAllowedNames(provider, allowedNames)) {
         continue;
       }
-
-      if (isRecentlyFailed(provider.name)) {
-        console.log(`[credit-gate] ${provider.name}: skipped (recently failed)`);
-        continue;
+      const selected = await tryProvider(provider);
+      if (selected) {
+        return selected;
       }
-
-      // SDK-based providers (like Codebuff) don't need HTTP probing
-      if (provider.requiresSdk) {
-        console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
-        clearProviderFailure(provider.name);
-        recordProviderSelection(provider.name);
-        return {
-          name: provider.name,
-          model: provider.model,
-          baseUrl: provider.baseUrl,
-          apiKey: apiKey || null,
-          requiresSdk: true,
-          cwd: PROJECT_ROOT,
-        };
-      }
-
-      console.log(`[credit-gate] ${provider.name}: probing...`);
-      const available = provider.probe
-        ? await provider.probe(provider, apiKey)
-        : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
-
-      if (available) {
-        console.log(`[credit-gate] ${provider.name}: available ✅`);
-        clearProviderFailure(provider.name);
-        recordProviderSelection(provider.name);
-        return {
-          name: provider.name,
-          model: provider.model,
-          baseUrl: provider.baseUrl,
-          apiKey: apiKey || null,
-          useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
-        };
-      }
-
-      console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
     }
   }
 
   // Fallback: use fixed PROVIDERS order for providers with insufficient data or none ranked
   for (const provider of PROVIDERS) {
-    // Get API key: first try env var, then try loadToken function
-    let apiKey = provider.envVar ? process.env[provider.envVar] : null;
-    if (!apiKey && provider.loadToken) {
-      apiKey = await provider.loadToken();
-    }
-
-    if (provider.envVar && !apiKey) {
-      console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
+    if (!matchesAllowedNames(provider, allowedNames)) {
       continue;
     }
-
-    if (isRecentlyFailed(provider.name)) {
-      console.log(`[credit-gate] ${provider.name}: skipped (recently failed)`);
-      continue;
+    const selected = await tryProvider(provider);
+    if (selected) {
+      return selected;
     }
-
-    // SDK-based providers (like Codebuff) don't need HTTP probing
-    if (provider.requiresSdk) {
-      console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
-      clearProviderFailure(provider.name);
-      recordProviderSelection(provider.name);
-      return {
-        name: provider.name,
-        model: provider.model,
-        baseUrl: provider.baseUrl,
-        apiKey: apiKey || null,
-        requiresSdk: true,
-        cwd: PROJECT_ROOT,
-      };
-    }
-
-    console.log(`[credit-gate] ${provider.name}: probing...`);
-    const available = provider.probe
-      ? await provider.probe(provider, apiKey)
-      : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
-
-    if (available) {
-      console.log(`[credit-gate] ${provider.name}: available ✅`);
-      clearProviderFailure(provider.name);
-      recordProviderSelection(provider.name);
-      return {
-        name: provider.name,
-        model: provider.model,
-        baseUrl: provider.baseUrl,
-        apiKey: apiKey || null,
-        useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
-      };
-    }
-
-    console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
   }
 
   // Note: logProviderStats() can be called explicitly by callers for monitoring

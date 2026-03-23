@@ -275,7 +275,7 @@ OpenClaw acts as a wrapper layer that can route requests to multiple backends:
    - Provides tool execution (exec, read, glob)
    - Bearer token: `local-symphony`
 
-2. **Fallback 1**: `codebuff-bridge/codebuff/base@latest` (port 4318)
+2. **Fallback 1**: `codebuff-bridge/codebuff/base` (port 4318)
    - Routes to Codebuff Bridge
    - Uses Codebuff SDK directly for local code editing
    - Has internal account rotation (KEY, KEY2, KEY3)
@@ -291,16 +291,16 @@ OpenClaw acts as a wrapper layer that can route requests to multiple backends:
 {
   "providers": {
     "codebuff-bridge": {
-      "baseUrl": "http://127.0.0.1:4318",
+      "baseUrl": "http://127.0.0.1:4318/v1",
       "apiKey": "local-bridge",
       "api": "openai-completions",
-      "models": [{ "id": "codebuff/base@latest" }]
+      "models": [{ "id": "codebuff/base" }]
     },
     "symphony-bridge": {
-      "baseUrl": "http://127.0.0.1:4319",
+      "baseUrl": "http://127.0.0.1:4319/v1",
       "apiKey": "local-symphony",
       "api": "openai-completions",
-      "models": [{ "id": "symphony/main" }]
+      "models": [{ "id": "symphony/main" }, { "id": "symphony/text" }]
     }
   },
   "agents": {

@@ -3,34 +3,46 @@
   "mode": "merge",
   "providers": {
     "codebuff-bridge": {
-      "baseUrl": "http://127.0.0.1:4318",
+      "baseUrl": "http://127.0.0.1:4318/v1",
       "apiKey": "local-bridge",
       "api": "openai-completions",
       "models": [
         {
-          "id": "codebuff/base@latest",
+          "id": "codebuff/base",
           "name": "Codebuff Base (via bridge)"
         }
       ]
     },
     "symphony-bridge": {
-      "baseUrl": "http://127.0.0.1:4319",
+      "baseUrl": "http://127.0.0.1:4319/v1",
       "apiKey": "local-symphony",
       "api": "openai-completions",
       "models": [
         {
           "id": "symphony/main",
           "name": "Symphony Bridge"
+        },
+        {
+          "id": "symphony/text",
+          "name": "Symphony Text"
+        },
+        {
+          "id": "symphony/codebuff-bridge",
+          "name": "Symphony Codebuff Bridge"
+        },
+        {
+          "id": "symphony/ollama-local",
+          "name": "Symphony Ollama Local"
         }
       ]
     },
     "symphony": {
-      "baseUrl": "http://127.0.0.1:4319",
+      "baseUrl": "http://127.0.0.1:4319/v1",
       "apiKey": "local-symphony",
       "api": "openai-completions",
       "models": [
         {
-          "id": "main@latest",
+          "id": "symphony/main",
           "name": "Symphony Main (direct)"
         }
       ]

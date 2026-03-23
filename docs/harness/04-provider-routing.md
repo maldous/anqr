@@ -16,7 +16,7 @@ OpenClaw is configured with the following failover chain:
 
 | Priority   | Model                           | Fallback behavior                                   |
 | ---------- | ------------------------------- | --------------------------------------------------- |
-| Primary    | `symphony-bridge/symphony/main` | Internal failover via credit-gate (see Layer 2)     |
+| Primary    | `symphony-bridge/symphony/main` | Tool-capable internal failover via credit-gate      |
 | Fallback 1 | `codebuff-bridge/codebuff/base` | Internal failover with paid → free account rotation |
 | Fallback 2 | OpenClaw free-rider models      | OpenClaw's native free model discovery              |
 
@@ -29,9 +29,10 @@ Symphony Bridge uses the credit-gate provider cascade with **dynamic scoring** b
 | Priority | Provider                                                                | Selection method                      |
 | -------- | ----------------------------------------------------------------------- | ------------------------------------- |
 | 1        | codebuff                                                                | SDK with paid → free account rotation |
-| 2        | openclaw                                                                | Local gateway                         |
-| 3        | groq                                                                    | Free, fast                            |
-| 4+       | mistral, gemini, openrouter, sambanova, cerebras, github-models, ollama | Fallback cascade                      |
+| 2        | github-models                                                           | HTTP fallback with tool support       |
+| 3        | codebuff-bridge                                                         | Local HTTP fallback                   |
+| 4        | ollama-local                                                            | Local fallback                        |
+| 5+       | groq, mistral, gemini, openrouter, sambanova, cerebras                  | Text-only / lower-confidence fallback |
 
 The credit-gate selects providers based on dynamic scoring (see Provider Metrics section below), not fixed order. After each request, providers are re-evaluated for the next request.
 
@@ -62,7 +63,7 @@ The credit-gate (`symphony-credit-gate.mjs`) to select providers in priority ord
 | 36   | sambanova                   | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
 | 37   | cerebras                    | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
 | 38   | github-models               | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`                        | No      |
-| 39   | codebuff-bridge             | HTTP | codebuff/base@latest                   | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
+| 39   | codebuff-bridge             | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
 | 40   | ollama-local                | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
 
 ### Provider notes
@@ -86,7 +87,7 @@ The Codebuff bridge (`scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 
 - **Base URL**: `http://127.0.0.1:4318/v1`
 - **Auth**: Bearer token (default: `local-bridge`)
-- **Model ID**: `codebuff/base@latest`
+- **Model ID**: `codebuff/base`
 - **Working directory**: Project root (configurable via `CODEBUFF_BRIDGE_CWD`)
 
 ### Endpoints
@@ -136,7 +137,7 @@ Configure OpenClaw to use the bridge by adding the following to your `~/.opencla
       "api": "openai-completions",
       "models": [
         {
-          "id": "codebuff/base@latest",
+          "id": "codebuff/base",
           "name": "Codebuff Base (via bridge)"
         }
       ]
@@ -145,7 +146,7 @@ Configure OpenClaw to use the bridge by adding the following to your `~/.opencla
   "agents": {
     "defaults": {
       "model": {
-        "primary": "codebuff-bridge/codebuff/base@latest"
+        "primary": "codebuff-bridge/codebuff/base"
       }
     }
   }
@@ -407,7 +408,10 @@ Configure OpenClaw to use the bridge:
       "apiKey": "local-symphony",
       "api": "openai-completions",
       "models": [
-        { "id": "symphony-bridge/symphony/main", "name": "Symphony Main" }
+        { "id": "symphony/main", "name": "Symphony Main" },
+        { "id": "symphony/text", "name": "Symphony Text" },
+        { "id": "symphony/codebuff-bridge", "name": "Symphony Codebuff Bridge" },
+        { "id": "symphony/ollama-local", "name": "Symphony Ollama Local" }
       ]
     }
   }

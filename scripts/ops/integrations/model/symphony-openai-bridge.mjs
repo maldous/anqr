@@ -39,6 +39,7 @@ import { execSync } from "node:child_process";
 import {
   selectProvider,
   recordProviderFailure,
+  recordProviderFailureCount,
   recordProviderSuccess,
   getProviderStats,
   getRankedProviders,
@@ -47,11 +48,12 @@ import {
 } from "./symphony-credit-gate.mjs";
 
 // AI SDK imports
-import { generateText, streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { generateText, streamText, tool } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { groq } from "@ai-sdk/groq";
 import { google } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { z } from "zod";
 
 // Local Codebuff SDK
 import { CodebuffClient } from "@codebuff/sdk";
@@ -234,43 +236,31 @@ async function globTool({ pattern, cwd }) {
 
 // Available tools for the AI SDK
 const tools = {
-  exec: {
+  exec: tool({
     description: "Execute a shell command and return the output",
-    parameters: {
-      type: "object",
-      properties: {
-        command: { type: "string", description: "Shell command to execute" },
-        cwd: { type: "string", description: "Working directory for the command" },
-      },
-      required: ["command"],
-    },
+    inputSchema: z.object({
+      command: z.string().describe("Shell command to execute"),
+      cwd: z.string().optional().describe("Working directory for the command"),
+    }),
     execute: execTool,
-  },
-  read: {
+  }),
+  read: tool({
     description: "Read a file from the filesystem",
-    parameters: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Path to the file to read" },
-        offset: { type: "number", description: "Line offset to start reading from" },
-        lines: { type: "number", description: "Number of lines to read" },
-      },
-      required: ["path"],
-    },
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file to read"),
+      offset: z.number().optional().describe("Line offset to start reading from"),
+      lines: z.number().optional().describe("Number of lines to read"),
+    }),
     execute: readFileTool,
-  },
-  glob: {
+  }),
+  glob: tool({
     description: "Find files matching a glob pattern",
-    parameters: {
-      type: "object",
-      properties: {
-        pattern: { type: "string", description: "Glob pattern (e.g., '*.ts')" },
-        cwd: { type: "string", description: "Directory to search in" },
-      },
-      required: ["pattern"],
-    },
+    inputSchema: z.object({
+      pattern: z.string().describe("Glob pattern (e.g., '*.ts')"),
+      cwd: z.string().optional().describe("Directory to search in"),
+    }),
     execute: globTool,
-  },
+  }),
 };
 
 // --------------------------------------------------------------------------
@@ -333,7 +323,7 @@ function createProviderModel(provider) {
     
     // OpenClaw - local gateway
     case "openclaw":
-      const openclaw = openai({
+      const openclaw = createOpenAI({
         baseURL: baseUrl,
         apiKey: apiKey || "local",
       });
@@ -341,7 +331,7 @@ function createProviderModel(provider) {
     
     // Mistral - use OpenAI-compatible API
     case "mistral":
-      const mistral = openai({
+      const mistral = createOpenAI({
         baseURL: "https://api.mistral.ai/v1",
         apiKey,
       });
@@ -349,7 +339,7 @@ function createProviderModel(provider) {
     
     // Codex (OpenAI) - use OpenAI-compatible API
     case "codex":
-      const codex = openai({
+      const codex = createOpenAI({
         baseURL: baseUrl || "https://api.openai.com/v1",
         apiKey,
       });
@@ -357,7 +347,7 @@ function createProviderModel(provider) {
     
     // SambaNova
     case "sambanova":
-      const sambanova = openai({
+      const sambanova = createOpenAI({
         baseURL: baseUrl || "https://api.sambanova.ai/v1",
         apiKey,
       });
@@ -365,7 +355,7 @@ function createProviderModel(provider) {
     
     // Cerebras
     case "cerebras":
-      const cerebras = openai({
+      const cerebras = createOpenAI({
         baseURL: baseUrl || "https://api.cerebras.ai/v1",
         apiKey,
       });
@@ -373,7 +363,7 @@ function createProviderModel(provider) {
     
     // GitHub Models
     case "github-models":
-      const githubModels = openai({
+      const githubModels = createOpenAI({
         baseURL: baseUrl || "https://models.github.ai/inference/v1",
         apiKey,
       });
@@ -381,7 +371,7 @@ function createProviderModel(provider) {
     
     // Codebuff Bridge (local HTTP)
     case "codebuff-bridge":
-      const codebuffBridge = openai({
+      const codebuffBridge = createOpenAI({
         baseURL: baseUrl || "http://127.0.0.1:4318/v1",
         apiKey,
       });
@@ -389,7 +379,7 @@ function createProviderModel(provider) {
     
     // Ollama local
     case "ollama-local":
-      const ollamaLocal = openai({
+      const ollamaLocal = createOpenAI({
         baseURL: baseUrl || "http://127.0.0.1:11434/v1",
         apiKey: apiKey || "ollama",
       });
@@ -400,7 +390,7 @@ function createProviderModel(provider) {
       if (!baseUrl) {
         throw new Error(`Provider ${name} not supported - no baseUrl for default fallback`);
       }
-      const defaultProvider = openai({
+      const defaultProvider = createOpenAI({
         baseURL: baseUrl,
         apiKey,
       });
@@ -417,6 +407,29 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
+const BRIDGE_PROVIDER_BLOCKLIST = new Set(["openclaw"]);
+const TOOL_CAPABLE_PROVIDER_NAMES = ["codebuff-bridge"];
+const ADVERTISED_MODELS = [
+  {
+    id: "symphony/main",
+    ownedBy: "symphony-bridge",
+    allowedNames: TOOL_CAPABLE_PROVIDER_NAMES,
+  },
+  {
+    id: "symphony/text",
+    ownedBy: "symphony-bridge",
+  },
+  {
+    id: "symphony/codebuff-bridge",
+    ownedBy: "codebuff-bridge",
+    allowedNames: ["codebuff-bridge"],
+  },
+  {
+    id: "symphony/ollama-local",
+    ownedBy: "ollama-local",
+    allowedNames: ["ollama-local"],
+  },
+];
 
 // Accept multiple valid tokens - configured via env var or default
 const additionalTokens = (process.env.SYMPHONY_BRIDGE_ACCEPTED_TOKENS || "")
@@ -443,6 +456,36 @@ const EXPLORATION_MIN_PROBES = 3;
 let lastExplorationTime = Date.now();
 let explorationProbesThisPeriod = 0;
 let lastSelectedProvider = null;
+
+function normalizeModelId(modelId) {
+  if (!modelId) {
+    return MODEL_ID;
+  }
+  if (modelId.startsWith("symphony-bridge/")) {
+    return modelId.slice("symphony-bridge/".length);
+  }
+  if (modelId === "symphony/main@latest" || modelId === "main@latest" || modelId === "main") {
+    return "symphony/main";
+  }
+  return modelId;
+}
+
+function resolveRoute(modelId) {
+  const normalizedModelId = normalizeModelId(modelId);
+  const advertised =
+    ADVERTISED_MODELS.find((entry) => entry.id === normalizedModelId) ||
+    ADVERTISED_MODELS.find((entry) => entry.id === MODEL_ID);
+
+  const allowedNames = (advertised?.allowedNames || null)
+    ?.filter((name) => !BRIDGE_PROVIDER_BLOCKLIST.has(name));
+
+  return {
+    requestedModelId: modelId || MODEL_ID,
+    normalizedModelId,
+    responseModelId: advertised?.id || MODEL_ID,
+    allowedNames,
+  };
+}
 
 // --------------------------------------------------------------------------
 // Tool execution helper
@@ -584,12 +627,14 @@ async function invokeWithAI(provider, messages, options = {}) {
 /**
  * Invoke with automatic fallback through all providers (non-streaming)
  */
-async function invokeWithFallback(messages) {
+async function invokeWithFallback(messages, route) {
   // Get provider from credit-gate
-  let provider = await selectProvider();
+  let provider = await selectProvider({ allowedNames: route.allowedNames });
   
   if (!provider) {
-    throw new Error("No providers available - check env vars and provider failures");
+    throw new Error(
+      `No providers available for ${route.responseModelId} - check env vars and provider failures`,
+    );
   }
   
   // Check exploration
@@ -638,10 +683,11 @@ async function invokeWithFallback(messages) {
     
     if (isRetryableError(err)) {
       recordProviderFailure(provider.name);
+      recordProviderFailureCount(provider.name);
     }
     
     // Try fallback
-    provider = await selectProvider();
+    provider = await selectProvider({ allowedNames: route.allowedNames });
     
     if (!provider) {
       throw new Error(`All providers failed. Last error: ${errStr}`);
@@ -673,6 +719,7 @@ async function invokeWithFallback(messages) {
       console.log(`[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`);
       if (isRetryableError(error_)) {
         recordProviderFailure(provider.name);
+        recordProviderFailureCount(provider.name);
       }
       throw new Error(`Provider ${provider.name} failed: ${retryStr}`);
     }
@@ -682,11 +729,13 @@ async function invokeWithFallback(messages) {
 /**
  * Invoke with streaming and automatic fallback
  */
-async function invokeWithFallbackStream(messages, onChunk) {
-  let provider = await selectProvider();
+async function invokeWithFallbackStream(messages, route, onChunk) {
+  let provider = await selectProvider({ allowedNames: route.allowedNames });
   
   if (!provider) {
-    throw new Error("No providers available - check env vars and provider failures");
+    throw new Error(
+      `No providers available for ${route.responseModelId} - check env vars and provider failures`,
+    );
   }
   
   console.log(`[symphony-bridge] Streaming selected provider: ${provider.name}`);
@@ -714,11 +763,12 @@ async function invokeWithFallbackStream(messages, onChunk) {
     
     if (isRetryableError(err)) {
       recordProviderFailure(provider.name);
+      recordProviderFailureCount(provider.name);
     }
     
     // Try fallback
     for (let retry = 0; retry < 2; retry++) {
-      provider = await selectProvider();
+      provider = await selectProvider({ allowedNames: route.allowedNames });
       
       if (!provider) {
         throw new Error(`Streaming providers failed. Last error: ${errStr}`);
@@ -750,6 +800,7 @@ async function invokeWithFallbackStream(messages, onChunk) {
         console.log(`[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`);
         if (isRetryableError(error_)) {
           recordProviderFailure(provider.name);
+          recordProviderFailureCount(provider.name);
         }
       }
     }
@@ -902,14 +953,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "GET" && req.url === "/v1/models") {
       return sendJson(res, 200, {
         object: "list",
-        data: [
-          {
-            id: "symphony-bridge/symphony/main",
-            object: "model",
-            owned_by: "symphony-bridge",
-            created: 1704067200,
-          },
-        ],
+        data: ADVERTISED_MODELS.map((entry) => ({
+          id: entry.id,
+          object: "model",
+          owned_by: entry.ownedBy,
+          created: 1704067200,
+        })),
       });
     }
     
@@ -946,7 +995,7 @@ const server = http.createServer(async (req, res) => {
     // POST /v1/chat/completions
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
-      const model = body.model || MODEL_ID;
+      const route = resolveRoute(body.model || MODEL_ID);
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
       
@@ -966,7 +1015,9 @@ const server = http.createServer(async (req, res) => {
         console.log(`[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`);
       }
       
-      console.log(`[symphony-bridge] Chat completion: model=${model}, messages=${messages.length}, stream=${stream}`);
+      console.log(
+        `[symphony-bridge] Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
+      );
       
       const startTime = Date.now();
       
@@ -982,13 +1033,13 @@ const server = http.createServer(async (req, res) => {
         const created = Math.floor(Date.now() / 1000);
         
         try {
-          const result = await invokeWithFallbackStream(messages, (chunk) => {
+          const result = await invokeWithFallbackStream(messages, route, (chunk) => {
             if (chunk.type === "text") {
               const chunkData = {
                 id: completionId,
                 object: "chat.completion.chunk",
                 created,
-                model,
+                model: route.responseModelId,
                 choices: [{ index: 0, delta: { content: chunk.text }, finish_reason: null }],
               };
               res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
@@ -1000,7 +1051,7 @@ const server = http.createServer(async (req, res) => {
             id: completionId,
             object: "chat.completion.chunk",
             created,
-            model,
+            model: route.responseModelId,
             choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
           };
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
@@ -1034,7 +1085,7 @@ const server = http.createServer(async (req, res) => {
             id: completionId,
             object: "chat.completion.chunk",
             created,
-            model,
+            model: route.responseModelId,
             choices: [{ index: 0, delta: { content: `\n[Error: ${streamError.message}]` }, finish_reason: "stop" }],
           };
           res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
@@ -1045,7 +1096,7 @@ const server = http.createServer(async (req, res) => {
         return;
       } else {
         // Non-streaming
-        const result = await invokeWithFallback(messages);
+        const result = await invokeWithFallback(messages, route);
         
         if (issueContext) {
           const firstLine = result.text ? result.text.split("\n")[0].trim().slice(0, 100) : "(no content)";
@@ -1069,7 +1120,7 @@ const server = http.createServer(async (req, res) => {
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",
           created: Math.floor(Date.now() / 1000),
-          model,
+          model: route.responseModelId,
           choices: [
             {
               index: 0,
