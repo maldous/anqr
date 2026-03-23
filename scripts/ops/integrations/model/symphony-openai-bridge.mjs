@@ -432,8 +432,8 @@ async function invokeWithFallbackStream(messages, onChunk) {
           // Filter out tool-call metadata from the content before sending to client
           if (parsed.choices?.[0]?.delta?.content) {
             const content = parsed.choices[0].delta.content;
-            // Check if content contains tool-call metadata (JSON format)
-            if (content && typeof content === "string" && content.includes('"toolCallId"')) {
+            // Check if content contains tool-call metadata (JSON or XML format)
+            if (content && typeof content === "string" && (content.includes('"toolCallId"') || content.includes('<tool_call'))) {
               // Try to parse as JSON and extract text parts, filtering out tool-call JSON
               const filtered = extractTextFromMessage({ role: "assistant", content }, true);
               fullText += filtered || "";
@@ -564,8 +564,8 @@ async function invokeWithFallbackStream(messages, onChunk) {
               // Filter out tool-call metadata from the content before sending to client
               if (parsed.choices?.[0]?.delta?.content) {
                 const content = parsed.choices[0].delta.content;
-                // Check if content contains tool-call metadata (JSON format)
-                if (content && typeof content === "string" && content.includes('"toolCallId"')) {
+                // Check if content contains tool-call metadata (JSON or XML format)
+                if (content && typeof content === "string" && (content.includes('"toolCallId"') || content.includes('<tool_call'))) {
                   // Try to parse as JSON and extract text parts, filtering out tool-call JSON
                   const filtered = extractTextFromMessage({ role: "assistant", content }, true);
                   fullText += filtered || "";
