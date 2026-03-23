@@ -165,30 +165,46 @@ async function probeCodexSdk(model) {
     return true;
   }
 
-  const codex = new Codex({
-    env: process.env,
-  });
-  const thread = codex.startThread({
-    model: model || undefined,
-    workingDirectory: PROJECT_ROOT,
-    sandboxMode: "read-only",
-    approvalPolicy: "never",
-    webSearchEnabled: false,
-    networkAccessEnabled: false,
-  });
+  try {
+    const codex = new Codex({
+      env: process.env,
+    });
+    const thread = codex.startThread({
+      model: model || undefined,
+      workingDirectory: PROJECT_ROOT,
+      sandboxMode: "read-only",
+      approvalPolicy: "never",
+      webSearchEnabled: false,
+      networkAccessEnabled: false,
+    });
 
-  const probe = thread.run("Reply with exactly: ok");
-  const result = await Promise.race([
-    probe,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Codex SDK probe timed out")), CODEX_PROBE_TIMEOUT_MS),
-    ),
-  ]);
+    const probe = thread.run("Reply with exactly: ok");
+    const result = await Promise.race([
+      probe,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Codex SDK probe timed out")), CODEX_PROBE_TIMEOUT_MS),
+      ),
+    ]);
 
-  const finalResponse = String(result?.finalResponse || "")
-    .trim()
-    .toLowerCase();
-  return finalResponse.includes("ok");
+    const finalResponse = String(result?.finalResponse || "")
+      .trim()
+      .toLowerCase();
+    return finalResponse.includes("ok");
+  } catch (err) {
+    // Log the error and record failure so credit-gate can try fallback providers
+    const errStr = String(err).toLowerCase();
+    if (errStr.includes("usage limit") || errStr.includes("quota")) {
+      console.log(`[credit-gate] codex: unavailable (quota exhausted)`);
+      recordProviderFailure("codex");
+    } else if (errStr.includes("timeout")) {
+      console.log(`[credit-gate] codex: unavailable (timeout)`);
+      recordProviderFailure("codex");
+    } else {
+      console.log(`[credit-gate] codex: unavailable (${err.message || err})`);
+      recordProviderFailure("codex");
+    }
+    return false;
+  }
 }
 
 async function probeGeminiModels(apiKey, model) {

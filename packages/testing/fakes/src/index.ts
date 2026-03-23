@@ -1,4 +1,7 @@
-// Scaffold only. This package has no runtime API until test-double extraction begins.
+// Canonical public API for @anqr/testing-fakes
+export * from "./harness-adapters";
+
+// Scaffold - legacy exports until fakes extraction is complete
 export interface ReservedFakesScaffold {
   readonly __reservedFakesScaffold: "reserved";
 }

@@ -617,6 +617,7 @@ function isRetryableError(err) {
     errStr.includes("429") ||
     errStr.includes("quota") ||
     errStr.includes("insufficient_quota") ||
+    errStr.includes("usage limit") ||
     errStr.includes("rate_limit") ||
     errStr.includes("timeout") ||
     errStr.includes("503") ||
@@ -710,12 +711,22 @@ async function invokeWithAI(provider, messages, options = {}) {
   const aiMessages = convertMessages(messages);
 
   if (stream) {
+    let finishReason = null;
+
     // Streaming with tool execution
     const result = await streamText({
       model,
       messages: aiMessages,
       tools,
       maxSteps: MAX_TOOL_ITERATIONS,
+      onFinish: async (partialResult) => {
+        // Capture finish reason and check for errors
+        finishReason = partialResult.finishReason;
+        // If finish reason is "error" or content is empty, we may have an embedded error
+        if (finishReason === "error" || !partialResult.text) {
+          console.log(`[symphony-bridge] ⚠️ Stream finished with reason: ${finishReason}, text length: ${partialResult.text?.length || 0}`);
+        }
+      },
     });
 
     // Process the stream
@@ -731,6 +742,30 @@ async function invokeWithAI(provider, messages, options = {}) {
           text: chunk,
         });
       }
+    }
+
+    // Check for embedded errors - some providers return 200 with error JSON in body
+    // The stream may complete without throwing but contain an error in the response
+    // Also check the response object which may contain error metadata
+    if (!fullText || fullText.trim() === "" || finishReason === "error") {
+      throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
+    }
+
+    // Additional check: await response to see if it has error metadata
+    // Some providers embed errors in successful 200 responses
+    try {
+      const response = await result.response;
+      // Check if response has error indicator (some providers embed errors in 200 responses)
+      if (response && typeof response === 'object') {
+        // Look for error symbols or properties that indicate embedded errors
+        const hasErrorSymbol = response[Symbol.for('vercel.ai.error')] || response[Symbol.for('vercel.ai.error.AI_APICallError')];
+        if (hasErrorSymbol) {
+          throw new Error(`Response contains embedded error`);
+        }
+      }
+    } catch (responseCheckError) {
+      // Re-throw to trigger fallback
+      throw responseCheckError;
     }
 
     // Note: streamText handles tool execution automatically in maxSteps mode
