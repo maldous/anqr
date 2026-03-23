@@ -49,7 +49,7 @@ import {
 } from "./symphony-credit-gate.mjs";
 
 // AI SDK imports
-import { generateText, streamText, tool } from "ai";
+import { generateText, streamText, tool, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { groq } from "@ai-sdk/groq";
 import { google } from "@ai-sdk/google";
@@ -718,13 +718,17 @@ async function invokeWithAI(provider, messages, options = {}) {
       model,
       messages: aiMessages,
       tools,
-      maxSteps: MAX_TOOL_ITERATIONS,
-      onFinish: async (partialResult) => {
-        // Capture finish reason and check for errors
-        finishReason = partialResult.finishReason;
-        // If finish reason is "error" or content is empty, we may have an embedded error
-        if (finishReason === "error" || !partialResult.text) {
-          console.log(`[symphony-bridge] ⚠️ Stream finished with reason: ${finishReason}, text length: ${partialResult.text?.length || 0}`);
+      toolChoice: "auto",
+      stopWhen: stepCountIs(MAX_TOOL_ITERATIONS),
+      onStepFinish: (step) => {
+        if (step.toolCalls && step.toolCalls.length > 0) {
+          console.log(`[symphony-bridge] 🔧 Step tools: ${step.toolCalls.map(t => t.toolName).join(', ')}`);
+        }
+      },
+      onFinish: (event) => {
+        finishReason = event.finishReason;
+        if (finishReason === "error" || !event.text) {
+          console.log(`[symphony-bridge] ⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`);
         }
       },
     });
@@ -735,7 +739,6 @@ async function invokeWithAI(provider, messages, options = {}) {
     for await (const chunk of result.textStream) {
       fullText += chunk;
 
-      // Send chunk to callback
       if (onChunk) {
         onChunk({
           type: "text",
@@ -744,32 +747,21 @@ async function invokeWithAI(provider, messages, options = {}) {
       }
     }
 
-    // Check for embedded errors - some providers return 200 with error JSON in body
-    // The stream may complete without throwing but contain an error in the response
-    // Also check the response object which may contain error metadata
+    // Check for embedded errors — some providers return 200 with error in body
     if (!fullText || fullText.trim() === "" || finishReason === "error") {
       throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
     }
 
-    // Additional check: await response to see if it has error metadata
-    // Some providers embed errors in successful 200 responses
-    try {
-      const response = await result.response;
-      // Check if response has error indicator (some providers embed errors in 200 responses)
-      if (response && typeof response === 'object') {
-        // Look for error symbols or properties that indicate embedded errors
-        const hasErrorSymbol = response[Symbol.for('vercel.ai.error')] || response[Symbol.for('vercel.ai.error.AI_APICallError')];
-        if (hasErrorSymbol) {
-          throw new Error(`Response contains embedded error`);
-        }
+    // Check response for embedded error metadata
+    const response = await result.response;
+    if (response && typeof response === 'object') {
+      const hasErrorSymbol = response[Symbol.for('vercel.ai.error')] || response[Symbol.for('vercel.ai.error.AI_APICallError')];
+      if (hasErrorSymbol) {
+        throw new Error(`Response contains embedded error`);
       }
-    } catch (responseCheckError) {
-      // Re-throw to trigger fallback
-      throw responseCheckError;
     }
 
-    // Note: streamText handles tool execution automatically in maxSteps mode
-    console.log(`[symphony-bridge] Streaming completed`);
+    console.log(`[symphony-bridge] Streaming completed (${fullText.length} chars)`);
 
     return {
       text: fullText,
@@ -781,7 +773,8 @@ async function invokeWithAI(provider, messages, options = {}) {
       model,
       messages: aiMessages,
       tools,
-      maxSteps: MAX_TOOL_ITERATIONS,
+      toolChoice: "auto",
+      stopWhen: stepCountIs(MAX_TOOL_ITERATIONS),
     });
 
     const text = result.text || "";
@@ -923,7 +916,7 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
     );
   }
 
-  console.log(`[symphony-bridge] Streaming selected provider: ${provider.name}`);
+  console.log(`[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`);
   triedProviders.push(provider.name);
 
   try {

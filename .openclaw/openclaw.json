@@ -1,0 +1,576 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.13",
+    "lastTouchedAt": "2026-03-23T06:14:57.921Z"
+  },
+  "env": {
+    "OPENROUTER_API_KEY": "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"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-22T05:20:59.994Z",
+    "lastRunVersion": "2026.3.13",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "ollama:default": {
+        "provider": "ollama",
+        "mode": "api_key"
+      },
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      },
+      "codebuff-bridge:default": {
+        "provider": "codebuff-bridge",
+        "mode": "api_key"
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "OPENROUTER_API_KEY",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "meta-llama/llama-3.3-70b-instruct:free",
+            "name": "Llama 3.3 70B Instruct (free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen/qwen3-next-80b-a3b-instruct:free",
+            "name": "Qwen3-Next-80B Instruct (free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "openrouter/auto",
+            "name": "OpenRouter Auto (free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "ollama": {
+        "baseUrl": "http://127.0.0.1:11434",
+        "apiKey": "OLLAMA_API_KEY",
+        "api": "ollama",
+        "models": [
+          {
+            "id": "glm-4.7-flash",
+            "name": "glm-4.7-flash",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "glm-4.7-flash:latest",
+            "name": "glm-4.7-flash:latest",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 202752,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen3.5:35b-a3b-32t",
+            "name": "qwen3.5:35b-a3b-32t",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen3.5:35b-a3b",
+            "name": "qwen3.5:35b-a3b",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen2.5-coder:0.5b",
+            "name": "Qwen2.5 Coder 0.5B",
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "qwen3-coder-next:latest",
+            "name": "Qwen3 Coder Next",
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "codebuff-bridge": {
+        "baseUrl": "http://127.0.0.1:4318/v1",
+        "apiKey": "local-bridge",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "codebuff/base",
+            "name": "Codebuff Base",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "symphony-bridge": {
+        "baseUrl": "http://127.0.0.1:4319/v1",
+        "apiKey": "local-symphony",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "symphony/main",
+            "name": "Symphony Bridge (local)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/text",
+            "name": "Symphony Text",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/codex",
+            "name": "Symphony Codex",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/codebuff",
+            "name": "Symphony Codebuff SDK",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/codebuff-bridge",
+            "name": "Symphony Codebuff Bridge",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/groq",
+            "name": "Symphony Groq",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/mistral",
+            "name": "Symphony Mistral",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/gemini",
+            "name": "Symphony Gemini",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/gemini-lite",
+            "name": "Symphony Gemini Lite",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/openrouter",
+            "name": "Symphony OpenRouter",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/sambanova",
+            "name": "Symphony SambaNova",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/cerebras",
+            "name": "Symphony Cerebras",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          },
+          {
+            "id": "symphony/ollama-local",
+            "name": "Symphony Ollama Local",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 8192
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "symphony-bridge/symphony/main",
+        "fallbacks": [
+          "symphony-bridge/symphony/codex",
+          "symphony-bridge/symphony/codebuff",
+          "codebuff-bridge/codebuff/base",
+          "symphony-bridge/symphony/codebuff-bridge",
+          "symphony-bridge/symphony/groq",
+          "symphony-bridge/symphony/mistral",
+          "symphony-bridge/symphony/gemini",
+          "symphony-bridge/symphony/gemini-lite",
+          "symphony-bridge/symphony/openrouter",
+          "symphony-bridge/symphony/sambanova",
+          "symphony-bridge/symphony/cerebras",
+          "symphony-bridge/symphony/ollama-local",
+          "symphony-bridge/symphony/text"
+        ]
+      },
+      "models": {
+        "codebuff-bridge/codebuff/base": {},
+        "symphony-bridge/symphony/main": {},
+        "symphony-bridge/symphony/text": {},
+        "symphony-bridge/symphony/codex": {},
+        "symphony-bridge/symphony/codebuff": {},
+        "symphony-bridge/symphony/codebuff-bridge": {},
+        "symphony-bridge/symphony/groq": {},
+        "symphony-bridge/symphony/mistral": {},
+        "symphony-bridge/symphony/gemini": {},
+        "symphony-bridge/symphony/gemini-lite": {},
+        "symphony-bridge/symphony/openrouter": {},
+        "symphony-bridge/symphony/sambanova": {},
+        "symphony-bridge/symphony/cerebras": {},
+        "symphony-bridge/symphony/ollama-local": {},
+        "ollama/qwen2.5-coder:0.5b": {},
+        "ollama/qwen3-coder-next:latest": {},
+        "ollama/glm-4.7-flash:latest": {},
+        "ollama/qwen3.5:35b-a3b-32t": {},
+        "ollama/qwen3.5:35b-a3b": {},
+        "ollama/glm-4.7-flash": {}
+      },
+      "workspace": "/home/user/src/anqr"
+    },
+    "list": [
+      {
+        "id": "main",
+        "model": "symphony-bridge/symphony/main",
+        "tools": {
+          "alsoAllow": [
+            "browser",
+            "canvas",
+            "message",
+            "gateway",
+            "nodes",
+            "agents_list",
+            "tts",
+            "read",
+            "write",
+            "edit",
+            "apply_patch",
+            "exec",
+            "process",
+            "web_search",
+            "web_fetch",
+            "memory_search",
+            "memory_get",
+            "sessions_spawn",
+            "sessions_yield",
+            "subagents",
+            "cron",
+            "image"
+          ]
+        }
+      }
+    ]
+  },
+  "tools": {
+    "profile": "coding",
+    "web": {
+      "search": {
+        "provider": "brave"
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "bootstrap-extra-files": {
+          "enabled": true
+        },
+        "session-memory": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "6632920657f34f9315104491432b536d65f6513626c60b78"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "http": {
+      "endpoints": {
+        "chatCompletions": {
+          "enabled": true
+        }
+      }
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "contacts.add",
+        "calendar.add",
+        "reminders.add",
+        "sms.send"
+      ]
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    },
+    "entries": {
+      "nano-banana-pro": {},
+      "gh-issues": {},
+      "goplaces": {},
+      "notion": {},
+      "openai-image-gen": {},
+      "openai-whisper-api": {},
+      "sag": {},
+      "self-improving-agent": {},
+      "free-ride": {}
+    }
+  },
+  "plugins": {
+    "entries": {
+      "qwen-portal-auth": {
+        "enabled": true
+      }
+    }
+  }
+}
