@@ -153,8 +153,8 @@ async function tryProvider(provider, messages) {
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-  } catch (fetchErr) {
-    console.log(`[symphony-bridge] Fetch exception: ${fetchErr.message}, URL: ${url}`);
+  } catch (error_) {
+    console.log(`[symphony-bridge] Fetch exception: ${error_.message}, URL: ${url}`);
     throw new Error(`Fetch failed: ${fetchErr.message}`);
   }
 
