@@ -58,7 +58,10 @@ describe("symphony-config.mjs", () => {
       expect(TITLE_PREFIX).toBe("Harness");
     });
     it("should require harness label", () => {
-      expect(REQUIRED_LABEL_IDS).toContain("harness");
+      expect(REQUIRED_LABEL_IDS.length).toBeGreaterThan(0);
+      // REQUIRED_LABEL_IDS contains Linear label UUIDs (e.g. LABELS.harness)
+      expect(typeof REQUIRED_LABEL_IDS[0]).toBe("string");
+      expect(REQUIRED_LABEL_IDS[0].length).toBeGreaterThan(10);
     });
     it("should define QUEUE_STATES with expected keys", () => {
       expect(QUEUE_STATES).toHaveProperty("feedSource");

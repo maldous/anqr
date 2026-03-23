@@ -26,9 +26,11 @@
  * Endpoints:
  *   GET  /v1/models            — List available models
  *   POST /v1/chat/completions  — Chat completion (streaming & non-streaming)
- *   GET  /health               — Health check (no auth required)
+ *   GET  /health               — Health check with provider status (no auth required)
  *   GET  /v1/metrics           — Bridge + credit-gate metrics
  *   GET  /v1/stats             — Provider statistics
+ *   GET  /v1/providers         — Detailed provider status with probe results
+ *   POST /v1/providers/refresh — Manually trigger provider re-probe
  */
 
 import http from "node:http";
@@ -46,6 +48,8 @@ import {
   getRankedProviders,
   logProviderStats,
   clearProviderFailure,
+  getConfiguredProviders,
+  probeAllProviders,
 } from "./symphony-credit-gate.mjs";
 
 // AI SDK imports
@@ -89,14 +93,62 @@ console.warn = (...args) => {
 // Codebuff invoke (special handling)
 // --------------------------------------------------------------------------
 
+function formatElapsed(ms) {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${(ms / 60000).toFixed(1)}min`;
+}
+
+function logMemory(label) {
+  const mem = process.memoryUsage();
+  const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
+  const rssMB = Math.round(mem.rss / 1024 / 1024);
+  console.log(`[symphony-bridge] 💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
+}
+
+function ensureString(value) {
+  if (typeof value === "string") return value;
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function extractTextFromSdkOutput(raw) {
+  const str = ensureString(raw);
+  try {
+    const parsed = JSON.parse(str);
+    if (parsed?.type === "lastMessage" && parsed?.value) {
+      const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
+      for (const msg of messages) {
+        if (msg.role !== "assistant") continue;
+        if (typeof msg.content === "string") return msg.content;
+        if (Array.isArray(msg.content)) {
+          const texts = [];
+          for (const part of msg.content) {
+            if (part?.type === "text" && part.text) texts.push(part.text);
+            else if (part?.type === "reasoning" && (part.reasoning || part.content)) texts.push(part.reasoning || part.content);
+          }
+          if (texts.length > 0) return texts.join("\n");
+        }
+      }
+    }
+    if (parsed?.role === "assistant") {
+      if (typeof parsed.content === "string") return parsed.content;
+    }
+  } catch { /* not JSON, return as-is */ }
+  return str;
+}
+
 /**
  * Invoke with Codebuff SDK directly (bypasses AI SDK)
  */
 async function invokeWithCodebuff(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
   const { apiKey, model } = provider;
+  const codebuffStartTime = Date.now();
 
   console.log(`[symphony-bridge] Using Codebuff SDK directly`);
+  logMemory('codebuff-start');
 
   const client = new CodebuffClient({
     apiKey,
@@ -242,27 +294,40 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
   };
 
   // Initial run
+  console.log(`[symphony-bridge] ⏱️ Codebuff initial run starting (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`);
   let result = await client.run({
     agent: model || "codebuff/base",
     prompt,
     maxAgentSteps: CODEBUFF_MAX_STEPS,
     ...callbacks,
   });
+  console.log(`[symphony-bridge] ⏱️ Codebuff initial run complete (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`);
 
   // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task
+  // Guarded by both iteration count AND elapsed time to prevent infinite hangs
   let continuation = 0;
   while (
     continuation < CODEBUFF_MAX_CONTINUATIONS &&
     lastSubgoalStatus === "IN_PROGRESS"
   ) {
+    const elapsed = Date.now() - codebuffStartTime;
+    if (elapsed > CODEBUFF_MAX_ELAPSED_MS) {
+      console.log(`[symphony-bridge] ⏱️ ⚠️ Codebuff elapsed time limit reached (${formatElapsed(elapsed)} > ${formatElapsed(CODEBUFF_MAX_ELAPSED_MS)}) — stopping continuation loop`);
+      logMemory('codebuff-timeout');
+      break;
+    }
+
     continuation++;
-    console.log(`[symphony-bridge] 🔄 Codebuff auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`);
+    console.log(`[symphony-bridge] 🔄 Codebuff auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS, elapsed: ${formatElapsed(elapsed)})`);
     if (onChunk) {
-      onChunk({ type: "text", text: `\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS})...\n` });
+      onChunk({ type: "text", text: `\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS}, ${formatElapsed(elapsed)})...\n` });
     }
 
     maybeGC();
+    if (continuation % 5 === 0) {
+      logMemory(`codebuff-continuation-${continuation}`);
+    }
 
     result = await client.run({
       agent: model || "codebuff/base",
@@ -273,11 +338,16 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
     });
   }
 
+  const totalElapsed = Date.now() - codebuffStartTime;
   if (continuation > 0) {
-    console.log(`[symphony-bridge] Codebuff completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
+    console.log(`[symphony-bridge] Codebuff completed after ${continuation + 1} runs in ${formatElapsed(totalElapsed)} (subgoal: ${lastSubgoalStatus})`);
+  } else {
+    console.log(`[symphony-bridge] Codebuff completed in ${formatElapsed(totalElapsed)}`);
   }
+  logMemory('codebuff-done');
 
-  const text = result?.text || result?.output || "";
+  const rawText = ensureString(result?.text || result?.output || "");
+  const text = extractTextFromSdkOutput(rawText);
 
   if (stream) {
     return {
@@ -694,6 +764,8 @@ if (VALID_TOKENS.size > 1) {
 const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
 const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
+const CODEBUFF_MAX_ELAPSED_MS = 20 * 60 * 1000; // 20 min — hard elapsed-time limit for Codebuff continuation loops
+const REQUEST_TIMEOUT_MS = 30 * 60 * 1000; // 30 min — hard timeout per HTTP request (prevents infinite hangs)
 const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
 
@@ -706,6 +778,7 @@ const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "set_output", "end_turn", 
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
 let requestCount = 0;
+let probeIntervalHandle = null;
 
 // Provider exploration - ensure all providers are tried at least once per day
 const EXPLORATION_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -713,6 +786,39 @@ const EXPLORATION_MIN_PROBES = 3;
 let lastExplorationTime = Date.now();
 let explorationProbesThisPeriod = 0;
 let lastSelectedProvider = null;
+
+// ---------------------------------------------------------------------------
+// Provider status cache — populated by startup probe, refreshed periodically
+// ---------------------------------------------------------------------------
+
+const PROVIDER_PROBE_INTERVAL_MS = 30 * 60 * 1000; // Re-probe every 30 minutes
+
+const providerStatusCache = {
+  configured: [],
+  probeResults: [],
+  lastProbeAt: null,
+  probing: false,
+};
+
+async function refreshProviderStatus() {
+  if (providerStatusCache.probing) return false;
+  providerStatusCache.probing = true;
+
+  try {
+    const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
+    providerStatusCache.configured = getConfiguredProviders({ excludeNames });
+    providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
+    providerStatusCache.lastProbeAt = new Date().toISOString();
+
+    const available = providerStatusCache.probeResults.filter((r) => r.available).length;
+    const total = providerStatusCache.configured.length;
+    console.log(`[symphony-bridge] 🔄 Provider status refreshed: ${available}/${total} available`);
+  } catch (err) {
+    console.error(`[symphony-bridge] Provider probe error: ${err.message}`);
+  } finally {
+    providerStatusCache.probing = false;
+  }
+}
 
 function normalizeModelId(modelId) {
   if (!modelId) {
@@ -1353,7 +1459,7 @@ const server = http.createServer(async (req, res) => {
   console.log(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
 
   try {
-    const skipAuth = req.url === "/health" || req.url === "/v1/models";
+    const skipAuth = req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers";
     if (!skipAuth && !checkAuth(req)) {
       console.log(`[symphony-bridge] Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
@@ -1375,16 +1481,24 @@ const server = http.createServer(async (req, res) => {
     // GET /health
     if (req.method === "GET" && req.url === "/health") {
       const stats = getProviderStats();
-      const providerCount = Object.keys(stats).length;
+      const statsCount = Object.keys(stats).length;
+      const configuredCount = providerStatusCache.configured.length;
+      const availableCount = providerStatusCache.probeResults.filter((r) => r.available).length;
 
       return sendJson(res, 200, {
         status: "ok",
         model: MODEL_ID,
-        providersConfigured: providerCount,
+        providersConfigured: configuredCount,
+        providersAvailable: availableCount,
+        providersWithStats: statsCount,
         rankedProviders: getRankedProviders()
           .slice(0, 5)
           .map((p) => ({ name: p.name, score: p.score })),
+        configuredProviders: providerStatusCache.probeResults
+          .filter((r) => r.status !== "excluded")
+          .map((r) => ({ name: r.name, status: r.status, available: r.available })),
         tools: Object.keys(tools),
+        lastProbeAt: providerStatusCache.lastProbeAt,
       });
     }
 
@@ -1405,6 +1519,57 @@ const server = http.createServer(async (req, res) => {
       const ranked = getRankedProviders();
 
       return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats });
+    }
+
+    // GET /v1/providers — detailed provider status with probe results and stats
+    if (req.method === "GET" && req.url === "/v1/providers") {
+      const stats = getProviderStats();
+      const ranked = getRankedProviders();
+      const rankMap = new Map(ranked.map((r) => [r.name, r]));
+
+      const providers = providerStatusCache.probeResults
+        .filter((probe) => probe.status !== "excluded")
+        .map((probe) => {
+          const rank = rankMap.get(probe.name);
+          const provStats = stats[probe.name];
+          return {
+            name: probe.name,
+            model: probe.model,
+            status: probe.status,
+            available: probe.available,
+            probeDurationMs: probe.durationMs,
+            rank: rank?.rank || null,
+            score: rank?.score || null,
+            selections: provStats?.selections || 0,
+            successes: provStats?.successes || 0,
+            failures: provStats?.failures || 0,
+            successRate: provStats?.successRate || "N/A",
+            avgDurationMs: provStats?.avgDurationMs || null,
+            lastSelected: provStats?.lastSelected || null,
+            lastSuccess: provStats?.lastSuccess || null,
+          };
+        });
+
+      return sendJson(res, 200, {
+        configured: providerStatusCache.configured.length,
+        available: providerStatusCache.probeResults.filter((r) => r.available).length,
+        lastProbeAt: providerStatusCache.lastProbeAt,
+        providers,
+      });
+    }
+
+    // POST /v1/providers/refresh — manually trigger a provider re-probe
+    if (req.method === "POST" && req.url === "/v1/providers/refresh") {
+      const started = refreshProviderStatus().catch((err) => {
+        console.error(`[symphony-bridge] Manual probe error: ${err.message}`);
+      });
+      const isNew = started !== false;
+      return sendJson(res, 200, {
+        status: isNew ? "refreshing" : "already_probing",
+        message: isNew
+          ? "Provider probe started. Check /v1/providers for results."
+          : "A probe is already in progress. Check /v1/providers for current results.",
+      });
     }
 
     // POST /v1/chat/completions
@@ -1435,8 +1600,42 @@ const server = http.createServer(async (req, res) => {
       console.log(
         `[symphony-bridge] Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
       );
+      logMemory('request-start');
 
       const startTime = Date.now();
+
+      // Progress logger — log elapsed time periodically during long requests
+      const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        console.log(`[symphony-bridge] ⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`);
+        logMemory('request-progress');
+      }, 60_000); // Log every 60 seconds
+
+      // Hard request timeout — prevents infinite hangs regardless of provider state
+      const requestTimeoutHandle = setTimeout(() => {
+        const elapsed = Date.now() - startTime;
+        console.error(`[symphony-bridge] ⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`);
+        logMemory('request-timeout');
+        clearInterval(progressInterval);
+        try {
+          if (stream && !res.writableEnded) {
+            const errorChunk = {
+              id: `chatcmpl-timeout-${Date.now()}`,
+              object: "chat.completion.chunk",
+              created: Math.floor(Date.now() / 1000),
+              model: route.responseModelId,
+              choices: [{ index: 0, delta: { content: `\n[Error: Request timed out after ${formatElapsed(elapsed)}]` }, finish_reason: "stop" }],
+            };
+            res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
+            res.write("data: [DONE]\n\n");
+            res.end();
+          } else if (!res.writableEnded) {
+            sendJson(res, 504, { error: { message: `Request timed out after ${formatElapsed(elapsed)}`, type: "timeout_error" } });
+          }
+        } catch (e) {
+          console.error(`[symphony-bridge] Timeout cleanup error: ${e.message}`);
+        }
+      }, REQUEST_TIMEOUT_MS);
 
       if (stream) {
         // Disable request timeout for streaming — tool execution can take minutes
@@ -1471,6 +1670,8 @@ const server = http.createServer(async (req, res) => {
           });
 
           clearInterval(heartbeat);
+          clearInterval(progressInterval);
+          clearTimeout(requestTimeoutHandle);
 
           // Send final chunk
           const finalChunk = {
@@ -1500,7 +1701,9 @@ const server = http.createServer(async (req, res) => {
           maybeGC();
         } catch (streamError) {
           clearInterval(heartbeat);
-          console.error(`[symphony-bridge] Streaming error: ${streamError.message}`);
+          clearInterval(progressInterval);
+          clearTimeout(requestTimeoutHandle);
+          console.error(`[symphony-bridge] Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`);
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -1532,11 +1735,18 @@ const server = http.createServer(async (req, res) => {
         return;
       } else {
         // Non-streaming
-        const result = await invokeWithFallback(messages, route);
+        let result;
+        try {
+          result = await invokeWithFallback(messages, route);
+        } finally {
+          clearInterval(progressInterval);
+          clearTimeout(requestTimeoutHandle);
+        }
 
         if (issueContext) {
-          const firstLine = result.text
-            ? result.text.split("\n")[0].trim().slice(0, 100)
+          const resultText = ensureString(result.text);
+          const firstLine = resultText
+            ? resultText.split("\n")[0].trim().slice(0, 100)
             : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
@@ -1564,7 +1774,7 @@ const server = http.createServer(async (req, res) => {
           choices: [
             {
               index: 0,
-              message: { role: "assistant", content: result.text },
+              message: { role: "assistant", content: ensureString(result.text) },
               finish_reason: "stop",
             },
           ],
@@ -1584,6 +1794,7 @@ const server = http.createServer(async (req, res) => {
     }
   } catch (error) {
     console.error(`[symphony-bridge] Error: ${error.message}`);
+    logMemory('request-error');
     sendJson(res, 500, {
       error: {
         message: error instanceof Error ? error.message : String(error),
@@ -1599,6 +1810,10 @@ const server = http.createServer(async (req, res) => {
 
 function shutdown(signal) {
   console.log(`\n[symphony-bridge] Received ${signal}, shutting down...`);
+  if (probeIntervalHandle) {
+    clearInterval(probeIntervalHandle);
+    probeIntervalHandle = null;
+  }
   logProviderStats();
   server.close(() => {
     console.log("[symphony-bridge] Server closed");
@@ -1628,8 +1843,41 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log(`[symphony-bridge] Auto-fallback: enabled (credit-gate)`);
   console.log(`[symphony-bridge] Tools available: ${Object.keys(tools).join(", ")}`);
   console.log(`[symphony-bridge] ========================================`);
-  console.log(`[symphony-bridge] Ready to accept requests`);
-  console.log(`[symphony-bridge] ========================================`);
+
+  // Synchronously populate configured providers (no network calls)
+  const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
+  providerStatusCache.configured = getConfiguredProviders({ excludeNames });
+  console.log(`[symphony-bridge] Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`);
+
+  // Async startup probe — test all providers for live availability
+  refreshProviderStatus()
+    .then(() => {
+      const available = providerStatusCache.probeResults.filter((r) => r.available);
+      const total = providerStatusCache.configured.length;
+      console.log(`[symphony-bridge] ========================================`);
+      console.log(`[symphony-bridge] Startup probe complete: ${available.length}/${total} providers available`);
+      for (const p of providerStatusCache.probeResults.filter((r) => r.status !== "excluded")) {
+        const icon = p.available ? "✅" : "❌";
+        const dur = p.durationMs > 0 ? ` (${p.durationMs}ms)` : "";
+        console.log(`[symphony-bridge]   ${icon} ${p.name}: ${p.status}${dur}`);
+      }
+      console.log(`[symphony-bridge] ========================================`);
+      console.log(`[symphony-bridge] Ready to accept requests`);
+      console.log(`[symphony-bridge] ========================================`);
+    })
+    .catch((err) => {
+      console.error(`[symphony-bridge] Startup probe failed: ${err.message}`);
+      console.log(`[symphony-bridge] ========================================`);
+      console.log(`[symphony-bridge] Ready to accept requests (probe incomplete)`);
+      console.log(`[symphony-bridge] ========================================`);
+    });
+
+  // Periodic re-probe to keep provider status fresh
+  probeIntervalHandle = setInterval(() => {
+    refreshProviderStatus().catch((err) => {
+      console.error(`[symphony-bridge] Periodic probe failed: ${err.message}`);
+    });
+  }, PROVIDER_PROBE_INTERVAL_MS);
 });
 
 // Export for testing

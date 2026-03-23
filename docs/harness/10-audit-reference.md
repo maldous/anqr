@@ -79,9 +79,7 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 #### Codebuff
 
-- `CODEBUFF_API_KEY` - Primary account (tried first in paid mode, then free mode)
-- `CODEBUFF_API_KEY2` - Secondary fallback account (free mode only)
-- `CODEBUFF_API_KEY3` - Tertiary fallback account (free mode only)
+- `CODEBUFF_API_KEY` - Single account (tried in paid mode first, then free mode)
 
 #### Provider Tokens
 
@@ -208,9 +206,8 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 **Features**:
 
-- Multi-account rotation for rate-limit fallback
-- Paid account re-probe every 5 hours
-- Account validation to ensure different accounts
+- Automatic paid → free mode fallback
+- Mode re-validation every 5 hours
 - Streaming via Server-Sent Events (SSE)
 
 ### Symphony Bridge (Port 4319)
@@ -338,7 +335,7 @@ When Symphony Runner executes an issue, it can:
 This gives the system multiple layers of fallback:
 
 - Within Symphony: credit-gate tries 40+ providers
-- Within Codebuff: account rotation with 3 keys
+- Within Codebuff: paid → free mode fallback
 - Within OpenClaw: cascades through Symphony → Codebuff → native models
 
 ---

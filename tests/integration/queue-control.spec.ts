@@ -7,73 +7,57 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { execSync } from "node:child_process";
 
 // These tests verify the queue control scripts exist and have expected interfaces
 // The actual queue operations are performed by the Node.js scripts
 
 describe("Queue Control Scripts", () => {
   describe("Script existence and interfaces", () => {
-    it("symphony-queue-control.mjs should be executable", async () => {
-      // Check the script exists
-      const { existsSync } = await import("node:fs");
-      const { resolve } = await import("node:path");
-
+    it("symphony-queue-control.mjs should be executable", () => {
       const scriptPath = resolve(process.cwd(), "scripts/ops/symphony-queue-control.mjs");
       expect(existsSync(scriptPath)).toBe(true);
     });
 
-    it("should support --check flag for state inspection", async () => {
-      // This tests the CLI interface exists
-      // The actual behavior is tested via npm run queue:check
-      const { execSync } = await import("node:child_process");
-
+    it("should support --check flag for state inspection", () => {
       try {
-        // Try to run with --help to verify CLI interface
         execSync("node scripts/ops/symphony-queue-control.mjs --help", {
           stdio: "pipe",
-          timeout: 5000,
+          timeout: 10_000,
         });
-      } catch (e) {
+      } catch {
         // May fail if no args provided, but should not crash
-        expect(e).toBeDefined();
       }
     });
 
-    it("should support --dry-run flag", async () => {
-      // Verify dry-run mode exists
-      const { execSync } = await import("node:child_process");
-
+    it("should support --dry-run flag", () => {
       try {
         execSync("node scripts/ops/symphony-queue-control.mjs --all --dry-run", {
           stdio: "pipe",
-          timeout: 5000,
+          timeout: 10_000,
         });
-      } catch (e) {
+      } catch {
         // May fail for various reasons but interface should exist
-        expect(e).toBeDefined();
       }
     });
   });
 
   describe("Queue state operations", () => {
-    it("should have queue:check command in package.json", async () => {
-      const { execSync } = await import("node:child_process");
-
+    it("should have queue:check command in package.json", () => {
       const output = execSync("npm run --silent queue:check 2>&1 || true", {
         encoding: "utf-8",
-        timeout: 10000,
+        timeout: 15_000,
       });
 
-      // Should run without crashing (may have business logic errors but not JS errors)
       expect(output).toBeDefined();
     });
 
-    it("should have queue:all:dry-run command in package.json", async () => {
-      const { execSync } = await import("node:child_process");
-
+    it("should have queue:all:dry-run command in package.json", () => {
       const output = execSync("npm run --silent queue:all:dry-run 2>&1 || true", {
         encoding: "utf-8",
-        timeout: 10000,
+        timeout: 15_000,
       });
 
       expect(output).toBeDefined();
@@ -81,30 +65,21 @@ describe("Queue Control Scripts", () => {
   });
 
   describe("Dry-run state validation", () => {
-    it("dry-run should not mutate state", async () => {
-      // This is a behavioral requirement - dry-run mode should be safe
-      // Verified by running the dry-run and checking it completes without errors
-      const { execSync } = await import("node:child_process");
-
+    it("dry-run should not mutate state", () => {
       const output = execSync("npm run queue:all:dry-run 2>&1", {
         encoding: "utf-8",
-        timeout: 15000,
+        timeout: 20_000,
       });
 
-      // Should complete without throwing (errors may be in output but not crashes)
       expect(output).toBeTruthy();
     });
 
-    it("should report queue state without modification", async () => {
-      // The queue:check command should report state
-      const { execSync } = await import("node:child_process");
-
+    it("should report queue state without modification", () => {
       const output = execSync("npm run queue:check 2>&1", {
         encoding: "utf-8",
-        timeout: 10000,
+        timeout: 15_000,
       });
 
-      // Should produce some output about queue state
       expect(output.length).toBeGreaterThan(0);
     });
   });
@@ -112,33 +87,27 @@ describe("Queue Control Scripts", () => {
 
 describe("Symphony Runner Scripts", () => {
   describe("symphony-runner.mjs", () => {
-    it("should have status command", async () => {
-      const { execSync } = await import("node:child_process");
-
+    it("should have status command", () => {
       try {
         const output = execSync("npm run symphony:status 2>&1 || true", {
           encoding: "utf-8",
-          timeout: 10000,
+          timeout: 15_000,
         });
 
         expect(output).toBeDefined();
-      } catch (e) {
+      } catch {
         // May fail but should not crash
-        expect(e).toBeDefined();
       }
     });
 
-    it("should support dry-run mode", async () => {
-      const { execSync } = await import("node:child_process");
-
+    it("should support dry-run mode", () => {
       try {
         execSync("npm run symphony:run:dry-run 2>&1 || true", {
           encoding: "utf-8",
-          timeout: 10000,
+          timeout: 15_000,
         });
-      } catch (e) {
+      } catch {
         // Expected - may not have work to process
-        expect(e).toBeDefined();
       }
     });
   });

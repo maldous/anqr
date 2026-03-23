@@ -36,13 +36,13 @@ Symphony Bridge uses the credit-gate provider cascade with **dynamic scoring** b
 
 The credit-gate selects providers based on dynamic scoring, but `codex` is always retried and Codebuff paid availability is re-probed every 5 hours. Temporary failures enter cooldown, then are retried so Symphony continues learning the best route over time.
 
-### Layer 3: Codebuff Bridge (multi-account rotation)
+### Layer 3: Codebuff Bridge (paid → free fallback)
 
-When Codebuff is selected, the bridge uses paid account first, then free accounts as runtime fallback:
+When Codebuff is selected, the bridge uses a single API key with automatic mode selection:
 
-1. **Paid account** is always preferred when available.
-2. **Free accounts** are used immediately if paid is unavailable or rate-limited.
-3. **Paid availability is re-probed every 5 hours** so the bridge returns to paid automatically.
+1. **Paid mode** is always tried first when available.
+2. **Free mode** is used if paid mode is unavailable or rate-limited.
+3. **Mode is re-validated every 5 hours** so the bridge returns to paid automatically.
 
 ## Current provider cascade
 
@@ -51,7 +51,7 @@ The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory.
 | #    | Provider                    | Type | Model                                  | Env Key(s) / Source                          | SDK     |
 | ---- | --------------------------- | ---- | -------------------------------------- | -------------------------------------------- | ------- |
 | 1    | codex                       | HTTP | gpt-5.4                                | `OPENAI_API_KEY`                             | No      |
-| 2    | codebuff                    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
+| 2    | codebuff                    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`                           | **Yes** |
 | 3    | groq                        | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
 | 4    | mistral                     | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
 | 5    | gemini                      | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
@@ -66,7 +66,7 @@ The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory.
 ### Provider notes
 
 - **codex** (position 1): Primary provider, uses OpenAI credits
-- **codebuff** (position 2): Autonomous agent via @codebuff/sdk, supports multi-account rotation for rate-limit fallback
+- **codebuff** (position 2): Autonomous agent via @codebuff/sdk, supports paid → free mode fallback
 - **openrouter-free** (positions 8-35): 27 free tier models ranked by quality score (nemotron-3-super-120b-a12b is best at 0.655)
 - **codebuff-bridge** (position 37): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration and HTTP parity
 - **ollama-local** (position 38): Local fallback when all remote providers fail
@@ -99,9 +99,7 @@ The Codebuff bridge (`scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 - `CODEBUFF_BRIDGE_API_KEY` — Bearer token for auth (default: local-bridge)
 - `CODEBUFF_MODEL_ID` — Model ID to advertise (default: codebuff/base)
 - `CODEBUFF_BRIDGE_CWD` — Working directory for Codebuff (default: project root)
-- `CODEBUFF_API_KEY` — Required: Codebuff API key for SDK calls
-- `CODEBUFF_API_KEY2` — Optional: fallback key
-- `CODEBUFF_API_KEY3` — Optional: additional key
+- `CODEBUFF_API_KEY` — Required: Codebuff API key (uses paid mode first, then free mode)
 
 ### Usage
 
@@ -116,9 +114,8 @@ node scripts/ops/integrations/model/codebuff-openai-bridge.mjs
 The bridge supports:
 
 - **Streaming responses** via Server-Sent Events (SSE)
-- **Multi-account rotation** for rate-limit fallback
-- **Account validation** to ensure different accounts for effective rotation
-- **Automatic retry logic** with cooldown for rate-limited accounts
+- **Automatic paid → free mode fallback** with periodic re-validation
+- **Automatic retry logic** with cooldown for rate-limited modes
 
 ### OpenClaw integration
 
@@ -149,15 +146,13 @@ Configure OpenClaw to use the bridge by adding the following to your `~/.opencla
 }
 ```
 
-### Multi-account rotation
+### Paid → free mode fallback
 
-Codebuff (both SDK and bridge) supports multiple API keys from different accounts for rate-limit rotation:
+Codebuff uses a single API key (`CODEBUFF_API_KEY`) with automatic mode selection:
 
-- `CODEBUFF_API_KEY` - Primary account (tried first in paid mode, then free mode)
-- `CODEBUFF_API_KEY2` - Secondary account fallback (free mode only)
-- `CODEBUFF_API_KEY3` - Additional accounts as needed
-
-The bridge validates that keys belong to different accounts at startup and warns if multiple keys resolve to the same account (which defeats rate-limit rotation). It also re-probes paid availability every 5 hours so the preferred account can recover automatically.
+- **Paid mode** is tried first at startup and on each re-validation
+- **Free mode** is used automatically if paid is unavailable (e.g. out of credits)
+- **Re-validation** runs every 5 hours so the bridge returns to paid mode automatically when credits are available
 
 ## Failure cooldown mechanism
 

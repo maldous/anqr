@@ -43,9 +43,9 @@ SyslogIdentifier=anqr-codebuff-bridge
 Restart=on-failure
 RestartSec=5
 
-# Safety limits — bridge runs 3 Codebuff SDK instances (1 paid + 2 free) in parallel
+# Safety limits — bridge runs Codebuff SDK (paid mode first, free mode fallback)
 TimeoutStartSec=30
-MemoryMax=4G
+MemoryMax=2G
 
 [Install]
 WantedBy=default.target

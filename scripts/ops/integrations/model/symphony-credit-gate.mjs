@@ -1007,6 +1007,120 @@ export function logProviderStats() {
 }
 
 // ---------------------------------------------------------------------------
+// Provider enumeration (for health/monitoring endpoints)
+// ---------------------------------------------------------------------------
+
+/**
+ * Get all providers that have valid credentials configured (no network calls).
+ * Returns a list of provider summaries for health/monitoring endpoints.
+ */
+export function getConfiguredProviders(options = {}) {
+  const { excludeNames = [] } = options;
+  const excludeSet = new Set(excludeNames);
+  const configured = [];
+
+  for (const provider of PROVIDERS) {
+    if (excludeSet.has(provider.name)) continue;
+
+    let hasCredential = false;
+    if (provider.envVar) {
+      const val = process.env[provider.envVar];
+      hasCredential = !!val && val !== "REPLACE" && val.length > 1;
+    } else if (provider.driver === "codex-sdk") {
+      hasCredential = !!process.env.OPENAI_API_KEY;
+    } else if (typeof provider.loadToken === "function") {
+      hasCredential = true;
+    } else {
+      hasCredential = true;
+    }
+
+    if (hasCredential) {
+      const type = provider.requiresSdk || provider.driver === "codex-sdk"
+        ? "sdk"
+        : provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")
+          ? "local"
+          : "api";
+      configured.push({ name: provider.name, model: provider.model, type });
+    }
+  }
+
+  return configured;
+}
+
+/**
+ * Probe all configured providers to check live availability (makes network calls).
+ * Runs probes in parallel for speed. SDK providers (codebuff, codex) are marked
+ * without network probing since their probes are expensive.
+ *
+ * @returns {Promise<Array<{name, model, status, available, durationMs}>>}
+ */
+export async function probeAllProviders(options = {}) {
+  const { excludeNames = [] } = options;
+  const excludeSet = new Set(excludeNames);
+  const startTime = Date.now();
+
+  const probePromises = PROVIDERS.map(async (provider) => {
+    if (excludeSet.has(provider.name)) {
+      return { name: provider.name, model: provider.model, status: "excluded", available: false, durationMs: 0 };
+    }
+
+    const apiKey = await resolveProviderApiKey(provider);
+    if (provider.envVar && !apiKey) {
+      return { name: provider.name, model: provider.model, status: "no-key", available: false, durationMs: 0 };
+    }
+
+    if (provider.requiresSdk) {
+      return { name: provider.name, model: provider.model, status: "sdk-configured", available: true, durationMs: 0 };
+    }
+
+    if (provider.driver === "codex-sdk") {
+      const hasKey = !!process.env.OPENAI_API_KEY;
+      return { name: provider.name, model: provider.model, status: hasKey ? "sdk-configured" : "no-key", available: hasKey, durationMs: 0 };
+    }
+
+    const probeStart = Date.now();
+    try {
+      const available = provider.probe
+        ? await provider.probe(provider, apiKey)
+        : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: available ? "available" : "unavailable",
+        available,
+        durationMs: Date.now() - probeStart,
+      };
+    } catch {
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "probe-error",
+        available: false,
+        durationMs: Date.now() - probeStart,
+      };
+    }
+  });
+
+  const settled = await Promise.allSettled(probePromises);
+  const probeResults = settled.map((r) =>
+    r.status === "fulfilled"
+      ? r.value
+      : { name: "unknown", model: "unknown", status: "error", available: false, durationMs: 0 },
+  );
+
+  const elapsed = Date.now() - startTime;
+  const available = probeResults.filter((r) => r.available);
+  const unavailable = probeResults.filter((r) => !r.available && r.status !== "excluded");
+  console.log(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
+  console.log(`[credit-gate]   ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`);
+  if (unavailable.length > 0) {
+    console.log(`[credit-gate]   ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`);
+  }
+
+  return probeResults;
+}
+
+// ---------------------------------------------------------------------------
 // Main: select best available provider
 // ---------------------------------------------------------------------------
 

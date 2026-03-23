@@ -157,22 +157,19 @@ The harness uses a cascading provider model with failure cooldown:
 
 1. **codex** (gpt-5.4) — primary, uses OpenAI credits
 2. **groq**, **mistral**, **gemini** — free tier providers
-3. **codebuff** (SDK-based) — autonomous agent with multi-account rotation
+3. **codebuff** (SDK-based) — autonomous agent with paid → free mode fallback
 4. **codebuff-bridge** (HTTP) — OpenAI-compatible gateway for OpenClaw integration
 5. **ollama-local** — local fallback
 
-Codebuff supports multi-account rotation via:
+Codebuff uses a single API key with automatic mode selection:
 
-- `CODEBUFF_API_KEY` — primary (paid → free)
-- `CODEBUFF_API_KEY2` — secondary fallback (free only)
-- `CODEBUFF_API_KEY3+` — additional accounts
+- `CODEBUFF_API_KEY` — single account (paid mode first, free mode fallback)
 
 **Codebuff bridge:** `http://127.0.0.1:4318` (OpenAI-compatible gateway)
 
 - Exposes Codebuff SDK via OpenAI-compatible HTTP API
 - Supports streaming responses (SSE)
-- Multi-account rotation with persistence
-- Validates accounts are distinct for effective rate-limit rotation
+- Automatic paid → free mode fallback with periodic re-validation
 - Configured via `.openclaw/models.json` for OpenClaw integration
 
 ### Degraded mode

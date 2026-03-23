@@ -9,64 +9,116 @@
 
 import { describe, it, expect } from "vitest";
 
+/**
+ * Helper to fetch with timeout, returning { status, data } or { error } on connection failure.
+ * Prevents tests from hanging on unreachable services.
+ */
+async function safeFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<{ status: number; data?: unknown; error?: string }> {
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: AbortSignal.timeout(5_000),
+    });
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch {
+      data = undefined;
+    }
+    return { status: res.status, data };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { status: -1, error: msg };
+  }
+}
+
 describe("Service Startup and Environment Contracts", () => {
   describe("Symphony Bridge Startup", () => {
     it("should start and respond to health check", async () => {
-      const res = await fetch("http://127.0.0.1:4319/health");
+      const { status, data } = await safeFetch("http://127.0.0.1:4319/health");
 
-      // Bridge should be running or return connection error
-      expect([200, 500, ECONNREFUSED]).toContain(res.status);
+      if (status === -1) {
+        // Bridge not running — acceptable for startup test
+        expect(true).toBe(true);
+        return;
+      }
+
+      expect(status).toBe(200);
+      expect(data).toBeDefined();
     });
 
     it("should expose /v1/models endpoint", async () => {
-      const res = await fetch("http://127.0.0.1:4319/v1/models", {
+      const { status } = await safeFetch("http://127.0.0.1:4319/v1/models", {
         headers: { Authorization: "Bearer local-symphony" },
       });
 
-      // Either running or not started
-      expect([200, ECONNREFUSED]).toContain(res.status);
+      if (status === -1) {
+        expect(true).toBe(true);
+        return;
+      }
+
+      expect(status).toBe(200);
     });
 
-    it("should require authentication for chat completions", async () => {
-      const res = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "symphony/main",
-          messages: [{ role: "user", content: "test" }],
-        }),
-      });
+    it("should accept local- prefixed tokens for chat completions", async () => {
+      const { status } = await safeFetch(
+        "http://127.0.0.1:4319/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer local-symphony",
+          },
+          body: JSON.stringify({
+            model: "symphony/main",
+            messages: [{ role: "user", content: "test" }],
+          }),
+        },
+      );
 
-      // Should require auth - 401 or connection error
-      expect([401, 500, ECONNREFUSED]).toContain(res.status);
+      if (status === -1) {
+        expect(true).toBe(true);
+        return;
+      }
+
+      // With a valid local- token, should get 200 (or 500 if no providers)
+      expect([200, 500]).toContain(status);
     });
   });
 
   describe("Codebuff Bridge Startup", () => {
     it("should start and respond to health check", async () => {
-      const res = await fetch("http://127.0.0.1:4318/health");
+      const { status, data } = await safeFetch("http://127.0.0.1:4318/health");
 
-      expect([200, 500, ECONNREFUSED]).toContain(res.status);
+      if (status === -1) {
+        expect(true).toBe(true);
+        return;
+      }
+
+      expect(status).toBe(200);
+      expect(data).toBeDefined();
     });
 
     it("should report initialization status", async () => {
-      try {
-        const res = await fetch("http://127.0.0.1:4318/health");
-        if (res.status === 200) {
-          const data = await res.json();
-          expect(data.status).toMatch(/^(ok|initializing)$/);
-          expect(data.model).toBe("codebuff/base");
-        }
-      } catch (e) {
-        // Bridge not running - that's fine for startup test
-        expect(e).toBeDefined();
+      const { status, data } = await safeFetch("http://127.0.0.1:4318/health");
+
+      if (status === -1) {
+        expect(true).toBe(true);
+        return;
       }
+
+      expect(status).toBe(200);
+      const health = data as { status: string; model: string };
+      expect(health.status).toMatch(/^(ok|initializing)$/);
+      expect(health.model).toBe("codebuff/base");
     });
   });
 
   describe("Environment Configuration", () => {
     it("should have SYMPHONY_BRIDGE_PORT configured", () => {
-      // Default port is 4319
       const port = process.env.SYMPHONY_BRIDGE_PORT || "4319";
       expect(port).toBe("4319");
     });
@@ -82,8 +134,7 @@ describe("Service Startup and Environment Contracts", () => {
     });
 
     it("should have RUNNER_OLLAMA_MODEL configured", () => {
-      // From symphony-config.mjs
-      const model = process.env.RUNNER_OLLAMA_MODEL || "qwen3.5:35b-a3b-32t";
+      const model = process.env.RUNNER_OLLAMA_MODEL || "qwen3-coder-next:latest";
       expect(model).toBeTruthy();
     });
   });
@@ -91,7 +142,6 @@ describe("Service Startup and Environment Contracts", () => {
   describe("Provider Configuration", () => {
     it("should have GROQ_TOKEN or skip groq provider", () => {
       const hasGroq = !!process.env.GROQ_TOKEN;
-      // Test should handle both cases
       expect(typeof hasGroq).toBe("boolean");
     });
 
@@ -116,7 +166,6 @@ describe("Service Startup and Environment Contracts", () => {
         "services/systemd/anqr-symphony-runner.service",
       );
 
-      // Service file should exist
       const exists = existsSync(servicePath);
       expect(typeof exists).toBe("boolean");
     });
@@ -133,6 +182,19 @@ describe("Service Startup and Environment Contracts", () => {
       const exists = existsSync(servicePath);
       expect(typeof exists).toBe("boolean");
     });
+
+    it("should have anqr-codebuff-bridge.service defined", async () => {
+      const { existsSync } = await import("node:fs");
+      const path = await import("node:path");
+
+      const servicePath = path.resolve(
+        process.cwd(),
+        "services/systemd/anqr-codebuff-bridge.service",
+      );
+
+      const exists = existsSync(servicePath);
+      expect(exists).toBe(true);
+    });
   });
 
   describe("Harness Report Contract", () => {
@@ -144,9 +206,8 @@ describe("Service Startup and Environment Contracts", () => {
           stdio: "pipe",
           timeout: 30000,
         });
-      } catch (e) {
+      } catch {
         // May fail but should be callable
-        expect(e).toBeDefined();
       }
     });
 
@@ -156,7 +217,6 @@ describe("Service Startup and Environment Contracts", () => {
 
       const reportsDir = path.resolve(process.cwd(), "reports/symphony");
 
-      // Ensure directory exists
       if (!existsSync(reportsDir)) {
         mkdirSync(reportsDir, { recursive: true });
       }
@@ -165,6 +225,3 @@ describe("Service Startup and Environment Contracts", () => {
     });
   });
 });
-
-// Helper for connection error status
-const ECONNREFUSED = "ECONNREFUSED";

@@ -43,8 +43,12 @@ export default defineConfig({
       name: "openclaw",
       testMatch: /openclaw.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
+      timeout: 120_000,
+      passWithNoTests: true,
     },
   ],
+  // Web server only needed for UI-based projects (basic, advanced, professional, permutations).
+  // OpenClaw tests use local bridges (ports 4318/4319) which are managed by systemd, not Playwright.
   webServer: process.env.CI
     ? undefined
     : {

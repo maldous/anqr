@@ -17,16 +17,13 @@
  *   CODEBUFF_BRIDGE_API_KEY   — Bearer token for auth (default: local-bridge)
  *   CODEBUFF_MODEL_ID         — Model ID to advertise (default: codebuff/base)
  *   CODEBUFF_BRIDGE_CWD       — Working directory for Codebuff (default: project root)
- *   CODEBUFF_API_KEY          — Required: Codebuff API key for SDK calls
- *   CODEBUFF_API_KEY2         — Optional: fallback key
- *   CODEBUFF_API_KEY3         — Optional: additional key
+ *   CODEBUFF_API_KEY          — Required: Codebuff API key (uses paid mode first, then free mode)
  */
 
 import http from "node:http";
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { CodebuffClient, WEBSITE_URL } from "@codebuff/sdk";
+import { CodebuffClient } from "@codebuff/sdk";
 import { isTextUIPart, isReasoningUIPart, isToolUIPart, isDataUIPart } from "ai";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,87 +35,30 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runner timeout
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
+function formatElapsed(ms) {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${(ms / 60000).toFixed(1)}min`;
+}
+
+function logMemory(label) {
+  const mem = process.memoryUsage();
+  const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
+  const rssMB = Math.round(mem.rss / 1024 / 1024);
+  console.log(`[bridge] 💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
+}
+
 // Re-validation interval - probe paid availability at least every 5 hours.
 const REVALIDATION_INTERVAL_MS = 5 * 60 * 60 * 1000;
 let lastRevalidationTime = Date.now();
 
-// Pre-computed at startup - validated accounts and attempt plan
-let STARTUP_ACCOUNTS = [];
-let STARTUP_ATTEMPTS = [];
+// Pre-computed at startup - validated key and mode
 let STARTUP_INITIALIZED = false;
-let STARTUP_WINNER = null; // Pre-selected winning key for fast requests
+let STARTUP_WINNER = null; // Pre-selected winning key + mode for fast requests
 
-// Get all Codebuff API keys from environment
-function getAllApiKeys() {
-  const keys = [];
-
-  for (const key of Object.keys(process.env).sort()) {
-    if (key.startsWith("CODEBUFF_API_KEY") && !key.endsWith("_FILE")) {
-      const value = process.env[key];
-      if (value) keys.push(value);
-    }
-  }
-
-  // Check .env file
-  const envPath = path.join(PROJECT_ROOT, ".env");
-  if (fs.existsSync(envPath)) {
-    const envContent = fs.readFileSync(envPath, "utf-8");
-    const regex = /CODEBUFF_API_KEY\d*=(?:"([^"]+)"|([^\s]+))/g;
-    let match;
-    while ((match = regex.exec(envContent)) !== null) {
-      const key = match[1] || match[2];
-      if (key && !keys.includes(key)) {
-        keys.push(key);
-      }
-    }
-  }
-
-  return keys;
-}
-
-// Resolve account info for an API key
-async function resolveKeyAccount(apiKey) {
-  try {
-    const url = new URL("/api/v1/me?fields=id,email", WEBSITE_URL);
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return { id: data.id, email: data.email };
-  } catch {
-    return null;
-  }
-}
-
-// Validate API keys - ensure they belong to different accounts
-async function validateApiKeys(apiKeys) {
-  const results = await Promise.allSettled(apiKeys.map((k) => resolveKeyAccount(k)));
-  const accounts = [];
-  for (let i = 0; i < apiKeys.length; i++) {
-    const result = results[i];
-    const info = result.status === "fulfilled" ? result.value : null;
-    const masked = apiKeys[i].slice(0, 6) + "..." + apiKeys[i].slice(-4);
-    if (info) {
-      accounts.push({ index: i, ...info });
-      console.log(`[bridge] Key ${i + 1} (${masked}): ${info.email}`);
-    } else {
-      console.warn(`[bridge] Key ${i + 1} (${masked}): could not resolve account (auth error?)`);
-    }
-  }
-
-  const uniqueIds = new Set(accounts.map((a) => a.id));
-  if (accounts.length > 1 && uniqueIds.size < accounts.length) {
-    console.warn(`[bridge] WARNING: Multiple keys resolve to the SAME account.`);
-    console.warn(`[bridge] Rate-limit rotation will NOT help — limits are per-account.`);
-    console.warn(`[bridge] Use keys from different Codebuff accounts for effective rotation.`);
-  } else if (uniqueIds.size > 1) {
-    console.log(`[bridge] ${uniqueIds.size} distinct accounts confirmed — rotation enabled.`);
-  }
-
-  return accounts;
+// Get the Codebuff API key from environment
+function getApiKey() {
+  return process.env.CODEBUFF_API_KEY || null;
 }
 
 // Check if error is a rate limit (should NOT be considered "working")
@@ -300,78 +240,29 @@ async function testApiKey(apiKey, index) {
   return { works: false, mode: null };
 }
 
-// Test ALL keys in parallel at startup and determine the winning key
-async function testAllKeysAndSelectWinner(apiKeys) {
-  console.log(`[bridge] Testing ALL ${apiKeys.length} API keys in parallel...`);
+// Test the API key at startup and determine the best mode (paid or free)
+async function testKeyAndSelectWinner(apiKey) {
+  const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
+  console.log(`[bridge] Testing API key (${masked})...`);
 
-  // Test ALL keys in parallel at startup
-  const results = await Promise.allSettled(apiKeys.map((key, i) => testApiKey(key, i)));
+  const result = await testApiKey(apiKey, 0);
 
-  // Find the best working key - prefer paid mode, then free mode
-  let bestWinner = null;
-  
-  // First pass: look for paid mode keys
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i]?.status === "fulfilled" ? results[i]?.value : null;
-    if (result?.works && result?.mode === "paid") {
-      bestWinner = {
-        index: i,
-        apiKey: apiKeys[i],
-        costMode: undefined, // Use paid mode (no costMode)
-        mode: "paid"
-      };
-      break; // Found a paid key - use it
-    }
-  }
-  
-  // Second pass: if no paid key, look for free mode keys
-  if (!bestWinner) {
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i]?.status === "fulfilled" ? results[i]?.value : null;
-      if (result?.works && result?.mode === "free") {
-        bestWinner = {
-          index: i,
-          apiKey: apiKeys[i],
-          costMode: "free",
-          mode: "free"
-        };
-        break; // Found a free key - use it
-      }
-    }
-  }
-
-  if (bestWinner) {
-    if (bestWinner.mode === "paid") {
-      console.log(`[bridge] 🎯 Winner: paid key ${bestWinner.index + 1} (will use directly on requests)`);
-    } else {
-      console.log(`[bridge] 🎯 Winner: free key ${bestWinner.index + 1} (will use directly on requests)`);
-    }
+  if (result.works) {
+    const isPaid = result.mode === "paid";
+    console.log(`[bridge] 🎯 Key working in ${result.mode} mode`);
     STARTUP_WINNER = {
-      apiKey: bestWinner.apiKey,
-      costMode: bestWinner.costMode,
-      label: bestWinner.mode === "paid" ? `paid key ${bestWinner.index + 1} (pre-warmed)` : `free key ${bestWinner.index + 1} (pre-warmed)`,
-      isPaid: bestWinner.mode === "paid",
+      apiKey,
+      costMode: isPaid ? undefined : "free",
+      label: isPaid ? "paid (pre-warmed)" : "free (pre-warmed)",
+      isPaid,
     };
-    
-    // Update STARTUP_ATTEMPTS with the tested modes for proper fallback handling
-    for (let i = 0; i < STARTUP_ATTEMPTS.length; i++) {
-      const testResult = results[i]?.status === "fulfilled" ? results[i]?.value : null;
-      if (testResult?.works) {
-        STARTUP_ATTEMPTS[i].costMode = testResult.mode === "paid" ? undefined : "free";
-        STARTUP_ATTEMPTS[i].isPaid = testResult.mode === "paid";
-      } else {
-        // Key doesn't work - mark as unusable
-        STARTUP_ATTEMPTS[i].costMode = testResult?.mode === "free" ? "free" : undefined;
-        STARTUP_ATTEMPTS[i].isPaid = false;
-      }
-    }
     return;
   }
 
-  // All keys failed - fallback to paid (will fail at runtime)
-  console.warn(`[bridge] ⚠️  All keys failed at startup - using paid as fallback`);
+  // Key failed - set as fallback anyway (will fail at runtime with clear error)
+  console.warn(`[bridge] ⚠️ Key failed at startup — using paid mode as fallback`);
   STARTUP_WINNER = {
-    apiKey: apiKeys[0],
+    apiKey,
     costMode: undefined,
     label: "paid (expected to fail)",
     isPaid: true,
@@ -387,27 +278,6 @@ function buildPrompt(messages) {
       return `${role}:\n${content}`;
     })
     .join("\n\n");
-}
-
-// Build parallel attempt plan: all accounts try simultaneously
-// First key: paid mode, others: free mode
-function buildAttemptPlan(apiKeys, accounts) {
-  const attempts = [];
-
-  for (let i = 0; i < apiKeys.length; i++) {
-    const acct = accounts.find((a) => a.index === i);
-    const email = acct ? acct.email : `key ${i + 1}`;
-    const apiKey = apiKeys[i];
-
-    // First key: paid mode, others: free mode
-    if (i === 0) {
-      attempts.push({ apiKey, costMode: undefined, label: `${email} (paid)`, isPaid: true });
-    } else {
-      attempts.push({ apiKey, costMode: "free", label: `${email} (free)`, isPaid: false });
-    }
-  }
-
-  return attempts;
 }
 
 // Check if error is an auth error
@@ -775,87 +645,35 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
 }
 
 // Get pre-selected winner (computed at startup)
-// Also checks if re-validation is needed (e.g., after paid rate limit cooldown)
 function getWinner() {
   if (!STARTUP_INITIALIZED) {
     throw new Error("Bridge not initialized - startup validation not complete");
   }
   if (!STARTUP_WINNER) {
-    throw new Error("No winner selected - startup tests not complete");
+    throw new Error("No API key configured - set CODEBUFF_API_KEY");
   }
-
-  // Check if we need to re-validate the winner (time-based or after rate limit)
-  const timeSinceLastRevalidation = Date.now() - lastRevalidationTime;
-  const needsRevalidation = timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS;
-
-  if (needsRevalidation) {
-    console.log(
-      `[bridge] 🔄 Re-validation needed: ${Math.round(timeSinceLastRevalidation / 3600000)}h since last check`,
-    );
-    console.log(`[bridge] 🔄 Will re-test API keys to find the best available one`);
-  }
-
   return STARTUP_WINNER;
 }
 
-// Re-validate and potentially switch to a better key
+// Re-validate and potentially switch mode (paid→free or free→paid)
 async function revalidateAndSelectWinner() {
-  const apiKeys = getAllApiKeys();
-  if (apiKeys.length === 0) {
-    console.warn(`[bridge] No API keys available for re-validation`);
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn(`[bridge] No API key available for re-validation`);
     return;
   }
 
-  console.log(`[bridge] 🔄 Re-validating ${apiKeys.length} API keys...`);
+  console.log(`[bridge] 🔄 Re-validating API key...`);
   lastRevalidationTime = Date.now();
 
-  // Test all keys again to find the best available one
-  await testAllKeysAndSelectWinner(apiKeys);
+  await testKeyAndSelectWinner(apiKey);
 
   if (STARTUP_WINNER) {
-    console.log(`[bridge] 🔄 Re-validation complete: selected ${STARTUP_WINNER.label}`);
+    console.log(`[bridge] 🔄 Re-validation complete: ${STARTUP_WINNER.label}`);
   }
 }
 
-function getOrderedAttempts(preferredWinner = null) {
-  if (!Array.isArray(STARTUP_ATTEMPTS) || STARTUP_ATTEMPTS.length === 0) {
-    return [];
-  }
-
-  if (!preferredWinner) {
-    return [...STARTUP_ATTEMPTS];
-  }
-
-  return [
-    preferredWinner,
-    ...STARTUP_ATTEMPTS.filter((attempt) => attempt.apiKey !== preferredWinner.apiKey),
-  ];
-}
-
-async function executeAttemptPlan(attempts, runner) {
-  let lastError = null;
-
-  for (const attempt of attempts) {
-    try {
-      const result = await runner(attempt);
-      if (STARTUP_WINNER?.apiKey !== attempt.apiKey) {
-        console.log(`[bridge] 🔄 Switching winner to ${attempt.label}`);
-      }
-      STARTUP_WINNER = attempt;
-      return result;
-    } catch (err) {
-      lastError = err;
-      console.warn(`[bridge] Attempt failed on ${attempt.label}: ${err.message}`);
-      if (attempt.isPaid && isRateLimitError(String(err.message || err))) {
-        console.log(`[bridge] Paid account unavailable - will re-probe after cooldown window`);
-      }
-    }
-  }
-
-  throw lastError || new Error("All codebuff attempts failed");
-}
-
-// Use pre-warmed winner directly (fast path - no parallel fallback)
+// Use pre-warmed winner directly
 async function invokeCodebuff({ messages, cwd }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered`);
@@ -863,19 +681,16 @@ async function invokeCodebuff({ messages, cwd }) {
   }
 
   const winner = getWinner();
-  const attempts = getOrderedAttempts(winner);
-  console.log(`[bridge] Using pre-warmed winner: ${winner.label}`);
+  console.log(`[bridge] Using: ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  return executeAttemptPlan(attempts, (attempt) =>
-    trySingleAccount(
-      attempt,
-      prompt,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-      }),
-      cwd,
-    ),
+  return trySingleAccount(
+    winner,
+    prompt,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
+    }),
+    cwd,
   );
 }
 
@@ -1014,7 +829,7 @@ async function trySingleAccountStream(
   };
 }
 
-// Use pre-warmed winner directly for streaming (fast path - no parallel fallback)
+// Use pre-warmed winner directly for streaming
 async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
@@ -1022,22 +837,19 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
   }
 
   const winner = getWinner();
-  const attempts = getOrderedAttempts(winner);
-  console.log(`[bridge] Streaming: Using pre-warmed winner: ${winner.label}`);
+  console.log(`[bridge] Streaming: Using ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  return executeAttemptPlan(attempts, (attempt) =>
-    trySingleAccountStream(
-      attempt,
-      prompt,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-      }),
-      cwd,
-      onChunk,
-      completionId,
-      created,
-    ),
+  return trySingleAccountStream(
+    winner,
+    prompt,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
+    }),
+    cwd,
+    onChunk,
+    completionId,
+    created,
   );
 }
 
@@ -1155,6 +967,8 @@ const server = http.createServer(async (req, res) => {
       console.log(
         `[bridge] Chat completion request: model=${model}, messages=${messages.length}, stream=${stream}`,
       );
+      logMemory('request-start');
+      const requestStartTime = Date.now();
 
       if (stream) {
         // Streaming mode - set headers before any writes
@@ -1171,6 +985,7 @@ const server = http.createServer(async (req, res) => {
         let streamResult = null;
 
         try {
+          console.log(`[bridge] ⏱️ Starting streaming invocation...`);
           streamResult = await invokeCodebuffStream({
             messages,
             cwd: DEFAULT_CWD,
@@ -1181,6 +996,9 @@ const server = http.createServer(async (req, res) => {
               res.write(`data: ${JSON.stringify(chunk)}\n\n`);
             },
           });
+
+          console.log(`[bridge] ⏱️ Streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`);
+          logMemory('stream-done');
 
           // Determine finish_reason and send any remaining content
           let finishReason = "stop";
@@ -1252,7 +1070,8 @@ const server = http.createServer(async (req, res) => {
           res.end();
         } catch (streamError) {
           // Send error as SSE event before closing
-          console.error(`[bridge] Streaming error: ${streamError.message}`);
+          console.error(`[bridge] Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`);
+          logMemory('stream-error');
           const errorChunk = {
             id: completionId,
             object: "chat.completion.chunk",
@@ -1274,10 +1093,13 @@ const server = http.createServer(async (req, res) => {
         return;
       } else {
         // Non-streaming mode
+        console.log(`[bridge] ⏱️ Starting non-streaming invocation...`);
         const result = await invokeCodebuff({
           messages,
           cwd: DEFAULT_CWD,
         });
+        console.log(`[bridge] ⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`);
+        logMemory('invoke-done');
 
         // Log completion with issue context and one-line summary
         let finishReason = "stop";
@@ -1356,36 +1178,25 @@ function shutdown(signal) {
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
-// Initialize at startup - validate keys and build attempt plan
+// Initialize at startup - validate key and determine paid/free mode
 async function initializeBridge() {
-  const apiKeys = getAllApiKeys();
+  const apiKey = getApiKey();
 
   console.log(`[bridge] ========================================`);
   console.log(`[bridge] Codebuff OpenAI Bridge Starting`);
   console.log(`[bridge] ========================================`);
   console.log(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
   console.log(`[bridge] Model: ${MODEL_ID}`);
-  console.log(`[bridge] API keys configured: ${apiKeys.length}`);
+  console.log(`[bridge] API key: ${apiKey ? "configured" : "NOT SET"}`);
   console.log(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
   console.log(`[bridge] Streaming: enabled`);
   console.log(`[bridge] Working directory: ${DEFAULT_CWD}`);
 
-  // Validate and determine paid/free at startup
-  if (apiKeys.length > 0) {
-    console.log(`[bridge] Validating API keys and determining paid/free status...`);
-    STARTUP_ACCOUNTS = await validateApiKeys(apiKeys);
-
-    if (STARTUP_ACCOUNTS.length === 0) {
-      console.warn(`[bridge] WARNING: No valid API keys found!`);
-    } else {
-      // Build the attempt plan once at startup
-      STARTUP_ATTEMPTS = buildAttemptPlan(apiKeys, STARTUP_ACCOUNTS);
-
-      // Test keys and pre-select winner for fast requests
-      await testAllKeysAndSelectWinner(apiKeys);
-    }
+  if (apiKey) {
+    console.log(`[bridge] Testing API key (paid mode first, then free)...`);
+    await testKeyAndSelectWinner(apiKey);
   } else {
-    console.warn(`[bridge] WARNING: No CODEBUFF_API_KEY* environment variables found!`);
+    console.warn(`[bridge] WARNING: CODEBUFF_API_KEY not set!`);
   }
 
   STARTUP_INITIALIZED = true;
@@ -1399,9 +1210,8 @@ function getHealthStatus() {
   return {
     status: STARTUP_INITIALIZED ? "ok" : "initializing",
     model: MODEL_ID,
-    apiKeysConfigured: STARTUP_ACCOUNTS.length,
-    paidAccounts: STARTUP_ATTEMPTS.filter((a) => a.isPaid).length,
-    freeAccounts: STARTUP_ATTEMPTS.filter((a) => !a.isPaid).length,
+    apiKeyConfigured: !!getApiKey(),
+    mode: STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "none",
   };
 }
 
@@ -1411,4 +1221,4 @@ server.listen(PORT, "127.0.0.1", async () => {
 });
 
 // Export for testing
-export { invokeCodebuff, invokeCodebuffStream, getAllApiKeys, MODEL_ID };
+export { invokeCodebuff, invokeCodebuffStream, getApiKey, MODEL_ID };

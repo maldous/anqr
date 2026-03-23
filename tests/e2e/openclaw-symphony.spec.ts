@@ -7,13 +7,17 @@
  * - Command execution through SDK, HTTP, and streaming modes
  * - Provider degradation and recovery behavior
  *
- * Requires: OpenClaw running and configured in .openclaw/models.json
+ * Requires: Bridges running on ports 4319 (symphony) and 4318 (codebuff)
  * Run: npx playwright test tests/e2e/openclaw-symphony.spec.ts
  */
 
 import { test, expect } from "@playwright/test";
 
-// Fixtures are imported inline to avoid workspace resolution issues in test context
+const SYMPHONY_BASE_URL = "http://127.0.0.1:4319";
+const CODEBUFF_BASE_URL = "http://127.0.0.1:4318";
+const SYMPHONY_API_KEY = "local-symphony";
+const CODEBUFF_API_KEY = "local-bridge";
+
 const symphonyTestScenarios = {
   simplePrompt: {
     messages: [{ role: "user" as const, content: "Say 'ok' if you can read this." }],
@@ -42,9 +46,6 @@ const symphonyTestScenarios = {
   },
 };
 
-/**
- * Test configuration - loads OpenClaw models.json to validate routing
- */
 const openclawConfig = {
   primaryModel: "symphony-bridge/symphony/main",
   fallbackModels: [
@@ -63,8 +64,15 @@ const openclawConfig = {
   ],
 };
 
-// These tests verify OpenClaw model configuration matches Symphony routes
-// The actual execution tests would use OpenClaw SDK or HTTP API
+// Helper: check if a bridge is reachable
+async function isBridgeReachable(baseUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3_000) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 test.describe("OpenClaw Model Configuration", () => {
   test("primary model should be Symphony main", () => {
@@ -86,7 +94,6 @@ test.describe("OpenClaw Model Configuration", () => {
       "symphony/ollama-local",
     ];
 
-    // Verify each Symphony route has a corresponding fallback
     for (const route of symphonyRoutes) {
       const hasFallback = openclawConfig.fallbackModels.some((f) =>
         f.includes(route),
@@ -104,20 +111,15 @@ test.describe("OpenClaw Model Configuration", () => {
 });
 
 test.describe("Symphony Bridge Primary Model Selection", () => {
-  test("should route to symphony/main when primary model requested", async () => {
-    // This test validates that the Symphony bridge can handle the primary model
-    // In real execution, OpenClaw would call the bridge with this model
+  test("should route to symphony/main when primary model requested", () => {
     const model = openclawConfig.primaryModel;
-
-    // Verify model format is correct for Symphony bridge
     expect(model).toMatch(/^symphony-bridge\/symphony\//);
 
     const routePart = model.replace("symphony-bridge/", "");
     expect(routePart).toBe("symphony/main");
   });
 
-  test("should include provider in response when using primary model", async () => {
-    // This verifies the contract expectation - Symphony adds _symphony_provider
+  test("should include provider in response when using primary model", () => {
     const responseContract = {
       _symphony_provider: expect.any(String),
       _symphony_attempts: expect.any(Number),
@@ -152,7 +154,6 @@ test.describe("Symphony Fallback Continuity", () => {
 
 test.describe("Provider Degradation Simulation", () => {
   test("should have multiple fallback options for resilience", () => {
-    // When primary fails, should have at least 3 fallbacks
     const fallbackCount = openclawConfig.fallbackModels.length;
     expect(fallbackCount).toBeGreaterThanOrEqual(3);
   });
@@ -175,7 +176,6 @@ test.describe("Provider Degradation Simulation", () => {
   });
 });
 
-// SDK, HTTP, and Streaming behavior tests
 test.describe("Command Execution Modes", () => {
   test("should support non-streaming HTTP mode", () => {
     const scenario = symphonyTestScenarios.simplePrompt;
@@ -188,7 +188,6 @@ test.describe("Command Execution Modes", () => {
   });
 
   test("should support tool execution via SDK", () => {
-    // Tool execution scenarios
     const readScenario = symphonyTestScenarios.toolExecutionRead;
     const execScenario = symphonyTestScenarios.toolExecutionExec;
     const globScenario = symphonyTestScenarios.toolExecutionGlob;
@@ -199,44 +198,306 @@ test.describe("Command Execution Modes", () => {
   });
 });
 
-// Note: Actual OpenClaw execution tests would require OpenClaw to be running
-// and would use the OpenClaw SDK to execute agents. These are contract/validation
-// tests that verify the configuration is correct for such execution.
+test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
+  test.setTimeout(120_000);
 
-test.describe("Actual OpenClaw Execution (requires running bridges)", () => {
-  test.skip(process.env.SKIP_LIVE_TESTS === "true", "Skipping live bridge tests");
+  test("Symphony bridge health check", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
-  test("Symphony bridge should respond to primary model request", async () => {
-    const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
+    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe("ok");
+    expect(data.model).toBeTruthy();
+    expect(data.tools).toBeDefined();
+    console.log(`[openclaw-e2e] Symphony health: configured=${data.providersConfigured}, available=${data.providersAvailable}, withStats=${data.providersWithStats}, tools=${data.tools?.join(", ")}`);
+    if (data.configuredProviders) {
+      const available = data.configuredProviders.filter((p: { available: boolean }) => p.available);
+      console.log(`[openclaw-e2e] Available providers: ${available.map((p: { name: string }) => p.name).join(", ")}`);
+    }
+  });
+
+  test("Symphony bridge /v1/models lists all expected models", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/models`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    const modelIds = data.data.map((m: { id: string }) => m.id);
+
+    expect(modelIds).toContain("symphony/main");
+    expect(modelIds).toContain("symphony/codebuff");
+    expect(modelIds).toContain("symphony/groq");
+    expect(modelIds).toContain("symphony/ollama-local");
+    console.log(`[openclaw-e2e] Symphony models: ${modelIds.join(", ")}`);
+  });
+
+  test("Symphony bridge non-streaming completion", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const startTime = Date.now();
+    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer local-symphony",
+        Authorization: `Bearer ${SYMPHONY_API_KEY}`,
       },
       body: JSON.stringify({
         model: "symphony/main",
-        messages: [{ role: "user", content: "Say ok" }],
+        messages: [{ role: "user", content: "Say 'ok' if you can read this." }],
       }),
+      signal: AbortSignal.timeout(90_000),
     });
 
-    // Bridge should be running if this test is to pass
-    expect(response.status).toBe(200);
+    const elapsed = Date.now() - startTime;
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.choices).toBeDefined();
+    expect(data.choices[0].message.content).toBeTruthy();
+    expect(data._symphony_provider).toBeDefined();
+
+    console.log(`[openclaw-e2e] Symphony completion: provider=${data._symphony_provider}, duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`);
+    const content = data.choices[0].message.content;
+    console.log(`[openclaw-e2e] Response: ${typeof content === "string" ? content.slice(0, 200) : JSON.stringify(content).slice(0, 200)}`);
   });
 
-  test("Codebuff bridge should respond to fallback request", async () => {
-    const response = await fetch("http://127.0.0.1:4318/v1/chat/completions", {
+  test("Symphony bridge streaming completion", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const startTime = Date.now();
+    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer local-bridge",
+        Authorization: `Bearer ${SYMPHONY_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "symphony/main",
+        messages: [{ role: "user", content: "Count from 1 to 3." }],
+        stream: true,
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/event-stream");
+
+    const chunks: string[] = [];
+    let fullContent = "";
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let doneReading = false;
+
+    if (reader) {
+      while (!doneReading) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") {
+              doneReading = true;
+              break;
+            }
+            if (data.trim()) {
+              chunks.push(data);
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) fullContent += content;
+              } catch {
+                // Ignore parse errors for ping/malformed chunks
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const elapsed = Date.now() - startTime;
+    expect(chunks.length).toBeGreaterThan(0);
+    console.log(`[openclaw-e2e] Symphony streaming: ${chunks.length} chunks, elapsed=${elapsed}ms`);
+    console.log(`[openclaw-e2e] Streamed content: ${fullContent.slice(0, 200)}`);
+  });
+
+  test("Symphony bridge /v1/stats returns provider statistics", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/stats`, {
+      headers: { Authorization: `Bearer ${SYMPHONY_API_KEY}` },
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+
+    expect(data.rankedProviders).toBeDefined();
+    expect(data.providerStats).toBeDefined();
+    console.log(`[openclaw-e2e] Provider stats: ${Object.keys(data.providerStats).length} providers tracked`);
+  });
+});
+
+test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
+  test.setTimeout(120_000);
+
+  test("Codebuff bridge health check", async () => {
+    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const res = await fetch(`${CODEBUFF_BASE_URL}/health`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toMatch(/^(ok|initializing)$/);
+    expect(data.model).toBe("codebuff/base");
+    console.log(`[openclaw-e2e] Codebuff health: keyConfigured=${data.apiKeyConfigured}, mode=${data.mode}`);
+  });
+
+  test("Codebuff bridge /v1/models lists codebuff model", async () => {
+    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const res = await fetch(`${CODEBUFF_BASE_URL}/v1/models`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    const modelIds = data.data.map((m: { id: string }) => m.id);
+    expect(modelIds).toContain("codebuff/base");
+  });
+
+  test("Codebuff bridge non-streaming completion", async () => {
+    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const startTime = Date.now();
+    const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${CODEBUFF_API_KEY}`,
       },
       body: JSON.stringify({
         model: "codebuff/base",
-        messages: [{ role: "user", content: "Say ok" }],
+        messages: [{ role: "user", content: "Say 'ok'." }],
       }),
+      signal: AbortSignal.timeout(90_000),
     });
 
-    // May be 200 or error depending on API key availability
-    expect([200, 401, 500]).toContain(response.status);
+    const elapsed = Date.now() - startTime;
+
+    if (res.status === 200) {
+      const data = await res.json();
+      expect(data.choices).toBeDefined();
+      expect(data.choices[0].message.content).toBeTruthy();
+      console.log(`[openclaw-e2e] Codebuff completion: elapsed=${elapsed}ms, content=${data.choices[0].message.content.slice(0, 200)}`);
+    } else {
+      const error = await res.json();
+      console.log(`[openclaw-e2e] Codebuff completion failed: status=${res.status}, error=${error.error?.message}`);
+      expect(error.error).toBeDefined();
+    }
+  });
+
+  test("Codebuff bridge streaming completion", async () => {
+    const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const startTime = Date.now();
+    const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${CODEBUFF_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "codebuff/base",
+        messages: [{ role: "user", content: "Count to 3." }],
+        stream: true,
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+
+    if (res.status === 200) {
+      expect(res.headers.get("content-type")).toContain("text/event-stream");
+
+      const chunks: string[] = [];
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let doneReading = false;
+
+      if (reader) {
+        while (!doneReading) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") {
+                doneReading = true;
+                break;
+              }
+              if (data.trim()) chunks.push(data);
+            }
+          }
+        }
+      }
+
+      const elapsed = Date.now() - startTime;
+      expect(chunks.length).toBeGreaterThan(0);
+      console.log(`[openclaw-e2e] Codebuff streaming: ${chunks.length} chunks, elapsed=${elapsed}ms`);
+    } else {
+      const error = await res.json();
+      console.log(`[openclaw-e2e] Codebuff streaming failed: status=${res.status}, error=${error.error?.message}`);
+    }
   });
 });

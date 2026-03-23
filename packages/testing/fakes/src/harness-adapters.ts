@@ -6,7 +6,6 @@
  * - Used for integration tests without real external dependencies
  */
 
-import type { z } from "zod";
 
 // Fake HTTP client for bridge testing
 export class FakeBridgeClient {

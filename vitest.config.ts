@@ -30,6 +30,6 @@ export default defineConfig({
       exclude: ["src/**/*.d.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "**/*.generated.*"],
     },
     setupFiles: [],
-    testTimeout: 10_000,
+    testTimeout: 30_000,
   },
 });

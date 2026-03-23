@@ -103,6 +103,14 @@ export const healthResponseSchema = z.object({
   status: z.string(),
   model: z.string(),
   providersConfigured: z.number().optional(),
+  providersAvailable: z.number().optional(),
+  providersWithStats: z.number().optional(),
+  configuredProviders: z.array(z.object({
+    name: z.string(),
+    status: z.string(),
+    available: z.boolean(),
+  })).optional(),
+  lastProbeAt: z.string().nullable().optional(),
   rankedProviders: z
     .array(
       z.object({

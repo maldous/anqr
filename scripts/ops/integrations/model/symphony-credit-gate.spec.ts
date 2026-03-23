@@ -18,9 +18,8 @@ const STATE_DIR = resolve(PROJECT_ROOT, "reports", "symphony");
 const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 
-// Type declaration for the .mjs module
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const creditGate = require("./symphony-credit-gate.mjs");
+// Dynamic import for the .mjs module (ESM-compatible)
+const creditGate = await import("./symphony-credit-gate.mjs");
 
 const {
   selectProvider,
@@ -31,13 +30,11 @@ const {
   recordProviderMetrics,
   getProviderStats,
   getRankedProviders,
-  logProviderStats,
   resetProviderStats,
 } = creditGate;
 
 describe("Symphony Credit Gate - Provider Selection", () => {
   beforeEach(() => {
-    // Clear any existing state before each test
     try {
       if (existsSync(FAILURE_STATE_FILE)) {
         unlinkSync(FAILURE_STATE_FILE);
@@ -52,7 +49,6 @@ describe("Symphony Credit Gate - Provider Selection", () => {
   });
 
   afterEach(() => {
-    // Cleanup after each test
     try {
       if (existsSync(FAILURE_STATE_FILE)) {
         unlinkSync(FAILURE_STATE_FILE);
@@ -103,12 +99,17 @@ describe("Symphony Credit Gate - Provider Selection", () => {
         excludeNames: [],
       });
 
-      // Behavioral test - key is that it tries
+      // If groq was recently failed, should try gemini instead (or skip both)
+      if (provider) {
+        // groq should be skipped due to recent failure
+        expect(provider.name).not.toBe("groq");
+      }
     });
   });
 
   describe("Provider Metrics", () => {
     it("should record provider success", () => {
+      creditGate.recordProviderSelection("test-provider");
       recordProviderSuccess("test-provider");
       const stats = getProviderStats();
 
@@ -117,6 +118,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should record provider failure count", () => {
+      creditGate.recordProviderSelection("test-provider");
       recordProviderFailureCount("test-provider");
       const stats = getProviderStats();
 
@@ -125,6 +127,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should record provider metrics", () => {
+      creditGate.recordProviderSelection("test-provider");
       recordProviderMetrics("test-provider", {
         durationMs: 5000,
         inputTokens: 100,
@@ -198,6 +201,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should include provider stats in output", () => {
+      creditGate.recordProviderSelection("test-provider");
       recordProviderSuccess("test-provider");
       recordProviderMetrics("test-provider", {
         durationMs: 2000,

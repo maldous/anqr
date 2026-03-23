@@ -37,7 +37,7 @@ function checkEnvVars() {
 
   // Check for critical env vars
   const critical = ["LINEAR_API_KEY", "CODEBUFF_API_KEY"];
-  const optional = ["CODEBUFF_API_KEY2", "CODEBUFF_API_KEY3", "OLLAMA_API_BASE", "SONAR_TOKEN"];
+  const optional = ["OLLAMA_API_BASE", "SONAR_TOKEN"];
 
   for (const key of critical) {
     const val = process.env[key];

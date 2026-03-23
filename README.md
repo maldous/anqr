@@ -965,7 +965,7 @@ Phase 1 exit criteria:
 - [x] implement account rotation persistence for bridge reliability
 - [x] add OpenClaw models.json configuration
 
-**Phase 3 completed:** All harness runtime surfaces classified and documented. Codebuff bridge fully implemented with streaming support, multi-account rotation with persistence, and OpenClaw integration. Provider routing cascade documented with 12 providers including codebuff-bridge at position 11. All documentation surfaces updated to reflect current state.
+**Phase 3 completed:** All harness runtime surfaces classified and documented. Codebuff bridge fully implemented with streaming support, paid → free mode fallback, and OpenClaw integration. Provider routing cascade documented with 12 providers including codebuff-bridge at position 11. All documentation surfaces updated to reflect current state.
 
 Required inventory classified:
 
