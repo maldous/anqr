@@ -42,6 +42,54 @@ import {
   clearProviderFailure,
 } from "./symphony-credit-gate.mjs";
 
+// Helper to extract text from AI SDK-style responses and filter out tool-call metadata
+// This prevents raw tool-call content from being exposed to clients like OpenClaw
+function extractTextFromMessage(msg, filterToolCalls = true) {
+  if (!msg || msg.role !== "assistant") return null;
+
+  const content = msg.content;
+
+  // If content is a string, return it directly
+  if (typeof content === "string") {
+    return content;
+  }
+
+  // If content is an array, extract text parts, filtering out tool-calls
+  if (Array.isArray(content)) {
+    const textParts = [];
+
+    for (const part of content) {
+      if (!part) continue;
+
+      const partType = part.type || "unknown";
+
+      // Skip tool-call parts if filtering is enabled
+      if (filterToolCalls && (part.type === "tool-call" || part.toolCallId)) {
+        continue;
+      }
+
+      // Extract text from various part types
+      if (partType === "text") {
+        const text = part.text || part.content || "";
+        if (text) textParts.push(text);
+      } else if (partType === "reasoning") {
+        const reasoning = part.reasoning || part.content || "";
+        if (reasoning) textParts.push(reasoning);
+      } else {
+        // Unknown type - try common fields
+        const text = part.text || part.content || part.result || "";
+        if (text) textParts.push(typeof text === "string" ? text : JSON.stringify(text));
+      }
+    }
+
+    if (textParts.length > 0) {
+      return textParts.join("\n");
+    }
+  }
+
+  return null;
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
@@ -381,9 +429,24 @@ async function invokeWithFallbackStream(messages, onChunk) {
 
         try {
           const parsed = JSON.parse(data);
+          // Filter out tool-call metadata from the content before sending to client
           if (parsed.choices?.[0]?.delta?.content) {
-            fullText += parsed.choices[0].delta.content;
-            onChunk(parsed);
+            const content = parsed.choices[0].delta.content;
+            // Check if content contains tool-call metadata (JSON format)
+            if (content && typeof content === "string" && content.includes('"toolCallId"')) {
+              // Try to parse as JSON and extract text parts, filtering out tool-call JSON
+              const filtered = extractTextFromMessage({ role: "assistant", content }, true);
+              fullText += filtered || "";
+              // Only send if there's actual text content
+              if (filtered) {
+                parsed.choices[0].delta.content = filtered;
+                onChunk(parsed);
+              }
+            } else {
+              // No tool-call metadata, send as-is
+              fullText += content;
+              onChunk(parsed);
+            }
           }
         } catch {
           // Skip non-parseable lines
@@ -498,9 +561,24 @@ async function invokeWithFallbackStream(messages, onChunk) {
 
             try {
               const parsed = JSON.parse(data);
+              // Filter out tool-call metadata from the content before sending to client
               if (parsed.choices?.[0]?.delta?.content) {
-                fullText += parsed.choices[0].delta.content;
-                onChunk(parsed);
+                const content = parsed.choices[0].delta.content;
+                // Check if content contains tool-call metadata (JSON format)
+                if (content && typeof content === "string" && content.includes('"toolCallId"')) {
+                  // Try to parse as JSON and extract text parts, filtering out tool-call JSON
+                  const filtered = extractTextFromMessage({ role: "assistant", content }, true);
+                  fullText += filtered || "";
+                  // Only send if there's actual text content
+                  if (filtered) {
+                    parsed.choices[0].delta.content = filtered;
+                    onChunk(parsed);
+                  }
+                } else {
+                  // No tool-call metadata, send as-is
+                  fullText += content;
+                  onChunk(parsed);
+                }
               }
             } catch {
               // Skip non-parseable lines
@@ -898,8 +976,15 @@ const server = http.createServer(async (req, res) => {
         // Non-streaming
         const result = await invokeWithFallback(messages);
 
+        // Filter the message content to remove tool-call metadata
+        const message = result.data.choices?.[0]?.message;
+        let filteredContent = null;
+        if (message?.content) {
+          filteredContent = extractTextFromMessage({ role: "assistant", content: message.content }, true);
+        }
+
         if (issueContext) {
-          const messageContent = result.data.choices?.[0]?.message?.content;
+          const messageContent = filteredContent || result.data.choices?.[0]?.message?.content;
           const firstLine = messageContent
             ? messageContent.split("\n")[0].trim().slice(0, 100)
             : "(no content)";
@@ -920,8 +1005,14 @@ const server = http.createServer(async (req, res) => {
           isError: false,
         });
 
+        // Return filtered response
+        const responseData = { ...result.data };
+        if (filteredContent !== null) {
+          responseData.choices[0].message.content = filteredContent;
+        }
+
         return sendJson(res, 200, {
-          ...result.data,
+          ...responseData,
           model,
           _symphony_provider: result.providerName,
           _symphony_attempts: result.attempts,
