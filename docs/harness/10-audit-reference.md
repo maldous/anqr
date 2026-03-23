@@ -236,7 +236,56 @@ Tool execution is handled automatically by AI SDK via `maxSteps` (default: 10 it
 
 ## 7. OpenClaw Integration
 
-**Configuration** (`.openclaw/models.json`):
+### Overview
+
+OpenClaw is an external AI agent framework that provides autonomous code editing capabilities. The ANQR harness integrates OpenClaw as an execution provider alongside Codebuff and the 40+ providers available through Symphony's credit-gate system.
+
+### How OpenClaw Uses Symphony and Codebuff
+
+OpenClaw acts as a wrapper layer that can route requests to multiple backends:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    OpenClaw Agent                            │
+│              (External AI Agent Framework)                  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+         ▼               ▼               ▼
+┌─────────────────┐ ┌──────────┐ ┌─────────────────┐
+│ Symphony Bridge │ │Codebuff  │ │ OpenClaw Native │
+│    (port 4319)  │ │ Bridge   │ │    Models       │
+│                 │ │(4318)    │ │  (free-rider)   │
+└────────┬────────┘ └────┬─────┘ └────────┬────────┘
+         │               │               │
+         ▼               ▼               ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Credit-Gate Provider Selection                 │
+│         (40+ providers with auto-fallback)                  │
+│   groq, openrouter, mistral, gemini, codex, ollama...       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Provider Cascade (Priority Order)
+
+1. **Primary**: `symphony-bridge/symphony/main` (port 4319)
+   - Routes to Symphony Bridge
+   - Uses AI SDK with credit-gate for 40+ provider fallback
+   - Provides tool execution (exec, read, glob)
+   - Bearer token: `local-symphony`
+
+2. **Fallback 1**: `codebuff-bridge/codebuff/base@latest` (port 4318)
+   - Routes to Codebuff Bridge
+   - Uses Codebuff SDK directly for local code editing
+   - Has internal account rotation (KEY, KEY2, KEY3)
+   - Bearer token: `local-bridge`
+
+3. **Fallback 2**: OpenClaw native free-rider models
+   - OpenClaw's built-in model discovery
+   - Uses publicly available free models
+
+### Configuration (`.openclaw/models.json`)
 
 ```json
 {
@@ -262,10 +311,18 @@ Tool execution is handled automatically by AI SDK via `maxSteps` (default: 10 it
 }
 ```
 
-**Provider Cascade in OpenClaw**:
-1. Primary: `symphony-bridge/symphony/main` → internal credit-gate fallback
-2. Fallback 1: `codebuff-bridge/codebuff/base@latest` → internal account rotation
-3. Fallback 2: OpenClaw free-rider models → OpenClaw's native discovery
+### Runtime Integration
+
+When Symphony Runner executes an issue, it can:
+
+1. **Direct Mode**: Use Codebuff SDK directly (via port 4318 bridge)
+2. **Symphony Bridge Mode**: Use credit-gate providers via port 4319
+3. **OpenClaw Mode**: Delegate to OpenClaw which uses Symphony/Codebuff as backends
+
+This gives the system multiple layers of fallback:
+- Within Symphony: credit-gate tries 40+ providers
+- Within Codebuff: account rotation with 3 keys
+- Within OpenClaw: cascades through Symphony → Codebuff → native models
 
 ---
 
