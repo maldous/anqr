@@ -49,8 +49,28 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
   const content = msg.content;
 
-  // If content is a string, return it directly
+  // If content is a string, check if it contains tool-call metadata and filter it
   if (typeof content === "string") {
+    // Check for tool-call patterns (both JSON and XML format)
+    if (filterToolCalls && (content.includes('"toolCallId"') || content.includes('<tool_call'))) {
+      // Try to parse as JSON and extract text parts
+      try {
+        const parsed = JSON.parse(content);
+        // Recursively process the parsed content as an array
+        if (Array.isArray(parsed)) {
+          return extractTextFromMessage({ role: "assistant", content: parsed }, filterToolCalls);
+        }
+      } catch {
+        // Not JSON - try to extract text by removing XML tool_call tags
+        // This is a fallback for XML-format tool calls
+        let text = content;
+        // Remove tool_call XML tags and their contents
+        text = text.replace(/<tool_call\s+[^>]*>[\s\S]*?<\/tool_call>/gi, '');
+        text = text.replace(/<tool_result\s+[^>]*>[\s\S]*?<\/tool_result>/gi, '');
+        text = text.trim();
+        return text || null;
+      }
+    }
     return content;
   }
 
