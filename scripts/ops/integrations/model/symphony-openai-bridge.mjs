@@ -61,20 +61,11 @@ function extractTextFromXml(obj) {
   }
   
   if (obj && typeof obj === 'object') {
-    // Skip tool_call and tool_result wrapper nodes
+    // Skip tool_call and tool_result wrapper nodes entirely
     const keys = Object.keys(obj);
     if (keys.includes('tool_call') || keys.includes('tool_result')) {
-      // Extract content from inside these nodes, skipping the wrapper
-      let textParts = [];
-      for (const key of keys) {
-        if (key !== '?xml' && key !== '@_version' && key !== '@_encoding') {
-          const value = obj[key];
-          if (key !== 'tool_call' && key !== 'tool_result') {
-            textParts.push(extractTextFromXml(value));
-          }
-        }
-      }
-      return textParts.filter(Boolean).join('\n');
+      // Skip these nodes - don't extract any content from them
+      return '';
     }
     
     // For other objects, extract all text values
