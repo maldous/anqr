@@ -96,6 +96,28 @@ systemctl --user enable --now anqr-symphony-runner.timer
 - `SONAR_HOST_URL` - SonarQube URL
 - `SONAR_TOKEN` / `SONARQUBE_TOKEN` - SonarQube authentication
 
+#### Bridge Configuration
+- `CODEBUFF_BRIDGE_PORT` - Port for Codebuff bridge (default: 4318)
+- `CODEBUFF_BRIDGE_API_KEY` - Bearer token for Codebuff bridge (default: local-bridge)
+- `CODEBUFF_BRIDGE_CWD` - Working directory for Codebuff
+- `CODEBUFF_BRIDGE_URL` - Override URL for bridge
+- `CODEBUFF_MODEL_ID` - Model ID to advertise (default: codebuff/base)
+- `SYMPHONY_BRIDGE_PORT` - Port for Symphony bridge (default: 4319)
+- `SYMPHONY_BRIDGE_API_KEY` - Bearer token for Symphony bridge (default: local-symphony)
+- `SYMPHONY_BRIDGE_ACCEPTED_TOKENS` - Additional accepted tokens (comma-separated)
+- `SYMPHONY_MODEL_ID` - Model ID to advertise (default: symphony/main)
+
+#### Symphony Runtime
+- `ANQR_SYMPHONY_HOST_ID` - Unique identifier for this host
+- `ANQR_SYMPHONY_LEASE_MS` - Lease duration for issue ownership (default: 120000)
+- `ANQR_SYMPHONY_HISTORY_LIMIT` - Number of recent runs to keep in history
+
+#### Email Ingest
+- `ANQR_INGEST_EMAIL` - Email address for ingest processing
+
+#### Linear
+- `LINEAR_WORKSPACE` - Linear workspace identifier
+
 ---
 
 ## 5. AI Providers (40+)
