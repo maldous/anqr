@@ -368,6 +368,112 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
   });
 });
 
+const TARGETED_PROVIDERS = [
+  { name: "groq", route: "symphony/groq", model: "llama-3.3-70b-versatile" },
+  { name: "gemini", route: "symphony/gemini", model: "gemini-2.5-flash" },
+  { name: "mistral", route: "symphony/mistral", model: "mistral-small-latest" },
+  { name: "sambanova", route: "symphony/sambanova", model: "Meta-Llama-3.3-70B-Instruct" },
+  { name: "cerebras", route: "symphony/cerebras", model: "llama3.1-8b" },
+] as const;
+
+test.describe("Per-Provider Completion Tests (requires running bridge)", () => {
+  test.setTimeout(120_000);
+
+  for (const provider of TARGETED_PROVIDERS) {
+    test(`${provider.name} — non-streaming completion via ${provider.route}`, async () => {
+      const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+      if (!reachable) {
+        test.skip();
+        return;
+      }
+
+      const startTime = Date.now();
+      const res = await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SYMPHONY_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: provider.route,
+          messages: [{ role: "user", content: "Say hello in one word." }],
+        }),
+        signal: AbortSignal.timeout(90_000),
+      });
+
+      const elapsed = Date.now() - startTime;
+      const data = await res.json();
+
+      const errMsg = data.error?.message ?? "";
+      if (res.status === 429 || (res.status === 500 && /Too Many Requests|rate.limit/i.test(errMsg))) {
+        console.log(`[openclaw-e2e] ${provider.name}: rate-limited, skipping (${errMsg})`);
+        test.skip();
+        return;
+      }
+
+      expect(res.status, `${provider.name} returned HTTP ${res.status}: ${errMsg}`).toBe(200);
+      expect(data.choices).toBeDefined();
+
+      const content = data.choices[0].message.content;
+      expect(content, `${provider.name} returned empty content`).toBeTruthy();
+      expect(data._symphony_provider).toBe(provider.name);
+
+      console.log(
+        `[openclaw-e2e] ${provider.name}: provider=${data._symphony_provider}, ` +
+        `model=${provider.model}, duration=${data._symphony_duration_ms}ms, ` +
+        `elapsed=${elapsed}ms, content=${String(content).slice(0, 100)}`,
+      );
+    });
+  }
+
+  test("all targeted providers return distinct responses", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const results: Array<{ name: string; status: number; provider: string }> = [];
+
+    await Promise.allSettled(
+      TARGETED_PROVIDERS.map(async (provider) => {
+        const res = await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SYMPHONY_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: provider.route,
+            messages: [{ role: "user", content: "Reply with only the word 'pong'." }],
+          }),
+          signal: AbortSignal.timeout(90_000),
+        });
+        const data = await res.json();
+        results.push({ name: provider.name, status: res.status, provider: data._symphony_provider });
+      }),
+    );
+
+    const succeeded = results.filter((r) => r.status === 200);
+
+    console.log(
+      `[openclaw-e2e] Provider cascade: ${succeeded.length}/${TARGETED_PROVIDERS.length} succeeded — ` +
+      `${succeeded.map((r) => r.name).join(", ")}`,
+    );
+
+    expect(
+      succeeded.length,
+      `Only ${succeeded.length}/${TARGETED_PROVIDERS.length} providers succeeded`,
+    ).toBeGreaterThanOrEqual(3);
+
+    const usedProviders = new Set(succeeded.map((r) => r.provider));
+    expect(
+      usedProviders.size,
+      "Responses should come from distinct providers",
+    ).toBeGreaterThanOrEqual(3);
+  });
+});
+
 test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
   test.setTimeout(120_000);
 
