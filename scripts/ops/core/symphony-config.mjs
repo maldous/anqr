@@ -37,10 +37,16 @@ export const QUEUE_STATES = {
 export const RUNNER_MAX_TURNS = 600;
 export const RUNNER_MAX_EXECUTION_MS = 7_200_000; // 120 min hard timeout — local Ollama averages ~1.5 min/turn
 export const RUNNER_MAX_RETRIES = 2;
-export const RUNNER_OLLAMA_MODEL = "qwen3.5:35b-a3b-32t";
+export const RUNNER_OLLAMA_MODEL = "qwen3-coder-next:latest";
+export const RUNNER_OLLAMA_MODELS = [
+  "qwen3-coder-next:latest",
+  "qwen2.5-coder:3b-instruct",
+  "qwen2.5-coder:0.5b",
+];
 export const RUNNER_OLLAMA_BASE_URL = "http://localhost:11434/v1";
 export const RUNNER_MAX_OUTPUT_TOKENS = 4096;
 export const RUNNER_PROVIDER_FAILURE_WINDOW_SECS = 360;
+export const RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS = 120; // 2 min — paid providers have temporary rate limits, retry sooner
 export const RUNNER_AUTO_PUSH = true;
 export const RUNNER_STUCK_THRESHOLD_MS = 15 * 60 * 1000; // 15 min — if In Progress with no update, assume runner was killed
 export const RUNNER_TURN_BUDGET_WARNING = 5; // inject wrap-up warning when this many turns remain

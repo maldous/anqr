@@ -93,20 +93,12 @@
           "name": "Qwen2.5 Coder 0.5B"
         },
         {
+          "id": "qwen2.5-coder:3b-instruct",
+          "name": "Qwen2.5 Coder 3B Instruct"
+        },
+        {
           "id": "qwen3-coder-next:latest",
           "name": "Qwen3 Coder Next"
-        },
-        {
-          "id": "glm-4.7-flash:latest",
-          "name": "GLM-4.7 Flash"
-        },
-        {
-          "id": "qwen3.5:35b-a3b-32t",
-          "name": "Qwen3.5 35B-A3B-32T"
-        },
-        {
-          "id": "qwen3.5:35b-a3b",
-          "name": "Qwen3.5 35B-A3B"
         }
       ]
     }
@@ -128,10 +120,8 @@
           "symphony-bridge/symphony/cerebras",
           "symphony-bridge/symphony/ollama-local",
           "ollama/qwen2.5-coder:0.5b",
+          "ollama/qwen2.5-coder:3b-instruct",
           "ollama/qwen3-coder-next:latest",
-          "ollama/glm-4.7-flash:latest",
-          "ollama/qwen3.5:35b-a3b-32t",
-          "ollama/qwen3.5:35b-a3b",
           "codebuff-bridge/codebuff/base"
         ]
       }

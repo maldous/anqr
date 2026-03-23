@@ -118,35 +118,63 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
     .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
     .join("\n\n");
 
+  const runOpts = {
+    agent: model || "codebuff/base",
+    prompt,
+    maxAgentSteps: MAX_TOOL_ITERATIONS,
+    handleEvent: (event) => {
+      try {
+        if (!event) return;
+        if (event.type === "tool_call") {
+          const toolName = event.toolName || "unknown";
+          const args = event.input ? JSON.stringify(event.input).slice(0, 200) : "";
+          console.log(`[symphony-bridge] 🔧 codebuff ${toolName}: ${args}`);
+          if (onChunk) {
+            onChunk({ type: "text", text: `🔧 ${toolName}: ${args}\n` });
+          }
+        } else if (event.type === "reasoning_delta" || event.type === "reasoning") {
+          const text = event.text || event.content || "";
+          if (text && onChunk) {
+            onChunk({ type: "text", text: `💡 ${text}\n` });
+          }
+        } else if (event.type === "subagent_start") {
+          const name = event.displayName || event.agentType || "subagent";
+          console.log(`[symphony-bridge] 🤖 codebuff subagent: ${name}`);
+          if (onChunk) {
+            onChunk({ type: "text", text: `🤖 subagent: ${name}\n` });
+          }
+        } else {
+          console.log(`[symphony-bridge] codebuff event: ${event.type}`);
+        }
+      } catch (err) {
+        console.log(`[symphony-bridge] handleEvent error: ${err.message}`);
+      }
+    },
+    handleStreamChunk: (chunk) => {
+      try {
+        if (!onChunk) return;
+        if (typeof chunk === "string") {
+          onChunk({ type: "text", text: chunk });
+        } else if (chunk && chunk.chunk) {
+          onChunk({ type: "text", text: chunk.chunk });
+        }
+      } catch (err) {
+        console.log(`[symphony-bridge] handleStreamChunk error: ${err.message}`);
+      }
+    },
+  };
+
+  const result = await client.run(runOpts);
+  const text = result?.text || result?.output || "";
+
   if (stream) {
-    // Codebuff doesn't support streaming, so we run and simulate
-    const result = await client.run({
-      agent: model || "codebuff/base",
-      prompt,
-      maxAgentSteps: MAX_TOOL_ITERATIONS,
-    });
-
-    const text = result?.text || result?.output || "";
-
-    // Yield text in chunks
-    for (let i = 0; i < text.length; i += 50) {
-      const chunk = text.slice(i, i + 50);
-      onChunk({ type: "text", text: chunk });
-    }
-
     return {
       text,
       providerName: provider.name,
     };
   } else {
-    const result = await client.run({
-      agent: model || "codebuff/base",
-      prompt,
-      maxAgentSteps: MAX_TOOL_ITERATIONS,
-    });
-
     return {
-      text: result?.text || result?.output || "",
+      text,
       providerName: provider.name,
       usage: { promptTokens: 0, completionTokens: 0 },
     };
@@ -417,7 +445,7 @@ function createProviderModel(provider) {
   if (name === "codebuff-bridge") {
     return createOpenAiCompatibleModel(model, apiKey, baseUrl || "http://127.0.0.1:4318/v1");
   }
-  if (name === "ollama-local") {
+  if (name === "ollama-local" || name.startsWith("ollama-qwen")) {
     return createOpenAiCompatibleModel(
       model,
       apiKey,
@@ -551,7 +579,7 @@ if (VALID_TOKENS.size > 1) {
   console.log(`[symphony-bridge] Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
-const MAX_TOOL_ITERATIONS = 10; // Maximum tool call loops
+const MAX_TOOL_ITERATIONS = 1000; // Maximum tool call loops
 const FALLBACK_DELAY_MS = 1000;
 
 // Periodic stats logging interval (every 10 requests)
@@ -721,14 +749,37 @@ async function invokeWithAI(provider, messages, options = {}) {
       toolChoice: "auto",
       stopWhen: stepCountIs(MAX_TOOL_ITERATIONS),
       onStepFinish: (step) => {
+        if (onChunk) {
+          if (step.reasoning && step.reasoning.length > 0) {
+            for (const r of step.reasoning) {
+              const text = r.text || r.content || '';
+              if (text) {
+                onChunk({ type: "text", text: `💡 ${text}\n` });
+              }
+            }
+          }
+          if (step.text && step.text.trim()) {
+            onChunk({ type: "text", text: `${step.text}\n` });
+          }
+        }
         if (step.toolCalls && step.toolCalls.length > 0) {
-          console.log(`[symphony-bridge] 🔧 Step tools: ${step.toolCalls.map(t => t.toolName).join(', ')}`);
+          for (const tc of step.toolCalls) {
+            const input = tc.input ?? tc.args;
+            const summary = input ? JSON.stringify(input).slice(0, 200) : '';
+            console.log(`[symphony-bridge] 🔧 ${tc.toolName}: ${summary}`);
+            if (onChunk) {
+              onChunk({ type: "text", text: `🔧 ${tc.toolName}: ${summary}\n` });
+            }
+          }
         }
       },
       onFinish: (event) => {
         finishReason = event.finishReason;
         if (finishReason === "error" || !event.text) {
           console.log(`[symphony-bridge] ⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`);
+        }
+        if (finishReason === "tool-calls") {
+          console.log(`[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`);
         }
       },
     });
@@ -750,6 +801,15 @@ async function invokeWithAI(provider, messages, options = {}) {
     // Check for embedded errors — some providers return 200 with error in body
     if (!fullText || fullText.trim() === "" || finishReason === "error") {
       throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
+    }
+
+    // Handle truncated responses — model hit step limit while still wanting to execute tools
+    if (finishReason === "tool-calls") {
+      const truncationNote = "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+      fullText += truncationNote;
+      if (onChunk) {
+        onChunk({ type: "text", text: truncationNote });
+      }
     }
 
     // Check response for embedded error metadata
@@ -777,7 +837,12 @@ async function invokeWithAI(provider, messages, options = {}) {
       stopWhen: stepCountIs(MAX_TOOL_ITERATIONS),
     });
 
-    const text = result.text || "";
+    let text = result.text || "";
+
+    if (result.finishReason === "tool-calls") {
+      console.log(`[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`);
+      text += "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+    }
 
     console.log(`[symphony-bridge] Completion done`);
 
@@ -1245,12 +1310,19 @@ const server = http.createServer(async (req, res) => {
       const startTime = Date.now();
 
       if (stream) {
+        // Disable request timeout for streaming — tool execution can take minutes
+        req.setTimeout(0);
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache",
           Connection: "keep-alive",
           "X-Accel-Buffering": "no",
         });
+
+        // SSE heartbeat — keeps connection alive during long tool executions
+        const heartbeat = setInterval(() => {
+          try { res.write(":ping\n\n"); } catch { /* connection closed */ }
+        }, 10000);
 
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
@@ -1268,6 +1340,8 @@ const server = http.createServer(async (req, res) => {
               res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
             }
           });
+
+          clearInterval(heartbeat);
 
           // Send final chunk
           const finalChunk = {
@@ -1295,6 +1369,7 @@ const server = http.createServer(async (req, res) => {
             isError: false,
           });
         } catch (streamError) {
+          clearInterval(heartbeat);
           console.error(`[symphony-bridge] Streaming error: ${streamError.message}`);
 
           const durationMs = Date.now() - startTime;
@@ -1405,6 +1480,10 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 // -------------------------------------------------------------------------->
 // Start server
 // --------------------------------------------------------------------------<
+
+// Disable default 2-minute server timeout for long-running SSE streams
+server.timeout = 0;
+server.keepAliveTimeout = 0;
 
 server.listen(PORT, "127.0.0.1", () => {
   console.log(`[symphony-bridge] ========================================`);

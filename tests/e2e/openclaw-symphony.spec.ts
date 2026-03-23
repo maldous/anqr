@@ -13,9 +13,6 @@
 
 import { test, expect } from "@playwright/test";
 
-// Playwright test type includes describe
-type TestType = typeof test;
-
 // Fixtures are imported inline to avoid workspace resolution issues in test context
 const symphonyTestScenarios = {
   simplePrompt: {
@@ -69,7 +66,7 @@ const openclawConfig = {
 // These tests verify OpenClaw model configuration matches Symphony routes
 // The actual execution tests would use OpenClaw SDK or HTTP API
 
-describe("OpenClaw Model Configuration", () => {
+test.describe("OpenClaw Model Configuration", () => {
   test("primary model should be Symphony main", () => {
     expect(openclawConfig.primaryModel).toBe("symphony-bridge/symphony/main");
   });
@@ -106,7 +103,7 @@ describe("OpenClaw Model Configuration", () => {
   });
 });
 
-describe("Symphony Bridge Primary Model Selection", () => {
+test.describe("Symphony Bridge Primary Model Selection", () => {
   test("should route to symphony/main when primary model requested", async () => {
     // This test validates that the Symphony bridge can handle the primary model
     // In real execution, OpenClaw would call the bridge with this model
@@ -131,7 +128,7 @@ describe("Symphony Bridge Primary Model Selection", () => {
   });
 });
 
-describe("Symphony Fallback Continuity", () => {
+test.describe("Symphony Fallback Continuity", () => {
   test("fallback chain should have at least 5 providers", () => {
     expect(openclawConfig.fallbackModels.length).toBeGreaterThanOrEqual(5);
   });
@@ -153,7 +150,7 @@ describe("Symphony Fallback Continuity", () => {
   });
 });
 
-describe("Provider Degradation Simulation", () => {
+test.describe("Provider Degradation Simulation", () => {
   test("should have multiple fallback options for resilience", () => {
     // When primary fails, should have at least 3 fallbacks
     const fallbackCount = openclawConfig.fallbackModels.length;
@@ -179,7 +176,7 @@ describe("Provider Degradation Simulation", () => {
 });
 
 // SDK, HTTP, and Streaming behavior tests
-describe("Command Execution Modes", () => {
+test.describe("Command Execution Modes", () => {
   test("should support non-streaming HTTP mode", () => {
     const scenario = symphonyTestScenarios.simplePrompt;
     expect(scenario.stream).toBe(false);

@@ -7,8 +7,8 @@
  * skips recently-failed providers, and returns the first available provider.
  *
  * Cascade order (best-to-worst):
- *   1. Codex (OpenAI)  — cloud, gpt-5.4 (when credits available)
- *   2. Codebuff        — cloud, codebuff/base (programmatic SDK)
+ *   1. Codex (OpenAI)  — paid cloud, gpt-5.4 (temporary rate limits, 2-min cooldown)
+ *   2. Codebuff        — paid cloud, codebuff/base (temporary rate limits, 2-min cooldown)
  *   3. Groq            — free cloud, fast, llama-3.3-70b-versatile
  *   4. Mistral         — free experimental tier, devstral-small-2507
  *   5. Gemini          — free cloud tier, gemini-2.5-flash
@@ -17,7 +17,10 @@
  *   8. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
  *   9. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
  *  10. GitHub Models   — free, gpt-4.1-mini
- *  11. Ollama local    — local fallback, qwen3.5:35b-a3b-32t
+ *  11. Codebuff Bridge — local proxy to codebuff
+ *  12. Ollama qwen3-coder-next    — local, never rate limited
+ *  13. Ollama qwen2.5-coder:3b    — local, never rate limited
+ *  14. Ollama qwen2.5-coder:0.5b  — local, never rate limited
  *
  * All probes use lightweight /v1/models listings (not generation requests)
  * to preserve free-tier quotas.
@@ -25,7 +28,8 @@
  * Legacy lessons encoded:
  *   - Always probe before selecting
  *   - Track failures with a time window (skip broken providers for 360s)
- *   - Ollama is the last-resort local fallback
+ *   - Local Ollama models are ultimate fallbacks (never rate limited)
+ *   - Paid providers (codex, codebuff) get shorter failure cooldowns (2 min vs 6 min)
  *   - State files live in /run/user/ for crash recovery
  */
 
@@ -37,6 +41,7 @@ import {
   RUNNER_OLLAMA_MODEL,
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PROVIDER_FAILURE_WINDOW_SECS,
+  RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
 } from "../../symphony-config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -229,13 +234,13 @@ async function probeGitHubModels(apiKey, model) {
   return text.includes(model);
 }
 
-async function probeOllama() {
+async function probeOllamaModel(modelName) {
   const res = await probeWithTimeout(`${RUNNER_OLLAMA_BASE_URL.replace("/v1", "")}/api/tags`);
   if (!res || !res.ok) return false;
   try {
     const data = await res.json();
     const models = (data.models || []).map((m) => m.name);
-    return models.includes(RUNNER_OLLAMA_MODEL);
+    return models.some((m) => m === modelName);
   } catch {
     return false;
   }
@@ -252,6 +257,7 @@ const PROVIDERS = [
     baseUrl: "codex-sdk",
     envVar: null,
     driver: "codex-sdk",
+    failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
     probe: (provider) => probeCodexSdk(provider.model),
   },
   {
@@ -260,6 +266,7 @@ const PROVIDERS = [
     baseUrl: "codebuff",
     envVar: "CODEBUFF_API_KEY",
     requiresSdk: true,
+    failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
   },
   {
     name: "openclaw",
@@ -500,6 +507,7 @@ const PROVIDERS = [
     model: "codebuff/base@latest",
     baseUrl: "http://127.0.0.1:4318/v1",
     envVar: "CODEBUFF_BRIDGE_API_KEY",
+    failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
     probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
   },
   {
@@ -507,7 +515,21 @@ const PROVIDERS = [
     model: RUNNER_OLLAMA_MODEL,
     baseUrl: RUNNER_OLLAMA_BASE_URL,
     envVar: null,
-    probe: () => probeOllama(),
+    probe: () => probeOllamaModel(RUNNER_OLLAMA_MODEL),
+  },
+  {
+    name: "ollama-qwen2.5-coder-3b",
+    model: "qwen2.5-coder:3b-instruct",
+    baseUrl: RUNNER_OLLAMA_BASE_URL,
+    envVar: null,
+    probe: () => probeOllamaModel("qwen2.5-coder:3b-instruct"),
+  },
+  {
+    name: "ollama-qwen2.5-coder-0.5b",
+    model: "qwen2.5-coder:0.5b",
+    baseUrl: RUNNER_OLLAMA_BASE_URL,
+    envVar: null,
+    probe: () => probeOllamaModel("qwen2.5-coder:0.5b"),
   },
 ];
 
@@ -539,7 +561,9 @@ function isRecentlyFailed(providerName) {
   const failedAt = failures[providerName];
   if (!failedAt) return false;
   const now = Math.floor(Date.now() / 1000);
-  return now - failedAt < RUNNER_PROVIDER_FAILURE_WINDOW_SECS;
+  const provider = PROVIDERS.find((p) => p.name === providerName);
+  const windowSecs = provider?.failureWindowSecs || RUNNER_PROVIDER_FAILURE_WINDOW_SECS;
+  return now - failedAt < windowSecs;
 }
 
 export function recordProviderFailure(providerName) {
@@ -1000,7 +1024,7 @@ function matchesExcludedNames(provider, excludedNames) {
   return excludedNames.has(provider.name);
 }
 
-const PREFERRED_PROVIDER_ORDER = ["codex"];
+const PREFERRED_PROVIDER_ORDER = ["codex", "codebuff"];
 
 async function resolveProviderApiKey(provider) {
   let apiKey = provider.envVar ? process.env[provider.envVar] : null;
