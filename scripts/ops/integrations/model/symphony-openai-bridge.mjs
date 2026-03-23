@@ -41,6 +41,54 @@ import {
   logProviderStats,
   clearProviderFailure,
 } from "./symphony-credit-gate.mjs";
+import { XMLParser } from "fast-xml-parser";
+
+// XML parser for filtering tool-call metadata
+const xmlParser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_",
+  textNodeName: "#text",
+});
+
+// Recursively extract text from XML AST, excluding tool_call and tool_result nodes
+function extractTextFromXml(obj) {
+  if (typeof obj === 'string' || typeof obj === 'number') {
+    return String(obj);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => extractTextFromXml(item)).filter(Boolean).join('\n');
+  }
+  
+  if (obj && typeof obj === 'object') {
+    // Skip tool_call and tool_result wrapper nodes
+    const keys = Object.keys(obj);
+    if (keys.includes('tool_call') || keys.includes('tool_result')) {
+      // Extract content from inside these nodes, skipping the wrapper
+      let textParts = [];
+      for (const key of keys) {
+        if (key !== '?xml' && key !== '@_version' && key !== '@_encoding') {
+          const value = obj[key];
+          if (key !== 'tool_call' && key !== 'tool_result') {
+            textParts.push(extractTextFromXml(value));
+          }
+        }
+      }
+      return textParts.filter(Boolean).join('\n');
+    }
+    
+    // For other objects, extract all text values
+    let textParts = [];
+    for (const key of Object.keys(obj)) {
+      // Skip XML declaration and attributes
+      if (key.startsWith('?xml') || key.startsWith('@_')) continue;
+      textParts.push(extractTextFromXml(obj[key]));
+    }
+    return textParts.filter(Boolean).join('\n');
+  }
+  
+  return '';
+}
 
 // Helper to extract text from AI SDK-style responses and filter out tool-call metadata
 // This prevents raw tool-call content from being exposed to clients like OpenClaw
@@ -51,18 +99,18 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
   // If content is a string, check if it contains tool-call metadata and filter it
   if (typeof content === "string") {
-    // Check for tool-call patterns (both JSON and XML format) - be comprehensive
+    // Check for tool-call patterns (both JSON and XML format)
     const hasToolCall = filterToolCalls && (
       content.includes('"toolCallId"') || 
       content.includes('<tool_call') || 
       content.includes('</tool_call>') ||
       content.includes('<tool-result') ||
-      content.includes('tool_call') ||
+      content.includes('<function=') ||
       content.includes('toolCallId')
     );
     
     if (hasToolCall) {
-      // Try to parse as JSON and extract text parts
+      // Try to parse as JSON first
       try {
         const parsed = JSON.parse(content);
         // Recursively process the parsed content as an array
@@ -70,22 +118,30 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
           return extractTextFromMessage({ role: "assistant", content: parsed }, filterToolCalls);
         }
       } catch {
-        // Not JSON - try to extract text by removing XML tool_call tags
-        // This is a fallback for XML-format tool calls
-        let text = content;
-        // Remove tool_call XML tags and their contents (comprehensive patterns)
-        // Handle both <tool_call> and <tool_call attr> formats
-        text = text.replace(/<tool_call(?:\s+[^>]*)?>[\s\S]*?<\/tool_call>/gi, '');
-        text = text.replace(/<tool_result(?:\s+[^>]*)?>[\s\S]*?<\/tool_result>/gi, '');
-        text = text.replace(/<tool-call(?:\s+[^>]*)?>[\s\S]*?<\/tool-call>/gi, '');
-        text = text.replace(/<toolName[\s>][\s\S]*?<\/toolName>/gi, '');
-        text = text.replace(/<argument[\s>][\s\S]*?<\/argument>/gi, '');
-        text = text.replace(/<function=[^>]*>[\s\S]*?<\/function>/gi, '');
-        // Also remove standalone tool_call-like XML fragments
-        text = text.replace(/<tool_call[^>]*\/?>/gi, '');
-        text = text.replace(/<\/tool_call>/gi, '');
-        text = text.trim();
-        return text || null;
+        // Not JSON - parse as XML and extract text nodes only
+        try {
+          const parsed = xmlParser.parse(content);
+          // Extract only text content, excluding tool_call and tool_result nodes
+          const text = extractTextFromXml(parsed);
+          if (text) return text.trim();
+        } catch {
+          // XML parsing failed, fall back to line-based filtering
+        }
+        
+        // Fallback: line-based filtering for XML content
+        const lines = content.split('\n');
+        const filteredLines = lines.filter(line => {
+          const trimmed = line.trim();
+          // Skip lines that are XML tags related to tool calls
+          if (trimmed.startsWith('<tool_call') || trimmed.startsWith('</tool_call') ||
+              trimmed.startsWith('<tool_result') || trimmed.startsWith('</tool_result') ||
+              trimmed.startsWith('<function=') || trimmed.startsWith('</function') ||
+              trimmed.startsWith('<parameter=') || trimmed.startsWith('</parameter')) {
+            return false;
+          }
+          return true;
+        });
+        return filteredLines.join('\n').trim() || null;
       }
     }
     return content;
