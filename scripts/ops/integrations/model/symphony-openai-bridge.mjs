@@ -691,9 +691,9 @@ if (VALID_TOKENS.size > 1) {
   console.log(`[symphony-bridge] Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
-const MAX_TOOL_ITERATIONS = 1000; // Maximum tool call loops for AI SDK providers
+const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
-const CODEBUFF_MAX_CONTINUATIONS = 5; // Max auto-continue loops when agent ends turn with work remaining
+const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
 const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
 

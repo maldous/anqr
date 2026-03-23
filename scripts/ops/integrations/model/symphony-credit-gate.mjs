@@ -1024,7 +1024,7 @@ function matchesExcludedNames(provider, excludedNames) {
   return excludedNames.has(provider.name);
 }
 
-const PREFERRED_PROVIDER_ORDER = ["codex", "codebuff"];
+const PREFERRED_PROVIDER_ORDER = ["codex"];
 
 async function resolveProviderApiKey(provider) {
   let apiKey = provider.envVar ? process.env[provider.envVar] : null;

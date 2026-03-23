@@ -15,6 +15,8 @@ export default defineConfig({
       "tests/unit/**/*.test.ts",
       "tests/integration/**/*.spec.ts",
       "tests/integration/**/*.test.ts",
+      "scripts/ops/**/*.spec.ts",
+      "scripts/ops/**/*.test.ts",
       "packages/**/*.spec.ts",
       "packages/**/*.test.ts",
       "apps/**/*.spec.ts",
@@ -24,7 +26,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reportsDirectory: "coverage",
-      include: ["src/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
+      include: ["src/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "scripts/ops/**/*.{ts,mjs}"],
       exclude: ["src/**/*.d.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "**/*.generated.*"],
     },
     setupFiles: [],
