@@ -74,11 +74,13 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
         // This is a fallback for XML-format tool calls
         let text = content;
         // Remove tool_call XML tags and their contents (comprehensive patterns)
-        text = text.replace(/<tool_call\s+[^>]*>[\s\S]*?<\/tool_call>/gi, '');
-        text = text.replace(/<tool_result\s+[^>]*>[\s\S]*?<\/tool_result>/gi, '');
-        text = text.replace(/<tool-call\s+[^>]*>[\s\S]*?<\/tool-call>/gi, '');
+        // Handle both <tool_call> and <tool_call attr> formats
+        text = text.replace(/<tool_call(?:\s+[^>]*)?>[\s\S]*?<\/tool_call>/gi, '');
+        text = text.replace(/<tool_result(?:\s+[^>]*)?>[\s\S]*?<\/tool_result>/gi, '');
+        text = text.replace(/<tool-call(?:\s+[^>]*)?>[\s\S]*?<\/tool-call>/gi, '');
         text = text.replace(/<toolName[\s>][\s\S]*?<\/toolName>/gi, '');
         text = text.replace(/<argument[\s>][\s\S]*?<\/argument>/gi, '');
+        text = text.replace(/<function=[^>]*>[\s\S]*?<\/function>/gi, '');
         // Also remove standalone tool_call-like XML fragments
         text = text.replace(/<tool_call[^>]*\/?>/gi, '');
         text = text.replace(/<\/tool_call>/gi, '');
