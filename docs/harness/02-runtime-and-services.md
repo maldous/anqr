@@ -25,6 +25,15 @@ Integrations and support:
 - `scripts/ops/sonar-linear-mail.mjs`
 - `scripts/ops/symphony-credit-gate.mjs`
 - `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
+- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — AI SDK-based bridge with tool execution
+- `scripts/ops/integrations/model/ollama-local-audit.mjs`
+- `scripts/ops/integrations/model/codebuff-sdk-runner.mjs` (DEPRECATED, exports shared constants only)
+- `scripts/ops/linear-all.mjs` — Fetches all backlog issues from Linear
+- `scripts/ops/linear-issue-review.mjs` — One-time issue review and correction
+- `scripts/ops/integrations/linear/linear-client.mjs` — Linear API helper library
+- `scripts/ops/harness-doctor.mjs` — Runtime diagnostics and health checks
+- `scripts/ops/integrations/sonar/sonar-linear-audit.mjs` — Nightly SonarQube to Linear sync
+- `scripts/ops/notifications/notify-impl.mjs` — Notification implementation details (path constants)
 
 Restructured copies under subdirectories may exist. The root entrypoints remain the stable operator contract until a deliberate cleanup replaces them.
 
@@ -40,6 +49,7 @@ Scheduled automation:
 Long-running services:
 
 - `anqr-codebuff-bridge.service` — OpenAI-compatible HTTP gateway for Codebuff SDK
+- `anqr-symphony-bridge.service` — OpenAI-compatible HTTP gateway for Symphony with AI SDK and tool execution (NEW)
 
 Shared environment:
 
@@ -68,6 +78,7 @@ Optional local support:
 Documented harness ports:
 
 - `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
+- `4319` — Symphony bridge (AI SDK-based with tool execution) [NEW]
 - `18789` — OpenClaw gateway (local AI agent, /v1/chat/completions)
 
 Additional port truth must be documented in follow-up runbooks instead of inferred.

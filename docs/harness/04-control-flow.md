@@ -71,6 +71,18 @@ The maintained flow is:
   - `scripts/ops/integrations/sonar/sonar-linear-sync.mjs`
   - keeps Sonar findings visible in Linear
 
+## Additional scripts
+
+### Linear utilities
+
+- `scripts/ops/linear-all.mjs` — Fetches all backlog issues from Linear, handling pagination. Used for bulk operations and reporting.
+- `scripts/ops/linear-issue-review.mjs` — Performs one-time review and correction of open Linear issues to ensure they adhere to hexagonal architecture contracts.
+- `scripts/ops/integrations/linear/linear-client.mjs` — Helper library for Linear API. Provides reusable functions for Linear operations (query building, mutations, etc.).
+
+### Diagnostics
+
+- `scripts/ops/harness-doctor.mjs` — Performs runtime diagnostics and health checks on the AI harness. Validates environment, tokens, services, and connectivity.
+
 ## Truth rules
 
 - root `scripts/ops/*` entrypoints remain the stable operator contract

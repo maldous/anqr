@@ -287,6 +287,133 @@ const ranked = getRankedProviders();
 
 For issues without estimates, the system auto-assigns based on priority: P0=5, P1=4, P2=3, P3=2, P4=1 (minimum 1 point).
 
+## Core Modules
+
+### symphony-credit-gate.mjs
+
+Core module for provider selection and auto-fallback. See earlier sections for detailed documentation.
+
+### symphony-state.mjs
+
+Core module for managing symphony state. Provides:
+
+- State file management (`reports/symphony/state.json`)
+- Issue queue tracking
+- Execution history
+- Provider usage metrics
+
+### symphony-validation.mjs
+
+Core module for validation. Defines a `VALIDATION_MANIFEST` for operations like:
+
+- Type checking (`typecheck:all`)
+- Linting (`lint:all`)
+- Dependency cruiser checks
+- Unit and E2E tests
+
+Used by the runner to validate changes before completion.
+
+### codebuff-sdk-runner.mjs (DEPRECATED)
+
+**Status**: Deprecated. All Codebuff calls now go through the HTTP bridge at `http://127.0.0.1:4318`.
+
+This module now only exports shared path constants:
+- `PROJECT_ROOT` — Project root directory
+- `REPORTS_DIR` — Codebuff reports directory
+
+Use `codebuff-openai-bridge.mjs` instead for Codebuff integration.
+
+## Symphony Bridge
+
+The Symphony Bridge (`scripts/ops/integrations/model/symphony-openai-bridge.mjs`) is an OpenAI-compatible HTTP gateway that uses the AI SDK for provider communication and tool execution.
+
+### Overview
+
+- **Purpose**: Provides a unified OpenAI-compatible API surface while leveraging AI SDK for automatic tool execution
+- **Port**: `4319` (configurable via `SYMPHONY_BRIDGE_PORT`)
+- **Auth**: Bearer token (default: `local-symphony`)
+- **Model ID**: `symphony/main` (configurable via `SYMPHONY_MODEL_ID`)
+
+### Architecture
+
+The bridge combines:
+1. **AI SDK** (`createAI`, `generateText`, `streamText`) for provider communication
+2. **Credit-gate** for provider selection and auto-fallback
+3. **Tool execution** for actual file operations, shell commands, and glob patterns
+
+### Supported Providers
+
+| Provider | AI SDK Integration | Notes |
+|----------|-------------------|-------|
+| codebuff | `@codebuff/sdk` | Uses local SDK directly |
+| groq | `@ai-sdk/groq` | Free, fast |
+| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API |
+| openclaw | OpenAI-compatible | Local gateway at `http://127.0.0.1:18789/v1` |
+| mistral | OpenAI-compatible | `https://api.mistral.ai/v1` |
+| gemini | `@ai-sdk/google` | Gemini 2.5 Flash models |
+| codex | OpenAI-compatible | Default: `https://api.openai.com/v1` |
+
+### Available Tools
+
+The bridge exposes three tools for autonomous execution:
+
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `exec` | Execute shell commands | `command` (string), `cwd` (optional) |
+| `read` | Read files from filesystem | `path` (string), `offset` (optional), `lines` (optional) |
+| `glob` | Find files matching pattern | `pattern` (string), `cwd` (optional) |
+
+Tool execution is handled automatically by AI SDK via `maxSteps` parameter (default: 10 iterations). The bridge executes tools autonomously during the conversation loop.
+
+### Endpoints
+
+- `GET /v1/models` — List available models
+- `POST /v1/chat/completions` — Chat completion (streaming & non-streaming)
+- `GET /health` — Health check (no auth required, includes provider stats and available tools)
+- `GET /v1/metrics` — Bridge + credit-gate metrics
+- `GET /v1/stats` — Provider statistics
+
+### Environment Variables
+
+- `SYMPHONY_BRIDGE_PORT` — Port (default: 4319)
+- `SYMPHONY_BRIDGE_API_KEY` — Bearer token (default: local-symphony)
+- `SYMPHONY_BRIDGE_ACCEPTED_TOKENS` — Comma-separated additional tokens
+- `SYMPHONY_MODEL_ID` — Model ID to advertise (default: symphony/main)
+
+Plus all provider tokens required by credit-gate (`GROQ_TOKEN`, `GEMINI_TOKEN`, `MISTRAL_TOKEN`, `OPENROUTER_TOKEN`, etc.)
+
+### Systemd Service
+
+```bash
+# Start
+systemctl --user start anqr-symphony-bridge.service
+
+# Stop
+systemctl --user stop anqr-symphony-bridge.service
+
+# View logs
+journalctl --user -u anqr-symphony-bridge.service -f
+```
+
+### Usage with OpenClaw
+
+Configure OpenClaw to use the bridge:
+
+```json
+{
+  "providers": {
+    "symphony-bridge": {
+      "baseUrl": "http://127.0.0.1:4319/v1",
+      "apiKey": "local-symphony",
+      "api": "openai-completions",
+      "models": [
+        { "id": "symphony-bridge/symphony/main", "name": "Symphony Main" }
+      ]
+    }
+  }
+}
+```
+
 ## Required behavior
 
 - prefer configured provider routing over ad hoc direct calls
