@@ -175,7 +175,9 @@ async function tryProvider(provider, messages) {
   const needsContinuation = finishReason === "length";
 
   if (needsContinuation) {
-    console.log(`[symphony-bridge] 🔄 Downstream signals continuation needed (finish_reason=length)`);
+    console.log(
+      `[symphony-bridge] 🔄 Downstream signals continuation needed (finish_reason=length)`,
+    );
   }
 
   return { data, providerName: name, needsContinuation };
@@ -805,7 +807,9 @@ const server = http.createServer(async (req, res) => {
             ],
           };
           if (needsContinuation) {
-            console.log(`[symphony-bridge] 🔄 Forwarding continuation to caller (finish_reason=length)`);
+            console.log(
+              `[symphony-bridge] 🔄 Forwarding continuation to caller (finish_reason=length)`,
+            );
           }
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
           res.write("data: [DONE]\n\n");

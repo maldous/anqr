@@ -709,23 +709,27 @@ async function trySingleAccountStream(
         const preview = event.content?.slice(0, 80) || "";
         console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
       }
-      // Stream any output events as they come in
+      // Stream any output events as they come in - filter out tool-call metadata
       if (event && event.type === "output" && event.content) {
         fullText += event.content;
-        const chunk = {
-          id: completionId,
-          object: "chat.completion.chunk",
-          created,
-          model: MODEL_ID,
-          choices: [
-            {
-              index: 0,
-              delta: { content: event.content },
-              finish_reason: null,
-            },
-          ],
-        };
-        onChunk(chunk);
+        // Filter the content to remove tool-call metadata before streaming
+        const { text: filteredContent } = extractTextFromResponse(event.content);
+        if (filteredContent) {
+          const chunk = {
+            id: completionId,
+            object: "chat.completion.chunk",
+            created,
+            model: MODEL_ID,
+            choices: [
+              {
+                index: 0,
+                delta: { content: filteredContent },
+                finish_reason: null,
+              },
+            ],
+          };
+          onChunk(chunk);
+        }
       }
     },
     maxAgentSteps: 50,
@@ -759,24 +763,28 @@ async function trySingleAccountStream(
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
-  // Send any remaining output
+  // Send any remaining output - filter out tool-call metadata
   if (typeof output === "string" && output.length > 0) {
     const remaining = output.slice(fullText.length);
     if (remaining) {
-      const chunk = {
-        id: completionId,
-        object: "chat.completion.chunk",
-        created,
-        model: MODEL_ID,
-        choices: [
-          {
-            index: 0,
-            delta: { content: remaining },
-            finish_reason: null,
-          },
-        ],
-      };
-      onChunk(chunk);
+      // Filter the remaining content to remove tool-call metadata
+      const { text: filteredRemaining } = extractTextFromResponse(remaining);
+      if (filteredRemaining) {
+        const chunk = {
+          id: completionId,
+          object: "chat.completion.chunk",
+          created,
+          model: MODEL_ID,
+          choices: [
+            {
+              index: 0,
+              delta: { content: filteredRemaining },
+              finish_reason: null,
+            },
+          ],
+        };
+        onChunk(chunk);
+      }
     }
   }
 
@@ -976,30 +984,32 @@ const server = http.createServer(async (req, res) => {
           // Determine finish_reason and send any remaining content
           let finishReason = "stop";
 
-          // If no streaming chunks were sent during execution (text-only mode), send the full result now
-          // This handles the case where the SDK doesn't emit "output" events during the run
-          if (
-            streamResult?.text &&
-            streamResult.text.length > 0 &&
-            !streamResult.hadStreamingChunks
-          ) {
-            // Extract actual text content from the JSON response
+          // ALWAYS filter the text content to remove tool-call metadata, regardless of streaming mode
+          // This ensures clean output in both text-only mode and streaming output events mode
+          if (streamResult?.text && streamResult.text.length > 0) {
+            // Extract actual text content from the JSON response, filtering out tool-call metadata
             const { text: textContent } = extractTextFromResponse(streamResult.text);
             if (textContent) {
-              const contentChunk = {
-                id: completionId,
-                object: "chat.completion.chunk",
-                created,
-                model,
-                choices: [
-                  {
-                    index: 0,
-                    delta: { content: textContent },
-                    finish_reason: null,
-                  },
-                ],
-              };
-              res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
+              // Only send if we didn't already stream during execution (avoid duplicates)
+              if (!streamResult.hadStreamingChunks) {
+                const contentChunk = {
+                  id: completionId,
+                  object: "chat.completion.chunk",
+                  created,
+                  model,
+                  choices: [
+                    {
+                      index: 0,
+                      delta: { content: textContent },
+                      finish_reason: null,
+                    },
+                  ],
+                };
+                res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
+              } else {
+                // Already streamed during execution - log what was filtered
+                console.log(`[bridge] 📝 Filtered content (already streamed: ${streamResult.hadStreamingChunks})`);
+              }
             }
           }
 
@@ -1093,6 +1103,9 @@ const server = http.createServer(async (req, res) => {
           }
         }
 
+        // Extract actual text content, filtering out tool-call metadata
+        const { text: filteredContent } = extractTextFromResponse(result.text);
+
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",
@@ -1104,7 +1117,7 @@ const server = http.createServer(async (req, res) => {
               finish_reason: finishReason,
               message: {
                 role: "assistant",
-                content: result.text ?? "",
+                content: filteredContent ?? "",
               },
             },
           ],

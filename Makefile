@@ -198,9 +198,9 @@ quality-harness: $(QUALITY_HARNESS_TARGETS) ## Run deeper harness and ops dry-ru
 
 quality-mobile: $(QUALITY_MOBILE_TARGETS) ## Run mobile Appium checks
 
-quality: quality-release ## Run the default current-platform quality target
+quality: fix quality-release ## Run the default current-platform quality target
 
-quality-full: quality-release quality-harness ## Run current-platform quality plus harness/ops
+quality-full: fix quality-release quality-harness ## Run current-platform quality plus harness/ops
 
 install: ## Install dependencies
 	npm install --legacy-peer-deps
