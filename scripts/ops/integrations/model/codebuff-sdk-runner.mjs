@@ -2,10 +2,10 @@
 
 /**
  * codebuff-sdk-runner.mjs — Shared constants for Codebuff integration
- * 
+ *
  * DEPRECATED: The direct SDK runner is deprecated. All Codebuff calls now
  * go through the HTTP bridge at http://127.0.0.1:4318 (codebuff-openai-bridge.mjs).
- * 
+ *
  * This module now only exports shared path constants used by other parts of the harness.
  */
 

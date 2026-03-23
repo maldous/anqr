@@ -14,11 +14,11 @@ The harness uses a **layered failover model** where each layer handles its own i
 
 OpenClaw is configured with the following failover chain:
 
-| Priority | Model | Fallback behavior |
-| -------- | ----- | ------------------ |
-| Primary | `symphony-bridge/symphony/main` | Internal failover via credit-gate (see Layer 2) |
+| Priority   | Model                           | Fallback behavior                                   |
+| ---------- | ------------------------------- | --------------------------------------------------- |
+| Primary    | `symphony-bridge/symphony/main` | Internal failover via credit-gate (see Layer 2)     |
 | Fallback 1 | `codebuff-bridge/codebuff/base` | Internal failover with paid → free account rotation |
-| Fallback 2 | OpenClaw free-rider models | OpenClaw's native free model discovery |
+| Fallback 2 | OpenClaw free-rider models      | OpenClaw's native free model discovery              |
 
 **Key insight**: OpenClaw sees Symphony Bridge as a single reliable model because it internally handles provider failover. When Symphony Bridge fails, OpenClaw falls back to Codebuff Bridge, and then to its own free-rider models.
 
@@ -26,12 +26,12 @@ OpenClaw is configured with the following failover chain:
 
 Symphony Bridge uses the credit-gate provider cascade with **dynamic scoring** based on actual performance metrics:
 
-| Priority | Provider | Selection method |
-| -------- | -------- | ----------------- |
-| 1 | codebuff | SDK with paid → free account rotation |
-| 2 | openclaw | Local gateway |
-| 3 | groq | Free, fast |
-| 4+ | mistral, gemini, openrouter, sambanova, cerebras, github-models, ollama | Fallback cascade |
+| Priority | Provider                                                                | Selection method                      |
+| -------- | ----------------------------------------------------------------------- | ------------------------------------- |
+| 1        | codebuff                                                                | SDK with paid → free account rotation |
+| 2        | openclaw                                                                | Local gateway                         |
+| 3        | groq                                                                    | Free, fast                            |
+| 4+       | mistral, gemini, openrouter, sambanova, cerebras, github-models, ollama | Fallback cascade                      |
 
 The credit-gate selects providers based on dynamic scoring (see Provider Metrics section below), not fixed order. After each request, providers are re-evaluated for the next request.
 
@@ -48,22 +48,22 @@ This ensures paid always wins when available, but free accounts are ready instan
 
 The credit-gate (`symphony-credit-gate.mjs`) to select providers in priority order. Providers are tried sequentially until one succeeds:
 
-| #   | Provider                  | Type | Model                              | Env Key(s) / Source                          | SDK     |
-| --- | ------------------------- | ---- | ---------------------------------- | -------------------------------------------- | ------- |
-| 1   | codex                     | HTTP | gpt-5.4                            | `OPENAI_API_KEY`                             | No      |
-| 2   | codebuff                  | SDK  | codebuff/base@latest               | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
-| 3   | openclaw                  | HTTP | openclaw:main                      | Token from `~/.openclaw/openclaw.json`       | No      |
-| 4   | groq                      | HTTP | llama-3.3-70b-versatile            | `GROQ_TOKEN`                                 | No      |
-| 5   | mistral                   | HTTP | devstral-small-2507                | `MISTRAL_TOKEN`                              | No      |
-| 6   | gemini                    | HTTP | gemini-2.5-flash                   | `GEMINI_TOKEN`                               | No      |
-| 7   | gemini-lite               | HTTP | gemini-2.5-flash-lite              | `GEMINI_TOKEN`                               | No      |
-| 8   | openrouter-nemotron-super | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`                       | No      |
-| 9-35| openrouter-free (27 models) | HTTP | Various free tier models          | `OPENROUTER_TOKEN`                           | No      |
-| 36  | sambanova                 | HTTP | Meta-Llama-3.3-70B-Instruct        | `SAMBANOVA_TOKEN`                            | No      |
-| 37  | cerebras                  | HTTP | llama3.1-8b                        | `CEREBRAS_TOKEN`                             | No      |
-| 38  | github-models             | HTTP | gpt-4.1-mini                       | `GITHUB_MODELS_TOKEN`                        | No      |
-| 39  | codebuff-bridge           | HTTP | codebuff/base@latest               | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
-| 40  | ollama-local              | HTTP | qwen3.5:35b-a3b-32t                | `OLLAMA_API_BASE`                            | No      |
+| #    | Provider                    | Type | Model                                  | Env Key(s) / Source                          | SDK     |
+| ---- | --------------------------- | ---- | -------------------------------------- | -------------------------------------------- | ------- |
+| 1    | codex                       | HTTP | gpt-5.4                                | `OPENAI_API_KEY`                             | No      |
+| 2    | codebuff                    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
+| 3    | openclaw                    | HTTP | openclaw:main                          | Token from `~/.openclaw/openclaw.json`       | No      |
+| 4    | groq                        | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
+| 5    | mistral                     | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
+| 6    | gemini                      | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
+| 7    | gemini-lite                 | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`                               | No      |
+| 8    | openrouter-nemotron-super   | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`                           | No      |
+| 9-35 | openrouter-free (27 models) | HTTP | Various free tier models               | `OPENROUTER_TOKEN`                           | No      |
+| 36   | sambanova                   | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
+| 37   | cerebras                    | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
+| 38   | github-models               | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`                        | No      |
+| 39   | codebuff-bridge             | HTTP | codebuff/base@latest                   | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
+| 40   | ollama-local                | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
 
 ### Provider notes
 
@@ -215,38 +215,44 @@ The credit-gate tracks comprehensive provider metrics to enable dynamic provider
 ### Metrics tracked
 
 **Basic metrics:**
+
 - Selections (count), successes, failures, success rate (%)
 
 **Timing metrics:**
+
 - Average, min, max duration (ms)
 
 **Token metrics:**
+
 - Total/average input and output tokens
 
 **Validation metrics:**
+
 - Validation passes/failures, validation rate (%)
 
 **Linear issue metrics (by priority):**
+
 - Completed/failed issues, high/medium/low priority success rates
 
 **Estimate-based complexity (story points):**
+
 - Total/completed/average estimate points
 - Small (1-2 pts), medium (3-5 pts), large (8+ pts) issue completion rates
 
 ### Scoring algorithm
 
-| Weight | Metric Category |
-| ------ | ---------------- |
-| 15%    | Success rate (general) |
-| 8%     | Average duration (faster = better) |
-| 12%    | Validation rate |
-| 5%     | Volume (usage count) |
-| 5%     | Recency (recent = better) |
-| 15%    | Linear issue completion rate |
-| 10%    | High priority issue success |
-| 5%     | Low priority issue success |
-| 10%    | Large estimate issue (8+) success |
-| 10%    | Estimate efficiency (completed/attempted) |
+| Weight | Metric Category                              |
+| ------ | -------------------------------------------- |
+| 15%    | Success rate (general)                       |
+| 8%     | Average duration (faster = better)           |
+| 12%    | Validation rate                              |
+| 5%     | Volume (usage count)                         |
+| 5%     | Recency (recent = better)                    |
+| 15%    | Linear issue completion rate                 |
+| 10%    | High priority issue success                  |
+| 5%     | Low priority issue success                   |
+| 10%    | Large estimate issue (8+) success            |
+| 10%    | Estimate efficiency (completed/attempted)    |
 | 5%     | Estimate throughput (total completed points) |
 
 **Minimum 3 selections required before a provider is ranked.**
@@ -260,10 +266,18 @@ reports/symphony/provider-stats.json
 ### Usage
 
 ```javascript
-import { recordLinearCompletion, getProviderStats, getRankedProviders } from './symphony-credit-gate.mjs';
+import {
+  recordLinearCompletion,
+  getProviderStats,
+  getRankedProviders,
+} from "./symphony-credit-gate.mjs";
 
 // Record issue completion with complexity metrics
-recordLinearCompletion(providerName, { completed: true, priority: issue.priority, estimate: issue.estimate });
+recordLinearCompletion(providerName, {
+  completed: true,
+  priority: issue.priority,
+  estimate: issue.estimate,
+});
 
 // Get providers sorted by dynamic score
 const ranked = getRankedProviders();

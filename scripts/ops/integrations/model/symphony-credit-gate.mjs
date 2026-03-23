@@ -50,32 +50,32 @@ const PROVIDER_STATS = {
   selections: {},
   successes: {},
   failures: {},
-  
+
   // Timing metrics (in ms)
   totalDuration: {},
   avgDuration: {},
   minDuration: {},
   maxDuration: {},
-  
+
   // Token metrics
   totalInputTokens: {},
   totalOutputTokens: {},
   avgInputTokens: {},
   avgOutputTokens: {},
-  
+
   // Quality metrics
   validationPasses: {},
   validationFailures: {},
-  
+
   // Timestamps
   lastSelected: {},
   lastSuccess: {},
   lastFailure: {},
   firstUsed: {},
-  
+
   // Score (dynamic ranking)
   score: {},
-  
+
   // Linear issue completion metrics (per complexity level)
   linearCompleted: {},
   linearFailed: {},
@@ -85,12 +85,12 @@ const PROVIDER_STATS = {
   linearMediumPriorityTotal: {},
   linearLowPrioritySuccess: {},
   linearLowPriorityTotal: {},
-  
+
   // Estimate-based complexity tracking
   totalEstimatePoints: {},
   avgEstimatePoints: {},
   completedEstimatePoints: {},
-  
+
   // Complexity breakdown by estimate ranges
   smallIssuesCompleted: {},
   smallIssuesTotal: {},
@@ -102,28 +102,28 @@ const PROVIDER_STATS = {
 
 // Scoring weights (customizable)
 const SCORE_WEIGHTS = {
-  successRate: 0.15,           // 15% - general success rate
-  avgDuration: 0.08,          // 8% - faster is better (normalized)
-  validationRate: 0.12,       // 12% - passes validation
-  volume: 0.05,               // 5% - more usage = more data
-  recency: 0.05,              // 5% - recent usage weighted higher
-  
+  successRate: 0.15, // 15% - general success rate
+  avgDuration: 0.08, // 8% - faster is better (normalized)
+  validationRate: 0.12, // 12% - passes validation
+  volume: 0.05, // 5% - more usage = more data
+  recency: 0.05, // 5% - recent usage weighted higher
+
   // Linear issue metrics (55% total)
   linearCompletionRate: 0.15, // 15% - Linear issues completed vs failed
   linearComplexitySuccess: 0.1, // 10% - success rate on complex (high priority) issues
-  linearSimpleSuccess: 0.05,  // 5% - success rate on simple issues
-  
+  linearSimpleSuccess: 0.05, // 5% - success rate on simple issues
+
   // Estimate-based complexity metrics (25%)
-  estimateSuccessRate: 0.1,  // 10% - completion rate on large (8+) estimate issues
-  estimateEfficiency: 0.1,   // 10% - avg completed estimate vs attempted
-  estimateThroughput: 0.05,   // 5% - total estimate points completed
+  estimateSuccessRate: 0.1, // 10% - completion rate on large (8+) estimate issues
+  estimateEfficiency: 0.1, // 10% - avg completed estimate vs attempted
+  estimateThroughput: 0.05, // 5% - total estimate points completed
 };
 
 // Minimum selections before provider is ranked
 const MIN_SELECTIONS_FOR_RANKING = 3;
 
 // Priority thresholds for complexity classification
-const HIGH_PRIORITY_THRESHOLD = 2;  // P0, P1 = high complexity
+const HIGH_PRIORITY_THRESHOLD = 2; // P0, P1 = high complexity
 const MEDIUM_PRIORITY_THRESHOLD = 4; // P2, P3 = medium complexity
 
 const PROBE_TIMEOUT_MS = 5000;
@@ -213,7 +213,11 @@ const PROVIDERS = [
     baseUrl: "http://127.0.0.1:18789/v1",
     envVar: "OPENCLAW_TOKEN",
     loadToken: () => {
-      const openclawConfig = join(process.env.HOME || process.env.USERPROFILE || "", ".openclaw", "openclaw.json");
+      const openclawConfig = join(
+        process.env.HOME || process.env.USERPROFILE || "",
+        ".openclaw",
+        "openclaw.json",
+      );
       try {
         if (existsSync(openclawConfig)) {
           const config = JSON.parse(readFileSync(openclawConfig, "utf-8"));
@@ -550,70 +554,77 @@ export function recordProviderFailureCount(providerName) {
  */
 export function recordLinearCompletion(providerName, { completed, priority = 4, estimate }) {
   const stats = loadStats();
-  const p = typeof priority === 'number' ? priority : 4; // Default to low priority
+  const p = typeof priority === "number" ? priority : 4; // Default to low priority
   // Auto-assign estimate based on priority if not provided (fallback for legacy issues)
-  const est = typeof estimate === 'number' && estimate > 0 
-    ? estimate 
-    : Math.max(1, 5 - p); // Default: P0=5, P1=4, P2=3, P3=2, P4=1
-  
+  const est = typeof estimate === "number" && estimate > 0 ? estimate : Math.max(1, 5 - p); // Default: P0=5, P1=4, P2=3, P3=2, P4=1
+
   if (completed) {
     stats.linearCompleted[providerName] = (stats.linearCompleted[providerName] || 0) + 1;
   } else {
     stats.linearFailed[providerName] = (stats.linearFailed[providerName] || 0) + 1;
   }
-  
+
   // Track by priority complexity
   if (p <= HIGH_PRIORITY_THRESHOLD) {
-    stats.linearHighPriorityTotal[providerName] = (stats.linearHighPriorityTotal[providerName] || 0) + 1;
+    stats.linearHighPriorityTotal[providerName] =
+      (stats.linearHighPriorityTotal[providerName] || 0) + 1;
     if (completed) {
-      stats.linearHighPrioritySuccess[providerName] = (stats.linearHighPrioritySuccess[providerName] || 0) + 1;
+      stats.linearHighPrioritySuccess[providerName] =
+        (stats.linearHighPrioritySuccess[providerName] || 0) + 1;
     }
   } else if (p <= MEDIUM_PRIORITY_THRESHOLD) {
-    stats.linearMediumPriorityTotal[providerName] = (stats.linearMediumPriorityTotal[providerName] || 0) + 1;
+    stats.linearMediumPriorityTotal[providerName] =
+      (stats.linearMediumPriorityTotal[providerName] || 0) + 1;
     if (completed) {
-      stats.linearMediumPrioritySuccess[providerName] = (stats.linearMediumPrioritySuccess[providerName] || 0) + 1;
+      stats.linearMediumPrioritySuccess[providerName] =
+        (stats.linearMediumPrioritySuccess[providerName] || 0) + 1;
     }
   } else {
-    stats.linearLowPriorityTotal[providerName] = (stats.linearLowPriorityTotal[providerName] || 0) + 1;
+    stats.linearLowPriorityTotal[providerName] =
+      (stats.linearLowPriorityTotal[providerName] || 0) + 1;
     if (completed) {
-      stats.linearLowPrioritySuccess[providerName] = (stats.linearLowPrioritySuccess[providerName] || 0) + 1;
+      stats.linearLowPrioritySuccess[providerName] =
+        (stats.linearLowPrioritySuccess[providerName] || 0) + 1;
     }
   }
-  
+
   // Track estimate-based complexity
   if (est > 0) {
     stats.totalEstimatePoints[providerName] = (stats.totalEstimatePoints[providerName] || 0) + est;
     const totalAttempts = stats.linearCompleted[providerName] + stats.linearFailed[providerName];
-    stats.avgEstimatePoints[providerName] = totalAttempts > 0 
-      ? Math.round(stats.totalEstimatePoints[providerName] / totalAttempts) 
-      : 0;
-    
+    stats.avgEstimatePoints[providerName] =
+      totalAttempts > 0 ? Math.round(stats.totalEstimatePoints[providerName] / totalAttempts) : 0;
+
     if (completed) {
-      stats.completedEstimatePoints[providerName] = (stats.completedEstimatePoints[providerName] || 0) + est;
+      stats.completedEstimatePoints[providerName] =
+        (stats.completedEstimatePoints[providerName] || 0) + est;
     }
-    
+
     // Track by estimate size ranges
     if (est <= 2) {
       // Small: 1-2 points
       stats.smallIssuesTotal[providerName] = (stats.smallIssuesTotal[providerName] || 0) + 1;
       if (completed) {
-        stats.smallIssuesCompleted[providerName] = (stats.smallIssuesCompleted[providerName] || 0) + 1;
+        stats.smallIssuesCompleted[providerName] =
+          (stats.smallIssuesCompleted[providerName] || 0) + 1;
       }
     } else if (est <= 5) {
       // Medium: 3-5 points
       stats.mediumIssuesTotal[providerName] = (stats.mediumIssuesTotal[providerName] || 0) + 1;
       if (completed) {
-        stats.mediumIssuesCompleted[providerName] = (stats.mediumIssuesCompleted[providerName] || 0) + 1;
+        stats.mediumIssuesCompleted[providerName] =
+          (stats.mediumIssuesCompleted[providerName] || 0) + 1;
       }
     } else {
       // Large: 8+ points
       stats.largeIssuesTotal[providerName] = (stats.largeIssuesTotal[providerName] || 0) + 1;
       if (completed) {
-        stats.largeIssuesCompleted[providerName] = (stats.largeIssuesCompleted[providerName] || 0) + 1;
+        stats.largeIssuesCompleted[providerName] =
+          (stats.largeIssuesCompleted[providerName] || 0) + 1;
       }
     }
   }
-  
+
   // Recalculate score
   stats.score[providerName] = calculateProviderScore(providerName, stats);
   saveStats(stats);
@@ -624,42 +635,44 @@ export function recordLinearCompletion(providerName, { completed, priority = 4, 
  * @param {string} providerName - Provider name
  * @param {object} metrics - { durationMs, inputTokens, outputTokens, validationPassed }
  */
-export function recordProviderMetrics(providerName, { durationMs, inputTokens, outputTokens, validationPassed }) {
+export function recordProviderMetrics(
+  providerName,
+  { durationMs, inputTokens, outputTokens, validationPassed },
+) {
   const stats = loadStats();
-  
+
   // Timing
   stats.totalDuration[providerName] = (stats.totalDuration[providerName] || 0) + durationMs;
   const selections = stats.selections[providerName] || 0;
-  stats.avgDuration[providerName] = selections > 0 
-    ? Math.round(stats.totalDuration[providerName] / selections) 
-    : 0;
-  
+  stats.avgDuration[providerName] =
+    selections > 0 ? Math.round(stats.totalDuration[providerName] / selections) : 0;
+
   const prevMin = stats.minDuration[providerName];
   stats.minDuration[providerName] = prevMin ? Math.min(prevMin, durationMs) : durationMs;
-  
+
   const prevMax = stats.maxDuration[providerName];
   stats.maxDuration[providerName] = prevMax ? Math.max(prevMax, durationMs) : durationMs;
-  
+
   // Tokens
-  stats.totalInputTokens[providerName] = (stats.totalInputTokens[providerName] || 0) + (inputTokens || 0);
-  stats.totalOutputTokens[providerName] = (stats.totalOutputTokens[providerName] || 0) + (outputTokens || 0);
-  stats.avgInputTokens[providerName] = selections > 0 
-    ? Math.round(stats.totalInputTokens[providerName] / selections) 
-    : 0;
-  stats.avgOutputTokens[providerName] = selections > 0 
-    ? Math.round(stats.totalOutputTokens[providerName] / selections) 
-    : 0;
-  
+  stats.totalInputTokens[providerName] =
+    (stats.totalInputTokens[providerName] || 0) + (inputTokens || 0);
+  stats.totalOutputTokens[providerName] =
+    (stats.totalOutputTokens[providerName] || 0) + (outputTokens || 0);
+  stats.avgInputTokens[providerName] =
+    selections > 0 ? Math.round(stats.totalInputTokens[providerName] / selections) : 0;
+  stats.avgOutputTokens[providerName] =
+    selections > 0 ? Math.round(stats.totalOutputTokens[providerName] / selections) : 0;
+
   // Validation
   if (validationPassed) {
     stats.validationPasses[providerName] = (stats.validationPasses[providerName] || 0) + 1;
   } else {
     stats.validationFailures[providerName] = (stats.validationFailures[providerName] || 0) + 1;
   }
-  
+
   // Recalculate score
   stats.score[providerName] = calculateProviderScore(providerName, stats);
-  
+
   saveStats(stats);
 }
 
@@ -668,88 +681,87 @@ export function recordProviderMetrics(providerName, { durationMs, inputTokens, o
  */
 function calculateProviderScore(providerName, stats) {
   const selections = stats.selections[providerName] || 0;
-  
+
   // Not enough data yet
   if (selections < MIN_SELECTIONS_FOR_RANKING) {
     return null; // Not ranked yet
   }
-  
+
   const successes = stats.successes[providerName] || 0;
   const avgDuration = stats.avgDuration[providerName] || 0;
   const validationPasses = stats.validationPasses[providerName] || 0;
   const validationFailures = stats.validationFailures[providerName] || 0;
   const lastSelected = stats.lastSelected[providerName] || 0;
-  
+
   // 1. Success Rate (0-1)
   const successRate = selections > 0 ? successes / selections : 0;
-  
+
   // 2. Avg Duration (normalized - lower is better, invert)
   // Use a baseline of 60s as "slow", anything faster gets higher score
-  const durationScore = avgDuration > 0 ? Math.max(0, 1 - (avgDuration / 60000)) : 0.5;
-  
+  const durationScore = avgDuration > 0 ? Math.max(0, 1 - avgDuration / 60000) : 0.5;
+
   // 3. Validation Rate (0-1)
   const totalValidations = validationPasses + validationFailures;
   const validationRate = totalValidations > 0 ? validationPasses / totalValidations : 0.5;
-  
+
   // 4. Volume (normalized - use log scale to prevent dominance)
   const volumeScore = Math.min(1, Math.log10(selections + 1) / 3); // Maxes at 1000 selections
-  
+
   // 5. Recency (0-1 - more recent = higher)
   const now = Date.now();
   const ageMs = now - lastSelected;
   const ageDays = ageMs / (1000 * 60 * 60 * 24);
-  const recencyScore = Math.max(0, 1 - (ageDays / 30)); // Decay over 30 days
-  
+  const recencyScore = Math.max(0, 1 - ageDays / 30); // Decay over 30 days
+
   // 6. Linear Issue Completion Rate (0-1)
   const linearCompleted = stats.linearCompleted[providerName] || 0;
   const linearFailed = stats.linearFailed[providerName] || 0;
   const linearTotal = linearCompleted + linearFailed;
   const linearCompletionRate = linearTotal > 0 ? linearCompleted / linearTotal : 0.5;
-  
+
   // 7. High Priority (Complex) Issue Success Rate (0-1)
   const highSuccess = stats.linearHighPrioritySuccess[providerName] || 0;
   const highTotal = stats.linearHighPriorityTotal[providerName] || 0;
   const highPrioritySuccessRate = highTotal > 0 ? highSuccess / highTotal : 0.5;
-  
+
   // 8. Medium Priority Issue Success Rate (0-1)
   const mediumSuccess = stats.linearMediumPrioritySuccess[providerName] || 0;
   const mediumTotal = stats.linearMediumPriorityTotal[providerName] || 0;
   const mediumPrioritySuccessRate = mediumTotal > 0 ? mediumSuccess / mediumTotal : 0.5;
-  
+
   // 9. Low Priority (Simple) Issue Success Rate (0-1)
   const lowSuccess = stats.linearLowPrioritySuccess[providerName] || 0;
   const lowTotal = stats.linearLowPriorityTotal[providerName] || 0;
   const lowPrioritySuccessRate = lowTotal > 0 ? lowSuccess / lowTotal : 0.5;
-  
+
   // 10. Large Issue (8+ points) Success Rate (0-1)
   const largeCompleted = stats.largeIssuesCompleted[providerName] || 0;
   const largeTotal = stats.largeIssuesTotal[providerName] || 0;
   const largeIssueSuccessRate = largeTotal > 0 ? largeCompleted / largeTotal : 0.5;
-  
+
   // 11. Estimate Efficiency - ratio of completed estimate points to attempted
   const totalEst = stats.totalEstimatePoints[providerName] || 0;
   const completedEst = stats.completedEstimatePoints[providerName] || 0;
   const estimateEfficiency = totalEst > 0 ? completedEst / totalEst : 0.5;
-  
+
   // 12. Estimate Throughput - log scale of total completed estimate points
   const estimateThroughput = Math.min(1, Math.log10(completedEst + 1) / 4); // Maxes at 10k points
-  
+
   // Weighted combination
-  const score = (
-    (successRate * SCORE_WEIGHTS.successRate) +
-    (durationScore * SCORE_WEIGHTS.avgDuration) +
-    (validationRate * SCORE_WEIGHTS.validationRate) +
-    (volumeScore * SCORE_WEIGHTS.volume) +
-    (recencyScore * SCORE_WEIGHTS.recency) +
-    (linearCompletionRate * SCORE_WEIGHTS.linearCompletionRate) +
-    (highPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) +
-    (mediumPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess) +
-    (lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess) +
-    (largeIssueSuccessRate * SCORE_WEIGHTS.estimateSuccessRate) +
-    (estimateEfficiency * SCORE_WEIGHTS.estimateEfficiency) +
-    (estimateThroughput * SCORE_WEIGHTS.estimateThroughput)
-  );
-  
+  const score =
+    successRate * SCORE_WEIGHTS.successRate +
+    durationScore * SCORE_WEIGHTS.avgDuration +
+    validationRate * SCORE_WEIGHTS.validationRate +
+    volumeScore * SCORE_WEIGHTS.volume +
+    recencyScore * SCORE_WEIGHTS.recency +
+    linearCompletionRate * SCORE_WEIGHTS.linearCompletionRate +
+    highPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess +
+    mediumPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess +
+    lowPrioritySuccessRate * SCORE_WEIGHTS.linearSimpleSuccess +
+    largeIssueSuccessRate * SCORE_WEIGHTS.estimateSuccessRate +
+    estimateEfficiency * SCORE_WEIGHTS.estimateEfficiency +
+    estimateThroughput * SCORE_WEIGHTS.estimateThroughput;
+
   return Math.round(score * 100) / 100; // 2 decimal places
 }
 
@@ -759,17 +771,17 @@ function calculateProviderScore(providerName, stats) {
 export function getRankedProviders() {
   const stats = loadStats();
   const ranked = [];
-  
+
   for (const name of Object.keys(stats.selections)) {
     const score = stats.score[name];
     if (score !== null && score !== undefined) {
       ranked.push({ name, score });
     }
   }
-  
+
   // Sort by score descending
   ranked.sort((a, b) => b.score - a.score);
-  
+
   // Add rank position
   return ranked.map((item, index) => ({ ...item, rank: index + 1 }));
 }
@@ -782,78 +794,68 @@ export function getProviderStats() {
     const success = stats.successes[name] || 0;
     const fail = stats.failures[name] || 0;
     const rate = selected > 0 ? ((success / selected) * 100).toFixed(1) : 0;
-    
+
     // Calculate validation rate
     const validationPasses = stats.validationPasses[name] || 0;
     const validationFailures = stats.validationFailures[name] || 0;
     const totalValidations = validationPasses + validationFailures;
-    const validationRate = totalValidations > 0 
-      ? ((validationPasses / totalValidations) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const validationRate =
+      totalValidations > 0 ? ((validationPasses / totalValidations) * 100).toFixed(1) + "%" : "N/A";
+
     // Calculate Linear completion rates
     const linearCompleted = stats.linearCompleted[name] || 0;
     const linearFailed = stats.linearFailed[name] || 0;
     const linearTotal = linearCompleted + linearFailed;
-    const linearCompletionRate = linearTotal > 0 
-      ? ((linearCompleted / linearTotal) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const linearCompletionRate =
+      linearTotal > 0 ? ((linearCompleted / linearTotal) * 100).toFixed(1) + "%" : "N/A";
+
     const highSuccess = stats.linearHighPrioritySuccess[name] || 0;
     const highTotal = stats.linearHighPriorityTotal[name] || 0;
-    const highPriorityRate = highTotal > 0 
-      ? ((highSuccess / highTotal) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const highPriorityRate =
+      highTotal > 0 ? ((highSuccess / highTotal) * 100).toFixed(1) + "%" : "N/A";
+
     const medSuccess = stats.linearMediumPrioritySuccess[name] || 0;
     const medTotal = stats.linearMediumPriorityTotal[name] || 0;
-    const medPriorityRate = medTotal > 0 
-      ? ((medSuccess / medTotal) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const medPriorityRate = medTotal > 0 ? ((medSuccess / medTotal) * 100).toFixed(1) + "%" : "N/A";
+
     const lowSuccess = stats.linearLowPrioritySuccess[name] || 0;
     const lowTotal = stats.linearLowPriorityTotal[name] || 0;
-    const lowPriorityRate = lowTotal > 0 
-      ? ((lowSuccess / lowTotal) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const lowPriorityRate = lowTotal > 0 ? ((lowSuccess / lowTotal) * 100).toFixed(1) + "%" : "N/A";
+
     // Estimate-based metrics
     const totalEst = stats.totalEstimatePoints[name] || 0;
     const completedEst = stats.completedEstimatePoints[name] || 0;
     const avgEst = stats.avgEstimatePoints[name] || 0;
-    const estEfficiency = totalEst > 0 
-      ? ((completedEst / totalEst) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const estEfficiency = totalEst > 0 ? ((completedEst / totalEst) * 100).toFixed(1) + "%" : "N/A";
+
     const largeCompleted = stats.largeIssuesCompleted[name] || 0;
     const largeTotal = stats.largeIssuesTotal[name] || 0;
-    const largeRate = largeTotal > 0 
-      ? ((largeCompleted / largeTotal) * 100).toFixed(1) + '%' 
-      : 'N/A';
-    
+    const largeRate =
+      largeTotal > 0 ? ((largeCompleted / largeTotal) * 100).toFixed(1) + "%" : "N/A";
+
     result[name] = {
       // Basic counts
       selections: selected,
       successes: success,
       failures: fail,
       successRate: `${rate}%`,
-      
+
       // Timing
       avgDurationMs: stats.avgDuration[name] || 0,
       minDurationMs: stats.minDuration[name] || null,
       maxDurationMs: stats.maxDuration[name] || null,
-      
+
       // Tokens
       avgInputTokens: stats.avgInputTokens[name] || 0,
       avgOutputTokens: stats.avgOutputTokens[name] || 0,
       totalInputTokens: stats.totalInputTokens[name] || 0,
       totalOutputTokens: stats.totalOutputTokens[name] || 0,
-      
+
       // Validation
       validationPasses,
       validationFailures,
       validationRate,
-      
+
       // Linear issue completion (by complexity)
       linearCompleted,
       linearFailed,
@@ -867,7 +869,7 @@ export function getProviderStats() {
       linearLowPrioritySuccess: lowSuccess,
       linearLowPriorityTotal: lowTotal,
       lowPrioritySuccessRate: lowPriorityRate,
-      
+
       // Estimate-based metrics
       totalEstimatePoints: totalEst,
       completedEstimatePoints: completedEst,
@@ -876,12 +878,14 @@ export function getProviderStats() {
       largeIssuesCompleted: largeCompleted,
       largeIssuesTotal: largeTotal,
       largeIssueSuccessRate: largeRate,
-      
+
       // Score
-      score: stats.score[name] === null ? 'pending' : stats.score[name], // null = not enough data
-      
+      score: stats.score[name] === null ? "pending" : stats.score[name], // null = not enough data
+
       // Timestamps
-      lastSelected: stats.lastSelected[name] ? new Date(stats.lastSelected[name]).toISOString() : null,
+      lastSelected: stats.lastSelected[name]
+        ? new Date(stats.lastSelected[name]).toISOString()
+        : null,
       lastSuccess: stats.lastSuccess[name] ? new Date(stats.lastSuccess[name]).toISOString() : null,
       lastFailure: stats.lastFailure[name] ? new Date(stats.lastFailure[name]).toISOString() : null,
       firstUsed: stats.firstUsed[name] ? new Date(stats.firstUsed[name]).toISOString() : null,
@@ -898,20 +902,28 @@ export function resetProviderStats() {
 export function logProviderStats() {
   const ranked = getRankedProviders();
   const stats = getProviderStats();
-  
+
   console.log(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
   if (ranked.length > 0) {
     for (const { rank, name, score } of ranked) {
       const data = stats[name];
-      console.log(`[credit-gate]   #${rank} ${name}: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`);
+      console.log(
+        `[credit-gate]   #${rank} ${name}: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`,
+      );
     }
   } else {
-    console.log(`[credit-gate]   (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`);
+    console.log(
+      `[credit-gate]   (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`,
+    );
   }
-  
+
   console.log(`[credit-gate] 📈 Provider Details:`);
-  for (const [name, data] of Object.entries(stats).sort((a, b) => b[1].selections - a[1].selections)) {
-    console.log(`[credit-gate]   ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`);
+  for (const [name, data] of Object.entries(stats).sort(
+    (a, b) => b[1].selections - a[1].selections,
+  )) {
+    console.log(
+      `[credit-gate]   ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
+    );
   }
 }
 
@@ -926,7 +938,7 @@ export async function selectProvider() {
   const ranked = getRankedProviders();
   if (ranked.length > 0) {
     for (const { name } of ranked) {
-      const provider = PROVIDERS.find(p => p.name === name);
+      const provider = PROVIDERS.find((p) => p.name === name);
       if (!provider) continue;
 
       // Get API key: first try env var, then try loadToken function

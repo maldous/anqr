@@ -402,7 +402,7 @@ async function callLLM(provider, messages, taskDescription) {
     // Use the HTTP bridge instead of direct SDK
     // The bridge handles key rotation, rate limiting, and continuation detection
     console.log(`[agent] Using bridge: ${BRIDGE_URL}`);
-    
+
     // Convert internal message format to OpenAI-style for bridge
     const bridgeMessages = messages.map((m) => {
       const content = typeof m.content === "string" ? m.content : JSON.stringify(m.content);
@@ -418,7 +418,7 @@ async function callLLM(provider, messages, taskDescription) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${BRIDGE_API_KEY}`,
+          Authorization: `Bearer ${BRIDGE_API_KEY}`,
         },
         body: JSON.stringify({
           model: BRIDGE_MODEL,
@@ -435,14 +435,14 @@ async function callLLM(provider, messages, taskDescription) {
       }
 
       const result = await res.json();
-      
+
       // The bridge returns completion tokens but we need to detect if agent wants continuation
       // Check finish_reason - if "length", agent has more work to do
       const needsContinuation = result.choices?.[0]?.finish_reason === "length";
-      
+
       // Return in same format as SDK for compatibility
       const content = result.choices?.[0]?.message?.content || "";
-      
+
       // Write report artifact
       const report = {
         timestamp: new Date().toISOString(),
@@ -473,17 +473,17 @@ async function callLLM(provider, messages, taskDescription) {
             },
           },
         ],
-        needsContinuation,  // Pass through for continuation logic
+        needsContinuation, // Pass through for continuation logic
       };
     } catch (err) {
       clearTimeout(timer);
       const errStr = err.message || "";
-      
+
       // Check for rate limits
       if (isRateLimitError(errStr)) {
         console.log(`[agent] Bridge rate limited: ${errStr.slice(0, 200)}`);
       }
-      
+
       // Write failure report
       const failureReport = {
         timestamp: new Date().toISOString(),
@@ -668,7 +668,7 @@ async function runToolLoop({
       consecutiveNoToolCalls++;
       if (consecutiveNoToolCalls >= 3) {
         console.log("[agent] Too many consecutive turns without tool calls — aborting");
-        const snippet = msg.content?.slice(0, 150).replaceAll(/\n/g, ' ') || '(empty)';
+        const snippet = msg.content?.slice(0, 150).replaceAll(/\n/g, " ") || "(empty)";
         return {
           completed: false,
           summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls. Last: ${snippet}`,
@@ -721,39 +721,46 @@ async function runToolLoop({
         let cleanContent = content;
         let hasActiveSubgoals = false;
         let subgoalSummary = [];
-        
+
         // Look for lastMessage metadata anywhere in content (not just at end)
         // Use a more flexible regex that can handle nested structures
         const lastMessageMatch = content.match(/\{"type":"lastMessage","value":\[.*?\]\}/s);
         if (lastMessageMatch) {
           const metadataStr = lastMessageMatch[0];
-          
+
           try {
             const metadata = JSON.parse(metadataStr);
-            
+
             // Handle subgoal updates from Codebuff
             if (metadata.type === "lastMessage" && metadata.value) {
               const msgs = Array.isArray(metadata.value) ? metadata.value : [metadata.value];
               for (const msg of msgs) {
                 if (msg.content && Array.isArray(msg.content)) {
                   for (const item of msg.content) {
-                    if ((item.toolName === "update_subgoal" || item.toolName === "add_subgoal") && item.input) {
+                    if (
+                      (item.toolName === "update_subgoal" || item.toolName === "add_subgoal") &&
+                      item.input
+                    ) {
                       const input = item.input;
-                      const status = input.status || 'UNKNOWN';
-                      const objective = input.objective || '';
-                      const log = input.log || '';
-                      
+                      const status = input.status || "UNKNOWN";
+                      const objective = input.objective || "";
+                      const log = input.log || "";
+
                       // Log subgoal update
-                      console.log(`[agent] Subgoal ${input.id}: ${status} - ${objective.slice(0, 80)}`);
+                      console.log(
+                        `[agent] Subgoal ${input.id}: ${status} - ${objective.slice(0, 80)}`,
+                      );
                       if (log) {
                         console.log(`[agent]   Log: ${log.slice(0, 120)}`);
                       }
-                      
+
                       // Track active subgoals (IN_PROGRESS means work is ongoing)
-                      if (status === 'IN_PROGRESS' || status === 'NOT_STARTED') {
+                      if (status === "IN_PROGRESS" || status === "NOT_STARTED") {
                         hasActiveSubgoals = true;
-                        const desc = objective || log || 'unknown task';
-                        subgoalSummary.push(`Subgoal ${input.id} (${status}): ${desc.slice(0, 100)}`);
+                        const desc = objective || log || "unknown task";
+                        subgoalSummary.push(
+                          `Subgoal ${input.id} (${status}): ${desc.slice(0, 100)}`,
+                        );
                       }
                     }
                   }
@@ -763,17 +770,17 @@ async function runToolLoop({
           } catch (err) {
             console.log(`[agent] Could not parse metadata JSON: ${err.message}`);
           }
-          
+
           // Remove metadata from clean content
-          cleanContent = content.replace(lastMessageMatch[0], '').trim();
+          cleanContent = content.replace(lastMessageMatch[0], "").trim();
         }
-        
+
         // If there are active subgoals, this is NOT completion - it's ongoing work
         if (hasActiveSubgoals) {
           console.log(`[agent] Active subgoals detected - work is ongoing, not complete`);
           return {
             completed: false,
-            summary: `Agent created subgoals - work is ongoing:\n${subgoalSummary.join('\n')}`,
+            summary: `Agent created subgoals - work is ongoing:\n${subgoalSummary.join("\n")}`,
             turns: turn + 1,
             toolCalls: totalToolCalls,
             filesChanged: [...filesChanged],
@@ -783,7 +790,7 @@ async function runToolLoop({
             needsContinuation: true,
           };
         }
-        
+
         // No active subgoals - agent actually completed
         console.log("[agent] Autonomous agent completed - no active subgoals");
         const summary = cleanContent.slice(0, 1000);

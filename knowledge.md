@@ -373,4 +373,4 @@ See `.env` for full local development variables.
 
 ---
 
-*Last updated: 2026‑03‑22 (auto‑generated from repository sources)*
+_Last updated: 2026‑03‑22 (auto‑generated from repository sources)_

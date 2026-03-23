@@ -168,6 +168,7 @@ Codebuff supports multi-account rotation via:
 - `CODEBUFF_API_KEY3+` — additional accounts
 
 **Codebuff bridge:** `http://127.0.0.1:4318` (OpenAI-compatible gateway)
+
 - Exposes Codebuff SDK via OpenAI-compatible HTTP API
 - Supports streaming responses (SSE)
 - Multi-account rotation with persistence
@@ -242,7 +243,7 @@ Use the hybrid Linear model:
 
 Use this structure for task handover:
 
-```markdown
+````markdown
 ## Task
 
 <one bounded objective>
@@ -268,6 +269,7 @@ Use this structure for task handover:
 ```bash
 <commands>
 ```
+````
 
 ## Expected evidence
 
@@ -276,8 +278,10 @@ Use this structure for task handover:
 ## Escalate if
 
 - paid spend, prod auth changes, store/signing work, operator secrets, launch scope changes
+
 ```
 
 ---
 
 For human/operator read order, see [README.md](/home/user/src/anqr/README.md).
+```

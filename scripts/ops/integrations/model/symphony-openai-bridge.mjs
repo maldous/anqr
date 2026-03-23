@@ -51,13 +51,10 @@ const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
 // SYMPHONY_BRIDGE_ACCEPTED_TOKENS: comma-separated list of accepted tokens
 const additionalTokens = (process.env.SYMPHONY_BRIDGE_ACCEPTED_TOKENS || "")
   .split(",")
-  .map(t => t.trim())
+  .map((t) => t.trim())
   .filter(Boolean);
 
-const VALID_TOKENS = new Set([
-  API_KEY,
-  ...additionalTokens,
-]);
+const VALID_TOKENS = new Set([API_KEY, ...additionalTokens]);
 
 if (VALID_TOKENS.size > 1) {
   console.log(`[symphony-bridge] Auth: accepting ${VALID_TOKENS.size} tokens`);
@@ -128,7 +125,9 @@ async function tryProvider(provider, messages) {
 
     const httpBridge = SDK_TO_HTTP[name];
     if (httpBridge) {
-      console.log(`[symphony-bridge] SDK provider '${name}' redirected to HTTP bridge (may take up to 10min)`);
+      console.log(
+        `[symphony-bridge] SDK provider '${name}' redirected to HTTP bridge (may take up to 10min)`,
+      );
       effectiveModel = httpBridge.model;
       effectiveBaseUrl = httpBridge.baseUrl;
       effectiveApiKey = httpBridge.apiKey;
@@ -193,7 +192,7 @@ async function invokeWithFallback(messages) {
     // Success - record and return
     console.log(`[symphony-bridge] ✅ Success with ${provider.name}`);
     recordProviderSuccess(provider.name);
-    
+
     // Log periodic stats
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -232,7 +231,7 @@ async function invokeWithFallback(messages) {
       const result = await tryProvider(provider, messages);
       console.log(`[symphony-bridge] ✅ Fallback success with ${provider.name}`);
       recordProviderSuccess(provider.name);
-      
+
       // Log periodic stats
       requestCount++;
       if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -247,7 +246,9 @@ async function invokeWithFallback(messages) {
       };
     } catch (retryErr) {
       const retryStr = String(retryErr);
-      console.log(`[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`);
+      console.log(
+        `[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`,
+      );
       if (isRetryableError(retryErr)) {
         recordProviderFailure(provider.name);
       }
@@ -267,19 +268,25 @@ async function invokeWithFallbackStream(messages, onChunk) {
     throw new Error("No providers available - check env vars and provider failures");
   }
 
-  console.log(`[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`);
+  console.log(
+    `[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`,
+  );
 
   try {
     const { name, model, baseUrl, apiKey, requiresSdk } = provider;
-    
+
     // For SDK providers, redirect to HTTP bridge equivalents
     let effectiveBaseUrl = baseUrl;
     let effectiveApiKey = apiKey;
     let effectiveModel = model;
-    
+
     if (requiresSdk) {
       const SDK_TO_HTTP = {
-        codebuff: { baseUrl: "http://127.0.0.1:4318/v1", apiKey: "local-bridge", model: "codebuff/base" },
+        codebuff: {
+          baseUrl: "http://127.0.0.1:4318/v1",
+          apiKey: "local-bridge",
+          model: "codebuff/base",
+        },
       };
       const httpBridge = SDK_TO_HTTP[name];
       if (httpBridge) {
@@ -289,7 +296,7 @@ async function invokeWithFallbackStream(messages, onChunk) {
         effectiveModel = httpBridge.model;
       }
     }
-    
+
     const url = `${effectiveBaseUrl}/chat/completions`;
 
     const response = await fetch(url, {
@@ -347,7 +354,7 @@ async function invokeWithFallbackStream(messages, onChunk) {
 
     console.log(`[symphony-bridge] ✅ Streaming success with ${provider.name}`);
     recordProviderSuccess(provider.name);
-    
+
     // Log periodic stats
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -383,25 +390,31 @@ async function invokeWithFallbackStream(messages, onChunk) {
 
       try {
         const { name, model, baseUrl, apiKey, requiresSdk } = provider;
-        
+
         // For SDK providers, redirect to HTTP bridge equivalents
         let effBaseUrl = baseUrl;
         let effApiKey = apiKey;
         let effModel = model;
-        
+
         if (requiresSdk) {
           const SDK_TO_HTTP = {
-            codebuff: { baseUrl: "http://127.0.0.1:4318/v1", apiKey: "local-bridge", model: "codebuff/base" },
+            codebuff: {
+              baseUrl: "http://127.0.0.1:4318/v1",
+              apiKey: "local-bridge",
+              model: "codebuff/base",
+            },
           };
           const httpBridge = SDK_TO_HTTP[name];
           if (httpBridge) {
-            console.log(`[symphony-bridge] Streaming fallback: SDK '${name}' redirected to HTTP bridge`);
+            console.log(
+              `[symphony-bridge] Streaming fallback: SDK '${name}' redirected to HTTP bridge`,
+            );
             effBaseUrl = httpBridge.baseUrl;
             effApiKey = httpBridge.apiKey;
             effModel = httpBridge.model;
           }
         }
-        
+
         const url = `${effBaseUrl}/chat/completions`;
 
         const response = await fetch(url, {
@@ -458,7 +471,7 @@ async function invokeWithFallbackStream(messages, onChunk) {
 
         console.log(`[symphony-bridge] ✅ Streaming fallback success with ${provider.name}`);
         recordProviderSuccess(provider.name);
-        
+
         // Log periodic stats
         requestCount++;
         if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -473,7 +486,9 @@ async function invokeWithFallbackStream(messages, onChunk) {
         };
       } catch (retryErr) {
         const retryStr = String(retryErr);
-        console.log(`[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`);
+        console.log(
+          `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`,
+        );
         if (isRetryableError(retryErr)) {
           recordProviderFailure(provider.name);
         }
@@ -551,33 +566,44 @@ const BRIDGE_METRICS = {
   lastStatsLog: Date.now(),
 };
 
-function recordBridgeMetrics({ provider, durationMs, isStream, tokensIn, tokensOut, isError, errorType }) {
+function recordBridgeMetrics({
+  provider,
+  durationMs,
+  isStream,
+  tokensIn,
+  tokensOut,
+  isError,
+  errorType,
+}) {
   BRIDGE_METRICS.totalRequests++;
   if (isStream) {
     BRIDGE_METRICS.streamingRequests++;
   } else {
     BRIDGE_METRICS.nonStreamingRequests++;
   }
-  
+
   // Response time tracking
   BRIDGE_METRICS.totalResponseTimeMs = (BRIDGE_METRICS.totalResponseTimeMs || 0) + durationMs;
-  BRIDGE_METRICS.avgResponseTimeMs = Math.round(BRIDGE_METRICS.totalResponseTimeMs / BRIDGE_METRICS.totalRequests);
-  BRIDGE_METRICS.minResponseTimeMs = BRIDGE_METRICS.minResponseTimeMs 
-    ? Math.min(BRIDGE_METRICS.minResponseTimeMs, durationMs) 
+  BRIDGE_METRICS.avgResponseTimeMs = Math.round(
+    BRIDGE_METRICS.totalResponseTimeMs / BRIDGE_METRICS.totalRequests,
+  );
+  BRIDGE_METRICS.minResponseTimeMs = BRIDGE_METRICS.minResponseTimeMs
+    ? Math.min(BRIDGE_METRICS.minResponseTimeMs, durationMs)
     : durationMs;
-  BRIDGE_METRICS.maxResponseTimeMs = BRIDGE_METRICS.maxResponseTimeMs 
-    ? Math.max(BRIDGE_METRICS.maxResponseTimeMs, durationMs) 
+  BRIDGE_METRICS.maxResponseTimeMs = BRIDGE_METRICS.maxResponseTimeMs
+    ? Math.max(BRIDGE_METRICS.maxResponseTimeMs, durationMs)
     : durationMs;
-  
+
   // Tokens
   BRIDGE_METRICS.totalTokensIn += tokensIn || 0;
   BRIDGE_METRICS.totalTokensOut += tokensOut || 0;
-  
+
   // Provider tracking
   if (provider) {
-    BRIDGE_METRICS.requestsByProvider[provider] = (BRIDGE_METRICS.requestsByProvider[provider] || 0) + 1;
+    BRIDGE_METRICS.requestsByProvider[provider] =
+      (BRIDGE_METRICS.requestsByProvider[provider] || 0) + 1;
   }
-  
+
   // Errors
   if (isError && errorType) {
     BRIDGE_METRICS.totalErrors++;
@@ -588,31 +614,43 @@ function recordBridgeMetrics({ provider, durationMs, isStream, tokensIn, tokensO
 function logBridgeStats() {
   const now = Date.now();
   const elapsed = Math.round((now - BRIDGE_METRICS.lastStatsLog) / 1000);
-  
+
   console.log(`[symphony-bridge] 📊 Bridge Stats (last ${elapsed}s):`);
-  console.log(`[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`);
-  console.log(`[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks}`);
-  console.log(`[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`);
-  console.log(`[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`);
-  
+  console.log(
+    `[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`,
+  );
+  console.log(
+    `[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks}`,
+  );
+  console.log(
+    `[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`,
+  );
+  console.log(
+    `[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`,
+  );
+
   // Top providers
   const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
   if (topProviders.length > 0) {
-    console.log(`[symphony-bridge]   Top providers: ${topProviders.map(([k, v]) => `${k}:${v}`).join(', ')}`);
+    console.log(
+      `[symphony-bridge]   Top providers: ${topProviders.map(([k, v]) => `${k}:${v}`).join(", ")}`,
+    );
   }
-  
+
   // Top errors
   const topErrors = Object.entries(BRIDGE_METRICS.errorsByType)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
   if (topErrors.length > 0) {
-    console.log(`[symphony-bridge]   Top errors: ${topErrors.map(([k, v]) => `${k}:${v}`).join(', ')}`);
+    console.log(
+      `[symphony-bridge]   Top errors: ${topErrors.map(([k, v]) => `${k}:${v}`).join(", ")}`,
+    );
   }
-  
+
   BRIDGE_METRICS.lastStatsLog = now;
-  
+
   // Also log credit-gate stats
   logProviderStats();
 }
@@ -657,10 +695,12 @@ const server = http.createServer(async (req, res) => {
         status: "ok",
         model: MODEL_ID,
         providersConfigured: providerCount,
-        rankedProviders: getRankedProviders().slice(0, 5).map(p => ({
-          name: p.name,
-          score: p.score,
-        })),
+        rankedProviders: getRankedProviders()
+          .slice(0, 5)
+          .map((p) => ({
+            name: p.name,
+            score: p.score,
+          })),
       });
     }
 
@@ -706,7 +746,9 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (issueContext) {
-        console.log(`[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`);
+        console.log(
+          `[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
+        );
       }
 
       console.log(
@@ -750,9 +792,11 @@ const server = http.createServer(async (req, res) => {
           res.end();
 
           if (issueContext) {
-            console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`);
+            console.log(
+              `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
+            );
           }
-          
+
           // Record streaming metrics
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -765,14 +809,14 @@ const server = http.createServer(async (req, res) => {
           });
         } catch (streamError) {
           console.error(`[symphony-bridge] Streaming error: ${streamError.message}`);
-          
+
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
-            provider: result?.providerName || 'unknown',
+            provider: result?.providerName || "unknown",
             durationMs,
             isStream: true,
             isError: true,
-            errorType: streamError.message?.slice(0, 50) || 'unknown',
+            errorType: streamError.message?.slice(0, 50) || "unknown",
           });
           const errorChunk = {
             id: completionId,
@@ -798,14 +842,16 @@ const server = http.createServer(async (req, res) => {
         const result = await invokeWithFallback(messages);
 
         if (issueContext) {
-          const firstLine = result.data.choices?.[0]?.message?.content?.split("\n")[0]?.trim().slice(0, 100) || "(no content)";
+          const firstLine =
+            result.data.choices?.[0]?.message?.content?.split("\n")[0]?.trim().slice(0, 100) ||
+            "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
 
         const durationMs = Date.now() - startTime;
         const tokensIn = result.data?.usage?.prompt_tokens || 0;
         const tokensOut = result.data?.usage?.completion_tokens || 0;
-        
+
         recordBridgeMetrics({
           provider: result.providerName,
           durationMs,

@@ -44,7 +44,6 @@ let STARTUP_ATTEMPTS = [];
 let STARTUP_INITIALIZED = false;
 let STARTUP_WINNER = null; // Pre-selected winning key for fast requests
 
-
 // Get all Codebuff API keys from environment
 function getAllApiKeys() {
   const keys = [];
@@ -154,7 +153,11 @@ async function testApiKey(apiKey, index) {
     const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
     // Check for auth errors in output
-    if (outputStr.includes("401") || outputStr.includes("Unauthorized") || outputStr.includes("Authentication failed")) {
+    if (
+      outputStr.includes("401") ||
+      outputStr.includes("Unauthorized") ||
+      outputStr.includes("Authentication failed")
+    ) {
       console.warn(`[bridge] Key ${index + 1} (${masked}): FAILED - auth error`);
       return false;
     }
@@ -171,13 +174,13 @@ async function testApiKey(apiKey, index) {
     return true;
   } catch (err) {
     const errStr = err.message || String(err);
-    
+
     // Check for auth errors
     if (errStr.includes("401") || errStr.includes("Unauthorized") || errStr.includes("auth")) {
       console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
       return false;
     }
-    
+
     // Check for rate limit errors
     if (isRateLimitError(errStr)) {
       const resetMatch = errStr.match(/resets in (\d+ \w+)/);
@@ -185,15 +188,17 @@ async function testApiKey(apiKey, index) {
       console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited${resetInfo}`);
       return false;
     }
-    
+
     // Timeout means the key is NOT working (can't complete even a simple request)
     if (errStr.toLowerCase().includes("timeout")) {
       console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ timed out`);
       return false;
     }
-    
+
     // Other errors might mean the key is valid but slow
-    console.log(`[bridge] Key ${index + 1} (${masked}): ⚠️  test completed (${errStr.slice(0, 50)})`);
+    console.log(
+      `[bridge] Key ${index + 1} (${masked}): ⚠️  test completed (${errStr.slice(0, 50)})`,
+    );
     return true; // Assume working if not an auth, rate limit, or timeout
   }
 }
@@ -201,31 +206,46 @@ async function testApiKey(apiKey, index) {
 // Test ALL keys in parallel at startup and determine the winning key
 async function testAllKeysAndSelectWinner(apiKeys) {
   console.log(`[bridge] Testing ALL ${apiKeys.length} API keys in parallel...`);
-  
+
   // Test ALL keys in parallel at startup
   const results = await Promise.allSettled(apiKeys.map((key, i) => testApiKey(key, i)));
-  
+
   // Check if paid (index 0) works
   const paidWorks = results[0]?.status === "fulfilled" && results[0]?.value === true;
-  
+
   if (paidWorks) {
     console.log(`[bridge] 🎯 Winner: paid key (will use directly on requests)`);
-    STARTUP_WINNER = { apiKey: apiKeys[0], costMode: undefined, label: "paid (pre-warmed)", isPaid: true };
+    STARTUP_WINNER = {
+      apiKey: apiKeys[0],
+      costMode: undefined,
+      label: "paid (pre-warmed)",
+      isPaid: true,
+    };
     return;
   }
-  
+
   // Paid doesn't work - find first working free key
   for (let i = 1; i < results.length; i++) {
     if (results[i]?.status === "fulfilled" && results[i]?.value === true) {
       console.log(`[bridge] 🎯 Winner: free key ${i} (will use directly on requests)`);
-      STARTUP_WINNER = { apiKey: apiKeys[i], costMode: "free", label: `free key ${i} (pre-warmed)`, isPaid: false };
+      STARTUP_WINNER = {
+        apiKey: apiKeys[i],
+        costMode: "free",
+        label: `free key ${i} (pre-warmed)`,
+        isPaid: false,
+      };
       return;
     }
   }
-  
+
   // All keys failed - fallback to paid (will fail at runtime)
   console.warn(`[bridge] ⚠️  All keys failed at startup - using paid as fallback`);
-  STARTUP_WINNER = { apiKey: apiKeys[0], costMode: undefined, label: "paid (expected to fail)", isPaid: true };
+  STARTUP_WINNER = {
+    apiKey: apiKeys[0],
+    costMode: undefined,
+    label: "paid (expected to fail)",
+    isPaid: true,
+  };
 }
 
 // Build prompt from OpenAI-style messages
@@ -277,18 +297,21 @@ function suppressSDKErrors(fn) {
   const originalWarn = console.warn;
   return async (...args) => {
     console.error = (...errArgs) => {
-      const errStr = String(errArgs[0] || '');
+      const errStr = String(errArgs[0] || "");
       // Only suppress Vercel AI SDK error dumps
-      if (errStr.includes('Symbol(vercel.ai.error)')) {
+      if (errStr.includes("Symbol(vercel.ai.error)")) {
         return;
       }
       originalError(...errArgs);
     };
     console.warn = (...warnArgs) => {
-      const warnStr = String(warnArgs[0] || '');
+      const warnStr = String(warnArgs[0] || "");
       // Suppress tools.profile allowlist warnings - these are SDK internal notices
       // about tools that are unavailable in current runtime/model config
-      if (warnStr.includes('tools.profile') && warnStr.includes('allowlist contains unknown entries')) {
+      if (
+        warnStr.includes("tools.profile") &&
+        warnStr.includes("allowlist contains unknown entries")
+      ) {
         return;
       }
       originalWarn(...warnArgs);
@@ -306,20 +329,20 @@ function suppressSDKErrors(fn) {
 function extractTextFromResponse(resultStr) {
   try {
     const parsed = JSON.parse(resultStr);
-    
+
     // Handle lastMessage format: { type: "lastMessage", value: [...] }
-    if (parsed?.type === 'lastMessage' && parsed?.value) {
+    if (parsed?.type === "lastMessage" && parsed?.value) {
       const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
       for (const msg of messages) {
         const text = extractTextFromMessage(msg);
         if (text) return text;
       }
     }
-    
+
     // Handle direct message format: { role: "assistant", content: "..." }
     const text = extractTextFromMessage(parsed);
     if (text) return text;
-    
+
     // If we can't parse it, return the raw string
     return resultStr;
   } catch {
@@ -330,38 +353,38 @@ function extractTextFromResponse(resultStr) {
 
 // Extract text from a single message object using AI SDK utilities for robustness
 function extractTextFromMessage(msg) {
-  if (!msg || msg.role !== 'assistant') return null;
-  
+  if (!msg || msg.role !== "assistant") return null;
+
   const content = msg.content;
-  
+
   // If content is a string, return it directly
-  if (typeof content === 'string') {
+  if (typeof content === "string") {
     console.log(`[bridge] 📝 Content: string (${content.length} chars)`);
     return content;
   }
-  
+
   // If content is an array, use AI SDK utilities to extract text from content parts
   if (Array.isArray(content)) {
     const textParts = [];
     const partTypes = [];
-    
+
     for (const part of content) {
       if (!part) continue;
-      
-      const partType = part.type || 'unknown';
+
+      const partType = part.type || "unknown";
       partTypes.push(partType);
-      
+
       // Use AI SDK utilities for robust type checking
       if (isTextUIPart(part)) {
         // Standard text content
-        const text = part.text || part.content || '';
+        const text = part.text || part.content || "";
         if (text) {
           textParts.push(text);
           console.log(`[bridge] 📝 Part: text (${text.length} chars)`);
         }
       } else if (isReasoningUIPart(part)) {
         // Model reasoning/rationale
-        const reasoning = part.reasoning || part.content || '';
+        const reasoning = part.reasoning || part.content || "";
         if (reasoning) {
           textParts.push(reasoning);
           console.log(`[bridge] 📝 Part: reasoning (${reasoning.length} chars)`);
@@ -374,9 +397,9 @@ function extractTextFromMessage(msg) {
         console.log(`[bridge] 📝 Part: data (skipped)`);
       } else {
         // Unknown type - try common fields
-        const text = part.text || part.content || part.result || '';
+        const text = part.text || part.content || part.result || "";
         if (text) {
-          const textStr = typeof text === 'string' ? text : JSON.stringify(text);
+          const textStr = typeof text === "string" ? text : JSON.stringify(text);
           textParts.push(textStr);
           console.log(`[bridge] 📝 Part: ${partType} (${textStr.length} chars)`);
         } else {
@@ -384,17 +407,38 @@ function extractTextFromMessage(msg) {
         }
       }
     }
-    
-    console.log(`[bridge] 📝 Content types found: ${partTypes.join(', ')}`);
-    
+
+    console.log(`[bridge] 📝 Content types found: ${partTypes.join(", ")}`);
+
     if (textParts.length > 0) {
-      const result = textParts.join('\n');
+      const result = textParts.join("\n");
       console.log(`[bridge] 📝 Extracted ${result.length} chars total`);
       return result;
     }
   }
-  
+
   return null;
+}
+
+// Check if a tool call indicates active (non-complete) subgoals
+function hasActiveSubgoals(content) {
+  if (!Array.isArray(content)) return false;
+
+  for (const item of content) {
+    const toolName = item.toolName || item.name;
+    if (toolName === "update_subgoal" || toolName === "add_subgoal") {
+      // Check the input status - COMPLETE means work is done, not ongoing
+      const input = item.input || item.args;
+      const status = (input?.status || "").toUpperCase();
+
+      // Only count as active if status is IN_PROGRESS or NOT_STARTED
+      // COMPLETE means the agent finished that task
+      if (status === "IN_PROGRESS" || status === "NOT_STARTED") {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 // Parse agent response to detect subgoals and continuation needs
@@ -409,53 +453,94 @@ function parseAgentResponse(resultStr) {
     }
 
     // Check for structured lastMessage with update_subgoal
-    if (parsed && parsed.type === 'lastMessage' && parsed.value) {
+    if (parsed && parsed.type === "lastMessage" && parsed.value) {
       const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
       for (const msg of messages) {
-        if (msg.role === 'assistant' && Array.isArray(msg.content)) {
-          const hasSubgoals = msg.content.some(item => 
-            item.toolName === 'update_subgoal' || item.toolName === 'add_subgoal'
-          );
-          if (hasSubgoals) {
+        if (msg.role === "assistant") {
+          // Handle content as array
+          if (Array.isArray(msg.content) && hasActiveSubgoals(msg.content)) {
             return {
               needsContinuation: true,
               hasSubgoals: true,
-              subgoalInfo: JSON.stringify(msg.content, null, 2)
+              subgoalInfo: JSON.stringify(msg.content, null, 2),
             };
+          }
+          // Handle content as object (nested in extra or other fields)
+          if (msg.content && typeof msg.content === "object") {
+            // Check if content has a nested array with tool calls
+            for (const key of Object.keys(msg.content)) {
+              const val = msg.content[key];
+              if (Array.isArray(val) && hasActiveSubgoals(val)) {
+                return {
+                  needsContinuation: true,
+                  hasSubgoals: true,
+                  subgoalInfo: JSON.stringify(val, null, 2),
+                };
+              }
+            }
           }
         }
       }
     }
 
-    // Fallback: check string directly for update_subgoal tool calls
-    if (resultStr.includes('"toolName":"update_subgoal"') || resultStr.includes('"toolName":"add_subgoal"')) {
+    // Fallback: check string directly for update_subgoal with IN_PROGRESS or NOT_STARTED status
+    // This handles cases where the JSON parsing fails but the string contains the data
+    if (
+      resultStr.includes('"toolName":"update_subgoal"') ||
+      resultStr.includes('"toolName":"add_subgoal"')
+    ) {
+      // Check if there's a non-COMPLETE status in the response
+      const hasActiveStatus =
+        resultStr.includes('"status":"IN_PROGRESS"') ||
+        resultStr.includes('"status":"NOT_STARTED"') ||
+        resultStr.includes('status":"IN_PROGRESS"') ||
+        resultStr.includes('status":"NOT_STARTED"');
+
+      // If we found update_subgoal but no active status, don't signal continuation
+      // (the agent completed the subgoals)
+      if (!hasActiveStatus) {
+        // Still check if it looks like there's more work to do by looking for tool-call without end_turn
+        if (resultStr.includes('"type":"tool-call"') && !resultStr.includes("end_turn")) {
+          return {
+            needsContinuation: true,
+            hasSubgoals: false,
+            subgoalInfo: null,
+          };
+        }
+        return {
+          needsContinuation: false,
+          hasSubgoals: true, // Subgoals exist but are complete
+          subgoalInfo: null,
+        };
+      }
+
       return {
         needsContinuation: true,
         hasSubgoals: true,
-        subgoalInfo: null
+        subgoalInfo: null,
       };
     }
-    
+
     // Check for other continuation signals (tool calls without end_turn)
-    if (resultStr.includes('"type":"tool-call"') && !resultStr.includes('end_turn')) {
+    if (resultStr.includes('"type":"tool-call"') && !resultStr.includes("end_turn")) {
       return {
         needsContinuation: true,
         hasSubgoals: false,
-        subgoalInfo: null
+        subgoalInfo: null,
       };
     }
-    
+
     return {
       needsContinuation: false,
       hasSubgoals: false,
-      subgoalInfo: null
+      subgoalInfo: null,
     };
   } catch (err) {
     console.warn(`[bridge] parseAgentResponse error: ${err.message}`);
     return {
       needsContinuation: false,
       hasSubgoals: false,
-      subgoalInfo: null
+      subgoalInfo: null,
     };
   }
 }
@@ -463,7 +548,7 @@ function parseAgentResponse(resultStr) {
 // Try a single account - helper for parallel execution
 async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
   const toolsUsed = new Set();
-  
+
   const client = new CodebuffClient({
     apiKey: attempt.apiKey,
     cwd: cwd || DEFAULT_CWD,
@@ -473,15 +558,15 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
     agent: MODEL_ID,
     prompt,
     handleEvent: (event) => {
-      if (event && event.type === 'tool-call') {
-        const toolName = event.toolName || event.name || 'unknown';
+      if (event && event.type === "tool-call") {
+        const toolName = event.toolName || event.name || "unknown";
         if (!toolsUsed.has(toolName)) {
           toolsUsed.add(toolName);
           console.log(`[bridge] 🔧 Tool used: ${toolName}`);
         }
       }
-      if (event && event.type === 'reasoning') {
-        const preview = event.content?.slice(0, 80) || '';
+      if (event && event.type === "reasoning") {
+        const preview = event.content?.slice(0, 80) || "";
         console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
       }
     },
@@ -492,7 +577,9 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
     runOpts.costMode = attempt.costMode;
   }
 
-  const result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), timeoutPromise]))();
+  const result = await suppressSDKErrors(() =>
+    Promise.race([client.run(runOpts), timeoutPromise]),
+  )();
 
   const output = result.output;
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
@@ -513,13 +600,13 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
   }
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
-  
+
   if (toolsUsed.size > 0) {
-    console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(', ')}`);
+    console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
   } else {
     console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
   }
-  
+
   const parseResult = parseAgentResponse(resultStr);
 
   if (parseResult.needsContinuation) {
@@ -569,7 +656,15 @@ async function invokeCodebuff({ messages, cwd }) {
 }
 
 // Try a single account for streaming - helper for parallel execution
-async function trySingleAccountStream(attempt, prompt, timeoutPromise, cwd, onChunk, completionId, created) {
+async function trySingleAccountStream(
+  attempt,
+  prompt,
+  timeoutPromise,
+  cwd,
+  onChunk,
+  completionId,
+  created,
+) {
   let fullText = "";
   const toolsUsed = new Set();
 
@@ -582,15 +677,15 @@ async function trySingleAccountStream(attempt, prompt, timeoutPromise, cwd, onCh
     agent: MODEL_ID,
     prompt,
     handleEvent: (event) => {
-      if (event && event.type === 'tool-call') {
-        const toolName = event.toolName || event.name || 'unknown';
+      if (event && event.type === "tool-call") {
+        const toolName = event.toolName || event.name || "unknown";
         if (!toolsUsed.has(toolName)) {
           toolsUsed.add(toolName);
           console.log(`[bridge] 🔧 Tool used: ${toolName}`);
         }
       }
-      if (event && event.type === 'reasoning') {
-        const preview = event.content?.slice(0, 80) || '';
+      if (event && event.type === "reasoning") {
+        const preview = event.content?.slice(0, 80) || "";
         console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
       }
       // Stream any output events as they come in
@@ -619,7 +714,9 @@ async function trySingleAccountStream(attempt, prompt, timeoutPromise, cwd, onCh
     runOpts.costMode = attempt.costMode;
   }
 
-  const result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), timeoutPromise]))();
+  const result = await suppressSDKErrors(() =>
+    Promise.race([client.run(runOpts), timeoutPromise]),
+  )();
 
   const output = result.output || "";
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
@@ -663,7 +760,7 @@ async function trySingleAccountStream(attempt, prompt, timeoutPromise, cwd, onCh
   }
 
   if (toolsUsed.size > 0) {
-    console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(', ')}`);
+    console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
   } else {
     console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
   }
@@ -697,7 +794,15 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
 
   // Use winner directly - no fallback
   try {
-    const result = await trySingleAccountStream(winner, prompt, timeoutPromise, cwd, onChunk, completionId, created);
+    const result = await trySingleAccountStream(
+      winner,
+      prompt,
+      timeoutPromise,
+      cwd,
+      onChunk,
+      completionId,
+      created,
+    );
     console.log(`[bridge] ✅ Winner succeeded`);
     return result;
   } catch (err) {
@@ -750,14 +855,12 @@ function checkAuth(req) {
   return token === API_KEY || token.startsWith("local-") || token === "";
 }
 
-
-
 // Main request handler
 const server = http.createServer(async (req, res) => {
   // Debug: log ALL requests before any processing
   console.log(`[bridge] ===== REQUEST =====`);
   console.log(`[bridge] method: ${req.method}, url: ${req.url}`);
-  console.log(`[bridge] headers: authorization=${req.headers.authorization?.slice(0,20)}...`);
+  console.log(`[bridge] headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
   console.log(`[bridge] ===================`);
 
   try {
@@ -789,17 +892,20 @@ const server = http.createServer(async (req, res) => {
     }
 
     // POST /v1/chat/completions or /chat/completions (OpenClaw might use either)
-    if (req.method === "POST" && (req.url === "/v1/chat/completions" || req.url === "/chat/completions")) {
+    if (
+      req.method === "POST" &&
+      (req.url === "/v1/chat/completions" || req.url === "/chat/completions")
+    ) {
       const body = await parseBody(req);
       const model = body.model || MODEL_ID;
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
 
       // Extract issue context from user messages
-      const userMessages = messages.filter(m => m.role === 'user');
+      const userMessages = messages.filter((m) => m.role === "user");
       let issueContext = null;
       for (const msg of userMessages) {
-        const content = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
+        const content = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
         // Look for issue identifier pattern (e.g., "ANQ-123")
         const issueMatch = content.match(/##\s*Issue:\s*([A-Z]+-\d+)\s*[—-]\s*([^\n]+)/);
         if (issueMatch) {
@@ -833,7 +939,7 @@ const server = http.createServer(async (req, res) => {
         const created = Math.floor(Date.now() / 1000);
 
         let streamResult = null;
-        
+
         try {
           streamResult = await invokeCodebuffStream({
             messages,
@@ -848,10 +954,14 @@ const server = http.createServer(async (req, res) => {
 
           // Determine finish_reason and send any remaining content
           let finishReason = "stop";
-          
+
           // If no streaming chunks were sent during execution (text-only mode), send the full result now
           // This handles the case where the SDK doesn't emit "output" events during the run
-          if (streamResult?.text && streamResult.text.length > 0 && !streamResult.hadStreamingChunks) {
+          if (
+            streamResult?.text &&
+            streamResult.text.length > 0 &&
+            !streamResult.hadStreamingChunks
+          ) {
             // Extract actual text content from the JSON response
             const textContent = extractTextFromResponse(streamResult.text);
             if (textContent) {
@@ -871,13 +981,17 @@ const server = http.createServer(async (req, res) => {
               res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
             }
           }
-          
+
           if (streamResult?.needsContinuation) {
-            finishReason = "length";  // Signal more work needed
+            finishReason = "length"; // Signal more work needed
             if (streamResult.hasSubgoals) {
-              console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (active subgoals)`);
+              console.log(
+                `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals)`,
+              );
             } else {
-              console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (pending work)`);
+              console.log(
+                `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending work)`,
+              );
             }
           } else if (issueContext) {
             console.log(`[bridge] ✅ Finished: ${issueContext.identifier}`);
@@ -933,23 +1047,27 @@ const server = http.createServer(async (req, res) => {
 
         // Log completion with issue context and one-line summary
         let finishReason = "stop";
-        
+
         if (result.needsContinuation) {
           // Agent has indicated it needs to continue with more work (via update_subgoal)
           // Do NOT send finish_reason: "stop" - that tells the caller to end the conversation
           // Send "length" to indicate more content is available, or null to let caller decide
-          finishReason = "length";  // Signal that agent wants to continue
-          
+          finishReason = "length"; // Signal that agent wants to continue
+
           if (result.hasSubgoals) {
-            console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (active subgoals - continuation required)`);
+            console.log(
+              `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals - continuation required)`,
+            );
           } else {
-            console.log(`[bridge] 🔄 More work needed: ${issueContext?.identifier || 'request'} (pending tool calls)`);
+            console.log(
+              `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending tool calls)`,
+            );
           }
         } else {
           if (issueContext) {
             // Extract first line of summary for logging
             const summary = result.text || "";
-            const firstLine = summary.split('\n')[0].trim().slice(0, 100) || '(no summary)';
+            const firstLine = summary.split("\n")[0].trim().slice(0, 100) || "(no summary)";
             console.log(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
           }
         }
@@ -1006,7 +1124,7 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 // Initialize at startup - validate keys and build attempt plan
 async function initializeBridge() {
   const apiKeys = getAllApiKeys();
-  
+
   console.log(`[bridge] ========================================`);
   console.log(`[bridge] Codebuff OpenAI Bridge Starting`);
   console.log(`[bridge] ========================================`);
@@ -1016,25 +1134,25 @@ async function initializeBridge() {
   console.log(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
   console.log(`[bridge] Streaming: enabled`);
   console.log(`[bridge] Working directory: ${DEFAULT_CWD}`);
-  
+
   // Validate and determine paid/free at startup
   if (apiKeys.length > 0) {
     console.log(`[bridge] Validating API keys and determining paid/free status...`);
     STARTUP_ACCOUNTS = await validateApiKeys(apiKeys);
-    
+
     if (STARTUP_ACCOUNTS.length === 0) {
       console.warn(`[bridge] WARNING: No valid API keys found!`);
     } else {
       // Build the attempt plan once at startup
       STARTUP_ATTEMPTS = buildAttemptPlan(apiKeys, STARTUP_ACCOUNTS);
-      
+
       // Test keys and pre-select winner for fast requests
       await testAllKeysAndSelectWinner(apiKeys);
     }
   } else {
     console.warn(`[bridge] WARNING: No CODEBUFF_API_KEY* environment variables found!`);
   }
-  
+
   STARTUP_INITIALIZED = true;
   console.log(`[bridge] ========================================`);
   console.log(`[bridge] Ready to accept requests`);
@@ -1047,8 +1165,8 @@ function getHealthStatus() {
     status: STARTUP_INITIALIZED ? "ok" : "initializing",
     model: MODEL_ID,
     apiKeysConfigured: STARTUP_ACCOUNTS.length,
-    paidAccounts: STARTUP_ATTEMPTS.filter(a => a.isPaid).length,
-    freeAccounts: STARTUP_ATTEMPTS.filter(a => !a.isPaid).length,
+    paidAccounts: STARTUP_ATTEMPTS.filter((a) => a.isPaid).length,
+    freeAccounts: STARTUP_ATTEMPTS.filter((a) => !a.isPaid).length,
   };
 }
 
