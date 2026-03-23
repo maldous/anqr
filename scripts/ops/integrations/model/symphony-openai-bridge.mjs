@@ -254,8 +254,8 @@ async function invokeWithFallback(messages) {
         attempts: 2,
         triedProviders: [provider.name],
       };
-    } catch (retryErr) {
-      const retryStr = String(retryErr);
+    } catch (error_) {
+      const retryStr = String(error_);
       console.log(
         `[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`,
       );
@@ -495,7 +495,7 @@ async function invokeWithFallbackStream(messages, onChunk) {
           triedProviders: [provider.name],
         };
       } catch (retryErr) {
-        const retryStr = String(retryErr);
+        const retryStr = String(error_);
         console.log(
           `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`,
         );
