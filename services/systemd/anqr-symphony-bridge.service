@@ -36,7 +36,7 @@ EnvironmentFile=-%h/.config/symphony/anqr.env
 # Systemd env overrides (LINEAR_API_KEY, etc.)
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/integrations/model/symphony-openai-bridge.mjs
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=1536 --expose-gc scripts/ops/integrations/model/symphony-openai-bridge.mjs
 
 # Logging to journal
 StandardOutput=journal
@@ -49,6 +49,7 @@ RestartSec=5
 
 # Safety limits
 TimeoutStartSec=30
+MemoryHigh=1536M
 MemoryMax=2G
 
 [Install]

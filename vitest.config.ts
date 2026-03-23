@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     globals: false,
-    environment: "happy-dom",
+    environment: "node",
     include: [
       "tests/unit/**/*.spec.ts",
       "tests/unit/**/*.test.ts",
@@ -20,7 +20,7 @@ export default defineConfig({
       "apps/**/*.spec.ts",
       "apps/**/*.test.ts",
     ],
-    exclude: ["node_modules", "dist", "android", "ios"],
+    exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**"],
     coverage: {
       provider: "v8",
       reportsDirectory: "coverage",

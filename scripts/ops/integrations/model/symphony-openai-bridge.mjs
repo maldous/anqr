@@ -121,7 +121,7 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
   const runOpts = {
     agent: model || "codebuff/base",
     prompt,
-    maxAgentSteps: MAX_TOOL_ITERATIONS,
+    maxAgentSteps: CODEBUFF_MAX_STEPS,
     handleEvent: (event) => {
       try {
         if (!event) return;
@@ -649,8 +649,13 @@ if (VALID_TOKENS.size > 1) {
   console.log(`[symphony-bridge] Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
-const MAX_TOOL_ITERATIONS = 1000; // Maximum tool call loops
+const MAX_TOOL_ITERATIONS = 1000; // Maximum tool call loops for AI SDK providers
+const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
 const FALLBACK_DELAY_MS = 1000;
+const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
+
+// Opportunistic GC between requests (requires --expose-gc flag)
+const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
 // Codebuff SDK internal tools — log only, don't stream to client
 const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "set_output", "end_turn", "lookup_agent_info"]);
@@ -857,11 +862,19 @@ async function invokeWithAI(provider, messages, options = {}) {
       },
     });
 
-    // Process the stream
+    // Process the stream — cap fullText to prevent unbounded memory growth
     let fullText = "";
+    let fullTextCapped = false;
 
     for await (const chunk of result.textStream) {
-      fullText += chunk;
+      if (!fullTextCapped) {
+        if (fullText.length + chunk.length > MAX_RESPONSE_TEXT_BYTES) {
+          fullTextCapped = true;
+          console.log(`[symphony-bridge] ⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`);
+        } else {
+          fullText += chunk;
+        }
+      }
 
       if (onChunk) {
         onChunk({
@@ -1441,6 +1454,7 @@ const server = http.createServer(async (req, res) => {
             isStream: true,
             isError: false,
           });
+          maybeGC();
         } catch (streamError) {
           clearInterval(heartbeat);
           console.error(`[symphony-bridge] Streaming error: ${streamError.message}`);
@@ -1496,6 +1510,8 @@ const server = http.createServer(async (req, res) => {
           tokensOut,
           isError: false,
         });
+
+        maybeGC();
 
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
