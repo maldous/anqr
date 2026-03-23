@@ -83,6 +83,7 @@ const ALLOWED_ROOT_DIRS = new Set([
   "playwright-report",
   "migration",
   "vite-config",
+  "memory",
 ]);
 
 // ---------------------------------------------------------------------------

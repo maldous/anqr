@@ -274,6 +274,32 @@ function createProviderModel(provider) {
     // OpenRouter (multiple models via OpenRouter API)
     case "openrouter-nemotron-super":
     case "openrouter":
+    case "openrouter-free":
+    case "openrouter-nemotron-nano-30b":
+    case "openrouter-qwen3-next-80b":
+    case "openrouter-step3-5-flash":
+    case "openrouter-trinity-mini":
+    case "openrouter-nemotron-nano-9b":
+    case "openrouter-minimax-m2.5":
+    case "openrouter-qwen3-coder":
+    case "openrouter-lfm-2.5-thinking":
+    case "openrouter-lfm-2.5-instruct":
+    case "openrouter-nemotron-nano-12b-vl":
+    case "openrouter-trinity-large":
+    case "openrouter-mistral-small-3.1":
+    case "openrouter-llama-3.3-70b":
+    case "openrouter-qwen3-4b":
+    case "openrouter-gpt-oss-120b":
+    case "openrouter-gpt-oss-20b":
+    case "openrouter-llama-3.2-3b":
+    case "openrouter-dolphin-mistral":
+    case "openrouter-gemma-3-27b":
+    case "openrouter-glm-4.5-air":
+    case "openrouter-gemma-3n-e2b":
+    case "openrouter-gemma-3-4b":
+    case "openrouter-gemma-3n-e4b":
+    case "openrouter-gemma-3-12b":
+    case "openrouter-hermes-3-405b":
       const openrouter = createOpenRouter({ apiKey });
       return openrouter(model);
     
@@ -301,8 +327,51 @@ function createProviderModel(provider) {
       });
       return codex(model);
     
-    // Default - try OpenAI-compatible
+    // SambaNova
+    case "sambanova":
+      const sambanova = openai({
+        baseURL: baseUrl || "https://api.sambanova.ai/v1",
+        apiKey,
+      });
+      return sambanova(model);
+    
+    // Cerebras
+    case "cerebras":
+      const cerebras = openai({
+        baseURL: baseUrl || "https://api.cerebras.ai/v1",
+        apiKey,
+      });
+      return cerebras(model);
+    
+    // GitHub Models
+    case "github-models":
+      const githubModels = openai({
+        baseURL: baseUrl || "https://models.github.ai/inference/v1",
+        apiKey,
+      });
+      return githubModels(model);
+    
+    // Codebuff Bridge (local HTTP)
+    case "codebuff-bridge":
+      const codebuffBridge = openai({
+        baseURL: baseUrl || "http://127.0.0.1:4318/v1",
+        apiKey,
+      });
+      return codebuffBridge(model);
+    
+    // Ollama local
+    case "ollama-local":
+      const ollamaLocal = openai({
+        baseURL: baseUrl || "http://127.0.0.1:11434/v1",
+        apiKey: apiKey || "ollama",
+      });
+      return ollamaLocal(model);
+    
+    // Default - try OpenAI-compatible (baseUrl required)
     default:
+      if (!baseUrl) {
+        throw new Error(`Provider ${name} not supported - no baseUrl for default fallback`);
+      }
       const defaultProvider = openai({
         baseURL: baseUrl,
         apiKey,
