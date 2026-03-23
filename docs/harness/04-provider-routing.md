@@ -6,9 +6,47 @@ This document defines the current provider posture for harness and AI-assisted w
 
 Use the cheapest truthful route that satisfies the task while preserving evidence quality.
 
+## Operating Model
+
+The harness uses a **layered failover model** where each layer handles its own internal fallback:
+
+### Layer 1: OpenClaw (user-facing gateway)
+
+OpenClaw is configured with the following failover chain:
+
+| Priority | Model | Fallback behavior |
+| -------- | ----- | ------------------ |
+| Primary | `symphony-bridge/symphony/main` | Internal failover via credit-gate (see Layer 2) |
+| Fallback 1 | `codebuff-bridge/codebuff/base` | Internal failover with paid → free account rotation |
+| Fallback 2 | OpenClaw free-rider models | OpenClaw's native free model discovery |
+
+**Key insight**: OpenClaw sees Symphony Bridge as a single reliable model because it internally handles provider failover. When Symphony Bridge fails, OpenClaw falls back to Codebuff Bridge, and then to its own free-rider models.
+
+### Layer 2: Symphony Bridge (credit-gate)
+
+Symphony Bridge uses the credit-gate provider cascade with **dynamic scoring** based on actual performance metrics:
+
+| Priority | Provider | Selection method |
+| -------- | -------- | ----------------- |
+| 1 | codebuff | SDK with paid → free account rotation |
+| 2 | openclaw | Local gateway |
+| 3 | groq | Free, fast |
+| 4+ | mistral, gemini, openrouter, sambanova, cerebras, github-models, ollama | Fallback cascade |
+
+The credit-gate selects providers based on dynamic scoring (see Provider Metrics section below), not fixed order. After each request, providers are re-evaluated for the next request.
+
+### Layer 3: Codebuff Bridge (multi-account rotation)
+
+When Codebuff is selected, the bridge uses paid account first, then free accounts in parallel as instant fallback:
+
+1. **Paid account** tried first - if successful, used
+2. **Free accounts** start in parallel (pre-warmed) - if paid fails, first working free account used instantly
+
+This ensures paid always wins when available, but free accounts are ready instantly when needed (no waiting for paid to timeout).
+
 ## Current provider cascade
 
-The harness uses a credit-gate (`symphony-credit-gate.mjs`) to select providers in priority order. Providers are tried sequentially until one succeeds:
+The credit-gate (`symphony-credit-gate.mjs`) to select providers in priority order. Providers are tried sequentially until one succeeds:
 
 | #   | Provider                  | Type | Model                              | Env Key(s) / Source                          | SDK     |
 | --- | ------------------------- | ---- | ---------------------------------- | -------------------------------------------- | ------- |

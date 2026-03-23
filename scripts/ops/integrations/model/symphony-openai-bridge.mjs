@@ -92,7 +92,10 @@ function isRetryableError(err) {
     errStr.includes("502") ||
     errStr.includes("network") ||
     errStr.includes("econnrefused") ||
-    errStr.includes("ECONNREFUSED")
+    errStr.includes("ECONNREFUSED") ||
+    errStr.includes("fetch failed") ||
+    errStr.includes("connection") ||
+    errStr.includes("enotfound")
   );
 }
 
@@ -267,17 +270,36 @@ async function invokeWithFallbackStream(messages, onChunk) {
   console.log(`[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`);
 
   try {
-    const { model, baseUrl, apiKey } = provider;
-    const url = `${baseUrl}/chat/completions`;
+    const { name, model, baseUrl, apiKey, requiresSdk } = provider;
+    
+    // For SDK providers, redirect to HTTP bridge equivalents
+    let effectiveBaseUrl = baseUrl;
+    let effectiveApiKey = apiKey;
+    let effectiveModel = model;
+    
+    if (requiresSdk) {
+      const SDK_TO_HTTP = {
+        codebuff: { baseUrl: "http://127.0.0.1:4318/v1", apiKey: "local-bridge", model: "codebuff/base" },
+      };
+      const httpBridge = SDK_TO_HTTP[name];
+      if (httpBridge) {
+        console.log(`[symphony-bridge] Streaming: SDK '${name}' redirected to HTTP bridge`);
+        effectiveBaseUrl = httpBridge.baseUrl;
+        effectiveApiKey = httpBridge.apiKey;
+        effectiveModel = httpBridge.model;
+      }
+    }
+    
+    const url = `${effectiveBaseUrl}/chat/completions`;
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${effectiveApiKey}`,
       },
       body: JSON.stringify({
-        model: model,
+        model: effectiveModel,
         messages: messages,
         stream: true,
       }),
@@ -360,17 +382,36 @@ async function invokeWithFallbackStream(messages, onChunk) {
       await sleep(FALLBACK_DELAY_MS);
 
       try {
-        const { model, baseUrl, apiKey } = provider;
-        const url = `${baseUrl}/chat/completions`;
+        const { name, model, baseUrl, apiKey, requiresSdk } = provider;
+        
+        // For SDK providers, redirect to HTTP bridge equivalents
+        let effBaseUrl = baseUrl;
+        let effApiKey = apiKey;
+        let effModel = model;
+        
+        if (requiresSdk) {
+          const SDK_TO_HTTP = {
+            codebuff: { baseUrl: "http://127.0.0.1:4318/v1", apiKey: "local-bridge", model: "codebuff/base" },
+          };
+          const httpBridge = SDK_TO_HTTP[name];
+          if (httpBridge) {
+            console.log(`[symphony-bridge] Streaming fallback: SDK '${name}' redirected to HTTP bridge`);
+            effBaseUrl = httpBridge.baseUrl;
+            effApiKey = httpBridge.apiKey;
+            effModel = httpBridge.model;
+          }
+        }
+        
+        const url = `${effBaseUrl}/chat/completions`;
 
         const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${effApiKey}`,
           },
           body: JSON.stringify({
-            model: model,
+            model: effModel,
             messages: messages,
             stream: true,
           }),
@@ -487,8 +528,10 @@ function parseBody(req) {
 function checkAuth(req) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  // Accept any of the valid tokens
-  return VALID_TOKENS.has(token);
+  // Accept: valid tokens, tokens starting with "local-", or no token (for local OpenClaw integration)
+  const isValid = VALID_TOKENS.has(token) || token.startsWith("local-") || token === "";
+  console.log(`[symphony-bridge] Auth check: received token="${token}", valid=${isValid}`);
+  return isValid;
 }
 
 // Bridge-specific metrics tracking
@@ -583,8 +626,9 @@ const server = http.createServer(async (req, res) => {
   console.log(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
 
   try {
-    // Auth check (skip for health check)
-    if (req.url !== "/health" && !checkAuth(req)) {
+    // Auth check (skip for health check and model list)
+    const skipAuth = req.url === "/health" || req.url === "/v1/models";
+    if (!skipAuth && !checkAuth(req)) {
       console.log(`[symphony-bridge] Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
     }

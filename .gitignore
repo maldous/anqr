@@ -14,3 +14,4 @@ reports/
 scripts/ops/__pycache__/
 scripts/reports/
 test-results/
+memory/

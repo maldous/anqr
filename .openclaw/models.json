@@ -12,12 +12,34 @@
           "name": "Codebuff Base (via bridge)"
         }
       ]
+    },
+    "symphony-bridge": {
+      "baseUrl": "http://127.0.0.1:4319",
+      "apiKey": "local-symphony",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "symphony/main",
+          "name": "Symphony Bridge"
+        }
+      ]
+    },
+    "symphony": {
+      "baseUrl": "http://127.0.0.1:4319",
+      "apiKey": "local-symphony",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "main@latest",
+          "name": "Symphony Main (direct)"
+        }
+      ]
     }
   },
   "agents": {
     "defaults": {
       "model": {
-        "primary": "codebuff-bridge/codebuff/base@latest"
+        "primary": "symphony-bridge/symphony/main"
       }
     }
   }

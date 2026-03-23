@@ -93,6 +93,7 @@
     "prepare": "lefthook install"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.47",
     "@capacitor-community/admob": "^8.0.0",
     "@capacitor/android": "^8.2.0",
     "@capacitor/camera": "^8.0.0",
@@ -117,6 +118,7 @@
     "@sentry/react": "^10.38.0",
     "@ts-rest/core": "^3.52.1",
     "@ts-rest/open-api": "^3.52.1",
+    "ai": "^6.0.134",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

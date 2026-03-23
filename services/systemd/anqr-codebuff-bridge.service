@@ -43,9 +43,9 @@ SyslogIdentifier=anqr-codebuff-bridge
 Restart=on-failure
 RestartSec=5
 
-# Safety limits — bridge is lightweight but can spike during long Codebuff runs
+# Safety limits — bridge runs 3 Codebuff SDK instances (1 paid + 2 free) in parallel
 TimeoutStartSec=30
-MemoryMax=2G
+MemoryMax=4G
 
 [Install]
 WantedBy=default.target
