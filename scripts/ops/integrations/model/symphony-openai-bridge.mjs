@@ -118,123 +118,165 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
     .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
     .join("\n\n");
 
-  const runOpts = {
-    agent: model || "codebuff/base",
-    prompt,
-    maxAgentSteps: CODEBUFF_MAX_STEPS,
+  // Track subgoal status across continuations to detect incomplete runs
+  let lastSubgoalStatus = null;
+
+  const callbacks = {
     handleEvent: (event) => {
-      try {
-        if (!event) return;
+        try {
+          if (!event) return;
 
-        // Text events are delivered via handleStreamChunk (token-by-token); skip to avoid duplication
-        if (event.type === "text") return;
+          // Text events are delivered via handleStreamChunk (token-by-token); skip to avoid duplication
+          if (event.type === "text") return;
 
-        if (event.type === "tool_call") {
-          const toolName = event.toolName || "unknown";
-          const input = event.input || {};
+          if (event.type === "tool_call") {
+            const toolName = event.toolName || "unknown";
+            const input = event.input || {};
 
-          // Filter noisy internal tools — log only, don't stream
-          if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-            console.log(`[symphony-bridge] codebuff ${toolName} (internal)`);
-            return;
-          }
+            // Filter noisy internal tools — log only, don't stream
+            if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
+              console.log(`[symphony-bridge] codebuff ${toolName} (internal)`);
+              return;
+            }
 
-          // Format user-facing tool activity based on known Codebuff tools
-          let display;
-          if (toolName === "read_files" && input.paths) {
-            const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
-            display = `📖 Reading: ${paths}`;
-          } else if (toolName === "str_replace") {
-            display = `✏️ Editing: ${input.path || "file"}`;
-          } else if (toolName === "write_file") {
-            display = `📝 Writing: ${input.path || "file"}`;
-          } else if (toolName === "run_terminal_command") {
-            const cmd = (input.command || "").slice(0, 120);
-            display = `💻 Running: ${cmd}`;
-          } else if (toolName === "code_search") {
-            display = `🔍 Searching: ${input.pattern || input.query || ""}`;
-          } else if (toolName === "spawn_agent_inline") {
-            const agentType = input.agent_type || "agent";
-            if (agentType === "context-pruner") {
+            // Track subgoal status for continuation decisions
+            if (toolName === "update_subgoal") {
+              lastSubgoalStatus = input.status || lastSubgoalStatus;
+            }
+            if (toolName === "add_subgoal") {
+              lastSubgoalStatus = input.status || "IN_PROGRESS";
+            }
+
+            // Format user-facing tool activity based on known Codebuff tools
+            let display;
+            if (toolName === "read_files" && input.paths) {
+              const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
+              display = `📖 Reading: ${paths}`;
+            } else if (toolName === "str_replace") {
+              display = `✏️ Editing: ${input.path || "file"}`;
+            } else if (toolName === "write_file") {
+              display = `📝 Writing: ${input.path || "file"}`;
+            } else if (toolName === "run_terminal_command") {
+              const cmd = (input.command || "").slice(0, 120);
+              display = `💻 Running: ${cmd}`;
+            } else if (toolName === "code_search") {
+              display = `🔍 Searching: ${input.pattern || input.query || ""}`;
+            } else if (toolName === "spawn_agent_inline") {
+              const agentType = input.agent_type || "agent";
+              if (agentType === "context-pruner") {
+                console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
+                return;
+              }
+              display = `🤖 Spawning: ${agentType}`;
+            } else if (toolName === "spawn_agents") {
+              const agents = input.agents || [];
+              const types = agents.map((a) => a.agent_type).filter(Boolean);
+              display = `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
+            } else if (toolName === "add_subgoal") {
+              const obj = (input.objective || "").slice(0, 120);
+              display = `🎯 Goal: ${obj}`;
+            } else if (toolName === "update_subgoal") {
+              const log = (input.log || input.status || "").slice(0, 120);
+              display = `📋 Progress: ${log}`;
+            } else if (toolName === "think_deeply") {
+              display = `🧠 Thinking deeply...`;
+            } else if (toolName === "create_plan") {
+              display = `📋 Creating plan...`;
+            } else if (toolName === "browser_logs") {
+              display = `🌐 Checking browser...`;
+            } else {
+              const args = JSON.stringify(input).slice(0, 150);
+              display = `🔧 ${toolName}: ${args}`;
+            }
+
+            console.log(`[symphony-bridge] ${display}`);
+            if (onChunk) {
+              onChunk({ type: "text", text: `${display}\n` });
+            }
+          } else if (event.type === "tool_result") {
+            console.log(`[symphony-bridge] ✅ codebuff ${event.toolName || "tool"} done`);
+          } else if (event.type === "reasoning_delta") {
+            if (event.text && onChunk) {
+              onChunk({ type: "text", text: `💡 ${event.text}\n` });
+            }
+          } else if (event.type === "subagent_start") {
+            const name = event.displayName || event.agentType || "subagent";
+            if (name.toLowerCase() === "context pruner" || (event.agentType || "").includes("context-pruner")) {
               console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
               return;
             }
-            display = `🤖 Spawning: ${agentType}`;
-          } else if (toolName === "spawn_agents") {
-            const agents = input.agents || [];
-            const types = agents.map((a) => a.agent_type).filter(Boolean);
-            display = `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
-          } else if (toolName === "add_subgoal") {
-            const obj = (input.objective || "").slice(0, 120);
-            display = `🎯 Goal: ${obj}`;
-          } else if (toolName === "update_subgoal") {
-            const log = (input.log || input.status || "").slice(0, 120);
-            display = `📋 Progress: ${log}`;
-          } else if (toolName === "think_deeply") {
-            display = `🧠 Thinking deeply...`;
-          } else if (toolName === "create_plan") {
-            display = `📋 Creating plan...`;
-          } else if (toolName === "browser_logs") {
-            display = `🌐 Checking browser...`;
+            console.log(`[symphony-bridge] 🤖 codebuff subagent: ${name}`);
+            if (onChunk) {
+              onChunk({ type: "text", text: `🤖 ${name}\n` });
+            }
+          } else if (event.type === "subagent_finish") {
+            const name = event.displayName || event.agentType || "subagent";
+            if (name.toLowerCase() === "context pruner" || (event.agentType || "").includes("context-pruner")) return;
+            console.log(`[symphony-bridge] 🤖 codebuff ${name} done`);
+          } else if (event.type === "agent_start" || event.type === "agent_finish") {
+            console.log(`[symphony-bridge] 🤖 codebuff ${event.type}`);
+          } else if (event.type === "error") {
+            console.log(`[symphony-bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+            if (onChunk) {
+              onChunk({ type: "text", text: `❌ Error: ${event.message || "unknown error"}\n` });
+            }
           } else {
-            const args = JSON.stringify(input).slice(0, 150);
-            display = `🔧 ${toolName}: ${args}`;
+            console.log(`[symphony-bridge] codebuff event: ${event.type}`);
           }
-
-          console.log(`[symphony-bridge] ${display}`);
-          if (onChunk) {
-            onChunk({ type: "text", text: `${display}\n` });
-          }
-        } else if (event.type === "tool_result") {
-          console.log(`[symphony-bridge] ✅ codebuff ${event.toolName || "tool"} done`);
-        } else if (event.type === "reasoning_delta") {
-          if (event.text && onChunk) {
-            onChunk({ type: "text", text: `💡 ${event.text}\n` });
-          }
-        } else if (event.type === "subagent_start") {
-          const name = event.displayName || event.agentType || "subagent";
-          // Filter context-pruner subagent spawns (automatic between every step)
-          if (name.toLowerCase() === "context pruner" || (event.agentType || "").includes("context-pruner")) {
-            console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
-            return;
-          }
-          console.log(`[symphony-bridge] 🤖 codebuff subagent: ${name}`);
-          if (onChunk) {
-            onChunk({ type: "text", text: `🤖 ${name}\n` });
-          }
-        } else if (event.type === "subagent_finish") {
-          const name = event.displayName || event.agentType || "subagent";
-          if (name.toLowerCase() === "context pruner" || (event.agentType || "").includes("context-pruner")) return;
-          console.log(`[symphony-bridge] 🤖 codebuff ${name} done`);
-        } else if (event.type === "agent_start" || event.type === "agent_finish") {
-          console.log(`[symphony-bridge] 🤖 codebuff ${event.type}`);
-        } else if (event.type === "error") {
-          console.log(`[symphony-bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
-          if (onChunk) {
-            onChunk({ type: "text", text: `❌ Error: ${event.message || "unknown error"}\n` });
-          }
-        } else {
-          console.log(`[symphony-bridge] codebuff event: ${event.type}`);
+        } catch (err) {
+          console.log(`[symphony-bridge] handleEvent error: ${err.message}`);
         }
-      } catch (err) {
-        console.log(`[symphony-bridge] handleEvent error: ${err.message}`);
-      }
-    },
-    handleStreamChunk: (chunk) => {
-      try {
-        if (!onChunk) return;
-        if (typeof chunk === "string") {
-          onChunk({ type: "text", text: chunk });
-        } else if (chunk && chunk.chunk) {
-          onChunk({ type: "text", text: chunk.chunk });
+      },
+      handleStreamChunk: (chunk) => {
+        try {
+          if (!onChunk) return;
+          if (typeof chunk === "string") {
+            onChunk({ type: "text", text: chunk });
+          } else if (chunk && chunk.chunk) {
+            onChunk({ type: "text", text: chunk.chunk });
+          }
+        } catch (err) {
+          console.log(`[symphony-bridge] handleStreamChunk error: ${err.message}`);
         }
-      } catch (err) {
-        console.log(`[symphony-bridge] handleStreamChunk error: ${err.message}`);
-      }
-    },
+      },
   };
 
-  const result = await client.run(runOpts);
+  // Initial run
+  let result = await client.run({
+    agent: model || "codebuff/base",
+    prompt,
+    maxAgentSteps: CODEBUFF_MAX_STEPS,
+    ...callbacks,
+  });
+
+  // Continuation loop — if the agent set a subgoal but didn't complete it,
+  // auto-continue with previousRun to let it finish the task
+  let continuation = 0;
+  while (
+    continuation < CODEBUFF_MAX_CONTINUATIONS &&
+    lastSubgoalStatus === "IN_PROGRESS"
+  ) {
+    continuation++;
+    console.log(`[symphony-bridge] 🔄 Codebuff auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`);
+    if (onChunk) {
+      onChunk({ type: "text", text: `\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS})...\n` });
+    }
+
+    maybeGC();
+
+    result = await client.run({
+      agent: model || "codebuff/base",
+      prompt: "Continue with the next step of the task. Complete the remaining work.",
+      previousRun: result,
+      maxAgentSteps: CODEBUFF_MAX_STEPS,
+      ...callbacks,
+    });
+  }
+
+  if (continuation > 0) {
+    console.log(`[symphony-bridge] Codebuff completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
+  }
+
   const text = result?.text || result?.output || "";
 
   if (stream) {
@@ -651,6 +693,7 @@ if (VALID_TOKENS.size > 1) {
 
 const MAX_TOOL_ITERATIONS = 1000; // Maximum tool call loops for AI SDK providers
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
+const CODEBUFF_MAX_CONTINUATIONS = 5; // Max auto-continue loops when agent ends turn with work remaining
 const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
 
