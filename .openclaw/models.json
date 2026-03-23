@@ -27,8 +27,44 @@
           "name": "Symphony Text"
         },
         {
+          "id": "symphony/codex",
+          "name": "Symphony Codex"
+        },
+        {
+          "id": "symphony/codebuff",
+          "name": "Symphony Codebuff SDK"
+        },
+        {
           "id": "symphony/codebuff-bridge",
           "name": "Symphony Codebuff Bridge"
+        },
+        {
+          "id": "symphony/groq",
+          "name": "Symphony Groq"
+        },
+        {
+          "id": "symphony/mistral",
+          "name": "Symphony Mistral"
+        },
+        {
+          "id": "symphony/gemini",
+          "name": "Symphony Gemini"
+        },
+        {
+          "id": "symphony/gemini-lite",
+          "name": "Symphony Gemini Lite"
+        },
+        {
+          "id": "symphony/openrouter",
+          "name": "Symphony OpenRouter"
+        },
+        {
+          "id": "symphony/sambanova",
+          "name": "Symphony SambaNova"
+        },
+        {
+          "id": "symphony/cerebras",
+          "name": "Symphony Cerebras"
         },
         {
           "id": "symphony/ollama-local",
@@ -51,7 +87,21 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "symphony-bridge/symphony/main"
+        "primary": "symphony-bridge/symphony/main",
+        "fallbacks": [
+          "symphony-bridge/symphony/codex",
+          "symphony-bridge/symphony/codebuff",
+          "symphony-bridge/symphony/codebuff-bridge",
+          "symphony-bridge/symphony/groq",
+          "symphony-bridge/symphony/mistral",
+          "symphony-bridge/symphony/gemini",
+          "symphony-bridge/symphony/gemini-lite",
+          "symphony-bridge/symphony/openrouter",
+          "symphony-bridge/symphony/sambanova",
+          "symphony-bridge/symphony/cerebras",
+          "symphony-bridge/symphony/ollama-local",
+          "codebuff-bridge/codebuff/base"
+        ]
       }
     }
   }

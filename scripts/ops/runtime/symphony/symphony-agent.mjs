@@ -58,10 +58,12 @@ import {
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
 
-// Bridge configuration - unify with codebuff-openai-bridge
-const BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
-const BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
-const BRIDGE_MODEL = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
+const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
+const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
+const CODEBUFF_BRIDGE_MODEL = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
+const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319";
+const SYMPHONY_BRIDGE_API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
+const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_MODEL_ID || "symphony/main";
 
 function isRateLimitError(errStr) {
   const s = errStr.toLowerCase();
@@ -397,11 +399,48 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // ---------------------------------------------------------------------------
 
 async function callLLM(provider, messages, taskDescription) {
+  if (provider.name === "symphony-bridge") {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const res = await fetch(`${SYMPHONY_BRIDGE_URL}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SYMPHONY_BRIDGE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: provider.model || SYMPHONY_BRIDGE_MODEL,
+          messages,
+          stream: false,
+          temperature: 0.2,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`Symphony bridge ${res.status}: ${body.slice(0, 500)}`);
+      }
+
+      const result = await res.json();
+      return {
+        ...result,
+        providerName: result._symphony_provider || provider.name,
+      };
+    } catch (err) {
+      clearTimeout(timer);
+      throw err;
+    }
+  }
+
   // Handle Codebuff via HTTP bridge (unified with OpenClaw)
   if (provider.requiresSdk) {
     // Use the HTTP bridge instead of direct SDK
     // The bridge handles key rotation, rate limiting, and continuation detection
-    console.log(`[agent] Using bridge: ${BRIDGE_URL}`);
+    console.log(`[agent] Using bridge: ${CODEBUFF_BRIDGE_URL}`);
 
     // Convert internal message format to OpenAI-style for bridge
     const bridgeMessages = messages.map((m) => {
@@ -414,14 +453,14 @@ async function callLLM(provider, messages, taskDescription) {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const res = await fetch(`${BRIDGE_URL}/v1/chat/completions`, {
+      const res = await fetch(`${CODEBUFF_BRIDGE_URL}/v1/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${BRIDGE_API_KEY}`,
+          Authorization: `Bearer ${CODEBUFF_BRIDGE_API_KEY}`,
         },
         body: JSON.stringify({
-          model: BRIDGE_MODEL,
+          model: CODEBUFF_BRIDGE_MODEL,
           messages: bridgeMessages,
           stream: false,
         }),
@@ -473,6 +512,7 @@ async function callLLM(provider, messages, taskDescription) {
             },
           },
         ],
+        providerName: provider.name,
         needsContinuation, // Pass through for continuation logic
       };
     } catch (err) {
@@ -625,6 +665,7 @@ async function runToolLoop({
         timedOut: true,
         error: null,
         messages,
+        providerName: provider.name,
       };
     }
 
@@ -644,10 +685,12 @@ async function runToolLoop({
         timedOut: false,
         error: err.message,
         messages,
+        providerName: provider.name,
       };
     }
 
     const choice = response.choices?.[0];
+    const actualProviderName = response.providerName || provider.name;
     if (!choice) {
       console.error("[agent] No choices in LLM response");
       return {
@@ -659,6 +702,7 @@ async function runToolLoop({
         timedOut: false,
         error: "Empty LLM response",
         messages,
+        providerName: actualProviderName,
       };
     }
 
@@ -678,6 +722,7 @@ async function runToolLoop({
           timedOut: false,
           error: null,
           messages,
+          providerName: actualProviderName,
         };
       }
       messages.push(msg);
@@ -714,6 +759,7 @@ async function runToolLoop({
             timedOut: content.includes("Timeout"),
             error: content.slice(0, 500),
             messages,
+            providerName: actualProviderName,
           };
         }
 
@@ -788,6 +834,7 @@ async function runToolLoop({
             error: null,
             messages,
             needsContinuation: true,
+            providerName: actualProviderName,
           };
         }
 
@@ -803,6 +850,7 @@ async function runToolLoop({
           timedOut: false,
           error: null,
           messages,
+          providerName: actualProviderName,
         };
       }
 
@@ -904,6 +952,7 @@ async function runToolLoop({
         timedOut: false,
         error: null,
         messages,
+        providerName: actualProviderName,
       };
     }
 
@@ -927,6 +976,7 @@ async function runToolLoop({
     timedOut: false,
     error: null,
     messages,
+    providerName: provider.name,
   };
 }
 

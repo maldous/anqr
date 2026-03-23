@@ -38,8 +38,8 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runner timeout
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
-// Re-validation interval - check keys at least 4 times a day (every 6 hours)
-const REVALIDATION_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+// Re-validation interval - probe paid availability at least every 5 hours.
+const REVALIDATION_INTERVAL_MS = 5 * 60 * 60 * 1000;
 let lastRevalidationTime = Date.now();
 
 // Pre-computed at startup - validated accounts and attempt plan
@@ -663,7 +663,9 @@ function getWinner() {
   const needsRevalidation = timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS;
 
   if (needsRevalidation) {
-    console.log(`[bridge] 🔄 Re-validation needed: ${Math.round(timeSinceLastRevalidation/3600000)}h since last check`);
+    console.log(
+      `[bridge] 🔄 Re-validation needed: ${Math.round(timeSinceLastRevalidation / 3600000)}h since last check`,
+    );
     console.log(`[bridge] 🔄 Will re-test API keys to find the best available one`);
   }
 
@@ -689,33 +691,66 @@ async function revalidateAndSelectWinner() {
   }
 }
 
+function getOrderedAttempts(preferredWinner = null) {
+  if (!Array.isArray(STARTUP_ATTEMPTS) || STARTUP_ATTEMPTS.length === 0) {
+    return [];
+  }
+
+  if (!preferredWinner) {
+    return [...STARTUP_ATTEMPTS];
+  }
+
+  return [
+    preferredWinner,
+    ...STARTUP_ATTEMPTS.filter((attempt) => attempt.apiKey !== preferredWinner.apiKey),
+  ];
+}
+
+async function executeAttemptPlan(attempts, runner) {
+  let lastError = null;
+
+  for (const attempt of attempts) {
+    try {
+      const result = await runner(attempt);
+      if (STARTUP_WINNER?.apiKey !== attempt.apiKey) {
+        console.log(`[bridge] 🔄 Switching winner to ${attempt.label}`);
+      }
+      STARTUP_WINNER = attempt;
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[bridge] Attempt failed on ${attempt.label}: ${err.message}`);
+      if (attempt.isPaid && isRateLimitError(String(err.message || err))) {
+        console.log(`[bridge] Paid account unavailable - will re-probe after cooldown window`);
+      }
+    }
+  }
+
+  throw lastError || new Error("All codebuff attempts failed");
+}
+
 // Use pre-warmed winner directly (fast path - no parallel fallback)
 async function invokeCodebuff({ messages, cwd }) {
-  const timeSinceLastRevalidation = Date.now() - lastRevalidationTime;
-  
-  // Check if re-validation is needed before using the winner
-  if (timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS) {
+  if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered`);
     await revalidateAndSelectWinner();
   }
 
   const winner = getWinner();
+  const attempts = getOrderedAttempts(winner);
   console.log(`[bridge] Using pre-warmed winner: ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-  });
-
-  // Use winner directly - no fallback
-  try {
-    const result = await trySingleAccount(winner, prompt, timeoutPromise, cwd);
-    console.log(`[bridge] ✅ Winner succeeded`);
-    return result;
-  } catch (err) {
-    console.error(`[bridge] ❌ Winner failed: ${err.message}`);
-    throw err;
-  }
+  return executeAttemptPlan(attempts, (attempt) =>
+    trySingleAccount(
+      attempt,
+      prompt,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
+      }),
+      cwd,
+    ),
+  );
 }
 
 // Try a single account for streaming - helper for parallel execution
@@ -855,39 +890,29 @@ async function trySingleAccountStream(
 
 // Use pre-warmed winner directly for streaming (fast path - no parallel fallback)
 async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created }) {
-  const timeSinceLastRevalidation = Date.now() - lastRevalidationTime;
-  
-  // Check if re-validation is needed before using the winner
-  if (timeSinceLastRevalidation > REVALIDATION_INTERVAL_MS) {
+  if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
     await revalidateAndSelectWinner();
   }
 
   const winner = getWinner();
+  const attempts = getOrderedAttempts(winner);
   console.log(`[bridge] Streaming: Using pre-warmed winner: ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-  });
-
-  // Use winner directly - no fallback
-  try {
-    const result = await trySingleAccountStream(
-      winner,
+  return executeAttemptPlan(attempts, (attempt) =>
+    trySingleAccountStream(
+      attempt,
       prompt,
-      timeoutPromise,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
+      }),
       cwd,
       onChunk,
       completionId,
       created,
-    );
-    console.log(`[bridge] ✅ Winner succeeded`);
-    return result;
-  } catch (err) {
-    console.error(`[bridge] ❌ Winner failed: ${err.message}`);
-    throw err;
-  }
+    ),
+  );
 }
 
 // HTTP utilities

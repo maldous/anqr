@@ -32,12 +32,7 @@ import {
   RUNNER_STUCK_THRESHOLD_MS,
 } from "../symphony-config.mjs";
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
-import {
-  selectProvider,
-  recordProviderFailure,
-  recordLinearCompletion,
-  recordProviderSuccess,
-} from "../symphony-credit-gate.mjs";
+import { recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
 import { runAgent, continueAgent } from "../symphony-agent.mjs";
 import {
   fetchAllSonarIssues,
@@ -80,6 +75,19 @@ const RUN_ID = `run-${Date.now()}-${process.pid}`;
 const LEASE_TTL_MS = Number(
   process.env.ANQR_SYMPHONY_LEASE_MS || Math.max(RUNNER_STUCK_THRESHOLD_MS, 20 * 60 * 1000),
 );
+const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319/v1";
+const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_RUNNER_MODEL || "symphony/main";
+
+function getRunnerProvider() {
+  return {
+    name: "symphony-bridge",
+    model: SYMPHONY_BRIDGE_MODEL,
+    baseUrl: SYMPHONY_BRIDGE_URL,
+    apiKey: process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony",
+    requiresSdk: false,
+    useMaxCompletionTokens: false,
+  };
+}
 
 function ensureRuntimeStateDir() {
   if (!existsSync(STATE_DIR)) mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
@@ -402,75 +410,45 @@ async function executeIssue(issue, dryRun = false) {
     let systemPrompt = "You are a coding agent. Implement the requested changes.";
     if (existsSync(WORKFLOW_PATH)) systemPrompt = readFileSync(WORKFLOW_PATH, "utf-8");
 
-    let provider = null;
+    const provider = getRunnerProvider();
     let agentResult = null;
-    const triedProviders = [];
+    const currentState = getIssueState(issue.identifier);
+    patchIssueState(issue.identifier, {
+      notes: { ...currentState.notes, lastProvider: provider.name },
+    });
+    if (startingCommentId) {
+      await updateComment(
+        startingCommentId,
+        `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\n**Route:** ${provider.model}\n**Gateway:** ${provider.name}\n**Run:** ${RUN_ID}`,
+      );
+    }
+    heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
+    try {
+      agentResult = await runAgent({ provider, issue: detail, projectRoot: ROOT, systemPrompt });
+    } catch (err) {
+      agentResult = {
+        completed: false,
+        summary: `Agent execution failed: ${err.message}`,
+        error: err.message,
+        turns: 0,
+        toolCalls: 0,
+        filesChanged: [],
+        timedOut: false,
+        messages: [],
+        providerName: provider.name,
+      };
+    }
+    heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
 
-    while (triedProviders.length < 12) {
-      provider = await selectProvider();
-      if (!provider) {
-        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_provider_available");
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        await addComment(
-          issue.id,
-          "❌ **No LLM provider available** — all providers exhausted or unhealthy. Returned to Todo with cooldown.",
-        );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "no_provider",
-          from: "In Progress",
-          to: "Todo",
-          runId: RUN_ID,
-        });
-        // Track all tried providers as failed
-        for (const prov of triedProviders) {
-          recordLinearCompletion(prov, {
-            completed: false,
-            priority: issue.priority,
-            estimate: issue.estimate,
-          });
-        }
-        return "done";
-      }
+    const metricsProviderName = agentResult.providerName || provider.name;
+    patchIssueState(issue.identifier, {
+      notes: { ...currentState.notes, lastProvider: metricsProviderName },
+    });
 
-      triedProviders.push(provider.name);
-      // Store provider in state for retry tracking across runner invocations
-      const currentState = getIssueState(issue.identifier);
-      patchIssueState(issue.identifier, {
-        notes: { ...currentState.notes, lastProvider: provider.name },
-      });
-      if (startingCommentId) {
-        await updateComment(
-          startingCommentId,
-          `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\n**Provider:** ${provider.name} (${provider.model})\n**Run:** ${RUN_ID}`,
-        );
-      }
-      heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
-      try {
-        agentResult = await runAgent({ provider, issue: detail, projectRoot: ROOT, systemPrompt });
-      } catch (err) {
-        agentResult = {
-          completed: false,
-          summary: `Agent execution failed: ${err.message}`,
-          error: err.message,
-          turns: 0,
-          toolCalls: 0,
-          filesChanged: [],
-          timedOut: false,
-          messages: [],
-        };
-      }
-      heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
-
-      if (agentResult.completed) break;
+    if (!agentResult.completed) {
       const failureKind = classifyProviderFailure(
         `${agentResult.summary} ${agentResult.error || ""}`,
       );
-      if (failureKind === "quota" || failureKind === "provider") {
-        recordProviderFailure(provider.name);
-        gitRevert();
-        continue;
-      }
       if (failureKind === "local_busy") {
         await updateIssue(issue.id, { stateId: STATES.todo });
         setCooldown(issue.identifier, 2 * 60 * 1000, "local_busy");
@@ -485,38 +463,29 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
-        // Track local busy as provider failure
-        if (provider?.name) {
-          recordLinearCompletion(provider.name, {
-            completed: false,
-            priority: issue.priority,
-            estimate: issue.estimate,
-          });
-        }
-        return "done";
-      }
-      break;
-    }
-
-    if (!agentResult) {
-      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "all_providers_failed");
-      await updateIssue(issue.id, { stateId: STATES.todo });
-      await addComment(issue.id, `❌ **All providers failed**. Returned to Todo with cooldown.`);
-      recordTransition(issue.identifier, {
-        actor: "runner",
-        reason: "all_providers_failed",
-        from: "In Progress",
-        to: "Todo",
-        runId: RUN_ID,
-      });
-      // Track all providers failed
-      for (const prov of triedProviders) {
-        recordLinearCompletion(prov, {
+        recordLinearCompletion(metricsProviderName, {
           completed: false,
           priority: issue.priority,
           estimate: issue.estimate,
         });
+        return "done";
       }
+    }
+
+    if (!agentResult) {
+      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "symphony_unavailable");
+      await updateIssue(issue.id, { stateId: STATES.todo });
+      await addComment(
+        issue.id,
+        `❌ **Symphony bridge unavailable**. Returned to Todo with cooldown.`,
+      );
+      recordTransition(issue.identifier, {
+        actor: "runner",
+        reason: "symphony_unavailable",
+        from: "In Progress",
+        to: "Todo",
+        runId: RUN_ID,
+      });
       return "done";
     }
     let changedFiles = gitDiffNames();
@@ -619,12 +588,12 @@ async function executeIssue(issue, dryRun = false) {
         });
         // Track Linear issue completion (externally completed - issue was resolved one way or another)
         if (provider?.name) {
-          recordLinearCompletion(provider.name, {
+          recordLinearCompletion(metricsProviderName, {
             completed: true,
             priority: issue.priority,
             estimate: issue.estimate,
           });
-          recordProviderSuccess(provider.name);
+          recordProviderSuccess(metricsProviderName);
         }
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
@@ -654,7 +623,7 @@ async function executeIssue(issue, dryRun = false) {
         );
         // Track active subgoals without messages as failure
         if (provider?.name) {
-          recordLinearCompletion(provider.name, {
+          recordLinearCompletion(metricsProviderName, {
             completed: false,
             priority: issue.priority,
             estimate: issue.estimate,
@@ -678,13 +647,11 @@ async function executeIssue(issue, dryRun = false) {
         runId: RUN_ID,
       });
       // Track failure (no files changed = failed)
-      if (provider?.name) {
-        recordLinearCompletion(provider.name, {
-          completed: false,
-          priority: issue.priority,
-          estimate: issue.estimate,
-        });
-      }
+      recordLinearCompletion(metricsProviderName, {
+        completed: false,
+        priority: issue.priority,
+        estimate: issue.estimate,
+      });
       return "done";
     }
 
@@ -743,13 +710,11 @@ ${String(r.detail).slice(0, 1000)}\n`,
           runId: RUN_ID,
         });
         // Track validation failure (exhausted)
-        if (provider?.name) {
-          recordLinearCompletion(provider.name, {
-            completed: false,
-            priority: issue.priority,
-            estimate: issue.estimate,
-          });
-        }
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
       } else {
         setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed");
         await updateIssue(issue.id, { stateId: STATES.todo });
@@ -771,13 +736,11 @@ ${String(r.detail).slice(0, 1000)}\n`,
           runId: RUN_ID,
         });
         // Track Linear issue failure
-        if (provider?.name) {
-          recordLinearCompletion(provider.name, {
-            completed: false,
-            priority: issue.priority,
-            estimate: issue.estimate,
-          });
-        }
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
       }
       return "done";
     }
@@ -799,13 +762,11 @@ ${String(r.detail).slice(0, 1000)}\n`,
         runId: RUN_ID,
       });
       // Track git commit failure
-      if (provider?.name) {
-        recordLinearCompletion(provider.name, {
-          completed: false,
-          priority: issue.priority,
-          estimate: issue.estimate,
-        });
-      }
+      recordLinearCompletion(metricsProviderName, {
+        completed: false,
+        priority: issue.priority,
+        estimate: issue.estimate,
+      });
       return "done";
     }
 
@@ -826,7 +787,8 @@ ${String(r.detail).slice(0, 1000)}\n`,
         `✅ **Symphony agent completed** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})`,
         "",
         `**Run:** ${RUN_ID}`,
-        `**Provider:** ${provider.name} (${provider.model})`,
+        `**Gateway:** ${provider.name} (${provider.model})`,
+        `**Routed provider:** ${metricsProviderName}`,
         `**Turns:** ${agentResult.turns}`,
         `**Tool calls:** ${agentResult.toolCalls}`,
         `**Files changed:** ${changedFiles.length}`,
@@ -857,15 +819,15 @@ ${String(r.detail).slice(0, 1000)}\n`,
     });
 
     // Track Linear issue completion (success = done state)
-    if (provider?.name) {
+    {
       const isDone = finalStateId === STATES.done;
-      recordLinearCompletion(provider.name, {
+      recordLinearCompletion(metricsProviderName, {
         completed: isDone,
         priority: issue.priority,
         estimate: issue.estimate,
       });
       if (isDone) {
-        recordProviderSuccess(provider.name);
+        recordProviderSuccess(metricsProviderName);
       }
     }
 

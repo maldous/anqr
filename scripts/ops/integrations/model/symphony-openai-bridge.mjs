@@ -70,10 +70,7 @@ console.warn = (...args) => {
   const warnStr = String(args[0] || "");
   // Suppress tools.profile allowlist warnings - these are SDK internal notices
   // about tools that are unavailable in current runtime/model config
-  if (
-    warnStr.includes("tools.profile") &&
-    warnStr.includes("allowlist contains unknown entries")
-  ) {
+  if (warnStr.includes("tools.profile") && warnStr.includes("allowlist contains unknown entries")) {
     return;
   }
   // Suppress agents.main.tools.allow warnings (same issue, different format)
@@ -86,8 +83,6 @@ console.warn = (...args) => {
   originalWarn(...args);
 };
 
-
-
 // --------------------------------------------------------------------------
 // Codebuff invoke (special handling)
 // --------------------------------------------------------------------------
@@ -98,57 +93,58 @@ console.warn = (...args) => {
 async function invokeWithCodebuff(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
   const { apiKey, model } = provider;
-  
+
   console.log(`[symphony-bridge] Using Codebuff SDK directly`);
-  
+
   const client = new CodebuffClient({
     apiKey,
     cwd: process.cwd(),
   });
-  
+
   // Build prompt from messages - combine all user messages
-  const userMessages = messages.filter(m => m.role === 'user');
-  const systemMessages = messages.filter(m => m.role === 'system');
-  
-  let prompt = '';
+  const userMessages = messages.filter((m) => m.role === "user");
+  const systemMessages = messages.filter((m) => m.role === "system");
+
+  let prompt = "";
   if (systemMessages.length > 0) {
-    prompt += systemMessages.map(m => 
-      typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-    ).join('\n\n') + '\n\n';
+    prompt +=
+      systemMessages
+        .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
+        .join("\n\n") + "\n\n";
   }
-  prompt += userMessages.map(m => 
-    typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-  ).join('\n\n');
-  
+  prompt += userMessages
+    .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
+    .join("\n\n");
+
   if (stream) {
     // Codebuff doesn't support streaming, so we run and simulate
     const result = await client.run({
-      agent: model || 'codebuff/base',
+      agent: model || "codebuff/base",
       prompt,
       maxAgentSteps: MAX_TOOL_ITERATIONS,
     });
-    
-    const text = result?.text || result?.output || '';
-    
+
+    const text = result?.text || result?.output || "";
+
     // Yield text in chunks
     for (let i = 0; i < text.length; i += 50) {
       const chunk = text.slice(i, i + 50);
-      onChunk({ type: 'text', text: chunk });
+      onChunk({ type: "text", text: chunk });
     }
-    
+
     return {
       text,
       providerName: provider.name,
     };
   } else {
     const result = await client.run({
-      agent: model || 'codebuff/base',
+      agent: model || "codebuff/base",
       prompt,
       maxAgentSteps: MAX_TOOL_ITERATIONS,
     });
-    
+
     return {
-      text: result?.text || result?.output || '',
+      text: result?.text || result?.output || "",
       providerName: provider.name,
       usage: { promptTokens: 0, completionTokens: 0 },
     };
@@ -187,14 +183,14 @@ async function readFileTool({ path: filePath, offset, lines }) {
   try {
     let content = fs.readFileSync(filePath, "utf-8");
     const totalLines = content.split("\n").length;
-    
+
     // Handle offset and lines parameters
     if (offset !== undefined || lines !== undefined) {
       const lineArray = content.split("\n");
       const startLine = offset || 0;
       const endLine = lines !== undefined ? startLine + lines : lineArray.length;
       content = lineArray.slice(startLine, endLine).join("\n");
-      
+
       return {
         content,
         totalLines,
@@ -202,7 +198,7 @@ async function readFileTool({ path: filePath, offset, lines }) {
         range: { start: startLine, end: endLine },
       };
     }
-    
+
     // If content is large, truncate it
     if (content.length > 100000) {
       return {
@@ -211,7 +207,7 @@ async function readFileTool({ path: filePath, offset, lines }) {
         truncated: true,
       };
     }
-    
+
     return { content, totalLines };
   } catch (error) {
     return { error: error.message };
@@ -273,22 +269,22 @@ const tools = {
  */
 function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
-  
+
   // Create the appropriate AI SDK model based on provider
   switch (name) {
     // Codebuff - handled separately in invokeWithAI
     case "codebuff":
       return null; // Special case - use CodebuffClient directly
-    
+
     // Groq
     case "groq":
       return groq(model);
-    
+
     // Google Gemini
     case "gemini":
     case "gemini-lite":
       return google(model);
-    
+
     // OpenRouter (multiple models via OpenRouter API)
     case "openrouter-nemotron-super":
     case "openrouter":
@@ -320,7 +316,7 @@ function createProviderModel(provider) {
     case "openrouter-hermes-3-405b":
       const openrouter = createOpenRouter({ apiKey });
       return openrouter(model);
-    
+
     // OpenClaw - local gateway
     case "openclaw":
       const openclaw = createOpenAI({
@@ -328,7 +324,7 @@ function createProviderModel(provider) {
         apiKey: apiKey || "local",
       });
       return openclaw(model);
-    
+
     // Mistral - use OpenAI-compatible API
     case "mistral":
       const mistral = createOpenAI({
@@ -336,7 +332,7 @@ function createProviderModel(provider) {
         apiKey,
       });
       return mistral(model);
-    
+
     // Codex (OpenAI) - use OpenAI-compatible API
     case "codex":
       const codex = createOpenAI({
@@ -344,7 +340,7 @@ function createProviderModel(provider) {
         apiKey,
       });
       return codex(model);
-    
+
     // SambaNova
     case "sambanova":
       const sambanova = createOpenAI({
@@ -352,7 +348,7 @@ function createProviderModel(provider) {
         apiKey,
       });
       return sambanova(model);
-    
+
     // Cerebras
     case "cerebras":
       const cerebras = createOpenAI({
@@ -360,7 +356,7 @@ function createProviderModel(provider) {
         apiKey,
       });
       return cerebras(model);
-    
+
     // GitHub Models
     case "github-models":
       const githubModels = createOpenAI({
@@ -368,7 +364,7 @@ function createProviderModel(provider) {
         apiKey,
       });
       return githubModels(model);
-    
+
     // Codebuff Bridge (local HTTP)
     case "codebuff-bridge":
       const codebuffBridge = createOpenAI({
@@ -376,7 +372,7 @@ function createProviderModel(provider) {
         apiKey,
       });
       return codebuffBridge(model);
-    
+
     // Ollama local
     case "ollama-local":
       const ollamaLocal = createOpenAI({
@@ -384,7 +380,7 @@ function createProviderModel(provider) {
         apiKey: apiKey || "ollama",
       });
       return ollamaLocal(model);
-    
+
     // Default - try OpenAI-compatible (baseUrl required)
     default:
       if (!baseUrl) {
@@ -407,22 +403,94 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
-const BRIDGE_PROVIDER_BLOCKLIST = new Set(["openclaw"]);
-const TOOL_CAPABLE_PROVIDER_NAMES = ["codebuff-bridge"];
+const BRIDGE_PROVIDER_BLOCKLIST = new Set(["openclaw", "github-models"]);
+const OPENROUTER_PROVIDER_NAMES = [
+  "openrouter-nemotron-super",
+  "openrouter-free",
+  "openrouter-nemotron-nano-30b",
+  "openrouter-qwen3-next-80b",
+  "openrouter-step3-5-flash",
+  "openrouter-trinity-mini",
+  "openrouter-nemotron-nano-9b",
+  "openrouter-minimax-m2.5",
+  "openrouter-qwen3-coder",
+  "openrouter-lfm-2.5-thinking",
+  "openrouter-lfm-2.5-instruct",
+  "openrouter-nemotron-nano-12b-vl",
+  "openrouter-trinity-large",
+  "openrouter-mistral-small-3.1",
+  "openrouter-llama-3.3-70b",
+  "openrouter-qwen3-4b",
+  "openrouter-gpt-oss-120b",
+  "openrouter-gpt-oss-20b",
+  "openrouter-llama-3.2-3b",
+  "openrouter-dolphin-mistral",
+  "openrouter-gemma-3-27b",
+  "openrouter-glm-4.5-air",
+  "openrouter-gemma-3n-e2b",
+  "openrouter-gemma-3-4b",
+  "openrouter-gemma-3n-e4b",
+  "openrouter-gemma-3-12b",
+  "openrouter-hermes-3-405b",
+];
 const ADVERTISED_MODELS = [
   {
     id: "symphony/main",
     ownedBy: "symphony-bridge",
-    allowedNames: TOOL_CAPABLE_PROVIDER_NAMES,
   },
   {
     id: "symphony/text",
     ownedBy: "symphony-bridge",
   },
   {
+    id: "symphony/codex",
+    ownedBy: "codex",
+    allowedNames: ["codex"],
+  },
+  {
+    id: "symphony/codebuff",
+    ownedBy: "codebuff",
+    allowedNames: ["codebuff"],
+  },
+  {
     id: "symphony/codebuff-bridge",
     ownedBy: "codebuff-bridge",
     allowedNames: ["codebuff-bridge"],
+  },
+  {
+    id: "symphony/groq",
+    ownedBy: "groq",
+    allowedNames: ["groq"],
+  },
+  {
+    id: "symphony/mistral",
+    ownedBy: "mistral",
+    allowedNames: ["mistral"],
+  },
+  {
+    id: "symphony/gemini",
+    ownedBy: "gemini",
+    allowedNames: ["gemini"],
+  },
+  {
+    id: "symphony/gemini-lite",
+    ownedBy: "gemini-lite",
+    allowedNames: ["gemini-lite"],
+  },
+  {
+    id: "symphony/openrouter",
+    ownedBy: "openrouter",
+    allowedNames: OPENROUTER_PROVIDER_NAMES,
+  },
+  {
+    id: "symphony/sambanova",
+    ownedBy: "sambanova",
+    allowedNames: ["sambanova"],
+  },
+  {
+    id: "symphony/cerebras",
+    ownedBy: "cerebras",
+    allowedNames: ["cerebras"],
   },
   {
     id: "symphony/ollama-local",
@@ -476,8 +544,9 @@ function resolveRoute(modelId) {
     ADVERTISED_MODELS.find((entry) => entry.id === normalizedModelId) ||
     ADVERTISED_MODELS.find((entry) => entry.id === MODEL_ID);
 
-  const allowedNames = (advertised?.allowedNames || null)
-    ?.filter((name) => !BRIDGE_PROVIDER_BLOCKLIST.has(name));
+  const allowedNames = (advertised?.allowedNames || null)?.filter(
+    (name) => !BRIDGE_PROVIDER_BLOCKLIST.has(name),
+  );
 
   return {
     requestedModelId: modelId || MODEL_ID,
@@ -494,7 +563,6 @@ function resolveRoute(modelId) {
 /**
  * Execute a tool call and return the result
  */
-
 
 // --------------------------------------------------------------------------
 // AI SDK invoke with tool execution
@@ -530,7 +598,7 @@ function sleep(ms) {
 function convertMessages(messages) {
   return messages.map((msg) => {
     const converted = { role: msg.role };
-    
+
     if (typeof msg.content === "string") {
       converted.content = msg.content;
     } else if (Array.isArray(msg.content)) {
@@ -544,7 +612,7 @@ function convertMessages(messages) {
       });
       converted.content = parts;
     }
-    
+
     return converted;
   });
 }
@@ -554,24 +622,24 @@ function convertMessages(messages) {
  */
 async function invokeWithAI(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
-  
+
   // Handle codebuff specially - use SDK directly
   if (provider.name === "codebuff") {
     return invokeWithCodebuff(provider, messages, options);
   }
-  
+
   // Create the provider model
   const model = createProviderModel(provider);
-  
+
   if (!model) {
     throw new Error(`Provider ${provider.name} not supported with AI SDK`);
   }
-  
+
   console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})`);
-  
+
   // Convert messages to AI SDK format
   const aiMessages = convertMessages(messages);
-  
+
   if (stream) {
     // Streaming with tool execution
     const result = await streamText({
@@ -580,13 +648,13 @@ async function invokeWithAI(provider, messages, options = {}) {
       tools,
       maxSteps: MAX_TOOL_ITERATIONS,
     });
-    
+
     // Process the stream
     let fullText = "";
-    
+
     for await (const chunk of result.textStream) {
       fullText += chunk;
-      
+
       // Send chunk to callback
       if (onChunk) {
         onChunk({
@@ -595,10 +663,10 @@ async function invokeWithAI(provider, messages, options = {}) {
         });
       }
     }
-    
+
     // Note: streamText handles tool execution automatically in maxSteps mode
     console.log(`[symphony-bridge] Streaming completed`);
-    
+
     return {
       text: fullText,
       providerName: provider.name,
@@ -611,11 +679,11 @@ async function invokeWithAI(provider, messages, options = {}) {
       tools,
       maxSteps: MAX_TOOL_ITERATIONS,
     });
-    
+
     const text = result.text || "";
-    
+
     console.log(`[symphony-bridge] Completion done`);
-    
+
     return {
       text,
       providerName: provider.name,
@@ -630,25 +698,28 @@ async function invokeWithAI(provider, messages, options = {}) {
 async function invokeWithFallback(messages, route) {
   // Get provider from credit-gate
   let provider = await selectProvider({ allowedNames: route.allowedNames });
-  
+
   if (!provider) {
     throw new Error(
       `No providers available for ${route.responseModelId} - check env vars and provider failures`,
     );
   }
-  
+
   // Check exploration
   const timeSinceLastExploration = Date.now() - lastExplorationTime;
-  const needsExploration = timeSinceLastExploration > EXPLORATION_INTERVAL_MS || 
+  const needsExploration =
+    timeSinceLastExploration > EXPLORATION_INTERVAL_MS ||
     explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
-  
+
   if (needsExploration && lastSelectedProvider) {
-    console.log(`[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`);
+    console.log(
+      `[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`,
+    );
     clearProviderFailure(lastSelectedProvider);
   }
-  
+
   console.log(`[symphony-bridge] Selected provider: ${provider.name} (${provider.model})`);
-  
+
   // Track exploration
   if (provider.name !== lastSelectedProvider) {
     explorationProbesThisPeriod++;
@@ -658,18 +729,18 @@ async function invokeWithFallback(messages, route) {
       explorationProbesThisPeriod = 1;
     }
   }
-  
+
   try {
     const result = await invokeWithAI(provider, messages, { stream: false });
-    
+
     console.log(`[symphony-bridge] ✅ Success with ${provider.name}`);
     recordProviderSuccess(provider.name);
-    
+
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
       logBridgeStats();
     }
-    
+
     return {
       text: result.text,
       usage: result.usage,
@@ -680,33 +751,33 @@ async function invokeWithFallback(messages, route) {
   } catch (err) {
     const errStr = String(err);
     console.log(`[symphony-bridge] ❌ ${provider.name} failed: ${errStr.slice(0, 100)}`);
-    
+
     if (isRetryableError(err)) {
       recordProviderFailure(provider.name);
       recordProviderFailureCount(provider.name);
     }
-    
+
     // Try fallback
     provider = await selectProvider({ allowedNames: route.allowedNames });
-    
+
     if (!provider) {
       throw new Error(`All providers failed. Last error: ${errStr}`);
     }
-    
+
     console.log(`[symphony-bridge] Retrying with fallback: ${provider.name}`);
     BRIDGE_METRICS.totalFallbacks++;
     await sleep(FALLBACK_DELAY_MS);
-    
+
     try {
       const result = await invokeWithAI(provider, messages, { stream: false });
       console.log(`[symphony-bridge] ✅ Fallback success with ${provider.name}`);
       recordProviderSuccess(provider.name);
-      
+
       requestCount++;
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
       }
-      
+
       return {
         text: result.text,
         usage: result.usage,
@@ -716,7 +787,9 @@ async function invokeWithFallback(messages, route) {
       };
     } catch (error_) {
       const retryStr = String(error_);
-      console.log(`[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`);
+      console.log(
+        `[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`,
+      );
       if (isRetryableError(error_)) {
         recordProviderFailure(provider.name);
         recordProviderFailureCount(provider.name);
@@ -731,26 +804,26 @@ async function invokeWithFallback(messages, route) {
  */
 async function invokeWithFallbackStream(messages, route, onChunk) {
   let provider = await selectProvider({ allowedNames: route.allowedNames });
-  
+
   if (!provider) {
     throw new Error(
       `No providers available for ${route.responseModelId} - check env vars and provider failures`,
     );
   }
-  
+
   console.log(`[symphony-bridge] Streaming selected provider: ${provider.name}`);
-  
+
   try {
     const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
-    
+
     console.log(`[symphony-bridge] ✅ Streaming success with ${provider.name}`);
     recordProviderSuccess(provider.name);
-    
+
     requestCount++;
     if (requestCount % STATS_LOG_INTERVAL === 0) {
       logBridgeStats();
     }
-    
+
     return {
       text: result.text,
       providerName: provider.name,
@@ -760,35 +833,35 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
   } catch (err) {
     const errStr = String(err);
     console.log(`[symphony-bridge] ❌ Streaming ${provider.name} failed: ${errStr.slice(0, 100)}`);
-    
+
     if (isRetryableError(err)) {
       recordProviderFailure(provider.name);
       recordProviderFailureCount(provider.name);
     }
-    
+
     // Try fallback
     for (let retry = 0; retry < 2; retry++) {
       provider = await selectProvider({ allowedNames: route.allowedNames });
-      
+
       if (!provider) {
         throw new Error(`Streaming providers failed. Last error: ${errStr}`);
       }
-      
+
       console.log(`[symphony-bridge] Streaming fallback (attempt ${retry + 2}): ${provider.name}`);
       BRIDGE_METRICS.totalFallbacks++;
       await sleep(FALLBACK_DELAY_MS);
-      
+
       try {
         const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
-        
+
         console.log(`[symphony-bridge] ✅ Streaming fallback success with ${provider.name}`);
         recordProviderSuccess(provider.name);
-        
+
         requestCount++;
         if (requestCount % STATS_LOG_INTERVAL === 0) {
           logBridgeStats();
         }
-        
+
         return {
           text: result.text,
           providerName: provider.name,
@@ -797,14 +870,16 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
         };
       } catch (error_) {
         const retryStr = String(error_);
-        console.log(`[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`);
+        console.log(
+          `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`,
+        );
         if (isRetryableError(error_)) {
           recordProviderFailure(provider.name);
           recordProviderFailureCount(provider.name);
         }
       }
     }
-    
+
     throw new Error(`All streaming providers failed. Last error: ${errStr}`);
   }
 }
@@ -878,27 +953,43 @@ const BRIDGE_METRICS = {
   lastStatsLog: Date.now(),
 };
 
-function recordBridgeMetrics({ provider, durationMs, isStream, tokensIn, tokensOut, toolCalls, isError, errorType }) {
+function recordBridgeMetrics({
+  provider,
+  durationMs,
+  isStream,
+  tokensIn,
+  tokensOut,
+  toolCalls,
+  isError,
+  errorType,
+}) {
   BRIDGE_METRICS.totalRequests++;
   if (isStream) {
     BRIDGE_METRICS.streamingRequests++;
   } else {
     BRIDGE_METRICS.nonStreamingRequests++;
   }
-  
+
   BRIDGE_METRICS.totalResponseTimeMs = (BRIDGE_METRICS.totalResponseTimeMs || 0) + durationMs;
-  BRIDGE_METRICS.avgResponseTimeMs = Math.round(BRIDGE_METRICS.totalResponseTimeMs / BRIDGE_METRICS.totalRequests);
-  BRIDGE_METRICS.minResponseTimeMs = BRIDGE_METRICS.minResponseTimeMs ? Math.min(BRIDGE_METRICS.minResponseTimeMs, durationMs) : durationMs;
-  BRIDGE_METRICS.maxResponseTimeMs = BRIDGE_METRICS.maxResponseTimeMs ? Math.max(BRIDGE_METRICS.maxResponseTimeMs, durationMs) : durationMs;
-  
+  BRIDGE_METRICS.avgResponseTimeMs = Math.round(
+    BRIDGE_METRICS.totalResponseTimeMs / BRIDGE_METRICS.totalRequests,
+  );
+  BRIDGE_METRICS.minResponseTimeMs = BRIDGE_METRICS.minResponseTimeMs
+    ? Math.min(BRIDGE_METRICS.minResponseTimeMs, durationMs)
+    : durationMs;
+  BRIDGE_METRICS.maxResponseTimeMs = BRIDGE_METRICS.maxResponseTimeMs
+    ? Math.max(BRIDGE_METRICS.maxResponseTimeMs, durationMs)
+    : durationMs;
+
   BRIDGE_METRICS.totalTokensIn += tokensIn || 0;
   BRIDGE_METRICS.totalTokensOut += tokensOut || 0;
   BRIDGE_METRICS.totalToolCalls += toolCalls || 0;
-  
+
   if (provider) {
-    BRIDGE_METRICS.requestsByProvider[provider] = (BRIDGE_METRICS.requestsByProvider[provider] || 0) + 1;
+    BRIDGE_METRICS.requestsByProvider[provider] =
+      (BRIDGE_METRICS.requestsByProvider[provider] || 0) + 1;
   }
-  
+
   if (isError && errorType) {
     BRIDGE_METRICS.totalErrors++;
     BRIDGE_METRICS.errorsByType[errorType] = (BRIDGE_METRICS.errorsByType[errorType] || 0) + 1;
@@ -908,30 +999,44 @@ function recordBridgeMetrics({ provider, durationMs, isStream, tokensIn, tokensO
 function logBridgeStats() {
   const now = Date.now();
   const elapsed = Math.round((now - BRIDGE_METRICS.lastStatsLog) / 1000);
-  
+
   console.log(`[symphony-bridge] 📊 Bridge Stats (last ${elapsed}s):`);
-  console.log(`[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`);
-  console.log(`[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks} | Tool calls: ${BRIDGE_METRICS.totalToolCalls}`);
-  console.log(`[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`);
-  console.log(`[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`);
-  
-  const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  console.log(
+    `[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`,
+  );
+  console.log(
+    `[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks} | Tool calls: ${BRIDGE_METRICS.totalToolCalls}`,
+  );
+  console.log(
+    `[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`,
+  );
+  console.log(
+    `[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`,
+  );
+
+  const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
   if (topProviders.length > 0) {
-    const providerStrings = topProviders.map(([k, v]) => k + ':' + v);
+    const providerStrings = topProviders.map(([k, v]) => k + ":" + v);
     console.log(`[symphony-bridge]   Top providers: ${providerStrings.join(", ")}`);
   }
-  
-  const topErrors = Object.entries(BRIDGE_METRICS.errorsByType).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  const topErrors = Object.entries(BRIDGE_METRICS.errorsByType)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
   if (topErrors.length > 0) {
-    const errorStrings = topErrors.map(([k, v]) => k + ':' + v);
+    const errorStrings = topErrors.map(([k, v]) => k + ":" + v);
     console.log(`[symphony-bridge]   Top errors: ${errorStrings.join(", ")}`);
   }
-  
+
   BRIDGE_METRICS.lastStatsLog = now;
   logProviderStats();
-  
+
   const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
-  console.log(`[symphony-bridge] 🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`);
+  console.log(
+    `[symphony-bridge] 🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`,
+  );
 }
 
 // -------------------------------------------------------------------------->
@@ -941,14 +1046,14 @@ function logBridgeStats() {
 const server = http.createServer(async (req, res) => {
   console.log(`[symphony-bridge] ===== REQUEST =====`);
   console.log(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
-  
+
   try {
     const skipAuth = req.url === "/health" || req.url === "/v1/models";
     if (!skipAuth && !checkAuth(req)) {
       console.log(`[symphony-bridge] Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
     }
-    
+
     // GET /v1/models
     if (req.method === "GET" && req.url === "/v1/models") {
       return sendJson(res, 200, {
@@ -961,44 +1066,49 @@ const server = http.createServer(async (req, res) => {
         })),
       });
     }
-    
+
     // GET /health
     if (req.method === "GET" && req.url === "/health") {
       const stats = getProviderStats();
       const providerCount = Object.keys(stats).length;
-      
+
       return sendJson(res, 200, {
         status: "ok",
         model: MODEL_ID,
         providersConfigured: providerCount,
-        rankedProviders: getRankedProviders().slice(0, 5).map((p) => ({ name: p.name, score: p.score })),
+        rankedProviders: getRankedProviders()
+          .slice(0, 5)
+          .map((p) => ({ name: p.name, score: p.score })),
         tools: Object.keys(tools),
       });
     }
-    
+
     // GET /v1/metrics
     if (req.method === "GET" && req.url === "/v1/metrics") {
       return sendJson(res, 200, {
-        bridge: { ...BRIDGE_METRICS, uptimeSeconds: Math.round((Date.now() - process.startTime) / 1000) },
+        bridge: {
+          ...BRIDGE_METRICS,
+          uptimeSeconds: Math.round((Date.now() - process.startTime) / 1000),
+        },
         creditGate: getProviderStats(),
       });
     }
-    
+
     // GET /v1/stats
     if (req.method === "GET" && req.url === "/v1/stats") {
       const stats = getProviderStats();
       const ranked = getRankedProviders();
-      
+
       return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats });
     }
-    
+
     // POST /v1/chat/completions
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
       const route = resolveRoute(body.model || MODEL_ID);
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
-      
+
       // Extract issue context
       const userMessages = messages.filter((m) => m.role === "user");
       let issueContext = null;
@@ -1010,17 +1120,19 @@ const server = http.createServer(async (req, res) => {
           break;
         }
       }
-      
+
       if (issueContext) {
-        console.log(`[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`);
+        console.log(
+          `[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
+        );
       }
-      
+
       console.log(
         `[symphony-bridge] Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
       );
-      
+
       const startTime = Date.now();
-      
+
       if (stream) {
         res.writeHead(200, {
           "Content-Type": "text/event-stream",
@@ -1028,10 +1140,10 @@ const server = http.createServer(async (req, res) => {
           Connection: "keep-alive",
           "X-Accel-Buffering": "no",
         });
-        
+
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
-        
+
         try {
           const result = await invokeWithFallbackStream(messages, route, (chunk) => {
             if (chunk.type === "text") {
@@ -1045,7 +1157,7 @@ const server = http.createServer(async (req, res) => {
               res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
             }
           });
-          
+
           // Send final chunk
           const finalChunk = {
             id: completionId,
@@ -1057,11 +1169,13 @@ const server = http.createServer(async (req, res) => {
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
           res.end();
-          
+
           if (issueContext) {
-            console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`);
+            console.log(
+              `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
+            );
           }
-          
+
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
             provider: result.providerName,
@@ -1071,7 +1185,7 @@ const server = http.createServer(async (req, res) => {
           });
         } catch (streamError) {
           console.error(`[symphony-bridge] Streaming error: ${streamError.message}`);
-          
+
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
             provider: "unknown",
@@ -1080,33 +1194,41 @@ const server = http.createServer(async (req, res) => {
             isError: true,
             errorType: streamError.message?.slice(0, 50) || "unknown",
           });
-          
+
           const errorChunk = {
             id: completionId,
             object: "chat.completion.chunk",
             created,
             model: route.responseModelId,
-            choices: [{ index: 0, delta: { content: `\n[Error: ${streamError.message}]` }, finish_reason: "stop" }],
+            choices: [
+              {
+                index: 0,
+                delta: { content: `\n[Error: ${streamError.message}]` },
+                finish_reason: "stop",
+              },
+            ],
           };
           res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
           res.end();
         }
-        
+
         return;
       } else {
         // Non-streaming
         const result = await invokeWithFallback(messages, route);
-        
+
         if (issueContext) {
-          const firstLine = result.text ? result.text.split("\n")[0].trim().slice(0, 100) : "(no content)";
+          const firstLine = result.text
+            ? result.text.split("\n")[0].trim().slice(0, 100)
+            : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
-        
+
         const durationMs = Date.now() - startTime;
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
-        
+
         recordBridgeMetrics({
           provider: result.providerName,
           durationMs,
@@ -1115,7 +1237,7 @@ const server = http.createServer(async (req, res) => {
           tokensOut,
           isError: false,
         });
-        
+
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",

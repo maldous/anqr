@@ -82,6 +82,8 @@
     "admob",
     "rolldown",
     "autoprefixer",
+    "autoselects",
+    "autoselection",
     "precache",
     "sourcemaps",
     "uiautomator",

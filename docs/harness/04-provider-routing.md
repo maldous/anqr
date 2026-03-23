@@ -14,66 +14,62 @@ The harness uses a **layered failover model** where each layer handles its own i
 
 OpenClaw is configured with the following failover chain:
 
-| Priority   | Model                           | Fallback behavior                                   |
-| ---------- | ------------------------------- | --------------------------------------------------- |
-| Primary    | `symphony-bridge/symphony/main` | Tool-capable internal failover via credit-gate      |
-| Fallback 1 | `codebuff-bridge/codebuff/base` | Internal failover with paid → free account rotation |
-| Fallback 2 | OpenClaw free-rider models      | OpenClaw's native free model discovery              |
+| Priority | Model                                     | Fallback behavior                                        |
+| -------- | ----------------------------------------- | -------------------------------------------------------- |
+| Primary  | `symphony-bridge/symphony/main`           | Symphony autoselects the best healthy provider           |
+| 2        | `symphony-bridge/symphony/codex`          | Direct pinned Codex route                                |
+| 3        | `symphony-bridge/symphony/codebuff`       | Direct pinned Codebuff SDK route                         |
+| 4+       | Other `symphony-bridge/symphony/*` routes | Direct pinned routes matching Symphony inventory         |
+| Final    | `codebuff-bridge/codebuff/base`           | Local Codebuff bridge fallback with paid → free rotation |
 
-**Key insight**: OpenClaw sees Symphony Bridge as a single reliable model because it internally handles provider failover. When Symphony Bridge fails, OpenClaw falls back to Codebuff Bridge, and then to its own free-rider models.
+**Key insight**: OpenClaw should prefer Symphony first, but its fallback inventory should mirror Symphony's provider surface so interactive work keeps going even if the Symphony bridge itself is unavailable.
 
 ### Layer 2: Symphony Bridge (credit-gate)
 
 Symphony Bridge uses the credit-gate provider cascade with **dynamic scoring** based on actual performance metrics:
 
-| Priority | Provider                                                                | Selection method                      |
-| -------- | ----------------------------------------------------------------------- | ------------------------------------- |
-| 1        | codebuff                                                                | SDK with paid → free account rotation |
-| 2        | github-models                                                           | HTTP fallback with tool support       |
-| 3        | codebuff-bridge                                                         | Local HTTP fallback                   |
-| 4        | ollama-local                                                            | Local fallback                        |
-| 5+       | groq, mistral, gemini, openrouter, sambanova, cerebras                  | Text-only / lower-confidence fallback |
+| Priority class | Provider set                                                                                  | Selection method                                   |
+| -------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Policy first   | `codex`                                                                                       | Always re-probed first when configured and healthy |
+| Ranked auto    | `codebuff`, `groq`, `mistral`, `gemini*`, OpenRouter, `sambanova`, `cerebras`, `ollama-local` | Dynamic scoring with cooldown and re-entry         |
+| Local HTTP     | `codebuff-bridge`                                                                             | OpenAI-compatible local bridge fallback            |
 
-The credit-gate selects providers based on dynamic scoring (see Provider Metrics section below), not fixed order. After each request, providers are re-evaluated for the next request.
+The credit-gate selects providers based on dynamic scoring, but `codex` is always retried and Codebuff paid availability is re-probed every 5 hours. Temporary failures enter cooldown, then are retried so Symphony continues learning the best route over time.
 
 ### Layer 3: Codebuff Bridge (multi-account rotation)
 
-When Codebuff is selected, the bridge uses paid account first, then free accounts in parallel as instant fallback:
+When Codebuff is selected, the bridge uses paid account first, then free accounts as runtime fallback:
 
-1. **Paid account** tried first - if successful, used
-2. **Free accounts** start in parallel (pre-warmed) - if paid fails, first working free account used instantly
-
-This ensures paid always wins when available, but free accounts are ready instantly when needed (no waiting for paid to timeout).
+1. **Paid account** is always preferred when available.
+2. **Free accounts** are used immediately if paid is unavailable or rate-limited.
+3. **Paid availability is re-probed every 5 hours** so the bridge returns to paid automatically.
 
 ## Current provider cascade
 
-The credit-gate (`symphony-credit-gate.mjs`) to select providers in priority order. Providers are tried sequentially until one succeeds:
+The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory. The harness reaches it only through Symphony Bridge. OpenClaw uses the same inventory as pinned `symphony/*` routes, then falls back to the direct Codebuff bridge only if Symphony itself is unavailable.
 
 | #    | Provider                    | Type | Model                                  | Env Key(s) / Source                          | SDK     |
 | ---- | --------------------------- | ---- | -------------------------------------- | -------------------------------------------- | ------- |
 | 1    | codex                       | HTTP | gpt-5.4                                | `OPENAI_API_KEY`                             | No      |
 | 2    | codebuff                    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`, `CODEBUFF_API_KEY2`, ... | **Yes** |
-| 3    | openclaw                    | HTTP | openclaw:main                          | Token from `~/.openclaw/openclaw.json`       | No      |
-| 4    | groq                        | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
-| 5    | mistral                     | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
-| 6    | gemini                      | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
-| 7    | gemini-lite                 | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`                               | No      |
+| 3    | groq                        | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
+| 4    | mistral                     | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
+| 5    | gemini                      | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
+| 6    | gemini-lite                 | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`                               | No      |
 | 8    | openrouter-nemotron-super   | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`                           | No      |
 | 9-35 | openrouter-free (27 models) | HTTP | Various free tier models               | `OPENROUTER_TOKEN`                           | No      |
-| 36   | sambanova                   | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
-| 37   | cerebras                    | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
-| 38   | github-models               | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`                        | No      |
-| 39   | codebuff-bridge             | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
-| 40   | ollama-local                | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
+| 35   | sambanova                   | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
+| 36   | cerebras                    | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
+| 37   | codebuff-bridge             | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
+| 38   | ollama-local                | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
 
 ### Provider notes
 
 - **codex** (position 1): Primary provider, uses OpenAI credits
 - **codebuff** (position 2): Autonomous agent via @codebuff/sdk, supports multi-account rotation for rate-limit fallback
-- **openclaw** (position 3): Local AI gateway at `http://127.0.0.1:18789/v1`, token loaded from `~/.openclaw/openclaw.json`
 - **openrouter-free** (positions 8-35): 27 free tier models ranked by quality score (nemotron-3-super-120b-a12b is best at 0.655)
-- **codebuff-bridge** (position 39): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration
-- **ollama-local** (position 40): Local fallback when all remote providers fail
+- **codebuff-bridge** (position 37): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration and HTTP parity
+- **ollama-local** (position 38): Local fallback when all remote providers fail
 
 ## SDK-based providers
 
@@ -161,7 +157,7 @@ Codebuff (both SDK and bridge) supports multiple API keys from different account
 - `CODEBUFF_API_KEY2` - Secondary account fallback (free mode only)
 - `CODEBUFF_API_KEY3` - Additional accounts as needed
 
-The bridge validates that keys belong to different accounts at startup and warns if multiple keys resolve to the same account (which defeats rate-limit rotation).
+The bridge validates that keys belong to different accounts at startup and warns if multiple keys resolve to the same account (which defeats rate-limit rotation). It also re-probes paid availability every 5 hours so the preferred account can recover automatically.
 
 ## Failure cooldown mechanism
 
@@ -319,6 +315,7 @@ Used by the runner to validate changes before completion.
 **Status**: Deprecated. All Codebuff calls now go through the HTTP bridge at `http://127.0.0.1:4318`.
 
 This module now only exports shared path constants:
+
 - `PROJECT_ROOT` — Project root directory
 - `REPORTS_DIR` — Codebuff reports directory
 
@@ -338,31 +335,32 @@ The Symphony Bridge (`scripts/ops/integrations/model/symphony-openai-bridge.mjs`
 ### Architecture
 
 The bridge combines:
+
 1. **AI SDK** (`createAI`, `generateText`, `streamText`) for provider communication
 2. **Credit-gate** for provider selection and auto-fallback
 3. **Tool execution** for actual file operations, shell commands, and glob patterns
 
 ### Supported Providers
 
-| Provider | AI SDK Integration | Notes |
-|----------|-------------------|-------|
-| codebuff | `@codebuff/sdk` | Uses local SDK directly |
-| groq | `@ai-sdk/groq` | Free, fast |
-| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API |
-| openclaw | OpenAI-compatible | Local gateway at `http://127.0.0.1:18789/v1` |
-| mistral | OpenAI-compatible | `https://api.mistral.ai/v1` |
-| gemini | `@ai-sdk/google` | Gemini 2.5 Flash models |
-| codex | OpenAI-compatible | Default: `https://api.openai.com/v1` |
+| Provider   | AI SDK Integration            | Notes                                        |
+| ---------- | ----------------------------- | -------------------------------------------- |
+| codebuff   | `@codebuff/sdk`               | Uses local SDK directly                      |
+| groq       | `@ai-sdk/groq`                | Free, fast                                   |
+| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API           |
+| openclaw   | OpenAI-compatible             | Local gateway at `http://127.0.0.1:18789/v1` |
+| mistral    | OpenAI-compatible             | `https://api.mistral.ai/v1`                  |
+| gemini     | `@ai-sdk/google`              | Gemini 2.5 Flash models                      |
+| codex      | OpenAI-compatible             | Default: `https://api.openai.com/v1`         |
 
 ### Available Tools
 
 The bridge exposes three tools for autonomous execution:
 
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `exec` | Execute shell commands | `command` (string), `cwd` (optional) |
-| `read` | Read files from filesystem | `path` (string), `offset` (optional), `lines` (optional) |
-| `glob` | Find files matching pattern | `pattern` (string), `cwd` (optional) |
+| Tool   | Description                 | Parameters                                               |
+| ------ | --------------------------- | -------------------------------------------------------- |
+| `exec` | Execute shell commands      | `command` (string), `cwd` (optional)                     |
+| `read` | Read files from filesystem  | `path` (string), `offset` (optional), `lines` (optional) |
+| `glob` | Find files matching pattern | `pattern` (string), `cwd` (optional)                     |
 
 Tool execution is handled automatically by AI SDK via `maxSteps` parameter (default: 10 iterations). The bridge executes tools autonomously during the conversation loop.
 
