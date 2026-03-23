@@ -1008,7 +1008,9 @@ const server = http.createServer(async (req, res) => {
                 res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
               } else {
                 // Already streamed during execution - log what was filtered
-                console.log(`[bridge] 📝 Filtered content (already streamed: ${streamResult.hadStreamingChunks})`);
+                console.log(
+                  `[bridge] 📝 Filtered content (already streamed: ${streamResult.hadStreamingChunks})`,
+                );
               }
             }
           }

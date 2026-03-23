@@ -866,9 +866,10 @@ const server = http.createServer(async (req, res) => {
         const result = await invokeWithFallback(messages);
 
         if (issueContext) {
-          const firstLine =
-            result.data.choices?.[0]?.message?.content?.split("\n")[0]?.trim().slice(0, 100) ||
-            "(no content)";
+          const messageContent = result.data.choices?.[0]?.message?.content;
+          const firstLine = messageContent
+            ? messageContent.split("\n")[0].trim().slice(0, 100)
+            : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
 
