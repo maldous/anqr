@@ -56,6 +56,34 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 // Local Codebuff SDK
 import { CodebuffClient } from "@codebuff/sdk";
 
+// --------------------------------------------------------------------------
+// Console warning suppression
+// --------------------------------------------------------------------------
+
+/**
+ * Suppress known harmless warnings from AI SDK/Codebuff runtime
+ */
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  const warnStr = String(args[0] || "");
+  // Suppress tools.profile allowlist warnings - these are SDK internal notices
+  // about tools that are unavailable in current runtime/model config
+  if (
+    warnStr.includes("tools.profile") &&
+    warnStr.includes("allowlist contains unknown entries")
+  ) {
+    return;
+  }
+  // Suppress agents.main.tools.allow warnings (same issue, different format)
+  if (
+    warnStr.includes("agents.main.tools.allow") &&
+    warnStr.includes("allowlist contains unknown entries")
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
+
 
 
 // --------------------------------------------------------------------------
