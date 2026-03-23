@@ -44,5 +44,6 @@
 - [docs/harness/07-secrets-redaction-and-operator-access.md](/home/user/src/anqr/docs/harness/07-secrets-redaction-and-operator-access.md)
 - [docs/harness/08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
 - [docs/harness/09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
+- [docs/standards/testing-strategy-anqr-1.0.md](/home/user/src/anqr/docs/standards/testing-strategy-anqr-1.0.md)
 - [docs/archive/README.md](/home/user/src/anqr/docs/archive/README.md)
 - [docs/generated/README.md](/home/user/src/anqr/docs/generated/README.md)

@@ -1,5 +1,7 @@
 # Testing Standards
 
+Use [testing-strategy-anqr-1.0.md](/home/user/src/anqr/docs/standards/testing-strategy-anqr-1.0.md) as the controlling implementation strategy.
+
 ## Layers
 
 ### Unit
