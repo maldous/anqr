@@ -870,7 +870,8 @@ const server = http.createServer(async (req, res) => {
           const firstLine = messageContent
             ? messageContent.split("\n")[0].trim().slice(0, 100)
             : "(no content)";
-          console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
+          const finishedMessage = `[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`;
+          console.log(finishedMessage);
         }
 
         const durationMs = Date.now() - startTime;
