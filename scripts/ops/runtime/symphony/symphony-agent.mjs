@@ -668,7 +668,7 @@ async function runToolLoop({
       consecutiveNoToolCalls++;
       if (consecutiveNoToolCalls >= 3) {
         console.log("[agent] Too many consecutive turns without tool calls — aborting");
-        const snippet = msg.content?.slice(0, 150).replaceAll(/\n/g, " ") || "(empty)";
+        const snippet = msg.content?.slice(0, 150).replaceAll("\n", " ") || "(empty)";
         return {
           completed: false,
           summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls. Last: ${snippet}`,

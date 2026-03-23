@@ -170,7 +170,15 @@ async function tryProvider(provider, messages) {
     throw new Error(`429 rate limit: ${data.error.message || "Rate limited"}`);
   }
 
-  return { data, providerName: name };
+  // Check for continuation signal from downstream (e.g., codebuff-bridge with active subgoals)
+  const finishReason = data.choices?.[0]?.finish_reason;
+  const needsContinuation = finishReason === "length";
+
+  if (needsContinuation) {
+    console.log(`[symphony-bridge] 🔄 Downstream signals continuation needed (finish_reason=length)`);
+  }
+
+  return { data, providerName: name, needsContinuation };
 }
 
 /**
