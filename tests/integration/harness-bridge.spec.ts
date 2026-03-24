@@ -384,6 +384,310 @@ describe("Symphony Bridge Contract Tests", () => {
       // Bridge may return 400 or 500 depending on where the parse error is caught
       expect([400, 500]).toContain(res.status);
     });
+
+    it("should reject request with empty messages array", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ model: "symphony/main", messages: [] }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      expect([400, 500]).toContain(res.status);
+    });
+
+    it("should reject request with missing model field", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ messages: [{ role: "user", content: "test" }] }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      expect([400, 500]).toContain(res.status);
+    });
+
+    it("should reject request to unknown model route", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "symphony/nonexistent-route-xyz",
+          messages: [{ role: "user", content: "test" }],
+        }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      expect([400, 404, 500]).toContain(res.status);
+      const data = await res.json();
+      expect(data.error).toBeDefined();
+    });
+
+    it("should handle request with no body", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      expect([400, 500]).toContain(res.status);
+    });
+
+    it("should handle request with missing Content-Type", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      // May succeed (some servers infer JSON) or fail — must not crash
+      expect([200, 400, 415, 500]).toContain(res.status);
+    });
+  });
+
+  describe("Auth posture", () => {
+    it("should reject request with no Authorization header", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      expect([401, 403]).toContain(res.status);
+    });
+
+    it("should accept local-prefixed tokens on completions", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer local-test-token",
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+      });
+
+      expect(res.status, "local-prefixed token should not be rejected as unauthorized").not.toBe(401);
+      expect(res.status, "local-prefixed token should not be rejected as forbidden").not.toBe(403);
+    });
+
+    it("should reject non-local Bearer tokens on completions", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer definitely-not-a-local-token",
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      expect(res.status).toBe(401);
+    });
+
+    it("should reject empty Bearer token on completions", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer ",
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      // Empty bearer should be rejected or treated as anonymous
+      expect([401, 403]).toContain(res.status);
+    });
+  });
+
+  describe("Secret redaction in error responses", () => {
+    const API_KEY_PATTERNS = [
+      /sk-[a-zA-Z0-9]{20,}/,
+      /gsk_[a-zA-Z0-9]{20,}/,
+      /key-[a-zA-Z0-9]{20,}/,
+      /GROQ_TOKEN/,
+      /MISTRAL_TOKEN/,
+      /GEMINI_TOKEN/,
+      /SAMBANOVA_TOKEN/,
+      /CEREBRAS_TOKEN/,
+      /OPENROUTER_TOKEN/,
+      /CODEBUFF_API_KEY/,
+    ];
+
+    it("should not leak API keys in error responses for invalid route", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "symphony/nonexistent",
+          messages: [{ role: "user", content: "test" }],
+        }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      const body = await res.text();
+      for (const pattern of API_KEY_PATTERNS) {
+        expect(body, `Error response leaks secret matching ${pattern}`).not.toMatch(pattern);
+      }
+    });
+
+    it("should not leak API keys in error responses for malformed input", async () => {
+      if (!bridgeAvailable) return;
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: "{ broken json with secret probe",
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      const body = await res.text();
+      for (const pattern of API_KEY_PATTERNS) {
+        expect(body, `Malformed-input error leaks secret matching ${pattern}`).not.toMatch(pattern);
+      }
+    });
+  });
+
+  describe("Metrics increment verification", () => {
+    it("should increment totalRequests after a completion", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
+      if (!bridgeAvailable) return;
+
+      const before = await fetch(`${baseUrl}/v1/metrics`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      expect(before.status).toBe(200);
+      const metricsBefore = await before.json();
+      const totalBefore = metricsBefore.bridge?.totalRequests ?? 0;
+
+      await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+      });
+
+      const after = await fetch(`${baseUrl}/v1/metrics`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      expect(after.status).toBe(200);
+      const metricsAfter = await after.json();
+      const totalAfter = metricsAfter.bridge?.totalRequests ?? 0;
+
+      expect(
+        totalAfter,
+        `totalRequests should increase: before=${totalBefore}, after=${totalAfter}`,
+      ).toBeGreaterThan(totalBefore);
+    });
+  });
+
+  describe("Provider cooldown and recovery", () => {
+    it("should track provider usage in stats after completion", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
+      if (!bridgeAvailable) return;
+
+      await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+      });
+
+      const statsRes = await fetch(`${baseUrl}/v1/stats`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+      expect(statsRes.status).toBe(200);
+      const stats = await statsRes.json();
+
+      expect(stats.providerStats).toBeDefined();
+      const trackedProviders = Object.keys(stats.providerStats);
+      expect(trackedProviders.length, "At least one provider should be tracked in stats").toBeGreaterThan(0);
+
+      const hasSuccessMetric = trackedProviders.some((name) => {
+        const ps = stats.providerStats[name];
+        return (ps.successes ?? 0) > 0 || (ps.totalRequests ?? 0) > 0;
+      });
+      expect(hasSuccessMetric, "At least one provider should have recorded a success").toBe(true);
+    });
+
+    it("should recover and serve requests after error-inducing input", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
+      if (!bridgeAvailable) return;
+
+      await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: "{ invalid json to trigger error path",
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
+
+      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.choices).toBeDefined();
+      expect(data.choices[0].message.content).toBeTruthy();
+    });
   });
 });
 

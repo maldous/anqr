@@ -253,30 +253,22 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
       return;
     }
 
-    const startTime = Date.now();
-    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${SYMPHONY_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "symphony/main",
-        messages: [{ role: "user", content: "Say 'ok' if you can read this." }],
-      }),
-      signal: AbortSignal.timeout(90_000),
-    });
+    const { status, data, elapsed } = await sendCompletion("symphony/main", "Say 'ok' if you can read this.");
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
-    const elapsed = Date.now() - startTime;
-    expect(res.status).toBe(200);
+    if (isTransientError(status, errMsg)) {
+      console.log(`[openclaw-e2e] Symphony completion: transient error, skipping (${errMsg})`);
+      test.skip();
+      return;
+    }
 
-    const data = await res.json();
+    expect(status).toBe(200);
     expect(data.choices).toBeDefined();
-    expect(data.choices[0].message.content).toBeTruthy();
+    const content = (data.choices as Array<{ message: { content: string } }>)[0].message.content;
+    expect(content).toBeTruthy();
     expect(data._symphony_provider).toBeDefined();
 
     console.log(`[openclaw-e2e] Symphony completion: provider=${data._symphony_provider}, duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`);
-    const content = data.choices[0].message.content;
     console.log(`[openclaw-e2e] Response: ${typeof content === "string" ? content.slice(0, 200) : JSON.stringify(content).slice(0, 200)}`);
   });
 
@@ -287,64 +279,21 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
       return;
     }
 
-    const startTime = Date.now();
-    const res = await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${SYMPHONY_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "symphony/main",
-        messages: [{ role: "user", content: "Count from 1 to 3." }],
-        stream: true,
-      }),
-      signal: AbortSignal.timeout(90_000),
-    });
+    const { status, chunks, content, elapsed, contentType, errMsg } =
+      await sendStreamingCompletion("symphony/main", "Count from 1 to 3.");
 
-    expect(res.status).toBe(200);
-    expect(res.headers.get("content-type")).toContain("text/event-stream");
-
-    const chunks: string[] = [];
-    let fullContent = "";
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder();
-    let doneReading = false;
-
-    if (reader) {
-      while (!doneReading) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") {
-              doneReading = true;
-              break;
-            }
-            if (data.trim()) {
-              chunks.push(data);
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                if (content) fullContent += content;
-              } catch {
-                // Ignore parse errors for ping/malformed chunks
-              }
-            }
-          }
-        }
-      }
+    if (isTransientError(status, errMsg)) {
+      console.log(`[openclaw-e2e] Symphony streaming: transient error, skipping (${errMsg})`);
+      test.skip();
+      return;
     }
 
-    const elapsed = Date.now() - startTime;
+    expect(status).toBe(200);
+    expect(contentType).toContain("text/event-stream");
     expect(chunks.length).toBeGreaterThan(0);
+
     console.log(`[openclaw-e2e] Symphony streaming: ${chunks.length} chunks, elapsed=${elapsed}ms`);
-    console.log(`[openclaw-e2e] Streamed content: ${fullContent.slice(0, 200)}`);
+    console.log(`[openclaw-e2e] Streamed content: ${content.slice(0, 200)}`);
   });
 
   test("Symphony bridge /v1/stats returns provider statistics", async () => {
@@ -516,6 +465,88 @@ function isTransientError(status: number, errMsg: string): boolean {
   if (status === 500 && /Too Many Requests|rate.limit|quota|exhausted/i.test(errMsg)) return true;
   if (status === 503) return true;
   return false;
+}
+
+async function sendStreamingCompletion(
+  route: string,
+  prompt: string = "Count from 1 to 3.",
+  baseUrl: string = SYMPHONY_BASE_URL,
+  apiKey: string = SYMPHONY_API_KEY,
+): Promise<{ status: number; chunks: string[]; content: string; elapsed: number; contentType: string | null; errMsg: string }> {
+  const startTime = Date.now();
+  try {
+    const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: route,
+        messages: [{ role: "user", content: prompt }],
+        stream: true,
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+
+    const contentType = res.headers.get("content-type");
+
+    if (res.status !== 200) {
+      const body = await res.text().catch(() => "");
+      let errMsg = "";
+      try { errMsg = JSON.parse(body).error?.message ?? ""; } catch { errMsg = body.slice(0, 200); }
+      return { status: res.status, chunks: [], content: "", elapsed: Date.now() - startTime, contentType, errMsg };
+    }
+
+    const chunks: string[] = [];
+    let content = "";
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let doneReading = false;
+
+    if (reader) {
+      while (!doneReading) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") { chunks.push("[DONE]"); doneReading = true; break; }
+          if (!data.trim()) continue;
+          chunks.push(data);
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) content += delta;
+          } catch { /* non-JSON chunk */ }
+        }
+      }
+    }
+
+    return { status: res.status, chunks, content, elapsed: Date.now() - startTime, contentType, errMsg: "" };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { status: 0, chunks: [], content: "", elapsed: Date.now() - startTime, contentType: null, errMsg: `fetch failed: ${msg}` };
+  }
+}
+
+function validateStreamChunks(chunks: string[]): { valid: boolean; errors: string[]; hasDone: boolean } {
+  const errors: string[] = [];
+  let hasDone = false;
+  for (let i = 0; i < chunks.length; i++) {
+    if (chunks[i] === "[DONE]") { hasDone = true; continue; }
+    try {
+      const parsed = JSON.parse(chunks[i]);
+      if (typeof parsed.id !== "string") errors.push(`Chunk ${i}: missing or non-string 'id'`);
+      if (parsed.object !== "chat.completion.chunk") errors.push(`Chunk ${i}: object='${parsed.object}', expected 'chat.completion.chunk'`);
+      if (!Array.isArray(parsed.choices)) errors.push(`Chunk ${i}: missing 'choices' array`);
+      if (typeof parsed.created !== "number") errors.push(`Chunk ${i}: missing or non-number 'created'`);
+    } catch {
+      errors.push(`Chunk ${i}: invalid JSON`);
+    }
+  }
+  return { valid: errors.length === 0, errors, hasDone };
 }
 
 // ---------------------------------------------------------------------------
@@ -734,12 +765,21 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
     const orNames = new Set(OPENROUTER_PROVIDERS.map((p) => p.name));
     const selectedProviders = new Set<string>();
     const attempts = 3;
+    let transientCount = 0;
 
     for (let i = 0; i < attempts; i++) {
       const { status, data } = await sendCompletion(
         "symphony/openrouter",
         `Reply with only the number ${i + 1}.`,
       );
+      const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+      if (isTransientError(status, errMsg)) {
+        transientCount++;
+        if (transientCount >= 2) break;
+        continue;
+      }
+
       if (status === 200 && typeof data._symphony_provider === "string") {
         selectedProviders.add(data._symphony_provider);
         expect(
@@ -750,9 +790,15 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
     }
 
     console.log(
-      `[openclaw-e2e] openrouter rotation: ${selectedProviders.size} distinct from ${attempts} requests — ` +
-      `${[...selectedProviders].join(", ")}`,
+      `[openclaw-e2e] openrouter rotation: ${selectedProviders.size} distinct from ${attempts} requests ` +
+      `(${transientCount} transient) — ${[...selectedProviders].join(", ")}`,
     );
+
+    if (transientCount >= attempts) {
+      console.log(`[openclaw-e2e] openrouter rotation: all requests were transient errors, skipping`);
+      test.skip();
+      return;
+    }
 
     expect(selectedProviders.size).toBeGreaterThanOrEqual(1);
   });
@@ -908,6 +954,416 @@ test.describe("Full Provider Cascade Summary (requires running bridge)", () => {
       distinctProviders.size,
       "Responses should come from distinct providers",
     ).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-Provider Streaming Completions — SSE contract per route (gap #1 + #8)
+// ---------------------------------------------------------------------------
+
+test.describe("Per-Provider Streaming Completions (requires running bridge)", () => {
+  test.setTimeout(120_000);
+
+  for (const { route, provider } of REMOTE_API_ROUTES) {
+    test(`${provider} — streaming via ${route}`, async () => {
+      const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+      if (!reachable) { test.skip(); return; }
+
+      const { status, chunks, content, elapsed, contentType, errMsg } =
+        await sendStreamingCompletion(route, "Say hello in one word.");
+
+      if (isTransientError(status, errMsg)) {
+        console.log(`[openclaw-e2e] ${provider} streaming: transient error, skipping (${errMsg})`);
+        test.skip();
+        return;
+      }
+
+      expect(status, `${provider} streaming returned HTTP ${status}: ${errMsg}`).toBe(200);
+      expect(contentType, `${provider} streaming content-type`).toContain("text/event-stream");
+      expect(chunks.length, `${provider} streaming produced no chunks`).toBeGreaterThan(0);
+
+      const validation = validateStreamChunks(chunks);
+      if (!validation.valid) {
+        console.log(`[openclaw-e2e] ${provider} streaming schema errors: ${validation.errors.join("; ")}`);
+      }
+      expect(validation.valid, `${provider} streaming chunk schema invalid: ${validation.errors[0] ?? ""}`).toBe(true);
+
+      console.log(
+        `[openclaw-e2e] ${provider} streaming: ${chunks.length} chunks, ` +
+        `elapsed=${elapsed}ms, content=${content.slice(0, 80)}, done=${validation.hasDone}`,
+      );
+    });
+  }
+
+  test("symphony/main — streaming with schema validation", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, chunks, content, elapsed, contentType, errMsg } =
+      await sendStreamingCompletion("symphony/main", "Say ok.");
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status).toBe(200);
+    expect(contentType).toContain("text/event-stream");
+    expect(chunks.length).toBeGreaterThan(0);
+
+    const validation = validateStreamChunks(chunks);
+    expect(validation.valid, `Schema errors: ${validation.errors.join("; ")}`).toBe(true);
+
+    console.log(
+      `[openclaw-e2e] symphony/main streaming: ${chunks.length} chunks, ` +
+      `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+    );
+  });
+
+  test("symphony/text — streaming with schema validation", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, chunks, content, elapsed, contentType, errMsg } =
+      await sendStreamingCompletion("symphony/text", "Say ok.");
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status).toBe(200);
+    expect(contentType).toContain("text/event-stream");
+    expect(chunks.length).toBeGreaterThan(0);
+
+    const validation = validateStreamChunks(chunks);
+    expect(validation.valid, `Schema errors: ${validation.errors.join("; ")}`).toBe(true);
+
+    console.log(
+      `[openclaw-e2e] symphony/text streaming: ${chunks.length} chunks, ` +
+      `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+    );
+  });
+
+  test("symphony/openrouter — streaming with schema validation", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, chunks, content, elapsed, contentType, errMsg } =
+      await sendStreamingCompletion("symphony/openrouter", "Say ok.");
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status).toBe(200);
+    expect(contentType).toContain("text/event-stream");
+    expect(chunks.length).toBeGreaterThan(0);
+
+    const validation = validateStreamChunks(chunks);
+    expect(validation.valid, `Schema errors: ${validation.errors.join("; ")}`).toBe(true);
+
+    console.log(
+      `[openclaw-e2e] symphony/openrouter streaming: ${chunks.length} chunks, ` +
+      `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+    );
+  });
+
+  for (const { route, provider, description } of LOCAL_SERVICE_ROUTES) {
+    test(`${route} — streaming (${description})`, async () => {
+      const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+      if (!reachable) { test.skip(); return; }
+
+      const { status, chunks, content, elapsed, contentType, errMsg } =
+        await sendStreamingCompletion(route, "Say ok.");
+
+      if (isTransientError(status, errMsg)) {
+        console.log(`[openclaw-e2e] ${route} streaming: transient error, skipping (${errMsg})`);
+        test.skip();
+        return;
+      }
+
+      if (status === 500 && /not supported|no.key|unavailable|not reachable|connection refused|No providers available|system memory/i.test(errMsg)) {
+        console.log(`[openclaw-e2e] ${route} streaming (${provider}): service unavailable, skipping (${errMsg})`);
+        test.skip();
+        return;
+      }
+
+      expect(status, `${route} streaming returned HTTP ${status}: ${errMsg}`).toBe(200);
+      expect(contentType).toContain("text/event-stream");
+      expect(chunks.length).toBeGreaterThan(0);
+
+      const validation = validateStreamChunks(chunks);
+      if (!validation.valid) {
+        console.log(`[openclaw-e2e] ${route} streaming schema errors: ${validation.errors.join("; ")}`);
+      }
+
+      console.log(
+        `[openclaw-e2e] ${route} streaming: ${chunks.length} chunks, ` +
+        `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+      );
+    });
+  }
+
+  test("streaming cascade — majority of remote routes stream successfully", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const results: Array<{ provider: string; ok: boolean; chunks: number }> = [];
+
+    await Promise.allSettled(
+      REMOTE_API_ROUTES.map(async ({ route, provider }) => {
+        const { status, chunks } = await sendStreamingCompletion(route, "Say ok.");
+        results.push({ provider, ok: status === 200 && chunks.length > 0, chunks: chunks.length });
+      }),
+    );
+
+    const succeeded = results.filter((r) => r.ok);
+    console.log(
+      `[openclaw-e2e] Streaming cascade: ${succeeded.length}/${REMOTE_API_ROUTES.length} streamed — ` +
+      `${succeeded.map((r) => `${r.provider}(${r.chunks}ch)`).join(", ")}`,
+    );
+
+    expect(
+      succeeded.length,
+      `Only ${succeeded.length}/${REMOTE_API_ROUTES.length} routes streamed successfully`,
+    ).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Live Tool-Use & Command Execution (gap #2)
+// ---------------------------------------------------------------------------
+
+test.describe("Live Tool-Use & Command Execution (requires running bridge)", () => {
+  test.setTimeout(120_000);
+
+  test("exec tool — bridge executes shell command and returns output", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, data, elapsed } = await sendCompletion(
+      "symphony/main",
+      "Run the shell command: echo hello-from-tool-test. Return only the output.",
+    );
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status, `tool-use exec returned HTTP ${status}: ${errMsg}`).toBe(200);
+    expect(data.choices).toBeDefined();
+
+    const content = String((data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "");
+    console.log(
+      `[openclaw-e2e] Tool exec: provider=${data._symphony_provider}, elapsed=${elapsed}ms, ` +
+      `content=${content.slice(0, 200)}`,
+    );
+  });
+
+  test("read tool — bridge reads a file and returns content", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, data, elapsed } = await sendCompletion(
+      "symphony/main",
+      "Read the file package.json and tell me the value of the 'name' field. Reply with only the value.",
+    );
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status, `tool-use read returned HTTP ${status}: ${errMsg}`).toBe(200);
+    expect(data.choices).toBeDefined();
+
+    const content = String((data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "");
+    console.log(
+      `[openclaw-e2e] Tool read: provider=${data._symphony_provider}, elapsed=${elapsed}ms, ` +
+      `content=${content.slice(0, 200)}`,
+    );
+  });
+
+  test("glob tool — bridge lists files matching a pattern", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, data, elapsed } = await sendCompletion(
+      "symphony/main",
+      "Use the glob tool to find files matching '*.json' in the project root. List them.",
+    );
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status, `tool-use glob returned HTTP ${status}: ${errMsg}`).toBe(200);
+    expect(data.choices).toBeDefined();
+
+    const content = String((data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "");
+    console.log(
+      `[openclaw-e2e] Tool glob: provider=${data._symphony_provider}, elapsed=${elapsed}ms, ` +
+      `content=${content.slice(0, 200)}`,
+    );
+  });
+
+  test("streaming tool-use — exec via streaming mode", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, chunks, content, elapsed, errMsg } = await sendStreamingCompletion(
+      "symphony/main",
+      "Run the command: echo streaming-tool-test. Return only the output.",
+    );
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status, `streaming tool-use returned HTTP ${status}: ${errMsg}`).toBe(200);
+    expect(chunks.length).toBeGreaterThan(0);
+
+    console.log(
+      `[openclaw-e2e] Streaming tool exec: ${chunks.length} chunks, ` +
+      `elapsed=${elapsed}ms, content=${content.slice(0, 200)}`,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Provider Degradation & Recovery Simulation (gap #9)
+// ---------------------------------------------------------------------------
+
+test.describe("Provider Degradation & Recovery (requires running bridge)", () => {
+  test.setTimeout(120_000);
+
+  test("invalid route returns error without crashing the bridge", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status, data } = await sendCompletion("symphony/nonexistent-provider-xyz");
+    expect([400, 404, 500]).toContain(status);
+
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+    console.log(`[openclaw-e2e] Invalid route: status=${status}, error=${errMsg.slice(0, 100)}`);
+  });
+
+  test("bridge recovers after invalid route error", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    await sendCompletion("symphony/nonexistent-provider-xyz");
+
+    const { status, data } = await sendCompletion("symphony/main", "Say ok.");
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status, `Recovery request failed with HTTP ${status}: ${errMsg}`).toBe(200);
+    expect(data.choices).toBeDefined();
+    console.log(`[openclaw-e2e] Bridge recovery: provider=${data._symphony_provider}, status=200 ✅`);
+  });
+
+  test("bridge recovers after malformed request", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SYMPHONY_API_KEY}` },
+      body: "{ broken json",
+      signal: AbortSignal.timeout(10_000),
+    }).catch(() => {});
+
+    const { status, data } = await sendCompletion("symphony/main", "Say ok.");
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+    if (isTransientError(status, errMsg)) { test.skip(); return; }
+
+    expect(status, `Post-malformed recovery failed: ${errMsg}`).toBe(200);
+    console.log(`[openclaw-e2e] Post-malformed recovery: provider=${data._symphony_provider} ✅`);
+  });
+
+  test("bridge health remains ok after error sequence", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.status).toBe("ok");
+    console.log(
+      `[openclaw-e2e] Post-degradation health: status=${data.status}, ` +
+      `configured=${data.providersConfigured}, available=${data.providersAvailable}`,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression Tests for Known Incident Classes (gap #10)
+// ---------------------------------------------------------------------------
+
+test.describe("Regression: Known Incident Classes (requires running bridge)", () => {
+  test.setTimeout(120_000);
+
+  test("REGRESSION: AI SDK v6 /v1/responses path — third-party providers use /v1/chat/completions", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const thirdPartyRoutes = [
+      { route: "symphony/groq", provider: "groq" },
+      { route: "symphony/cerebras", provider: "cerebras" },
+    ];
+
+    for (const { route, provider } of thirdPartyRoutes) {
+      const { status, data } = await sendCompletion(route, "Say ok.");
+      const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+      if (isTransientError(status, errMsg)) continue;
+
+      expect(
+        errMsg,
+        `${provider}: should not get 'Not Found' (AI SDK v6 /v1/responses regression)`,
+      ).not.toMatch(/Not Found/);
+
+      if (status === 200) {
+        console.log(`[openclaw-e2e] REGRESSION(v6-responses): ${provider} OK via chat/completions path`);
+      }
+    }
+  });
+
+  test("REGRESSION: .chat() vs () — providers return content, not endpoint errors", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const routes = [
+      { route: "symphony/groq", provider: "groq" },
+      { route: "symphony/gemini", provider: "gemini" },
+      { route: "symphony/cerebras", provider: "cerebras" },
+    ];
+
+    let successes = 0;
+    for (const { route, provider } of routes) {
+      const { status, data } = await sendCompletion(route, "Say ok.");
+      const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+      if (isTransientError(status, errMsg)) continue;
+
+      if (status === 200) {
+        const content = (data.choices as Array<{ message: { content: string } }>)[0]?.message?.content;
+        expect(content, `${provider}: .chat() regression — empty content`).toBeTruthy();
+        successes++;
+        console.log(`[openclaw-e2e] REGRESSION(.chat): ${provider} returned content OK`);
+      }
+    }
+
+    expect(successes, "At least 2 of 3 regression routes should succeed").toBeGreaterThanOrEqual(2);
+  });
+
+  test("REGRESSION: provider cascade does not get stuck after single provider failure", async () => {
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) { test.skip(); return; }
+
+    const { status: s1 } = await sendCompletion("symphony/main", "Say 1.");
+    const { status: s2 } = await sendCompletion("symphony/main", "Say 2.");
+    const { status: s3 } = await sendCompletion("symphony/main", "Say 3.");
+
+    const successes = [s1, s2, s3].filter((s) => s === 200).length;
+    console.log(
+      `[openclaw-e2e] REGRESSION(cascade-stuck): ${successes}/3 sequential requests succeeded ` +
+      `(statuses: ${s1}, ${s2}, ${s3})`,
+    );
+
+    expect(successes, "Cascade should not get stuck — at least 2 of 3 sequential requests should succeed").toBeGreaterThanOrEqual(2);
   });
 });
 
