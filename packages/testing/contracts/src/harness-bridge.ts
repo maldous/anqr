@@ -174,4 +174,3 @@ export const codebuffHealthResponseSchema = z.object({
 // Tool definitions that should be available
 export const availableTools = ["exec", "read", "glob"] as const;
 export type ToolName = (typeof availableTools)[number];
-

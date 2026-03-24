@@ -31,7 +31,12 @@ module.exports = {
     {
       name: "no-circular-in-harness",
       severity: "error",
-      comment: "Circular dependencies in harness lead to hard-to-reason-about code.",
+      comment:
+        "Circular dependencies in harness lead to hard-to-reason-about code. " +
+        "The node_modules exclusion in pathNot prevents false positives from " +
+        "third-party internal cycles. This is simpler than the main config's " +
+        "viaOnly approach because harness code is not bundled, so there are no " +
+        "dist/assets chunks to worry about — only node_modules needs filtering.",
       from: { path: "^scripts/ops/" },
       to: { circular: true, pathNot: "^node_modules/" },
     },

@@ -112,6 +112,7 @@ async function main() {
 
     const files = await collectFiles(srcDir);
     for (const filePath of files) {
+      if (/\.(spec|test)\.ts$/.test(filePath)) continue;
       const relativePath = path.relative(repoRoot, filePath);
       const baseName = path.basename(filePath);
       const isIndex = baseName === "index.ts";

@@ -62,7 +62,6 @@ const chatCompletionResponseSchema = z.object({
   _symphony_duration_ms: z.number().optional(),
 });
 
-
 const healthResponseSchema = z.object({
   status: z.string(),
   model: z.string(),

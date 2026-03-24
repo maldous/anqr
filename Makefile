@@ -2,7 +2,7 @@
 
 QUALITY_FAST_TARGETS := \
 	openapi-generate format-check cspell knip typecheck-all lint-all lint-boundaries \
-	depcruise-all contracts-check audit-ast test-unit build-web
+	depcruise-all contracts-check audit-ast test-unit-coverage build-web
 
 QUALITY_RELEASE_TARGETS := \
 	quality-fast test-basic test-advanced sonar-scan sonar-export
@@ -87,6 +87,9 @@ knip: ## Run the scoped Knip hygiene pass
 
 test-unit: ## Run unit tests
 	npm run test:unit
+
+test-unit-coverage: ## Run unit tests with V8 coverage (generates coverage/lcov.info)
+	npm run test:unit:coverage
 
 test-e2e: ## Run the default end-to-end test suite
 	npm run test

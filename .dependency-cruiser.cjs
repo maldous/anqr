@@ -5,7 +5,12 @@ module.exports = {
     {
       name: "not-to-unresolvable",
       severity: "error",
-      comment: "All imports must resolve cleanly.",
+      comment:
+        "All imports must resolve cleanly. " +
+        'Exceptions: vite-env.d.ts uses a triple-slash reference (/// <reference types="vite/client" />) ' +
+        "which does not resolve through normal module resolution; " +
+        "edge-functions/seo/handler.ts imports from https://edge.netlify.com (Deno-style URL import) " +
+        "which is unresolvable in a Node/TypeScript resolver.",
       from: {
         pathNot: ["^src/vite-env\\.d\\.ts$", "^netlify/edge-functions/seo/handler\\.ts$"],
       },
@@ -24,7 +29,11 @@ module.exports = {
       comment:
         "Circular dependencies lead to hard-to-reason-about code. " +
         "Library-internal worker/plugin cycles (Sentry SDK, Capacitor AdMob) " +
-        "are excluded via viaOnly — they are unavoidable third-party artifacts.",
+        "are excluded via viaOnly — they are unavoidable third-party artifacts. " +
+        "The viaOnly.pathNot suppresses cycles that traverse bundled third-party " +
+        "chunks in dist/assets/. This is only needed in the main config because its " +
+        "broader scope (src/ + everything) pulls in build output; the architecture " +
+        "config scopes to packages/apps/netlify and does not need this exclusion.",
       from: {},
       to: {
         circular: true,
@@ -638,14 +647,16 @@ module.exports = {
       name: "netlify-no-deep-package-imports",
       severity: "error",
       comment:
-        "Netlify delivery code must consume packages via stable public entrypoints, one-level barrels, or explicit server entry files only.",
+        "Netlify delivery code must consume packages via stable public entrypoints, " +
+        "one-level barrels, or explicit server entrypoint barrels only.",
       from: { path: "^netlify/" },
       to: {
         path: "^packages/[^/]+/[^/]+/",
         pathNot: [
           "^packages/[^/]+/[^/]+/(index|src/index)\\.",
           "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
-          "^packages/[^/]+/[^/]+/src/server/[^/]+\\.",
+          // Server subpackage barrels (e.g. src/server/netlify-qr/index.ts)
+          "^packages/[^/]+/[^/]+/src/server/[^/]+/index\\.",
         ],
       },
     },
@@ -658,7 +669,8 @@ module.exports = {
       },
       to: {
         path: "^packages/contracts/([^/]+)/src/",
-        pathNot: ["^packages/contracts/[^/]+/(index|src/index)\\."],
+        // to.path already requires /src/ so only src/index can match; bare index is dead
+        pathNot: ["^packages/contracts/[^/]+/src/index\\."],
       },
     },
     {

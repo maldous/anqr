@@ -408,7 +408,11 @@ module.exports = {
       name: "platform-node-entrypoint-only",
       severity: "error",
       comment:
-        "Consumers must use declared @anqr/platform-node public entrypoints only, not arbitrary internal submodule barrels.",
+        "Consumers must use declared @anqr/platform-node public entrypoints only, " +
+        "not arbitrary internal submodule barrels. " +
+        "DRIFT RISK: the pathNot list below declares the public API surface of " +
+        "@anqr/platform-node. When a new public submodule is added to that package, " +
+        "its entrypoint must be added here or consumers will get a false violation.",
       from: { path: "^(packages|apps|netlify)/", pathNot: "^packages/platform/node/" },
       to: {
         path: "^packages/platform/node/src/",
@@ -437,13 +441,15 @@ module.exports = {
       name: "netlify-no-deep-package-imports",
       severity: "error",
       comment:
-        "Netlify delivery code must consume packages via stable public entrypoints, one-level barrels, or explicit server public subpaths only.",
+        "Netlify delivery code must consume packages via stable public entrypoints, " +
+        "one-level barrels, or explicit server entrypoint barrels only.",
       from: { path: "^netlify/" },
       to: {
         path: "^packages/[^/]+/[^/]+/",
         pathNot: [
           "^packages/[^/]+/[^/]+/(index|src/index)\\.",
           "^packages/[^/]+/[^/]+/src/[^/]+/index\\.",
+          // Server subpackage barrels (e.g. src/server/netlify-qr/index.ts)
           "^packages/[^/]+/[^/]+/src/server/[^/]+/index\\.",
         ],
       },
@@ -457,7 +463,8 @@ module.exports = {
       },
       to: {
         path: "^packages/contracts/([^/]+)/src/",
-        pathNot: ["^packages/contracts/[^/]+/(index|src/index)\\."],
+        // to.path already requires /src/ so only src/index can match; bare index is dead
+        pathNot: ["^packages/contracts/[^/]+/src/index\\."],
       },
     },
     {
