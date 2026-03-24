@@ -105,6 +105,13 @@ export function truncateMessageContent(msg, maxChars) {
  * @returns {Array} - Truncated messages that fit within the provider's budget
  */
 export function truncateMessagesForProvider(messages, providerName) {
+  // Validate input - must have at least one message
+  if (!messages || messages.length === 0) {
+    throw new Error(
+      `truncateMessagesForProvider: messages array is empty (provider: ${providerName})`,
+    );
+  }
+
   const maxTokens = PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
   let estimated = estimateMessagesTokens(messages);
 
@@ -175,6 +182,16 @@ export function truncateMessagesForProvider(messages, providerName) {
     console.log(
       `[symphony-bridge] ✂️ Pass 4 (last resort — system + last 2): ~${estimated} tokens`,
     );
+  }
+
+  // Final validation - ensure we always return at least one message
+  if (!truncated || truncated.length === 0) {
+    console.warn(
+      `[symphony-bridge] ⚠️ Truncation resulted in empty array — returning last message only`,
+    );
+    const lastMsg = messages[messages.length - 1];
+    const emergencyLimit = Math.floor((maxTokens * CHARS_PER_TOKEN) / 2);
+    return [truncateMessageContent(lastMsg, emergencyLimit)];
   }
 
   return truncated;
