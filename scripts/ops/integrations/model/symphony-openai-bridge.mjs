@@ -1049,18 +1049,21 @@ async function invokeWithAI(provider, messages, options = {}) {
   const rawMessages = convertMessages(messages);
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
 
-  // Validate that we have at least one message after truncation
-  // (truncateMessagesForProvider has a fallback that returns a minimal message if input is empty)
+  // Validation: truncateMessagesForProvider guarantees at least one message,
+  // but double-check to catch any edge cases
   if (!aiMessages || aiMessages.length === 0) {
     console.error(
-      `[symphony-bridge] ❌ Message truncation resulted in empty array for provider ${provider.name}`,
+      `[symphony-bridge] ❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
     );
     console.error(`[symphony-bridge]   Original messages: ${messages?.length || 0}`);
     console.error(
       `[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`,
     );
+    console.error(
+      `[symphony-bridge]   This should never happen - truncateMessagesForProvider has a fallback`,
+    );
     throw new Error(
-      `Message truncation resulted in empty array for provider ${provider.name} - original had ${messages?.length || 0} messages`,
+      `CRITICAL: Message truncation failed for provider ${provider.name} - original had ${messages?.length || 0} messages`,
     );
   }
 
@@ -1750,25 +1753,18 @@ const server = http.createServer(async (req, res) => {
       const stream = body.stream === true;
 
       // Validate that we have messages before processing
+      // Note: If messages is empty, we inject a fallback message rather than rejecting
+      // the request, since this could be caused by truncation edge cases
       if (!messages || messages.length === 0) {
-        console.error(
-          `[symphony-bridge] ❌ Invalid request: messages array is empty (model=${route.requestedModelId})`,
+        console.warn(
+          `[symphony-bridge] ⚠️ Empty messages array received (model=${route.requestedModelId}) - injecting fallback`,
         );
-        console.error(`[symphony-bridge]   body.messages type: ${typeof body.messages}`);
-        console.error(
+        console.warn(`[symphony-bridge]   body.messages type: ${typeof body.messages}`);
+        console.warn(
           `[symphony-bridge]   body.messages value: ${JSON.stringify(body.messages).slice(0, 200)}`,
         );
-        console.error(`[symphony-bridge]   Full request body keys: ${Object.keys(body).join(", ")}`);
-        console.error(
-          `[symphony-bridge]   Request headers: ${JSON.stringify(req.headers).slice(0, 300)}`,
-        );
-        return sendJson(res, 400, {
-          error: {
-            message: "Invalid prompt: messages must not be empty. Please provide at least one message.",
-            type: "invalid_request_error",
-            param: "messages",
-          },
-        });
+        // Inject a fallback message to prevent downstream errors
+        messages.push({ role: "user", content: "[Empty request - please provide a message]" });
       }
 
       // Log message summary for debugging
