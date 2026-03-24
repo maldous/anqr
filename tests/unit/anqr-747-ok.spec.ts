@@ -1,8 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 
-describe("ANQR-747", () => {
-  it("should write ok", () => {
-    const result = "ok";
-    expect(result).toBe("ok");
+/**
+ * ANQR-747 Test
+ */
+
+describe('ANQR-747', () => {
+  it('should be ok', () => {
+    expect('ok').toBe('ok');
   });
 });

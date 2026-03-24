@@ -213,9 +213,9 @@ async function testApiKey(apiKey, index) {
       return { works: true, mode: "free" };
     }
 
-    // Free mode also failed
-    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free)`);
-    return { works: false, mode: null };
+    // Free mode also failed - return error with clear message for symphony-bridge fallback
+    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`);
+    return { works: false, mode: null, error: "both_modes_exhausted" };
   }
 
   if (paidResult.error === "payment_required" && paidResult.isFreeAccount) {
@@ -241,8 +241,8 @@ async function testApiKey(apiKey, index) {
     return { works: true, mode: "free" };
   }
 
-  console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ both modes failed`);
-  return { works: false, mode: null };
+  console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`);
+  return { works: false, mode: null, error: "both_modes_exhausted" };
 }
 
 // Test the API key at startup and determine the best mode (paid or free)
@@ -264,7 +264,12 @@ async function testKeyAndSelectWinner(apiKey) {
     return;
   }
 
-  // Key failed - set as fallback anyway (will fail at runtime with clear error)
+  // Key failed - throw clear error for symphony-bridge to catch and try other providers
+  if (result.error === "both_modes_exhausted") {
+    throw new Error("Codebuff provider exhausted: both paid and free modes are out of credits");
+  }
+
+  // Other failures - set as fallback anyway (will fail at runtime with clear error)
   console.warn(`[bridge] ⚠️ Key failed at startup — using paid mode as fallback`);
   STARTUP_WINNER = {
     apiKey,
@@ -624,6 +629,17 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
   if (isAuthError(resultStr)) {
     throw new Error(`Auth failed on ${attempt.label}`);
   }
+  
+  // Check for payment/credit errors - trigger fallback to other providers
+  const paymentCheck = checkPaymentRequiredError(resultStr);
+  if (paymentCheck.isPaymentError) {
+    // If this was already in free mode, both modes are exhausted
+    if (attempt.costMode === "free") {
+      throw new Error(`Codebuff provider exhausted: both paid and free modes are out of credits${paymentCheck.resetInfo}`);
+    }
+    // Otherwise just report the payment error (caller might retry with free mode)
+    throw new Error(`Payment required on ${attempt.label}${paymentCheck.resetInfo}`);
+  }
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
@@ -782,6 +798,17 @@ async function trySingleAccountStream(
   }
   if (isAuthError(resultStr)) {
     throw new Error(`Auth failed on ${attempt.label}`);
+  }
+  
+  // Check for payment/credit errors - trigger fallback to other providers
+  const paymentCheck = checkPaymentRequiredError(resultStr);
+  if (paymentCheck.isPaymentError) {
+    // If this was already in free mode, both modes are exhausted
+    if (attempt.costMode === "free") {
+      throw new Error(`Codebuff provider exhausted: both paid and free modes are out of credits${paymentCheck.resetInfo}`);
+    }
+    // Otherwise just report the payment error (caller might retry with free mode)
+    throw new Error(`Payment required on ${attempt.label}${paymentCheck.resetInfo}`);
   }
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
