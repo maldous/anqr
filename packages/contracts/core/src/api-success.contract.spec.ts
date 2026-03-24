@@ -1,42 +1,45 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { ApiSuccess } from "./api-success.contract";
 
-describe("api-success.contract", () => {
-  describe("ApiSuccess interface", () => {
-    it("should accept valid API success with data", () => {
-      const success: ApiSuccess<string> = {
-        ok: true,
-        data: "QR code generated successfully",
-      };
-      expect(success.ok).toBe(true);
-      expect(success.data).toBe("QR code generated successfully");
-    });
+describe("ApiSuccess", () => {
+  it("should validate success structure with string data", () => {
+    const success: ApiSuccess<string> = {
+      ok: true,
+      data: "Success response",
+    };
 
-    it("should have readonly ok field set to true", () => {
-      const success: ApiSuccess<number> = {
-        ok: true,
-        data: 42,
-      };
-      expect(success.ok).toBe(true);
-    });
+    expect(success.ok).toBe(true);
+    expect(success.data).toBe("Success response");
+  });
 
-    it("should support various data types", () => {
-      const stringSuccess: ApiSuccess<string> = {
-        ok: true,
-        data: "result",
-      };
-      const numberSuccess: ApiSuccess<number> = {
-        ok: true,
-        data: 123,
-      };
-      const objectSuccess: ApiSuccess<{ id: string }> = {
-        ok: true,
-        data: { id: "qr-123" },
-      };
-      
-      expect(stringSuccess.data).toBe("result");
-      expect(numberSuccess.data).toBe(123);
-      expect(objectSuccess.data.id).toBe("qr-123");
-    });
+  it("should validate success structure with object data", () => {
+    const success: ApiSuccess<{ id: number; name: string }> = {
+      ok: true,
+      data: { id: 1, name: "Test" },
+    };
+
+    expect(success.ok).toBe(true);
+    expect(success.data.id).toBe(1);
+    expect(success.data.name).toBe("Test");
+  });
+
+  it("should validate success structure with array data", () => {
+    const success: ApiSuccess<number[]> = {
+      ok: true,
+      data: [1, 2, 3],
+    };
+
+    expect(success.ok).toBe(true);
+    expect(success.data).toHaveLength(3);
+  });
+
+  it("should have readonly properties", () => {
+    const success: ApiSuccess<boolean> = {
+      ok: true,
+      data: true,
+    };
+
+    expect(success.ok).toBe(true);
+    expect(success.data).toBe(true);
   });
 });

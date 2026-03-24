@@ -1,48 +1,61 @@
-import { describe, it, expect } from "vitest";
-import type { ApiErrorDetail, ApiError, ApiSuccess, ApiResult } from "./result-envelope.contract";
+import { describe, expect, it } from "vitest";
+import type { ApiError, ApiErrorDetail, ApiResult, ApiSuccess } from "./result-envelope.contract";
 
-describe("result-envelope.contract", () => {
-  describe("Re-exported types", () => {
-    it("should re-export ApiErrorDetail type", () => {
-      const errorDetail: ApiErrorDetail = {
-        message: "Error message",
-        code: "ERROR_CODE",
-        status: 400,
-      };
-      expect(errorDetail.message).toBe("Error message");
-    });
+describe("Result Envelope Contracts", () => {
+  it("should validate ApiSuccess structure", () => {
+    const success: ApiSuccess<string> = {
+      ok: true,
+      data: "test data",
+    };
 
-    it("should re-export ApiError type", () => {
-      const error: ApiError = {
-        ok: false,
-        error: {
-          message: "Failed",
-        },
-      };
-      expect(error.ok).toBe(false);
-    });
+    expect(success.ok).toBe(true);
+    expect(success.data).toBe("test data");
+  });
 
-    it("should re-export ApiSuccess type", () => {
-      const success: ApiSuccess<string> = {
-        ok: true,
-        data: "Success",
-      };
-      expect(success.ok).toBe(true);
-    });
+  it("should validate ApiError structure", () => {
+    const error: ApiError = {
+      ok: false,
+      error: {
+        message: "Something went wrong",
+        code: "ERR_001",
+        status: 500,
+      },
+    };
 
-    it("should re-export ApiResult type", () => {
-      const successResult: ApiResult<number> = {
-        ok: true,
-        data: 123,
-      };
-      const errorResult: ApiResult<number> = {
-        ok: false,
-        error: {
-          message: "Failed",
-        },
-      };
-      expect(successResult.ok).toBe(true);
-      expect(errorResult.ok).toBe(false);
-    });
+    expect(error.ok).toBe(false);
+    expect(error.error.message).toBe("Something went wrong");
+  });
+
+  it("should validate ApiResult as union type", () => {
+    const successResult: ApiResult<number> = {
+      ok: true,
+      data: 42,
+    };
+
+    const errorResult: ApiResult<number> = {
+      ok: false,
+      error: {
+        message: "Error occurred",
+      },
+    };
+
+    expect(successResult.ok).toBe(true);
+    expect(errorResult.ok).toBe(false);
+  });
+
+  it("should validate ApiErrorDetail with optional fields", () => {
+    const minimal: ApiErrorDetail = {
+      message: "Error message",
+    };
+
+    const full: ApiErrorDetail = {
+      message: "Error message",
+      code: "ERR_CODE",
+      status: 404,
+    };
+
+    expect(minimal.message).toBe("Error message");
+    expect(full.code).toBe("ERR_CODE");
+    expect(full.status).toBe(404);
   });
 });
