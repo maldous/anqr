@@ -504,7 +504,6 @@ const PROVIDERS = [
     probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini"),
   },
 
-
   {
     name: "ollama-qwen2.5-coder-3b",
     tier: TIER_LOCAL_SAFETY_NET,
