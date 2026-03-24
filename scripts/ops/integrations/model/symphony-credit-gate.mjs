@@ -507,6 +507,7 @@ const PROVIDERS = [
     model: "codebuff/base@latest",
     baseUrl: "http://127.0.0.1:4318/v1",
     envVar: "CODEBUFF_BRIDGE_API_KEY",
+    loadToken: () => "local-bridge",
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
     probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
   },
@@ -1026,6 +1027,9 @@ export function getConfiguredProviders(options = {}) {
     if (provider.envVar) {
       const val = process.env[provider.envVar];
       hasCredential = !!val && val !== "REPLACE" && val.length > 1;
+      if (!hasCredential && typeof provider.loadToken === "function") {
+        hasCredential = true;
+      }
     } else if (provider.driver === "codex-sdk") {
       hasCredential = !!process.env.OPENAI_API_KEY;
     } else if (typeof provider.loadToken === "function") {

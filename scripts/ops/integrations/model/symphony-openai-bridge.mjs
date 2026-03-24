@@ -750,6 +750,16 @@ const ADVERTISED_MODELS = [
     ownedBy: "ollama-local",
     allowedNames: ["ollama-local"],
   },
+  {
+    id: "symphony/ollama-qwen2.5-coder-3b",
+    ownedBy: "ollama-qwen2.5-coder-3b",
+    allowedNames: ["ollama-qwen2.5-coder-3b"],
+  },
+  {
+    id: "symphony/ollama-qwen2.5-coder-0.5b",
+    ownedBy: "ollama-qwen2.5-coder-0.5b",
+    allowedNames: ["ollama-qwen2.5-coder-0.5b"],
+  },
 ];
 
 // Accept multiple valid tokens - configured via env var or default

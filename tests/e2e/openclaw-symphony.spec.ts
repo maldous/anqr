@@ -60,6 +60,8 @@ const openclawConfig = {
     "symphony-bridge/symphony/sambanova",
     "symphony-bridge/symphony/cerebras",
     "symphony-bridge/symphony/ollama-local",
+    "symphony-bridge/symphony/ollama-qwen2.5-coder-3b",
+    "symphony-bridge/symphony/ollama-qwen2.5-coder-0.5b",
     "codebuff-bridge/codebuff/base",
   ],
 };
@@ -92,6 +94,8 @@ test.describe("OpenClaw Model Configuration", () => {
       "symphony/sambanova",
       "symphony/cerebras",
       "symphony/ollama-local",
+      "symphony/ollama-qwen2.5-coder-3b",
+      "symphony/ollama-qwen2.5-coder-0.5b",
     ];
 
     for (const route of symphonyRoutes) {
@@ -402,6 +406,8 @@ const EXPECTED_ROUTES = [
   "symphony/sambanova",
   "symphony/cerebras",
   "symphony/ollama-local",
+  "symphony/ollama-qwen2.5-coder-3b",
+  "symphony/ollama-qwen2.5-coder-0.5b",
 ];
 
 // Routes that target a single named provider (remote APIs with dedicated keys)
@@ -426,7 +432,9 @@ const LOCAL_SERVICE_ROUTES = [
   { route: "symphony/codebuff", provider: "codebuff", description: "Codebuff SDK" },
   { route: "symphony/codebuff-bridge", provider: "codebuff-bridge", description: "Codebuff bridge on :4318" },
   { route: "symphony/codex", provider: "codex", description: "Codex API (often quota-exhausted)" },
-  { route: "symphony/ollama-local", provider: "ollama-local", description: "Local Ollama" },
+  { route: "symphony/ollama-local", provider: "ollama-local", description: "Local Ollama (qwen3-coder-next 51GB)" },
+  { route: "symphony/ollama-qwen2.5-coder-3b", provider: "ollama-qwen2.5-coder-3b", description: "Local Ollama (qwen2.5-coder 3B)" },
+  { route: "symphony/ollama-qwen2.5-coder-0.5b", provider: "ollama-qwen2.5-coder-0.5b", description: "Local Ollama (qwen2.5-coder 0.5B)" },
 ];
 
 async function sendCompletion(
@@ -462,7 +470,7 @@ async function sendCompletion(
 function isTransientError(status: number, errMsg: string): boolean {
   if (status === 0) return true;
   if (status === 429) return true;
-  if (status === 500 && /Too Many Requests|rate.limit|quota|exhausted/i.test(errMsg)) return true;
+  if (status === 500 && /Too Many Requests|rate.limit|quota|exhausted|system memory|not enough memory|out of memory/i.test(errMsg)) return true;
   if (status === 503) return true;
   return false;
 }
