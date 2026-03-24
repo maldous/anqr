@@ -46,7 +46,7 @@ describe("qr-safety-options.contract", () => {
 
     it("should support maxOverlayIntensityByEcc for all ECC levels", () => {
       const options: QRSafetyOptions = {
-        mode: "permissive",
+        mode: "off",
         minModulePx: 2,
         minQuietZoneModules: 2,
         lockFinders: false,

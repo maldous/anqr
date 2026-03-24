@@ -7,14 +7,14 @@ describe("contracts/analyze/scan-result", () => {
       const result: ScanResult = {
         data: "https://example.com",
         location: {
-          topLeft: { x: 10, y: 10 },
-          topRight: { x: 100, y: 10 },
-          bottomLeft: { x: 10, y: 100 },
-          bottomRight: { x: 100, y: 100 },
+          topLeftCorner: { x: 10, y: 10 },
+          topRightCorner: { x: 100, y: 10 },
+          bottomLeftCorner: { x: 10, y: 100 },
+          bottomRightCorner: { x: 100, y: 100 },
         },
       };
       expect(result.data).toBe("https://example.com");
-      expect(result.location?.topLeft.x).toBe(10);
+      expect(result.location?.topLeftCorner.x).toBe(10);
     });
 
     it("accepts null data when no QR is detected", () => {

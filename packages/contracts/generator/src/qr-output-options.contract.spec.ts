@@ -15,7 +15,7 @@ describe("qr-output-options.contract", () => {
         bgOverride: "#ffffff",
         gifPaletteSize: 256,
         gifQuantizer: "neuquant",
-        gifDither: "floydsteinberg", // cspell:disable-line
+        gifDither: "floyd",
         gifTransparentColor: "",
         gifDisposal: "background",
         svgTrueVector: true,
@@ -49,7 +49,7 @@ describe("qr-output-options.contract", () => {
         bgOverride: "",
         gifPaletteSize: 128,
         gifQuantizer: "octree",
-        gifDither: "none",
+        gifDither: "off",
         gifTransparentColor: "#ffffff",
         gifDisposal: "none",
         svgTrueVector: false,
