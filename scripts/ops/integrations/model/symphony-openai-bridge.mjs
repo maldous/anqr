@@ -1743,9 +1743,9 @@ const server = http.createServer(async (req, res) => {
     // POST /v1/chat/completions
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
+      const messages = Array.isArray(body.messages) ? body.messages : [];
       
       // Fast validation BEFORE route resolution - fail immediately on invalid input
-      const messages = Array.isArray(body.messages) ? body.messages : [];
       if (!messages || messages.length === 0) {
         console.warn(
           `[symphony-bridge] ⚠️ Empty messages array received - returning 400 immediately`,
