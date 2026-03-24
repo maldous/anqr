@@ -180,7 +180,7 @@ systemctl --user enable --now anqr-symphony-runner.timer
 | 35       | sambanova       | Meta-Llama-3.3-70B-Instruct | https://api.sambanova.ai/v1 |
 | 36       | cerebras        | llama3.1-8b                 | https://api.cerebras.ai/v1  |
 | 37       | codebuff-bridge | codebuff/base               | http://127.0.0.1:4318/v1    |
-| 38       | ollama-local    | qwen3.5:35b-a3b-32t         | http://localhost:11434      |
+| 38       | ollama-local    | qwen3-coder-next:latest      | http://localhost:11434      |
 
 ---
 

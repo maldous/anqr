@@ -61,7 +61,7 @@ The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory.
 | 35   | sambanova                   | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
 | 36   | cerebras                    | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
 | 37   | codebuff-bridge             | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
-| 38   | ollama-local                | HTTP | qwen3.5:35b-a3b-32t                    | `OLLAMA_API_BASE`                            | No      |
+| 38   | ollama-local                | HTTP | qwen3-coder-next:latest                 | `OLLAMA_API_BASE`                            | No      |
 
 ### Provider notes
 

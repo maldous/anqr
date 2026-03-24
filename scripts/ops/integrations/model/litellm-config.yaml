@@ -15,7 +15,7 @@
 model_list:
   - model_name: "symphony-local"
     litellm_params:
-      model: "ollama/qwen3.5:35b-a3b-32t"
+      model: "ollama/qwen3-coder-next:latest"
       api_base: "http://localhost:11434"
       max_tokens: 4096
       num_thread: 1

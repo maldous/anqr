@@ -368,7 +368,7 @@ const OPENROUTER_PROVIDERS = [
 ];
 
 const LOCAL_PROVIDERS = [
-  { name: "ollama-local", model: "qwen3.5:35b-a3b-32t" },
+  { name: "ollama-local", model: "qwen3-coder-next:latest" },
   { name: "ollama-qwen2.5-coder-3b", model: "qwen2.5-coder:3b-instruct" },
   { name: "ollama-qwen2.5-coder-0.5b", model: "qwen2.5-coder:0.5b" },
 ];
