@@ -1050,9 +1050,17 @@ async function invokeWithAI(provider, messages, options = {}) {
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
 
   // Validate that we have at least one message after truncation
+  // (truncateMessagesForProvider has a fallback that returns a minimal message if input is empty)
   if (!aiMessages || aiMessages.length === 0) {
+    console.error(
+      `[symphony-bridge] ❌ Message truncation resulted in empty array for provider ${provider.name}`,
+    );
+    console.error(`[symphony-bridge]   Original messages: ${messages?.length || 0}`);
+    console.error(
+      `[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`,
+    );
     throw new Error(
-      `Message truncation resulted in empty array for provider ${provider.name} - original had ${messages.length} messages`,
+      `Message truncation resulted in empty array for provider ${provider.name} - original had ${messages?.length || 0} messages`,
     );
   }
 
@@ -1735,6 +1743,29 @@ const server = http.createServer(async (req, res) => {
       const route = resolveRoute(body.model || MODEL_ID);
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
+
+      // Validate that we have messages before processing
+      if (!messages || messages.length === 0) {
+        console.error(
+          `[symphony-bridge] ❌ Invalid request: messages array is empty (model=${route.requestedModelId})`,
+        );
+        console.error(`[symphony-bridge]   body.messages type: ${typeof body.messages}`);
+        console.error(
+          `[symphony-bridge]   body.messages value: ${JSON.stringify(body.messages).slice(0, 200)}`,
+        );
+        return sendJson(res, 400, {
+          error: {
+            message: "Invalid prompt: messages must not be empty. Please provide at least one message.",
+            type: "invalid_request_error",
+            param: "messages",
+          },
+        });
+      }
+
+      // Log message summary for debugging
+      console.log(
+        `[symphony-bridge] 📨 Request messages: ${messages.length} total (${messages.filter((m) => m.role === "system").length} system, ${messages.filter((m) => m.role === "user").length} user, ${messages.filter((m) => m.role === "assistant").length} assistant)`,
+      );
 
       // Extract issue context
       const userMessages = messages.filter((m) => m.role === "user");
