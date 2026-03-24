@@ -1744,28 +1744,23 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
       
-      // Diagnostic logging for empty messages debugging
-      console.log(`[symphony-bridge] 🔍 Request body keys: ${Object.keys(body).join(", ")}`);
-      console.log(`[symphony-bridge] 🔍 body.messages type: ${typeof body.messages}, isArray: ${Array.isArray(body.messages)}, length: ${body.messages?.length ?? "undefined"}`);
-      
-      const route = resolveRoute(body.model || MODEL_ID);
+      // Fast validation BEFORE route resolution - fail immediately on invalid input
       const messages = Array.isArray(body.messages) ? body.messages : [];
-      const stream = body.stream === true;
-
-      // Validate that we have messages before processing
-      // Note: If messages is empty, we inject a fallback message rather than rejecting
-      // the request, since this could be caused by truncation edge cases
       if (!messages || messages.length === 0) {
         console.warn(
-          `[symphony-bridge] ⚠️ Empty messages array received (model=${route.requestedModelId}) - injecting fallback`,
+          `[symphony-bridge] ⚠️ Empty messages array received - returning 400 immediately`,
         );
-        console.warn(`[symphony-bridge]   body.messages type: ${typeof body.messages}`);
-        console.warn(
-          `[symphony-bridge]   body.messages value: ${JSON.stringify(body.messages).slice(0, 200)}`,
-        );
-        // Inject a fallback message to prevent downstream errors
-        messages.push({ role: "user", content: "[Empty request - please provide a message]" });
+        return sendJson(res, 400, {
+          error: {
+            message: "Invalid request: messages array must not be empty",
+            type: "invalid_request_error",
+            param: "messages",
+          },
+        });
       }
+      
+      const route = resolveRoute(body.model || MODEL_ID);
+      const stream = body.stream === true;
 
       // Log message summary for debugging
       console.log(
