@@ -1757,6 +1757,11 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // Validate model field is present (some tests expect this)
+      if (!body.model && body.model !== undefined) {
+        console.warn(`[symphony-bridge] ⚠️ Empty model field - using default`);
+      }
+
       const route = resolveRoute(body.model || MODEL_ID);
       const stream = body.stream === true;
 

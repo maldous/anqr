@@ -37,9 +37,8 @@ export const QUEUE_STATES = {
 export const RUNNER_MAX_TURNS = 600;
 export const RUNNER_MAX_EXECUTION_MS = 7_200_000; // 120 min hard timeout — local Ollama averages ~1.5 min/turn
 export const RUNNER_MAX_RETRIES = 2;
-export const RUNNER_OLLAMA_MODEL = "qwen3-coder-next:latest";
+export const RUNNER_OLLAMA_MODEL = "qwen2.5-coder:3b-instruct";
 export const RUNNER_OLLAMA_MODELS = [
-  "qwen3-coder-next:latest",
   "qwen2.5-coder:3b-instruct",
   "qwen2.5-coder:0.5b",
 ];
