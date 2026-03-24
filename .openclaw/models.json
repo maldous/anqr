@@ -2,17 +2,6 @@
   "$schema": "https://docs.openclaw.ai/schema/models.json",
   "mode": "merge",
   "providers": {
-    "codebuff-bridge": {
-      "baseUrl": "http://127.0.0.1:4318/v1",
-      "apiKey": "local-bridge",
-      "api": "openai-completions",
-      "models": [
-        {
-          "id": "codebuff/base",
-          "name": "Codebuff Base (via bridge)"
-        }
-      ]
-    },
     "symphony-bridge": {
       "baseUrl": "http://127.0.0.1:4319/v1",
       "apiKey": "local-symphony",
@@ -101,6 +90,17 @@
           "name": "Qwen3 Coder Next"
         }
       ]
+    },
+    "codebuff-bridge": {
+      "baseUrl": "http://127.0.0.1:4318/v1",
+      "apiKey": "local-bridge",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "codebuff/base",
+          "name": "Codebuff Base (via bridge)"
+        }
+      ]
     }
   },
   "agents": {
@@ -119,6 +119,7 @@
           "symphony-bridge/symphony/sambanova",
           "symphony-bridge/symphony/cerebras",
           "symphony-bridge/symphony/ollama-local",
+          "symphony-bridge/symphony/text",
           "ollama/qwen2.5-coder:0.5b",
           "ollama/qwen2.5-coder:3b-instruct",
           "ollama/qwen3-coder-next:latest",
