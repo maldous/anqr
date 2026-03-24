@@ -49,7 +49,9 @@ describe("qrGenerateAdvancedInputSchema", () => {
     expect(() =>
       qrGenerateAdvancedInputSchema.overlayUrl.parse("https://example.com/image.png"),
     ).not.toThrow();
-    expect(() => qrGenerateAdvancedInputSchema.overlayUrl.parse("http://example.com/image.png")).toThrow();
+    expect(() =>
+      qrGenerateAdvancedInputSchema.overlayUrl.parse("http://example.com/image.png"),
+    ).toThrow();
   });
 
   it("should validate gradient stops", () => {

@@ -39,7 +39,7 @@ describe("qr-core-options.contract", () => {
       const mediumEcc: QRCoreOptions["ecc"] = "M";
       const quartileEcc: QRCoreOptions["ecc"] = "Q";
       const highEcc: QRCoreOptions["ecc"] = "H";
-      
+
       expect(lowEcc).toBe("L");
       expect(mediumEcc).toBe("M");
       expect(quartileEcc).toBe("Q");

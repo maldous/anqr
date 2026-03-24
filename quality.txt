@@ -1,0 +1,507 @@
+npm run lint:fix
+
+> anqr@1.0.69 lint:fix
+> oxlint --fix .
+
+Found 0 warnings and 0 errors.
+Finished in 233ms on 4744 files with 93 rules using 32 threads.
+npm run format
+
+> anqr@1.0.69 format
+> oxfmt --write .
+
+npm run openapi:generate
+
+> anqr@1.0.69 openapi:generate
+> tsx scripts/generate-openapi.ts
+
+Generated docs/api/qr-api.openapi.json
+npx oxfmt docs/api/qr-api.openapi.json
+npm run format:check
+
+> anqr@1.0.69 format:check
+> oxfmt --check .
+
+Checking formatting...
+
+All matched files use the correct format.
+Finished in 1964ms on 5137 files using 32 threads.
+npm run cspell
+
+> anqr@1.0.69 cspell
+> cspell --config cspell.json --no-progress
+
+npm run knip
+
+> anqr@1.0.69 knip
+> knip --include duplicates,unlisted,binaries --no-config-hints
+
+npm run typecheck:all
+
+> anqr@1.0.69 typecheck:all
+> npm run typecheck:src && npm run typecheck:apps && npm run typecheck:packages && npm run typecheck:netlify && npm run typecheck:tests
+
+
+> anqr@1.0.69 typecheck:src
+> tsc --noEmit -p tsconfig.src.json
+
+
+> anqr@1.0.69 typecheck:apps
+> tsc --noEmit -p tsconfig.apps.json
+
+
+> anqr@1.0.69 typecheck:packages
+> tsc --noEmit -p tsconfig.packages.json
+
+
+> anqr@1.0.69 typecheck:netlify
+> tsc --noEmit -p tsconfig.netlify.json
+
+
+> anqr@1.0.69 typecheck:tests
+> tsc --noEmit -p tsconfig.tests.json
+
+npm run lint:all
+
+> anqr@1.0.69 lint:all
+> oxlint .
+
+Found 0 warnings and 0 errors.
+Finished in 232ms on 4744 files with 93 rules using 32 threads.
+npm run lint:boundaries
+
+> anqr@1.0.69 lint:boundaries
+> eslint src/
+
+npm run depcruise:all
+
+> anqr@1.0.69 depcruise:all
+> npm run depcruise:architecture && npm run depcruise:contracts && npm run depcruise:harness
+
+
+> anqr@1.0.69 depcruise:architecture
+> depcruise packages apps netlify --config .dependency-cruiser.architecture.cjs
+
+
+✔ no dependency violations found (4636 modules, 9548 dependencies cruised)
+
+
+> anqr@1.0.69 depcruise:contracts
+> depcruise packages/contracts --config .dependency-cruiser.contracts.cjs
+
+
+✔ no dependency violations found (190 modules, 335 dependencies cruised)
+
+
+> anqr@1.0.69 depcruise:harness
+> depcruise scripts/ops --config .dependency-cruiser.harness.cjs
+
+
+✔ no dependency violations found (47 modules, 52 dependencies cruised)
+
+npm run contracts:check
+
+> anqr@1.0.69 contracts:check
+> node scripts/contracts-check.mjs
+
+contracts-check: validated 6 contract package(s)
+npm run audit:ast
+
+> anqr@1.0.69 audit:ast
+> node scripts/audit-ast-density.mjs
+
+  2 scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts  function:2
+npm run test:unit:coverage
+
+> anqr@1.0.69 test:unit:coverage
+> NODE_OPTIONS='--no-experimental-webstorage' ANQR_LOG_LEVEL=error vitest run --maxWorkers=100% --coverage
+
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90m/home/user/src/anqr[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m packages/contracts/core/src/core-contracts.spec.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/generator-contracts.spec.ts [2m([22m[2m77 tests[22m[2m)[22m[32m 90[2mms[22m[39m
+ [32m✓[39m packages/contracts/share/src/share-contracts.spec.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/analyze-contracts.spec.ts [2m([22m[2m51 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m scripts/ops/integrations/model/symphony-bridge-truncation.spec.ts [2m([22m[2m37 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m packages/contracts/api/src/api-contracts.spec.ts [2m([22m[2m66 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Fallback Configuration[2m > [22m[2mshould respect excluded providers in selection
+[22m[39m[credit-gate] groq: skipped (recently failed)
+
+ [32m✓[39m packages/contracts/mcp/src/mcp-contracts.spec.ts [2m([22m[2m80 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould select a provider with no restrictions
+[22m[39m[credit-gate] codex: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Fallback Configuration[2m > [22m[2mshould respect excluded providers in selection
+[22m[39m[credit-gate] gemini: probing...
+
+ [32m✓[39m packages/domain/render/src/primitives/primitives.spec.ts [2m([22m[2m41 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+ [32m✓[39m packages/contracts/api/src/qr-api-query.contract.spec.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/domain/render/src/color/render-color.spec.ts [2m([22m[2m53 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m packages/ui/web/src/ui-web.spec.ts [2m([22m[2m78 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/vite-config.spec.ts [2m([22m[2m41 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m packages/domain/logging/src/logging.spec.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/qr-generate-tool.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m scripts/ops/core/symphony-config.spec.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/analytics/ads/src/analytics-ads.spec.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/domain/share/src/share-domain.spec.ts [2m([22m[2m38 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Fallback Configuration[2m > [22m[2mshould respect excluded providers in selection
+[22m[39m[credit-gate] gemini: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mCredit Gate Integration[2m > [22m[2mshould select providers using credit gate
+[22m[39m[credit-gate] codex: probing...
+
+ [32m✓[39m packages/domain/qr/src/encode/qr-encode.spec.ts [2m([22m[2m87 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m packages/domain/qr/src/cache/memo-cache.spec.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/platform/worker/src/platform-worker.spec.ts [2m([22m[2m41 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m packages/domain/render/src/render-server-extended.spec.ts [2m([22m[2m64 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/integration/queue-control.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 1042[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/rgb-with-meta.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/domain/analyze/src/qr-analyzer/analyze-domain.spec.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m packages/application/analyze/src/analyze-app.spec.ts [2m([22m[2m81 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/qr-generate-advanced-tool.contract.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m packages/domain/render/src/render-color-extended.spec.ts [2m([22m[2m71 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/qr-capabilities-resource.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/contracts/share/src/share-config.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/domain/render/src/render-filters-pure.spec.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/domain/render/src/render-color-harmony.spec.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-pattern-alias.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/payload-kind.contract.spec.ts [2m([22m[2m41 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-overlay-options.contract.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m packages/domain/payload/src/payload-generators/payload-validators.spec.ts [2m([22m[2m101 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m packages/domain/qr/src/qr-generator/qr-generator-utils.spec.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/overlay-mode.contract.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/domain/render/src/render-utils.spec.ts [2m([22m[2m124 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m packages/platform/native/src/platform-native.spec.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m packages/contracts/core/src/api-success.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/platform/node/src/platform-node.spec.ts [2m([22m[2m79 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m packages/contracts/api/src/qr-api-success.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m packages/observability/logging/src/observability-logging.spec.ts [2m([22m[2m101 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/dither-kind.contract.spec.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/content-type.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-metadata-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/api/src/qr-api-error.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m packages/domain/qr/src/spec/qr-spec.spec.ts [2m([22m[2m89 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/image-properties.contract.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/rgba.contract.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/mask-pattern.contract.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/ecc-level.contract.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/qr-generate-prompt.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m packages/domain/payload/src/payload-generators-extended.spec.ts [2m([22m[2m102 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m packages/application/generator/src/generator-app.spec.ts [2m([22m[2m127 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-animation-options.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/diffusion-kernel.contract.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gradient-config.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/qr-generate-prompt-args.contract.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/character-encoding.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-easing.contract.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/hsl.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/validation-result.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/api/src/qr-api.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/dominant-color-info.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/module-style.contract.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould select a provider with no restrictions
+[22m[39m[credit-gate] codex: unavailable (quota exhausted)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould select a provider with no restrictions
+[22m[39m[credit-gate] codex: unavailable ❌
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould select a provider with no restrictions
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+ [32m✓[39m packages/contracts/mcp/src/qr-generate-input.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/timing-diagnostics.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/alignment-style.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/ordered-matrix.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-output-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould select a provider with no restrictions
+[22m[39m[credit-gate] codebuff: probing...
+
+ [32m✓[39m packages/contracts/generator/src/hsla.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/ecc-level.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/qr-generate-advanced-input.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/domain/qr/src/qart/qr-qart.spec.ts [2m([22m[2m117 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/error-type.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/encoding-mode.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/geometry-diagnostics.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/frame-style.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/quiet-zone-info.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/data-capacity.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-render-options.contract.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gradient.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/core/src/result-envelope.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/timing-style.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/domain/payload/src/payload-generators.spec.ts [2m([22m[2m73 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/qr-location.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gap-mode.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/crop-region.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-quality-assurance-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/share/src/embed-options.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/safety-mode.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/core/src/api-error-detail.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/core/src/error-response.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/watermark-blend.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/rgb.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/fit-mode.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-wave-axis.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gif-dither.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-watermark-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mCredit Gate Integration[2m > [22m[2mshould select providers using credit gate
+[22m[39m[credit-gate] codex: unavailable (quota exhausted)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mCredit Gate Integration[2m > [22m[2mshould select providers using credit gate
+[22m[39m[credit-gate] codex: unavailable ❌
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mCredit Gate Integration[2m > [22m[2mshould select providers using credit gate
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mCredit Gate Integration[2m > [22m[2mshould select providers using credit gate
+[22m[39m[credit-gate] codebuff: probing...
+
+ [32m✓[39m tests/unit/bootstrap.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/overlay-type.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/finder-style.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gradient-stop.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-generation-options.contract.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-temporal-dither-mode.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/qr-analysis-result.contract.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/color-mode.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gradient-type.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-core-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/decoder-metadata.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/gif-quantizer.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/detected-colors.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/structural-analysis.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m packages/contracts/core/src/api-error.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-pattern.contract.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/domain/qr/src/decode/qr-decode.spec.ts [2m([22m[2m102 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/watermark-kind.contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-interpolation.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/scan-result.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/output-format.contract.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/animation-target.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m packages/contracts/mcp/src/mcp-tool-descriptor.contract.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-auto-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m packages/contracts/analyze/src/content-type-details.contract.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m packages/contracts/generator/src/qr-safety-options.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m packages/observability/telemetry/src/observability-telemetry.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/anqr-747-ok.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m packages/contracts/core/src/api-result.contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mCredit Gate Integration[2m > [22m[2mshould select providers using credit gate
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Ranking After Fallback[2m > [22m[2mshould update provider stats after fallback success
+[22m[39m[credit-gate] codex: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould select a provider with no restrictions
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect allowedNames filter
+[22m[39m[credit-gate] groq: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect allowedNames filter
+[22m[39m[credit-gate] groq: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect excludeNames filter
+[22m[39m[credit-gate] codex: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Ranking After Fallback[2m > [22m[2mshould update provider stats after fallback success
+[22m[39m[credit-gate] codex: unavailable (quota exhausted)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Ranking After Fallback[2m > [22m[2mshould update provider stats after fallback success
+[22m[39m[credit-gate] codex: unavailable ❌
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Ranking After Fallback[2m > [22m[2mshould update provider stats after fallback success
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Ranking After Fallback[2m > [22m[2mshould update provider stats after fallback success
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts[2m > [22m[2mSymphony Bridge Fallback Logic[2m > [22m[2mProvider Ranking After Fallback[2m > [22m[2mshould update provider stats after fallback success
+[22m[39m[credit-gate] codebuff: available ✅
+
+ [32m✓[39m scripts/ops/integrations/model/symphony-openai-bridge-fallback.spec.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 5019[2mms[22m[39m
+       [33m[2m✓[22m[39m should respect excluded providers in selection [33m 846[2mms[22m[39m
+       [33m[2m✓[22m[39m should select providers using credit gate [33m 1840[2mms[22m[39m
+       [33m[2m✓[22m[39m should update provider stats after fallback success [33m 2327[2mms[22m[39m
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect excludeNames filter
+[22m[39m[credit-gate] codex: unavailable (quota exhausted)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect excludeNames filter
+[22m[39m[credit-gate] codex: unavailable ❌
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect excludeNames filter
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect excludeNames filter
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould respect excludeNames filter
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould skip recently failed providers
+[22m[39m[credit-gate] groq: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould skip recently failed providers
+[22m[39m[credit-gate] gemini: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mselectProvider[2m > [22m[2mshould skip recently failed providers
+[22m[39m[credit-gate] gemini: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: unavailable (quota exhausted)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: unavailable ❌
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Metrics[2m > [22m[2mshould calculate provider score after multiple selections
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: unavailable (quota exhausted)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: unavailable ❌
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: available ✅
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codex: skipped (recently failed)
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: probing...
+
+[90mstdout[2m | scripts/ops/integrations/model/symphony-credit-gate.spec.ts[2m > [22m[2mSymphony Credit Gate - Provider Selection[2m > [22m[2mProvider Ranking[2m > [22m[2mshould return ranked providers
+[22m[39m[credit-gate] codebuff: available ✅
+
+ [32m✓[39m scripts/ops/integrations/model/symphony-credit-gate.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 8084[2mms[22m[39m
+       [33m[2m✓[22m[39m should select a provider with no restrictions [33m 2277[2mms[22m[39m
+       [33m[2m✓[22m[39m should respect excludeNames filter [33m 2575[2mms[22m[39m
+       [33m[2m✓[22m[39m should calculate provider score after multiple selections [33m 1373[2mms[22m[39m
+       [33m[2m✓[22m[39m should return ranked providers [33m 1393[2mms[22m[39m
+ [32m✓[39m tests/integration/service-startup.spec.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 12564[2mms[22m[39m
+       [33m[2m✓[22m[39m should accept local- prefixed tokens for chat completions [33m 5002[2mms[22m[39m
+       [33m[2m✓[22m[39m should start and respond to health check [33m 302[2mms[22m[39m
+       [33m[2m✓[22m[39m harness:quick should be available [33m 7219[2mms[22m[39m
+ [32m✓[39m tests/integration/codebuff-key-rotation.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 33552[2mms[22m[39m
+       [33m[2m✓[22m[39m should handle time-based re-validation trigger [33m 20489[2mms[22m[39m
+       [33m[2m✓[22m[39m should handle rate limit scenarios [33m 13013[2mms[22m[39m
+ [31m❯[39m tests/integration/harness-bridge.spec.ts [2m([22m[2m29 tests[22m[2m | [22m[31m7 failed[39m[2m)[22m[33m 221648[2mms[22m[39m
+       [32m✓[39m should return valid models response[32m 9[2mms[22m[39m
+       [32m✓[39m should return health status[32m 4[2mms[22m[39m
+       [32m✓[39m should not require auth for health check[32m 2[2mms[22m[39m
+       [33m[2m✓[22m[39m should complete simple prompt [33m 17457[2mms[22m[39m
+       [33m[2m✓[22m[39m should handle issue context in prompt [33m 34740[2mms[22m[39m
+       [33m[2m✓[22m[39m should include provider attempts in response [33m 12133[2mms[22m[39m
+       [33m[2m✓[22m[39m should stream response chunks [33m 12635[2mms[22m[39m
+       [32m✓[39m should return bridge and credit-gate metrics[32m 5[2mms[22m[39m
+       [32m✓[39m should return ranked provider stats[32m 1[2mms[22m[39m
+       [32m✓[39m should reject invalid auth tokens[32m 1[2mms[22m[39m
+       [32m✓[39m should handle malformed JSON[32m 1[2mms[22m[39m
+[31m       [31m×[31m should reject request with empty messages array[39m[33m 10001[2mms[22m[39m
+[31m       [31m×[31m should reject request with missing model field[39m[33m 10001[2mms[22m[39m
+[31m       [31m×[31m should reject request to unknown model route[39m[33m 10001[2mms[22m[39m
+[31m       [31m×[31m should handle request with no body[39m[33m 10001[2mms[22m[39m
+[31m       [31m×[31m should handle request with missing Content-Type[39m[33m 10000[2mms[22m[39m
+[31m       [31m×[31m should reject request with no Authorization header[39m[33m 10000[2mms[22m[39m
+       [33m[2m✓[22m[39m should accept local-prefixed tokens on completions [33m 11906[2mms[22m[39m
+       [32m✓[39m should reject non-local Bearer tokens on completions[32m 2[2mms[22m[39m
+       [32m✓[39m should reject empty Bearer token on completions[32m 1[2mms[22m[39m
+[31m       [31m×[31m should not leak API keys in error responses for invalid route[39m[33m 10001[2mms[22m[39m
+       [32m✓[39m should not leak API keys in error responses for malformed input[32m 1[2mms[22m[39m
+       [33m[2m✓[22m[39m should increment totalRequests after a completion [33m 13170[2mms[22m[39m
+       [33m[2m✓[22m[39m should track provider usage in stats after completion [33m 12070[2mms[22m[39m
+       [33m[2m✓[22m[39m should recover and serve requests after error-inducing input [33m 12058[2mms[22m[39m
+       [32m✓[39m should return valid codebuff model[32m 1[2mms[22m[39m
+       [32m✓[39m should return health status with account info[32m 0[2mms[22m[39m
+       [33m[2m✓[22m[39m should complete simple prompt [33m 12476[2mms[22m[39m
+       [33m[2m✓[22m[39m should stream response [33m 12935[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m133 passed[39m[22m[90m (134)[39m
+[2m      Tests [22m [1m[31m7 failed[39m[22m[2m | [22m[1m[32m2779 passed[39m[22m[90m (2786)[39m
+[2m   Start at [22m 09:15:23
+[2m   Duration [22m 227.12s[2m (transform 35.93s, setup 0ms, import 43.92s, tests 283.64s, environment 16ms)[22m
+

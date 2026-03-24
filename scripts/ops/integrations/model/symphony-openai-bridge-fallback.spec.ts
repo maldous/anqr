@@ -128,10 +128,10 @@ describe("Symphony Bridge Fallback Logic", () => {
     it("should track tried providers during fallback", () => {
       // Simulate the triedProviders tracking in invokeWithFallbackStream
       const triedProviders: string[] = [];
-      
+
       // First attempt
       triedProviders.push("codebuff");
-      
+
       // Fallback attempts
       triedProviders.push("groq");
       triedProviders.push("gemini");
@@ -149,12 +149,12 @@ describe("Symphony Bridge Fallback Logic", () => {
 
       // Record failure for a provider
       recordProviderFailure("test-provider");
-      
+
       expect(existsSync(FAILURE_STATE_FILE)).toBe(true);
-      
+
       const failures = JSON.parse(readFileSync(FAILURE_STATE_FILE, "utf-8"));
       expect(failures["test-provider"]).toBeDefined();
-      
+
       // Clean up
       clearProviderFailure("test-provider");
     });
@@ -174,7 +174,7 @@ describe("Symphony Bridge Fallback Logic", () => {
 
       // Select a provider
       const provider = await selectProvider({ allowedNames: null, excludeNames: [] });
-      
+
       expect(provider).toBeDefined();
       expect(provider.name).toBeTruthy();
       expect(provider.model).toBeTruthy();
@@ -205,15 +205,16 @@ describe("Symphony Bridge Fallback Logic", () => {
     it("should update provider stats after fallback success", async () => {
       // @ts-ignore - .mjs import
       const creditGate = await import("./symphony-credit-gate.mjs");
-      const { selectProvider, recordProviderSuccess, recordProviderMetrics, getProviderStats } = creditGate;
+      const { selectProvider, recordProviderSuccess, recordProviderMetrics, getProviderStats } =
+        creditGate;
 
       // Select and use a provider
       const provider = await selectProvider({ allowedNames: null, excludeNames: [] });
-      
+
       if (provider) {
         // Record success
         recordProviderSuccess(provider.name);
-        
+
         // Record metrics
         recordProviderMetrics(provider.name, {
           durationMs: 5000,
@@ -224,7 +225,7 @@ describe("Symphony Bridge Fallback Logic", () => {
       }
 
       const stats = getProviderStats();
-      
+
       // Verify stats were recorded
       const providerName = provider?.name;
       if (providerName && stats[providerName]) {
@@ -246,14 +247,14 @@ describe("Error Propagation from Codebuff SDK", () => {
 
       // All of these should be detected as retryable
       codebuffErrorPatterns.forEach((pattern) => {
-        const isRetryable = 
+        const isRetryable =
           pattern.includes("RetryError") ||
           pattern.includes("maxRetriesExceeded") ||
           pattern.includes("rate_limit") ||
           pattern.includes("429") ||
           pattern.includes("Too Many Requests") ||
           pattern.includes("session limit");
-        
+
         expect(isRetryable, `Pattern "${pattern.slice(0, 50)}" should be retryable`).toBe(true);
       });
     });
@@ -270,7 +271,7 @@ describe("Error Propagation from Codebuff SDK", () => {
       };
 
       // Should be able to find rate limit info in nested structure
-      const hasRateLimit = 
+      const hasRateLimit =
         String(nestedError).includes("rate_limit") ||
         nestedError.cause?.responseBody?.includes("rate_limit") ||
         nestedError.cause?.statusCode === 429;

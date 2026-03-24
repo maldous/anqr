@@ -32,7 +32,7 @@ describe("animation-pattern-alias.contract", () => {
       const shimmer: AnimationPattern = "shimmer";
       const drift: AnimationPattern = "drift";
       const colorCycle: AnimationPattern = "color_cycle";
-      
+
       expect(none).toBe("none");
       expect(pulse).toBe("pulse");
       expect(wave).toBe("wave");

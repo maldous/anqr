@@ -31,7 +31,7 @@ describe("gradient.contract", () => {
       const radial: GradientUpdate["type"] = "radial";
       const conic: GradientUpdate["type"] = "conic";
       const none: GradientUpdate["type"] = "none";
-      
+
       expect(linear).toBe("linear");
       expect(radial).toBe("radial");
       expect(conic).toBe("conic");

@@ -29,7 +29,7 @@ describe("crop-region.contract", () => {
       const topLeft: CropRegion = { x: 0, y: 0, size: 0.5 };
       const center: CropRegion = { x: 0.25, y: 0.25, size: 0.5 };
       const bottomRight: CropRegion = { x: 0.5, y: 0.5, size: 0.5 };
-      
+
       expect(topLeft.x).toBe(0);
       expect(center.x).toBe(0.25);
       expect(bottomRight.x).toBe(0.5);

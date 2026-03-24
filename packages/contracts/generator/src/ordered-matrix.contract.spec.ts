@@ -23,7 +23,7 @@ describe("ordered-matrix.contract", () => {
       const bayer2: OrderedMatrix = "bayer2";
       const bayer4: OrderedMatrix = "bayer4";
       const bayer8: OrderedMatrix = "bayer8";
-      
+
       expect(bayer2).toBe("bayer2");
       expect(bayer4).toBe("bayer4");
       expect(bayer8).toBe("bayer8");
@@ -32,7 +32,7 @@ describe("ordered-matrix.contract", () => {
     it("should support clustered and void cluster types", () => {
       const clustered: OrderedMatrix = "clustered_dot";
       const voidCluster: OrderedMatrix = "void_cluster";
-      
+
       expect(clustered).toBe("clustered_dot");
       expect(voidCluster).toBe("void_cluster");
     });

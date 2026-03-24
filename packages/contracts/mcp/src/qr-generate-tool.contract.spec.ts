@@ -12,7 +12,7 @@ describe("qr-generate-tool.contract", () => {
       const schema = qrGenerateInputSchema.size;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid sizes
       expect(() => schema.parse(400)).not.toThrow();
       expect(() => schema.parse(50)).not.toThrow();
@@ -23,7 +23,7 @@ describe("qr-generate-tool.contract", () => {
       const schema = qrGenerateInputSchema.errorCorrection;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid values
       expect(() => schema.parse("L")).not.toThrow();
       expect(() => schema.parse("M")).not.toThrow();
@@ -35,7 +35,7 @@ describe("qr-generate-tool.contract", () => {
       const schema = qrGenerateInputSchema.foreground;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid hex colors
       expect(() => schema.parse("000000")).not.toThrow();
       expect(() => schema.parse("FFFFFF")).not.toThrow();
@@ -46,7 +46,7 @@ describe("qr-generate-tool.contract", () => {
       const schema = qrGenerateInputSchema.background;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid hex colors
       expect(() => schema.parse("ffffff")).not.toThrow();
       expect(() => schema.parse("000000")).not.toThrow();
@@ -56,7 +56,7 @@ describe("qr-generate-tool.contract", () => {
       const schema = qrGenerateInputSchema.format;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid formats
       expect(() => schema.parse("png")).not.toThrow();
       expect(() => schema.parse("svg")).not.toThrow();
@@ -66,7 +66,7 @@ describe("qr-generate-tool.contract", () => {
       const schema = qrGenerateInputSchema.margin;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid margins
       expect(() => schema.parse(0)).not.toThrow();
       expect(() => schema.parse(4)).not.toThrow();

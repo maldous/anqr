@@ -20,11 +20,7 @@ describe("qrCapabilitiesResourceSchema", () => {
         maxBytes: 10485760,
         timeoutMs: 5000,
       },
-      safety: [
-        "HTTPS-only overlay fetching",
-        "Private network blocking",
-        "Redirect validation",
-      ],
+      safety: ["HTTPS-only overlay fetching", "Private network blocking", "Redirect validation"],
     };
 
     expect(() => qrCapabilitiesResourceSchema.parse(valid)).not.toThrow();

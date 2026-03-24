@@ -405,15 +405,15 @@ The bridge combines:
 
 ### Supported Providers
 
-| Provider   | AI SDK Integration            | Notes                                           |
-| ---------- | ----------------------------- | ----------------------------------------------- |
-| codebuff   | OpenAI-compatible             | Routes through codebuff-bridge at `:4318`        |
-| groq       | `@ai-sdk/groq`                | Free, fast                                       |
-| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API               |
-| openclaw   | OpenAI-compatible             | Local gateway at `http://127.0.0.1:18789/v1`    |
-| mistral    | OpenAI-compatible             | `https://api.mistral.ai/v1`                      |
-| gemini     | `@ai-sdk/google`              | Gemini 2.5 Flash models                          |
-| codex      | Codex SDK                     | Uses `@openai/codex-sdk` directly                |
+| Provider   | AI SDK Integration            | Notes                                        |
+| ---------- | ----------------------------- | -------------------------------------------- |
+| codebuff   | OpenAI-compatible             | Routes through codebuff-bridge at `:4318`    |
+| groq       | `@ai-sdk/groq`                | Free, fast                                   |
+| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API           |
+| openclaw   | OpenAI-compatible             | Local gateway at `http://127.0.0.1:18789/v1` |
+| mistral    | OpenAI-compatible             | `https://api.mistral.ai/v1`                  |
+| gemini     | `@ai-sdk/google`              | Gemini 2.5 Flash models                      |
+| codex      | Codex SDK                     | Uses `@openai/codex-sdk` directly            |
 
 ### Available Tools
 

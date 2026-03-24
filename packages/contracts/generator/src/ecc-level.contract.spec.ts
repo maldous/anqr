@@ -17,7 +17,7 @@ describe("ecc-level.contract (generator)", () => {
       const m: ECCLevel = "M"; // 15% redundancy
       const q: ECCLevel = "Q"; // 25% redundancy
       const h: ECCLevel = "H"; // 30% redundancy
-      
+
       expect(l).toBe("L");
       expect(m).toBe("M");
       expect(q).toBe("Q");

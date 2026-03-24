@@ -6,7 +6,7 @@ describe("qr-generate-prompt.contract", () => {
     it("should define intent as required enum", () => {
       const schema = qrGeneratePromptArgsSchema.intent;
       expect(schema).toBeDefined();
-      
+
       // Test valid intent values
       expect(() => schema.parse("url")).not.toThrow();
       expect(() => schema.parse("wifi")).not.toThrow();
@@ -19,7 +19,7 @@ describe("qr-generate-prompt.contract", () => {
       const schema = qrGeneratePromptArgsSchema.data;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid data
       expect(() => schema.parse("https://example.com")).not.toThrow();
       expect(() => schema.parse(undefined)).not.toThrow();
@@ -29,7 +29,7 @@ describe("qr-generate-prompt.contract", () => {
       const schema = qrGeneratePromptArgsSchema.format;
       expect(schema).toBeDefined();
       expect(schema.isOptional()).toBe(true);
-      
+
       // Test valid formats
       expect(() => schema.parse("png")).not.toThrow();
       expect(() => schema.parse("svg")).not.toThrow();

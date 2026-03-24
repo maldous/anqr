@@ -1740,6 +1740,11 @@ const server = http.createServer(async (req, res) => {
     // POST /v1/chat/completions
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
+      
+      // Diagnostic logging for empty messages debugging
+      console.log(`[symphony-bridge] 🔍 Request body keys: ${Object.keys(body).join(", ")}`);
+      console.log(`[symphony-bridge] 🔍 body.messages type: ${typeof body.messages}, isArray: ${Array.isArray(body.messages)}, length: ${body.messages?.length ?? "undefined"}`);
+      
       const route = resolveRoute(body.model || MODEL_ID);
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
@@ -1752,6 +1757,10 @@ const server = http.createServer(async (req, res) => {
         console.error(`[symphony-bridge]   body.messages type: ${typeof body.messages}`);
         console.error(
           `[symphony-bridge]   body.messages value: ${JSON.stringify(body.messages).slice(0, 200)}`,
+        );
+        console.error(`[symphony-bridge]   Full request body keys: ${Object.keys(body).join(", ")}`);
+        console.error(
+          `[symphony-bridge]   Request headers: ${JSON.stringify(req.headers).slice(0, 300)}`,
         );
         return sendJson(res, 400, {
           error: {

@@ -36,8 +36,13 @@ const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runn
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
-const CODEBUFF_MAX_CONTINUATIONS = 5; // Max auto-continue loops when agent ends turn with work remaining
-const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "set_output", "end_turn", "lookup_agent_info"]);
+const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
+const CODEBUFF_NOISY_TOOLS = new Set([
+  "set_messages",
+  "set_output",
+  "end_turn",
+  "lookup_agent_info",
+]);
 const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
 function formatElapsed(ms) {
@@ -221,7 +226,9 @@ async function testApiKey(apiKey, index) {
     }
 
     // Free mode also failed - return error with clear message for symphony-bridge fallback
-    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`);
+    console.warn(
+      `[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`,
+    );
     return { works: false, mode: null, error: "both_modes_exhausted" };
   }
 
@@ -248,7 +255,9 @@ async function testApiKey(apiKey, index) {
     return { works: true, mode: "free" };
   }
 
-  console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`);
+  console.warn(
+    `[bridge] Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`,
+  );
   return { works: false, mode: null, error: "both_modes_exhausted" };
 }
 
@@ -609,7 +618,9 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
         console.log(`[bridge] 🤖 codebuff subagent: ${name}`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
-        console.log(`[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`);
+        console.log(
+          `[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`,
+        );
       } else if (type === "agent_start" || type === "agent_finish") {
         console.log(`[bridge] 🤖 codebuff ${type}`);
       } else if (type === "error") {
@@ -633,9 +644,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
   };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
-  let result = await suppressSDKErrors(() =>
-    Promise.race([client.run(runOpts), makeTimeout()]),
-  )();
+  let result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), makeTimeout()]))();
 
   // Error checks on initial run
   const output = result.output;
@@ -650,12 +659,11 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
   // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
   let continuation = 0;
-  while (
-    continuation < CODEBUFF_MAX_CONTINUATIONS &&
-    lastSubgoalStatus === "IN_PROGRESS"
-  ) {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
-    console.log(`[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`);
+    console.log(
+      `[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
+    );
     maybeGC();
 
     const contOpts = {
@@ -667,9 +675,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
     };
     if (attempt.costMode) contOpts.costMode = attempt.costMode;
 
-    result = await suppressSDKErrors(() =>
-      Promise.race([client.run(contOpts), makeTimeout()]),
-    )();
+    result = await suppressSDKErrors(() => Promise.race([client.run(contOpts), makeTimeout()]))();
 
     const contOutput = result.output;
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
@@ -681,7 +687,9 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
   }
 
   if (continuation > 0) {
-    console.log(`[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
+    console.log(
+      `[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
+    );
   }
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
@@ -855,7 +863,9 @@ async function trySingleAccountStream(
         streamActivity(`🤖 ${name}\n`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
-        console.log(`[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`);
+        console.log(
+          `[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`,
+        );
       } else if (type === "agent_start" || type === "agent_finish") {
         console.log(`[bridge] 🤖 codebuff ${type}`);
       } else if (type === "error") {
@@ -894,9 +904,7 @@ async function trySingleAccountStream(
   };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
-  let result = await suppressSDKErrors(() =>
-    Promise.race([client.run(runOpts), makeTimeout()]),
-  )();
+  let result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), makeTimeout()]))();
 
   // Error checks on initial run
   const output = result.output || "";
@@ -911,12 +919,11 @@ async function trySingleAccountStream(
   // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
   let continuation = 0;
-  while (
-    continuation < CODEBUFF_MAX_CONTINUATIONS &&
-    lastSubgoalStatus === "IN_PROGRESS"
-  ) {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
-    console.log(`[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`);
+    console.log(
+      `[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
+    );
     streamActivity(`\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS})...\n`);
     maybeGC();
 
@@ -929,9 +936,7 @@ async function trySingleAccountStream(
     };
     if (attempt.costMode) contOpts.costMode = attempt.costMode;
 
-    result = await suppressSDKErrors(() =>
-      Promise.race([client.run(contOpts), makeTimeout()]),
-    )();
+    result = await suppressSDKErrors(() => Promise.race([client.run(contOpts), makeTimeout()]))();
 
     const contOutput = result.output || "";
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
@@ -943,7 +948,9 @@ async function trySingleAccountStream(
   }
 
   if (continuation > 0) {
-    console.log(`[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
+    console.log(
+      `[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
+    );
   }
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
@@ -998,7 +1005,13 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
 
   try {
     return await trySingleAccountStream(
-      winner, prompt, makeTimeout, cwd, trackedOnChunk, completionId, created,
+      winner,
+      prompt,
+      makeTimeout,
+      cwd,
+      trackedOnChunk,
+      completionId,
+      created,
     );
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message) && chunksSent === 0) {
@@ -1019,7 +1032,13 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
       console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
       return await trySingleAccountStream(
-        freeAttempt, prompt, makeTimeout, cwd, onChunk, completionId, created,
+        freeAttempt,
+        prompt,
+        makeTimeout,
+        cwd,
+        onChunk,
+        completionId,
+        created,
       );
     }
     throw err;
@@ -1298,7 +1317,7 @@ const server = http.createServer(async (req, res) => {
 
         // Extract text content, filtering out tool-call metadata for clean response
         const { text: filteredContent } = extractTextFromResponse(result.text);
-        
+
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",

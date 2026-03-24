@@ -31,7 +31,7 @@ describe("qr-output-options.contract", () => {
       const pngOptions: QROutputOptions["format"] = "png";
       const svgOptions: QROutputOptions["format"] = "svg";
       const webpOptions: QROutputOptions["format"] = "webp";
-      
+
       expect(pngOptions).toBe("png");
       expect(svgOptions).toBe("svg");
       expect(webpOptions).toBe("webp");
