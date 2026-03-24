@@ -387,9 +387,9 @@ describe("truncateMessagesForProvider", () => {
   });
 
   describe("edge cases", () => {
-    it("handles empty message array", () => {
+    it("handles empty message array by returning fallback message", () => {
       const result = truncateMessagesForProvider([], "cerebras");
-      expect(result).toEqual([]);
+      expect(result).toEqual([{ role: "user", content: "[Error: No messages provided]" }]);
     });
 
     it("handles single message under budget", () => {

@@ -107,9 +107,11 @@ export function truncateMessageContent(msg, maxChars) {
 export function truncateMessagesForProvider(messages, providerName) {
   // Validate input - must have at least one message
   if (!messages || messages.length === 0) {
-    throw new Error(
-      `truncateMessagesForProvider: messages array is empty (provider: ${providerName})`,
+    console.warn(
+      `[symphony-bridge] ⚠️ truncateMessagesForProvider: messages array is empty (provider: ${providerName}) - this should never happen`,
     );
+    // Return a minimal valid message to prevent AI SDK errors
+    return [{ role: "user", content: "[Error: No messages provided]" }];
   }
 
   const maxTokens = PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
