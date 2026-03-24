@@ -61,12 +61,12 @@ describe("qr-generate-prompt-args.contract", () => {
     it("should maintain readonly properties", () => {
       const args: QrGeneratePromptArgs = {
         intent: "payment",
-        data: "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", // cspell:disable-line
+        data: "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", // cspell:disable-line // cspell:disable-line
         format: "png",
       };
       expect(args).toEqual({
         intent: "payment",
-        data: "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", // cspell:disable-line
+        data: "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", // cspell:disable-line // cspell:disable-line
         format: "png",
       });
     });
