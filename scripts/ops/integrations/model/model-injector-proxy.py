@@ -33,7 +33,7 @@ from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, timezone
 
 OLLAMA_BASE = os.environ.get("OLLAMA_API_BASE", "http://localhost:11434")
-PINNED_MODEL = "qwen3-coder-next:latest"
+PINNED_MODEL = "qwen2.5-coder:3b-instruct"
 DEFAULT_PORT = 8400
 
 # Single-agent lock

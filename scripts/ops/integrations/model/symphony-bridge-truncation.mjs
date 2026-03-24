@@ -22,8 +22,7 @@ export const PROVIDER_MAX_INPUT_TOKENS = {
   cerebras: 6_000, // 8K total context
   "github-models": 100_000, // gpt-4.1-mini 128K
   "codebuff-bridge": 200_000, // managed internally
-  "ollama-local": 24_000, // qwen3-coder-next ~32K
-  "ollama-qwen2.5-coder-3b": 24_000,
+  "ollama-qwen2.5-coder-3b": 24_000, // qwen2.5-coder:3b-instruct ~32K
   "ollama-qwen2.5-coder-0.5b": 16_000,
 };
 export const DEFAULT_MAX_INPUT_TOKENS = 24_000; // OpenRouter and unknown providers

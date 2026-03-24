@@ -14,7 +14,7 @@
  */
 
 const OLLAMA_BASE = process.env.OLLAMA_API_BASE || "http://localhost:11434";
-const PINNED_MODEL = "qwen3-coder-next:latest";
+const PINNED_MODEL = "qwen2.5-coder:3b-instruct";
 const PROMPT_TIMEOUT_MS = 60_000;
 const PING_TIMEOUT_MS = 5_000;
 

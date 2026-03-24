@@ -1056,9 +1056,7 @@ async function invokeWithAI(provider, messages, options = {}) {
       `[symphony-bridge] ❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
     );
     console.error(`[symphony-bridge]   Original messages: ${messages?.length || 0}`);
-    console.error(
-      `[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`,
-    );
+    console.error(`[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`);
     console.error(
       `[symphony-bridge]   This should never happen - truncateMessagesForProvider has a fallback`,
     );
@@ -1744,7 +1742,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
       const body = await parseBody(req);
       const messages = Array.isArray(body.messages) ? body.messages : [];
-      
+
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
         console.warn(
@@ -1758,7 +1756,7 @@ const server = http.createServer(async (req, res) => {
           },
         });
       }
-      
+
       const route = resolveRoute(body.model || MODEL_ID);
       const stream = body.stream === true;
 
