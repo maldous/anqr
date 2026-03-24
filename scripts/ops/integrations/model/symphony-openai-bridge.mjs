@@ -952,6 +952,14 @@ function convertMessages(messages) {
   });
 }
 
+// Providers that don't support function calling / tool use.
+// These are coding-focused local models — they generate tool-call JSON as plain
+// text instead of using the structured tool protocol, which causes AI SDK's
+// streamText to hang indefinitely.
+function providerSupportsTools(providerName) {
+  return !providerName.startsWith("ollama");
+}
+
 /**
  * Invoke AI SDK with a provider, handling tool execution
  */
@@ -973,7 +981,8 @@ async function invokeWithAI(provider, messages, options = {}) {
     throw new Error(`Provider ${provider.name} not supported with AI SDK`);
   }
 
-  console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})`);
+  const useTools = providerSupportsTools(provider.name);
+  console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? '' : ' [no-tools]'}`);
 
   // Convert messages to AI SDK format
   const aiMessages = convertMessages(messages);
@@ -981,13 +990,11 @@ async function invokeWithAI(provider, messages, options = {}) {
   if (stream) {
     let finishReason = null;
 
-    // Streaming with tool execution
+    // Streaming with tool execution (tools disabled for providers that don't support them)
     const result = await streamText({
       model,
       messages: aiMessages,
-      tools,
-      toolChoice: "auto",
-      stopWhen: stepCountIs(MAX_TOOL_ITERATIONS),
+      ...(useTools ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) } : {}),
       onStepFinish: (step) => {
         if (onChunk) {
           if (step.reasoning && step.reasoning.length > 0) {
@@ -1076,13 +1083,11 @@ async function invokeWithAI(provider, messages, options = {}) {
       providerName: provider.name,
     };
   } else {
-    // Non-streaming with tool execution
+    // Non-streaming with tool execution (tools disabled for providers that don't support them)
     const result = await generateText({
       model,
       messages: aiMessages,
-      tools,
-      toolChoice: "auto",
-      stopWhen: stepCountIs(MAX_TOOL_ITERATIONS),
+      ...(useTools ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) } : {}),
     });
 
     let text = result.text || "";
