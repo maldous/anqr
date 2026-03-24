@@ -640,7 +640,7 @@ function errorToString(err) {
 
 function isRetryableError(err) {
   const errStr = (typeof err === "string" ? err : errorToString(err)).toLowerCase();
-  const isRetryable = (
+  const isRetryable =
     errStr.includes("429") ||
     errStr.includes("402") ||
     errStr.includes("quota") ||
@@ -680,19 +680,31 @@ function isRetryableError(err) {
     errStr.includes("request too large") ||
     errStr.includes("reduce the length") ||
     errStr.includes("too many tokens") ||
-    errStr.includes("failed_generation")
-  );
-  
+    errStr.includes("failed_generation");
+
   // Log credit exhaustion errors for debugging
-  if (isRetryable && (errStr.includes("codebuff") || errStr.includes("credits") || errStr.includes("payment"))) {
-    console.log(`[symphony-bridge] 💳 Detected retryable credit/payment error: ${errStr.slice(0, 150)}`);
+  if (
+    isRetryable &&
+    (errStr.includes("codebuff") || errStr.includes("credits") || errStr.includes("payment"))
+  ) {
+    console.log(
+      `[symphony-bridge] 💳 Detected retryable credit/payment error: ${errStr.slice(0, 150)}`,
+    );
   }
-  
+
   // Log connection errors for debugging
-  if (isRetryable && (errStr.includes("econnrefused") || errStr.includes("econnreset") || errStr.includes("aborted") || errStr.includes("socket"))) {
-    console.log(`[symphony-bridge] 🔌 Detected retryable connection error: ${errStr.slice(0, 150)}`);
+  if (
+    isRetryable &&
+    (errStr.includes("econnrefused") ||
+      errStr.includes("econnreset") ||
+      errStr.includes("aborted") ||
+      errStr.includes("socket"))
+  ) {
+    console.log(
+      `[symphony-bridge] 🔌 Detected retryable connection error: ${errStr.slice(0, 150)}`,
+    );
   }
-  
+
   return isRetryable;
 }
 
@@ -1037,6 +1049,13 @@ async function invokeWithAI(provider, messages, options = {}) {
   const rawMessages = convertMessages(messages);
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
 
+  // Validate that we have at least one message after truncation
+  if (!aiMessages || aiMessages.length === 0) {
+    throw new Error(
+      `Message truncation resulted in empty array for provider ${provider.name} - original had ${messages.length} messages`,
+    );
+  }
+
   if (stream) {
     let finishReason = null;
 
@@ -1253,11 +1272,12 @@ async function invokeWithFallback(messages, route) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-      const errorMsg = excludedByProbe.length > 0
-        ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-        : lastError
-          ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
-          : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      const errorMsg =
+        excludedByProbe.length > 0
+          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+          : lastError
+            ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
+            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       throw new Error(errorMsg);
     }
 
@@ -1355,11 +1375,12 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-      const errorMsg = excludedByProbe.length > 0
-        ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-        : lastError
-          ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
-          : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      const errorMsg =
+        excludedByProbe.length > 0
+          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+          : lastError
+            ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
+            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       throw new Error(errorMsg);
     }
 
