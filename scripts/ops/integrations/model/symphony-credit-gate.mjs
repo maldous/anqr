@@ -43,7 +43,6 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Codex } from "@openai/codex-sdk";
 import {
-  RUNNER_OLLAMA_MODEL,
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PROVIDER_FAILURE_WINDOW_SECS,
   RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
@@ -505,14 +504,7 @@ const PROVIDERS = [
     probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini"),
   },
 
-  {
-    name: "ollama-local",
-    tier: TIER_LOCAL_SAFETY_NET,
-    model: RUNNER_OLLAMA_MODEL,
-    baseUrl: RUNNER_OLLAMA_BASE_URL,
-    envVar: null,
-    probe: () => probeOllamaModel(RUNNER_OLLAMA_MODEL),
-  },
+
   {
     name: "ollama-qwen2.5-coder-3b",
     tier: TIER_LOCAL_SAFETY_NET,
