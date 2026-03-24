@@ -130,7 +130,8 @@ function extractTextFromSdkOutput(raw) {
           const texts = [];
           for (const part of msg.content) {
             if (part?.type === "text" && part.text) texts.push(part.text);
-            else if (part?.type === "reasoning" && (part.reasoning || part.content)) texts.push(part.reasoning || part.content);
+            else if (part?.type === "reasoning" && (part.reasoning || part.content))
+              texts.push(part.reasoning || part.content);
           }
           if (texts.length > 0) return texts.join("\n");
         }
@@ -139,7 +140,9 @@ function extractTextFromSdkOutput(raw) {
     if (parsed?.role === "assistant") {
       if (typeof parsed.content === "string") return parsed.content;
     }
-  } catch { /* not JSON, return as-is */ }
+  } catch {
+    /* not JSON, return as-is */
+  }
   return str;
 }
 
@@ -152,7 +155,7 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
   const codebuffStartTime = Date.now();
 
   console.log(`[symphony-bridge] Using Codebuff SDK directly`);
-  logMemory('codebuff-start');
+  logMemory("codebuff-start");
 
   const client = new CodebuffClient({
     apiKey,
@@ -179,153 +182,170 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
 
   const callbacks = {
     handleEvent: (event) => {
-        try {
-          if (!event) return;
+      try {
+        if (!event) return;
 
-          // Text events are delivered via handleStreamChunk (token-by-token); skip to avoid duplication
-          if (event.type === "text") return;
+        // Text events are delivered via handleStreamChunk (token-by-token); skip to avoid duplication
+        if (event.type === "text") return;
 
-          if (event.type === "tool_call") {
-            const toolName = event.toolName || "unknown";
-            const input = event.input || {};
+        if (event.type === "tool_call") {
+          const toolName = event.toolName || "unknown";
+          const input = event.input || {};
 
-            // Filter noisy internal tools — log only, don't stream
-            if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-              console.log(`[symphony-bridge] codebuff ${toolName} (internal)`);
-              return;
-            }
+          // Filter noisy internal tools — log only, don't stream
+          if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
+            console.log(`[symphony-bridge] codebuff ${toolName} (internal)`);
+            return;
+          }
 
-            // Track subgoal status for continuation decisions
-            if (toolName === "update_subgoal") {
-              lastSubgoalStatus = input.status || lastSubgoalStatus;
-            }
-            if (toolName === "add_subgoal") {
-              lastSubgoalStatus = input.status || "IN_PROGRESS";
-            }
+          // Track subgoal status for continuation decisions
+          if (toolName === "update_subgoal") {
+            lastSubgoalStatus = input.status || lastSubgoalStatus;
+          }
+          if (toolName === "add_subgoal") {
+            lastSubgoalStatus = input.status || "IN_PROGRESS";
+          }
 
-            // Format user-facing tool activity based on known Codebuff tools
-            let display;
-            if (toolName === "read_files" && input.paths) {
-              const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
-              display = `📖 Reading: ${paths}`;
-            } else if (toolName === "str_replace") {
-              display = `✏️ Editing: ${input.path || "file"}`;
-            } else if (toolName === "write_file") {
-              display = `📝 Writing: ${input.path || "file"}`;
-            } else if (toolName === "run_terminal_command") {
-              const cmd = (input.command || "").slice(0, 120);
-              display = `💻 Running: ${cmd}`;
-            } else if (toolName === "code_search") {
-              display = `🔍 Searching: ${input.pattern || input.query || ""}`;
-            } else if (toolName === "spawn_agent_inline") {
-              const agentType = input.agent_type || "agent";
-              if (agentType === "context-pruner") {
-                console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
-                return;
-              }
-              display = `🤖 Spawning: ${agentType}`;
-            } else if (toolName === "spawn_agents") {
-              const agents = input.agents || [];
-              const types = agents.map((a) => a.agent_type).filter(Boolean);
-              display = `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
-            } else if (toolName === "add_subgoal") {
-              const obj = (input.objective || "").slice(0, 120);
-              display = `🎯 Goal: ${obj}`;
-            } else if (toolName === "update_subgoal") {
-              const log = (input.log || input.status || "").slice(0, 120);
-              display = `📋 Progress: ${log}`;
-            } else if (toolName === "think_deeply") {
-              display = `🧠 Thinking deeply...`;
-            } else if (toolName === "create_plan") {
-              display = `📋 Creating plan...`;
-            } else if (toolName === "browser_logs") {
-              display = `🌐 Checking browser...`;
-            } else {
-              const args = JSON.stringify(input).slice(0, 150);
-              display = `🔧 ${toolName}: ${args}`;
-            }
-
-            console.log(`[symphony-bridge] ${display}`);
-            if (onChunk) {
-              onChunk({ type: "text", text: `${display}\n` });
-            }
-          } else if (event.type === "tool_result") {
-            console.log(`[symphony-bridge] ✅ codebuff ${event.toolName || "tool"} done`);
-          } else if (event.type === "reasoning_delta") {
-            if (event.text && onChunk) {
-              onChunk({ type: "text", text: `💡 ${event.text}\n` });
-            }
-          } else if (event.type === "subagent_start") {
-            const name = event.displayName || event.agentType || "subagent";
-            if (name.toLowerCase() === "context pruner" || (event.agentType || "").includes("context-pruner")) {
+          // Format user-facing tool activity based on known Codebuff tools
+          let display;
+          if (toolName === "read_files" && input.paths) {
+            const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
+            display = `📖 Reading: ${paths}`;
+          } else if (toolName === "str_replace") {
+            display = `✏️ Editing: ${input.path || "file"}`;
+          } else if (toolName === "write_file") {
+            display = `📝 Writing: ${input.path || "file"}`;
+          } else if (toolName === "run_terminal_command") {
+            const cmd = (input.command || "").slice(0, 120);
+            display = `💻 Running: ${cmd}`;
+          } else if (toolName === "code_search") {
+            display = `🔍 Searching: ${input.pattern || input.query || ""}`;
+          } else if (toolName === "spawn_agent_inline") {
+            const agentType = input.agent_type || "agent";
+            if (agentType === "context-pruner") {
               console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
               return;
             }
-            console.log(`[symphony-bridge] 🤖 codebuff subagent: ${name}`);
-            if (onChunk) {
-              onChunk({ type: "text", text: `🤖 ${name}\n` });
-            }
-          } else if (event.type === "subagent_finish") {
-            const name = event.displayName || event.agentType || "subagent";
-            if (name.toLowerCase() === "context pruner" || (event.agentType || "").includes("context-pruner")) return;
-            console.log(`[symphony-bridge] 🤖 codebuff ${name} done`);
-          } else if (event.type === "agent_start" || event.type === "agent_finish") {
-            console.log(`[symphony-bridge] 🤖 codebuff ${event.type}`);
-          } else if (event.type === "error") {
-            console.log(`[symphony-bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
-            if (onChunk) {
-              onChunk({ type: "text", text: `❌ Error: ${event.message || "unknown error"}\n` });
-            }
+            display = `🤖 Spawning: ${agentType}`;
+          } else if (toolName === "spawn_agents") {
+            const agents = input.agents || [];
+            const types = agents.map((a) => a.agent_type).filter(Boolean);
+            display = `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
+          } else if (toolName === "add_subgoal") {
+            const obj = (input.objective || "").slice(0, 120);
+            display = `🎯 Goal: ${obj}`;
+          } else if (toolName === "update_subgoal") {
+            const log = (input.log || input.status || "").slice(0, 120);
+            display = `📋 Progress: ${log}`;
+          } else if (toolName === "think_deeply") {
+            display = `🧠 Thinking deeply...`;
+          } else if (toolName === "create_plan") {
+            display = `📋 Creating plan...`;
+          } else if (toolName === "browser_logs") {
+            display = `🌐 Checking browser...`;
           } else {
-            console.log(`[symphony-bridge] codebuff event: ${event.type}`);
+            const args = JSON.stringify(input).slice(0, 150);
+            display = `🔧 ${toolName}: ${args}`;
           }
-        } catch (err) {
-          console.log(`[symphony-bridge] handleEvent error: ${err.message}`);
-        }
-      },
-      handleStreamChunk: (chunk) => {
-        try {
-          if (!onChunk) return;
-          if (typeof chunk === "string") {
-            onChunk({ type: "text", text: chunk });
-          } else if (chunk && chunk.chunk) {
-            onChunk({ type: "text", text: chunk.chunk });
+
+          console.log(`[symphony-bridge] ${display}`);
+          if (onChunk) {
+            onChunk({ type: "text", text: `${display}\n` });
           }
-        } catch (err) {
-          console.log(`[symphony-bridge] handleStreamChunk error: ${err.message}`);
+        } else if (event.type === "tool_result") {
+          console.log(`[symphony-bridge] ✅ codebuff ${event.toolName || "tool"} done`);
+        } else if (event.type === "reasoning_delta") {
+          if (event.text && onChunk) {
+            onChunk({ type: "text", text: `💡 ${event.text}\n` });
+          }
+        } else if (event.type === "subagent_start") {
+          const name = event.displayName || event.agentType || "subagent";
+          if (
+            name.toLowerCase() === "context pruner" ||
+            (event.agentType || "").includes("context-pruner")
+          ) {
+            console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
+            return;
+          }
+          console.log(`[symphony-bridge] 🤖 codebuff subagent: ${name}`);
+          if (onChunk) {
+            onChunk({ type: "text", text: `🤖 ${name}\n` });
+          }
+        } else if (event.type === "subagent_finish") {
+          const name = event.displayName || event.agentType || "subagent";
+          if (
+            name.toLowerCase() === "context pruner" ||
+            (event.agentType || "").includes("context-pruner")
+          )
+            return;
+          console.log(`[symphony-bridge] 🤖 codebuff ${name} done`);
+        } else if (event.type === "agent_start" || event.type === "agent_finish") {
+          console.log(`[symphony-bridge] 🤖 codebuff ${event.type}`);
+        } else if (event.type === "error") {
+          console.log(
+            `[symphony-bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`,
+          );
+          if (onChunk) {
+            onChunk({ type: "text", text: `❌ Error: ${event.message || "unknown error"}\n` });
+          }
+        } else {
+          console.log(`[symphony-bridge] codebuff event: ${event.type}`);
         }
-      },
+      } catch (err) {
+        console.log(`[symphony-bridge] handleEvent error: ${err.message}`);
+      }
+    },
+    handleStreamChunk: (chunk) => {
+      try {
+        if (!onChunk) return;
+        if (typeof chunk === "string") {
+          onChunk({ type: "text", text: chunk });
+        } else if (chunk && chunk.chunk) {
+          onChunk({ type: "text", text: chunk.chunk });
+        }
+      } catch (err) {
+        console.log(`[symphony-bridge] handleStreamChunk error: ${err.message}`);
+      }
+    },
   };
 
   // Initial run
-  console.log(`[symphony-bridge] ⏱️ Codebuff initial run starting (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`);
+  console.log(
+    `[symphony-bridge] ⏱️ Codebuff initial run starting (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`,
+  );
   let result = await client.run({
     agent: model || "codebuff/base",
     prompt,
     maxAgentSteps: CODEBUFF_MAX_STEPS,
     ...callbacks,
   });
-  console.log(`[symphony-bridge] ⏱️ Codebuff initial run complete (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`);
+  console.log(
+    `[symphony-bridge] ⏱️ Codebuff initial run complete (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`,
+  );
 
   // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task
   // Guarded by both iteration count AND elapsed time to prevent infinite hangs
   let continuation = 0;
-  while (
-    continuation < CODEBUFF_MAX_CONTINUATIONS &&
-    lastSubgoalStatus === "IN_PROGRESS"
-  ) {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     const elapsed = Date.now() - codebuffStartTime;
     if (elapsed > CODEBUFF_MAX_ELAPSED_MS) {
-      console.log(`[symphony-bridge] ⏱️ ⚠️ Codebuff elapsed time limit reached (${formatElapsed(elapsed)} > ${formatElapsed(CODEBUFF_MAX_ELAPSED_MS)}) — stopping continuation loop`);
-      logMemory('codebuff-timeout');
+      console.log(
+        `[symphony-bridge] ⏱️ ⚠️ Codebuff elapsed time limit reached (${formatElapsed(elapsed)} > ${formatElapsed(CODEBUFF_MAX_ELAPSED_MS)}) — stopping continuation loop`,
+      );
+      logMemory("codebuff-timeout");
       break;
     }
 
     continuation++;
-    console.log(`[symphony-bridge] 🔄 Codebuff auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS, elapsed: ${formatElapsed(elapsed)})`);
+    console.log(
+      `[symphony-bridge] 🔄 Codebuff auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS, elapsed: ${formatElapsed(elapsed)})`,
+    );
     if (onChunk) {
-      onChunk({ type: "text", text: `\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS}, ${formatElapsed(elapsed)})...\n` });
+      onChunk({
+        type: "text",
+        text: `\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS}, ${formatElapsed(elapsed)})...\n`,
+      });
     }
 
     maybeGC();
@@ -344,11 +364,13 @@ async function invokeWithCodebuff(provider, messages, options = {}) {
 
   const totalElapsed = Date.now() - codebuffStartTime;
   if (continuation > 0) {
-    console.log(`[symphony-bridge] Codebuff completed after ${continuation + 1} runs in ${formatElapsed(totalElapsed)} (subgoal: ${lastSubgoalStatus})`);
+    console.log(
+      `[symphony-bridge] Codebuff completed after ${continuation + 1} runs in ${formatElapsed(totalElapsed)} (subgoal: ${lastSubgoalStatus})`,
+    );
   } else {
     console.log(`[symphony-bridge] Codebuff completed in ${formatElapsed(totalElapsed)}`);
   }
-  logMemory('codebuff-done');
+  logMemory("codebuff-done");
 
   const rawText = ensureString(result?.text || result?.output || "");
   const text = extractTextFromSdkOutput(rawText);
@@ -592,8 +614,8 @@ function createOpenAiCompatibleModel(model, apiKey, baseURL, fallbackApiKey) {
     baseURL,
     apiKey: apiKey || fallbackApiKey,
     compatibility: "compatible",
-  // .chat() forces /v1/chat/completions — required for non-OpenAI providers
-  // (AI SDK v6 defaults to /v1/responses which third-party APIs don't support)
+    // .chat() forces /v1/chat/completions — required for non-OpenAI providers
+    // (AI SDK v6 defaults to /v1/responses which third-party APIs don't support)
   }).chat(model);
 }
 
@@ -784,7 +806,6 @@ if (VALID_TOKENS.size > 1) {
 
 const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
 
-
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
 const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
 const CODEBUFF_MAX_ELAPSED_MS = 20 * 60 * 1000; // 20 min — hard elapsed-time limit for Codebuff continuation loops
@@ -796,7 +817,12 @@ const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response
 const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
 // Codebuff SDK internal tools — log only, don't stream to client
-const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "set_output", "end_turn", "lookup_agent_info"]);
+const CODEBUFF_NOISY_TOOLS = new Set([
+  "set_messages",
+  "set_output",
+  "end_turn",
+  "lookup_agent_info",
+]);
 
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
@@ -898,7 +924,11 @@ function errorToString(err) {
   if (typeof err === "string") return err;
   if (err && typeof err === "object") {
     if (err.message) return `${err.type || err.name || "Error"}: ${err.message}`;
-    try { return JSON.stringify(err).slice(0, 300); } catch { return "[unserializable error]"; }
+    try {
+      return JSON.stringify(err).slice(0, 300);
+    } catch {
+      return "[unserializable error]";
+    }
   }
   return String(err);
 }
@@ -1078,7 +1108,11 @@ async function probeToolCapabilityForProvider(providerDef) {
   // Resolve API key (mirrors credit-gate's resolveProviderApiKey)
   let apiKey = providerDef.envVar ? process.env[providerDef.envVar] : null;
   if (!apiKey && providerDef.loadToken) {
-    try { apiKey = await providerDef.loadToken(); } catch { /* ignore */ }
+    try {
+      apiKey = await providerDef.loadToken();
+    } catch {
+      /* ignore */
+    }
   }
 
   const providerObj = { ...providerDef, apiKey };
@@ -1176,9 +1210,7 @@ async function probeAllToolCapability() {
     return;
   }
 
-  console.log(
-    `[symphony-bridge] 🔧 Tool capability probe: testing ${toProbe.length} providers...`,
-  );
+  console.log(`[symphony-bridge] 🔧 Tool capability probe: testing ${toProbe.length} providers...`);
 
   const results = [];
   for (let i = 0; i < toProbe.length; i += TOOL_PROBE_BATCH_SIZE) {
@@ -1223,13 +1255,17 @@ async function probeAllToolCapability() {
       );
       setTimeout(async () => {
         try {
-          console.log(`[symphony-bridge] 🔧 Retry tool probe for ${names.length} unclassified providers...`);
+          console.log(
+            `[symphony-bridge] 🔧 Retry tool probe for ${names.length} unclassified providers...`,
+          );
           await probeAllToolCapability();
           const remaining = names.filter(
             (n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n),
           );
           if (remaining.length > 0) {
-            console.log(`[symphony-bridge] 🔧 Still unclassified after retry: ${remaining.join(", ")}`);
+            console.log(
+              `[symphony-bridge] 🔧 Still unclassified after retry: ${remaining.join(", ")}`,
+            );
           }
         } catch (err) {
           console.error(`[symphony-bridge] Tool probe retry failed: ${err.message}`);
@@ -1261,7 +1297,9 @@ async function invokeWithAI(provider, messages, options = {}) {
   }
 
   const useTools = providerSupportsTools(provider.name);
-  console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? '' : ' [no-tools]'}`);
+  console.log(
+    `[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
+  );
 
   // Convert messages to AI SDK format and truncate for provider's context limit
   const rawMessages = convertMessages(messages);
@@ -1274,12 +1312,14 @@ async function invokeWithAI(provider, messages, options = {}) {
     const result = await streamText({
       model,
       messages: aiMessages,
-      ...(useTools ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) } : {}),
+      ...(useTools
+        ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
+        : {}),
       onStepFinish: (step) => {
         if (step.toolCalls && step.toolCalls.length > 0) {
           for (const tc of step.toolCalls) {
             const input = tc.input ?? tc.args;
-            const summary = input ? JSON.stringify(input).slice(0, 200) : '';
+            const summary = input ? JSON.stringify(input).slice(0, 200) : "";
             console.log(`[symphony-bridge] 🔧 ${tc.toolName}: ${summary}`);
           }
         }
@@ -1287,10 +1327,14 @@ async function invokeWithAI(provider, messages, options = {}) {
       onFinish: (event) => {
         finishReason = event.finishReason;
         if (finishReason === "error" || !event.text) {
-          console.log(`[symphony-bridge] ⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`);
+          console.log(
+            `[symphony-bridge] ⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`,
+          );
         }
         if (finishReason === "tool-calls") {
-          console.log(`[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`);
+          console.log(
+            `[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
+          );
         }
       },
     });
@@ -1355,7 +1399,9 @@ async function invokeWithAI(provider, messages, options = {}) {
       try {
         const fallbackText = await result.text;
         if (fallbackText && fallbackText.trim()) {
-          console.log(`[symphony-bridge] ⚠️ fullStream produced no text-delta events, recovered ${fallbackText.length} chars from result.text`);
+          console.log(
+            `[symphony-bridge] ⚠️ fullStream produced no text-delta events, recovered ${fallbackText.length} chars from result.text`,
+          );
           fullText = fallbackText;
           if (onChunk) {
             onChunk({ type: "text", text: fallbackText });
@@ -1363,7 +1409,9 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
       } catch (textErr) {
         // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
-        console.log(`[symphony-bridge] ⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`);
+        console.log(
+          `[symphony-bridge] ⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`,
+        );
       }
     }
 
@@ -1372,12 +1420,15 @@ async function invokeWithAI(provider, messages, options = {}) {
       throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
     }
     if (finishReason === "error") {
-      throw new Error(`Stream finished with error: ${streamErrorDetail || 'unknown'} (text: ${fullText.length} chars)`);
+      throw new Error(
+        `Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`,
+      );
     }
 
     // Handle truncated responses — model hit step limit while still wanting to execute tools
     if (finishReason === "tool-calls") {
-      const truncationNote = "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+      const truncationNote =
+        "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
       fullText += truncationNote;
       if (onChunk) {
         onChunk({ type: "text", text: truncationNote });
@@ -1386,8 +1437,10 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     // Check response for embedded error metadata
     const response = await result.response;
-    if (response && typeof response === 'object') {
-      const hasErrorSymbol = response[Symbol.for('vercel.ai.error')] || response[Symbol.for('vercel.ai.error.AI_APICallError')];
+    if (response && typeof response === "object") {
+      const hasErrorSymbol =
+        response[Symbol.for("vercel.ai.error")] ||
+        response[Symbol.for("vercel.ai.error.AI_APICallError")];
       if (hasErrorSymbol) {
         throw new Error(`Response contains embedded error`);
       }
@@ -1396,7 +1449,9 @@ async function invokeWithAI(provider, messages, options = {}) {
     // Runtime safety net (streaming): detect providers that emit tool calls as raw JSON text.
     // The stream is already delivered, so we can't retry — just mark for future exclusion.
     if (useTools && fullText && RAW_TOOL_JSON_RE.test(fullText)) {
-      console.log(`[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable for future requests`);
+      console.log(
+        `[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable for future requests`,
+      );
       nonToolCapableProviders.add(provider.name);
     }
 
@@ -1411,21 +1466,30 @@ async function invokeWithAI(provider, messages, options = {}) {
     const result = await generateText({
       model,
       messages: aiMessages,
-      ...(useTools ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) } : {}),
+      ...(useTools
+        ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
+        : {}),
     });
 
     let text = result.text || "";
 
     if (result.finishReason === "tool-calls") {
-      console.log(`[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`);
-      text += "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+      console.log(
+        `[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
+      );
+      text +=
+        "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
     }
 
     // Runtime safety net (non-streaming): detect raw JSON tool output and cascade to next provider
     if (useTools && text && RAW_TOOL_JSON_RE.test(text)) {
-      console.log(`[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable`);
+      console.log(
+        `[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable`,
+      );
       nonToolCapableProviders.add(provider.name);
-      throw new Error(`Provider ${provider.name} does not support structured tool calling — excluded`);
+      throw new Error(
+        `Provider ${provider.name} does not support structured tool calling — excluded`,
+      );
     }
 
     console.log(`[symphony-bridge] Completion done`);
@@ -1447,7 +1511,9 @@ async function invokeWithFallback(messages, route) {
   let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
   if (!provider) {
-    const excludedByProbe = (route.allowedNames || []).filter((n) => nonToolCapableProviders.has(n));
+    const excludedByProbe = (route.allowedNames || []).filter((n) =>
+      nonToolCapableProviders.has(n),
+    );
     throw new Error(
       excludedByProbe.length > 0
         ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
@@ -1563,7 +1629,9 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
   let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
   if (!provider) {
-    const excludedByProbe = (route.allowedNames || []).filter((n) => nonToolCapableProviders.has(n));
+    const excludedByProbe = (route.allowedNames || []).filter((n) =>
+      nonToolCapableProviders.has(n),
+    );
     throw new Error(
       excludedByProbe.length > 0
         ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
@@ -1571,7 +1639,9 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
     );
   }
 
-  console.log(`[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`);
+  console.log(
+    `[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`,
+  );
   triedProviders.push(provider.name);
 
   try {
@@ -1650,7 +1720,9 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
       }
     }
 
-    throw new Error(`All streaming providers failed (tried ${triedProviders.join(', ')}). Last error: ${lastErr}`);
+    throw new Error(
+      `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastErr}`,
+    );
   }
 }
 
@@ -1818,7 +1890,8 @@ const server = http.createServer(async (req, res) => {
   console.log(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
 
   try {
-    const skipAuth = req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers";
+    const skipAuth =
+      req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers";
     if (!skipAuth && !checkAuth(req)) {
       console.log(`[symphony-bridge] Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
@@ -1972,22 +2045,26 @@ const server = http.createServer(async (req, res) => {
       console.log(
         `[symphony-bridge] Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
       );
-      logMemory('request-start');
+      logMemory("request-start");
 
       const startTime = Date.now();
 
       // Progress logger — log elapsed time periodically during long requests
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
-        console.log(`[symphony-bridge] ⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`);
-        logMemory('request-progress');
+        console.log(
+          `[symphony-bridge] ⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`,
+        );
+        logMemory("request-progress");
       }, 60_000); // Log every 60 seconds
 
       // Hard request timeout — prevents infinite hangs regardless of provider state
       const requestTimeoutHandle = setTimeout(() => {
         const elapsed = Date.now() - startTime;
-        console.error(`[symphony-bridge] ⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`);
-        logMemory('request-timeout');
+        console.error(
+          `[symphony-bridge] ⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`,
+        );
+        logMemory("request-timeout");
         clearInterval(progressInterval);
         try {
           if (stream && !res.writableEnded) {
@@ -1996,13 +2073,26 @@ const server = http.createServer(async (req, res) => {
               object: "chat.completion.chunk",
               created: Math.floor(Date.now() / 1000),
               model: route.responseModelId,
-              choices: [{ index: 0, delta: { content: `\n[Error: Request timed out after ${formatElapsed(elapsed)}]` }, finish_reason: "stop" }],
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    content: `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
+                  },
+                  finish_reason: "stop",
+                },
+              ],
             };
             res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
             res.write("data: [DONE]\n\n");
             res.end();
           } else if (!res.writableEnded) {
-            sendJson(res, 504, { error: { message: `Request timed out after ${formatElapsed(elapsed)}`, type: "timeout_error" } });
+            sendJson(res, 504, {
+              error: {
+                message: `Request timed out after ${formatElapsed(elapsed)}`,
+                type: "timeout_error",
+              },
+            });
           }
         } catch (e) {
           console.error(`[symphony-bridge] Timeout cleanup error: ${e.message}`);
@@ -2021,7 +2111,11 @@ const server = http.createServer(async (req, res) => {
 
         // SSE heartbeat — keeps connection alive during long tool executions
         const heartbeat = setInterval(() => {
-          try { res.write(":ping\n\n"); } catch { /* connection closed */ }
+          try {
+            res.write(":ping\n\n");
+          } catch {
+            /* connection closed */
+          }
         }, 10000);
 
         const completionId = `chatcmpl-${Date.now()}`;
@@ -2075,7 +2169,9 @@ const server = http.createServer(async (req, res) => {
           clearInterval(heartbeat);
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
-          console.error(`[symphony-bridge] Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`);
+          console.error(
+            `[symphony-bridge] Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`,
+          );
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -2166,7 +2262,7 @@ const server = http.createServer(async (req, res) => {
     }
   } catch (error) {
     console.error(`[symphony-bridge] Error: ${error.message}`);
-    logMemory('request-error');
+    logMemory("request-error");
     sendJson(res, 500, {
       error: {
         message: error instanceof Error ? error.message : String(error),
@@ -2219,7 +2315,9 @@ server.listen(PORT, "127.0.0.1", () => {
   // Synchronously populate configured providers (no network calls)
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
   providerStatusCache.configured = getConfiguredProviders({ excludeNames });
-  console.log(`[symphony-bridge] Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`);
+  console.log(
+    `[symphony-bridge] Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`,
+  );
   if (BRIDGE_PROVIDER_BLOCKLIST.size > 0) {
     console.log(`[symphony-bridge] ⛔ Blocked providers (${BRIDGE_PROVIDER_BLOCKLIST.size}):`);
     for (const name of BRIDGE_PROVIDER_BLOCKLIST) {
@@ -2234,22 +2332,30 @@ server.listen(PORT, "127.0.0.1", () => {
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
       console.log(`[symphony-bridge] ========================================`);
-      console.log(`[symphony-bridge] Startup probe complete: ${available.length}/${total} providers available`);
+      console.log(
+        `[symphony-bridge] Startup probe complete: ${available.length}/${total} providers available`,
+      );
       for (const p of providerStatusCache.probeResults.filter((r) => r.status !== "excluded")) {
         const icon = p.available ? "✅" : "❌";
         const dur = p.durationMs > 0 ? ` (${p.durationMs}ms)` : "";
         console.log(`[symphony-bridge]   ${icon} ${p.name}: ${p.status}${dur}`);
       }
       if (nonToolCapableProviders.size > 0) {
-        console.log(`[symphony-bridge] 🚫 Non-tool-capable (excluded from selection): ${[...nonToolCapableProviders].join(", ")}`);
+        console.log(
+          `[symphony-bridge] 🚫 Non-tool-capable (excluded from selection): ${[...nonToolCapableProviders].join(", ")}`,
+        );
       }
       const unclassified = available
         .map((r) => r.name)
         .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n));
       if (unclassified.length > 0) {
-        console.log(`[symphony-bridge] ❓ Unclassified (${unclassified.length}, left in pool): ${unclassified.join(", ")}`);
+        console.log(
+          `[symphony-bridge] ❓ Unclassified (${unclassified.length}, left in pool): ${unclassified.join(", ")}`,
+        );
       }
-      console.log(`[symphony-bridge] ✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`);
+      console.log(
+        `[symphony-bridge] ✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
+      );
       console.log(`[symphony-bridge] ========================================`);
       console.log(`[symphony-bridge] Ready to accept requests`);
       console.log(`[symphony-bridge] ========================================`);
@@ -2271,4 +2377,3 @@ server.listen(PORT, "127.0.0.1", () => {
 
 // Export for testing
 export { invokeWithFallback, invokeWithFallbackStream, MODEL_ID, tools };
-

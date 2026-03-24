@@ -81,15 +81,47 @@ describe("contracts/generator", () => {
 
     it("PayloadKind has 41 members", () => {
       const values: PayloadKind[] = [
-        "plain_text", "url", "tel", "email", "sms", "geo",
-        "vcard", "mecard", "bizcard", "wifi", "app_link",
-        "event", "event_rsvp", "calendar_subscription",
-        "social_profile", "messaging_link",
-        "epc_sepa", "upi", "paynow", "promptpay", "pix",
-        "crypto", "swiss_qr_bill", "lightning", "ethereum_eip681",
-        "qris", "duitnow", "bharatqr", "vietqr", "qrph", "twqr", "hkqr", "jpqr", "auspaynet",
-        "paypal_me", "cashapp", "emv_generic",
-        "gs1_digital_link", "short_link", "utm_link", "custom",
+        "plain_text",
+        "url",
+        "tel",
+        "email",
+        "sms",
+        "geo",
+        "vcard",
+        "mecard",
+        "bizcard",
+        "wifi",
+        "app_link",
+        "event",
+        "event_rsvp",
+        "calendar_subscription",
+        "social_profile",
+        "messaging_link",
+        "epc_sepa",
+        "upi",
+        "paynow",
+        "promptpay",
+        "pix",
+        "crypto",
+        "swiss_qr_bill",
+        "lightning",
+        "ethereum_eip681",
+        "qris",
+        "duitnow",
+        "bharatqr",
+        "vietqr",
+        "qrph",
+        "twqr",
+        "hkqr",
+        "jpqr",
+        "auspaynet",
+        "paypal_me",
+        "cashapp",
+        "emv_generic",
+        "gs1_digital_link",
+        "short_link",
+        "utm_link",
+        "custom",
       ];
       expect(values).toHaveLength(41);
       expect(new Set(values).size).toBe(41);
@@ -143,10 +175,24 @@ describe("contracts/generator", () => {
   describe("overlay enums", () => {
     it("OverlayMode has 18 members", () => {
       const values: OverlayMode[] = [
-        "center", "blend", "halftone", "halftone-dithered", "mosaic",
-        "gapfill", "brightness", "duotone", "subpixel", "dithered",
-        "blue-noise", "pixelate", "outline", "wave",
-        "subpixel-size", "dither", "extreme", "artwork",
+        "center",
+        "blend",
+        "halftone",
+        "halftone-dithered",
+        "mosaic",
+        "gapfill",
+        "brightness",
+        "duotone",
+        "subpixel",
+        "dithered",
+        "blue-noise",
+        "pixelate",
+        "outline",
+        "wave",
+        "subpixel-size",
+        "dither",
+        "extreme",
+        "artwork",
       ];
       expect(values).toHaveLength(18);
       expect(new Set(values).size).toBe(18);
@@ -166,11 +212,23 @@ describe("contracts/generator", () => {
   describe("dither enums", () => {
     it("DitherKind has 17 members", () => {
       const values: DitherKind[] = [
-        "none", "error_diffusion", "ordered_bayer", "ordered_clustered",
-        "ordered_void_cluster", "blue_noise_threshold", "true_dither",
-        "blue_noise", "white_noise", "gaussian_noise", "triangular_noise",
-        "blue_noise_error_diffusion", "screened_blue_noise",
-        "perceptual", "edge_aware", "adaptive_threshold", "temporal_blue_noise",
+        "none",
+        "error_diffusion",
+        "ordered_bayer",
+        "ordered_clustered",
+        "ordered_void_cluster",
+        "blue_noise_threshold",
+        "true_dither",
+        "blue_noise",
+        "white_noise",
+        "gaussian_noise",
+        "triangular_noise",
+        "blue_noise_error_diffusion",
+        "screened_blue_noise",
+        "perceptual",
+        "edge_aware",
+        "adaptive_threshold",
+        "temporal_blue_noise",
       ];
       expect(values).toHaveLength(17);
       expect(new Set(values).size).toBe(17);
@@ -178,14 +236,26 @@ describe("contracts/generator", () => {
 
     it("DiffusionKernel has 8 members", () => {
       const values: DiffusionKernel[] = [
-        "floyd_steinberg", "jarvis_judice_ninke", "stucki", "burkes",
-        "sierra", "sierra_2", "sierra_lite", "atkinson",
+        "floyd_steinberg",
+        "jarvis_judice_ninke",
+        "stucki",
+        "burkes",
+        "sierra",
+        "sierra_2",
+        "sierra_lite",
+        "atkinson",
       ];
       expect(values).toHaveLength(8);
     });
 
     it("OrderedMatrix has 5 members", () => {
-      const values: OrderedMatrix[] = ["bayer2", "bayer4", "bayer8", "clustered_dot", "void_cluster"];
+      const values: OrderedMatrix[] = [
+        "bayer2",
+        "bayer4",
+        "bayer8",
+        "clustered_dot",
+        "void_cluster",
+      ];
       expect(values).toHaveLength(5);
     });
 
@@ -213,7 +283,13 @@ describe("contracts/generator", () => {
 
     it("AnimationPatternType has 7 members", () => {
       const values: AnimationPatternType[] = [
-        "none", "pulse", "wave", "scanline", "shimmer", "drift", "color_cycle",
+        "none",
+        "pulse",
+        "wave",
+        "scanline",
+        "shimmer",
+        "drift",
+        "color_cycle",
       ];
       expect(values).toHaveLength(7);
     });
@@ -325,7 +401,10 @@ describe("contracts/generator", () => {
     it("GradientConfig requires type and stops, angle is optional", () => {
       const minimal: GradientConfig = {
         type: "linear",
-        stops: [{ pos: 0, color: "#000" }, { pos: 1, color: "#fff" }],
+        stops: [
+          { pos: 0, color: "#000" },
+          { pos: 1, color: "#fff" },
+        ],
       };
       expect(minimal.type).toBe("linear");
       expect(minimal.stops).toHaveLength(2);
@@ -669,7 +748,10 @@ describe("contracts/generator", () => {
 
     it("maxOverlayIntensityByEcc is keyed by all 4 ECC levels", () => {
       const record: QRSafetyOptions["maxOverlayIntensityByEcc"] = {
-        L: 1.0, M: 0.75, Q: 0.5, H: 0.25,
+        L: 1.0,
+        M: 0.75,
+        Q: 0.5,
+        H: 0.25,
       };
       expect(Object.keys(record).sort()).toEqual(["H", "L", "M", "Q"]);
     });
@@ -887,8 +969,16 @@ describe("contracts/generator", () => {
       };
 
       expect(Object.keys(options).sort()).toEqual([
-        "animation", "auto", "metadata", "output", "overlay",
-        "qa", "qr", "render", "safety", "watermark",
+        "animation",
+        "auto",
+        "metadata",
+        "output",
+        "overlay",
+        "qa",
+        "qr",
+        "render",
+        "safety",
+        "watermark",
       ]);
       expect(options.qr.ecc).toBe("M");
       expect(options.render.moduleStyle).toBe("square");
@@ -908,70 +998,126 @@ describe("contracts/generator", () => {
   describe("structural field counts (drift detection)", () => {
     it("QRCoreOptions has exactly 8 fields", () => {
       const opts: QRCoreOptions = {
-        version: 1, ecc: "L", encodingMode: "auto", maskPattern: "auto",
-        characterEncoding: "default", quietZoneModules: 4,
-        quietZoneMinEnforce: false, borderModulesExtra: 0,
+        version: 1,
+        ecc: "L",
+        encodingMode: "auto",
+        maskPattern: "auto",
+        characterEncoding: "default",
+        quietZoneModules: 4,
+        quietZoneMinEnforce: false,
+        borderModulesExtra: 0,
       };
       expect(Object.keys(opts)).toHaveLength(8);
     });
 
     it("QRRenderOptions has exactly 25 fields", () => {
       const opts: QRRenderOptions = {
-        modulePx: 10, crispEdges: true, pixelSnap: "floor",
-        moduleGapPercent: 0, gapMode: "none", moduleStyle: "square",
-        finderStyle: "square", alignmentStyle: "square",
-        timingStyle: "solid", cornerRadius: 0, dotRotationDeg: 0,
-        eyeOuterStyle: "square", eyeInnerStyle: "square", eyeScale: 1,
-        frameStyle: "none", frameText: "", fgColor: "#000", bgColor: "#fff",
-        bgTransparent: false, palette: [], paletteMode: "off",
-        gradient: { type: "none" }, perModuleColorMode: "off",
-        contrastGuard: true, minContrastRatio: 4.5,
+        modulePx: 10,
+        crispEdges: true,
+        pixelSnap: "floor",
+        moduleGapPercent: 0,
+        gapMode: "none",
+        moduleStyle: "square",
+        finderStyle: "square",
+        alignmentStyle: "square",
+        timingStyle: "solid",
+        cornerRadius: 0,
+        dotRotationDeg: 0,
+        eyeOuterStyle: "square",
+        eyeInnerStyle: "square",
+        eyeScale: 1,
+        frameStyle: "none",
+        frameText: "",
+        fgColor: "#000",
+        bgColor: "#fff",
+        bgTransparent: false,
+        palette: [],
+        paletteMode: "off",
+        gradient: { type: "none" },
+        perModuleColorMode: "off",
+        contrastGuard: true,
+        minContrastRatio: 4.5,
       };
       expect(Object.keys(opts)).toHaveLength(25);
     });
 
     it("QROutputOptions has exactly 16 fields", () => {
       const opts: QROutputOptions = {
-        format: "png", widthPx: 512, heightPx: 512, quality: 90,
-        filename: "qr", includeQuietZone: true, dpi: 72, bgOverride: "",
-        gifPaletteSize: 256, gifQuantizer: "median_cut", gifDither: "off",
-        gifTransparentColor: "", gifDisposal: "none",
-        svgTrueVector: true, svgShapePrecision: 2, svgEmbedRasterOverlay: false,
+        format: "png",
+        widthPx: 512,
+        heightPx: 512,
+        quality: 90,
+        filename: "qr",
+        includeQuietZone: true,
+        dpi: 72,
+        bgOverride: "",
+        gifPaletteSize: 256,
+        gifQuantizer: "median_cut",
+        gifDither: "off",
+        gifTransparentColor: "",
+        gifDisposal: "none",
+        svgTrueVector: true,
+        svgShapePrecision: 2,
+        svgEmbedRasterOverlay: false,
       };
       expect(Object.keys(opts)).toHaveLength(16);
     });
 
     it("QRAnimationOptions has exactly 17 fields", () => {
       const opts: QRAnimationOptions = {
-        speedMs: 100, loop: true, bounce: false, startFrame: 0,
-        maxFrames: 60, frameStep: 1, interpolate: "none",
-        temporalDither: "off", seed: 0, pattern: "none", target: "result",
-        waveAxis: "x", pattern2: "none", target2: "result",
-        waveAxis2: "x", moduleJitterPx: 0, colorCycle: false,
+        speedMs: 100,
+        loop: true,
+        bounce: false,
+        startFrame: 0,
+        maxFrames: 60,
+        frameStep: 1,
+        interpolate: "none",
+        temporalDither: "off",
+        seed: 0,
+        pattern: "none",
+        target: "result",
+        waveAxis: "x",
+        pattern2: "none",
+        target2: "result",
+        waveAxis2: "x",
+        moduleJitterPx: 0,
+        colorCycle: false,
       };
       expect(Object.keys(opts)).toHaveLength(17);
     });
 
     it("QRAutoOptions has exactly 3 fields", () => {
       const opts: QRAutoOptions = {
-        pickVersion: true, pickEcc: true, reduceIntensityUntilSafe: false,
+        pickVersion: true,
+        pickEcc: true,
+        reduceIntensityUntilSafe: false,
       };
       expect(Object.keys(opts)).toHaveLength(3);
     });
 
     it("QRMetadataOptions has exactly 7 fields", () => {
       const opts: QRMetadataOptions = {
-        title: "", author: "", copyright: "", license: "",
-        description: "", creationTime: false, customKv: [],
+        title: "",
+        author: "",
+        copyright: "",
+        license: "",
+        description: "",
+        creationTime: false,
+        customKv: [],
       };
       expect(Object.keys(opts)).toHaveLength(7);
     });
 
     it("QRSafetyOptions has exactly 9 fields", () => {
       const opts: QRSafetyOptions = {
-        mode: "off", minModulePx: 1, minQuietZoneModules: 0,
-        lockFinders: false, lockTiming: false, lockAlign: false,
-        lockFormat: false, lockVersion: false,
+        mode: "off",
+        minModulePx: 1,
+        minQuietZoneModules: 0,
+        lockFinders: false,
+        lockTiming: false,
+        lockAlign: false,
+        lockFormat: false,
+        lockVersion: false,
         maxOverlayIntensityByEcc: { L: 1, M: 1, Q: 1, H: 1 },
       };
       expect(Object.keys(opts)).toHaveLength(9);
@@ -979,24 +1125,39 @@ describe("contracts/generator", () => {
 
     it("QRQualityAssuranceOptions has exactly 5 fields", () => {
       const opts: QRQualityAssuranceOptions = {
-        contrastCheck: false, simulateBlurPx: 0, simulateNoise: 0,
-        simulateRotationDeg: 0, showHeatmap: false,
+        contrastCheck: false,
+        simulateBlurPx: 0,
+        simulateNoise: 0,
+        simulateRotationDeg: 0,
+        showHeatmap: false,
       };
       expect(Object.keys(opts)).toHaveLength(5);
     });
 
     it("QRWatermarkOptions has exactly 6 fields", () => {
       const opts: QRWatermarkOptions = {
-        enabled: false, kind: "text", text: "",
-        position: "center", opacity: 0, blend: "normal",
+        enabled: false,
+        kind: "text",
+        text: "",
+        position: "center",
+        opacity: 0,
+        blend: "normal",
       };
       expect(Object.keys(opts)).toHaveLength(6);
     });
 
     it("QRGenerationOptions has exactly 10 top-level keys", () => {
       const keys = [
-        "qr", "render", "overlay", "animation", "output",
-        "watermark", "metadata", "safety", "qa", "auto",
+        "qr",
+        "render",
+        "overlay",
+        "animation",
+        "output",
+        "watermark",
+        "metadata",
+        "safety",
+        "qa",
+        "auto",
       ];
       expect(keys).toHaveLength(10);
       expect(new Set(keys).size).toBe(10);
@@ -1006,14 +1167,21 @@ describe("contracts/generator", () => {
   describe("QRCoreOptions encoding mode coverage", () => {
     it("accepts all 5 encoding modes", () => {
       const modes: Array<QRCoreOptions["encodingMode"]> = [
-        "auto", "numeric", "alphanumeric", "byte", "kanji",
+        "auto",
+        "numeric",
+        "alphanumeric",
+        "byte",
+        "kanji",
       ];
       expect(new Set(modes).size).toBe(5);
     });
 
     it("accepts all 4 character encodings", () => {
       const encodings: Array<QRCoreOptions["characterEncoding"]> = [
-        "default", "utf8", "iso-8859-1", "shift-jis",
+        "default",
+        "utf8",
+        "iso-8859-1",
+        "shift-jis",
       ];
       expect(new Set(encodings).size).toBe(4);
     });

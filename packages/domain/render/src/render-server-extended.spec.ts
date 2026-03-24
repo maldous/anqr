@@ -19,6 +19,7 @@ import { packOverlayColor } from "./overlay/pack-overlay-color";
 import type { AnimationEffectConfig } from "./server/animation-effect-config.types";
 import type { OverlayFilterOptions } from "./server/overlay-filter-options.types";
 import type { ServerAnimationFrame } from "./server/server-animation-frame.types";
+import type { AnimationFrame } from "./animation/animation-frame";
 
 describe("domain/render/server (extended)", () => {
   // ── rgbToGrayServer ────────────────────────────────────────────
@@ -168,7 +169,10 @@ describe("domain/render/server (extended)", () => {
     });
 
     it("does not add black when already present", () => {
-      const palette = [[0, 0, 0], [128, 128, 128]];
+      const palette = [
+        [0, 0, 0],
+        [128, 128, 128],
+      ];
       const result = ensureGifPaletteAnchors(palette, 256);
       const blackCount = result.filter(([r, g, b]) => r === 0 && g === 0 && b === 0).length;
       expect(blackCount).toBe(1);
@@ -208,15 +212,21 @@ describe("domain/render/server (extended)", () => {
 
   describe("hasAnimationEffect", () => {
     it("returns false for none pattern without color cycle", () => {
-      expect(hasAnimationEffect({ pattern: "none", colorCycle: false } as AnimationEffectConfig)).toBe(false);
+      expect(
+        hasAnimationEffect({ pattern: "none", colorCycle: false } as AnimationEffectConfig),
+      ).toBe(false);
     });
 
     it("returns true for non-none pattern", () => {
-      expect(hasAnimationEffect({ pattern: "pulse", colorCycle: false } as AnimationEffectConfig)).toBe(true);
+      expect(
+        hasAnimationEffect({ pattern: "pulse", colorCycle: false } as AnimationEffectConfig),
+      ).toBe(true);
     });
 
     it("returns true when color cycle is enabled", () => {
-      expect(hasAnimationEffect({ pattern: "none", colorCycle: true } as AnimationEffectConfig)).toBe(true);
+      expect(
+        hasAnimationEffect({ pattern: "none", colorCycle: true } as AnimationEffectConfig),
+      ).toBe(true);
     });
   });
 
@@ -224,7 +234,10 @@ describe("domain/render/server (extended)", () => {
 
   describe("hasPaletteColor", () => {
     it("returns true when predicate matches", () => {
-      const palette = [[255, 0, 0], [0, 255, 0]];
+      const palette = [
+        [255, 0, 0],
+        [0, 255, 0],
+      ];
       expect(hasPaletteColor(palette, (r) => r === 255)).toBe(true);
     });
 
@@ -267,7 +280,9 @@ describe("domain/render/server (extended)", () => {
     });
 
     it("returns true when edge is not off", () => {
-      expect(hasActiveOverlayFilters({ ...defaultFilters, edge: "sobel" } as OverlayFilterOptions)).toBe(true);
+      expect(
+        hasActiveOverlayFilters({ ...defaultFilters, edge: "sobel" } as OverlayFilterOptions),
+      ).toBe(true);
     });
   });
 
@@ -287,8 +302,7 @@ describe("domain/render/server (extended)", () => {
   // ── decimateFramesToMaxCount ────────────────────────────────────
 
   describe("decimateFramesToMaxCount", () => {
-    const makeFrame = (delay: number): ServerAnimationFrame =>
-      ({ delay } as ServerAnimationFrame);
+    const makeFrame = (delay: number) => ({ delay, disposalType: 0 }) as ServerAnimationFrame;
 
     it("returns original when count is within limit", () => {
       const frames = [makeFrame(100), makeFrame(100)];
@@ -350,7 +364,9 @@ describe("domain/render/server (extended)", () => {
   describe("detectImageFormat", () => {
     it("detects GIF format", () => {
       const buf = new Uint8Array(12);
-      buf[0] = 0x47; buf[1] = 0x49; buf[2] = 0x46;
+      buf[0] = 0x47;
+      buf[1] = 0x49;
+      buf[2] = 0x46;
       expect(detectImageFormat(buf.buffer)).toBe("gif");
     });
 
@@ -382,17 +398,17 @@ describe("domain/render/server (extended)", () => {
     });
 
     it("calculates FPS from uniform delays", () => {
-      const frames = [{ delay: 100 }, { delay: 100 }, { delay: 100 }];
+      const frames = [{ delay: 100 }, { delay: 100 }, { delay: 100 }] as AnimationFrame[];
       expect(calculateSourceFps(frames)).toBeCloseTo(10, 1);
     });
 
     it("calculates FPS from mixed delays", () => {
-      const frames = [{ delay: 50 }, { delay: 50 }];
+      const frames = [{ delay: 50 }, { delay: 50 }] as AnimationFrame[];
       expect(calculateSourceFps(frames)).toBeCloseTo(20, 1);
     });
 
     it("defaults missing delay to 100", () => {
-      const frames = [{ delay: 0 }, { delay: 0 }];
+      const frames = [{ delay: 0 }, { delay: 0 }] as AnimationFrame[];
       expect(calculateSourceFps(frames)).toBeCloseTo(10, 1);
     });
   });

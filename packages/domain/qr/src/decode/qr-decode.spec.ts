@@ -323,12 +323,7 @@ describe("domain/qr/decode", () => {
 
   describe("deinterleaveByBlock", () => {
     it("de-interleaves equal-size blocks", () => {
-      const { blocks, nextIdx } = deinterleaveByBlock(
-        [1, 2, 3, 4, 5, 6],
-        [3, 3],
-        3,
-        0,
-      );
+      const { blocks, nextIdx } = deinterleaveByBlock([1, 2, 3, 4, 5, 6], [3, 3], 3, 0);
       expect(blocks).toEqual([
         [1, 3, 5],
         [2, 4, 6],
@@ -337,24 +332,14 @@ describe("domain/qr/decode", () => {
     });
 
     it("de-interleaves unequal blocks", () => {
-      const { blocks, nextIdx } = deinterleaveByBlock(
-        [1, 2, 3, 4, 5],
-        [2, 3],
-        3,
-        0,
-      );
+      const { blocks, nextIdx } = deinterleaveByBlock([1, 2, 3, 4, 5], [2, 3], 3, 0);
       expect(blocks[0]).toEqual([1, 3]);
       expect(blocks[1]).toEqual([2, 4, 5]);
       expect(nextIdx).toBe(5);
     });
 
     it("respects startIdx offset", () => {
-      const { blocks } = deinterleaveByBlock(
-        [10, 20, 1, 2, 3, 4],
-        [2, 2],
-        2,
-        2,
-      );
+      const { blocks } = deinterleaveByBlock([10, 20, 1, 2, 3, 4], [2, 2], 2, 2);
       expect(blocks).toEqual([
         [1, 3],
         [2, 4],

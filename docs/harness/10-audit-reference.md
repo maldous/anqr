@@ -135,23 +135,23 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 The credit-gate classifies every provider into one of four tiers. `getRankedProviders()` partitions providers by tier — safety-net providers are always appended last regardless of score.
 
-| Tier               | Providers                                                                    | Score ceiling | Ranking behavior                  |
-| ------------------ | ---------------------------------------------------------------------------- | ------------- | --------------------------------- |
-| `paid`             | codex, codebuff                                                              | none          | Probed first; uses paid credits   |
-| `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models        | none          | Dynamic scoring (default tier)    |
-| `local-proxy`      | openclaw, codebuff-bridge                                                    | none          | Local HTTP gateways               |
-| `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b            | **0.25**      | Always rank last                  |
+| Tier               | Providers                                                             | Score ceiling | Ranking behavior                |
+| ------------------ | --------------------------------------------------------------------- | ------------- | ------------------------------- |
+| `paid`             | codex, codebuff                                                       | none          | Probed first; uses paid credits |
+| `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models | none          | Dynamic scoring (default tier)  |
+| `local-proxy`      | openclaw, codebuff-bridge                                             | none          | Local HTTP gateways             |
+| `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b      | **0.25**      | Always rank last                |
 
 ### Primary Providers (Selected by Credit-gate)
 
-| Priority | Provider    | Tier           | Model                   | Type | API Endpoint                                            | SDK     |
-| -------- | ----------- | -------------- | ----------------------- | ---- | ------------------------------------------------------- | ------- |
-| 1        | codex       | `paid`         | gpt-5.4                 | HTTP | https://api.openai.com/v1                               | No      |
-| 2        | codebuff    | `paid`         | codebuff/base@latest    | SDK  | @codebuff/sdk                                           | **Yes** |
-| 3        | groq        | `free-cloud`   | llama-3.3-70b-versatile | HTTP | https://api.groq.com/openai/v1                          | No      |
-| 4        | mistral     | `free-cloud`   | mistral-small-latest    | HTTP | https://api.mistral.ai/v1                               | No      |
-| 5        | gemini      | `free-cloud`   | gemini-2.5-flash        | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
-| 6        | gemini-lite | `free-cloud`   | gemini-2.5-flash-lite   | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
+| Priority | Provider    | Tier         | Model                   | Type | API Endpoint                                            | SDK     |
+| -------- | ----------- | ------------ | ----------------------- | ---- | ------------------------------------------------------- | ------- |
+| 1        | codex       | `paid`       | gpt-5.4                 | HTTP | https://api.openai.com/v1                               | No      |
+| 2        | codebuff    | `paid`       | codebuff/base@latest    | SDK  | @codebuff/sdk                                           | **Yes** |
+| 3        | groq        | `free-cloud` | llama-3.3-70b-versatile | HTTP | https://api.groq.com/openai/v1                          | No      |
+| 4        | mistral     | `free-cloud` | mistral-small-latest    | HTTP | https://api.mistral.ai/v1                               | No      |
+| 5        | gemini      | `free-cloud` | gemini-2.5-flash        | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
+| 6        | gemini-lite | `free-cloud` | gemini-2.5-flash-lite   | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
 
 ### OpenRouter Free Models (28 models, priority 8-35)
 
@@ -186,15 +186,15 @@ The credit-gate classifies every provider into one of four tiers. `getRankedProv
 
 ### Additional Providers
 
-| Priority | Provider                   | Tier               | Model                        | API Endpoint                |
-| -------- | -------------------------- | ------------------ | ---------------------------- | --------------------------- |
-| 36       | sambanova                  | `free-cloud`       | Meta-Llama-3.3-70B-Instruct | https://api.sambanova.ai/v1 |
-| 37       | cerebras                   | `free-cloud`       | llama3.1-8b                  | https://api.cerebras.ai/v1  |
-| 38       | github-models              | `free-cloud`       | gpt-4.1-mini                 | https://models.github.ai/inference/v1 |
-| 39       | codebuff-bridge            | `local-proxy`      | codebuff/base                | http://127.0.0.1:4318/v1    |
-| 40       | ollama-local               | `local-safety-net` | qwen3-coder-next:latest      | http://localhost:11434      |
-| 41       | ollama-qwen2.5-coder-3b   | `local-safety-net` | qwen2.5-coder:3b-instruct   | http://localhost:11434      |
-| 42       | ollama-qwen2.5-coder-0.5b | `local-safety-net` | qwen2.5-coder:0.5b          | http://localhost:11434      |
+| Priority | Provider                  | Tier               | Model                       | API Endpoint                          |
+| -------- | ------------------------- | ------------------ | --------------------------- | ------------------------------------- |
+| 36       | sambanova                 | `free-cloud`       | Meta-Llama-3.3-70B-Instruct | https://api.sambanova.ai/v1           |
+| 37       | cerebras                  | `free-cloud`       | llama3.1-8b                 | https://api.cerebras.ai/v1            |
+| 38       | github-models             | `free-cloud`       | gpt-4.1-mini                | https://models.github.ai/inference/v1 |
+| 39       | codebuff-bridge           | `local-proxy`      | codebuff/base               | http://127.0.0.1:4318/v1              |
+| 40       | ollama-local              | `local-safety-net` | qwen3-coder-next:latest     | http://localhost:11434                |
+| 41       | ollama-qwen2.5-coder-3b   | `local-safety-net` | qwen2.5-coder:3b-instruct   | http://localhost:11434                |
+| 42       | ollama-qwen2.5-coder-0.5b | `local-safety-net` | qwen2.5-coder:0.5b          | http://localhost:11434                |
 
 ---
 
@@ -266,12 +266,12 @@ At startup, the bridge probes each available provider with a minimal `generateTe
 
 The `GET /health` endpoint exposes `toolProbe` with:
 
-| Field          | Type       | Description                                                      |
-| -------------- | ---------- | ---------------------------------------------------------------- |
-| `capable`      | `string[]` | Providers confirmed to support structured tool calls             |
-| `excluded`     | `string[]` | Providers excluded (raw JSON tool output detected)               |
+| Field          | Type       | Description                                                       |
+| -------------- | ---------- | ----------------------------------------------------------------- |
+| `capable`      | `string[]` | Providers confirmed to support structured tool calls              |
+| `excluded`     | `string[]` | Providers excluded (raw JSON tool output detected)                |
 | `unclassified` | `string[]` | Available but not yet classified (rate-limited, errored, timeout) |
-| `blocked`      | `object[]` | Providers blocked from bridge, with `{ name, reason }`           |
+| `blocked`      | `object[]` | Providers blocked from bridge, with `{ name, reason }`            |
 
 **Bridge Provider Blocklist**:
 
@@ -537,10 +537,10 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 **In-memory state** (not persisted, rebuilt at startup):
 
-| State                    | Location                  | Purpose                                                |
-| ------------------------ | ------------------------- | ------------------------------------------------------ |
-| `toolCapableProviders`   | Symphony Bridge (memory)  | Set of providers confirmed to support structured tools  |
-| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests    |
+| State                     | Location                 | Purpose                                                |
+| ------------------------- | ------------------------ | ------------------------------------------------------ |
+| `toolCapableProviders`    | Symphony Bridge (memory) | Set of providers confirmed to support structured tools |
+| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests   |
 
 ---
 

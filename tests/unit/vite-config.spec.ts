@@ -75,7 +75,7 @@ describe("vite-config", () => {
       const special = "file.(test)+[0]";
       const pattern = new RegExp(`^${escapeRegex(special)}$`);
       expect(pattern.test(special)).toBe(true);
-      expect(pattern.test("fileXtestY0")).toBe(false);  // cspell:disable-line
+      expect(pattern.test("fileXtestY0")).toBe(false); // cspell:disable-line
     });
   });
 

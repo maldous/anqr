@@ -104,9 +104,7 @@ test.describe("OpenClaw Model Configuration", () => {
     ];
 
     for (const route of symphonyRoutes) {
-      const hasFallback = openclawConfig.fallbackModels.some((f) =>
-        f.includes(route),
-      );
+      const hasFallback = openclawConfig.fallbackModels.some((f) => f.includes(route));
       expect(hasFallback, `Missing fallback for ${route}`).toBe(true);
     }
   });
@@ -125,9 +123,7 @@ test.describe("OpenClaw Model Configuration", () => {
   });
 
   test("fallback list should include Codebuff as last resort", () => {
-    const lastFallback = openclawConfig.fallbackModels[
-      openclawConfig.fallbackModels.length - 1
-    ];
+    const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
     expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
   });
 });
@@ -158,30 +154,28 @@ test.describe("Symphony Fallback Continuity", () => {
   });
 
   test("fallback chain should include free providers", () => {
-    const freeProviders = openclawConfig.fallbackModels.filter((f) =>
-      f.includes("groq") || f.includes("gemini") || f.includes("openrouter"),
+    const freeProviders = openclawConfig.fallbackModels.filter(
+      (f) => f.includes("groq") || f.includes("gemini") || f.includes("openrouter"),
     );
 
     expect(freeProviders.length).toBeGreaterThan(0);
   });
 
   test("fallback chain should include local fallback", () => {
-    const hasLocalFallback = openclawConfig.fallbackModels.some((f) =>
-      f.includes("ollama-local"),
-    );
+    const hasLocalFallback = openclawConfig.fallbackModels.some((f) => f.includes("ollama-local"));
 
     expect(hasLocalFallback).toBe(true);
   });
 
   test("direct ollama models should rank after all symphony-bridge routes", () => {
-    const firstDirectOllamaIdx = openclawConfig.fallbackModels.findIndex(
-      (f: string) => f.startsWith("ollama/"),
+    const firstDirectOllamaIdx = openclawConfig.fallbackModels.findIndex((f: string) =>
+      f.startsWith("ollama/"),
     );
     if (firstDirectOllamaIdx < 0) return;
 
-    const symphonyAfterOllama = openclawConfig.fallbackModels.slice(firstDirectOllamaIdx).filter(
-      (f: string) => f.startsWith("symphony-bridge/"),
-    );
+    const symphonyAfterOllama = openclawConfig.fallbackModels
+      .slice(firstDirectOllamaIdx)
+      .filter((f: string) => f.startsWith("symphony-bridge/"));
     expect(
       symphonyAfterOllama.length,
       "No symphony-bridge route should appear after the first direct ollama model in the fallback chain",
@@ -259,10 +253,14 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     expect(data.status).toBe("ok");
     expect(data.model).toBeTruthy();
     expect(data.tools).toBeDefined();
-    console.log(`[openclaw-e2e] Symphony health: configured=${data.providersConfigured}, available=${data.providersAvailable}, withStats=${data.providersWithStats}, tools=${data.tools?.join(", ")}`);
+    console.log(
+      `[openclaw-e2e] Symphony health: configured=${data.providersConfigured}, available=${data.providersAvailable}, withStats=${data.providersWithStats}, tools=${data.tools?.join(", ")}`,
+    );
     if (data.configuredProviders) {
       const available = data.configuredProviders.filter((p: { available: boolean }) => p.available);
-      console.log(`[openclaw-e2e] Available providers: ${available.map((p: { name: string }) => p.name).join(", ")}`);
+      console.log(
+        `[openclaw-e2e] Available providers: ${available.map((p: { name: string }) => p.name).join(", ")}`,
+      );
     }
   });
 
@@ -295,7 +293,10 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
       return;
     }
 
-    const { status, data, elapsed } = await sendCompletion("symphony/main", "Say 'ok' if you can read this.");
+    const { status, data, elapsed } = await sendCompletion(
+      "symphony/main",
+      "Say 'ok' if you can read this.",
+    );
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
     if (isTransientError(status, errMsg)) {
@@ -310,8 +311,12 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     expect(content).toBeTruthy();
     expect(data._symphony_provider).toBeDefined();
 
-    console.log(`[openclaw-e2e] Symphony completion: provider=${data._symphony_provider}, duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`);
-    console.log(`[openclaw-e2e] Response: ${typeof content === "string" ? content.slice(0, 200) : JSON.stringify(content).slice(0, 200)}`);
+    console.log(
+      `[openclaw-e2e] Symphony completion: provider=${data._symphony_provider}, duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`,
+    );
+    console.log(
+      `[openclaw-e2e] Response: ${typeof content === "string" ? content.slice(0, 200) : JSON.stringify(content).slice(0, 200)}`,
+    );
   });
 
   test("Symphony bridge streaming completion", async () => {
@@ -321,8 +326,10 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
       return;
     }
 
-    const { status, chunks, content, elapsed, contentType, errMsg } =
-      await sendStreamingCompletion("symphony/main", "Count from 1 to 3.");
+    const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
+      "symphony/main",
+      "Count from 1 to 3.",
+    );
 
     if (isTransientError(status, errMsg)) {
       console.log(`[openclaw-e2e] Symphony streaming: transient error, skipping (${errMsg})`);
@@ -355,7 +362,9 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
 
     expect(data.rankedProviders).toBeDefined();
     expect(data.providerStats).toBeDefined();
-    console.log(`[openclaw-e2e] Provider stats: ${Object.keys(data.providerStats).length} providers tracked`);
+    console.log(
+      `[openclaw-e2e] Provider stats: ${Object.keys(data.providerStats).length} providers tracked`,
+    );
   });
 });
 
@@ -400,7 +409,10 @@ const OPENROUTER_PROVIDERS = [
   { name: "openrouter-gpt-oss-120b", model: "openai/gpt-oss-120b:free" },
   { name: "openrouter-gpt-oss-20b", model: "openai/gpt-oss-20b:free" },
   { name: "openrouter-llama-3.2-3b", model: "meta-llama/llama-3.2-3b-instruct:free" },
-  { name: "openrouter-dolphin-mistral", model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free" },
+  {
+    name: "openrouter-dolphin-mistral",
+    model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+  },
   { name: "openrouter-gemma-3-27b", model: "google/gemma-3-27b-it:free" },
   { name: "openrouter-glm-4.5-air", model: "z-ai/glm-4.5-air:free" },
   { name: "openrouter-gemma-3n-e2b", model: "google/gemma-3n-e2b-it:free" },
@@ -419,9 +431,7 @@ const LOCAL_PROVIDERS = [
 // Providers in the credit-gate but blocklisted by the bridge — they appear in
 // the credit-gate PROVIDERS array but the bridge filters them out of its
 // configuredProviders list, so the inventory test must NOT expect them.
-const BRIDGE_BLOCKLISTED_PROVIDERS = [
-  { name: "openclaw", model: "openclaw:main" },
-];
+const BRIDGE_BLOCKLISTED_PROVIDERS = [{ name: "openclaw", model: "openclaw:main" }];
 
 // Providers the bridge actually exposes (excludes blocklisted)
 const ALL_EXPECTED_PROVIDER_NAMES = [
@@ -470,11 +480,27 @@ const HEURISTIC_ROUTES = [
 // Routes that need local/special services
 const LOCAL_SERVICE_ROUTES = [
   { route: "symphony/codebuff", provider: "codebuff", description: "Codebuff SDK" },
-  { route: "symphony/codebuff-bridge", provider: "codebuff-bridge", description: "Codebuff bridge on :4318" },
+  {
+    route: "symphony/codebuff-bridge",
+    provider: "codebuff-bridge",
+    description: "Codebuff bridge on :4318",
+  },
   { route: "symphony/codex", provider: "codex", description: "Codex API (often quota-exhausted)" },
-  { route: "symphony/ollama-local", provider: "ollama-local", description: "Local Ollama (qwen3-coder-next 51GB)" },
-  { route: "symphony/ollama-qwen2.5-coder-3b", provider: "ollama-qwen2.5-coder-3b", description: "Local Ollama (qwen2.5-coder 3B)" },
-  { route: "symphony/ollama-qwen2.5-coder-0.5b", provider: "ollama-qwen2.5-coder-0.5b", description: "Local Ollama (qwen2.5-coder 0.5B)" },
+  {
+    route: "symphony/ollama-local",
+    provider: "ollama-local",
+    description: "Local Ollama (qwen3-coder-next 51GB)",
+  },
+  {
+    route: "symphony/ollama-qwen2.5-coder-3b",
+    provider: "ollama-qwen2.5-coder-3b",
+    description: "Local Ollama (qwen2.5-coder 3B)",
+  },
+  {
+    route: "symphony/ollama-qwen2.5-coder-0.5b",
+    provider: "ollama-qwen2.5-coder-0.5b",
+    description: "Local Ollama (qwen2.5-coder 0.5B)",
+  },
 ];
 
 async function sendCompletion(
@@ -510,7 +536,13 @@ async function sendCompletion(
 function isTransientError(status: number, errMsg: string): boolean {
   if (status === 0) return true;
   if (status === 429) return true;
-  if (status === 500 && /Too Many Requests|rate.limit|quota|exhausted|system memory|not enough memory|out of memory/i.test(errMsg)) return true;
+  if (
+    status === 500 &&
+    /Too Many Requests|rate.limit|quota|exhausted|system memory|not enough memory|out of memory/i.test(
+      errMsg,
+    )
+  )
+    return true;
   if (status === 503) return true;
   return false;
 }
@@ -520,7 +552,14 @@ async function sendStreamingCompletion(
   prompt: string = "Count from 1 to 3.",
   baseUrl: string = SYMPHONY_BASE_URL,
   apiKey: string = SYMPHONY_API_KEY,
-): Promise<{ status: number; chunks: string[]; content: string; elapsed: number; contentType: string | null; errMsg: string }> {
+): Promise<{
+  status: number;
+  chunks: string[];
+  content: string;
+  elapsed: number;
+  contentType: string | null;
+  errMsg: string;
+}> {
   const startTime = Date.now();
   try {
     const res = await fetch(`${baseUrl}/v1/chat/completions`, {
@@ -542,8 +581,19 @@ async function sendStreamingCompletion(
     if (res.status !== 200) {
       const body = await res.text().catch(() => "");
       let errMsg = "";
-      try { errMsg = JSON.parse(body).error?.message ?? ""; } catch { errMsg = body.slice(0, 200); }
-      return { status: res.status, chunks: [], content: "", elapsed: Date.now() - startTime, contentType, errMsg };
+      try {
+        errMsg = JSON.parse(body).error?.message ?? "";
+      } catch {
+        errMsg = body.slice(0, 200);
+      }
+      return {
+        status: res.status,
+        chunks: [],
+        content: "",
+        elapsed: Date.now() - startTime,
+        contentType,
+        errMsg,
+      };
     }
 
     const chunks: string[] = [];
@@ -560,36 +610,65 @@ async function sendStreamingCompletion(
         for (const line of chunk.split("\n")) {
           if (!line.startsWith("data: ")) continue;
           const data = line.slice(6);
-          if (data === "[DONE]") { chunks.push("[DONE]"); doneReading = true; break; }
+          if (data === "[DONE]") {
+            chunks.push("[DONE]");
+            doneReading = true;
+            break;
+          }
           if (!data.trim()) continue;
           chunks.push(data);
           try {
             const parsed = JSON.parse(data);
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) content += delta;
-          } catch { /* non-JSON chunk */ }
+          } catch {
+            /* non-JSON chunk */
+          }
         }
       }
     }
 
-    return { status: res.status, chunks, content, elapsed: Date.now() - startTime, contentType, errMsg: "" };
+    return {
+      status: res.status,
+      chunks,
+      content,
+      elapsed: Date.now() - startTime,
+      contentType,
+      errMsg: "",
+    };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { status: 0, chunks: [], content: "", elapsed: Date.now() - startTime, contentType: null, errMsg: `fetch failed: ${msg}` };
+    return {
+      status: 0,
+      chunks: [],
+      content: "",
+      elapsed: Date.now() - startTime,
+      contentType: null,
+      errMsg: `fetch failed: ${msg}`,
+    };
   }
 }
 
-function validateStreamChunks(chunks: string[]): { valid: boolean; errors: string[]; hasDone: boolean } {
+function validateStreamChunks(chunks: string[]): {
+  valid: boolean;
+  errors: string[];
+  hasDone: boolean;
+} {
   const errors: string[] = [];
   let hasDone = false;
   for (let i = 0; i < chunks.length; i++) {
-    if (chunks[i] === "[DONE]") { hasDone = true; continue; }
+    if (chunks[i] === "[DONE]") {
+      hasDone = true;
+      continue;
+    }
     try {
       const parsed = JSON.parse(chunks[i]);
       if (typeof parsed.id !== "string") errors.push(`Chunk ${i}: missing or non-string 'id'`);
-      if (parsed.object !== "chat.completion.chunk") errors.push(`Chunk ${i}: object='${parsed.object}', expected 'chat.completion.chunk'`);
+      if (parsed.object !== "chat.completion.chunk")
+        errors.push(`Chunk ${i}: object='${parsed.object}', expected 'chat.completion.chunk'`);
       if (!Array.isArray(parsed.choices)) errors.push(`Chunk ${i}: missing 'choices' array`);
-      if (typeof parsed.created !== "number") errors.push(`Chunk ${i}: missing or non-number 'created'`);
+      if (typeof parsed.created !== "number")
+        errors.push(`Chunk ${i}: missing or non-number 'created'`);
     } catch {
       errors.push(`Chunk ${i}: invalid JSON`);
     }
@@ -606,7 +685,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
 
   test("all expected providers are configured in the bridge", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -614,13 +696,9 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
 
-    const configured = (data.configuredProviders ?? []).map(
-      (p: { name: string }) => p.name,
-    );
+    const configured = (data.configuredProviders ?? []).map((p: { name: string }) => p.name);
 
-    const missing = ALL_EXPECTED_PROVIDER_NAMES.filter(
-      (name) => !configured.includes(name),
-    );
+    const missing = ALL_EXPECTED_PROVIDER_NAMES.filter((name) => !configured.includes(name));
     const unexpected = configured.filter(
       (name: string) => !ALL_EXPECTED_PROVIDER_NAMES.includes(name),
     );
@@ -629,21 +707,29 @@ test.describe("Provider Inventory (requires running bridge)", () => {
       console.log(`[openclaw-e2e] ⚠️  Missing providers: ${missing.join(", ")}`);
     }
     if (unexpected.length > 0) {
-      console.log(`[openclaw-e2e] ⚠️  Unexpected providers (add to test): ${unexpected.join(", ")}`);
+      console.log(
+        `[openclaw-e2e] ⚠️  Unexpected providers (add to test): ${unexpected.join(", ")}`,
+      );
     }
     console.log(
       `[openclaw-e2e] Provider inventory: ${configured.length} configured, ` +
-      `${ALL_EXPECTED_PROVIDER_NAMES.length} expected, ` +
-      `${missing.length} missing, ${unexpected.length} unexpected`,
+        `${ALL_EXPECTED_PROVIDER_NAMES.length} expected, ` +
+        `${missing.length} missing, ${unexpected.length} unexpected`,
     );
 
     expect(missing, `Providers missing from bridge: ${missing.join(", ")}`).toHaveLength(0);
-    expect(unexpected, `Providers in bridge not in test — update the test: ${unexpected.join(", ")}`).toHaveLength(0);
+    expect(
+      unexpected,
+      `Providers in bridge not in test — update the test: ${unexpected.join(", ")}`,
+    ).toHaveLength(0);
   });
 
   test("all expected routes are exposed by the bridge", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/v1/models`, {
       signal: AbortSignal.timeout(5_000),
@@ -659,17 +745,27 @@ test.describe("Provider Inventory (requires running bridge)", () => {
       console.log(`[openclaw-e2e] ⚠️  Missing routes: ${missingRoutes.join(", ")}`);
     }
     if (unexpectedRoutes.length > 0) {
-      console.log(`[openclaw-e2e] ⚠️  Unexpected routes (add to test): ${unexpectedRoutes.join(", ")}`);
+      console.log(
+        `[openclaw-e2e] ⚠️  Unexpected routes (add to test): ${unexpectedRoutes.join(", ")}`,
+      );
     }
-    console.log(`[openclaw-e2e] Route inventory: ${modelIds.length} exposed, ${EXPECTED_ROUTES.length} expected`);
+    console.log(
+      `[openclaw-e2e] Route inventory: ${modelIds.length} exposed, ${EXPECTED_ROUTES.length} expected`,
+    );
 
     expect(missingRoutes, `Routes missing: ${missingRoutes.join(", ")}`).toHaveLength(0);
-    expect(unexpectedRoutes, `Routes in bridge not in test — update the test: ${unexpectedRoutes.join(", ")}`).toHaveLength(0);
+    expect(
+      unexpectedRoutes,
+      `Routes in bridge not in test — update the test: ${unexpectedRoutes.join(", ")}`,
+    ).toHaveLength(0);
   });
 
   test("all direct providers report available", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -684,8 +780,8 @@ test.describe("Provider Inventory (requires running bridge)", () => {
 
     console.log(
       `[openclaw-e2e] Direct provider availability: ` +
-      `${directNames.length - unavailable.length}/${directNames.length} available` +
-      (unavailable.length > 0 ? ` (unavailable: ${unavailable.join(", ")})` : ""),
+        `${directNames.length - unavailable.length}/${directNames.length} available` +
+        (unavailable.length > 0 ? ` (unavailable: ${unavailable.join(", ")})` : ""),
     );
 
     expect(
@@ -696,19 +792,18 @@ test.describe("Provider Inventory (requires running bridge)", () => {
 
   test("blocklisted providers are not configured in the bridge", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
-    const configured = (data.configuredProviders ?? []).map(
-      (p: { name: string }) => p.name,
-    );
+    const configured = (data.configuredProviders ?? []).map((p: { name: string }) => p.name);
 
-    const leaked = BRIDGE_BLOCKLISTED_PROVIDERS.filter(
-      (p) => configured.includes(p.name),
-    );
+    const leaked = BRIDGE_BLOCKLISTED_PROVIDERS.filter((p) => configured.includes(p.name));
 
     expect(
       leaked,
@@ -718,7 +813,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
 
   test("all openrouter providers report available", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -732,10 +830,12 @@ test.describe("Provider Inventory (requires running bridge)", () => {
 
     console.log(
       `[openclaw-e2e] OpenRouter availability: ${configured.length - unavailable.length}/${orNames.length} available` +
-      (unavailable.length > 0 ? ` (unavailable: ${unavailable.join(", ")})` : ""),
+        (unavailable.length > 0 ? ` (unavailable: ${unavailable.join(", ")})` : ""),
     );
 
-    expect(configured.length, "OpenRouter providers missing from bridge config").toBe(orNames.length);
+    expect(configured.length, "OpenRouter providers missing from bridge config").toBe(
+      orNames.length,
+    );
   });
 });
 
@@ -748,7 +848,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
 
   test("toolProbe health fields are present and valid", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -765,10 +868,9 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
     // Known-capable providers must be in the capable list
     const capable: string[] = data.toolProbe.capable;
     for (const known of ["codex", "codebuff", "codebuff-bridge"]) {
-      expect(
-        capable,
-        `Known-capable provider "${known}" should be in toolProbe.capable`,
-      ).toContain(known);
+      expect(capable, `Known-capable provider "${known}" should be in toolProbe.capable`).toContain(
+        known,
+      );
     }
 
     // Blocked providers must have a reason
@@ -780,20 +882,22 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
     // No provider should appear in both capable and excluded
     const excluded: string[] = data.toolProbe.excluded;
     const overlap = capable.filter((n: string) => excluded.includes(n));
-    expect(
-      overlap,
-      `Providers in both capable AND excluded: ${overlap.join(", ")}`,
-    ).toHaveLength(0);
+    expect(overlap, `Providers in both capable AND excluded: ${overlap.join(", ")}`).toHaveLength(
+      0,
+    );
 
     console.log(
       `[openclaw-e2e] Tool probe: capable=${capable.length}, excluded=${excluded.length}, ` +
-      `unclassified=${data.toolProbe.unclassified.length}, blocked=${data.toolProbe.blocked.length}`,
+        `unclassified=${data.toolProbe.unclassified.length}, blocked=${data.toolProbe.blocked.length}`,
     );
   });
 
   test("excluded providers are NOT in health rankedProviders", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -802,9 +906,7 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
     const data = await res.json();
 
     const excluded: string[] = data.toolProbe?.excluded ?? [];
-    const rankedNames: string[] = (data.rankedProviders ?? []).map(
-      (p: { name: string }) => p.name,
-    );
+    const rankedNames: string[] = (data.rankedProviders ?? []).map((p: { name: string }) => p.name);
 
     const leaked = excluded.filter((n) => rankedNames.includes(n));
     expect(
@@ -814,13 +916,16 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
 
     console.log(
       `[openclaw-e2e] Ranked providers (top 5): ${rankedNames.join(", ")} | ` +
-      `Excluded: ${excluded.join(", ")} | Leaked: ${leaked.length}`,
+        `Excluded: ${excluded.join(", ")} | Leaked: ${leaked.length}`,
     );
   });
 
   test("excluded providers are NOT in /v1/stats rankedProviders", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const healthRes = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -846,13 +951,16 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
 
     console.log(
       `[openclaw-e2e] /v1/stats ranked: ${rankedNames.length} providers | ` +
-      `Excluded leak check: ${leaked.length === 0 ? "PASS ✅" : `FAIL — ${leaked.join(", ")}`}`,
+        `Excluded leak check: ${leaked.length === 0 ? "PASS ✅" : `FAIL — ${leaked.join(", ")}`}`,
     );
   });
 
   test("pinned routes for excluded providers return clear error", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const healthRes = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -877,12 +985,13 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
       const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
       expect(status, `Pinned route ${route} should return 500 for excluded provider`).toBe(500);
-      expect(
-        errMsg,
-        `Error for ${route} should mention tool-capability probe exclusion`,
-      ).toMatch(/excluded by tool-capability probe|non-tool-capable/);
+      expect(errMsg, `Error for ${route} should mention tool-capability probe exclusion`).toMatch(
+        /excluded by tool-capability probe|non-tool-capable/,
+      );
 
-      console.log(`[openclaw-e2e] Excluded route ${route}: status=${status}, error="${errMsg.slice(0, 120)}" ✅`);
+      console.log(
+        `[openclaw-e2e] Excluded route ${route}: status=${status}, error="${errMsg.slice(0, 120)}" ✅`,
+      );
     }
   });
 });
@@ -897,7 +1006,10 @@ test.describe("Remote API Route Completions (requires running bridge)", () => {
   for (const { route, provider } of REMOTE_API_ROUTES) {
     test(`${provider} — completion via ${route}`, async () => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-      if (!reachable) { test.skip(); return; }
+      if (!reachable) {
+        test.skip();
+        return;
+      }
 
       const { status, data, elapsed } = await sendCompletion(route);
       const errMsg = (data.error as Record<string, string>)?.message ?? "";
@@ -916,7 +1028,7 @@ test.describe("Remote API Route Completions (requires running bridge)", () => {
 
       console.log(
         `[openclaw-e2e] ${provider}: duration=${data._symphony_duration_ms}ms, ` +
-        `elapsed=${elapsed}ms, content=${String(content).slice(0, 80)}`,
+          `elapsed=${elapsed}ms, content=${String(content).slice(0, 80)}`,
       );
     });
   }
@@ -932,7 +1044,10 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
   for (const { route, description } of HEURISTIC_ROUTES) {
     test(`${route} — ${description}`, async () => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-      if (!reachable) { test.skip(); return; }
+      if (!reachable) {
+        test.skip();
+        return;
+      }
 
       const { status, data, elapsed } = await sendCompletion(route);
       const errMsg = (data.error as Record<string, string>)?.message ?? "";
@@ -949,14 +1064,17 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
 
       console.log(
         `[openclaw-e2e] ${route}: provider=${data._symphony_provider}, ` +
-        `duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`,
+          `duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`,
       );
     });
   }
 
   test("symphony/openrouter selects from the openrouter pool", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const orNames = new Set(OPENROUTER_PROVIDERS.map((p) => p.name));
     const selectedProviders = new Set<string>();
@@ -987,11 +1105,13 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
 
     console.log(
       `[openclaw-e2e] openrouter rotation: ${selectedProviders.size} distinct from ${attempts} requests ` +
-      `(${transientCount} transient) — ${[...selectedProviders].join(", ")}`,
+        `(${transientCount} transient) — ${[...selectedProviders].join(", ")}`,
     );
 
     if (transientCount >= attempts) {
-      console.log(`[openclaw-e2e] openrouter rotation: all requests were transient errors, skipping`);
+      console.log(
+        `[openclaw-e2e] openrouter rotation: all requests were transient errors, skipping`,
+      );
       test.skip();
       return;
     }
@@ -1010,19 +1130,31 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
   for (const { route, provider, description } of LOCAL_SERVICE_ROUTES) {
     test(`${route} — ${description}`, async () => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-      if (!reachable) { test.skip(); return; }
+      if (!reachable) {
+        test.skip();
+        return;
+      }
 
       const { status, data, elapsed } = await sendCompletion(route);
       const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
       if (isTransientError(status, errMsg)) {
-        console.log(`[openclaw-e2e] ${route} (${provider}): transient/unavailable, skipping (${errMsg})`);
+        console.log(
+          `[openclaw-e2e] ${route} (${provider}): transient/unavailable, skipping (${errMsg})`,
+        );
         test.skip();
         return;
       }
 
-      if (status === 500 && /not supported|no.key|unavailable|not reachable|connection refused|No providers available|system memory/i.test(errMsg)) {
-        console.log(`[openclaw-e2e] ${route} (${provider}): service unavailable, skipping (${errMsg})`);
+      if (
+        status === 500 &&
+        /not supported|no.key|unavailable|not reachable|connection refused|No providers available|system memory/i.test(
+          errMsg,
+        )
+      ) {
+        console.log(
+          `[openclaw-e2e] ${route} (${provider}): service unavailable, skipping (${errMsg})`,
+        );
         test.skip();
         return;
       }
@@ -1032,7 +1164,7 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
 
       console.log(
         `[openclaw-e2e] ${route}: provider=${data._symphony_provider}, ` +
-        `duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`,
+          `duration=${data._symphony_duration_ms}ms, elapsed=${elapsed}ms`,
       );
     });
   }
@@ -1047,32 +1179,37 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
 
   test("all 27 openrouter models are in the configured provider list", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
     });
     const data = await res.json();
-    const configured = (data.configuredProviders ?? []).map(
-      (p: { name: string }) => p.name,
-    );
+    const configured = (data.configuredProviders ?? []).map((p: { name: string }) => p.name);
 
-    const missing = OPENROUTER_PROVIDERS.filter(
-      (p) => !configured.includes(p.name),
-    );
+    const missing = OPENROUTER_PROVIDERS.filter((p) => !configured.includes(p.name));
 
     console.log(
       `[openclaw-e2e] OpenRouter models: ${OPENROUTER_PROVIDERS.length} expected, ` +
-      `${OPENROUTER_PROVIDERS.length - missing.length} configured` +
-      (missing.length > 0 ? `, missing: ${missing.map((p) => p.name).join(", ")}` : ""),
+        `${OPENROUTER_PROVIDERS.length - missing.length} configured` +
+        (missing.length > 0 ? `, missing: ${missing.map((p) => p.name).join(", ")}` : ""),
     );
 
-    expect(missing, `OpenRouter models missing: ${missing.map((p) => p.name).join(", ")}`).toHaveLength(0);
+    expect(
+      missing,
+      `OpenRouter models missing: ${missing.map((p) => p.name).join(", ")}`,
+    ).toHaveLength(0);
   });
 
   test("openrouter models are exercised via pool route", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const selectedProviders = new Set<string>();
     const results: Array<{ provider: string; ok: boolean }> = [];
@@ -1096,7 +1233,7 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
     const successes = results.filter((r) => r.ok).length;
     console.log(
       `[openclaw-e2e] OpenRouter pool exercise: ${successes}/${rounds} succeeded, ` +
-      `${selectedProviders.size} distinct providers — ${[...selectedProviders].join(", ")}`,
+        `${selectedProviders.size} distinct providers — ${[...selectedProviders].join(", ")}`,
     );
 
     expect(successes, "OpenRouter pool should succeed at least once").toBeGreaterThanOrEqual(1);
@@ -1112,7 +1249,10 @@ test.describe("Full Provider Cascade Summary (requires running bridge)", () => {
 
   test("remote API routes — majority succeed in parallel", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const results: Array<{ route: string; provider: string; status: number }> = [];
 
@@ -1136,8 +1276,8 @@ test.describe("Full Provider Cascade Summary (requires running bridge)", () => {
 
     console.log(
       `[openclaw-e2e] Cascade summary: ${succeeded.length}/${REMOTE_API_ROUTES.length} remote routes succeeded\n` +
-      `  ✅ ${succeeded.map((r) => r.provider).join(", ") || "none"}\n` +
-      `  ❌ ${failed.map((r) => `${r.provider}(${r.status})`).join(", ") || "none"}`,
+        `  ✅ ${succeeded.map((r) => r.provider).join(", ") || "none"}\n` +
+        `  ❌ ${failed.map((r) => `${r.provider}(${r.status})`).join(", ") || "none"}`,
     );
 
     expect(
@@ -1163,7 +1303,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
   for (const { route, provider } of REMOTE_API_ROUTES) {
     test(`${provider} — streaming via ${route}`, async () => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-      if (!reachable) { test.skip(); return; }
+      if (!reachable) {
+        test.skip();
+        return;
+      }
 
       const { status, chunks, content, elapsed, contentType, errMsg } =
         await sendStreamingCompletion(route, "Say hello in one word.");
@@ -1180,25 +1323,38 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
       const validation = validateStreamChunks(chunks);
       if (!validation.valid) {
-        console.log(`[openclaw-e2e] ${provider} streaming schema errors: ${validation.errors.join("; ")}`);
+        console.log(
+          `[openclaw-e2e] ${provider} streaming schema errors: ${validation.errors.join("; ")}`,
+        );
       }
-      expect(validation.valid, `${provider} streaming chunk schema invalid: ${validation.errors[0] ?? ""}`).toBe(true);
+      expect(
+        validation.valid,
+        `${provider} streaming chunk schema invalid: ${validation.errors[0] ?? ""}`,
+      ).toBe(true);
 
       console.log(
         `[openclaw-e2e] ${provider} streaming: ${chunks.length} chunks, ` +
-        `elapsed=${elapsed}ms, content=${content.slice(0, 80)}, done=${validation.hasDone}`,
+          `elapsed=${elapsed}ms, content=${content.slice(0, 80)}, done=${validation.hasDone}`,
       );
     });
   }
 
   test("symphony/main — streaming with schema validation", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
-    const { status, chunks, content, elapsed, contentType, errMsg } =
-      await sendStreamingCompletion("symphony/main", "Say ok.");
+    const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
+      "symphony/main",
+      "Say ok.",
+    );
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status).toBe(200);
     expect(contentType).toContain("text/event-stream");
@@ -1209,18 +1365,26 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
     console.log(
       `[openclaw-e2e] symphony/main streaming: ${chunks.length} chunks, ` +
-      `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+        `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
     );
   });
 
   test("symphony/text — streaming with schema validation", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
-    const { status, chunks, content, elapsed, contentType, errMsg } =
-      await sendStreamingCompletion("symphony/text", "Say ok.");
+    const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
+      "symphony/text",
+      "Say ok.",
+    );
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status).toBe(200);
     expect(contentType).toContain("text/event-stream");
@@ -1231,18 +1395,26 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
     console.log(
       `[openclaw-e2e] symphony/text streaming: ${chunks.length} chunks, ` +
-      `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+        `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
     );
   });
 
   test("symphony/openrouter — streaming with schema validation", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
-    const { status, chunks, content, elapsed, contentType, errMsg } =
-      await sendStreamingCompletion("symphony/openrouter", "Say ok.");
+    const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
+      "symphony/openrouter",
+      "Say ok.",
+    );
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status).toBe(200);
     expect(contentType).toContain("text/event-stream");
@@ -1253,14 +1425,17 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
     console.log(
       `[openclaw-e2e] symphony/openrouter streaming: ${chunks.length} chunks, ` +
-      `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+        `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
     );
   });
 
   for (const { route, provider, description } of LOCAL_SERVICE_ROUTES) {
     test(`${route} — streaming (${description})`, async () => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-      if (!reachable) { test.skip(); return; }
+      if (!reachable) {
+        test.skip();
+        return;
+      }
 
       const { status, chunks, content, elapsed, contentType, errMsg } =
         await sendStreamingCompletion(route, "Say ok.");
@@ -1271,8 +1446,15 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
         return;
       }
 
-      if (status === 500 && /not supported|no.key|unavailable|not reachable|connection refused|No providers available|system memory/i.test(errMsg)) {
-        console.log(`[openclaw-e2e] ${route} streaming (${provider}): service unavailable, skipping (${errMsg})`);
+      if (
+        status === 500 &&
+        /not supported|no.key|unavailable|not reachable|connection refused|No providers available|system memory/i.test(
+          errMsg,
+        )
+      ) {
+        console.log(
+          `[openclaw-e2e] ${route} streaming (${provider}): service unavailable, skipping (${errMsg})`,
+        );
         test.skip();
         return;
       }
@@ -1283,19 +1465,24 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
       const validation = validateStreamChunks(chunks);
       if (!validation.valid) {
-        console.log(`[openclaw-e2e] ${route} streaming schema errors: ${validation.errors.join("; ")}`);
+        console.log(
+          `[openclaw-e2e] ${route} streaming schema errors: ${validation.errors.join("; ")}`,
+        );
       }
 
       console.log(
         `[openclaw-e2e] ${route} streaming: ${chunks.length} chunks, ` +
-        `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
+          `elapsed=${elapsed}ms, hasDone=${validation.hasDone}, content=${content.slice(0, 80)}`,
       );
     });
   }
 
   test("streaming cascade — majority of remote routes stream successfully", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const results: Array<{ provider: string; ok: boolean; chunks: number }> = [];
 
@@ -1309,7 +1496,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     const succeeded = results.filter((r) => r.ok);
     console.log(
       `[openclaw-e2e] Streaming cascade: ${succeeded.length}/${REMOTE_API_ROUTES.length} streamed — ` +
-      `${succeeded.map((r) => `${r.provider}(${r.chunks}ch)`).join(", ")}`,
+        `${succeeded.map((r) => `${r.provider}(${r.chunks}ch)`).join(", ")}`,
     );
 
     expect(
@@ -1328,7 +1515,10 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
 
   test("exec tool — bridge executes shell command and returns output", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const { status, data, elapsed } = await sendCompletion(
       "symphony/main",
@@ -1336,21 +1526,29 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status, `tool-use exec returned HTTP ${status}: ${errMsg}`).toBe(200);
     expect(data.choices).toBeDefined();
 
-    const content = String((data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "");
+    const content = String(
+      (data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "",
+    );
     console.log(
       `[openclaw-e2e] Tool exec: provider=${data._symphony_provider}, elapsed=${elapsed}ms, ` +
-      `content=${content.slice(0, 200)}`,
+        `content=${content.slice(0, 200)}`,
     );
   });
 
   test("read tool — bridge reads a file and returns content", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const { status, data, elapsed } = await sendCompletion(
       "symphony/main",
@@ -1358,21 +1556,29 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status, `tool-use read returned HTTP ${status}: ${errMsg}`).toBe(200);
     expect(data.choices).toBeDefined();
 
-    const content = String((data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "");
+    const content = String(
+      (data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "",
+    );
     console.log(
       `[openclaw-e2e] Tool read: provider=${data._symphony_provider}, elapsed=${elapsed}ms, ` +
-      `content=${content.slice(0, 200)}`,
+        `content=${content.slice(0, 200)}`,
     );
   });
 
   test("glob tool — bridge lists files matching a pattern", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const { status, data, elapsed } = await sendCompletion(
       "symphony/main",
@@ -1380,35 +1586,46 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status, `tool-use glob returned HTTP ${status}: ${errMsg}`).toBe(200);
     expect(data.choices).toBeDefined();
 
-    const content = String((data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "");
+    const content = String(
+      (data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "",
+    );
     console.log(
       `[openclaw-e2e] Tool glob: provider=${data._symphony_provider}, elapsed=${elapsed}ms, ` +
-      `content=${content.slice(0, 200)}`,
+        `content=${content.slice(0, 200)}`,
     );
   });
 
   test("streaming tool-use — exec via streaming mode", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const { status, chunks, content, elapsed, errMsg } = await sendStreamingCompletion(
       "symphony/main",
       "Run the command: echo streaming-tool-test. Return only the output.",
     );
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status, `streaming tool-use returned HTTP ${status}: ${errMsg}`).toBe(200);
     expect(chunks.length).toBeGreaterThan(0);
 
     console.log(
       `[openclaw-e2e] Streaming tool exec: ${chunks.length} chunks, ` +
-      `elapsed=${elapsed}ms, content=${content.slice(0, 200)}`,
+        `elapsed=${elapsed}ms, content=${content.slice(0, 200)}`,
     );
   });
 });
@@ -1422,7 +1639,10 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
 
   test("invalid route returns error without crashing the bridge", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const { status, data } = await sendCompletion("symphony/nonexistent-provider-xyz");
     // The bridge's resolveRoute() falls back unknown models to symphony/main,
@@ -1430,7 +1650,9 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     expect([200, 400, 404, 500]).toContain(status);
 
     if (status === 200) {
-      console.log(`[openclaw-e2e] Invalid route: status=200 (fell back to default model), provider=${data._symphony_provider}`);
+      console.log(
+        `[openclaw-e2e] Invalid route: status=200 (fell back to default model), provider=${data._symphony_provider}`,
+      );
     } else {
       const errMsg = (data.error as Record<string, string>)?.message ?? "";
       console.log(`[openclaw-e2e] Invalid route: status=${status}, error=${errMsg.slice(0, 100)}`);
@@ -1439,23 +1661,34 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
 
   test("bridge recovers after invalid route error", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     await sendCompletion("symphony/nonexistent-provider-xyz");
 
     const { status, data } = await sendCompletion("symphony/main", "Say ok.");
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status, `Recovery request failed with HTTP ${status}: ${errMsg}`).toBe(200);
     expect(data.choices).toBeDefined();
-    console.log(`[openclaw-e2e] Bridge recovery: provider=${data._symphony_provider}, status=200 ✅`);
+    console.log(
+      `[openclaw-e2e] Bridge recovery: provider=${data._symphony_provider}, status=200 ✅`,
+    );
   });
 
   test("bridge recovers after malformed request", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
       method: "POST",
@@ -1467,7 +1700,10 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     const { status, data } = await sendCompletion("symphony/main", "Say ok.");
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
-    if (isTransientError(status, errMsg)) { test.skip(); return; }
+    if (isTransientError(status, errMsg)) {
+      test.skip();
+      return;
+    }
 
     expect(status, `Post-malformed recovery failed: ${errMsg}`).toBe(200);
     console.log(`[openclaw-e2e] Post-malformed recovery: provider=${data._symphony_provider} ✅`);
@@ -1475,7 +1711,10 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
 
   test("bridge health remains ok after error sequence", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
       signal: AbortSignal.timeout(5_000),
@@ -1485,7 +1724,7 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     expect(data.status).toBe("ok");
     console.log(
       `[openclaw-e2e] Post-degradation health: status=${data.status}, ` +
-      `configured=${data.providersConfigured}, available=${data.providersAvailable}`,
+        `configured=${data.providersConfigured}, available=${data.providersAvailable}`,
     );
   });
 });
@@ -1499,12 +1738,13 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
 
   test("REGRESSION: AI SDK v6 /v1/responses path — third-party providers use /v1/chat/completions", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     // cerebras removed: dynamically excluded by tool-capability probe
-    const thirdPartyRoutes = [
-      { route: "symphony/groq", provider: "groq" },
-    ];
+    const thirdPartyRoutes = [{ route: "symphony/groq", provider: "groq" }];
 
     for (const { route, provider } of thirdPartyRoutes) {
       const { status, data } = await sendCompletion(route, "Say ok.");
@@ -1518,14 +1758,19 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
       ).not.toMatch(/Not Found/);
 
       if (status === 200) {
-        console.log(`[openclaw-e2e] REGRESSION(v6-responses): ${provider} OK via chat/completions path`);
+        console.log(
+          `[openclaw-e2e] REGRESSION(v6-responses): ${provider} OK via chat/completions path`,
+        );
       }
     }
   });
 
   test("REGRESSION: .chat() vs () — providers return content, not endpoint errors", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const routes = [
       { route: "symphony/groq", provider: "groq" },
@@ -1541,7 +1786,8 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
       if (isTransientError(status, errMsg)) continue;
 
       if (status === 200) {
-        const content = (data.choices as Array<{ message: { content: string } }>)[0]?.message?.content;
+        const content = (data.choices as Array<{ message: { content: string } }>)[0]?.message
+          ?.content;
         expect(content, `${provider}: .chat() regression — empty content`).toBeTruthy();
         successes++;
         console.log(`[openclaw-e2e] REGRESSION(.chat): ${provider} returned content OK`);
@@ -1553,7 +1799,10 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
 
   test("REGRESSION: provider cascade does not get stuck after single provider failure", async () => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-    if (!reachable) { test.skip(); return; }
+    if (!reachable) {
+      test.skip();
+      return;
+    }
 
     const { status: s1 } = await sendCompletion("symphony/main", "Say 1.");
     const { status: s2 } = await sendCompletion("symphony/main", "Say 2.");
@@ -1562,10 +1811,13 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
     const successes = [s1, s2, s3].filter((s) => s === 200).length;
     console.log(
       `[openclaw-e2e] REGRESSION(cascade-stuck): ${successes}/3 sequential requests succeeded ` +
-      `(statuses: ${s1}, ${s2}, ${s3})`,
+        `(statuses: ${s1}, ${s2}, ${s3})`,
     );
 
-    expect(successes, "Cascade should not get stuck — at least 2 of 3 sequential requests should succeed").toBeGreaterThanOrEqual(2);
+    expect(
+      successes,
+      "Cascade should not get stuck — at least 2 of 3 sequential requests should succeed",
+    ).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -1587,7 +1839,9 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
     const data = await res.json();
     expect(data.status).toMatch(/^(ok|initializing)$/);
     expect(data.model).toBe("codebuff/base");
-    console.log(`[openclaw-e2e] Codebuff health: keyConfigured=${data.apiKeyConfigured}, mode=${data.mode}`);
+    console.log(
+      `[openclaw-e2e] Codebuff health: keyConfigured=${data.apiKeyConfigured}, mode=${data.mode}`,
+    );
   });
 
   test("Codebuff bridge /v1/models lists codebuff model", async () => {
@@ -1634,10 +1888,14 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
       const data = await res.json();
       expect(data.choices).toBeDefined();
       expect(data.choices[0].message.content).toBeTruthy();
-      console.log(`[openclaw-e2e] Codebuff completion: elapsed=${elapsed}ms, content=${data.choices[0].message.content.slice(0, 200)}`);
+      console.log(
+        `[openclaw-e2e] Codebuff completion: elapsed=${elapsed}ms, content=${data.choices[0].message.content.slice(0, 200)}`,
+      );
     } else {
       const error = await res.json();
-      console.log(`[openclaw-e2e] Codebuff completion failed: status=${res.status}, error=${error.error?.message}`);
+      console.log(
+        `[openclaw-e2e] Codebuff completion failed: status=${res.status}, error=${error.error?.message}`,
+      );
       expect(error.error).toBeDefined();
     }
   });
@@ -1695,10 +1953,14 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
 
       const elapsed = Date.now() - startTime;
       expect(chunks.length).toBeGreaterThan(0);
-      console.log(`[openclaw-e2e] Codebuff streaming: ${chunks.length} chunks, elapsed=${elapsed}ms`);
+      console.log(
+        `[openclaw-e2e] Codebuff streaming: ${chunks.length} chunks, elapsed=${elapsed}ms`,
+      );
     } else {
       const error = await res.json();
-      console.log(`[openclaw-e2e] Codebuff streaming failed: status=${res.status}, error=${error.error?.message}`);
+      console.log(
+        `[openclaw-e2e] Codebuff streaming failed: status=${res.status}, error=${error.error?.message}`,
+      );
     }
   });
 });
@@ -1753,22 +2015,33 @@ interface ModelsStatusOutput {
   imageFallbacks: string[];
 }
 
-function spawnTuiAndCapture(messageText: string, captureMs = 15_000): Promise<{ output: string; exitCode: number | null }> {
+function spawnTuiAndCapture(
+  messageText: string,
+  captureMs = 15_000,
+): Promise<{ output: string; exitCode: number | null }> {
   return new Promise((resolve) => {
     let output = "";
     let child: ChildProcess;
     try {
-      child = spawn("script", ["-qc", `openclaw tui --no-color --message "${messageText}"`, "/dev/null"], {
-        env: { ...process.env, NO_COLOR: "1", TERM: "dumb" },
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+      child = spawn(
+        "script",
+        ["-qc", `openclaw tui --no-color --message "${messageText}"`, "/dev/null"],
+        {
+          env: { ...process.env, NO_COLOR: "1", TERM: "dumb" },
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
     } catch {
       resolve({ output: "", exitCode: 1 });
       return;
     }
 
-    child.stdout?.on("data", (data: Buffer) => { output += data.toString(); });
-    child.stderr?.on("data", (data: Buffer) => { output += data.toString(); });
+    child.stdout?.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
+    child.stderr?.on("data", (data: Buffer) => {
+      output += data.toString();
+    });
 
     const timer = setTimeout(() => {
       child.kill("SIGTERM");
@@ -1879,8 +2152,14 @@ function runTuiPromptWithPexpect(
   timeoutSecs: number,
 ): TuiPexpectResult {
   const defaultResult: TuiPexpectResult = {
-    connected: false, running: false, idle: false,
-    modelInfo: "", tokenInfo: "", rawLength: 0, elapsed: 0, error: "execSync failed",
+    connected: false,
+    running: false,
+    idle: false,
+    modelInfo: "",
+    tokenInfo: "",
+    rawLength: 0,
+    elapsed: 0,
+    error: "execSync failed",
   };
 
   const scriptPath = join(tmpdir(), `openclaw-tui-pexpect-${Date.now()}.py`);
@@ -1906,7 +2185,11 @@ function runTuiPromptWithPexpect(
     const msg = err instanceof Error ? err.message.slice(0, 200) : "unknown error";
     return { ...defaultResult, error: `execSync failed: ${msg}` };
   } finally {
-    try { unlinkSync(scriptPath); } catch { /* cleanup best-effort */ }
+    try {
+      unlinkSync(scriptPath);
+    } catch {
+      /* cleanup best-effort */
+    }
   }
 }
 
@@ -1973,7 +2256,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
 
     console.log(
       `[openclaw-e2e] CLI status: default=${data.defaultModel}, fallbacks=${data.fallbacks.length}, ` +
-      `allowed=${data.allowed.length}`,
+        `allowed=${data.allowed.length}`,
     );
   });
 
@@ -1989,17 +2272,19 @@ test.describe("OpenClaw CLI Model Validation", () => {
     const { fallbacks } = data;
     const firstDirectOllamaIdx = fallbacks.findIndex((f) => f.startsWith("ollama/"));
     if (firstDirectOllamaIdx < 0) {
-      console.log("[openclaw-e2e] No direct ollama models in live fallbacks, skipping ordering check");
+      console.log(
+        "[openclaw-e2e] No direct ollama models in live fallbacks, skipping ordering check",
+      );
       return;
     }
 
-    const symphonyAfterOllama = fallbacks.slice(firstDirectOllamaIdx).filter(
-      (f) => f.startsWith("symphony-bridge/"),
-    );
+    const symphonyAfterOllama = fallbacks
+      .slice(firstDirectOllamaIdx)
+      .filter((f) => f.startsWith("symphony-bridge/"));
 
     console.log(
       `[openclaw-e2e] Live fallback ordering: first direct ollama at index ${firstDirectOllamaIdx}, ` +
-      `${symphonyAfterOllama.length} symphony routes after it`,
+        `${symphonyAfterOllama.length} symphony routes after it`,
     );
 
     expect(
@@ -2034,10 +2319,15 @@ test.describe("OpenClaw CLI Model Validation", () => {
 
     const missing = expectedSymphonyRoutes.filter((r) => !data.fallbacks.includes(r));
     if (missing.length > 0) {
-      console.log(`[openclaw-e2e] Missing symphony routes in live fallbacks: ${missing.join(", ")}`);
+      console.log(
+        `[openclaw-e2e] Missing symphony routes in live fallbacks: ${missing.join(", ")}`,
+      );
     }
 
-    expect(missing, `Symphony routes missing from live fallbacks: ${missing.join(", ")}`).toHaveLength(0);
+    expect(
+      missing,
+      `Symphony routes missing from live fallbacks: ${missing.join(", ")}`,
+    ).toHaveLength(0);
   });
 
   test("codebuff-bridge is last in the live fallback chain", () => {
@@ -2091,12 +2381,11 @@ test.describe("OpenClaw Model Selection Validation", () => {
       console.log(`[openclaw-e2e] Symphony models NOT selectable: ${missing.join(", ")}`);
     }
 
-    expect(
-      missing,
-      `Symphony models not in allowed list: ${missing.join(", ")}`,
-    ).toHaveLength(0);
+    expect(missing, `Symphony models not in allowed list: ${missing.join(", ")}`).toHaveLength(0);
 
-    console.log(`[openclaw-e2e] All ${expectedModels.length} symphony bridge models are selectable`);
+    console.log(
+      `[openclaw-e2e] All ${expectedModels.length} symphony bridge models are selectable`,
+    );
   });
 
   test("all direct ollama models are selectable (in allowed list)", () => {
@@ -2115,10 +2404,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     ];
 
     const missing = ollamaModels.filter((m) => !data.allowed.includes(m));
-    expect(
-      missing,
-      `Ollama models not in allowed list: ${missing.join(", ")}`,
-    ).toHaveLength(0);
+    expect(missing, `Ollama models not in allowed list: ${missing.join(", ")}`).toHaveLength(0);
 
     console.log(`[openclaw-e2e] All ${ollamaModels.length} direct ollama models are selectable`);
   });
@@ -2132,10 +2418,9 @@ test.describe("OpenClaw Model Selection Validation", () => {
       return;
     }
 
-    expect(
-      data.allowed,
-      "codebuff-bridge/codebuff/base not in allowed list",
-    ).toContain("codebuff-bridge/codebuff/base");
+    expect(data.allowed, "codebuff-bridge/codebuff/base not in allowed list").toContain(
+      "codebuff-bridge/codebuff/base",
+    );
   });
 
   test("configured model count matches expected", () => {
@@ -2150,7 +2435,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     const configuredModels = data.models.filter((m) => m.tags.includes("configured"));
     console.log(
       `[openclaw-e2e] Configured models: ${configuredModels.length} ` +
-      `(${configuredModels.map((m) => m.key).join(", ")})`,
+        `(${configuredModels.map((m) => m.key).join(", ")})`,
     );
 
     expect(configuredModels.length).toBeGreaterThanOrEqual(17);
@@ -2186,11 +2471,14 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
 
     const { output, exitCode } = await spawnTuiAndCapture("Say ok", 15_000);
 
-    // oxlint-disable-next-line no-control-regex -- intentional ANSI escape stripping
-    const stripped = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "").replace(/[\x00-\x09\x0b-\x1f]/g, "");
+    /* oxlint-disable no-control-regex -- intentional ANSI escape stripping */
+    const stripped = output
+      .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+      .replace(/[\x00-\x09\x0b-\x1f]/g, "");
+    /* oxlint-enable no-control-regex */
     console.log(
       `[openclaw-e2e] TUI output (${stripped.length} chars, exitCode=${exitCode}): ` +
-      `${stripped.slice(0, 300).replace(/\n/g, "⏎")}`,
+        `${stripped.slice(0, 300).replace(/\n/g, "⏎")}`,
     );
 
     expect(
@@ -2208,11 +2496,15 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
 
     const { output } = await spawnTuiAndCapture("Reply with only the word pong", 20_000);
 
-    // oxlint-disable-next-line no-control-regex -- intentional ANSI escape stripping
-    const stripped = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "").replace(/[\x00-\x09\x0b-\x1f]/g, "");
+    /* oxlint-disable no-control-regex -- intentional ANSI escape stripping */
+    const stripped = output
+      .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+      .replace(/[\x00-\x09\x0b-\x1f]/g, "");
+    /* oxlint-enable no-control-regex */
     const lower = stripped.toLowerCase();
 
-    const hasResponse = lower.includes("pong") ||
+    const hasResponse =
+      lower.includes("pong") ||
       lower.includes("ok") ||
       lower.includes("connected") ||
       lower.includes("symphony") ||
@@ -2221,14 +2513,11 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
 
     console.log(
       `[openclaw-e2e] TUI response check (${stripped.length} chars): ` +
-      `hasPong=${lower.includes("pong")}, ` +
-      `preview=${stripped.slice(0, 400).replace(/\n/g, "⏎")}`,
+        `hasPong=${lower.includes("pong")}, ` +
+        `preview=${stripped.slice(0, 400).replace(/\n/g, "⏎")}`,
     );
 
-    expect(
-      hasResponse,
-      "TUI should show a connection indicator or model response",
-    ).toBe(true);
+    expect(hasResponse, "TUI should show a connection indicator or model response").toBe(true);
   });
 
   test("openclaw tui sends prompt through pipeline and validates response via API", async () => {
@@ -2248,9 +2537,9 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
 
     console.log(
       `[openclaw-e2e] TUI prompt test: connected=${tuiResult.connected}, ` +
-      `running=${tuiResult.running}, idle=${tuiResult.idle}, ` +
-      `elapsed=${tuiResult.elapsed}s, rawLen=${tuiResult.rawLength}, ` +
-      `error=${tuiResult.error || "none"}`,
+        `running=${tuiResult.running}, idle=${tuiResult.idle}, ` +
+        `elapsed=${tuiResult.elapsed}s, rawLen=${tuiResult.rawLength}, ` +
+        `error=${tuiResult.error || "none"}`,
     );
     if (tuiResult.modelInfo) {
       console.log(`[openclaw-e2e] TUI model: ${tuiResult.modelInfo}`);
@@ -2259,10 +2548,7 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
       console.log(`[openclaw-e2e] TUI tokens: ${tuiResult.tokenInfo}`);
     }
 
-    expect(
-      tuiResult.connected,
-      "TUI should connect to the gateway",
-    ).toBe(true);
+    expect(tuiResult.connected, "TUI should connect to the gateway").toBe(true);
 
     expect(
       tuiResult.running || tuiResult.idle,
@@ -2300,7 +2586,7 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
 
     console.log(
       `[openclaw-e2e] Content validation: provider=${data._symphony_provider}, ` +
-      `elapsed=${elapsed}ms, content="${content.slice(0, 100)}"`,
+        `elapsed=${elapsed}ms, content="${content.slice(0, 100)}"`,
     );
 
     expect(

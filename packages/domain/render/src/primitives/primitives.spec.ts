@@ -268,10 +268,7 @@ describe("domain/render/primitives", () => {
     });
 
     it("exports exactly 2 members", () => {
-      expect(Object.keys(index).sort()).toEqual([
-        "createRNG",
-        "createSeededRandom",
-      ]);
+      expect(Object.keys(index).sort()).toEqual(["createRNG", "createSeededRandom"]);
     });
   });
 });

@@ -116,13 +116,8 @@ describe("domain/share", () => {
     });
 
     it("wraps in url tags when linkUrl is provided", () => {
-      const result = generateBBCodeEmbed(
-        "https://example.com/qr.png",
-        "https://example.com",
-      );
-      expect(result).toBe(
-        "[url=https://example.com][img]https://example.com/qr.png[/img][/url]",
-      );
+      const result = generateBBCodeEmbed("https://example.com/qr.png", "https://example.com");
+      expect(result).toBe("[url=https://example.com][img]https://example.com/qr.png[/img][/url]");
     });
   });
 
@@ -246,13 +241,7 @@ describe("domain/share", () => {
     });
 
     it("passes width and height to convertToImageApiUrl", () => {
-      const result = generateMarkdownEmbed(
-        "https://anqr.link/?data=hello",
-        "QR",
-        200,
-        300,
-        400,
-      );
+      const result = generateMarkdownEmbed("https://anqr.link/?data=hello", "QR", 200, 300, 400);
       expect(result).toContain("w=300");
       expect(result).toContain("h=400");
     });

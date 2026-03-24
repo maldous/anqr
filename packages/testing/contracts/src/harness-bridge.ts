@@ -105,11 +105,15 @@ export const healthResponseSchema = z.object({
   providersConfigured: z.number().optional(),
   providersAvailable: z.number().optional(),
   providersWithStats: z.number().optional(),
-  configuredProviders: z.array(z.object({
-    name: z.string(),
-    status: z.string(),
-    available: z.boolean(),
-  })).optional(),
+  configuredProviders: z
+    .array(
+      z.object({
+        name: z.string(),
+        status: z.string(),
+        available: z.boolean(),
+      }),
+    )
+    .optional(),
   lastProbeAt: z.string().nullable().optional(),
   rankedProviders: z
     .array(
@@ -197,9 +201,11 @@ export function validateContract(
 }
 
 // Validate streaming response format
-export function validateStreamingContract(
-  chunks: unknown[],
-): { valid: boolean; errors: string[]; finalChunkFound: boolean } {
+export function validateStreamingContract(chunks: unknown[]): {
+  valid: boolean;
+  errors: string[];
+  finalChunkFound: boolean;
+} {
   const errors: string[] = [];
   let finalChunkFound = false;
 

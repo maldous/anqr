@@ -142,9 +142,7 @@ describe("domain/payload generators (extended)", () => {
     });
 
     it("is case-insensitive", () => {
-      expect(generateMessagingLink("WhatsApp", "15551234567")).toBe(
-        "https://wa.me/15551234567",
-      );
+      expect(generateMessagingLink("WhatsApp", "15551234567")).toBe("https://wa.me/15551234567");
     });
 
     it("returns identifier as-is for unknown platform", () => {
@@ -308,9 +306,7 @@ describe("domain/payload generators (extended)", () => {
     });
 
     it("includes amount when positive", () => {
-      expect(generateCashApp({ cashtag: "john", amount: 25 })).toBe(
-        "https://cash.app/$john/25.00",
-      );
+      expect(generateCashApp({ cashtag: "john", amount: 25 })).toBe("https://cash.app/$john/25.00");
     });
 
     it("omits amount when zero", () => {
@@ -332,15 +328,13 @@ describe("domain/payload generators (extended)", () => {
     });
 
     it("includes currency code with amount", () => {
-      expect(
-        generatePayPalMe({ username: "john", amount: 10, currencyCode: "eur" }),
-      ).toBe("https://paypal.me/john/10.00EUR");
+      expect(generatePayPalMe({ username: "john", amount: 10, currencyCode: "eur" })).toBe(
+        "https://paypal.me/john/10.00EUR",
+      );
     });
 
     it("omits amount when zero", () => {
-      expect(generatePayPalMe({ username: "john", amount: 0 })).toBe(
-        "https://paypal.me/john",
-      );
+      expect(generatePayPalMe({ username: "john", amount: 0 })).toBe("https://paypal.me/john");
     });
   });
 
@@ -356,9 +350,7 @@ describe("domain/payload generators (extended)", () => {
     });
 
     it("strips existing lightning: prefix", () => {
-      expect(generateLightning({ invoice: "lightning:lnbc1abc123" })).toBe(
-        "lightning:lnbc1abc123",
-      );
+      expect(generateLightning({ invoice: "lightning:lnbc1abc123" })).toBe("lightning:lnbc1abc123");
     });
   });
 
@@ -398,15 +390,11 @@ describe("domain/payload generators (extended)", () => {
     });
 
     it("includes chainId when not 1", () => {
-      expect(buildPlainEthURI({ targetAddress: "0xabc", chainId: 137 })).toBe(
-        "ethereum:0xabc@137",
-      );
+      expect(buildPlainEthURI({ targetAddress: "0xabc", chainId: 137 })).toBe("ethereum:0xabc@137");
     });
 
     it("omits chainId when 1 (mainnet)", () => {
-      expect(buildPlainEthURI({ targetAddress: "0xabc", chainId: 1 })).toBe(
-        "ethereum:0xabc",
-      );
+      expect(buildPlainEthURI({ targetAddress: "0xabc", chainId: 1 })).toBe("ethereum:0xabc");
     });
 
     it("includes value as query param", () => {
@@ -513,7 +501,7 @@ describe("domain/payload generators (extended)", () => {
     it("includes transaction note truncated to 50 chars", () => {
       const longNote = "A".repeat(60);
       const result = generateUPI({ pa: "user@upi", tn: longNote });
-      expect(result).toContain(`tn=${'A'.repeat(50)}`);
+      expect(result).toContain(`tn=${"A".repeat(50)}`);
     });
   });
 
@@ -610,7 +598,7 @@ describe("domain/payload generators (extended)", () => {
     it("truncates long summary to 50 chars", () => {
       const longSummary = "A".repeat(60);
       const result = generateEvent({ summary: longSummary });
-      expect(result).toContain(`SUMMARY:${'A'.repeat(47)}...`);
+      expect(result).toContain(`SUMMARY:${"A".repeat(47)}...`);
     });
 
     it("includes location", () => {
@@ -733,10 +721,10 @@ describe("domain/payload generators (extended)", () => {
     it("appends IMPP", () => {
       const lines: string[] = [];
       appendVCardOptionalFields(lines, {
-        impp: "xmpp:john@example.com",  // cspell:disable-line
+        impp: "xmpp:john@example.com", // cspell:disable-line
         version: "3.0",
       } as VCardHelper);
-      expect(lines).toContain("IMPP:xmpp:john@example.com");  // cspell:disable-line
+      expect(lines).toContain("IMPP:xmpp:john@example.com"); // cspell:disable-line
     });
 
     it("appends UID", () => {
@@ -773,11 +761,7 @@ describe("domain/payload generators (extended)", () => {
 
     it("processes multiple emails", () => {
       const lines: string[] = [];
-      appendValidEmailLines(
-        lines,
-        ["john@example.com", "invalid", "jane@example.com"],
-        "3.0",
-      );
+      appendValidEmailLines(lines, ["john@example.com", "invalid", "jane@example.com"], "3.0");
       expect(lines.length).toBe(2);
     });
   });

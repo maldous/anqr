@@ -64,20 +64,17 @@ describe("Service Startup and Environment Contracts", () => {
     });
 
     it("should accept local- prefixed tokens for chat completions", async () => {
-      const { status } = await safeFetch(
-        "http://127.0.0.1:4319/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer local-symphony",
-          },
-          body: JSON.stringify({
-            model: "symphony/main",
-            messages: [{ role: "user", content: "test" }],
-          }),
+      const { status } = await safeFetch("http://127.0.0.1:4319/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer local-symphony",
         },
-      );
+        body: JSON.stringify({
+          model: "symphony/main",
+          messages: [{ role: "user", content: "test" }],
+        }),
+      });
 
       if (status === -1) {
         expect(true).toBe(true);

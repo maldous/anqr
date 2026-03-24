@@ -47,12 +47,7 @@ describe("contracts/mcp", () => {
     });
 
     it("accepts all error correction levels", () => {
-      const levels: Array<NonNullable<QrGenerateInput["errorCorrection"]>> = [
-        "L",
-        "M",
-        "Q",
-        "H",
-      ];
+      const levels: Array<NonNullable<QrGenerateInput["errorCorrection"]>> = ["L", "M", "Q", "H"];
       expect(new Set(levels).size).toBe(4);
     });
 
@@ -472,9 +467,9 @@ describe("contracts/mcp", () => {
       expect(
         schema.parse({ data: "x", overlayUrl: "https://example.com/logo.png" }).overlayUrl,
       ).toBe("https://example.com/logo.png");
-      expect(schema.safeParse({ data: "x", overlayUrl: "http://example.com/logo.png" }).success).toBe(
-        false,
-      );
+      expect(
+        schema.safeParse({ data: "x", overlayUrl: "http://example.com/logo.png" }).success,
+      ).toBe(false);
     });
 
     it("validates overlayMode enum", () => {
@@ -668,8 +663,11 @@ describe("contracts/mcp", () => {
         size: { min: 50, max: 4096, default: 400 },
         margin: { min: 0, max: 20, default: 4 },
         overlay: {
-          httpsOnly: true, privateNetworkBlocked: true,
-          redirectsRevalidated: true, maxBytes: 5_000_000, timeoutMs: 10_000,
+          httpsOnly: true,
+          privateNetworkBlocked: true,
+          redirectsRevalidated: true,
+          maxBytes: 5_000_000,
+          timeoutMs: 10_000,
         },
         safety: [],
       });

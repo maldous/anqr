@@ -408,16 +408,17 @@ describe("contracts/share", () => {
   describe("structural field counts (drift detection)", () => {
     it("EmbedOptions has exactly 5 optional fields", () => {
       const full: EmbedOptions = {
-        width: 400, height: 400, responsive: true,
-        showBorder: false, includeLink: true,
+        width: 400,
+        height: 400,
+        responsive: true,
+        showBorder: false,
+        includeLink: true,
       };
       expect(Object.keys(full)).toHaveLength(5);
     });
 
     it("ShareConfig blendPreservationMode is strictly 'overlay' | 'dither'", () => {
-      const modes: Array<ShareConfig["blendPreservationMode"]> = [
-        "overlay", "dither", undefined,
-      ];
+      const modes: Array<ShareConfig["blendPreservationMode"]> = ["overlay", "dither", undefined];
       const defined = modes.filter((m): m is NonNullable<typeof m> => m !== undefined);
       expect(new Set(defined).size).toBe(2);
     });

@@ -72,12 +72,12 @@ Linear (Todo issues)
 
 The credit-gate classifies every provider into one of four tiers:
 
-| Tier               | Providers                                            | Behavior                                          |
-| ------------------ | ---------------------------------------------------- | ------------------------------------------------- |
-| `paid`             | codex, codebuff                                      | Probed first; uses paid API credits               |
-| `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models | Dynamic scoring; default tier                     |
-| `local-proxy`      | openclaw, codebuff-bridge                            | Local HTTP gateways to other services             |
-| `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b | Score-capped at 0.25; always rank last            |
+| Tier               | Providers                                                             | Behavior                               |
+| ------------------ | --------------------------------------------------------------------- | -------------------------------------- |
+| `paid`             | codex, codebuff                                                       | Probed first; uses paid API credits    |
+| `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models | Dynamic scoring; default tier          |
+| `local-proxy`      | openclaw, codebuff-bridge                                             | Local HTTP gateways to other services  |
+| `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b      | Score-capped at 0.25; always rank last |
 
 **Key constraint:** `SAFETY_NET_SCORE_CEILING = 0.25` — safety-net providers are capped at this score in dynamic ranking so they never outrank even a mediocre cloud provider. `getRankedProviders()` partitions providers into two groups (normal + safety-net) and always appends safety nets after all other providers regardless of their raw score.
 

@@ -23,6 +23,7 @@ import {
   RUNNER_MAX_VALIDATION_FIXES,
   RUNNER_VALIDATION_FIX_TURNS,
   RUNNER_ISSUE_COOLDOWN_MS,
+  // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-config.mjs";
 
 describe("symphony-config.mjs", () => {

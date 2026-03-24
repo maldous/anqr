@@ -25,7 +25,14 @@ const COMPLETION_TIMEOUT_MS = 120_000;
 // Contract schemas
 const symphonyModelsResponseSchema = z.object({
   object: z.literal("list"),
-  data: z.array(z.object({ id: z.string(), object: z.literal("model"), owned_by: z.string(), created: z.number() })),
+  data: z.array(
+    z.object({
+      id: z.string(),
+      object: z.literal("model"),
+      owned_by: z.string(),
+      created: z.number(),
+    }),
+  ),
 });
 
 const chatCompletionResponseSchema = z.object({
@@ -33,8 +40,18 @@ const chatCompletionResponseSchema = z.object({
   object: z.literal("chat.completion"),
   created: z.number(),
   model: z.string(),
-  choices: z.array(z.object({ index: z.number(), message: z.object({ role: z.literal("assistant"), content: z.string().nullable() }), finish_reason: z.string() })),
-  usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number(), total_tokens: z.number() }),
+  choices: z.array(
+    z.object({
+      index: z.number(),
+      message: z.object({ role: z.literal("assistant"), content: z.string().nullable() }),
+      finish_reason: z.string(),
+    }),
+  ),
+  usage: z.object({
+    prompt_tokens: z.number(),
+    completion_tokens: z.number(),
+    total_tokens: z.number(),
+  }),
   _symphony_provider: z.string().optional(),
   _symphony_attempts: z.number().optional(),
   _symphony_tried: z.array(z.string()).optional(),
@@ -46,7 +63,13 @@ const streamingChunkSchema = z.object({
   object: z.literal("chat.completion.chunk"),
   created: z.number(),
   model: z.string(),
-  choices: z.array(z.object({ index: z.number(), delta: z.object({ role: z.string().optional(), content: z.string().nullable().optional() }), finish_reason: z.string().nullable() })),
+  choices: z.array(
+    z.object({
+      index: z.number(),
+      delta: z.object({ role: z.string().optional(), content: z.string().nullable().optional() }),
+      finish_reason: z.string().nullable(),
+    }),
+  ),
 });
 
 const healthResponseSchema = z.object({
@@ -55,11 +78,15 @@ const healthResponseSchema = z.object({
   providersConfigured: z.number().optional(),
   providersAvailable: z.number().optional(),
   providersWithStats: z.number().optional(),
-  configuredProviders: z.array(z.object({
-    name: z.string(),
-    status: z.string(),
-    available: z.boolean(),
-  })).optional(),
+  configuredProviders: z
+    .array(
+      z.object({
+        name: z.string(),
+        status: z.string(),
+        available: z.boolean(),
+      }),
+    )
+    .optional(),
   lastProbeAt: z.string().nullable().optional(),
   rankedProviders: z.array(z.object({ name: z.string(), score: z.number().nullable() })).optional(),
   tools: z.array(z.string()).optional(),
@@ -69,7 +96,10 @@ function validateStreamingContract(chunks: string[]) {
   const errors: string[] = [];
   let finalChunkFound = false;
   for (let i = 0; i < chunks.length; i++) {
-    if (chunks[i] === "[DONE]") { finalChunkFound = true; continue; }
+    if (chunks[i] === "[DONE]") {
+      finalChunkFound = true;
+      continue;
+    }
     try {
       const parsed = JSON.parse(chunks[i]);
       const result = streamingChunkSchema.safeParse(parsed);
@@ -133,7 +163,9 @@ describe("Symphony Bridge Contract Tests", () => {
   beforeAll(async () => {
     bridgeAvailable = await isBridgeReachable(baseUrl);
     if (!bridgeAvailable) {
-      console.warn(`[harness-bridge] ⚠️ Symphony bridge not reachable at ${baseUrl} — skipping live tests`);
+      console.warn(
+        `[harness-bridge] ⚠️ Symphony bridge not reachable at ${baseUrl} — skipping live tests`,
+      );
     }
   });
 
@@ -236,27 +268,31 @@ describe("Symphony Bridge Contract Tests", () => {
       expect(data.choices[0].message.content).toBeTruthy();
     });
 
-    it("should include provider attempts in response", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should include provider attempts in response",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const scenario = symphonyTestScenarios.simplePrompt;
+        const scenario = symphonyTestScenarios.simplePrompt;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(scenario),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(scenario),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      expect(data._symphony_attempts).toBeDefined();
-      expect(data._symphony_tried).toBeDefined();
-      expect(Array.isArray(data._symphony_tried)).toBe(true);
-    });
+        expect(data._symphony_attempts).toBeDefined();
+        expect(data._symphony_tried).toBeDefined();
+        expect(Array.isArray(data._symphony_tried)).toBe(true);
+      },
+    );
   });
 
   describe("POST /v1/chat/completions - Streaming", () => {
@@ -484,22 +520,30 @@ describe("Symphony Bridge Contract Tests", () => {
       expect([401, 403]).toContain(res.status);
     });
 
-    it("should accept local-prefixed tokens on completions", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should accept local-prefixed tokens on completions",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer local-test-token",
-        },
-        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer local-test-token",
+          },
+          body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      expect(res.status, "local-prefixed token should not be rejected as unauthorized").not.toBe(401);
-      expect(res.status, "local-prefixed token should not be rejected as forbidden").not.toBe(403);
-    });
+        expect(res.status, "local-prefixed token should not be rejected as unauthorized").not.toBe(
+          401,
+        );
+        expect(res.status, "local-prefixed token should not be rejected as forbidden").not.toBe(
+          403,
+        );
+      },
+    );
 
     it("should reject non-local Bearer tokens on completions", async () => {
       if (!bridgeAvailable) return;
@@ -592,102 +636,117 @@ describe("Symphony Bridge Contract Tests", () => {
   });
 
   describe("Metrics increment verification", () => {
-    it("should increment totalRequests after a completion", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should increment totalRequests after a completion",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const before = await fetch(`${baseUrl}/v1/metrics`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      expect(before.status).toBe(200);
-      const metricsBefore = await before.json();
-      const totalBefore = metricsBefore.bridge?.totalRequests ?? 0;
+        const before = await fetch(`${baseUrl}/v1/metrics`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+        expect(before.status).toBe(200);
+        const metricsBefore = await before.json();
+        const totalBefore = metricsBefore.bridge?.totalRequests ?? 0;
 
-      await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
+        await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      const after = await fetch(`${baseUrl}/v1/metrics`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      expect(after.status).toBe(200);
-      const metricsAfter = await after.json();
-      const totalAfter = metricsAfter.bridge?.totalRequests ?? 0;
+        const after = await fetch(`${baseUrl}/v1/metrics`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+        expect(after.status).toBe(200);
+        const metricsAfter = await after.json();
+        const totalAfter = metricsAfter.bridge?.totalRequests ?? 0;
 
-      expect(
-        totalAfter,
-        `totalRequests should increase: before=${totalBefore}, after=${totalAfter}`,
-      ).toBeGreaterThan(totalBefore);
-    });
+        expect(
+          totalAfter,
+          `totalRequests should increase: before=${totalBefore}, after=${totalAfter}`,
+        ).toBeGreaterThan(totalBefore);
+      },
+    );
   });
 
   describe("Provider cooldown and recovery", () => {
-    it("should track provider usage in stats after completion", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should track provider usage in stats after completion",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
+        await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      const statsRes = await fetch(`${baseUrl}/v1/stats`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      expect(statsRes.status).toBe(200);
-      const stats = await statsRes.json();
+        const statsRes = await fetch(`${baseUrl}/v1/stats`, {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+        expect(statsRes.status).toBe(200);
+        const stats = await statsRes.json();
 
-      expect(stats.providerStats).toBeDefined();
-      const trackedProviders = Object.keys(stats.providerStats);
-      expect(trackedProviders.length, "At least one provider should be tracked in stats").toBeGreaterThan(0);
+        expect(stats.providerStats).toBeDefined();
+        const trackedProviders = Object.keys(stats.providerStats);
+        expect(
+          trackedProviders.length,
+          "At least one provider should be tracked in stats",
+        ).toBeGreaterThan(0);
 
-      const hasSuccessMetric = trackedProviders.some((name) => {
-        const ps = stats.providerStats[name];
-        return (ps.successes ?? 0) > 0 || (ps.totalRequests ?? 0) > 0;
-      });
-      expect(hasSuccessMetric, "At least one provider should have recorded a success").toBe(true);
-    });
+        const hasSuccessMetric = trackedProviders.some((name) => {
+          const ps = stats.providerStats[name];
+          return (ps.successes ?? 0) > 0 || (ps.totalRequests ?? 0) > 0;
+        });
+        expect(hasSuccessMetric, "At least one provider should have recorded a success").toBe(true);
+      },
+    );
 
-    it("should recover and serve requests after error-inducing input", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should recover and serve requests after error-inducing input",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: "{ invalid json to trigger error path",
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
+        await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: "{ invalid json to trigger error path",
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(data.choices).toBeDefined();
-      expect(data.choices[0].message.content).toBeTruthy();
-    });
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        expect(data.choices).toBeDefined();
+        expect(data.choices[0].message.content).toBeTruthy();
+      },
+    );
   });
 });
 
@@ -699,7 +758,9 @@ describe("Codebuff Bridge Contract Tests", () => {
   beforeAll(async () => {
     bridgeAvailable = await isBridgeReachable(baseUrl);
     if (!bridgeAvailable) {
-      console.warn(`[harness-bridge] ⚠️ Codebuff bridge not reachable at ${baseUrl} — skipping live tests`);
+      console.warn(
+        `[harness-bridge] ⚠️ Codebuff bridge not reachable at ${baseUrl} — skipping live tests`,
+      );
     }
   });
 

@@ -600,10 +600,16 @@ describe("observability/logging", () => {
     });
 
     it("captures structured log entry", () => {
-      captureToBuffer("TEST", "info", "hello", { key: "val" }, {
-        captureStructured: true,
-        captureString: false,
-      });
+      captureToBuffer(
+        "TEST",
+        "info",
+        "hello",
+        { key: "val" },
+        {
+          captureStructured: true,
+          captureString: false,
+        },
+      );
       expect(getStructuredLogCount()).toBe(1);
       const logs = getStructuredLogs();
       expect(logs[0].scope).toBe("TEST");
@@ -633,10 +639,16 @@ describe("observability/logging", () => {
     });
 
     it("includes context object in string output", () => {
-      captureToBuffer("SC", "info", "msg", { count: 42 }, {
-        captureStructured: false,
-        captureString: true,
-      });
+      captureToBuffer(
+        "SC",
+        "info",
+        "msg",
+        { count: 42 },
+        {
+          captureStructured: false,
+          captureString: true,
+        },
+      );
       const flushed = flushLogBuffer();
       expect(flushed).toContain("count=42");
     });

@@ -12,22 +12,22 @@
 // ---------------------------------------------------------------------------
 
 export const PROVIDER_MAX_INPUT_TOKENS = {
-  'codex':              100_000,
-  'codebuff':           200_000,  // managed internally by SDK
-  'groq':                 6_000,  // 12K TPM free tier shared with output
-  'mistral':             24_000,  // 32K context
-  'gemini':             200_000,  // 1M context — very generous
-  'gemini-lite':        200_000,
-  'sambanova':           24_000,  // 128K context but conservative
-  'cerebras':             6_000,  // 8K total context
-  'github-models':      100_000,  // gpt-4.1-mini 128K
-  'codebuff-bridge':    200_000,  // managed internally
-  'ollama-local':        24_000,  // qwen3-coder-next ~32K
-  'ollama-qwen2.5-coder-3b':   24_000,
-  'ollama-qwen2.5-coder-0.5b': 16_000,
+  codex: 100_000,
+  codebuff: 200_000, // managed internally by SDK
+  groq: 6_000, // 12K TPM free tier shared with output
+  mistral: 24_000, // 32K context
+  gemini: 200_000, // 1M context — very generous
+  "gemini-lite": 200_000,
+  sambanova: 24_000, // 128K context but conservative
+  cerebras: 6_000, // 8K total context
+  "github-models": 100_000, // gpt-4.1-mini 128K
+  "codebuff-bridge": 200_000, // managed internally
+  "ollama-local": 24_000, // qwen3-coder-next ~32K
+  "ollama-qwen2.5-coder-3b": 24_000,
+  "ollama-qwen2.5-coder-0.5b": 16_000,
 };
 export const DEFAULT_MAX_INPUT_TOKENS = 24_000; // OpenRouter and unknown providers
-export const MESSAGE_TRUNCATION_MARKER = '\n... [truncated for context limits]';
+export const MESSAGE_TRUNCATION_MARKER = "\n... [truncated for context limits]";
 export const PER_MESSAGE_CHAR_LIMIT = 12_000; // ~3K tokens — truncate any single message content beyond this
 export const CHARS_PER_TOKEN = 4; // conservative estimate for English/code
 
@@ -37,7 +37,7 @@ export const CHARS_PER_TOKEN = 4; // conservative estimate for English/code
 
 export function estimateTokens(text) {
   if (!text) return 0;
-  const str = typeof text === 'string' ? text : JSON.stringify(text);
+  const str = typeof text === "string" ? text : JSON.stringify(text);
   return Math.ceil(str.length / CHARS_PER_TOKEN);
 }
 
@@ -45,7 +45,7 @@ export function estimateMessagesTokens(messages) {
   let total = 0;
   for (const msg of messages) {
     total += 4; // per-message overhead (role, delimiters)
-    if (typeof msg.content === 'string') {
+    if (typeof msg.content === "string") {
       total += estimateTokens(msg.content);
     } else if (Array.isArray(msg.content)) {
       for (const part of msg.content) {
@@ -67,15 +67,16 @@ export function truncateString(str, maxChars) {
 
 export function truncateMessageContent(msg, maxChars) {
   const clone = { ...msg };
-  if (typeof clone.content === 'string') {
+  if (typeof clone.content === "string") {
     clone.content = truncateString(clone.content, maxChars);
   } else if (Array.isArray(clone.content)) {
     clone.content = clone.content.map((part) => {
-      if (part.type === 'text' && part.text && part.text.length > maxChars) {
+      if (part.type === "text" && part.text && part.text.length > maxChars) {
         return { ...part, text: truncateString(part.text, maxChars) };
       }
-      if (part.type === 'tool-result' && part.result) {
-        const resultStr = typeof part.result === 'string' ? part.result : JSON.stringify(part.result);
+      if (part.type === "tool-result" && part.result) {
+        const resultStr =
+          typeof part.result === "string" ? part.result : JSON.stringify(part.result);
         if (resultStr.length > maxChars) {
           return { ...part, result: truncateString(resultStr, maxChars) };
         }
@@ -110,13 +111,17 @@ export function truncateMessagesForProvider(messages, providerName) {
   // Under budget — no truncation needed
   if (estimated <= maxTokens) return messages;
 
-  console.log(`[symphony-bridge] ✂️ Context pruning for ${providerName}: ~${estimated} tokens > ${maxTokens} limit`);
+  console.log(
+    `[symphony-bridge] ✂️ Context pruning for ${providerName}: ~${estimated} tokens > ${maxTokens} limit`,
+  );
 
   // Pass 1: Truncate oversized individual messages
   let truncated = messages.map((msg) => truncateMessageContent(msg, PER_MESSAGE_CHAR_LIMIT));
   estimated = estimateMessagesTokens(truncated);
   if (estimated <= maxTokens) {
-    console.log(`[symphony-bridge] ✂️ Pass 1 (truncate large messages): ~${estimated} tokens — fits`);
+    console.log(
+      `[symphony-bridge] ✂️ Pass 1 (truncate large messages): ~${estimated} tokens — fits`,
+    );
     return truncated;
   }
 
@@ -125,7 +130,7 @@ export function truncateMessagesForProvider(messages, providerName) {
   const systemMessages = [];
   const nonSystemMessages = [];
   for (const msg of truncated) {
-    if (msg.role === 'system') {
+    if (msg.role === "system") {
       systemMessages.push(msg);
     } else {
       nonSystemMessages.push(msg);
@@ -135,10 +140,15 @@ export function truncateMessagesForProvider(messages, providerName) {
   if (nonSystemMessages.length > keepLast) {
     const dropped = nonSystemMessages.length - keepLast;
     const kept = nonSystemMessages.slice(-keepLast);
-    const marker = { role: 'system', content: `[${dropped} earlier messages removed for context limits]` };
+    const marker = {
+      role: "system",
+      content: `[${dropped} earlier messages removed for context limits]`,
+    };
     truncated = [...systemMessages, marker, ...kept];
     estimated = estimateMessagesTokens(truncated);
-    console.log(`[symphony-bridge] ✂️ Pass 2 (drop ${dropped} middle messages): ~${estimated} tokens`);
+    console.log(
+      `[symphony-bridge] ✂️ Pass 2 (drop ${dropped} middle messages): ~${estimated} tokens`,
+    );
     if (estimated <= maxTokens) return truncated;
   }
 
@@ -146,20 +156,25 @@ export function truncateMessagesForProvider(messages, providerName) {
   const aggressiveLimit = Math.floor(PER_MESSAGE_CHAR_LIMIT / 3);
   truncated = truncated.map((msg) => truncateMessageContent(msg, aggressiveLimit));
   estimated = estimateMessagesTokens(truncated);
-  console.log(`[symphony-bridge] ✂️ Pass 3 (aggressive truncation to ${aggressiveLimit} chars/msg): ~${estimated} tokens`);
+  console.log(
+    `[symphony-bridge] ✂️ Pass 3 (aggressive truncation to ${aggressiveLimit} chars/msg): ~${estimated} tokens`,
+  );
 
   // Pass 4: Last resort — fresh start with only system + last 2 ORIGINAL messages.
   // Uses the original nonSystemMessages (not the truncated set) intentionally —
   // this is a complete reset rather than iterating on previous passes.
   if (estimated > maxTokens) {
-    const lastResortLimit = Math.floor(maxTokens * CHARS_PER_TOKEN / 3); // ~1/3 of total budget in chars
-    const sysMsg = systemMessages.length > 0
-      ? [truncateMessageContent(systemMessages[0], lastResortLimit)]
-      : [];
-    const lastTwo = nonSystemMessages.slice(-2).map((m) => truncateMessageContent(m, lastResortLimit));
+    const lastResortLimit = Math.floor((maxTokens * CHARS_PER_TOKEN) / 3); // ~1/3 of total budget in chars
+    const sysMsg =
+      systemMessages.length > 0 ? [truncateMessageContent(systemMessages[0], lastResortLimit)] : [];
+    const lastTwo = nonSystemMessages
+      .slice(-2)
+      .map((m) => truncateMessageContent(m, lastResortLimit));
     truncated = [...sysMsg, ...lastTwo];
     estimated = estimateMessagesTokens(truncated);
-    console.log(`[symphony-bridge] ✂️ Pass 4 (last resort — system + last 2): ~${estimated} tokens`);
+    console.log(
+      `[symphony-bridge] ✂️ Pass 4 (last resort — system + last 2): ~${estimated} tokens`,
+    );
   }
 
   return truncated;

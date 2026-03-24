@@ -6,7 +6,6 @@
  * - Used for integration tests without real external dependencies
  */
 
-
 // Fake HTTP client for bridge testing
 export class FakeBridgeClient {
   private baseUrl: string;

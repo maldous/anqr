@@ -442,7 +442,9 @@ describe("domain/qr/qart", () => {
       const existing = new Uint8Array(10).fill(42);
       buckets.set(10, [existing]);
       let acquired = 0;
-      const buf = acquireUint8Buffer(10, true, buckets, (bytes) => { acquired = bytes; });
+      const buf = acquireUint8Buffer(10, true, buckets, (bytes) => {
+        acquired = bytes;
+      });
       expect(buf).toBe(existing);
       expect(buf.every((v) => v === 0)).toBe(true);
       expect(acquired).toBe(10);
@@ -574,8 +576,22 @@ describe("domain/qr/qart", () => {
 
     it("handles multi-byte output", () => {
       const row = [
-        true, true, true, true, true, true, true, true,
-        false, false, false, false, false, false, false, false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
       ];
       const bytes = matrixRowToBytes(row, 2);
       expect(bytes[0]).toBe(0xff);
@@ -694,34 +710,38 @@ describe("domain/qr/qart", () => {
     });
 
     it("skips boundary-touching when skipBoundaryTouching is true", () => {
-      expect(
-        shouldRemoveComponent({ cells: [1], touchesBoundary: true }, 5, true),
-      ).toBe(false);
+      expect(shouldRemoveComponent({ cells: [1], touchesBoundary: true }, 5, true)).toBe(false);
     });
 
     it("removes boundary-touching when skipBoundaryTouching is false", () => {
-      expect(
-        shouldRemoveComponent({ cells: [1], touchesBoundary: true }, 5, false),
-      ).toBe(true);
+      expect(shouldRemoveComponent({ cells: [1], touchesBoundary: true }, 5, false)).toBe(true);
     });
   });
 
   // ── Selection / interleaving ───────────────────────────────────
 
   describe("unflattenSelections", () => {
+    const dummyVector: RSBasisVector = {
+      dataBitIndex: 0,
+      rsBlockIndex: 0,
+      posInBlock: 0,
+      bitInByte: 0,
+      blockBits: new Uint8Array([0]),
+      affectedPixels: [],
+      pivotPixel: 0,
+    };
+
     it("returns empty for count 0", () => {
-      const flattened = [
-        { blockIndex: 0, vectorIndex: 1, importance: 1, pixelIndex: 0 },
-      ];
+      const flattened = [{ blockIndex: 0, vectorIndex: 1, importance: 1, vector: dummyVector }];
       const result = unflattenSelections(flattened, 0);
       expect(result).toHaveLength(0);
     });
 
     it("groups selections by block index", () => {
       const flattened = [
-        { blockIndex: 0, vectorIndex: 1, importance: 1, pixelIndex: 0 },
-        { blockIndex: 1, vectorIndex: 2, importance: 0.9, pixelIndex: 1 },
-        { blockIndex: 0, vectorIndex: 3, importance: 0.8, pixelIndex: 2 },
+        { blockIndex: 0, vectorIndex: 1, importance: 1, vector: dummyVector },
+        { blockIndex: 1, vectorIndex: 2, importance: 0.9, vector: dummyVector },
+        { blockIndex: 0, vectorIndex: 3, importance: 0.8, vector: dummyVector },
       ];
       const result = unflattenSelections(flattened, 3);
       expect(result).toHaveLength(2);
@@ -731,9 +751,9 @@ describe("domain/qr/qart", () => {
 
     it("limits to count entries", () => {
       const flattened = [
-        { blockIndex: 0, vectorIndex: 0, importance: 1, pixelIndex: 0 },
-        { blockIndex: 0, vectorIndex: 1, importance: 0.9, pixelIndex: 1 },
-        { blockIndex: 0, vectorIndex: 2, importance: 0.8, pixelIndex: 2 },
+        { blockIndex: 0, vectorIndex: 0, importance: 1, vector: dummyVector },
+        { blockIndex: 0, vectorIndex: 1, importance: 0.9, vector: dummyVector },
+        { blockIndex: 0, vectorIndex: 2, importance: 0.8, vector: dummyVector },
       ];
       const result = unflattenSelections(flattened, 2);
       const block0 = result.find((r) => r.blockIndex === 0);
@@ -742,9 +762,9 @@ describe("domain/qr/qart", () => {
 
     it("sorts results by block index", () => {
       const flattened = [
-        { blockIndex: 2, vectorIndex: 0, importance: 1, pixelIndex: 0 },
-        { blockIndex: 0, vectorIndex: 1, importance: 0.9, pixelIndex: 1 },
-        { blockIndex: 1, vectorIndex: 2, importance: 0.8, pixelIndex: 2 },
+        { blockIndex: 2, vectorIndex: 0, importance: 1, vector: dummyVector },
+        { blockIndex: 0, vectorIndex: 1, importance: 0.9, vector: dummyVector },
+        { blockIndex: 1, vectorIndex: 2, importance: 0.8, vector: dummyVector },
       ];
       const result = unflattenSelections(flattened, 3);
       expect(result.map((r) => r.blockIndex)).toEqual([0, 1, 2]);
@@ -772,9 +792,7 @@ describe("domain/qr/qart", () => {
     });
 
     it("handles single block", () => {
-      const blocks: RSBlockInfo[] = [
-        { blockIndex: 0, dataCount: 10, eccCount: 5, totalCount: 15 },
-      ];
+      const blocks: RSBlockInfo[] = [{ blockIndex: 0, dataCount: 10, eccCount: 5, totalCount: 15 }];
       const result = simulateInterleavingProtection(blocks, 1, 5);
       expect(result).toEqual([4]);
     });

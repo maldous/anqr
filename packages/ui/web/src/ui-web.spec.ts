@@ -250,7 +250,9 @@ describe("ui/web", () => {
     });
 
     it("prioritizes aria-label over title", () => {
-      expect(baseFromProps({ "aria-label": "Close", title: "Info" }, "btn", "r1")).toBe("btn-close");
+      expect(baseFromProps({ "aria-label": "Close", title: "Info" }, "btn", "r1")).toBe(
+        "btn-close",
+      );
     });
 
     it("normalizes the fallback candidate", () => {

@@ -388,12 +388,30 @@ describe("domain/qr/encode", () => {
     });
 
     it("interleaves multiple DC blocks", () => {
-      const result = interleaveCodewords([[1, 2], [3, 4]], [[5], [6]], 2, 1, 6);
+      const result = interleaveCodewords(
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [[5], [6]],
+        2,
+        1,
+        6,
+      );
       expect(result).toEqual([1, 3, 2, 4, 5, 6]);
     });
 
     it("handles unequal DC block lengths", () => {
-      const result = interleaveCodewords([[1, 2], [3, 4, 5]], [[6], [7]], 3, 1, 7);
+      const result = interleaveCodewords(
+        [
+          [1, 2],
+          [3, 4, 5],
+        ],
+        [[6], [7]],
+        3,
+        1,
+        7,
+      );
       expect(result).toEqual([1, 3, 2, 4, 5, 6, 7]);
     });
 

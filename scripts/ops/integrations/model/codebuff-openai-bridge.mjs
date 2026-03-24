@@ -78,15 +78,20 @@ function isRateLimitError(errStr) {
 // Returns: { isPaymentError: boolean, isFreeAccount: boolean, resetInfo: string }
 function checkPaymentRequiredError(errStr) {
   const s = errStr.toLowerCase();
-  const has402 = s.includes("402") || s.includes("payment required") || s.includes("out of credits") || s.includes("add credits") || s.includes("insufficient credits");
+  const has402 =
+    s.includes("402") ||
+    s.includes("payment required") ||
+    s.includes("out of credits") ||
+    s.includes("add credits") ||
+    s.includes("insufficient credits");
   const isFreeAccount = s.includes("free credits reset");
   const resetMatch = errStr.match(/resets in (\d+ \w+)/);
   const resetInfo = resetMatch ? ` (resets in ${resetMatch[1]})` : "";
-  
+
   return {
     isPaymentError: has402,
     isFreeAccount,
-    resetInfo
+    resetInfo,
   };
 }
 
@@ -102,7 +107,7 @@ async function testApiKeyInMode(apiKey, index, costMode) {
     prompt: "Say 'ok' if you can read this.",
     maxAgentSteps: 1,
   };
-  
+
   if (costMode) {
     runOpts.costMode = costMode;
   }
@@ -133,10 +138,10 @@ async function testApiKeyInMode(apiKey, index, costMode) {
     // Check for payment required errors
     const paymentCheck = checkPaymentRequiredError(outputStr);
     if (paymentCheck.isPaymentError) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: "payment_required",
-        isFreeAccount: paymentCheck.isFreeAccount 
+        isFreeAccount: paymentCheck.isFreeAccount,
       };
     }
 
@@ -157,10 +162,10 @@ async function testApiKeyInMode(apiKey, index, costMode) {
     // Check for payment required errors
     const paymentCheck = checkPaymentRequiredError(errStr);
     if (paymentCheck.isPaymentError) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: "payment_required",
-        isFreeAccount: paymentCheck.isFreeAccount 
+        isFreeAccount: paymentCheck.isFreeAccount,
       };
     }
 
@@ -178,64 +183,64 @@ async function testApiKeyInMode(apiKey, index, costMode) {
 // Returns: { works: boolean, mode: "paid" | "free" | null }
 async function testApiKey(apiKey, index) {
   const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
-  
+
   // Phase 1: Test in paid mode (no costMode)
   console.log(`[bridge] Key ${index + 1} (${masked}): Testing paid mode...`);
   const paidResult = await testApiKeyInMode(apiKey, index, undefined);
-  
+
   if (paidResult.success) {
     console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (paid mode)`);
     return { works: true, mode: "paid" };
   }
-  
+
   if (paidResult.error === "auth") {
     console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
     return { works: false, mode: null };
   }
-  
+
   if (paidResult.error === "rate_limit") {
     console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited`);
     return { works: false, mode: null };
   }
-  
+
   if (paidResult.error === "payment_required" && !paidResult.isFreeAccount) {
     // Paid account out of credits - try free mode
     console.log(`[bridge] Key ${index + 1} (${masked}): Paid mode failed, testing free mode...`);
     const freeResult = await testApiKeyInMode(apiKey, index, "free");
-    
+
     if (freeResult.success) {
       console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
       return { works: true, mode: "free" };
     }
-    
+
     // Free mode also failed
     console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free)`);
     return { works: false, mode: null };
   }
-  
+
   if (paidResult.error === "payment_required" && paidResult.isFreeAccount) {
     // This IS a free account - no paid credits, test free mode
     console.log(`[bridge] Key ${index + 1} (${masked}): Free account, testing free mode...`);
     const freeResult = await testApiKeyInMode(apiKey, index, "free");
-    
+
     if (freeResult.success) {
       console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
       return { works: true, mode: "free" };
     }
-    
+
     console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ free mode also failed`);
     return { works: false, mode: null };
   }
-  
+
   // Other error - try free mode as fallback
   console.log(`[bridge] Key ${index + 1} (${masked}): Paid mode error, testing free mode...`);
   const fallbackResult = await testApiKeyInMode(apiKey, index, "free");
-  
+
   if (fallbackResult.success) {
     console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
     return { works: true, mode: "free" };
   }
-  
+
   console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ both modes failed`);
   return { works: false, mode: null };
 }
@@ -967,7 +972,7 @@ const server = http.createServer(async (req, res) => {
       console.log(
         `[bridge] Chat completion request: model=${model}, messages=${messages.length}, stream=${stream}`,
       );
-      logMemory('request-start');
+      logMemory("request-start");
       const requestStartTime = Date.now();
 
       if (stream) {
@@ -997,8 +1002,10 @@ const server = http.createServer(async (req, res) => {
             },
           });
 
-          console.log(`[bridge] ⏱️ Streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`);
-          logMemory('stream-done');
+          console.log(
+            `[bridge] ⏱️ Streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
+          );
+          logMemory("stream-done");
 
           // Determine finish_reason and send any remaining content
           let finishReason = "stop";
@@ -1070,8 +1077,10 @@ const server = http.createServer(async (req, res) => {
           res.end();
         } catch (streamError) {
           // Send error as SSE event before closing
-          console.error(`[bridge] Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`);
-          logMemory('stream-error');
+          console.error(
+            `[bridge] Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`,
+          );
+          logMemory("stream-error");
           const errorChunk = {
             id: completionId,
             object: "chat.completion.chunk",
@@ -1098,8 +1107,10 @@ const server = http.createServer(async (req, res) => {
           messages,
           cwd: DEFAULT_CWD,
         });
-        console.log(`[bridge] ⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`);
-        logMemory('invoke-done');
+        console.log(
+          `[bridge] ⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
+        );
+        logMemory("invoke-done");
 
         // Log completion with issue context and one-line summary
         let finishReason = "stop";

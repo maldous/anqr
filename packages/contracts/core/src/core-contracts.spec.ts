@@ -1,11 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type {
-  ApiErrorDetail,
-  ApiError,
-  ApiSuccess,
-  ApiResult,
-  ApiErrorResponse,
-} from "./index";
+import type { ApiErrorDetail, ApiError, ApiSuccess, ApiResult, ApiErrorResponse } from "./index";
 
 describe("contracts/core", () => {
   describe("ApiErrorDetail", () => {

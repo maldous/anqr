@@ -234,9 +234,9 @@ describe("application/analyze", () => {
 
   describe("resolveMode", () => {
     const makeResult = (encodingMode: string | null) =>
-      ({ encodingMode } as Parameters<typeof resolveMode>[1]);
+      ({ encodingMode }) as Parameters<typeof resolveMode>[1];
     const makeQrState = (encodingMode: string) =>
-      ({ encodingMode } as Parameters<typeof resolveMode>[2]);
+      ({ encodingMode }) as Parameters<typeof resolveMode>[2];
 
     it("returns qrState.encodingMode when isGeneratorSource", () => {
       expect(resolveMode(true, makeResult("numeric"), makeQrState("byte"))).toBe("byte");

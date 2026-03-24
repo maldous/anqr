@@ -50,7 +50,8 @@ Please write a simple test file that returns "ok".`,
     messages: [
       {
         role: "user" as const,
-        content: "Read the package.json file in the current directory and tell me the project name.",
+        content:
+          "Read the package.json file in the current directory and tell me the project name.",
       },
     ],
     model: "symphony/main",

@@ -19,6 +19,7 @@ import {
   PER_MESSAGE_CHAR_LIMIT,
   CHARS_PER_TOKEN,
   MESSAGE_TRUNCATION_MARKER,
+  // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-bridge-truncation.mjs";
 
 // Suppress console.log from truncation passes during tests
@@ -193,9 +194,7 @@ describe("truncateMessageContent", () => {
   });
 
   it("leaves non-text, non-tool-result parts unchanged", () => {
-    const msg = makeArrayContentMessage("assistant", [
-      { type: "image", text: "a".repeat(200) },
-    ]);
+    const msg = makeArrayContentMessage("assistant", [{ type: "image", text: "a".repeat(200) }]);
     const result = truncateMessageContent(msg, 50);
     // image type should not be truncated (only 'text' type checks text)
     expect(result.content[0].text).toBe("a".repeat(200));
@@ -209,10 +208,7 @@ describe("truncateMessageContent", () => {
 describe("truncateMessagesForProvider", () => {
   describe("under budget — no truncation", () => {
     it("returns original messages when under budget", () => {
-      const messages = [
-        makeMessage("system", 100),
-        makeMessage("user", 200),
-      ];
+      const messages = [makeMessage("system", 100), makeMessage("user", 200)];
       const result = truncateMessagesForProvider(messages, "gemini");
       // gemini has 200K limit — these tiny messages should pass through unchanged
       expect(result).toBe(messages); // same reference
@@ -230,10 +226,7 @@ describe("truncateMessagesForProvider", () => {
       // cerebras: 6K token limit
       // One 30K-char message = ~7500 tokens > 6000
       // After Pass 1: truncated to 12K chars = ~3000 tokens + overhead → fits
-      const messages = [
-        makeMessage("system", 100),
-        makeMessage("user", 30_000),
-      ];
+      const messages = [makeMessage("system", 100), makeMessage("user", 30_000)];
       const result = truncateMessagesForProvider(messages, "cerebras");
 
       expect(result.length).toBe(2);
@@ -385,10 +378,7 @@ describe("truncateMessagesForProvider", () => {
   describe("provider limit lookups", () => {
     it("uses provider-specific limits from PROVIDER_MAX_INPUT_TOKENS", () => {
       // gemini has 200K — large messages should pass through
-      const messages = [
-        makeMessage("system", 1000),
-        makeMessage("user", 50_000),
-      ];
+      const messages = [makeMessage("system", 1000), makeMessage("user", 50_000)];
       const result = truncateMessagesForProvider(messages, "gemini");
       expect(result).toBe(messages); // no truncation needed
     });

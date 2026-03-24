@@ -275,36 +275,24 @@ describe("domain/render/color (extended)", () => {
 
   describe("alphaBlend", () => {
     it("returns top when fully opaque", () => {
-      const result = alphaBlend(
-        { r: 255, g: 0, b: 0, a: 1 },
-        { r: 0, g: 0, b: 255, a: 1 },
-      );
+      const result = alphaBlend({ r: 255, g: 0, b: 0, a: 1 }, { r: 0, g: 0, b: 255, a: 1 });
       expect(result.r).toBe(255);
       expect(result.b).toBe(0);
     });
 
     it("returns bottom when top is fully transparent", () => {
-      const result = alphaBlend(
-        { r: 255, g: 0, b: 0, a: 0 },
-        { r: 0, g: 255, b: 0, a: 1 },
-      );
+      const result = alphaBlend({ r: 255, g: 0, b: 0, a: 0 }, { r: 0, g: 255, b: 0, a: 1 });
       expect(result.g).toBe(255);
     });
 
     it("blends at half alpha", () => {
-      const result = alphaBlend(
-        { r: 255, g: 0, b: 0, a: 0.5 },
-        { r: 0, g: 0, b: 255, a: 1 },
-      );
+      const result = alphaBlend({ r: 255, g: 0, b: 0, a: 0.5 }, { r: 0, g: 0, b: 255, a: 1 });
       expect(result.r).toBeGreaterThan(0);
       expect(result.b).toBeGreaterThan(0);
     });
 
     it("returns transparent black when both are transparent", () => {
-      const result = alphaBlend(
-        { r: 255, g: 0, b: 0, a: 0 },
-        { r: 0, g: 255, b: 0, a: 0 },
-      );
+      const result = alphaBlend({ r: 255, g: 0, b: 0, a: 0 }, { r: 0, g: 255, b: 0, a: 0 });
       expect(result.a).toBe(0);
     });
   });

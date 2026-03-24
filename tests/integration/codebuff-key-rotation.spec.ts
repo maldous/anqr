@@ -33,7 +33,9 @@ describe("Codebuff Bridge Mode Selection", () => {
   beforeAll(async () => {
     bridgeAvailable = await isBridgeReachable();
     if (!bridgeAvailable) {
-      console.warn(`[codebuff-key-rotation] ⚠️ Codebuff bridge not reachable at ${CODEBUFF_BASE_URL} — skipping live tests`);
+      console.warn(
+        `[codebuff-key-rotation] ⚠️ Codebuff bridge not reachable at ${CODEBUFF_BASE_URL} — skipping live tests`,
+      );
     }
   });
 
@@ -100,24 +102,28 @@ describe("Codebuff Bridge Mode Selection", () => {
       expect(data.status).toMatch(/^(ok|initializing)$/);
     });
 
-    it("should handle time-based re-validation trigger", { timeout: COMPLETION_TIMEOUT_MS }, async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should handle time-based re-validation trigger",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${CODEBUFF_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "codebuff/base",
-          messages: [{ role: "user", content: "test" }],
-        }),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
-      });
+        const res = await fetch(`${CODEBUFF_BASE_URL}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${CODEBUFF_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "codebuff/base",
+            messages: [{ role: "user", content: "test" }],
+          }),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      expect([200, 401, 500]).toContain(res.status);
-    });
+        expect([200, 401, 500]).toContain(res.status);
+      },
+    );
   });
 
   describe("Error Handling for Key Failures", () => {

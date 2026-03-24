@@ -1119,12 +1119,18 @@ export function getConfiguredProviders(options = {}) {
     }
 
     if (hasCredential) {
-      const type = provider.requiresSdk || provider.driver === "codex-sdk"
-        ? "sdk"
-        : provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")
-          ? "local"
-          : "api";
-      configured.push({ name: provider.name, model: provider.model, type, tier: getProviderTier(provider) });
+      const type =
+        provider.requiresSdk || provider.driver === "codex-sdk"
+          ? "sdk"
+          : provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")
+            ? "local"
+            : "api";
+      configured.push({
+        name: provider.name,
+        model: provider.model,
+        type,
+        tier: getProviderTier(provider),
+      });
     }
   }
 
@@ -1145,21 +1151,45 @@ export async function probeAllProviders(options = {}) {
 
   const probePromises = PROVIDERS.map(async (provider) => {
     if (excludeSet.has(provider.name)) {
-      return { name: provider.name, model: provider.model, status: "excluded", available: false, durationMs: 0 };
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "excluded",
+        available: false,
+        durationMs: 0,
+      };
     }
 
     const apiKey = await resolveProviderApiKey(provider);
     if (provider.envVar && !apiKey) {
-      return { name: provider.name, model: provider.model, status: "no-key", available: false, durationMs: 0 };
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "no-key",
+        available: false,
+        durationMs: 0,
+      };
     }
 
     if (provider.requiresSdk) {
-      return { name: provider.name, model: provider.model, status: "sdk-configured", available: true, durationMs: 0 };
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: "sdk-configured",
+        available: true,
+        durationMs: 0,
+      };
     }
 
     if (provider.driver === "codex-sdk") {
       const hasKey = !!process.env.OPENAI_API_KEY;
-      return { name: provider.name, model: provider.model, status: hasKey ? "sdk-configured" : "no-key", available: hasKey, durationMs: 0 };
+      return {
+        name: provider.name,
+        model: provider.model,
+        status: hasKey ? "sdk-configured" : "no-key",
+        available: hasKey,
+        durationMs: 0,
+      };
     }
 
     const probeStart = Date.now();
@@ -1196,9 +1226,13 @@ export async function probeAllProviders(options = {}) {
   const available = probeResults.filter((r) => r.available);
   const unavailable = probeResults.filter((r) => !r.available && r.status !== "excluded");
   console.log(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
-  console.log(`[credit-gate]   ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`);
+  console.log(
+    `[credit-gate]   ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`,
+  );
   if (unavailable.length > 0) {
-    console.log(`[credit-gate]   ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`);
+    console.log(
+      `[credit-gate]   ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`,
+    );
   }
 
   return probeResults;

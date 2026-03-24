@@ -413,6 +413,8 @@ describe("contracts/analyze", () => {
         moduleCount: 0,
         eccLevel: null,
         maskPattern: null,
+        encodingMode: null,
+        errorsCorrected: null,
         estimatedModulePx: null,
       };
       expect(result.success).toBe(false);
@@ -524,11 +526,7 @@ describe("contracts/analyze", () => {
     });
 
     it("accepts all confidence levels", () => {
-      const levels: Array<NonNullable<QRAnalysisResult["confidence"]>> = [
-        "low",
-        "medium",
-        "high",
-      ];
+      const levels: Array<NonNullable<QRAnalysisResult["confidence"]>> = ["low", "medium", "high"];
       expect(new Set(levels).size).toBe(3);
     });
   });
@@ -541,6 +539,8 @@ describe("contracts/analyze", () => {
         moduleCount: 21,
         eccLevel: "L",
         maskPattern: 0,
+        encodingMode: null,
+        errorsCorrected: null,
         estimatedModulePx: 5,
         debugLog: "decode: 12ms, analyze: 30ms",
       };
@@ -554,6 +554,8 @@ describe("contracts/analyze", () => {
         moduleCount: 21,
         eccLevel: "L",
         maskPattern: 0,
+        encodingMode: null,
+        errorsCorrected: null,
         estimatedModulePx: 5,
         warnings: [],
       };
@@ -567,6 +569,8 @@ describe("contracts/analyze", () => {
         moduleCount: 0,
         eccLevel: null,
         maskPattern: null,
+        encodingMode: null,
+        errorsCorrected: null,
         estimatedModulePx: null,
         warnings: ["Low contrast", "Overlay too large", "Small module size"],
       };
@@ -580,6 +584,8 @@ describe("contracts/analyze", () => {
         moduleCount: 0,
         eccLevel: "L",
         maskPattern: 0,
+        encodingMode: null,
+        errorsCorrected: null,
         estimatedModulePx: null,
         moduleMatrix: [],
       };
@@ -636,29 +642,49 @@ describe("contracts/analyze", () => {
         moduleCount: 0,
         eccLevel: null,
         maskPattern: null,
+        encodingMode: null,
+        errorsCorrected: null,
         estimatedModulePx: null,
       };
-      expect(Object.keys(minimal)).toHaveLength(6);
+      expect(Object.keys(minimal)).toHaveLength(8);
     });
 
     it("DecoderMetadata has exactly 12 fields", () => {
       const meta: DecoderMetadata = {
-        version: null, maskPattern: null, eccLevel: null,
-        errorsCorrected: null, erasures: null, numBits: null,
-        orientation: null, structuredAppendSequence: null,
-        structuredAppendParity: null, hasStructuredAppend: false,
-        byteSegmentCount: 0, totalByteLength: 0,
+        version: null,
+        maskPattern: null,
+        eccLevel: null,
+        errorsCorrected: null,
+        erasures: null,
+        numBits: null,
+        orientation: null,
+        structuredAppendSequence: null,
+        structuredAppendParity: null,
+        hasStructuredAppend: false,
+        byteSegmentCount: 0,
+        totalByteLength: 0,
       };
       expect(Object.keys(meta)).toHaveLength(12);
     });
 
     it("ContentTypeDetails has 2 required and 14 optional fields", () => {
       const full: ContentTypeDetails = {
-        type: "url", label: "URL", url: "x", protocol: "https",
-        wifiSsid: "s", wifiAuth: "a", contactName: "n",
-        phoneNumber: "p", emailAddress: "e", cryptoCurrency: "BTC",
-        cryptoAddress: "addr", amount: "1",
-        hasUtmParams: false, utmSource: "s", utmMedium: "m", utmCampaign: "c",
+        type: "url",
+        label: "URL",
+        url: "x",
+        protocol: "https",
+        wifiSsid: "s",
+        wifiAuth: "a",
+        contactName: "n",
+        phoneNumber: "p",
+        emailAddress: "e",
+        cryptoCurrency: "BTC",
+        cryptoAddress: "addr",
+        amount: "1",
+        hasUtmParams: false,
+        utmSource: "s",
+        utmMedium: "m",
+        utmCampaign: "c",
       };
       expect(Object.keys(full)).toHaveLength(16);
     });
@@ -666,18 +692,25 @@ describe("contracts/analyze", () => {
     it("GeometryDiagnostics has exactly 5 top-level fields", () => {
       const geo: GeometryDiagnostics = {
         corners: {
-          topLeft: { x: 0, y: 0 }, topRight: { x: 1, y: 0 },
-          bottomLeft: { x: 0, y: 1 }, bottomRight: { x: 1, y: 1 },
+          topLeft: { x: 0, y: 0 },
+          topRight: { x: 1, y: 0 },
+          bottomLeft: { x: 0, y: 1 },
+          bottomRight: { x: 1, y: 1 },
         },
         boundingBox: { minX: 0, minY: 0, maxX: 1, maxY: 1, width: 1, height: 1 },
-        topEdgePx: 0, leftEdgePx: 0, estimatedRotationDeg: 0,
+        topEdgePx: 0,
+        leftEdgePx: 0,
+        estimatedRotationDeg: 0,
       };
       expect(Object.keys(geo)).toHaveLength(5);
     });
 
     it("ImageProperties has exactly 4 fields", () => {
       const props: ImageProperties = {
-        width: 100, height: 100, aspectRatio: 1, estimatedQrSizePx: 90,
+        width: 100,
+        height: 100,
+        aspectRatio: 1,
+        estimatedQrSizePx: 90,
       };
       expect(Object.keys(props)).toHaveLength(4);
     });
@@ -689,8 +722,10 @@ describe("contracts/analyze", () => {
 
     it("StructuralAnalysis has exactly 4 fields", () => {
       const sa: StructuralAnalysis = {
-        hasFinderPatterns: true, hasTimingPatterns: true,
-        hasAlignmentPatterns: false, alignmentPatternCount: 0,
+        hasFinderPatterns: true,
+        hasTimingPatterns: true,
+        hasAlignmentPatterns: false,
+        alignmentPatternCount: 0,
       };
       expect(Object.keys(sa)).toHaveLength(4);
     });

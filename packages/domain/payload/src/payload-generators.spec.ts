@@ -25,24 +25,27 @@ describe("domain/payload generators", () => {
 
   describe("generateUrl", () => {
     it("returns URL as-is when no extras", () => {
-      expect(generateUrl({ href: "https://example.com" })).toBe("https://example.com");
+      expect(generateUrl({ href: "https://example.com", forceHttps: false })).toBe(
+        "https://example.com",
+      );
     });
 
     it("forces HTTPS when flag is set", () => {
-      expect(
-        generateUrl({ href: "http://example.com", forceHttps: true }),
-      ).toBe("https://example.com");
+      expect(generateUrl({ href: "http://example.com", forceHttps: true })).toBe(
+        "https://example.com",
+      );
     });
 
     it("does not change HTTPS when forceHttps is set", () => {
-      expect(
-        generateUrl({ href: "https://example.com", forceHttps: true }),
-      ).toBe("https://example.com");
+      expect(generateUrl({ href: "https://example.com", forceHttps: true })).toBe(
+        "https://example.com",
+      );
     });
 
     it("appends UTM parameters", () => {
       const result = generateUrl({
         href: "https://example.com",
+        forceHttps: false,
         utmSource: "qr",
         utmMedium: "print",
       });
@@ -53,6 +56,7 @@ describe("domain/payload generators", () => {
     it("appends with & when URL already has query params", () => {
       const result = generateUrl({
         href: "https://example.com?page=1",
+        forceHttps: false,
         utmSource: "qr",
       });
       expect(result).toContain("?page=1&");
@@ -141,7 +145,12 @@ describe("domain/payload generators", () => {
 
   describe("generateWifi", () => {
     it("generates WPA WiFi string", () => {
-      const result = generateWifi({ ssid: "MyNetwork", auth: "WPA", password: "secret123" });
+      const result = generateWifi({
+        ssid: "MyNetwork",
+        auth: "WPA",
+        password: "secret123",
+        hidden: false,
+      });
       expect(result).toContain("WIFI:");
       expect(result).toContain("T:WPA;");
       expect(result).toContain("S:MyNetwork;");
@@ -149,7 +158,7 @@ describe("domain/payload generators", () => {
     });
 
     it("omits password for nopass", () => {
-      const result = generateWifi({ ssid: "OpenNet", auth: "nopass" });
+      const result = generateWifi({ ssid: "OpenNet", auth: "nopass", hidden: false });
       expect(result).toContain("T:nopass;");
       expect(result).not.toContain("P:");
     });
@@ -160,12 +169,17 @@ describe("domain/payload generators", () => {
     });
 
     it("escapes special characters in SSID", () => {
-      const result = generateWifi({ ssid: "My;Network", auth: "WPA", password: "p" });
+      const result = generateWifi({
+        ssid: "My;Network",
+        auth: "WPA",
+        password: "p",
+        hidden: false,
+      });
       expect(result).toContain("S:My\\;Network;");
     });
 
     it("ends with double semicolon", () => {
-      const result = generateWifi({ ssid: "Net", auth: "WPA", password: "p" });
+      const result = generateWifi({ ssid: "Net", auth: "WPA", password: "p", hidden: false });
       expect(result).toMatch(/;;$/);
     });
   });
@@ -204,24 +218,18 @@ describe("domain/payload generators", () => {
 
   describe("generateVCard", () => {
     it("wraps content in BEGIN/END VCARD markers", () => {
-      const result = generateVCard(
-        { version: "3.0" } as Parameters<typeof generateVCard>[0],
-      );
+      const result = generateVCard({ version: "3.0" } as Parameters<typeof generateVCard>[0]);
       expect(result).toMatch(/^BEGIN:VCARD/);
       expect(result).toContain("END:VCARD");
     });
 
     it("includes VERSION line", () => {
-      const result = generateVCard(
-        { version: "4.0" } as Parameters<typeof generateVCard>[0],
-      );
+      const result = generateVCard({ version: "4.0" } as Parameters<typeof generateVCard>[0]);
       expect(result).toContain("VERSION:4.0");
     });
 
     it("uses CRLF line endings", () => {
-      const result = generateVCard(
-        { version: "3.0" } as Parameters<typeof generateVCard>[0],
-      );
+      const result = generateVCard({ version: "3.0" } as Parameters<typeof generateVCard>[0]);
       expect(result).toContain("\r\n");
       expect(result).toMatch(/\r\n$/);
     });
@@ -264,7 +272,7 @@ describe("domain/payload generators", () => {
 
   describe("generateOTPAuth", () => {
     it("generates basic TOTP URI", () => {
-      const result = generateOTPAuth({ secret: "JBSWY3DPEHPK3PXP" });
+      const result = generateOTPAuth({ type: "totp", secret: "JBSWY3DPEHPK3PXP" });
       expect(result).toContain("otpauth://totp/");
       expect(result).toContain("secret=JBSWY3DPEHPK3PXP");
     });
@@ -281,6 +289,7 @@ describe("domain/payload generators", () => {
 
     it("includes issuer in label and params", () => {
       const result = generateOTPAuth({
+        type: "totp",
         secret: "ABC",
         issuer: "GitHub",
         account: "user@example.com",
@@ -290,12 +299,12 @@ describe("domain/payload generators", () => {
     });
 
     it("omits default algorithm SHA1", () => {
-      const result = generateOTPAuth({ secret: "ABC", algorithm: "SHA1" });
+      const result = generateOTPAuth({ type: "totp", secret: "ABC", algorithm: "SHA1" });
       expect(result).not.toContain("algorithm=");
     });
 
     it("includes non-default algorithm", () => {
-      const result = generateOTPAuth({ secret: "ABC", algorithm: "SHA256" });
+      const result = generateOTPAuth({ type: "totp", secret: "ABC", algorithm: "SHA256" });
       expect(result).toContain("algorithm=SHA256");
     });
   });
@@ -413,20 +422,22 @@ describe("domain/payload generators", () => {
   describe("resolveTipValue", () => {
     it("returns tipFixed for indicator 02", () => {
       expect(
-        resolveTipValue({ tipIndicator: "02", tipFixed: 5.0 } as Parameters<typeof resolveTipValue>[0]),
+        resolveTipValue({ tipIndicator: "02", tipFixed: 5.0 } as Parameters<
+          typeof resolveTipValue
+        >[0]),
       ).toBe(5.0);
     });
 
     it("returns tipPercentage for indicator 03", () => {
       expect(
-        resolveTipValue({ tipIndicator: "03", tipPercentage: 10 } as Parameters<typeof resolveTipValue>[0]),
+        resolveTipValue({ tipIndicator: "03", tipPercentage: 10 } as Parameters<
+          typeof resolveTipValue
+        >[0]),
       ).toBe(10);
     });
 
     it("returns undefined for no indicator", () => {
-      expect(
-        resolveTipValue({} as Parameters<typeof resolveTipValue>[0]),
-      ).toBeUndefined();
+      expect(resolveTipValue({} as Parameters<typeof resolveTipValue>[0])).toBeUndefined();
     });
   });
 
@@ -463,16 +474,14 @@ describe("domain/payload generators", () => {
     });
 
     it("omits undefined fields", () => {
-      const result = buildEMVAdditionalData(
-        { billNumber: "B123" } as Parameters<typeof buildEMVAdditionalData>[0],
-      );
+      const result = buildEMVAdditionalData({ billNumber: "B123" } as Parameters<
+        typeof buildEMVAdditionalData
+      >[0]);
       expect(Object.keys(result)).toEqual(["billNumber"]);
     });
 
     it("returns empty object when no fields set", () => {
-      const result = buildEMVAdditionalData(
-        {} as Parameters<typeof buildEMVAdditionalData>[0],
-      );
+      const result = buildEMVAdditionalData({} as Parameters<typeof buildEMVAdditionalData>[0]);
       expect(Object.keys(result)).toHaveLength(0);
     });
   });

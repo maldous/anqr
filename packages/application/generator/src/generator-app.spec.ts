@@ -160,11 +160,7 @@ describe("application/generator", () => {
     });
 
     it("formats attempt+mask stage pattern", () => {
-      const result = localizeQArtProgressStage(
-        "Attempt 1/3: Mask 2: Rendering",
-        identity,
-        mockT,
-      );
+      const result = localizeQArtProgressStage("Attempt 1/3: Mask 2: Rendering", identity, mockT);
       expect(result).toContain("Attempt");
       expect(result).toContain("Mask");
       expect(result).toContain("Rendering");
@@ -722,6 +718,10 @@ describe("application/generator", () => {
     it("converts string encodedData to Uint8Array", () => {
       const input = {
         success: true,
+        matrix: [[true]],
+        moduleCount: 1,
+        version: 1,
+        maskPattern: 0,
         matchingPixels: 100,
         totalControllable: 200,
         matchPercentage: 50,
@@ -738,13 +738,17 @@ describe("application/generator", () => {
       const data = new Uint8Array([65, 66, 67]);
       const input = {
         success: true,
+        matrix: [[true]],
+        moduleCount: 1,
+        version: 1,
+        maskPattern: 0,
         matchingPixels: 100,
         totalControllable: 200,
         matchPercentage: 50,
         encodedData: data,
       };
       const result = toFullQArtPipelineResult(
-        input as Parameters<typeof toFullQArtPipelineResult>[0],
+        input as unknown as Parameters<typeof toFullQArtPipelineResult>[0],
       );
       expect(result.encodedData).toBe(data);
     });
@@ -753,6 +757,7 @@ describe("application/generator", () => {
       const input = {
         success: false,
         error: "test error",
+        matrix: [[true]],
         matchingPixels: 10,
         totalControllable: 20,
         matchPercentage: 50,
@@ -814,9 +819,7 @@ describe("application/generator", () => {
     });
 
     it("throws when not configured", () => {
-      expect(() => requireGeneratorRuntime()).toThrow(
-        "Generator runtime has not been configured",
-      );
+      expect(() => requireGeneratorRuntime()).toThrow("Generator runtime has not been configured");
     });
 
     it("returns configured runtime", () => {
@@ -883,9 +886,9 @@ describe("application/generator", () => {
     });
 
     it("returns empty object for non-cloneable config", () => {
-      const result = sanitizeQArtRenderConfig(
-        (() => {}) as unknown as Parameters<typeof sanitizeQArtRenderConfig>[0],
-      );
+      const result = sanitizeQArtRenderConfig((() => {}) as unknown as Parameters<
+        typeof sanitizeQArtRenderConfig
+      >[0]);
       expect(result).toEqual({});
     });
 
@@ -964,7 +967,7 @@ describe("application/generator", () => {
         gradientStops: ["#000", "#fff"],
       };
       const result = buildBasicGeneratorConfig(
-        params as Parameters<typeof buildBasicGeneratorConfig>[0],
+        params as unknown as Parameters<typeof buildBasicGeneratorConfig>[0],
         10,
       );
       expect(result.gradient).toEqual({

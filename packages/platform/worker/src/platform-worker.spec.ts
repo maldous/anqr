@@ -89,9 +89,7 @@ describe("platform/worker", () => {
 
     it("returns correct size for larger matrix", () => {
       const size = 5;
-      const matrix = Array.from({ length: size }, () =>
-        Array.from({ length: size }, () => false),
-      );
+      const matrix = Array.from({ length: size }, () => Array.from({ length: size }, () => false));
       const result = packBooleanMatrix(matrix);
       expect(result.length).toBe(size * size);
     });
@@ -220,18 +218,19 @@ describe("platform/worker", () => {
   // ── toWorkerPayload ────────────────────────────────────────────
 
   describe("toWorkerPayload", () => {
-    const makeInput = (overrides?: Record<string, unknown>) => ({
-      data: "https://example.com",
-      ecc: "M",
-      version: 5,
-      targetImage: {
-        data: new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255]),
-        width: 2,
-        height: 1,
-        colorSpace: "srgb",
-      },
-      ...overrides,
-    }) as Parameters<typeof toWorkerPayload>[0];
+    const makeInput = (overrides?: Record<string, unknown>) =>
+      ({
+        data: "https://example.com",
+        ecc: "M",
+        version: 5,
+        targetImage: {
+          data: new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255]),
+          width: 2,
+          height: 1,
+          colorSpace: "srgb",
+        },
+        ...overrides,
+      }) as Parameters<typeof toWorkerPayload>[0];
 
     it("copies data field", () => {
       const result = toWorkerPayload(makeInput());
@@ -266,15 +265,17 @@ describe("platform/worker", () => {
     });
 
     it("preserves optional fields when set", () => {
-      const result = toWorkerPayload(makeInput({
-        maskPattern: 3,
-        lockVersionToMinimum: true,
-        strictSuffix: false,
-        targetControlPercent: 75,
-        searchAttempts: 100,
-        searchSeed: 42,
-        performanceProfile: "quality",
-      }));
+      const result = toWorkerPayload(
+        makeInput({
+          maskPattern: 3,
+          lockVersionToMinimum: true,
+          strictSuffix: false,
+          targetControlPercent: 75,
+          searchAttempts: 100,
+          searchSeed: 42,
+          performanceProfile: "quality",
+        }),
+      );
       expect(result.maskPattern).toBe(3);
       expect(result.lockVersionToMinimum).toBe(true);
       expect(result.searchAttempts).toBe(100);

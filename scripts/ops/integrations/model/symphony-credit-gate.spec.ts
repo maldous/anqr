@@ -19,6 +19,7 @@ const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 
 // Dynamic import for the .mjs module (ESM-compatible)
+// @ts-expect-error -- .mjs has no declaration file
 const creditGate = await import("./symphony-credit-gate.mjs");
 
 const {

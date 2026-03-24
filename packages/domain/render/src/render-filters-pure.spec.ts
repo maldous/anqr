@@ -108,41 +108,27 @@ describe("domain/render/filters (pure)", () => {
     });
 
     it("returns false when disableAutoSoften is true", () => {
-      expect(
-        shouldAutoNormalizeColor(makeConfig({ disableAutoSoften: true })),
-      ).toBe(false);
+      expect(shouldAutoNormalizeColor(makeConfig({ disableAutoSoften: true }))).toBe(false);
     });
 
     it("returns false when qrFirstMode is true", () => {
-      expect(
-        shouldAutoNormalizeColor(makeConfig({ qrFirstMode: true })),
-      ).toBe(false);
+      expect(shouldAutoNormalizeColor(makeConfig({ qrFirstMode: true }))).toBe(false);
     });
 
     it("returns false when scanGateProfile is off", () => {
-      expect(
-        shouldAutoNormalizeColor(makeConfig({ scanGateProfile: "off" })),
-      ).toBe(false);
+      expect(shouldAutoNormalizeColor(makeConfig({ scanGateProfile: "off" }))).toBe(false);
     });
 
     it("returns false when colorMode is not color", () => {
-      expect(
-        shouldAutoNormalizeColor(makeConfig({ colorMode: "grayscale" })),
-      ).toBe(false);
+      expect(shouldAutoNormalizeColor(makeConfig({ colorMode: "grayscale" }))).toBe(false);
     });
 
     it("returns false for unsupported overlay mode", () => {
-      expect(
-        shouldAutoNormalizeColor(makeConfig({ overlayMode: "standard" })),
-      ).toBe(false);
+      expect(shouldAutoNormalizeColor(makeConfig({ overlayMode: "standard" }))).toBe(false);
     });
 
     it("defaults scanGateProfile to full when undefined", () => {
-      expect(
-        shouldAutoNormalizeColor(
-          makeConfig({ scanGateProfile: undefined }),
-        ),
-      ).toBe(true);
+      expect(shouldAutoNormalizeColor(makeConfig({ scanGateProfile: undefined }))).toBe(true);
     });
   });
 });

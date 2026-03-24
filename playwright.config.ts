@@ -19,32 +19,27 @@ export default defineConfig({
       name: "basic",
       testMatch: /basic\..*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
-      passWithNoTests: true,
     },
     {
       name: "advanced",
       testMatch: /advanced\..*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
-      passWithNoTests: true,
     },
     {
       name: "professional",
       testMatch: /professional\..*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
-      passWithNoTests: true,
     },
     {
       name: "permutations",
       testMatch: /permutations\..*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
-      passWithNoTests: true,
     },
     {
       name: "openclaw",
       testMatch: /openclaw.*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
       timeout: 120_000,
-      passWithNoTests: true,
     },
   ],
   // Web server only needed for UI-based projects (basic, advanced, professional, permutations).

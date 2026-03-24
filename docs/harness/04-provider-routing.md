@@ -28,12 +28,12 @@ OpenClaw is configured with the following failover chain:
 
 Symphony Bridge uses the credit-gate provider cascade with **tier-based dynamic scoring** based on actual performance metrics:
 
-| Tier               | Provider set                                                                                  | Selection method                                              |
-| ------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `paid`             | `codex`, `codebuff`                                                                           | Probed first; uses paid API credits                           |
-| `free-cloud`       | `groq`, `mistral`, `gemini*`, OpenRouter (27 models), `sambanova`, `cerebras`, `github-models` | Dynamic scoring with cooldown and re-entry (default tier)     |
-| `local-proxy`      | `openclaw`, `codebuff-bridge`                                                                 | Local HTTP gateways to other services                         |
-| `local-safety-net` | `ollama-local`, `ollama-qwen2.5-coder-3b`, `ollama-qwen2.5-coder-0.5b`                       | Score-capped at 0.25; always rank last in `getRankedProviders()` |
+| Tier               | Provider set                                                                                   | Selection method                                                 |
+| ------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `paid`             | `codex`, `codebuff`                                                                            | Probed first; uses paid API credits                              |
+| `free-cloud`       | `groq`, `mistral`, `gemini*`, OpenRouter (27 models), `sambanova`, `cerebras`, `github-models` | Dynamic scoring with cooldown and re-entry (default tier)        |
+| `local-proxy`      | `openclaw`, `codebuff-bridge`                                                                  | Local HTTP gateways to other services                            |
+| `local-safety-net` | `ollama-local`, `ollama-qwen2.5-coder-3b`, `ollama-qwen2.5-coder-0.5b`                         | Score-capped at 0.25; always rank last in `getRankedProviders()` |
 
 The credit-gate selects providers based on dynamic scoring, but `codex` is always retried and Codebuff paid availability is re-probed every 5 hours. Temporary failures enter cooldown, then are retried so Symphony continues learning the best route over time.
 
@@ -76,12 +76,12 @@ During actual request handling, `invokeWithAI()` inspects responses for raw JSON
 
 The `toolProbe` object in the health response exposes the current classification state:
 
-| Field          | Type       | Description                                                                 |
-| -------------- | ---------- | --------------------------------------------------------------------------- |
-| `capable`      | `string[]` | Providers confirmed to support structured tool calls                        |
-| `excluded`     | `string[]` | Providers confirmed to emit raw JSON tool output (excluded from selection)  |
-| `unclassified` | `string[]` | Available providers not yet classified (rate-limited, errored, timed out)   |
-| `blocked`      | `object[]` | Providers blocked from the bridge entirely, with `{ name, reason }` detail  |
+| Field          | Type       | Description                                                                |
+| -------------- | ---------- | -------------------------------------------------------------------------- |
+| `capable`      | `string[]` | Providers confirmed to support structured tool calls                       |
+| `excluded`     | `string[]` | Providers confirmed to emit raw JSON tool output (excluded from selection) |
+| `unclassified` | `string[]` | Available providers not yet classified (rate-limited, errored, timed out)  |
+| `blocked`      | `object[]` | Providers blocked from the bridge entirely, with `{ name, reason }` detail |
 
 Example:
 
@@ -119,13 +119,13 @@ The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory.
 | 7    | gemini-lite                 | `free-cloud`       | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`            | No      |
 | 8    | openrouter-nemotron-super   | `free-cloud`       | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`        | No      |
 | 9-35 | openrouter-free (27 models) | `free-cloud`       | HTTP | Various free tier models               | `OPENROUTER_TOKEN`        | No      |
-| 36   | sambanova                   | `free-cloud`       | HTTP | Meta-Llama-3.3-70B-Instruct           | `SAMBANOVA_TOKEN`         | No      |
+| 36   | sambanova                   | `free-cloud`       | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`         | No      |
 | 37   | cerebras                    | `free-cloud`       | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`          | No      |
 | 38   | github-models               | `free-cloud`       | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`     | No      |
 | 39   | codebuff-bridge             | `local-proxy`      | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY` | No      |
 | 40   | ollama-local                | `local-safety-net` | HTTP | qwen3-coder-next:latest                | `OLLAMA_API_BASE`         | No      |
-| 41   | ollama-qwen2.5-coder-3b    | `local-safety-net` | HTTP | qwen2.5-coder:3b-instruct             | `OLLAMA_API_BASE`         | No      |
-| 42   | ollama-qwen2.5-coder-0.5b  | `local-safety-net` | HTTP | qwen2.5-coder:0.5b                    | `OLLAMA_API_BASE`         | No      |
+| 41   | ollama-qwen2.5-coder-3b     | `local-safety-net` | HTTP | qwen2.5-coder:3b-instruct              | `OLLAMA_API_BASE`         | No      |
+| 42   | ollama-qwen2.5-coder-0.5b   | `local-safety-net` | HTTP | qwen2.5-coder:0.5b                     | `OLLAMA_API_BASE`         | No      |
 
 ### Provider notes
 

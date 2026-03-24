@@ -514,9 +514,7 @@ describe("platform/node", () => {
     });
 
     it("matches by name", () => {
-      expect(
-        isMissingBlobsEnvironmentError({ name: "MissingBlobsEnvironmentError" }),
-      ).toBe(true);
+      expect(isMissingBlobsEnvironmentError({ name: "MissingBlobsEnvironmentError" })).toBe(true);
     });
 
     it("matches by message content", () => {
@@ -528,9 +526,9 @@ describe("platform/node", () => {
     });
 
     it("returns false for unrelated errors", () => {
-      expect(
-        isMissingBlobsEnvironmentError({ name: "TypeError", message: "cannot read" }),
-      ).toBe(false);
+      expect(isMissingBlobsEnvironmentError({ name: "TypeError", message: "cannot read" })).toBe(
+        false,
+      );
     });
   });
 
