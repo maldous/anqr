@@ -35,6 +35,11 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runner timeout
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
+const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
+const CODEBUFF_MAX_CONTINUATIONS = 5; // Max auto-continue loops when agent ends turn with work remaining
+const CODEBUFF_NOISY_TOOLS = new Set(["set_messages", "set_output", "end_turn", "lookup_agent_info"]);
+const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
+
 function formatElapsed(ms) {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
@@ -379,6 +384,62 @@ function suppressSDKErrors(fn) {
   };
 }
 
+// Format tool call display for rich event logging (matches old symphony-bridge invokeWithCodebuff)
+function formatToolCallDisplay(toolName, input) {
+  if (toolName === "read_files" && input.paths) {
+    const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
+    return `📖 Reading: ${paths}`;
+  } else if (toolName === "str_replace") {
+    return `✏️ Editing: ${input.path || "file"}`;
+  } else if (toolName === "write_file") {
+    return `📝 Writing: ${input.path || "file"}`;
+  } else if (toolName === "run_terminal_command") {
+    const cmd = (input.command || "").slice(0, 120);
+    return `💻 Running: ${cmd}`;
+  } else if (toolName === "code_search") {
+    return `🔍 Searching: ${input.pattern || input.query || ""}`;
+  } else if (toolName === "spawn_agent_inline") {
+    const agentType = input.agent_type || "agent";
+    if (agentType === "context-pruner") return null;
+    return `🤖 Spawning: ${agentType}`;
+  } else if (toolName === "spawn_agents") {
+    const agents = input.agents || [];
+    const types = agents.map((a) => a.agent_type).filter(Boolean);
+    return `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
+  } else if (toolName === "add_subgoal") {
+    const obj = (input.objective || "").slice(0, 120);
+    return `🎯 Goal: ${obj}`;
+  } else if (toolName === "update_subgoal") {
+    const log = (input.log || input.status || "").slice(0, 120);
+    return `📋 Progress: ${log}`;
+  } else if (toolName === "think_deeply") {
+    return `🧠 Thinking deeply...`;
+  } else if (toolName === "create_plan") {
+    return `📋 Creating plan...`;
+  } else if (toolName === "browser_logs") {
+    return `🌐 Checking browser...`;
+  }
+  const args = JSON.stringify(input).slice(0, 150);
+  return `🔧 ${toolName}: ${args}`;
+}
+
+// Helper to create SSE chunk objects for streaming responses
+function makeSseChunk(completionId, created, content) {
+  return {
+    id: completionId,
+    object: "chat.completion.chunk",
+    created,
+    model: MODEL_ID,
+    choices: [{ index: 0, delta: { content }, finish_reason: null }],
+  };
+}
+
+// Check if an event is from the context-pruner (should be filtered/hidden)
+function isContextPrunerEvent(event) {
+  const name = event.displayName || event.agentType || "";
+  return name.toLowerCase() === "context pruner" || name.includes("context-pruner");
+}
+
 // Extract actual text content from Codebuff/Vercel AI SDK response
 // Also returns whether the response contains active subgoals (for continuation detection)
 function extractTextFromResponse(resultStr) {
@@ -495,133 +556,11 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
   return null;
 }
 
-// Check if a tool call indicates active (non-complete) subgoals
-function hasActiveSubgoals(content) {
-  if (!Array.isArray(content)) return false;
-
-  for (const item of content) {
-    const toolName = item.toolName || item.name;
-    if (toolName === "update_subgoal" || toolName === "add_subgoal") {
-      // Check the input status - COMPLETE means work is done, not ongoing
-      const input = item.input || item.args;
-      const status = (input?.status || "").toUpperCase();
-
-      // Only count as active if status is IN_PROGRESS or NOT_STARTED
-      // COMPLETE means the agent finished that task
-      if (status === "IN_PROGRESS" || status === "NOT_STARTED") {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-// Parse agent response to detect subgoals and continuation needs
-function parseAgentResponse(resultStr) {
-  try {
-    // Try to parse as JSON first (structured response)
-    let parsed = null;
-    try {
-      parsed = JSON.parse(resultStr);
-    } catch {
-      // Not JSON, check string directly
-    }
-
-    // Check for structured lastMessage with update_subgoal
-    if (parsed && parsed.type === "lastMessage" && parsed.value) {
-      const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
-      for (const msg of messages) {
-        if (msg.role === "assistant") {
-          // Handle content as array
-          if (Array.isArray(msg.content) && hasActiveSubgoals(msg.content)) {
-            return {
-              needsContinuation: true,
-              hasSubgoals: true,
-              subgoalInfo: JSON.stringify(msg.content, null, 2),
-            };
-          }
-          // Handle content as object (nested in extra or other fields)
-          if (msg.content && typeof msg.content === "object") {
-            // Check if content has a nested array with tool calls
-            for (const key of Object.keys(msg.content)) {
-              const val = msg.content[key];
-              if (Array.isArray(val) && hasActiveSubgoals(val)) {
-                return {
-                  needsContinuation: true,
-                  hasSubgoals: true,
-                  subgoalInfo: JSON.stringify(val, null, 2),
-                };
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Fallback: check string directly for update_subgoal with IN_PROGRESS or NOT_STARTED status
-    // This handles cases where the JSON parsing fails but the string contains the data
-    if (
-      resultStr.includes('"toolName":"update_subgoal"') ||
-      resultStr.includes('"toolName":"add_subgoal"')
-    ) {
-      // Check if there's a non-COMPLETE status in the response
-      const hasActiveStatus =
-        resultStr.includes('"status":"IN_PROGRESS"') ||
-        resultStr.includes('"status":"NOT_STARTED"') ||
-        resultStr.includes('status":"IN_PROGRESS"') ||
-        resultStr.includes('status":"NOT_STARTED"');
-
-      // If we found update_subgoal but no active status, don't signal continuation
-      // (the agent completed the subgoals)
-      if (!hasActiveStatus) {
-        // Still check if it looks like there's more work to do by looking for tool-call without end_turn
-        if (resultStr.includes('"type":"tool-call"') && !resultStr.includes("end_turn")) {
-          return {
-            needsContinuation: true,
-            hasSubgoals: false,
-            subgoalInfo: null,
-          };
-        }
-        return {
-          needsContinuation: false,
-          hasSubgoals: true, // Subgoals exist but are complete
-          subgoalInfo: null,
-        };
-      }
-
-      return {
-        needsContinuation: true,
-        hasSubgoals: true,
-        subgoalInfo: null,
-      };
-    }
-
-    // Check for other continuation signals (tool calls without end_turn)
-    if (resultStr.includes('"type":"tool-call"') && !resultStr.includes("end_turn")) {
-      return {
-        needsContinuation: true,
-        hasSubgoals: false,
-        subgoalInfo: null,
-      };
-    }
-
-    return {
-      needsContinuation: false,
-      hasSubgoals: false,
-      subgoalInfo: null,
-    };
-  } catch (err) {
-    console.warn(`[bridge] parseAgentResponse error: ${err.message}`);
-    return {
-      needsContinuation: false,
-      hasSubgoals: false,
-      subgoalInfo: null,
-    };
-  }
-}
-
-// Try a single account - helper for parallel execution
-async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
+// Try a single account — includes rich event handling, subgoal tracking, and
+// auto-continuation loop with previousRun (memento mode), matching the old
+// symphony-bridge invokeWithCodebuff that was lost during extraction.
+async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
+  let lastSubgoalStatus = null;
   const toolsUsed = new Set();
 
   const client = new CodebuffClient({
@@ -629,46 +568,121 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
     cwd: cwd || DEFAULT_CWD,
   });
 
+  const handleEvent = (event) => {
+    try {
+      if (!event) return;
+      // Text events are delivered via handleStreamChunk; skip to avoid duplication
+      if (event.type === "text") return;
+
+      const type = event.type;
+
+      if (type === "tool_call" || type === "tool-call") {
+        const toolName = event.toolName || event.name || "unknown";
+        toolsUsed.add(toolName);
+
+        if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
+          console.log(`[bridge] codebuff ${toolName} (internal)`);
+          return;
+        }
+
+        const input = event.input || {};
+        if (toolName === "update_subgoal") {
+          lastSubgoalStatus = input.status || lastSubgoalStatus;
+        }
+        if (toolName === "add_subgoal") {
+          lastSubgoalStatus = input.status || "IN_PROGRESS";
+        }
+
+        const display = formatToolCallDisplay(toolName, input);
+        if (display) console.log(`[bridge] ${display}`);
+      } else if (type === "tool_result" || type === "tool-result") {
+        console.log(`[bridge] ✅ codebuff ${event.toolName || "tool"} done`);
+      } else if (type === "reasoning_delta" || type === "reasoning") {
+        const text = event.text || event.content || "";
+        if (text) console.log(`[bridge] 💡 ${text.slice(0, 80)}...`);
+      } else if (type === "subagent_start" || type === "subagent-start") {
+        if (isContextPrunerEvent(event)) {
+          console.log(`[bridge] codebuff context-pruner (internal)`);
+          return;
+        }
+        const name = event.displayName || event.agentType || "subagent";
+        console.log(`[bridge] 🤖 codebuff subagent: ${name}`);
+      } else if (type === "subagent_finish" || type === "subagent-finish") {
+        if (isContextPrunerEvent(event)) return;
+        console.log(`[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`);
+      } else if (type === "agent_start" || type === "agent_finish") {
+        console.log(`[bridge] 🤖 codebuff ${type}`);
+      } else if (type === "error") {
+        console.log(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+      }
+    } catch (err) {
+      console.log(`[bridge] handleEvent error: ${err.message}`);
+    }
+  };
+
+  const callbacks = {
+    handleEvent,
+    handleStreamChunk: () => {},
+  };
+
   const runOpts = {
     agent: MODEL_ID,
     prompt,
-    handleEvent: (event) => {
-      if (event && event.type === "tool-call") {
-        const toolName = event.toolName || event.name || "unknown";
-        if (!toolsUsed.has(toolName)) {
-          toolsUsed.add(toolName);
-          console.log(`[bridge] 🔧 Tool used: ${toolName}`);
-        }
-      }
-      if (event && event.type === "reasoning") {
-        const preview = event.content?.slice(0, 80) || "";
-        console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
-      }
-    },
-    maxAgentSteps: 50,
+    maxAgentSteps: CODEBUFF_MAX_STEPS,
+    ...callbacks,
   };
+  if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
-  if (attempt.costMode) {
-    runOpts.costMode = attempt.costMode;
-  }
-
-  const result = await suppressSDKErrors(() =>
-    Promise.race([client.run(runOpts), timeoutPromise]),
+  let result = await suppressSDKErrors(() =>
+    Promise.race([client.run(runOpts), makeTimeout()]),
   )();
 
+  // Error checks on initial run
   const output = result.output;
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
-  // Check for SDK-internal error markers
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
     const errorMatch = resultStr.match(/"message":"([^"]+)"/);
-    const cleanError = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
-    throw new Error(cleanError);
+    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+  }
+  checkResultForErrors(output, resultStr, attempt);
+
+  // Continuation loop — if the agent set a subgoal but didn't complete it,
+  // auto-continue with previousRun to let it finish the task (memento mode)
+  let continuation = 0;
+  while (
+    continuation < CODEBUFF_MAX_CONTINUATIONS &&
+    lastSubgoalStatus === "IN_PROGRESS"
+  ) {
+    continuation++;
+    console.log(`[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`);
+    maybeGC();
+
+    const contOpts = {
+      agent: MODEL_ID,
+      prompt: "Continue with the next step of the task. Complete the remaining work.",
+      previousRun: result,
+      maxAgentSteps: CODEBUFF_MAX_STEPS,
+      ...callbacks,
+    };
+    if (attempt.costMode) contOpts.costMode = attempt.costMode;
+
+    result = await suppressSDKErrors(() =>
+      Promise.race([client.run(contOpts), makeTimeout()]),
+    )();
+
+    const contOutput = result.output;
+    const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
+    if (contStr.includes("Symbol(vercel.ai.error)")) {
+      const errorMatch = contStr.match(/"message":"([^"]+)"/);
+      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+    }
+    checkResultForErrors(contOutput, contStr, attempt);
   }
 
-  // Check for structured error responses (rate limit, payment, type:"error").
-  // This throws on match — caller catches and handles paid→free fallback.
-  checkResultForErrors(output, resultStr, attempt);
+  if (continuation > 0) {
+    console.log(`[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
+  }
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
@@ -678,19 +692,19 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
     console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
   }
 
-  const parseResult = parseAgentResponse(resultStr);
+  const finalOutput = result.output;
+  const finalStr = typeof finalOutput === "string" ? finalOutput : JSON.stringify(finalOutput);
+  const needsContinuation = lastSubgoalStatus === "IN_PROGRESS";
 
-  if (parseResult.needsContinuation) {
-    const contMsg = parseResult.hasSubgoals ? " (active subgoals)" : "";
-    console.log(`[bridge] 🔄 Agent indicates continuation needed${contMsg}`);
-  }
+  // Extract clean text from final result, filtering out tool metadata
+  const { text: cleanText } = extractTextFromResponse(finalStr);
 
   return {
-    text: resultStr,
+    text: cleanText,
     account: attempt.label,
     isPaid: attempt.isPaid,
-    needsContinuation: parseResult.needsContinuation,
-    hasSubgoals: parseResult.hasSubgoals,
+    needsContinuation,
+    hasSubgoals: lastSubgoalStatus !== null,
   };
 }
 
@@ -740,7 +754,7 @@ async function invokeCodebuff({ messages, cwd }) {
     });
 
   try {
-    return await trySingleAccount(winner, prompt, makeTimeout(), cwd);
+    return await trySingleAccount(winner, prompt, makeTimeout, cwd);
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message)) {
       console.log(`[bridge] ⚠️ Paid mode failed: ${err.message}`);
@@ -759,23 +773,26 @@ async function invokeCodebuff({ messages, cwd }) {
       lastRevalidationTime = Date.now();
       console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
-      return await trySingleAccount(freeAttempt, prompt, makeTimeout(), cwd);
+      return await trySingleAccount(freeAttempt, prompt, makeTimeout, cwd);
     }
     throw err;
   }
 }
 
-// Try a single account for streaming - helper for parallel execution
+// Try a single account for streaming — includes rich event handling, token-by-token
+// streaming via handleStreamChunk, subgoal tracking, and auto-continuation loop
+// with previousRun (memento mode), matching the old symphony-bridge invokeWithCodebuff.
 async function trySingleAccountStream(
   attempt,
   prompt,
-  timeoutPromise,
+  makeTimeout,
   cwd,
   onChunk,
   completionId,
   created,
 ) {
   let fullText = "";
+  let lastSubgoalStatus = null;
   const toolsUsed = new Set();
 
   const client = new CodebuffClient({
@@ -783,95 +800,153 @@ async function trySingleAccountStream(
     cwd: cwd || DEFAULT_CWD,
   });
 
+  // Stream a text fragment to the client as an SSE chunk
+  const streamActivity = (text) => {
+    if (onChunk && text) {
+      onChunk(makeSseChunk(completionId, created, text));
+    }
+  };
+
+  const handleEvent = (event) => {
+    try {
+      if (!event) return;
+      // Text events are delivered via handleStreamChunk; skip to avoid duplication
+      if (event.type === "text") return;
+
+      const type = event.type;
+
+      if (type === "tool_call" || type === "tool-call") {
+        const toolName = event.toolName || event.name || "unknown";
+        toolsUsed.add(toolName);
+
+        if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
+          console.log(`[bridge] codebuff ${toolName} (internal)`);
+          return;
+        }
+
+        const input = event.input || {};
+        if (toolName === "update_subgoal") {
+          lastSubgoalStatus = input.status || lastSubgoalStatus;
+        }
+        if (toolName === "add_subgoal") {
+          lastSubgoalStatus = input.status || "IN_PROGRESS";
+        }
+
+        const display = formatToolCallDisplay(toolName, input);
+        if (display) {
+          console.log(`[bridge] ${display}`);
+          streamActivity(display + "\n");
+        }
+      } else if (type === "tool_result" || type === "tool-result") {
+        console.log(`[bridge] ✅ codebuff ${event.toolName || "tool"} done`);
+      } else if (type === "reasoning_delta" || type === "reasoning") {
+        const text = event.text || event.content || "";
+        if (text) {
+          console.log(`[bridge] 💡 ${text.slice(0, 80)}...`);
+          streamActivity(`💡 ${text}\n`);
+        }
+      } else if (type === "subagent_start" || type === "subagent-start") {
+        if (isContextPrunerEvent(event)) {
+          console.log(`[bridge] codebuff context-pruner (internal)`);
+          return;
+        }
+        const name = event.displayName || event.agentType || "subagent";
+        console.log(`[bridge] 🤖 codebuff subagent: ${name}`);
+        streamActivity(`🤖 ${name}\n`);
+      } else if (type === "subagent_finish" || type === "subagent-finish") {
+        if (isContextPrunerEvent(event)) return;
+        console.log(`[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`);
+      } else if (type === "agent_start" || type === "agent_finish") {
+        console.log(`[bridge] 🤖 codebuff ${type}`);
+      } else if (type === "error") {
+        console.log(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+        streamActivity(`❌ Error: ${event.message || "unknown error"}\n`);
+      }
+    } catch (err) {
+      console.log(`[bridge] handleEvent error: ${err.message}`);
+    }
+  };
+
+  // Token-by-token text streaming — the primary text delivery path.
+  // The old symphony-bridge invokeWithCodebuff used this callback and it was
+  // lost when the codebuff-bridge was extracted.
+  const handleStreamChunk = (chunk) => {
+    try {
+      let text = null;
+      if (typeof chunk === "string") text = chunk;
+      else if (chunk && chunk.chunk) text = chunk.chunk;
+      if (text) {
+        fullText += text;
+        onChunk(makeSseChunk(completionId, created, text));
+      }
+    } catch (err) {
+      console.log(`[bridge] handleStreamChunk error: ${err.message}`);
+    }
+  };
+
+  const callbacks = { handleEvent, handleStreamChunk };
+
   const runOpts = {
     agent: MODEL_ID,
     prompt,
-    handleEvent: (event) => {
-      if (event && event.type === "tool-call") {
-        const toolName = event.toolName || event.name || "unknown";
-        if (!toolsUsed.has(toolName)) {
-          toolsUsed.add(toolName);
-          console.log(`[bridge] 🔧 Tool used: ${toolName}`);
-        }
-      }
-      if (event && event.type === "reasoning") {
-        const preview = event.content?.slice(0, 80) || "";
-        console.log(`[bridge] 🤔 Reasoning: ${preview}...`);
-      }
-      // Stream any output events as they come in - filter out tool-call metadata
-      if (event && event.type === "output" && event.content) {
-        fullText += event.content;
-        // Filter the content to remove tool-call metadata before streaming
-        const { text: filteredContent } = extractTextFromResponse(event.content);
-        if (filteredContent) {
-          const chunk = {
-            id: completionId,
-            object: "chat.completion.chunk",
-            created,
-            model: MODEL_ID,
-            choices: [
-              {
-                index: 0,
-                delta: { content: filteredContent },
-                finish_reason: null,
-              },
-            ],
-          };
-          onChunk(chunk);
-        }
-      }
-    },
-    maxAgentSteps: 50,
+    maxAgentSteps: CODEBUFF_MAX_STEPS,
+    ...callbacks,
   };
+  if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
-  if (attempt.costMode) {
-    runOpts.costMode = attempt.costMode;
-  }
-
-  const result = await suppressSDKErrors(() =>
-    Promise.race([client.run(runOpts), timeoutPromise]),
+  let result = await suppressSDKErrors(() =>
+    Promise.race([client.run(runOpts), makeTimeout()]),
   )();
 
+  // Error checks on initial run
   const output = result.output || "";
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
-  // Check for SDK-internal error markers
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
     const errorMatch = resultStr.match(/"message":"([^"]+)"/);
-    const cleanError = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
-    throw new Error(cleanError);
+    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
   }
-
-  // Check for structured error responses (rate limit, payment, type:"error").
-  // This throws on match — caller catches and handles paid→free fallback.
   checkResultForErrors(output, resultStr, attempt);
 
-  console.log(`[bridge] ✅ Success on ${attempt.label}`);
+  // Continuation loop — if the agent set a subgoal but didn't complete it,
+  // auto-continue with previousRun to let it finish the task (memento mode)
+  let continuation = 0;
+  while (
+    continuation < CODEBUFF_MAX_CONTINUATIONS &&
+    lastSubgoalStatus === "IN_PROGRESS"
+  ) {
+    continuation++;
+    console.log(`[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`);
+    streamActivity(`\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS})...\n`);
+    maybeGC();
 
-  // Send any remaining output - filter out tool-call metadata
-  if (typeof output === "string" && output.length > 0) {
-    const remaining = output.slice(fullText.length);
-    if (remaining) {
-      // Filter the remaining content to remove tool-call metadata
-      const { text: filteredRemaining } = extractTextFromResponse(remaining);
-      if (filteredRemaining) {
-        const chunk = {
-          id: completionId,
-          object: "chat.completion.chunk",
-          created,
-          model: MODEL_ID,
-          choices: [
-            {
-              index: 0,
-              delta: { content: filteredRemaining },
-              finish_reason: null,
-            },
-          ],
-        };
-        onChunk(chunk);
-      }
+    const contOpts = {
+      agent: MODEL_ID,
+      prompt: "Continue with the next step of the task. Complete the remaining work.",
+      previousRun: result,
+      maxAgentSteps: CODEBUFF_MAX_STEPS,
+      ...callbacks,
+    };
+    if (attempt.costMode) contOpts.costMode = attempt.costMode;
+
+    result = await suppressSDKErrors(() =>
+      Promise.race([client.run(contOpts), makeTimeout()]),
+    )();
+
+    const contOutput = result.output || "";
+    const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
+    if (contStr.includes("Symbol(vercel.ai.error)")) {
+      const errorMatch = contStr.match(/"message":"([^"]+)"/);
+      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
     }
+    checkResultForErrors(contOutput, contStr, attempt);
   }
+
+  if (continuation > 0) {
+    console.log(`[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
+  }
+
+  console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
   if (toolsUsed.size > 0) {
     console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
@@ -879,20 +954,20 @@ async function trySingleAccountStream(
     console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
   }
 
-  const parseResult = parseAgentResponse(resultStr);
+  const needsContinuation = lastSubgoalStatus === "IN_PROGRESS";
 
-  if (parseResult.needsContinuation) {
-    const contMsg = parseResult.hasSubgoals ? " (active subgoals)" : "";
-    console.log(`[bridge] 🔄 Agent indicates continuation needed${contMsg}`);
-  }
+  // Extract clean text from final result, filtering out tool metadata
+  const finalOutput = result.output || "";
+  const finalStr = typeof finalOutput === "string" ? finalOutput : JSON.stringify(finalOutput);
+  const { text: cleanText } = extractTextFromResponse(fullText || finalStr);
 
   return {
-    text: fullText || resultStr,
+    text: cleanText,
     account: attempt.label,
     isPaid: attempt.isPaid,
-    needsContinuation: parseResult.needsContinuation,
-    hasSubgoals: parseResult.hasSubgoals,
-    hadStreamingChunks: fullText.length > 0, // Track if any chunks were streamed during execution
+    needsContinuation,
+    hasSubgoals: lastSubgoalStatus !== null,
+    hadStreamingChunks: fullText.length > 0,
   };
 }
 
@@ -923,7 +998,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
 
   try {
     return await trySingleAccountStream(
-      winner, prompt, makeTimeout(), cwd, trackedOnChunk, completionId, created,
+      winner, prompt, makeTimeout, cwd, trackedOnChunk, completionId, created,
     );
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message) && chunksSent === 0) {
@@ -944,7 +1019,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
       console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
       return await trySingleAccountStream(
-        freeAttempt, prompt, makeTimeout(), cwd, onChunk, completionId, created,
+        freeAttempt, prompt, makeTimeout, cwd, onChunk, completionId, created,
       );
     }
     throw err;
@@ -1103,34 +1178,25 @@ const server = http.createServer(async (req, res) => {
           // Determine finish_reason and send any remaining content
           let finishReason = "stop";
 
-          // ALWAYS filter the text content to remove tool-call metadata, regardless of streaming mode
-          // This ensures clean output in both text-only mode and streaming output events mode
+          // Send any remaining text after filtering tool metadata
           if (streamResult?.text && streamResult.text.length > 0) {
-            // Extract actual text content from the JSON response, filtering out tool-call metadata
-            const { text: textContent } = extractTextFromResponse(streamResult.text);
-            if (textContent) {
-              // Only send if we didn't already stream during execution (avoid duplicates)
-              if (streamResult.hadStreamingChunks) {
-                // Already streamed during execution - log what was filtered
-                console.log(
-                  `[bridge] 📝 Filtered content (already streamed: ${streamResult.hadStreamingChunks})`,
-                );
-              } else {
-                const contentChunk = {
-                  id: completionId,
-                  object: "chat.completion.chunk",
-                  created,
-                  model,
-                  choices: [
-                    {
-                      index: 0,
-                      delta: { content: textContent },
-                      finish_reason: null,
-                    },
-                  ],
-                };
-                res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
-              }
+            // Extract text content, filtering out tool-call metadata
+            const { text: filteredText } = extractTextFromResponse(streamResult.text);
+            if (filteredText && filteredText.trim() && !streamResult.hadStreamingChunks) {
+              const contentChunk = {
+                id: completionId,
+                object: "chat.completion.chunk",
+                created,
+                model,
+                choices: [
+                  {
+                    index: 0,
+                    delta: { content: filteredText },
+                    finish_reason: null,
+                  },
+                ],
+              };
+              res.write(`data: ${JSON.stringify(contentChunk)}\n\n`);
             }
           }
 
@@ -1230,9 +1296,9 @@ const server = http.createServer(async (req, res) => {
           console.log(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
 
-        // Extract actual text content, filtering out tool-call metadata
+        // Extract text content, filtering out tool-call metadata for clean response
         const { text: filteredContent } = extractTextFromResponse(result.text);
-
+        
         return sendJson(res, 200, {
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",
