@@ -1,2 +1,8 @@
+import type { RGB } from "@/domain/share";
+
 export type { RGB } from "@/domain/share";
-export type { RGBWithMeta } from "@/domain/qr/generator-types";
+
+export interface RGBWithMeta extends RGB {
+  halftone?: boolean;
+  sizeRatio?: number;
+}

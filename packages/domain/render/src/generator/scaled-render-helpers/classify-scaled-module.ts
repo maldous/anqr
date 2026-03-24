@@ -4,7 +4,7 @@ import {
   isFormatInfo as isFormatInfoSpec,
   isTimingPattern as isTimingPatternSpec,
   isVersionInfo as isVersionInfoSpec,
-} from "@/domain/qr/spec";
+} from "../../qr-spec";
 import {
   PATTERN_ALIGNMENT,
   PATTERN_FIXED_DARK,

@@ -1,4 +1,4 @@
-import { isAlignmentPattern, isFormatInfo, isTimingPattern, isVersionInfo } from "@/domain/qr/spec";
+import { isAlignmentPattern, isFormatInfo, isTimingPattern, isVersionInfo } from "../qr-spec";
 import { isFinderModuleOrSeparator } from "./is-finder-module-or-separator";
 import { isFixedDarkModule } from "./is-fixed-dark-module";
 

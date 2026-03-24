@@ -1,3 +1,3 @@
-import { MemoCache, type OverlayDataMatrix } from "@/domain/qr/cache";
+import { MemoCache, type OverlayDataMatrix } from "../cache";
 
 export const overlayDataCache = new MemoCache<OverlayDataMatrix>(20);

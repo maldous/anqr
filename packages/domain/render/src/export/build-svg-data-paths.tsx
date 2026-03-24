@@ -3,7 +3,7 @@ import {
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
-} from "@/domain/qr/spec";
+} from "../qr-spec";
 import type { VectorModuleStyle } from "../export-shared/types";
 import { generateModulePath } from "./generate-module-path";
 

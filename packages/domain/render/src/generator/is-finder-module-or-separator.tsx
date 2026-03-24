@@ -1,4 +1,4 @@
-import { isFinderPattern } from "@/domain/qr/spec";
+import { isFinderPattern } from "../qr-spec";
 
 export function isFinderModuleOrSeparator(
   row: number,

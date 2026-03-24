@@ -1,3 +1,3 @@
-import { MemoCache } from "@/domain/qr/cache";
+import { MemoCache } from "../cache";
 
 export const alignmentCache = new MemoCache<Array<{ row: number; col: number }>>(50);

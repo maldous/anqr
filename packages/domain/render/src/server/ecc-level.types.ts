@@ -1,1 +1,1 @@
-export type { ECCLevel } from "@/domain/qr/spec";
+export type { ECCLevel } from "../qr-spec";
