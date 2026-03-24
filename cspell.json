@@ -422,7 +422,8 @@
     "nousresearch",
     "hermes",
     "slos",
-    "traceparent"
+    "traceparent",
+    "blocklisted"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
