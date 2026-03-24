@@ -13,6 +13,10 @@
 
 import { describe, it, expect, beforeAll } from "vitest";
 import { z } from "zod";
+import { validateStreamingContract } from "./harness-bridge-validate-streaming";
+import { isBridgeReachable } from "./harness-bridge-check";
+import { symphonyTestScenarios } from "./harness-bridge-scenarios";
+import { codebuffTestScenarios } from "./harness-bridge-codebuff-scenarios";
 
 const SYMPHONY_BASE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319";
 const CODEBUFF_BASE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
@@ -58,19 +62,6 @@ const chatCompletionResponseSchema = z.object({
   _symphony_duration_ms: z.number().optional(),
 });
 
-const streamingChunkSchema = z.object({
-  id: z.string(),
-  object: z.literal("chat.completion.chunk"),
-  created: z.number(),
-  model: z.string(),
-  choices: z.array(
-    z.object({
-      index: z.number(),
-      delta: z.object({ role: z.string().optional(), content: z.string().nullable().optional() }),
-      finish_reason: z.string().nullable(),
-    }),
-  ),
-});
 
 const healthResponseSchema = z.object({
   status: z.string(),
@@ -91,69 +82,6 @@ const healthResponseSchema = z.object({
   rankedProviders: z.array(z.object({ name: z.string(), score: z.number().nullable() })).optional(),
   tools: z.array(z.string()).optional(),
 });
-
-function validateStreamingContract(chunks: string[]) {
-  const errors: string[] = [];
-  let finalChunkFound = false;
-  for (let i = 0; i < chunks.length; i++) {
-    if (chunks[i] === "[DONE]") {
-      finalChunkFound = true;
-      continue;
-    }
-    try {
-      const parsed = JSON.parse(chunks[i]);
-      const result = streamingChunkSchema.safeParse(parsed);
-      if (!result.success) errors.push(`Chunk ${i} validation failed: ${result.error.message}`);
-    } catch {
-      errors.push(`Chunk ${i} is not valid JSON`);
-    }
-  }
-  return { valid: errors.length === 0, errors, finalChunkFound };
-}
-
-/**
- * Check if a bridge is reachable. Returns true if reachable.
- */
-async function isBridgeReachable(baseUrl: string): Promise<boolean> {
-  try {
-    const res = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(3_000) });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-// Inline test scenarios
-const symphonyTestScenarios = {
-  simplePrompt: {
-    messages: [{ role: "user" as const, content: "Say 'ok' if you can read this." }],
-    model: "symphony/main",
-    stream: false,
-  },
-  streamingPrompt: {
-    messages: [{ role: "user" as const, content: "Count from 1 to 5." }],
-    model: "symphony/main",
-    stream: true,
-  },
-  withIssueContext: {
-    messages: [{ role: "user" as const, content: "## Issue: ANQR-747 — Test\nPlease write ok." }],
-    model: "symphony/main",
-    stream: false,
-  },
-};
-
-const codebuffTestScenarios = {
-  simplePrompt: {
-    messages: [{ role: "user" as const, content: "Say 'ok'." }],
-    model: "codebuff/base",
-    stream: false,
-  },
-  streamingPrompt: {
-    messages: [{ role: "user" as const, content: "Count to 3." }],
-    model: "codebuff/base",
-    stream: true,
-  },
-};
 
 describe("Symphony Bridge Contract Tests", () => {
   const baseUrl = SYMPHONY_BASE_URL;

@@ -21,6 +21,7 @@ import {
   MESSAGE_TRUNCATION_MARKER,
   // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-bridge-truncation.mjs";
+import { makeArrayContentMessage } from "./symphony-bridge-truncation.make-array-content-message";
 
 // Suppress console.log from truncation passes during tests
 beforeEach(() => {
@@ -33,13 +34,6 @@ beforeEach(() => {
 
 function makeMessage(role: string, charCount: number): { role: string; content: string } {
   return { role, content: "x".repeat(charCount) };
-}
-
-function makeArrayContentMessage(
-  role: string,
-  parts: Array<{ type: string; text?: string; result?: string }>,
-): { role: string; content: Array<{ type: string; text?: string; result?: string }> } {
-  return { role, content: parts };
 }
 
 // ---------------------------------------------------------------------------

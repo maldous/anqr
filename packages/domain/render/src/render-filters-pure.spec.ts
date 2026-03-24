@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { computeNormalizationStrength } from "./overlay/compute-normalization-strength";
 import { shouldAutoNormalizeColor } from "./overlay/should-auto-normalize-color";
-import type { QRGeneratorConfig } from "./qr-generator-shared";
 import type { OverlayToneStats } from "./overlay/overlay-tone-stats";
+import { makeConfig } from "./render-filters-pure.make-config.fixture";
 
 function makeStats(overrides: Partial<OverlayToneStats> = {}): OverlayToneStats {
   return {
@@ -13,15 +13,6 @@ function makeStats(overrides: Partial<OverlayToneStats> = {}): OverlayToneStats 
     clippedLightRatio: 0,
     ...overrides,
   };
-}
-
-function makeConfig(overrides: Partial<QRGeneratorConfig> = {}): QRGeneratorConfig {
-  return {
-    colorMode: "color",
-    overlayMode: "dithered",
-    scanGateProfile: "full",
-    ...overrides,
-  } as QRGeneratorConfig;
 }
 
 describe("domain/render/filters (pure)", () => {

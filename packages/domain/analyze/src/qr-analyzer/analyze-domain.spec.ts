@@ -3,6 +3,7 @@ import { buildAnalysisExportData } from "./export";
 import type { QRAnalysisResult } from "./qr-analysis-result";
 import * as qrAnalyzerIndex from "./index";
 import * as domainIndex from "../index";
+import { fullResult } from "./analyze-domain-full-result.fixture";
 
 function minimalResult(): QRAnalysisResult {
   return {
@@ -14,102 +15,6 @@ function minimalResult(): QRAnalysisResult {
     encodingMode: null,
     errorsCorrected: null,
     estimatedModulePx: null,
-  };
-}
-
-function fullResult(): QRAnalysisResult {
-  return {
-    success: true,
-    payload: "https://anqr.app",
-    payloadBytes: new Uint8Array([104, 116, 116, 112, 115]),
-    version: 5,
-    moduleCount: 37,
-    eccLevel: "H",
-    maskPattern: 3,
-    encodingMode: "byte",
-    errorsCorrected: 2,
-    estimatedModulePx: 10,
-    confidence: "high",
-    warnings: ["Low contrast detected"],
-    contentType: {
-      type: "url",
-      label: "URL",
-    },
-    detectedColors: {
-      foreground: "#000000",
-      background: "#ffffff",
-      contrastRatio: 21,
-    },
-    dominantColors: [{ color: "#000000", percentage: 50, rgb: { r: 0, g: 0, b: 0 } }],
-    quietZone: {
-      top: 4,
-      right: 4,
-      bottom: 4,
-      left: 4,
-      adequate: true,
-    },
-    dataCapacity: {
-      used: 50,
-      total: 100,
-      percentage: 50,
-      overflow: false,
-    },
-    structuralAnalysis: {
-      hasFinderPatterns: true,
-      hasTimingPatterns: true,
-      hasAlignmentPatterns: true,
-      alignmentPatternCount: 1,
-    },
-    imageProperties: {
-      width: 370,
-      height: 370,
-      aspectRatio: 1,
-      estimatedQrSizePx: 350,
-    },
-    geometry: {
-      corners: {
-        topLeft: { x: 10, y: 10 },
-        topRight: { x: 360, y: 10 },
-        bottomLeft: { x: 10, y: 360 },
-        bottomRight: { x: 360, y: 360 },
-      },
-      boundingBox: {
-        minX: 10,
-        minY: 10,
-        maxX: 360,
-        maxY: 360,
-        width: 350,
-        height: 350,
-      },
-      topEdgePx: 10,
-      leftEdgePx: 10,
-      estimatedRotationDeg: 0,
-    },
-    timing: {
-      decodeMs: 15,
-      totalAnalysisMs: 50,
-      encodeMs: 10,
-      renderMs: 5,
-      exportMs: 2,
-    },
-    decoderMetadata: {
-      version: 5,
-      maskPattern: 3,
-      eccLevel: "H",
-      errorsCorrected: 2,
-      erasures: 0,
-      numBits: 480,
-      orientation: 0,
-      structuredAppendSequence: null,
-      structuredAppendParity: null,
-      hasStructuredAppend: false,
-      byteSegmentCount: 1,
-      totalByteLength: 19,
-    },
-    moduleMatrix: [
-      [true, false, true],
-      [false, true, false],
-    ],
   };
 }
 
