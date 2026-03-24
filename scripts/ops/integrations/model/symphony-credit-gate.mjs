@@ -23,9 +23,8 @@
  *  10. GitHub Models   — free, gpt-4.1-mini
  *
  *   TIER: local-safety-net — last-resort local models (score-capped)
- *  11. Ollama qwen3-coder-next    — local, never rate limited
- *  12. Ollama qwen2.5-coder:3b    — local, never rate limited
- *  13. Ollama qwen2.5-coder:0.5b  — local, never rate limited
+ *  11. Ollama qwen2.5-coder:3b    — local, never rate limited
+ *  12. Ollama qwen2.5-coder:0.5b  — local, never rate limited
  *
  * All probes use lightweight /v1/models listings (not generation requests)
  * to preserve free-tier quotas.
