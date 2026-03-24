@@ -423,7 +423,10 @@
     "hermes",
     "slos",
     "traceparent",
-    "blocklisted"
+    "blocklisted",
+    "pexpect",
+    "sendcontrol",
+    "PYSCRIPT"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

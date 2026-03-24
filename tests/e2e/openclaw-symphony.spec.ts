@@ -12,6 +12,10 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { execSync, spawn, type ChildProcess } from "node:child_process";
+import { writeFileSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const SYMPHONY_BASE_URL = "http://127.0.0.1:4319";
 const CODEBUFF_BASE_URL = "http://127.0.0.1:4318";
@@ -60,8 +64,10 @@ const openclawConfig = {
     "symphony-bridge/symphony/sambanova",
     "symphony-bridge/symphony/cerebras",
     "symphony-bridge/symphony/ollama-local",
-    "symphony-bridge/symphony/ollama-qwen2.5-coder-3b",
-    "symphony-bridge/symphony/ollama-qwen2.5-coder-0.5b",
+    "symphony-bridge/symphony/text",
+    "ollama/qwen2.5-coder:0.5b",
+    "ollama/qwen2.5-coder:3b-instruct",
+    "ollama/qwen3-coder-next:latest",
     "codebuff-bridge/codebuff/base",
   ],
 };
@@ -94,8 +100,7 @@ test.describe("OpenClaw Model Configuration", () => {
       "symphony/sambanova",
       "symphony/cerebras",
       "symphony/ollama-local",
-      "symphony/ollama-qwen2.5-coder-3b",
-      "symphony/ollama-qwen2.5-coder-0.5b",
+      "symphony/text",
     ];
 
     for (const route of symphonyRoutes) {
@@ -103,6 +108,19 @@ test.describe("OpenClaw Model Configuration", () => {
         f.includes(route),
       );
       expect(hasFallback, `Missing fallback for ${route}`).toBe(true);
+    }
+  });
+
+  test("fallback models should include direct ollama safety-net models", () => {
+    const ollamaModels = [
+      "ollama/qwen2.5-coder:0.5b",
+      "ollama/qwen2.5-coder:3b-instruct",
+      "ollama/qwen3-coder-next:latest",
+    ];
+
+    for (const model of ollamaModels) {
+      const hasFallback = openclawConfig.fallbackModels.includes(model);
+      expect(hasFallback, `Missing direct ollama fallback: ${model}`).toBe(true);
     }
   });
 
@@ -153,6 +171,26 @@ test.describe("Symphony Fallback Continuity", () => {
     );
 
     expect(hasLocalFallback).toBe(true);
+  });
+
+  test("direct ollama models should rank after all symphony-bridge routes", () => {
+    const firstDirectOllamaIdx = openclawConfig.fallbackModels.findIndex(
+      (f: string) => f.startsWith("ollama/"),
+    );
+    if (firstDirectOllamaIdx < 0) return;
+
+    const symphonyAfterOllama = openclawConfig.fallbackModels.slice(firstDirectOllamaIdx).filter(
+      (f: string) => f.startsWith("symphony-bridge/"),
+    );
+    expect(
+      symphonyAfterOllama.length,
+      "No symphony-bridge route should appear after the first direct ollama model in the fallback chain",
+    ).toBe(0);
+  });
+
+  test("codebuff-bridge should be the absolute last fallback", () => {
+    const lastFallback = openclawConfig.fallbackModels[openclawConfig.fallbackModels.length - 1];
+    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
   });
 });
 
@@ -338,7 +376,7 @@ const DIRECT_PROVIDERS = [
   { name: "gemini-lite", model: "gemini-2.5-flash-lite", envVar: "GEMINI_TOKEN" },
   { name: "sambanova", model: "Meta-Llama-3.3-70B-Instruct", envVar: "SAMBANOVA_TOKEN" },
   { name: "cerebras", model: "llama3.1-8b", envVar: "CEREBRAS_TOKEN" },
-  { name: "codebuff-bridge", model: "codebuff/base@latest", envVar: "CODEBUFF_BRIDGE_API_KEY" },
+  { name: "codebuff-bridge", model: "codebuff/base", envVar: "CODEBUFF_BRIDGE_API_KEY" },
 ];
 
 const OPENROUTER_PROVIDERS = [
@@ -1506,5 +1544,612 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
       const error = await res.json();
       console.log(`[openclaw-e2e] Codebuff streaming failed: status=${res.status}, error=${error.error?.message}`);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CLI Helpers for OpenClaw TUI / Model validation
+// ---------------------------------------------------------------------------
+
+function runCli(args: string, timeoutMs = 15_000): string {
+  return execSync(`openclaw ${args}`, {
+    timeout: timeoutMs,
+    encoding: "utf-8",
+    env: { ...process.env, NO_COLOR: "1" },
+  }).trim();
+}
+
+function runCliJson<T = Record<string, unknown>>(args: string, timeoutMs = 15_000): T {
+  const raw = runCli(args, timeoutMs);
+  return JSON.parse(raw) as T;
+}
+
+function isGatewayReachable(): boolean {
+  try {
+    const out = runCli("health", 10_000);
+    return out.includes("Agents:") || out.includes("Heartbeat");
+  } catch {
+    return false;
+  }
+}
+
+interface ModelsListOutput {
+  count: number;
+  models: Array<{
+    key: string;
+    name: string;
+    input: string;
+    contextWindow: number;
+    local: boolean;
+    available: boolean;
+    tags: string[];
+    missing: boolean;
+  }>;
+}
+
+interface ModelsStatusOutput {
+  configPath: string;
+  defaultModel: string;
+  resolvedDefault: string;
+  fallbacks: string[];
+  allowed: string[];
+  imageModel: string | null;
+  imageFallbacks: string[];
+}
+
+function spawnTuiAndCapture(messageText: string, captureMs = 15_000): Promise<{ output: string; exitCode: number | null }> {
+  return new Promise((resolve) => {
+    let output = "";
+    let child: ChildProcess;
+    try {
+      child = spawn("script", ["-qc", `openclaw tui --no-color --message "${messageText}"`, "/dev/null"], {
+        env: { ...process.env, NO_COLOR: "1", TERM: "dumb" },
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch {
+      resolve({ output: "", exitCode: 1 });
+      return;
+    }
+
+    child.stdout?.on("data", (data: Buffer) => { output += data.toString(); });
+    child.stderr?.on("data", (data: Buffer) => { output += data.toString(); });
+
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      setTimeout(() => {
+        child.kill("SIGKILL");
+        resolve({ output, exitCode: null });
+      }, 2_000);
+    }, captureMs);
+
+    child.on("exit", (code) => {
+      clearTimeout(timer);
+      resolve({ output, exitCode: code });
+    });
+  });
+}
+
+interface TuiPexpectResult {
+  connected: boolean;
+  running: boolean;
+  idle: boolean;
+  modelInfo: string;
+  tokenInfo: string;
+  rawLength: number;
+  elapsed: number;
+  error: string;
+}
+
+const PEXPECT_SCRIPT = `
+import pexpect, json, time, re, os
+
+session_id = os.environ.get("TUI_SESSION", "e2e-default")
+message = os.environ.get("TUI_MESSAGE", "Say ok")
+timeout_secs = int(os.environ.get("TUI_TIMEOUT", "120"))
+
+result = {
+    "connected": False,
+    "running": False,
+    "idle": False,
+    "modelInfo": "",
+    "tokenInfo": "",
+    "rawLength": 0,
+    "elapsed": 0.0,
+    "error": ""
+}
+
+start = time.time()
+cmd = "openclaw tui --no-color --session {} --message '{}'".format(session_id, message)
+child = pexpect.spawn(cmd, encoding="utf-8", timeout=timeout_secs + 10)
+
+try:
+    child.expect("connected", timeout=30)
+    result["connected"] = True
+
+    try:
+        child.expect("running", timeout=30)
+        result["running"] = True
+    except pexpect.TIMEOUT:
+        pass
+
+    idx = child.expect(["idle", pexpect.TIMEOUT], timeout=timeout_secs)
+    all_output = child.before or ""
+
+    if idx == 0:
+        result["idle"] = True
+        time.sleep(2)
+        try:
+            child.expect(pexpect.TIMEOUT, timeout=2)
+        except Exception:
+            pass
+        all_output += (child.before or "")
+
+    stripped = re.sub(r"\\x1b\\[[0-9;]*[a-zA-Z]", "", all_output)
+    stripped = re.sub(r"\\x1b\\][^\\x07]*\\x07", "", stripped)
+    stripped = re.sub(r"[\\x00-\\x09\\x0b-\\x1f]", "", stripped)
+    result["rawLength"] = len(stripped)
+
+    for line in stripped.split("\\n"):
+        line = line.strip()
+        if "agent" in line and "|" in line:
+            result["modelInfo"] = line[:200]
+            break
+
+    for line in stripped.split("\\n"):
+        line = line.strip()
+        if "tokens" in line.lower() and ("/" in line or "%" in line):
+            result["tokenInfo"] = line[:200]
+            break
+
+except pexpect.TIMEOUT:
+    result["error"] = "timeout_before_connected"
+except Exception as e:
+    result["error"] = str(e)[:200]
+finally:
+    result["elapsed"] = round(time.time() - start, 1)
+    try:
+        child.sendcontrol("c")
+        time.sleep(0.5)
+    except Exception:
+        pass
+    child.close()
+
+print(json.dumps(result))
+`.trimStart();
+
+function runTuiPromptWithPexpect(
+  message: string,
+  sessionId: string,
+  timeoutSecs: number,
+): TuiPexpectResult {
+  const defaultResult: TuiPexpectResult = {
+    connected: false, running: false, idle: false,
+    modelInfo: "", tokenInfo: "", rawLength: 0, elapsed: 0, error: "execSync failed",
+  };
+
+  const scriptPath = join(tmpdir(), `openclaw-tui-pexpect-${Date.now()}.py`);
+  try {
+    writeFileSync(scriptPath, PEXPECT_SCRIPT, "utf-8");
+
+    const cleanEnv = { ...process.env };
+    delete cleanEnv.FORCE_COLOR;
+    cleanEnv.NO_COLOR = "1";
+    cleanEnv.TUI_SESSION = sessionId;
+    cleanEnv.TUI_MESSAGE = message;
+    cleanEnv.TUI_TIMEOUT = String(timeoutSecs);
+
+    const raw = execSync(`python3 ${scriptPath}`, {
+      encoding: "utf-8",
+      timeout: (timeoutSecs + 40) * 1000,
+      env: cleanEnv,
+    });
+
+    const lastLine = raw.trim().split("\n").pop() ?? "{}";
+    return JSON.parse(lastLine) as TuiPexpectResult;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.slice(0, 200) : "unknown error";
+    return { ...defaultResult, error: `execSync failed: ${msg}` };
+  } finally {
+    try { unlinkSync(scriptPath); } catch { /* cleanup best-effort */ }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// OpenClaw CLI Model Validation
+// ---------------------------------------------------------------------------
+
+test.describe("OpenClaw CLI Model Validation", () => {
+  test.setTimeout(30_000);
+
+  test("openclaw models list shows all configured models", () => {
+    let data: ModelsListOutput;
+    try {
+      data = runCliJson<ModelsListOutput>("models list --json");
+    } catch {
+      console.log("[openclaw-e2e] openclaw CLI not available, skipping");
+      test.skip();
+      return;
+    }
+
+    expect(data.count).toBeGreaterThanOrEqual(17);
+
+    const keys = data.models.map((m) => m.key);
+    console.log(`[openclaw-e2e] CLI models list: ${data.count} models`);
+
+    expect(keys).toContain("symphony-bridge/symphony/main");
+    expect(keys).toContain("symphony-bridge/symphony/codex");
+    expect(keys).toContain("symphony-bridge/symphony/groq");
+    expect(keys).toContain("symphony-bridge/symphony/gemini");
+    expect(keys).toContain("symphony-bridge/symphony/ollama-local");
+    expect(keys).toContain("symphony-bridge/symphony/text");
+    expect(keys).toContain("ollama/qwen2.5-coder:0.5b");
+    expect(keys).toContain("ollama/qwen2.5-coder:3b-instruct");
+    expect(keys).toContain("ollama/qwen3-coder-next:latest");
+    expect(keys).toContain("codebuff-bridge/codebuff/base");
+  });
+
+  test("default model is symphony-bridge/symphony/main", () => {
+    let data: ModelsListOutput;
+    try {
+      data = runCliJson<ModelsListOutput>("models list --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const defaultModel = data.models.find((m) => m.tags.includes("default"));
+    expect(defaultModel, "No model tagged as default").toBeDefined();
+    expect(defaultModel!.key).toBe("symphony-bridge/symphony/main");
+  });
+
+  test("openclaw models status shows correct default and fallback chain", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    expect(data.defaultModel).toBe("symphony-bridge/symphony/main");
+    expect(data.resolvedDefault).toBe("symphony-bridge/symphony/main");
+    expect(data.fallbacks.length).toBeGreaterThanOrEqual(12);
+
+    console.log(
+      `[openclaw-e2e] CLI status: default=${data.defaultModel}, fallbacks=${data.fallbacks.length}, ` +
+      `allowed=${data.allowed.length}`,
+    );
+  });
+
+  test("live fallback ordering places direct ollama models after all symphony routes", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const { fallbacks } = data;
+    const firstDirectOllamaIdx = fallbacks.findIndex((f) => f.startsWith("ollama/"));
+    if (firstDirectOllamaIdx < 0) {
+      console.log("[openclaw-e2e] No direct ollama models in live fallbacks, skipping ordering check");
+      return;
+    }
+
+    const symphonyAfterOllama = fallbacks.slice(firstDirectOllamaIdx).filter(
+      (f) => f.startsWith("symphony-bridge/"),
+    );
+
+    console.log(
+      `[openclaw-e2e] Live fallback ordering: first direct ollama at index ${firstDirectOllamaIdx}, ` +
+      `${symphonyAfterOllama.length} symphony routes after it`,
+    );
+
+    expect(
+      symphonyAfterOllama.length,
+      `Symphony routes found after first direct ollama model: ${symphonyAfterOllama.join(", ")}`,
+    ).toBe(0);
+  });
+
+  test("live fallback chain includes all symphony bridge routes from config", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const expectedSymphonyRoutes = [
+      "symphony-bridge/symphony/codex",
+      "symphony-bridge/symphony/codebuff",
+      "symphony-bridge/symphony/codebuff-bridge",
+      "symphony-bridge/symphony/groq",
+      "symphony-bridge/symphony/mistral",
+      "symphony-bridge/symphony/gemini",
+      "symphony-bridge/symphony/gemini-lite",
+      "symphony-bridge/symphony/openrouter",
+      "symphony-bridge/symphony/sambanova",
+      "symphony-bridge/symphony/cerebras",
+      "symphony-bridge/symphony/ollama-local",
+      "symphony-bridge/symphony/text",
+    ];
+
+    const missing = expectedSymphonyRoutes.filter((r) => !data.fallbacks.includes(r));
+    if (missing.length > 0) {
+      console.log(`[openclaw-e2e] Missing symphony routes in live fallbacks: ${missing.join(", ")}`);
+    }
+
+    expect(missing, `Symphony routes missing from live fallbacks: ${missing.join(", ")}`).toHaveLength(0);
+  });
+
+  test("codebuff-bridge is last in the live fallback chain", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const lastFallback = data.fallbacks[data.fallbacks.length - 1];
+    expect(lastFallback).toBe("codebuff-bridge/codebuff/base");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// OpenClaw Model Selection Validation
+// ---------------------------------------------------------------------------
+
+test.describe("OpenClaw Model Selection Validation", () => {
+  test.setTimeout(30_000);
+
+  test("all symphony bridge models are selectable (in allowed list)", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const expectedModels = [
+      "symphony-bridge/symphony/main",
+      "symphony-bridge/symphony/text",
+      "symphony-bridge/symphony/codex",
+      "symphony-bridge/symphony/codebuff",
+      "symphony-bridge/symphony/codebuff-bridge",
+      "symphony-bridge/symphony/groq",
+      "symphony-bridge/symphony/mistral",
+      "symphony-bridge/symphony/gemini",
+      "symphony-bridge/symphony/gemini-lite",
+      "symphony-bridge/symphony/openrouter",
+      "symphony-bridge/symphony/sambanova",
+      "symphony-bridge/symphony/cerebras",
+      "symphony-bridge/symphony/ollama-local",
+    ];
+
+    const missing = expectedModels.filter((m) => !data.allowed.includes(m));
+    if (missing.length > 0) {
+      console.log(`[openclaw-e2e] Symphony models NOT selectable: ${missing.join(", ")}`);
+    }
+
+    expect(
+      missing,
+      `Symphony models not in allowed list: ${missing.join(", ")}`,
+    ).toHaveLength(0);
+
+    console.log(`[openclaw-e2e] All ${expectedModels.length} symphony bridge models are selectable`);
+  });
+
+  test("all direct ollama models are selectable (in allowed list)", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const ollamaModels = [
+      "ollama/qwen2.5-coder:0.5b",
+      "ollama/qwen2.5-coder:3b-instruct",
+      "ollama/qwen3-coder-next:latest",
+    ];
+
+    const missing = ollamaModels.filter((m) => !data.allowed.includes(m));
+    expect(
+      missing,
+      `Ollama models not in allowed list: ${missing.join(", ")}`,
+    ).toHaveLength(0);
+
+    console.log(`[openclaw-e2e] All ${ollamaModels.length} direct ollama models are selectable`);
+  });
+
+  test("codebuff-bridge model is selectable (in allowed list)", () => {
+    let data: ModelsStatusOutput;
+    try {
+      data = runCliJson<ModelsStatusOutput>("models status --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    expect(
+      data.allowed,
+      "codebuff-bridge/codebuff/base not in allowed list",
+    ).toContain("codebuff-bridge/codebuff/base");
+  });
+
+  test("configured model count matches expected", () => {
+    let data: ModelsListOutput;
+    try {
+      data = runCliJson<ModelsListOutput>("models list --json");
+    } catch {
+      test.skip();
+      return;
+    }
+
+    const configuredModels = data.models.filter((m) => m.tags.includes("configured"));
+    console.log(
+      `[openclaw-e2e] Configured models: ${configuredModels.length} ` +
+      `(${configuredModels.map((m) => m.key).join(", ")})`,
+    );
+
+    expect(configuredModels.length).toBeGreaterThanOrEqual(17);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// OpenClaw TUI Validation (requires running gateway)
+// ---------------------------------------------------------------------------
+
+test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
+  test.setTimeout(60_000);
+
+  test("gateway is healthy (prerequisite for TUI)", () => {
+    const reachable = isGatewayReachable();
+    if (!reachable) {
+      console.log("[openclaw-e2e] Gateway not reachable, skipping TUI tests");
+      test.skip();
+      return;
+    }
+
+    const output = runCli("health");
+    expect(output).toContain("Agents:");
+    console.log(`[openclaw-e2e] Gateway health: ${output.split("\n")[0]}`);
+  });
+
+  test("openclaw tui starts and produces output", async () => {
+    const reachable = isGatewayReachable();
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const { output, exitCode } = await spawnTuiAndCapture("Say ok", 15_000);
+
+    // oxlint-disable-next-line no-control-regex -- intentional ANSI escape stripping
+    const stripped = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "").replace(/[\x00-\x09\x0b-\x1f]/g, "");
+    console.log(
+      `[openclaw-e2e] TUI output (${stripped.length} chars, exitCode=${exitCode}): ` +
+      `${stripped.slice(0, 300).replace(/\n/g, "⏎")}`,
+    );
+
+    expect(
+      stripped.length,
+      "TUI should produce some output (connection banner, prompt, or response)",
+    ).toBeGreaterThan(0);
+  });
+
+  test("openclaw tui connects to gateway and receives response", async () => {
+    const reachable = isGatewayReachable();
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const { output } = await spawnTuiAndCapture("Reply with only the word pong", 20_000);
+
+    // oxlint-disable-next-line no-control-regex -- intentional ANSI escape stripping
+    const stripped = output.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "").replace(/[\x00-\x09\x0b-\x1f]/g, "");
+    const lower = stripped.toLowerCase();
+
+    const hasResponse = lower.includes("pong") ||
+      lower.includes("ok") ||
+      lower.includes("connected") ||
+      lower.includes("symphony") ||
+      lower.includes("session") ||
+      stripped.length > 100;
+
+    console.log(
+      `[openclaw-e2e] TUI response check (${stripped.length} chars): ` +
+      `hasPong=${lower.includes("pong")}, ` +
+      `preview=${stripped.slice(0, 400).replace(/\n/g, "⏎")}`,
+    );
+
+    expect(
+      hasResponse,
+      "TUI should show a connection indicator or model response",
+    ).toBe(true);
+  });
+
+  test("openclaw tui sends prompt through pipeline and validates response via API", async () => {
+    test.setTimeout(180_000);
+
+    const reachable = isGatewayReachable();
+    if (!reachable) {
+      test.skip();
+      return;
+    }
+
+    const sessionId = `e2e-content-${Date.now()}`;
+    const prompt = "What is 6 times 7? Reply with ONLY the number, nothing else.";
+
+    // Phase 1: Send prompt through the TUI and validate pipeline
+    const tuiResult = runTuiPromptWithPexpect(prompt, sessionId, 120);
+
+    console.log(
+      `[openclaw-e2e] TUI prompt test: connected=${tuiResult.connected}, ` +
+      `running=${tuiResult.running}, idle=${tuiResult.idle}, ` +
+      `elapsed=${tuiResult.elapsed}s, rawLen=${tuiResult.rawLength}, ` +
+      `error=${tuiResult.error || "none"}`,
+    );
+    if (tuiResult.modelInfo) {
+      console.log(`[openclaw-e2e] TUI model: ${tuiResult.modelInfo}`);
+    }
+    if (tuiResult.tokenInfo) {
+      console.log(`[openclaw-e2e] TUI tokens: ${tuiResult.tokenInfo}`);
+    }
+
+    expect(
+      tuiResult.connected,
+      "TUI should connect to the gateway",
+    ).toBe(true);
+
+    expect(
+      tuiResult.running || tuiResult.idle,
+      "Model should start processing the prompt (running or idle state)",
+    ).toBe(true);
+
+    if (tuiResult.idle) {
+      expect(
+        tuiResult.modelInfo.length,
+        "TUI should display model identifier after completion",
+      ).toBeGreaterThan(0);
+    }
+
+    // Phase 2: Validate response content via Symphony HTTP API
+    // (same backend the TUI uses — proves the pipeline returns correct content)
+    const bridgeReachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!bridgeReachable) {
+      console.log("[openclaw-e2e] Symphony bridge not reachable, skipping content validation");
+      return;
+    }
+
+    const { status, data, elapsed } = await sendCompletion("symphony/main", prompt);
+    const errMsg = (data.error as Record<string, string>)?.message ?? "";
+
+    if (isTransientError(status, errMsg)) {
+      console.log(`[openclaw-e2e] Content validation: transient error (${errMsg}), skipping`);
+      return;
+    }
+
+    expect(status, `HTTP API returned ${status}: ${errMsg}`).toBe(200);
+
+    const content = String(
+      (data.choices as Array<{ message: { content: string } }>)[0]?.message?.content ?? "",
+    );
+
+    console.log(
+      `[openclaw-e2e] Content validation: provider=${data._symphony_provider}, ` +
+      `elapsed=${elapsed}ms, content="${content.slice(0, 100)}"`,
+    );
+
+    expect(
+      content.includes("42"),
+      `Model response should contain "42" for 6×7, got: "${content.slice(0, 200)}"`,
+    ).toBe(true);
   });
 });

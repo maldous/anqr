@@ -6,9 +6,13 @@
  * Probes providers in priority order (matching legacy codex-credit-gate.sh),
  * skips recently-failed providers, and returns the first available provider.
  *
- * Cascade order (best-to-worst):
+ * Cascade order (best-to-worst), grouped by tier:
+ *
+ *   TIER: paid — cloud providers with paid API keys
  *   1. Codex (OpenAI)  — paid cloud, gpt-5.4 (temporary rate limits, 2-min cooldown)
  *   2. Codebuff        — paid cloud, codebuff/base (temporary rate limits, 2-min cooldown)
+ *
+ *   TIER: free-cloud — free/experimental cloud providers
  *   3. Groq            — free cloud, fast, llama-3.3-70b-versatile
  *   4. Mistral         — free experimental tier, devstral-small-2507
  *   5. Gemini          — free cloud tier, gemini-2.5-flash
@@ -17,7 +21,11 @@
  *   8. SambaNova       — free cloud, 20 req/day, llama-3.3-70b
  *   9. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
  *  10. GitHub Models   — free, gpt-4.1-mini
+ *
+ *   TIER: local-proxy — local proxies to paid services
  *  11. Codebuff Bridge — local proxy to codebuff
+ *
+ *   TIER: local-safety-net — last-resort local models (score-capped)
  *  12. Ollama qwen3-coder-next    — local, never rate limited
  *  13. Ollama qwen2.5-coder:3b    — local, never rate limited
  *  14. Ollama qwen2.5-coder:0.5b  — local, never rate limited
@@ -28,7 +36,7 @@
  * Legacy lessons encoded:
  *   - Always probe before selecting
  *   - Track failures with a time window (skip broken providers for 360s)
- *   - Local Ollama models are ultimate fallbacks (never rate limited)
+ *   - Local Ollama models are ultimate fallbacks (never rate limited, score-capped)
  *   - Paid providers (codex, codebuff) get shorter failure cooldowns (2 min vs 6 min)
  *   - State files live in /run/user/ for crash recovery
  */
@@ -106,6 +114,26 @@ const PROVIDER_STATS = {
   largeIssuesCompleted: {},
   largeIssuesTotal: {},
 };
+
+// ---------------------------------------------------------------------------
+// Provider tiers — explicit priority categories for cascade selection.
+// Safety-net providers are score-capped and always rank last in dynamic
+// ranking to prevent local models from outranking cloud providers.
+// ---------------------------------------------------------------------------
+
+const TIER_PAID = "paid";
+const TIER_FREE_CLOUD = "free-cloud";
+const TIER_LOCAL_PROXY = "local-proxy";
+const TIER_LOCAL_SAFETY_NET = "local-safety-net";
+
+// Safety-net providers are capped at this score ceiling in dynamic ranking.
+// Normal provider scores range 0.0–1.0; this ceiling keeps safety nets below
+// even a mediocre cloud provider so they only activate when everything else fails.
+const SAFETY_NET_SCORE_CEILING = 0.25;
+
+function getProviderTier(provider) {
+  return provider.tier || TIER_FREE_CLOUD;
+}
 
 // Scoring weights (customizable)
 const SCORE_WEIGHTS = {
@@ -253,6 +281,7 @@ async function probeOllamaModel(modelName) {
 const PROVIDERS = [
   {
     name: "codex",
+    tier: TIER_PAID,
     model: process.env.CODEX_MODEL || "gpt-5-codex",
     baseUrl: "codex-sdk",
     envVar: null,
@@ -262,6 +291,7 @@ const PROVIDERS = [
   },
   {
     name: "codebuff",
+    tier: TIER_PAID,
     model: "codebuff/base@latest",
     baseUrl: "codebuff",
     envVar: "CODEBUFF_API_KEY",
@@ -270,6 +300,7 @@ const PROVIDERS = [
   },
   {
     name: "openclaw",
+    tier: TIER_LOCAL_PROXY,
     model: "openclaw:main",
     baseUrl: "http://127.0.0.1:18789/v1",
     envVar: "OPENCLAW_TOKEN",
@@ -504,7 +535,8 @@ const PROVIDERS = [
   },
   {
     name: "codebuff-bridge",
-    model: "codebuff/base@latest",
+    tier: TIER_LOCAL_PROXY,
+    model: "codebuff/base",
     baseUrl: "http://127.0.0.1:4318/v1",
     envVar: "CODEBUFF_BRIDGE_API_KEY",
     loadToken: () => "local-bridge",
@@ -513,6 +545,7 @@ const PROVIDERS = [
   },
   {
     name: "ollama-local",
+    tier: TIER_LOCAL_SAFETY_NET,
     model: RUNNER_OLLAMA_MODEL,
     baseUrl: RUNNER_OLLAMA_BASE_URL,
     envVar: null,
@@ -520,6 +553,7 @@ const PROVIDERS = [
   },
   {
     name: "ollama-qwen2.5-coder-3b",
+    tier: TIER_LOCAL_SAFETY_NET,
     model: "qwen2.5-coder:3b-instruct",
     baseUrl: RUNNER_OLLAMA_BASE_URL,
     envVar: null,
@@ -527,6 +561,7 @@ const PROVIDERS = [
   },
   {
     name: "ollama-qwen2.5-coder-0.5b",
+    tier: TIER_LOCAL_SAFETY_NET,
     model: "qwen2.5-coder:0.5b",
     baseUrl: RUNNER_OLLAMA_BASE_URL,
     envVar: null,
@@ -842,7 +877,16 @@ function calculateProviderScore(providerName, stats) {
     estimateEfficiency * SCORE_WEIGHTS.estimateEfficiency +
     estimateThroughput * SCORE_WEIGHTS.estimateThroughput;
 
-  return Math.round(score * 100) / 100; // 2 decimal places
+  const rounded = Math.round(score * 100) / 100;
+
+  // Apply tier-based score ceiling — safety-net providers are capped to prevent
+  // them from outranking cloud providers through accumulated local-only stats.
+  const provider = PROVIDERS.find((p) => p.name === providerName);
+  if (provider && getProviderTier(provider) === TIER_LOCAL_SAFETY_NET) {
+    return Math.min(rounded, SAFETY_NET_SCORE_CEILING);
+  }
+
+  return rounded;
 }
 
 /**
@@ -851,19 +895,31 @@ function calculateProviderScore(providerName, stats) {
 export function getRankedProviders() {
   const stats = loadStats();
   const ranked = [];
+  const safetyNets = [];
 
   for (const name of Object.keys(stats.selections)) {
     const score = stats.score[name];
     if (score !== null && score !== undefined) {
-      ranked.push({ name, score });
+      const provider = PROVIDERS.find((p) => p.name === name);
+      const tier = provider ? getProviderTier(provider) : TIER_FREE_CLOUD;
+      const entry = { name, score, tier };
+      if (tier === TIER_LOCAL_SAFETY_NET) {
+        safetyNets.push(entry);
+      } else {
+        ranked.push(entry);
+      }
     }
   }
 
-  // Sort by score descending
+  // Sort each group by score descending
   ranked.sort((a, b) => b.score - a.score);
+  safetyNets.sort((a, b) => b.score - a.score);
+
+  // Safety nets always come after all other providers regardless of score
+  const combined = [...ranked, ...safetyNets];
 
   // Add rank position
-  return ranked.map((item, index) => ({ ...item, rank: index + 1 }));
+  return combined.map((item, index) => ({ ...item, rank: index + 1 }));
 }
 
 export function getProviderStats() {
@@ -913,7 +969,11 @@ export function getProviderStats() {
     const largeRate =
       largeTotal > 0 ? ((largeCompleted / largeTotal) * 100).toFixed(1) + "%" : "N/A";
 
+    const provider = PROVIDERS.find((p) => p.name === name);
+    const tier = provider ? getProviderTier(provider) : TIER_FREE_CLOUD;
+
     result[name] = {
+      tier,
       // Basic counts
       selections: selected,
       successes: success,
@@ -985,10 +1045,10 @@ export function logProviderStats() {
 
   console.log(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
   if (ranked.length > 0) {
-    for (const { rank, name, score } of ranked) {
+    for (const { rank, name, score, tier } of ranked) {
       const data = stats[name];
       console.log(
-        `[credit-gate]   #${rank} ${name}: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`,
+        `[credit-gate]   #${rank} ${name} [${tier}]: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`,
       );
     }
   } else {
@@ -1044,7 +1104,7 @@ export function getConfiguredProviders(options = {}) {
         : provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")
           ? "local"
           : "api";
-      configured.push({ name: provider.name, model: provider.model, type });
+      configured.push({ name: provider.name, model: provider.model, type, tier: getProviderTier(provider) });
     }
   }
 
@@ -1162,6 +1222,7 @@ function toSelectedProvider(provider, apiKey) {
     driver: provider.driver || null,
     cwd: provider.requiresSdk ? PROJECT_ROOT : undefined,
     useMaxCompletionTokens: provider.useMaxCompletionTokens || false,
+    tier: getProviderTier(provider),
   };
 }
 
