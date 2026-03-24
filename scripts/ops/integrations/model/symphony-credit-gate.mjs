@@ -22,13 +22,12 @@
  *   9. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
  *  10. GitHub Models   — free, gpt-4.1-mini
  *
- *   TIER: local-proxy — local proxies to paid services
- *  11. Codebuff Bridge — local proxy to codebuff
+ *   (openclaw: local-proxy tier, not in numbered cascade — blocked by bridge to prevent loops)
  *
  *   TIER: local-safety-net — last-resort local models (score-capped)
- *  12. Ollama qwen3-coder-next    — local, never rate limited
- *  13. Ollama qwen2.5-coder:3b    — local, never rate limited
- *  14. Ollama qwen2.5-coder:0.5b  — local, never rate limited
+ *  11. Ollama qwen3-coder-next    — local, never rate limited
+ *  12. Ollama qwen2.5-coder:3b    — local, never rate limited
+ *  13. Ollama qwen2.5-coder:0.5b  — local, never rate limited
  *
  * All probes use lightweight /v1/models listings (not generation requests)
  * to preserve free-tier quotas.
@@ -292,11 +291,12 @@ const PROVIDERS = [
   {
     name: "codebuff",
     tier: TIER_PAID,
-    model: "codebuff/base@latest",
-    baseUrl: "codebuff",
-    envVar: "CODEBUFF_API_KEY",
-    requiresSdk: true,
+    model: "codebuff/base",
+    baseUrl: "http://127.0.0.1:4318/v1",
+    envVar: "CODEBUFF_BRIDGE_API_KEY",
+    loadToken: () => "local-bridge",
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
+    probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
   },
   {
     name: "openclaw",
@@ -533,16 +533,7 @@ const PROVIDERS = [
     envVar: "GITHUB_MODELS_TOKEN",
     probe: (_p, apiKey) => probeGitHubModels(apiKey, "gpt-4.1-mini"),
   },
-  {
-    name: "codebuff-bridge",
-    tier: TIER_LOCAL_PROXY,
-    model: "codebuff/base",
-    baseUrl: "http://127.0.0.1:4318/v1",
-    envVar: "CODEBUFF_BRIDGE_API_KEY",
-    loadToken: () => "local-bridge",
-    failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
-    probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
-  },
+
   {
     name: "ollama-local",
     tier: TIER_LOCAL_SAFETY_NET,

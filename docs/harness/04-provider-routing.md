@@ -18,7 +18,7 @@ OpenClaw is configured with the following failover chain:
 | -------- | ----------------------------------------- | -------------------------------------------------------- |
 | Primary  | `symphony-bridge/symphony/main`           | Symphony autoselects the best healthy provider           |
 | 2        | `symphony-bridge/symphony/codex`          | Direct pinned Codex route                                |
-| 3        | `symphony-bridge/symphony/codebuff`       | Direct pinned Codebuff SDK route                         |
+| 3        | `symphony-bridge/symphony/codebuff`       | Direct pinned Codebuff route (via codebuff-bridge)       |
 | 4+       | Other `symphony-bridge/symphony/*` routes | Direct pinned routes matching Symphony inventory         |
 | Final    | `codebuff-bridge/codebuff/base`           | Local Codebuff bridge fallback with paid → free rotation |
 
@@ -32,10 +32,10 @@ Symphony Bridge uses the credit-gate provider cascade with **tier-based dynamic 
 | ------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | `paid`             | `codex`, `codebuff`                                                                            | Probed first; uses paid API credits                              |
 | `free-cloud`       | `groq`, `mistral`, `gemini*`, OpenRouter (27 models), `sambanova`, `cerebras`, `github-models` | Dynamic scoring with cooldown and re-entry (default tier)        |
-| `local-proxy`      | `openclaw`, `codebuff-bridge`                                                                  | Local HTTP gateways to other services                            |
+| `local-proxy`      | `openclaw`                                                                                     | Local HTTP gateways to other services                            |
 | `local-safety-net` | `ollama-local`, `ollama-qwen2.5-coder-3b`, `ollama-qwen2.5-coder-0.5b`                         | Score-capped at 0.25; always rank last in `getRankedProviders()` |
 
-The credit-gate selects providers based on dynamic scoring, but `codex` is always retried and Codebuff paid availability is re-probed every 5 hours. Temporary failures enter cooldown, then are retried so Symphony continues learning the best route over time.
+The credit-gate selects providers based on dynamic scoring, but `codex` is always retried first. Codebuff routes through the codebuff-bridge (port 4318) which handles paid → free mode fallback internally, with paid availability re-probed every 5 hours. The exploration mechanism clears old failures every 5 hours to re-discover providers whose rate-limit windows (e.g. Codex/Codebuff 5-hour session limits) may have reset. Temporary failures enter cooldown (2 min for paid providers, 6 min for others), then are retried so Symphony continuously learns the best route.
 
 #### Tier-based ranking guarantee
 
@@ -52,7 +52,7 @@ The Symphony Bridge dynamically discovers which providers support structured too
 
 ##### How it works
 
-1. **Known-capable shortcut**: `codex`, `codebuff`, and `codebuff-bridge` are pre-classified as tool-capable (skip probing).
+1. **Known-capable shortcut**: `codex` and `codebuff` are pre-classified as tool-capable (skip probing).
 2. **Live probe**: For each available provider, the bridge sends a minimal `generateText` call with `toolChoice: "auto"` and a simple `add(2, 2)` tool. If the response contains a structured `toolCalls` array, the provider is classified as **capable**. If the response contains raw JSON tool output (e.g. `{"name":"add","arguments":{...}}`) in the text, the provider is classified as **non-capable** and excluded from future selection.
 3. **OpenRouter deduplication**: All OpenRouter models share the same API and tool protocol. Once any single OpenRouter provider is probed, the result is inferred for all 27 others — saving 26 API calls.
 4. **Inconclusive results**: Rate-limited (`429`), timed-out, or errored providers are left unclassified and remain in the pool. The runtime safety net (below) catches any that slip through.
@@ -108,43 +108,36 @@ When Codebuff is selected, the bridge uses a single API key with automatic mode 
 
 The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory. The harness reaches it only through Symphony Bridge. OpenClaw uses the same inventory as pinned `symphony/*` routes, then falls back to the direct Codebuff bridge only if Symphony itself is unavailable.
 
-| #    | Provider                    | Tier               | Type | Model                                  | Env Key(s) / Source       | SDK     |
-| ---- | --------------------------- | ------------------ | ---- | -------------------------------------- | ------------------------- | ------- |
-| 1    | codex                       | `paid`             | HTTP | gpt-5.4                                | `OPENAI_API_KEY`          | No      |
-| 2    | codebuff                    | `paid`             | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`        | **Yes** |
-| 3    | openclaw                    | `local-proxy`      | HTTP | openclaw:main                          | `OPENCLAW_TOKEN`          | No      |
-| 4    | groq                        | `free-cloud`       | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`              | No      |
-| 5    | mistral                     | `free-cloud`       | HTTP | mistral-small-latest                   | `MISTRAL_TOKEN`           | No      |
-| 6    | gemini                      | `free-cloud`       | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`            | No      |
-| 7    | gemini-lite                 | `free-cloud`       | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`            | No      |
-| 8    | openrouter-nemotron-super   | `free-cloud`       | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`        | No      |
-| 9-35 | openrouter-free (27 models) | `free-cloud`       | HTTP | Various free tier models               | `OPENROUTER_TOKEN`        | No      |
-| 36   | sambanova                   | `free-cloud`       | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`         | No      |
-| 37   | cerebras                    | `free-cloud`       | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`          | No      |
-| 38   | github-models               | `free-cloud`       | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`     | No      |
-| 39   | codebuff-bridge             | `local-proxy`      | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY` | No      |
-| 40   | ollama-local                | `local-safety-net` | HTTP | qwen3-coder-next:latest                | `OLLAMA_API_BASE`         | No      |
-| 41   | ollama-qwen2.5-coder-3b     | `local-safety-net` | HTTP | qwen2.5-coder:3b-instruct              | `OLLAMA_API_BASE`         | No      |
-| 42   | ollama-qwen2.5-coder-0.5b   | `local-safety-net` | HTTP | qwen2.5-coder:0.5b                     | `OLLAMA_API_BASE`         | No      |
+| #    | Provider                    | Tier               | Type | Model                                  | Env Key(s) / Source       |
+| ---- | --------------------------- | ------------------ | ---- | -------------------------------------- | ------------------------- |
+| 1    | codex                       | `paid`             | SDK  | gpt-5-codex                            | `OPENAI_API_KEY`          |
+| 2    | codebuff                    | `paid`             | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY` |
+| 3    | openclaw                    | `local-proxy`      | HTTP | openclaw:main                          | `OPENCLAW_TOKEN`          |
+| 4    | groq                        | `free-cloud`       | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`              |
+| 5    | mistral                     | `free-cloud`       | HTTP | mistral-small-latest                   | `MISTRAL_TOKEN`           |
+| 6    | gemini                      | `free-cloud`       | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`            |
+| 7    | gemini-lite                 | `free-cloud`       | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`            |
+| 8    | openrouter-nemotron-super   | `free-cloud`       | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`        |
+| 9-35 | openrouter-free (27 models) | `free-cloud`       | HTTP | Various free tier models               | `OPENROUTER_TOKEN`        |
+| 36   | sambanova                   | `free-cloud`       | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`         |
+| 37   | cerebras                    | `free-cloud`       | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`          |
+| 38   | github-models               | `free-cloud`       | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`     |
+| 39   | ollama-local                | `local-safety-net` | HTTP | qwen3-coder-next:latest                | `OLLAMA_API_BASE`         |
+| 40   | ollama-qwen2.5-coder-3b     | `local-safety-net` | HTTP | qwen2.5-coder:3b-instruct              | `OLLAMA_API_BASE`         |
+| 41   | ollama-qwen2.5-coder-0.5b   | `local-safety-net` | HTTP | qwen2.5-coder:0.5b                     | `OLLAMA_API_BASE`         |
 
 ### Provider notes
 
-- **codex** (`paid`): Primary provider, uses OpenAI credits, always re-probed first
-- **codebuff** (`paid`): Autonomous agent via @codebuff/sdk, supports paid → free mode fallback, re-probed every 5 hours
-- **openclaw** (`local-proxy`): Local OpenClaw gateway, probed for port reachability
+- **codex** (`paid`): Primary provider (Codex SDK), uses OpenAI credits, always re-probed first via `PREFERRED_PROVIDER_ORDER`
+- **codebuff** (`paid`): Routes through codebuff-bridge (port 4318) which handles paid → free mode fallback internally; paid availability re-validated every 5 hours by the bridge
+- **openclaw** (`local-proxy`): Local OpenClaw gateway, probed for port reachability; blocked from Symphony Bridge to prevent routing loop (bridge → openclaw → bridge)
 - **openrouter-free** (`free-cloud`, positions 8-35): 27 free tier models ranked by quality score
 - **github-models** (`free-cloud`): GitHub Models API with gpt-4.1-mini
-- **codebuff-bridge** (`local-proxy`): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration and HTTP parity
 - **ollama-\*** (`local-safety-net`): Local fallback models, score-capped at 0.25 — only activate when all cloud providers are unavailable
-- **openclaw** (`local-proxy`): Blocked from Symphony Bridge to prevent routing loop (bridge → openclaw → bridge)
-
-## SDK-based providers
-
-Codebuff uses the @codebuff/sdk for programmatic AI agent execution. Unlike HTTP providers that return JSON responses, Codebuff runs autonomously as an agent and completes tasks in a single run.
 
 ## Codebuff bridge
 
-The Codebuff bridge (`scripts/ops/integrations/model/codebuff-openai-bridge.mjs`) exposes the Codebuff SDK as an OpenAI-compatible HTTP server for OpenClaw integration.
+The Codebuff bridge (`scripts/ops/integrations/model/codebuff-openai-bridge.mjs`) exposes the Codebuff SDK as an OpenAI-compatible HTTP server. It is the **sole entry point** for all Codebuff usage — both the Symphony Bridge and OpenClaw route through it.
 
 ### Configuration
 
@@ -412,15 +405,15 @@ The bridge combines:
 
 ### Supported Providers
 
-| Provider   | AI SDK Integration            | Notes                                        |
-| ---------- | ----------------------------- | -------------------------------------------- |
-| codebuff   | `@codebuff/sdk`               | Uses local SDK directly                      |
-| groq       | `@ai-sdk/groq`                | Free, fast                                   |
-| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API           |
-| openclaw   | OpenAI-compatible             | Local gateway at `http://127.0.0.1:18789/v1` |
-| mistral    | OpenAI-compatible             | `https://api.mistral.ai/v1`                  |
-| gemini     | `@ai-sdk/google`              | Gemini 2.5 Flash models                      |
-| codex      | OpenAI-compatible             | Default: `https://api.openai.com/v1`         |
+| Provider   | AI SDK Integration            | Notes                                           |
+| ---------- | ----------------------------- | ----------------------------------------------- |
+| codebuff   | OpenAI-compatible             | Routes through codebuff-bridge at `:4318`        |
+| groq       | `@ai-sdk/groq`                | Free, fast                                       |
+| openrouter | `@openrouter/ai-sdk-provider` | Multiple models via OpenRouter API               |
+| openclaw   | OpenAI-compatible             | Local gateway at `http://127.0.0.1:18789/v1`    |
+| mistral    | OpenAI-compatible             | `https://api.mistral.ai/v1`                      |
+| gemini     | `@ai-sdk/google`              | Gemini 2.5 Flash models                          |
+| codex      | Codex SDK                     | Uses `@openai/codex-sdk` directly                |
 
 ### Available Tools
 
@@ -478,7 +471,6 @@ Configure OpenClaw to use the bridge:
       "models": [
         { "id": "symphony/main", "name": "Symphony Main" },
         { "id": "symphony/text", "name": "Symphony Text" },
-        { "id": "symphony/codebuff-bridge", "name": "Symphony Codebuff Bridge" },
         { "id": "symphony/ollama-local", "name": "Symphony Ollama Local" }
       ]
     }
@@ -510,4 +502,4 @@ Provider routing currently depends on:
 
 Use [README.md](/home/user/src/anqr/README.md) and [MCP-MIGRATION.md](/home/user/src/anqr/MCP-MIGRATION.md) for the broader launch and migration backlog around external AI services.
 
-_Last updated: 2026-03-24_
+_Last updated: 2026-03-25_

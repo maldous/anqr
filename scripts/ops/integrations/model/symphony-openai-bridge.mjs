@@ -61,8 +61,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { z } from "zod";
 
-// Local Codebuff SDK
-import { CodebuffClient } from "@codebuff/sdk";
+// Codebuff SDK — no longer imported directly; codebuff routes through codebuff-bridge (port 4318)
 import { Codex } from "@openai/codex-sdk";
 
 // Truncation utilities (extracted for unit-testability)
@@ -94,7 +93,7 @@ console.warn = (...args) => {
 };
 
 // --------------------------------------------------------------------------
-// Codebuff invoke (special handling)
+// Helpers
 // --------------------------------------------------------------------------
 
 function formatElapsed(ms) {
@@ -117,277 +116,9 @@ function ensureString(value) {
   return String(value);
 }
 
-function extractTextFromSdkOutput(raw) {
-  const str = ensureString(raw);
-  try {
-    const parsed = JSON.parse(str);
-    if (parsed?.type === "lastMessage" && parsed?.value) {
-      const messages = Array.isArray(parsed.value) ? parsed.value : [parsed.value];
-      for (const msg of messages) {
-        if (msg.role !== "assistant") continue;
-        if (typeof msg.content === "string") return msg.content;
-        if (Array.isArray(msg.content)) {
-          const texts = [];
-          for (const part of msg.content) {
-            if (part?.type === "text" && part.text) texts.push(part.text);
-            else if (part?.type === "reasoning" && (part.reasoning || part.content))
-              texts.push(part.reasoning || part.content);
-          }
-          if (texts.length > 0) return texts.join("\n");
-        }
-      }
-    }
-    if (parsed?.role === "assistant") {
-      if (typeof parsed.content === "string") return parsed.content;
-    }
-  } catch {
-    /* not JSON, return as-is */
-  }
-  return str;
-}
-
-/**
- * Invoke with Codebuff SDK directly (bypasses AI SDK)
- */
-async function invokeWithCodebuff(provider, messages, options = {}) {
-  const { stream = false, onChunk } = options;
-  const { apiKey, model } = provider;
-  const codebuffStartTime = Date.now();
-
-  console.log(`[symphony-bridge] Using Codebuff SDK directly`);
-  logMemory("codebuff-start");
-
-  const client = new CodebuffClient({
-    apiKey,
-    cwd: process.cwd(),
-  });
-
-  // Build prompt from messages - combine all user messages
-  const userMessages = messages.filter((m) => m.role === "user");
-  const systemMessages = messages.filter((m) => m.role === "system");
-
-  let prompt = "";
-  if (systemMessages.length > 0) {
-    prompt +=
-      systemMessages
-        .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
-        .join("\n\n") + "\n\n";
-  }
-  prompt += userMessages
-    .map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content)))
-    .join("\n\n");
-
-  // Track subgoal status across continuations to detect incomplete runs
-  let lastSubgoalStatus = null;
-
-  const callbacks = {
-    handleEvent: (event) => {
-      try {
-        if (!event) return;
-
-        // Text events are delivered via handleStreamChunk (token-by-token); skip to avoid duplication
-        if (event.type === "text") return;
-
-        if (event.type === "tool_call") {
-          const toolName = event.toolName || "unknown";
-          const input = event.input || {};
-
-          // Filter noisy internal tools — log only, don't stream
-          if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-            console.log(`[symphony-bridge] codebuff ${toolName} (internal)`);
-            return;
-          }
-
-          // Track subgoal status for continuation decisions
-          if (toolName === "update_subgoal") {
-            lastSubgoalStatus = input.status || lastSubgoalStatus;
-          }
-          if (toolName === "add_subgoal") {
-            lastSubgoalStatus = input.status || "IN_PROGRESS";
-          }
-
-          // Format user-facing tool activity based on known Codebuff tools
-          let display;
-          if (toolName === "read_files" && input.paths) {
-            const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
-            display = `📖 Reading: ${paths}`;
-          } else if (toolName === "str_replace") {
-            display = `✏️ Editing: ${input.path || "file"}`;
-          } else if (toolName === "write_file") {
-            display = `📝 Writing: ${input.path || "file"}`;
-          } else if (toolName === "run_terminal_command") {
-            const cmd = (input.command || "").slice(0, 120);
-            display = `💻 Running: ${cmd}`;
-          } else if (toolName === "code_search") {
-            display = `🔍 Searching: ${input.pattern || input.query || ""}`;
-          } else if (toolName === "spawn_agent_inline") {
-            const agentType = input.agent_type || "agent";
-            if (agentType === "context-pruner") {
-              console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
-              return;
-            }
-            display = `🤖 Spawning: ${agentType}`;
-          } else if (toolName === "spawn_agents") {
-            const agents = input.agents || [];
-            const types = agents.map((a) => a.agent_type).filter(Boolean);
-            display = `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
-          } else if (toolName === "add_subgoal") {
-            const obj = (input.objective || "").slice(0, 120);
-            display = `🎯 Goal: ${obj}`;
-          } else if (toolName === "update_subgoal") {
-            const log = (input.log || input.status || "").slice(0, 120);
-            display = `📋 Progress: ${log}`;
-          } else if (toolName === "think_deeply") {
-            display = `🧠 Thinking deeply...`;
-          } else if (toolName === "create_plan") {
-            display = `📋 Creating plan...`;
-          } else if (toolName === "browser_logs") {
-            display = `🌐 Checking browser...`;
-          } else {
-            const args = JSON.stringify(input).slice(0, 150);
-            display = `🔧 ${toolName}: ${args}`;
-          }
-
-          console.log(`[symphony-bridge] ${display}`);
-          if (onChunk) {
-            onChunk({ type: "text", text: `${display}\n` });
-          }
-        } else if (event.type === "tool_result") {
-          console.log(`[symphony-bridge] ✅ codebuff ${event.toolName || "tool"} done`);
-        } else if (event.type === "reasoning_delta") {
-          if (event.text && onChunk) {
-            onChunk({ type: "text", text: `💡 ${event.text}\n` });
-          }
-        } else if (event.type === "subagent_start") {
-          const name = event.displayName || event.agentType || "subagent";
-          if (
-            name.toLowerCase() === "context pruner" ||
-            (event.agentType || "").includes("context-pruner")
-          ) {
-            console.log(`[symphony-bridge] codebuff context-pruner (internal)`);
-            return;
-          }
-          console.log(`[symphony-bridge] 🤖 codebuff subagent: ${name}`);
-          if (onChunk) {
-            onChunk({ type: "text", text: `🤖 ${name}\n` });
-          }
-        } else if (event.type === "subagent_finish") {
-          const name = event.displayName || event.agentType || "subagent";
-          if (
-            name.toLowerCase() === "context pruner" ||
-            (event.agentType || "").includes("context-pruner")
-          )
-            return;
-          console.log(`[symphony-bridge] 🤖 codebuff ${name} done`);
-        } else if (event.type === "agent_start" || event.type === "agent_finish") {
-          console.log(`[symphony-bridge] 🤖 codebuff ${event.type}`);
-        } else if (event.type === "error") {
-          console.log(
-            `[symphony-bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`,
-          );
-          if (onChunk) {
-            onChunk({ type: "text", text: `❌ Error: ${event.message || "unknown error"}\n` });
-          }
-        } else {
-          console.log(`[symphony-bridge] codebuff event: ${event.type}`);
-        }
-      } catch (err) {
-        console.log(`[symphony-bridge] handleEvent error: ${err.message}`);
-      }
-    },
-    handleStreamChunk: (chunk) => {
-      try {
-        if (!onChunk) return;
-        if (typeof chunk === "string") {
-          onChunk({ type: "text", text: chunk });
-        } else if (chunk && chunk.chunk) {
-          onChunk({ type: "text", text: chunk.chunk });
-        }
-      } catch (err) {
-        console.log(`[symphony-bridge] handleStreamChunk error: ${err.message}`);
-      }
-    },
-  };
-
-  // Initial run
-  console.log(
-    `[symphony-bridge] ⏱️ Codebuff initial run starting (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`,
-  );
-  let result = await client.run({
-    agent: model || "codebuff/base",
-    prompt,
-    maxAgentSteps: CODEBUFF_MAX_STEPS,
-    ...callbacks,
-  });
-  console.log(
-    `[symphony-bridge] ⏱️ Codebuff initial run complete (elapsed: ${formatElapsed(Date.now() - codebuffStartTime)})`,
-  );
-
-  // Continuation loop — if the agent set a subgoal but didn't complete it,
-  // auto-continue with previousRun to let it finish the task
-  // Guarded by both iteration count AND elapsed time to prevent infinite hangs
-  let continuation = 0;
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
-    const elapsed = Date.now() - codebuffStartTime;
-    if (elapsed > CODEBUFF_MAX_ELAPSED_MS) {
-      console.log(
-        `[symphony-bridge] ⏱️ ⚠️ Codebuff elapsed time limit reached (${formatElapsed(elapsed)} > ${formatElapsed(CODEBUFF_MAX_ELAPSED_MS)}) — stopping continuation loop`,
-      );
-      logMemory("codebuff-timeout");
-      break;
-    }
-
-    continuation++;
-    console.log(
-      `[symphony-bridge] 🔄 Codebuff auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS, elapsed: ${formatElapsed(elapsed)})`,
-    );
-    if (onChunk) {
-      onChunk({
-        type: "text",
-        text: `\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS}, ${formatElapsed(elapsed)})...\n`,
-      });
-    }
-
-    maybeGC();
-    if (continuation % 5 === 0) {
-      logMemory(`codebuff-continuation-${continuation}`);
-    }
-
-    result = await client.run({
-      agent: model || "codebuff/base",
-      prompt: "Continue with the next step of the task. Complete the remaining work.",
-      previousRun: result,
-      maxAgentSteps: CODEBUFF_MAX_STEPS,
-      ...callbacks,
-    });
-  }
-
-  const totalElapsed = Date.now() - codebuffStartTime;
-  if (continuation > 0) {
-    console.log(
-      `[symphony-bridge] Codebuff completed after ${continuation + 1} runs in ${formatElapsed(totalElapsed)} (subgoal: ${lastSubgoalStatus})`,
-    );
-  } else {
-    console.log(`[symphony-bridge] Codebuff completed in ${formatElapsed(totalElapsed)}`);
-  }
-  logMemory("codebuff-done");
-
-  const rawText = ensureString(result?.text || result?.output || "");
-  const text = extractTextFromSdkOutput(rawText);
-
-  if (stream) {
-    return {
-      text,
-      providerName: provider.name,
-    };
-  } else {
-    return {
-      text,
-      providerName: provider.name,
-      usage: { promptTokens: 0, completionTokens: 0 },
-    };
-  }
-}
+// --------------------------------------------------------------------------
+// Codex SDK invoke
+// --------------------------------------------------------------------------
 
 async function invokeWithCodex(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
@@ -575,8 +306,8 @@ const tools = {
 // --------------------------------------------------------------------------
 
 /**
- * Map credit-gate providers to AI SDK instances
- * Returns null for providers that need special handling (like codebuff)
+ * Map credit-gate providers to AI SDK instances.
+ * "codebuff" routes through codebuff-bridge (port 4318) which handles paid→free fallback.
  */
 const OPENROUTER_PROVIDER_NAME_SET = new Set([
   "openrouter-nemotron-super",
@@ -623,7 +354,7 @@ function createProviderModel(provider) {
   const { name, model, baseUrl, apiKey } = provider;
 
   if (name === "codebuff") {
-    return null;
+    return createOpenAiCompatibleModel(model, apiKey, "http://127.0.0.1:4318/v1", "local-bridge");
   }
   if (name === "groq") {
     return createGroq({ apiKey })(model);
@@ -652,9 +383,6 @@ function createProviderModel(provider) {
       apiKey,
       baseUrl || "https://models.github.ai/inference/v1",
     );
-  }
-  if (name === "codebuff-bridge") {
-    return createOpenAiCompatibleModel(model, apiKey, baseUrl || "http://127.0.0.1:4318/v1");
   }
   if (name === "ollama-local" || name.startsWith("ollama-qwen")) {
     return createOpenAiCompatibleModel(
@@ -736,11 +464,6 @@ const ADVERTISED_MODELS = [
     allowedNames: ["codebuff"],
   },
   {
-    id: "symphony/codebuff-bridge",
-    ownedBy: "codebuff-bridge",
-    allowedNames: ["codebuff-bridge"],
-  },
-  {
     id: "symphony/groq",
     ownedBy: "groq",
     allowedNames: ["groq"],
@@ -805,10 +528,6 @@ if (VALID_TOKENS.size > 1) {
 }
 
 const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
-
-const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
-const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
-const CODEBUFF_MAX_ELAPSED_MS = 20 * 60 * 1000; // 20 min — hard elapsed-time limit for Codebuff continuation loops
 const REQUEST_TIMEOUT_MS = 30 * 60 * 1000; // 30 min — hard timeout per HTTP request (prevents infinite hangs)
 const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
@@ -816,21 +535,13 @@ const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response
 // Opportunistic GC between requests (requires --expose-gc flag)
 const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
-// Codebuff SDK internal tools — log only, don't stream to client
-const CODEBUFF_NOISY_TOOLS = new Set([
-  "set_messages",
-  "set_output",
-  "end_turn",
-  "lookup_agent_info",
-]);
-
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
 let requestCount = 0;
 let probeIntervalHandle = null;
 
-// Provider exploration - ensure all providers are tried at least once per day
-const EXPLORATION_INTERVAL_MS = 24 * 60 * 60 * 1000;
+// Provider exploration — re-discover providers whose rate-limit windows may have reset (5h matches Codex/Codebuff session limits)
+const EXPLORATION_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5h — matches Codex/Codebuff session limit windows
 const EXPLORATION_MIN_PROBES = 3;
 let lastExplorationTime = Date.now();
 let explorationProbesThisPeriod = 0;
@@ -937,10 +648,24 @@ function isRetryableError(err) {
   const errStr = (typeof err === "string" ? err : errorToString(err)).toLowerCase();
   return (
     errStr.includes("429") ||
+    errStr.includes("402") ||
     errStr.includes("quota") ||
     errStr.includes("insufficient_quota") ||
     errStr.includes("usage limit") ||
     errStr.includes("rate_limit") ||
+    errStr.includes("payment required") ||
+    errStr.includes("out of credits") ||
+    errStr.includes("insufficient credits") ||
+    errStr.includes("free credits reset") ||
+    errStr.includes("both modes failed") ||
+    errStr.includes("both modes exhausted") ||
+    errStr.includes("both paid and free") ||
+    errStr.includes("codebuff provider exhausted") ||
+    errStr.includes("codebuff provider failed") ||
+    errStr.includes("codebuff continuation exhausted") ||
+    errStr.includes("codebuff continuation failed") ||
+    errStr.includes("provider exhausted") ||
+    errStr.includes("triggering fallback") ||
     errStr.includes("timeout") ||
     errStr.includes("503") ||
     errStr.includes("502") ||
@@ -1061,7 +786,7 @@ function convertMessages(messages) {
 // through before the startup probe completes.
 // ---------------------------------------------------------------------------
 
-const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff", "codebuff-bridge"]);
+const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff"]);
 const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
 const nonToolCapableProviders = new Set();
 const TOOL_PROBE_TIMEOUT_MS = 20_000;
@@ -1281,10 +1006,6 @@ async function probeAllToolCapability() {
 async function invokeWithAI(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
 
-  // Handle codebuff specially - use SDK directly
-  if (provider.name === "codebuff") {
-    return invokeWithCodebuff(provider, messages, options);
-  }
   if (provider.driver === "codex-sdk" || provider.name === "codex") {
     return invokeWithCodex(provider, messages, options);
   }
@@ -1507,91 +1228,66 @@ async function invokeWithAI(provider, messages, options = {}) {
  */
 async function invokeWithFallback(messages, route) {
   const triedProviders = [];
-  // Get provider from credit-gate
-  let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
+  let lastError = null;
+  let attemptNumber = 0;
 
-  if (!provider) {
-    const excludedByProbe = (route.allowedNames || []).filter((n) =>
-      nonToolCapableProviders.has(n),
-    );
-    throw new Error(
-      excludedByProbe.length > 0
-        ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-        : `No providers available for ${route.responseModelId} - check env vars and provider failures`,
-    );
-  }
+  // Keep trying providers until we run out
+  while (attemptNumber < 10) {
+    attemptNumber++;
 
-  // Check exploration
-  const timeSinceLastExploration = Date.now() - lastExplorationTime;
-  const needsExploration =
-    timeSinceLastExploration > EXPLORATION_INTERVAL_MS ||
-    explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
-
-  if (needsExploration && lastSelectedProvider) {
-    console.log(
-      `[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`,
-    );
-    clearProviderFailure(lastSelectedProvider);
-  }
-
-  console.log(`[symphony-bridge] Selected provider: ${provider.name} (${provider.model})`);
-  triedProviders.push(provider.name);
-
-  // Track exploration
-  if (provider.name !== lastSelectedProvider) {
-    explorationProbesThisPeriod++;
-    lastSelectedProvider = provider.name;
-    if (timeSinceLastExploration > EXPLORATION_INTERVAL_MS) {
-      lastExplorationTime = Date.now();
-      explorationProbesThisPeriod = 1;
-    }
-  }
-
-  try {
-    const startedAt = Date.now();
-    const result = await invokeWithAI(provider, messages, { stream: false });
-
-    console.log(`[symphony-bridge] ✅ Success with ${provider.name}`);
-    recordProviderSuccess(provider.name);
-    recordSuccessfulMetrics(provider.name, startedAt, result.usage);
-
-    requestCount++;
-    if (requestCount % STATS_LOG_INTERVAL === 0) {
-      logBridgeStats();
-    }
-
-    return {
-      text: result.text,
-      usage: result.usage,
-      providerName: provider.name,
-      attempts: 1,
-      triedProviders: [...triedProviders],
-    };
-  } catch (err) {
-    const errStr = String(err);
-    console.log(`[symphony-bridge] ❌ ${provider.name} failed: ${errStr.slice(0, 100)}`);
-
-    if (isRetryableErrorDeep(err)) {
-      recordProviderFailure(provider.name);
-      recordProviderFailureCount(provider.name);
-    }
-
-    // Try fallback
-    provider = await selectProvider(buildSelectionOptions(route, triedProviders));
+    // Get next provider from credit-gate (excluding already-tried ones)
+    const provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
     if (!provider) {
-      throw new Error(`All providers failed. Last error: ${errStr}`);
+      const excludedByProbe = (route.allowedNames || []).filter((n) =>
+        nonToolCapableProviders.has(n),
+      );
+      const errorMsg = excludedByProbe.length > 0
+        ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+        : lastError
+          ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
+          : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      throw new Error(errorMsg);
     }
 
-    console.log(`[symphony-bridge] Retrying with fallback: ${provider.name}`);
+    // Check exploration
+    const timeSinceLastExploration = Date.now() - lastExplorationTime;
+    const needsExploration =
+      timeSinceLastExploration > EXPLORATION_INTERVAL_MS ||
+      explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
+
+    if (needsExploration && lastSelectedProvider) {
+      console.log(
+        `[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`,
+      );
+      clearProviderFailure(lastSelectedProvider);
+    }
+
+    console.log(
+      `[symphony-bridge] ${attemptNumber === 1 ? "Selected" : "Fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
+    );
     triedProviders.push(provider.name);
-    BRIDGE_METRICS.totalFallbacks++;
-    await sleep(FALLBACK_DELAY_MS);
+
+    // Track exploration
+    if (provider.name !== lastSelectedProvider) {
+      explorationProbesThisPeriod++;
+      lastSelectedProvider = provider.name;
+      if (timeSinceLastExploration > EXPLORATION_INTERVAL_MS) {
+        lastExplorationTime = Date.now();
+        explorationProbesThisPeriod = 1;
+      }
+    }
+
+    if (attemptNumber > 1) {
+      BRIDGE_METRICS.totalFallbacks++;
+      await sleep(FALLBACK_DELAY_MS);
+    }
 
     try {
       const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: false });
-      console.log(`[symphony-bridge] ✅ Fallback success with ${provider.name}`);
+
+      console.log(`[symphony-bridge] ✅ Success with ${provider.name} (attempt ${attemptNumber})`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
@@ -1604,21 +1300,29 @@ async function invokeWithFallback(messages, route) {
         text: result.text,
         usage: result.usage,
         providerName: provider.name,
-        attempts: 2,
+        attempts: attemptNumber,
         triedProviders: [...triedProviders],
       };
-    } catch (error_) {
-      const retryStr = String(error_);
+    } catch (err) {
+      const errStr = String(err);
+      lastError = errStr;
       console.log(
-        `[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`,
+        `[symphony-bridge] ❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`,
       );
-      if (isRetryableErrorDeep(error_)) {
+
+      if (isRetryableErrorDeep(err)) {
         recordProviderFailure(provider.name);
         recordProviderFailureCount(provider.name);
       }
-      throw new Error(`Provider ${provider.name} failed: ${retryStr}`);
+
+      // Continue to next provider in the loop
     }
   }
+
+  // If we exhausted all attempts
+  throw new Error(
+    `All providers failed after ${attemptNumber} attempts (tried ${triedProviders.join(", ")}). Last error: ${lastError || "unknown"}`,
+  );
 }
 
 /**
@@ -1626,104 +1330,80 @@ async function invokeWithFallback(messages, route) {
  */
 async function invokeWithFallbackStream(messages, route, onChunk) {
   const triedProviders = [];
-  let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
+  let lastError = null;
+  let attemptNumber = 0;
 
-  if (!provider) {
-    const excludedByProbe = (route.allowedNames || []).filter((n) =>
-      nonToolCapableProviders.has(n),
-    );
-    throw new Error(
-      excludedByProbe.length > 0
+  // Keep trying providers until we run out (higher limit for streaming due to rate limits)
+  while (attemptNumber < 15) {
+    attemptNumber++;
+
+    // Get next provider from credit-gate (excluding already-tried ones)
+    const provider = await selectProvider(buildSelectionOptions(route, triedProviders));
+
+    if (!provider) {
+      const excludedByProbe = (route.allowedNames || []).filter((n) =>
+        nonToolCapableProviders.has(n),
+      );
+      const errorMsg = excludedByProbe.length > 0
         ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-        : `No providers available for ${route.responseModelId} - check env vars and provider failures`,
+        : lastError
+          ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
+          : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      throw new Error(errorMsg);
+    }
+
+    console.log(
+      `[symphony-bridge] ${attemptNumber === 1 ? "Streaming selected" : "Streaming fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
-  }
+    triedProviders.push(provider.name);
 
-  console.log(
-    `[symphony-bridge] Streaming selected provider: ${provider.name} (${provider.model})`,
-  );
-  triedProviders.push(provider.name);
-
-  try {
-    const startedAt = Date.now();
-    const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
-
-    console.log(`[symphony-bridge] ✅ Streaming success with ${provider.name}`);
-    recordProviderSuccess(provider.name);
-    recordSuccessfulMetrics(provider.name, startedAt);
-
-    requestCount++;
-    if (requestCount % STATS_LOG_INTERVAL === 0) {
-      logBridgeStats();
-    }
-
-    return {
-      text: result.text,
-      providerName: provider.name,
-      attempts: 1,
-      triedProviders: [...triedProviders],
-    };
-  } catch (err) {
-    const rootErr = unwrapAIError(err);
-    const errStr = errorToString(rootErr !== err ? rootErr : err);
-    console.log(`[symphony-bridge] ❌ Streaming ${provider.name} failed: ${errStr.slice(0, 200)}`);
-
-    if (isRetryableErrorDeep(err)) {
-      recordProviderFailure(provider.name);
-      recordProviderFailureCount(provider.name);
-    }
-
-    // Try fallback — more attempts for streaming since providers may be rate-limited
-    let lastErr = errStr;
-    for (let retry = 0; retry < 4; retry++) {
-      provider = await selectProvider(buildSelectionOptions(route, triedProviders));
-
-      if (!provider) {
-        break;
-      }
-
-      console.log(`[symphony-bridge] Streaming fallback (attempt ${retry + 2}): ${provider.name}`);
-      triedProviders.push(provider.name);
+    if (attemptNumber > 1) {
       BRIDGE_METRICS.totalFallbacks++;
       await sleep(FALLBACK_DELAY_MS);
-
-      try {
-        const startedAt = Date.now();
-        const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
-
-        console.log(`[symphony-bridge] ✅ Streaming fallback success with ${provider.name}`);
-        recordProviderSuccess(provider.name);
-        recordSuccessfulMetrics(provider.name, startedAt);
-
-        requestCount++;
-        if (requestCount % STATS_LOG_INTERVAL === 0) {
-          logBridgeStats();
-        }
-
-        return {
-          text: result.text,
-          providerName: provider.name,
-          attempts: retry + 2,
-          triedProviders: [...triedProviders],
-        };
-      } catch (error_) {
-        const rootRetryErr = unwrapAIError(error_);
-        const retryStr = errorToString(rootRetryErr !== error_ ? rootRetryErr : error_);
-        console.log(
-          `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 200)}`,
-        );
-        lastErr = retryStr;
-        if (isRetryableErrorDeep(error_)) {
-          recordProviderFailure(provider.name);
-          recordProviderFailureCount(provider.name);
-        }
-      }
     }
 
-    throw new Error(
-      `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastErr}`,
-    );
+    try {
+      const startedAt = Date.now();
+      const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
+
+      console.log(
+        `[symphony-bridge] ✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
+      );
+      recordProviderSuccess(provider.name);
+      recordSuccessfulMetrics(provider.name, startedAt);
+
+      requestCount++;
+      if (requestCount % STATS_LOG_INTERVAL === 0) {
+        logBridgeStats();
+      }
+
+      return {
+        text: result.text,
+        providerName: provider.name,
+        attempts: attemptNumber,
+        triedProviders: [...triedProviders],
+      };
+    } catch (err) {
+      const rootErr = unwrapAIError(err);
+      const errStr = errorToString(rootErr !== err ? rootErr : err);
+      lastError = errStr;
+      console.log(
+        `[symphony-bridge] ❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
+      );
+
+      if (isRetryableErrorDeep(err)) {
+        recordProviderFailure(provider.name);
+        recordProviderFailureCount(provider.name);
+      }
+
+      // Continue to next provider in the loop
+    }
   }
+
+  // If we exhausted all attempts
+  throw new Error(
+    `All streaming providers failed after ${attemptNumber} attempts (tried ${triedProviders.join(", ")}). Last error: ${lastError || "unknown"}`,
+  );
 }
 
 // --------------------------------------------------------------------------
