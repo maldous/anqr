@@ -22,8 +22,6 @@
  *   9. Cerebras        — free cloud, 1M tok/day, 8K context, llama3.1-8b
  *  10. GitHub Models   — free, gpt-4.1-mini
  *
- *   (openclaw: local-proxy tier, not in numbered cascade — blocked by bridge to prevent loops)
- *
  *   TIER: local-safety-net — last-resort local models (score-capped)
  *  11. Ollama qwen3-coder-next    — local, never rate limited
  *  12. Ollama qwen2.5-coder:3b    — local, never rate limited
@@ -41,7 +39,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Codex } from "@openai/codex-sdk";
 import {
@@ -122,7 +120,6 @@ const PROVIDER_STATS = {
 
 const TIER_PAID = "paid";
 const TIER_FREE_CLOUD = "free-cloud";
-const TIER_LOCAL_PROXY = "local-proxy";
 const TIER_LOCAL_SAFETY_NET = "local-safety-net";
 
 // Safety-net providers are capped at this score ceiling in dynamic ranking.
@@ -297,32 +294,6 @@ const PROVIDERS = [
     loadToken: () => "local-bridge",
     failureWindowSecs: RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS,
     probe: (p, apiKey) => probeOpenAIModels(p.baseUrl, p.model, apiKey),
-  },
-  {
-    name: "openclaw",
-    tier: TIER_LOCAL_PROXY,
-    model: "openclaw:main",
-    baseUrl: "http://127.0.0.1:18789/v1",
-    envVar: "OPENCLAW_TOKEN",
-    loadToken: () => {
-      const openclawConfig = join(
-        process.env.HOME || process.env.USERPROFILE || "",
-        ".openclaw",
-        "openclaw.json",
-      );
-      try {
-        if (existsSync(openclawConfig)) {
-          const config = JSON.parse(readFileSync(openclawConfig, "utf-8"));
-          return config.gateway?.auth?.token || null;
-        }
-      } catch {}
-      return null;
-    },
-    // Custom probe - check if gateway port is reachable (simplified)
-    probe: async () => {
-      const res = await probeWithTimeout("http://127.0.0.1:18789/");
-      return res !== null;
-    },
   },
   {
     name: "groq",

@@ -68,6 +68,8 @@ function isRateLimitError(errStr) {
     s.includes("429") ||
     s.includes("rate_limit") ||
     s.includes("rate_limit_exceeded") ||
+    s.includes("too many requests") ||
+    s.includes("session limit") ||
     s.includes("weekly limit") ||
     s.includes("limit resets") ||
     s.includes("continue with credits")
@@ -290,14 +292,56 @@ function buildPrompt(messages) {
     .join("\n\n");
 }
 
-// Check if error is an auth error
-function isAuthError(errStr) {
+// Check SDK result for structured error responses (rate limit, payment, type:"error")
+// Throws if the result contains a recognizable error — callers catch and handle fallback.
+function checkResultForErrors(output, resultStr, attempt) {
+  let parsed;
+  try {
+    parsed = typeof output === "string" ? JSON.parse(resultStr) : output;
+  } catch {
+    return; // Not JSON — no structured error to check
+  }
+  if (!parsed || typeof parsed !== "object") return;
+
+  const isErrorType = parsed.type === "error";
+  const fields = [parsed.error, parsed.message, parsed.errorMessage].filter(
+    (f) => f && typeof f === "string",
+  );
+
+  for (const field of fields) {
+    if (isRateLimitError(field)) {
+      throw new Error(`Rate limited on ${attempt.label}`);
+    }
+    const pc = checkPaymentRequiredError(field);
+    if (pc.isPaymentError) {
+      if (attempt.costMode === "free") {
+        throw new Error(
+          `Codebuff provider exhausted: both paid and free modes are out of credits${pc.resetInfo}`,
+        );
+      }
+      throw new Error(`Payment required on ${attempt.label}${pc.resetInfo}`);
+    }
+  }
+
+  // If the SDK returned a type:"error" that didn't match specific patterns, still throw
+  if (isErrorType) {
+    const msg = parsed.message || parsed.error || "Unknown error";
+    throw new Error(`Codebuff SDK error on ${attempt.label}: ${msg}`);
+  }
+}
+
+// Check whether an error message indicates a recoverable paid-mode failure
+// that should trigger a paid→free fallback.
+function isRecoverableError(errMsg) {
+  const s = errMsg.toLowerCase();
   return (
-    errStr.includes("401") ||
-    errStr.includes("403") ||
-    errStr.includes("Unauthorized") ||
-    errStr.includes("Forbidden") ||
-    errStr.includes("Authentication failed")
+    s.includes("rate limit") ||
+    s.includes("payment required") ||
+    s.includes("too many requests") ||
+    s.includes("session limit") ||
+    s.includes("out of credits") ||
+    s.includes("quota exhausted") ||
+    s.includes("codebuff sdk error")
   );
 }
 
@@ -615,31 +659,16 @@ async function trySingleAccount(attempt, prompt, timeoutPromise, cwd) {
   const output = result.output;
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
+  // Check for SDK-internal error markers
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
     const errorMatch = resultStr.match(/"message":"([^"]+)"/);
     const cleanError = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
     throw new Error(cleanError);
   }
 
-  if (isRateLimitError(resultStr)) {
-    const resetMatch = resultStr.match(/(\d+)\s*(day|hour|minute)/);
-    const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
-    throw new Error(`Rate limited on ${attempt.label}${resetInfo}`);
-  }
-  if (isAuthError(resultStr)) {
-    throw new Error(`Auth failed on ${attempt.label}`);
-  }
-  
-  // Check for payment/credit errors - trigger fallback to other providers
-  const paymentCheck = checkPaymentRequiredError(resultStr);
-  if (paymentCheck.isPaymentError) {
-    // If this was already in free mode, both modes are exhausted
-    if (attempt.costMode === "free") {
-      throw new Error(`Codebuff provider exhausted: both paid and free modes are out of credits${paymentCheck.resetInfo}`);
-    }
-    // Otherwise just report the payment error (caller might retry with free mode)
-    throw new Error(`Payment required on ${attempt.label}${paymentCheck.resetInfo}`);
-  }
+  // Check for structured error responses (rate limit, payment, type:"error").
+  // This throws on match — caller catches and handles paid→free fallback.
+  checkResultForErrors(output, resultStr, attempt);
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
@@ -694,7 +723,7 @@ async function revalidateAndSelectWinner() {
   }
 }
 
-// Use pre-warmed winner directly
+// Use pre-warmed winner directly, with paid→free fallback on recoverable errors
 async function invokeCodebuff({ messages, cwd }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered`);
@@ -705,14 +734,35 @@ async function invokeCodebuff({ messages, cwd }) {
   console.log(`[bridge] Using: ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  return trySingleAccount(
-    winner,
-    prompt,
+  const makeTimeout = () =>
     new Promise((_, reject) => {
       setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-    }),
-    cwd,
-  );
+    });
+
+  try {
+    return await trySingleAccount(winner, prompt, makeTimeout(), cwd);
+  } catch (err) {
+    if (winner.isPaid && isRecoverableError(err.message)) {
+      console.log(`[bridge] ⚠️ Paid mode failed: ${err.message}`);
+      console.log(`[bridge] 🔄 Falling back to free mode...`);
+
+      const freeAttempt = {
+        apiKey: winner.apiKey,
+        costMode: "free",
+        label: "free (fallback)",
+        isPaid: false,
+      };
+
+      // Update STARTUP_WINNER so subsequent requests use free mode until re-probe.
+      // Reset revalidation timer so paid mode is re-probed in 5 hours.
+      STARTUP_WINNER = freeAttempt;
+      lastRevalidationTime = Date.now();
+      console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+
+      return await trySingleAccount(freeAttempt, prompt, makeTimeout(), cwd);
+    }
+    throw err;
+  }
 }
 
 // Try a single account for streaming - helper for parallel execution
@@ -785,31 +835,16 @@ async function trySingleAccountStream(
   const output = result.output || "";
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
+  // Check for SDK-internal error markers
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
     const errorMatch = resultStr.match(/"message":"([^"]+)"/);
     const cleanError = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
     throw new Error(cleanError);
   }
 
-  if (isRateLimitError(resultStr)) {
-    const resetMatch = resultStr.match(/(\d+)\s*(day|hour|minute)/);
-    const resetInfo = resetMatch ? ` (resets in ${resetMatch[0]})` : "";
-    throw new Error(`Rate limited on ${attempt.label}${resetInfo}`);
-  }
-  if (isAuthError(resultStr)) {
-    throw new Error(`Auth failed on ${attempt.label}`);
-  }
-  
-  // Check for payment/credit errors - trigger fallback to other providers
-  const paymentCheck = checkPaymentRequiredError(resultStr);
-  if (paymentCheck.isPaymentError) {
-    // If this was already in free mode, both modes are exhausted
-    if (attempt.costMode === "free") {
-      throw new Error(`Codebuff provider exhausted: both paid and free modes are out of credits${paymentCheck.resetInfo}`);
-    }
-    // Otherwise just report the payment error (caller might retry with free mode)
-    throw new Error(`Payment required on ${attempt.label}${paymentCheck.resetInfo}`);
-  }
+  // Check for structured error responses (rate limit, payment, type:"error").
+  // This throws on match — caller catches and handles paid→free fallback.
+  checkResultForErrors(output, resultStr, attempt);
 
   console.log(`[bridge] ✅ Success on ${attempt.label}`);
 
@@ -861,7 +896,7 @@ async function trySingleAccountStream(
   };
 }
 
-// Use pre-warmed winner directly for streaming
+// Use pre-warmed winner directly for streaming, with paid→free fallback on recoverable errors
 async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
@@ -872,17 +907,48 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
   console.log(`[bridge] Streaming: Using ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  return trySingleAccountStream(
-    winner,
-    prompt,
+  const makeTimeout = () =>
     new Promise((_, reject) => {
       setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-    }),
-    cwd,
-    onChunk,
-    completionId,
-    created,
-  );
+    });
+
+  // Track how many chunks were sent so we know if it's safe to retry.
+  // The error case (rate limit, session limit) produces zero streaming output
+  // events — the error JSON lands only in result.output, not via onChunk.
+  let chunksSent = 0;
+  const trackedOnChunk = (chunk) => {
+    chunksSent++;
+    onChunk(chunk);
+  };
+
+  try {
+    return await trySingleAccountStream(
+      winner, prompt, makeTimeout(), cwd, trackedOnChunk, completionId, created,
+    );
+  } catch (err) {
+    if (winner.isPaid && isRecoverableError(err.message) && chunksSent === 0) {
+      console.log(`[bridge] ⚠️ Paid mode failed (streaming, 0 chunks sent): ${err.message}`);
+      console.log(`[bridge] 🔄 Falling back to free mode...`);
+
+      const freeAttempt = {
+        apiKey: winner.apiKey,
+        costMode: "free",
+        label: "free (fallback)",
+        isPaid: false,
+      };
+
+      // Update STARTUP_WINNER so subsequent requests use free mode until re-probe.
+      // Reset revalidation timer so paid mode is re-probed in 5 hours.
+      STARTUP_WINNER = freeAttempt;
+      lastRevalidationTime = Date.now();
+      console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+
+      return await trySingleAccountStream(
+        freeAttempt, prompt, makeTimeout(), cwd, onChunk, completionId, created,
+      );
+    }
+    throw err;
+  }
 }
 
 // HTTP utilities

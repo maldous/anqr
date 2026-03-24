@@ -32,7 +32,7 @@ Environment=CODEBUFF_BRIDGE_API_KEY=local-bridge
 # Codebuff API keys from ops env
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 
-ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=3072 --expose-gc scripts/ops/integrations/model/codebuff-openai-bridge.mjs
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node --max-old-space-size=4096 --expose-gc scripts/ops/integrations/model/codebuff-openai-bridge.mjs
 
 # Logging to journal
 StandardOutput=journal
@@ -46,8 +46,8 @@ RestartSec=5
 # Safety limits — host has 64 GB RAM; be generous to avoid cgroup throttle.
 # MemoryHigh must exceed --max-old-space-size by ≥512 MB for native overhead.
 TimeoutStartSec=30
-MemoryHigh=4096M
-MemoryMax=5G
+MemoryHigh=5120M
+MemoryMax=6G
 
 [Install]
 WantedBy=default.target
