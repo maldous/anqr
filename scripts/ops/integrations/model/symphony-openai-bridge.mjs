@@ -49,6 +49,7 @@ import {
   logProviderStats,
   clearProviderFailure,
   getConfiguredProviders,
+  getProviderDefinitions,
   probeAllProviders,
 } from "./symphony-credit-gate.mjs";
 
@@ -63,6 +64,9 @@ import { z } from "zod";
 // Local Codebuff SDK
 import { CodebuffClient } from "@codebuff/sdk";
 import { Codex } from "@openai/codex-sdk";
+
+// Truncation utilities (extracted for unit-testability)
+import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // --------------------------------------------------------------------------
 // Console warning suppression
@@ -656,7 +660,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.SYMPHONY_BRIDGE_PORT || 4319;
 const API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const MODEL_ID = process.env.SYMPHONY_MODEL_ID || "symphony/main";
-const BRIDGE_PROVIDER_BLOCKLIST = new Set(["openclaw", "github-models"]);
+// openclaw is blocked to prevent routing loop (bridge → openclaw → bridge)
+const BRIDGE_PROVIDER_BLOCKLIST = new Set(["openclaw"]);
+const BRIDGE_PROVIDER_BLOCKLIST_REASONS = {
+  openclaw: "routing loop prevention (bridge → openclaw → bridge)",
+};
 const OPENROUTER_PROVIDER_NAMES = [
   "openrouter-nemotron-super",
   "openrouter-free",
@@ -775,6 +783,8 @@ if (VALID_TOKENS.size > 1) {
 }
 
 const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
+
+
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap lower to limit memory
 const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
 const CODEBUFF_MAX_ELAPSED_MS = 20 * 60 * 1000; // 20 min — hard elapsed-time limit for Codebuff continuation loops
@@ -826,6 +836,9 @@ async function refreshProviderStatus() {
     const available = providerStatusCache.probeResults.filter((r) => r.available).length;
     const total = providerStatusCache.configured.length;
     console.log(`[symphony-bridge] 🔄 Provider status refreshed: ${available}/${total} available`);
+
+    // Phase 2: probe tool-calling capability for all available providers
+    await probeAllToolCapability();
   } catch (err) {
     console.error(`[symphony-bridge] Provider probe error: ${err.message}`);
   } finally {
@@ -877,10 +890,21 @@ function resolveRoute(modelId) {
 // --------------------------------------------------------------------------
 
 /**
- * Check if error is a temporary failure worth retrying
+ * Safely convert any value to a descriptive error string.
+ * Handles Error instances, plain objects (from AI SDK error events), and primitives.
  */
+function errorToString(err) {
+  if (err instanceof Error) return String(err);
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object") {
+    if (err.message) return `${err.type || err.name || "Error"}: ${err.message}`;
+    try { return JSON.stringify(err).slice(0, 300); } catch { return "[unserializable error]"; }
+  }
+  return String(err);
+}
+
 function isRetryableError(err) {
-  const errStr = String(err).toLowerCase();
+  const errStr = (typeof err === "string" ? err : errorToString(err)).toLowerCase();
   return (
     errStr.includes("429") ||
     errStr.includes("quota") ||
@@ -895,8 +919,50 @@ function isRetryableError(err) {
     errStr.includes("ECONNREFUSED") ||
     errStr.includes("fetch failed") ||
     errStr.includes("connection") ||
-    errStr.includes("enotfound")
+    errStr.includes("enotfound") ||
+    errStr.includes("no output generated") ||
+    errStr.includes("nooutputgeneratederror") || // cspell:disable-line
+    errStr.includes("context_length_exceeded") ||
+    errStr.includes("request too large") ||
+    errStr.includes("reduce the length") ||
+    errStr.includes("too many tokens") ||
+    errStr.includes("failed_generation")
   );
+}
+
+/**
+ * Unwrap AI SDK error cause chains to find the root error.
+ * AI SDK wraps errors: NoOutputGeneratedError → RetryError → APICallError.
+ * Returns the deepest cause, or the original error if no cause chain exists.
+ */
+function unwrapAIError(err) {
+  let current = err;
+  let deepest = err;
+  const seen = new Set();
+  while (current?.cause && !seen.has(current.cause)) {
+    seen.add(current.cause);
+    current = current.cause;
+    deepest = current;
+  }
+  return deepest;
+}
+
+/**
+ * Check retry-ability by examining the full AI SDK error cause chain,  // cspell:disable-line
+ * including responseBody and data properties from AI_APICallError.
+ * Returns true if ANY error in the chain is retryable.
+ */
+function isRetryableErrorDeep(err) {
+  if (isRetryableError(err)) return true;
+  if (err?.responseBody && isRetryableError(err.responseBody)) return true;
+  if (err?.data && isRetryableError(JSON.stringify(err.data))) return true;
+  const root = unwrapAIError(err);
+  if (root !== err) {
+    if (isRetryableError(root)) return true;
+    if (root?.responseBody && isRetryableError(root.responseBody)) return true;
+    if (root?.data && isRetryableError(JSON.stringify(root.data))) return true;
+  }
+  return false;
 }
 
 function sleep(ms) {
@@ -906,7 +972,7 @@ function sleep(ms) {
 function buildSelectionOptions(route, excludedNames = []) {
   return {
     allowedNames: route.allowedNames,
-    excludeNames: excludedNames,
+    excludeNames: [...excludedNames, ...nonToolCapableProviders],
   };
 }
 
@@ -926,6 +992,8 @@ function recordSuccessfulMetrics(providerName, startedAt, usage, validationPasse
     validationPassed,
   });
 }
+
+// Message truncation functions imported from ./symphony-bridge-truncation.mjs
 
 /**
  * Convert OpenAI-style messages to AI SDK format
@@ -952,12 +1020,223 @@ function convertMessages(messages) {
   });
 }
 
-// Providers that don't support function calling / tool use.
-// These are coding-focused local models — they generate tool-call JSON as plain
-// text instead of using the structured tool protocol, which causes AI SDK's
-// streamText to hang indefinitely.
+// ---------------------------------------------------------------------------
+// Dynamic tool-capability probing
+//
+// At startup, each available provider is tested with a minimal generateText
+// call that includes a tool + toolChoice:'required'. Providers that return
+// structured tool calls pass; those that emit raw JSON text or reject the
+// tool_choice parameter are excluded from future credit-gate selection.
+// A runtime safety net in invokeWithAI() catches any providers that slip
+// through before the startup probe completes.
+// ---------------------------------------------------------------------------
+
+const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff", "codebuff-bridge"]);
+const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
+const nonToolCapableProviders = new Set();
+const TOOL_PROBE_TIMEOUT_MS = 20_000;
+const TOOL_PROBE_BATCH_SIZE = 5;
+const TOOL_PROBE_RETRY_DELAY_MS = 60_000;
+let toolProbeRetryScheduled = false;
+const RAW_TOOL_JSON_RE = /\{\s*"name"\s*:\s*"|"function_call"\s*:|"tool_calls"\s*:/;
+
 function providerSupportsTools(providerName) {
-  return !providerName.startsWith("ollama");
+  if (nonToolCapableProviders.has(providerName)) return false;
+  if (toolCapableProviders.has(providerName)) return true;
+  // Not yet probed — optimistically allow tools; runtime safety net catches failures
+  return true;
+}
+
+async function probeToolCapabilityForProvider(providerDef) {
+  const name = providerDef.name;
+
+  if (KNOWN_TOOL_CAPABLE.has(name)) return { name, status: "known-capable" };
+  if (toolCapableProviders.has(name)) return { name, status: "cached-capable" };
+  if (nonToolCapableProviders.has(name)) return { name, status: "cached-non-capable" };
+
+  // SDK-based providers are handled outside AI SDK tool protocol
+  if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {
+    toolCapableProviders.add(name);
+    return { name, status: "sdk-capable" };
+  }
+
+  // OpenRouter: all models share the same API key and tool protocol support.
+  // If any openrouter provider was already probed, reuse its result.
+  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
+    for (const orName of OPENROUTER_PROVIDER_NAME_SET) {
+      if (toolCapableProviders.has(orName)) {
+        toolCapableProviders.add(name);
+        return { name, status: "inferred-capable" };
+      }
+      if (nonToolCapableProviders.has(orName)) {
+        nonToolCapableProviders.add(name);
+        return { name, status: "inferred-non-capable" };
+      }
+    }
+  }
+
+  // Resolve API key (mirrors credit-gate's resolveProviderApiKey)
+  let apiKey = providerDef.envVar ? process.env[providerDef.envVar] : null;
+  if (!apiKey && providerDef.loadToken) {
+    try { apiKey = await providerDef.loadToken(); } catch { /* ignore */ }
+  }
+
+  const providerObj = { ...providerDef, apiKey };
+  let model;
+  try {
+    model = createProviderModel(providerObj);
+  } catch {
+    return { name, status: "no-model" };
+  }
+  if (!model) return { name, status: "no-model" };
+
+  const probeTools = {
+    add: tool({
+      description: "Add two numbers",
+      inputSchema: z.object({ a: z.number(), b: z.number() }),
+      execute: async ({ a, b }) => String(a + b),
+    }),
+  };
+
+  try {
+    const result = await Promise.race([
+      generateText({
+        model,
+        messages: [{ role: "user", content: "Compute 2+2. You must use the add tool." }],
+        tools: probeTools,
+        toolChoice: "auto",
+        maxTokens: 100,
+        maxSteps: 2,
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("tool-probe-timeout")), TOOL_PROBE_TIMEOUT_MS),
+      ),
+    ]);
+
+    const hasStructuredToolCall = result.steps?.some((s) => s.toolCalls?.length > 0);
+    const text = result.text || "";
+    const hasRawToolJson = RAW_TOOL_JSON_RE.test(text);
+
+    if (hasStructuredToolCall && !hasRawToolJson) {
+      toolCapableProviders.add(name);
+      return { name, status: "capable" };
+    }
+
+    if (hasRawToolJson) {
+      nonToolCapableProviders.add(name);
+      return { name, status: "non-capable-raw-json" };
+    }
+
+    // Model responded with text but didn't use the tool — inconclusive.
+    // Don't exclude; the runtime safety net will catch it if needed.
+    return { name, status: "no-tool-call" };
+  } catch (err) {
+    const errStr = String(err).slice(0, 300);
+
+    // Rate limit — don't exclude; assume capable until proven otherwise
+    if (/429|rate.?limit|too many|quota|resource.?exhausted/i.test(errStr)) {
+      return { name, status: "rate-limited" };
+    }
+
+    // Explicit tool rejection by the API
+    if (/tool_choice|tools.*not.*support|function.*call.*not|does not support/i.test(errStr)) {
+      nonToolCapableProviders.add(name);
+      return { name, status: "non-capable-rejected" };
+    }
+
+    if (/timeout|tool-probe-timeout/i.test(errStr)) {
+      return { name, status: "timeout" };
+    }
+
+    // Log the actual error for debugging
+    console.log(`[symphony-bridge] 🔧 ${name} probe error: ${errStr.slice(0, 150)}`);
+    return { name, status: "probe-error" };
+  }
+}
+
+async function probeAllToolCapability() {
+  const available = (providerStatusCache.probeResults || [])
+    .filter((r) => r.available)
+    .map((r) => r.name);
+  const availableSet = new Set(available);
+
+  // Use full provider definitions (with envVar, baseUrl, loadToken) for probing
+  const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
+  const allDefs = getProviderDefinitions({ excludeNames });
+  const toProbe = allDefs.filter(
+    (p) =>
+      availableSet.has(p.name) &&
+      !KNOWN_TOOL_CAPABLE.has(p.name) &&
+      !toolCapableProviders.has(p.name) &&
+      !nonToolCapableProviders.has(p.name),
+  );
+
+  if (toProbe.length === 0) {
+    console.log(`[symphony-bridge] 🔧 Tool probe: all providers already classified`);
+    return;
+  }
+
+  console.log(
+    `[symphony-bridge] 🔧 Tool capability probe: testing ${toProbe.length} providers...`,
+  );
+
+  const results = [];
+  for (let i = 0; i < toProbe.length; i += TOOL_PROBE_BATCH_SIZE) {
+    if (i > 0) await sleep(1000); // throttle between batches to reduce rate-limit pressure
+    const batch = toProbe.slice(i, i + TOOL_PROBE_BATCH_SIZE);
+    const batchResults = await Promise.allSettled(
+      batch.map((p) => probeToolCapabilityForProvider(p)),
+    );
+    for (const r of batchResults) {
+      if (r.status === "fulfilled") {
+        results.push(r.value);
+      }
+    }
+  }
+
+  for (const r of results) {
+    const icon = toolCapableProviders.has(r.name)
+      ? "✅"
+      : nonToolCapableProviders.has(r.name)
+        ? "🚫"
+        : "❓";
+    console.log(`[symphony-bridge]   ${icon} ${r.name}: ${r.status}`);
+  }
+
+  console.log(
+    `[symphony-bridge] 🔧 Tool probe complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
+  );
+
+  // Schedule a delayed retry for unclassified providers (rate-limited, probe-error, etc.)
+  if (!toolProbeRetryScheduled) {
+    const stillUnclassified = allDefs.filter(
+      (p) =>
+        availableSet.has(p.name) &&
+        !toolCapableProviders.has(p.name) &&
+        !nonToolCapableProviders.has(p.name),
+    );
+    if (stillUnclassified.length > 0) {
+      toolProbeRetryScheduled = true;
+      const names = stillUnclassified.map((p) => p.name);
+      console.log(
+        `[symphony-bridge] 🔧 Scheduling tool probe retry in ${TOOL_PROBE_RETRY_DELAY_MS / 1000}s for ${names.length} unclassified: ${names.join(", ")}`,
+      );
+      setTimeout(async () => {
+        try {
+          console.log(`[symphony-bridge] 🔧 Retry tool probe for ${names.length} unclassified providers...`);
+          await probeAllToolCapability();
+          const remaining = names.filter(
+            (n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n),
+          );
+          if (remaining.length > 0) {
+            console.log(`[symphony-bridge] 🔧 Still unclassified after retry: ${remaining.join(", ")}`);
+          }
+        } catch (err) {
+          console.error(`[symphony-bridge] Tool probe retry failed: ${err.message}`);
+        }
+      }, TOOL_PROBE_RETRY_DELAY_MS);
+    }
+  }
 }
 
 /**
@@ -984,8 +1263,9 @@ async function invokeWithAI(provider, messages, options = {}) {
   const useTools = providerSupportsTools(provider.name);
   console.log(`[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? '' : ' [no-tools]'}`);
 
-  // Convert messages to AI SDK format
-  const aiMessages = convertMessages(messages);
+  // Convert messages to AI SDK format and truncate for provider's context limit
+  const rawMessages = convertMessages(messages);
+  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
 
   if (stream) {
     let finishReason = null;
@@ -996,27 +1276,11 @@ async function invokeWithAI(provider, messages, options = {}) {
       messages: aiMessages,
       ...(useTools ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) } : {}),
       onStepFinish: (step) => {
-        if (onChunk) {
-          if (step.reasoning && step.reasoning.length > 0) {
-            for (const r of step.reasoning) {
-              const text = r.text || r.content || '';
-              if (text) {
-                onChunk({ type: "text", text: `💡 ${text}\n` });
-              }
-            }
-          }
-          if (step.text && step.text.trim()) {
-            onChunk({ type: "text", text: `${step.text}\n` });
-          }
-        }
         if (step.toolCalls && step.toolCalls.length > 0) {
           for (const tc of step.toolCalls) {
             const input = tc.input ?? tc.args;
             const summary = input ? JSON.stringify(input).slice(0, 200) : '';
             console.log(`[symphony-bridge] 🔧 ${tc.toolName}: ${summary}`);
-            if (onChunk) {
-              onChunk({ type: "text", text: `🔧 ${tc.toolName}: ${summary}\n` });
-            }
           }
         }
       },
@@ -1031,31 +1295,84 @@ async function invokeWithAI(provider, messages, options = {}) {
       },
     });
 
-    // Process the stream — cap fullText to prevent unbounded memory growth
+    // Process the full stream — includes reasoning, text, tool-call, and tool-result events
     let fullText = "";
     let fullTextCapped = false;
+    let streamErrorDetail = null;
 
-    for await (const chunk of result.textStream) {
-      if (!fullTextCapped) {
-        if (fullText.length + chunk.length > MAX_RESPONSE_TEXT_BYTES) {
-          fullTextCapped = true;
-          console.log(`[symphony-bridge] ⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`);
-        } else {
-          fullText += chunk;
+    for await (const part of result.fullStream) {
+      if (part.type === "reasoning-start") {
+        if (onChunk) onChunk({ type: "text", text: "\n💡 " });
+      } else if (part.type === "reasoning-delta") {
+        if (onChunk && part.textDelta) {
+          onChunk({ type: "text", text: part.textDelta });
+        }
+      } else if (part.type === "reasoning-end") {
+        if (onChunk) onChunk({ type: "text", text: "\n" });
+      } else if (part.type === "text-delta") {
+        const delta = part.textDelta || "";
+        if (!fullTextCapped) {
+          if (fullText.length + delta.length > MAX_RESPONSE_TEXT_BYTES) {
+            fullTextCapped = true;
+            console.log(`[symphony-bridge] ⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`);
+          } else {
+            fullText += delta;
+          }
+        }
+        if (onChunk && delta) {
+          onChunk({ type: "text", text: delta });
+        }
+      } else if (part.type === "tool-call") {
+        const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
+        if (onChunk) {
+          onChunk({ type: "text", text: `\n🔧 ${part.toolName}: ${argsSummary}\n` });
+        }
+      } else if (part.type === "tool-result") {
+        console.log(`[symphony-bridge] ✅ ${part.toolName} done`);
+        if (onChunk) {
+          onChunk({ type: "text", text: `✅ ${part.toolName} done\n` });
+        }
+      } else if (part.type === "error") {
+        const streamError = part.error || part;
+        const rootError = unwrapAIError(streamError);
+        const errorMsg = errorToString(rootError);
+        streamErrorDetail = streamErrorDetail || errorMsg;
+        console.log(`[symphony-bridge] ⚠️ fullStream error event: ${errorMsg.slice(0, 200)}`);
+        if (onChunk) {
+          onChunk({ type: "text", text: `\n⚠️ Stream error: ${errorMsg.slice(0, 150)}\n` });
+        }
+      } else if (part.type === "finish") {
+        if (part.finishReason) {
+          finishReason = part.finishReason;
         }
       }
+    }
 
-      if (onChunk) {
-        onChunk({
-          type: "text",
-          text: chunk,
-        });
+    // Fallback: if fullStream produced no text-delta events, try result.text
+    // (best-effort — result.text derives from the same stream, but internal
+    // accumulation may differ for some provider SDKs)
+    if (!fullText || fullText.trim() === "") {
+      try {
+        const fallbackText = await result.text;
+        if (fallbackText && fallbackText.trim()) {
+          console.log(`[symphony-bridge] ⚠️ fullStream produced no text-delta events, recovered ${fallbackText.length} chars from result.text`);
+          fullText = fallbackText;
+          if (onChunk) {
+            onChunk({ type: "text", text: fallbackText });
+          }
+        }
+      } catch (textErr) {
+        // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
+        console.log(`[symphony-bridge] ⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`);
       }
     }
 
     // Check for embedded errors — some providers return 200 with error in body
-    if (!fullText || fullText.trim() === "" || finishReason === "error") {
+    if ((!fullText || fullText.trim() === "") && finishReason !== "tool-calls") {
       throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
+    }
+    if (finishReason === "error") {
+      throw new Error(`Stream finished with error: ${streamErrorDetail || 'unknown'} (text: ${fullText.length} chars)`);
     }
 
     // Handle truncated responses — model hit step limit while still wanting to execute tools
@@ -1074,6 +1391,13 @@ async function invokeWithAI(provider, messages, options = {}) {
       if (hasErrorSymbol) {
         throw new Error(`Response contains embedded error`);
       }
+    }
+
+    // Runtime safety net (streaming): detect providers that emit tool calls as raw JSON text.
+    // The stream is already delivered, so we can't retry — just mark for future exclusion.
+    if (useTools && fullText && RAW_TOOL_JSON_RE.test(fullText)) {
+      console.log(`[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable for future requests`);
+      nonToolCapableProviders.add(provider.name);
     }
 
     console.log(`[symphony-bridge] Streaming completed (${fullText.length} chars)`);
@@ -1097,6 +1421,13 @@ async function invokeWithAI(provider, messages, options = {}) {
       text += "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
     }
 
+    // Runtime safety net (non-streaming): detect raw JSON tool output and cascade to next provider
+    if (useTools && text && RAW_TOOL_JSON_RE.test(text)) {
+      console.log(`[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable`);
+      nonToolCapableProviders.add(provider.name);
+      throw new Error(`Provider ${provider.name} does not support structured tool calling — excluded`);
+    }
+
     console.log(`[symphony-bridge] Completion done`);
 
     return {
@@ -1116,8 +1447,11 @@ async function invokeWithFallback(messages, route) {
   let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
   if (!provider) {
+    const excludedByProbe = (route.allowedNames || []).filter((n) => nonToolCapableProviders.has(n));
     throw new Error(
-      `No providers available for ${route.responseModelId} - check env vars and provider failures`,
+      excludedByProbe.length > 0
+        ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+        : `No providers available for ${route.responseModelId} - check env vars and provider failures`,
     );
   }
 
@@ -1171,7 +1505,7 @@ async function invokeWithFallback(messages, route) {
     const errStr = String(err);
     console.log(`[symphony-bridge] ❌ ${provider.name} failed: ${errStr.slice(0, 100)}`);
 
-    if (isRetryableError(err)) {
+    if (isRetryableErrorDeep(err)) {
       recordProviderFailure(provider.name);
       recordProviderFailureCount(provider.name);
     }
@@ -1212,7 +1546,7 @@ async function invokeWithFallback(messages, route) {
       console.log(
         `[symphony-bridge] ❌ Fallback ${provider.name} also failed: ${retryStr.slice(0, 100)}`,
       );
-      if (isRetryableError(error_)) {
+      if (isRetryableErrorDeep(error_)) {
         recordProviderFailure(provider.name);
         recordProviderFailureCount(provider.name);
       }
@@ -1229,8 +1563,11 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
   let provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
   if (!provider) {
+    const excludedByProbe = (route.allowedNames || []).filter((n) => nonToolCapableProviders.has(n));
     throw new Error(
-      `No providers available for ${route.responseModelId} - check env vars and provider failures`,
+      excludedByProbe.length > 0
+        ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+        : `No providers available for ${route.responseModelId} - check env vars and provider failures`,
     );
   }
 
@@ -1257,20 +1594,22 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
       triedProviders: [...triedProviders],
     };
   } catch (err) {
-    const errStr = String(err);
-    console.log(`[symphony-bridge] ❌ Streaming ${provider.name} failed: ${errStr.slice(0, 100)}`);
+    const rootErr = unwrapAIError(err);
+    const errStr = errorToString(rootErr !== err ? rootErr : err);
+    console.log(`[symphony-bridge] ❌ Streaming ${provider.name} failed: ${errStr.slice(0, 200)}`);
 
-    if (isRetryableError(err)) {
+    if (isRetryableErrorDeep(err)) {
       recordProviderFailure(provider.name);
       recordProviderFailureCount(provider.name);
     }
 
-    // Try fallback
-    for (let retry = 0; retry < 2; retry++) {
+    // Try fallback — more attempts for streaming since providers may be rate-limited
+    let lastErr = errStr;
+    for (let retry = 0; retry < 4; retry++) {
       provider = await selectProvider(buildSelectionOptions(route, triedProviders));
 
       if (!provider) {
-        throw new Error(`Streaming providers failed. Last error: ${errStr}`);
+        break;
       }
 
       console.log(`[symphony-bridge] Streaming fallback (attempt ${retry + 2}): ${provider.name}`);
@@ -1298,18 +1637,20 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
           triedProviders: [...triedProviders],
         };
       } catch (error_) {
-        const retryStr = String(error_);
+        const rootRetryErr = unwrapAIError(error_);
+        const retryStr = errorToString(rootRetryErr !== error_ ? rootRetryErr : error_);
         console.log(
-          `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 100)}`,
+          `[symphony-bridge] ❌ Streaming fallback ${provider.name} failed: ${retryStr.slice(0, 200)}`,
         );
-        if (isRetryableError(error_)) {
+        lastErr = retryStr;
+        if (isRetryableErrorDeep(error_)) {
           recordProviderFailure(provider.name);
           recordProviderFailureCount(provider.name);
         }
       }
     }
 
-    throw new Error(`All streaming providers failed. Last error: ${errStr}`);
+    throw new Error(`All streaming providers failed (tried ${triedProviders.join(', ')}). Last error: ${lastErr}`);
   }
 }
 
@@ -1460,7 +1801,7 @@ function logBridgeStats() {
   }
 
   BRIDGE_METRICS.lastStatsLog = now;
-  logProviderStats();
+  logProviderStats({ excludeNames: nonToolCapableProviders });
 
   const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
   console.log(
@@ -1509,12 +1850,25 @@ const server = http.createServer(async (req, res) => {
         providersConfigured: configuredCount,
         providersAvailable: availableCount,
         providersWithStats: statsCount,
-        rankedProviders: getRankedProviders()
+        rankedProviders: getRankedProviders({ excludeNames: nonToolCapableProviders })
           .slice(0, 5)
           .map((p) => ({ name: p.name, score: p.score })),
         configuredProviders: providerStatusCache.probeResults
           .filter((r) => r.status !== "excluded")
           .map((r) => ({ name: r.name, status: r.status, available: r.available })),
+        toolProbe: {
+          capable: [...toolCapableProviders].sort(),
+          excluded: [...nonToolCapableProviders].sort(),
+          unclassified: (providerStatusCache.probeResults || [])
+            .filter((r) => r.available)
+            .map((r) => r.name)
+            .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n))
+            .sort(),
+          blocked: [...BRIDGE_PROVIDER_BLOCKLIST].map((name) => ({
+            name,
+            reason: BRIDGE_PROVIDER_BLOCKLIST_REASONS[name] || "blocklisted",
+          })),
+        },
         tools: Object.keys(tools),
         lastProbeAt: providerStatusCache.lastProbeAt,
       });
@@ -1534,7 +1888,7 @@ const server = http.createServer(async (req, res) => {
     // GET /v1/stats
     if (req.method === "GET" && req.url === "/v1/stats") {
       const stats = getProviderStats();
-      const ranked = getRankedProviders();
+      const ranked = getRankedProviders({ excludeNames: nonToolCapableProviders });
 
       return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats });
     }
@@ -1542,7 +1896,7 @@ const server = http.createServer(async (req, res) => {
     // GET /v1/providers — detailed provider status with probe results and stats
     if (req.method === "GET" && req.url === "/v1/providers") {
       const stats = getProviderStats();
-      const ranked = getRankedProviders();
+      const ranked = getRankedProviders({ excludeNames: nonToolCapableProviders });
       const rankMap = new Map(ranked.map((r) => [r.name, r]));
 
       const providers = providerStatusCache.probeResults
@@ -1866,6 +2220,13 @@ server.listen(PORT, "127.0.0.1", () => {
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
   providerStatusCache.configured = getConfiguredProviders({ excludeNames });
   console.log(`[symphony-bridge] Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`);
+  if (BRIDGE_PROVIDER_BLOCKLIST.size > 0) {
+    console.log(`[symphony-bridge] ⛔ Blocked providers (${BRIDGE_PROVIDER_BLOCKLIST.size}):`);
+    for (const name of BRIDGE_PROVIDER_BLOCKLIST) {
+      const reason = BRIDGE_PROVIDER_BLOCKLIST_REASONS[name] || "blocklisted";
+      console.log(`[symphony-bridge]   ⛔ ${name}: ${reason}`);
+    }
+  }
 
   // Async startup probe — test all providers for live availability
   refreshProviderStatus()
@@ -1879,6 +2240,16 @@ server.listen(PORT, "127.0.0.1", () => {
         const dur = p.durationMs > 0 ? ` (${p.durationMs}ms)` : "";
         console.log(`[symphony-bridge]   ${icon} ${p.name}: ${p.status}${dur}`);
       }
+      if (nonToolCapableProviders.size > 0) {
+        console.log(`[symphony-bridge] 🚫 Non-tool-capable (excluded from selection): ${[...nonToolCapableProviders].join(", ")}`);
+      }
+      const unclassified = available
+        .map((r) => r.name)
+        .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n));
+      if (unclassified.length > 0) {
+        console.log(`[symphony-bridge] ❓ Unclassified (${unclassified.length}, left in pool): ${unclassified.join(", ")}`);
+      }
+      console.log(`[symphony-bridge] ✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`);
       console.log(`[symphony-bridge] ========================================`);
       console.log(`[symphony-bridge] Ready to accept requests`);
       console.log(`[symphony-bridge] ========================================`);
@@ -1900,3 +2271,4 @@ server.listen(PORT, "127.0.0.1", () => {
 
 // Export for testing
 export { invokeWithFallback, invokeWithFallbackStream, MODEL_ID, tools };
+

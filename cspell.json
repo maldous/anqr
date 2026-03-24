@@ -426,7 +426,8 @@
     "blocklisted",
     "pexpect",
     "sendcontrol",
-    "PYSCRIPT"
+    "PYSCRIPT",
+    "lcov"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

@@ -961,11 +961,16 @@ Phase 1 exit criteria:
 - [x] document port expectations truthfully
 - [x] decide what remains blocking versus advisory
 - [x] implement Codebuff OpenAI-compatible bridge for OpenClaw integration
-- [x] document Codebuff bridge configuration and usage
+- [x] implement Symphony OpenAI-compatible bridge with AI SDK and tool execution
+- [x] document bridge configurations and usage
 - [x] implement account rotation persistence for bridge reliability
 - [x] add OpenClaw models.json configuration
+- [x] implement dynamic tool-capability probing for 42 providers
+- [x] implement 4-tier provider system with safety-net score ceiling
+- [x] implement 90+ E2E tests for OpenClaw/Symphony integration
+- [x] define coverage-scope.json with 7-phase protected scope
 
-**Phase 3 completed:** All harness runtime surfaces classified and documented. Codebuff bridge fully implemented with streaming support, paid → free mode fallback, and OpenClaw integration. Provider routing cascade documented with 12 providers including codebuff-bridge at position 11. All documentation surfaces updated to reflect current state.
+**Phase 3 completed:** All harness runtime surfaces classified and documented. Symphony Bridge (port 4319) with AI SDK tool execution and Codebuff Bridge (port 4318) fully implemented. Provider routing cascade with 42 providers across 4 tiers (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`). Dynamic tool-capability probing ensures only structured-tool-capable providers are selected. Comprehensive E2E testing (90+ tests) validates OpenClaw integration, provider cascade, and TUI workflows. Coverage strategy documented in 7 phases with Phase 1 (Contracts & Domain Primitives) active. All documentation surfaces current.
 
 Required inventory classified:
 
@@ -1307,7 +1312,7 @@ This is the correct immediate order from here.
 4. rebuild launch-grade verification around the current claim (Phase 7)
 5. resolve the mobile claim truthfully before any 1.0 launch claim expansion (Phase 6)
 
-**Current focus:** Phase 4 ongoing maintenance. The harness is fully operational with 12-provider cascade including Codebuff bridge. Documentation is current. Ready to begin Phase 5 API/MCP perimeter work when prioritized.
+**Current focus:** Phase 4 ongoing maintenance. The harness is fully operational with 42-provider cascade across 4 tiers, including Symphony Bridge (port 4319) with AI SDK tool execution and dynamic tool-capability probing. All documentation updated to reflect Phase 3 completion and current testing strategy (90+ E2E tests, coverage-scope.json with 7 phases). Ready to begin Phase 5 API/MCP perimeter work when prioritized.
 
 ---
 

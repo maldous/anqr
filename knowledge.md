@@ -42,6 +42,13 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **API & MCP**: Netlify Functions under `netlify/*`.
 - **Mobile**: Capacitor shells (`apps/mobile`, `android/`, `ios/`) exist but are not in the 1.0 launch claim.
 
+**AI Automation & Harness**:
+
+- **Symphony Bridge** (port 4319): OpenAI-compatible HTTP gateway using AI SDK with tool execution for provider communication. Primary route for harness and OpenClaw integration.
+- **Codebuff Bridge** (port 4318): OpenAI-compatible HTTP gateway for Codebuff SDK with paid → free mode fallback.
+- **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 42 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests.
+- **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
+
 ### Current 1.0 Claim
 
 The officially supported launch surface is:
@@ -128,13 +135,21 @@ The QR generator is composed of several functional sections. Exposed options and
 
 ### Test Strategy
 
-ANQR uses a layered testing approach:
+ANQR uses a hexagonal/layered testing approach aligned with strict contract boundaries:
 
+- **Contract tests**: Schema validation for all boundary types in `packages/contracts/*`. Each contract package has colocated `*-contracts.spec.ts` tests.
 - **Unit tests**: Cover pure functions in `packages/domain` and `packages/application`. No network, storage, or real SDKs.
-- **Integration tests**: Validate boundaries with fakes for analytics, ads, telemetry, and storage.
+- **Integration tests**: Validate boundaries with fakes for analytics, ads, telemetry, and storage. Harness integration tests cover provider routing, credit gate, and bridge contracts.
+- **E2E tests**: 90+ tests in `tests/e2e/openclaw-symphony.spec.ts` covering OpenClaw model configuration, Symphony/Codebuff bridge routing, provider cascade with 42 providers across 4 tiers, and TUI validation. Additional Playwright tests for web critical flows.
 - **Parity tests**: Compare local/browser/API paths against a shared scenario corpus to ensure consistency across platforms.
-- **E2E tests**: Playwright for critical user journeys (generation, customization, export, analysis). Semantic selectors preferred; `data-testid` used as fallback.
 - **Property‑based & fuzz tests**: Randomized payloads and option combinations to stress‑test decoding success and error handling.
+
+**Coverage targeting**: `coverage-scope.json` defines protected scope for 100% Sonar coverage in 7 phases:
+
+1. **Phase 1 (active)**: Contracts & Domain Primitives — pure schemas, types, math primitives
+2. **Phase 2-7 (planned)**: Domain Core, Application Services, Netlify & Platform Adapters, Harness Model Routing, Harness Orchestration, Web App Critical Paths
+
+LCOV reports exported to `coverage/` directory. See `docs/standards/testing-strategy-anqr-1.0.md` for complete implementation strategy.
 
 ### Gallery
 
@@ -201,9 +216,10 @@ To ensure good scanability:
 
 ### Testing
 
-- Coverage thresholds: 90%+ for packages (configurable per package).
-- Test organization: `__tests__` or `*.test.ts` colocated with source; integration tests in `tests/`.
-- Naming: Descriptive test names reflecting behavior.
+- **Coverage model**: 100% Sonar coverage target for protected scope (defined in `coverage-scope.json`)
+- **Test organization**: Colocated `*.spec.ts` files in package roots; `tests/e2e/`, `tests/unit/`, `tests/smoke/` for cross-cutting tests
+- **Test taxonomy**: Contract tests, unit tests, integration tests, E2E tests (90+ OpenClaw/Symphony tests), parity tests, security tests
+- **Naming**: Descriptive test names reflecting behavior; see `docs/standards/testing-standards.md`
 
 ### Security
 
@@ -230,14 +246,24 @@ Product runtime budgets (from `docs/discovery/05-performance-budgets-and-slos.md
 
 ### Quality Gates
 
-CI/CD enforces:
+**Blocking gates** (must pass before merge):
 
-- Type checking (`npm run typecheck:all`)
-- Linting (`npm run lint:all`)
-- Dependency boundaries (`npm run depcruise`)
-- Unit tests (`npm run test:unit`)
-- E2E tests (`npm run test:basic` and `npm run test:advanced`)
-- SonarCloud quality gate
+- `typecheck` — TypeScript compilation (`npm run typecheck:all`)
+- `lint` — oxlint violations (`npm run lint:all`)
+- `depcruise` — Architecture boundaries (`npm run depcruise:all`)
+- `ast-density` — One declaration per file (`npm run audit:ast`)
+- `test-unit` — Unit test correctness (`npm run test:unit`)
+- `contracts:check` — Contract validation
+
+**Advisory gates** (tracked but non-blocking):
+
+- `cspell-coverage` — Spelling
+- `docs-freshness` — Stale documentation
+- `ollama-health` — Environment-dependent
+- `litellm-routing` — Environment-dependent
+- `sonar-audit` — Quality insights
+
+See `docs/harness/05-quality-gates.md` for complete gate classification.
 
 ---
 
@@ -373,4 +399,4 @@ See `.env` for full local development variables.
 
 ---
 
-_Last updated: 2026‑03‑22 (auto‑generated from repository sources)_
+_Last updated: 2026‑03‑24_

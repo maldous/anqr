@@ -18,7 +18,7 @@ The ANQR harness is an AI-assisted engineering automation system that:
 - **Symphony Runner** - Main execution engine that picks up issues and executes via AI
 - **Symphony Bridge** - OpenAI-compatible HTTP gateway (port 4319) using AI SDK with tool execution
 - **Codebuff Bridge** - OpenAI-compatible HTTP gateway (port 4318) for Codebuff SDK
-- **Credit-gate** - Provider selection and auto-fallback system with 40+ providers
+- **Credit-gate** - Provider selection and auto-fallback system with 40+ providers, 4-tier ranking, dynamic tool-capability probing
 - **Queue Control** - Queue maintenance and backup feeding
 - **Linear Guardian** - Issue hygiene enforcement
 - **Harness Report** - Continuous health monitoring
@@ -85,7 +85,7 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 - `OPENAI_API_KEY` - OpenAI/Codex (gpt-5.4)
 - `GROQ_TOKEN` - Groq (llama-3.3-70b-versatile)
-- `MISTRAL_TOKEN` - Mistral (devstral-small-2507)
+- `MISTRAL_TOKEN` - Mistral (mistral-small-latest)
 - `GEMINI_TOKEN` - Google Gemini (gemini-2.5-flash)
 - `OPENROUTER_TOKEN` - OpenRouter (40+ free models)
 - `SAMBANOVA_TOKEN` - SambaNova (Meta-Llama-3.3-70B)
@@ -131,16 +131,27 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 ## 5. AI Providers (40+)
 
+### Provider Tier System
+
+The credit-gate classifies every provider into one of four tiers. `getRankedProviders()` partitions providers by tier — safety-net providers are always appended last regardless of score.
+
+| Tier               | Providers                                                                    | Score ceiling | Ranking behavior                  |
+| ------------------ | ---------------------------------------------------------------------------- | ------------- | --------------------------------- |
+| `paid`             | codex, codebuff                                                              | none          | Probed first; uses paid credits   |
+| `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models        | none          | Dynamic scoring (default tier)    |
+| `local-proxy`      | openclaw, codebuff-bridge                                                    | none          | Local HTTP gateways               |
+| `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b            | **0.25**      | Always rank last                  |
+
 ### Primary Providers (Selected by Credit-gate)
 
-| Priority | Provider    | Model                   | Type | API Endpoint                                            | SDK     |
-| -------- | ----------- | ----------------------- | ---- | ------------------------------------------------------- | ------- |
-| 1        | codex       | gpt-5.4                 | HTTP | https://api.openai.com/v1                               | No      |
-| 2        | codebuff    | codebuff/base@latest    | SDK  | @codebuff/sdk                                           | **Yes** |
-| 3        | groq        | llama-3.3-70b-versatile | HTTP | https://api.groq.com/openai/v1                          | No      |
-| 4        | mistral     | devstral-small-2507     | HTTP | https://api.mistral.ai/v1                               | No      |
-| 5        | gemini      | gemini-2.5-flash        | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
-| 6        | gemini-lite | gemini-2.5-flash-lite   | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
+| Priority | Provider    | Tier           | Model                   | Type | API Endpoint                                            | SDK     |
+| -------- | ----------- | -------------- | ----------------------- | ---- | ------------------------------------------------------- | ------- |
+| 1        | codex       | `paid`         | gpt-5.4                 | HTTP | https://api.openai.com/v1                               | No      |
+| 2        | codebuff    | `paid`         | codebuff/base@latest    | SDK  | @codebuff/sdk                                           | **Yes** |
+| 3        | groq        | `free-cloud`   | llama-3.3-70b-versatile | HTTP | https://api.groq.com/openai/v1                          | No      |
+| 4        | mistral     | `free-cloud`   | mistral-small-latest    | HTTP | https://api.mistral.ai/v1                               | No      |
+| 5        | gemini      | `free-cloud`   | gemini-2.5-flash        | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
+| 6        | gemini-lite | `free-cloud`   | gemini-2.5-flash-lite   | HTTP | https://generativelanguage.googleapis.com/v1beta/openai | No      |
 
 ### OpenRouter Free Models (28 models, priority 8-35)
 
@@ -175,12 +186,15 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 ### Additional Providers
 
-| Priority | Provider        | Model                       | API Endpoint                |
-| -------- | --------------- | --------------------------- | --------------------------- |
-| 35       | sambanova       | Meta-Llama-3.3-70B-Instruct | https://api.sambanova.ai/v1 |
-| 36       | cerebras        | llama3.1-8b                 | https://api.cerebras.ai/v1  |
-| 37       | codebuff-bridge | codebuff/base               | http://127.0.0.1:4318/v1    |
-| 38       | ollama-local    | qwen3-coder-next:latest      | http://localhost:11434      |
+| Priority | Provider                   | Tier               | Model                        | API Endpoint                |
+| -------- | -------------------------- | ------------------ | ---------------------------- | --------------------------- |
+| 36       | sambanova                  | `free-cloud`       | Meta-Llama-3.3-70B-Instruct | https://api.sambanova.ai/v1 |
+| 37       | cerebras                   | `free-cloud`       | llama3.1-8b                  | https://api.cerebras.ai/v1  |
+| 38       | github-models              | `free-cloud`       | gpt-4.1-mini                 | https://models.github.ai/inference/v1 |
+| 39       | codebuff-bridge            | `local-proxy`      | codebuff/base                | http://127.0.0.1:4318/v1    |
+| 40       | ollama-local               | `local-safety-net` | qwen3-coder-next:latest      | http://localhost:11434      |
+| 41       | ollama-qwen2.5-coder-3b   | `local-safety-net` | qwen2.5-coder:3b-instruct   | http://localhost:11434      |
+| 42       | ollama-qwen2.5-coder-0.5b | `local-safety-net` | qwen2.5-coder:0.5b          | http://localhost:11434      |
 
 ---
 
@@ -246,6 +260,23 @@ systemctl --user enable --now anqr-symphony-runner.timer
 
 Tool execution is handled automatically by AI SDK via `maxSteps` (default: 10 iterations).
 
+**Dynamic Tool-Capability Probing**:
+
+At startup, the bridge probes each available provider with a minimal `generateText` call using `toolChoice: "auto"` and a simple `add(2, 2)` tool to determine whether it supports structured tool calling. Providers that emit raw JSON tool output instead of structured `toolCalls` are excluded from selection. A delayed retry (60s) re-probes rate-limited or errored providers. OpenRouter models share probe results (one probe covers all 27 models).
+
+The `GET /health` endpoint exposes `toolProbe` with:
+
+| Field          | Type       | Description                                                      |
+| -------------- | ---------- | ---------------------------------------------------------------- |
+| `capable`      | `string[]` | Providers confirmed to support structured tool calls             |
+| `excluded`     | `string[]` | Providers excluded (raw JSON tool output detected)               |
+| `unclassified` | `string[]` | Available but not yet classified (rate-limited, errored, timeout) |
+| `blocked`      | `object[]` | Providers blocked from bridge, with `{ name, reason }`           |
+
+**Bridge Provider Blocklist**:
+
+- `openclaw` — Blocked to prevent routing loop (bridge → openclaw → bridge)
+
 ---
 
 ## 7. OpenClaw Integration
@@ -300,25 +331,71 @@ OpenClaw acts as a wrapper layer that can route requests to multiple backends:
 
 ### Configuration (`.openclaw/models.json`)
 
+Provider key order matters — the TUI `/models` picker iterates in JSON insertion order. Symphony-bridge must come first, codebuff-bridge last.
+
 ```json
 {
   "providers": {
+    "symphony-bridge": {
+      "baseUrl": "http://127.0.0.1:4319/v1",
+      "apiKey": "local-symphony",
+      "api": "openai-completions",
+      "models": [
+        { "id": "symphony/main" },
+        { "id": "symphony/text" },
+        { "id": "symphony/codex" },
+        { "id": "symphony/codebuff" },
+        { "id": "symphony/codebuff-bridge" },
+        { "id": "symphony/groq" },
+        { "id": "symphony/mistral" },
+        { "id": "symphony/gemini" },
+        { "id": "symphony/gemini-lite" },
+        { "id": "symphony/openrouter" },
+        { "id": "symphony/sambanova" },
+        { "id": "symphony/cerebras" },
+        { "id": "symphony/ollama-local" }
+      ]
+    },
+    "ollama": {
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "ollama",
+      "api": "openai-completions",
+      "models": [
+        { "id": "qwen2.5-coder:0.5b" },
+        { "id": "qwen2.5-coder:3b-instruct" },
+        { "id": "qwen3-coder-next:latest" }
+      ]
+    },
     "codebuff-bridge": {
       "baseUrl": "http://127.0.0.1:4318/v1",
       "apiKey": "local-bridge",
       "api": "openai-completions",
       "models": [{ "id": "codebuff/base" }]
-    },
-    "symphony-bridge": {
-      "baseUrl": "http://127.0.0.1:4319/v1",
-      "apiKey": "local-symphony",
-      "api": "openai-completions",
-      "models": [{ "id": "symphony/main" }, { "id": "symphony/text" }]
     }
   },
   "agents": {
     "defaults": {
-      "model": { "primary": "symphony-bridge/symphony/main" }
+      "model": {
+        "primary": "symphony-bridge/symphony/main",
+        "fallbacks": [
+          "symphony-bridge/symphony/codex",
+          "symphony-bridge/symphony/codebuff",
+          "symphony-bridge/symphony/codebuff-bridge",
+          "symphony-bridge/symphony/groq",
+          "symphony-bridge/symphony/mistral",
+          "symphony-bridge/symphony/gemini",
+          "symphony-bridge/symphony/gemini-lite",
+          "symphony-bridge/symphony/openrouter",
+          "symphony-bridge/symphony/sambanova",
+          "symphony-bridge/symphony/cerebras",
+          "symphony-bridge/symphony/ollama-local",
+          "symphony-bridge/symphony/text",
+          "ollama/qwen2.5-coder:0.5b",
+          "ollama/qwen2.5-coder:3b-instruct",
+          "ollama/qwen3-coder-next:latest",
+          "codebuff-bridge/codebuff/base"
+        ]
+      }
     }
   }
 }
@@ -458,6 +535,13 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 | `reports/symphony/provider-stats.json`     | Provider metrics and scores |
 | `reports/codebuff/latest-{timestamp}.json` | Codebuff execution reports  |
 
+**In-memory state** (not persisted, rebuilt at startup):
+
+| State                    | Location                  | Purpose                                                |
+| ------------------------ | ------------------------- | ------------------------------------------------------ |
+| `toolCapableProviders`   | Symphony Bridge (memory)  | Set of providers confirmed to support structured tools  |
+| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests    |
+
 ---
 
 ## 13. Files Reference
@@ -496,4 +580,4 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 ---
 
-_Last updated: 2026-03-22_
+_Last updated: 2026-03-24_

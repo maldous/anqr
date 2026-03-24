@@ -892,12 +892,19 @@ function calculateProviderScore(providerName, stats) {
 /**
  * Get providers sorted by dynamic score (best first)
  */
-export function getRankedProviders() {
+export function getRankedProviders(options = {}) {
+  const excludeSet =
+    options.excludeNames instanceof Set
+      ? options.excludeNames
+      : Array.isArray(options.excludeNames)
+        ? new Set(options.excludeNames)
+        : null;
   const stats = loadStats();
   const ranked = [];
   const safetyNets = [];
 
   for (const name of Object.keys(stats.selections)) {
+    if (excludeSet && excludeSet.has(name)) continue;
     const score = stats.score[name];
     if (score !== null && score !== undefined) {
       const provider = PROVIDERS.find((p) => p.name === name);
@@ -1039,9 +1046,15 @@ export function resetProviderStats() {
 }
 
 // Log stats summary (for debugging/monitoring)
-export function logProviderStats() {
-  const ranked = getRankedProviders();
+export function logProviderStats(options = {}) {
+  const ranked = getRankedProviders(options);
   const stats = getProviderStats();
+  const excludeSet =
+    options.excludeNames instanceof Set
+      ? options.excludeNames
+      : Array.isArray(options.excludeNames)
+        ? new Set(options.excludeNames)
+        : null;
 
   console.log(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
   if (ranked.length > 0) {
@@ -1061,6 +1074,7 @@ export function logProviderStats() {
   for (const [name, data] of Object.entries(stats).sort(
     (a, b) => b[1].selections - a[1].selections,
   )) {
+    if (excludeSet && excludeSet.has(name)) continue;
     console.log(
       `[credit-gate]   ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
     );
@@ -1075,6 +1089,12 @@ export function logProviderStats() {
  * Get all providers that have valid credentials configured (no network calls).
  * Returns a list of provider summaries for health/monitoring endpoints.
  */
+export function getProviderDefinitions(options = {}) {
+  const { excludeNames = [] } = options;
+  const excludeSet = new Set(excludeNames);
+  return PROVIDERS.filter((p) => !excludeSet.has(p.name));
+}
+
 export function getConfiguredProviders(options = {}) {
   const { excludeNames = [] } = options;
   const excludeSet = new Set(excludeNames);

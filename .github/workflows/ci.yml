@@ -1,0 +1,74 @@
+name: CI Smoke Lane
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Smoke Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Static Analysis ──────────────────────────────────────────
+
+      - name: Typecheck (all)
+        run: npm run typecheck:all
+
+      - name: Lint (all)
+        run: npm run lint:all
+
+      - name: Dependency architecture
+        run: npm run depcruise:all
+
+      - name: Contract checks
+        run: npm run contracts:check
+
+      - name: AST density audit
+        run: npm run audit:ast
+
+      # ── Tests ────────────────────────────────────────────────────
+
+      - name: Unit tests (with coverage)
+        run: npm run test:unit:coverage
+
+      # ── Build ────────────────────────────────────────────────────
+
+      - name: Build web
+        run: npm run build:web
+
+      # ── Harness ──────────────────────────────────────────────────
+
+      - name: Harness quick report
+        run: npm run harness:quick
+        continue-on-error: true
+
+      # ── Coverage Upload ──────────────────────────────────────────
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          retention-days: 14
+          if-no-files-found: warn

@@ -26,15 +26,75 @@ OpenClaw is configured with the following failover chain:
 
 ### Layer 2: Symphony Bridge (credit-gate)
 
-Symphony Bridge uses the credit-gate provider cascade with **dynamic scoring** based on actual performance metrics:
+Symphony Bridge uses the credit-gate provider cascade with **tier-based dynamic scoring** based on actual performance metrics:
 
-| Priority class | Provider set                                                                                  | Selection method                                   |
-| -------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Policy first   | `codex`                                                                                       | Always re-probed first when configured and healthy |
-| Ranked auto    | `codebuff`, `groq`, `mistral`, `gemini*`, OpenRouter, `sambanova`, `cerebras`, `ollama-local` | Dynamic scoring with cooldown and re-entry         |
-| Local HTTP     | `codebuff-bridge`                                                                             | OpenAI-compatible local bridge fallback            |
+| Tier               | Provider set                                                                                  | Selection method                                              |
+| ------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `paid`             | `codex`, `codebuff`                                                                           | Probed first; uses paid API credits                           |
+| `free-cloud`       | `groq`, `mistral`, `gemini*`, OpenRouter (27 models), `sambanova`, `cerebras`, `github-models` | Dynamic scoring with cooldown and re-entry (default tier)     |
+| `local-proxy`      | `openclaw`, `codebuff-bridge`                                                                 | Local HTTP gateways to other services                         |
+| `local-safety-net` | `ollama-local`, `ollama-qwen2.5-coder-3b`, `ollama-qwen2.5-coder-0.5b`                       | Score-capped at 0.25; always rank last in `getRankedProviders()` |
 
 The credit-gate selects providers based on dynamic scoring, but `codex` is always retried and Codebuff paid availability is re-probed every 5 hours. Temporary failures enter cooldown, then are retried so Symphony continues learning the best route over time.
+
+#### Tier-based ranking guarantee
+
+The `getRankedProviders()` function partitions providers into two groups:
+
+1. **Normal providers** — `paid`, `free-cloud`, and `local-proxy` tiers, sorted by dynamic score descending.
+2. **Safety-net providers** — `local-safety-net` tier, sorted by dynamic score descending but always appended after all normal providers.
+
+Safety-net providers have their scores capped by `SAFETY_NET_SCORE_CEILING = 0.25` in `computeProviderScore()`. This prevents local Ollama models from accumulating high scores through local-only usage and outranking cloud providers. The ceiling ensures safety nets only activate when all cloud providers are unavailable or in cooldown.
+
+#### Dynamic tool-capability probing
+
+The Symphony Bridge dynamically discovers which providers support structured tool calling at startup, replacing the former static deny list (`PROVIDERS_WITHOUT_TOOL_SUPPORT`). This ensures the bridge always has an accurate view of tool support across all 40+ providers without manual maintenance.
+
+##### How it works
+
+1. **Known-capable shortcut**: `codex`, `codebuff`, and `codebuff-bridge` are pre-classified as tool-capable (skip probing).
+2. **Live probe**: For each available provider, the bridge sends a minimal `generateText` call with `toolChoice: "auto"` and a simple `add(2, 2)` tool. If the response contains a structured `toolCalls` array, the provider is classified as **capable**. If the response contains raw JSON tool output (e.g. `{"name":"add","arguments":{...}}`) in the text, the provider is classified as **non-capable** and excluded from future selection.
+3. **OpenRouter deduplication**: All OpenRouter models share the same API and tool protocol. Once any single OpenRouter provider is probed, the result is inferred for all 27 others — saving 26 API calls.
+4. **Inconclusive results**: Rate-limited (`429`), timed-out, or errored providers are left unclassified and remain in the pool. The runtime safety net (below) catches any that slip through.
+
+##### Delayed retry
+
+60 seconds after the initial startup probe, the bridge automatically retries all providers that were rate-limited, timed out, or returned probe errors. This picks up providers that were temporarily unavailable during the initial burst.
+
+##### Runtime safety net
+
+During actual request handling, `invokeWithAI()` inspects responses for raw JSON tool output patterns (`{"name":"...","arguments":{...}}`):
+
+- **Streaming**: Detects raw JSON after the stream completes; marks the provider as non-capable for future exclusion (stream already delivered, so no throw).
+- **Non-streaming**: Detects raw JSON in the response text; marks the provider as non-capable **and** throws to cascade to the next provider.
+
+##### Provider exclusion
+
+`buildSelectionOptions()` in the credit-gate selection path automatically spreads `nonToolCapableProviders` into the `excludeNames` set, so excluded providers are never selected for tool-bearing requests.
+
+##### Health endpoint (`GET /health`)
+
+The `toolProbe` object in the health response exposes the current classification state:
+
+| Field          | Type       | Description                                                                 |
+| -------------- | ---------- | --------------------------------------------------------------------------- |
+| `capable`      | `string[]` | Providers confirmed to support structured tool calls                        |
+| `excluded`     | `string[]` | Providers confirmed to emit raw JSON tool output (excluded from selection)  |
+| `unclassified` | `string[]` | Available providers not yet classified (rate-limited, errored, timed out)   |
+| `blocked`      | `object[]` | Providers blocked from the bridge entirely, with `{ name, reason }` detail  |
+
+Example:
+
+```json
+{
+  "toolProbe": {
+    "capable": ["codex", "codebuff", "groq", "openrouter-free", "...27 more"],
+    "excluded": ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
+    "unclassified": ["mistral", "gemini", "sambanova"],
+    "blocked": [{ "name": "openclaw", "reason": "routing loop prevention" }]
+  }
+}
+```
 
 ### Layer 3: Codebuff Bridge (paid → free fallback)
 
@@ -48,28 +108,35 @@ When Codebuff is selected, the bridge uses a single API key with automatic mode 
 
 The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory. The harness reaches it only through Symphony Bridge. OpenClaw uses the same inventory as pinned `symphony/*` routes, then falls back to the direct Codebuff bridge only if Symphony itself is unavailable.
 
-| #    | Provider                    | Type | Model                                  | Env Key(s) / Source                          | SDK     |
-| ---- | --------------------------- | ---- | -------------------------------------- | -------------------------------------------- | ------- |
-| 1    | codex                       | HTTP | gpt-5.4                                | `OPENAI_API_KEY`                             | No      |
-| 2    | codebuff                    | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`                           | **Yes** |
-| 3    | groq                        | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`                                 | No      |
-| 4    | mistral                     | HTTP | devstral-small-2507                    | `MISTRAL_TOKEN`                              | No      |
-| 5    | gemini                      | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`                               | No      |
-| 6    | gemini-lite                 | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`                               | No      |
-| 8    | openrouter-nemotron-super   | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`                           | No      |
-| 9-35 | openrouter-free (27 models) | HTTP | Various free tier models               | `OPENROUTER_TOKEN`                           | No      |
-| 35   | sambanova                   | HTTP | Meta-Llama-3.3-70B-Instruct            | `SAMBANOVA_TOKEN`                            | No      |
-| 36   | cerebras                    | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`                             | No      |
-| 37   | codebuff-bridge             | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY`                    | No      |
-| 38   | ollama-local                | HTTP | qwen3-coder-next:latest                 | `OLLAMA_API_BASE`                            | No      |
+| #    | Provider                    | Tier               | Type | Model                                  | Env Key(s) / Source       | SDK     |
+| ---- | --------------------------- | ------------------ | ---- | -------------------------------------- | ------------------------- | ------- |
+| 1    | codex                       | `paid`             | HTTP | gpt-5.4                                | `OPENAI_API_KEY`          | No      |
+| 2    | codebuff                    | `paid`             | SDK  | codebuff/base@latest                   | `CODEBUFF_API_KEY`        | **Yes** |
+| 3    | openclaw                    | `local-proxy`      | HTTP | openclaw:main                          | `OPENCLAW_TOKEN`          | No      |
+| 4    | groq                        | `free-cloud`       | HTTP | llama-3.3-70b-versatile                | `GROQ_TOKEN`              | No      |
+| 5    | mistral                     | `free-cloud`       | HTTP | mistral-small-latest                   | `MISTRAL_TOKEN`           | No      |
+| 6    | gemini                      | `free-cloud`       | HTTP | gemini-2.5-flash                       | `GEMINI_TOKEN`            | No      |
+| 7    | gemini-lite                 | `free-cloud`       | HTTP | gemini-2.5-flash-lite                  | `GEMINI_TOKEN`            | No      |
+| 8    | openrouter-nemotron-super   | `free-cloud`       | HTTP | nvidia/nemotron-3-super-120b-a12b:free | `OPENROUTER_TOKEN`        | No      |
+| 9-35 | openrouter-free (27 models) | `free-cloud`       | HTTP | Various free tier models               | `OPENROUTER_TOKEN`        | No      |
+| 36   | sambanova                   | `free-cloud`       | HTTP | Meta-Llama-3.3-70B-Instruct           | `SAMBANOVA_TOKEN`         | No      |
+| 37   | cerebras                    | `free-cloud`       | HTTP | llama3.1-8b                            | `CEREBRAS_TOKEN`          | No      |
+| 38   | github-models               | `free-cloud`       | HTTP | gpt-4.1-mini                           | `GITHUB_MODELS_TOKEN`     | No      |
+| 39   | codebuff-bridge             | `local-proxy`      | HTTP | codebuff/base                          | `CODEBUFF_BRIDGE_API_KEY` | No      |
+| 40   | ollama-local                | `local-safety-net` | HTTP | qwen3-coder-next:latest                | `OLLAMA_API_BASE`         | No      |
+| 41   | ollama-qwen2.5-coder-3b    | `local-safety-net` | HTTP | qwen2.5-coder:3b-instruct             | `OLLAMA_API_BASE`         | No      |
+| 42   | ollama-qwen2.5-coder-0.5b  | `local-safety-net` | HTTP | qwen2.5-coder:0.5b                    | `OLLAMA_API_BASE`         | No      |
 
 ### Provider notes
 
-- **codex** (position 1): Primary provider, uses OpenAI credits
-- **codebuff** (position 2): Autonomous agent via @codebuff/sdk, supports paid → free mode fallback
-- **openrouter-free** (positions 8-35): 27 free tier models ranked by quality score (nemotron-3-super-120b-a12b is best at 0.655)
-- **codebuff-bridge** (position 37): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration and HTTP parity
-- **ollama-local** (position 38): Local fallback when all remote providers fail
+- **codex** (`paid`): Primary provider, uses OpenAI credits, always re-probed first
+- **codebuff** (`paid`): Autonomous agent via @codebuff/sdk, supports paid → free mode fallback, re-probed every 5 hours
+- **openclaw** (`local-proxy`): Local OpenClaw gateway, probed for port reachability
+- **openrouter-free** (`free-cloud`, positions 8-35): 27 free tier models ranked by quality score
+- **github-models** (`free-cloud`): GitHub Models API with gpt-4.1-mini
+- **codebuff-bridge** (`local-proxy`): OpenAI-compatible HTTP gateway for Codebuff SDK, enables OpenClaw integration and HTTP parity
+- **ollama-\*** (`local-safety-net`): Local fallback models, score-capped at 0.25 — only activate when all cloud providers are unavailable
+- **openclaw** (`local-proxy`): Blocked from Symphony Bridge to prevent routing loop (bridge → openclaw → bridge)
 
 ## SDK-based providers
 
@@ -283,7 +350,15 @@ For issues without estimates, the system auto-assigns based on priority: P0=5, P
 
 ### symphony-credit-gate.mjs
 
-Core module for provider selection and auto-fallback. See earlier sections for detailed documentation.
+Core module for provider selection and auto-fallback. Exports:
+
+- `getRankedProviders()` — Tier-partitioned provider ranking
+- `getConfiguredProviders()` — Provider summaries for health/monitoring
+- `getProviderDefinitions()` — Full provider objects (with `envVar`, `baseUrl`, `loadToken`) for tool-capability probing
+- `recordProviderFailure()` / `clearProviderFailure()` — Failure cooldown management
+- `probeAllProviders()` — Availability probing (network reachability)
+
+See earlier sections for detailed documentation.
 
 ### symphony-state.mjs
 
@@ -434,3 +509,5 @@ Provider routing currently depends on:
 - provider routing must not become hidden doctrine inside scripts alone
 
 Use [README.md](/home/user/src/anqr/README.md) and [MCP-MIGRATION.md](/home/user/src/anqr/MCP-MIGRATION.md) for the broader launch and migration backlog around external AI services.
+
+_Last updated: 2026-03-24_

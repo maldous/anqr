@@ -1,11 +1,19 @@
 import path from "node:path";
 import { defineConfig } from "vitest/config";
+import { buildTsconfigAliases } from "./vite-config/build-tsconfig-aliases.ts";
+
+const repoRoot = import.meta.dirname;
+const tsconfigAliases = buildTsconfigAliases(repoRoot);
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
-    },
+    alias: [
+      ...tsconfigAliases,
+      {
+        find: "@",
+        replacement: path.resolve(repoRoot, "src"),
+      },
+    ],
   },
   test: {
     globals: false,
@@ -25,6 +33,7 @@ export default defineConfig({
     exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**"],
     coverage: {
       provider: "v8",
+      reporter: ["text", "lcov"],
       reportsDirectory: "coverage",
       include: ["src/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "scripts/ops/**/*.{ts,mjs}"],
       exclude: ["src/**/*.d.ts", "src/**/*.test.ts", "src/**/*.spec.ts", "**/*.generated.*"],

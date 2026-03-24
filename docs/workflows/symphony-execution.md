@@ -52,26 +52,40 @@ Orchestrates: harness-report (full) → queue-control (all) → guardian → not
 ## Provider Routing
 
 ```
-Ollama ← credit-gate.mjs (provider selection)
+Symphony Bridge (port 4319) ← credit-gate.mjs (tier-based provider selection)
   ↑
-symphony-agent.mjs (tool-calling loop)
+symphony-agent.mjs (tool-calling loop, AI SDK)
   ↑
 symphony-runner.mjs (orchestrator)
   ↑
 Linear (Todo issues)
 ```
 
-**Pinned model:** `qwen3-coder-next:latest` (Qwen 3 Coder Next, 51 GB)
-**Credit gate:** `scripts/ops/symphony-credit-gate.mjs` (Ollama-first, extensible)
+**Primary route:** Symphony Bridge with dynamic scoring across 40+ providers
+**Credit gate:** `scripts/ops/integrations/model/symphony-credit-gate.mjs` (tier-based, dynamic scoring)
+**Local safety net:** `qwen3-coder-next:latest` via Ollama (score-capped, always ranks last)
 
-- LiteLLM config: `scripts/ops/integrations/model/litellm-config.yaml`
+- LiteLLM config: `scripts/ops/integrations/model/litellm-config.yaml` (legacy aliases)
 - Health audit: `scripts/ops/ollama-local-audit.mjs`
+
+### Provider Tier System
+
+The credit-gate classifies every provider into one of four tiers:
+
+| Tier               | Providers                                            | Behavior                                          |
+| ------------------ | ---------------------------------------------------- | ------------------------------------------------- |
+| `paid`             | codex, codebuff                                      | Probed first; uses paid API credits               |
+| `free-cloud`       | groq, mistral, gemini, openrouter, sambanova, cerebras, github-models | Dynamic scoring; default tier                     |
+| `local-proxy`      | openclaw, codebuff-bridge                            | Local HTTP gateways to other services             |
+| `local-safety-net` | ollama-local, ollama-qwen2.5-coder-3b, ollama-qwen2.5-coder-0.5b | Score-capped at 0.25; always rank last            |
+
+**Key constraint:** `SAFETY_NET_SCORE_CEILING = 0.25` — safety-net providers are capped at this score in dynamic ranking so they never outrank even a mediocre cloud provider. `getRankedProviders()` partitions providers into two groups (normal + safety-net) and always appends safety nets after all other providers regardless of their raw score.
 
 ## Execution Constraints
 
 | Parameter                 | Value               | Reason                              |
 | ------------------------- | ------------------- | ----------------------------------- |
-| `max_concurrent_agents`   | 1                   | Ollama is single-slot               |
+| `max_concurrent_agents`   | 1                   | Single-slot execution               |
 | `target_min`              | 1                   | Minimum queue depth                 |
 | `target_max`              | 2                   | Maximum queue depth                 |
 | `RUNNER_MAX_TURNS`        | 600                 | Max tool-calling rounds per issue   |
@@ -81,7 +95,7 @@ Linear (Todo issues)
 
 ## Issue Sizing Rules
 
-All Symphony-automatable issues must be Ollama-sized:
+All Symphony-automatable issues must be runner-sized:
 
 - 1–2 files changed
 - 1–3 acceptance criteria
@@ -279,7 +293,7 @@ The Symphony runner (`anqr-symphony-runner.timer`) is the execution agent that p
 2. **Sonar gate**: checks for open `[Sonar]` issues — if any exist, only picks sonar work
 3. Polls Linear for highest-priority automatable Todo issue
 4. Moves issue to In Progress + comments start marker
-5. Credit gate selects best available provider (Ollama-first)
+5. Credit gate selects best available provider (tier-based dynamic scoring)
 6. Runs tool-calling agent loop against the provider
 7. Agent reads files, makes changes, calls task_complete
 8. Validates: typecheck (`tsc --noEmit`) + unit tests (`vitest run`)

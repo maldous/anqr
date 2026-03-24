@@ -409,6 +409,51 @@ OpenClaw-specific E2E requirements:
 - command execution and tool-use stability
 - SSE streaming behavior
 - provider degradation and recovery behavior
+- provider tier system validation (`SAFETY_NET_SCORE_CEILING`, tier-based partitioning in `getRankedProviders()`)
+
+### Implemented OpenClaw E2E Suites
+
+The following test suites are implemented in `tests/e2e/openclaw-symphony.spec.ts` (90 tests total, 20 describe blocks):
+
+**Configuration & Routing (offline — no bridge required):**
+
+| Suite                          | Tests | Validates                                                      |
+| ------------------------------ | ----- | -------------------------------------------------------------- |
+| OpenClaw Model Configuration   | 4     | Primary model, fallback routes, ollama safety-nets, codebuff-last |
+| Symphony Fallback Continuity   | 5     | Chain length, free providers, local fallback, ollama ordering, codebuff-last |
+| Provider Degradation Simulation | 2    | Resilience, provider diversity                                 |
+| Command Execution Modes        | 3     | HTTP, streaming, tool-use                                      |
+| CLI Model Validation           | 6     | Models list, default model, status, fallback ordering, route coverage, codebuff-bridge-last |
+| Model Selection Validation     | 4     | Symphony selectable, ollama selectable, codebuff selectable, model count |
+
+**Live bridge tests (require Symphony/Codebuff bridge running):**
+
+| Suite                              | Tests | Validates                                                      |
+| ---------------------------------- | ----- | -------------------------------------------------------------- |
+| Live Symphony Bridge Tests         | 5     | Health, models, non-streaming, streaming, stats                |
+| Provider Inventory                 | 5     | All providers configured, routes exposed, availability, blocklist, openrouter |
+| Remote API Route Completions       | ~10   | Per-provider completions via pinned routes                     |
+| Heuristic & Pool Route Completions | ~5    | Pool routes, openrouter selection                              |
+| Local & Special Service Routes     | ~3    | Ollama, codebuff-bridge, openclaw routes                       |
+| OpenRouter Model Coverage          | 2     | All 27 models configured, pool route exercises them            |
+| Full Provider Cascade Summary      | 1     | Majority of remote routes succeed in parallel                  |
+| Per-Provider Streaming Completions | ~8    | Streaming via each remote route + schema validation            |
+| Live Tool-Use & Command Execution  | 4     | exec, read, glob tools + streaming tool-use                    |
+| Provider Degradation & Recovery    | 4     | Invalid route errors, recovery, health after errors            |
+| Regression: Known Incident Classes | 3     | AI SDK v6 path, .chat() vs (), cascade stuck prevention        |
+| Live Codebuff Bridge Tests         | 4     | Health, models, non-streaming, streaming                       |
+
+**TUI Validation (require gateway running):**
+
+| Suite                | Tests | Validates                                                      |
+| -------------------- | ----- | -------------------------------------------------------------- |
+| TUI Validation       | 4     | Gateway health, TUI startup, response capture, prompt→response pipeline via pexpect + HTTP API |
+
+The TUI prompt+response test uses a Python pexpect helper (`runTuiPromptWithPexpect`) that:
+- Writes a temp Python script to interact with the TUI via PTY
+- Detects state transitions: connected → running → idle
+- Extracts model/token info from the status bar
+- Validates response content via Symphony HTTP API (Phase 2)
 
 ## Execution Lanes
 
@@ -477,17 +522,17 @@ The test programme should be implemented in this order:
 
 ## Local Checklist
 
-- [ ] Confirm protected scope file list and exclusions.
-- [ ] Wire LCOV export into Sonar for all protected suites.
+- [x] Confirm protected scope file list and exclusions.
+- [x] Wire LCOV export into Sonar for all protected suites.
 - [ ] Add colocated unit tests for uncovered domain and application modules.
 - [ ] Add contract suites for API, MCP, Symphony bridge, and Codebuff bridge.
 - [ ] Add integration tests for Netlify handlers and platform adapters.
-- [ ] Add harness integration tests for credit gate, fallback, cooldown, and metrics.
-- [ ] Add OpenClaw E2E scenarios for primary routing, fallback, and streaming.
-- [ ] Add CI smoke lane enforcing the minimum required commands.
+- [x] Add harness integration tests for credit gate, fallback, cooldown, and metrics.
+- [x] Add OpenClaw E2E scenarios for primary routing, fallback, and streaming.
+- [x] Add CI smoke lane enforcing the minimum required commands.
 - [ ] Add security regression suites for route policy, file access, secret redaction, and command safety.
 - [ ] Add mutation testing to critical pure logic modules.
-- [ ] Record every escaped defect as a regression test.
+- [x] Record every escaped defect as a regression test.
 - [ ] Track coverage progress to 100% Sonar for the protected scope.
 - [ ] Keep Linear issues and evidence aligned with the current strategy.
 
