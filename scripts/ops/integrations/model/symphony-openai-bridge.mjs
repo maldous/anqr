@@ -1138,8 +1138,9 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
+        console.log(`[symphony-bridge] 🔧 ${part.toolName}: ${argsSummary}`);
         if (onChunk) {
-          onChunk({ type: "text", text: `\n🔧 ${part.toolName}: ${argsSummary}\n` });
+          onChunk({ type: "text", text: `\n🔧 ${part.toolName}: \n` });
         }
       } else if (part.type === "tool-result") {
         console.log(`[symphony-bridge] ✅ ${part.toolName} done`);
