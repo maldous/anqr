@@ -1427,32 +1427,60 @@ function invokeCodebuffDirectStream(messages, res) {
 
       let fullText = "";
 
-      // Transparent relay - forward every SSE chunk from Codebuff directly to OpenClaw
+      // Filter internal SDK activity from Codebuff stream before forwarding to client
+      // Only forward user-facing tool activity and response text
+      const INTERNAL_TOOLS = new Set(["set_messages", "spawn_agent_inline", "context-pruner", "end_turn"]);
+      
       proxyRes.on("data", (chunk) => {
         const chunkStr = chunk.toString();
         
-        // Forward chunk IMMEDIATELY to OpenClaw without parsing (transparent relay)
-        res.write(chunk);
-        
-        // Extract content for logging and final result accumulation
+        // Extract and filter content before forwarding
         const lines = chunkStr.split("\n");
+        const filteredLines = [];
+        
         for (const line of lines) {
-          if (!line.trim() || line.startsWith(":")) continue;
-          if (line === "data: [DONE]") continue;
+          if (!line.trim() || line.startsWith(":")) {
+            filteredLines.push(line);
+            continue;
+          }
+          if (line === "data: [DONE]") {
+            filteredLines.push(line);
+            continue;
+          }
 
           const dataMatch = line.match(/^data: (.+)$/);
-          if (!dataMatch) continue;
+          if (!dataMatch) {
+            filteredLines.push(line);
+            continue;
+          }
 
           try {
             const parsed = JSON.parse(dataMatch[1]);
             const content = parsed.choices?.[0]?.delta?.content;
+            
             if (content) {
+              // Filter out internal SDK activity markers
+              const isInternalActivity = INTERNAL_TOOLS.has(content.replace(/^(✅|🔧|💡)\s*/, "").split(" ")[0]);
+              
+              if (isInternalActivity) {
+                console.log(`[symphony-bridge] 🔇 Filtered internal activity: ${content.slice(0, 50)}`);
+                continue; // Skip this chunk - don't forward to client
+              }
+              
               fullText += content;
               console.log(`[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`);
             }
+            
+            filteredLines.push(line);
           } catch {
-            // Ignore parse errors - we already forwarded the raw chunk
+            // Can't parse - forward as-is
+            filteredLines.push(line);
           }
+        }
+        
+        // Forward filtered chunks to OpenClaw
+        if (filteredLines.length > 0) {
+          res.write(filteredLines.join("\n") + (chunkStr.endsWith("\n") ? "\n" : ""));
         }
       });
 
