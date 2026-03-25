@@ -1180,12 +1180,12 @@ export async function probeAllProviders(options = {}) {
   const elapsed = Date.now() - startTime;
   const available = probeResults.filter((r) => r.available);
   const unavailable = probeResults.filter((r) => !r.available && r.status !== "excluded");
-  logInfo(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
-  logInfo(
+  logDebug(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
+  logDebug(
     `[credit-gate]   ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`,
   );
   if (unavailable.length > 0) {
-    logInfo(
+    logWarn(
       `[credit-gate]   ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`,
     );
   }

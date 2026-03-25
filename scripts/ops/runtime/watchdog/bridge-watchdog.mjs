@@ -275,7 +275,7 @@ async function checkService(service) {
 
   // Check for failures
   if (status === "failed") {
-    logInfo(`[watchdog] ❌ ${shortName}: Service failed`);
+    logError(`[watchdog] ❌ ${shortName}: Service failed`);
     await rollbackAndRestart(serviceName, shortName, "service failed");
     await verifyAndNotifyRecovery(serviceName, shortName);
     return;
@@ -296,7 +296,7 @@ async function checkService(service) {
     const activatingDuration = now - activatingStart;
     if (activatingDuration > STARTUP_GRACE_PERIOD_MS) {
       const stuckSeconds = Math.round(activatingDuration / 1000);
-      logInfo(
+      logWarn(
         `[watchdog] ❌ ${shortName}: Stuck in activating for ${stuckSeconds}s`
       );
       activatingStateStart.delete(serviceName);
@@ -311,7 +311,7 @@ async function checkService(service) {
     
     // Still within grace period
     const elapsed = Math.round(activatingDuration / 1000);
-    logInfo(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
+    logDebug(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
     return;
   }
   
@@ -322,9 +322,9 @@ async function checkService(service) {
 
   // Normal status
   if (status === "active") {
-    logInfo(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);
+    logDebug(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);
   } else {
-    logInfo(`[watchdog] ⚠️ ${shortName}: ${status}`);
+    logWarn(`[watchdog] ⚠️ ${shortName}: ${status}`);
   }
 }
 

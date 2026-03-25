@@ -2293,6 +2293,7 @@ const server = http.createServer(async (req, res) => {
       activeRequests.set(requestId, {
         startTime,
         issueId: issueContext?.identifier || null,
+        requestText: contentStr.slice(0, 200),
         model: route.responseModelId,
         stream,
       });
@@ -2327,32 +2328,21 @@ const server = http.createServer(async (req, res) => {
       ];
       
       if (concurrentCount > 0) {
-        // Build detailed concurrent request summary
-        const concurrentIssues = concurrentRequests
-          .filter(r => r.issueId)
-          .map(r => r.issueId)
-          .slice(0, 3);
+        // Build detailed concurrent request summary with actual request text
+        const concurrentSummaries = concurrentRequests
+          .slice(0, 3)
+          .map(r => {
+            const prefix = r.issueId ? `${r.issueId}: ` : '';
+            return prefix + (r.requestText || '(no text)');
+          });
         
-        const concurrentModels = concurrentRequests
-          .map(r => r.model)
-          .filter((m, i, arr) => arr.indexOf(m) === i) // unique models
-          .slice(0, 2);
+        let concurrentText = concurrentSummaries.join('\n');
         
-        let concurrentText = `${concurrentCount} other request${concurrentCount > 1 ? 's' : ''}`;
-        
-        if (concurrentIssues.length > 0) {
-          concurrentText += ` (${concurrentIssues.join(', ')}`;
-          if (concurrentCount > concurrentIssues.length) {
-            concurrentText += `, +${concurrentCount - concurrentIssues.length} more`;
-          }
-          concurrentText += ')';
+        if (concurrentCount > concurrentSummaries.length) {
+          concurrentText += `\n...and ${concurrentCount - concurrentSummaries.length} more`;
         }
         
-        if (concurrentModels.length > 0) {
-          concurrentText += ` using ${concurrentModels.join(', ')}`;
-        }
-        
-        fields.push({ name: "Concurrent", value: concurrentText, inline: false });
+        fields.push({ name: `Concurrent (${concurrentCount})`, value: concurrentText, inline: false });
       }
       
       sendDiscordEmbed({
@@ -2475,19 +2465,21 @@ const server = http.createServer(async (req, res) => {
             // Clean up request tracking
             activeRequests.delete(requestId);
             
-            logInfo(
-              `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
-            );
-            
-            // Send comprehensive completion metrics (non-blocking)
-            sendDiscordEmbed({
-              title: issueContext?.identifier || "Complete",
-              color: 0x00FF00, // Green
-              fields: [
-                { name: "Output", value: `${result.text.length} chars`, inline: true },
-                { name: "Model", value: "codebuff", inline: true },
-              ],
-            }).catch(err => logDebug(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          logInfo(
+            `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
+          );
+          
+          // Send comprehensive completion metrics (non-blocking)
+          sendDiscordEmbed({
+            title: "Completed Request",
+            description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+            color: 0x00FF00, // Green
+            fields: [
+              { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
+              { name: "Output", value: `${result.text.length} chars`, inline: true },
+              { name: "Model", value: "codebuff", inline: true },
+            ],
+          }).catch(err => logDebug(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -2563,9 +2555,11 @@ const server = http.createServer(async (req, res) => {
           
           // Send comprehensive completion metrics (non-blocking)
           sendDiscordEmbed({
-            title: issueContext?.identifier || "Complete",
+            title: "Completed Request",
+            description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
             color: 0x00FF00, // Green
             fields: [
+              { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
               { name: "Output", value: `${result.text.length} chars`, inline: true },
               { name: "Model", value: result.providerName, inline: true },
             ],
@@ -2644,9 +2638,11 @@ const server = http.createServer(async (req, res) => {
         const totalTokens = tokensIn + tokensOut;
         
         sendDiscordEmbed({
-          title: issueContext?.identifier || "Complete",
+          title: "Completed Request",
+          description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
           color: 0x00FF00, // Green
           fields: [
+            { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
             { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
             { name: "Model", value: result.providerName, inline: true },
           ],

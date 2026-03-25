@@ -267,8 +267,7 @@ async function maybeRunPreflights() {
   const cachedHead = getGlobalValue("baseline.head");
   const cachedHash = getGlobalValue("baseline.manifestHash");
   const cachedPass = getGlobalValue("baseline.pass");
-  if (cachedHead === head && cachedHash === manifestHash && cachedPass === true) {
-    logInfo("[runner] Baseline cache hit — skipping full pre-flights");
+  if (cachedHead === head && cachedHash === manifestHash && cachedPass === true) {    logDebug("[runner] Baseline cache hit — skipping full pre-flights");
     return { pass: true, cached: true };
   }
   const result = runGlobalPreflights(ROOT);
@@ -351,7 +350,7 @@ async function executeIssue(issue, dryRun = false) {
 
   const state = getIssueState(issue.identifier);
   const attempt = Number(state.retry_count || 0) + 1;
-  logInfo(
+  logDebug(
     `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
   );
 
@@ -389,7 +388,7 @@ async function executeIssue(issue, dryRun = false) {
     ttlMs: LEASE_TTL_MS,
   });
   if (!lease.ok) {
-    logInfo(`[runner] Lease unavailable for ${issue.identifier} — skipping`);
+    logDebug(`[runner] Lease unavailable for ${issue.identifier} — skipping`);
     return "skip";
   }
 
@@ -553,7 +552,7 @@ async function executeIssue(issue, dryRun = false) {
             to: "Todo",
             runId: RUN_ID,
           });
-          logInfo(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
+          logWarn(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
           // Track continuation exhausted as failure
           if (provider?.name) {
             recordLinearCompletion(provider.name, {
@@ -623,9 +622,9 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
-        logInfo(
-          `[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`,
-        );
+      logDebug(
+        `[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`,
+      );
         // Track active subgoals without messages as failure
         if (provider?.name) {
           recordLinearCompletion(metricsProviderName, {

@@ -808,7 +808,7 @@ async function runToolLoop({
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       consecutiveNoToolCalls++;
       if (consecutiveNoToolCalls >= 3) {
-        logInfo("[agent] Too many consecutive turns without tool calls — aborting");
+        logWarn("[agent] Too many consecutive turns without tool calls — aborting");
         const snippet = msg.content?.slice(0, 150).replaceAll("\n", " ") || "(empty)";
         return {
           completed: false,
@@ -846,7 +846,7 @@ async function runToolLoop({
           !content.includes("passed");
 
         if (isFailure) {
-          logInfo("[agent] Autonomous agent reported failure");
+          logWarn("[agent] Autonomous agent reported failure");
           return {
             completed: false,
             summary: `Autonomous agent failed: ${content.slice(0, 500)}`,
@@ -920,7 +920,7 @@ async function runToolLoop({
 
         // If there are active subgoals, this is NOT completion - it's ongoing work
         if (hasActiveSubgoals) {
-          logInfo(`[agent] Active subgoals detected - work is ongoing, not complete`);
+          logDebug(`[agent] Active subgoals detected - work is ongoing, not complete`);
           return {
             completed: false,
             summary: `Agent created subgoals - work is ongoing:\n${subgoalSummary.join("\n")}`,

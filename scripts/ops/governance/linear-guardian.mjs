@@ -154,7 +154,8 @@ function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };
   actions.push(entry);
   const icons = { create: "🆕", comment: "💬", hygiene: "🏷️", skip: "⏭️", stale: "⏰", info: "ℹ️" };
-  logInfo(`${icons[type] || "•"} ${type}: ${detail}`);
+  const logLevel = type === 'skip' ? logDebug : type === 'stale' ? logWarn : logInfo;
+  logLevel(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 
 async function processFailingCheck(check, report, queueDepth, dryRun) {
@@ -257,10 +258,10 @@ async function main() {
   const report = JSON.parse(readFileSync(REPORT_PATH, "utf-8"));
   const failures = report.checks.filter((c) => !c.pass);
 
-  logInfo(
+  logDebug(
     `[linear-guardian] Report: ${report.profile} profile, ${report.summary.passed}/${report.summary.total} passed, ${failures.length} failures`,
   );
-  logInfo(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
+  logDebug(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
 
   if (failures.length === 0) {
     logAction("info", "No harness failures — nothing to do");
@@ -270,7 +271,7 @@ async function main() {
 
   const queue = await getQueueDepth();
   let currentDepth = queue.automatable;
-  logInfo(
+  logDebug(
     `[linear-guardian] Queue depth: ${currentDepth} automatable / ${queue.total} total (max: ${TARGET_MAX})\n`,
   );
 
