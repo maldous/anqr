@@ -36,6 +36,67 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 120 * 60 * 1000; // 120 min to match RUNNER_MAX_EXECUTION_MS from symphony-config
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
+// --------------------------------------------------------------------------
+// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
+// --------------------------------------------------------------------------
+
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+let currentLogLevel = LOG_LEVELS.INFO; // Default: INFO
+
+function setLogLevel(level) {
+  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
+  console.log(`[bridge] 📊 Log level: ${levelName}`);
+  currentLogLevel = level;
+}
+
+function incrementLogLevel() {
+  if (currentLogLevel < LOG_LEVELS.ERROR) {
+    setLogLevel(currentLogLevel + 1);
+  }
+}
+
+function decrementLogLevel() {
+  if (currentLogLevel > LOG_LEVELS.DEBUG) {
+    setLogLevel(currentLogLevel - 1);
+  }
+}
+
+// Signal handlers for dynamic log level control
+process.on("SIGUSR1", () => {
+  console.log("[bridge] Received SIGUSR1 - increasing log level");
+  incrementLogLevel();
+});
+
+process.on("SIGUSR2", () => {
+  console.log("[bridge] Received SIGUSR2 - decreasing log level");
+  decrementLogLevel();
+});
+
+// Logging functions
+function logDebug(...args) {
+  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
+    console.log(...args);
+  }
+}
+
+function logInfo(...args) {
+  if (currentLogLevel <= LOG_LEVELS.INFO) {
+    console.log(...args);
+  }
+}
+
+function logWarn(...args) {
+  if (currentLogLevel <= LOG_LEVELS.WARN) {
+    console.warn(...args);
+  }
+}
+
+function logError(...args) {
+  if (currentLogLevel <= LOG_LEVELS.ERROR) {
+    console.error(...args);
+  }
+}
+
 // OpenClaw Gateway API configuration for tool proxying
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
 const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
@@ -1517,10 +1578,11 @@ const server = http.createServer(async (req, res) => {
 
 // Graceful shutdown
 function shutdown(signal) {
-  console.log(`\n[bridge] Received ${signal}, shutting down...`);
+  console.log(`\n[bridge] Received ${signal}, shutting down immediately...`);
   server.close(() => {
     console.log("[bridge] Server closed");
   });
+  // Exit immediately without waiting for active connections
   process.exit(0);
 }
 

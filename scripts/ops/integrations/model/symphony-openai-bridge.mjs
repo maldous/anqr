@@ -228,21 +228,73 @@ function stopDiscordMonitoring() {
 // Symphony bridge Discord notifications are text-only via webhook
 
 // --------------------------------------------------------------------------
-// Console warning suppression
+// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
 // --------------------------------------------------------------------------
 
-/**
- * Suppress known harmless warnings from AI SDK/Codebuff runtime
- */
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+let currentLogLevel = LOG_LEVELS.INFO; // Default: INFO
+
+function setLogLevel(level) {
+  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
+  console.log(`[symphony-bridge] 📊 Log level: ${levelName}`);
+  currentLogLevel = level;
+}
+
+function incrementLogLevel() {
+  if (currentLogLevel < LOG_LEVELS.ERROR) {
+    setLogLevel(currentLogLevel + 1);
+  }
+}
+
+function decrementLogLevel() {
+  if (currentLogLevel > LOG_LEVELS.DEBUG) {
+    setLogLevel(currentLogLevel - 1);
+  }
+}
+
+// Signal handlers for dynamic log level control
+process.on("SIGUSR1", () => {
+  console.log("[symphony-bridge] Received SIGUSR1 - increasing log level");
+  incrementLogLevel();
+});
+
+process.on("SIGUSR2", () => {
+  console.log("[symphony-bridge] Received SIGUSR2 - decreasing log level");
+  decrementLogLevel();
+});
+
+// Logging functions
+function logDebug(...args) {
+  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
+    console.log(...args);
+  }
+}
+
+function logInfo(...args) {
+  if (currentLogLevel <= LOG_LEVELS.INFO) {
+    console.log(...args);
+  }
+}
+
+function logWarn(...args) {
+  if (currentLogLevel <= LOG_LEVELS.WARN) {
+    console.warn(...args);
+  }
+}
+
+function logError(...args) {
+  if (currentLogLevel <= LOG_LEVELS.ERROR) {
+    console.error(...args);
+  }
+}
+
+// Console warning suppression (keep for SDK noise)
 const originalWarn = console.warn;
 console.warn = (...args) => {
   const warnStr = String(args[0] || "");
-  // Suppress tools.profile allowlist warnings - these are SDK internal notices
-  // about tools that are unavailable in current runtime/model config
   if (warnStr.includes("tools.profile") && warnStr.includes("allowlist contains unknown entries")) {
     return;
   }
-  // Suppress agents.main.tools.allow warnings (same issue, different format)
   if (
     warnStr.includes("agents.main.tools.allow") &&
     warnStr.includes("allowlist contains unknown entries")
@@ -2716,7 +2768,7 @@ const server = http.createServer(async (req, res) => {
 // --------------------------------------------------------------------------<
 
 function shutdown(signal) {
-  console.log(`\n[symphony-bridge] Received ${signal}, shutting down...`);
+  console.log(`\n[symphony-bridge] Received ${signal}, shutting down immediately...`);
   if (probeIntervalHandle) {
     clearInterval(probeIntervalHandle);
     probeIntervalHandle = null;
@@ -2726,6 +2778,7 @@ function shutdown(signal) {
   server.close(() => {
     console.log("[symphony-bridge] Server closed");
   });
+  // Exit immediately without waiting for active connections
   process.exit(0);
 }
 
