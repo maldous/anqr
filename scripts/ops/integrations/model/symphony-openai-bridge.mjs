@@ -1179,10 +1179,10 @@ async function invokeWithAI(provider, messages, options = {}) {
           if (onChunk) {
             const CHUNK_SIZE = 50; // Forward in 50-char chunks for better real-time appearance
             for (let i = 0; i < fallbackText.length; i += CHUNK_SIZE) {
-              const chunk = fallbackText.slice(i, i + CHUNK_SIZE);
-              onChunk({ type: "text", text: chunk });
-              // Small delay to prevent overwhelming the client (5ms = ~10KB/s)
-              await sleep(5);
+            const chunk = fallbackText.slice(i, i + CHUNK_SIZE);
+            onChunk({ type: "text", text: chunk });
+            // Small delay to prevent overwhelming the client (2ms = ~25KB/s)
+            await sleep(2);
             }
           }
         }
