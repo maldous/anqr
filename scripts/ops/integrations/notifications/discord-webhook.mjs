@@ -80,7 +80,7 @@ export async function sendDiscordNotification(payload) {
 
         res.on("end", () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.error(`[discord-webhook] Sent: ${payload.content?.substring(0, 50) || "embed"}`);
+            console.error(`[discord-webhook] ✅ Sent: ${payload.content?.substring(0, 50) || "embed"}`);
             resolve({ sent: true });
           } else {
             const error = `HTTP ${res.statusCode}: ${data}`;

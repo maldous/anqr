@@ -246,7 +246,7 @@ function stopDiscordMonitoring() {
 // --------------------------------------------------------------------------
 
 const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-let currentLogLevel = LOG_LEVELS.INFO; // Default: INFO
+let currentLogLevel = LOG_LEVELS.ERROR; // Default: ERROR
 
 function setLogLevel(level) {
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
@@ -2444,10 +2444,12 @@ const server = http.createServer(async (req, res) => {
         : contentStr.slice(0, 100) || "Request";
       
       await sendDiscordEmbed({
-        title: "Processing Request",
+        title: issueContext?.identifier || "Processing Request",
+        description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
         color: 0xFFA500, // Orange
         fields: [
-          { name: "Model", value: selectedProvider?.model || "unknown", inline: false },
+          { name: "Provider", value: selectedProvider?.name || "unknown", inline: true },
+          { name: "Model", value: selectedProvider?.model || "unknown", inline: true },
         ],
       }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
@@ -2821,7 +2823,7 @@ process.on("SIGINT", async () => await shutdown("SIGINT"));
 server.timeout = 0;
 server.keepAliveTimeout = 0;
 
-server.listen(PORT, "127.0.0.1", () => {
+server.listen(PORT, "127.0.0.1", async () => {
   console.log(`[symphony-bridge] ========================================`);
   console.log(`[symphony-bridge] Symphony OpenAI Bridge Starting`);
   console.log(`[symphony-bridge] ========================================`);
@@ -2832,6 +2834,27 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log(`[symphony-bridge] Auto-fallback: enabled (credit-gate)`);
   console.log(`[symphony-bridge] Tools available: ${Object.keys(tools).join(", ")}`);
   console.log(`[symphony-bridge] ========================================`);
+
+  // Send immediate Discord notification on startup
+  try {
+    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    console.log(`[symphony-bridge] 📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`);
+    await sendDiscordEmbed({
+      title: "🚀 Symphony Bridge Started",
+      description: `PID ${process.pid}, commit ${commitHash}`,
+      color: 0x00FF00, // Green
+      fields: [
+        { name: "Port", value: String(PORT), inline: true },
+        { name: "Model", value: MODEL_ID, inline: true },
+      ],
+    }).then(() => {
+      console.log(`[symphony-bridge] ✅ Discord startup notification sent successfully`);
+    }).catch(err => {
+      console.error(`[symphony-bridge] ❌ Discord startup notification failed: ${err.message}`);
+    });
+  } catch (err) {
+    console.error(`[symphony-bridge] ❌ Failed to send Discord startup notification: ${err.message}`);
+  }
 
   // Synchronously populate configured providers (no network calls)
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];

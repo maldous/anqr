@@ -254,3 +254,25 @@ Both bridges now update MEMORY.md **before** calling `process.exit(0)` on SIGTER
 - Any follow-up work needed
 
 This prevents work duplication and ensures continuity across restarts.
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1868075, commit 833d3fff5, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1872933, commit 833d3fff5, 37/38 providers available, Discord monitoring active)
+
+### 2026-03-26 - Discord Startup Notification Fix
+
+**Problem**: Symphony bridge restarted (PID 1868075 → 1872933) but no startup notification sent to Discord.
+
+**Root Cause**: 
+- Log level changed to ERROR (from INFO) suppressed success logs
+- Startup notification was using `.catch()` which silently swallowed errors
+- No explicit logging around Discord webhook calls during startup
+
+**Solution** (Commit pending):
+1. ✅ Added explicit `console.log` before sending Discord notification (bypasses log level)
+2. ✅ Changed `.catch()` to `.then()/.catch()` for proper success/failure logging
+3. ✅ Using `console.log` for success, `console.error` for failures (always visible)
+4. ✅ Added 📢 emoji prefix for startup notification attempt
+5. ✅ Added ✅/❌ emoji for success/failure results
+
+**Status**: Code updated, needs bridge restart to verify fix works.

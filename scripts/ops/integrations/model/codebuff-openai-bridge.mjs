@@ -41,7 +41,7 @@ const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 // --------------------------------------------------------------------------
 
 const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-let currentLogLevel = LOG_LEVELS.INFO; // Default: INFO
+let currentLogLevel = LOG_LEVELS.ERROR; // Default: ERROR
 
 function setLogLevel(level) {
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
