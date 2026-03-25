@@ -90,6 +90,9 @@ const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
 const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
 const VOICE_ANNOUNCEMENTS_ENABLED = process.env.VOICE_ANNOUNCEMENTS_ENABLED !== "false";
 
+// Discord channel ID for voice announcements
+const DISCORD_CHANNEL_ID = "1486262758256410646";
+
 /**
  * Send a voice announcement via OpenClaw message tool (Discord TTS)
  * This uses the message tool which automatically triggers TTS playback in Discord voice channel
@@ -110,6 +113,8 @@ async function speakAnnouncement(text, sessionKey = null) {
       args: {
         action: "send",
         message: text,
+        channel: "discord",
+        to: DISCORD_CHANNEL_ID,
       },
       sessionKey: sessionKey || undefined,
     });

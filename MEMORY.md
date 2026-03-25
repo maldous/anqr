@@ -159,10 +159,17 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
 - Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
 - Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
 
-**Voice Playback Status (2026-03-25 21:27 GMT+11):**
+**Voice Playback Status (2026-03-25 21:38 GMT+11):**
 - ✅ Discord text notifications: Working (webhook integration active)
-- ✅ OpenClaw TTS: Generating audio files successfully (e.g., `/tmp/openclaw/tts-5VE2IS/voice-1774434673916.mp3`)
-- ⚠️ Discord voice playback: Audio files generated but not automatically played in Discord voice channel
-- 📝 **Issue**: OpenClaw TTS tool generates audio files locally but doesn't automatically stream them to Discord voice
-- 📝 **Expected**: When Symphony bridge calls OpenClaw TTS, audio should play in Discord voice channel (Guild: 1486262757543121021, Channel: 1486262758256410647)
-- 📝 **Next step**: Configure OpenClaw Discord integration to automatically play TTS audio in voice channel, or modify Symphony bridge to use a different TTS delivery method
+- ❌ Discord voice announcements: Cannot work from webchat context
+- 📝 **Root Cause**: Voice announcements require Discord session context
+  - `message` tool requires active Discord session to route TTS playback
+  - Webchat requests have no associated Discord session
+  - Session key from webchat (X-OpenClaw-Session header) is webchat session, not Discord
+- 📝 **Solution**: Voice announcements will only work when requests originate FROM Discord
+  - User must send requests in Discord channel (not webchat)
+  - OpenClaw will then have Discord session context for routing `message` tool calls
+  - TTS will automatically play in the voice channel the bot is connected to
+- ✅ Discord webhook text notifications: Working from any context (webchat, Discord, etc.)
+- ✅ Symphony Bridge restarted (PID 1474166, 2026-03-25 21:28 GMT+11)
+- 📝 **Alternative**: Keep using Discord webhooks for text notifications from webchat; voice only works from Discord requests
