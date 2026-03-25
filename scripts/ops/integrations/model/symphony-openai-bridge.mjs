@@ -1132,6 +1132,10 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (onChunk && delta && delta.length > 0) {
           onChunk({ type: "text", text: delta });
         }
+        // Log non-empty text-delta events for debugging (first 200 chars)
+        if (delta && delta.length > 0) {
+          console.log(`[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`);
+        }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
         if (onChunk) {
@@ -1441,8 +1445,11 @@ async function invokeCodebuffDirectStream(messages, onChunk) {
             if (onChunk) {
               onChunk({ type: "text", text: content });
             }
-            // Log ALL content chunks for debugging (not just activity messages)
-            console.log(`[symphony-bridge] 🌊 SSE chunk (${content.length} chars): ${content.slice(0, 200)}`);
+            // Log activity messages (emojis indicate tool/agent activity)
+            // Check for common activity markers: 🔧 ✅ 💡 📖 💻 🔍 🤖 ✏
+            if (/🔧|✅|💡|📖|💻|🔍|🤖|✏/u.test(content)) {
+              console.log(`[symphony-bridge] 🌊 SSE activity chunk (${content.length} chars): ${content.slice(0, 200)}`);
+            }
           }
         } catch (parseErr) {
           console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
