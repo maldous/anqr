@@ -2039,11 +2039,15 @@ const server = http.createServer(async (req, res) => {
 
         // Transparent SSE relay for Codebuff - bypasses AI SDK buffering entirely
         // This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
-        const codebuffAvailable = route.allowedNames?.includes("codebuff") || route.normalizedModelId === "symphony/codebuff";
+        // Only use if Codebuff is in the allowed provider set for this route
+        const codebuffAllowed = !route.allowedNames || route.allowedNames.includes("codebuff");
+        const codebuffNotBlocked = !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff");
         
-        if (codebuffAvailable && !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff")) {
+        console.log(`[symphony-bridge] 🔍 Codebuff relay check: allowed=${codebuffAllowed}, notBlocked=${codebuffNotBlocked}, route=${route.normalizedModelId}`);
+        
+        if (codebuffAllowed && codebuffNotBlocked) {
           try {
-            console.log(`[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming)`);
+            console.log(`[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`);
             const result = await invokeCodebuffDirectStream(messages, res);
             
             clearInterval(heartbeat);
@@ -2080,8 +2084,11 @@ const server = http.createServer(async (req, res) => {
               recordProviderFailure("codebuff");
               recordProviderFailureCount("codebuff");
             }
+            console.log(`[symphony-bridge] 🔄 Falling back to standard provider cascade...`);
             // Fall through to standard fallback cascade with other providers
           }
+        } else {
+          console.log(`[symphony-bridge] ⚠️ Codebuff transparent relay skipped (not in route or blocked), using standard cascade`);
         }
 
         try {
