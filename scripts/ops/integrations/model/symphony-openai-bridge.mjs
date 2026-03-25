@@ -2395,17 +2395,30 @@ const server = http.createServer(async (req, res) => {
             
             // Stream output to Discord as it's received (buffer for readability)
             let discordBuffer = "";
-            const DISCORD_BUFFER_SIZE = 100; // Send in ~100 char chunks
+            const DISCORD_BUFFER_SIZE = 200; // Send in ~200 char chunks for better readability
             const streamToDiscord = (text) => {
               discordBuffer += text;
-              if (discordBuffer.length >= DISCORD_BUFFER_SIZE || text.includes("\n")) {
-                const toSend = discordBuffer;
+              
+              // Only send when we have enough text AND hit a natural boundary
+              // (space, newline, sentence end) to avoid breaking words
+              const hasNaturalBoundary = /[\s\n.!?]$/.test(discordBuffer) || discordBuffer.includes("\n\n");
+              const isLargeEnough = discordBuffer.length >= DISCORD_BUFFER_SIZE;
+              
+              if ((isLargeEnough && hasNaturalBoundary) || discordBuffer.length >= DISCORD_BUFFER_SIZE * 2) {
+                const toSend = discordBuffer.trim();
                 discordBuffer = "";
-                streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
+                if (toSend.length > 0) {
+                  streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
+                }
               }
             };
             
             const result = await invokeCodebuffDirectStream(messages, res, sessionId, streamToDiscord);
+            
+            // Flush any remaining Discord buffer
+            if (discordBuffer.trim().length > 0) {
+              await streamDiscordUpdate(discordBuffer.trim(), { emoji: "" }).catch(() => {/* ignore */});
+            }
 
             clearInterval(heartbeat);
             clearInterval(progressInterval);

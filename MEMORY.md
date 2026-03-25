@@ -2,7 +2,7 @@
 
 ## User Preferences
 
-### Discord Integration (2026-03-25 23:48)
+### Discord Integration (2026-03-26 00:33)
 
 **Voice Channel (1486262758256410647)**:
 - User sends voice commands → OpenClaw responds with voice
@@ -10,8 +10,10 @@
 - OpenClaw automatically handles TTS when responding in Discord sessions
 
 **Text Channel (1486262758256410646)**:
-- User reads and types text commands → OpenClaw responds with text
-- Symphony Bridge sends start/stop summaries via webhook (1486304408286527539)
+- ✅ **Command Monitoring Active**: Symphony bridge polls channel every 5s for user messages
+- ✅ **Command Processing**: User commands sent to Symphony → responses via webhook
+- ✅ **Request Notifications**: Start/stop summaries via webhook (1486304408286527539)
+- ✅ **Streaming Output**: Real-time responses streamed to Discord during execution
 
 **Notification Format**:
 - **Initial**: Request description, provider, model
