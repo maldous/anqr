@@ -195,8 +195,8 @@ function stopDiscordMonitoring() {
 }
 
 /**
- * Send a voice announcement via OpenClaw message tool (Discord TTS)
- * This uses the message tool which automatically triggers TTS playback in Discord voice channel
+ * Send a voice announcement via OpenClaw TTS (Discord voice playback)
+ * This uses the tts tool which triggers TTS playback in the active Discord session
  * @param {string} text - Text to speak
  * @param {string} sessionKey - OpenClaw session key for routing
  * @returns {Promise<void>}
@@ -210,12 +210,9 @@ async function speakAnnouncement(text, sessionKey = null) {
 
   try {
     const requestBody = JSON.stringify({
-      tool: "message",
+      tool: "tts",
       args: {
-        action: "send",
-        message: text,
-        channel: "discord",
-        to: DISCORD_VOICE_CHANNEL_ID,
+        text: text,
       },
       sessionKey: sessionKey || undefined,
     });
