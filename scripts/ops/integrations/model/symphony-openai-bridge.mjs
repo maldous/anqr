@@ -2867,10 +2867,14 @@ server.listen(PORT, "127.0.0.1", () => {
       console.log(`[symphony-bridge] ========================================`);
       
       // Update MEMORY.md with successful startup
-      const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
-      updateMemory(
-        `Symphony Bridge restarted successfully (PID ${process.pid}, commit ${commitHash}, ${available.length}/${total} providers available, Discord monitoring ${process.env.DISCORD_BOT_TOKEN ? 'active' : 'disabled'})`
-      ).catch(() => {/* ignore */});
+      try {
+        const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+        await updateMemory(
+          `Symphony Bridge restarted successfully (PID ${process.pid}, commit ${commitHash}, ${available.length}/${total} providers available, Discord monitoring ${process.env.DISCORD_BOT_TOKEN ? 'active' : 'disabled'})`
+        );
+      } catch (err) {
+        console.log(`[symphony-bridge] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+      }
     })
     .catch((err) => {
       console.error(`[symphony-bridge] Startup probe failed: ${err.message}`);
