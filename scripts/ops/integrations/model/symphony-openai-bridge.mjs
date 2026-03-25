@@ -115,9 +115,9 @@ async function speakAnnouncement(text) {
         "x-openclaw-message-channel": "discord",
       },
       body: JSON.stringify({
-        model: "symphony-bridge/symphony/main",
-        user: "symphony-announcer",
-        input: text,
+        model: "openclaw",
+        user: "discord-announcer",
+        input: `Say this in Discord voice: "${text}"`,
       }),
     });
 
@@ -127,6 +127,7 @@ async function speakAnnouncement(text) {
       return;
     }
 
+    const result = await response.json();
     console.log(`[symphony-bridge] 🔊 Voice announcement sent via /v1/responses: "${text}"`);
   } catch (err) {
     console.log(`[symphony-bridge] Voice announcement error: ${err.message}`);
