@@ -2,69 +2,31 @@
 
 ## User Preferences
 
-### Discord Announcements
-- **CRITICAL REQUIREMENT**: ALWAYS open response in chat GUI first, then stream progress updates to Discord
-- **Why**: User is listening via Discord voice TTS when away from computer
-- **Implementation**: 
-  1. Send initial "Working on it..." message immediately (✅ implemented)
-  2. Stream progress updates every 30 seconds during Symphony bridge processing (✅ implemented)
-  3. Send completion message with summary (✅ implemented)
-- **Context**: User can listen when away from computer and might respond
-- **Use case**: Voice-based monitoring of long-running AI tasks
-- **Date added**: 2026-03-25
-- ✅ **Status**: Discord text notifications fully implemented in Symphony bridge
-- ⚠️ **Voice announcements**: Removed from Symphony bridge - OpenClaw automatically speaks responses in Discord sessions
+### Discord Integration (2026-03-25 23:48)
 
-## Recent Configuration
+**Voice Channel (1486262758256410647)**:
+- User sends voice commands → OpenClaw responds with voice
+- User sends text commands → OpenClaw responds with voice
+- OpenClaw automatically handles TTS when responding in Discord sessions
 
-### Discord Integration (2026-03-25 23:44 GMT+11)
-✅ **Working features:**
-1. **Discord text notifications**: Webhook integration to Discord text channel (1486262758256410646)
-2. **Discord voice**: OpenClaw automatically speaks my responses when I reply in Discord sessions
-3. **Linear issue formatting**: Embedded messages with status/provider/model/tokens/time fields
-4. **Normal requests**: Simple text announcements with provider/model/tokens/time
-5. **Discord message monitoring**: Polls text channel for user input every 5 seconds
+**Text Channel (1486262758256410646)**:
+- User reads and types text commands → OpenClaw responds with text
+- Symphony Bridge sends start/stop summaries via webhook (1486304408286527539)
 
-✅ **Simplified Notifications** (commit pending):
-- **Initial notification**: Request description, provider, model
-- **Completion notification**: Tokens/chars, total time
-- **No periodic progress updates**: Removed 30-second progress spam
-- **Voice announcements**: Removed entirely - not possible to spontaneously send voice from Symphony bridge to Discord
-- **User solution**: Use Discord-based text-to-speech in voice channel (see below)
+**Notification Format**:
+- **Initial**: Request description, provider, model
+- **Completion**: Characters/tokens, total time
+- **Linear issues**: Embedded messages using Linear.app fields (status, provider, tokens/time)
 
-### Discord Text-to-Speech in Voice Channel
-
-**Question**: Is it possible to configure text messages sent to a Discord voice channel to be automatically converted using Discord text-to-speech?
-
-**Answer**: Yes, but it requires **user-side configuration**, not bot-side:
-
-1. **User enables TTS in Discord settings**: Users can type `/tts <message>` to send TTS messages in any channel
-2. **Bot cannot force TTS**: Discord bots cannot force text messages to be read as TTS to users in voice channels
-3. **Alternative**: Use a Discord voice bot library (discord.js voice) to stream audio directly to voice channel
-4. **User's preferred solution**: Accept text-only notifications and use Discord's built-in TTS features manually if desired
-
-### Voice Setup (2026-03-25)
-- ✅ Discord voice integration working
-- ✅ Bot auto-joins voice channel (Guild: 1486262757543121021, Channel: 1486262758256410647)
-- ✅ TTS configured with Microsoft (primary) + ElevenLabs (fallback)
-- ✅ Two-way voice conversations operational
-- ✅ OpenClaw speaks responses automatically in Discord sessions
-- ⚠️ Web Chat Control UI has limited TTS playback (browser restrictions)
-
-### Symphony Bridge Adaptive Provider Selection (2026-03-25)
-- ✅ Implemented session-aware provider stickiness
-- ✅ Paid providers (codex, codebuff-paid) are sticky until exhausted
-- ✅ Free providers rotate after adaptive turn limits (base: 10, range: 3-25)
-- ✅ Self-tuning system adjusts parameters based on observed performance
-- ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
-- ✅ Codebuff mode detection via X-Codebuff-Mode header
-- ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge restarted (PID 1539625, commit 74abc44a4)
-- ✅ Discord text notifications working via webhook
-- ✅ Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+**Implementation** (Commit d1f59c80c):
+✅ Voice announcements removed from Symphony bridge (OpenClaw handles TTS in Discord sessions)
+✅ Text notifications via webhook to text channel
+✅ Embedded messages for Linear issues
+✅ Simple messages for normal requests
+✅ No periodic progress updates (too noisy)
 
 ### Discord Webhook Integration (2026-03-25)
-- ✅ Created `scripts/ops/notifications/discord-webhook.mjs` module
+- ✅ Created `scripts/ops/integrations/notifications/discord-webhook.mjs` module
 - ✅ Integrated with Symphony bridge for request notifications
 - ✅ Webhook URL configured in `services/systemd/anqr-ops.env`
 - ✅ Sends notifications when requests start and complete
@@ -78,89 +40,26 @@
 - `sendDiscordEmbed({ title, description, ... })` - Rich embed
 - `streamDiscordUpdate(message, { emoji, timestamp })` - Stream progress updates
 
-### Discord Integration Protocol (2026-03-25 22:25)
+### Symphony Bridge Adaptive Provider Selection (2026-03-25)
+- ✅ Implemented session-aware provider stickiness
+- ✅ Paid providers (codex, codebuff-paid) are sticky until exhausted
+- ✅ Free providers rotate after adaptive turn limits (base: 10, range: 3-25)
+- ✅ Self-tuning system adjusts parameters based on observed performance
+- ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
+- ✅ Codebuff mode detection via X-Codebuff-Mode header
+- ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
+- ✅ Symphony Bridge active (PID 1647371, commit d1f59c80c)
+- ✅ Discord text notifications working via webhook
 
-**CRITICAL RULES**:
+### Voice Setup (2026-03-25)
+- ✅ Discord voice integration working
+- ✅ Bot auto-joins voice channel (Guild: 1486262757543121021, Channel: 1486262758256410647)
+- ✅ TTS configured with Microsoft (primary) + ElevenLabs (fallback)
+- ✅ Two-way voice conversations operational
+- ✅ OpenClaw speaks responses automatically in Discord sessions
+- ⚠️ Web Chat Control UI has limited TTS playback (browser restrictions)
 
-✅ **VOICE Channel (1486262758256410647)**:
-- **USER**: LISTEN AND TALK in voice channel
-- **BOT (1486261316820664462)**: LISTEN AND TALK in voice channel
-- **RULE**: DO NOT TYPE TEXT MESSAGES IN VOICE CHANNEL
-
-✅ **TEXT Channel (1486262758256410646)**:
-- **USER**: READ AND TYPE in text channel
-- **BOT (1486261316820664462)**: READ AND TYPE in text channel
-- **WEBHOOK (1486304408286527539)**: Send text messages here
-- **RULE**: DO NOT SEND VOICE/TTS TO TEXT CHANNEL
-
-**Implementation** (commit 958cdc92a - BROKEN):
-- ❌ `speakAnnouncement()` function uses OpenClaw Gateway `/tools/invoke` endpoint with `tts` tool
-- ❌ `tts` tool generates audio files locally but DOES NOT play them in Discord voice
-- ✅ Discord webhook for text messages to TEXT_CHANNEL_ID
-
-**Root Cause (2026-03-25 23:13)**:
-
-Discord voice playback depends on the Discord execution path, not just successful TTS generation. The Symphony bridge currently uses `/tools/invoke`, which bypasses that path.
-
-**Recommended Implementation Path**:
-
-Replace bare `/tools/invoke` TTS calls with a normal OpenClaw response execution path, using Discord-aware context/session headers so the response can be delivered through Discord's voice pipeline.
-
-**Hypothesis**:
-If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesis is confirmed.
-
-**What is Proven**:
-- ✅ Discord voice output works for native Discord interactions
-- ❌ Bridge-triggered `/tools/invoke` TTS does not produce audible Discord voice output
-- ⚠️ `sessions_list` does not expose a usable Discord session in the observed tests
-
-**What Remains Unproven**:
-- Whether Discord sessions are ephemeral
-- Whether they are internal-only
-- Whether there is a separate API path that can target them
-
-**Implementation Status** (2026-03-25 23:47):
-
-✅ **Code Updated**: Symphony bridge now uses `/v1/responses` endpoint with correct Discord channel session key format (Commit 7d431ee70)
-✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1640158)
-⏳ **Testing Required**: User needs to test if voice announcements work in Discord by triggering a Symphony bridge request
-
-**Code Changes** (Commit 7d431ee70):
-- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/responses`
-- Headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: agent:main:discord:channel:1486262758256410647`, `x-openclaw-message-channel: discord`
-- Request body: `{ model: "openclaw", user: "symphony-bridge", input: "<text>" }`
-- Uses documented Discord channel session key format: `agent:main:discord:channel:CHANNEL_ID`
-
-**Hypothesis**:
-If `/v1/responses` with correct Discord channel session key speaks in Discord voice, the session-targeted path hypothesis is confirmed.
-
-**Voice announcements** (attempted but not working):
-- **Target**: Send voice to Discord voice channel 1486262758256410647
-- **Status**: ❌ NOT WORKING - `/v1/responses` endpoint does not exist
-- **Implementation**: Uses `/v1/responses` with Discord context headers (Commit d43844ee1)
-- **Linear issues**: "Working on ISSUE-ID" → "ISSUE-ID: N minutes" (every 2 min) → "ISSUE-ID done"
-- **Normal requests**: "Processing request" → "N minutes elapsed" (every 2 min) → "Request complete"
-
-**Text notifications** (working via webhook):
-- ✅ Progress updates every 30 seconds
-- ✅ Embedded messages for Linear issues
-- ✅ Simple messages for normal requests
-- ✅ Sent to Discord text channel 1486262758256410646
-
-**Symphony Bridge**: Restarted successfully (PID 1601622, commit ea9462c92)
-
-## Technical Notes
-
-### Symphony Bridge Provider Routing
-- **Port**: 4319 (OpenAI-compatible HTTP gateway)
-- **Codebuff Bridge**: 4318 (with paid→free fallback)
-- **Provider Cascade**: 38 providers across 4 tiers (paid, free-cloud, local-proxy, local-safety-net)
-- **Transparent SSE Relay**: Preserves real-time Codebuff streaming without AI SDK buffering
-- **Session State**: In-memory tracking for provider stickiness and turn counts
-- **Adaptive Tuning**: Every 50 requests, adjusts turn limits based on success rates
-- **Evaluation Cycle**: Every 200 requests OR 1 hour (whichever comes first, updated 2026-03-25)
-- **All-Provider Sampling**: During evaluation cycle, force-sample the most underused provider (by time since use + selection count)
-- **Tool Availability**: OpenClaw tools (`message`, `memory_get`, `read`) are NOT available in Codebuff bridge context - they're session-specific
+## Recent Configuration
 
 ### Codebuff Bridge Tool Proxying (Implemented 2026-03-25)
 ✅ **Implementation Complete**: Codebuff bridge now proxies OpenClaw-specific tools back to OpenClaw Gateway API
@@ -193,3 +92,16 @@ If `/v1/responses` with correct Discord channel session key speaks in Discord vo
 8. Result flows back: Gateway → Codebuff SDK → Bridge SSE → Symphony → OpenClaw
 
 **Status**: Ready for testing. Bridges need restart to apply changes.
+
+## Technical Notes
+
+### Symphony Bridge Provider Routing
+- **Port**: 4319 (OpenAI-compatible HTTP gateway)
+- **Codebuff Bridge**: 4318 (with paid→free fallback)
+- **Provider Cascade**: 38 providers across 4 tiers (paid, free-cloud, local-proxy, local-safety-net)
+- **Transparent SSE Relay**: Preserves real-time Codebuff streaming without AI SDK buffering
+- **Session State**: In-memory tracking for provider stickiness and turn counts
+- **Adaptive Tuning**: Every 50 requests, adjusts turn limits based on success rates
+- **Evaluation Cycle**: Every 200 requests OR 1 hour (whichever comes first, updated 2026-03-25)
+- **All-Provider Sampling**: During evaluation cycle, force-sample the most underused provider (by time since use + selection count)
+- **Tool Availability**: OpenClaw tools (`message`, `memory_get`, `read`) are NOT available in Codebuff bridge context - they're session-specific
