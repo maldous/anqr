@@ -32,7 +32,7 @@ const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
 const PORT = process.env.CODEBUFF_BRIDGE_PORT || 4318;
 const API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
 const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
-const TIMEOUT_MS = 10 * 60 * 1000; // increased from 5min to 10min to match runner timeout
+const TIMEOUT_MS = 120 * 60 * 1000; // 120 min to match RUNNER_MAX_EXECUTION_MS from symphony-config
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
