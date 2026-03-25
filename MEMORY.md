@@ -78,6 +78,7 @@
 - ✅ Level-based logging (DEBUG/INFO/WARN/ERROR) with SIGUSR1/SIGUSR2 control
 - ✅ Immediate SIGTERM shutdown for both bridges
 - ✅ **MEMORY.md Persistence** (Commit fbfe5f047): Symphony bridge now updates MEMORY.md on restart with PID, commit hash, provider count, and Discord status - ensures continuity across restarts
+- ✅ **Watchdog Service** (Commit 253d423c5): Automatic rollback on failed bridge restarts - monitors Symphony/Codebuff health for 60s, rolls back git commit if service fails to start, restarts services with previous working code
 
 ### Voice Setup (2026-03-25)
 - ✅ Discord voice integration working
