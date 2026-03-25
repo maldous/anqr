@@ -109,19 +109,20 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Status** (2026-03-25 23:35):
+**Implementation Status** (2026-03-25 23:37):
 
-✅ **Code Updated**: Symphony bridge now uses OpenClaw Gateway `message` tool with Discord channel targeting (Commit 29de02d16)
-✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1621552)
+✅ **Code Updated**: Symphony bridge now uses `/v1/chat/completions` with Discord context headers
+✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1625712)
 ⏳ **Testing Required**: User needs to test if voice announcements work in Discord by triggering a Symphony bridge request
 
 **Code Changes** (Latest):
-- `speakAnnouncement()` now calls `http://127.0.0.1:18789/tools/invoke` with `message` tool
-- Args: `{ action: "send", channel: "discord", to: "1486262758256410647", message: "<text>" }`
-- Direct channel targeting instead of session-based routing
+- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/chat/completions`
+- Headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: discord-announcer`, `x-openclaw-message-channel: discord`
+- Request body: `{ model: "symphony-bridge/symphony/main", messages: [{role: "user", content: "Say this in Discord voice: \"<text>\""}], stream: false }`
+- Session-targeted execution path instead of bare tool invocation
 
 **Hypothesis**:
-If the `message` tool with Discord voice channel ID speaks in Discord voice, the direct channel targeting approach is confirmed.
+If `/v1/chat/completions` with Discord context headers speaks in Discord voice, the session-targeted path hypothesis is confirmed.
 
 **Voice announcements** (attempted but not working):
 - **Target**: Send voice to Discord voice channel 1486262758256410647
