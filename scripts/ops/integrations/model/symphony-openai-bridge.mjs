@@ -105,13 +105,13 @@ async function speakAnnouncement(text) {
   try {
     const requestBody = JSON.stringify({
       tool: "tts",
-      input: { text },
+      args: { text },
     });
 
     const options = {
       hostname: OPENCLAW_GATEWAY_HOST,
       port: OPENCLAW_GATEWAY_PORT,
-      path: "/v1/tools/execute",
+      path: "/tools/invoke",
       method: "POST",
       headers: {
         "Content-Type": "application/json",

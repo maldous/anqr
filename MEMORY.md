@@ -13,9 +13,15 @@
 - **Context**: User can listen when away from computer and might respond
 - **Use case**: Voice-based monitoring of long-running AI tasks
 - **Date added**: 2026-03-25
-- **Updated**: 2026-03-25 21:20 GMT+11 - Added periodic progress announcements
+- **Updated**: 2026-03-25 21:21 GMT+11 - Fixed voice announcements to be task-focused only
 - ✅ **Status**: Fully implemented in Symphony bridge
 - ⚠️ **Note**: `message` tool not available in web chat context (can only send from Discord channel)
+
+**Voice Announcement Format** (2026-03-25 21:21 GMT+11):
+- Start: "Working on ISSUE-ID" (simple, no conversational text)
+- Progress: "Still working on ISSUE-ID. N minutes elapsed." (every 2 minutes)
+- Complete: "ISSUE-ID is done." (simple, no conversational text)
+- Fixed: No more "you're welcome" or conversational fluff in voice announcements
 
 ## Recent Configuration
 
