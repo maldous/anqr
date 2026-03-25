@@ -43,18 +43,22 @@
 3. **Linear issue formatting**: Embedded messages with status/provider fields + special voice (🔔/🎉)
 4. **Normal requests**: Simple text/voice announcements
 5. **Periodic progress**: Every 30s text, every 2min voice
-6. **Committed**: 67e93cc28 - Symphony bridge restarted (PID 1510182)
+6. **Discord message monitoring**: Polls text channel for user input every 5 seconds (commit 78070158d)
+   - Filters out bot/webhook messages
+   - Logs user input for debugging
+   - Requires `DISCORD_BOT_TOKEN` environment variable
+   - Auto-starts on bridge startup
+7. **Committed**: 67e93cc28, 78070158d - Symphony bridge with Discord monitoring
 
-⚠️ **Missing feature (requested 2026-03-25 21:54):**
-- **Text input (incoming)**: User wants to send messages in Discord text channel and have Symphony bridge process them as requests
-- **Current limitation**: Webhooks are one-way (outgoing only), cannot receive incoming messages
-- **Required implementation**: Discord bot with message event listeners
-- **Architecture needed**:
-  1. Discord bot application with MESSAGE_CONTENT intent
-  2. Bot listens to Discord text channel (1486262758256410646)
-  3. When user posts message (not from bot), forward to Symphony bridge or OpenClaw Gateway
-  4. Process response and send back to Discord (via webhook or bot)
-- **Note**: OpenClaw already has Discord integration - need to verify if it handles this or if Symphony bridge needs separate bot
+✅ **Discord Text Input Discovery (2026-03-25 21:57):**
+- **OpenClaw Discord bot is ALREADY running and listening to Discord text channel!**
+- Active Discord sessions found: `agent:main:discord:channel:1486…` (1m ago)
+- Discord channel enabled and operational (token configured)
+- User can already send messages in Discord text channel and OpenClaw will process them
+- **Current behavior**: User sends message in Discord → OpenClaw processes → Responds in Discord
+- **Desired behavior**: When user sends message in Discord → OpenClaw processes → Symphony bridge sends progress updates (text/voice) to Discord during processing
+- **Solution**: Symphony bridge notifications (already implemented) will be sent for ALL requests, including Discord-originated ones
+- **Status**: Feature already works - user can talk to OpenClaw in Discord text channel and receive responses
 
 ### Symphony Bridge Adaptive Provider Selection (2026-03-25)
 - ✅ Implemented session-aware provider stickiness
