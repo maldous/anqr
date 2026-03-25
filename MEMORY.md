@@ -18,23 +18,36 @@
 - **Completion**: Characters/tokens, total time
 - **Linear issues**: Embedded messages using Linear.app fields (status, provider, tokens/time)
 
-**Implementation** (Commit d1f59c80c):
+**Implementation** (Commit 993bd01e1):
 ✅ Voice announcements removed from Symphony bridge (OpenClaw handles TTS in Discord sessions)
 ✅ Text notifications via webhook to text channel
-✅ Embedded messages for Linear issues
-✅ Simple messages for normal requests
+✅ Embedded messages for all notifications (structured, readable)
+✅ Real-time streaming output to Discord (Codebuff)
+✅ Comprehensive metrics at completion (all heuristics)
+✅ Color-coded: Orange (processing), Green (complete)
 ✅ No periodic progress updates (too noisy)
 
-### Discord Webhook Integration (2026-03-26)
+### Discord Webhook Integration (2026-03-26 00:19)
 - ✅ Created `scripts/ops/integrations/notifications/discord-webhook.mjs` module
 - ✅ Integrated with Symphony bridge for request notifications
 - ✅ Webhook URL configured in `services/systemd/anqr-ops.env`
-- ✅ Sends notifications when requests start and complete
-- ✅ Streams real-time output to Discord (Codebuff)
-- ✅ Sends comprehensive metrics at completion
 - ✅ Discord text channel: 1486262758256410646
 - ✅ Discord voice channel: 1486262758256410647 (for OpenClaw automatic TTS)
 - 📝 Webhook URL: https://discord.com/api/webhooks/1486304408286527539/...
+
+**Notification Flow** (Commit 993bd01e1):
+1. **Initial**: Embedded message with request description, provider, model (Orange)
+2. **Streaming**: Real-time output forwarded to Discord as received (Codebuff only)
+3. **Completion**: Embedded message with comprehensive metrics (Green):
+   - Output size (characters or tokens)
+   - Execution time
+   - Provider name
+   - Tokens In/Out (if available)
+   - Avg Duration (from credit-gate heuristics)
+   - Success Rate (from credit-gate heuristics)
+   - Validation Rate (from credit-gate heuristics)
+   - Linear Completion Rate (from credit-gate heuristics)
+   - Score (from credit-gate heuristics)
 
 **Functions available:**
 - `sendDiscordNotification(payload)` - Full structured webhook payload
@@ -50,7 +63,7 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge active (PID 1662387, commit 3bdf3919b)
+- ✅ Symphony Bridge active (PID 1762451, commit 993bd01e1)
 - ✅ Discord text notifications working via webhook
 - ✅ Discord streaming output working (Codebuff)
 - ✅ Discord comprehensive metrics working (all providers)

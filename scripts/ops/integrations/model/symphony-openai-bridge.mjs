@@ -2323,12 +2323,15 @@ const server = http.createServer(async (req, res) => {
       );
 
       // Send Discord notification that we're starting to process
+      const lastUserMessage = messages[messages.length - 1];
+      const rawContent = lastUserMessage?.content;
+      const contentStr = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
       const requestDescription = issueContext 
         ? `${issueContext.identifier} — ${issueContext.title}`
-        : messages[messages.length - 1]?.content?.slice(0, 100) || "Request";
+        : contentStr.slice(0, 100) || "Request";
       
       await sendDiscordEmbed({
-        title: "⏳ Processing Request",
+        title: "Processing Request",
         description: requestDescription,
         color: 0xFFA500, // Orange
         fields: [
@@ -2343,11 +2346,16 @@ const server = http.createServer(async (req, res) => {
               `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
             
-            // Stream output to Discord as it's received
-            let streamedChars = 0;
+            // Stream output to Discord as it's received (buffer for readability)
+            let discordBuffer = "";
+            const DISCORD_BUFFER_SIZE = 100; // Send in ~100 char chunks
             const streamToDiscord = (text) => {
-              streamedChars += text.length;
-              streamDiscordUpdate(text, { emoji: "📨" }).catch(() => {/* ignore */});
+              discordBuffer += text;
+              if (discordBuffer.length >= DISCORD_BUFFER_SIZE || text.includes("\n")) {
+                const toSend = discordBuffer;
+                discordBuffer = "";
+                streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
+              }
             };
             
             const result = await invokeCodebuffDirectStream(messages, res, sessionId, streamToDiscord);
@@ -2477,7 +2485,7 @@ const server = http.createServer(async (req, res) => {
           ];
           
           await sendDiscordEmbed({
-            title: issueContext ? `✅ ${issueContext.identifier} Complete` : "✅ Request Complete",
+            title: issueContext ? `${issueContext.identifier} Complete` : "Request Complete",
             description: issueContext?.title || "Request completed successfully",
             color: 0x00FF00, // Green
             fields: metricsFields,
