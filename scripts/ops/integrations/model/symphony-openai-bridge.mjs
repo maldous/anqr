@@ -88,51 +88,12 @@ import { streamDiscordUpdate, sendDiscordEmbed } from "../notifications/discord-
 let lastDiscordMessageId = null;
 let discordMonitorInterval = null;
 
-// Voice announcements via OpenClaw message tool
-
 // Discord channel IDs
 const DISCORD_TEXT_CHANNEL_ID = "1486262758256410646";
 const DISCORD_VOICE_CHANNEL_ID = "1486262758256410647";
 
-/**
- * Send voice announcement to Discord voice channel via OpenClaw Gateway
- * Uses /v1/responses with Discord channel session key to trigger voice delivery
- */
-async function speakAnnouncement(text) {
-  if (!process.env.OPENCLAW_GATEWAY_TOKEN) {
-    console.log(`[symphony-bridge] Voice announcement skipped: OPENCLAW_GATEWAY_TOKEN not set`);
-    return;
-  }
-
-  try {
-    const response = await fetch(`http://127.0.0.1:18789/v1/responses`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENCLAW_GATEWAY_TOKEN}`,
-        "x-openclaw-agent-id": "main",
-        "x-openclaw-session-key": `agent:main:discord:channel:${DISCORD_VOICE_CHANNEL_ID}`,
-        "x-openclaw-message-channel": "discord",
-      },
-      body: JSON.stringify({
-        model: "openclaw",
-        user: "symphony-bridge",
-        input: text
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log(`[symphony-bridge] Voice announcement failed (${response.status}): ${errorText.slice(0, 200)}`);
-      return;
-    }
-
-    const result = await response.json();
-    console.log(`[symphony-bridge] 🔊 Voice announcement sent to Discord: "${text}"`);
-  } catch (err) {
-    console.log(`[symphony-bridge] Voice announcement error: ${err.message}`);
-  }
-}
+// Voice announcements removed - not possible to send spontaneous voice from Symphony bridge to Discord
+// User will use Discord-based text-to-speech instead
 
 /**
  * Poll Discord channel for new messages (user input)
@@ -2274,36 +2235,7 @@ const server = http.createServer(async (req, res) => {
         );
         logMemory("request-progress");
         
-        // Send Discord progress update every 30 seconds
-        progressCounter++;
-        if (progressCounter % 1 === 0) { // Every 30s (since interval is 30s)
-          if (issueContext) {
-            // Linear issue: normal text progress
-            const progressMessage = `${issueContext.identifier}: Still working... (${formatElapsed(elapsed)} elapsed)`;
-            streamDiscordUpdate(
-              progressMessage,
-              { emoji: "⏳", timestamp: true }
-            ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
-            
-            // Send voice announcement for Linear issues
-            speakAnnouncement(`${issueContext.identifier}: ${Math.floor(elapsed / 60000)} minutes`).catch(err => 
-              console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-            );
-          } else {
-            // Non-Linear: normal text/voice progress
-            streamDiscordUpdate(
-              `Still working... (${formatElapsed(elapsed)} elapsed)`,
-              { emoji: "⏳", timestamp: true }
-            ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
-            
-            // Send voice announcement for normal requests
-            if (progressCounter % 4 === 0) { // Every 2 minutes (4 * 30s)
-              speakAnnouncement(`${Math.floor(elapsed / 60000)} minutes elapsed`).catch(err => 
-                console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-              );
-            }
-          }
-        }
+        // No progress updates - only initial and completion messages
       }, 30_000); // Log every 30 seconds
 
       // Hard request timeout — prevents infinite hangs regardless of provider state
@@ -2380,36 +2312,26 @@ const server = http.createServer(async (req, res) => {
         `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
       );
 
-      // Send Discord notification and voice announcement that we're starting to process
+      // Send Discord notification that we're starting to process
       if (issueContext) {
-        // Linear issue: Send embedded message (text) + special voice announcement
-        const startMessage = `Starting ${issueContext.identifier}: ${issueContext.title}`;
+        // Linear issue: Send embedded message
         sendDiscordEmbed({
           title: `🚀 ${issueContext.identifier}`,
           description: issueContext.title,
-          color: 0x00FF00, // Green for start
+          color: 0x3498db, // Blue for processing
           fields: [
-            { name: "Status", value: "Starting", inline: true },
-            { name: "Provider", value: selectedProvider?.name || "unknown", inline: true }
+            { name: "Status", value: "Processing", inline: true },
+            { name: "Provider", value: selectedProvider?.name || "unknown", inline: true },
+            { name: "Model", value: selectedProvider?.model || "unknown", inline: true }
           ],
           footer: "OpenClaw Symphony Bridge"
         }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-        
-        // Send voice announcement for Linear issues
-        speakAnnouncement(`Working on ${issueContext.identifier}`).catch(err => 
-          console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-        );
       } else {
-        // Normal text/voice for non-Linear requests
+        // Normal request: Simple text notification
         streamDiscordUpdate(
-          "Processing your request...",
+          `Processing request (${selectedProvider?.name || "unknown"} / ${selectedProvider?.model || "unknown"})`,
           { emoji: "⏳" }
         ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-        
-        // Send voice announcement for normal requests
-        speakAnnouncement("Processing request").catch(err => 
-          console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-        );
       }
 
         if (selectedProvider?.name === "codebuff") {
@@ -2431,34 +2353,27 @@ const server = http.createServer(async (req, res) => {
               console.log(
                 `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: codebuff, ${result.text.length} chars)`,
               );
-              // Linear issue: Send embedded completion + special voice
+              // Linear issue: Send embedded completion
+              const elapsedTime = formatElapsed(Date.now() - startTime);
               sendDiscordEmbed({
                 title: `✅ ${issueContext.identifier}`,
                 description: issueContext.title,
-                color: 0x00AA00, // Dark green for completion
+                color: 0x2ecc71, // Green for completion
                 fields: [
                   { name: "Status", value: "Completed", inline: true },
                   { name: "Provider", value: "codebuff", inline: true },
-                  { name: "Response", value: `${result.text.length} chars`, inline: true }
+                  { name: "Response", value: `${result.text.length} chars`, inline: true },
+                  { name: "Time", value: elapsedTime, inline: true }
                 ],
                 footer: "OpenClaw Symphony Bridge"
               }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-              
-              // Send voice announcement for Linear issues
-              speakAnnouncement(`${issueContext.identifier} done`).catch(err => 
-                console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-              );
             } else {
-              // Normal text/voice completion
+              // Normal request: Simple text completion
+              const elapsedTime = formatElapsed(Date.now() - startTime);
               streamDiscordUpdate(
-                `Request complete — ${result.text.length} chars (provider: codebuff)`,
+                `✅ Complete: ${result.text.length} chars (codebuff, ${elapsedTime})`,
                 { emoji: "✅" }
               ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-              
-              // Send voice announcement for normal requests
-              speakAnnouncement("Request complete").catch(err => 
-                console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-              );
             }
 
             const durationMs = Date.now() - startTime;
@@ -2531,32 +2446,25 @@ const server = http.createServer(async (req, res) => {
               `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
             );
             // Linear issue: Send embedded completion
+            const elapsedTime = formatElapsed(Date.now() - startTime);
             sendDiscordEmbed({
               title: `✅ ${issueContext.identifier}`,
               description: issueContext.title,
-              color: 0x00AA00, // Dark green for completion
+              color: 0x2ecc71, // Green for completion
               fields: [
                 { name: "Status", value: "Completed", inline: true },
-                { name: "Provider", value: result.providerName, inline: true }
+                { name: "Provider", value: result.providerName, inline: true },
+                { name: "Time", value: elapsedTime, inline: true }
               ],
               footer: "OpenClaw Symphony Bridge"
             }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-            
-            // Send voice announcement for Linear issues
-            speakAnnouncement(`${issueContext.identifier} done`).catch(err => 
-              console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-            );
           } else {
-            // Normal text completion
+            // Normal request: Simple text completion
+            const elapsedTime = formatElapsed(Date.now() - startTime);
             streamDiscordUpdate(
-              `Request complete (provider: ${result.providerName})`,
+              `✅ Complete: ${result.providerName}, ${elapsedTime}`,
               { emoji: "✅" }
             ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-            
-            // Send voice announcement for normal requests
-            speakAnnouncement("Request complete").catch(err => 
-              console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-            );
           }
 
           const durationMs = Date.now() - startTime;
@@ -2620,33 +2528,31 @@ const server = http.createServer(async (req, res) => {
             : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
           // Linear issue: Send embedded completion
+          const tokensIn = result.usage?.promptTokens || 0;
+          const tokensOut = result.usage?.completionTokens || 0;
+          const totalTokens = tokensIn + tokensOut;
           sendDiscordEmbed({
             title: `✅ ${issueContext.identifier}`,
             description: issueContext.title,
-            color: 0x00AA00, // Dark green for completion
+            color: 0x2ecc71, // Green for completion
             fields: [
               { name: "Status", value: "Completed", inline: true },
               { name: "Provider", value: result.providerName, inline: true },
-              { name: "Summary", value: firstLine, inline: false }
+              { name: "Tokens", value: totalTokens > 0 ? `${totalTokens}` : `${resultText.length} chars`, inline: true },
+              { name: "Time", value: formatElapsed(durationMs), inline: true }
             ],
             footer: "OpenClaw Symphony Bridge"
           }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-          
-          // Send voice announcement for Linear issues
-          speakAnnouncement(`${issueContext.identifier} done`).catch(err => 
-            console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-          );
         } else {
-          // Normal text completion
+          // Normal request: Simple text completion
+          const tokensIn = result.usage?.promptTokens || 0;
+          const tokensOut = result.usage?.completionTokens || 0;
+          const totalTokens = tokensIn + tokensOut;
+          const resultText = ensureString(result.text);
           streamDiscordUpdate(
-            `Request complete (provider: ${result.providerName})`,
+            `✅ Complete: ${result.providerName}, ${totalTokens > 0 ? totalTokens + ' tokens' : resultText.length + ' chars'}, ${formatElapsed(durationMs)}`,
             { emoji: "✅" }
           ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-          
-          // Send voice announcement for normal requests
-          speakAnnouncement("Request complete").catch(err => 
-            console.log(`[symphony-bridge] Voice failed: ${err.message}`)
-          );
         }
 
         const durationMs = Date.now() - startTime;

@@ -17,21 +17,31 @@
 
 ## Recent Configuration
 
-### Discord Integration (2026-03-25 22:18 GMT+11)
+### Discord Integration (2026-03-25 23:44 GMT+11)
 ✅ **Working features:**
 1. **Discord text notifications**: Webhook integration to Discord text channel (1486262758256410646)
 2. **Discord voice**: OpenClaw automatically speaks my responses when I reply in Discord sessions
-3. **Linear issue formatting**: Embedded messages with status/provider fields
-4. **Normal requests**: Simple text announcements
-5. **Periodic progress**: Every 30s text updates
-6. **Discord message monitoring**: Polls text channel for user input every 5 seconds
+3. **Linear issue formatting**: Embedded messages with status/provider/model/tokens/time fields
+4. **Normal requests**: Simple text announcements with provider/model/tokens/time
+5. **Discord message monitoring**: Polls text channel for user input every 5 seconds
 
-⚠️ **Voice Announcements Removed** (commit 74abc44a4):
-- **Problem**: Symphony bridge runs outside Discord session context, so TTS tool calls don't reach Discord voice
-- **Solution**: Removed all voice announcement calls from Symphony bridge
-- **Why this is correct**: OpenClaw automatically speaks my responses when I reply in Discord sessions - no need for separate TTS calls
-- **User experience**: When I respond in Discord, user will hear my voice naturally (OpenClaw handles this)
-- **Symphony role**: Send Discord text notifications only (via webhook)
+✅ **Simplified Notifications** (commit pending):
+- **Initial notification**: Request description, provider, model
+- **Completion notification**: Tokens/chars, total time
+- **No periodic progress updates**: Removed 30-second progress spam
+- **Voice announcements**: Removed entirely - not possible to spontaneously send voice from Symphony bridge to Discord
+- **User solution**: Use Discord-based text-to-speech in voice channel (see below)
+
+### Discord Text-to-Speech in Voice Channel
+
+**Question**: Is it possible to configure text messages sent to a Discord voice channel to be automatically converted using Discord text-to-speech?
+
+**Answer**: Yes, but it requires **user-side configuration**, not bot-side:
+
+1. **User enables TTS in Discord settings**: Users can type `/tts <message>` to send TTS messages in any channel
+2. **Bot cannot force TTS**: Discord bots cannot force text messages to be read as TTS to users in voice channels
+3. **Alternative**: Use a Discord voice bot library (discord.js voice) to stream audio directly to voice channel
+4. **User's preferred solution**: Accept text-only notifications and use Discord's built-in TTS features manually if desired
 
 ### Voice Setup (2026-03-25)
 - ✅ Discord voice integration working
@@ -109,20 +119,20 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Status** (2026-03-25 23:45):
+**Implementation Status** (2026-03-25 23:47):
 
-✅ **Code Updated**: Symphony bridge now uses `/v1/responses` endpoint with Discord channel session key (Commit 807c2a29e)
-✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1635706)
+✅ **Code Updated**: Symphony bridge now uses `/v1/responses` endpoint with correct Discord channel session key format (Commit 7d431ee70)
+✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1640158)
 ⏳ **Testing Required**: User needs to test if voice announcements work in Discord by triggering a Symphony bridge request
 
-**Code Changes** (Commit 807c2a29e):
+**Code Changes** (Commit 7d431ee70):
 - `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/responses`
-- Headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: discord:channel:1486262758256410647`, `x-openclaw-message-channel: discord`
+- Headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: agent:main:discord:channel:1486262758256410647`, `x-openclaw-message-channel: discord`
 - Request body: `{ model: "openclaw", user: "symphony-bridge", input: "<text>" }`
 - Uses documented Discord channel session key format: `agent:main:discord:channel:CHANNEL_ID`
 
 **Hypothesis**:
-If `/v1/responses` with Discord channel session key speaks in Discord voice, the session-targeted path hypothesis is confirmed.
+If `/v1/responses` with correct Discord channel session key speaks in Discord voice, the session-targeted path hypothesis is confirmed.
 
 **Voice announcements** (attempted but not working):
 - **Target**: Send voice to Discord voice channel 1486262758256410647
