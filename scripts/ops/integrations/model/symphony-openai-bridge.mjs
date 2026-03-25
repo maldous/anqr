@@ -1393,7 +1393,7 @@ async function invokeWithFallback(messages, route) {
  * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
  * that the AI SDK would otherwise buffer until the end.
  */
-function invokeCodebuffDirectStream(messages, res, _completionId, _created, _route) {
+function invokeCodebuffDirectStream(messages, res) {
   return new Promise((resolve, reject) => {
     const requestBody = JSON.stringify({
       model: "codebuff/base",
@@ -1426,34 +1426,32 @@ function invokeCodebuffDirectStream(messages, res, _completionId, _created, _rou
       }
 
       let fullText = "";
-      let buffer = "";
 
+      // Transparent relay - forward every SSE chunk from Codebuff directly to OpenClaw
       proxyRes.on("data", (chunk) => {
-        buffer += chunk.toString();
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep incomplete line in buffer
-
+        const chunkStr = chunk.toString();
+        
+        // Forward chunk IMMEDIATELY to OpenClaw without parsing (transparent relay)
+        res.write(chunk);
+        
+        // Extract content for logging and final result accumulation
+        const lines = chunkStr.split("\n");
         for (const line of lines) {
-          if (!line.trim() || line.startsWith(":")) continue; // Skip empty lines and comments
+          if (!line.trim() || line.startsWith(":")) continue;
           if (line === "data: [DONE]") continue;
 
           const dataMatch = line.match(/^data: (.+)$/);
           if (!dataMatch) continue;
 
           try {
-            const chunk = JSON.parse(dataMatch[1]);
-            const content = chunk.choices?.[0]?.delta?.content;
+            const parsed = JSON.parse(dataMatch[1]);
+            const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               fullText += content;
-              // Forward chunk IMMEDIATELY to OpenClaw - preserve Codebuff's completionId and format
-              res.write(`data: ${JSON.stringify(chunk)}\n\n`);
-              // Log relay activity for debugging (only non-empty chunks, first 100 chars)
-              if (content.length > 0) {
-                console.log(`[symphony-bridge] 🌊 SSE relay → OpenClaw (${content.length} chars): ${content.slice(0, 100)}`);
-              }
+              console.log(`[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`);
             }
-          } catch (parseErr) {
-            console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
+          } catch {
+            // Ignore parse errors - we already forwarded the raw chunk
           }
         }
       });
@@ -2045,22 +2043,14 @@ const server = http.createServer(async (req, res) => {
         
         if (codebuffAvailable && !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff")) {
           try {
-            console.log(`[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK buffering)`);
-            const result = await invokeCodebuffDirectStream(messages, res, completionId, created, route);
+            console.log(`[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming)`);
+            const result = await invokeCodebuffDirectStream(messages, res);
             
             clearInterval(heartbeat);
             clearInterval(progressInterval);
             clearTimeout(requestTimeoutHandle);
 
-            // Send final chunk
-            const finalChunk = {
-              id: completionId,
-              object: "chat.completion.chunk",
-              created,
-              model: route.responseModelId,
-              choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
-            };
-            res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+            // Codebuff bridge already sends [DONE], but send it again to ensure completion
             res.write("data: [DONE]\n\n");
             res.end();
 
