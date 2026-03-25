@@ -1152,10 +1152,9 @@ async function invokeWithAI(provider, messages, options = {}) {
         const rootError = unwrapAIError(streamError);
         const errorMsg = errorToString(rootError);
         streamErrorDetail = streamErrorDetail || errorMsg;
-        // Log server-side only - don't forward internal provider errors to client
-        console.log(`[symphony-bridge] ⚠️ fullStream error event: ${errorMsg.slice(0, 200)}`);
-        // Don't send error events to client - these are internal provider failures
-        // that Symphony will handle via auto-fallback. Client only sees tool activity.
+        // Log server-side only - internal provider errors are handled by auto-fallback
+        console.log(`[symphony-bridge] 🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`);
+        // DO NOT forward error events to client - these are internal Symphony routing errors
       } else if (part.type === "finish") {
         if (part.finishReason) {
           finishReason = part.finishReason;
