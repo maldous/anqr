@@ -91,11 +91,13 @@ const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
 const VOICE_ANNOUNCEMENTS_ENABLED = process.env.VOICE_ANNOUNCEMENTS_ENABLED !== "false";
 
 /**
- * Send a voice announcement via OpenClaw TTS
+ * Send a voice announcement via OpenClaw message tool (Discord TTS)
+ * This uses the message tool which automatically triggers TTS playback in Discord voice channel
  * @param {string} text - Text to speak
+ * @param {string} sessionKey - OpenClaw session key for routing
  * @returns {Promise<void>}
  */
-async function speakAnnouncement(text) {
+async function speakAnnouncement(text, sessionKey = null) {
   if (!VOICE_ANNOUNCEMENTS_ENABLED) return;
   if (!OPENCLAW_GATEWAY_TOKEN) {
     console.log(`[symphony-bridge] Voice announcement skipped: OPENCLAW_GATEWAY_TOKEN not set`);
@@ -104,8 +106,12 @@ async function speakAnnouncement(text) {
 
   try {
     const requestBody = JSON.stringify({
-      tool: "tts",
-      args: { text },
+      tool: "message",
+      args: {
+        action: "send",
+        message: text,
+      },
+      sessionKey: sessionKey || undefined,
     });
 
     const options = {
@@ -2206,7 +2212,7 @@ const server = http.createServer(async (req, res) => {
           
           // Voice announcement every 2 minutes
           if (progressCounter % 4 === 0) {
-            speakAnnouncement(`Still working on ${issueContext.identifier}. ${formatElapsed(elapsed)} elapsed.`)
+            speakAnnouncement(`Still working on ${issueContext.identifier}. ${formatElapsed(elapsed)} elapsed.`, sessionId)
               .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
           }
         }
@@ -2295,7 +2301,7 @@ const server = http.createServer(async (req, res) => {
         ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
         
         // Voice: simple task start announcement (no conversational text)
-        speakAnnouncement(`Working on ${issueContext.identifier}.`).catch(err => 
+        speakAnnouncement(`Working on ${issueContext.identifier}.`, sessionId).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
       }
@@ -2327,7 +2333,7 @@ const server = http.createServer(async (req, res) => {
               ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
               
               // Voice: simple completion announcement (no conversational text)
-              speakAnnouncement(`${issueContext.identifier} is done.`).catch(err => 
+              speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
             }
@@ -2409,7 +2415,7 @@ const server = http.createServer(async (req, res) => {
             ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
             
             // Voice: simple completion announcement (no conversational text)
-            speakAnnouncement(`${issueContext.identifier} is done.`).catch(err => 
+            speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
           }
@@ -2482,7 +2488,7 @@ const server = http.createServer(async (req, res) => {
           ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
           
           // Voice: simple completion announcement (no conversational text)
-          speakAnnouncement(`${issueContext.identifier} is done.`).catch(err => 
+          speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
         }

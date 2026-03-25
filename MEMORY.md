@@ -155,6 +155,14 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
   ✅ Discord text messages
   ✅ Discord embedded messages
   ✅ Discord progress updates
-  ✅ Voice announcements via OpenClaw TTS
+  ✅ Voice announcements via OpenClaw TTS (audio file generated)
 - Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
 - Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
+
+**Voice Playback Status (2026-03-25 21:27 GMT+11):**
+- ✅ Discord text notifications: Working (webhook integration active)
+- ✅ OpenClaw TTS: Generating audio files successfully (e.g., `/tmp/openclaw/tts-5VE2IS/voice-1774434673916.mp3`)
+- ⚠️ Discord voice playback: Audio files generated but not automatically played in Discord voice channel
+- 📝 **Issue**: OpenClaw TTS tool generates audio files locally but doesn't automatically stream them to Discord voice
+- 📝 **Expected**: When Symphony bridge calls OpenClaw TTS, audio should play in Discord voice channel (Guild: 1486262757543121021, Channel: 1486262758256410647)
+- 📝 **Next step**: Configure OpenClaw Discord integration to automatically play TTS audio in voice channel, or modify Symphony bridge to use a different TTS delivery method
