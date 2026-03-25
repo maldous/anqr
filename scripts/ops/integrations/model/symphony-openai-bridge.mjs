@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification, sendDiscordMessage } from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { appendFile } from "node:fs/promises";
