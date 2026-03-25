@@ -6,12 +6,15 @@
 - **CRITICAL REQUIREMENT**: ALWAYS open response in chat GUI first, then stream progress updates to Discord
 - **Why**: User is listening via Discord voice TTS when away from computer
 - **Implementation**: 
-  1. Send initial "Working on it..." message immediately
-  2. Stream progress updates during Symphony bridge processing
-  3. Send completion message with summary
+  1. Send initial "Working on it..." message immediately (✅ implemented)
+  2. Stream progress updates every 30 seconds during Symphony bridge processing (✅ implemented)
+  3. Voice announcements every 2 minutes via OpenClaw TTS (✅ implemented)
+  4. Send completion message with summary (✅ implemented)
 - **Context**: User can listen when away from computer and might respond
 - **Use case**: Voice-based monitoring of long-running AI tasks
 - **Date added**: 2026-03-25
+- **Updated**: 2026-03-25 21:20 GMT+11 - Added periodic progress announcements
+- ✅ **Status**: Fully implemented in Symphony bridge
 - ⚠️ **Note**: `message` tool not available in web chat context (can only send from Discord channel)
 
 ## Recent Configuration

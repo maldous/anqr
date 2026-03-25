@@ -2294,7 +2294,8 @@ const server = http.createServer(async (req, res) => {
           { emoji: "🚀" }
         ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
         
-        speakAnnouncement(startMessage).catch(err => 
+        // Voice: simple task start announcement (no conversational text)
+        speakAnnouncement(`Working on ${issueContext.identifier}.`).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
       }
@@ -2325,7 +2326,8 @@ const server = http.createServer(async (req, res) => {
                 { emoji: "✅" }
               ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
               
-              speakAnnouncement(completeMessage).catch(err => 
+              // Voice: simple completion announcement (no conversational text)
+              speakAnnouncement(`${issueContext.identifier} is done.`).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
             }
@@ -2406,7 +2408,8 @@ const server = http.createServer(async (req, res) => {
               { emoji: "✅" }
             ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
             
-            speakAnnouncement(completeMessage).catch(err => 
+            // Voice: simple completion announcement (no conversational text)
+            speakAnnouncement(`${issueContext.identifier} is done.`).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
           }
@@ -2478,7 +2481,8 @@ const server = http.createServer(async (req, res) => {
             { emoji: "✅" }
           ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
           
-          speakAnnouncement(completeMessage).catch(err => 
+          // Voice: simple completion announcement (no conversational text)
+          speakAnnouncement(`${issueContext.identifier} is done.`).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
         }
