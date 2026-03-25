@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification, sendDiscordMessage } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification } from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
@@ -93,7 +93,6 @@ let discordMonitorInterval = null;
 
 // Discord channel IDs
 const DISCORD_TEXT_CHANNEL_ID = "1486262758256410646";
-const DISCORD_VOICE_CHANNEL_ID = "1486262758256410647";
 
 // Voice announcements removed - not possible to send spontaneous voice from Symphony bridge to Discord
 // User will use Discord-based text-to-speech instead
@@ -110,7 +109,6 @@ async function pollDiscordMessages() {
     const webhookMatch = process.env.DISCORD_WEBHOOK_URL.match(/webhooks\/(\d+)\//);
     if (!webhookMatch) return null;
 
-    const webhookId = webhookMatch[1];
     const channelId = DISCORD_TEXT_CHANNEL_ID;
 
     // Fetch recent messages from Discord API
@@ -288,11 +286,7 @@ function logWarn(...args) {
   }
 }
 
-function logError(...args) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(...args);
-  }
-}
+
 
 // Console warning suppression (keep for SDK noise)
 const originalWarn = console.warn;
@@ -2357,7 +2351,6 @@ const server = http.createServer(async (req, res) => {
 
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
-      let progressCounter = 0;
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         console.log(
@@ -2448,38 +2441,15 @@ const server = http.createServer(async (req, res) => {
               `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
             
-            // Stream output to Discord as it's received (buffer for readability)
-            let discordBuffer = "";
-            const DISCORD_BUFFER_SIZE = 200; // Send in ~200 char chunks for better readability
+            // Stream output to Discord as it's received (immediate, no buffering)
             const streamToDiscord = (text) => {
-              discordBuffer += text;
-              
-              // Wait for natural boundaries: sentences, paragraphs, or code blocks
-              const hasBoundary = 
-                /[.!?]\s/.test(discordBuffer) || 
-                /[.!?]$/.test(discordBuffer.trim()) ||
-                discordBuffer.includes("\n\n") ||
-                discordBuffer.includes("```");
-              
-              const isLargeEnough = discordBuffer.length >= DISCORD_BUFFER_SIZE;
-              const isVeryLarge = discordBuffer.length >= DISCORD_BUFFER_SIZE * 3;
-              
-              // Send when: (large + boundary) OR force-send if very large
-              if ((isLargeEnough && hasBoundary) || isVeryLarge) {
-                const toSend = discordBuffer.trim();
-                discordBuffer = "";
-                if (toSend.length > 0) {
-                  streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
-                }
+              if (text && text.length > 0) {
+                // Send immediately for real-time feedback
+                streamDiscordUpdate(text, { emoji: "" }).catch(() => {/* ignore */});
               }
             };
             
             const result = await invokeCodebuffDirectStream(messages, res, sessionId, streamToDiscord);
-            
-            // Flush any remaining Discord buffer
-            if (discordBuffer.trim().length > 0) {
-              await streamDiscordUpdate(discordBuffer.trim(), { emoji: "" }).catch(() => {/* ignore */});
-            }
 
             clearInterval(heartbeat);
             clearInterval(progressInterval);
@@ -2489,11 +2459,6 @@ const server = http.createServer(async (req, res) => {
             res.write("data: [DONE]\n\n");
             res.end();
 
-            // Get all available metrics from credit-gate
-            const stats = getProviderStats();
-            const codebuffStats = stats.codebuff || {};
-            const elapsedTime = formatElapsed(Date.now() - startTime);
-            
             logInfo(
               `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
             );
@@ -2573,11 +2538,6 @@ const server = http.createServer(async (req, res) => {
           res.write("data: [DONE]\n\n");
           res.end();
 
-          // Get all available metrics from credit-gate
-          const stats = getProviderStats();
-          const providerStats = stats[result.providerName] || {};
-          const elapsedTime = formatElapsed(Date.now() - startTime);
-          
           logInfo(
             `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
           );
@@ -2646,9 +2606,6 @@ const server = http.createServer(async (req, res) => {
           clearTimeout(requestTimeoutHandle);
         }
 
-        // Get all available metrics from credit-gate
-        const stats = getProviderStats();
-        const providerStats = stats[result.providerName] || {};
         const resultText = ensureString(result.text);
         const firstLine = resultText
           ? resultText.split("\n")[0].trim().slice(0, 100)
@@ -2826,11 +2783,11 @@ server.listen(PORT, "127.0.0.1", async () => {
   console.log(`[symphony-bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or SYMPHONY_BRIDGE_LOG_LEVEL env)`);
   console.log(`[symphony-bridge] ========================================`);
 
-  // Send immediate Discord notification on startup
+  // Send immediate Discord notification on startup - BEFORE async probe
   try {
     const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
     console.log(`[symphony-bridge] 📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`);
-    await sendDiscordEmbed({
+    const discordResult = await sendDiscordEmbed({
       title: "🚀 Symphony Bridge Started",
       description: `PID ${process.pid}, commit ${commitHash}`,
       color: 0x00FF00, // Green
@@ -2838,11 +2795,12 @@ server.listen(PORT, "127.0.0.1", async () => {
         { name: "Port", value: String(PORT), inline: true },
         { name: "Model", value: MODEL_ID, inline: true },
       ],
-    }).then(() => {
-      console.log(`[symphony-bridge] ✅ Discord startup notification sent successfully`);
-    }).catch(err => {
-      console.error(`[symphony-bridge] ❌ Discord startup notification failed: ${err.message}`);
     });
+    if (discordResult.sent) {
+      console.log(`[symphony-bridge] ✅ Discord startup notification sent successfully`);
+    } else {
+      console.error(`[symphony-bridge] ❌ Discord startup notification failed: ${discordResult.reason || 'unknown'}`);
+    }
   } catch (err) {
     console.error(`[symphony-bridge] ❌ Failed to send Discord startup notification: ${err.message}`);
   }
