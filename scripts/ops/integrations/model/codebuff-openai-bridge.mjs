@@ -1522,7 +1522,6 @@ process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); })
 async function initializeBridge() {
   const apiKey = getApiKey();
 
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLogLevel);
   logInfo(`[bridge] ========================================`);
   logInfo(`[bridge] Codebuff OpenAI Bridge Starting`);
   logInfo(`[bridge] ========================================`);
@@ -1532,7 +1531,7 @@ async function initializeBridge() {
   logInfo(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
   logInfo(`[bridge] Streaming: enabled`);
   logInfo(`[bridge] Working directory: ${DEFAULT_CWD}`);
-  logInfo(`[bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env)`);
+  logInfo(`[bridge] Log level: configurable via SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env`);
 
   if (apiKey) {
     logInfo(`[bridge] Testing API key (paid mode first, then free)...`);

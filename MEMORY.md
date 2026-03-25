@@ -471,3 +471,18 @@ This prevents work duplication and ensures continuity across restarts.
 ### 2026-03-25 - Codebuff Bridge stopped (PID 1988672, commit 8690acde0, mode: free, signal: SIGTERM)
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1995789, commit 8690acde0, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25T22:36:56.071Z - Watchdog rolled back codebuff bridge from 5d98e3740 to 5fe75fc13 (stuck in activating for 60s)
+
+╔════════════════════════════════════════════════════════════════╗
+║ 🚨 WATCHDOG AUTOMATIC ROLLBACK 🚨                              ║
+╠════════════════════════════════════════════════════════════════╣
+║ Service:        codebuff                                        ║
+║ Failed Commit:  5d98e3740                                       ║
+║ Rolled Back To: 5fe75fc13                                       ║
+║ Reason:         stuck in activating for 60s                     ║
+╠════════════════════════════════════════════════════════════════╣
+║ ⚠️  REVIEW THE FAILED COMMIT BEFORE MAKING NEW CHANGES         ║
+╚════════════════════════════════════════════════════════════════╝
+
+### 2026-03-25 - Codebuff Bridge stopped (PID 2014993, commit 5fe75fc13, mode: paid, signal: SIGTERM)
