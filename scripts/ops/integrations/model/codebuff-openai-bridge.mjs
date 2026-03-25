@@ -819,6 +819,7 @@ async function trySingleAccountStream(
   // Stream a text fragment to the client as an SSE chunk
   const streamActivity = (text) => {
     if (onChunk && text) {
+      console.log(`[bridge] 🌊 Streaming activity: ${text.slice(0, 80)}`);
       onChunk(makeSseChunk(completionId, created, text));
     }
   };
