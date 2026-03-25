@@ -109,24 +109,19 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Status** (2026-03-25 23:30):
+**Implementation Status** (2026-03-25 23:31):
 
-✅ **Code Updated**: Symphony bridge now uses `/v1/chat/completions` endpoint with Discord context headers (Commit ea9462c92)
-✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1601622)
-✅ **Test Conducted**: User sent test message "Say this in Discord voice: 'Processing request'"
-❌ **Result**: TTS tool not available in Discord session context (expected - confirms Symphony runs outside session)
+✅ **Code Updated**: Symphony bridge now uses OpenClaw Gateway `message` tool with Discord channel targeting
+⏳ **Service Restart**: Need to restart Symphony bridge to test
+⏳ **Testing Required**: User needs to test if voice announcements work in Discord by triggering a Symphony bridge request
 
-**Code Changes** (Commit ea9462c92):
-- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/chat/completions`
-- Includes Discord context headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: discord-announcer`, `x-openclaw-message-channel: discord`
-- Request body: `{ model: "symphony-bridge/symphony/main", messages: [{role: "user", content: "Say this in Discord voice: \"<text>\""}], stream: false }`
-- Uses standard OpenAI chat completions format instead of `/v1/responses`
+**Code Changes** (Latest):
+- `speakAnnouncement()` now calls `http://127.0.0.1:18789/tools/invoke` with `message` tool
+- Args: `{ action: "send", channel: "discord", to: "1486262758256410647", message: "<text>" }`
+- Direct channel targeting instead of session-based routing
 
-**Conclusion**:
-- TTS tool is not available in Discord session context (confirmed)
-- Symphony bridge voice announcements require actual Symphony execution (Linear issue processing)
-- User must trigger a real Symphony bridge request to test voice announcements
-- Text notifications via webhook are working (separate from voice)
+**Hypothesis**:
+If the `message` tool with Discord voice channel ID speaks in Discord voice, the direct channel targeting approach is confirmed.
 
 **Voice announcements** (attempted but not working):
 - **Target**: Send voice to Discord voice channel 1486262758256410647
