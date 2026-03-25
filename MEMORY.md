@@ -159,17 +159,21 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
 - Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
 - Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
 
-**Voice Playback Status (2026-03-25 21:38 GMT+11):**
+**Voice Playback Status (2026-03-25 21:41 GMT+11):**
 - ✅ Discord text notifications: Working (webhook integration active)
-- ❌ Discord voice announcements: Cannot work from webchat context
-- 📝 **Root Cause**: Voice announcements require Discord session context
-  - `message` tool requires active Discord session to route TTS playback
-  - Webchat requests have no associated Discord session
-  - Session key from webchat (X-OpenClaw-Session header) is webchat session, not Discord
-- 📝 **Solution**: Voice announcements will only work when requests originate FROM Discord
-  - User must send requests in Discord channel (not webchat)
-  - OpenClaw will then have Discord session context for routing `message` tool calls
-  - TTS will automatically play in the voice channel the bot is connected to
-- ✅ Discord webhook text notifications: Working from any context (webchat, Discord, etc.)
-- ✅ Symphony Bridge restarted (PID 1474166, 2026-03-25 21:28 GMT+11)
-- 📝 **Alternative**: Keep using Discord webhooks for text notifications from webchat; voice only works from Discord requests
+- ✅ Discord voice announcements: Working! Fixed by adding channel routing
+- 📝 **Root Cause**: `message` tool needed explicit channel routing
+  - Symphony bridge was calling `message` tool without `channel` and `to` parameters
+  - Added `channel: "discord"` and `to: "1486262758256410646"` to message args
+  - OpenClaw now knows exactly where to send TTS audio
+- 📝 **Solution**: Specify Discord channel ID in message tool args
+  - Channel: discord
+  - To: 1486262758256410646 (text channel ID)
+  - OpenClaw routes TTS to connected voice channel automatically
+- ✅ All integration tests passing (commit e707002bd):
+  - ✅ Discord text messages
+  - ✅ Discord embedded messages  
+  - ✅ Discord progress updates
+  - ✅ Voice announcements via OpenClaw TTS
+- ✅ Symphony Bridge restarted (PID 1484490, 2026-03-25 21:41 GMT+11)
+- ✅ Test script: `scripts/ops/integrations/notifications/test-discord.mjs`

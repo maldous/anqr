@@ -14,7 +14,7 @@ const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
 const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
 
 /**
- * Send a voice announcement via OpenClaw TTS
+ * Send a voice announcement via OpenClaw message tool (Discord TTS)
  */
 async function testVoiceAnnouncement(text) {
   if (!OPENCLAW_GATEWAY_TOKEN) {
@@ -24,8 +24,13 @@ async function testVoiceAnnouncement(text) {
 
   try {
     const requestBody = JSON.stringify({
-      tool: 'tts',
-      args: { text },
+      tool: 'message',
+      args: {
+        action: 'send',
+        message: text,
+        channel: 'discord',
+        to: '1486262758256410646',
+      },
     });
 
     const options = {
