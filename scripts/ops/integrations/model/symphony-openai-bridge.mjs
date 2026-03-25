@@ -84,6 +84,10 @@ import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 // Discord webhook notifications
 import { streamDiscordUpdate, sendDiscordEmbed } from "../notifications/discord-webhook.mjs";
 
+// Discord message monitoring (listen for user input from Discord text channel)
+let lastDiscordMessageId = null;
+let discordMonitorInterval = null;
+
 // OpenClaw Gateway API for TTS voice announcements
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
 const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
@@ -93,6 +97,102 @@ const VOICE_ANNOUNCEMENTS_ENABLED = process.env.VOICE_ANNOUNCEMENTS_ENABLED !== 
 // Discord channel IDs
 const DISCORD_TEXT_CHANNEL_ID = "1486262758256410646";
 const DISCORD_VOICE_CHANNEL_ID = "1486262758256410647";
+
+/**
+ * Poll Discord channel for new messages (user input)
+ * Returns newest message if found, otherwise null
+ */
+async function pollDiscordMessages() {
+  if (!process.env.DISCORD_WEBHOOK_URL) return null;
+
+  try {
+    // Extract webhook ID from URL
+    const webhookMatch = process.env.DISCORD_WEBHOOK_URL.match(/webhooks\/(\d+)\//);
+    if (!webhookMatch) return null;
+
+    const webhookId = webhookMatch[1];
+    const channelId = DISCORD_TEXT_CHANNEL_ID;
+
+    // Fetch recent messages from Discord API
+    const response = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages?limit=5`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`[symphony-bridge] Discord API error: ${response.status}`);
+      return null;
+    }
+
+    const messages = await response.json();
+    
+    // Filter out bot messages (from webhook)
+    const userMessages = messages.filter(msg => 
+      !msg.webhook_id && // Not from webhook
+      msg.author && !msg.author.bot && // Not from bot
+      (!lastDiscordMessageId || msg.id > lastDiscordMessageId) // Newer than last seen
+    );
+
+    if (userMessages.length > 0) {
+      // Get the newest message
+      const newest = userMessages[0];
+      lastDiscordMessageId = newest.id;
+      return {
+        id: newest.id,
+        content: newest.content,
+        author: newest.author.username,
+        timestamp: newest.timestamp,
+      };
+    }
+
+    return null;
+  } catch (err) {
+    console.log(`[symphony-bridge] Discord poll error: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Start monitoring Discord channel for user messages
+ */
+function startDiscordMonitoring() {
+  if (!process.env.DISCORD_BOT_TOKEN) {
+    console.log(`[symphony-bridge] ⚠️ Discord monitoring disabled: DISCORD_BOT_TOKEN not set`);
+    return;
+  }
+
+  if (discordMonitorInterval) {
+    clearInterval(discordMonitorInterval);
+  }
+
+  console.log(`[symphony-bridge] 📡 Starting Discord message monitoring (polling every 5s)`);
+  
+  discordMonitorInterval = setInterval(async () => {
+    const message = await pollDiscordMessages();
+    if (message) {
+      console.log(
+        `[symphony-bridge] 📨 Discord input: "${message.content.slice(0, 100)}" (from ${message.author})`
+      );
+      // TODO: Handle the message (forward to OpenClaw or queue for processing)
+      // For now, just log it - full integration would require session management
+    }
+  }, 5000); // Poll every 5 seconds
+}
+
+/**
+ * Stop monitoring Discord channel
+ */
+function stopDiscordMonitoring() {
+  if (discordMonitorInterval) {
+    clearInterval(discordMonitorInterval);
+    discordMonitorInterval = null;
+    console.log(`[symphony-bridge] 📡 Stopped Discord message monitoring`);
+  }
+}
 
 /**
  * Send a voice announcement via OpenClaw message tool (Discord TTS)
@@ -2687,6 +2787,7 @@ function shutdown(signal) {
     clearInterval(probeIntervalHandle);
     probeIntervalHandle = null;
   }
+  stopDiscordMonitoring();
   logProviderStats();
   server.close(() => {
     console.log("[symphony-bridge] Server closed");
@@ -2778,6 +2879,9 @@ server.listen(PORT, "127.0.0.1", () => {
       console.error(`[symphony-bridge] Periodic probe failed: ${err.message}`);
     });
   }, PROVIDER_PROBE_INTERVAL_MS);
+
+  // Start Discord message monitoring
+  startDiscordMonitoring();
 });
 
 // Export for testing

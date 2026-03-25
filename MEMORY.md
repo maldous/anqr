@@ -30,9 +30,31 @@
 - ✅ Bot auto-joins voice channel (Guild: 1486262757543121021, Channel: 1486262758256410647)
 - ✅ TTS configured with Microsoft (primary) + ElevenLabs (fallback)
 - ✅ Two-way voice conversations operational
+- ✅ Discord voice announcements working via OpenClaw message tool
+- ✅ Channel routing: Text channel 1486262758256410646, Voice channel 1486262758256410647
 - ⚠️ Web Chat Control UI has limited TTS playback (browser restrictions)
 
 
+
+### Discord Integration Status (2026-03-25 21:54 UTC+11)
+✅ **Working features:**
+1. **Text notifications (outgoing)**: Webhook integration to Discord text channel (1486262758256410646)
+2. **Voice announcements (outgoing)**: OpenClaw message tool to Discord voice channel (1486262758256410647)
+3. **Linear issue formatting**: Embedded messages with status/provider fields + special voice (🔔/🎉)
+4. **Normal requests**: Simple text/voice announcements
+5. **Periodic progress**: Every 30s text, every 2min voice
+6. **Committed**: 67e93cc28 - Symphony bridge restarted (PID 1510182)
+
+⚠️ **Missing feature (requested 2026-03-25 21:54):**
+- **Text input (incoming)**: User wants to send messages in Discord text channel and have Symphony bridge process them as requests
+- **Current limitation**: Webhooks are one-way (outgoing only), cannot receive incoming messages
+- **Required implementation**: Discord bot with message event listeners
+- **Architecture needed**:
+  1. Discord bot application with MESSAGE_CONTENT intent
+  2. Bot listens to Discord text channel (1486262758256410646)
+  3. When user posts message (not from bot), forward to Symphony bridge or OpenClaw Gateway
+  4. Process response and send back to Discord (via webhook or bot)
+- **Note**: OpenClaw already has Discord integration - need to verify if it handles this or if Symphony bridge needs separate bot
 
 ### Symphony Bridge Adaptive Provider Selection (2026-03-25)
 - ✅ Implemented session-aware provider stickiness
