@@ -21,6 +21,7 @@
  */
 
 import http from "node:http";
+import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CodebuffClient } from "@codebuff/sdk";
@@ -35,6 +36,18 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 120 * 60 * 1000; // 120 min to match RUNNER_MAX_EXECUTION_MS from symphony-config
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
+// OpenClaw Gateway API configuration for tool proxying
+const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
+const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
+const OPENCLAW_GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || `http://${OPENCLAW_GATEWAY_HOST}:${OPENCLAW_GATEWAY_PORT}`;
+const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
+const OPENCLAW_TOOL_PROXY_ENABLED = process.env.OPENCLAW_TOOL_PROXY_ENABLED !== "false";
+
+// Validate config on startup
+if (OPENCLAW_TOOL_PROXY_ENABLED && !OPENCLAW_GATEWAY_TOKEN) {
+  console.warn("[bridge] ⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail");
+}
+
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
 const CODEBUFF_MAX_CONTINUATIONS = 200; // Max auto-continue loops when agent ends turn with work remaining
 const CODEBUFF_NOISY_TOOLS = new Set([
@@ -46,6 +59,98 @@ const CODEBUFF_NOISY_TOOLS = new Set([
   "context-pruner",
 ]);
 const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
+
+// OpenClaw-specific tools that should be proxied to the Gateway API
+// Note: These are checked but not yet fully integrated - tool proxying is in progress
+const _OPENCLAW_PROXY_TOOLS = [
+  "message",
+  "memory_get",
+  "read",
+  "write",
+  "exec"
+];
+
+/**
+ * Call OpenClaw Gateway API to execute a tool
+ * @param {string} toolName - Tool name (e.g., "message", "memory_get", "read")
+ * @param {object} toolInput - Tool arguments
+ * @param {string} sessionId - OpenClaw session ID from X-OpenClaw-Session header
+ * @returns {Promise<object>} - Tool result
+ */
+async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
+  if (!OPENCLAW_TOOL_PROXY_ENABLED) {
+    throw new Error(`Tool ${toolName} requires OpenClaw Gateway API (OPENCLAW_TOOL_PROXY_ENABLED=false)`);
+  }
+
+  if (!sessionId) {
+    throw new Error(`Tool ${toolName} requires session context (X-OpenClaw-Session header missing)`);
+  }
+
+  if (!OPENCLAW_GATEWAY_TOKEN) {
+    throw new Error(`Tool ${toolName} requires OPENCLAW_GATEWAY_TOKEN environment variable`);
+  }
+
+  return new Promise((resolve, reject) => {
+    const requestBody = JSON.stringify({
+      tool: toolName,
+      input: toolInput,
+      sessionId,
+    });
+
+    const url = new URL(OPENCLAW_GATEWAY_URL);
+    const isHttps = url.protocol === "https:";
+    const httpModule = isHttps ? https : http;
+
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: "/v1/tools/execute",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(requestBody),
+        "Authorization": `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+        "X-OpenClaw-Session": sessionId,
+      },
+      timeout: 30000,
+    };
+
+    console.log(`[bridge] 🔗 Proxying ${toolName} to OpenClaw Gateway (session: ${sessionId.slice(0, 8)}...)`);
+
+    const req = httpModule.request(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (res.statusCode === 200) {
+            console.log(`[bridge] ✅ ${toolName} proxied successfully`);
+            resolve(parsed.output || parsed.result || parsed);
+          } else {
+            const errorMsg = parsed.error?.message || parsed.error || data || `Gateway returned ${res.statusCode}`;
+            console.log(`[bridge] ❌ ${toolName} proxy failed: ${errorMsg}`);
+            reject(new Error(`OpenClaw Gateway returned ${res.statusCode}: ${errorMsg}`));
+          }
+        } catch (parseErr) {
+          reject(new Error(`Failed to parse OpenClaw Gateway response: ${parseErr.message}`));
+        }
+      });
+    });
+
+    req.on("error", (err) => {
+      console.log(`[bridge] ❌ ${toolName} proxy connection failed: ${err.message}`);
+      reject(new Error(`OpenClaw Gateway connection error: ${err.message}`));
+    });
+
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error(`OpenClaw Gateway proxy timeout after 30s`));
+    });
+
+    req.write(requestBody);
+    req.end();
+  });
+}
 
 function formatElapsed(ms) {
   if (ms < 1000) return `${ms}ms`;
@@ -570,7 +675,7 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 // Try a single account — includes rich event handling, subgoal tracking, and
 // auto-continuation loop with previousRun (memento mode), matching the old
 // symphony-bridge invokeWithCodebuff that was lost during extraction.
-async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
+async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = null, _proxyToolFn = null) {
   let lastSubgoalStatus = null;
   const toolsUsed = new Set();
 
@@ -758,7 +863,7 @@ async function revalidateAndSelectWinner() {
 }
 
 // Use pre-warmed winner directly, with paid→free fallback on recoverable errors
-async function invokeCodebuff({ messages, cwd }) {
+async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = null }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered`);
     await revalidateAndSelectWinner();
@@ -774,7 +879,7 @@ async function invokeCodebuff({ messages, cwd }) {
     });
 
   try {
-    return await trySingleAccount(winner, prompt, makeTimeout, cwd);
+    return await trySingleAccount(winner, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message)) {
       console.log(`[bridge] ⚠️ Paid mode failed: ${err.message}`);
@@ -793,7 +898,7 @@ async function invokeCodebuff({ messages, cwd }) {
       lastRevalidationTime = Date.now();
       console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
-      return await trySingleAccount(freeAttempt, prompt, makeTimeout, cwd);
+      return await trySingleAccount(freeAttempt, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
     }
     throw err;
   }
@@ -810,6 +915,8 @@ async function trySingleAccountStream(
   onChunk,
   completionId,
   created,
+  _sessionId = null,
+  _proxyToolFn = null,
 ) {
   let fullText = "";
   let lastSubgoalStatus = null;
@@ -996,7 +1103,7 @@ async function trySingleAccountStream(
 }
 
 // Use pre-warmed winner directly for streaming, with paid→free fallback on recoverable errors
-async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created }) {
+async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created, sessionId = null, proxyToolFn = null }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     console.log(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
     await revalidateAndSelectWinner();
@@ -1029,6 +1136,8 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
       trackedOnChunk,
       completionId,
       created,
+      sessionId,
+      proxyToolFn,
     );
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message) && chunksSent === 0) {
@@ -1056,6 +1165,8 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
         onChunk,
         completionId,
         created,
+        sessionId,
+        proxyToolFn,
       );
     }
     throw err;
@@ -1080,6 +1191,8 @@ function unauthorized(res) {
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
+  // Extract OpenClaw session ID from request headers (passed by Symphony bridge)
+    const _openclawSessionId = req.headers["x-openclaw-session"] || null;
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
@@ -1112,7 +1225,13 @@ const server = http.createServer(async (req, res) => {
   console.log(`[bridge] ===== REQUEST =====`);
   console.log(`[bridge] method: ${req.method}, url: ${req.url}`);
   console.log(`[bridge] headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
+  if (req.headers["x-openclaw-session"]) {
+    console.log(`[bridge] session: ${req.headers["x-openclaw-session"].slice(0, 12)}...`);
+  }
   console.log(`[bridge] ===================`);
+
+  // Extract OpenClaw session ID for tool proxying
+  const openclawSessionId = req.headers["x-openclaw-session"] || null;
 
   try {
     // Auth check (skip for health check and model list)
@@ -1142,12 +1261,17 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, getHealthStatus());
     }
 
+
+
     // POST /v1/chat/completions or /chat/completions (OpenClaw might use either)
     if (
       req.method === "POST" &&
       (req.url === "/v1/chat/completions" || req.url === "/chat/completions")
     ) {
       const body = await parseBody(req);
+      
+      // Store session ID for tool proxy access
+      req.openclawSessionId = openclawSessionId;
       const model = body.model || MODEL_ID;
       const messages = Array.isArray(body.messages) ? body.messages : [];
       const stream = body.stream === true;
@@ -1186,6 +1310,7 @@ const server = http.createServer(async (req, res) => {
           "Cache-Control": "no-cache",
           Connection: "keep-alive",
           "X-Accel-Buffering": "no",
+          "X-Codebuff-Mode": STARTUP_WINNER?.isPaid ? "paid" : "free",
         });
 
         const completionId = `chatcmpl-${Date.now()}`;
@@ -1208,6 +1333,8 @@ const server = http.createServer(async (req, res) => {
             cwd: DEFAULT_CWD,
             completionId,
             created,
+            sessionId: openclawSessionId,
+            proxyToolFn: openclawSessionId ? callOpenClawGatewayTool : null,
             onChunk: (chunk) => {
               // Send immediately to client
               res.write(`data: ${JSON.stringify(chunk)}\n\n`);
@@ -1311,6 +1438,8 @@ const server = http.createServer(async (req, res) => {
         const result = await invokeCodebuff({
           messages,
           cwd: DEFAULT_CWD,
+          sessionId: openclawSessionId,
+          proxyToolFn: openclawSessionId ? callOpenClawGatewayTool : null,
         });
         console.log(
           `[bridge] ⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
@@ -1345,7 +1474,11 @@ const server = http.createServer(async (req, res) => {
         // Extract text content, filtering out tool-call metadata for clean response
         const { text: filteredContent } = extractTextFromResponse(result.text);
 
-        return sendJson(res, 200, {
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "X-Codebuff-Mode": STARTUP_WINNER?.isPaid ? "paid" : "free",
+        });
+        return res.end(JSON.stringify({
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",
           created: Math.floor(Date.now() / 1000),
@@ -1365,7 +1498,7 @@ const server = http.createServer(async (req, res) => {
             completion_tokens: 0,
             total_tokens: 0,
           },
-        });
+        }));
       }
     } else {
       // 404 for other routes

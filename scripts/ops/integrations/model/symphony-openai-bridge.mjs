@@ -53,6 +53,20 @@ import {
   probeAllProviders,
 } from "./symphony-credit-gate.mjs";
 
+// Session state and adaptive rotation
+import {
+  getSessionProvider,
+  updateSessionProvider,
+  clearSessionProvider,
+  cleanupExpiredSessions,
+  detectCodebuffMode,
+  tuneAdaptiveParams,
+  getProviderTurnLimit,
+  shouldTriggerEvalCycle,
+  getAdaptiveParams,
+  getEvaluationSampleProvider,
+} from "./symphony-session-state.mjs";
+
 // AI SDK imports
 import { generateText, streamText, tool, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -747,10 +761,65 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildSelectionOptions(route, excludedNames = []) {
+function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
+  const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders]);
+
+  // Check if evaluation cycle wants to force-sample a specific provider
+  const stats = getProviderStats();
+  const allProviderNames = route.allowedNames || Array.from(stats.keys()).filter(n => !excludeSet.has(n));
+  const evaluationSample = getEvaluationSampleProvider(allProviderNames, stats);
+  
+  if (evaluationSample) {
+    console.log(
+      `[symphony-bridge] 🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`,
+    );
+    return {
+      allowedNames: [evaluationSample],
+      excludeNames: [...excludeSet],
+    };
+  }
+
+  // Check session state for sticky provider
+  if (sessionId) {
+    const sessionState = getSessionProvider(sessionId);
+    if (sessionState) {
+      const { provider: providerName, mode, tier, turnCount } = sessionState;
+      const turnLimit = getProviderTurnLimit(providerName);
+
+      // Paid providers: stick until exhausted
+      if (tier === "paid" && mode === "paid") {
+        console.log(
+          `[symphony-bridge] 📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`,
+        );
+        return {
+          allowedNames: [providerName],
+          excludeNames: [...excludeSet],
+        };
+      }
+
+      // Free providers: rotate after turn limit
+      if (turnCount < turnLimit) {
+        console.log(
+          `[symphony-bridge] 📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`,
+        );
+        return {
+          allowedNames: [providerName],
+          excludeNames: [...excludeSet],
+        };
+      } else {
+        console.log(
+          `[symphony-bridge] 🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`,
+        );
+        // Exclude current provider to force rotation
+        excludeSet.add(providerName);
+        clearSessionProvider(sessionId);
+      }
+    }
+  }
+
   return {
     allowedNames: route.allowedNames,
-    excludeNames: [...excludedNames, ...nonToolCapableProviders],
+    excludeNames: [...excludeSet],
   };
 }
 
@@ -1292,17 +1361,22 @@ async function invokeWithAI(provider, messages, options = {}) {
 /**
  * Invoke with automatic fallback through all providers (non-streaming)
  */
-async function invokeWithFallback(messages, route) {
+async function invokeWithFallback(messages, route, sessionId = null) {
   const triedProviders = [];
   let lastError = null;
   let attemptNumber = 0;
+
+  // Check if it's time for periodic evaluation
+  if (shouldTriggerEvalCycle()) {
+    console.log(`[symphony-bridge] 🔍 Periodic evaluation cycle: sampling underused providers`);
+  }
 
   // Keep trying providers until we run out
   while (attemptNumber < 10) {
     attemptNumber++;
 
     // Get next provider from credit-gate (excluding already-tried ones)
-    const provider = await selectProvider(buildSelectionOptions(route, triedProviders));
+    const provider = await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
 
     if (!provider) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
@@ -1358,6 +1432,12 @@ async function invokeWithFallback(messages, route) {
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
+      // Update session state
+      if (sessionId) {
+        const mode = detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
+        updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
+      }
+
       requestCount++;
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
@@ -1397,7 +1477,7 @@ async function invokeWithFallback(messages, route) {
  * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
  * that the AI SDK would otherwise buffer until the end.
  */
-function invokeCodebuffDirectStream(messages, res) {
+function invokeCodebuffDirectStream(messages, res, sessionId = null) {
   return new Promise((resolve, reject) => {
     const requestBody = JSON.stringify({
       model: "codebuff/base",
@@ -1409,16 +1489,24 @@ function invokeCodebuffDirectStream(messages, res) {
       `[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`,
     );
 
+    const headers = {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(requestBody),
+      Authorization: "Bearer local-bridge",
+    };
+    
+    // Forward OpenClaw session ID to Codebuff bridge for tool proxying
+    if (sessionId) {
+      headers["X-OpenClaw-Session"] = sessionId;
+      console.log(`[symphony-bridge] 🔗 Forwarding session ID to Codebuff bridge (${sessionId.slice(0, 12)}...)`);
+    }
+
     const options = {
       hostname: "127.0.0.1",
       port: 4318,
       path: "/v1/chat/completions",
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(requestBody),
-        Authorization: "Bearer local-bridge",
-      },
+      headers,
     };
 
     const proxyReq = http.request(options, (proxyRes) => {
@@ -1432,9 +1520,10 @@ function invokeCodebuffDirectStream(messages, res) {
       }
 
       let fullText = "";
-      let buffer = ""; // Accumulate text to detect complete internal activity markers
+      let logBuffer = ""; // Accumulate text for readable logging
+      const LOG_BUFFER_THRESHOLD = 150; // Log when buffer exceeds ~150 chars
 
-      // Internal SDK activity patterns (complete markers to filter out)
+      // Internal SDK activity patterns (complete markers to filter out of logs)
       const INTERNAL_PATTERNS = [
         /✅ set_messages done\n?/,
         /✅ spawn_agent_inline done\n?/,
@@ -1446,7 +1535,6 @@ function invokeCodebuffDirectStream(messages, res) {
         const chunkStr = chunk.toString();
 
         // Forward raw chunks directly to OpenClaw (no filtering)
-        // The filtering happens on the accumulated buffer for logging only
         res.write(chunk);
 
         // Extract content for logging and accumulation
@@ -1460,22 +1548,23 @@ function invokeCodebuffDirectStream(messages, res) {
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               fullText += content;
-              buffer += content;
+              logBuffer += content;
 
-              // Check if buffer contains any complete internal activity markers
-              let hasInternal = false;
+              // Filter out internal activity markers
               for (const pattern of INTERNAL_PATTERNS) {
-                if (pattern.test(buffer)) {
-                  hasInternal = true;
-                  buffer = buffer.replace(pattern, ""); // Remove from buffer
-                }
+                logBuffer = logBuffer.replace(pattern, "");
               }
 
-              // Only log non-internal activity
-              if (!hasInternal && content.length > 0) {
-                console.log(
-                  `[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`,
-                );
+              // Log when buffer exceeds threshold or contains sentence boundary
+              const hasSentenceEnd = /[.!?]\s/.test(logBuffer) || logBuffer.includes("\n\n");
+              if (logBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
+                const toLog = logBuffer.trim();
+                if (toLog.length > 0) {
+                  console.log(
+                    `[symphony-bridge] 🌊 ${toLog.slice(0, 200)}`,
+                  );
+                }
+                logBuffer = ""; // Clear buffer after logging
               }
             }
           } catch {
@@ -1485,7 +1574,13 @@ function invokeCodebuffDirectStream(messages, res) {
       });
 
       proxyRes.on("end", () => {
-        console.log(`[symphony-bridge] 🌊 Transparent relay complete: ${fullText.length} chars`);
+        // Log any remaining buffered text
+        if (logBuffer.trim().length > 0) {
+          console.log(
+            `[symphony-bridge] 🌊 ${logBuffer.trim().slice(0, 200)}`,
+          );
+        }
+        console.log(`[symphony-bridge] 🌊 Relay complete: ${fullText.length} chars`);
         resolve({ text: fullText, providerName: "codebuff" });
       });
 
@@ -1506,8 +1601,8 @@ function invokeCodebuffDirectStream(messages, res) {
 /**
  * Invoke with streaming and automatic fallback
  */
-async function invokeWithFallbackStream(messages, route, onChunk) {
-  const triedProviders = [];
+async function invokeWithFallbackStream(messages, route, onChunk, initialExcluded = [], sessionId = null) {
+  const triedProviders = [...initialExcluded];
   let lastError = null;
   let attemptNumber = 0;
 
@@ -1516,7 +1611,7 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
     attemptNumber++;
 
     // Get next provider from credit-gate (excluding already-tried ones)
-    const provider = await selectProvider(buildSelectionOptions(route, triedProviders));
+    const provider = await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
 
     if (!provider) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
@@ -1553,6 +1648,12 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
       );
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt);
+
+      // Update session state
+      if (sessionId) {
+        const mode = detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
+        updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
+      }
 
       requestCount++;
       if (requestCount % STATS_LOG_INTERVAL === 0) {
@@ -1735,12 +1836,29 @@ function logBridgeStats() {
   }
 
   BRIDGE_METRICS.lastStatsLog = now;
+  
+  // Self-tune adaptive parameters
+  const stats = getProviderStats();
+  tuneAdaptiveParams(stats);
+  
   logProviderStats({ excludeNames: nonToolCapableProviders });
 
   const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
   console.log(
     `[symphony-bridge] 🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`,
   );
+
+  // Log adaptive params
+  const adaptiveParams = getAdaptiveParams();
+  const customLimits = Object.entries(adaptiveParams.freeTurnLimit.perProvider)
+    .map(([p, l]) => `${p}:${l}`)
+    .join(", ");
+  if (customLimits) {
+    console.log(`[symphony-bridge] 🎯 Adaptive turn limits: ${customLimits}`);
+  }
+  
+  // Cleanup expired sessions
+  cleanupExpiredSessions();
 }
 
 // -------------------------------------------------------------------------->
@@ -1895,6 +2013,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       const messages = Array.isArray(body.messages) ? body.messages : undefined;
+      const sessionId = req.headers["x-openclaw-session"] || null;
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
@@ -2067,21 +2186,21 @@ const server = http.createServer(async (req, res) => {
 
         // Transparent SSE relay for Codebuff - bypasses AI SDK buffering entirely
         // This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
-        // Only use if Codebuff is in the allowed provider set for this route
-        const codebuffAllowed = !route.allowedNames || route.allowedNames.includes("codebuff");
-        const codebuffNotBlocked =
-          !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff");
-
+        // Only use if Codebuff is SELECTED by credit-gate (not just allowed)
+        
+        // First, let credit-gate select the best provider (with session awareness)
+        const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
+        
         console.log(
-          `[symphony-bridge] 🔍 Codebuff relay check: allowed=${codebuffAllowed}, notBlocked=${codebuffNotBlocked}, route=${route.normalizedModelId}`,
+          `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
         );
 
-        if (codebuffAllowed && codebuffNotBlocked) {
+        if (selectedProvider?.name === "codebuff") {
           try {
             console.log(
               `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
-            const result = await invokeCodebuffDirectStream(messages, res);
+            const result = await invokeCodebuffDirectStream(messages, res, sessionId);
 
             clearInterval(heartbeat);
             clearInterval(progressInterval);
@@ -2106,6 +2225,13 @@ const server = http.createServer(async (req, res) => {
             });
             recordProviderSuccess("codebuff");
             recordSuccessfulMetrics("codebuff", startTime);
+            
+            // Update session state for codebuff
+            if (sessionId) {
+              // Detect mode from response or errors
+              const mode = result.mode || "unknown";
+              updateSessionProvider(sessionId, { name: "codebuff", mode, tier: "paid" });
+            }
             maybeGC();
             return;
           } catch (codebuffErr) {
@@ -2117,14 +2243,13 @@ const server = http.createServer(async (req, res) => {
               recordProviderFailure("codebuff");
               recordProviderFailureCount("codebuff");
             }
-            console.log(`[symphony-bridge] 🔄 Falling back to standard provider cascade...`);
-            // Fall through to standard fallback cascade with other providers
+            console.log(`[symphony-bridge] 🔄 Falling back to standard provider cascade (excluding codebuff)...`);
+            // Fall through to standard fallback cascade, excluding the failed codebuff
           }
-        } else {
-          console.log(
-            `[symphony-bridge] ⚠️ Codebuff transparent relay skipped (not in route or blocked), using standard cascade`,
-          );
         }
+
+        // If codebuff was tried and failed, exclude it from the cascade
+        const excludeAfterCodebuff = selectedProvider?.name === "codebuff" ? ["codebuff"] : [];
 
         try {
           const result = await invokeWithFallbackStream(messages, route, (chunk) => {
@@ -2138,7 +2263,7 @@ const server = http.createServer(async (req, res) => {
               };
               res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
             }
-          });
+          }, excludeAfterCodebuff, sessionId);
 
           clearInterval(heartbeat);
           clearInterval(progressInterval);
@@ -2210,7 +2335,7 @@ const server = http.createServer(async (req, res) => {
         // Non-streaming
         let result;
         try {
-          result = await invokeWithFallback(messages, route);
+          result = await invokeWithFallback(messages, route, sessionId);
         } finally {
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
@@ -2268,6 +2393,47 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     console.error(`[symphony-bridge] Error: ${error.message}`);
     logMemory("request-error");
+
+    // Prevent ERR_HTTP_HEADERS_SENT crash - don't try to send JSON response
+    // if headers have already been sent (e.g., streaming mode with partial response)
+    if (res.writableEnded) {
+      console.error(
+        `[symphony-bridge] Cannot send error response - response already ended (stream likely failed mid-flight)`,
+      );
+      return;
+    }
+
+    // Check if headers were sent but response is still writable (streaming with some chunks sent)
+    // In this case, try to send an error chunk via the stream instead of JSON
+    const headersSent = res.headersSent || res.writableFinished;
+    if (headersSent) {
+      console.error(
+        `[symphony-bridge] Headers already sent - sending error as stream chunk instead of JSON`,
+      );
+      try {
+        const errorChunk = {
+          id: `chatcmpl-error-${Date.now()}`,
+          object: "chat.completion.chunk",
+          created: Math.floor(Date.now() / 1000),
+          model: (route && route.responseModelId) || MODEL_ID,
+          choices: [
+            {
+              index: 0,
+              delta: { content: `\n[Server Error: ${error.message}]` },
+              finish_reason: "stop",
+            },
+          ],
+        };
+        res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
+        res.write("data: [DONE]\n\n");
+        res.end();
+        return;
+      } catch (streamErr) {
+        console.error(`[symphony-bridge] Failed to send error chunk: ${streamErr.message}`);
+        return;
+      }
+    }
+
     sendJson(res, 500, {
       error: {
         message: error instanceof Error ? error.message : String(error),
