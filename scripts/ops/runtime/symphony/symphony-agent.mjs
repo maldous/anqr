@@ -57,7 +57,7 @@ import {
   runTests,
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
-import { streamDiscordUpdate } from "../../integrations/notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, flushDiscordStream } from "../../integrations/notifications/discord-webhook.mjs";
 
 const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
@@ -465,6 +465,9 @@ async function callLLM(provider, messages, taskDescription) {
       if (fullContent) {
         process.stdout.write("\n"); // Final newline
       }
+      
+      // Flush any remaining Discord stream buffer
+      await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
 
       return {
         choices: [
@@ -565,6 +568,9 @@ async function callLLM(provider, messages, taskDescription) {
       if (content) {
         process.stdout.write("\n"); // Final newline
       }
+      
+      // Flush any remaining Discord stream buffer
+      await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
 
       // The bridge returns completion tokens but we need to detect if agent wants continuation
       // Check finish_reason - if "length", agent has more work to do

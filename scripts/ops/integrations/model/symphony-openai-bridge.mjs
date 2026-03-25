@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, flushDiscordStream, sendDiscordEmbed, sendDiscordNotification } from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
@@ -752,6 +752,10 @@ const EXPLORATION_MIN_PROBES = 3;
 let lastExplorationTime = Date.now();
 let explorationProbesThisPeriod = 0;
 let lastSelectedProvider = null;
+
+// Track concurrent requests for Discord notifications
+const activeRequests = new Map(); // requestId -> { startTime, issueId, model, stream }
+let requestIdCounter = 0;
 
 // ---------------------------------------------------------------------------
 // Provider status cache — populated by startup probe, refreshed periodically
@@ -1781,13 +1785,17 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
         }
       });
 
-      proxyRes.on("end", () => {
+      proxyRes.on("end", async () => {
         // Log any remaining buffered text
         if (logBuffer.trim().length > 0) {
           console.log(
             `[symphony-bridge] 🌊 ${logBuffer.trim().slice(0, 200)}`,
           );
         }
+        
+        // Flush any remaining Discord stream buffer
+        await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
+        
         console.log(`[symphony-bridge] 🌊 Relay complete: ${fullText.length} chars`);
         resolve({ text: fullText, providerName: "codebuff" });
       });
@@ -2319,6 +2327,15 @@ const server = http.createServer(async (req, res) => {
       logMemory("request-start");
 
       const startTime = Date.now();
+      const requestId = `req-${++requestIdCounter}`;
+      
+      // Track this request
+      activeRequests.set(requestId, {
+        startTime,
+        issueId: issueContext?.identifier || null,
+        model: route.responseModelId,
+        stream,
+      });
 
       // Send Discord notification that we're starting to process (for ALL requests)
       const lastUserMessage = messages[messages.length - 1];
@@ -2339,14 +2356,50 @@ const server = http.createServer(async (req, res) => {
       }
       
       // Fire-and-forget Discord notification (non-blocking)
+      const concurrentCount = activeRequests.size - 1; // Exclude current request
+      const concurrentRequests = Array.from(activeRequests.values()).filter(
+        r => r.startTime !== startTime // Exclude current request
+      );
+      
+      const fields = [
+        { name: "Model", value: route.responseModelId, inline: true },
+        { name: "Stream", value: stream ? "yes" : "no", inline: true },
+      ];
+      
+      if (concurrentCount > 0) {
+        // Build detailed concurrent request summary
+        const concurrentIssues = concurrentRequests
+          .filter(r => r.issueId)
+          .map(r => r.issueId)
+          .slice(0, 3);
+        
+        const concurrentModels = concurrentRequests
+          .map(r => r.model)
+          .filter((m, i, arr) => arr.indexOf(m) === i) // unique models
+          .slice(0, 2);
+        
+        let concurrentText = `${concurrentCount} other request${concurrentCount > 1 ? 's' : ''}`;
+        
+        if (concurrentIssues.length > 0) {
+          concurrentText += ` (${concurrentIssues.join(', ')}`;
+          if (concurrentCount > concurrentIssues.length) {
+            concurrentText += `, +${concurrentCount - concurrentIssues.length} more`;
+          }
+          concurrentText += ')';
+        }
+        
+        if (concurrentModels.length > 0) {
+          concurrentText += ` using ${concurrentModels.join(', ')}`;
+        }
+        
+        fields.push({ name: "Concurrent", value: concurrentText, inline: false });
+      }
+      
       sendDiscordEmbed({
         title: issueContext?.identifier || "Processing Request",
         description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
         color: 0xFFA500, // Orange
-        fields: [
-          { name: "Model", value: route.responseModelId, inline: true },
-          { name: "Stream", value: stream ? "yes" : "no", inline: true },
-        ],
+        fields,
       }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
@@ -2368,6 +2421,7 @@ const server = http.createServer(async (req, res) => {
           `[symphony-bridge] ⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`,
         );
         logMemory("request-timeout");
+        activeRequests.delete(requestId);
         clearInterval(progressInterval);
         try {
           if (stream && !res.writableEnded) {
@@ -2459,6 +2513,9 @@ const server = http.createServer(async (req, res) => {
             res.write("data: [DONE]\n\n");
             res.end();
 
+            // Clean up request tracking
+            activeRequests.delete(requestId);
+            
             logInfo(
               `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
             );
@@ -2538,6 +2595,9 @@ const server = http.createServer(async (req, res) => {
           res.write("data: [DONE]\n\n");
           res.end();
 
+          // Clean up request tracking
+          activeRequests.delete(requestId);
+          
           logInfo(
             `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
           );
@@ -2561,6 +2621,9 @@ const server = http.createServer(async (req, res) => {
           });
           maybeGC();
         } catch (streamError) {
+          // Clean up request tracking
+          activeRequests.delete(requestId);
+          
           clearInterval(heartbeat);
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
@@ -2610,6 +2673,9 @@ const server = http.createServer(async (req, res) => {
         const firstLine = resultText
           ? resultText.split("\n")[0].trim().slice(0, 100)
           : "(no content)";
+        
+        // Clean up request tracking
+        activeRequests.delete(requestId);
         
         logInfo(`[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
         
@@ -2669,6 +2735,11 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     console.error(`[symphony-bridge] Error: ${error.message}`);
     logMemory("request-error");
+    
+    // Clean up request tracking on error (only if requestId was defined)
+    if (typeof requestId !== 'undefined') {
+      activeRequests.delete(requestId);
+    }
 
     // Prevent ERR_HTTP_HEADERS_SENT crash - don't try to send JSON response
     // if headers have already been sent (e.g., streaming mode with partial response)
@@ -2786,15 +2857,29 @@ server.listen(PORT, "127.0.0.1", async () => {
   // Send immediate Discord notification on startup - BEFORE async probe
   try {
     const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    const commitInfo = execSync('git log -1 --pretty=format:"%s%n%b"', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    const [commitSubject, ...commitBodyLines] = commitInfo.split('\n');
+    const commitBody = commitBodyLines.join('\n').trim();
+    
     console.log(`[symphony-bridge] 📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`);
+    
+    const fields = [
+      { name: "Port", value: String(PORT), inline: true },
+      { name: "Model", value: MODEL_ID, inline: true },
+      { name: "Commit", value: `${commitHash}: ${commitSubject}`, inline: false },
+    ];
+    
+    // Add commit body if present (truncate to Discord field limit of 1024 chars)
+    if (commitBody && commitBody.length > 0) {
+      const truncatedBody = commitBody.length > 1000 ? commitBody.slice(0, 997) + '...' : commitBody;
+      fields.push({ name: "Details", value: truncatedBody, inline: false });
+    }
+    
     const discordResult = await sendDiscordEmbed({
       title: "🚀 Symphony Bridge Started",
-      description: `PID ${process.pid}, commit ${commitHash}`,
+      description: `PID ${process.pid}`,
       color: 0x00FF00, // Green
-      fields: [
-        { name: "Port", value: String(PORT), inline: true },
-        { name: "Model", value: MODEL_ID, inline: true },
-      ],
+      fields,
     });
     if (discordResult.sent) {
       console.log(`[symphony-bridge] ✅ Discord startup notification sent successfully`);

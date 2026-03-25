@@ -20,6 +20,7 @@
 import { execSync } from "node:child_process";
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
+import { sendDiscordEmbed } from "../../integrations/notifications/discord-webhook.mjs";
 
 const CHECK_INTERVAL_MS = (parseInt(process.env.WATCHDOG_CHECK_INTERVAL) || 60) * 1000;
 const STARTUP_GRACE_PERIOD_MS = 60 * 1000; // 60 seconds grace period for startup
@@ -50,7 +51,7 @@ function getServiceStatus(serviceName) {
       { encoding: "utf-8", timeout: 5000 }
     );
     return output.trim();
-  } catch (err) {
+  } catch {
     return "unknown";
   }
 }
@@ -63,7 +64,7 @@ function getServicePID(serviceName) {
     );
     const pid = parseInt(output.trim());
     return pid > 0 ? pid : null;
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -77,7 +78,7 @@ function getServiceActiveTime(serviceName) {
     const timestamp = output.trim();
     if (!timestamp || timestamp === "0") return null;
     return new Date(timestamp);
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -108,6 +109,26 @@ function getPreviousCommit() {
   }
 }
 
+async function verifyAndNotifyRecovery(serviceName, shortName) {
+  await new Promise(resolve => setTimeout(resolve, 5000));
+  const recoveryStatus = getServiceStatus(serviceName);
+  if (recoveryStatus === "active") {
+    try {
+      await sendDiscordEmbed({
+        title: "🎉 Recovery Successful",
+        description: `${shortName.toUpperCase()} bridge is now healthy after rollback`,
+        color: 0x00FF00, // Green
+        fields: [
+          { name: "Service", value: serviceName, inline: true },
+          { name: "Status", value: "Active", inline: true },
+        ],
+      });
+    } catch (err) {
+      console.error(`[watchdog] ⚠️ Failed to send recovery notification: ${err.message}`);
+    }
+  }
+}
+
 async function rollbackAndRestart(serviceName, shortName, reason) {
   const currentCommit = getCurrentCommit();
   const previousCommit = getPreviousCommit();
@@ -119,6 +140,24 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
 
   console.log(`[watchdog] 🔄 Rolling back ${shortName} from ${currentCommit} to ${previousCommit}`);
   console.log(`[watchdog]    Reason: ${reason}`);
+
+  // Send immediate Discord alert about rollback
+  try {
+    await sendDiscordEmbed({
+      title: "🚨 WATCHDOG ROLLBACK TRIGGERED",
+      description: `**${shortName.toUpperCase()} BRIDGE FAILED TO START**\n\nAutomatic rollback in progress...`,
+      color: 0xFF0000, // Red
+      fields: [
+        { name: "Service", value: serviceName, inline: true },
+        { name: "Reason", value: reason, inline: true },
+        { name: "Failed Commit", value: `\`${currentCommit}\``, inline: true },
+        { name: "Rolling Back To", value: `\`${previousCommit}\``, inline: true },
+      ],
+      footer: "⚠️ Review the failed commit before attempting fixes",
+    });
+  } catch (err) {
+    console.error(`[watchdog] ⚠️ Failed to send rollback alert: ${err.message}`);
+  }
 
   try {
     // 1. Stop the service
@@ -152,15 +191,61 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
       timeout: 10000,
     });
 
-    // 4. Update MEMORY.md
+    // 4. Update MEMORY.md with detailed banner
+    const memoryBanner = [
+      `╔════════════════════════════════════════════════════════════════╗`,
+      `║ 🚨 WATCHDOG AUTOMATIC ROLLBACK 🚨                              ║`,
+      `╠════════════════════════════════════════════════════════════════╣`,
+      `║ Service:        ${shortName.slice(0, 47).padEnd(47)} ║`,
+      `║ Failed Commit:  ${currentCommit.slice(0, 47).padEnd(47)} ║`,
+      `║ Rolled Back To: ${previousCommit.slice(0, 47).padEnd(47)} ║`,
+      `║ Reason:         ${reason.slice(0, 47).padEnd(47)} ║`,
+      `╠════════════════════════════════════════════════════════════════╣`,
+      `║ ⚠️  REVIEW THE FAILED COMMIT BEFORE MAKING NEW CHANGES         ║`,
+      `╚════════════════════════════════════════════════════════════════╝`,
+    ].join("\n");
+
     await updateMemory(
-      `Watchdog rolled back ${shortName} bridge from ${currentCommit} to ${previousCommit} (${reason})`
+      `Watchdog rolled back ${shortName} bridge from ${currentCommit} to ${previousCommit} (${reason})\n\n${memoryBanner}`
     );
+
+    // Send Discord success notification
+    try {
+      await sendDiscordEmbed({
+        title: "✅ Rollback Complete",
+        description: `${shortName.toUpperCase()} bridge successfully rolled back and restarted`,
+        color: 0x00FF00, // Green
+        fields: [
+          { name: "Previous Commit", value: `\`${previousCommit}\``, inline: true },
+          { name: "Status", value: "Service restarted", inline: true },
+        ],
+        footer: "Watchdog will continue monitoring",
+      });
+    } catch (err) {
+      console.error(`[watchdog] ⚠️ Failed to send rollback success notification: ${err.message}`);
+    }
 
     console.log(`[watchdog] ✅ Rollback complete for ${shortName}`);
     return true;
   } catch (err) {
     console.error(`[watchdog] ❌ Rollback failed for ${shortName}: ${err.message}`);
+    
+    // Send critical failure notification
+    try {
+      await sendDiscordEmbed({
+        title: "🚨 ROLLBACK FAILED",
+        description: `**CRITICAL: ${shortName.toUpperCase()} BRIDGE ROLLBACK FAILED**\n\nManual intervention required!`,
+        color: 0xFF0000, // Red
+        fields: [
+          { name: "Service", value: serviceName, inline: true },
+          { name: "Error", value: err.message.slice(0, 200), inline: false },
+        ],
+        footer: "⚠️ Manual recovery needed immediately",
+      });
+    } catch (discordErr) {
+      console.error(`[watchdog] ⚠️ Failed to send rollback failure notification: ${discordErr.message}`);
+    }
+    
     await updateMemory(
       `Watchdog rollback FAILED for ${shortName} bridge: ${err.message}`
     );
@@ -188,6 +273,7 @@ async function checkService(service) {
   if (status === "failed") {
     console.log(`[watchdog] ❌ ${shortName}: Service failed`);
     await rollbackAndRestart(serviceName, shortName, "service failed");
+    await verifyAndNotifyRecovery(serviceName, shortName);
     return;
   }
 
@@ -200,14 +286,16 @@ async function checkService(service) {
     // 2. It's been more than grace period since restart
     // 3. Service is STILL activating (not active)
     if (lastRestartTime && now - lastRestartTime > STARTUP_GRACE_PERIOD_MS) {
+      const stuckSeconds = Math.round((now - lastRestartTime) / 1000);
       console.log(
-        `[watchdog] ❌ ${shortName}: Stuck in activating for ${Math.round((now - lastRestartTime) / 1000)}s`
+        `[watchdog] ❌ ${shortName}: Stuck in activating for ${stuckSeconds}s`
       );
       await rollbackAndRestart(
         serviceName,
         shortName,
-        `stuck in activating for ${Math.round((now - lastRestartTime) / 1000)}s`
+        `stuck in activating for ${stuckSeconds}s`
       );
+      await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     } else if (!lastRestartTime) {
       // Service is activating but we haven't tracked it yet - wait one more cycle
