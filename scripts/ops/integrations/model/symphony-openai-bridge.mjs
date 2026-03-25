@@ -1128,13 +1128,9 @@ async function invokeWithAI(provider, messages, options = {}) {
             fullText += delta;
           }
         }
-        // Forward ALL text deltas to client immediately (including Codebuff activity messages)
-        if (onChunk && delta) {
+        // Forward non-empty text deltas to client immediately (including Codebuff activity messages)
+        if (onChunk && delta && delta.length > 0) {
           onChunk({ type: "text", text: delta });
-        }
-        // Log non-empty text-delta events only (to reduce log noise from AI SDK empty deltas)
-        if (delta && delta.length > 0) {
-          console.log(`[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`);
         }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
