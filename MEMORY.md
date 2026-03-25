@@ -109,23 +109,21 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Example** (to test hypothesis):
+**Implementation Status** (2026-03-25 23:16):
 
-```bash
-curl -sS http://127.0.0.1:18789/v1/responses \
-  -H "Authorization: Bearer YOUR_GATEWAY_TOKEN" \
-  -H "Content-Type: application/json" \
-  -H "x-openclaw-agent-id: main" \
-  -H "x-openclaw-session-key: discord-announcer" \
-  -H "x-openclaw-message-channel: discord" \
-  -d '{
-    "model": "openclaw",
-    "user": "discord-announcer",
-    "input": "Announce that the build has completed successfully."
-  }'
-```
+✅ **Code Updated**: Symphony bridge now uses `/v1/responses` endpoint with Discord context headers
+❌ **Testing Failed**: `/v1/responses` endpoint returned "Not Found" (404)
+⚠️ **Hypothesis Unproven**: Cannot confirm if session-targeted path works without valid endpoint
 
-This approach uses the documented Gateway agent run path (`/v1/responses`) which may preserve Discord delivery context, rather than the bare tool invocation endpoint (`/tools/invoke`).
+**Code Changes** (Commit pending):
+- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/responses`
+- Includes Discord context headers: `x-openclaw-agent-id`, `x-openclaw-session-key`, `x-openclaw-message-channel`
+- Request body: `{ model: "openclaw", user: "discord-announcer", input: "<text>" }`
+
+**Next Steps**:
+1. Verify correct OpenClaw Gateway endpoint (may not be `/v1/responses`)
+2. Check OpenClaw documentation for Discord-bound execution path
+3. Retest with correct endpoint once identified
 
 **Voice announcements** (sent to Discord voice via TTS):
 - **Linear issues**: "Working on ISSUE-ID" → "ISSUE-ID: N minutes" (every 2 min) → "ISSUE-ID done"
