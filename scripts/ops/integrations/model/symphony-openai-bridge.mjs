@@ -1123,8 +1123,13 @@ async function invokeWithAI(provider, messages, options = {}) {
             fullText += delta;
           }
         }
+        // Forward ALL text deltas to client immediately (including Codebuff activity messages)
         if (onChunk && delta) {
           onChunk({ type: "text", text: delta });
+        }
+        // Also log Codebuff activity markers locally for debugging
+        if (delta.includes('🔧') || delta.includes('✅') || delta.includes('💡') || delta.includes('📖') || delta.includes('💻') || delta.includes('✏️')) {
+          console.log(`[symphony-bridge] 🌊 Forwarding activity: ${delta.trim()}`);
         }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
