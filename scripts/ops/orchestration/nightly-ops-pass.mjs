@@ -15,10 +15,10 @@ const steps = [];
 
 function runStep(step) {
   const start = Date.now();
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`[nightly] Step: ${step.name}`);
-  console.log(`[nightly] Command: ${step.command}`);
-  console.log("=".repeat(60) + "\n");
+  console.error(`\n${"=".repeat(60)}`);
+  console.error(`[nightly] Step: ${step.name}`);
+  console.error(`[nightly] Command: ${step.command}`);
+  console.error("=".repeat(60) + "\n");
 
   let exitCode = 0;
   const skipped = false;
@@ -40,7 +40,7 @@ function runStep(step) {
     skipped,
   };
   steps.push(result);
-  console.log(`\n${exitCode === 0 ? "✅" : "⚠️"} [nightly] ${step.name}: exit=${exitCode}`);
+  console.error(`\n${exitCode === 0 ? "✅" : "⚠️"} [nightly] ${step.name}: exit=${exitCode}`);
   return result;
 }
 
@@ -51,22 +51,22 @@ function archiveReport() {
   const ts = new Date().toISOString().replaceAll(/[:.]/g, "-").replaceAll("T", "_").slice(0, 19);
   const archivePath = resolve(archiveDir, `report-${ts}.json`);
   copyFileSync(LATEST_REPORT, archivePath);
-  console.log(`[nightly] Report archived to ${archivePath}`);
+  console.error(`[nightly] Report archived to ${archivePath}`);
 }
 
 function printSummary() {
-  console.log(`\n${"=".repeat(60)}`);
-  console.log("[nightly] Pipeline summary");
-  console.log("=".repeat(60));
+  console.error(`\n${"=".repeat(60)}`);
+  console.error("[nightly] Pipeline summary");
+  console.error("=".repeat(60));
   for (const step of steps) {
-    console.log(
+    console.error(
       `  ${step.exitCode === 0 ? "✅" : "⚠️"} ${step.name}: exit=${step.exitCode} (${(step.duration_ms / 1000).toFixed(1)}s) [${step.severity}]`,
     );
   }
 }
 
 async function main() {
-  console.log(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+  console.error(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   const plan = [
     {
       name: "harness-report",
@@ -127,7 +127,7 @@ async function main() {
   let degraded = false;
   for (const step of plan) {
     if (hardFailure && step.severity === "blocking") {
-      console.log(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
+      console.error(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
       steps.push({
         name: step.name,
         exitCode: 99,

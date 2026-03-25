@@ -221,13 +221,13 @@ async function probeCodexSdk(model) {
     // Log the error and record failure so credit-gate can try fallback providers
     const errStr = String(err).toLowerCase();
     if (errStr.includes("usage limit") || errStr.includes("quota")) {
-      console.log(`[credit-gate] codex: unavailable (quota exhausted)`);
+      console.error(`[credit-gate] codex: unavailable (quota exhausted)`);
       recordProviderFailure("codex");
     } else if (errStr.includes("timeout")) {
-      console.log(`[credit-gate] codex: unavailable (timeout)`);
+      console.error(`[credit-gate] codex: unavailable (timeout)`);
       recordProviderFailure("codex");
     } else {
-      console.log(`[credit-gate] codex: unavailable (${err.message || err})`);
+      console.error(`[credit-gate] codex: unavailable (${err.message || err})`);
       recordProviderFailure("codex");
     }
     return false;
@@ -1008,26 +1008,26 @@ export function logProviderStats(options = {}) {
         ? new Set(options.excludeNames)
         : null;
 
-  console.log(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
+  console.error(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
   if (ranked.length > 0) {
     for (const { rank, name, score, tier } of ranked) {
       const data = stats[name];
-      console.log(
+      console.error(
         `[credit-gate]   #${rank} ${name} [${tier}]: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`,
       );
     }
   } else {
-    console.log(
+    console.error(
       `[credit-gate]   (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`,
     );
   }
 
-  console.log(`[credit-gate] 📈 Provider Details:`);
+  console.error(`[credit-gate] 📈 Provider Details:`);
   for (const [name, data] of Object.entries(stats).sort(
     (a, b) => b[1].selections - a[1].selections,
   )) {
     if (excludeSet && excludeSet.has(name)) continue;
-    console.log(
+    console.error(
       `[credit-gate]   ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
     );
   }
@@ -1177,12 +1177,12 @@ export async function probeAllProviders(options = {}) {
   const elapsed = Date.now() - startTime;
   const available = probeResults.filter((r) => r.available);
   const unavailable = probeResults.filter((r) => !r.available && r.status !== "excluded");
-  console.log(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
-  console.log(
+  console.error(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
+  console.error(
     `[credit-gate]   ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`,
   );
   if (unavailable.length > 0) {
-    console.log(
+    console.error(
       `[credit-gate]   ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`,
     );
   }
@@ -1236,33 +1236,33 @@ async function tryProvider(provider) {
   const apiKey = await resolveProviderApiKey(provider);
 
   if (provider.envVar && !apiKey) {
-    console.log(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
+    console.error(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
     return null;
   }
 
   if (isRecentlyFailed(provider.name)) {
-    console.log(`[credit-gate] ${provider.name}: skipped (recently failed)`);
+    console.error(`[credit-gate] ${provider.name}: skipped (recently failed)`);
     return null;
   }
 
   if (provider.requiresSdk) {
-    console.log(`[credit-gate] ${provider.name}: using SDK ✅`);
+    console.error(`[credit-gate] ${provider.name}: using SDK ✅`);
     clearProviderFailure(provider.name);
     recordProviderSelection(provider.name);
     return toSelectedProvider(provider, apiKey);
   }
 
-  console.log(`[credit-gate] ${provider.name}: probing...`);
+  console.error(`[credit-gate] ${provider.name}: probing...`);
   const available = provider.probe
     ? await provider.probe(provider, apiKey)
     : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
 
   if (!available) {
-    console.log(`[credit-gate] ${provider.name}: unavailable ❌`);
+    console.error(`[credit-gate] ${provider.name}: unavailable ❌`);
     return null;
   }
 
-  console.log(`[credit-gate] ${provider.name}: available ✅`);
+  console.error(`[credit-gate] ${provider.name}: available ✅`);
   clearProviderFailure(provider.name);
   recordProviderSelection(provider.name);
   return toSelectedProvider(provider, apiKey);

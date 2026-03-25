@@ -440,7 +440,7 @@ async function main() {
   }
 
   const checkNames = PROFILES[profile];
-  console.log(`[harness-report] profile=${profile} checks=${checkNames.length}\n`);
+  console.error(`[harness-report] profile=${profile} checks=${checkNames.length}\n`);
 
   const results = [];
   for (const name of checkNames) {
@@ -450,7 +450,7 @@ async function main() {
       result.duration_ms > 1000
         ? `${(result.duration_ms / 1000).toFixed(1)}s`
         : `${result.duration_ms}ms`;
-    console.log(`${icon} ${result.name} (${timing}): ${result.detail}`);
+    console.error(`${icon} ${result.name} (${timing}): ${result.detail}`);
     results.push(result);
   }
 
@@ -475,10 +475,10 @@ async function main() {
   const reportPath = resolve(reportsDir, "latest.json");
   writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
 
-  console.log(
+  console.error(
     `\n[harness-report] ${passed}/${total} passed, ${failed} failed (${(total_duration_ms / 1000).toFixed(1)}s)`,
   );
-  console.log(`[harness-report] report written to reports/latest.json`);
+  console.error(`[harness-report] report written to reports/latest.json`);
 
   process.exit(failed > 0 ? 1 : 0);
 }

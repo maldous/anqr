@@ -37,6 +37,7 @@ function run(cmd, args, opts = {}) {
   return spawnSync(cmd, args, {
     encoding: "utf-8",
     timeout: 60_000,
+    stdio: "pipe",
     ...opts,
   });
 }

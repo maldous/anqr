@@ -106,7 +106,7 @@ export function truncateMessageContent(msg, maxChars) {
 export function truncateMessagesForProvider(messages, providerName) {
   // Validate input - must have at least one message
   if (!messages || messages.length === 0) {
-    console.warn(
+    console.error(
       `[symphony-bridge] ⚠️ truncateMessagesForProvider: messages array is empty (provider: ${providerName}) - this should never happen`,
     );
     // Return a minimal valid message to prevent AI SDK errors
@@ -119,7 +119,7 @@ export function truncateMessagesForProvider(messages, providerName) {
   // Under budget — no truncation needed
   if (estimated <= maxTokens) return messages;
 
-  console.log(
+  console.error(
     `[symphony-bridge] ✂️ Context pruning for ${providerName}: ~${estimated} tokens > ${maxTokens} limit`,
   );
 
@@ -127,7 +127,7 @@ export function truncateMessagesForProvider(messages, providerName) {
   let truncated = messages.map((msg) => truncateMessageContent(msg, PER_MESSAGE_CHAR_LIMIT));
   estimated = estimateMessagesTokens(truncated);
   if (estimated <= maxTokens) {
-    console.log(
+    console.error(
       `[symphony-bridge] ✂️ Pass 1 (truncate large messages): ~${estimated} tokens — fits`,
     );
     return truncated;
@@ -154,7 +154,7 @@ export function truncateMessagesForProvider(messages, providerName) {
     };
     truncated = [...systemMessages, marker, ...kept];
     estimated = estimateMessagesTokens(truncated);
-    console.log(
+    console.error(
       `[symphony-bridge] ✂️ Pass 2 (drop ${dropped} middle messages): ~${estimated} tokens`,
     );
     if (estimated <= maxTokens) return truncated;
@@ -164,7 +164,7 @@ export function truncateMessagesForProvider(messages, providerName) {
   const aggressiveLimit = Math.floor(PER_MESSAGE_CHAR_LIMIT / 3);
   truncated = truncated.map((msg) => truncateMessageContent(msg, aggressiveLimit));
   estimated = estimateMessagesTokens(truncated);
-  console.log(
+  console.error(
     `[symphony-bridge] ✂️ Pass 3 (aggressive truncation to ${aggressiveLimit} chars/msg): ~${estimated} tokens`,
   );
 
@@ -180,14 +180,14 @@ export function truncateMessagesForProvider(messages, providerName) {
       .map((m) => truncateMessageContent(m, lastResortLimit));
     truncated = [...sysMsg, ...lastTwo];
     estimated = estimateMessagesTokens(truncated);
-    console.log(
+    console.error(
       `[symphony-bridge] ✂️ Pass 4 (last resort — system + last 2): ~${estimated} tokens`,
     );
   }
 
   // Final validation - ensure we always return at least one message
   if (!truncated || truncated.length === 0) {
-    console.warn(
+    console.error(
       `[symphony-bridge] ⚠️ Truncation resulted in empty array — returning last message only`,
     );
     const lastMsg = messages[messages.length - 1];

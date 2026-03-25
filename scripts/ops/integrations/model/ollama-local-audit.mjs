@@ -24,7 +24,7 @@ function record(name, pass, detail) {
   const entry = { name, pass, detail, ts: new Date().toISOString() };
   results.push(entry);
   const icon = pass ? "✅" : "❌";
-  console.log(`${icon} ${name}: ${detail}`);
+  console.error(`${icon} ${name}: ${detail}`);
 }
 
 async function checkReachable() {
@@ -97,7 +97,7 @@ async function checkModelResponds() {
 }
 
 async function main() {
-  console.log(`[ollama-local-audit] Checking ${PINNED_MODEL} at ${OLLAMA_BASE}\n`);
+  console.error(`[ollama-local-audit] Checking ${PINNED_MODEL} at ${OLLAMA_BASE}\n`);
 
   const reachable = await checkReachable();
   if (!reachable) {
@@ -121,7 +121,7 @@ async function main() {
 function printSummary() {
   const passed = results.filter((r) => r.pass).length;
   const total = results.length;
-  console.log(`\n[ollama-local-audit] ${passed}/${total} checks passed`);
+  console.error(`\n[ollama-local-audit] ${passed}/${total} checks passed`);
 }
 
 await main();

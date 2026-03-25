@@ -151,7 +151,7 @@ function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };
   actions.push(entry);
   const icons = { create: "🆕", comment: "💬", hygiene: "🏷️", skip: "⏭️", stale: "⏰", info: "ℹ️" };
-  console.log(`${icons[type] || "•"} ${type}: ${detail}`);
+  console.error(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 
 async function processFailingCheck(check, report, queueDepth, dryRun) {
@@ -243,7 +243,7 @@ async function checkStaleIssues(dryRun) {
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
 
-  console.log(`[linear-guardian]${dryRun ? " (DRY RUN)" : ""} starting\n`);
+  console.error(`[linear-guardian]${dryRun ? " (DRY RUN)" : ""} starting\n`);
 
   if (!existsSync(REPORT_PATH)) {
     console.error(`[linear-guardian] No report found at ${REPORT_PATH}`);
@@ -254,10 +254,10 @@ async function main() {
   const report = JSON.parse(readFileSync(REPORT_PATH, "utf-8"));
   const failures = report.checks.filter((c) => !c.pass);
 
-  console.log(
+  console.error(
     `[linear-guardian] Report: ${report.profile} profile, ${report.summary.passed}/${report.summary.total} passed, ${failures.length} failures`,
   );
-  console.log(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
+  console.error(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
 
   if (failures.length === 0) {
     logAction("info", "No harness failures — nothing to do");
@@ -267,7 +267,7 @@ async function main() {
 
   const queue = await getQueueDepth();
   let currentDepth = queue.automatable;
-  console.log(
+  console.error(
     `[linear-guardian] Queue depth: ${currentDepth} automatable / ${queue.total} total (max: ${TARGET_MAX})\n`,
   );
 
@@ -278,13 +278,13 @@ async function main() {
     }
   }
 
-  console.log("");
+  console.error("");
   const staleCount = await checkStaleIssues(dryRun);
   if (staleCount === 0) {
     logAction("info", "No stale in-progress issues");
   }
 
-  console.log("");
+  console.error("");
   printSummary();
   process.exit(0);
 }
@@ -295,7 +295,7 @@ function printSummary() {
     counts[a.type] = (counts[a.type] || 0) + 1;
   }
   const parts = Object.entries(counts).map(([k, v]) => `${k}=${v}`);
-  console.log(`[linear-guardian] Summary: ${parts.join(", ") || "no actions"}`);
+  console.error(`[linear-guardian] Summary: ${parts.join(", ") || "no actions"}`);
 }
 
 await main();
