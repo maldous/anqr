@@ -69,13 +69,14 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge active (PID 1849000, commit 009677499)
+- ✅ Symphony Bridge active (PID 1858638, commit fbfe5f047)
 - ✅ Codebuff Bridge active (PID 1812448, commit 9f624fa53)
 - ✅ Discord text notifications working via webhook
 - ✅ Discord streaming output working (Codebuff)
 - ✅ Discord comprehensive metrics working (all providers)
 - ✅ Level-based logging (DEBUG/INFO/WARN/ERROR) with SIGUSR1/SIGUSR2 control
 - ✅ Immediate SIGTERM shutdown for both bridges
+- ✅ **MEMORY.md Persistence** (Commit fbfe5f047): Symphony bridge now updates MEMORY.md on restart with PID, commit hash, provider count, and Discord status - ensures continuity across restarts
 
 ### Voice Setup (2026-03-25)
 - ✅ Discord voice integration working
@@ -163,3 +164,5 @@ Both Symphony and Codebuff bridges now support dynamic log level control:
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1853420, 38/38 providers available, Discord monitoring active)
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1854496, commit 082909a04, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1859315, commit fbfe5f047, 38/38 providers available, Discord monitoring active)

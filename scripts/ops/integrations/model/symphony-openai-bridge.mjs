@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordMessage } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification } from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { appendFile } from "node:fs/promises";
@@ -219,9 +219,9 @@ function startDiscordMonitoring() {
         console.log(`[symphony-bridge] ✅ Discord command processed: ${assistantReply.slice(0, 100)}`);
         
         // Send reply back to Discord text channel via webhook
-        await sendDiscordMessage(assistantReply.slice(0, 2000)); // Discord message limit
+        await sendDiscordNotification({ content: assistantReply.slice(0, 2000) }); // Discord message limit
       } catch (err) {
-        console.log(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
+        console.error(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
       }
     }
   }, 5000); // Poll every 5 seconds
