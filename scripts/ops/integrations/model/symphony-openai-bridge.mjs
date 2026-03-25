@@ -1103,8 +1103,13 @@ async function invokeWithAI(provider, messages, options = {}) {
     let fullText = "";
     let fullTextCapped = false;
     let streamErrorDetail = null;
+    let hasTextDeltas = false;
 
     for await (const part of result.fullStream) {
+      // Track if we're receiving text-delta events (for fallback detection)
+      if (part.type === "text-delta") {
+        hasTextDeltas = true;
+      }
       if (part.type === "reasoning-start") {
         if (onChunk) onChunk({ type: "text", text: "\n💡 " });
       } else if (part.type === "reasoning-delta") {
@@ -1127,10 +1132,8 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (onChunk && delta) {
           onChunk({ type: "text", text: delta });
         }
-        // Also log Codebuff activity markers locally for debugging
-        if (delta.includes('🔧') || delta.includes('✅') || delta.includes('💡') || delta.includes('📖') || delta.includes('💻') || delta.includes('✏️')) {
-          console.log(`[symphony-bridge] 🌊 Forwarding activity: ${delta.trim()}`);
-        }
+        // Log ALL text-delta events for debugging (first 200 chars)
+        console.log(`[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`);
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
         if (onChunk) {
@@ -1160,7 +1163,7 @@ async function invokeWithAI(provider, messages, options = {}) {
     // Fallback: if fullStream produced no text-delta events, try result.text
     // (best-effort — result.text derives from the same stream, but internal
     // accumulation may differ for some provider SDKs)
-    if (!fullText || fullText.trim() === "") {
+    if (!hasTextDeltas || !fullText || fullText.trim() === "") {
       try {
         const fallbackText = await result.text;
         if (fallbackText && fallbackText.trim()) {
@@ -1168,8 +1171,15 @@ async function invokeWithAI(provider, messages, options = {}) {
             `[symphony-bridge] ⚠️ fullStream produced no text-delta events, recovered ${fallbackText.length} chars from result.text`,
           );
           fullText = fallbackText;
+          // Forward the fallback text in smaller chunks to simulate streaming
           if (onChunk) {
-            onChunk({ type: "text", text: fallbackText });
+            const CHUNK_SIZE = 100; // Forward in 100-char chunks
+            for (let i = 0; i < fallbackText.length; i += CHUNK_SIZE) {
+              const chunk = fallbackText.slice(i, i + CHUNK_SIZE);
+              onChunk({ type: "text", text: chunk });
+              // Small delay to prevent overwhelming the client
+              await sleep(10);
+            }
           }
         }
       } catch (textErr) {
