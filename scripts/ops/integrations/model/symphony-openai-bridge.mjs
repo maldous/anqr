@@ -111,7 +111,7 @@ async function speakAnnouncement(text) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.OPENCLAW_GATEWAY_TOKEN}`,
         "x-openclaw-agent-id": "main",
-        "x-openclaw-session-key": `discord:channel:${DISCORD_VOICE_CHANNEL_ID}`,
+        "x-openclaw-session-key": `agent:main:discord:channel:${DISCORD_VOICE_CHANNEL_ID}`,
         "x-openclaw-message-channel": "discord",
       },
       body: JSON.stringify({
