@@ -214,6 +214,25 @@ Codebuff uses a single API key (`CODEBUFF_API_KEY`) with automatic mode selectio
 - **Free mode** is used automatically if paid is unavailable (e.g. out of credits)
 - **Re-validation** runs every 5 hours so the bridge returns to paid mode automatically when credits are available
 
+### Real-time streaming
+
+The Codebuff bridge supports real-time streaming with activity markers:
+
+**User-facing tool activity** (streamed to client):
+- File operations: `📖 Reading:`, `✏️ Editing:`, `🔍 Searching:`
+- Shell commands: `💻 Running:`
+- Pattern matching: `🔧 glob:`
+- Completions: `✅ <tool> done` (only for user-facing tools)
+
+**Internal SDK activity** (filtered from client, logged server-side only):
+- `set_messages`, `spawn_agent_inline`, `context-pruner`, `end_turn`
+- All `run_terminal_command` completion markers
+
+**Formatting rules**:
+- Tool execution markers appear on new lines for readability
+- No completion markers clutter the client stream
+- Server logs retain full activity for debugging
+
 ## Failure cooldown mechanism
 
 The credit-gate tracks provider failures to avoid repeatedly trying broken providers:
@@ -402,6 +421,24 @@ The bridge combines:
 1. **AI SDK** (`createAI`, `generateText`, `streamText`) for provider communication
 2. **Credit-gate** for provider selection and auto-fallback
 3. **Tool execution** for actual file operations, shell commands, and glob patterns
+4. **Transparent SSE relay** for Codebuff to preserve real-time streaming
+
+### Streaming Improvements
+
+**Transparent SSE relay for Codebuff** (2026-03-25):
+
+- When Codebuff is selected, Symphony acts as a transparent SSE relay instead of consuming the response through AI SDK
+- Raw SSE chunks from Codebuff bridge (port 4318) are forwarded directly to OpenClaw without parsing or buffering
+- Preserves real-time streaming of activity messages (✅ done, 🔧 read:, 💻 Running:, etc.)
+- Internal provider errors filtered from client stream (rate limits, quota exhausted)
+- Internal SDK activity filtered from client stream (set_messages, spawn_agent_inline, context-pruner, end_turn)
+
+**Streaming behavior by provider**:
+
+| Provider   | Streaming Method      | Notes                                           |
+| ---------- | --------------------- | ----------------------------------------------- |
+| codebuff   | Transparent SSE relay | Direct proxy, no AI SDK buffering               |
+| Other      | AI SDK streaming      | Uses `streamText()` with text-delta events      |
 
 ### Supported Providers
 
@@ -444,6 +481,31 @@ Tool execution is handled automatically by AI SDK via `maxSteps` parameter (defa
 
 Plus all provider tokens required by credit-gate (`GROQ_TOKEN`, `GEMINI_TOKEN`, `MISTRAL_TOKEN`, `OPENROUTER_TOKEN`, etc.)
 
+### Health Monitoring
+
+**Health endpoint** (`GET /health`):
+
+```json
+{
+  "status": "ok",
+  "uptime": 12345,
+  "providers": {
+    "available": 42,
+    "configured": 42
+  },
+  "toolProbe": {
+    "capable": ["codex", "codebuff", "groq", "openrouter-free", "..."],
+    "excluded": ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
+    "unclassified": ["mistral", "gemini"],
+    "blocked": [{"name": "openclaw", "reason": "routing loop prevention"}]
+  },
+  "streaming": {
+    "codebuff": "transparent-sse-relay",
+    "default": "ai-sdk-streaming"
+  }
+}
+```
+
 ### Systemd Service
 
 ```bash
@@ -453,8 +515,14 @@ systemctl --user start anqr-symphony-bridge.service
 # Stop
 systemctl --user stop anqr-symphony-bridge.service
 
+# Restart
+systemctl --user restart anqr-symphony-bridge.service
+
 # View logs
 journalctl --user -u anqr-symphony-bridge.service -f
+
+# Check status
+systemctl --user status anqr-symphony-bridge.service
 ```
 
 ### Usage with OpenClaw

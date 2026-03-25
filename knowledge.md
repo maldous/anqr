@@ -44,10 +44,11 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 
 **AI Automation & Harness**:
 
-- **Symphony Bridge** (port 4319): OpenAI-compatible HTTP gateway using AI SDK with tool execution for provider communication. Primary route for harness and OpenClaw integration.
-- **Codebuff Bridge** (port 4318): OpenAI-compatible HTTP gateway for Codebuff SDK with paid → free mode fallback.
+- **Symphony Bridge** (port 4319): OpenAI-compatible HTTP gateway using AI SDK with tool execution for provider communication. Primary route for harness and OpenClaw integration. Uses transparent SSE relay for Codebuff to preserve real-time streaming without AI SDK buffering.
+- **Codebuff Bridge** (port 4318): OpenAI-compatible HTTP gateway for Codebuff SDK with paid → free mode fallback. Streams user-facing tool activity (📖, ✏️, 💻, ✅) while filtering internal SDK activity server-side.
 - **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 42 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests.
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
+- **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
 
 ### Current 1.0 Claim
 
