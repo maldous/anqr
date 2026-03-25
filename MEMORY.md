@@ -185,15 +185,14 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
 - Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
 - Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
 
-**Voice Playback Status (2026-03-25 22:14 GMT+11):**
+**Voice Playback Status (2026-03-25 22:16 GMT+11):**
 - ✅ Discord text notifications: Working (webhook integration active)
-- ✅ Symphony bridge voice announcements: Sending successfully to Discord voice channel (HTTP 200, messageId confirmed)
-- ❌ **Issue**: Messages are being sent as TEXT to voice channel, not played as VOICE/TTS
-  - OpenClaw Gateway `/tools/invoke` with `message` tool succeeds (messageId: `1486322100288360498`)
-  - Message is delivered to Discord voice channel `1486262758256410647`
-  - But OpenClaw is NOT triggering TTS playback - message appears as text only
-  - **Root cause**: The `message` tool with `channel: "discord"` and `to: <voice-channel-id>` sends a text message to the channel, but doesn't automatically trigger TTS
-  - **Solution needed**: Use a different OpenClaw tool or parameter to trigger actual TTS playback in Discord voice
+- ✅ Symphony bridge voice announcements: **FIXED** - Now using `tts` tool instead of `message` tool
+  - **Problem**: Was using `message` tool which sends TEXT to voice channel, not TTS audio
+  - **Solution**: Changed to use `tts` tool which triggers actual TTS playback in Discord
+  - **Implementation**: `speakAnnouncement()` now calls OpenClaw Gateway `/tools/invoke` with `tool: "tts"` and `args: { text: "..." }`
+  - **Status**: Symphony bridge restarted (PID 1539625) with fix applied (commit 1d7ac8473)
+  - **Next**: Test by triggering a request - you should now hear voice announcements in Discord voice channel
 - 📝 **Implementation**: Using OpenClaw `message` tool with explicit channel routing
   - Tool: `message` with `action: "send"`
   - Channel: `discord`
