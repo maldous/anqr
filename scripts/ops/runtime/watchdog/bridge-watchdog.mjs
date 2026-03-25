@@ -30,6 +30,73 @@ const MONITORED_SERVICES = [
   { name: "anqr-codebuff-bridge.service", shortName: "codebuff" },
 ];
 
+// --------------------------------------------------------------------------
+// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
+// --------------------------------------------------------------------------
+
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+const envLogLevel = process.env.WATCHDOG_LOG_LEVEL?.toUpperCase();
+const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
+let currentLogLevel = initialLevel;
+
+function setLogLevel(level) {
+  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
+  console.error(`[watchdog] 📊 Log level: ${levelName}`);
+  currentLogLevel = level;
+}
+
+function incrementLogLevel() {
+  if (currentLogLevel < LOG_LEVELS.ERROR) {
+    setLogLevel(currentLogLevel + 1);
+  }
+}
+
+function decrementLogLevel() {
+  if (currentLogLevel > LOG_LEVELS.DEBUG) {
+    setLogLevel(currentLogLevel - 1);
+  }
+}
+
+// Signal handlers for dynamic log level control
+process.on("SIGUSR1", () => {
+  console.error("[watchdog] Received SIGUSR1 - increasing log level");
+  incrementLogLevel();
+});
+
+process.on("SIGUSR2", () => {
+  console.error("[watchdog] Received SIGUSR2 - decreasing log level");
+  decrementLogLevel();
+});
+
+// Logging functions
+// eslint-disable-next-line no-unused-vars
+function logDebug(msg) {
+  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
+    console.log(msg);
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+function logInfo(msg) {
+  if (currentLogLevel <= LOG_LEVELS.INFO) {
+    console.log(msg);
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+function logWarn(msg) {
+  if (currentLogLevel <= LOG_LEVELS.WARN) {
+    console.warn(msg);
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+function logError(msg) {
+  if (currentLogLevel <= LOG_LEVELS.ERROR) {
+    console.error(msg);
+  }
+}
+
 // Track restart timestamps and activating state
 const restartTimestamps = new Map();
 const activatingStateStart = new Map();

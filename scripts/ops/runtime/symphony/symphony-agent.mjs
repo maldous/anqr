@@ -193,6 +193,69 @@ const ALLOWED_COMMANDS = new Set([
 
 const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom for large-context turns
 
+// --------------------------------------------------------------------------
+// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
+// --------------------------------------------------------------------------
+
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+const envLogLevel = process.env.SYMPHONY_AGENT_LOG_LEVEL?.toUpperCase();
+const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
+let currentLogLevel = initialLevel;
+
+function setLogLevel(level) {
+  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
+  console.error(`[agent] 📊 Log level: ${levelName}`);
+  currentLogLevel = level;
+}
+
+function incrementLogLevel() {
+  if (currentLogLevel < LOG_LEVELS.ERROR) {
+    setLogLevel(currentLogLevel + 1);
+  }
+}
+
+function decrementLogLevel() {
+  if (currentLogLevel > LOG_LEVELS.DEBUG) {
+    setLogLevel(currentLogLevel - 1);
+  }
+}
+
+// Signal handlers for dynamic log level control
+process.on("SIGUSR1", () => {
+  console.error("[agent] Received SIGUSR1 - increasing log level");
+  incrementLogLevel();
+});
+
+process.on("SIGUSR2", () => {
+  console.error("[agent] Received SIGUSR2 - decreasing log level");
+  decrementLogLevel();
+});
+
+// Logging functions
+function logDebug(msg) {
+  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
+    console.log(msg);
+  }
+}
+
+function logInfo(msg) {
+  if (currentLogLevel <= LOG_LEVELS.INFO) {
+    console.log(msg);
+  }
+}
+
+function logWarn(msg) {
+  if (currentLogLevel <= LOG_LEVELS.WARN) {
+    console.warn(msg);
+  }
+}
+
+function logError(msg) {
+  if (currentLogLevel <= LOG_LEVELS.ERROR) {
+    console.error(msg);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tool implementations
 // ---------------------------------------------------------------------------
@@ -761,15 +824,13 @@ async function runToolLoop({
         messages,
         providerName: provider.name,
       };
-    }
-
-    console.log(`[agent] Turn ${turn + 1}/${maxTurns}`);
+    }      logInfo(`[agent] Turn ${turn + 1}/${maxTurns}`);
 
     let response;
     try {
       response = await callLLM(provider, messages, taskDescription);
     } catch (err) {
-      console.error(`[agent] LLM call failed: ${err.message}`);
+      logError(`[agent] LLM call failed: ${err.message}`);
       return {
         completed: false,
         summary: `LLM call failed: ${err.message}`,
@@ -786,7 +847,7 @@ async function runToolLoop({
     const choice = response.choices?.[0];
     const actualProviderName = response.providerName || provider.name;
     if (!choice) {
-      console.error("[agent] No choices in LLM response");
+      logError("[agent] No choices in LLM response");
       return {
         completed: false,
         summary: "No choices in LLM response",
@@ -805,7 +866,7 @@ async function runToolLoop({
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       consecutiveNoToolCalls++;
       if (consecutiveNoToolCalls >= 3) {
-        console.log("[agent] Too many consecutive turns without tool calls — aborting");
+        logInfo("[agent] Too many consecutive turns without tool calls — aborting");
         const snippet = msg.content?.slice(0, 150).replaceAll("\n", " ") || "(empty)";
         return {
           completed: false,
@@ -949,7 +1010,7 @@ async function runToolLoop({
       }
 
       if (turn < maxTurns - 1) {
-        console.log("[agent] No tool calls — prompting to continue");
+        logDebug("[agent] No tool calls — prompting to continue");
         messages.push({
           role: "user",
           content:
@@ -997,7 +1058,7 @@ async function runToolLoop({
         continue;
       }
 
-      console.log(
+      logDebug(
         `[agent]   Tool: ${toolName}(${toolCall.function.arguments.slice(0, 100)}${toolCall.function.arguments.length > 100 ? "..." : ""})`,
       );
 
@@ -1036,7 +1097,7 @@ async function runToolLoop({
     }
 
     if (taskCompleteResult) {
-      console.log(`[agent] Task complete: ${taskCompleteResult.summary}`);
+      logInfo(`[agent] Task complete: ${taskCompleteResult.summary}`);
       return {
         completed: true,
         summary: taskCompleteResult.summary || "No summary provided",
@@ -1052,7 +1113,7 @@ async function runToolLoop({
 
     const turnsRemaining = maxTurns - (turn + 1);
     if (turnsRemaining === RUNNER_TURN_BUDGET_WARNING) {
-      console.log(`[agent] Turn budget warning: ${turnsRemaining} turns remaining`);
+      logWarn(`[agent] Turn budget warning: ${turnsRemaining} turns remaining`);
       messages.push({
         role: "user",
         content: `⚠️ TURN BUDGET WARNING: You have only ${turnsRemaining} turns remaining out of ${maxTurns}. Stop making new changes immediately. Run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests to verify your work, fix any errors, then call task_complete. Do not start any new modifications.`,
@@ -1060,7 +1121,7 @@ async function runToolLoop({
     }
   }
 
-  console.log(`[agent] Max turns (${maxTurns}) reached`);
+  logInfo(`[agent] Max turns (${maxTurns}) reached`);
   return {
     completed: false,
     summary: "Max turns reached without task_complete",
