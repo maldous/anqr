@@ -671,7 +671,7 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
   // If content is a string, return it directly
   if (typeof content === "string") {
-    console.log(`[bridge] 📝 Content: string (${content.length} chars)`);
+    logDebug(`[bridge] 📝 Content: string (${content.length} chars)`);
     return content;
   }
 
@@ -687,7 +687,7 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
       // Skip tool-call parts if filtering is enabled (for cleaner client output)
       if (filterToolCalls && (isToolUIPart(part) || part.type === "tool-call")) {
-        console.log(`[bridge] 📝 Part: tool-call (filtered out)`);
+        logDebug(`[bridge] 📝 Part: tool-call (filtered out)`);
         continue;
       }
 
@@ -699,36 +699,36 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
         const text = part.text || part.content || "";
         if (text) {
           textParts.push(text);
-          console.log(`[bridge] 📝 Part: text (${text.length} chars)`);
+          logDebug(`[bridge] 📝 Part: text (${text.length} chars)`);
         }
       } else if (isReasoningUIPart(part)) {
         // Model reasoning/rationale
         const reasoning = part.reasoning || part.content || "";
         if (reasoning) {
           textParts.push(reasoning);
-          console.log(`[bridge] 📝 Part: reasoning (${reasoning.length} chars)`);
+          logDebug(`[bridge] 📝 Part: reasoning (${reasoning.length} chars)`);
         }
       } else if (isDataUIPart(part)) {
         // Data parts - skip
-        console.log(`[bridge] 📝 Part: data (skipped)`);
+        logDebug(`[bridge] 📝 Part: data (skipped)`);
       } else {
         // Unknown type - try common fields
         const text = part.text || part.content || part.result || "";
         if (text) {
           const textStr = typeof text === "string" ? text : JSON.stringify(text);
           textParts.push(textStr);
-          console.log(`[bridge] 📝 Part: ${partType} (${textStr.length} chars)`);
+          logDebug(`[bridge] 📝 Part: ${partType} (${textStr.length} chars)`);
         } else {
-          console.log(`[bridge] 📝 Part: ${partType} (no extractable text)`);
+          logDebug(`[bridge] 📝 Part: ${partType} (no extractable text)`);
         }
       }
     }
 
-    console.log(`[bridge] 📝 Content types found: ${partTypes.join(", ")}`);
+    logDebug(`[bridge] 📝 Content types found: ${partTypes.join(", ")}`);
 
     if (textParts.length > 0) {
       const result = textParts.join("\n");
-      console.log(`[bridge] 📝 Extracted ${result.length} chars total`);
+      logDebug(`[bridge] 📝 Extracted ${result.length} chars total`);
       return result;
     }
   }
@@ -767,7 +767,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
         toolsUsed.add(toolName);
 
         if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          console.log(`[bridge] codebuff ${toolName} (internal)`);
+          logDebug(`[bridge] codebuff ${toolName} (internal)`);
           return;
         }
 
@@ -780,35 +780,35 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
         }
 
         const display = formatToolCallDisplay(toolName, input);
-        if (display) console.log(`[bridge] ${display}`);
+        if (display) logDebug(`[bridge] ${display}`);
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
         if (!CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          console.log(`[bridge] ✅ codebuff ${toolName} done`);
+          logDebug(`[bridge] ✅ codebuff ${toolName} done`);
           streamActivity(`✅ ${toolName} done\n`);
         }
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
-        if (text) console.log(`[bridge] 💡 ${text.slice(0, 80)}...`);
+        if (text) logDebug(`[bridge] 💡 ${text.slice(0, 80)}...`);
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
-          console.log(`[bridge] codebuff context-pruner (internal)`);
+          logDebug(`[bridge] codebuff context-pruner (internal)`);
           return;
         }
         const name = event.displayName || event.agentType || "subagent";
-        console.log(`[bridge] 🤖 codebuff subagent: ${name}`);
+        logDebug(`[bridge] 🤖 codebuff subagent: ${name}`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
         const name = event.displayName || event.agentType || "subagent";
-        console.log(`[bridge] 🤖 codebuff ${name} done`);
+        logDebug(`[bridge] 🤖 codebuff ${name} done`);
         streamActivity(`🤖 ${name} done\n`);
       } else if (type === "agent_start" || type === "agent_finish") {
-        console.log(`[bridge] 🤖 codebuff ${type}`);
+        logDebug(`[bridge] 🤖 codebuff ${type}`);
       } else if (type === "error") {
-        console.log(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+        logDebug(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
       }
     } catch (err) {
-      console.log(`[bridge] handleEvent error: ${err.message}`);
+      logDebug(`[bridge] handleEvent error: ${err.message}`);
     }
   };
 
@@ -842,7 +842,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   let continuation = 0;
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
-    console.log(
+    logDebug(
       `[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
     );
     maybeGC();
@@ -868,17 +868,17 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   }
 
   if (continuation > 0) {
-    console.log(
+    logDebug(
       `[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
     );
   }
 
-  console.log(`[bridge] ✅ Success on ${attempt.label}`);
+  logDebug(`[bridge] ✅ Success on ${attempt.label}`);
 
   if (toolsUsed.size > 0) {
-    console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
+    logDebug(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
   } else {
-    console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
+    logDebug(`[bridge] 📊 Tools used: none (text-only mode)`);
   }
 
   const finalOutput = result.output;
@@ -995,8 +995,8 @@ async function trySingleAccountStream(
   const streamActivity = (text) => {
     if (onChunk && text) {
       const chunk = makeSseChunk(completionId, created, text);
-      console.log(`[bridge] 🌊 Streaming activity: ${text.slice(0, 80)}`);
-      console.log(`[bridge] 📤 SSE chunk: ${JSON.stringify(chunk).slice(0, 200)}`);
+      logDebug(`[bridge] 🌊 Streaming activity: ${text.slice(0, 80)}`);
+      logDebug(`[bridge] 📤 SSE chunk: ${JSON.stringify(chunk).slice(0, 200)}`);
       onChunk(chunk);
     }
   };
@@ -1014,7 +1014,7 @@ async function trySingleAccountStream(
         toolsUsed.add(toolName);
 
         if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          console.log(`[bridge] codebuff ${toolName} (internal)`);
+          logDebug(`[bridge] codebuff ${toolName} (internal)`);
           return;
         }
 
@@ -1028,40 +1028,40 @@ async function trySingleAccountStream(
 
         const display = formatToolCallDisplay(toolName, input);
         if (display) {
-          console.log(`[bridge] ${display}`);
+          logDebug(`[bridge] ${display}`);
           streamActivity("\n" + display + "\n");
         }
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
         // Log completion server-side but do NOT stream to client
-        console.log(`[bridge] ✅ codebuff ${toolName} done`);
+        logDebug(`[bridge] ✅ codebuff ${toolName} done`);
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
-          console.log(`[bridge] 💡 ${text.slice(0, 80)}...`);
+          logDebug(`[bridge] 💡 ${text.slice(0, 80)}...`);
           streamActivity(`💡 ${text}\n`);
         }
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
-          console.log(`[bridge] codebuff context-pruner (internal)`);
+          logDebug(`[bridge] codebuff context-pruner (internal)`);
           return;
         }
         const name = event.displayName || event.agentType || "subagent";
-        console.log(`[bridge] 🤖 codebuff subagent: ${name}`);
+        logDebug(`[bridge] 🤖 codebuff subagent: ${name}`);
         streamActivity(`🤖 ${name}\n`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
         const name = event.displayName || event.agentType || "subagent";
-        console.log(`[bridge] 🤖 codebuff ${name} done`);
+        logDebug(`[bridge] 🤖 codebuff ${name} done`);
         streamActivity(`🤖 ${name} done\n`);
       } else if (type === "agent_start" || type === "agent_finish") {
-        console.log(`[bridge] 🤖 codebuff ${type}`);
+        logDebug(`[bridge] 🤖 codebuff ${type}`);
       } else if (type === "error") {
-        console.log(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+        logDebug(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
         streamActivity(`❌ Error: ${event.message || "unknown error"}\n`);
       }
     } catch (err) {
-      console.log(`[bridge] handleEvent error: ${err.message}`);
+      logDebug(`[bridge] handleEvent error: ${err.message}`);
     }
   };
 
@@ -1078,7 +1078,7 @@ async function trySingleAccountStream(
         onChunk(makeSseChunk(completionId, created, text));
       }
     } catch (err) {
-      console.log(`[bridge] handleStreamChunk error: ${err.message}`);
+      logDebug(`[bridge] handleStreamChunk error: ${err.message}`);
     }
   };
 
@@ -1109,7 +1109,7 @@ async function trySingleAccountStream(
   let continuation = 0;
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
-    console.log(
+    logDebug(
       `[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
     );
     streamActivity(`\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS})...\n`);
@@ -1136,17 +1136,17 @@ async function trySingleAccountStream(
   }
 
   if (continuation > 0) {
-    console.log(
+    logDebug(
       `[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
     );
   }
 
-  console.log(`[bridge] ✅ Success on ${attempt.label}`);
+  logDebug(`[bridge] ✅ Success on ${attempt.label}`);
 
   if (toolsUsed.size > 0) {
-    console.log(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
+    logDebug(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
   } else {
-    console.log(`[bridge] 📊 Tools used: none (text-only mode)`);
+    logDebug(`[bridge] 📊 Tools used: none (text-only mode)`);
   }
 
   const needsContinuation = lastSubgoalStatus === "IN_PROGRESS";
