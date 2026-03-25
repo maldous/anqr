@@ -84,6 +84,20 @@ import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 // Discord webhook notifications
 import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordMessage } from "../notifications/discord-webhook.mjs";
 
+// MEMORY.md updates for persistence across restarts
+import { appendFile } from "node:fs/promises";
+
+async function updateMemory(note) {
+  const timestamp = new Date().toISOString().split('T')[0];
+  const entry = `\n### ${timestamp} - ${note}\n`;
+  try {
+    await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
+    console.log(`[symphony-bridge] 📝 Updated MEMORY.md: ${note}`);
+  } catch (err) {
+    console.log(`[symphony-bridge] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+  }
+}
+
 // Discord message monitoring (listen for user input from Discord text channel)
 let lastDiscordMessageId = null;
 let discordMonitorInterval = null;
@@ -2848,10 +2862,14 @@ server.listen(PORT, "127.0.0.1", () => {
       }
       console.log(
         `[symphony-bridge] ✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
-      );
-      console.log(`[symphony-bridge] ========================================`);
-      console.log(`[symphony-bridge] Ready to accept requests`);
-      console.log(`[symphony-bridge] ========================================`);
+      );  console.log(`[symphony-bridge] ========================================`);
+  console.log(`[symphony-bridge] Ready to accept requests`);
+  console.log(`[symphony-bridge] ========================================`);
+      
+      // Update MEMORY.md with successful startup
+      updateMemory(
+        `Symphony Bridge restarted successfully (PID ${process.pid}, ${available.length}/${total} providers available, Discord monitoring active)`
+      ).catch(() => {/* ignore */});
     })
     .catch((err) => {
       console.error(`[symphony-bridge] Startup probe failed: ${err.message}`);
