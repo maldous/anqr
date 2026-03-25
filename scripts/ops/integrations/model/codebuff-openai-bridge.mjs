@@ -1471,7 +1471,7 @@ const server = http.createServer(async (req, res) => {
           res.end();
         } catch (streamError) {
           // Send error as SSE event before closing
-          console.error(
+          logError(
             `[bridge] Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`,
           );
           logMemory("stream-error");
@@ -1569,7 +1569,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 404, { error: { message: "Not found" } });
     }
   } catch (error) {
-    console.error(`[bridge] Error: ${error.message}`);
+    logError(`[bridge] Error: ${error.message}`);
     sendJson(res, 500, {
       error: {
         message: error instanceof Error ? error.message : String(error),

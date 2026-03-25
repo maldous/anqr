@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, flushDiscordStream, sendDiscordEmbed, sendDiscordNotification } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, flushDiscordStream, sendDiscordEmbed } from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
@@ -236,7 +236,7 @@ function startDiscordMonitoring() {
         
         console.log(`[symphony-bridge] ✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
-        console.error(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
+        logError(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
       }
     }
   }, 5000); // Poll every 5 seconds
@@ -311,6 +311,12 @@ function logInfo(...args) {
 function logWarn(...args) {
   if (currentLogLevel <= LOG_LEVELS.WARN) {
     console.warn(...args);
+  }
+}
+
+function logError(...args) {
+  if (currentLogLevel <= LOG_LEVELS.ERROR) {
+    console.error(...args);
   }
 }
 
@@ -815,7 +821,7 @@ async function refreshProviderStatus() {
     // Phase 2: probe tool-calling capability for all available providers
     await probeAllToolCapability();
   } catch (err) {
-    console.error(`[symphony-bridge] Provider probe error: ${err.message}`);
+    logError(`[symphony-bridge] Provider probe error: ${err.message}`);
   } finally {
     providerStatusCache.probing = false;
   }
@@ -1315,7 +1321,7 @@ async function probeAllToolCapability() {
             );
           }
         } catch (err) {
-          console.error(`[symphony-bridge] Tool probe retry failed: ${err.message}`);
+          logError(`[symphony-bridge] Tool probe retry failed: ${err.message}`);
         }
       }, TOOL_PROBE_RETRY_DELAY_MS);
     }
@@ -1351,12 +1357,12 @@ async function invokeWithAI(provider, messages, options = {}) {
   // Validation: truncateMessagesForProvider guarantees at least one message,
   // but double-check to catch any edge cases
   if (!aiMessages || aiMessages.length === 0) {
-    console.error(
+    logError(
       `[symphony-bridge] ❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
     );
-    console.error(`[symphony-bridge]   Original messages: ${messages?.length || 0}`);
-    console.error(`[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`);
-    console.error(
+    logError(`[symphony-bridge]   Original messages: ${messages?.length || 0}`);
+    logError(`[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`);
+    logError(
       `[symphony-bridge]   This should never happen - truncateMessagesForProvider has a fallback`,
     );
     throw new Error(
@@ -2230,7 +2236,7 @@ const server = http.createServer(async (req, res) => {
     // POST /v1/providers/refresh — manually trigger a provider re-probe
     if (req.method === "POST" && req.url === "/v1/providers/refresh") {
       const started = refreshProviderStatus().catch((err) => {
-        console.error(`[symphony-bridge] Manual probe error: ${err.message}`);
+        logError(`[symphony-bridge] Manual probe error: ${err.message}`);
       });
       const isNew = started !== false;
       return sendJson(res, 200, {
@@ -2445,7 +2451,7 @@ const server = http.createServer(async (req, res) => {
       // Hard request timeout — prevents infinite hangs regardless of provider state
       const requestTimeoutHandle = setTimeout(() => {
         const elapsed = Date.now() - startTime;
-        console.error(
+        logError(
           `[symphony-bridge] ⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`,
         );
         logMemory("request-timeout");
@@ -2478,10 +2484,9 @@ const server = http.createServer(async (req, res) => {
                 type: "timeout_error",
               },
             });
+          }          } catch (e) {
+            logError(`[symphony-bridge] Timeout cleanup error: ${e.message}`);
           }
-        } catch (e) {
-          console.error(`[symphony-bridge] Timeout cleanup error: ${e.message}`);
-        }
       }, REQUEST_TIMEOUT_MS);
 
       if (stream) {
@@ -2655,7 +2660,7 @@ const server = http.createServer(async (req, res) => {
           clearInterval(heartbeat);
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
-          console.error(
+          logError(
             `[symphony-bridge] Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`,
           );
 
@@ -2761,7 +2766,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 404, { error: { message: "Not found" } });
     }
   } catch (error) {
-    console.error(`[symphony-bridge] Error: ${error.message}`);
+    logError(`[symphony-bridge] Error: ${error.message}`);
     logMemory("request-error");
     
     // Clean up request tracking on error (only if requestId was defined)
@@ -2772,7 +2777,7 @@ const server = http.createServer(async (req, res) => {
     // Prevent ERR_HTTP_HEADERS_SENT crash - don't try to send JSON response
     // if headers have already been sent (e.g., streaming mode with partial response)
     if (res.writableEnded) {
-      console.error(
+      logError(
         `[symphony-bridge] Cannot send error response - response already ended (stream likely failed mid-flight)`,
       );
       return;
@@ -2782,14 +2787,14 @@ const server = http.createServer(async (req, res) => {
     // In this case, try to send an error chunk via the stream instead of JSON
     const headersSent = res.headersSent || res.writableFinished;
     if (headersSent) {
-      console.error(
+      logError(
         `[symphony-bridge] Headers already sent - sending error as stream chunk instead of JSON`,
       );
       // Use a fallback model ID since route may not be defined if error occurred early
       const fallbackModelId = typeof route !== 'undefined' ? route.responseModelId : MODEL_ID;
       try {
         if (res.writableEnded) {
-          console.error(`[symphony-bridge] Cannot send error chunk - response already ended`);
+          logError(`[symphony-bridge] Cannot send error chunk - response already ended`);
           return;
         }
         const errorChunk = {
@@ -2810,7 +2815,7 @@ const server = http.createServer(async (req, res) => {
         res.end();
         return;
       } catch (streamErr) {
-        console.error(`[symphony-bridge] Failed to send error chunk: ${streamErr.message}`);
+        logError(`[symphony-bridge] Failed to send error chunk: ${streamErr.message}`);
         return;
       }
     }
