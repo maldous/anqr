@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed } from "../notifications/discord-webhook.mjs";
 
 // OpenClaw Gateway API for TTS voice announcements
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
@@ -2209,17 +2209,31 @@ const server = http.createServer(async (req, res) => {
         
         // Send Discord progress update every 30 seconds
         progressCounter++;
-        if (progressCounter % 1 === 0 && issueContext) { // Every 30s (since interval is 30s)
-          const progressMessage = `${issueContext.identifier}: Still working... (${formatElapsed(elapsed)} elapsed)`;
-          streamDiscordUpdate(
-            progressMessage,
-            { emoji: "⏳", timestamp: true }
-          ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
-          
-          // Voice announcement every 2 minutes
-          if (progressCounter % 4 === 0) {
-            speakAnnouncement(`Still working on ${issueContext.identifier}. ${formatElapsed(elapsed)} elapsed.`, sessionId)
-              .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
+        if (progressCounter % 1 === 0) { // Every 30s (since interval is 30s)
+          if (issueContext) {
+            // Linear issue: normal text progress
+            const progressMessage = `${issueContext.identifier}: Still working... (${formatElapsed(elapsed)} elapsed)`;
+            streamDiscordUpdate(
+              progressMessage,
+              { emoji: "⏳", timestamp: true }
+            ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
+            
+            // Voice announcement every 2 minutes
+            if (progressCounter % 4 === 0) {
+              speakAnnouncement(`Still working on ${issueContext.identifier}. ${formatElapsed(elapsed)} elapsed.`, sessionId)
+                .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
+            }
+          } else {
+            // Non-Linear: normal text/voice progress
+            streamDiscordUpdate(
+              `Still working... (${formatElapsed(elapsed)} elapsed)`,
+              { emoji: "⏳", timestamp: true }
+            ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
+            
+            if (progressCounter % 4 === 0) {
+              speakAnnouncement(`Still working. ${formatElapsed(elapsed)} elapsed.`, sessionId)
+                .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
+            }
           }
         }
       }, 30_000); // Log every 30 seconds
@@ -2300,18 +2314,30 @@ const server = http.createServer(async (req, res) => {
 
       // Send Discord notification and voice announcement that we're starting to process
       if (issueContext) {
+        // Linear issue: Send embedded message (text) + special voice announcement
         const startMessage = `Starting ${issueContext.identifier}: ${issueContext.title}`;
-        streamDiscordUpdate(
-          `🚀 ${startMessage}`,
-          { emoji: "🚀" }
-        ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+        sendDiscordEmbed({
+          title: `🚀 ${issueContext.identifier}`,
+          description: issueContext.title,
+          color: 0x00FF00, // Green for start
+          fields: [
+            { name: "Status", value: "Starting", inline: true },
+            { name: "Provider", value: selectedProvider?.name || "unknown", inline: true }
+          ],
+          footer: "OpenClaw Symphony Bridge"
+        }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
         
-        // Voice: simple task start announcement (no conversational text)
-        speakAnnouncement(`Working on ${issueContext.identifier}.`, sessionId).catch(err => 
+        // Voice: Special announcement with sound effect marker
+        speakAnnouncement(`🔔 Working on ${issueContext.identifier}.`, sessionId).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
       } else {
-        // Voice announcement for non-Linear requests (webchat, etc.)
+        // Normal text/voice for non-Linear requests
+        streamDiscordUpdate(
+          "Processing your request...",
+          { emoji: "⏳" }
+        ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+        
         speakAnnouncement(`Processing your request.`, sessionId).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
@@ -2336,19 +2362,30 @@ const server = http.createServer(async (req, res) => {
               console.log(
                 `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: codebuff, ${result.text.length} chars)`,
               );
-              // Send Discord completion notification and voice announcement
-              const completeMessage = `Completed ${issueContext.identifier}`;
-              streamDiscordUpdate(
-                `✅ ${completeMessage} — ${result.text.length} chars (provider: codebuff)`,
-                { emoji: "✅" }
-              ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+              // Linear issue: Send embedded completion + special voice
+              sendDiscordEmbed({
+                title: `✅ ${issueContext.identifier}`,
+                description: issueContext.title,
+                color: 0x00AA00, // Dark green for completion
+                fields: [
+                  { name: "Status", value: "Completed", inline: true },
+                  { name: "Provider", value: "codebuff", inline: true },
+                  { name: "Response", value: `${result.text.length} chars`, inline: true }
+                ],
+                footer: "OpenClaw Symphony Bridge"
+              }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
               
-              // Voice: simple completion announcement (no conversational text)
-              speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
+              // Voice: Special completion with sound effect marker
+              speakAnnouncement(`🎉 ${issueContext.identifier} is done.`, sessionId).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
             } else {
-              // Voice announcement for non-Linear requests (webchat, etc.)
+              // Normal text/voice completion
+              streamDiscordUpdate(
+                `Request complete — ${result.text.length} chars (provider: codebuff)`,
+                { emoji: "✅" }
+              ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+              
               speakAnnouncement(`Request complete.`, sessionId).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
@@ -2423,19 +2460,29 @@ const server = http.createServer(async (req, res) => {
             console.log(
               `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
             );
-            // Send Discord completion notification and voice announcement
-            const completeMessage = `Completed ${issueContext.identifier}`;
-            streamDiscordUpdate(
-              `✅ ${completeMessage} (provider: ${result.providerName})`,
-              { emoji: "✅" }
-            ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+            // Linear issue: Send embedded completion + special voice
+            sendDiscordEmbed({
+              title: `✅ ${issueContext.identifier}`,
+              description: issueContext.title,
+              color: 0x00AA00, // Dark green for completion
+              fields: [
+                { name: "Status", value: "Completed", inline: true },
+                { name: "Provider", value: result.providerName, inline: true }
+              ],
+              footer: "OpenClaw Symphony Bridge"
+            }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
             
-            // Voice: simple completion announcement (no conversational text)
-            speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
+            // Voice: Special completion with sound effect marker
+            speakAnnouncement(`🎉 ${issueContext.identifier} is done.`, sessionId).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
           } else {
-            // Voice announcement for non-Linear requests (webchat, etc.)
+            // Normal text/voice completion
+            streamDiscordUpdate(
+              `Request complete (provider: ${result.providerName})`,
+              { emoji: "✅" }
+            ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+            
             speakAnnouncement(`Request complete.`, sessionId).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
@@ -2501,19 +2548,30 @@ const server = http.createServer(async (req, res) => {
             ? resultText.split("\n")[0].trim().slice(0, 100)
             : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
-          // Send Discord completion notification and voice announcement
-          const completeMessage = `Completed ${issueContext.identifier}`;
-          streamDiscordUpdate(
-            `✅ ${completeMessage} — ${firstLine} (provider: ${result.providerName})`,
-            { emoji: "✅" }
-          ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          // Linear issue: Send embedded completion + special voice
+          sendDiscordEmbed({
+            title: `✅ ${issueContext.identifier}`,
+            description: issueContext.title,
+            color: 0x00AA00, // Dark green for completion
+            fields: [
+              { name: "Status", value: "Completed", inline: true },
+              { name: "Provider", value: result.providerName, inline: true },
+              { name: "Summary", value: firstLine, inline: false }
+            ],
+            footer: "OpenClaw Symphony Bridge"
+          }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
           
-          // Voice: simple completion announcement (no conversational text)
-          speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
+          // Voice: Special completion with sound effect marker
+          speakAnnouncement(`🎉 ${issueContext.identifier} is done.`, sessionId).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
         } else {
-          // Voice announcement for non-Linear requests (webchat, etc.)
+          // Normal text/voice completion
+          streamDiscordUpdate(
+            `Request complete (provider: ${result.providerName})`,
+            { emoji: "✅" }
+          ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          
           speakAnnouncement(`Request complete.`, sessionId).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
