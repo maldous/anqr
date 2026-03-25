@@ -2782,7 +2782,7 @@ const server = http.createServer(async (req, res) => {
 // --------------------------------------------------------------------------<
 
 async function shutdown(signal) {
-  console.log(`\n[symphony-bridge] Received ${signal}, shutting down immediately...`);
+  console.log(`\n[symphony-bridge] Received ${signal}, shutting down...`);
   
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -2792,6 +2792,7 @@ async function shutdown(signal) {
     await updateMemory(
       `Symphony Bridge stopped (PID ${process.pid}, commit ${commitHash}, ${available}/${total} providers, signal: ${signal})`
     );
+    console.log(`[symphony-bridge] 📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
     console.log(`[symphony-bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }

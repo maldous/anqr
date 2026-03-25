@@ -1578,7 +1578,7 @@ const server = http.createServer(async (req, res) => {
 
 // Graceful shutdown
 async function shutdown(signal) {
-  console.log(`\n[bridge] Received ${signal}, shutting down immediately...`);
+  console.log(`\n[bridge] Received ${signal}, shutting down...`);
   
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -1589,7 +1589,7 @@ async function shutdown(signal) {
     const mode = STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "unknown";
     const entry = `\n### ${timestamp} - Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})\n`;
     await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
-    console.log(`[bridge] 📝 Updated MEMORY.md on shutdown`);
+    console.log(`[bridge] 📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
     console.log(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
