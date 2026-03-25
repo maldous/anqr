@@ -2382,7 +2382,6 @@ const server = http.createServer(async (req, res) => {
         description: requestDescription,
         color: 0xFFA500, // Orange
         fields: [
-          { name: "Provider", value: selectedProvider?.name || "unknown", inline: true },
           { name: "Model", value: selectedProvider?.model || "unknown", inline: true },
         ],
       }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
@@ -2450,10 +2449,8 @@ const server = http.createServer(async (req, res) => {
             
             // Send comprehensive completion metrics
             const metricsFields = [
-              { name: "Status", value: "✅ Complete", inline: false },
               { name: "Output", value: `${result.text.length} characters`, inline: true },
-              { name: "Time", value: elapsedTime, inline: true },
-              { name: "Provider", value: "codebuff", inline: true },
+              { name: "Model", value: "codebuff", inline: true },
               { name: "Avg Duration", value: `${codebuffStats.avgDurationMs || 0}ms`, inline: true },
               { name: "Success Rate", value: codebuffStats.successRate || 'N/A', inline: true },
               { name: "Validation Rate", value: codebuffStats.validationRate || 'N/A', inline: true },
@@ -2462,7 +2459,7 @@ const server = http.createServer(async (req, res) => {
             ];
             
             await sendDiscordEmbed({
-              title: issueContext ? `✅ ${issueContext.identifier} Complete` : "✅ Request Complete",
+              title: issueContext ? `${issueContext.identifier} Complete` : "Request Complete",
               description: issueContext?.title || "Request completed successfully",
               color: 0x00FF00, // Green
               fields: metricsFields,
@@ -2544,10 +2541,8 @@ const server = http.createServer(async (req, res) => {
           
           // Send comprehensive completion metrics
           const metricsFields = [
-            { name: "Status", value: "✅ Complete", inline: false },
             { name: "Output", value: `${result.text.length} characters`, inline: true },
-            { name: "Time", value: elapsedTime, inline: true },
-            { name: "Provider", value: result.providerName, inline: true },
+            { name: "Model", value: result.providerName, inline: true },
             { name: "Avg Duration", value: `${providerStats.avgDurationMs || 0}ms`, inline: true },
             { name: "Success Rate", value: providerStats.successRate || 'N/A', inline: true },
             { name: "Validation Rate", value: providerStats.validationRate || 'N/A', inline: true },
@@ -2630,13 +2625,11 @@ const server = http.createServer(async (req, res) => {
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
-        const elapsedTime = formatElapsed(durationMs);
+        const durationMs = Date.now() - startTime;
         
         const metricsFields = [
-          { name: "Status", value: "✅ Complete", inline: false },
           { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
-          { name: "Time", value: elapsedTime, inline: true },
-          { name: "Provider", value: result.providerName, inline: true },
+          { name: "Model", value: result.providerName, inline: true },
           { name: "Tokens In/Out", value: `${tokensIn}/${tokensOut}`, inline: true },
           { name: "Avg Duration", value: `${providerStats.avgDurationMs || 0}ms`, inline: true },
           { name: "Success Rate", value: providerStats.successRate || 'N/A', inline: true },
@@ -2646,7 +2639,7 @@ const server = http.createServer(async (req, res) => {
         ];
         
         await sendDiscordEmbed({
-          title: issueContext ? `✅ ${issueContext.identifier} Complete` : "✅ Request Complete",
+          title: issueContext ? `${issueContext.identifier} Complete` : "Request Complete",
           description: issueContext?.title || firstLine,
           color: 0x00FF00, // Green
           fields: metricsFields,
