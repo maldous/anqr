@@ -146,7 +146,15 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
 
 **Status**: ✅ Active and streaming to Discord text channel `1486262758256410646`
 
-**Setup Complete (2026-03-25 21:08 GMT+11):**
+**Setup Complete (2026-03-25 21:26 GMT+11):**
 - Discord webhook URL configured in `services/systemd/anqr-ops.env`
-- Symphony bridge restarted and active
-- Will send notifications when requests start and complete
+- Symphony bridge updated with corrected TTS endpoint
+- OpenClaw Gateway TTS endpoint: `/tools/invoke` (not `/v1/tools/execute`)
+- Request format: `{ tool: "tts", args: { text } }` (not `input`)
+- All integration tests passing (commit c2623208d):
+  ✅ Discord text messages
+  ✅ Discord embedded messages
+  ✅ Discord progress updates
+  ✅ Voice announcements via OpenClaw TTS
+- Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
+- Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
