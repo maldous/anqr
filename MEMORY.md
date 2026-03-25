@@ -109,29 +109,24 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Status** (2026-03-25 23:18):
+**Implementation Status** (2026-03-25 23:30):
 
-✅ **Code Updated**: Symphony bridge now uses `/v1/responses` endpoint with Discord context headers (Commit d43844ee1)
-✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1596546)
-❌ **Test Failed**: `/v1/responses` endpoint returned "Not Found" (404)
-⚠️ **Hypothesis Unproven**: Cannot confirm if session-targeted path works - `/v1/responses` endpoint does not exist
+✅ **Code Updated**: Symphony bridge now uses `/v1/chat/completions` endpoint with Discord context headers (Commit ea9462c92)
+✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1601622)
+✅ **Test Conducted**: User sent test message "Say this in Discord voice: 'Processing request'"
+❌ **Result**: TTS tool not available in Discord session context (expected - confirms Symphony runs outside session)
 
-**Code Changes** (Commit d43844ee1):
-- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/responses`
+**Code Changes** (Commit ea9462c92):
+- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/chat/completions`
 - Includes Discord context headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: discord-announcer`, `x-openclaw-message-channel: discord`
-- Request body: `{ model: "openclaw", user: "discord-announcer", input: "Say this in Discord voice: \"<text>\"" }`
-- Input prompt explicitly instructs OpenClaw to speak in Discord voice
-
-**Test Result**:
-```bash
-curl -s http://127.0.0.1:18789/v1/responses -H "Authorization: Bearer $OPENCLAW_GATEWAY_TOKEN" ...
-# Response: "Not Found"
-```
+- Request body: `{ model: "symphony-bridge/symphony/main", messages: [{role: "user", content: "Say this in Discord voice: \"<text>\""}], stream: false }`
+- Uses standard OpenAI chat completions format instead of `/v1/responses`
 
 **Conclusion**:
-- `/v1/responses` is not a valid OpenClaw Gateway endpoint
-- The recommended implementation path from user guidance cannot be tested without correct endpoint
-- **Next action required**: User must provide correct OpenClaw Gateway endpoint for Discord-bound execution, OR confirm that Symphony bridge voice announcements are not feasible with current OpenClaw architecture
+- TTS tool is not available in Discord session context (confirmed)
+- Symphony bridge voice announcements require actual Symphony execution (Linear issue processing)
+- User must trigger a real Symphony bridge request to test voice announcements
+- Text notifications via webhook are working (separate from voice)
 
 **Voice announcements** (attempted but not working):
 - **Target**: Send voice to Discord voice channel 1486262758256410647
@@ -146,7 +141,7 @@ curl -s http://127.0.0.1:18789/v1/responses -H "Authorization: Bearer $OPENCLAW_
 - ✅ Simple messages for normal requests
 - ✅ Sent to Discord text channel 1486262758256410646
 
-**Symphony Bridge**: Restarted successfully (PID 1596546, commit d43844ee1)
+**Symphony Bridge**: Restarted successfully (PID 1601622, commit ea9462c92)
 
 ## Technical Notes
 
