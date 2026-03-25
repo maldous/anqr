@@ -577,6 +577,12 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
     cwd: cwd || DEFAULT_CWD,
   });
 
+  // No-op streamActivity for non-streaming mode (just logs, doesn't send to client)
+  const streamActivity = (_text) => {
+    // In non-streaming mode, we don't send to client, just log
+    // The streaming version will override this with actual SSE sending
+  };
+
   const handleEvent = (event) => {
     try {
       if (!event) return;
@@ -605,7 +611,9 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
         const display = formatToolCallDisplay(toolName, input);
         if (display) console.log(`[bridge] ${display}`);
       } else if (type === "tool_result" || type === "tool-result") {
-        console.log(`[bridge] ✅ codebuff ${event.toolName || "tool"} done`);
+        const toolName = event.toolName || "tool";
+        console.log(`[bridge] ✅ codebuff ${toolName} done`);
+        streamActivity(`✅ ${toolName} done\n`);
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) console.log(`[bridge] 💡 ${text.slice(0, 80)}...`);
@@ -618,9 +626,9 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
         console.log(`[bridge] 🤖 codebuff subagent: ${name}`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
-        console.log(
-          `[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`,
-        );
+        const name = event.displayName || event.agentType || "subagent";
+        console.log(`[bridge] 🤖 codebuff ${name} done`);
+        streamActivity(`🤖 ${name} done\n`);
       } else if (type === "agent_start" || type === "agent_finish") {
         console.log(`[bridge] 🤖 codebuff ${type}`);
       } else if (type === "error") {
@@ -846,7 +854,9 @@ async function trySingleAccountStream(
           streamActivity(display + "\n");
         }
       } else if (type === "tool_result" || type === "tool-result") {
-        console.log(`[bridge] ✅ codebuff ${event.toolName || "tool"} done`);
+        const toolName = event.toolName || "tool";
+        console.log(`[bridge] ✅ codebuff ${toolName} done`);
+        streamActivity(`✅ ${toolName} done\n`);
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
@@ -863,9 +873,9 @@ async function trySingleAccountStream(
         streamActivity(`🤖 ${name}\n`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
-        console.log(
-          `[bridge] 🤖 codebuff ${event.displayName || event.agentType || "subagent"} done`,
-        );
+        const name = event.displayName || event.agentType || "subagent";
+        console.log(`[bridge] 🤖 codebuff ${name} done`);
+        streamActivity(`🤖 ${name} done\n`);
       } else if (type === "agent_start" || type === "agent_finish") {
         console.log(`[bridge] 🤖 codebuff ${type}`);
       } else if (type === "error") {
@@ -1173,6 +1183,14 @@ const server = http.createServer(async (req, res) => {
 
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
+        // Heartbeat to keep connection alive
+        const heartbeat = setInterval(() => {
+          try {
+            res.write(": heartbeat\n\n");
+          } catch {
+            // Ignore write errors on closed connections
+          }
+        }, 10000);
 
         let streamResult = null;
 
@@ -1275,6 +1293,8 @@ const server = http.createServer(async (req, res) => {
           res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
           res.end();
+        } finally {
+          clearInterval(heartbeat);
         }
 
         return;
