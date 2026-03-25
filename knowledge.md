@@ -49,6 +49,7 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 42 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests.
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
 - **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
+- **Bridge Restart Procedure**: After code changes to Symphony/Codebuff bridges, always restart the bridge service: `sudo systemctl restart anqr-symphony-bridge.service` (or equivalent for Codebuff bridge). The bridges run as background services and won't pick up code changes until restarted.
 
 ### Current 1.0 Claim
 

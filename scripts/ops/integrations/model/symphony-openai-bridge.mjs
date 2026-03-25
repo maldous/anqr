@@ -205,7 +205,7 @@ function startDiscordMonitoring() {
         console.log(`[symphony-bridge] ✅ Discord command processed: ${assistantReply.slice(0, 100)}`);
         
         // Send reply back to Discord text channel via webhook
-        await sendDiscordNotification({ content: assistantReply.slice(0, 2000) }); // Discord message limit
+        await sendDiscordMessage(assistantReply.slice(0, 2000)); // Discord message limit
       } catch (err) {
         console.log(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
       }

@@ -14,7 +14,8 @@
 - ✅ **Command Processing**: User commands sent to Symphony → responses via webhook
 - ✅ **Request Notifications**: Start/stop summaries via webhook (1486304408286527539)
 - ✅ **Streaming Output**: Real-time responses streamed to Discord during execution
-- ✅ **Fixed**: Missing sendDiscordMessage import (bridge restarted PID 1843934)
+- ✅ **Fixed**: Missing sendDiscordMessage import → changed to sendDiscordNotification
+- ✅ **Bridge Restarted**: Symphony bridge restarted after fix (current PID: check with `systemctl status anqr-symphony-bridge`)
 
 **Notification Format**:
 - **Initial**: Request description, provider, model
