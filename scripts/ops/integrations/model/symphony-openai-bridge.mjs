@@ -82,7 +82,77 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate } from "../../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate } from "../notifications/discord-webhook.mjs";
+
+// OpenClaw Gateway API for TTS voice announcements
+const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
+const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
+const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
+const VOICE_ANNOUNCEMENTS_ENABLED = process.env.VOICE_ANNOUNCEMENTS_ENABLED !== "false";
+
+/**
+ * Send a voice announcement via OpenClaw TTS
+ * @param {string} text - Text to speak
+ * @returns {Promise<void>}
+ */
+async function speakAnnouncement(text) {
+  if (!VOICE_ANNOUNCEMENTS_ENABLED) return;
+  if (!OPENCLAW_GATEWAY_TOKEN) {
+    console.log(`[symphony-bridge] Voice announcement skipped: OPENCLAW_GATEWAY_TOKEN not set`);
+    return;
+  }
+
+  try {
+    const requestBody = JSON.stringify({
+      tool: "tts",
+      input: { text },
+    });
+
+    const options = {
+      hostname: OPENCLAW_GATEWAY_HOST,
+      port: OPENCLAW_GATEWAY_PORT,
+      path: "/v1/tools/execute",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(requestBody),
+        "Authorization": `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+      },
+      timeout: 10000,
+    };
+
+    return new Promise((resolve, reject) => {
+      const req = http.request(options, (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          if (res.statusCode === 200) {
+            console.log(`[symphony-bridge] 🔊 Voice announcement sent: "${text.slice(0, 50)}..."`);
+            resolve();
+          } else {
+            console.log(`[symphony-bridge] Voice announcement failed: ${res.statusCode} ${data}`);
+            reject(new Error(`Gateway returned ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on("error", (err) => {
+        console.log(`[symphony-bridge] Voice announcement error: ${err.message}`);
+        reject(err);
+      });
+
+      req.on("timeout", () => {
+        req.destroy();
+        reject(new Error("Voice announcement timeout"));
+      });
+
+      req.write(requestBody);
+      req.end();
+    });
+  } catch (err) {
+    console.log(`[symphony-bridge] Voice announcement exception: ${err.message}`);
+  }
+}
 
 // --------------------------------------------------------------------------
 // Console warning suppression
@@ -2198,12 +2268,17 @@ const server = http.createServer(async (req, res) => {
         `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
       );
 
-      // Send Discord notification that we're starting to process
+      // Send Discord notification and voice announcement that we're starting to process
       if (issueContext) {
+        const startMessage = `Starting ${issueContext.identifier}: ${issueContext.title}`;
         streamDiscordUpdate(
-          `🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`,
+          `🚀 ${startMessage}`,
           { emoji: "🚀" }
         ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+        
+        speakAnnouncement(startMessage).catch(err => 
+          console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+        );
       }
 
         if (selectedProvider?.name === "codebuff") {
@@ -2225,11 +2300,16 @@ const server = http.createServer(async (req, res) => {
               console.log(
                 `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: codebuff, ${result.text.length} chars)`,
               );
-              // Send Discord completion notification
+              // Send Discord completion notification and voice announcement
+              const completeMessage = `Completed ${issueContext.identifier}`;
               streamDiscordUpdate(
-                `✅ Completed: ${issueContext.identifier} — ${result.text.length} chars (provider: codebuff)`,
+                `✅ ${completeMessage} — ${result.text.length} chars (provider: codebuff)`,
                 { emoji: "✅" }
               ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+              
+              speakAnnouncement(completeMessage).catch(err => 
+                console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+              );
             }
 
             const durationMs = Date.now() - startTime;
@@ -2301,11 +2381,16 @@ const server = http.createServer(async (req, res) => {
             console.log(
               `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
             );
-            // Send Discord completion notification
+            // Send Discord completion notification and voice announcement
+            const completeMessage = `Completed ${issueContext.identifier}`;
             streamDiscordUpdate(
-              `✅ Completed: ${issueContext.identifier} (provider: ${result.providerName})`,
+              `✅ ${completeMessage} (provider: ${result.providerName})`,
               { emoji: "✅" }
             ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+            
+            speakAnnouncement(completeMessage).catch(err => 
+              console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+            );
           }
 
           const durationMs = Date.now() - startTime;
@@ -2368,11 +2453,16 @@ const server = http.createServer(async (req, res) => {
             ? resultText.split("\n")[0].trim().slice(0, 100)
             : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
-          // Send Discord completion notification
+          // Send Discord completion notification and voice announcement
+          const completeMessage = `Completed ${issueContext.identifier}`;
           streamDiscordUpdate(
-            `✅ Completed: ${issueContext.identifier} — ${firstLine} (provider: ${result.providerName})`,
+            `✅ ${completeMessage} — ${firstLine} (provider: ${result.providerName})`,
             { emoji: "✅" }
           ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          
+          speakAnnouncement(completeMessage).catch(err => 
+            console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+          );
         }
 
         const durationMs = Date.now() - startTime;
