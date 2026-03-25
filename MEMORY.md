@@ -83,17 +83,30 @@
 - **WEBHOOK (1486304408286527539)**: Send text messages here
 - **RULE**: DO NOT SEND VOICE/TTS TO TEXT CHANNEL
 
-**Implementation** (commit 0d301dc5f):
-- Restored `speakAnnouncement()` function using OpenClaw Gateway `/tools/invoke` endpoint
-- ❌ **BROKEN**: Calls `message` tool which sends TEXT to voice channel (user can READ it, not HEAR it)
-- ✅ Uses Discord webhook for text messages to TEXT_CHANNEL_ID
+**Implementation** (commit 958cdc92a - BROKEN):
+- ❌ `speakAnnouncement()` function uses OpenClaw Gateway `/tools/invoke` endpoint with `tts` tool
+- ❌ `tts` tool generates audio files locally but DOES NOT play them in Discord voice
+- ✅ Discord webhook for text messages to TEXT_CHANNEL_ID
 
-**ISSUE IDENTIFIED (2026-03-25 22:27)**:
-- `message` tool sends TEXT messages to Discord channels (even voice channels)
-- User confirmed: "I READ 'Test voice announcement from Symphony Bridge.' in the VOICE CHANNEL - I DIDN'T HEAR IT"
-- **FIX NEEDED**: Use OpenClaw `tts` tool or different method to trigger actual audio playback in Discord voice
+**Issue Identified (2026-03-25 22:32)**:
+- User confirmed: "I HAVE NOT HEARD ANY VOICES"
+- Symphony bridge logs show voice announcements being sent, but TTS tool generates files locally
+- OpenClaw Gateway successfully generates audio (`audioAsVoice: true`, Microsoft provider)
+- **Audio files created** at `/tmp/openclaw/tts-*/voice-*.mp3` but **not played in Discord**
+- **ROOT CAUSE**: `/tools/invoke` with `tts` tool generates audio files but doesn't deliver them to Discord voice
+- **SOLUTION NEEDED**: OpenClaw automatically plays TTS when responding IN a Discord session, not via external API calls
+- **HYPOTHESIS**: Voice announcements only work when sent as responses in an active Discord conversation, not via stateless API calls
 
-**Symphony Bridge**: Restarted successfully (PID 1543805)
+**Voice announcements** (sent to Discord voice via TTS):
+- **Linear issues**: "Working on ISSUE-ID" → "ISSUE-ID: N minutes" (every 2 min) → "ISSUE-ID done"
+- **Normal requests**: "Processing request" → "N minutes elapsed" (every 2 min) → "Request complete"
+
+**Text notifications** (sent to Discord text channel via webhook):
+- Progress updates every 30 seconds
+- Embedded messages for Linear issues
+- Simple messages for normal requests
+
+**Symphony Bridge**: Restarted successfully (PID 1550918)
 
 ## Technical Notes
 
