@@ -115,9 +115,9 @@ async function speakAnnouncement(text) {
         "x-openclaw-message-channel": "discord",
       },
       body: JSON.stringify({
-        model: "openclaw",
-        user: "discord-announcer",
-        input: `Say this in Discord voice: "${text}"`,
+        model: "symphony-bridge/symphony/main",
+        user: "symphony-announcer",
+        input: text,
       }),
     });
 
