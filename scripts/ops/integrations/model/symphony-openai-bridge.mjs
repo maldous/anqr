@@ -81,6 +81,9 @@ import { Codex } from "@openai/codex-sdk";
 // Truncation utilities (extracted for unit-testability)
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
+// Discord webhook notifications
+import { streamDiscordUpdate } from "../../notifications/discord-webhook.mjs";
+
 // --------------------------------------------------------------------------
 // Console warning suppression
 // --------------------------------------------------------------------------
@@ -766,7 +769,7 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
 
   // Check if evaluation cycle wants to force-sample a specific provider
   const stats = getProviderStats();
-  const allProviderNames = route.allowedNames || Array.from(stats.keys()).filter(n => !excludeSet.has(n));
+  const allProviderNames = route.allowedNames || Object.keys(stats).filter(n => !excludeSet.has(n));
   const evaluationSample = getEvaluationSampleProvider(allProviderNames, stats);
   
   if (evaluationSample) {
@@ -2191,9 +2194,17 @@ const server = http.createServer(async (req, res) => {
         // First, let credit-gate select the best provider (with session awareness)
         const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
         
-        console.log(
-          `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
-        );
+      console.log(
+        `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
+      );
+
+      // Send Discord notification that we're starting to process
+      if (issueContext) {
+        streamDiscordUpdate(
+          `🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`,
+          { emoji: "🚀" }
+        ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+      }
 
         if (selectedProvider?.name === "codebuff") {
           try {
@@ -2214,6 +2225,11 @@ const server = http.createServer(async (req, res) => {
               console.log(
                 `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: codebuff, ${result.text.length} chars)`,
               );
+              // Send Discord completion notification
+              streamDiscordUpdate(
+                `✅ Completed: ${issueContext.identifier} — ${result.text.length} chars (provider: codebuff)`,
+                { emoji: "✅" }
+              ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
             }
 
             const durationMs = Date.now() - startTime;
@@ -2285,6 +2301,11 @@ const server = http.createServer(async (req, res) => {
             console.log(
               `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
             );
+            // Send Discord completion notification
+            streamDiscordUpdate(
+              `✅ Completed: ${issueContext.identifier} (provider: ${result.providerName})`,
+              { emoji: "✅" }
+            ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
           }
 
           const durationMs = Date.now() - startTime;
@@ -2347,6 +2368,11 @@ const server = http.createServer(async (req, res) => {
             ? resultText.split("\n")[0].trim().slice(0, 100)
             : "(no content)";
           console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
+          // Send Discord completion notification
+          streamDiscordUpdate(
+            `✅ Completed: ${issueContext.identifier} — ${firstLine} (provider: ${result.providerName})`,
+            { emoji: "✅" }
+          ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
         }
 
         const durationMs = Date.now() - startTime;
@@ -2410,12 +2436,18 @@ const server = http.createServer(async (req, res) => {
       console.error(
         `[symphony-bridge] Headers already sent - sending error as stream chunk instead of JSON`,
       );
+      // Use a fallback model ID since route may not be defined if error occurred early
+      const fallbackModelId = typeof route !== 'undefined' ? route.responseModelId : MODEL_ID;
       try {
+        if (res.writableEnded) {
+          console.error(`[symphony-bridge] Cannot send error chunk - response already ended`);
+          return;
+        }
         const errorChunk = {
           id: `chatcmpl-error-${Date.now()}`,
           object: "chat.completion.chunk",
           created: Math.floor(Date.now() / 1000),
-          model: (route && route.responseModelId) || MODEL_ID,
+          model: fallbackModelId,
           choices: [
             {
               index: 0,
