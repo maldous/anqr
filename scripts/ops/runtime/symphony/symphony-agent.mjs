@@ -57,6 +57,7 @@ import {
   runTests,
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
+import { streamDiscordUpdate } from "../../integrations/notifications/discord-webhook.mjs";
 
 const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
@@ -413,7 +414,7 @@ async function callLLM(provider, messages, taskDescription) {
         body: JSON.stringify({
           model: provider.model || SYMPHONY_BRIDGE_MODEL,
           messages,
-          stream: false,
+          stream: true,
           temperature: 0.2,
         }),
         signal: controller.signal,
@@ -425,10 +426,57 @@ async function callLLM(provider, messages, taskDescription) {
         throw new Error(`Symphony bridge ${res.status}: ${body.slice(0, 500)}`);
       }
 
-      const result = await res.json();
+      // Stream the response and accumulate content
+      let fullContent = "";
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") continue;
+          if (!data.trim()) continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              fullContent += content;
+              process.stdout.write(content); // Stream to console in real-time
+              
+              // Stream to Discord in real-time (non-blocking)
+              streamDiscordUpdate(content, { emoji: "" }).catch(() => {/* ignore */});
+            }
+          } catch {
+            // Skip non-JSON chunks
+          }
+        }
+      }
+
+      if (fullContent) {
+        process.stdout.write("\n"); // Final newline
+      }
+
       return {
-        ...result,
-        providerName: result._symphony_provider || provider.name,
+        choices: [
+          {
+            message: {
+              role: "assistant",
+              content: fullContent,
+              tool_calls: [],
+            },
+          },
+        ],
+        providerName: provider.name,
       };
     } catch (err) {
       clearTimeout(timer);
@@ -462,7 +510,7 @@ async function callLLM(provider, messages, taskDescription) {
         body: JSON.stringify({
           model: CODEBUFF_BRIDGE_MODEL,
           messages: bridgeMessages,
-          stream: false,
+          stream: true,
         }),
         signal: controller.signal,
       });
@@ -473,14 +521,54 @@ async function callLLM(provider, messages, taskDescription) {
         throw new Error(`Bridge API ${res.status}: ${body.slice(0, 500)}`);
       }
 
-      const result = await res.json();
+      // Stream the response and accumulate content
+      let content = "";
+      let finishReason = "stop";
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") continue;
+          if (!data.trim()) continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const deltaContent = parsed.choices?.[0]?.delta?.content;
+            if (deltaContent) {
+              content += deltaContent;
+              process.stdout.write(deltaContent); // Stream to console in real-time
+              
+              // Stream to Discord in real-time (non-blocking)
+              streamDiscordUpdate(deltaContent, { emoji: "" }).catch(() => {/* ignore */});
+            }
+            const reason = parsed.choices?.[0]?.finish_reason;
+            if (reason) {
+              finishReason = reason;
+            }
+          } catch {
+            // Skip non-JSON chunks
+          }
+        }
+      }
+
+      if (content) {
+        process.stdout.write("\n"); // Final newline
+      }
 
       // The bridge returns completion tokens but we need to detect if agent wants continuation
       // Check finish_reason - if "length", agent has more work to do
-      const needsContinuation = result.choices?.[0]?.finish_reason === "length";
-
-      // Return in same format as SDK for compatibility
-      const content = result.choices?.[0]?.message?.content || "";
+      const needsContinuation = finishReason === "length";
 
       // Write report artifact
       const report = {

@@ -18,6 +18,7 @@
 
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
+import { sendDiscordEmbed, sendDiscordMessage } from "../../integrations/notifications/discord-webhook.mjs";
 
 const WATCHDOG_ENABLED = process.env.WATCHDOG_ENABLED !== "false";
 const WATCHDOG_TIMEOUT_MS = parseInt(process.env.WATCHDOG_TIMEOUT_MS || "60000", 10);
@@ -98,7 +99,32 @@ async function rollbackGit() {
     return false;
   }
   
-  log(`🔄 Rolling back from ${currentCommit.slice(0, 7)} to ${previousCommit.slice(0, 7)}...`);
+  // VERY OBVIOUS ROLLBACK BANNER
+  log(``);
+  log(`╔═══════════════════════════════════════════════════════════════════════╗`);
+  log(`║                                                                       ║`);
+  log(`║   🚨 🚨 🚨  WATCHDOG AUTOMATIC ROLLBACK TRIGGERED  🚨 🚨 🚨          ║`);
+  log(`║                                                                       ║`);
+  log(`╚═══════════════════════════════════════════════════════════════════════╝`);
+  log(``);
+  log(`   Reason: Bridge failed to become healthy within timeout`);
+  log(`   Current commit: ${currentCommit.slice(0, 7)} (FAILED)`);
+  log(`   Rolling back to: ${previousCommit.slice(0, 7)} (PREVIOUS)`);
+  log(``);
+  log(`═══════════════════════════════════════════════════════════════════════`);
+  log(``);
+  
+  // Send Discord notification about rollback
+  sendDiscordEmbed({
+    title: "🚨 WATCHDOG AUTOMATIC ROLLBACK TRIGGERED",
+    description: `Bridge failed to become healthy after restart.\n\nRolling back to previous commit...`,
+    color: 0xFF0000, // Red
+    fields: [
+      { name: "Failed Commit", value: currentCommit.slice(0, 7), inline: true },
+      { name: "Rolling Back To", value: previousCommit.slice(0, 7), inline: true },
+      { name: "Timeout", value: `${WATCHDOG_TIMEOUT_MS}ms`, inline: true },
+    ],
+  }).catch(err => log(`⚠️ Failed to send Discord notification: ${err.message}`));
   
   // Hard reset to previous commit
   const resetResult = exec("git reset --hard HEAD~1");
@@ -109,13 +135,49 @@ async function rollbackGit() {
   
   const newHead = exec("git rev-parse HEAD");
   if (newHead === previousCommit) {
-    log(`✅ Successfully rolled back to ${newHead.slice(0, 7)}`);
+    log(``);
+    log(`✅ ROLLBACK SUCCESSFUL`);
+    log(`   HEAD is now at: ${newHead.slice(0, 7)}`);
+    log(``);
     
-    // Update MEMORY.md with rollback notice
+    // Send Discord success notification
+    sendDiscordEmbed({
+      title: "✅ Watchdog Rollback Successful",
+      description: `Successfully rolled back to previous commit.\n\nBridge services will be restarted.`,
+      color: 0x00FF00, // Green
+      fields: [
+        { name: "Reverted Commit", value: currentCommit.slice(0, 7), inline: true },
+        { name: "Current Commit", value: newHead.slice(0, 7), inline: true },
+      ],
+    }).catch(err => log(`⚠️ Failed to send Discord notification: ${err.message}`));
+    
+    // Update MEMORY.md with very obvious rollback notice
     try {
       const timestamp = new Date().toISOString().split('T')[0];
-      const note = `\n### ${timestamp} - Watchdog rolled back to ${newHead.slice(0, 7)} (previous commit failed health checks)\n`;
-      writeFileSync("MEMORY.md", note, { flag: "a" });
+      const rollbackBanner = `
+
+═══════════════════════════════════════════════════════════════════════════════
+🚨 🚨 🚨  WATCHDOG AUTOMATIC ROLLBACK OCCURRED  🚨 🚨 🚨
+═══════════════════════════════════════════════════════════════════════════════
+
+### ${timestamp} - WATCHDOG ROLLBACK: ${currentCommit.slice(0, 7)} → ${newHead.slice(0, 7)}
+
+**REASON**: Bridge health check failed after restart (timeout: ${WATCHDOG_TIMEOUT_MS}ms)
+
+**ACTION TAKEN**:
+- Git reset --hard to previous commit (${newHead.slice(0, 7)})
+- Bridge services restarted with previous code
+- System automatically recovered
+
+**FAILED COMMIT**: ${currentCommit.slice(0, 7)} (reverted)
+**CURRENT COMMIT**: ${newHead.slice(0, 7)} (restored)
+
+⚠️ **IMPORTANT**: Review the failed commit to identify what broke the bridge startup!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+`;
+      writeFileSync("MEMORY.md", rollbackBanner, { flag: "a" });
       log(`📝 Updated MEMORY.md with rollback notice`);
     } catch (err) {
       log(`⚠️ Failed to update MEMORY.md: ${err.message}`);
@@ -129,8 +191,16 @@ async function rollbackGit() {
 }
 
 function restartBridge(name) {
-  log(`🔄 Restarting ${name}...`);
   const serviceName = name === "Symphony" ? "anqr-symphony-bridge" : "anqr-codebuff-bridge";
+  
+  log(``);
+  log(`════════════════════════════════════════════════════════════════`);
+  log(`🔄 RESTARTING ${name.toUpperCase()} BRIDGE SERVICE`);
+  log(`   Service: ${serviceName}`);
+  log(`   Reason: Post-rollback recovery`);
+  log(`════════════════════════════════════════════════════════════════`);
+  log(``);
+  
   const result = exec(`systemctl --user restart ${serviceName}`);
   if (result !== null) {
     log(`✅ ${name} restart initiated`);
@@ -194,10 +264,54 @@ async function main() {
     };
     
     if (afterRollback.symphony && afterRollback.codebuff) {
-      log(`✅ Rollback successful - all bridges healthy`);
+      log(``);
+      log(`╔═══════════════════════════════════════════════════════════════════════╗`);
+      log(`║                                                                       ║`);
+      log(`║   ✅ ✅ ✅  WATCHDOG RECOVERY SUCCESSFUL  ✅ ✅ ✅                    ║`);
+      log(`║                                                                       ║`);
+      log(`╚═══════════════════════════════════════════════════════════════════════╝`);
+      log(``);
+      log(`   All bridges are now healthy after rollback`);
+      log(`   System is operational`);
+      log(``);
+      
+      // Send final success notification to Discord
+      await sendDiscordEmbed({
+        title: "🎉 WATCHDOG RECOVERY COMPLETE",
+        description: `All bridges are healthy after automatic rollback.\n\nSystem is operational.`,
+        color: 0x00FF00, // Green
+        fields: [
+          { name: "Symphony Bridge", value: "✅ Healthy", inline: true },
+          { name: "Codebuff Bridge", value: "✅ Healthy", inline: true },
+        ],
+      }).catch(err => log(`⚠️ Failed to send Discord notification: ${err.message}`));
+      
       process.exit(0);
     } else {
-      log(`❌ Rollback did not fix the issue - manual intervention required`);
+      log(``);
+      log(`╔═══════════════════════════════════════════════════════════════════════╗`);
+      log(`║                                                                       ║`);
+      log(`║   ❌ ❌ ❌  WATCHDOG RECOVERY FAILED  ❌ ❌ ❌                        ║`);
+      log(`║                                                                       ║`);
+      log(`╚═══════════════════════════════════════════════════════════════════════╝`);
+      log(``);
+      log(`   Rollback did not fix the issue`);
+      log(`   MANUAL INTERVENTION REQUIRED`);
+      log(`   Symphony: ${afterRollback.symphony ? "✅ Healthy" : "❌ Failed"}`);
+      log(`   Codebuff: ${afterRollback.codebuff ? "✅ Healthy" : "❌ Failed"}`);
+      log(``);
+      
+      // Send critical failure notification to Discord
+      await sendDiscordEmbed({
+        title: "🚨 WATCHDOG RECOVERY FAILED - MANUAL INTERVENTION REQUIRED",
+        description: `Automatic rollback did not fix the issue.\n\n**ACTION NEEDED**: Manual investigation required!`,
+        color: 0xFF0000, // Red
+        fields: [
+          { name: "Symphony Bridge", value: afterRollback.symphony ? "✅ Healthy" : "❌ Failed", inline: true },
+          { name: "Codebuff Bridge", value: afterRollback.codebuff ? "✅ Healthy" : "❌ Failed", inline: true },
+        ],
+      }).catch(err => log(`⚠️ Failed to send Discord notification: ${err.message}`));
+      
       process.exit(1);
     }
   }

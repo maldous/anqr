@@ -1,5 +1,14 @@
 # ANQR Knowledge Base
 
+## User Preferences
+
+### Communication Style
+
+- **Progress Updates**: Provide step-by-step updates as requests are being processed. Announce what you're doing before performing each major action.
+- **Transparency**: Keep the user informed throughout multi-step processes rather than only reporting when complete.
+- **Streaming Reconstruction**: When processing requests, reconstruct the natural stream of communication with proper line feeds before emojis, markdown formatting, and clear progress markers so the user can follow along in real-time.
+- **No Raw JSON**: Never display raw JSON tool results or internal message formats. Always format responses as natural language with proper markdown. The user should never see unformatted data structures like `{"type":"lastMessage","value":[...]}`.
+
 ## System Overview
 
 ### Purpose

@@ -203,7 +203,17 @@ systemctl --user daemon-reload
 systemctl --user enable --now anqr-watchdog.service
 ```
 
-**Status**: ✅ **FIXED** (Commit 537454258) - Watchdog false positives resolved.
+**Status**: ✅ **DEPLOYED AND VERIFIED** (PID 1886392)
+
+**Enhancement** (2026-03-26 02:00):
+- **Added Very Obvious Rollback Messaging**: Console banners with box-drawing characters and emojis
+- **Discord Notifications**: All watchdog events now send Discord embeds:
+  - 🚨 Red alert when rollback is triggered (with failed/target commit info)
+  - ✅ Green confirmation when rollback succeeds
+  - 🎉 Green success when recovery is complete (all bridges healthy)
+  - 🚨 Red critical alert if recovery fails (manual intervention needed)
+- **Enhanced MEMORY.md Entries**: Rollback events now include detailed banner with reason, action taken, and warning to review failed commit
+- **Result**: Impossible to miss when watchdog takes action - visible in logs, Discord, and MEMORY.md
 
 **Bug Fix** (2026-03-26 01:43):
 - **Problem**: Watchdog was restarting services unnecessarily (e.g., restart at 01:42:11)
@@ -211,12 +221,13 @@ systemctl --user enable --now anqr-watchdog.service
 - **Fix**: Added proper state handling with grace period logging and early return for "activating" status
 - **Result**: Watchdog now only triggers rollback on actual failures (status="failed") or genuine stuck activations (>60s grace period)
 
-**To Deploy** (after fix):
-```bash
-cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now anqr-watchdog.service
-```
+**Deployment** (2026-03-26 01:53):
+- ✅ Service file copied to `~/.config/systemd/user/`
+- ✅ Systemd daemon reloaded
+- ✅ Service restarted (PID 1886392)
+- ✅ Verification: Correctly detects service restarts without false positives
+- ✅ Monitoring both Symphony (PID 1886563) and Codebuff (PID 1872983) bridges
+- ✅ Check interval: 60s, Grace period: 60s
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1863698, commit 554036ab8, 38/38 providers available, Discord monitoring active)
 
@@ -315,3 +326,13 @@ This prevents work duplication and ensures continuity across restarts.
 **Status**: ✅ Watchdog fixed but not yet deployed as systemd service
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1878767, commit adb9f568a, 37/37 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1878767, commit a8d24ec23, 37/37 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1886563, commit a8d24ec23, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1886563, commit a8d24ec23, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Codebuff Bridge stopped (PID 1872983, commit a8d24ec23, mode: free, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1887987, commit a8d24ec23, 38/38 providers available, Discord monitoring active)

@@ -41,7 +41,10 @@ const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 // --------------------------------------------------------------------------
 
 const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-let currentLogLevel = LOG_LEVELS.ERROR; // Default: ERROR
+// Read log level from env or default to ERROR
+const envLogLevel = process.env.CODEBUFF_BRIDGE_LOG_LEVEL?.toUpperCase();
+const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
+let currentLogLevel = initialLevel;
 
 function setLogLevel(level) {
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
@@ -931,7 +934,7 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
   }
 
   const winner = getWinner();
-  console.log(`[bridge] Using: ${winner.label}`);
+  logInfo(`[bridge] Using: ${winner.label}`);
 
   const prompt = buildPrompt(messages);
   const makeTimeout = () =>
@@ -943,8 +946,8 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
     return await trySingleAccount(winner, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message)) {
-      console.log(`[bridge] ⚠️ Paid mode failed: ${err.message}`);
-      console.log(`[bridge] 🔄 Falling back to free mode...`);
+      logWarn(`[bridge] ⚠️ Paid mode failed: ${err.message}`);
+      logInfo(`[bridge] 🔄 Falling back to free mode...`);
 
       const freeAttempt = {
         apiKey: winner.apiKey,
@@ -957,7 +960,7 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
-      console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+      logInfo(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
       return await trySingleAccount(freeAttempt, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
     }
@@ -1171,7 +1174,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
   }
 
   const winner = getWinner();
-  console.log(`[bridge] Streaming: Using ${winner.label}`);
+  logInfo(`[bridge] Streaming: Using ${winner.label}`);
 
   const prompt = buildPrompt(messages);
   const makeTimeout = () =>
@@ -1202,8 +1205,8 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
     );
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message) && chunksSent === 0) {
-      console.log(`[bridge] ⚠️ Paid mode failed (streaming, 0 chunks sent): ${err.message}`);
-      console.log(`[bridge] 🔄 Falling back to free mode...`);
+      logWarn(`[bridge] ⚠️ Paid mode failed (streaming, 0 chunks sent): ${err.message}`);
+      logInfo(`[bridge] 🔄 Falling back to free mode...`);
 
       const freeAttempt = {
         apiKey: winner.apiKey,
@@ -1216,7 +1219,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
-      console.log(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+      logInfo(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
       return await trySingleAccountStream(
         freeAttempt,
@@ -1283,13 +1286,13 @@ function checkAuth(req) {
 // Main request handler
 const server = http.createServer(async (req, res) => {
   // Debug: log ALL requests before any processing
-  console.log(`[bridge] ===== REQUEST =====`);
-  console.log(`[bridge] method: ${req.method}, url: ${req.url}`);
-  console.log(`[bridge] headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
+  logDebug(`[bridge] ===== REQUEST =====`);
+  logDebug(`[bridge] method: ${req.method}, url: ${req.url}`);
+  logDebug(`[bridge] headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
   if (req.headers["x-openclaw-session"]) {
-    console.log(`[bridge] session: ${req.headers["x-openclaw-session"].slice(0, 12)}...`);
+    logDebug(`[bridge] session: ${req.headers["x-openclaw-session"].slice(0, 12)}...`);
   }
-  console.log(`[bridge] ===================`);
+  logDebug(`[bridge] ===================`);
 
   // Extract OpenClaw session ID for tool proxying
   const openclawSessionId = req.headers["x-openclaw-session"] || null;
@@ -1355,10 +1358,10 @@ const server = http.createServer(async (req, res) => {
 
       // Log start for new requests (only on first message)
       if (issueContext && isNewRequest) {
-        console.log(`[bridge] 🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
+        logInfo(`[bridge] 🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
       }
 
-      console.log(
+      logInfo(
         `[bridge] Chat completion request: model=${model}, messages=${messages.length}, stream=${stream}`,
       );
       logMemory("request-start");
@@ -1388,7 +1391,7 @@ const server = http.createServer(async (req, res) => {
         let streamResult = null;
 
         try {
-          console.log(`[bridge] ⏱️ Starting streaming invocation...`);
+          logInfo(`[bridge] ⏱️ Starting streaming invocation...`);
           streamResult = await invokeCodebuffStream({
             messages,
             cwd: DEFAULT_CWD,
@@ -1402,7 +1405,7 @@ const server = http.createServer(async (req, res) => {
             },
           });
 
-          console.log(
+          logInfo(
             `[bridge] ⏱️ Streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
           );
           logMemory("stream-done");
@@ -1435,16 +1438,16 @@ const server = http.createServer(async (req, res) => {
           if (streamResult?.needsContinuation) {
             finishReason = "length"; // Signal more work needed
             if (streamResult.hasSubgoals) {
-              console.log(
+              logInfo(
                 `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals)`,
               );
             } else {
-              console.log(
+              logInfo(
                 `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending work)`,
               );
             }
           } else if (issueContext) {
-            console.log(`[bridge] ✅ Finished: ${issueContext.identifier}`);
+            logInfo(`[bridge] ✅ Finished: ${issueContext.identifier}`);
           }
 
           // Send final chunk with appropriate finish_reason
@@ -1495,14 +1498,14 @@ const server = http.createServer(async (req, res) => {
         return;
       } else {
         // Non-streaming mode
-        console.log(`[bridge] ⏱️ Starting non-streaming invocation...`);
+        logInfo(`[bridge] ⏱️ Starting non-streaming invocation...`);
         const result = await invokeCodebuff({
           messages,
           cwd: DEFAULT_CWD,
           sessionId: openclawSessionId,
           proxyToolFn: openclawSessionId ? callOpenClawGatewayTool : null,
         });
-        console.log(
+        logInfo(
           `[bridge] ⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
         );
         logMemory("invoke-done");
@@ -1517,11 +1520,11 @@ const server = http.createServer(async (req, res) => {
           finishReason = "length"; // Signal that agent wants to continue
 
           if (result.hasSubgoals) {
-            console.log(
+            logInfo(
               `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals - continuation required)`,
             );
           } else {
-            console.log(
+            logInfo(
               `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending tool calls)`,
             );
           }
@@ -1529,7 +1532,7 @@ const server = http.createServer(async (req, res) => {
           // Extract first line of summary for logging
           const summary = result.text || "";
           const firstLine = summary.split("\n")[0].trim().slice(0, 100) || "(no summary)";
-          console.log(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
+          logInfo(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
 
         // Extract text content, filtering out tool-call metadata for clean response
@@ -1576,6 +1579,9 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+// Shared MEMORY.md update utility
+import { updateMemory } from "../../lib/update-memory.mjs";
+
 // Graceful shutdown
 async function shutdown(signal) {
   console.log(`\n[bridge] Received ${signal}, shutting down...`);
@@ -1583,13 +1589,11 @@ async function shutdown(signal) {
   // Update MEMORY.md BEFORE shutdown
   try {
     const { execSync } = await import('node:child_process');
-    const { appendFile } = await import('node:fs/promises');
     const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
-    const timestamp = new Date().toISOString().split('T')[0];
     const mode = STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "unknown";
-    const entry = `\n### ${timestamp} - Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})\n`;
-    await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
-    console.log(`[bridge] 📝 Updated MEMORY.md before shutdown`);
+    await updateMemory(
+      `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`
+    );
   } catch (err) {
     console.log(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
@@ -1608,6 +1612,7 @@ process.on("SIGINT", async () => await shutdown("SIGINT"));
 async function initializeBridge() {
   const apiKey = getApiKey();
 
+  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLogLevel);
   console.log(`[bridge] ========================================`);
   console.log(`[bridge] Codebuff OpenAI Bridge Starting`);
   console.log(`[bridge] ========================================`);
@@ -1617,6 +1622,7 @@ async function initializeBridge() {
   console.log(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
   console.log(`[bridge] Streaming: enabled`);
   console.log(`[bridge] Working directory: ${DEFAULT_CWD}`);
+  console.log(`[bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env)`);
 
   if (apiKey) {
     console.log(`[bridge] Testing API key (paid mode first, then free)...`);

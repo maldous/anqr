@@ -138,7 +138,14 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     });
 
     // 3. Restart the service
-    console.log(`[watchdog]    Restarting ${serviceName}...`);
+    console.log(``);
+    console.log(`[watchdog] ════════════════════════════════════════════════════════════════`);
+    console.log(`[watchdog] 🔄 RESTARTING ${shortName.toUpperCase()} BRIDGE SERVICE`);
+    console.log(`[watchdog]    Service: ${serviceName}`);
+    console.log(`[watchdog]    Reason: Rollback recovery from ${currentCommit} to ${previousCommit}`);
+    console.log(`[watchdog] ════════════════════════════════════════════════════════════════`);
+    console.log(``);
+    
     execSync(`systemctl --user restart ${serviceName}`, {
       encoding: "utf-8",
       cwd: process.cwd(),

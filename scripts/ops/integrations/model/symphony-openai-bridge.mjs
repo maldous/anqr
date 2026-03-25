@@ -85,18 +85,7 @@ import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordNotification, sendDiscordMessage } from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
-import { appendFile } from "node:fs/promises";
-
-async function updateMemory(note) {
-  const timestamp = new Date().toISOString().split('T')[0];
-  const entry = `\n### ${timestamp} - ${note}\n`;
-  try {
-    await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
-    console.log(`[symphony-bridge] 📝 Updated MEMORY.md: ${note}`);
-  } catch (err) {
-    console.log(`[symphony-bridge] ⚠️ Failed to update MEMORY.md: ${err.message}`);
-  }
-}
+import { updateMemory } from "../../lib/update-memory.mjs";
 
 // Discord message monitoring (listen for user input from Discord text channel)
 let lastDiscordMessageId = null;
@@ -246,7 +235,10 @@ function stopDiscordMonitoring() {
 // --------------------------------------------------------------------------
 
 const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-let currentLogLevel = LOG_LEVELS.ERROR; // Default: ERROR
+// Read log level from env or default to ERROR
+const envLogLevel = process.env.SYMPHONY_BRIDGE_LOG_LEVEL?.toUpperCase();
+const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
+let currentLogLevel = initialLevel;
 
 function setLogLevel(level) {
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
@@ -1361,19 +1353,19 @@ async function invokeWithAI(provider, messages, options = {}) {
           for (const tc of step.toolCalls) {
             const input = tc.input ?? tc.args;
             const summary = input ? JSON.stringify(input).slice(0, 200) : "";
-            console.log(`[symphony-bridge] 🔧 ${tc.toolName}: ${summary}`);
+            logDebug(`[symphony-bridge] 🔧 ${tc.toolName}: ${summary}`);
           }
         }
       },
       onFinish: (event) => {
         finishReason = event.finishReason;
         if (finishReason === "error" || !event.text) {
-          console.log(
+          logWarn(
             `[symphony-bridge] ⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`,
           );
         }
         if (finishReason === "tool-calls") {
-          console.log(
+          logWarn(
             `[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
           );
         }
@@ -1616,7 +1608,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       clearProviderFailure(lastSelectedProvider);
     }
 
-    console.log(
+    logInfo(
       `[symphony-bridge] ${attemptNumber === 1 ? "Selected" : "Fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
     triedProviders.push(provider.name);
@@ -1640,7 +1632,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: false });
 
-      console.log(`[symphony-bridge] ✅ Success with ${provider.name} (attempt ${attemptNumber})`);
+      logInfo(`[symphony-bridge] ✅ Success with ${provider.name} (attempt ${attemptNumber})`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
@@ -1665,7 +1657,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
     } catch (err) {
       const errStr = String(err);
       lastError = errStr;
-      console.log(
+      logWarn(
         `[symphony-bridge] ❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`,
       );
 
@@ -1848,7 +1840,7 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
       throw new Error(errorMsg);
     }
 
-    console.log(
+    logInfo(
       `[symphony-bridge] ${attemptNumber === 1 ? "Streaming selected" : "Streaming fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
     triedProviders.push(provider.name);
@@ -1865,7 +1857,7 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
       const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
-      console.log(
+      logInfo(
         `[symphony-bridge] ✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
       );
       recordProviderSuccess(provider.name);
@@ -1892,7 +1884,7 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
       const rootErr = unwrapAIError(err);
       const errStr = errorToString(rootErr !== err ? rootErr : err);
       lastError = errStr;
-      console.log(
+      logWarn(
         `[symphony-bridge] ❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
       );
 
@@ -2088,8 +2080,8 @@ function logBridgeStats() {
 // --------------------------------------------------------------------------<
 
 const server = http.createServer(async (req, res) => {
-  console.log(`[symphony-bridge] ===== REQUEST =====`);
-  console.log(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
+  logDebug(`[symphony-bridge] ===== REQUEST =====`);
+  logDebug(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
 
   try {
     const skipAuth =
@@ -2305,7 +2297,7 @@ const server = http.createServer(async (req, res) => {
       const stream = body.stream === true;
 
       // Log message summary for debugging
-      console.log(
+      logInfo(
         `[symphony-bridge] 📨 Request messages: ${messages.length} total (${messages.filter((m) => m.role === "system").length} system, ${messages.filter((m) => m.role === "user").length} user, ${messages.filter((m) => m.role === "assistant").length} assistant)`,
       );
 
@@ -2322,12 +2314,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (issueContext) {
-        console.log(
+        logInfo(
           `[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
         );
       }
 
-      console.log(
+      logInfo(
         `[symphony-bridge] Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
       );
       logMemory("request-start");
@@ -2446,13 +2438,13 @@ const server = http.createServer(async (req, res) => {
         // First, let credit-gate select the best provider (with session awareness)
         const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
         
-      console.log(
+      logInfo(
         `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
       );
 
         if (selectedProvider?.name === "codebuff") {
           try {
-            console.log(
+            logInfo(
               `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
             
@@ -2502,7 +2494,7 @@ const server = http.createServer(async (req, res) => {
             const codebuffStats = stats.codebuff || {};
             const elapsedTime = formatElapsed(Date.now() - startTime);
             
-            console.log(
+            logInfo(
               `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
             );
             
@@ -2536,14 +2528,14 @@ const server = http.createServer(async (req, res) => {
             return;
           } catch (codebuffErr) {
             const errMsg = String(codebuffErr.message || codebuffErr).slice(0, 200);
-            console.log(`[symphony-bridge] ⚠️ Codebuff transparent relay failed: ${errMsg}`);
+            logWarn(`[symphony-bridge] ⚠️ Codebuff transparent relay failed: ${errMsg}`);
 
             // Record failure and fall through to standard cascade
             if (isRetryableErrorDeep(codebuffErr)) {
               recordProviderFailure("codebuff");
               recordProviderFailureCount("codebuff");
             }
-            console.log(`[symphony-bridge] 🔄 Falling back to standard provider cascade (excluding codebuff)...`);
+            logInfo(`[symphony-bridge] 🔄 Falling back to standard provider cascade (excluding codebuff)...`);
             // Fall through to standard fallback cascade, excluding the failed codebuff
           }
         }
@@ -2586,7 +2578,7 @@ const server = http.createServer(async (req, res) => {
           const providerStats = stats[result.providerName] || {};
           const elapsedTime = formatElapsed(Date.now() - startTime);
           
-          console.log(
+          logInfo(
             `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
           );
           
@@ -2662,7 +2654,7 @@ const server = http.createServer(async (req, res) => {
           ? resultText.split("\n")[0].trim().slice(0, 100)
           : "(no content)";
         
-        console.log(`[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
+        logInfo(`[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
         
         // Send comprehensive completion metrics (non-blocking)
         const tokensIn = result.usage?.promptTokens || 0;
@@ -2821,6 +2813,7 @@ server.timeout = 0;
 server.keepAliveTimeout = 0;
 
 server.listen(PORT, "127.0.0.1", async () => {
+  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLogLevel);
   console.log(`[symphony-bridge] ========================================`);
   console.log(`[symphony-bridge] Symphony OpenAI Bridge Starting`);
   console.log(`[symphony-bridge] ========================================`);
@@ -2830,6 +2823,7 @@ server.listen(PORT, "127.0.0.1", async () => {
   console.log(`[symphony-bridge] Streaming: enabled`);
   console.log(`[symphony-bridge] Auto-fallback: enabled (credit-gate)`);
   console.log(`[symphony-bridge] Tools available: ${Object.keys(tools).join(", ")}`);
+  console.log(`[symphony-bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or SYMPHONY_BRIDGE_LOG_LEVEL env)`);
   console.log(`[symphony-bridge] ========================================`);
 
   // Send immediate Discord notification on startup
