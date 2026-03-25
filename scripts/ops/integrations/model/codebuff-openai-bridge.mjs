@@ -48,7 +48,7 @@ let currentLogLevel = initialLevel;
 
 function setLogLevel(level) {
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.log(`[bridge] 📊 Log level: ${levelName}`);
+  console.error(`[bridge] 📊 Log level: ${levelName}`);
   currentLogLevel = level;
 }
 
@@ -66,12 +66,12 @@ function decrementLogLevel() {
 
 // Signal handlers for dynamic log level control
 process.on("SIGUSR1", () => {
-  console.log("[bridge] Received SIGUSR1 - increasing log level");
+  console.error("[bridge] Received SIGUSR1 - increasing log level");
   incrementLogLevel();
 });
 
 process.on("SIGUSR2", () => {
-  console.log("[bridge] Received SIGUSR2 - decreasing log level");
+  console.error("[bridge] Received SIGUSR2 - decreasing log level");
   decrementLogLevel();
 });
 
@@ -109,7 +109,7 @@ const OPENCLAW_TOOL_PROXY_ENABLED = process.env.OPENCLAW_TOOL_PROXY_ENABLED !== 
 
 // Validate config on startup
 if (OPENCLAW_TOOL_PROXY_ENABLED && !OPENCLAW_GATEWAY_TOKEN) {
-  console.warn("[bridge] ⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail");
+  logError("[bridge] ⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail");
 }
 
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
@@ -179,7 +179,7 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
       timeout: 30000,
     };
 
-    console.log(`[bridge] 🔗 Proxying ${toolName} to OpenClaw Gateway (session: ${sessionId.slice(0, 8)}...)`);
+    logDebug(`[bridge] 🔗 Proxying ${toolName} to OpenClaw Gateway (session: ${sessionId.slice(0, 8)}...)`);
 
     const req = httpModule.request(options, (res) => {
       let data = "";
@@ -188,11 +188,11 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
         try {
           const parsed = JSON.parse(data);
           if (res.statusCode === 200) {
-            console.log(`[bridge] ✅ ${toolName} proxied successfully`);
+            logDebug(`[bridge] ✅ ${toolName} proxied successfully`);
             resolve(parsed.output || parsed.result || parsed);
           } else {
             const errorMsg = parsed.error?.message || parsed.error || data || `Gateway returned ${res.statusCode}`;
-            console.log(`[bridge] ❌ ${toolName} proxy failed: ${errorMsg}`);
+            logWarn(`[bridge] ❌ ${toolName} proxy failed: ${errorMsg}`);
             reject(new Error(`OpenClaw Gateway returned ${res.statusCode}: ${errorMsg}`));
           }
         } catch (parseErr) {
@@ -202,7 +202,7 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
     });
 
     req.on("error", (err) => {
-      console.log(`[bridge] ❌ ${toolName} proxy connection failed: ${err.message}`);
+      logError(`[bridge] ❌ ${toolName} proxy connection failed: ${err.message}`);
       reject(new Error(`OpenClaw Gateway connection error: ${err.message}`));
     });
 
@@ -226,7 +226,7 @@ function logMemory(label) {
   const mem = process.memoryUsage();
   const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
   const rssMB = Math.round(mem.rss / 1024 / 1024);
-  console.log(`[bridge] 💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
+  logDebug(`[bridge] 💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
 }
 
 // Re-validation interval - probe paid availability at least every 5 hours.
@@ -368,36 +368,36 @@ async function testApiKey(apiKey, index) {
   const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
 
   // Phase 1: Test in paid mode (no costMode)
-  console.log(`[bridge] Key ${index + 1} (${masked}): Testing paid mode...`);
+  logDebug(`[bridge] Key ${index + 1} (${masked}): Testing paid mode...`);
   const paidResult = await testApiKeyInMode(apiKey, index, undefined);
 
   if (paidResult.success) {
-    console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (paid mode)`);
+    logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (paid mode)`);
     return { works: true, mode: "paid" };
   }
 
   if (paidResult.error === "auth") {
-    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
+    logError(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
     return { works: false, mode: null };
   }
 
   if (paidResult.error === "rate_limit") {
-    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited`);
+    logWarn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited`);
     return { works: false, mode: null };
   }
 
   if (paidResult.error === "payment_required" && !paidResult.isFreeAccount) {
     // Paid account out of credits - try free mode
-    console.log(`[bridge] Key ${index + 1} (${masked}): Paid mode failed, testing free mode...`);
+    logDebug(`[bridge] Key ${index + 1} (${masked}): Paid mode failed, testing free mode...`);
     const freeResult = await testApiKeyInMode(apiKey, index, "free");
 
     if (freeResult.success) {
-      console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+      logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
       return { works: true, mode: "free" };
     }
 
     // Free mode also failed - return error with clear message for symphony-bridge fallback
-    console.warn(
+    logWarn(
       `[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`,
     );
     return { works: false, mode: null, error: "both_modes_exhausted" };
@@ -405,28 +405,28 @@ async function testApiKey(apiKey, index) {
 
   if (paidResult.error === "payment_required" && paidResult.isFreeAccount) {
     // This IS a free account - no paid credits, test free mode
-    console.log(`[bridge] Key ${index + 1} (${masked}): Free account, testing free mode...`);
+    logDebug(`[bridge] Key ${index + 1} (${masked}): Free account, testing free mode...`);
     const freeResult = await testApiKeyInMode(apiKey, index, "free");
 
     if (freeResult.success) {
-      console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+      logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
       return { works: true, mode: "free" };
     }
 
-    console.warn(`[bridge] Key ${index + 1} (${masked}): ❌ free mode also failed`);
+    logWarn(`[bridge] Key ${index + 1} (${masked}): ❌ free mode also failed`);
     return { works: false, mode: null };
   }
 
   // Other error - try free mode as fallback
-  console.log(`[bridge] Key ${index + 1} (${masked}): Paid mode error, testing free mode...`);
+  logDebug(`[bridge] Key ${index + 1} (${masked}): Paid mode error, testing free mode...`);
   const fallbackResult = await testApiKeyInMode(apiKey, index, "free");
 
   if (fallbackResult.success) {
-    console.log(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+    logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
     return { works: true, mode: "free" };
   }
 
-  console.warn(
+  logWarn(
     `[bridge] Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`,
   );
   return { works: false, mode: null, error: "both_modes_exhausted" };
@@ -435,13 +435,13 @@ async function testApiKey(apiKey, index) {
 // Test the API key at startup and determine the best mode (paid or free)
 async function testKeyAndSelectWinner(apiKey) {
   const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
-  console.log(`[bridge] Testing API key (${masked})...`);
+  logDebug(`[bridge] Testing API key (${masked})...`);
 
   const result = await testApiKey(apiKey, 0);
 
   if (result.works) {
     const isPaid = result.mode === "paid";
-    console.log(`[bridge] 🎯 Key working in ${result.mode} mode`);
+    logDebug(`[bridge] 🎯 Key working in ${result.mode} mode`);
     STARTUP_WINNER = {
       apiKey,
       costMode: isPaid ? undefined : "free",
@@ -457,7 +457,7 @@ async function testKeyAndSelectWinner(apiKey) {
   }
 
   // Other failures - set as fallback anyway (will fail at runtime with clear error)
-  console.warn(`[bridge] ⚠️ Key failed at startup — using paid mode as fallback`);
+  logWarn(`[bridge] ⚠️ Key failed at startup — using paid mode as fallback`);
   STARTUP_WINNER = {
     apiKey,
     costMode: undefined,
@@ -1584,7 +1584,7 @@ import { updateMemory } from "../../lib/update-memory.mjs";
 
 // Graceful shutdown
 async function shutdown(signal) {
-  console.log(`\n[bridge] Received ${signal}, shutting down...`);
+  console.error(`\n[bridge] Received ${signal}, shutting down...`);
   
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -1594,12 +1594,13 @@ async function shutdown(signal) {
     await updateMemory(
       `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`
     );
+    console.error(`[bridge] 📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
-    console.log(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+    console.error(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
   
   server.close(() => {
-    console.log("[bridge] Server closed");
+    console.error("[bridge] Server closed");
   });
   // Exit immediately without waiting for active connections
   process.exit(0);
@@ -1613,28 +1614,28 @@ async function initializeBridge() {
   const apiKey = getApiKey();
 
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLogLevel);
-  console.log(`[bridge] ========================================`);
-  console.log(`[bridge] Codebuff OpenAI Bridge Starting`);
-  console.log(`[bridge] ========================================`);
-  console.log(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
-  console.log(`[bridge] Model: ${MODEL_ID}`);
-  console.log(`[bridge] API key: ${apiKey ? "configured" : "NOT SET"}`);
-  console.log(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
-  console.log(`[bridge] Streaming: enabled`);
-  console.log(`[bridge] Working directory: ${DEFAULT_CWD}`);
-  console.log(`[bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env)`);
+  console.error(`[bridge] ========================================`);
+  console.error(`[bridge] Codebuff OpenAI Bridge Starting`);
+  console.error(`[bridge] ========================================`);
+  console.error(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
+  console.error(`[bridge] Model: ${MODEL_ID}`);
+  console.error(`[bridge] API key: ${apiKey ? "configured" : "NOT SET"}`);
+  console.error(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
+  console.error(`[bridge] Streaming: enabled`);
+  console.error(`[bridge] Working directory: ${DEFAULT_CWD}`);
+  console.error(`[bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env)`);
 
   if (apiKey) {
-    console.log(`[bridge] Testing API key (paid mode first, then free)...`);
+    console.error(`[bridge] Testing API key (paid mode first, then free)...`);
     await testKeyAndSelectWinner(apiKey);
   } else {
-    console.warn(`[bridge] WARNING: CODEBUFF_API_KEY not set!`);
+    logError(`[bridge] WARNING: CODEBUFF_API_KEY not set!`);
   }
 
   STARTUP_INITIALIZED = true;
-  console.log(`[bridge] ========================================`);
-  console.log(`[bridge] Ready to accept requests`);
-  console.log(`[bridge] ========================================`);
+  console.error(`[bridge] ========================================`);
+  console.error(`[bridge] Ready to accept requests`);
+  console.error(`[bridge] ========================================`);
 }
 
 // Health check - include initialization status
