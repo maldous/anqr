@@ -109,20 +109,20 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Status** (2026-03-25 23:37):
+**Implementation Status** (2026-03-25 23:41):
 
-✅ **Code Updated**: Symphony bridge now uses `/v1/chat/completions` with Discord context headers
-✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1625712)
+✅ **Code Updated**: Symphony bridge now uses `/v1/responses` with Discord channel session key (Commit b5a582983)
+✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1630281)
 ⏳ **Testing Required**: User needs to test if voice announcements work in Discord by triggering a Symphony bridge request
 
-**Code Changes** (Latest):
-- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/chat/completions`
-- Headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: discord-announcer`, `x-openclaw-message-channel: discord`
-- Request body: `{ model: "symphony-bridge/symphony/main", messages: [{role: "user", content: "Say this in Discord voice: \"<text>\""}], stream: false }`
-- Session-targeted execution path instead of bare tool invocation
+**Code Changes** (Commit b5a582983):
+- `speakAnnouncement()` now calls `http://127.0.0.1:18789/v1/responses`
+- Headers: `x-openclaw-agent-id: main`, `x-openclaw-session-key: discord:channel:1486262758256410647`, `x-openclaw-message-channel: discord`
+- Request body: `{ model: "openclaw", user: "symphony-bridge", input: "<text>" }`
+- Uses documented Discord channel session key format (agent:main:discord:channel:CHANNEL_ID)
 
 **Hypothesis**:
-If `/v1/chat/completions` with Discord context headers speaks in Discord voice, the session-targeted path hypothesis is confirmed.
+If `/v1/responses` with Discord channel session key speaks in Discord voice, the session-targeted path hypothesis is confirmed.
 
 **Voice announcements** (attempted but not working):
 - **Target**: Send voice to Discord voice channel 1486262758256410647
