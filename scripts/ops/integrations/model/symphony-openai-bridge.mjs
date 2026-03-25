@@ -2318,9 +2318,10 @@ const server = http.createServer(async (req, res) => {
               { emoji: "⏳", timestamp: true }
             ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
             
-            // Voice announcement every 2 minutes
+            // Voice announcement every 2 minutes - keep short
             if (progressCounter % 4 === 0) {
-              speakAnnouncement(`Still working on ${issueContext.identifier}. ${formatElapsed(elapsed)} elapsed.`, sessionId)
+              const minutes = Math.floor((Date.now() - startTime) / 60000);
+              speakAnnouncement(`${issueContext.identifier}: ${minutes} minutes`, sessionId)
                 .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
             }
           } else {
@@ -2331,7 +2332,8 @@ const server = http.createServer(async (req, res) => {
             ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
             
             if (progressCounter % 4 === 0) {
-              speakAnnouncement(`Still working. ${formatElapsed(elapsed)} elapsed.`, sessionId)
+              const minutes = Math.floor((Date.now() - startTime) / 60000);
+              speakAnnouncement(`${minutes} minutes elapsed`, sessionId)
                 .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
             }
           }
@@ -2427,8 +2429,8 @@ const server = http.createServer(async (req, res) => {
           footer: "OpenClaw Symphony Bridge"
         }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
         
-        // Voice: Special announcement with sound effect marker
-        speakAnnouncement(`🔔 Working on ${issueContext.identifier}.`, sessionId).catch(err => 
+        // Voice: Keep very short to avoid TTS 1500-char limit
+        speakAnnouncement(`Working on ${issueContext.identifier}`, sessionId).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
       } else {
@@ -2438,7 +2440,7 @@ const server = http.createServer(async (req, res) => {
           { emoji: "⏳" }
         ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
         
-        speakAnnouncement(`Processing your request.`, sessionId).catch(err => 
+        speakAnnouncement(`Processing request`, sessionId).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
       }
@@ -2475,8 +2477,8 @@ const server = http.createServer(async (req, res) => {
                 footer: "OpenClaw Symphony Bridge"
               }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
               
-              // Voice: Special completion with sound effect marker
-              speakAnnouncement(`🎉 ${issueContext.identifier} is done.`, sessionId).catch(err => 
+              // Voice: Keep very short
+              speakAnnouncement(`${issueContext.identifier} done`, sessionId).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
             } else {
@@ -2486,7 +2488,7 @@ const server = http.createServer(async (req, res) => {
                 { emoji: "✅" }
               ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
               
-              speakAnnouncement(`Request complete.`, sessionId).catch(err => 
+              speakAnnouncement(`Complete`, sessionId).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
             }
@@ -2572,8 +2574,8 @@ const server = http.createServer(async (req, res) => {
               footer: "OpenClaw Symphony Bridge"
             }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
             
-            // Voice: Special completion with sound effect marker
-            speakAnnouncement(`🎉 ${issueContext.identifier} is done.`, sessionId).catch(err => 
+            // Voice: Keep very short
+            speakAnnouncement(`${issueContext.identifier} done`, sessionId).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
           } else {
@@ -2583,7 +2585,7 @@ const server = http.createServer(async (req, res) => {
               { emoji: "✅" }
             ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
             
-            speakAnnouncement(`Request complete.`, sessionId).catch(err => 
+            speakAnnouncement(`Complete`, sessionId).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
           }
@@ -2661,8 +2663,8 @@ const server = http.createServer(async (req, res) => {
             footer: "OpenClaw Symphony Bridge"
           }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
           
-          // Voice: Special completion with sound effect marker
-          speakAnnouncement(`🎉 ${issueContext.identifier} is done.`, sessionId).catch(err => 
+          // Voice: Keep very short
+          speakAnnouncement(`${issueContext.identifier} done`, sessionId).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
         } else {
@@ -2672,7 +2674,7 @@ const server = http.createServer(async (req, res) => {
             { emoji: "✅" }
           ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
           
-          speakAnnouncement(`Request complete.`, sessionId).catch(err => 
+          speakAnnouncement(`Complete`, sessionId).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
         }
