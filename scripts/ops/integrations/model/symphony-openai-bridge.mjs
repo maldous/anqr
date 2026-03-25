@@ -82,7 +82,7 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, sendDiscordEmbed } from "../notifications/discord-webhook.mjs";
+import { streamDiscordUpdate, sendDiscordEmbed, sendDiscordMessage } from "../notifications/discord-webhook.mjs";
 
 // Discord message monitoring (listen for user input from Discord text channel)
 let lastDiscordMessageId = null;

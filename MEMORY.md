@@ -10,10 +10,10 @@
 - OpenClaw automatically handles TTS when responding in Discord sessions
 
 **Text Channel (1486262758256410646)**:
-- ✅ **Command Monitoring Active**: Symphony bridge polls channel every 5s for user messages
-- ✅ **Command Processing**: User commands sent to Symphony → responses via webhook
+- ⚠️ **Command Monitoring**: Requires `DISCORD_BOT_TOKEN` in `services/systemd/anqr-ops.env` (needs user to provide token)
 - ✅ **Request Notifications**: Start/stop summaries via webhook (1486304408286527539)
 - ✅ **Streaming Output**: Real-time responses streamed to Discord during execution
+- 📝 **Setup Required**: User needs to copy token from their environment to `services/systemd/anqr-ops.env`
 
 **Notification Format**:
 - **Initial**: Request description, provider, model
@@ -67,10 +67,13 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge active (PID 1769401, commit 4770570e5)
+- ✅ Symphony Bridge active (PID 1812440, commit 9f624fa53)
+- ✅ Codebuff Bridge active (PID 1812448, commit 9f624fa53)
 - ✅ Discord text notifications working via webhook
 - ✅ Discord streaming output working (Codebuff)
 - ✅ Discord comprehensive metrics working (all providers)
+- ✅ Level-based logging (DEBUG/INFO/WARN/ERROR) with SIGUSR1/SIGUSR2 control
+- ✅ Immediate SIGTERM shutdown for both bridges
 
 ### Voice Setup (2026-03-25)
 - ✅ Discord voice integration working
@@ -115,6 +118,34 @@
 **Status**: Ready for testing. Bridges need restart to apply changes.
 
 ## Technical Notes
+
+### Level-Based Logging (2026-03-26 00:52)
+
+Both Symphony and Codebuff bridges now support dynamic log level control:
+
+**Log Levels**:
+- `DEBUG` (0): Everything including JSON payloads, SSE chunks, provider probes
+- `INFO` (1): Normal operations, requests, completions, metrics
+- `WARN` (2): Warnings, rate limits, fallbacks
+- `ERROR` (3): Errors only
+
+**Dynamic Control**:
+- `SIGUSR1`: Increase log level (less verbose) - `kill -USR1 <PID>`
+- `SIGUSR2`: Decrease log level (more verbose) - `kill -USR2 <PID>`
+- Current level logged on change: `[bridge] Log level changed: INFO → DEBUG`
+
+**Default Level**: `INFO` (configurable via `LOG_LEVEL` env var)
+
+**Benefits**:
+- Reduce noise in production (set to WARN/ERROR)
+- Enable debugging without restart (send SIGUSR2 for DEBUG)
+- Rate limit errors no longer spam logs (only shown at DEBUG level)
+
+**Implementation** (Commit 9f624fa53):
+- Global `logLevel` variable with level checks before logging
+- SIGUSR1/SIGUSR2 handlers increment/decrement level
+- All log statements wrapped in level checks (e.g., `if (logLevel <= LOG_LEVELS.DEBUG)`)
+- Immediate SIGTERM shutdown (process.exit(0) without waiting for connections)
 
 ### Symphony Bridge Provider Routing
 - **Port**: 4319 (OpenAI-compatible HTTP gateway)
