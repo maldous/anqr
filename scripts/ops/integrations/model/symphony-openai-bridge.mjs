@@ -1426,61 +1426,53 @@ function invokeCodebuffDirectStream(messages, res) {
       }
 
       let fullText = "";
+      let buffer = ""; // Accumulate text to detect complete internal activity markers
 
-      // Filter internal SDK activity from Codebuff stream before forwarding to client
-      // Only forward user-facing tool activity and response text
-      const INTERNAL_TOOLS = new Set(["set_messages", "spawn_agent_inline", "context-pruner", "end_turn"]);
+      // Internal SDK activity patterns (complete markers to filter out)
+      const INTERNAL_PATTERNS = [
+        /✅ set_messages done\n?/,
+        /✅ spawn_agent_inline done\n?/,
+        /✅ context-pruner done\n?/,
+        /✅ end_turn done\n?/,
+      ];
       
       proxyRes.on("data", (chunk) => {
         const chunkStr = chunk.toString();
         
-        // Extract and filter content before forwarding
-        const lines = chunkStr.split("\n");
-        const filteredLines = [];
+        // Forward raw chunks directly to OpenClaw (no filtering)
+        // The filtering happens on the accumulated buffer for logging only
+        res.write(chunk);
         
+        // Extract content for logging and accumulation
+        const lines = chunkStr.split("\n");
         for (const line of lines) {
-          if (!line.trim() || line.startsWith(":")) {
-            filteredLines.push(line);
-            continue;
-          }
-          if (line === "data: [DONE]") {
-            filteredLines.push(line);
-            continue;
-          }
-
           const dataMatch = line.match(/^data: (.+)$/);
-          if (!dataMatch) {
-            filteredLines.push(line);
-            continue;
-          }
+          if (!dataMatch || dataMatch[1] === "[DONE]") continue;
 
           try {
             const parsed = JSON.parse(dataMatch[1]);
             const content = parsed.choices?.[0]?.delta?.content;
-            
             if (content) {
-              // Filter out internal SDK activity markers
-              const isInternalActivity = INTERNAL_TOOLS.has(content.replace(/^(✅|🔧|💡)\s*/, "").split(" ")[0]);
+              fullText += content;
+              buffer += content;
               
-              if (isInternalActivity) {
-                console.log(`[symphony-bridge] 🔇 Filtered internal activity: ${content.slice(0, 50)}`);
-                continue; // Skip this chunk - don't forward to client
+              // Check if buffer contains any complete internal activity markers
+              let hasInternal = false;
+              for (const pattern of INTERNAL_PATTERNS) {
+                if (pattern.test(buffer)) {
+                  hasInternal = true;
+                  buffer = buffer.replace(pattern, ""); // Remove from buffer
+                }
               }
               
-              fullText += content;
-              console.log(`[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`);
+              // Only log non-internal activity
+              if (!hasInternal && content.length > 0) {
+                console.log(`[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`);
+              }
             }
-            
-            filteredLines.push(line);
           } catch {
-            // Can't parse - forward as-is
-            filteredLines.push(line);
+            // Parse error - ignore
           }
-        }
-        
-        // Forward filtered chunks to OpenClaw
-        if (filteredLines.length > 0) {
-          res.write(filteredLines.join("\n") + (chunkStr.endsWith("\n") ? "\n" : ""));
         }
       });
 

@@ -42,6 +42,8 @@ const CODEBUFF_NOISY_TOOLS = new Set([
   "set_output",
   "end_turn",
   "lookup_agent_info",
+  "spawn_agent_inline",
+  "context-pruner",
 ]);
 const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
@@ -612,8 +614,10 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd) {
         if (display) console.log(`[bridge] ${display}`);
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
-        console.log(`[bridge] ✅ codebuff ${toolName} done`);
-        streamActivity(`✅ ${toolName} done\n`);
+        if (!CODEBUFF_NOISY_TOOLS.has(toolName)) {
+          console.log(`[bridge] ✅ codebuff ${toolName} done`);
+          streamActivity(`✅ ${toolName} done\n`);
+        }
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) console.log(`[bridge] 💡 ${text.slice(0, 80)}...`);
@@ -858,8 +862,10 @@ async function trySingleAccountStream(
         }
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
-        console.log(`[bridge] ✅ codebuff ${toolName} done`);
-        streamActivity(`✅ ${toolName} done\n`);
+        if (!CODEBUFF_NOISY_TOOLS.has(toolName)) {
+          console.log(`[bridge] ✅ codebuff ${toolName} done`);
+          streamActivity(`✅ ${toolName} done\n`);
+        }
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
