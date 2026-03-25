@@ -206,3 +206,28 @@ systemctl --user enable --now anqr-watchdog.service
 **Status**: Ready for deployment. Watchdog will prevent the "sendDiscordMessage is not defined" issue from recurring.
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1863698, commit 554036ab8, 38/38 providers available, Discord monitoring active)
+
+### MEMORY.md Persistence on Shutdown (2026-03-26 01:26)
+
+✅ **Implementation Complete** (Commit 9a2668fd6)
+
+**Purpose**: Both Symphony and Codebuff bridges now update MEMORY.md **before** exiting on SIGTERM/SIGINT.
+
+**How It Works**:
+1. **Symphony Bridge**: Records PID, commit hash, provider availability, signal
+2. **Codebuff Bridge**: Records PID, commit hash, mode (paid/free), signal
+3. **Async Shutdown**: Handlers use `async/await` to ensure MEMORY.md write completes before exit
+4. **Immediate Exit**: After MEMORY.md update, `process.exit(0)` called immediately (no connection wait)
+
+**Benefits**:
+- ✅ Shutdown events tracked across restarts (no more forgetting)
+- ✅ Watchdog service can detect looping (repeated restarts within short time)
+- ✅ Debug history preserved (when/why bridges restarted)
+- ✅ No more "you keep looping" issues
+
+**Example Shutdown Entry**:
+```
+### 2026-03-26 - Symphony Bridge stopped (PID 1863698, commit 9a2668fd6, 38/38 providers, signal: SIGTERM)
+```
+
+**Status**: Ready for testing. Restart bridges to verify MEMORY.md updates on shutdown.
