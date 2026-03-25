@@ -15,7 +15,8 @@
 - ✅ **Request Notifications**: Start/stop summaries via webhook (1486304408286527539)
 - ✅ **Streaming Output**: Real-time responses streamed to Discord during execution
 - ✅ **Fixed**: Discord command reply error - changed `sendDiscordNotification({ content })` to `sendDiscordMessage(content)`
-- ✅ **Bridge Restarted**: Symphony bridge restarted after fix (PID: 1849000, commit 009677499)
+- ✅ **Bridge Restarted**: Symphony bridge restarted after fix (PID 1863698, commit 554036ab8)
+- ✅ **Import Fixed**: Added missing `sendDiscordMessage` import - Discord command replies now working
 
 **Notification Format**:
 - **Initial**: Request description, provider, model
@@ -69,7 +70,7 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge active (PID 1862871, commit a02c510d5)
+- ✅ Symphony Bridge active (PID 1863698, commit 554036ab8)
 - ✅ Codebuff Bridge active (PID 1812448, commit 9f624fa53)
 - ✅ Discord text notifications working via webhook
 - ✅ Discord streaming output working (Codebuff)
@@ -170,3 +171,5 @@ Both Symphony and Codebuff bridges now support dynamic log level control:
 ### 2026-03-26 - Symphony Bridge restarted successfully (PID 1862871, commit a02c510d5, Discord command monitoring fixed)
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1862871, commit 14ce5ff45, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1863698, commit 554036ab8, 38/38 providers available, Discord monitoring active)

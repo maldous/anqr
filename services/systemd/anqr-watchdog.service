@@ -1,0 +1,15 @@
+[Unit]
+Description=ANQR Bridge Watchdog - Automatic rollback on failed restarts
+After=anqr-symphony-bridge.service anqr-codebuff-bridge.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/user/src/anqr
+EnvironmentFile=/home/user/src/anqr/services/systemd/anqr-ops.env
+ExecStart=/home/user/.nvm/versions/node/v25.8.0/bin/node scripts/ops/runtime/symphony/watchdog-monitor.mjs
+
+# Run on-demand only (triggered by symphony/codebuff restart)
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
