@@ -1605,8 +1605,8 @@ async function shutdown(signal) {
   process.exit(0);
 }
 
-process.on("SIGTERM", async () => await shutdown("SIGTERM"));
-process.on("SIGINT", async () => await shutdown("SIGINT"));
+process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => process.exit(1)); });
+process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); });
 
 // Initialize at startup - validate key and determine paid/free mode
 async function initializeBridge() {

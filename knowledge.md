@@ -58,8 +58,8 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 42 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests.
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
 - **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
-- **Discord Streaming**: Discord webhooks don't support true real-time streaming. Text is accumulated in a buffer and sent every 5 seconds (or when buffer exceeds 1900 chars). The buffer is automatically flushed at the end of each response. This batching prevents overwhelming Discord's API with hundreds of tiny messages while still providing regular progress updates every 5 seconds.
-- **Bridge Restart Procedure**: After code changes to Symphony/Codebuff bridges, always restart the bridge service: `sudo systemctl restart anqr-symphony-bridge.service` (or equivalent for Codebuff bridge). The bridges run as background services and won't pick up code changes until restarted.
+- **Discord Streaming**: Discord webhooks batch text chunks and send every 5 seconds (or when buffer exceeds 1900 chars) to preserve natural formatting and prevent fragmented messages. The buffer is automatically flushed at the end of each response.
+- **Bridge Restart Procedure**: After code changes to Symphony/Codebuff bridges, always restart the bridge service: `systemctl --user restart anqr-symphony-bridge` (or `anqr-codebuff-bridge`). The bridges run as **user services** (not system services) and won't pick up code changes until restarted.
 
 ### Current 1.0 Claim
 

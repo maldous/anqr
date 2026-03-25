@@ -30,8 +30,9 @@ const MONITORED_SERVICES = [
   { name: "anqr-codebuff-bridge.service", shortName: "codebuff" },
 ];
 
-// Track restart timestamps
+// Track restart timestamps and activating state
 const restartTimestamps = new Map();
+const activatingStateStart = new Map();
 
 async function updateMemory(note) {
   const timestamp = new Date().toISOString();
@@ -277,19 +278,25 @@ async function checkService(service) {
     return;
   }
 
-  // Check for stuck activation (ONLY if we have a restart timestamp)
-  // This prevents false positives on initial startup or manual restarts
+  // Check for stuck activation with proper state tracking
   if (status === "activating") {
-    const lastRestartTime = restartTimestamps.get(serviceName);
-    // Only trigger if:
-    // 1. We have a restart timestamp (we detected the restart ourselves)
-    // 2. It's been more than grace period since restart
-    // 3. Service is STILL activating (not active)
-    if (lastRestartTime && now - lastRestartTime > STARTUP_GRACE_PERIOD_MS) {
-      const stuckSeconds = Math.round((now - lastRestartTime) / 1000);
+    const activatingStart = activatingStateStart.get(serviceName);
+    
+    if (!activatingStart) {
+      // First time seeing "activating" - record start time
+      console.log(`[watchdog] ⏳ ${shortName}: Activating (starting grace period)`);
+      activatingStateStart.set(serviceName, now);
+      return;
+    }
+    
+    // Check how long we've been in activating state
+    const activatingDuration = now - activatingStart;
+    if (activatingDuration > STARTUP_GRACE_PERIOD_MS) {
+      const stuckSeconds = Math.round(activatingDuration / 1000);
       console.log(
         `[watchdog] ❌ ${shortName}: Stuck in activating for ${stuckSeconds}s`
       );
+      activatingStateStart.delete(serviceName);
       await rollbackAndRestart(
         serviceName,
         shortName,
@@ -297,15 +304,17 @@ async function checkService(service) {
       );
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
-    } else if (!lastRestartTime) {
-      // Service is activating but we haven't tracked it yet - wait one more cycle
-      console.log(`[watchdog] ⏳ ${shortName}: Activating (waiting for tracking)`);
-    } else {
-      // Within grace period - normal startup
-      const elapsed = Math.round((now - lastRestartTime) / 1000);
-      console.log(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
     }
+    
+    // Still within grace period
+    const elapsed = Math.round(activatingDuration / 1000);
+    console.log(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
     return;
+  }
+  
+  // Clear activating state if service is no longer activating
+  if (activatingStateStart.has(serviceName)) {
+    activatingStateStart.delete(serviceName);
   }
 
   // Normal status

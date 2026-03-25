@@ -176,7 +176,7 @@ function startDiscordMonitoring() {
         `[symphony-bridge] 📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`
       );
       
-      // Process the command via Symphony bridge
+      // Process the command via Symphony bridge (Discord streaming handled by invokeCodebuffDirectStream)
       try {
         const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
           method: "POST",
@@ -190,7 +190,7 @@ function startDiscordMonitoring() {
             messages: [
               { role: "user", content: message.content }
             ],
-            stream: false,
+            stream: true,
           }),
         });
         
@@ -200,13 +200,41 @@ function startDiscordMonitoring() {
           return;
         }
         
-        const result = await response.json();
-        const assistantReply = result.choices?.[0]?.message?.content || "(no response)";
+        // Just consume the stream without duplicating to Discord
+        // (Discord streaming is already handled by the main request handler via invokeCodebuffDirectStream)
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
         
-        console.log(`[symphony-bridge] ✅ Discord command processed: ${assistantReply.slice(0, 100)}`);
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+            
+            for (const line of lines) {
+              const dataMatch = line.match(/^data: (.+)$/);
+              if (!dataMatch || dataMatch[1] === "[DONE]") continue;
+              
+              try {
+                const parsed = JSON.parse(dataMatch[1]);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullText += content;
+                  // Discord streaming removed - already handled by invokeCodebuffDirectStream
+                }
+              } catch {
+                // Parse error - ignore malformed JSON chunk
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
         
-        // Send reply back to Discord text channel via webhook
-        await sendDiscordNotification({ content: assistantReply.slice(0, 2000) }); // Discord message limit
+        console.log(`[symphony-bridge] ✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
         console.error(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
       }
@@ -2829,8 +2857,8 @@ async function shutdown(signal) {
   process.exit(0);
 }
 
-process.on("SIGTERM", async () => await shutdown("SIGTERM"));
-process.on("SIGINT", async () => await shutdown("SIGINT"));
+process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => process.exit(1)); });
+process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); });
 
 // -------------------------------------------------------------------------->
 // Start server

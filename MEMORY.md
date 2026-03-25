@@ -215,11 +215,15 @@ systemctl --user enable --now anqr-watchdog.service
 - **Enhanced MEMORY.md Entries**: Rollback events now include detailed banner with reason, action taken, and warning to review failed commit
 - **Result**: Impossible to miss when watchdog takes action - visible in logs, Discord, and MEMORY.md
 
-**Bug Fix** (2026-03-26 01:43):
+**Bug Fix** (2026-03-26 01:43 & 04:01):
 - **Problem**: Watchdog was restarting services unnecessarily (e.g., restart at 01:42:11)
-- **Root Cause**: Missing early return after detecting "activating" state - watchdog would continue checking and trigger rollback on manual restarts
-- **Fix**: Added proper state handling with grace period logging and early return for "activating" status
-- **Result**: Watchdog now only triggers rollback on actual failures (status="failed") or genuine stuck activations (>60s grace period)
+- **Root Cause**: Watchdog tracked restart times but not "activating" state transitions - it would check if service was activating before it had stored the restart timestamp, then on the next cycle it might trigger unnecessarily
+- **Fix** (04:01): Track "activating" state separately using `activatingStateStart` map:
+  - First time seeing "activating": Record start time, wait
+  - Subsequent checks: Calculate duration in "activating" state
+  - Only trigger rollback if stuck in "activating" for >60s
+  - Clear state when service transitions out of "activating"
+- **Result**: Watchdog now accurately tracks how long a service has been in "activating" state and only triggers rollback on genuine stuck activations
 
 **Deployment** (2026-03-26 01:53):
 - ✅ Service file copied to `~/.config/systemd/user/`
@@ -368,3 +372,41 @@ This prevents work duplication and ensures continuity across restarts.
 ### 2026-03-25 - Symphony Bridge stopped (PID 1912256, commit 8302e74e4, 38/38 providers, signal: SIGTERM)
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1913672, commit 8302e74e4, 37/37 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1913672, commit 24a21187e, 37/37 providers, signal: SIGTERM)
+
+### 2026-03-25 - Codebuff Bridge stopped (PID 1905565, commit 24a21187e, mode: free, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1917448, commit 24a21187e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1917448, commit 24a21187e, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1918404, commit 24a21187e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1918404, commit 24a21187e, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1919612, commit 24a21187e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1919612, commit 24a21187e, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Codebuff Bridge stopped (PID 1917461, commit 24a21187e, mode: free, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1922809, commit 24a21187e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1922809, commit 24a21187e, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1930130, commit 24a21187e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1930130, commit 24a21187e, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1932044, commit 24a21187e, 37/37 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1932044, commit 24a21187e, 37/37 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1932607, commit 24a21187e, 37/37 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1932685, commit 24a21187e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1933635, commit 24a21187e, 37/37 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1935372, commit 24a21187e, 38/38 providers available, Discord monitoring active)

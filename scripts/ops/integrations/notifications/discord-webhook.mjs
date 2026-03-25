@@ -151,15 +151,16 @@ export async function sendDiscordEmbed({ title, description, color = 0x5865F2, f
   });
 }
 
-// Streaming state for Discord updates - send in chunks every 5 seconds for real-time feedback
+// Streaming state for Discord updates - send in chunks every 5 seconds for proper formatting
 let discordStreamBuffer = "";
 let discordStreamTimer = null;
-const DISCORD_STREAM_INTERVAL_MS = 5000; // Send every 5 seconds for real-time progress updates
+const DISCORD_STREAM_INTERVAL_MS = 5000; // Send every 5 seconds to preserve formatting
 const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
 
 /**
  * Stream a progress update to Discord with automatic batching.
  * Accumulates text and sends every 5 seconds OR when buffer exceeds 1900 chars.
+ * This preserves natural formatting and prevents fragmented messages.
  * 
  * @param {string} message
  * @param {{ emoji?: string, timestamp?: boolean }} options
