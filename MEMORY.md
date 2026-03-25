@@ -109,10 +109,10 @@ If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesi
 - Whether they are internal-only
 - Whether there is a separate API path that can target them
 
-**Implementation Status** (2026-03-25 23:31):
+**Implementation Status** (2026-03-25 23:35):
 
-✅ **Code Updated**: Symphony bridge now uses OpenClaw Gateway `message` tool with Discord channel targeting
-⏳ **Service Restart**: Need to restart Symphony bridge to test
+✅ **Code Updated**: Symphony bridge now uses OpenClaw Gateway `message` tool with Discord channel targeting (Commit 29de02d16)
+✅ **Service Restarted**: Symphony bridge restarted successfully (PID 1621552)
 ⏳ **Testing Required**: User needs to test if voice announcements work in Discord by triggering a Symphony bridge request
 
 **Code Changes** (Latest):
