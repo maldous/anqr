@@ -10,10 +10,11 @@
 - OpenClaw automatically handles TTS when responding in Discord sessions
 
 **Text Channel (1486262758256410646)**:
-- ⚠️ **Command Monitoring**: Requires `DISCORD_BOT_TOKEN` in `services/systemd/anqr-ops.env` (needs user to provide token)
+- ✅ **Command Monitoring Active**: Symphony bridge polls channel every 5s for user messages
+- ✅ **Command Processing**: User commands sent to Symphony → responses via webhook
 - ✅ **Request Notifications**: Start/stop summaries via webhook (1486304408286527539)
 - ✅ **Streaming Output**: Real-time responses streamed to Discord during execution
-- 📝 **Setup Required**: User needs to copy token from their environment to `services/systemd/anqr-ops.env`
+- ✅ **Fixed**: Missing sendDiscordMessage import (bridge restarted PID 1843934)
 
 **Notification Format**:
 - **Initial**: Request description, provider, model
