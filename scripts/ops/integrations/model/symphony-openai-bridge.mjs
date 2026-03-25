@@ -2186,13 +2186,31 @@ const server = http.createServer(async (req, res) => {
       const startTime = Date.now();
 
       // Progress logger — log elapsed time periodically during long requests
+      // AND send Discord updates every 30 seconds
+      let progressCounter = 0;
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         console.log(
           `[symphony-bridge] ⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`,
         );
         logMemory("request-progress");
-      }, 60_000); // Log every 60 seconds
+        
+        // Send Discord progress update every 30 seconds
+        progressCounter++;
+        if (progressCounter % 1 === 0 && issueContext) { // Every 30s (since interval is 30s)
+          const progressMessage = `${issueContext.identifier}: Still working... (${formatElapsed(elapsed)} elapsed)`;
+          streamDiscordUpdate(
+            progressMessage,
+            { emoji: "⏳", timestamp: true }
+          ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
+          
+          // Voice announcement every 2 minutes
+          if (progressCounter % 4 === 0) {
+            speakAnnouncement(`Still working on ${issueContext.identifier}. ${formatElapsed(elapsed)} elapsed.`)
+              .catch(err => console.log(`[symphony-bridge] Voice progress announcement failed: ${err.message}`));
+          }
+        }
+      }, 30_000); // Log every 30 seconds
 
       // Hard request timeout — prevents infinite hangs regardless of provider state
       const requestTimeoutHandle = setTimeout(() => {
