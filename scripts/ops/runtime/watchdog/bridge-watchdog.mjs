@@ -1,0 +1,242 @@
+#!/usr/bin/env node
+
+/**
+ * bridge-watchdog.mjs — Watchdog for Symphony and Codebuff bridges
+ *
+ * Monitors both bridges and automatically rolls back to previous git commit
+ * if either service fails to start within 60 seconds after a restart.
+ *
+ * Features:
+ *   - Monitors systemd service status every 60 seconds
+ *   - Detects failed starts (service stuck in "activating" or "failed")
+ *   - Automatically rolls back to previous commit on failure
+ *   - Restarts failed services after rollback
+ *   - Updates MEMORY.md with rollback events
+ *
+ * Environment:
+ *   WATCHDOG_CHECK_INTERVAL — Check interval in seconds (default: 60)
+ */
+
+import { execSync } from "node:child_process";
+import { appendFile } from "node:fs/promises";
+import path from "node:path";
+
+const CHECK_INTERVAL_MS = (parseInt(process.env.WATCHDOG_CHECK_INTERVAL) || 60) * 1000;
+const STARTUP_GRACE_PERIOD_MS = 60 * 1000; // 60 seconds grace period for startup
+
+const MONITORED_SERVICES = [
+  { name: "anqr-symphony-bridge.service", shortName: "symphony" },
+  { name: "anqr-codebuff-bridge.service", shortName: "codebuff" },
+];
+
+// Track restart timestamps
+const restartTimestamps = new Map();
+
+async function updateMemory(note) {
+  const timestamp = new Date().toISOString();
+  const entry = `\n### ${timestamp} - ${note}\n`;
+  try {
+    await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
+    console.log(`[watchdog] 📝 Updated MEMORY.md: ${note}`);
+  } catch (err) {
+    console.log(`[watchdog] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+  }
+}
+
+function getServiceStatus(serviceName) {
+  try {
+    const output = execSync(
+      `systemctl --user is-active ${serviceName} 2>&1 || true`,
+      { encoding: "utf-8", timeout: 5000 }
+    );
+    return output.trim();
+  } catch (err) {
+    return "unknown";
+  }
+}
+
+function getServicePID(serviceName) {
+  try {
+    const output = execSync(
+      `systemctl --user show ${serviceName} --property=MainPID --value 2>&1 || true`,
+      { encoding: "utf-8", timeout: 5000 }
+    );
+    const pid = parseInt(output.trim());
+    return pid > 0 ? pid : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function getServiceActiveTime(serviceName) {
+  try {
+    const output = execSync(
+      `systemctl --user show ${serviceName} --property=ActiveEnterTimestamp --value 2>&1 || true`,
+      { encoding: "utf-8", timeout: 5000 }
+    );
+    const timestamp = output.trim();
+    if (!timestamp || timestamp === "0") return null;
+    return new Date(timestamp);
+  } catch (err) {
+    return null;
+  }
+}
+
+function getCurrentCommit() {
+  try {
+    return execSync("git rev-parse --short HEAD", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 5000,
+    }).trim();
+  } catch (err) {
+    console.error(`[watchdog] Failed to get current commit: ${err.message}`);
+    return null;
+  }
+}
+
+function getPreviousCommit() {
+  try {
+    return execSync("git rev-parse --short HEAD~1", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 5000,
+    }).trim();
+  } catch (err) {
+    console.error(`[watchdog] Failed to get previous commit: ${err.message}`);
+    return null;
+  }
+}
+
+async function rollbackAndRestart(serviceName, shortName, reason) {
+  const currentCommit = getCurrentCommit();
+  const previousCommit = getPreviousCommit();
+
+  if (!currentCommit || !previousCommit) {
+    console.error(`[watchdog] ❌ Cannot rollback ${shortName}: failed to get commit info`);
+    return false;
+  }
+
+  console.log(`[watchdog] 🔄 Rolling back ${shortName} from ${currentCommit} to ${previousCommit}`);
+  console.log(`[watchdog]    Reason: ${reason}`);
+
+  try {
+    // 1. Stop the service
+    console.log(`[watchdog]    Stopping ${serviceName}...`);
+    execSync(`systemctl --user stop ${serviceName}`, {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 10000,
+    });
+
+    // 2. Rollback git
+    console.log(`[watchdog]    Rolling back to ${previousCommit}...`);
+    execSync(`git reset --hard ${previousCommit}`, {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 10000,
+    });
+
+    // 3. Restart the service
+    console.log(`[watchdog]    Restarting ${serviceName}...`);
+    execSync(`systemctl --user restart ${serviceName}`, {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+      timeout: 10000,
+    });
+
+    // 4. Update MEMORY.md
+    await updateMemory(
+      `Watchdog rolled back ${shortName} bridge from ${currentCommit} to ${previousCommit} (${reason})`
+    );
+
+    console.log(`[watchdog] ✅ Rollback complete for ${shortName}`);
+    return true;
+  } catch (err) {
+    console.error(`[watchdog] ❌ Rollback failed for ${shortName}: ${err.message}`);
+    await updateMemory(
+      `Watchdog rollback FAILED for ${shortName} bridge: ${err.message}`
+    );
+    return false;
+  }
+}
+
+async function checkService(service) {
+  const { name: serviceName, shortName } = service;
+  const status = getServiceStatus(serviceName);
+  const pid = getServicePID(serviceName);
+  const activeTime = getServiceActiveTime(serviceName);
+
+  // Track when service was last restarted
+  const lastRestart = restartTimestamps.get(serviceName);
+  const now = Date.now();
+
+  // Detect new restart
+  if (activeTime && (!lastRestart || activeTime.getTime() > lastRestart)) {
+    console.log(`[watchdog] 🔍 ${shortName}: New restart detected (PID ${pid || "unknown"})`);
+    restartTimestamps.set(serviceName, activeTime.getTime());
+  }
+
+  // Check for failures
+  if (status === "failed") {
+    console.log(`[watchdog] ❌ ${shortName}: Service failed`);
+    await rollbackAndRestart(serviceName, shortName, "service failed");
+    return;
+  }
+
+  // Check for stuck activation (longer than grace period)
+  if (status === "activating") {
+    const lastRestartTime = restartTimestamps.get(serviceName);
+    if (lastRestartTime && now - lastRestartTime > STARTUP_GRACE_PERIOD_MS) {
+      console.log(
+        `[watchdog] ❌ ${shortName}: Stuck in activating for ${Math.round((now - lastRestartTime) / 1000)}s`
+      );
+      await rollbackAndRestart(
+        serviceName,
+        shortName,
+        `stuck in activating for ${Math.round((now - lastRestartTime) / 1000)}s`
+      );
+      return;
+    }
+  }
+
+  // Normal status
+  if (status === "active") {
+    console.log(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);
+  } else {
+    console.log(`[watchdog] ⚠️ ${shortName}: ${status}`);
+  }
+}
+
+async function monitorLoop() {
+  console.log(`[watchdog] 🐕 Bridge watchdog starting...`);
+  console.log(`[watchdog]    Check interval: ${CHECK_INTERVAL_MS / 1000}s`);
+  console.log(`[watchdog]    Grace period: ${STARTUP_GRACE_PERIOD_MS / 1000}s`);
+  console.log(`[watchdog]    Monitored services: ${MONITORED_SERVICES.map(s => s.shortName).join(", ")}`);
+
+  while (true) {
+    console.log(`[watchdog] 🔍 Checking services...`);
+    
+    for (const service of MONITORED_SERVICES) {
+      await checkService(service);
+    }
+
+    // Wait for next check
+    await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL_MS));
+  }
+}
+
+// Graceful shutdown
+function shutdown(signal) {
+  console.log(`\n[watchdog] Received ${signal}, shutting down...`);
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+// Start monitoring
+monitorLoop().catch(err => {
+  console.error(`[watchdog] Fatal error: ${err.message}`);
+  process.exit(1);
+});
