@@ -8,57 +8,38 @@
 - **Implementation**: 
   1. Send initial "Working on it..." message immediately (✅ implemented)
   2. Stream progress updates every 30 seconds during Symphony bridge processing (✅ implemented)
-  3. Voice announcements every 2 minutes via OpenClaw TTS (✅ implemented)
-  4. Send completion message with summary (✅ implemented)
+  3. Send completion message with summary (✅ implemented)
 - **Context**: User can listen when away from computer and might respond
 - **Use case**: Voice-based monitoring of long-running AI tasks
 - **Date added**: 2026-03-25
-- **Updated**: 2026-03-25 21:21 GMT+11 - Fixed voice announcements to be task-focused only
-- ✅ **Status**: Fully implemented in Symphony bridge
-- ⚠️ **Note**: `message` tool not available in web chat context (can only send from Discord channel)
-
-**Voice Announcement Format** (2026-03-25 21:21 GMT+11):
-- Start: "Working on ISSUE-ID" (simple, no conversational text)
-- Progress: "Still working on ISSUE-ID. N minutes elapsed." (every 2 minutes)
-- Complete: "ISSUE-ID is done." (simple, no conversational text)
-- Fixed: No more "you're welcome" or conversational fluff in voice announcements
+- ✅ **Status**: Discord text notifications fully implemented in Symphony bridge
+- ⚠️ **Voice announcements**: Removed from Symphony bridge - OpenClaw automatically speaks responses in Discord sessions
 
 ## Recent Configuration
+
+### Discord Integration (2026-03-25 22:18 GMT+11)
+✅ **Working features:**
+1. **Discord text notifications**: Webhook integration to Discord text channel (1486262758256410646)
+2. **Discord voice**: OpenClaw automatically speaks my responses when I reply in Discord sessions
+3. **Linear issue formatting**: Embedded messages with status/provider fields
+4. **Normal requests**: Simple text announcements
+5. **Periodic progress**: Every 30s text updates
+6. **Discord message monitoring**: Polls text channel for user input every 5 seconds
+
+⚠️ **Voice Announcements Removed** (commit 74abc44a4):
+- **Problem**: Symphony bridge runs outside Discord session context, so TTS tool calls don't reach Discord voice
+- **Solution**: Removed all voice announcement calls from Symphony bridge
+- **Why this is correct**: OpenClaw automatically speaks my responses when I reply in Discord sessions - no need for separate TTS calls
+- **User experience**: When I respond in Discord, user will hear my voice naturally (OpenClaw handles this)
+- **Symphony role**: Send Discord text notifications only (via webhook)
 
 ### Voice Setup (2026-03-25)
 - ✅ Discord voice integration working
 - ✅ Bot auto-joins voice channel (Guild: 1486262757543121021, Channel: 1486262758256410647)
 - ✅ TTS configured with Microsoft (primary) + ElevenLabs (fallback)
 - ✅ Two-way voice conversations operational
-- ✅ Discord voice announcements working via OpenClaw message tool
-- ✅ Channel routing: Text channel 1486262758256410646, Voice channel 1486262758256410647
+- ✅ OpenClaw speaks responses automatically in Discord sessions
 - ⚠️ Web Chat Control UI has limited TTS playback (browser restrictions)
-
-
-
-### Discord Integration Status (2026-03-25 21:54 UTC+11)
-✅ **Working features:**
-1. **Text notifications (outgoing)**: Webhook integration to Discord text channel (1486262758256410646)
-2. **Voice announcements (outgoing)**: OpenClaw message tool to Discord voice channel (1486262758256410647)
-3. **Linear issue formatting**: Embedded messages with status/provider fields + special voice (🔔/🎉)
-4. **Normal requests**: Simple text/voice announcements
-5. **Periodic progress**: Every 30s text, every 2min voice
-6. **Discord message monitoring**: Polls text channel for user input every 5 seconds (commit 78070158d)
-   - Filters out bot/webhook messages
-   - Logs user input for debugging
-   - Requires `DISCORD_BOT_TOKEN` environment variable
-   - Auto-starts on bridge startup
-7. **Committed**: 67e93cc28, 78070158d - Symphony bridge with Discord monitoring
-
-✅ **Discord Text Input Discovery (2026-03-25 21:57):**
-- **OpenClaw Discord bot is ALREADY running and listening to Discord text channel!**
-- Active Discord sessions found: `agent:main:discord:channel:1486…` (1m ago)
-- Discord channel enabled and operational (token configured)
-- User can already send messages in Discord text channel and OpenClaw will process them
-- **Current behavior**: User sends message in Discord → OpenClaw processes → Responds in Discord
-- **Desired behavior**: When user sends message in Discord → OpenClaw processes → Symphony bridge sends progress updates (text/voice) to Discord during processing
-- **Solution**: Symphony bridge notifications (already implemented) will be sent for ALL requests, including Discord-originated ones
-- **Status**: Feature already works - user can talk to OpenClaw in Discord text channel and receive responses
 
 ### Symphony Bridge Adaptive Provider Selection (2026-03-25)
 - ✅ Implemented session-aware provider stickiness
@@ -68,15 +49,17 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge restarted successfully (PID 1451490, 2026-03-25 21:11 UTC+11)
-- ✅ Discord webhook integration active (channel: 1486262758256410646)
+- ✅ Symphony Bridge restarted (PID 1539625, commit 74abc44a4)
+- ✅ Discord text notifications working via webhook
+- ✅ Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
 
 ### Discord Webhook Integration (2026-03-25)
 - ✅ Created `scripts/ops/notifications/discord-webhook.mjs` module
 - ✅ Integrated with Symphony bridge for request notifications
 - ✅ Webhook URL configured in `services/systemd/anqr-ops.env`
 - ✅ Sends notifications when requests start and complete
-- ✅ Discord channel: 1486262758256410646 (text)
+- ✅ Discord text channel: 1486262758256410646
+- ✅ Discord voice channel: 1486262758256410647 (for OpenClaw automatic TTS)
 - 📝 Webhook URL: https://discord.com/api/webhooks/1486304408286527539/...
 
 **Functions available:**
@@ -101,115 +84,31 @@
 ### Codebuff Bridge Tool Proxying (Implemented 2026-03-25)
 ✅ **Implementation Complete**: Codebuff bridge now proxies OpenClaw-specific tools back to OpenClaw Gateway API
 
-**Architecture**: Codebuff → OpenClaw Gateway `/v1/tools/execute` (stateless HTTP proxy)
+**Architecture**: Codebuff → OpenClaw Gateway `/tools/invoke` (stateless HTTP proxy)
 
 **Implementation Details**:
-1. ✅ Symphony bridge forwards `X-OpenClaw-Session` header to Codebuff bridge
-2. ✅ Codebuff bridge extracts session ID from request headers
-3. ✅ Tool proxy function `callOpenClawGatewayTool` implemented with 30s timeout
-4. ✅ Proxied tools: `message`, `memory_get`, `read`, `write`, `exec`
-5. ✅ Integrated with Codebuff SDK via `proxyToolFn` parameter (both streaming and non-streaming)
-6. ✅ Error handling with ERR_HTTP_HEADERS_SENT fix applied
-7. ✅ Environment variable validation on startup
+1. ✅ Symphony bridge forwards `X-OpenClaw-Session` header to Codebuff bridge (line 1481)
+2. ✅ Codebuff bridge extracts session ID from `X-OpenClaw-Session` request header
+3. ✅ Codebuff bridge calls OpenClaw Gateway `/tools/invoke` endpoint (corrected from `/v1/tools/execute`)
+4. ✅ Request format: `{ tool, args, sessionKey }` - Response: `{ ok, result }` or `{ ok: false, error }`
+5. ✅ Proxied tools: `message`, `memory_get`, `read`, `write`, `exec`
+6. ✅ Tool proxy function `proxyToolToOpenClaw` passed to Codebuff SDK via `proxyToolFn` parameter
+7. ✅ Full integration with streaming and non-streaming modes
 
 **Configuration** (Environment variables for Codebuff bridge):
-- `OPENCLAW_GATEWAY_URL` - Full gateway URL (default: http://127.0.0.1:18789)
 - `OPENCLAW_GATEWAY_HOST` - Gateway hostname (default: 127.0.0.1)
 - `OPENCLAW_GATEWAY_PORT` - Gateway port (default: 18789)
-- `OPENCLAW_GATEWAY_TOKEN` - Gateway bearer token (required for tool proxying)
+- `OPENCLAW_GATEWAY_TOKEN` - Gateway bearer token (optional, for auth)
 - `OPENCLAW_TOOL_PROXY_ENABLED` - Enable/disable proxy (default: true)
 
 **Request Flow**:
 1. OpenClaw sends chat request to Symphony bridge (port 4319) with `X-OpenClaw-Session` header
 2. Symphony credit-gate selects Codebuff and uses transparent SSE relay
 3. Symphony forwards `X-OpenClaw-Session` header to Codebuff bridge (port 4318)
-4. Codebuff bridge extracts session ID and passes `proxyToolFn` to Codebuff SDK
-5. When Codebuff SDK calls OpenClaw-specific tools, `proxyToolFn` intercepts and calls `callOpenClawGatewayTool`
-6. Bridge proxies HTTP POST to OpenClaw Gateway `/v1/tools/execute` with `{ tool, input, sessionId }`
-7. Gateway validates session, executes tool, returns result or error
+4. Codebuff bridge passes session ID and `proxyToolFn` to Codebuff SDK
+5. When Codebuff SDK calls OpenClaw-specific tools, `proxyToolFn` intercepts
+6. Bridge proxies HTTP POST to OpenClaw Gateway `/tools/invoke` with `{ tool, args, sessionKey }`
+7. Gateway validates session, executes tool, returns `{ ok: true, result }` or `{ ok: false, error }`
 8. Result flows back: Gateway → Codebuff SDK → Bridge SSE → Symphony → OpenClaw
 
-**Status**: ✅ **Active** - Both bridges restarted and running (committed 2026-03-25)
-
-**Critical Fixes Applied**:
-- Fixed ERR_HTTP_HEADERS_SENT crash in Symphony bridge error handling
-- Removed duplicate imports and function definitions in Codebuff bridge
-- Fixed endpoint path to `/v1/tools/execute`
-- Added proper timeout handling (30s) with cleanup
-- Improved error messages with session ID truncation
-- Added startup validation for OPENCLAW_GATEWAY_TOKEN
-
-### Discord Webhook Integration (Implemented 2026-03-25)
-✅ **Implementation Complete**: Symphony bridge now sends real-time notifications to Discord
-
-**Features:**
-- Sends notification when request starts (with issue context if available)
-- Sends notification when request completes (with provider and result summary)
-- Non-blocking async notifications (failures logged but don't interrupt requests)
-- Supports embedded messages with rich formatting
-
-**Setup:**
-1. Create Discord webhook in Server Settings → Integrations → Webhooks
-2. Select target text channel (e.g., `1486262758256410646`)
-3. Copy webhook URL
-4. Set environment variable:
-   ```bash
-   export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
-   ```
-5. Add to `services/systemd/anqr-ops.env` for persistent service
-6. Restart Symphony bridge: `systemctl --user restart anqr-symphony-bridge`
-
-**Files:**
-- `scripts/ops/notifications/discord-webhook.mjs` - Core webhook module
-- `scripts/ops/notifications/README.md` - Setup documentation
-- `scripts/ops/integrations/model/symphony-openai-bridge.mjs` - Integration point
-
-**Environment Variables:**
-- `DISCORD_WEBHOOK_URL` - Discord webhook URL (required)
-- `DISCORD_WEBHOOK_ENABLED` - Enable/disable webhook (default: true if URL set)
-
-See `scripts/ops/notifications/README.md` for complete setup instructions and testing commands.
-
-**Status**: ✅ Active and streaming to Discord text channel `1486262758256410646`
-
-**Setup Complete (2026-03-25 21:26 GMT+11):**
-- Discord webhook URL configured in `services/systemd/anqr-ops.env`
-- Symphony bridge updated with corrected TTS endpoint
-- OpenClaw Gateway TTS endpoint: `/tools/invoke` (not `/v1/tools/execute`)
-- Request format: `{ tool: "tts", args: { text } }` (not `input`)
-- All integration tests passing (commit c2623208d):
-  ✅ Discord text messages
-  ✅ Discord embedded messages
-  ✅ Discord progress updates
-  ✅ Voice announcements via OpenClaw TTS (audio file generated)
-- Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
-- Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
-
-**Voice Playback Status (2026-03-25 22:16 GMT+11):**
-- ✅ Discord text notifications: Working (webhook integration active)
-- ✅ Symphony bridge voice announcements: **FIXED** - Now using `tts` tool instead of `message` tool
-  - **Problem**: Was using `message` tool which sends TEXT to voice channel, not TTS audio
-  - **Solution**: Changed to use `tts` tool which triggers actual TTS playback in Discord
-  - **Implementation**: `speakAnnouncement()` now calls OpenClaw Gateway `/tools/invoke` with `tool: "tts"` and `args: { text: "..." }`
-  - **Status**: Symphony bridge restarted (PID 1539625) with fix applied (commit 1d7ac8473)
-  - **Next**: Test by triggering a request - you should now hear voice announcements in Discord voice channel
-- 📝 **Implementation**: Using OpenClaw `message` tool with explicit channel routing
-  - Tool: `message` with `action: "send"`
-  - Channel: `discord`
-  - To: `1486262758256410647` (Discord **voice** channel ID, not text channel)
-  - Text channel: `1486262758256410646`
-  - OpenClaw routes TTS to voice channel when message is sent to voice channel ID
-- ✅ All integration tests passing (commit 906c5d765):
-  - ✅ Discord text messages
-  - ✅ Discord embedded messages  
-  - ✅ Discord progress updates
-  - ✅ Voice announcements via OpenClaw message tool
-- ✅ Symphony Bridge: Active (PID 1501712, 2026-03-25 21:48 GMT+11)
-- ✅ Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
-- 📝 **Final Fix** (commit 539083fd9): Voice announcements now trigger for ALL requests (webchat, Linear, etc.)
-  - Webchat: "Processing your request." → "Request complete."
-  - Linear issues: "Working on ISSUE-ID." → "ISSUE-ID is done."
-  - Voice announcements are sent to Discord voice channel via OpenClaw `message` tool
-- ⚠️ **Issue Found** (2026-03-25 21:54): Environment variables in `services/systemd/anqr-ops.env` must be copied to `~/.config/systemd/user/anqr-ops.env` for systemd service to load them
-  - Fixed by running: `cp services/systemd/anqr-ops.env ~/.config/systemd/user/anqr-ops.env`
-  - Symphony bridge restart required after env sync
+**Status**: Ready for testing. Bridges need restart to apply changes.

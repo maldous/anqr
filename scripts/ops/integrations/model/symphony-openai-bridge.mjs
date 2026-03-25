@@ -88,12 +88,50 @@ import { streamDiscordUpdate, sendDiscordEmbed } from "../notifications/discord-
 let lastDiscordMessageId = null;
 let discordMonitorInterval = null;
 
-// Voice announcements removed - OpenClaw automatically speaks responses in Discord sessions
-// The Symphony bridge runs outside Discord session context, so TTS calls don't reach Discord voice
+// Voice announcements via OpenClaw message tool
 
 // Discord channel IDs
 const DISCORD_TEXT_CHANNEL_ID = "1486262758256410646";
 const DISCORD_VOICE_CHANNEL_ID = "1486262758256410647";
+
+/**
+ * Send voice announcement to Discord voice channel via OpenClaw Gateway
+ */
+async function speakAnnouncement(text) {
+  if (!process.env.OPENCLAW_GATEWAY_TOKEN) {
+    console.log(`[symphony-bridge] Voice announcement skipped: OPENCLAW_GATEWAY_TOKEN not set`);
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://127.0.0.1:18789/tools/invoke`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENCLAW_GATEWAY_TOKEN}`,
+      },
+      body: JSON.stringify({
+        tool: "message",
+        args: {
+          action: "send",
+          channel: "discord",
+          to: DISCORD_VOICE_CHANNEL_ID,
+          message: text,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`[symphony-bridge] Voice announcement failed (${response.status}): ${errorText.slice(0, 200)}`);
+      return;
+    }
+
+    console.log(`[symphony-bridge] 🔊 Voice announcement sent: "${text}"`);
+  } catch (err) {
+    console.log(`[symphony-bridge] Voice announcement error: ${err.message}`);
+  }
+}
 
 /**
  * Poll Discord channel for new messages (user input)
@@ -2246,7 +2284,10 @@ const server = http.createServer(async (req, res) => {
               { emoji: "⏳", timestamp: true }
             ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
             
-            // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+            // Send voice announcement for Linear issues
+            speakAnnouncement(`${issueContext.identifier}: ${Math.floor(elapsed / 60000)} minutes`).catch(err => 
+              console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+            );
           } else {
             // Non-Linear: normal text/voice progress
             streamDiscordUpdate(
@@ -2254,7 +2295,12 @@ const server = http.createServer(async (req, res) => {
               { emoji: "⏳", timestamp: true }
             ).catch(err => console.log(`[symphony-bridge] Discord progress update failed: ${err.message}`));
             
-            // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+            // Send voice announcement for normal requests
+            if (progressCounter % 4 === 0) { // Every 2 minutes (4 * 30s)
+              speakAnnouncement(`${Math.floor(elapsed / 60000)} minutes elapsed`).catch(err => 
+                console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+              );
+            }
           }
         }
       }, 30_000); // Log every 30 seconds
@@ -2348,7 +2394,10 @@ const server = http.createServer(async (req, res) => {
           footer: "OpenClaw Symphony Bridge"
         }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
         
-        // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+        // Send voice announcement for Linear issues
+        speakAnnouncement(`Working on ${issueContext.identifier}`).catch(err => 
+          console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+        );
       } else {
         // Normal text/voice for non-Linear requests
         streamDiscordUpdate(
@@ -2356,7 +2405,10 @@ const server = http.createServer(async (req, res) => {
           { emoji: "⏳" }
         ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
         
-        // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+        // Send voice announcement for normal requests
+        speakAnnouncement("Processing request").catch(err => 
+          console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+        );
       }
 
         if (selectedProvider?.name === "codebuff") {
@@ -2391,7 +2443,10 @@ const server = http.createServer(async (req, res) => {
                 footer: "OpenClaw Symphony Bridge"
               }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
               
-              // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+              // Send voice announcement for Linear issues
+              speakAnnouncement(`${issueContext.identifier} done`).catch(err => 
+                console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+              );
             } else {
               // Normal text/voice completion
               streamDiscordUpdate(
@@ -2399,7 +2454,10 @@ const server = http.createServer(async (req, res) => {
                 { emoji: "✅" }
               ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
               
-              // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+              // Send voice announcement for normal requests
+              speakAnnouncement("Request complete").catch(err => 
+                console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+              );
             }
 
             const durationMs = Date.now() - startTime;
@@ -2483,7 +2541,10 @@ const server = http.createServer(async (req, res) => {
               footer: "OpenClaw Symphony Bridge"
             }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
             
-            // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+            // Send voice announcement for Linear issues
+            speakAnnouncement(`${issueContext.identifier} done`).catch(err => 
+              console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+            );
           } else {
             // Normal text completion
             streamDiscordUpdate(
@@ -2491,7 +2552,10 @@ const server = http.createServer(async (req, res) => {
               { emoji: "✅" }
             ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
             
-            // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+            // Send voice announcement for normal requests
+            speakAnnouncement("Request complete").catch(err => 
+              console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+            );
           }
 
           const durationMs = Date.now() - startTime;
@@ -2567,7 +2631,10 @@ const server = http.createServer(async (req, res) => {
             footer: "OpenClaw Symphony Bridge"
           }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
           
-          // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+          // Send voice announcement for Linear issues
+          speakAnnouncement(`${issueContext.identifier} done`).catch(err => 
+            console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+          );
         } else {
           // Normal text completion
           streamDiscordUpdate(
@@ -2575,7 +2642,10 @@ const server = http.createServer(async (req, res) => {
             { emoji: "✅" }
           ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
           
-          // Voice announcements removed - OpenClaw handles TTS automatically in Discord sessions
+          // Send voice announcement for normal requests
+          speakAnnouncement("Request complete").catch(err => 
+            console.log(`[symphony-bridge] Voice failed: ${err.message}`)
+          );
         }
 
         const durationMs = Date.now() - startTime;
