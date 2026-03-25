@@ -2395,22 +2395,24 @@ const server = http.createServer(async (req, res) => {
             
             // Stream output to Discord as it's received (buffer for readability)
             let discordBuffer = "";
-            const DISCORD_BUFFER_SIZE = 150; // Send in ~150 char chunks for better readability
+            const DISCORD_BUFFER_SIZE = 200; // Send in ~200 char chunks for better readability
             const streamToDiscord = (text) => {
               discordBuffer += text;
               
-              // Only send when we have enough text AND hit a natural boundary
-              // (sentence end, double newline) to avoid breaking words or sentences
-              const hasSentenceEnd = /[.!?]\s/.test(discordBuffer);
+              // Wait for natural sentence/paragraph boundaries before sending
+              const hasSentenceEnd = /[.!?]\s/.test(discordBuffer) || /[.!?]$/.test(discordBuffer.trim());
               const hasParagraphBreak = discordBuffer.includes("\n\n");
+              const hasCodeBlock = discordBuffer.includes("```");
               const isLargeEnough = discordBuffer.length >= DISCORD_BUFFER_SIZE;
               
-              if ((isLargeEnough && (hasSentenceEnd || hasParagraphBreak)) || discordBuffer.length >= DISCORD_BUFFER_SIZE * 2) {
-                // Remove single linefeeds (keep double linefeeds for paragraphs)
-                // This prevents unexpected linebreaks within sentences while preserving paragraph structure
+              // Send when: (large enough AND hit boundary) OR very large (force send)
+              if ((isLargeEnough && (hasSentenceEnd || hasParagraphBreak || hasCodeBlock)) || discordBuffer.length >= DISCORD_BUFFER_SIZE * 3) {
+                // Clean up linefeeds: replace single \n with space (except in code blocks)
+                // This prevents unexpected linebreaks within sentences while preserving paragraphs and code
                 const toSend = discordBuffer.trim()
-                  .replace(/([^\n])\n(?!\n)/g, "$1 ")  // Replace single \n with space
-                  .replace(/\n{3,}/g, "\n\n");          // Collapse 3+ newlines to 2
+                  .replace(/([^\n`])\n(?!\n|```)/g, "$1 ")  // Replace single \n with space (not in code blocks)
+                  .replace(/\n{3,}/g, "\n\n")              // Collapse 3+ newlines to 2
+                  .replace(/\s{2,}/g, " ");                 // Collapse multiple spaces to 1
                 discordBuffer = "";
                 if (toSend.length > 0) {
                   streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
@@ -2423,8 +2425,9 @@ const server = http.createServer(async (req, res) => {
             // Flush any remaining Discord buffer
             if (discordBuffer.trim().length > 0) {
               const finalText = discordBuffer.trim()
-                .replace(/([^\n])\n(?!\n)/g, "$1 ")  // Replace single \n with space
-                .replace(/\n{3,}/g, "\n\n");          // Collapse 3+ newlines to 2
+                .replace(/([^\n`])\n(?!\n|```)/g, "$1 ")  // Replace single \n with space (not in code blocks)
+                .replace(/\n{3,}/g, "\n\n")              // Collapse 3+ newlines to 2
+                .replace(/\s{2,}/g, " ");                 // Collapse multiple spaces to 1
               await streamDiscordUpdate(finalText, { emoji: "" }).catch(() => {/* ignore */});
             }
 
