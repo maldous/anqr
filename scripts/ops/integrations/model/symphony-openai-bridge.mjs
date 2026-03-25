@@ -1443,10 +1443,11 @@ async function invokeCodebuffDirectStream(messages, onChunk) {
             if (onChunk) {
               onChunk({ type: "text", text: content });
             }
-            // Log activity messages for debugging
-            if (content.includes("✅") || content.includes("🔧") || content.includes("💻") || content.includes("📖")) {
-              console.log(`[symphony-bridge] 🌊 Codebuff activity: ${content.trim().slice(0, 100)}`);
-            }
+            // Log ALL content chunks for debugging (not just activity messages)
+            console.log(`[symphony-bridge] 🌊 SSE chunk (${content.length} chars): ${content.slice(0, 200)}`);
+          } else if (chunk.choices?.[0]?.delta) {
+            // Log empty deltas to diagnose the 0-char text-delta issue
+            console.log(`[symphony-bridge] ⚠️ Empty SSE delta received: ${JSON.stringify(chunk.choices[0].delta)}`);
           }
         } catch (parseErr) {
           console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
