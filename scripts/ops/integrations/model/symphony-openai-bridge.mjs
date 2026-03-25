@@ -2862,13 +2862,14 @@ server.listen(PORT, "127.0.0.1", () => {
       }
       console.log(
         `[symphony-bridge] ✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
-      );  console.log(`[symphony-bridge] ========================================`);
-  console.log(`[symphony-bridge] Ready to accept requests`);
-  console.log(`[symphony-bridge] ========================================`);
+      );      console.log(`[symphony-bridge] ========================================`);
+      console.log(`[symphony-bridge] Ready to accept requests`);
+      console.log(`[symphony-bridge] ========================================`);
       
       // Update MEMORY.md with successful startup
+      const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
       updateMemory(
-        `Symphony Bridge restarted successfully (PID ${process.pid}, ${available.length}/${total} providers available, Discord monitoring active)`
+        `Symphony Bridge restarted successfully (PID ${process.pid}, commit ${commitHash}, ${available.length}/${total} providers available, Discord monitoring ${process.env.DISCORD_BOT_TOKEN ? 'active' : 'disabled'})`
       ).catch(() => {/* ignore */});
     })
     .catch((err) => {
