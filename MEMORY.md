@@ -159,9 +159,9 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
 - Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
 - Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
 
-**Voice Playback Status (2026-03-25 21:44 GMT+11):**
+**Voice Playback Status (2026-03-25 21:54 GMT+11):**
 - ✅ Discord text notifications: Working (webhook integration active)
-- ✅ Discord voice announcements: **WORKING!** Fixed by using correct voice channel ID
+- ⚠️ Discord voice announcements: **PARTIALLY WORKING** - Environment variables need to be synced to systemd user directory
 - 📝 **Implementation**: Using OpenClaw `message` tool with explicit channel routing
   - Tool: `message` with `action: "send"`
   - Channel: `discord`
@@ -173,6 +173,12 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
   - ✅ Discord embedded messages  
   - ✅ Discord progress updates
   - ✅ Voice announcements via OpenClaw message tool
-- ✅ Symphony Bridge: Active (PID 1491766, 2026-03-25 21:42 GMT+11)
+- ✅ Symphony Bridge: Active (PID 1501712, 2026-03-25 21:48 GMT+11)
 - ✅ Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
-- 📝 **Fix**: Was sending to text channel ID instead of voice channel ID - voice now plays correctly!
+- 📝 **Final Fix** (commit 539083fd9): Voice announcements now trigger for ALL requests (webchat, Linear, etc.)
+  - Webchat: "Processing your request." → "Request complete."
+  - Linear issues: "Working on ISSUE-ID." → "ISSUE-ID is done."
+  - Voice announcements are sent to Discord voice channel via OpenClaw `message` tool
+- ⚠️ **Issue Found** (2026-03-25 21:54): Environment variables in `services/systemd/anqr-ops.env` must be copied to `~/.config/systemd/user/anqr-ops.env` for systemd service to load them
+  - Fixed by running: `cp services/systemd/anqr-ops.env ~/.config/systemd/user/anqr-ops.env`
+  - Symphony bridge restart required after env sync
