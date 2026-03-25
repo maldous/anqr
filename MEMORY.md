@@ -33,10 +33,22 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge restarted with clean slate (PID 1379367)
-- ⚠️ Discord announcements: `message` tool not available in web chat context (can only send from Discord channel)
-- ⚠️ Codebuff bridge tool errors: `message`, `memory_get`, `read` not available in bridge context (these are OpenClaw-specific tools)
-- 📝 Implementing OpenClaw tool proxying in Codebuff bridge requires architecture changes (see below)
+- ✅ Symphony Bridge restarted successfully (PID 1451490, 2026-03-25 21:11 UTC+11)
+- ✅ Discord webhook integration active (channel: 1486262758256410646)
+
+### Discord Webhook Integration (2026-03-25)
+- ✅ Created `scripts/ops/notifications/discord-webhook.mjs` module
+- ✅ Integrated with Symphony bridge for request notifications
+- ✅ Webhook URL configured in `services/systemd/anqr-ops.env`
+- ✅ Sends notifications when requests start and complete
+- ✅ Discord channel: 1486262758256410646 (text)
+- 📝 Webhook URL: https://discord.com/api/webhooks/1486304408286527539/...
+
+**Functions available:**
+- `sendDiscordNotification(payload)` - Full structured webhook payload
+- `sendDiscordMessage(message)` - Simple text message
+- `sendDiscordEmbed({ title, description, ... })` - Rich embed
+- `streamDiscordUpdate(message, { emoji, timestamp })` - Stream progress updates
 
 ## Technical Notes
 
@@ -124,3 +136,8 @@
 See `scripts/ops/notifications/README.md` for complete setup instructions and testing commands.
 
 **Status**: ✅ Active and streaming to Discord text channel `1486262758256410646`
+
+**Setup Complete (2026-03-25 21:08 GMT+11):**
+- Discord webhook URL configured in `services/systemd/anqr-ops.env`
+- Symphony bridge restarted and active
+- Will send notifications when requests start and complete
