@@ -2684,7 +2684,7 @@ const server = http.createServer(async (req, res) => {
 // --------------------------------------------------------------------------<
 
 function shutdown(signal) {
-  console.log(`\n[symphony-bridge] Received ${signal}, shutting down...`);
+  console.log(`\n[symphony-bridge] Received ${signal}, shutting down immediately...`);
   if (probeIntervalHandle) {
     clearInterval(probeIntervalHandle);
     probeIntervalHandle = null;
@@ -2693,8 +2693,9 @@ function shutdown(signal) {
   logProviderStats();
   server.close(() => {
     console.log("[symphony-bridge] Server closed");
-    process.exit(0);
   });
+  // Exit immediately without waiting for active connections
+  process.exit(0);
 }
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));

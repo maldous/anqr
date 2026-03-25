@@ -1517,11 +1517,12 @@ const server = http.createServer(async (req, res) => {
 
 // Graceful shutdown
 function shutdown(signal) {
-  console.log(`\n[bridge] Received ${signal}, shutting down...`);
+  console.log(`\n[bridge] Received ${signal}, shutting down immediately...`);
   server.close(() => {
     console.log("[bridge] Server closed");
-    process.exit(0);
   });
+  // Exit immediately without waiting for active connections
+  process.exit(0);
 }
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));

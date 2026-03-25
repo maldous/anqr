@@ -18,14 +18,16 @@
 - **Completion**: Characters/tokens, total time
 - **Linear issues**: Embedded messages using Linear.app fields (status, provider, tokens/time)
 
-**Implementation** (Commit 993bd01e1):
+**Implementation** (Commit 4770570e5):
 ✅ Voice announcements removed from Symphony bridge (OpenClaw handles TTS in Discord sessions)
 ✅ Text notifications via webhook to text channel
 ✅ Embedded messages for all notifications (structured, readable)
-✅ Real-time streaming output to Discord (Codebuff)
+✅ Real-time streaming output to Discord (Codebuff) - buffered in ~100 char chunks for readability
 ✅ Comprehensive metrics at completion (all heuristics)
 ✅ Color-coded: Orange (processing), Green (complete)
 ✅ No periodic progress updates (too noisy)
+✅ Fixed: Proper text handling (no more "[object Object]")
+✅ Fixed: Removed duplicate emoji prefixes
 
 ### Discord Webhook Integration (2026-03-26 00:19)
 - ✅ Created `scripts/ops/integrations/notifications/discord-webhook.mjs` module
@@ -63,7 +65,7 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge active (PID 1762451, commit 993bd01e1)
+- ✅ Symphony Bridge active (PID 1769401, commit 4770570e5)
 - ✅ Discord text notifications working via webhook
 - ✅ Discord streaming output working (Codebuff)
 - ✅ Discord comprehensive metrics working (all providers)
