@@ -495,7 +495,7 @@ const ADVERTISED_MODELS = [
   {
     id: "symphony/ollama-local",
     ownedBy: "ollama-local",
-    allowedNames: ["ollama-local"],
+    allowedNames: ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
   },
   {
     id: "symphony/ollama-qwen2.5-coder-3b",
@@ -1740,8 +1740,20 @@ const server = http.createServer(async (req, res) => {
 
     // POST /v1/chat/completions
     if (req.method === "POST" && req.url === "/v1/chat/completions") {
-      const body = await parseBody(req);
-      const messages = Array.isArray(body.messages) ? body.messages : [];
+      let body;
+      try {
+        body = await parseBody(req);
+      } catch (parseErr) {
+        console.warn(`[symphony-bridge] ⚠️ Request parse error: ${parseErr.message}`);
+        return sendJson(res, 400, {
+          error: {
+            message: "Invalid request body: not valid JSON",
+            type: "invalid_request_error",
+          },
+        });
+      }
+
+      const messages = Array.isArray(body.messages) ? body.messages : undefined;
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
@@ -1757,7 +1769,52 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
-      // Validate model field is present (some tests expect this)
+      // Validate message structure
+      for (let i = 0; i < messages.length; i++) {
+        const msg = messages[i];
+        if (!msg.role) {
+          return sendJson(res, 400, {
+            error: {
+              message: `Invalid request: message[${i}].role is required`,
+              type: "invalid_request_error",
+              param: `messages[${i}].role`,
+            },
+          });
+        }
+        if (msg.content === undefined) {
+          return sendJson(res, 400, {
+            error: {
+              message: `Invalid request: message[${i}].content is required`,
+              type: "invalid_request_error",
+              param: `messages[${i}].content`,
+            },
+          });
+        }
+      }
+
+      // Validate model if present
+      if (body.model !== undefined && typeof body.model !== "string") {
+        return sendJson(res, 400, {
+          error: {
+            message: "Invalid request: model must be a string",
+            type: "invalid_request_error",
+            param: "model",
+          },
+        });
+      }
+
+      // Validate stream if present
+      if (body.stream !== undefined && typeof body.stream !== "boolean") {
+        return sendJson(res, 400, {
+          error: {
+            message: "Invalid request: stream must be a boolean",
+            type: "invalid_request_error",
+            param: "stream",
+          },
+        });
+      }
+
+      // Existing warning for empty string model (if model present but empty)
       if (!body.model && body.model !== undefined) {
         console.warn(`[symphony-bridge] ⚠️ Empty model field - using default`);
       }

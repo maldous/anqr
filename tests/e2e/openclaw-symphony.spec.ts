@@ -64,7 +64,6 @@ test.describe("OpenClaw Model Configuration", () => {
     const ollamaModels = [
       "ollama/qwen2.5-coder:0.5b",
       "ollama/qwen2.5-coder:3b-instruct",
-      "ollama/qwen3-coder-next:latest",
     ];
 
     for (const model of ollamaModels) {
@@ -113,7 +112,7 @@ test.describe("Symphony Fallback Continuity", () => {
   });
 
   test("fallback chain should include local fallback", () => {
-    const hasLocalFallback = openclawConfig.fallbackModels.some((f) => f.includes("ollama-local"));
+    const hasLocalFallback = openclawConfig.fallbackModels.some((f) => f.startsWith("ollama/"));
 
     expect(hasLocalFallback).toBe(true);
   });
@@ -374,7 +373,6 @@ const OPENROUTER_PROVIDERS = [
 ];
 
 const LOCAL_PROVIDERS = [
-  { name: "ollama-local", model: "qwen3-coder-next:latest" },
   { name: "ollama-qwen2.5-coder-3b", model: "qwen2.5-coder:3b-instruct" },
   { name: "ollama-qwen2.5-coder-0.5b", model: "qwen2.5-coder:0.5b" },
 ];
@@ -437,11 +435,6 @@ const LOCAL_SERVICE_ROUTES = [
     description: "Codebuff bridge on :4318",
   },
   { route: "symphony/codex", provider: "codex", description: "Codex API (often quota-exhausted)" },
-  {
-    route: "symphony/ollama-local",
-    provider: "ollama-local",
-    description: "Local Ollama (qwen3-coder-next 51GB)",
-  },
   {
     route: "symphony/ollama-qwen2.5-coder-3b",
     provider: "ollama-qwen2.5-coder-3b",
@@ -1773,7 +1766,6 @@ test.describe("OpenClaw CLI Model Validation", () => {
     expect(keys).toContain("symphony-bridge/symphony/text");
     expect(keys).toContain("ollama/qwen2.5-coder:0.5b");
     expect(keys).toContain("ollama/qwen2.5-coder:3b-instruct");
-    expect(keys).toContain("ollama/qwen3-coder-next:latest");
     expect(keys).toContain("codebuff-bridge/codebuff/base");
   });
 
@@ -1950,7 +1942,6 @@ test.describe("OpenClaw Model Selection Validation", () => {
     const ollamaModels = [
       "ollama/qwen2.5-coder:0.5b",
       "ollama/qwen2.5-coder:3b-instruct",
-      "ollama/qwen3-coder-next:latest",
     ];
 
     const missing = ollamaModels.filter((m) => !data.allowed.includes(m));

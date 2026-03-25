@@ -21,26 +21,29 @@ const FAILURE_STATE_FILE = resolve(STATE_DIR, "provider-failures.json");
 const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 
 // Ensure state directory exists
-function ensureStateDir() {
-  if (!existsSync(STATE_DIR)) {
-    mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
-  }
-}
 
-function clearState() {
-  try {
-    if (existsSync(FAILURE_STATE_FILE)) {
-      unlinkSync(FAILURE_STATE_FILE);
-    }
-    if (existsSync(STATS_FILE)) {
-      unlinkSync(STATS_FILE);
-    }
-  } catch {
-    // Ignore
-  }
-}
 
 describe("Symphony Bridge Fallback Logic", () => {
+
+  // Helper functions scoped inside describe to reduce top-level heavy nodes
+  function ensureStateDir() {
+    if (!existsSync(STATE_DIR)) {
+      mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
+    }
+  }
+
+  function clearState() {
+    try {
+      if (existsSync(FAILURE_STATE_FILE)) {
+        unlinkSync(FAILURE_STATE_FILE);
+      }
+      if (existsSync(STATS_FILE)) {
+        unlinkSync(STATS_FILE);
+      }
+    } catch {
+      // Ignore
+    }
+  }
   beforeEach(() => {
     ensureStateDir();
     clearState();

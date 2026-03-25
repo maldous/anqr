@@ -20,7 +20,6 @@ export const openclawConfig = {
     "symphony-bridge/symphony/text",
     "ollama/qwen2.5-coder:0.5b",
     "ollama/qwen2.5-coder:3b-instruct",
-    "ollama/qwen3-coder-next:latest",
     "codebuff-bridge/codebuff/base",
   ],
 };

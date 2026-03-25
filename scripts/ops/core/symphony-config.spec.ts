@@ -85,10 +85,10 @@ describe("symphony-config.mjs", () => {
       expect(RUNNER_MAX_RETRIES).toBe(2);
     });
     it("should have default Ollama model defined", () => {
-      expect(RUNNER_OLLAMA_MODEL).toBe("qwen3-coder-next:latest");
+      expect(RUNNER_OLLAMA_MODEL).toBe("qwen2.5-coder:3b-instruct");
     });
     it("should have multiple Ollama models", () => {
-      expect(RUNNER_OLLAMA_MODELS).toContain("qwen3-coder-next:latest");
+      expect(RUNNER_OLLAMA_MODELS).toContain("qwen2.5-coder:3b-instruct");
       expect(RUNNER_OLLAMA_MODELS.length).toBeGreaterThanOrEqual(2);
     });
     it("should have Ollama base URL", () => {

@@ -29,7 +29,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");
 
 const OLLAMA_BASE = process.env.OLLAMA_API_BASE || "http://localhost:11434";
-const PINNED_MODEL = "qwen3-coder-next:latest";
+const PINNED_MODEL = "qwen2.5-coder:3b-instruct";
 const PING_TIMEOUT_MS = 5_000;
 const DOCS_FRESHNESS_DAYS = 30;
 
