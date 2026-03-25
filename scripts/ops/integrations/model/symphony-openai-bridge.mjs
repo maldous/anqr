@@ -1163,22 +1163,28 @@ async function invokeWithAI(provider, messages, options = {}) {
     // Fallback: if fullStream produced no text-delta events, try result.text
     // (best-effort — result.text derives from the same stream, but internal
     // accumulation may differ for some provider SDKs)
+    //
+    // For Codebuff: AI SDK buffers activity messages ("✅ done", "🔧 read:") and only
+    // exposes them via result.text at the end. This is expected behavior - the AI SDK
+    // only emits text-delta for model-generated text, not for SDK activity metadata.
     if (!hasTextDeltas || !fullText || fullText.trim() === "") {
       try {
         const fallbackText = await result.text;
         if (fallbackText && fallbackText.trim()) {
-          console.log(
-            `[symphony-bridge] ⚠️ fullStream produced no text-delta events, recovered ${fallbackText.length} chars from result.text`,
-          );
+          if (!hasTextDeltas) {
+            console.log(
+              `[symphony-bridge] ⚠️ fullStream produced no text-delta events (${provider.name} buffered), recovered ${fallbackText.length} chars from result.text`,
+            );
+          }
           fullText = fallbackText;
           // Forward the fallback text in smaller chunks to simulate streaming
           if (onChunk) {
-            const CHUNK_SIZE = 100; // Forward in 100-char chunks
+            const CHUNK_SIZE = 50; // Forward in 50-char chunks for better real-time appearance
             for (let i = 0; i < fallbackText.length; i += CHUNK_SIZE) {
               const chunk = fallbackText.slice(i, i + CHUNK_SIZE);
               onChunk({ type: "text", text: chunk });
-              // Small delay to prevent overwhelming the client
-              await sleep(10);
+              // Small delay to prevent overwhelming the client (5ms = ~10KB/s)
+              await sleep(5);
             }
           }
         }
