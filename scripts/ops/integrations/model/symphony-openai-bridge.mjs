@@ -2327,10 +2327,15 @@ const server = http.createServer(async (req, res) => {
         ? `${issueContext.identifier} — ${issueContext.title}`
         : messages[messages.length - 1]?.content?.slice(0, 100) || "Request";
       
-      streamDiscordUpdate(
-        `⏳ Processing: ${requestDescription}\nProvider: ${selectedProvider?.name || "unknown"} (${selectedProvider?.model || "unknown"})`,
-        { emoji: "⏳" }
-      ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+      await sendDiscordEmbed({
+        title: "⏳ Processing Request",
+        description: requestDescription,
+        color: 0xFFA500, // Orange
+        fields: [
+          { name: "Provider", value: selectedProvider?.name || "unknown", inline: true },
+          { name: "Model", value: selectedProvider?.model || "unknown", inline: true },
+        ],
+      }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
         if (selectedProvider?.name === "codebuff") {
           try {
@@ -2365,16 +2370,24 @@ const server = http.createServer(async (req, res) => {
             );
             
             // Send comprehensive completion metrics
-            const metricsText = [
-              `✅ Complete: ${result.text.length} chars`,
-              `Provider: codebuff`,
-              `Time: ${elapsedTime}`,
-              `Avg Duration: ${codebuffStats.avgDurationMs || 0}ms`,
-              `Success Rate: ${codebuffStats.successRate || 'N/A'}`,
-              `Score: ${codebuffStats.score || 'pending'}`
-            ].join(' | ');
+            const metricsFields = [
+              { name: "Status", value: "✅ Complete", inline: false },
+              { name: "Output", value: `${result.text.length} characters`, inline: true },
+              { name: "Time", value: elapsedTime, inline: true },
+              { name: "Provider", value: "codebuff", inline: true },
+              { name: "Avg Duration", value: `${codebuffStats.avgDurationMs || 0}ms`, inline: true },
+              { name: "Success Rate", value: codebuffStats.successRate || 'N/A', inline: true },
+              { name: "Validation Rate", value: codebuffStats.validationRate || 'N/A', inline: true },
+              { name: "Linear Completion", value: codebuffStats.linearCompletionRate || 'N/A', inline: true },
+              { name: "Score", value: String(codebuffStats.score || 'pending'), inline: true },
+            ];
             
-            streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+            await sendDiscordEmbed({
+              title: issueContext ? `✅ ${issueContext.identifier} Complete` : "✅ Request Complete",
+              description: issueContext?.title || "Request completed successfully",
+              color: 0x00FF00, // Green
+              fields: metricsFields,
+            }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -2451,17 +2464,24 @@ const server = http.createServer(async (req, res) => {
           );
           
           // Send comprehensive completion metrics
-          const metricsText = [
-            `✅ Complete: ${result.text.length} chars`,
-            `Provider: ${result.providerName}`,
-            `Time: ${elapsedTime}`,
-            `Avg Duration: ${providerStats.avgDurationMs || 0}ms`,
-            `Success Rate: ${providerStats.successRate || 'N/A'}`,
-            `Validation: ${providerStats.validationRate || 'N/A'}`,
-            `Score: ${providerStats.score || 'pending'}`
-          ].join(' | ');
+          const metricsFields = [
+            { name: "Status", value: "✅ Complete", inline: false },
+            { name: "Output", value: `${result.text.length} characters`, inline: true },
+            { name: "Time", value: elapsedTime, inline: true },
+            { name: "Provider", value: result.providerName, inline: true },
+            { name: "Avg Duration", value: `${providerStats.avgDurationMs || 0}ms`, inline: true },
+            { name: "Success Rate", value: providerStats.successRate || 'N/A', inline: true },
+            { name: "Validation Rate", value: providerStats.validationRate || 'N/A', inline: true },
+            { name: "Linear Completion", value: providerStats.linearCompletionRate || 'N/A', inline: true },
+            { name: "Score", value: String(providerStats.score || 'pending'), inline: true },
+          ];
           
-          streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          await sendDiscordEmbed({
+            title: issueContext ? `✅ ${issueContext.identifier} Complete` : "✅ Request Complete",
+            description: issueContext?.title || "Request completed successfully",
+            color: 0x00FF00, // Green
+            fields: metricsFields,
+          }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -2531,20 +2551,27 @@ const server = http.createServer(async (req, res) => {
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
+        const elapsedTime = formatElapsed(durationMs);
         
-        const metricsText = [
-          `✅ Complete: ${totalTokens > 0 ? totalTokens + ' tokens' : resultText.length + ' chars'}`,
-          `Provider: ${result.providerName}`,
-          `Time: ${formatElapsed(durationMs)}`,
-          `Tokens In/Out: ${tokensIn}/${tokensOut}`,
-          `Avg Duration: ${providerStats.avgDurationMs || 0}ms`,
-          `Success Rate: ${providerStats.successRate || 'N/A'}`,
-          `Validation: ${providerStats.validationRate || 'N/A'}`,
-          `Linear Completion: ${providerStats.linearCompletionRate || 'N/A'}`,
-          `Score: ${providerStats.score || 'pending'}`
-        ].join(' | ');
+        const metricsFields = [
+          { name: "Status", value: "✅ Complete", inline: false },
+          { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
+          { name: "Time", value: elapsedTime, inline: true },
+          { name: "Provider", value: result.providerName, inline: true },
+          { name: "Tokens In/Out", value: `${tokensIn}/${tokensOut}`, inline: true },
+          { name: "Avg Duration", value: `${providerStats.avgDurationMs || 0}ms`, inline: true },
+          { name: "Success Rate", value: providerStats.successRate || 'N/A', inline: true },
+          { name: "Validation Rate", value: providerStats.validationRate || 'N/A', inline: true },
+          { name: "Linear Completion", value: providerStats.linearCompletionRate || 'N/A', inline: true },
+          { name: "Score", value: String(providerStats.score || 'pending'), inline: true },
+        ];
         
-        streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+        await sendDiscordEmbed({
+          title: issueContext ? `✅ ${issueContext.identifier} Complete` : "✅ Request Complete",
+          description: issueContext?.title || firstLine,
+          color: 0x00FF00, // Green
+          fields: metricsFields,
+        }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
 
