@@ -29,7 +29,7 @@ async function testVoiceAnnouncement(text) {
         action: 'send',
         message: text,
         channel: 'discord',
-        to: '1486262758256410646',
+        to: '1486262758256410647', // Voice channel
       },
     });
 
