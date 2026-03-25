@@ -1132,8 +1132,10 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (onChunk && delta) {
           onChunk({ type: "text", text: delta });
         }
-        // Log ALL text-delta events for debugging (first 200 chars)
-        console.log(`[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`);
+        // Log non-empty text-delta events only (to reduce log noise from AI SDK empty deltas)
+        if (delta && delta.length > 0) {
+          console.log(`[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`);
+        }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
         if (onChunk) {
@@ -1445,9 +1447,6 @@ async function invokeCodebuffDirectStream(messages, onChunk) {
             }
             // Log ALL content chunks for debugging (not just activity messages)
             console.log(`[symphony-bridge] 🌊 SSE chunk (${content.length} chars): ${content.slice(0, 200)}`);
-          } else if (chunk.choices?.[0]?.delta) {
-            // Log empty deltas to diagnose the 0-char text-delta issue
-            console.log(`[symphony-bridge] ⚠️ Empty SSE delta received: ${JSON.stringify(chunk.choices[0].delta)}`);
           }
         } catch (parseErr) {
           console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
