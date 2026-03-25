@@ -1387,6 +1387,80 @@ async function invokeWithFallback(messages, route) {
 }
 
 /**
+ * Direct SSE passthrough for Codebuff - bypasses AI SDK buffering to stream activity messages immediately
+ */
+async function invokeCodebuffDirectStream(messages, onChunk) {
+  const url = "http://127.0.0.1:4318/v1/chat/completions";
+  const body = JSON.stringify({
+    model: "codebuff/base",
+    messages,
+    stream: true,
+  });
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer local-bridge",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Codebuff bridge returned ${response.status}: ${await response.text()}`);
+  }
+
+  if (!response.body) {
+    throw new Error("Codebuff bridge returned no body");
+  }
+
+  let fullText = "";
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (!line.trim() || line.startsWith(":")) continue; // Skip empty lines and comments
+        if (line === "data: [DONE]") break;
+
+        const dataMatch = line.match(/^data: (.+)$/);
+        if (!dataMatch) continue;
+
+        try {
+          const chunk = JSON.parse(dataMatch[1]);
+          const content = chunk.choices?.[0]?.delta?.content;
+          if (content) {
+            fullText += content;
+            if (onChunk) {
+              onChunk({ type: "text", text: content });
+            }
+            // Log activity messages for debugging
+            if (content.includes("✅") || content.includes("🔧") || content.includes("💻") || content.includes("📖")) {
+              console.log(`[symphony-bridge] 🌊 Codebuff activity: ${content.trim().slice(0, 100)}`);
+            }
+          }
+        } catch (parseErr) {
+          console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return { text: fullText, providerName: "codebuff" };
+}
+
+/**
  * Invoke with streaming and automatic fallback
  */
 async function invokeWithFallbackStream(messages, route, onChunk) {
@@ -1422,6 +1496,48 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
     if (attemptNumber > 1) {
       BRIDGE_METRICS.totalFallbacks++;
       await sleep(FALLBACK_DELAY_MS);
+    }
+
+    // Special case: Codebuff uses direct SSE passthrough to bypass AI SDK buffering
+    if (provider.name === "codebuff") {
+      try {
+        const startedAt = Date.now();
+        console.log(`[symphony-bridge] 🌊 Using direct SSE passthrough for Codebuff (bypasses AI SDK buffering)`);
+        const result = await invokeCodebuffDirectStream(messages, onChunk);
+
+        console.log(
+          `[symphony-bridge] ✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
+        );
+        recordProviderSuccess(provider.name);
+        recordSuccessfulMetrics(provider.name, startedAt);
+
+        requestCount++;
+        if (requestCount % STATS_LOG_INTERVAL === 0) {
+          logBridgeStats();
+        }
+
+        return {
+          text: result.text,
+          providerName: provider.name,
+          attempts: attemptNumber,
+          triedProviders: [...triedProviders],
+        };
+      } catch (err) {
+        const rootErr = unwrapAIError(err);
+        const errStr = errorToString(rootErr !== err ? rootErr : err);
+        lastError = errStr;
+        console.log(
+          `[symphony-bridge] ❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
+        );
+
+        if (isRetryableErrorDeep(err)) {
+          recordProviderFailure(provider.name);
+          recordProviderFailureCount(provider.name);
+        }
+
+        // Continue to next provider in the loop
+        continue;
+      }
     }
 
     try {
