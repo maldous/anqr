@@ -2379,10 +2379,9 @@ const server = http.createServer(async (req, res) => {
       
       await sendDiscordEmbed({
         title: "Processing Request",
-        description: requestDescription,
         color: 0xFFA500, // Orange
         fields: [
-          { name: "Model", value: selectedProvider?.model || "unknown", inline: true },
+          { name: "Model", value: selectedProvider?.model || "unknown", inline: false },
         ],
       }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
@@ -2398,20 +2397,19 @@ const server = http.createServer(async (req, res) => {
             const streamToDiscord = (text) => {
               discordBuffer += text;
               
-              // Wait for natural sentence/paragraph boundaries before sending
-              const hasSentenceEnd = /[.!?]\s/.test(discordBuffer) || /[.!?]$/.test(discordBuffer.trim());
-              const hasParagraphBreak = discordBuffer.includes("\n\n");
-              const hasCodeBlock = discordBuffer.includes("```");
-              const isLargeEnough = discordBuffer.length >= DISCORD_BUFFER_SIZE;
+              // Wait for natural boundaries: sentences, paragraphs, or code blocks
+              const hasBoundary = 
+                /[.!?]\s/.test(discordBuffer) || 
+                /[.!?]$/.test(discordBuffer.trim()) ||
+                discordBuffer.includes("\n\n") ||
+                discordBuffer.includes("```");
               
-              // Send when: (large enough AND hit boundary) OR very large (force send)
-              if ((isLargeEnough && (hasSentenceEnd || hasParagraphBreak || hasCodeBlock)) || discordBuffer.length >= DISCORD_BUFFER_SIZE * 3) {
-                // Clean up linefeeds: replace single \n with space (except in code blocks)
-                // This prevents unexpected linebreaks within sentences while preserving paragraphs and code
-                const toSend = discordBuffer.trim()
-                  .replace(/([^\n`])\n(?!\n|```)/g, "$1 ")  // Replace single \n with space (not in code blocks)
-                  .replace(/\n{3,}/g, "\n\n")              // Collapse 3+ newlines to 2
-                  .replace(/\s{2,}/g, " ");                 // Collapse multiple spaces to 1
+              const isLargeEnough = discordBuffer.length >= DISCORD_BUFFER_SIZE;
+              const isVeryLarge = discordBuffer.length >= DISCORD_BUFFER_SIZE * 3;
+              
+              // Send when: (large + boundary) OR force-send if very large
+              if ((isLargeEnough && hasBoundary) || isVeryLarge) {
+                const toSend = discordBuffer.trim();
                 discordBuffer = "";
                 if (toSend.length > 0) {
                   streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
@@ -2423,11 +2421,7 @@ const server = http.createServer(async (req, res) => {
             
             // Flush any remaining Discord buffer
             if (discordBuffer.trim().length > 0) {
-              const finalText = discordBuffer.trim()
-                .replace(/([^\n`])\n(?!\n|```)/g, "$1 ")  // Replace single \n with space (not in code blocks)
-                .replace(/\n{3,}/g, "\n\n")              // Collapse 3+ newlines to 2
-                .replace(/\s{2,}/g, " ");                 // Collapse multiple spaces to 1
-              await streamDiscordUpdate(finalText, { emoji: "" }).catch(() => {/* ignore */});
+              await streamDiscordUpdate(discordBuffer.trim(), { emoji: "" }).catch(() => {/* ignore */});
             }
 
             clearInterval(heartbeat);
@@ -2448,21 +2442,13 @@ const server = http.createServer(async (req, res) => {
             );
             
             // Send comprehensive completion metrics
-            const metricsFields = [
-              { name: "Output", value: `${result.text.length} characters`, inline: true },
-              { name: "Model", value: "codebuff", inline: true },
-              { name: "Avg Duration", value: `${codebuffStats.avgDurationMs || 0}ms`, inline: true },
-              { name: "Success Rate", value: codebuffStats.successRate || 'N/A', inline: true },
-              { name: "Validation Rate", value: codebuffStats.validationRate || 'N/A', inline: true },
-              { name: "Linear Completion", value: codebuffStats.linearCompletionRate || 'N/A', inline: true },
-              { name: "Score", value: String(codebuffStats.score || 'pending'), inline: true },
-            ];
-            
             await sendDiscordEmbed({
-              title: issueContext ? `${issueContext.identifier} Complete` : "Request Complete",
-              description: issueContext?.title || "Request completed successfully",
+              title: issueContext?.identifier || "Complete",
               color: 0x00FF00, // Green
-              fields: metricsFields,
+              fields: [
+                { name: "Output", value: `${result.text.length} chars`, inline: true },
+                { name: "Model", value: "codebuff", inline: true },
+              ],
             }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
@@ -2540,21 +2526,13 @@ const server = http.createServer(async (req, res) => {
           );
           
           // Send comprehensive completion metrics
-          const metricsFields = [
-            { name: "Output", value: `${result.text.length} characters`, inline: true },
-            { name: "Model", value: result.providerName, inline: true },
-            { name: "Avg Duration", value: `${providerStats.avgDurationMs || 0}ms`, inline: true },
-            { name: "Success Rate", value: providerStats.successRate || 'N/A', inline: true },
-            { name: "Validation Rate", value: providerStats.validationRate || 'N/A', inline: true },
-            { name: "Linear Completion", value: providerStats.linearCompletionRate || 'N/A', inline: true },
-            { name: "Score", value: String(providerStats.score || 'pending'), inline: true },
-          ];
-          
           await sendDiscordEmbed({
-            title: issueContext ? `${issueContext.identifier} Complete` : "Request Complete",
-            description: issueContext?.title || "Request completed successfully",
+            title: issueContext?.identifier || "Complete",
             color: 0x00FF00, // Green
-            fields: metricsFields,
+            fields: [
+              { name: "Output", value: `${result.text.length} chars`, inline: true },
+              { name: "Model", value: result.providerName, inline: true },
+            ],
           }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
@@ -2626,22 +2604,13 @@ const server = http.createServer(async (req, res) => {
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
         
-        const metricsFields = [
-          { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
-          { name: "Model", value: result.providerName, inline: true },
-          { name: "Tokens In/Out", value: `${tokensIn}/${tokensOut}`, inline: true },
-          { name: "Avg Duration", value: `${providerStats.avgDurationMs || 0}ms`, inline: true },
-          { name: "Success Rate", value: providerStats.successRate || 'N/A', inline: true },
-          { name: "Validation Rate", value: providerStats.validationRate || 'N/A', inline: true },
-          { name: "Linear Completion", value: providerStats.linearCompletionRate || 'N/A', inline: true },
-          { name: "Score", value: String(providerStats.score || 'pending'), inline: true },
-        ];
-        
         await sendDiscordEmbed({
-          title: issueContext ? `${issueContext.identifier} Complete` : "Request Complete",
-          description: issueContext?.title || firstLine,
+          title: issueContext?.identifier || "Complete",
           color: 0x00FF00, // Green
-          fields: metricsFields,
+          fields: [
+            { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
+            { name: "Model", value: result.providerName, inline: true },
+          ],
         }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
@@ -2747,8 +2716,16 @@ const server = http.createServer(async (req, res) => {
 // --------------------------------------------------------------------------<
 
 function shutdown(signal) {
-  console.log(`\n[symphony-bridge] Received ${signal}, shutting down immediately...`);
-  // Exit immediately - no cleanup, no waiting
+  console.log(`\n[symphony-bridge] Received ${signal}, shutting down...`);
+  if (probeIntervalHandle) {
+    clearInterval(probeIntervalHandle);
+    probeIntervalHandle = null;
+  }
+  stopDiscordMonitoring();
+  logProviderStats();
+  server.close(() => {
+    console.log("[symphony-bridge] Server closed");
+  });
   process.exit(0);
 }
 
