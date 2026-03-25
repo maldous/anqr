@@ -858,14 +858,12 @@ async function trySingleAccountStream(
         const display = formatToolCallDisplay(toolName, input);
         if (display) {
           console.log(`[bridge] ${display}`);
-          streamActivity(display + "\n");
+          streamActivity("\n" + display + "\n");
         }
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
-        if (!CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          console.log(`[bridge] ✅ codebuff ${toolName} done`);
-          streamActivity(`✅ ${toolName} done\n`);
-        }
+        // Log completion server-side but do NOT stream to client
+        console.log(`[bridge] ✅ codebuff ${toolName} done`);
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
