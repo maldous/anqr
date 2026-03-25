@@ -2405,7 +2405,8 @@ const server = http.createServer(async (req, res) => {
               const isLargeEnough = discordBuffer.length >= DISCORD_BUFFER_SIZE;
               
               if ((isLargeEnough && hasNaturalBoundary) || discordBuffer.length >= DISCORD_BUFFER_SIZE * 2) {
-                const toSend = discordBuffer.trim();
+                // Remove unexpected linefeeds within words/sentences
+                const toSend = discordBuffer.trim().replace(/([^\n])\n([^\n])/g, "$1 $2");
                 discordBuffer = "";
                 if (toSend.length > 0) {
                   streamDiscordUpdate(toSend, { emoji: "" }).catch(() => {/* ignore */});
@@ -2417,7 +2418,8 @@ const server = http.createServer(async (req, res) => {
             
             // Flush any remaining Discord buffer
             if (discordBuffer.trim().length > 0) {
-              await streamDiscordUpdate(discordBuffer.trim(), { emoji: "" }).catch(() => {/* ignore */});
+              const finalText = discordBuffer.trim().replace(/([^\n])\n([^\n])/g, "$1 $2");
+              await streamDiscordUpdate(finalText, { emoji: "" }).catch(() => {/* ignore */});
             }
 
             clearInterval(heartbeat);
