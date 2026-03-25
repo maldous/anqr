@@ -203,13 +203,13 @@ systemctl --user daemon-reload
 systemctl --user enable --now anqr-watchdog.service
 ```
 
-**Status**: ⚠️ **BUGGY** - Watchdog was triggering false positives and restarting services incorrectly.
+**Status**: ✅ **FIXED** (Commit 537454258) - Watchdog false positives resolved.
 
 **Bug Fix** (2026-03-26 01:43):
-- **Problem**: Watchdog detected new restarts but then immediately checked if service was "activating" too long
-- **Root Cause**: Missing early return after detecting activating status - watchdog would treat manual restarts as failures
-- **Fix**: Added proper handling for "activating" state with grace period logging and early return
-- **Commit**: Next commit will include this fix
+- **Problem**: Watchdog was restarting services unnecessarily (e.g., restart at 01:42:11)
+- **Root Cause**: Missing early return after detecting "activating" state - watchdog would continue checking and trigger rollback on manual restarts
+- **Fix**: Added proper state handling with grace period logging and early return for "activating" status
+- **Result**: Watchdog now only triggers rollback on actual failures (status="failed") or genuine stuck activations (>60s grace period)
 
 **To Deploy** (after fix):
 ```bash
@@ -301,5 +301,17 @@ This prevents work duplication and ensures continuity across restarts.
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1874590, commit 335a1530d, 38/38 providers available, Discord monitoring active)
 
 ### 2026-03-25 - Symphony Bridge stopped (PID 1874590, commit adb9f568a, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-26 - Watchdog False Positive Fixed (Commit 537454258)
+
+**Problem**: Watchdog service was triggering unnecessary restarts (e.g., restart at 01:42:11 when no failure occurred).
+
+**Fix**:
+- Added proper early return after detecting "activating" state
+- Watchdog now waits for grace period (60s) before triggering rollback
+- Manual restarts no longer trigger false positive rollbacks
+- Improved logging to show grace period progress
+
+**Status**: ✅ Watchdog fixed but not yet deployed as systemd service
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1878767, commit adb9f568a, 37/37 providers available, Discord monitoring active)
