@@ -2547,8 +2547,6 @@ const server = http.createServer(async (req, res) => {
         streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
-        const tokensIn = result.usage?.promptTokens || 0;
-        const tokensOut = result.usage?.completionTokens || 0;
 
         recordBridgeMetrics({
           provider: result.providerName,

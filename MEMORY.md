@@ -25,11 +25,13 @@
 ✅ Simple messages for normal requests
 ✅ No periodic progress updates (too noisy)
 
-### Discord Webhook Integration (2026-03-25)
+### Discord Webhook Integration (2026-03-26)
 - ✅ Created `scripts/ops/integrations/notifications/discord-webhook.mjs` module
 - ✅ Integrated with Symphony bridge for request notifications
 - ✅ Webhook URL configured in `services/systemd/anqr-ops.env`
 - ✅ Sends notifications when requests start and complete
+- ✅ Streams real-time output to Discord (Codebuff)
+- ✅ Sends comprehensive metrics at completion
 - ✅ Discord text channel: 1486262758256410646
 - ✅ Discord voice channel: 1486262758256410647 (for OpenClaw automatic TTS)
 - 📝 Webhook URL: https://discord.com/api/webhooks/1486304408286527539/...
@@ -37,10 +39,10 @@
 **Functions available:**
 - `sendDiscordNotification(payload)` - Full structured webhook payload
 - `sendDiscordMessage(message)` - Simple text message
-- `sendDiscordEmbed({ title, description, ... })` - Rich embed
+- `sendDiscordEmbed({ title, description, ... })` - Rich embed (not used - too verbose)
 - `streamDiscordUpdate(message, { emoji, timestamp })` - Stream progress updates
 
-### Symphony Bridge Adaptive Provider Selection (2026-03-25)
+### Symphony Bridge Adaptive Provider Selection (2026-03-26)
 - ✅ Implemented session-aware provider stickiness
 - ✅ Paid providers (codex, codebuff-paid) are sticky until exhausted
 - ✅ Free providers rotate after adaptive turn limits (base: 10, range: 3-25)
@@ -48,8 +50,10 @@
 - ✅ Periodic evaluation cycles every 1 hour (changed from 6 hours per user request)
 - ✅ Codebuff mode detection via X-Codebuff-Mode header
 - ✅ Provider rankings cleared and starting fresh (2026-03-25 20:04 UTC+11)
-- ✅ Symphony Bridge active (PID 1647371, commit d1f59c80c)
+- ✅ Symphony Bridge active (PID 1662387, commit 3bdf3919b)
 - ✅ Discord text notifications working via webhook
+- ✅ Discord streaming output working (Codebuff)
+- ✅ Discord comprehensive metrics working (all providers)
 
 ### Voice Setup (2026-03-25)
 - ✅ Discord voice integration working
