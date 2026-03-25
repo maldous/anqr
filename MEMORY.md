@@ -159,19 +159,20 @@ See `scripts/ops/notifications/README.md` for complete setup instructions and te
 - Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
 - Run test: `set -a && source services/systemd/anqr-ops.env && set +a && node scripts/ops/integrations/notifications/test-discord.mjs`
 
-**Voice Playback Status (2026-03-25 21:56 GMT+11):**
+**Voice Playback Status (2026-03-25 21:44 GMT+11):**
 - ✅ Discord text notifications: Working (webhook integration active)
-- ✅ Discord voice announcements: Configured and tested successfully
+- ✅ Discord voice announcements: **WORKING!** Fixed by using correct voice channel ID
 - 📝 **Implementation**: Using OpenClaw `message` tool with explicit channel routing
   - Tool: `message` with `action: "send"`
   - Channel: `discord`
-  - To: `1486262758256410646` (Discord text channel ID)
-  - OpenClaw routes TTS to connected voice channel automatically
-- ✅ All integration tests passing (commit 776d1dc74):
+  - To: `1486262758256410647` (Discord **voice** channel ID, not text channel)
+  - Text channel: `1486262758256410646`
+  - OpenClaw routes TTS to voice channel when message is sent to voice channel ID
+- ✅ All integration tests passing (commit 906c5d765):
   - ✅ Discord text messages
   - ✅ Discord embedded messages  
   - ✅ Discord progress updates
   - ✅ Voice announcements via OpenClaw message tool
-- ✅ Symphony Bridge: Active (PID 1484490, 2026-03-25 21:41 GMT+11)
+- ✅ Symphony Bridge: Active (PID 1491766, 2026-03-25 21:42 GMT+11)
 - ✅ Test script: `scripts/ops/integrations/notifications/test-discord.mjs`
-- 📝 **Note**: Voice will only play if OpenClaw bot is connected to Discord voice channel and TTS is enabled in Discord settings
+- 📝 **Fix**: Was sending to text channel ID instead of voice channel ID - voice now plays correctly!

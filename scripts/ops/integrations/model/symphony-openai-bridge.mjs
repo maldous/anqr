@@ -2310,6 +2310,11 @@ const server = http.createServer(async (req, res) => {
         speakAnnouncement(`Working on ${issueContext.identifier}.`, sessionId).catch(err => 
           console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
         );
+      } else {
+        // Voice announcement for non-Linear requests (webchat, etc.)
+        speakAnnouncement(`Processing your request.`, sessionId).catch(err => 
+          console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+        );
       }
 
         if (selectedProvider?.name === "codebuff") {
@@ -2340,6 +2345,11 @@ const server = http.createServer(async (req, res) => {
               
               // Voice: simple completion announcement (no conversational text)
               speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
+                console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+              );
+            } else {
+              // Voice announcement for non-Linear requests (webchat, etc.)
+              speakAnnouncement(`Request complete.`, sessionId).catch(err => 
                 console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
               );
             }
@@ -2424,6 +2434,11 @@ const server = http.createServer(async (req, res) => {
             speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
               console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
             );
+          } else {
+            // Voice announcement for non-Linear requests (webchat, etc.)
+            speakAnnouncement(`Request complete.`, sessionId).catch(err => 
+              console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+            );
           }
 
           const durationMs = Date.now() - startTime;
@@ -2495,6 +2510,11 @@ const server = http.createServer(async (req, res) => {
           
           // Voice: simple completion announcement (no conversational text)
           speakAnnouncement(`${issueContext.identifier} is done.`, sessionId).catch(err => 
+            console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
+          );
+        } else {
+          // Voice announcement for non-Linear requests (webchat, etc.)
+          speakAnnouncement(`Request complete.`, sessionId).catch(err => 
             console.log(`[symphony-bridge] Voice announcement failed: ${err.message}`)
           );
         }
