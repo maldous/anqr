@@ -111,12 +111,9 @@ async function speakAnnouncement(text) {
         Authorization: `Bearer ${process.env.OPENCLAW_GATEWAY_TOKEN}`,
       },
       body: JSON.stringify({
-        tool: "message",
+        tool: "tts",
         args: {
-          action: "send",
-          channel: "discord",
-          to: DISCORD_VOICE_CHANNEL_ID,
-          message: text,
+          text: text,
         },
       }),
     });

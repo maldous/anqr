@@ -68,6 +68,33 @@
 - `sendDiscordEmbed({ title, description, ... })` - Rich embed
 - `streamDiscordUpdate(message, { emoji, timestamp })` - Stream progress updates
 
+### Discord Integration Protocol (2026-03-25 22:25)
+
+**CRITICAL RULES**:
+
+✅ **VOICE Channel (1486262758256410647)**:
+- **USER**: LISTEN AND TALK in voice channel
+- **BOT (1486261316820664462)**: LISTEN AND TALK in voice channel
+- **RULE**: DO NOT TYPE TEXT MESSAGES IN VOICE CHANNEL
+
+✅ **TEXT Channel (1486262758256410646)**:
+- **USER**: READ AND TYPE in text channel
+- **BOT (1486261316820664462)**: READ AND TYPE in text channel
+- **WEBHOOK (1486304408286527539)**: Send text messages here
+- **RULE**: DO NOT SEND VOICE/TTS TO TEXT CHANNEL
+
+**Implementation** (commit 0d301dc5f):
+- Restored `speakAnnouncement()` function using OpenClaw Gateway `/tools/invoke` endpoint
+- ❌ **BROKEN**: Calls `message` tool which sends TEXT to voice channel (user can READ it, not HEAR it)
+- ✅ Uses Discord webhook for text messages to TEXT_CHANNEL_ID
+
+**ISSUE IDENTIFIED (2026-03-25 22:27)**:
+- `message` tool sends TEXT messages to Discord channels (even voice channels)
+- User confirmed: "I READ 'Test voice announcement from Symphony Bridge.' in the VOICE CHANNEL - I DIDN'T HEAR IT"
+- **FIX NEEDED**: Use OpenClaw `tts` tool or different method to trigger actual audio playback in Discord voice
+
+**Symphony Bridge**: Restarted successfully (PID 1543805)
+
 ## Technical Notes
 
 ### Symphony Bridge Provider Routing
