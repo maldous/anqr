@@ -173,4 +173,36 @@ Both Symphony and Codebuff bridges now support dynamic log level control:
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1862871, commit 14ce5ff45, 38/38 providers available, Discord monitoring active)
 
+## Watchdog Service (2026-03-26 01:24)
+
+✅ **Implementation Complete** (Commit 6cfb43354)
+
+**Purpose**: Automatically detect and recover from failed bridge restarts by rolling back to the previous git commit.
+
+**How It Works**:
+1. Monitors Symphony and Codebuff bridges every 60 seconds
+2. Detects failures:
+   - Service status = "failed"
+   - Service stuck in "activating" for >60 seconds
+3. Automatic recovery:
+   - Stops failed service
+   - Rolls back git to previous commit (HEAD~1)
+   - Restarts service with previous code
+   - Updates MEMORY.md with rollback event
+
+**Benefits**:
+- Prevents looping on broken code changes
+- Automatic recovery without human intervention
+- Preserves restart history in MEMORY.md for debugging
+- Guards against code errors that break bridge startup
+
+**Installation**:
+```bash
+cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now anqr-watchdog.service
+```
+
+**Status**: Ready for deployment. Watchdog will prevent the "sendDiscordMessage is not defined" issue from recurring.
+
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1863698, commit 554036ab8, 38/38 providers available, Discord monitoring active)
