@@ -2325,7 +2325,21 @@ const server = http.createServer(async (req, res) => {
       // Send Discord notification that we're starting to process
       const lastUserMessage = messages[messages.length - 1];
       const rawContent = lastUserMessage?.content;
-      const contentStr = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+      
+      // Extract text from content (handle both string and array formats)
+      let contentStr = "";
+      if (typeof rawContent === "string") {
+        contentStr = rawContent;
+      } else if (Array.isArray(rawContent)) {
+        // Extract text parts from array content
+        contentStr = rawContent
+          .filter(part => part.type === "text")
+          .map(part => part.text)
+          .join(" ");
+      } else if (rawContent && typeof rawContent === "object") {
+        contentStr = JSON.stringify(rawContent);
+      }
+      
       const requestDescription = issueContext 
         ? `${issueContext.identifier} — ${issueContext.title}`
         : contentStr.slice(0, 100) || "Request";
