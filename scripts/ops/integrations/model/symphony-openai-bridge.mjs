@@ -1393,84 +1393,88 @@ async function invokeWithFallback(messages, route) {
  * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
  * that the AI SDK would otherwise buffer until the end.
  */
-async function invokeCodebuffDirectStream(messages, res, completionId, created, route) {
-  const url = "http://127.0.0.1:4318/v1/chat/completions";
-  const body = JSON.stringify({
-    model: "codebuff/base",
-    messages,
-    stream: true,
-  });
+function invokeCodebuffDirectStream(messages, res, _completionId, _created, _route) {
+  return new Promise((resolve, reject) => {
+    const requestBody = JSON.stringify({
+      model: "codebuff/base",
+      messages,
+      stream: true,
+    });
 
-  console.log(`[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`);
+    console.log(`[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`);
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer local-bridge",
-    },
-    body,
-  });
+    const options = {
+      hostname: "127.0.0.1",
+      port: 4318,
+      path: "/v1/chat/completions",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(requestBody),
+        "Authorization": "Bearer local-bridge",
+      },
+    };
 
-  if (!response.ok) {
-    throw new Error(`Codebuff bridge returned ${response.status}: ${await response.text()}`);
-  }
-
-  if (!response.body) {
-    throw new Error("Codebuff bridge returned no body");
-  }
-
-  let fullText = "";
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || ""; // Keep incomplete line in buffer
-
-      for (const line of lines) {
-        if (!line.trim() || line.startsWith(":")) continue; // Skip empty lines and comments
-        if (line === "data: [DONE]") break;
-
-        const dataMatch = line.match(/^data: (.+)$/);
-        if (!dataMatch) continue;
-
-        try {
-          const chunk = JSON.parse(dataMatch[1]);
-          const content = chunk.choices?.[0]?.delta?.content;
-          if (content) {
-            fullText += content;
-            // Forward chunk IMMEDIATELY to OpenClaw with Symphony's response format
-            const relayChunk = {
-              id: completionId,
-              object: "chat.completion.chunk",
-              created,
-              model: route.responseModelId,
-              choices: [{ index: 0, delta: { content }, finish_reason: null }],
-            };
-            res.write(`data: ${JSON.stringify(relayChunk)}\n\n`);
-            // Log relay activity for debugging (only non-empty chunks, first 100 chars)
-            if (content.length > 0) {
-              console.log(`[symphony-bridge] 🌊 SSE relay → OpenClaw: ${content.slice(0, 100)}`);
-            }
-          }
-        } catch (parseErr) {
-          console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
-        }
+    const proxyReq = http.request(options, (proxyRes) => {
+      if (proxyRes.statusCode !== 200) {
+        let errorBody = "";
+        proxyRes.on("data", (chunk) => errorBody += chunk);
+        proxyRes.on("end", () => {
+          reject(new Error(`Codebuff bridge returned ${proxyRes.statusCode}: ${errorBody}`));
+        });
+        return;
       }
-    }
-  } finally {
-    reader.releaseLock();
-  }
 
-  console.log(`[symphony-bridge] 🌊 Transparent relay complete: ${fullText.length} chars`);
-  return { text: fullText, providerName: "codebuff" };
+      let fullText = "";
+      let buffer = "";
+
+      proxyRes.on("data", (chunk) => {
+        buffer += chunk.toString();
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (!line.trim() || line.startsWith(":")) continue; // Skip empty lines and comments
+          if (line === "data: [DONE]") continue;
+
+          const dataMatch = line.match(/^data: (.+)$/);
+          if (!dataMatch) continue;
+
+          try {
+            const chunk = JSON.parse(dataMatch[1]);
+            const content = chunk.choices?.[0]?.delta?.content;
+            if (content) {
+              fullText += content;
+              // Forward chunk IMMEDIATELY to OpenClaw - preserve Codebuff's completionId and format
+              res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+              // Log relay activity for debugging (only non-empty chunks, first 100 chars)
+              if (content.length > 0) {
+                console.log(`[symphony-bridge] 🌊 SSE relay → OpenClaw (${content.length} chars): ${content.slice(0, 100)}`);
+              }
+            }
+          } catch (parseErr) {
+            console.warn(`[symphony-bridge] SSE parse error: ${parseErr.message}`);
+          }
+        }
+      });
+
+      proxyRes.on("end", () => {
+        console.log(`[symphony-bridge] 🌊 Transparent relay complete: ${fullText.length} chars`);
+        resolve({ text: fullText, providerName: "codebuff" });
+      });
+
+      proxyRes.on("error", (err) => {
+        reject(new Error(`Codebuff stream error: ${err.message}`));
+      });
+    });
+
+    proxyReq.on("error", (err) => {
+      reject(new Error(`Codebuff request error: ${err.message}`));
+    });
+
+    proxyReq.write(requestBody);
+    proxyReq.end();
+  });
 }
 
 /**
