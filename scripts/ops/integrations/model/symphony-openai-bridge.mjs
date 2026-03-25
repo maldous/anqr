@@ -172,10 +172,43 @@ function startDiscordMonitoring() {
     const message = await pollDiscordMessages();
     if (message) {
       console.log(
-        `[symphony-bridge] 📨 Discord input: "${message.content.slice(0, 100)}" (from ${message.author})`
+        `[symphony-bridge] 📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`
       );
-      // TODO: Handle the message (forward to OpenClaw or queue for processing)
-      // For now, just log it - full integration would require session management
+      
+      // Process the command via Symphony bridge
+      try {
+        const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer local-symphony",
+            "X-OpenClaw-Session": `discord:channel:${DISCORD_TEXT_CHANNEL_ID}`,
+          },
+          body: JSON.stringify({
+            model: "symphony/main",
+            messages: [
+              { role: "user", content: message.content }
+            ],
+            stream: false,
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log(`[symphony-bridge] ❌ Discord command failed: ${response.status} ${errorText.slice(0, 200)}`);
+          return;
+        }
+        
+        const result = await response.json();
+        const assistantReply = result.choices?.[0]?.message?.content || "(no response)";
+        
+        console.log(`[symphony-bridge] ✅ Discord command processed: ${assistantReply.slice(0, 100)}`);
+        
+        // Send reply back to Discord text channel via webhook
+        await sendDiscordMessage(assistantReply.slice(0, 2000)); // Discord message limit
+      } catch (err) {
+        console.log(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
+      }
     }
   }, 5000); // Poll every 5 seconds
 }
