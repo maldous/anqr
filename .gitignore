@@ -15,3 +15,7 @@ scripts/reports/
 test-results/
 memory/
 coverage/
+all.txt
+err.txt
+ok.txt
+test-output.log

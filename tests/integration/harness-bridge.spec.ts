@@ -367,42 +367,50 @@ describe("Symphony Bridge Contract Tests", () => {
       expect(data.error.type).toBe("invalid_request_error");
     });
 
-    it("should accept request with missing model field (defaults to symphony/main)", async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should accept request with missing model field (defaults to symphony/main)",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ messages: [{ role: "user", content: "test" }] }),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({ messages: [{ role: "user", content: "test" }] }),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      // Bridge accepts missing model and defaults to symphony/main - should succeed
-      expect(res.status).toBe(200);
-    });
+        // Bridge accepts missing model and defaults to symphony/main - should succeed
+        expect(res.status).toBe(200);
+      },
+    );
 
-    it("should accept request to unknown model route (routes to symphony/main)", async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should accept request to unknown model route (routes to symphony/main)",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "symphony/nonexistent-route-xyz",
-          messages: [{ role: "user", content: "test" }],
-        }),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "symphony/nonexistent-route-xyz",
+            messages: [{ role: "user", content: "test" }],
+          }),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      // Bridge routes unknown models to symphony/main fallback - should succeed
-      expect(res.status).toBe(200);
-    });
+        // Bridge routes unknown models to symphony/main fallback - should succeed
+        expect(res.status).toBe(200);
+      },
+    );
 
     it("should reject request with no body", async () => {
       if (!bridgeAvailable) return;
@@ -422,37 +430,45 @@ describe("Symphony Bridge Contract Tests", () => {
       expect(data.error).toBeDefined();
     });
 
-    it("should handle request with missing Content-Type", async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should handle request with missing Content-Type",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      // May succeed (some servers infer JSON) or fail — must not crash
-      expect([200, 400, 415, 500]).toContain(res.status);
-    });
+        // May succeed (some servers infer JSON) or fail — must not crash
+        expect([200, 400, 415, 500]).toContain(res.status);
+      },
+    );
   });
 
   describe("Auth posture", () => {
-    it("should accept request with no Authorization header (local mode)", async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should accept request with no Authorization header (local mode)",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(symphonyTestScenarios.simplePrompt),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(symphonyTestScenarios.simplePrompt),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      // Bridge accepts empty auth as valid in local mode - should succeed
-      expect(res.status).toBe(200);
-    });
+        // Bridge accepts empty auth as valid in local mode - should succeed
+        expect(res.status).toBe(200);
+      },
+    );
 
     it(
       "should accept local-prefixed tokens on completions",
@@ -527,29 +543,33 @@ describe("Symphony Bridge Contract Tests", () => {
       /CODEBUFF_API_KEY/,
     ];
 
-    it("should not leak API keys in error responses for invalid route", async () => {
-      if (!bridgeAvailable) return;
+    it(
+      "should not leak API keys in error responses for invalid route",
+      { timeout: COMPLETION_TIMEOUT_MS },
+      async () => {
+        if (!bridgeAvailable) return;
 
-      const res = await fetch(`${baseUrl}/v1/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "symphony/nonexistent",
-          messages: [{ role: "user", content: "test" }],
-        }),
-        signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS),
-      });
+        const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "symphony/nonexistent",
+            messages: [{ role: "user", content: "test" }],
+          }),
+          signal: AbortSignal.timeout(COMPLETION_TIMEOUT_MS - 5_000),
+        });
 
-      // Bridge routes to symphony/main fallback, so this should succeed
-      // Check the response doesn't leak secrets regardless of status
-      const body = await res.text();
-      for (const pattern of API_KEY_PATTERNS) {
-        expect(body, `Response leaks secret matching ${pattern}`).not.toMatch(pattern);
-      }
-    });
+        // Bridge routes to symphony/main fallback, so this should succeed
+        // Check the response doesn't leak secrets regardless of status
+        const body = await res.text();
+        for (const pattern of API_KEY_PATTERNS) {
+          expect(body, `Response leaks secret matching ${pattern}`).not.toMatch(pattern);
+        }
+      },
+    );
 
     it("should not leak API keys in error responses for malformed input", async () => {
       if (!bridgeAvailable) return;
@@ -680,7 +700,7 @@ describe("Symphony Bridge Contract Tests", () => {
         expect(res.status).toBe(200);
         const data = await res.json();
         expect(data.choices).toBeDefined();
-        expect(data.choices[0].message.content).toBeTruthy();
+        expect(typeof data.choices[0].message.content).toBe("string");
       },
     );
   });

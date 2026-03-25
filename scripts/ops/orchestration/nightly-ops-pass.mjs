@@ -79,11 +79,18 @@ async function main() {
         'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'',
       severity: "advisory",
     },
+    {
+      name: "test-unit-coverage",
+      command: "npm run test:unit:coverage",
+      severity: "blocking",
+      timeout: 400_000,
+    },
     ...(process.env.SONAR_TOKEN
       ? [
           {
             name: "sonar-scan",
-            command: "NODE_OPTIONS='' SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
+            command:
+              "test -f coverage/lcov.info || { echo 'ERROR: coverage/lcov.info missing'; exit 1; } && NODE_OPTIONS='' SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
             severity: "blocking",
             timeout: 600_000,
           },

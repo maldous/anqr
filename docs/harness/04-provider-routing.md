@@ -219,16 +219,19 @@ Codebuff uses a single API key (`CODEBUFF_API_KEY`) with automatic mode selectio
 The Codebuff bridge supports real-time streaming with activity markers:
 
 **User-facing tool activity** (streamed to client):
+
 - File operations: `📖 Reading:`, `✏️ Editing:`, `🔍 Searching:`
 - Shell commands: `💻 Running:`
 - Pattern matching: `🔧 glob:`
 - Completions: `✅ <tool> done` (only for user-facing tools)
 
 **Internal SDK activity** (filtered from client, logged server-side only):
+
 - `set_messages`, `spawn_agent_inline`, `context-pruner`, `end_turn`
 - All `run_terminal_command` completion markers
 
 **Formatting rules**:
+
 - Tool execution markers appear on new lines for readability
 - No completion markers clutter the client stream
 - Server logs retain full activity for debugging
@@ -435,10 +438,10 @@ The bridge combines:
 
 **Streaming behavior by provider**:
 
-| Provider   | Streaming Method      | Notes                                           |
-| ---------- | --------------------- | ----------------------------------------------- |
-| codebuff   | Transparent SSE relay | Direct proxy, no AI SDK buffering               |
-| Other      | AI SDK streaming      | Uses `streamText()` with text-delta events      |
+| Provider | Streaming Method      | Notes                                      |
+| -------- | --------------------- | ------------------------------------------ |
+| codebuff | Transparent SSE relay | Direct proxy, no AI SDK buffering          |
+| Other    | AI SDK streaming      | Uses `streamText()` with text-delta events |
 
 ### Supported Providers
 
@@ -497,7 +500,7 @@ Plus all provider tokens required by credit-gate (`GROQ_TOKEN`, `GEMINI_TOKEN`, 
     "capable": ["codex", "codebuff", "groq", "openrouter-free", "..."],
     "excluded": ["ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
     "unclassified": ["mistral", "gemini"],
-    "blocked": [{"name": "openclaw", "reason": "routing loop prevention"}]
+    "blocked": [{ "name": "openclaw", "reason": "routing loop prevention" }]
   },
   "streaming": {
     "codebuff": "transparent-sse-relay",

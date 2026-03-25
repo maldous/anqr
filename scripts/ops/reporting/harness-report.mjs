@@ -9,7 +9,7 @@
  * Profiles:
  *   quick       — fast sanity checks (<30s): repo-structure, typecheck, lint
  *   continuous  — background polling checks: repo-structure, ollama-health, litellm-routing
- *   full        — comprehensive audit: all 9 checks
+ *   full        — comprehensive audit: all checks (excludes test-unit, handled by Make pipeline)
  *
  * Exit code:
  *   0 = all checks passed
@@ -40,7 +40,6 @@ const PROFILES = {
     "repo-structure",
     "typecheck",
     "lint",
-    "test-unit",
     "depcruise",
     "cspell-coverage",
     "ast-density",
@@ -124,12 +123,12 @@ function checkRepoStructure() {
   };
 }
 
-function checkNpmScript(scriptName, label) {
+function checkNpmScript(scriptName, label, timeout_ms = 120_000) {
   try {
     execFileSync("npm", ["run", scriptName], {
       cwd: ROOT,
       stdio: "pipe",
-      timeout: 120_000,
+      timeout: timeout_ms,
       env: { ...process.env, FORCE_COLOR: "0" },
     });
     return { pass: true, detail: `${label} passed` };
@@ -156,7 +155,9 @@ function checkLint() {
 }
 
 function checkTestUnit() {
-  return checkNpmScript("test:unit", "vitest");
+  // Not included in any profile — unit tests run via Make's test-unit-coverage target.
+  // Kept for standalone/programmatic use: node harness-report.mjs with a custom profile.
+  return checkNpmScript("test:unit", "vitest", 300_000);
 }
 
 function checkDepcruise() {

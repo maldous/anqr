@@ -124,7 +124,8 @@ sonar-export: ## Export Sonar data into sonar-report.json
 sonar-mail: ## Mail the latest Sonar summary
 	npm run sonar:mail
 
-sonar-scan: ## Run SonarQube analysis
+sonar-scan: test-unit-coverage ## Run SonarQube analysis (requires fresh coverage)
+	@test -f coverage/lcov.info || { echo "ERROR: coverage/lcov.info missing — run test-unit-coverage first"; exit 1; }
 	npm run sonar:scan
 
 harness-quick: ## Run the quick harness report
