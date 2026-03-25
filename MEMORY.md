@@ -203,7 +203,20 @@ systemctl --user daemon-reload
 systemctl --user enable --now anqr-watchdog.service
 ```
 
-**Status**: Ready for deployment. Watchdog will prevent the "sendDiscordMessage is not defined" issue from recurring.
+**Status**: ⚠️ **BUGGY** - Watchdog was triggering false positives and restarting services incorrectly.
+
+**Bug Fix** (2026-03-26 01:43):
+- **Problem**: Watchdog detected new restarts but then immediately checked if service was "activating" too long
+- **Root Cause**: Missing early return after detecting activating status - watchdog would treat manual restarts as failures
+- **Fix**: Added proper handling for "activating" state with grace period logging and early return
+- **Commit**: Next commit will include this fix
+
+**To Deploy** (after fix):
+```bash
+cp services/systemd/anqr-watchdog.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now anqr-watchdog.service
+```
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1863698, commit 554036ab8, 38/38 providers available, Discord monitoring active)
 
@@ -286,3 +299,7 @@ This prevents work duplication and ensures continuity across restarts.
 ### 2026-03-25 - Symphony Bridge stopped (PID 1872933, commit 335a1530d, 37/38 providers, signal: SIGTERM)
 
 ### 2026-03-25 - Symphony Bridge restarted successfully (PID 1874590, commit 335a1530d, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-25 - Symphony Bridge stopped (PID 1874590, commit adb9f568a, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-25 - Symphony Bridge restarted successfully (PID 1878767, commit adb9f568a, 37/37 providers available, Discord monitoring active)

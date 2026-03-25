@@ -184,9 +184,14 @@ async function checkService(service) {
     return;
   }
 
-  // Check for stuck activation (longer than grace period)
+  // Check for stuck activation (ONLY if we have a restart timestamp)
+  // This prevents false positives on initial startup or manual restarts
   if (status === "activating") {
     const lastRestartTime = restartTimestamps.get(serviceName);
+    // Only trigger if:
+    // 1. We have a restart timestamp (we detected the restart ourselves)
+    // 2. It's been more than grace period since restart
+    // 3. Service is STILL activating (not active)
     if (lastRestartTime && now - lastRestartTime > STARTUP_GRACE_PERIOD_MS) {
       console.log(
         `[watchdog] ❌ ${shortName}: Stuck in activating for ${Math.round((now - lastRestartTime) / 1000)}s`
@@ -197,7 +202,15 @@ async function checkService(service) {
         `stuck in activating for ${Math.round((now - lastRestartTime) / 1000)}s`
       );
       return;
+    } else if (!lastRestartTime) {
+      // Service is activating but we haven't tracked it yet - wait one more cycle
+      console.log(`[watchdog] ⏳ ${shortName}: Activating (waiting for tracking)`);
+    } else {
+      // Within grace period - normal startup
+      const elapsed = Math.round((now - lastRestartTime) / 1000);
+      console.log(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
     }
+    return;
   }
 
   // Normal status

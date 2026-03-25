@@ -2334,6 +2334,35 @@ const server = http.createServer(async (req, res) => {
 
       const startTime = Date.now();
 
+      // Send Discord notification that we're starting to process (for ALL requests)
+      const lastUserMessage = messages[messages.length - 1];
+      const rawContent = lastUserMessage?.content;
+      
+      // Extract text from content (handle both string and array formats)
+      let contentStr = "";
+      if (typeof rawContent === "string") {
+        contentStr = rawContent;
+      } else if (Array.isArray(rawContent)) {
+        // Extract text parts from array content
+        contentStr = rawContent
+          .filter(part => part.type === "text")
+          .map(part => part.text)
+          .join(" ");
+      } else if (rawContent && typeof rawContent === "object") {
+        contentStr = JSON.stringify(rawContent);
+      }
+      
+      // Fire-and-forget Discord notification (non-blocking)
+      sendDiscordEmbed({
+        title: issueContext?.identifier || "Processing Request",
+        description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+        color: 0xFFA500, // Orange
+        fields: [
+          { name: "Model", value: route.responseModelId, inline: true },
+          { name: "Stream", value: stream ? "yes" : "no", inline: true },
+        ],
+      }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
       let progressCounter = 0;
@@ -2421,38 +2450,6 @@ const server = http.createServer(async (req, res) => {
         `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
       );
 
-      // Send Discord notification that we're starting to process
-      const lastUserMessage = messages[messages.length - 1];
-      const rawContent = lastUserMessage?.content;
-      
-      // Extract text from content (handle both string and array formats)
-      let contentStr = "";
-      if (typeof rawContent === "string") {
-        contentStr = rawContent;
-      } else if (Array.isArray(rawContent)) {
-        // Extract text parts from array content
-        contentStr = rawContent
-          .filter(part => part.type === "text")
-          .map(part => part.text)
-          .join(" ");
-      } else if (rawContent && typeof rawContent === "object") {
-        contentStr = JSON.stringify(rawContent);
-      }
-      
-      const requestDescription = issueContext 
-        ? `${issueContext.identifier} — ${issueContext.title}`
-        : contentStr.slice(0, 100) || "Request";
-      
-      await sendDiscordEmbed({
-        title: issueContext?.identifier || "Processing Request",
-        description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
-        color: 0xFFA500, // Orange
-        fields: [
-          { name: "Provider", value: selectedProvider?.name || "unknown", inline: true },
-          { name: "Model", value: selectedProvider?.model || "unknown", inline: true },
-        ],
-      }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-
         if (selectedProvider?.name === "codebuff") {
           try {
             console.log(
@@ -2509,8 +2506,8 @@ const server = http.createServer(async (req, res) => {
               `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
             );
             
-            // Send comprehensive completion metrics
-            await sendDiscordEmbed({
+            // Send comprehensive completion metrics (non-blocking)
+            sendDiscordEmbed({
               title: issueContext?.identifier || "Complete",
               color: 0x00FF00, // Green
               fields: [
@@ -2593,8 +2590,8 @@ const server = http.createServer(async (req, res) => {
             `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
           );
           
-          // Send comprehensive completion metrics
-          await sendDiscordEmbed({
+          // Send comprehensive completion metrics (non-blocking)
+          sendDiscordEmbed({
             title: issueContext?.identifier || "Complete",
             color: 0x00FF00, // Green
             fields: [
@@ -2667,12 +2664,12 @@ const server = http.createServer(async (req, res) => {
         
         console.log(`[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
         
-        // Send comprehensive completion metrics
+        // Send comprehensive completion metrics (non-blocking)
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
         
-        await sendDiscordEmbed({
+        sendDiscordEmbed({
           title: issueContext?.identifier || "Complete",
           color: 0x00FF00, // Green
           fields: [
