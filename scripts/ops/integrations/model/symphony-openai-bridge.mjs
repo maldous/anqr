@@ -2835,7 +2835,7 @@ server.listen(PORT, "127.0.0.1", () => {
 
   // Async startup probe — test all providers for live availability
   refreshProviderStatus()
-    .then(() => {
+    .then(async () => {
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
       console.log(`[symphony-bridge] ========================================`);
