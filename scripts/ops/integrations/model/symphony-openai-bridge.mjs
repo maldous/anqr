@@ -1589,8 +1589,13 @@ async function invokeWithFallback(messages, route, sessionId = null) {
  * Transparent SSE relay for Codebuff - forwards raw SSE chunks directly to OpenClaw
  * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
  * that the AI SDK would otherwise buffer until the end.
+ * 
+ * @param {Array} messages - Chat messages
+ * @param {http.ServerResponse} res - HTTP response for SSE streaming
+ * @param {string|null} sessionId - OpenClaw session ID for tool proxying
+ * @param {Function|null} onDiscordChunk - Optional callback for streaming to Discord (text) => void
  */
-function invokeCodebuffDirectStream(messages, res, sessionId = null) {
+function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordChunk = null) {
   return new Promise((resolve, reject) => {
     const requestBody = JSON.stringify({
       model: "codebuff/base",
@@ -1650,7 +1655,7 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null) {
         // Forward raw chunks directly to OpenClaw (no filtering)
         res.write(chunk);
 
-        // Extract content for logging and accumulation
+        // Extract content for logging, accumulation, and Discord streaming
         const lines = chunkStr.split("\n");
         for (const line of lines) {
           const dataMatch = line.match(/^data: (.+)$/);
@@ -1662,6 +1667,11 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null) {
             if (content) {
               fullText += content;
               logBuffer += content;
+
+              // Stream to Discord if callback provided
+              if (onDiscordChunk && content.length > 0) {
+                onDiscordChunk(content);
+              }
 
               // Filter out internal activity markers
               for (const pattern of INTERNAL_PATTERNS) {
@@ -2313,33 +2323,29 @@ const server = http.createServer(async (req, res) => {
       );
 
       // Send Discord notification that we're starting to process
-      if (issueContext) {
-        // Linear issue: Send embedded message
-        sendDiscordEmbed({
-          title: `🚀 ${issueContext.identifier}`,
-          description: issueContext.title,
-          color: 0x3498db, // Blue for processing
-          fields: [
-            { name: "Status", value: "Processing", inline: true },
-            { name: "Provider", value: selectedProvider?.name || "unknown", inline: true },
-            { name: "Model", value: selectedProvider?.model || "unknown", inline: true }
-          ],
-          footer: "OpenClaw Symphony Bridge"
-        }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-      } else {
-        // Normal request: Simple text notification
-        streamDiscordUpdate(
-          `Processing request (${selectedProvider?.name || "unknown"} / ${selectedProvider?.model || "unknown"})`,
-          { emoji: "⏳" }
-        ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-      }
+      const requestDescription = issueContext 
+        ? `${issueContext.identifier} — ${issueContext.title}`
+        : messages[messages.length - 1]?.content?.slice(0, 100) || "Request";
+      
+      streamDiscordUpdate(
+        `⏳ Processing: ${requestDescription}\nProvider: ${selectedProvider?.name || "unknown"} (${selectedProvider?.model || "unknown"})`,
+        { emoji: "⏳" }
+      ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
         if (selectedProvider?.name === "codebuff") {
           try {
             console.log(
               `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
-            const result = await invokeCodebuffDirectStream(messages, res, sessionId);
+            
+            // Stream output to Discord as it's received
+            let streamedChars = 0;
+            const streamToDiscord = (text) => {
+              streamedChars += text.length;
+              streamDiscordUpdate(text, { emoji: "📨" }).catch(() => {/* ignore */});
+            };
+            
+            const result = await invokeCodebuffDirectStream(messages, res, sessionId, streamToDiscord);
 
             clearInterval(heartbeat);
             clearInterval(progressInterval);
@@ -2349,32 +2355,26 @@ const server = http.createServer(async (req, res) => {
             res.write("data: [DONE]\n\n");
             res.end();
 
-            if (issueContext) {
-              console.log(
-                `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: codebuff, ${result.text.length} chars)`,
-              );
-              // Linear issue: Send embedded completion
-              const elapsedTime = formatElapsed(Date.now() - startTime);
-              sendDiscordEmbed({
-                title: `✅ ${issueContext.identifier}`,
-                description: issueContext.title,
-                color: 0x2ecc71, // Green for completion
-                fields: [
-                  { name: "Status", value: "Completed", inline: true },
-                  { name: "Provider", value: "codebuff", inline: true },
-                  { name: "Response", value: `${result.text.length} chars`, inline: true },
-                  { name: "Time", value: elapsedTime, inline: true }
-                ],
-                footer: "OpenClaw Symphony Bridge"
-              }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-            } else {
-              // Normal request: Simple text completion
-              const elapsedTime = formatElapsed(Date.now() - startTime);
-              streamDiscordUpdate(
-                `✅ Complete: ${result.text.length} chars (codebuff, ${elapsedTime})`,
-                { emoji: "✅" }
-              ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-            }
+            // Get all available metrics from credit-gate
+            const stats = getProviderStats();
+            const codebuffStats = stats.codebuff || {};
+            const elapsedTime = formatElapsed(Date.now() - startTime);
+            
+            console.log(
+              `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
+            );
+            
+            // Send comprehensive completion metrics
+            const metricsText = [
+              `✅ Complete: ${result.text.length} chars`,
+              `Provider: codebuff`,
+              `Time: ${elapsedTime}`,
+              `Avg Duration: ${codebuffStats.avgDurationMs || 0}ms`,
+              `Success Rate: ${codebuffStats.successRate || 'N/A'}`,
+              `Score: ${codebuffStats.score || 'pending'}`
+            ].join(' | ');
+            
+            streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -2441,31 +2441,27 @@ const server = http.createServer(async (req, res) => {
           res.write("data: [DONE]\n\n");
           res.end();
 
-          if (issueContext) {
-            console.log(
-              `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: ${result.providerName})`,
-            );
-            // Linear issue: Send embedded completion
-            const elapsedTime = formatElapsed(Date.now() - startTime);
-            sendDiscordEmbed({
-              title: `✅ ${issueContext.identifier}`,
-              description: issueContext.title,
-              color: 0x2ecc71, // Green for completion
-              fields: [
-                { name: "Status", value: "Completed", inline: true },
-                { name: "Provider", value: result.providerName, inline: true },
-                { name: "Time", value: elapsedTime, inline: true }
-              ],
-              footer: "OpenClaw Symphony Bridge"
-            }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-          } else {
-            // Normal request: Simple text completion
-            const elapsedTime = formatElapsed(Date.now() - startTime);
-            streamDiscordUpdate(
-              `✅ Complete: ${result.providerName}, ${elapsedTime}`,
-              { emoji: "✅" }
-            ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-          }
+          // Get all available metrics from credit-gate
+          const stats = getProviderStats();
+          const providerStats = stats[result.providerName] || {};
+          const elapsedTime = formatElapsed(Date.now() - startTime);
+          
+          console.log(
+            `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
+          );
+          
+          // Send comprehensive completion metrics
+          const metricsText = [
+            `✅ Complete: ${result.text.length} chars`,
+            `Provider: ${result.providerName}`,
+            `Time: ${elapsedTime}`,
+            `Avg Duration: ${providerStats.avgDurationMs || 0}ms`,
+            `Success Rate: ${providerStats.successRate || 'N/A'}`,
+            `Validation: ${providerStats.validationRate || 'N/A'}`,
+            `Score: ${providerStats.score || 'pending'}`
+          ].join(' | ');
+          
+          streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -2521,39 +2517,34 @@ const server = http.createServer(async (req, res) => {
           clearTimeout(requestTimeoutHandle);
         }
 
-        if (issueContext) {
-          const resultText = ensureString(result.text);
-          const firstLine = resultText
-            ? resultText.split("\n")[0].trim().slice(0, 100)
-            : "(no content)";
-          console.log(`[symphony-bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
-          // Linear issue: Send embedded completion
-          const tokensIn = result.usage?.promptTokens || 0;
-          const tokensOut = result.usage?.completionTokens || 0;
-          const totalTokens = tokensIn + tokensOut;
-          sendDiscordEmbed({
-            title: `✅ ${issueContext.identifier}`,
-            description: issueContext.title,
-            color: 0x2ecc71, // Green for completion
-            fields: [
-              { name: "Status", value: "Completed", inline: true },
-              { name: "Provider", value: result.providerName, inline: true },
-              { name: "Tokens", value: totalTokens > 0 ? `${totalTokens}` : `${resultText.length} chars`, inline: true },
-              { name: "Time", value: formatElapsed(durationMs), inline: true }
-            ],
-            footer: "OpenClaw Symphony Bridge"
-          }).catch(err => console.log(`[symphony-bridge] Discord embed failed: ${err.message}`));
-        } else {
-          // Normal request: Simple text completion
-          const tokensIn = result.usage?.promptTokens || 0;
-          const tokensOut = result.usage?.completionTokens || 0;
-          const totalTokens = tokensIn + tokensOut;
-          const resultText = ensureString(result.text);
-          streamDiscordUpdate(
-            `✅ Complete: ${result.providerName}, ${totalTokens > 0 ? totalTokens + ' tokens' : resultText.length + ' chars'}, ${formatElapsed(durationMs)}`,
-            { emoji: "✅" }
-          ).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
-        }
+        // Get all available metrics from credit-gate
+        const stats = getProviderStats();
+        const providerStats = stats[result.providerName] || {};
+        const resultText = ensureString(result.text);
+        const firstLine = resultText
+          ? resultText.split("\n")[0].trim().slice(0, 100)
+          : "(no content)";
+        
+        console.log(`[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
+        
+        // Send comprehensive completion metrics
+        const tokensIn = result.usage?.promptTokens || 0;
+        const tokensOut = result.usage?.completionTokens || 0;
+        const totalTokens = tokensIn + tokensOut;
+        
+        const metricsText = [
+          `✅ Complete: ${totalTokens > 0 ? totalTokens + ' tokens' : resultText.length + ' chars'}`,
+          `Provider: ${result.providerName}`,
+          `Time: ${formatElapsed(durationMs)}`,
+          `Tokens In/Out: ${tokensIn}/${tokensOut}`,
+          `Avg Duration: ${providerStats.avgDurationMs || 0}ms`,
+          `Success Rate: ${providerStats.successRate || 'N/A'}`,
+          `Validation: ${providerStats.validationRate || 'N/A'}`,
+          `Linear Completion: ${providerStats.linearCompletionRate || 'N/A'}`,
+          `Score: ${providerStats.score || 'pending'}`
+        ].join(' | ');
+        
+        streamDiscordUpdate(metricsText, { emoji: "📊" }).catch(err => console.log(`[symphony-bridge] Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
         const tokensIn = result.usage?.promptTokens || 0;
