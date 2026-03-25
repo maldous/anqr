@@ -1389,15 +1389,19 @@ async function invokeWithFallback(messages, route) {
 }
 
 /**
- * Direct SSE passthrough for Codebuff - bypasses AI SDK buffering to stream activity messages immediately
+ * Transparent SSE relay for Codebuff - forwards raw SSE chunks directly to OpenClaw
+ * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
+ * that the AI SDK would otherwise buffer until the end.
  */
-async function invokeCodebuffDirectStream(messages, onChunk) {
+async function invokeCodebuffDirectStream(messages, res, completionId, created, route) {
   const url = "http://127.0.0.1:4318/v1/chat/completions";
   const body = JSON.stringify({
     model: "codebuff/base",
     messages,
     stream: true,
   });
+
+  console.log(`[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`);
 
   const response = await fetch(url, {
     method: "POST",
@@ -1442,13 +1446,18 @@ async function invokeCodebuffDirectStream(messages, onChunk) {
           const content = chunk.choices?.[0]?.delta?.content;
           if (content) {
             fullText += content;
-            if (onChunk) {
-              onChunk({ type: "text", text: content });
-            }
-            // Log activity messages (emojis indicate tool/agent activity)
-            // Check for common activity markers: 🔧 ✅ 💡 📖 💻 🔍 🤖 ✏
-            if (/🔧|✅|💡|📖|💻|🔍|🤖|✏/u.test(content)) {
-              console.log(`[symphony-bridge] 🌊 SSE activity chunk (${content.length} chars): ${content.slice(0, 200)}`);
+            // Forward chunk IMMEDIATELY to OpenClaw with Symphony's response format
+            const relayChunk = {
+              id: completionId,
+              object: "chat.completion.chunk",
+              created,
+              model: route.responseModelId,
+              choices: [{ index: 0, delta: { content }, finish_reason: null }],
+            };
+            res.write(`data: ${JSON.stringify(relayChunk)}\n\n`);
+            // Log relay activity (first 100 chars)
+            if (content.length > 0) {
+              console.log(`[symphony-bridge] ↗️ Relayed: ${content.slice(0, 100)}`);
             }
           }
         } catch (parseErr) {
@@ -1460,6 +1469,7 @@ async function invokeCodebuffDirectStream(messages, onChunk) {
     reader.releaseLock();
   }
 
+  console.log(`[symphony-bridge] 🌊 Transparent relay complete: ${fullText.length} chars`);
   return { text: fullText, providerName: "codebuff" };
 }
 
@@ -1501,47 +1511,8 @@ async function invokeWithFallbackStream(messages, route, onChunk) {
       await sleep(FALLBACK_DELAY_MS);
     }
 
-    // Special case: Codebuff uses direct SSE passthrough to bypass AI SDK buffering
-    if (provider.name === "codebuff") {
-      try {
-        const startedAt = Date.now();
-        console.log(`[symphony-bridge] 🌊 Using direct SSE passthrough for Codebuff (bypasses AI SDK buffering)`);
-        const result = await invokeCodebuffDirectStream(messages, onChunk);
-
-        console.log(
-          `[symphony-bridge] ✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
-        );
-        recordProviderSuccess(provider.name);
-        recordSuccessfulMetrics(provider.name, startedAt);
-
-        requestCount++;
-        if (requestCount % STATS_LOG_INTERVAL === 0) {
-          logBridgeStats();
-        }
-
-        return {
-          text: result.text,
-          providerName: provider.name,
-          attempts: attemptNumber,
-          triedProviders: [...triedProviders],
-        };
-      } catch (err) {
-        const rootErr = unwrapAIError(err);
-        const errStr = errorToString(rootErr !== err ? rootErr : err);
-        lastError = errStr;
-        console.log(
-          `[symphony-bridge] ❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
-        );
-
-        if (isRetryableErrorDeep(err)) {
-          recordProviderFailure(provider.name);
-          recordProviderFailureCount(provider.name);
-        }
-
-        // Continue to next provider in the loop
-        continue;
-      }
-    }
+    // Note: Codebuff transparent relay is handled in the main POST /v1/chat/completions handler
+    // to enable direct SSE passthrough without going through invokeWithFallbackStream
 
     try {
       const startedAt = Date.now();
@@ -2063,6 +2034,54 @@ const server = http.createServer(async (req, res) => {
 
         const completionId = `chatcmpl-${Date.now()}`;
         const created = Math.floor(Date.now() / 1000);
+
+        // Special case: Transparent SSE relay for Codebuff
+        // Check if codebuff is available and not excluded
+        const codebuffAvailable = route.allowedNames?.includes("codebuff") || route.normalizedModelId === "symphony/codebuff";
+        
+        if (codebuffAvailable && !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff")) {
+          try {
+            console.log(`[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (bypasses all buffering)`);
+            await invokeCodebuffDirectStream(messages, res, completionId, created, route);
+            
+            clearInterval(heartbeat);
+            clearInterval(progressInterval);
+            clearTimeout(requestTimeoutHandle);
+
+            // Send final chunk
+            const finalChunk = {
+              id: completionId,
+              object: "chat.completion.chunk",
+              created,
+              model: route.responseModelId,
+              choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+            };
+            res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+            res.write("data: [DONE]\n\n");
+            res.end();
+
+            if (issueContext) {
+              console.log(
+                `[symphony-bridge] ✅ Finished: ${issueContext.identifier} (provider: codebuff via transparent relay)`,
+              );
+            }
+
+            const durationMs = Date.now() - startTime;
+            recordBridgeMetrics({
+              provider: "codebuff",
+              durationMs,
+              isStream: true,
+              isError: false,
+            });
+            recordProviderSuccess("codebuff");
+            recordSuccessfulMetrics("codebuff", startTime);
+            maybeGC();
+            return;
+          } catch (codebuffErr) {
+            console.log(`[symphony-bridge] ⚠️ Codebuff transparent relay failed: ${codebuffErr.message.slice(0, 150)} - falling back to standard cascade`);
+            // Fall through to standard fallback cascade
+          }
+        }
 
         try {
           const result = await invokeWithFallbackStream(messages, route, (chunk) => {
