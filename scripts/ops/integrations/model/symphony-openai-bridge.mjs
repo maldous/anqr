@@ -1787,24 +1787,25 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
           try {
             const parsed = JSON.parse(dataMatch[1]);
             const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
+            if (content && content.length > 0) {
               fullText += content;
               logBuffer += content;
 
-              // Stream to Discord if callback provided
-              if (onDiscordChunk && content.length > 0) {
+              // Stream ALL content to Discord (including activity messages)
+              if (onDiscordChunk) {
                 onDiscordChunk(content);
               }
 
-              // Filter out internal activity markers
+              // Filter out internal activity markers for logging only
+              let filteredLogBuffer = logBuffer;
               for (const pattern of INTERNAL_PATTERNS) {
-                logBuffer = logBuffer.replace(pattern, "");
+                filteredLogBuffer = filteredLogBuffer.replace(pattern, "");
               }
 
               // Log when buffer exceeds threshold or contains sentence boundary
-              const hasSentenceEnd = /[.!?]\s/.test(logBuffer) || logBuffer.includes("\n\n");
-              if (logBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
-                const toLog = logBuffer.trim();
+              const hasSentenceEnd = /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
+              if (filteredLogBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
+                const toLog = filteredLogBuffer.trim();
                 if (toLog.length > 0) {
                   console.log(
                     `[symphony-bridge] 🌊 ${toLog.slice(0, 200)}`,
