@@ -1134,7 +1134,9 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
         // Log non-empty text-delta events for debugging (first 200 chars)
         if (delta && delta.length > 0) {
-          console.log(`[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`);
+          console.log(
+            `[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`,
+          );
         }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
@@ -1153,7 +1155,9 @@ async function invokeWithAI(provider, messages, options = {}) {
         const errorMsg = errorToString(rootError);
         streamErrorDetail = streamErrorDetail || errorMsg;
         // Log server-side only - internal provider errors are handled by auto-fallback
-        console.log(`[symphony-bridge] 🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`);
+        console.log(
+          `[symphony-bridge] 🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`,
+        );
         // DO NOT forward error events to client - these are internal Symphony routing errors
       } else if (part.type === "finish") {
         if (part.finishReason) {
@@ -1183,10 +1187,10 @@ async function invokeWithAI(provider, messages, options = {}) {
           if (onChunk) {
             const CHUNK_SIZE = 50; // Forward in 50-char chunks for better real-time appearance
             for (let i = 0; i < fallbackText.length; i += CHUNK_SIZE) {
-            const chunk = fallbackText.slice(i, i + CHUNK_SIZE);
-            onChunk({ type: "text", text: chunk });
-            // Small delay to prevent overwhelming the client (2ms = ~25KB/s)
-            await sleep(2);
+              const chunk = fallbackText.slice(i, i + CHUNK_SIZE);
+              onChunk({ type: "text", text: chunk });
+              // Small delay to prevent overwhelming the client (2ms = ~25KB/s)
+              await sleep(2);
             }
           }
         }
@@ -1401,7 +1405,9 @@ function invokeCodebuffDirectStream(messages, res) {
       stream: true,
     });
 
-    console.log(`[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`);
+    console.log(
+      `[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`,
+    );
 
     const options = {
       hostname: "127.0.0.1",
@@ -1411,14 +1417,14 @@ function invokeCodebuffDirectStream(messages, res) {
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(requestBody),
-        "Authorization": "Bearer local-bridge",
+        Authorization: "Bearer local-bridge",
       },
     };
 
     const proxyReq = http.request(options, (proxyRes) => {
       if (proxyRes.statusCode !== 200) {
         let errorBody = "";
-        proxyRes.on("data", (chunk) => errorBody += chunk);
+        proxyRes.on("data", (chunk) => (errorBody += chunk));
         proxyRes.on("end", () => {
           reject(new Error(`Codebuff bridge returned ${proxyRes.statusCode}: ${errorBody}`));
         });
@@ -1435,14 +1441,14 @@ function invokeCodebuffDirectStream(messages, res) {
         /✅ context-pruner done\n?/,
         /✅ end_turn done\n?/,
       ];
-      
+
       proxyRes.on("data", (chunk) => {
         const chunkStr = chunk.toString();
-        
+
         // Forward raw chunks directly to OpenClaw (no filtering)
         // The filtering happens on the accumulated buffer for logging only
         res.write(chunk);
-        
+
         // Extract content for logging and accumulation
         const lines = chunkStr.split("\n");
         for (const line of lines) {
@@ -1455,7 +1461,7 @@ function invokeCodebuffDirectStream(messages, res) {
             if (content) {
               fullText += content;
               buffer += content;
-              
+
               // Check if buffer contains any complete internal activity markers
               let hasInternal = false;
               for (const pattern of INTERNAL_PATTERNS) {
@@ -1464,10 +1470,12 @@ function invokeCodebuffDirectStream(messages, res) {
                   buffer = buffer.replace(pattern, ""); // Remove from buffer
                 }
               }
-              
+
               // Only log non-internal activity
               if (!hasInternal && content.length > 0) {
-                console.log(`[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`);
+                console.log(
+                  `[symphony-bridge] 🌊 SSE relay (${content.length} chars): ${content.slice(0, 100)}`,
+                );
               }
             }
           } catch {
@@ -2061,15 +2069,20 @@ const server = http.createServer(async (req, res) => {
         // This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
         // Only use if Codebuff is in the allowed provider set for this route
         const codebuffAllowed = !route.allowedNames || route.allowedNames.includes("codebuff");
-        const codebuffNotBlocked = !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff");
-        
-        console.log(`[symphony-bridge] 🔍 Codebuff relay check: allowed=${codebuffAllowed}, notBlocked=${codebuffNotBlocked}, route=${route.normalizedModelId}`);
-        
+        const codebuffNotBlocked =
+          !BRIDGE_PROVIDER_BLOCKLIST.has("codebuff") && !nonToolCapableProviders.has("codebuff");
+
+        console.log(
+          `[symphony-bridge] 🔍 Codebuff relay check: allowed=${codebuffAllowed}, notBlocked=${codebuffNotBlocked}, route=${route.normalizedModelId}`,
+        );
+
         if (codebuffAllowed && codebuffNotBlocked) {
           try {
-            console.log(`[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`);
+            console.log(
+              `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
+            );
             const result = await invokeCodebuffDirectStream(messages, res);
-            
+
             clearInterval(heartbeat);
             clearInterval(progressInterval);
             clearTimeout(requestTimeoutHandle);
@@ -2098,7 +2111,7 @@ const server = http.createServer(async (req, res) => {
           } catch (codebuffErr) {
             const errMsg = String(codebuffErr.message || codebuffErr).slice(0, 200);
             console.log(`[symphony-bridge] ⚠️ Codebuff transparent relay failed: ${errMsg}`);
-            
+
             // Record failure and fall through to standard cascade
             if (isRetryableErrorDeep(codebuffErr)) {
               recordProviderFailure("codebuff");
@@ -2108,7 +2121,9 @@ const server = http.createServer(async (req, res) => {
             // Fall through to standard fallback cascade with other providers
           }
         } else {
-          console.log(`[symphony-bridge] ⚠️ Codebuff transparent relay skipped (not in route or blocked), using standard cascade`);
+          console.log(
+            `[symphony-bridge] ⚠️ Codebuff transparent relay skipped (not in route or blocked), using standard cascade`,
+          );
         }
 
         try {

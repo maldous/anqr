@@ -22,9 +22,7 @@ const STATS_FILE = resolve(STATE_DIR, "provider-stats.json");
 
 // Ensure state directory exists
 
-
 describe("Symphony Bridge Fallback Logic", () => {
-
   // Helper functions scoped inside describe to reduce top-level heavy nodes
   function ensureStateDir() {
     if (!existsSync(STATE_DIR)) {

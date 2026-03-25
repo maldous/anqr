@@ -61,10 +61,7 @@ test.describe("OpenClaw Model Configuration", () => {
   });
 
   test("fallback models should include direct ollama safety-net models", () => {
-    const ollamaModels = [
-      "ollama/qwen2.5-coder:0.5b",
-      "ollama/qwen2.5-coder:3b-instruct",
-    ];
+    const ollamaModels = ["ollama/qwen2.5-coder:0.5b", "ollama/qwen2.5-coder:3b-instruct"];
 
     for (const model of ollamaModels) {
       const hasFallback = openclawConfig.fallbackModels.includes(model);
@@ -1939,10 +1936,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
       return;
     }
 
-    const ollamaModels = [
-      "ollama/qwen2.5-coder:0.5b",
-      "ollama/qwen2.5-coder:3b-instruct",
-    ];
+    const ollamaModels = ["ollama/qwen2.5-coder:0.5b", "ollama/qwen2.5-coder:3b-instruct"];
 
     const missing = ollamaModels.filter((m) => !data.allowed.includes(m));
     expect(missing, `Ollama models not in allowed list: ${missing.join(", ")}`).toHaveLength(0);
