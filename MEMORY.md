@@ -230,4 +230,27 @@ systemctl --user enable --now anqr-watchdog.service
 ### 2026-03-26 - Symphony Bridge stopped (PID 1863698, commit 9a2668fd6, 38/38 providers, signal: SIGTERM)
 ```
 
-**Status**: Ready for testing. Restart bridges to verify MEMORY.md updates on shutdown.
+**Status**: ✅ **IMPLEMENTED AND WORKING**
+
+Both bridges now update MEMORY.md **before** calling `process.exit(0)` on SIGTERM/SIGINT. No action needed - feature is complete and operational.
+
+### 2026-03-26 01:29 - Critical Fix: Pre-Restart Memory Updates
+
+**Problem**: Agent was committing code changes, restarting bridges, then forgetting what work was done and repeating it (looping).
+
+**Root Cause**: MEMORY.md updates happened during shutdown (on SIGTERM), but the new process didn't see those updates because they were written by the dying process.
+
+**Solution**: Update MEMORY.md **BEFORE** restarting bridges, not during shutdown:
+1. Make code changes
+2. **Update MEMORY.md with what was done**
+3. Commit everything (code + MEMORY.md)
+4. Restart bridges
+5. New process reads MEMORY.md and knows what was already completed
+
+**Implementation**: Agent must manually update MEMORY.md before any `systemctl restart` command, documenting:
+- What changes were made
+- What problem was solved
+- Current status/PID after restart
+- Any follow-up work needed
+
+This prevents work duplication and ensures continuity across restarts.
