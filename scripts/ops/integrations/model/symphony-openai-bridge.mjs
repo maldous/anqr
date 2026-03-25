@@ -96,6 +96,7 @@ const DISCORD_VOICE_CHANNEL_ID = "1486262758256410647";
 
 /**
  * Send voice announcement to Discord voice channel via OpenClaw Gateway
+ * Uses /v1/responses (agent run path) to preserve Discord delivery context
  */
 async function speakAnnouncement(text) {
   if (!process.env.OPENCLAW_GATEWAY_TOKEN) {
@@ -104,17 +105,19 @@ async function speakAnnouncement(text) {
   }
 
   try {
-    const response = await fetch(`http://127.0.0.1:18789/tools/invoke`, {
+    const response = await fetch(`http://127.0.0.1:18789/v1/responses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.OPENCLAW_GATEWAY_TOKEN}`,
+        "x-openclaw-agent-id": "main",
+        "x-openclaw-session-key": "discord-announcer",
+        "x-openclaw-message-channel": "discord",
       },
       body: JSON.stringify({
-        tool: "tts",
-        args: {
-          text: text,
-        },
+        model: "openclaw",
+        user: "discord-announcer",
+        input: `Say this in Discord voice: "${text}"`,
       }),
     });
 
@@ -124,7 +127,7 @@ async function speakAnnouncement(text) {
       return;
     }
 
-    console.log(`[symphony-bridge] 🔊 Voice announcement sent: "${text}"`);
+    console.log(`[symphony-bridge] 🔊 Voice announcement sent via /v1/responses: "${text}"`);
   } catch (err) {
     console.log(`[symphony-bridge] Voice announcement error: ${err.message}`);
   }

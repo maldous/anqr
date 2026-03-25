@@ -88,14 +88,44 @@
 - ❌ `tts` tool generates audio files locally but DOES NOT play them in Discord voice
 - ✅ Discord webhook for text messages to TEXT_CHANNEL_ID
 
-**Issue Identified (2026-03-25 22:32)**:
-- User confirmed: "I HAVE NOT HEARD ANY VOICES"
-- Symphony bridge logs show voice announcements being sent, but TTS tool generates files locally
-- OpenClaw Gateway successfully generates audio (`audioAsVoice: true`, Microsoft provider)
-- **Audio files created** at `/tmp/openclaw/tts-*/voice-*.mp3` but **not played in Discord**
-- **ROOT CAUSE**: `/tools/invoke` with `tts` tool generates audio files but doesn't deliver them to Discord voice
-- **SOLUTION NEEDED**: OpenClaw automatically plays TTS when responding IN a Discord session, not via external API calls
-- **HYPOTHESIS**: Voice announcements only work when sent as responses in an active Discord conversation, not via stateless API calls
+**Root Cause (2026-03-25 23:13)**:
+
+Discord voice playback depends on the Discord execution path, not just successful TTS generation. The Symphony bridge currently uses `/tools/invoke`, which bypasses that path.
+
+**Recommended Implementation Path**:
+
+Replace bare `/tools/invoke` TTS calls with a normal OpenClaw response execution path, using Discord-aware context/session headers so the response can be delivered through Discord's voice pipeline.
+
+**Hypothesis**:
+If `/v1/responses` speaks in Discord and `/tools/invoke` does not, the hypothesis is confirmed.
+
+**What is Proven**:
+- ✅ Discord voice output works for native Discord interactions
+- ❌ Bridge-triggered `/tools/invoke` TTS does not produce audible Discord voice output
+- ⚠️ `sessions_list` does not expose a usable Discord session in the observed tests
+
+**What Remains Unproven**:
+- Whether Discord sessions are ephemeral
+- Whether they are internal-only
+- Whether there is a separate API path that can target them
+
+**Implementation Example** (to test hypothesis):
+
+```bash
+curl -sS http://127.0.0.1:18789/v1/responses \
+  -H "Authorization: Bearer YOUR_GATEWAY_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "x-openclaw-agent-id: main" \
+  -H "x-openclaw-session-key: discord-announcer" \
+  -H "x-openclaw-message-channel: discord" \
+  -d '{
+    "model": "openclaw",
+    "user": "discord-announcer",
+    "input": "Announce that the build has completed successfully."
+  }'
+```
+
+This approach uses the documented Gateway agent run path (`/v1/responses`) which may preserve Discord delivery context, rather than the bare tool invocation endpoint (`/tools/invoke`).
 
 **Voice announcements** (sent to Discord voice via TTS):
 - **Linear issues**: "Working on ISSUE-ID" → "ISSUE-ID: N minutes" (every 2 min) → "ISSUE-ID done"
