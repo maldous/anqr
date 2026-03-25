@@ -2699,16 +2699,7 @@ const server = http.createServer(async (req, res) => {
 
 function shutdown(signal) {
   console.log(`\n[symphony-bridge] Received ${signal}, shutting down immediately...`);
-  if (probeIntervalHandle) {
-    clearInterval(probeIntervalHandle);
-    probeIntervalHandle = null;
-  }
-  stopDiscordMonitoring();
-  logProviderStats();
-  server.close(() => {
-    console.log("[symphony-bridge] Server closed");
-  });
-  // Exit immediately without waiting for active connections
+  // Exit immediately - no cleanup, no waiting
   process.exit(0);
 }
 
