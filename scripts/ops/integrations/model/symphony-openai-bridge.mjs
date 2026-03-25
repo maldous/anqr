@@ -2781,8 +2781,21 @@ const server = http.createServer(async (req, res) => {
 // Graceful shutdown
 // --------------------------------------------------------------------------<
 
-function shutdown(signal) {
+async function shutdown(signal) {
   console.log(`\n[symphony-bridge] Received ${signal}, shutting down immediately...`);
+  
+  // Update MEMORY.md BEFORE shutdown
+  try {
+    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    const available = providerStatusCache.probeResults.filter((r) => r.available).length;
+    const total = providerStatusCache.configured.length;
+    await updateMemory(
+      `Symphony Bridge stopped (PID ${process.pid}, commit ${commitHash}, ${available}/${total} providers, signal: ${signal})`
+    );
+  } catch (err) {
+    console.log(`[symphony-bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+  }
+  
   if (probeIntervalHandle) {
     clearInterval(probeIntervalHandle);
     probeIntervalHandle = null;
@@ -2796,8 +2809,8 @@ function shutdown(signal) {
   process.exit(0);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", async () => await shutdown("SIGTERM"));
+process.on("SIGINT", async () => await shutdown("SIGINT"));
 
 // -------------------------------------------------------------------------->
 // Start server

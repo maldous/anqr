@@ -1577,8 +1577,23 @@ const server = http.createServer(async (req, res) => {
 });
 
 // Graceful shutdown
-function shutdown(signal) {
+async function shutdown(signal) {
   console.log(`\n[bridge] Received ${signal}, shutting down immediately...`);
+  
+  // Update MEMORY.md BEFORE shutdown
+  try {
+    const { execSync } = await import('node:child_process');
+    const { appendFile } = await import('node:fs/promises');
+    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    const timestamp = new Date().toISOString().split('T')[0];
+    const mode = STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "unknown";
+    const entry = `\n### ${timestamp} - Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})\n`;
+    await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
+    console.log(`[bridge] 📝 Updated MEMORY.md on shutdown`);
+  } catch (err) {
+    console.log(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+  }
+  
   server.close(() => {
     console.log("[bridge] Server closed");
   });
@@ -1586,8 +1601,8 @@ function shutdown(signal) {
   process.exit(0);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", async () => await shutdown("SIGTERM"));
+process.on("SIGINT", async () => await shutdown("SIGINT"));
 
 // Initialize at startup - validate key and determine paid/free mode
 async function initializeBridge() {
