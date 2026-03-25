@@ -18,6 +18,9 @@ import {
   TEAM_ID,
   STATES,
 } from "../../linear-client.mjs";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logInfo } = createLogger("sonar-linear-sync");
 
 const FETCH_TIMEOUT_MS = 30_000;
 const SONAR_KEY_PATTERN = /<!-- sonar-key:([a-f0-9-]+) -->/;
@@ -178,7 +181,7 @@ async function applyPromoteAndRequeue(
         `Priority changed from ${fromLabel} to ${toLabel}. This ${entityLabel} must be resolved.`,
       ].join("\n"),
     );
-    console.log(`[${logPrefix}] Promoted ${linearIssue.identifier} from ${fromLabel} → ${toLabel}`);
+    logInfo(`[${logPrefix}] Promoted ${linearIssue.identifier} from ${fromLabel} → ${toLabel}`);
     actions.promoted = { from: linearIssue.priority, to: priority };
   }
 
@@ -193,7 +196,7 @@ async function applyPromoteAndRequeue(
         `Moved from ${fromState} back to Todo so the runner can pick it up.`,
       ].join("\n"),
     );
-    console.log(`[${logPrefix}] Requeued ${linearIssue.identifier} from ${fromState} → Todo`);
+    logInfo(`[${logPrefix}] Requeued ${linearIssue.identifier} from ${fromState} → Todo`);
     actions.requeued = { fromState };
   }
 
@@ -204,7 +207,7 @@ async function resolveStaleLinearIssues(keyToLinear, currentKeys, logPrefix, res
   const resolved = [];
   for (const [key, linearIssue] of keyToLinear) {
     if (currentKeys.has(key)) continue;
-    console.log(
+    logInfo(
       `[${logPrefix}] Resolving ${linearIssue.identifier} — ${resolveLabel} no longer present`,
     );
     await addComment(
@@ -330,7 +333,7 @@ export async function syncSonarToLinear({
     const description = buildLinearDescription(si, projectKey, sonarHost);
     const issue = await createIssue({ title, description, priority, stateId: STATES.todo });
     created.push({ sonar: si, linear: issue });
-    console.log(`[sonar-sync] Created ${issue.identifier}: ${title}`);
+    logInfo(`[sonar-sync] Created ${issue.identifier}: ${title}`);
   }
 
   const resolved = resolveStale
@@ -339,7 +342,7 @@ export async function syncSonarToLinear({
 
   if (resolveStale) {
     for (const linearIssue of legacyIssues) {
-      console.log(`[sonar-sync] Resolving legacy issue ${linearIssue.identifier}`);
+      logInfo(`[sonar-sync] Resolving legacy issue ${linearIssue.identifier}`);
       await addComment(
         linearIssue.id,
         [
@@ -457,7 +460,7 @@ export async function syncSonarHotspotsToLinear({
     const description = buildHotspotLinearDescription(sh, projectKey, sonarHost);
     const issue = await createIssue({ title, description, priority, stateId: STATES.todo });
     created.push({ hotspot: sh, linear: issue });
-    console.log(`[sonar-hotspot-sync] Created ${issue.identifier}: ${title}`);
+    logInfo(`[sonar-hotspot-sync] Created ${issue.identifier}: ${title}`);
   }
 
   const resolved = resolveStale
@@ -562,7 +565,7 @@ export async function syncSonarDuplicationsToLinear({
     const description = buildDuplicationLinearDescription(sd, projectKey, sonarHost);
     const issue = await createIssue({ title, description, priority, stateId: STATES.todo });
     created.push({ duplication: sd, linear: issue });
-    console.log(`[sonar-dup-sync] Created ${issue.identifier}: ${title}`);
+    logInfo(`[sonar-dup-sync] Created ${issue.identifier}: ${title}`);
   }
 
   const resolved = resolveStale

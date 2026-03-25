@@ -27,6 +27,9 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sendNotification } from "../lib/notify.mjs";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("notify");
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");
@@ -106,11 +109,11 @@ function formatEmailBody(report) {
 async function main() {
   const { dryRun, channel } = parseArgs();
 
-  console.log(`[notify]${dryRun ? " (DRY RUN)" : ""} channel=${channel}\n`);
+  logInfo(`[notify]${dryRun ? " (DRY RUN)" : ""} channel=${channel}\n`);
 
   if (!existsSync(REPORT_PATH)) {
-    console.error(`[notify] No report found at ${REPORT_PATH}`);
-    console.error("[notify] Run harness-report.mjs first.");
+    logError(`[notify] No report found at ${REPORT_PATH}`);
+    logError("[notify] Run harness-report.mjs first.");
     process.exit(1);
   }
 
@@ -118,7 +121,7 @@ async function main() {
 
   // stdout channel
   if (channel === "stdout" || channel === "all") {
-    console.log(formatStdout(report));
+    logInfo(formatStdout(report));
   }
 
   // email channel
@@ -127,7 +130,7 @@ async function main() {
     const subject = `Nightly report: ${report.summary.passed}/${report.summary.total} passed`;
 
     if (dryRun) {
-      console.log(`[notify] [DRY RUN] Would send email: ${subject}`);
+      logInfo(`[notify] [DRY RUN] Would send email: ${subject}`);
     } else {
       const result = sendNotification({
         subject,
@@ -135,14 +138,14 @@ async function main() {
         severity,
       });
       if (result.sent) {
-        console.log("[notify] Email sent ✅");
+        logInfo("[notify] Email sent ✅");
       } else {
-        console.log(`[notify] Email not sent: ${result.reason}`);
+        logInfo(`[notify] Email not sent: ${result.reason}`);
       }
     }
   }
 
-  console.log("\n[notify] done");
+  logInfo("\n[notify] done");
   process.exit(0);
 }
 

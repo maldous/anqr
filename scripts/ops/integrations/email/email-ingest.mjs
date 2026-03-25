@@ -18,6 +18,9 @@ import {
   patchIssueState,
   recordTransition,
 } from "../../symphony-state.mjs";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logError } = createLogger("email-ingest");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
@@ -29,72 +32,7 @@ const ALLOWED_SENDERS = ["matthew.aldous@gmail.com", "alexander.emmalyn.thomas@g
 const DRY_RUN = process.argv.includes("--dry-run");
 const NOTMUCH_QUERY = `(from:${INGEST_EMAIL} OR to:${INGEST_EMAIL}) AND tag:inbox AND NOT tag:anqr-processed AND NOT tag:anqr-rejected`;
 
-// --------------------------------------------------------------------------
-// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
-// --------------------------------------------------------------------------
 
-const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-const envLogLevel = process.env.EMAIL_INGEST_LOG_LEVEL?.toUpperCase();
-const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
-let currentLogLevel = initialLevel;
-
-function setLogLevel(level) {
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.error(`[email-ingest] 📊 Log level: ${levelName}`);
-  currentLogLevel = level;
-}
-
-function incrementLogLevel() {
-  if (currentLogLevel < LOG_LEVELS.ERROR) {
-    setLogLevel(currentLogLevel + 1);
-  }
-}
-
-function decrementLogLevel() {
-  if (currentLogLevel > LOG_LEVELS.DEBUG) {
-    setLogLevel(currentLogLevel - 1);
-  }
-}
-
-// Signal handlers for dynamic log level control
-process.on("SIGUSR1", () => {
-  console.error("[email-ingest] Received SIGUSR1 - increasing log level");
-  incrementLogLevel();
-});
-
-process.on("SIGUSR2", () => {
-  console.error("[email-ingest] Received SIGUSR2 - decreasing log level");
-  decrementLogLevel();
-});
-
-// Logging functions
-// eslint-disable-next-line no-unused-vars
-function logDebug(msg) {
-  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logInfo(msg) {
-  if (currentLogLevel <= LOG_LEVELS.INFO) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logWarn(msg) {
-  if (currentLogLevel <= LOG_LEVELS.WARN) {
-    console.warn(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logError(msg) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(msg);
-  }
-}
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -373,7 +311,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     await main();
   } catch (err) {
-    console.error(`[email-ingest] Fatal: ${err.message}`);
+    logError(`[email-ingest] Fatal: ${err.message}`);
     const failure = { ok: false, error: err.message, at: new Date().toISOString() };
     ensureDir(REPORTS_DIR);
     fs.writeFileSync(

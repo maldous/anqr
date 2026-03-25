@@ -10,6 +10,10 @@
  *   LINEAR_API_KEY=... node scripts/ops/linear-issue-review.mjs
  */
 
+import { createLogger } from "./lib/logger.mjs";
+
+const { logInfo, logWarn, logError } = createLogger("linear-issue-review");
+
 const LINEAR_API = "https://api.linear.app/graphql";
 const REQUEST_TIMEOUT_MS = 20_000;
 
@@ -238,33 +242,33 @@ const dryRun = process.argv.includes("--dry-run");
 const stats = { done: 0, canceled: 0, updated: 0, skipped: 0, errors: 0 };
 
 async function main() {
-  console.log(`\n=== Linear Issue Review ${dryRun ? "(DRY RUN)" : ""} ===\n`);
+  logInfo(`\n=== Linear Issue Review ${dryRun ? "(DRY RUN)" : ""} ===\n`);
 
   const issues = await listAllOpen();
-  console.log(`Found ${issues.length} open issues\n`);
+  logInfo(`Found ${issues.length} open issues\n`);
 
   const issueMap = new Map(issues.map((i) => [i.identifier, i]));
 
   // 1. Close completed issues as Done
-  console.log("--- CLOSING COMPLETED ISSUES (Done) ---\n");
+  logInfo("--- CLOSING COMPLETED ISSUES (Done) ---\n");
   for (const [identifier, evidence] of Object.entries(CLOSE_AS_DONE)) {
     const issue = issueMap.get(identifier);
     if (!issue) {
-      console.log(`  ⚠️  ${identifier}: not found in open issues (may already be closed)`);
+      logWarn(`  ⚠️  ${identifier}: not found in open issues (may already be closed)`);
       stats.skipped++;
       continue;
     }
     const comment = `✅ **Closed by architecture review**\n\n${evidence}\n\n---\n*Closed by linear-issue-review.mjs — all issues reviewed against current hexagonal architecture with strict contracts.*`;
     if (dryRun) {
-      console.log(`  🔲 ${identifier}: ${issue.title}`);
-      console.log(`     → Would mark Done + comment: ${evidence.substring(0, 80)}...`);
+      logInfo(`  🔲 ${identifier}: ${issue.title}`);
+      logInfo(`     → Would mark Done + comment: ${evidence.substring(0, 80)}...`);
     } else {
       try {
         await addComment(issue.id, comment);
         await updateIssue(issue.id, { stateId: STATES.done });
-        console.log(`  ✅ ${identifier}: ${issue.title} → Done`);
+        logInfo(`  ✅ ${identifier}: ${issue.title} → Done`);
       } catch (err) {
-        console.error(`  ❌ ${identifier}: ${err.message}`);
+        logError(`  ❌ ${identifier}: ${err.message}`);
         stats.errors++;
         continue;
       }
@@ -273,25 +277,25 @@ async function main() {
   }
 
   // 2. Cancel stale issues
-  console.log("\n--- CANCELING STALE ISSUES ---\n");
+  logInfo("\n--- CANCELING STALE ISSUES ---\n");
   for (const [identifier, reason] of Object.entries(CLOSE_AS_CANCELED)) {
     const issue = issueMap.get(identifier);
     if (!issue) {
-      console.log(`  ⚠️  ${identifier}: not found`);
+      logWarn(`  ⚠️  ${identifier}: not found`);
       stats.skipped++;
       continue;
     }
     const comment = `🚫 **Canceled by architecture review**\n\n${reason}\n\n---\n*Canceled by linear-issue-review.mjs*`;
     if (dryRun) {
-      console.log(`  🔲 ${identifier}: ${issue.title}`);
-      console.log(`     → Would cancel: ${reason.substring(0, 80)}...`);
+      logInfo(`  🔲 ${identifier}: ${issue.title}`);
+      logInfo(`     → Would cancel: ${reason.substring(0, 80)}...`);
     } else {
       try {
         await addComment(issue.id, comment);
         await updateIssue(issue.id, { stateId: STATES.canceled });
-        console.log(`  🚫 ${identifier}: ${issue.title} → Canceled`);
+        logInfo(`  🚫 ${identifier}: ${issue.title} → Canceled`);
       } catch (err) {
-        console.error(`  ❌ ${identifier}: ${err.message}`);
+        logError(`  ❌ ${identifier}: ${err.message}`);
         stats.errors++;
         continue;
       }
@@ -300,23 +304,23 @@ async function main() {
   }
 
   // 3. Update issues with scope corrections
-  console.log("\n--- UPDATING ISSUE SCOPE ---\n");
+  logInfo("\n--- UPDATING ISSUE SCOPE ---\n");
   for (const [identifier, update] of Object.entries(SCOPE_UPDATES)) {
     const issue = issueMap.get(identifier);
     if (!issue) {
-      console.log(`  ⚠️  ${identifier}: not found`);
+      logWarn(`  ⚠️  ${identifier}: not found`);
       stats.skipped++;
       continue;
     }
     if (dryRun) {
-      console.log(`  🔲 ${identifier}: ${issue.title}`);
-      console.log(`     → Would add scope review comment`);
+      logInfo(`  🔲 ${identifier}: ${issue.title}`);
+      logInfo(`     → Would add scope review comment`);
     } else {
       try {
         await addComment(issue.id, update.comment + "\n\n---\n*Added by linear-issue-review.mjs*");
-        console.log(`  📝 ${identifier}: ${issue.title} → Updated`);
+        logInfo(`  📝 ${identifier}: ${issue.title} → Updated`);
       } catch (err) {
-        console.error(`  ❌ ${identifier}: ${err.message}`);
+        logError(`  ❌ ${identifier}: ${err.message}`);
         stats.errors++;
         continue;
       }
@@ -325,17 +329,17 @@ async function main() {
   }
 
   // Summary
-  console.log("\n=== SUMMARY ===\n");
-  console.log(`  Done:     ${stats.done}`);
-  console.log(`  Canceled: ${stats.canceled}`);
-  console.log(`  Updated:  ${stats.updated}`);
-  console.log(`  Skipped:  ${stats.skipped}`);
-  console.log(`  Errors:   ${stats.errors}`);
-  console.log(
+  logInfo("\n=== SUMMARY ===\n");
+  logInfo(`  Done:     ${stats.done}`);
+  logInfo(`  Canceled: ${stats.canceled}`);
+  logInfo(`  Updated:  ${stats.updated}`);
+  logInfo(`  Skipped:  ${stats.skipped}`);
+  logInfo(`  Errors:   ${stats.errors}`);
+  logInfo(
     `  Valid (no changes): ${issues.length - stats.done - stats.canceled - stats.updated - stats.skipped}`,
   );
-  console.log(`\n  Total open issues processed: ${issues.length}`);
-  if (dryRun) console.log("\n  ⚠️  DRY RUN — no changes were made\n");
+  logInfo(`\n  Total open issues processed: ${issues.length}`);
+  if (dryRun) logWarn("\n  ⚠️  DRY RUN — no changes were made\n");
 }
 
 await main();

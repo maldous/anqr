@@ -13,6 +13,10 @@
  *   1 = Ollama unavailable or model missing
  */
 
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logInfo } = createLogger("ollama-audit");
+
 const OLLAMA_BASE = process.env.OLLAMA_API_BASE || "http://localhost:11434";
 const PINNED_MODEL = "qwen2.5-coder:3b-instruct";
 const PROMPT_TIMEOUT_MS = 60_000;
@@ -24,7 +28,7 @@ function record(name, pass, detail) {
   const entry = { name, pass, detail, ts: new Date().toISOString() };
   results.push(entry);
   const icon = pass ? "✅" : "❌";
-  console.error(`${icon} ${name}: ${detail}`);
+  logInfo(`${icon} ${name}: ${detail}`);
 }
 
 async function checkReachable() {
@@ -97,7 +101,7 @@ async function checkModelResponds() {
 }
 
 async function main() {
-  console.error(`[ollama-local-audit] Checking ${PINNED_MODEL} at ${OLLAMA_BASE}\n`);
+  logInfo(`[ollama-local-audit] Checking ${PINNED_MODEL} at ${OLLAMA_BASE}\n`);
 
   const reachable = await checkReachable();
   if (!reachable) {
@@ -121,7 +125,7 @@ async function main() {
 function printSummary() {
   const passed = results.filter((r) => r.pass).length;
   const total = results.length;
-  console.error(`\n[ollama-local-audit] ${passed}/${total} checks passed`);
+  logInfo(`\n[ollama-local-audit] ${passed}/${total} checks passed`);
 }
 
 await main();

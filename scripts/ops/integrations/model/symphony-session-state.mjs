@@ -14,6 +14,9 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logInfo } = createLogger("session-state");
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../..");
@@ -178,7 +181,7 @@ export function cleanupExpiredSessions() {
 
   if (cleaned > 0) {
     saveSessionState(state);
-    console.log(`[session-state] 🧹 Cleaned up ${cleaned} expired sessions`);
+    logInfo(`[session-state] 🧹 Cleaned up ${cleaned} expired sessions`);
   }
 
   return cleaned;
@@ -231,7 +234,7 @@ export function tuneAdaptiveParams(providerStats) {
     return params;
   }
 
-  console.log(`[session-state] 🎯 Self-tuning adaptive parameters...`);
+  logInfo(`[session-state] 🎯 Self-tuning adaptive parameters...`);
 
   let tuned = 0;
 
@@ -255,7 +258,7 @@ export function tuneAdaptiveParams(providerStats) {
       );
       if (newLimit !== currentLimit) {
         params.freeTurnLimit.perProvider[providerName] = newLimit;
-        console.log(
+        logInfo(
           `[session-state]   ⬆️ ${providerName}: ${currentLimit} → ${newLimit} turns (high success)`,
         );
         tuned++;
@@ -270,7 +273,7 @@ export function tuneAdaptiveParams(providerStats) {
       );
       if (newLimit !== currentLimit) {
         params.freeTurnLimit.perProvider[providerName] = newLimit;
-        console.log(
+        logInfo(
           `[session-state]   ⬇️ ${providerName}: ${currentLimit} → ${newLimit} turns (low success)`,
         );
         tuned++;
@@ -282,9 +285,9 @@ export function tuneAdaptiveParams(providerStats) {
   saveAdaptiveParams(params);
 
   if (tuned > 0) {
-    console.log(`[session-state] ✅ Tuned ${tuned} provider turn limits`);
+    logInfo(`[session-state] ✅ Tuned ${tuned} provider turn limits`);
   } else {
-    console.log(`[session-state] ✅ No tuning needed (all providers stable)`);
+    logInfo(`[session-state] ✅ No tuning needed (all providers stable)`);
   }
 
   return params;
@@ -319,7 +322,7 @@ export function shouldTriggerEvalCycle() {
     params.evalCycle.counter = 0;
     params.evalCycle.lastEval = now;
     saveAdaptiveParams(params);
-    console.log(`[session-state] 🔄 Triggering periodic evaluation cycle (all providers will be sampled)`);
+    logInfo(`[session-state] 🔄 Triggering periodic evaluation cycle (all providers will be sampled)`);
   }
 
   return shouldEval;
@@ -355,7 +358,7 @@ export function getEvaluationSampleProvider(allProviderNames, providerStats) {
 
   const selected = providerScores[0]?.name;
   if (selected) {
-    console.log(
+    logInfo(
       `[session-state] 🎯 Evaluation cycle: forcing sample of underused provider "${selected}"`
     );
   }
@@ -375,5 +378,5 @@ export function getAdaptiveParams() {
  */
 export function resetAdaptiveParams() {
   saveAdaptiveParams({ ...DEFAULT_ADAPTIVE_PARAMS });
-  console.log(`[session-state] 🔄 Reset adaptive parameters to defaults`);
+  logInfo(`[session-state] 🔄 Reset adaptive parameters to defaults`);
 }

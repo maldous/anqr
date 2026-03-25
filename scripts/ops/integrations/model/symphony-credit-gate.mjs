@@ -41,6 +41,9 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Codex } from "@openai/codex-sdk";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logDebug, logInfo, logWarn } = createLogger("credit-gate");
 import {
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PROVIDER_FAILURE_WINDOW_SECS,
@@ -221,13 +224,13 @@ async function probeCodexSdk(model) {
     // Log the error and record failure so credit-gate can try fallback providers
     const errStr = String(err).toLowerCase();
     if (errStr.includes("usage limit") || errStr.includes("quota")) {
-      console.error(`[credit-gate] codex: unavailable (quota exhausted)`);
+      logWarn(`[credit-gate] codex: unavailable (quota exhausted)`);
       recordProviderFailure("codex");
     } else if (errStr.includes("timeout")) {
-      console.error(`[credit-gate] codex: unavailable (timeout)`);
+      logWarn(`[credit-gate] codex: unavailable (timeout)`);
       recordProviderFailure("codex");
     } else {
-      console.error(`[credit-gate] codex: unavailable (${err.message || err})`);
+      logWarn(`[credit-gate] codex: unavailable (${err.message || err})`);
       recordProviderFailure("codex");
     }
     return false;
@@ -1008,26 +1011,26 @@ export function logProviderStats(options = {}) {
         ? new Set(options.excludeNames)
         : null;
 
-  console.error(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
+  logInfo(`[credit-gate] 📊 Provider Rankings (dynamic scoring):`);
   if (ranked.length > 0) {
     for (const { rank, name, score, tier } of ranked) {
       const data = stats[name];
-      console.error(
+      logInfo(
         `[credit-gate]   #${rank} ${name} [${tier}]: score=${score}, ${data.selections} sel, ${data.successRate} success, ${data.avgDurationMs}ms avg`,
       );
     }
   } else {
-    console.error(
+    logInfo(
       `[credit-gate]   (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`,
     );
   }
 
-  console.error(`[credit-gate] 📈 Provider Details:`);
+  logInfo(`[credit-gate] 📈 Provider Details:`);
   for (const [name, data] of Object.entries(stats).sort(
     (a, b) => b[1].selections - a[1].selections,
   )) {
     if (excludeSet && excludeSet.has(name)) continue;
-    console.error(
+    logInfo(
       `[credit-gate]   ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
     );
   }
@@ -1177,12 +1180,12 @@ export async function probeAllProviders(options = {}) {
   const elapsed = Date.now() - startTime;
   const available = probeResults.filter((r) => r.available);
   const unavailable = probeResults.filter((r) => !r.available && r.status !== "excluded");
-  console.error(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
-  console.error(
+  logInfo(`[credit-gate] Probed ${probeResults.length} providers in ${elapsed}ms`);
+  logInfo(
     `[credit-gate]   ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`,
   );
   if (unavailable.length > 0) {
-    console.error(
+    logInfo(
       `[credit-gate]   ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`,
     );
   }
@@ -1236,33 +1239,33 @@ async function tryProvider(provider) {
   const apiKey = await resolveProviderApiKey(provider);
 
   if (provider.envVar && !apiKey) {
-    console.error(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
+    logDebug(`[credit-gate] ${provider.name}: skipped (no ${provider.envVar})`);
     return null;
   }
 
   if (isRecentlyFailed(provider.name)) {
-    console.error(`[credit-gate] ${provider.name}: skipped (recently failed)`);
+    logDebug(`[credit-gate] ${provider.name}: skipped (recently failed)`);
     return null;
   }
 
   if (provider.requiresSdk) {
-    console.error(`[credit-gate] ${provider.name}: using SDK ✅`);
+    logInfo(`[credit-gate] ${provider.name}: using SDK ✅`);
     clearProviderFailure(provider.name);
     recordProviderSelection(provider.name);
     return toSelectedProvider(provider, apiKey);
   }
 
-  console.error(`[credit-gate] ${provider.name}: probing...`);
+  logDebug(`[credit-gate] ${provider.name}: probing...`);
   const available = provider.probe
     ? await provider.probe(provider, apiKey)
     : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
 
   if (!available) {
-    console.error(`[credit-gate] ${provider.name}: unavailable ❌`);
+    logDebug(`[credit-gate] ${provider.name}: unavailable ❌`);
     return null;
   }
 
-  console.error(`[credit-gate] ${provider.name}: available ✅`);
+  logInfo(`[credit-gate] ${provider.name}: available ✅`);
   clearProviderFailure(provider.name);
   recordProviderSelection(provider.name);
   return toSelectedProvider(provider, apiKey);

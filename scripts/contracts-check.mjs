@@ -2,6 +2,9 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "./ops/lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("contracts-check");
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contractsRoot = path.join(repoRoot, "packages", "contracts");
@@ -46,7 +49,7 @@ async function collectFiles(rootPath) {
 
 async function main() {
   if (!(await pathExists(contractsRoot))) {
-    console.log(
+    logInfo(
       "contracts-check: packages/contracts/ does not exist yet; structural checks skipped.",
     );
     return;
@@ -66,7 +69,7 @@ async function main() {
   }
 
   if (actualPackageDirs.length === 0) {
-    console.log(
+    logInfo(
       "contracts-check: no packages/contracts/* workspace packages yet; structural checks skipped.",
     );
     return;
@@ -168,13 +171,13 @@ async function main() {
   }
 
   if (errors.length > 0) {
-    console.error("contracts-check failed:");
-    for (const error of errors) console.error(`- ${error}`);
+    logError("contracts-check failed:");
+    for (const error of errors) logError(`- ${error}`);
     process.exitCode = 1;
     return;
   }
 
-  console.log(`contracts-check: validated ${actualPackageDirs.length} contract package(s)`);
+  logInfo(`contracts-check: validated ${actualPackageDirs.length} contract package(s)`);
 }
 
 await main();

@@ -9,6 +9,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("notify-impl");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../../..");
@@ -106,7 +109,7 @@ export function sendNotification({ subject, body, severity = "info" }) {
   const state = loadState();
   const dedupCheck = checkDedup(state, formattedSubject);
   if (!dedupCheck.allowed) {
-    console.error(`[notify] Dedup: ${dedupCheck.reason} — skipping: ${formattedSubject}`);
+    logInfo(`[notify] Dedup: ${dedupCheck.reason} — skipping: ${formattedSubject}`);
     return { sent: false, reason: dedupCheck.reason };
   }
 
@@ -133,12 +136,12 @@ export function sendNotification({ subject, body, severity = "info" }) {
 
   if (proc.status !== 0) {
     const err = (proc.stderr || proc.error?.message || "unknown error").trim();
-    console.error(`[notify] msmtp failed (exit ${proc.status}): ${err}`);
+    logError(`[notify] msmtp failed (exit ${proc.status}): ${err}`);
     return { sent: false, reason: `msmtp exit ${proc.status}: ${err}` };
   }
 
   state.sends.push({ ts: Date.now(), subject: formattedSubject });
   saveState(state);
-  console.error(`[notify] Sent: ${formattedSubject}`);
+  logInfo(`[notify] Sent: ${formattedSubject}`);
   return { sent: true };
 }

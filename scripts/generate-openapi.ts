@@ -3,6 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateOpenApi } from "@ts-rest/open-api";
 import { qrApiContract } from "../packages/contracts/api/src";
+import { createLogger } from "./ops/lib/logger.mjs";
+
+const { logInfo } = createLogger("generate-openapi");
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDir = path.join(repoRoot, "docs", "api");
@@ -19,4 +22,4 @@ const openApiDocument = generateOpenApi(qrApiContract, {
 
 await mkdir(outputDir, { recursive: true });
 await writeFile(outputPath, JSON.stringify(openApiDocument, null, 2));
-console.log(`Generated ${path.relative(repoRoot, outputPath)}`);
+logInfo(`Generated ${path.relative(repoRoot, outputPath)}`);

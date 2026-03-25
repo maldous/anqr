@@ -31,6 +31,9 @@ import {
   TARGET_MIN,
   RUNNER_STUCK_THRESHOLD_MS,
 } from "../symphony-config.mjs";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logWarn, logError } = createLogger("runner");
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
 import { recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
 import { runAgent, continueAgent } from "../symphony-agent.mjs";
@@ -78,72 +81,7 @@ const LEASE_TTL_MS = Number(
 const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319/v1";
 const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_RUNNER_MODEL || "symphony/main";
 
-// --------------------------------------------------------------------------
-// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
-// --------------------------------------------------------------------------
 
-const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-const envLogLevel = process.env.SYMPHONY_RUNNER_LOG_LEVEL?.toUpperCase();
-const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
-let currentLogLevel = initialLevel;
-
-function setLogLevel(level) {
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.error(`[runner] 📊 Log level: ${levelName}`);
-  currentLogLevel = level;
-}
-
-function incrementLogLevel() {
-  if (currentLogLevel < LOG_LEVELS.ERROR) {
-    setLogLevel(currentLogLevel + 1);
-  }
-}
-
-function decrementLogLevel() {
-  if (currentLogLevel > LOG_LEVELS.DEBUG) {
-    setLogLevel(currentLogLevel - 1);
-  }
-}
-
-// Signal handlers for dynamic log level control
-process.on("SIGUSR1", () => {
-  console.error("[runner] Received SIGUSR1 - increasing log level");
-  incrementLogLevel();
-});
-
-process.on("SIGUSR2", () => {
-  console.error("[runner] Received SIGUSR2 - decreasing log level");
-  decrementLogLevel();
-});
-
-// Logging functions
-// eslint-disable-next-line no-unused-vars
-function logDebug(msg) {
-  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logInfo(msg) {
-  if (currentLogLevel <= LOG_LEVELS.INFO) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logWarn(msg) {
-  if (currentLogLevel <= LOG_LEVELS.WARN) {
-    console.warn(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logError(msg) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(msg);
-  }
-}
 
 function getRunnerProvider() {
   return {
@@ -227,7 +165,7 @@ function gitRevert() {
     execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
     return true;
   } catch (err) {
-    console.error(`[runner] Git revert failed: ${err.message}`);
+    logError(`[runner] Git revert failed: ${err.message}`);
     return false;
   }
 }
@@ -287,7 +225,7 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
     }
     return true;
   } catch (err) {
-    console.error(`[runner] Git commit failed: ${err.message}`);
+    logError(`[runner] Git commit failed: ${err.message}`);
     return false;
   }
 }
@@ -297,7 +235,7 @@ function gitPush() {
     execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
     return true;
   } catch (err) {
-    console.error(`[runner] Git push failed: ${err.message}`);
+    logError(`[runner] Git push failed: ${err.message}`);
     return false;
   }
 }
@@ -330,7 +268,7 @@ async function maybeRunPreflights() {
   const cachedHash = getGlobalValue("baseline.manifestHash");
   const cachedPass = getGlobalValue("baseline.pass");
   if (cachedHead === head && cachedHash === manifestHash && cachedPass === true) {
-    console.log("[runner] Baseline cache hit — skipping full pre-flights");
+    logInfo("[runner] Baseline cache hit — skipping full pre-flights");
     return { pass: true, cached: true };
   }
   const result = runGlobalPreflights(ROOT);
@@ -401,9 +339,9 @@ async function runSonarPostCommit(issueIdentifier) {
       resolveStale: true,
       requeueToTodo: false,
     });
-    console.log(`[runner] Sonar post-commit complete for ${issueIdentifier}`);
+    logInfo(`[runner] Sonar post-commit complete for ${issueIdentifier}`);
   } catch (err) {
-    console.warn(`[runner] Sonar post-commit scan failed (non-fatal): ${err.message}`);
+    logWarn(`[runner] Sonar post-commit scan failed (non-fatal): ${err.message}`);
   }
 }
 
@@ -413,7 +351,7 @@ async function executeIssue(issue, dryRun = false) {
 
   const state = getIssueState(issue.identifier);
   const attempt = Number(state.retry_count || 0) + 1;
-  console.log(
+  logInfo(
     `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
   );
 
@@ -451,7 +389,7 @@ async function executeIssue(issue, dryRun = false) {
     ttlMs: LEASE_TTL_MS,
   });
   if (!lease.ok) {
-    console.log(`[runner] Lease unavailable for ${issue.identifier} — skipping`);
+    logInfo(`[runner] Lease unavailable for ${issue.identifier} — skipping`);
     return "skip";
   }
 
@@ -575,7 +513,7 @@ async function executeIssue(issue, dryRun = false) {
       // If agent needs continuation with active subgoals, continue the work
       // instead of returning to Todo for a fresh start
       if (needsContinuation && agentResult.messages && agentResult.messages.length > 0) {
-        console.log(`[runner] 🔄 Agent has active subgoals - continuing with previous session...`);
+        logInfo(`[runner] 🔄 Agent has active subgoals - continuing with previous session...`);
         heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
 
         try {
@@ -591,14 +529,14 @@ async function executeIssue(issue, dryRun = false) {
           agentResult = continueResult;
           changedFiles = gitDiffNames();
         } catch (err) {
-          console.error(`[runner] Continuation failed: ${err.message}`);
+          logError(`[runner] Continuation failed: ${err.message}`);
           // Fall through to handle as no changes
         }
 
         // Check result after continuation
         if (changedFiles.length > 0) {
           // Continuation produced changes - proceed to validation
-          console.log(`[runner] ✅ Continuation produced changes: ${changedFiles.length} files`);
+          logInfo(`[runner] ✅ Continuation produced changes: ${changedFiles.length} files`);
         } else if (agentResult.needsContinuation) {
           // Still needs continuation after second attempt - return to Todo with cooldown
           // to avoid infinite loop
@@ -615,7 +553,7 @@ async function executeIssue(issue, dryRun = false) {
             to: "Todo",
             runId: RUN_ID,
           });
-          console.log(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
+          logInfo(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
           // Track continuation exhausted as failure
           if (provider?.name) {
             recordLinearCompletion(provider.name, {
@@ -664,7 +602,7 @@ async function executeIssue(issue, dryRun = false) {
         }
         // Clear any cooldown so it doesn't get re-queued
         clearCooldown(issue.identifier);
-        console.log(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (externally)`);
+        logInfo(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (externally)`);
         return "done";
       }
 
@@ -685,7 +623,7 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
-        console.log(
+        logInfo(
           `[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`,
         );
         // Track active subgoals without messages as failure
@@ -899,7 +837,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
     }
 
     // Log completion with issue context
-    console.log(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title}`);
+    logInfo(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title}`);
 
     if (!RUNNER_AUTO_PUSH) {
       await addComment(
@@ -920,16 +858,16 @@ ${String(r.detail).slice(0, 1000)}\n`,
 }
 
 function showStatus() {
-  console.log("[runner] Symphony Runner Status\n");
+  logInfo("[runner] Symphony Runner Status\n");
   if (existsSync(LOCK_FILE)) {
     const pid = readFileSync(LOCK_FILE, "utf-8").trim();
-    console.log(`  Lock: ${isProcessAlive(Number(pid)) ? "🔒 LOCKED" : "🔓 stale"} (PID ${pid})`);
+    logInfo(`  Lock: ${isProcessAlive(Number(pid)) ? "🔒 LOCKED" : "🔓 stale"} (PID ${pid})`);
   } else {
-    console.log("  Lock: 🔓 available");
+    logInfo("  Lock: 🔓 available");
   }
-  console.log(`  Git clean: ${gitIsClean() ? "✅" : "❌"}`);
-  console.log(`  LINEAR_API_KEY: ${process.env.LINEAR_API_KEY ? "✅" : "❌ not set"}`);
-  console.log(`  Run ID: ${RUN_ID}`);
+  logInfo(`  Git clean: ${gitIsClean() ? "✅" : "❌"}`);
+  logInfo(`  LINEAR_API_KEY: ${process.env.LINEAR_API_KEY ? "✅" : "❌ not set"}`);
+  logInfo(`  Run ID: ${RUN_ID}`);
 }
 
 async function main() {
@@ -942,16 +880,16 @@ async function main() {
     process.exit(0);
   }
   if (!doOnce) {
-    console.error("Usage: symphony-runner.mjs --once [--dry-run] | --status");
+    logError("Usage: symphony-runner.mjs --once [--dry-run] | --status");
     process.exit(2);
   }
-  console.log(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+  logInfo(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   if (!process.env.LINEAR_API_KEY) {
-    console.error("[runner] LINEAR_API_KEY is not set");
+    logError("[runner] LINEAR_API_KEY is not set");
     process.exit(1);
   }
   if (!acquireLock()) {
-    console.log("[runner] Another runner instance is active — exiting");
+    logInfo("[runner] Another runner instance is active — exiting");
     process.exit(0);
   }
   process.on("exit", releaseLock);
@@ -966,7 +904,7 @@ async function main() {
 
   try {
     if (!gitIsClean()) {
-      console.error(
+      logError(
         "[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree",
       );
       process.exit(1);
@@ -975,7 +913,7 @@ async function main() {
     const preflight = dryRun ? { pass: true } : await maybeRunPreflights();
     const baselineOnly = !preflight.pass;
     if (!preflight.pass) {
-      console.warn(
+      logWarn(
         `[runner] Baseline pre-flight ${preflight.check} failed — only baseline-repair issues may run this cycle`,
       );
     }
@@ -985,7 +923,7 @@ async function main() {
       const { findExpiredLeases } = await import("../symphony-state.mjs");
       const expiredLeases = findExpiredLeases();
       for (const { issueIdentifier } of expiredLeases) {
-        console.log(`[runner] Clearing expired lease for ${issueIdentifier}`);
+        logInfo(`[runner] Clearing expired lease for ${issueIdentifier}`);
         const { releaseLease } = await import("../symphony-state.mjs");
         releaseLease(issueIdentifier);
       }
@@ -993,7 +931,7 @@ async function main() {
       // Now check for stuck In Progress issues - recover them to Todo so they can be picked up
       const snap = await getQueueSnapshot();
       if (snap.inProgress.all.length > 0) {
-        console.log(`[runner] Checking for stuck In Progress issues...`);
+        logInfo(`[runner] Checking for stuck In Progress issues...`);
         const { detectStuckWork } = await import("./symphony-queue-control.mjs");
         await detectStuckWork(snap, false);
       }
@@ -1027,13 +965,13 @@ async function main() {
     }
 
     if (!executed) {
-      console.log(`[runner] No eligible issues found for execution`);
+      logInfo(`[runner] No eligible issues found for execution`);
     }
-    console.log(`[runner] Run completed at ${new Date().toISOString()}`);
+    logInfo(`[runner] Run completed at ${new Date().toISOString()}`);
     process.exit(0);
   } catch (err) {
-    console.error(`[runner] Fatal error: ${err.message}`);
-    console.error(err.stack);
+    logError(`[runner] Fatal error: ${err.message}`);
+    logError(err.stack);
     process.exit(1);
   }
 }

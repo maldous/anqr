@@ -4,6 +4,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, copyFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("nightly");
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");
@@ -13,79 +16,14 @@ const dryRun = process.argv.includes("--dry-run");
 const dryRunFlag = dryRun ? " --dry-run" : "";
 const steps = [];
 
-// --------------------------------------------------------------------------
-// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
-// --------------------------------------------------------------------------
 
-const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-const envLogLevel = process.env.NIGHTLY_OPS_LOG_LEVEL?.toUpperCase();
-const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
-let currentLogLevel = initialLevel;
-
-function setLogLevel(level) {
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.error(`[nightly] 📊 Log level: ${levelName}`);
-  currentLogLevel = level;
-}
-
-function incrementLogLevel() {
-  if (currentLogLevel < LOG_LEVELS.ERROR) {
-    setLogLevel(currentLogLevel + 1);
-  }
-}
-
-function decrementLogLevel() {
-  if (currentLogLevel > LOG_LEVELS.DEBUG) {
-    setLogLevel(currentLogLevel - 1);
-  }
-}
-
-// Signal handlers for dynamic log level control
-process.on("SIGUSR1", () => {
-  console.error("[nightly] Received SIGUSR1 - increasing log level");
-  incrementLogLevel();
-});
-
-process.on("SIGUSR2", () => {
-  console.error("[nightly] Received SIGUSR2 - decreasing log level");
-  decrementLogLevel();
-});
-
-// Logging functions
-// eslint-disable-next-line no-unused-vars
-function logDebug(msg) {
-  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logInfo(msg) {
-  if (currentLogLevel <= LOG_LEVELS.INFO) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logWarn(msg) {
-  if (currentLogLevel <= LOG_LEVELS.WARN) {
-    console.warn(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logError(msg) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(msg);
-  }
-}
 
 function runStep(step) {
   const start = Date.now();
-  console.error(`\n${"=".repeat(60)}`);
-  console.error(`[nightly] Step: ${step.name}`);
-  console.error(`[nightly] Command: ${step.command}`);
-  console.error("=".repeat(60) + "\n");
+  logInfo(`\n${"=".repeat(60)}`);
+  logInfo(`[nightly] Step: ${step.name}`);
+  logInfo(`[nightly] Command: ${step.command}`);
+  logInfo("=".repeat(60) + "\n");
 
   let exitCode = 0;
   const skipped = false;
@@ -107,7 +45,7 @@ function runStep(step) {
     skipped,
   };
   steps.push(result);
-  console.error(`\n${exitCode === 0 ? "✅" : "⚠️"} [nightly] ${step.name}: exit=${exitCode}`);
+  logInfo(`\n${exitCode === 0 ? "✅" : "⚠️"} [nightly] ${step.name}: exit=${exitCode}`);
   return result;
 }
 
@@ -118,22 +56,22 @@ function archiveReport() {
   const ts = new Date().toISOString().replaceAll(/[:.]/g, "-").replaceAll("T", "_").slice(0, 19);
   const archivePath = resolve(archiveDir, `report-${ts}.json`);
   copyFileSync(LATEST_REPORT, archivePath);
-  console.error(`[nightly] Report archived to ${archivePath}`);
+  logInfo(`[nightly] Report archived to ${archivePath}`);
 }
 
 function printSummary() {
-  console.error(`\n${"=".repeat(60)}`);
-  console.error("[nightly] Pipeline summary");
-  console.error("=".repeat(60));
+  logInfo(`\n${"=".repeat(60)}`);
+  logInfo("[nightly] Pipeline summary");
+  logInfo("=".repeat(60));
   for (const step of steps) {
-    console.error(
+    logInfo(
       `  ${step.exitCode === 0 ? "✅" : "⚠️"} ${step.name}: exit=${step.exitCode} (${(step.duration_ms / 1000).toFixed(1)}s) [${step.severity}]`,
     );
   }
 }
 
 async function main() {
-  console.error(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+  logInfo(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   const plan = [
     {
       name: "harness-report",
@@ -194,7 +132,7 @@ async function main() {
   let degraded = false;
   for (const step of plan) {
     if (hardFailure && step.severity === "blocking") {
-      console.error(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
+      logInfo(`[nightly] Skipping ${step.name} because an earlier blocking step failed`);
       steps.push({
         name: step.name,
         exitCode: 99,
@@ -223,6 +161,6 @@ async function main() {
 try {
   await main();
 } catch (err) {
-  console.error(`[nightly] Fatal: ${err.message}`);
+  logError(`[nightly] Fatal: ${err.message}`);
   process.exit(1);
 }

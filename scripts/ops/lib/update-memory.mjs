@@ -10,6 +10,9 @@
 
 import { appendFile } from "node:fs/promises";
 import path from "node:path";
+import { createLogger } from "./logger.mjs";
+
+const { logInfo, logWarn } = createLogger("update-memory");
 
 /**
  * Append a timestamped note to MEMORY.md
@@ -22,8 +25,8 @@ export async function updateMemory(note, cwd = process.cwd()) {
   const entry = `\n### ${timestamp} - ${note}\n`;
   try {
     await appendFile(path.join(cwd, "MEMORY.md"), entry);
-    console.log(`[update-memory] 📝 Updated MEMORY.md: ${note}`);
+    logInfo(`[update-memory] 📝 Updated MEMORY.md: ${note}`);
   } catch (err) {
-    console.log(`[update-memory] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+    logWarn(`[update-memory] ⚠️ Failed to update MEMORY.md: ${err.message}`);
   }
 }

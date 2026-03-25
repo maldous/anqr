@@ -7,6 +7,7 @@ export const DEFAULT_GLOBS = [
   "!**/node_modules/**",
   "!**/.git/**",
   "!**/dist/**",
+  "!scripts/**",
 ];
 
 export const normalizePath = (filePath) =>

@@ -25,6 +25,9 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("linear-guardian");
 import {
   createIssue,
   updateIssue,
@@ -151,7 +154,7 @@ function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };
   actions.push(entry);
   const icons = { create: "🆕", comment: "💬", hygiene: "🏷️", skip: "⏭️", stale: "⏰", info: "ℹ️" };
-  console.error(`${icons[type] || "•"} ${type}: ${detail}`);
+  logInfo(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 
 async function processFailingCheck(check, report, queueDepth, dryRun) {
@@ -243,21 +246,21 @@ async function checkStaleIssues(dryRun) {
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
 
-  console.error(`[linear-guardian]${dryRun ? " (DRY RUN)" : ""} starting\n`);
+  logInfo(`[linear-guardian]${dryRun ? " (DRY RUN)" : ""} starting\n`);
 
   if (!existsSync(REPORT_PATH)) {
-    console.error(`[linear-guardian] No report found at ${REPORT_PATH}`);
-    console.error("[linear-guardian] Run harness-report.mjs first.");
+    logError(`[linear-guardian] No report found at ${REPORT_PATH}`);
+    logError("[linear-guardian] Run harness-report.mjs first.");
     process.exit(1);
   }
 
   const report = JSON.parse(readFileSync(REPORT_PATH, "utf-8"));
   const failures = report.checks.filter((c) => !c.pass);
 
-  console.error(
+  logInfo(
     `[linear-guardian] Report: ${report.profile} profile, ${report.summary.passed}/${report.summary.total} passed, ${failures.length} failures`,
   );
-  console.error(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
+  logInfo(`[linear-guardian] Report timestamp: ${report.timestamp}\n`);
 
   if (failures.length === 0) {
     logAction("info", "No harness failures — nothing to do");
@@ -267,7 +270,7 @@ async function main() {
 
   const queue = await getQueueDepth();
   let currentDepth = queue.automatable;
-  console.error(
+  logInfo(
     `[linear-guardian] Queue depth: ${currentDepth} automatable / ${queue.total} total (max: ${TARGET_MAX})\n`,
   );
 
@@ -278,13 +281,13 @@ async function main() {
     }
   }
 
-  console.error("");
+  logInfo("");
   const staleCount = await checkStaleIssues(dryRun);
   if (staleCount === 0) {
     logAction("info", "No stale in-progress issues");
   }
 
-  console.error("");
+  logInfo("");
   printSummary();
   process.exit(0);
 }
@@ -295,7 +298,7 @@ function printSummary() {
     counts[a.type] = (counts[a.type] || 0) + 1;
   }
   const parts = Object.entries(counts).map(([k, v]) => `${k}=${v}`);
-  console.error(`[linear-guardian] Summary: ${parts.join(", ") || "no actions"}`);
+  logInfo(`[linear-guardian] Summary: ${parts.join(", ") || "no actions"}`);
 }
 
 await main();

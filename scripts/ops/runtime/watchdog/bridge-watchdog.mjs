@@ -30,72 +30,9 @@ const MONITORED_SERVICES = [
   { name: "anqr-codebuff-bridge.service", shortName: "codebuff" },
 ];
 
-// --------------------------------------------------------------------------
-// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
-// --------------------------------------------------------------------------
+import { createLogger } from "../../lib/logger.mjs";
 
-const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-const envLogLevel = process.env.WATCHDOG_LOG_LEVEL?.toUpperCase();
-const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
-let currentLogLevel = initialLevel;
-
-function setLogLevel(level) {
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.error(`[watchdog] 📊 Log level: ${levelName}`);
-  currentLogLevel = level;
-}
-
-function incrementLogLevel() {
-  if (currentLogLevel < LOG_LEVELS.ERROR) {
-    setLogLevel(currentLogLevel + 1);
-  }
-}
-
-function decrementLogLevel() {
-  if (currentLogLevel > LOG_LEVELS.DEBUG) {
-    setLogLevel(currentLogLevel - 1);
-  }
-}
-
-// Signal handlers for dynamic log level control
-process.on("SIGUSR1", () => {
-  console.error("[watchdog] Received SIGUSR1 - increasing log level");
-  incrementLogLevel();
-});
-
-process.on("SIGUSR2", () => {
-  console.error("[watchdog] Received SIGUSR2 - decreasing log level");
-  decrementLogLevel();
-});
-
-// Logging functions
-// eslint-disable-next-line no-unused-vars
-function logDebug(msg) {
-  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logInfo(msg) {
-  if (currentLogLevel <= LOG_LEVELS.INFO) {
-    console.log(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logWarn(msg) {
-  if (currentLogLevel <= LOG_LEVELS.WARN) {
-    console.warn(msg);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function logError(msg) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(msg);
-  }
-}
+const { logInfo, logWarn, logError } = createLogger("watchdog");
 
 // Track restart timestamps and activating state
 const restartTimestamps = new Map();
@@ -106,9 +43,9 @@ async function updateMemory(note) {
   const entry = `\n### ${timestamp} - ${note}\n`;
   try {
     await appendFile(path.join(process.cwd(), "MEMORY.md"), entry);
-    console.log(`[watchdog] 📝 Updated MEMORY.md: ${note}`);
+    logInfo(`[watchdog] 📝 Updated MEMORY.md: ${note}`);
   } catch (err) {
-    console.log(`[watchdog] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+    logWarn(`[watchdog] ⚠️ Failed to update MEMORY.md: ${err.message}`);
   }
 }
 
@@ -159,7 +96,7 @@ function getCurrentCommit() {
       timeout: 5000,
     }).trim();
   } catch (err) {
-    console.error(`[watchdog] Failed to get current commit: ${err.message}`);
+    logError(`[watchdog] Failed to get current commit: ${err.message}`);
     return null;
   }
 }
@@ -172,7 +109,7 @@ function getPreviousCommit() {
       timeout: 5000,
     }).trim();
   } catch (err) {
-    console.error(`[watchdog] Failed to get previous commit: ${err.message}`);
+    logError(`[watchdog] Failed to get previous commit: ${err.message}`);
     return null;
   }
 }
@@ -192,7 +129,7 @@ async function verifyAndNotifyRecovery(serviceName, shortName) {
         ],
       });
     } catch (err) {
-      console.error(`[watchdog] ⚠️ Failed to send recovery notification: ${err.message}`);
+      logError(`[watchdog] ⚠️ Failed to send recovery notification: ${err.message}`);
     }
   }
 }
@@ -202,12 +139,12 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
   const previousCommit = getPreviousCommit();
 
   if (!currentCommit || !previousCommit) {
-    console.error(`[watchdog] ❌ Cannot rollback ${shortName}: failed to get commit info`);
+    logError(`[watchdog] ❌ Cannot rollback ${shortName}: failed to get commit info`);
     return false;
   }
 
-  console.log(`[watchdog] 🔄 Rolling back ${shortName} from ${currentCommit} to ${previousCommit}`);
-  console.log(`[watchdog]    Reason: ${reason}`);
+  logInfo(`[watchdog] 🔄 Rolling back ${shortName} from ${currentCommit} to ${previousCommit}`);
+  logInfo(`[watchdog]    Reason: ${reason}`);
 
   // Send immediate Discord alert about rollback
   try {
@@ -222,14 +159,13 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
         { name: "Rolling Back To", value: `\`${previousCommit}\``, inline: true },
       ],
       footer: "⚠️ Review the failed commit before attempting fixes",
-    });
-  } catch (err) {
-    console.error(`[watchdog] ⚠️ Failed to send rollback alert: ${err.message}`);
-  }
+    });    } catch (err) {
+      logError(`[watchdog] ⚠️ Failed to send rollback alert: ${err.message}`);
+    }
 
   try {
     // 1. Stop the service
-    console.log(`[watchdog]    Stopping ${serviceName}...`);
+    logInfo(`[watchdog]    Stopping ${serviceName}...`);
     execSync(`systemctl --user stop ${serviceName}`, {
       encoding: "utf-8",
       cwd: process.cwd(),
@@ -237,7 +173,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     });
 
     // 2. Rollback git
-    console.log(`[watchdog]    Rolling back to ${previousCommit}...`);
+    logInfo(`[watchdog]    Rolling back to ${previousCommit}...`);
     execSync(`git reset --hard ${previousCommit}`, {
       encoding: "utf-8",
       cwd: process.cwd(),
@@ -245,13 +181,13 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     });
 
     // 3. Restart the service
-    console.log(``);
-    console.log(`[watchdog] ════════════════════════════════════════════════════════════════`);
-    console.log(`[watchdog] 🔄 RESTARTING ${shortName.toUpperCase()} BRIDGE SERVICE`);
-    console.log(`[watchdog]    Service: ${serviceName}`);
-    console.log(`[watchdog]    Reason: Rollback recovery from ${currentCommit} to ${previousCommit}`);
-    console.log(`[watchdog] ════════════════════════════════════════════════════════════════`);
-    console.log(``);
+    logInfo(``);
+    logInfo(`[watchdog] ════════════════════════════════════════════════════════════════`);
+    logInfo(`[watchdog] 🔄 RESTARTING ${shortName.toUpperCase()} BRIDGE SERVICE`);
+    logInfo(`[watchdog]    Service: ${serviceName}`);
+    logInfo(`[watchdog]    Reason: Rollback recovery from ${currentCommit} to ${previousCommit}`);
+    logInfo(`[watchdog] ════════════════════════════════════════════════════════════════`);
+    logInfo(``);
     
     execSync(`systemctl --user restart ${serviceName}`, {
       encoding: "utf-8",
@@ -290,13 +226,13 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
         footer: "Watchdog will continue monitoring",
       });
     } catch (err) {
-      console.error(`[watchdog] ⚠️ Failed to send rollback success notification: ${err.message}`);
+      logError(`[watchdog] ⚠️ Failed to send rollback success notification: ${err.message}`);
     }
 
-    console.log(`[watchdog] ✅ Rollback complete for ${shortName}`);
+    logInfo(`[watchdog] ✅ Rollback complete for ${shortName}`);
     return true;
   } catch (err) {
-    console.error(`[watchdog] ❌ Rollback failed for ${shortName}: ${err.message}`);
+    logError(`[watchdog] ❌ Rollback failed for ${shortName}: ${err.message}`);
     
     // Send critical failure notification
     try {
@@ -311,7 +247,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
         footer: "⚠️ Manual recovery needed immediately",
       });
     } catch (discordErr) {
-      console.error(`[watchdog] ⚠️ Failed to send rollback failure notification: ${discordErr.message}`);
+      logError(`[watchdog] ⚠️ Failed to send rollback failure notification: ${discordErr.message}`);
     }
     
     await updateMemory(
@@ -333,13 +269,13 @@ async function checkService(service) {
 
   // Detect new restart
   if (activeTime && (!lastRestart || activeTime.getTime() > lastRestart)) {
-    console.log(`[watchdog] 🔍 ${shortName}: New restart detected (PID ${pid || "unknown"})`);
+    logInfo(`[watchdog] 🔍 ${shortName}: New restart detected (PID ${pid || "unknown"})`);
     restartTimestamps.set(serviceName, activeTime.getTime());
   }
 
   // Check for failures
   if (status === "failed") {
-    console.log(`[watchdog] ❌ ${shortName}: Service failed`);
+    logInfo(`[watchdog] ❌ ${shortName}: Service failed`);
     await rollbackAndRestart(serviceName, shortName, "service failed");
     await verifyAndNotifyRecovery(serviceName, shortName);
     return;
@@ -351,7 +287,7 @@ async function checkService(service) {
     
     if (!activatingStart) {
       // First time seeing "activating" - record start time
-      console.log(`[watchdog] ⏳ ${shortName}: Activating (starting grace period)`);
+      logInfo(`[watchdog] ⏳ ${shortName}: Activating (starting grace period)`);
       activatingStateStart.set(serviceName, now);
       return;
     }
@@ -360,7 +296,7 @@ async function checkService(service) {
     const activatingDuration = now - activatingStart;
     if (activatingDuration > STARTUP_GRACE_PERIOD_MS) {
       const stuckSeconds = Math.round(activatingDuration / 1000);
-      console.log(
+      logInfo(
         `[watchdog] ❌ ${shortName}: Stuck in activating for ${stuckSeconds}s`
       );
       activatingStateStart.delete(serviceName);
@@ -375,7 +311,7 @@ async function checkService(service) {
     
     // Still within grace period
     const elapsed = Math.round(activatingDuration / 1000);
-    console.log(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
+    logInfo(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
     return;
   }
   
@@ -386,20 +322,20 @@ async function checkService(service) {
 
   // Normal status
   if (status === "active") {
-    console.log(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);
+    logInfo(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);
   } else {
-    console.log(`[watchdog] ⚠️ ${shortName}: ${status}`);
+    logInfo(`[watchdog] ⚠️ ${shortName}: ${status}`);
   }
 }
 
 async function monitorLoop() {
-  console.log(`[watchdog] 🐕 Bridge watchdog starting...`);
-  console.log(`[watchdog]    Check interval: ${CHECK_INTERVAL_MS / 1000}s`);
-  console.log(`[watchdog]    Grace period: ${STARTUP_GRACE_PERIOD_MS / 1000}s`);
-  console.log(`[watchdog]    Monitored services: ${MONITORED_SERVICES.map(s => s.shortName).join(", ")}`);
+  logInfo(`[watchdog] 🐕 Bridge watchdog starting...`);
+  logInfo(`[watchdog]    Check interval: ${CHECK_INTERVAL_MS / 1000}s`);
+  logInfo(`[watchdog]    Grace period: ${STARTUP_GRACE_PERIOD_MS / 1000}s`);
+  logInfo(`[watchdog]    Monitored services: ${MONITORED_SERVICES.map(s => s.shortName).join(", ")}`);
 
   while (true) {
-    console.log(`[watchdog] 🔍 Checking services...`);
+    logInfo(`[watchdog] 🔍 Checking services...`);
     
     for (const service of MONITORED_SERVICES) {
       await checkService(service);
@@ -412,7 +348,7 @@ async function monitorLoop() {
 
 // Graceful shutdown
 function shutdown(signal) {
-  console.log(`\n[watchdog] Received ${signal}, shutting down...`);
+  logInfo(`\n[watchdog] Received ${signal}, shutting down...`);
   process.exit(0);
 }
 
@@ -421,6 +357,6 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 
 // Start monitoring
 monitorLoop().catch(err => {
-  console.error(`[watchdog] Fatal error: ${err.message}`);
+  logError(`[watchdog] Fatal error: ${err.message}`);
   process.exit(1);
 });

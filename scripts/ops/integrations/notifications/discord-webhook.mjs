@@ -23,6 +23,9 @@
 
 import https from "node:https";
 import { URL } from "node:url";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logInfo, logWarn, logError } = createLogger("discord-webhook");
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "";
 const DISCORD_WEBHOOK_ENABLED = process.env.DISCORD_WEBHOOK_ENABLED !== "false" && !!DISCORD_WEBHOOK_URL;
@@ -80,24 +83,24 @@ export async function sendDiscordNotification(payload) {
 
         res.on("end", () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            console.error(`[discord-webhook] ✅ Sent: ${payload.content?.substring(0, 50) || "embed"}`);
+            logInfo(`[discord-webhook] ✅ Sent: ${payload.content?.substring(0, 50) || "embed"}`);
             resolve({ sent: true });
           } else {
             const error = `HTTP ${res.statusCode}: ${data}`;
-            console.error(`[discord-webhook] Failed: ${error}`);
+            logError(`[discord-webhook] Failed: ${error}`);
             resolve({ sent: false, reason: error });
           }
         });
       });
 
       req.on("error", (err) => {
-        console.error(`[discord-webhook] Error: ${err.message}`);
+        logError(`[discord-webhook] Error: ${err.message}`);
         resolve({ sent: false, reason: err.message });
       });
 
       req.on("timeout", () => {
         req.destroy();
-        console.error(`[discord-webhook] Timeout after 10s`);
+        logWarn(`[discord-webhook] Timeout after 10s`);
         resolve({ sent: false, reason: "Request timeout" });
       });
 
@@ -105,7 +108,7 @@ export async function sendDiscordNotification(payload) {
       req.end();
     });
   } catch (err) {
-    console.error(`[discord-webhook] Exception: ${err.message}`);
+    logError(`[discord-webhook] Exception: ${err.message}`);
     return { sent: false, reason: err.message };
   }
 }

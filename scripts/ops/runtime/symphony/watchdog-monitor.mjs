@@ -18,7 +18,10 @@
 
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
-import { sendDiscordEmbed, sendDiscordMessage } from "../../integrations/notifications/discord-webhook.mjs";
+import { sendDiscordEmbed } from "../../integrations/notifications/discord-webhook.mjs";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logInfo } = createLogger("watchdog-monitor");
 
 const WATCHDOG_ENABLED = process.env.WATCHDOG_ENABLED !== "false";
 const WATCHDOG_TIMEOUT_MS = parseInt(process.env.WATCHDOG_TIMEOUT_MS || "60000", 10);
@@ -30,14 +33,13 @@ const args = process.argv.slice(2);
 const bridgeArg = args.find(a => a.startsWith("--bridge="))?.split("=")[1] || "both";
 
 function log(msg) {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [watchdog] ${msg}`);
+  logInfo(msg);
 }
 
 function exec(cmd, opts = {}) {
   try {
     return execSync(cmd, { encoding: "utf-8", ...opts }).trim();
-  } catch (err) {
+  } catch {
     return null;
   }
 }

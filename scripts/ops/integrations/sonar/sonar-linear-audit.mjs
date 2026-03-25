@@ -32,6 +32,9 @@ import {
   syncSonarDuplicationsToLinear,
 } from "../../lib/sonar-linear-sync.mjs";
 import { sendNotification } from "../../lib/notify.mjs";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("sonar-audit");
 
 const SONAR_TOKEN = process.env.SONAR_TOKEN;
 const SONAR_HOST = process.env.SONAR_HOST_URL || "http://localhost:9000";
@@ -39,16 +42,16 @@ const PROJECT_KEY = "anqr";
 
 async function main() {
   if (!SONAR_TOKEN) {
-    console.error("[sonar-audit] SONAR_TOKEN not set");
+    logError("[sonar-audit] SONAR_TOKEN not set");
     process.exit(2);
   }
 
   if (!process.env.LINEAR_API_KEY) {
-    console.error("[sonar-audit] LINEAR_API_KEY not set");
+    logError("[sonar-audit] LINEAR_API_KEY not set");
     process.exit(2);
   }
 
-  console.log(`[sonar-audit] Querying ${SONAR_HOST} for project ${PROJECT_KEY}...`);
+  logInfo(`[sonar-audit] Querying ${SONAR_HOST} for project ${PROJECT_KEY}...`);
 
   const [issues, hotspots, dupIssues, measures] = await Promise.all([
     fetchAllSonarIssues(SONAR_TOKEN, SONAR_HOST, PROJECT_KEY),
@@ -59,7 +62,7 @@ async function main() {
 
   const hotspotCount = hotspots.length;
   const measSummary = measures.map((m) => `${m.metric}: ${m.value}`).join(", ");
-  console.log(
+  logInfo(
     `[sonar-audit] Issues: ${issues.length}, Hotspots: ${hotspotCount}, Duplications: ${dupIssues.length}, Measures: ${measSummary || "none"}`,
   );
 
@@ -104,16 +107,16 @@ async function main() {
   const totalResolved =
     issueResult.resolved.length + hotspotResult.resolved.length + dupResult.resolved.length;
 
-  console.log(
+  logInfo(
     `[sonar-audit] Issues: created ${issueResult.created.length}, promoted ${issueResult.promoted.length}, requeued ${issueResult.requeued.length}, existing ${issueResult.skipped.length}, resolved ${issueResult.resolved.length}`,
   );
-  console.log(
+  logInfo(
     `[sonar-audit] Hotspots: created ${hotspotResult.created.length}, promoted ${hotspotResult.promoted.length}, requeued ${hotspotResult.requeued.length}, existing ${hotspotResult.skipped.length}, resolved ${hotspotResult.resolved.length}`,
   );
-  console.log(
+  logInfo(
     `[sonar-audit] Duplications: created ${dupResult.created.length}, promoted ${dupResult.promoted.length}, requeued ${dupResult.requeued.length}, existing ${dupResult.skipped.length}, resolved ${dupResult.resolved.length}`,
   );
-  console.log(
+  logInfo(
     `[sonar-audit] Total: created ${totalCreated}, promoted ${totalPromoted}, requeued ${totalRequeued}, existing ${totalSkipped}, resolved ${totalResolved}`,
   );
 
@@ -187,17 +190,17 @@ async function main() {
   }
 
   if (issues.length === 0 && hotspotCount === 0 && dupIssues.length === 0) {
-    console.log("[sonar-audit] Clean — no findings");
+    logInfo("[sonar-audit] Clean — no findings");
     process.exit(0);
   }
 
-  console.log(`[sonar-audit] Findings exist — exiting with code 1 (blocking)`);
+  logInfo(`[sonar-audit] Findings exist — exiting with code 1 (blocking)`);
   process.exit(1);
 }
 
 try {
   await main();
 } catch (err) {
-  console.error(`[sonar-audit] Fatal: ${err.message}`);
+  logError(`[sonar-audit] Fatal: ${err.message}`);
   process.exit(2);
 }

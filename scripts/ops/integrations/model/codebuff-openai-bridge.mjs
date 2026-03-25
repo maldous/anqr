@@ -26,6 +26,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CodebuffClient } from "@codebuff/sdk";
 import { isTextUIPart, isReasoningUIPart, isToolUIPart, isDataUIPart } from "ai";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logDebug, logInfo, logWarn, logError } = createLogger("codebuff-bridge");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../../../../");
@@ -36,69 +39,7 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 120 * 60 * 1000; // 120 min to match RUNNER_MAX_EXECUTION_MS from symphony-config
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
-// --------------------------------------------------------------------------
-// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
-// --------------------------------------------------------------------------
 
-const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-// Read log level from env or default to ERROR
-const envLogLevel = process.env.CODEBUFF_BRIDGE_LOG_LEVEL?.toUpperCase();
-const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
-let currentLogLevel = initialLevel;
-
-function setLogLevel(level) {
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.error(`[bridge] 📊 Log level: ${levelName}`);
-  currentLogLevel = level;
-}
-
-function incrementLogLevel() {
-  if (currentLogLevel < LOG_LEVELS.ERROR) {
-    setLogLevel(currentLogLevel + 1);
-  }
-}
-
-function decrementLogLevel() {
-  if (currentLogLevel > LOG_LEVELS.DEBUG) {
-    setLogLevel(currentLogLevel - 1);
-  }
-}
-
-// Signal handlers for dynamic log level control
-process.on("SIGUSR1", () => {
-  console.error("[bridge] Received SIGUSR1 - increasing log level");
-  incrementLogLevel();
-});
-
-process.on("SIGUSR2", () => {
-  console.error("[bridge] Received SIGUSR2 - decreasing log level");
-  decrementLogLevel();
-});
-
-// Logging functions
-function logDebug(...args) {
-  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-    console.log(...args);
-  }
-}
-
-function logInfo(...args) {
-  if (currentLogLevel <= LOG_LEVELS.INFO) {
-    console.log(...args);
-  }
-}
-
-function logWarn(...args) {
-  if (currentLogLevel <= LOG_LEVELS.WARN) {
-    console.warn(...args);
-  }
-}
-
-function logError(...args) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(...args);
-  }
-}
 
 // OpenClaw Gateway API configuration for tool proxying
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
@@ -530,39 +471,7 @@ function isRecoverableError(errMsg) {
   );
 }
 
-// Suppress verbose SDK error dumps and warnings
-function suppressSDKErrors(fn) {
-  const originalError = console.error;
-  const originalWarn = console.warn;
-  return async (...args) => {
-    console.error = (...errArgs) => {
-      const errStr = String(errArgs[0] || "");
-      // Only suppress Vercel AI SDK error dumps
-      if (errStr.includes("Symbol(vercel.ai.error)")) {
-        return;
-      }
-      originalError(...errArgs);
-    };
-    console.warn = (...warnArgs) => {
-      const warnStr = String(warnArgs[0] || "");
-      // Suppress tools.profile allowlist warnings - these are SDK internal notices
-      // about tools that are unavailable in current runtime/model config
-      if (
-        warnStr.includes("tools.profile") &&
-        warnStr.includes("allowlist contains unknown entries")
-      ) {
-        return;
-      }
-      originalWarn(...warnArgs);
-    };
-    try {
-      return await fn(...args);
-    } finally {
-      console.error = originalError;
-      console.warn = originalWarn;
-    }
-  };
-}
+
 
 // Format tool call display for rich event logging (matches old symphony-bridge invokeWithCodebuff)
 function formatToolCallDisplay(toolName, input) {
@@ -825,7 +734,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
-  let result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), makeTimeout()]))();
+  let result = await Promise.race([client.run(runOpts), makeTimeout()]);
 
   // Error checks on initial run
   const output = result.output;
@@ -856,7 +765,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
     };
     if (attempt.costMode) contOpts.costMode = attempt.costMode;
 
-    result = await suppressSDKErrors(() => Promise.race([client.run(contOpts), makeTimeout()]))();
+    result = await Promise.race([client.run(contOpts), makeTimeout()]);
 
     const contOutput = result.output;
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
@@ -912,24 +821,24 @@ function getWinner() {
 async function revalidateAndSelectWinner() {
   const apiKey = getApiKey();
   if (!apiKey) {
-    console.warn(`[bridge] No API key available for re-validation`);
+    logWarn(`[bridge] No API key available for re-validation`);
     return;
   }
 
-  console.log(`[bridge] 🔄 Re-validating API key...`);
+  logInfo(`[bridge] 🔄 Re-validating API key...`);
   lastRevalidationTime = Date.now();
 
   await testKeyAndSelectWinner(apiKey);
 
   if (STARTUP_WINNER) {
-    console.log(`[bridge] 🔄 Re-validation complete: ${STARTUP_WINNER.label}`);
+    logInfo(`[bridge] 🔄 Re-validation complete: ${STARTUP_WINNER.label}`);
   }
 }
 
 // Use pre-warmed winner directly, with paid→free fallback on recoverable errors
 async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = null }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
-    console.log(`[bridge] ⏰ Time-based re-validation triggered`);
+    logInfo(`[bridge] ⏰ Time-based re-validation triggered`);
     await revalidateAndSelectWinner();
   }
 
@@ -1092,7 +1001,7 @@ async function trySingleAccountStream(
   };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
-  let result = await suppressSDKErrors(() => Promise.race([client.run(runOpts), makeTimeout()]))();
+  let result = await Promise.race([client.run(runOpts), makeTimeout()]);
 
   // Error checks on initial run
   const output = result.output || "";
@@ -1124,7 +1033,7 @@ async function trySingleAccountStream(
     };
     if (attempt.costMode) contOpts.costMode = attempt.costMode;
 
-    result = await suppressSDKErrors(() => Promise.race([client.run(contOpts), makeTimeout()]))();
+    result = await Promise.race([client.run(contOpts), makeTimeout()]);
 
     const contOutput = result.output || "";
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
@@ -1169,7 +1078,7 @@ async function trySingleAccountStream(
 // Use pre-warmed winner directly for streaming, with paid→free fallback on recoverable errors
 async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created, sessionId = null, proxyToolFn = null }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
-    console.log(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
+    logInfo(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
     await revalidateAndSelectWinner();
   }
 
@@ -1301,7 +1210,7 @@ const server = http.createServer(async (req, res) => {
     // Auth check (skip for health check and model list)
     const skipAuth = req.url === "/health" || req.url === "/v1/models";
     if (!skipAuth && !checkAuth(req)) {
-      console.log(`[bridge] Auth failed for ${req.method} ${req.url}`);
+      logWarn(`[bridge] Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
     }
 
@@ -1584,7 +1493,7 @@ import { updateMemory } from "../../lib/update-memory.mjs";
 
 // Graceful shutdown
 async function shutdown(signal) {
-  console.error(`\n[bridge] Received ${signal}, shutting down...`);
+  logInfo(`\n[bridge] Received ${signal}, shutting down...`);
   
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -1594,13 +1503,13 @@ async function shutdown(signal) {
     await updateMemory(
       `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`
     );
-    console.error(`[bridge] 📝 Updated MEMORY.md before shutdown`);
+    logInfo(`[bridge] 📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
-    console.error(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+    logError(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
   
   server.close(() => {
-    console.error("[bridge] Server closed");
+    logInfo("[bridge] Server closed");
   });
   // Exit immediately without waiting for active connections
   process.exit(0);
@@ -1614,28 +1523,28 @@ async function initializeBridge() {
   const apiKey = getApiKey();
 
   const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLogLevel);
-  console.error(`[bridge] ========================================`);
-  console.error(`[bridge] Codebuff OpenAI Bridge Starting`);
-  console.error(`[bridge] ========================================`);
-  console.error(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
-  console.error(`[bridge] Model: ${MODEL_ID}`);
-  console.error(`[bridge] API key: ${apiKey ? "configured" : "NOT SET"}`);
-  console.error(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
-  console.error(`[bridge] Streaming: enabled`);
-  console.error(`[bridge] Working directory: ${DEFAULT_CWD}`);
-  console.error(`[bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env)`);
+  logInfo(`[bridge] ========================================`);
+  logInfo(`[bridge] Codebuff OpenAI Bridge Starting`);
+  logInfo(`[bridge] ========================================`);
+  logInfo(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
+  logInfo(`[bridge] Model: ${MODEL_ID}`);
+  logInfo(`[bridge] API key: ${apiKey ? "configured" : "NOT SET"}`);
+  logInfo(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
+  logInfo(`[bridge] Streaming: enabled`);
+  logInfo(`[bridge] Working directory: ${DEFAULT_CWD}`);
+  logInfo(`[bridge] Log level: ${levelName} (use SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env)`);
 
   if (apiKey) {
-    console.error(`[bridge] Testing API key (paid mode first, then free)...`);
+    logInfo(`[bridge] Testing API key (paid mode first, then free)...`);
     await testKeyAndSelectWinner(apiKey);
   } else {
     logError(`[bridge] WARNING: CODEBUFF_API_KEY not set!`);
   }
 
   STARTUP_INITIALIZED = true;
-  console.error(`[bridge] ========================================`);
-  console.error(`[bridge] Ready to accept requests`);
-  console.error(`[bridge] ========================================`);
+  logInfo(`[bridge] ========================================`);
+  logInfo(`[bridge] Ready to accept requests`);
+  logInfo(`[bridge] ========================================`);
 }
 
 // Health check - include initialization status

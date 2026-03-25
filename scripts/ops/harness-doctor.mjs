@@ -24,6 +24,9 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "./lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("harness-doctor");
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..");
@@ -301,7 +304,7 @@ function checkHarnessConfig() {
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log("[harness-doctor] Running harness diagnostics...\n");
+  logInfo("[harness-doctor] Running harness diagnostics...\n");
 
   const categories = [
     { name: "Environment Variables", fn: checkEnvVars },
@@ -327,7 +330,7 @@ async function main() {
     const duration_ms = Date.now() - start;
 
     const icon = result.pass ? "✅" : "❌";
-    console.log(`${icon} ${cat.name}: ${result.detail}`);
+    logInfo(`${icon} ${cat.name}: ${result.detail}`);
 
     results.push({
       category: cat.name,
@@ -342,7 +345,7 @@ async function main() {
   const failed = results.filter((r) => !r.pass).length;
   const total = results.length;
 
-  console.log(`\n[harness-doctor] ${passed}/${total} categories passed, ${failed} failed`);
+  logInfo(`\n[harness-doctor] ${passed}/${total} categories passed, ${failed} failed`);
 
   // Write detailed report
   const report = {
@@ -354,7 +357,7 @@ async function main() {
   const reportPath = resolve(ROOT, "reports", "doctor.json");
   const { writeFileSync } = await import("node:fs");
   writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
-  console.log(`[harness-doctor] Report written to reports/doctor.json`);
+  logInfo(`[harness-doctor] Report written to reports/doctor.json`);
 
   process.exit(failed > 0 ? 1 : 0);
 }
@@ -363,7 +366,7 @@ async function main() {
 const isMain = process.argv[1] === fileURLToPath(import.meta.url);
 if (isMain) {
   await main().catch((err) => {
-    console.error(`[harness-doctor] Fatal: ${err.message}`);
+    logError(`[harness-doctor] Fatal: ${err.message}`);
     process.exit(2);
   });
 }

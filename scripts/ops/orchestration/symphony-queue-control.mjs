@@ -2,6 +2,9 @@
 
 import { fileURLToPath } from "node:url";
 import { listIssuesByState, updateIssue, addComment, STATES } from "../linear-client.mjs";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("queue-control");
 import {
   TARGET_MIN,
   TARGET_MAX,
@@ -34,7 +37,7 @@ function logAction(type, detail) {
     recover: "🩹",
     skip: "⏭️",
   };
-  console.log(`${icons[type] || "•"} ${type}: ${detail}`);
+  logInfo(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 
 function issueAge(issue, field) {
@@ -69,18 +72,18 @@ export async function getQueueSnapshot() {
 }
 
 function printQueueHealth(snap) {
-  console.log("[queue-control] Queue health snapshot\n");
-  console.log(
+  logInfo("[queue-control] Queue health snapshot\n");
+  logInfo(
     `  Backlog (feed-eligible): ${snap.backlog.automatable.length} / ${snap.backlog.all.length} total`,
   );
-  console.log(
+  logInfo(
     `  Todo (runnable):         ${snap.todo.automatable.length} / ${snap.todo.all.length} total`,
   );
-  console.log(
+  logInfo(
     `  In Progress (managed):   ${snap.inProgress.automatable.length} / ${snap.inProgress.all.length} total`,
   );
-  console.log(`  Queue depth:             ${snap.queueDepth}`);
-  console.log(
+  logInfo(`  Queue depth:             ${snap.queueDepth}`);
+  logInfo(
     `\n  target_min=${TARGET_MIN}  target_max=${TARGET_MAX}  max_concurrent=${MAX_CONCURRENT_AGENTS}`,
   );
 }
@@ -252,40 +255,40 @@ async function main() {
   const doAll = args.has("--all");
 
   if (!doCheck && !doFeed && !doDrain && !doEnforce && !doAll) {
-    console.error(
+    logError(
       "Usage: symphony-queue-control.mjs --check|--feed|--drain|--enforce|--all [--dry-run]",
     );
     process.exit(2);
   }
 
-  console.log(`[queue-control]${dryRun ? " (DRY RUN)" : ""} starting\n`);
+  logInfo(`[queue-control]${dryRun ? " (DRY RUN)" : ""} starting\n`);
 
   if (doCheck || doAll) {
     printQueueHealth(await getQueueSnapshot());
-    console.log("");
+    logInfo("");
   }
   if (doFeed || doAll) {
-    console.log("[queue-control] === Feed ===");
+    logInfo("[queue-control] === Feed ===");
     await feedQueue(null, dryRun);
-    console.log("");
+    logInfo("");
   }
   if (doDrain || doAll) {
-    console.log("[queue-control] === Drain ===");
+    logInfo("[queue-control] === Drain ===");
     await drainOverflow(null, dryRun);
-    console.log("");
+    logInfo("");
   }
   if (doEnforce || doAll) {
-    console.log("[queue-control] === Enforce concurrent ===");
+    logInfo("[queue-control] === Enforce concurrent ===");
     await enforceMaxConcurrent(null, dryRun);
-    console.log("");
-    console.log("[queue-control] === Detect stuck work ===");
+    logInfo("");
+    logInfo("[queue-control] === Detect stuck work ===");
     await detectStuckWork(null, dryRun);
-    console.log("");
+    logInfo("");
   }
 
   const counts = {};
   for (const action of actions) counts[action.type] = (counts[action.type] || 0) + 1;
-  console.log(
+  logInfo(
     `[queue-control] Summary: ${
       Object.entries(counts)
         .map(([k, v]) => `${k}=${v}`)
@@ -298,7 +301,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     await main();
   } catch (err) {
-    console.error(`[queue-control] Fatal: ${err.message}`);
+    logError(`[queue-control] Fatal: ${err.message}`);
     process.exit(1);
   }
 }

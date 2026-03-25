@@ -7,7 +7,7 @@
  * Run: npx vitest run scripts/ops/integrations/model/symphony-bridge-truncation.spec.ts
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   estimateTokens,
   estimateMessagesTokens,
@@ -22,11 +22,6 @@ import {
   // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-bridge-truncation.mjs";
 import { makeArrayContentMessage } from "./symphony-bridge-truncation.make-array-content-message";
-
-// Suppress console.log from truncation passes during tests
-beforeEach(() => {
-  vi.spyOn(console, "log").mockImplementation(() => {});
-});
 
 // ---------------------------------------------------------------------------
 // Helper to build messages of specific sizes

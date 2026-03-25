@@ -49,6 +49,9 @@ import {
   RUNNER_MAX_OUTPUT_TOKENS,
   RUNNER_TURN_BUDGET_WARNING,
 } from "../../symphony-config.mjs";
+import { createLogger } from "../../lib/logger.mjs";
+
+const { logDebug, logInfo, logWarn, logError } = createLogger("agent");
 import {
   runTypecheck,
   runLint,
@@ -193,68 +196,7 @@ const ALLOWED_COMMANDS = new Set([
 
 const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom for large-context turns
 
-// --------------------------------------------------------------------------
-// Level-based logging with SIGUSR1/SIGUSR2 dynamic control
-// --------------------------------------------------------------------------
 
-const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
-const envLogLevel = process.env.SYMPHONY_AGENT_LOG_LEVEL?.toUpperCase();
-const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS.ERROR;
-let currentLogLevel = initialLevel;
-
-function setLogLevel(level) {
-  const levelName = Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === level);
-  console.error(`[agent] 📊 Log level: ${levelName}`);
-  currentLogLevel = level;
-}
-
-function incrementLogLevel() {
-  if (currentLogLevel < LOG_LEVELS.ERROR) {
-    setLogLevel(currentLogLevel + 1);
-  }
-}
-
-function decrementLogLevel() {
-  if (currentLogLevel > LOG_LEVELS.DEBUG) {
-    setLogLevel(currentLogLevel - 1);
-  }
-}
-
-// Signal handlers for dynamic log level control
-process.on("SIGUSR1", () => {
-  console.error("[agent] Received SIGUSR1 - increasing log level");
-  incrementLogLevel();
-});
-
-process.on("SIGUSR2", () => {
-  console.error("[agent] Received SIGUSR2 - decreasing log level");
-  decrementLogLevel();
-});
-
-// Logging functions
-function logDebug(msg) {
-  if (currentLogLevel <= LOG_LEVELS.DEBUG) {
-    console.log(msg);
-  }
-}
-
-function logInfo(msg) {
-  if (currentLogLevel <= LOG_LEVELS.INFO) {
-    console.log(msg);
-  }
-}
-
-function logWarn(msg) {
-  if (currentLogLevel <= LOG_LEVELS.WARN) {
-    console.warn(msg);
-  }
-}
-
-function logError(msg) {
-  if (currentLogLevel <= LOG_LEVELS.ERROR) {
-    console.error(msg);
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Tool implementations
@@ -514,7 +456,7 @@ async function callLLM(provider, messages, taskDescription) {
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
               fullContent += content;
-              process.stdout.write(content); // Stream to console in real-time
+              logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
               
               // Stream to Discord in real-time (non-blocking)
               streamDiscordUpdate(content, { emoji: "" }).catch(() => {/* ignore */});
@@ -554,7 +496,7 @@ async function callLLM(provider, messages, taskDescription) {
   if (provider.requiresSdk) {
     // Use the HTTP bridge instead of direct SDK
     // The bridge handles key rotation, rate limiting, and continuation detection
-    console.log(`[agent] Using bridge: ${CODEBUFF_BRIDGE_URL}`);
+    logDebug(`[agent] Using bridge: ${CODEBUFF_BRIDGE_URL}`);
 
     // Convert internal message format to OpenAI-style for bridge
     const bridgeMessages = messages.map((m) => {
@@ -613,7 +555,7 @@ async function callLLM(provider, messages, taskDescription) {
             const deltaContent = parsed.choices?.[0]?.delta?.content;
             if (deltaContent) {
               content += deltaContent;
-              process.stdout.write(deltaContent); // Stream to console in real-time
+              logDebug(`[agent] 🌊 ${deltaContent.slice(0, 200)}`);
               
               // Stream to Discord in real-time (non-blocking)
               streamDiscordUpdate(deltaContent, { emoji: "" }).catch(() => {/* ignore */});
@@ -657,7 +599,7 @@ async function callLLM(provider, messages, taskDescription) {
       }
       const reportFile = pathJoin(REPORTS_DIR, `latest-${Date.now()}.json`);
       writeFileSync(reportFile, JSON.stringify(report, null, 2) + "\n");
-      console.log(`[agent] Codebuff bridge report written to: ${reportFile}`);
+      logDebug(`[agent] Codebuff bridge report written to: ${reportFile}`);
 
       return {
         choices: [
@@ -678,7 +620,7 @@ async function callLLM(provider, messages, taskDescription) {
 
       // Check for rate limits
       if (isRateLimitError(errStr)) {
-        console.log(`[agent] Bridge rate limited: ${errStr.slice(0, 200)}`);
+        logWarn(`[agent] Bridge rate limited: ${errStr.slice(0, 200)}`);
       }
 
       // Write failure report
@@ -812,7 +754,7 @@ async function runToolLoop({
 
   for (; turn < maxTurns; turn++) {
     if (Date.now() - startTime > maxMs) {
-      console.log(`[agent] Hard timeout reached (${maxMs}ms) at turn ${turn}`);
+      logInfo(`[agent] Hard timeout reached (${maxMs}ms) at turn ${turn}`);
       return {
         completed: false,
         summary: "Execution timed out",
@@ -824,7 +766,7 @@ async function runToolLoop({
         messages,
         providerName: provider.name,
       };
-    }      logInfo(`[agent] Turn ${turn + 1}/${maxTurns}`);
+    }      logDebug(`[agent] Turn ${turn + 1}/${maxTurns}`);
 
     let response;
     try {
@@ -904,7 +846,7 @@ async function runToolLoop({
           !content.includes("passed");
 
         if (isFailure) {
-          console.log("[agent] Autonomous agent reported failure");
+          logInfo("[agent] Autonomous agent reported failure");
           return {
             completed: false,
             summary: `Autonomous agent failed: ${content.slice(0, 500)}`,
@@ -948,11 +890,11 @@ async function runToolLoop({
                       const log = input.log || "";
 
                       // Log subgoal update
-                      console.log(
+                      logDebug(
                         `[agent] Subgoal ${input.id}: ${status} - ${objective.slice(0, 80)}`,
                       );
                       if (log) {
-                        console.log(`[agent]   Log: ${log.slice(0, 120)}`);
+                        logDebug(`[agent]   Log: ${log.slice(0, 120)}`);
                       }
 
                       // Track active subgoals (IN_PROGRESS means work is ongoing)
@@ -969,7 +911,7 @@ async function runToolLoop({
               }
             }
           } catch (err) {
-            console.log(`[agent] Could not parse metadata JSON: ${err.message}`);
+            logDebug(`[agent] Could not parse metadata JSON: ${err.message}`);
           }
 
           // Remove metadata from clean content
@@ -978,7 +920,7 @@ async function runToolLoop({
 
         // If there are active subgoals, this is NOT completion - it's ongoing work
         if (hasActiveSubgoals) {
-          console.log(`[agent] Active subgoals detected - work is ongoing, not complete`);
+          logInfo(`[agent] Active subgoals detected - work is ongoing, not complete`);
           return {
             completed: false,
             summary: `Agent created subgoals - work is ongoing:\n${subgoalSummary.join("\n")}`,
@@ -994,7 +936,7 @@ async function runToolLoop({
         }
 
         // No active subgoals - agent actually completed
-        console.log("[agent] Autonomous agent completed - no active subgoals");
+        logInfo("[agent] Autonomous agent completed - no active subgoals");
         const summary = cleanContent.slice(0, 1000);
         return {
           completed: true,

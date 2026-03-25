@@ -24,6 +24,9 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, statSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createLogger } from "../lib/logger.mjs";
+
+const { logInfo, logError } = createLogger("harness-report");
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");
@@ -434,13 +437,13 @@ async function main() {
   const profile = process.argv[2] || "quick";
 
   if (!PROFILES[profile]) {
-    console.error(`Unknown profile: ${profile}`);
-    console.error(`Available profiles: ${Object.keys(PROFILES).join(", ")}`);
+    logError(`Unknown profile: ${profile}`);
+    logError(`Available profiles: ${Object.keys(PROFILES).join(", ")}`);
     process.exit(2);
   }
 
   const checkNames = PROFILES[profile];
-  console.error(`[harness-report] profile=${profile} checks=${checkNames.length}\n`);
+  logInfo(`[harness-report] profile=${profile} checks=${checkNames.length}\n`);
 
   const results = [];
   for (const name of checkNames) {
@@ -450,7 +453,7 @@ async function main() {
       result.duration_ms > 1000
         ? `${(result.duration_ms / 1000).toFixed(1)}s`
         : `${result.duration_ms}ms`;
-    console.error(`${icon} ${result.name} (${timing}): ${result.detail}`);
+    logInfo(`${icon} ${result.name} (${timing}): ${result.detail}`);
     results.push(result);
   }
 
@@ -475,10 +478,10 @@ async function main() {
   const reportPath = resolve(reportsDir, "latest.json");
   writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n");
 
-  console.error(
+  logInfo(
     `\n[harness-report] ${passed}/${total} passed, ${failed} failed (${(total_duration_ms / 1000).toFixed(1)}s)`,
   );
-  console.error(`[harness-report] report written to reports/latest.json`);
+  logInfo(`[harness-report] report written to reports/latest.json`);
 
   process.exit(failed > 0 ? 1 : 0);
 }
