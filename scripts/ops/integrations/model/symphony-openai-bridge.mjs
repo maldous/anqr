@@ -2625,7 +2625,6 @@ const server = http.createServer(async (req, res) => {
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
-        const durationMs = Date.now() - startTime;
         
         const metricsFields = [
           { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
