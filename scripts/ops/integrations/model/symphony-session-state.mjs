@@ -16,7 +16,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logInfo } = createLogger("session-state");
+const { logInfo } = createLogger();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, "../../../..");

@@ -12,7 +12,7 @@ import { appendFile } from "node:fs/promises";
 import path from "node:path";
 import { createLogger } from "./logger.mjs";
 
-const { logInfo, logWarn } = createLogger("update-memory");
+const { logInfo, logWarn } = createLogger();
 
 /**
  * Append a timestamped note to MEMORY.md

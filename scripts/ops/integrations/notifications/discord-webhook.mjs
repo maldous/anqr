@@ -25,7 +25,7 @@ import https from "node:https";
 import { URL } from "node:url";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logInfo, logWarn, logError } = createLogger("discord-webhook");
+const { logInfo, logWarn, logError } = createLogger();
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "";
 const DISCORD_WEBHOOK_ENABLED = process.env.DISCORD_WEBHOOK_ENABLED !== "false" && !!DISCORD_WEBHOOK_URL;

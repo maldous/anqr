@@ -6,7 +6,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("nightly");
+const { logInfo, logError } = createLogger();
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");

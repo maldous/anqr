@@ -43,7 +43,7 @@ import { fileURLToPath } from "node:url";
 import { Codex } from "@openai/codex-sdk";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logDebug, logInfo, logWarn } = createLogger("credit-gate");
+const { logDebug, logInfo, logWarn } = createLogger();
 import {
   RUNNER_OLLAMA_BASE_URL,
   RUNNER_PROVIDER_FAILURE_WINDOW_SECS,

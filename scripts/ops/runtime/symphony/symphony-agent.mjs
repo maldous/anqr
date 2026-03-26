@@ -51,7 +51,7 @@ import {
 } from "../../symphony-config.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logDebug, logInfo, logWarn, logError } = createLogger("agent");
+const { logDebug, logInfo, logWarn, logError } = createLogger();
 import {
   runTypecheck,
   runLint,

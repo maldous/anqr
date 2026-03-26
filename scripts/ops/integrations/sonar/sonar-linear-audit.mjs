@@ -34,7 +34,7 @@ import {
 import { sendNotification } from "../../lib/notify.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("sonar-audit");
+const { logInfo, logError } = createLogger();
 
 const SONAR_TOKEN = process.env.SONAR_TOKEN;
 const SONAR_HOST = process.env.SONAR_HOST_URL || "http://localhost:9000";

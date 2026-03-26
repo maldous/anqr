@@ -40,7 +40,7 @@ import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logDebug, logInfo, logWarn, logError } = createLogger("symphony-bridge");
+const { logDebug, logInfo, logWarn, logError } = createLogger();
 import {
   selectProvider,
   recordProviderFailure,
@@ -125,7 +125,7 @@ async function pollDiscordMessages() {
     );
 
     if (!response.ok) {
-      logError(`[symphony-bridge] Discord API error: ${response.status}`);
+      logError(`Discord API error: ${response.status}`);
       return null;
     }
 
@@ -152,7 +152,7 @@ async function pollDiscordMessages() {
 
     return null;
   } catch (err) {
-    logError(`[symphony-bridge] Discord poll error: ${err.message}`);
+    logError(`Discord poll error: ${err.message}`);
     return null;
   }
 }
@@ -162,7 +162,7 @@ async function pollDiscordMessages() {
  */
 function startDiscordMonitoring() {
   if (!process.env.DISCORD_BOT_TOKEN) {
-    logError(`[symphony-bridge] ⚠️ Discord monitoring disabled: DISCORD_BOT_TOKEN not set`);
+    logError(`⚠️ Discord monitoring disabled: DISCORD_BOT_TOKEN not set`);
     return;
   }
 
@@ -170,13 +170,13 @@ function startDiscordMonitoring() {
     clearInterval(discordMonitorInterval);
   }
 
-  logInfo(`[symphony-bridge] 📡 Starting Discord message monitoring (polling every 5s)`);
+  logInfo(`📡 Starting Discord message monitoring (polling every 5s)`);
   
   discordMonitorInterval = setInterval(async () => {
     const message = await pollDiscordMessages();
     if (message) {
       logInfo(
-        `[symphony-bridge] 📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`
+        `📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`
       );
       
       // Process the command via Symphony bridge (Discord streaming handled by invokeCodebuffDirectStream)
@@ -199,7 +199,7 @@ function startDiscordMonitoring() {
         
         if (!response.ok) {
           const errorText = await response.text();
-          logError(`[symphony-bridge] ❌ Discord command failed: ${response.status} ${errorText.slice(0, 200)}`);
+          logError(`❌ Discord command failed: ${response.status} ${errorText.slice(0, 200)}`);
           return;
         }
         
@@ -237,9 +237,9 @@ function startDiscordMonitoring() {
           reader.releaseLock();
         }
         
-        logInfo(`[symphony-bridge] ✅ Discord command processed: ${fullText.slice(0, 100)}`);
+        logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
-        logError(`[symphony-bridge] ❌ Discord command error: ${err.message}`);
+        logError(`❌ Discord command error: ${err.message}`);
       }
     }
   }, 5000); // Poll every 5 seconds
@@ -252,7 +252,7 @@ function stopDiscordMonitoring() {
   if (discordMonitorInterval) {
     clearInterval(discordMonitorInterval);
     discordMonitorInterval = null;
-    logInfo(`[symphony-bridge] 📡 Stopped Discord message monitoring`);
+    logInfo(`📡 Stopped Discord message monitoring`);
   }
 }
 
@@ -279,7 +279,7 @@ function logMemory(label) {
   const mem = process.memoryUsage();
   const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
   const rssMB = Math.round(mem.rss / 1024 / 1024);
-  logDebug(`[symphony-bridge] 💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
+  logDebug(`💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
 }
 
 function ensureString(value) {
@@ -691,7 +691,7 @@ const additionalTokens = (process.env.SYMPHONY_BRIDGE_ACCEPTED_TOKENS || "")
 const VALID_TOKENS = new Set([API_KEY, ...additionalTokens]);
 
 if (VALID_TOKENS.size > 1) {
-  logDebug(`[symphony-bridge] Auth: accepting ${VALID_TOKENS.size} tokens`);
+  logDebug(`Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
 const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
@@ -743,12 +743,12 @@ async function refreshProviderStatus() {
 
     const available = providerStatusCache.probeResults.filter((r) => r.available).length;
     const total = providerStatusCache.configured.length;
-    logDebug(`[symphony-bridge] 🔄 Provider status refreshed: ${available}/${total} available`);
+    logDebug(`🔄 Provider status refreshed: ${available}/${total} available`);
 
     // Phase 2: probe tool-calling capability for all available providers
     await probeAllToolCapability();
   } catch (err) {
-    logError(`[symphony-bridge] Provider probe error: ${err.message}`);
+    logError(`Provider probe error: ${err.message}`);
   } finally {
     providerStatusCache.probing = false;
   }
@@ -863,7 +863,7 @@ function isRetryableError(err) {
       (errStr.includes("codebuff") || errStr.includes("credits") || errStr.includes("payment"))
     ) {
       logDebug(
-        `[symphony-bridge] 💳 Detected retryable credit/payment error: ${errStr.slice(0, 150)}`,
+        `💳 Detected retryable credit/payment error: ${errStr.slice(0, 150)}`,
       );
     }
 
@@ -876,7 +876,7 @@ function isRetryableError(err) {
         errStr.includes("socket"))
     ) {
       logDebug(
-        `[symphony-bridge] 🔌 Detected retryable connection error: ${errStr.slice(0, 150)}`,
+        `🔌 Detected retryable connection error: ${errStr.slice(0, 150)}`,
       );
     }
 
@@ -932,7 +932,7 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
   
   if (evaluationSample) {
     logDebug(
-      `[symphony-bridge] 🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`,
+      `🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`,
     );
     return {
       allowedNames: [evaluationSample],
@@ -950,7 +950,7 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
       // Paid providers: stick until exhausted
       if (tier === "paid" && mode === "paid") {
         logDebug(
-          `[symphony-bridge] 📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`,
+          `📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`,
         );
         return {
           allowedNames: [providerName],
@@ -961,7 +961,7 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
       // Free providers: rotate after turn limit
       if (turnCount < turnLimit) {
         logDebug(
-          `[symphony-bridge] 📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`,
+          `📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`,
         );
         return {
           allowedNames: [providerName],
@@ -969,7 +969,7 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
         };
       } else {
         logDebug(
-          `[symphony-bridge] 🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`,
+          `🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`,
         );
         // Exclude current provider to force rotation
         excludeSet.add(providerName);
@@ -1161,7 +1161,7 @@ async function probeToolCapabilityForProvider(providerDef) {
     }
 
     // Log the actual error for debugging
-    logDebug(`[symphony-bridge] 🔧 ${name} probe error: ${errStr.slice(0, 150)}`);
+    logDebug(`🔧 ${name} probe error: ${errStr.slice(0, 150)}`);
     return { name, status: "probe-error" };
   }
 }
@@ -1184,11 +1184,11 @@ async function probeAllToolCapability() {
   );
 
   if (toProbe.length === 0) {
-    logDebug(`[symphony-bridge] 🔧 Tool probe: all providers already classified`);
+    logDebug(`🔧 Tool probe: all providers already classified`);
     return;
   }
 
-  logDebug(`[symphony-bridge] 🔧 Tool capability probe: testing ${toProbe.length} providers...`);
+  logDebug(`🔧 Tool capability probe: testing ${toProbe.length} providers...`);
 
   const results = [];
   for (let i = 0; i < toProbe.length; i += TOOL_PROBE_BATCH_SIZE) {
@@ -1210,11 +1210,11 @@ async function probeAllToolCapability() {
       : nonToolCapableProviders.has(r.name)
         ? "🚫"
         : "❓";
-    logDebug(`[symphony-bridge]   ${icon} ${r.name}: ${r.status}`);
+    logDebug(`  ${icon} ${r.name}: ${r.status}`);
   }
 
   logDebug(
-    `[symphony-bridge] 🔧 Tool probe complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
+    `🔧 Tool probe complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
   );
 
   // Schedule a delayed retry for unclassified providers (rate-limited, probe-error, etc.)
@@ -1229,12 +1229,12 @@ async function probeAllToolCapability() {
       toolProbeRetryScheduled = true;
       const names = stillUnclassified.map((p) => p.name);
       logDebug(
-        `[symphony-bridge] 🔧 Scheduling tool probe retry in ${TOOL_PROBE_RETRY_DELAY_MS / 1000}s for ${names.length} unclassified: ${names.join(", ")}`,
+        `🔧 Scheduling tool probe retry in ${TOOL_PROBE_RETRY_DELAY_MS / 1000}s for ${names.length} unclassified: ${names.join(", ")}`,
       );
       setTimeout(async () => {
         try {
           logDebug(
-            `[symphony-bridge] 🔧 Retry tool probe for ${names.length} unclassified providers...`,
+            `🔧 Retry tool probe for ${names.length} unclassified providers...`,
           );
           await probeAllToolCapability();
           const remaining = names.filter(
@@ -1242,11 +1242,11 @@ async function probeAllToolCapability() {
           );
           if (remaining.length > 0) {
             logDebug(
-              `[symphony-bridge] 🔧 Still unclassified after retry: ${remaining.join(", ")}`,
+              `🔧 Still unclassified after retry: ${remaining.join(", ")}`,
             );
           }
         } catch (err) {
-          logError(`[symphony-bridge] Tool probe retry failed: ${err.message}`);
+          logError(`Tool probe retry failed: ${err.message}`);
         }
       }, TOOL_PROBE_RETRY_DELAY_MS);
     }
@@ -1272,7 +1272,7 @@ async function invokeWithAI(provider, messages, options = {}) {
 
   const useTools = providerSupportsTools(provider.name);
   logDebug(
-    `[symphony-bridge] Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
+    `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
   );
 
   // Convert messages to AI SDK format and truncate for provider's context limit
@@ -1283,12 +1283,12 @@ async function invokeWithAI(provider, messages, options = {}) {
   // but double-check to catch any edge cases
   if (!aiMessages || aiMessages.length === 0) {
     logError(
-      `[symphony-bridge] ❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
+      `❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
     );
-    logError(`[symphony-bridge]   Original messages: ${messages?.length || 0}`);
-    logError(`[symphony-bridge]   Raw messages after conversion: ${rawMessages?.length || 0}`);
+    logError(`  Original messages: ${messages?.length || 0}`);
+    logError(`  Raw messages after conversion: ${rawMessages?.length || 0}`);
     logError(
-      `[symphony-bridge]   This should never happen - truncateMessagesForProvider has a fallback`,
+      `  This should never happen - truncateMessagesForProvider has a fallback`,
     );
     throw new Error(
       `CRITICAL: Message truncation failed for provider ${provider.name} - original had ${messages?.length || 0} messages`,
@@ -1310,7 +1310,7 @@ async function invokeWithAI(provider, messages, options = {}) {
           for (const tc of step.toolCalls) {
             const input = tc.input ?? tc.args;
             const summary = input ? JSON.stringify(input).slice(0, 200) : "";
-            logDebug(`[symphony-bridge] 🔧 ${tc.toolName}: ${summary}`);
+            logDebug(`🔧 ${tc.toolName}: ${summary}`);
           }
         }
       },
@@ -1318,12 +1318,12 @@ async function invokeWithAI(provider, messages, options = {}) {
         finishReason = event.finishReason;
         if (finishReason === "error" || !event.text) {
           logWarn(
-            `[symphony-bridge] ⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`,
+            `⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`,
           );
         }
         if (finishReason === "tool-calls") {
           logWarn(
-            `[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
+            `⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
           );
         }
       },
@@ -1353,7 +1353,7 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (!fullTextCapped) {
           if (fullText.length + delta.length > MAX_RESPONSE_TEXT_BYTES) {
             fullTextCapped = true;
-            logDebug(`[symphony-bridge] ⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`);
+            logDebug(`⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`);
           } else {
             fullText += delta;
           }
@@ -1365,17 +1365,17 @@ async function invokeWithAI(provider, messages, options = {}) {
         // Log non-empty text-delta events for debugging (first 200 chars)
         if (delta && delta.length > 0) {
           logDebug(
-            `[symphony-bridge] 📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`,
+            `📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`,
           );
         }
       } else if (part.type === "tool-call") {
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
-        logDebug(`[symphony-bridge] 🔧 ${part.toolName}: ${argsSummary}`);
+        logDebug(`🔧 ${part.toolName}: ${argsSummary}`);
         if (onChunk) {
           onChunk({ type: "text", text: `\n🔧 ${part.toolName}: \n` });
         }
       } else if (part.type === "tool-result") {
-        logDebug(`[symphony-bridge] ✅ ${part.toolName} done`);
+        logDebug(`✅ ${part.toolName} done`);
         if (onChunk) {
           onChunk({ type: "text", text: `✅ ${part.toolName} done\n` });
         }
@@ -1386,7 +1386,7 @@ async function invokeWithAI(provider, messages, options = {}) {
         streamErrorDetail = streamErrorDetail || errorMsg;
         // Log server-side only - internal provider errors are handled by auto-fallback
         logDebug(
-          `[symphony-bridge] 🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`,
+          `🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`,
         );
         // DO NOT forward error events to client - these are internal Symphony routing errors
       } else if (part.type === "finish") {
@@ -1409,7 +1409,7 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (fallbackText && fallbackText.trim()) {
           if (!hasTextDeltas) {
             logDebug(
-              `[symphony-bridge] ⚠️ fullStream produced no text-delta events (${provider.name} buffered), recovered ${fallbackText.length} chars from result.text`,
+              `⚠️ fullStream produced no text-delta events (${provider.name} buffered), recovered ${fallbackText.length} chars from result.text`,
             );
           }
           fullText = fallbackText;
@@ -1427,7 +1427,7 @@ async function invokeWithAI(provider, messages, options = {}) {
       } catch (textErr) {
         // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
         logDebug(
-          `[symphony-bridge] ⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`,
+          `⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`,
         );
       }
     }
@@ -1467,12 +1467,12 @@ async function invokeWithAI(provider, messages, options = {}) {
     // The stream is already delivered, so we can't retry — just mark for future exclusion.
     if (useTools && fullText && RAW_TOOL_JSON_RE.test(fullText)) {
       logWarn(
-        `[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable for future requests`,
+        `⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable for future requests`,
       );
       nonToolCapableProviders.add(provider.name);
     }
 
-    logDebug(`[symphony-bridge] Streaming completed (${fullText.length} chars)`);
+    logDebug(`Streaming completed (${fullText.length} chars)`);
 
     return {
       text: fullText,
@@ -1492,7 +1492,7 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     if (result.finishReason === "tool-calls") {
       logWarn(
-        `[symphony-bridge] ⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
+        `⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
       );
       text +=
         "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
@@ -1501,7 +1501,7 @@ async function invokeWithAI(provider, messages, options = {}) {
     // Runtime safety net (non-streaming): detect raw JSON tool output and cascade to next provider
     if (useTools && text && RAW_TOOL_JSON_RE.test(text)) {
       logWarn(
-        `[symphony-bridge] ⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable`,
+        `⚠️ ${provider.name} emitted tool calls as raw JSON text — marking as non-tool-capable`,
       );
       nonToolCapableProviders.add(provider.name);
       throw new Error(
@@ -1509,7 +1509,7 @@ async function invokeWithAI(provider, messages, options = {}) {
       );
     }
 
-    logDebug(`[symphony-bridge] Completion done`);
+    logDebug(`Completion done`);
 
     return {
       text,
@@ -1529,7 +1529,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
 
   // Check if it's time for periodic evaluation
   if (shouldTriggerEvalCycle()) {
-    logDebug(`[symphony-bridge] 🔍 Periodic evaluation cycle: sampling underused providers`);
+    logDebug(`🔍 Periodic evaluation cycle: sampling underused providers`);
   }
 
   // Keep trying providers until we run out
@@ -1560,13 +1560,13 @@ async function invokeWithFallback(messages, route, sessionId = null) {
 
     if (needsExploration && lastSelectedProvider) {
       logDebug(
-        `[symphony-bridge] 🔍 Exploration mode: clearing failures to discover new providers`,
+        `🔍 Exploration mode: clearing failures to discover new providers`,
       );
       clearProviderFailure(lastSelectedProvider);
     }
 
     logInfo(
-      `[symphony-bridge] ${attemptNumber === 1 ? "Selected" : "Fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
+      `${attemptNumber === 1 ? "Selected" : "Fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
     triedProviders.push(provider.name);
 
@@ -1589,7 +1589,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: false });
 
-      logInfo(`[symphony-bridge] ✅ Success with ${provider.name} (attempt ${attemptNumber})`);
+      logInfo(`✅ Success with ${provider.name} (attempt ${attemptNumber})`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
@@ -1615,7 +1615,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const errStr = String(err);
       lastError = errStr;
       logWarn(
-        `[symphony-bridge] ❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`,
+        `❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`,
       );
 
       if (isRetryableErrorDeep(err)) {
@@ -1652,7 +1652,7 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
     });
 
   logDebug(
-    `[symphony-bridge] 🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`,
+    `🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`,
   );
 
     const headers = {
@@ -1664,7 +1664,7 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
     // Forward OpenClaw session ID to Codebuff bridge for tool proxying
     if (sessionId) {
       headers["X-OpenClaw-Session"] = sessionId;
-      logDebug(`[symphony-bridge] 🔗 Forwarding session ID to Codebuff bridge (${sessionId.slice(0, 12)}...)`);
+      logDebug(`🔗 Forwarding session ID to Codebuff bridge (${sessionId.slice(0, 12)}...)`);
     }
 
     const options = {
@@ -1733,7 +1733,7 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
               const toLog = filteredLogBuffer.trim();
               if (toLog.length > 0) {
                 logDebug(
-                  `[symphony-bridge] 🌊 ${toLog.slice(0, 200)}`,
+                  `🌊 ${toLog.slice(0, 200)}`,
                 );
               }
               logBuffer = ""; // Clear buffer after logging
@@ -1749,14 +1749,14 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
         // Log any remaining buffered text
         if (logBuffer.trim().length > 0) {
           logDebug(
-            `[symphony-bridge] 🌊 ${logBuffer.trim().slice(0, 200)}`,
+            `🌊 ${logBuffer.trim().slice(0, 200)}`,
           );
         }
         
         // Flush any remaining Discord stream buffer
         await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
         
-        logDebug(`[symphony-bridge] 🌊 Relay complete: ${fullText.length} chars`);
+        logDebug(`🌊 Relay complete: ${fullText.length} chars`);
         resolve({ text: fullText, providerName: "codebuff" });
       });
 
@@ -1803,7 +1803,7 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
     }
 
     logInfo(
-      `[symphony-bridge] ${attemptNumber === 1 ? "Streaming selected" : "Streaming fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
+      `${attemptNumber === 1 ? "Streaming selected" : "Streaming fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
     triedProviders.push(provider.name);
 
@@ -1820,7 +1820,7 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
       const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
       logInfo(
-        `[symphony-bridge] ✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
+        `✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
       );
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt);
@@ -1847,7 +1847,7 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
       const errStr = errorToString(rootErr !== err ? rootErr : err);
       lastError = errStr;
       logWarn(
-        `[symphony-bridge] ❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
+        `❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
       );
 
       if (isRetryableErrorDeep(err)) {
@@ -1909,7 +1909,7 @@ function checkAuth(req) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   const isValid = VALID_TOKENS.has(token) || token.startsWith("local-") || token === "";
-  logDebug(`[symphony-bridge] Auth check: received token="${token}", valid=${isValid}`);
+  logDebug(`Auth check: received token="${token}", valid=${isValid}`);
   return isValid;
 }
 
@@ -1981,18 +1981,18 @@ function logBridgeStats() {
   const now = Date.now();
   const elapsed = Math.round((now - BRIDGE_METRICS.lastStatsLog) / 1000);
 
-  logDebug(`[symphony-bridge] 📊 Bridge Stats (last ${elapsed}s):`);
+  logDebug(`📊 Bridge Stats (last ${elapsed}s):`);
   logDebug(
-    `[symphony-bridge]   Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`,
+    `  Total: ${BRIDGE_METRICS.totalRequests} requests | ${BRIDGE_METRICS.streamingRequests} stream | ${BRIDGE_METRICS.nonStreamingRequests} non-stream`,
   );
   logDebug(
-    `[symphony-bridge]   Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks} | Tool calls: ${BRIDGE_METRICS.totalToolCalls}`,
+    `  Errors: ${BRIDGE_METRICS.totalErrors} | Fallbacks: ${BRIDGE_METRICS.totalFallbacks} | Tool calls: ${BRIDGE_METRICS.totalToolCalls}`,
   );
   logDebug(
-    `[symphony-bridge]   Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`,
+    `  Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`,
   );
   logDebug(
-    `[symphony-bridge]   Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`,
+    `  Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`,
   );
 
   const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider)
@@ -2000,7 +2000,7 @@ function logBridgeStats() {
     .slice(0, 5);
   if (topProviders.length > 0) {
     const providerStrings = topProviders.map(([k, v]) => k + ":" + v);
-    logDebug(`[symphony-bridge]   Top providers: ${providerStrings.join(", ")}`);
+    logDebug(`  Top providers: ${providerStrings.join(", ")}`);
   }
 
   const topErrors = Object.entries(BRIDGE_METRICS.errorsByType)
@@ -2008,7 +2008,7 @@ function logBridgeStats() {
     .slice(0, 3);
   if (topErrors.length > 0) {
     const errorStrings = topErrors.map(([k, v]) => k + ":" + v);
-    logDebug(`[symphony-bridge]   Top errors: ${errorStrings.join(", ")}`);
+    logDebug(`  Top errors: ${errorStrings.join(", ")}`);
   }
 
   BRIDGE_METRICS.lastStatsLog = now;
@@ -2021,7 +2021,7 @@ function logBridgeStats() {
 
   const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
   logDebug(
-    `[symphony-bridge] 🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`,
+    `🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`,
   );
 
   // Log adaptive params
@@ -2030,7 +2030,7 @@ function logBridgeStats() {
     .map(([p, l]) => `${p}:${l}`)
     .join(", ");
   if (customLimits) {
-    logDebug(`[symphony-bridge] 🎯 Adaptive turn limits: ${customLimits}`);
+    logDebug(`🎯 Adaptive turn limits: ${customLimits}`);
   }
   
   // Cleanup expired sessions
@@ -2042,14 +2042,14 @@ function logBridgeStats() {
 // --------------------------------------------------------------------------<
 
 const server = http.createServer(async (req, res) => {
-  logDebug(`[symphony-bridge] ===== REQUEST =====`);
-  logDebug(`[symphony-bridge] method: ${req.method}, url: ${req.url}`);
+  logDebug(`===== REQUEST =====`);
+  logDebug(`method: ${req.method}, url: ${req.url}`);
 
   try {
     const skipAuth =
       req.url === "/health" || req.url === "/v1/models" || req.url === "/v1/providers";
     if (!skipAuth && !checkAuth(req)) {
-      logWarn(`[symphony-bridge] Auth failed for ${req.method} ${req.url}`);
+      logWarn(`Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
     }
 
@@ -2162,7 +2162,7 @@ const server = http.createServer(async (req, res) => {
     // POST /v1/providers/refresh — manually trigger a provider re-probe
     if (req.method === "POST" && req.url === "/v1/providers/refresh") {
       const started = refreshProviderStatus().catch((err) => {
-        logError(`[symphony-bridge] Manual probe error: ${err.message}`);
+        logError(`Manual probe error: ${err.message}`);
       });
       const isNew = started !== false;
       return sendJson(res, 200, {
@@ -2179,7 +2179,7 @@ const server = http.createServer(async (req, res) => {
       try {
         body = await parseBody(req);
       } catch (parseErr) {
-        logWarn(`[symphony-bridge] ⚠️ Request parse error: ${parseErr.message}`);
+        logWarn(`⚠️ Request parse error: ${parseErr.message}`);
         return sendJson(res, 400, {
           error: {
             message: "Invalid request body: not valid JSON",
@@ -2194,7 +2194,7 @@ const server = http.createServer(async (req, res) => {
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
         logWarn(
-          `[symphony-bridge] ⚠️ Empty messages array received - returning 400 immediately`,
+          `⚠️ Empty messages array received - returning 400 immediately`,
         );
         return sendJson(res, 400, {
           error: {
@@ -2252,7 +2252,7 @@ const server = http.createServer(async (req, res) => {
 
       // Existing warning for empty string model (if model present but empty)
       if (!body.model && body.model !== undefined) {
-        logWarn(`[symphony-bridge] ⚠️ Empty model field - using default`);
+        logWarn(`⚠️ Empty model field - using default`);
       }
 
       const route = resolveRoute(body.model || MODEL_ID);
@@ -2260,7 +2260,7 @@ const server = http.createServer(async (req, res) => {
 
       // Log message summary for debugging
       logInfo(
-        `[symphony-bridge] 📨 Request messages: ${messages.length} total (${messages.filter((m) => m.role === "system").length} system, ${messages.filter((m) => m.role === "user").length} user, ${messages.filter((m) => m.role === "assistant").length} assistant)`,
+        `📨 Request messages: ${messages.length} total (${messages.filter((m) => m.role === "system").length} system, ${messages.filter((m) => m.role === "user").length} user, ${messages.filter((m) => m.role === "assistant").length} assistant)`,
       );
 
       // Extract issue context
@@ -2277,12 +2277,12 @@ const server = http.createServer(async (req, res) => {
 
       if (issueContext) {
         logInfo(
-          `[symphony-bridge] 🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
+          `🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
         );
       }
 
       logInfo(
-        `[symphony-bridge] Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
+        `Chat completion: requestedModel=${route.requestedModelId}, routedModel=${route.responseModelId}, messages=${messages.length}, stream=${stream}`,
       );
       logMemory("request-start");
 
@@ -2350,14 +2350,14 @@ const server = http.createServer(async (req, res) => {
         description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
         color: 0xFFA500, // Orange
         fields,
-      }).catch(err => logDebug(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+      }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
         logDebug(
-          `[symphony-bridge] ⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`,
+          `⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`,
         );
         logMemory("request-progress");
         
@@ -2368,7 +2368,7 @@ const server = http.createServer(async (req, res) => {
       const requestTimeoutHandle = setTimeout(() => {
         const elapsed = Date.now() - startTime;
         logError(
-          `[symphony-bridge] ⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`,
+          `⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`,
         );
         logMemory("request-timeout");
         activeRequests.delete(requestId);
@@ -2401,7 +2401,7 @@ const server = http.createServer(async (req, res) => {
               },
             });
           }          } catch (e) {
-            logError(`[symphony-bridge] Timeout cleanup error: ${e.message}`);
+            logError(`Timeout cleanup error: ${e.message}`);
           }
       }, REQUEST_TIMEOUT_MS);
 
@@ -2435,13 +2435,13 @@ const server = http.createServer(async (req, res) => {
         const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
         
       logInfo(
-        `[symphony-bridge] 🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
+        `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
       );
 
         if (selectedProvider?.name === "codebuff") {
           try {
             logInfo(
-              `[symphony-bridge] 🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
+              `🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
             
             // Stream output to Discord as it's received (immediate, no buffering)
@@ -2466,7 +2466,7 @@ const server = http.createServer(async (req, res) => {
             activeRequests.delete(requestId);
             
           logInfo(
-            `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
+            `✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
           );
           
           // Send comprehensive completion metrics (non-blocking)
@@ -2479,7 +2479,7 @@ const server = http.createServer(async (req, res) => {
               { name: "Output", value: `${result.text.length} chars`, inline: true },
               { name: "Model", value: "codebuff", inline: true },
             ],
-          }).catch(err => logDebug(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -2501,14 +2501,14 @@ const server = http.createServer(async (req, res) => {
             return;
           } catch (codebuffErr) {
             const errMsg = String(codebuffErr.message || codebuffErr).slice(0, 200);
-            logWarn(`[symphony-bridge] ⚠️ Codebuff transparent relay failed: ${errMsg}`);
+            logWarn(`⚠️ Codebuff transparent relay failed: ${errMsg}`);
 
             // Record failure and fall through to standard cascade
             if (isRetryableErrorDeep(codebuffErr)) {
               recordProviderFailure("codebuff");
               recordProviderFailureCount("codebuff");
             }
-            logInfo(`[symphony-bridge] 🔄 Falling back to standard provider cascade (excluding codebuff)...`);
+            logInfo(`🔄 Falling back to standard provider cascade (excluding codebuff)...`);
             // Fall through to standard fallback cascade, excluding the failed codebuff
           }
         }
@@ -2550,7 +2550,7 @@ const server = http.createServer(async (req, res) => {
           activeRequests.delete(requestId);
           
           logInfo(
-            `[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
+            `✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
           );
           
           // Send comprehensive completion metrics (non-blocking)
@@ -2563,7 +2563,7 @@ const server = http.createServer(async (req, res) => {
               { name: "Output", value: `${result.text.length} chars`, inline: true },
               { name: "Model", value: result.providerName, inline: true },
             ],
-          }).catch(err => logDebug(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+          }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -2581,7 +2581,7 @@ const server = http.createServer(async (req, res) => {
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
           logError(
-            `[symphony-bridge] Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`,
+            `Streaming error after ${formatElapsed(Date.now() - startTime)}: ${streamError.message}`,
           );
 
           const durationMs = Date.now() - startTime;
@@ -2630,7 +2630,7 @@ const server = http.createServer(async (req, res) => {
         // Clean up request tracking
         activeRequests.delete(requestId);
         
-        logInfo(`[symphony-bridge] ✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
+        logInfo(`✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
         
         // Send comprehensive completion metrics (non-blocking)
         const tokensIn = result.usage?.promptTokens || 0;
@@ -2646,7 +2646,7 @@ const server = http.createServer(async (req, res) => {
             { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
             { name: "Model", value: result.providerName, inline: true },
           ],
-        }).catch(err => logDebug(`[symphony-bridge] Discord webhook failed: ${err.message}`));
+        }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
 
@@ -2688,7 +2688,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 404, { error: { message: "Not found" } });
     }
   } catch (error) {
-    logError(`[symphony-bridge] Error: ${error.message}`);
+    logError(`Error: ${error.message}`);
     logMemory("request-error");
     
     // Clean up request tracking on error (only if requestId was defined)
@@ -2700,7 +2700,7 @@ const server = http.createServer(async (req, res) => {
     // if headers have already been sent (e.g., streaming mode with partial response)
     if (res.writableEnded) {
       logError(
-        `[symphony-bridge] Cannot send error response - response already ended (stream likely failed mid-flight)`,
+        `Cannot send error response - response already ended (stream likely failed mid-flight)`,
       );
       return;
     }
@@ -2710,13 +2710,13 @@ const server = http.createServer(async (req, res) => {
     const headersSent = res.headersSent || res.writableFinished;
     if (headersSent) {
       logError(
-        `[symphony-bridge] Headers already sent - sending error as stream chunk instead of JSON`,
+        `Headers already sent - sending error as stream chunk instead of JSON`,
       );
       // Use a fallback model ID since route may not be defined if error occurred early
       const fallbackModelId = typeof route !== 'undefined' ? route.responseModelId : MODEL_ID;
       try {
         if (res.writableEnded) {
-          logError(`[symphony-bridge] Cannot send error chunk - response already ended`);
+          logError(`Cannot send error chunk - response already ended`);
           return;
         }
         const errorChunk = {
@@ -2737,7 +2737,7 @@ const server = http.createServer(async (req, res) => {
         res.end();
         return;
       } catch (streamErr) {
-        logError(`[symphony-bridge] Failed to send error chunk: ${streamErr.message}`);
+        logError(`Failed to send error chunk: ${streamErr.message}`);
         return;
       }
     }
@@ -2756,7 +2756,7 @@ const server = http.createServer(async (req, res) => {
 // --------------------------------------------------------------------------<
 
 async function shutdown(signal) {
-  logInfo(`\n[symphony-bridge] Received ${signal}, shutting down...`);
+  logInfo(`\nReceived ${signal}, shutting down...`);
   
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -2766,9 +2766,9 @@ async function shutdown(signal) {
     await updateMemory(
       `Symphony Bridge stopped (PID ${process.pid}, commit ${commitHash}, ${available}/${total} providers, signal: ${signal})`
     );
-    logInfo(`[symphony-bridge] 📝 Updated MEMORY.md before shutdown`);
+    logInfo(`📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
-    logError(`[symphony-bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+    logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
   
   if (probeIntervalHandle) {
@@ -2778,7 +2778,7 @@ async function shutdown(signal) {
   stopDiscordMonitoring();
   logProviderStats();
   server.close(() => {
-    logInfo("[symphony-bridge] Server closed");
+    logInfo("Server closed");
   });
   // Exit immediately without waiting for active connections
   process.exit(0);
@@ -2796,16 +2796,16 @@ server.timeout = 0;
 server.keepAliveTimeout = 0;
 
 server.listen(PORT, "127.0.0.1", async () => {
-  logInfo(`[symphony-bridge] ========================================`);
-  logInfo(`[symphony-bridge] Symphony OpenAI Bridge Starting`);
-  logInfo(`[symphony-bridge] ========================================`);
-  logInfo(`[symphony-bridge] Listening: http://127.0.0.1:${PORT}/v1`);
-  logInfo(`[symphony-bridge] Model: ${MODEL_ID}`);
-  logInfo(`[symphony-bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
-  logInfo(`[symphony-bridge] Streaming: enabled`);
-  logInfo(`[symphony-bridge] Auto-fallback: enabled (credit-gate)`);
-  logInfo(`[symphony-bridge] Tools available: ${Object.keys(tools).join(", ")}`);
-  logInfo(`[symphony-bridge] ========================================`);
+  logInfo(`========================================`);
+  logInfo(`Symphony OpenAI Bridge Starting`);
+  logInfo(`========================================`);
+  logInfo(`Listening: http://127.0.0.1:${PORT}/v1`);
+  logInfo(`Model: ${MODEL_ID}`);
+  logInfo(`Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
+  logInfo(`Streaming: enabled`);
+  logInfo(`Auto-fallback: enabled (credit-gate)`);
+  logInfo(`Tools available: ${Object.keys(tools).join(", ")}`);
+  logInfo(`========================================`);
 
   // Send immediate Discord notification on startup - BEFORE async probe
   try {
@@ -2814,7 +2814,7 @@ server.listen(PORT, "127.0.0.1", async () => {
     const [commitSubject, ...commitBodyLines] = commitInfo.split('\n');
     const commitBody = commitBodyLines.join('\n').trim();
     
-    logInfo(`[symphony-bridge] 📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`);
+    logInfo(`📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`);
     
     const fields = [
       { name: "Port", value: String(PORT), inline: true },
@@ -2835,25 +2835,25 @@ server.listen(PORT, "127.0.0.1", async () => {
       fields,
     });
     if (discordResult.sent) {
-      logInfo(`[symphony-bridge] ✅ Discord startup notification sent successfully`);
+      logInfo(`✅ Discord startup notification sent successfully`);
     } else {
-      logError(`[symphony-bridge] ❌ Discord startup notification failed: ${discordResult.reason || 'unknown'}`);
+      logError(`❌ Discord startup notification failed: ${discordResult.reason || 'unknown'}`);
     }
   } catch (err) {
-    logError(`[symphony-bridge] ❌ Failed to send Discord startup notification: ${err.message}`);
+    logError(`❌ Failed to send Discord startup notification: ${err.message}`);
   }
 
   // Synchronously populate configured providers (no network calls)
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
   providerStatusCache.configured = getConfiguredProviders({ excludeNames });
   logInfo(
-    `[symphony-bridge] Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`,
+    `Configured providers (${providerStatusCache.configured.length}): ${providerStatusCache.configured.map((p) => p.name).join(", ")}`,
   );
   if (BRIDGE_PROVIDER_BLOCKLIST.size > 0) {
-    logInfo(`[symphony-bridge] ⛔ Blocked providers (${BRIDGE_PROVIDER_BLOCKLIST.size}):`);
+    logInfo(`⛔ Blocked providers (${BRIDGE_PROVIDER_BLOCKLIST.size}):`);
     for (const name of BRIDGE_PROVIDER_BLOCKLIST) {
       const reason = BRIDGE_PROVIDER_BLOCKLIST_REASONS[name] || "blocklisted";
-      logInfo(`[symphony-bridge]   ⛔ ${name}: ${reason}`);
+      logInfo(`  ⛔ ${name}: ${reason}`);
     }
   }
 
@@ -2862,18 +2862,18 @@ server.listen(PORT, "127.0.0.1", async () => {
     .then(async () => {
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
-      logInfo(`[symphony-bridge] ========================================`);
+      logInfo(`========================================`);
       logInfo(
-        `[symphony-bridge] Startup probe complete: ${available.length}/${total} providers available`,
+        `Startup probe complete: ${available.length}/${total} providers available`,
       );
       for (const p of providerStatusCache.probeResults.filter((r) => r.status !== "excluded")) {
         const icon = p.available ? "✅" : "❌";
         const dur = p.durationMs > 0 ? ` (${p.durationMs}ms)` : "";
-        logInfo(`[symphony-bridge]   ${icon} ${p.name}: ${p.status}${dur}`);
+        logInfo(`  ${icon} ${p.name}: ${p.status}${dur}`);
       }
       if (nonToolCapableProviders.size > 0) {
         logInfo(
-          `[symphony-bridge] 🚫 Non-tool-capable (excluded from selection): ${[...nonToolCapableProviders].join(", ")}`,
+          `🚫 Non-tool-capable (excluded from selection): ${[...nonToolCapableProviders].join(", ")}`,
         );
       }
       const unclassified = available
@@ -2881,14 +2881,14 @@ server.listen(PORT, "127.0.0.1", async () => {
         .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n));
       if (unclassified.length > 0) {
         logInfo(
-          `[symphony-bridge] ❓ Unclassified (${unclassified.length}, left in pool): ${unclassified.join(", ")}`,
+          `❓ Unclassified (${unclassified.length}, left in pool): ${unclassified.join(", ")}`,
         );
       }
       logInfo(
-        `[symphony-bridge] ✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
-      );      logInfo(`[symphony-bridge] ========================================`);
-      logInfo(`[symphony-bridge] Ready to accept requests`);
-      logInfo(`[symphony-bridge] ========================================`);
+        `✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
+      );      logInfo(`========================================`);
+      logInfo(`Ready to accept requests`);
+      logInfo(`========================================`);
       
       // Update MEMORY.md with successful startup
       try {
@@ -2897,20 +2897,20 @@ server.listen(PORT, "127.0.0.1", async () => {
           `Symphony Bridge restarted successfully (PID ${process.pid}, commit ${commitHash}, ${available.length}/${total} providers available, Discord monitoring ${process.env.DISCORD_BOT_TOKEN ? 'active' : 'disabled'})`
         );
       } catch (err) {
-        logWarn(`[symphony-bridge] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+        logWarn(`⚠️ Failed to update MEMORY.md: ${err.message}`);
       }
     })
     .catch((err) => {
-      logError(`[symphony-bridge] Startup probe failed: ${err.message}`);
-      logInfo(`[symphony-bridge] ========================================`);
-      logInfo(`[symphony-bridge] Ready to accept requests (probe incomplete)`);
-      logInfo(`[symphony-bridge] ========================================`);
+      logError(`Startup probe failed: ${err.message}`);
+      logInfo(`========================================`);
+      logInfo(`Ready to accept requests (probe incomplete)`);
+      logInfo(`========================================`);
     });
 
   // Periodic re-probe to keep provider status fresh
   probeIntervalHandle = setInterval(() => {
     refreshProviderStatus().catch((err) => {
-      logError(`[symphony-bridge] Periodic probe failed: ${err.message}`);
+      logError(`Periodic probe failed: ${err.message}`);
     });
   }, PROVIDER_PROBE_INTERVAL_MS);
 

@@ -15,7 +15,7 @@
 
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logInfo } = createLogger("ollama-audit");
+const { logInfo } = createLogger();
 
 const OLLAMA_BASE = process.env.OLLAMA_API_BASE || "http://localhost:11434";
 const PINNED_MODEL = "qwen2.5-coder:3b-instruct";

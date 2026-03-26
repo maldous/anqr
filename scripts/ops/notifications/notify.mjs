@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url";
 import { sendNotification } from "../lib/notify.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("notify");
+const { logInfo, logError } = createLogger();
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..", "..", "..");

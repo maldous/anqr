@@ -5,7 +5,7 @@ import { generateOpenApi } from "@ts-rest/open-api";
 import { qrApiContract } from "../packages/contracts/api/src";
 import { createLogger } from "./ops/lib/logger.mjs";
 
-const { logInfo } = createLogger("generate-openapi");
+const { logInfo } = createLogger();
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDir = path.join(repoRoot, "docs", "api");

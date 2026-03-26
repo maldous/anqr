@@ -10,7 +10,7 @@ import { sendDiscordMessage, sendDiscordEmbed, streamDiscordUpdate } from './dis
 import http from 'node:http';
 import { createLogger } from '../../lib/logger.mjs';
 
-const { logInfo, logWarn, logError } = createLogger('test-discord');
+const { logInfo, logWarn, logError } = createLogger();
 
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || '127.0.0.1';
 const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;

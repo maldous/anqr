@@ -11,7 +11,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "./logger.mjs";
 
-const { logInfo, logError } = createLogger("notify");
+const { logInfo, logError } = createLogger();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../../..");

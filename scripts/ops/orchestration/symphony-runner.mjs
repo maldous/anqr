@@ -33,7 +33,7 @@ import {
 } from "../symphony-config.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logWarn, logError } = createLogger("runner");
+const { logInfo, logWarn, logError } = createLogger();
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
 import { recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
 import { runAgent, continueAgent } from "../symphony-agent.mjs";

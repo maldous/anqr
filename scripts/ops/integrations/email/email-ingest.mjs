@@ -20,7 +20,7 @@ import {
 } from "../../symphony-state.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logError } = createLogger("email-ingest");
+const { logError } = createLogger();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../../../../");

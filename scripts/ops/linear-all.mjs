@@ -13,7 +13,7 @@
 import { fileURLToPath } from "node:url";
 import { createLogger } from "./lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("linear-all");
+const { logInfo, logError } = createLogger();
 
 const API_KEY = process.env.LINEAR_API_KEY;
 const TEAM_ID = process.env.LINEAR_TEAM_ID || "01534c1e-4041-474d-a81e-24f917f33912";

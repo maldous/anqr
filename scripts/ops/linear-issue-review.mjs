@@ -12,7 +12,7 @@
 
 import { createLogger } from "./lib/logger.mjs";
 
-const { logInfo, logWarn, logError } = createLogger("linear-issue-review");
+const { logInfo, logWarn, logError } = createLogger();
 
 const LINEAR_API = "https://api.linear.app/graphql";
 const REQUEST_TIMEOUT_MS = 20_000;

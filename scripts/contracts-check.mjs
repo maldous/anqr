@@ -4,7 +4,7 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "./ops/lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("contracts-check");
+const { logInfo, logError } = createLogger();
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const contractsRoot = path.join(repoRoot, "packages", "contracts");

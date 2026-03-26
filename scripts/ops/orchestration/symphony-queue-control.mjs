@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { listIssuesByState, updateIssue, addComment, STATES } from "../linear-client.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("queue-control");
+const { logInfo, logError } = createLogger();
 import {
   TARGET_MIN,
   TARGET_MAX,

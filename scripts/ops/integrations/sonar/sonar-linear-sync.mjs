@@ -20,7 +20,7 @@ import {
 } from "../../linear-client.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logInfo } = createLogger("sonar-linear-sync");
+const { logInfo } = createLogger();
 
 const FETCH_TIMEOUT_MS = 30_000;
 const SONAR_KEY_PATTERN = /<!-- sonar-key:([a-f0-9-]+) -->/;

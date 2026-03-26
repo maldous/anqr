@@ -28,7 +28,7 @@ import { CodebuffClient } from "@codebuff/sdk";
 import { isTextUIPart, isReasoningUIPart, isToolUIPart, isDataUIPart } from "ai";
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logDebug, logInfo, logWarn, logError } = createLogger("codebuff-bridge");
+const { logDebug, logInfo, logWarn, logError } = createLogger();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../../../../");

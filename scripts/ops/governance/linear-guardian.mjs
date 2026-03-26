@@ -27,7 +27,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logError } = createLogger("linear-guardian");
+const { logInfo, logError } = createLogger();
 import {
   createIssue,
   updateIssue,
