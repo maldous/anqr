@@ -1870,12 +1870,8 @@ async function invokeWithAI(provider, messages, options = {}) {
             { finishReason, textLength: event.text?.length || 0 },
           );
         }
-        if (finishReason === "tool-calls") {
-          logWarn(
-            `⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
-            { maxIterations: MAX_TOOL_ITERATIONS, finishReason },
-          );
-        }
+        // Note: The step limit warning is handled after the stream loop (line ~2085)
+        // because errorCount is not yet available in onFinish callback.
       },
     });
 
@@ -2073,10 +2069,11 @@ async function invokeWithAI(provider, messages, options = {}) {
       );
     }
 
-    // Handle truncated responses — model hit step limit while still wanting to execute tools
+    // Handle truncated responses — but distinguish between actual step limit vs API errors
     if (finishReason === "tool-calls") {
-      const truncationNote =
-        "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+      const truncationNote = errorCount > 0
+        ? "\n\n---\n⚠️ Response truncated: the stream ended during tool execution due to API error(s). The results above may be incomplete."
+        : "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
       fullText += truncationNote;
       if (onChunk) {
         onChunk({ type: "text", text: truncationNote });
@@ -2121,6 +2118,10 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     let text = result.text || "";
 
+    // Non-streaming: check if there were errors during generateText
+    // Note: For non-streaming, we don't have per-event error tracking, but we can check
+    // if the result.text indicates issues. The "tool-calls" finish reason on non-streaming
+    // is more likely to be an actual step limit (generateText doesn't surface individual errors).
     if (result.finishReason === "tool-calls") {
       logWarn(
         `⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
