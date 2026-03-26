@@ -184,7 +184,7 @@ function startDiscordMonitoring() {
     if (message) {
       logInfo(`📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`);
 
-      // Process the command via Symphony bridge (Discord streaming handled by invokeCodebuffDirectStream)
+      // Process the command via Symphony bridge (Discord streaming handled in SSE consumption loop below)
       try {
         const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
           method: "POST",
@@ -206,8 +206,7 @@ function startDiscordMonitoring() {
           return;
         }
 
-        // Just consume the stream without duplicating to Discord
-        // (Discord streaming is already handled by the main request handler via invokeCodebuffDirectStream)
+        // Consume the SSE stream and forward text chunks to Discord via streamDiscordUpdate
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullText = "";
@@ -229,7 +228,7 @@ function startDiscordMonitoring() {
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
                   fullText += content;
-                  // Discord streaming removed - already handled by invokeCodebuffDirectStream
+                  streamDiscordUpdate(content, { emoji: "" }).catch(() => { /* ignore */ });
                 }
               } catch {
                 // Parse error - ignore malformed JSON chunk
@@ -240,8 +239,13 @@ function startDiscordMonitoring() {
           reader.releaseLock();
         }
 
+        // Flush any remaining buffered text to Discord
+        await flushDiscordStream({ emoji: "" }).catch(() => { /* ignore */ });
+
         logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
+        // Flush buffer on error too so partial text reaches Discord
+        await flushDiscordStream({ emoji: "" }).catch(() => { /* ignore */ });
         logError(`❌ Discord command error: ${err.message}`);
       }
     }
@@ -3000,14 +3004,18 @@ const server = http.createServer(async (req, res) => {
             );
 
             // Stream output to Discord as it's received (immediate, no buffering)
-            const streamToDiscord = (text) => {
-              if (text && text.length > 0) {
-                // Send immediately for real-time feedback
-                streamDiscordUpdate(text, { emoji: "" }).catch(() => {
-                  /* ignore */
-                });
-              }
-            };
+            // Skip for Discord-originated requests — the Discord command handler
+            // already streams text from the SSE response to avoid double delivery.
+            const isDiscordOrigin = sessionId?.startsWith("discord:");
+            const streamToDiscord = isDiscordOrigin
+              ? null
+              : (text) => {
+                  if (text && text.length > 0) {
+                    streamDiscordUpdate(text, { emoji: "" }).catch(() => {
+                      /* ignore */
+                    });
+                  }
+                };
 
             const result = await invokeCodebuffDirectStream(
               messages,
