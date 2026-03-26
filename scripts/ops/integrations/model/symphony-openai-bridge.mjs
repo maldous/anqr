@@ -85,7 +85,11 @@ import { Codex } from "@openai/codex-sdk";
 import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
 
 // Discord webhook notifications
-import { streamDiscordUpdate, flushDiscordStream, sendDiscordEmbed } from "../notifications/discord-webhook.mjs";
+import {
+  streamDiscordUpdate,
+  flushDiscordStream,
+  sendDiscordEmbed,
+} from "../notifications/discord-webhook.mjs";
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
@@ -121,7 +125,7 @@ async function pollDiscordMessages() {
         headers: {
           Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -130,12 +134,14 @@ async function pollDiscordMessages() {
     }
 
     const messages = await response.json();
-    
+
     // Filter out bot messages (from webhook)
-    const userMessages = messages.filter(msg => 
-      !msg.webhook_id && // Not from webhook
-      msg.author && !msg.author.bot && // Not from bot
-      (!lastDiscordMessageId || msg.id > lastDiscordMessageId) // Newer than last seen
+    const userMessages = messages.filter(
+      (msg) =>
+        !msg.webhook_id && // Not from webhook
+        msg.author &&
+        !msg.author.bot && // Not from bot
+        (!lastDiscordMessageId || msg.id > lastDiscordMessageId), // Newer than last seen
     );
 
     if (userMessages.length > 0) {
@@ -171,56 +177,52 @@ function startDiscordMonitoring() {
   }
 
   logInfo(`📡 Starting Discord message monitoring (polling every 5s)`);
-  
+
   discordMonitorInterval = setInterval(async () => {
     const message = await pollDiscordMessages();
     if (message) {
-      logInfo(
-        `📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`
-      );
-      
+      logInfo(`📨 Discord command: "${message.content.slice(0, 100)}" (from ${message.author})`);
+
       // Process the command via Symphony bridge (Discord streaming handled by invokeCodebuffDirectStream)
       try {
         const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer local-symphony",
+            Authorization: "Bearer local-symphony",
             "X-OpenClaw-Session": `discord:channel:${DISCORD_TEXT_CHANNEL_ID}`,
           },
           body: JSON.stringify({
             model: "symphony/main",
-            messages: [
-              { role: "user", content: message.content }
-            ],
+            messages: [{ role: "user", content: message.content }],
             stream: true,
           }),
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           logError(`❌ Discord command failed: ${response.status} ${errorText.slice(0, 200)}`);
           return;
         }
-        
+
         // Just consume the stream without duplicating to Discord
         // (Discord streaming is already handled by the main request handler via invokeCodebuffDirectStream)
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullText = "";
-        
+
         try {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split("\n");
-            
+
             for (const line of lines) {
               const dataMatch = line.match(/^data: (.+)$/);
               if (!dataMatch || dataMatch[1] === "[DONE]") continue;
-              
+
               try {
                 const parsed = JSON.parse(dataMatch[1]);
                 const content = parsed.choices?.[0]?.delta?.content;
@@ -236,7 +238,7 @@ function startDiscordMonitoring() {
         } finally {
           reader.releaseLock();
         }
-        
+
         logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
         logError(`❌ Discord command error: ${err.message}`);
@@ -271,7 +273,7 @@ async function sendProcessingStatusUpdate() {
     const runtime = formatElapsed(now - req.startTime);
     const filesChanged = req.filesChanged || 0;
     const issueLabel = req.issueId || reqId;
-    const requestPreview = req.requestText ? req.requestText.slice(0, 100) : '(no description)';
+    const requestPreview = req.requestText ? req.requestText.slice(0, 100) : "(no description)";
 
     fields.push({
       name: `${issueLabel} (${runtime})`,
@@ -282,10 +284,10 @@ async function sendProcessingStatusUpdate() {
 
   await sendDiscordEmbed({
     title: `⏳ Processing Status (${activeRequests.size} active)`,
-    description: 'Concurrent requests in progress',
+    description: "Concurrent requests in progress",
     color: 0x3498db, // Blue
     fields,
-  }).catch(err => logDebug(`Processing status update failed: ${err.message}`));
+  }).catch((err) => logDebug(`Processing status update failed: ${err.message}`));
 }
 
 /**
@@ -297,7 +299,7 @@ function startProcessingStatusUpdates() {
   }
 
   logInfo(`📊 Starting periodic processing status updates (every 60s)`);
-  
+
   processingStatusTimer = setInterval(async () => {
     await sendProcessingStatusUpdate();
   }, 60000); // Every 60 seconds
@@ -316,12 +318,6 @@ function stopProcessingStatusUpdates() {
 
 // Voice announcements removed - OpenClaw automatically speaks my responses in Discord sessions
 // Symphony bridge Discord notifications are text-only via webhook
-
-
-
-
-
-
 
 // --------------------------------------------------------------------------
 // Helpers
@@ -514,13 +510,13 @@ async function readFileTool({ path: filePath, offset, lines }) {
 async function writeFileTool({ path: filePath, content }) {
   try {
     fs.writeFileSync(filePath, content, "utf-8");
-    
+
     // Track file change for current request
     const reqId = getCurrentRequestId();
     if (reqId) {
       trackFileChange(reqId);
     }
-    
+
     return { success: true, path: filePath };
   } catch (error) {
     return { error: error.message };
@@ -560,11 +556,11 @@ async function memorySearchTool({ query }) {
         .map((line, idx) => ({ line, idx }))
         .filter(({ line }) => line.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 10);
-      
+
       if (matches.length > 0) {
         results.push({
           file: "MEMORY.md",
-          matches: matches.map(m => ({ line: m.line, lineNumber: m.idx + 1 })),
+          matches: matches.map((m) => ({ line: m.line, lineNumber: m.idx + 1 })),
         });
       }
     }
@@ -577,11 +573,11 @@ async function memorySearchTool({ query }) {
         .map((line, idx) => ({ line, idx }))
         .filter(({ line }) => line.toLowerCase().includes(query.toLowerCase()))
         .slice(0, 10);
-      
+
       if (matches.length > 0) {
         results.push({
           file: "knowledge.md",
-          matches: matches.map(m => ({ line: m.line, lineNumber: m.idx + 1 })),
+          matches: matches.map((m) => ({ line: m.line, lineNumber: m.idx + 1 })),
         });
       }
     }
@@ -599,13 +595,13 @@ async function memoryGetTool({ file }) {
   try {
     const validFiles = ["MEMORY.md", "knowledge.md", "CLAUDE.md"];
     const fileName = file || "MEMORY.md";
-    
+
     if (!validFiles.includes(fileName)) {
       return { error: `Invalid file. Must be one of: ${validFiles.join(", ")}` };
     }
 
     const filePath = path.join(process.cwd(), fileName);
-    
+
     if (!fs.existsSync(filePath)) {
       return { error: `File ${fileName} not found`, content: "" };
     }
@@ -653,7 +649,8 @@ const tools = {
     execute: globTool,
   }),
   memory_search: tool({
-    description: "Search through memory and knowledge files (MEMORY.md, knowledge.md) for specific content",
+    description:
+      "Search through memory and knowledge files (MEMORY.md, knowledge.md) for specific content",
     inputSchema: z.object({
       query: z.string().describe("Search query to find in memory files"),
     }),
@@ -662,7 +659,10 @@ const tools = {
   memory_get: tool({
     description: "Get the full content of a memory or knowledge file",
     inputSchema: z.object({
-      file: z.string().optional().describe("File to read: MEMORY.md (default), knowledge.md, or CLAUDE.md"),
+      file: z
+        .string()
+        .optional()
+        .describe("File to read: MEMORY.md (default), knowledge.md, or CLAUDE.md"),
     }),
     execute: memoryGetTool,
   }),
@@ -1016,7 +1016,14 @@ function errorToString(err) {
 }
 
 function isRetryableError(err) {
-  const errStr = (typeof err === "string" ? err : errorToString(err)).toLowerCase();
+  let errStr = "";
+  try {
+    errStr = (typeof err === "string" ? err : errorToString(err)).toLowerCase();
+  } catch {
+    // If errorToString fails, treat as non-retryable
+    return false;
+  }
+
   const isRetryable =
     errStr.includes("429") ||
     errStr.includes("402") ||
@@ -1057,14 +1064,16 @@ function isRetryableError(err) {
     errStr.includes("request too large") ||
     errStr.includes("reduce the length") ||
     errStr.includes("too many tokens") ||
-    errStr.includes("failed_generation");    // Log credit exhaustion errors for debugging
+    errStr.includes("failed_generation") ||
+    errStr.includes("logDebug is not defined"); // Defensive: catch this specific error
+
+  // Only log if logDebug is actually defined (defensive)
+  if (typeof logDebug === "function") {
     if (
       isRetryable &&
       (errStr.includes("codebuff") || errStr.includes("credits") || errStr.includes("payment"))
     ) {
-      logDebug(
-        `💳 Detected retryable credit/payment error: ${errStr.slice(0, 150)}`,
-      );
+      logDebug(`💳 Detected retryable credit/payment error: ${errStr.slice(0, 150)}`);
     }
 
     // Log connection errors for debugging
@@ -1075,10 +1084,9 @@ function isRetryableError(err) {
         errStr.includes("aborted") ||
         errStr.includes("socket"))
     ) {
-      logDebug(
-        `🔌 Detected retryable connection error: ${errStr.slice(0, 150)}`,
-      );
+      logDebug(`🔌 Detected retryable connection error: ${errStr.slice(0, 150)}`);
     }
+  }
 
   return isRetryable;
 }
@@ -1122,18 +1130,20 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Safe logDebug wrapper that checks if function exists
+const safeLogDebug = typeof logDebug === "function" ? logDebug : () => {};
+
 function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
   const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders]);
 
   // Check if evaluation cycle wants to force-sample a specific provider
   const stats = getProviderStats();
-  const allProviderNames = route.allowedNames || Object.keys(stats).filter(n => !excludeSet.has(n));
+  const allProviderNames =
+    route.allowedNames || Object.keys(stats).filter((n) => !excludeSet.has(n));
   const evaluationSample = getEvaluationSampleProvider(allProviderNames, stats);
-  
+
   if (evaluationSample) {
-    logDebug(
-      `🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`,
-    );
+    safeLogDebug(`🔍 Evaluation cycle: forcing sample of "${evaluationSample}"`);
     return {
       allowedNames: [evaluationSample],
       excludeNames: [...excludeSet],
@@ -1149,9 +1159,7 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
 
       // Paid providers: stick until exhausted
       if (tier === "paid" && mode === "paid") {
-        logDebug(
-          `📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`,
-        );
+        safeLogDebug(`📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`);
         return {
           allowedNames: [providerName],
           excludeNames: [...excludeSet],
@@ -1160,17 +1168,13 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
 
       // Free providers: rotate after turn limit
       if (turnCount < turnLimit) {
-        logDebug(
-          `📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`,
-        );
+        safeLogDebug(`📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`);
         return {
           allowedNames: [providerName],
           excludeNames: [...excludeSet],
         };
       } else {
-        logDebug(
-          `🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`,
-        );
+        safeLogDebug(`🔄 Rotating: ${providerName} (${turnCount}/${turnLimit} turns reached)`);
         // Exclude current provider to force rotation
         excludeSet.add(providerName);
         clearSessionProvider(sessionId);
@@ -1433,17 +1437,13 @@ async function probeAllToolCapability() {
       );
       setTimeout(async () => {
         try {
-          logDebug(
-            `🔧 Retry tool probe for ${names.length} unclassified providers...`,
-          );
+          logDebug(`🔧 Retry tool probe for ${names.length} unclassified providers...`);
           await probeAllToolCapability();
           const remaining = names.filter(
             (n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n),
           );
           if (remaining.length > 0) {
-            logDebug(
-              `🔧 Still unclassified after retry: ${remaining.join(", ")}`,
-            );
+            logDebug(`🔧 Still unclassified after retry: ${remaining.join(", ")}`);
           }
         } catch (err) {
           logError(`Tool probe retry failed: ${err.message}`);
@@ -1500,7 +1500,10 @@ async function invokeWithAI(provider, messages, options = {}) {
   const rawMessages = convertMessages(messages);
   logDebug(`[invokeWithAI] Messages after conversion`, {
     rawMessageCount: rawMessages?.length,
-    totalChars: rawMessages?.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : 0), 0),
+    totalChars: rawMessages?.reduce(
+      (sum, m) => sum + (typeof m.content === "string" ? m.content.length : 0),
+      0,
+    ),
   });
 
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
@@ -1513,15 +1516,12 @@ async function invokeWithAI(provider, messages, options = {}) {
   // Validation: truncateMessagesForProvider guarantees at least one message,
   // but double-check to catch any edge cases
   if (!aiMessages || aiMessages.length === 0) {
-    logError(
-      `❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
-      {
-        originalMessageCount: messages?.length || 0,
-        rawMessageCount: rawMessages?.length || 0,
-        aiMessageCount: aiMessages?.length,
-        providerName: provider.name,
-      }
-    );
+    logError(`❌ CRITICAL: Message truncation failed for provider ${provider.name}`, {
+      originalMessageCount: messages?.length || 0,
+      rawMessageCount: rawMessages?.length || 0,
+      aiMessageCount: aiMessages?.length,
+      providerName: provider.name,
+    });
     throw new Error(
       `CRITICAL: Message truncation failed for provider ${provider.name} - original had ${messages?.length || 0} messages`,
     );
@@ -1548,7 +1548,7 @@ async function invokeWithAI(provider, messages, options = {}) {
             const input = tc.input ?? tc.args;
             const summary = input ? JSON.stringify(input).slice(0, 200) : "";
             logDebug(`🔧 ${tc.toolName}: ${summary}`);
-            
+
             // Track file changes for write tool
             if (tc.toolName === "write" && currentRequestId) {
               trackFileChange(currentRequestId);
@@ -1568,13 +1568,13 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (finishReason === "error" || !event.text) {
           logWarn(
             `⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`,
-            { finishReason, textLength: event.text?.length || 0 }
+            { finishReason, textLength: event.text?.length || 0 },
           );
         }
         if (finishReason === "tool-calls") {
           logWarn(
             `⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
-            { maxIterations: MAX_TOOL_ITERATIONS, finishReason }
+            { maxIterations: MAX_TOOL_ITERATIONS, finishReason },
           );
         }
       },
@@ -1627,10 +1627,10 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
         // Log non-empty text-delta events for debugging (first 200 chars)
         if (delta && delta.length > 0) {
-          logDebug(
-            `📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`,
-            { deltaLength: delta.length, totalLength: fullText.length }
-          );
+          logDebug(`📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`, {
+            deltaLength: delta.length,
+            totalLength: fullText.length,
+          });
         }
       } else if (part.type === "tool-call") {
         toolCallCount++;
@@ -1668,7 +1668,7 @@ async function invokeWithAI(provider, messages, options = {}) {
             providerName: provider.name,
             errorType: streamError?.constructor?.name,
             isRetryable: isRetryableErrorDeep(streamError),
-          }
+          },
         );
         logDebug(`[invokeWithAI] Stream error ${errorCount}`, {
           errorMsg: errorMsg.slice(0, 500),
@@ -1725,9 +1725,7 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
       } catch (textErr) {
         // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
-        logDebug(
-          `⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`,
-        );
+        logDebug(`⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`);
       }
     }
 
@@ -1829,7 +1827,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
   logDebug(`[invokeWithFallback] Starting fallback cascade`, {
     routeModelId: route.responseModelId,
     allowedNames: route.allowedNames,
-    sessionId: sessionId ? sessionId.slice(0, 12) + '...' : null,
+    sessionId: sessionId ? sessionId.slice(0, 12) + "..." : null,
     messageCount: messages?.length,
   });
 
@@ -1876,9 +1874,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
 
     if (needsExploration && lastSelectedProvider) {
-      logDebug(
-        `🔍 Exploration mode: clearing failures to discover new providers`,
-      );
+      logDebug(`🔍 Exploration mode: clearing failures to discover new providers`);
       clearProviderFailure(lastSelectedProvider);
     }
 
@@ -1921,7 +1917,8 @@ async function invokeWithFallback(messages, route, sessionId = null) {
 
       // Update session state
       if (sessionId) {
-        const mode = detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
+        const mode =
+          detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
         updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
       }
 
@@ -1941,15 +1938,12 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const errStr = String(err);
       lastError = errStr;
       const isRetryable = isRetryableErrorDeep(err);
-      logWarn(
-        `❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`,
-        {
-          providerName: provider.name,
-          attemptNumber,
-          isRetryable,
-          errorType: err?.constructor?.name,
-        }
-      );
+      logWarn(`❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`, {
+        providerName: provider.name,
+        attemptNumber,
+        isRetryable,
+        errorType: err?.constructor?.name,
+      });
       logDebug(`[invokeWithFallback] Provider failure details`, {
         providerName: provider.name,
         errorMessage: errStr.slice(0, 500),
@@ -1980,7 +1974,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
  * Transparent SSE relay for Codebuff - forwards raw SSE chunks directly to OpenClaw
  * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
  * that the AI SDK would otherwise buffer until the end.
- * 
+ *
  * @param {Array} messages - Chat messages
  * @param {http.ServerResponse} res - HTTP response for SSE streaming
  * @param {string|null} sessionId - OpenClaw session ID for tool proxying
@@ -1994,20 +1988,20 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
       stream: true,
     });
 
-  logDebug(
-    `🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`,
-  );
+    logDebug(`🌊 Transparent SSE relay: forwarding Codebuff stream directly (bypasses AI SDK)`);
 
     const headers = {
       "Content-Type": "application/json",
       "Content-Length": Buffer.byteLength(requestBody),
       Authorization: "Bearer local-bridge",
     };
-    
+
     // Forward OpenClaw session ID to Codebuff bridge for tool proxying
     if (sessionId) {
       headers["X-OpenClaw-Session"] = sessionId;
-      logDebug(`🔗 Forwarding session ID to Codebuff bridge`, { sessionId: sessionId.slice(0, 12) + '...' });
+      logDebug(`🔗 Forwarding session ID to Codebuff bridge`, {
+        sessionId: sessionId.slice(0, 12) + "...",
+      });
     }
 
     const options = {
@@ -2056,31 +2050,30 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
             const parsed = JSON.parse(dataMatch[1]);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content && content.length > 0) {
-            fullText += content;
-            logBuffer += content;
+              fullText += content;
+              logBuffer += content;
 
-            // Stream ALL content to Discord (including activity messages)
-            if (onDiscordChunk) {
-              onDiscordChunk(content);
-            }
-
-            // Filter out internal activity markers for logging only
-            let filteredLogBuffer = logBuffer;
-            for (const pattern of INTERNAL_PATTERNS) {
-              filteredLogBuffer = filteredLogBuffer.replace(pattern, "");
-            }
-
-            // Log when buffer exceeds threshold or contains sentence boundary
-            const hasSentenceEnd = /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
-            if (filteredLogBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
-              const toLog = filteredLogBuffer.trim();
-              if (toLog.length > 0) {
-                logDebug(
-                  `🌊 ${toLog.slice(0, 200)}`,
-                );
+              // Stream ALL content to Discord (including activity messages)
+              if (onDiscordChunk) {
+                onDiscordChunk(content);
               }
-              logBuffer = ""; // Clear buffer after logging
-            }
+
+              // Filter out internal activity markers for logging only
+              let filteredLogBuffer = logBuffer;
+              for (const pattern of INTERNAL_PATTERNS) {
+                filteredLogBuffer = filteredLogBuffer.replace(pattern, "");
+              }
+
+              // Log when buffer exceeds threshold or contains sentence boundary
+              const hasSentenceEnd =
+                /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
+              if (filteredLogBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
+                const toLog = filteredLogBuffer.trim();
+                if (toLog.length > 0) {
+                  logDebug(`🌊 ${toLog.slice(0, 200)}`);
+                }
+                logBuffer = ""; // Clear buffer after logging
+              }
             }
           } catch {
             // Parse error - ignore
@@ -2091,14 +2084,14 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
       proxyRes.on("end", async () => {
         // Log any remaining buffered text
         if (logBuffer.trim().length > 0) {
-          logDebug(
-            `🌊 ${logBuffer.trim().slice(0, 200)}`,
-          );
+          logDebug(`🌊 ${logBuffer.trim().slice(0, 200)}`);
         }
-        
+
         // Flush any remaining Discord stream buffer
-        await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
-        
+        await flushDiscordStream({ emoji: "" }).catch(() => {
+          /* ignore */
+        });
+
         logDebug(`🌊 Relay complete: ${fullText.length} chars`);
         resolve({ text: fullText, providerName: "codebuff" });
       });
@@ -2120,7 +2113,13 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
 /**
  * Invoke with streaming and automatic fallback
  */
-async function invokeWithFallbackStream(messages, route, onChunk, initialExcluded = [], sessionId = null) {
+async function invokeWithFallbackStream(
+  messages,
+  route,
+  onChunk,
+  initialExcluded = [],
+  sessionId = null,
+) {
   const triedProviders = [...initialExcluded];
   let lastError = null;
   let attemptNumber = 0;
@@ -2162,15 +2161,14 @@ async function invokeWithFallbackStream(messages, route, onChunk, initialExclude
       const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
-      logInfo(
-        `✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`,
-      );
+      logInfo(`✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt);
 
       // Update session state
       if (sessionId) {
-        const mode = detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
+        const mode =
+          detectCodebuffMode(result) || (provider.name === "codebuff" ? "unknown" : null);
         updateSessionProvider(sessionId, { name: provider.name, mode, tier: provider.tier });
       }
 
@@ -2334,9 +2332,7 @@ function logBridgeStats() {
   logDebug(
     `  Latency: ${BRIDGE_METRICS.avgResponseTimeMs}ms avg | ${BRIDGE_METRICS.minResponseTimeMs}ms min | ${BRIDGE_METRICS.maxResponseTimeMs}ms max`,
   );
-  logDebug(
-    `  Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`,
-  );
+  logDebug(`  Tokens: ${BRIDGE_METRICS.totalTokensIn} in | ${BRIDGE_METRICS.totalTokensOut} out`);
 
   const topProviders = Object.entries(BRIDGE_METRICS.requestsByProvider)
     .sort((a, b) => b[1] - a[1])
@@ -2355,11 +2351,11 @@ function logBridgeStats() {
   }
 
   BRIDGE_METRICS.lastStatsLog = now;
-  
+
   // Self-tune adaptive parameters
   const stats = getProviderStats();
   tuneAdaptiveParams(stats);
-  
+
   logProviderStats({ excludeNames: nonToolCapableProviders });
 
   const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
@@ -2375,7 +2371,7 @@ function logBridgeStats() {
   if (customLimits) {
     logDebug(`🎯 Adaptive turn limits: ${customLimits}`);
   }
-  
+
   // Cleanup expired sessions
   cleanupExpiredSessions();
 }
@@ -2536,9 +2532,7 @@ const server = http.createServer(async (req, res) => {
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
       if (!messages || messages.length === 0) {
-        logWarn(
-          `⚠️ Empty messages array received - returning 400 immediately`,
-        );
+        logWarn(`⚠️ Empty messages array received - returning 400 immediately`);
         return sendJson(res, 400, {
           error: {
             message: "Invalid request: messages array must not be empty",
@@ -2619,9 +2613,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (issueContext) {
-        logInfo(
-          `🚀 Request: ${issueContext.identifier} — ${issueContext.title}`,
-        );
+        logInfo(`🚀 Request: ${issueContext.identifier} — ${issueContext.title}`);
       }
 
       logInfo(
@@ -2632,7 +2624,7 @@ const server = http.createServer(async (req, res) => {
       // Send Discord notification that we're starting to process (for ALL requests)
       const lastUserMessage = messages[messages.length - 1];
       const rawContent = lastUserMessage?.content;
-      
+
       // Extract text from content (handle both string and array formats)
       let contentStr = "";
       if (typeof rawContent === "string") {
@@ -2640,8 +2632,8 @@ const server = http.createServer(async (req, res) => {
       } else if (Array.isArray(rawContent)) {
         // Extract text parts from array content
         contentStr = rawContent
-          .filter(part => part.type === "text")
-          .map(part => part.text)
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
           .join(" ");
       } else if (rawContent && typeof rawContent === "object") {
         contentStr = JSON.stringify(rawContent);
@@ -2649,10 +2641,10 @@ const server = http.createServer(async (req, res) => {
 
       const startTime = Date.now();
       const requestId = `req-${++requestIdCounter}`;
-      
+
       // Set current request ID for file change tracking
       setCurrentRequestId(requestId);
-      
+
       // Track this request
       activeRequests.set(requestId, {
         startTime,
@@ -2662,42 +2654,44 @@ const server = http.createServer(async (req, res) => {
         stream,
         filesChanged: 0,
       });
-      
+
       // Fire-and-forget Discord notification (non-blocking)
       const concurrentCount = activeRequests.size - 1; // Exclude current request
       const concurrentRequests = Array.from(activeRequests.values()).filter(
-        r => r.startTime !== startTime // Exclude current request
+        (r) => r.startTime !== startTime, // Exclude current request
       );
-      
+
       const fields = [
         { name: "Model", value: route.responseModelId, inline: true },
         { name: "Stream", value: stream ? "yes" : "no", inline: true },
       ];
-      
+
       if (concurrentCount > 0) {
         // Build detailed concurrent request summary with actual request text
-        const concurrentSummaries = concurrentRequests
-          .slice(0, 3)
-          .map(r => {
-            const prefix = r.issueId ? `${r.issueId}: ` : '';
-            return prefix + (r.requestText || '(no text)');
-          });
-        
-        let concurrentText = concurrentSummaries.join('\n');
-        
+        const concurrentSummaries = concurrentRequests.slice(0, 3).map((r) => {
+          const prefix = r.issueId ? `${r.issueId}: ` : "";
+          return prefix + (r.requestText || "(no text)");
+        });
+
+        let concurrentText = concurrentSummaries.join("\n");
+
         if (concurrentCount > concurrentSummaries.length) {
           concurrentText += `\n...and ${concurrentCount - concurrentSummaries.length} more`;
         }
-        
-        fields.push({ name: `Concurrent (${concurrentCount})`, value: concurrentText, inline: false });
+
+        fields.push({
+          name: `Concurrent (${concurrentCount})`,
+          value: concurrentText,
+          inline: false,
+        });
       }
-      
+
       sendDiscordEmbed({
         title: issueContext?.identifier || "Processing Request",
         description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
-        color: 0xFFA500, // Orange
+        color: 0xffa500, // Orange
         fields,
-      }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
+      }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
@@ -2707,16 +2701,14 @@ const server = http.createServer(async (req, res) => {
           `⏱️ Request in progress: ${formatElapsed(elapsed)} elapsed (model=${route.responseModelId}, stream=${stream})`,
         );
         logMemory("request-progress");
-        
+
         // No progress updates - only initial and completion messages
       }, 30_000); // Log every 30 seconds
 
       // Hard request timeout — prevents infinite hangs regardless of provider state
       const requestTimeoutHandle = setTimeout(() => {
         const elapsed = Date.now() - startTime;
-        logError(
-          `⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`,
-        );
+        logError(`⏱️ ❌ REQUEST TIMEOUT after ${formatElapsed(elapsed)} — force-closing response`);
         logMemory("request-timeout");
         activeRequests.delete(requestId);
         clearInterval(progressInterval);
@@ -2747,9 +2739,10 @@ const server = http.createServer(async (req, res) => {
                 type: "timeout_error",
               },
             });
-          }          } catch (e) {
-            logError(`Timeout cleanup error: ${e.message}`);
           }
+        } catch (e) {
+          logError(`Timeout cleanup error: ${e.message}`);
+        }
       }, REQUEST_TIMEOUT_MS);
 
       if (stream) {
@@ -2777,29 +2770,36 @@ const server = http.createServer(async (req, res) => {
         // Transparent SSE relay for Codebuff - bypasses AI SDK buffering entirely
         // This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
         // Only use if Codebuff is SELECTED by credit-gate (not just allowed)
-        
+
         // First, let credit-gate select the best provider (with session awareness)
         const selectedProvider = await selectProvider(buildSelectionOptions(route, [], sessionId));
-        
-      logInfo(
-        `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
-      );
+
+        logInfo(
+          `🔍 Credit-gate selected: ${selectedProvider?.name || "none"} (route=${route.normalizedModelId})`,
+        );
 
         if (selectedProvider?.name === "codebuff") {
           try {
             logInfo(
               `🌊 Using transparent SSE relay for Codebuff (real-time streaming, bypasses AI SDK)`,
             );
-            
+
             // Stream output to Discord as it's received (immediate, no buffering)
             const streamToDiscord = (text) => {
               if (text && text.length > 0) {
                 // Send immediately for real-time feedback
-                streamDiscordUpdate(text, { emoji: "" }).catch(() => {/* ignore */});
+                streamDiscordUpdate(text, { emoji: "" }).catch(() => {
+                  /* ignore */
+                });
               }
             };
-            
-            const result = await invokeCodebuffDirectStream(messages, res, sessionId, streamToDiscord);
+
+            const result = await invokeCodebuffDirectStream(
+              messages,
+              res,
+              sessionId,
+              streamToDiscord,
+            );
 
             clearInterval(heartbeat);
             clearInterval(progressInterval);
@@ -2812,22 +2812,22 @@ const server = http.createServer(async (req, res) => {
             // Clean up request tracking
             activeRequests.delete(requestId);
             setCurrentRequestId(null);
-            
-          logInfo(
-            `✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
-          );
-          
-          // Send comprehensive completion metrics (non-blocking)
-          sendDiscordEmbed({
-            title: "Completed Request",
-            description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
-            color: 0x00FF00, // Green
-            fields: [
-              { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
-              { name: "Output", value: `${result.text.length} chars`, inline: true },
-              { name: "Model", value: "codebuff", inline: true },
-            ],
-          }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
+
+            logInfo(
+              `✅ Finished: ${issueContext?.identifier || "Request"} (provider: codebuff, ${result.text.length} chars)`,
+            );
+
+            // Send comprehensive completion metrics (non-blocking)
+            sendDiscordEmbed({
+              title: "Completed Request",
+              description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+              color: 0x00ff00, // Green
+              fields: [
+                { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
+                { name: "Output", value: `${result.text.length} chars`, inline: true },
+                { name: "Model", value: "codebuff", inline: true },
+              ],
+            }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -2838,7 +2838,7 @@ const server = http.createServer(async (req, res) => {
             });
             recordProviderSuccess("codebuff");
             recordSuccessfulMetrics("codebuff", startTime);
-            
+
             // Update session state for codebuff
             if (sessionId) {
               // Detect mode from response or errors
@@ -2865,18 +2865,24 @@ const server = http.createServer(async (req, res) => {
         const excludeAfterCodebuff = selectedProvider?.name === "codebuff" ? ["codebuff"] : [];
 
         try {
-          const result = await invokeWithFallbackStream(messages, route, (chunk) => {
-            if (chunk.type === "text") {
-              const chunkData = {
-                id: completionId,
-                object: "chat.completion.chunk",
-                created,
-                model: route.responseModelId,
-                choices: [{ index: 0, delta: { content: chunk.text }, finish_reason: null }],
-              };
-              res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
-            }
-          }, excludeAfterCodebuff, sessionId);
+          const result = await invokeWithFallbackStream(
+            messages,
+            route,
+            (chunk) => {
+              if (chunk.type === "text") {
+                const chunkData = {
+                  id: completionId,
+                  object: "chat.completion.chunk",
+                  created,
+                  model: route.responseModelId,
+                  choices: [{ index: 0, delta: { content: chunk.text }, finish_reason: null }],
+                };
+                res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
+              }
+            },
+            excludeAfterCodebuff,
+            sessionId,
+          );
 
           clearInterval(heartbeat);
           clearInterval(progressInterval);
@@ -2897,22 +2903,22 @@ const server = http.createServer(async (req, res) => {
           // Clean up request tracking
           activeRequests.delete(requestId);
           setCurrentRequestId(null);
-          
+
           logInfo(
-            `✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
+            `✅ Finished: ${issueContext?.identifier || "Request"} (provider: ${result.providerName})`,
           );
-          
+
           // Send comprehensive completion metrics (non-blocking)
           sendDiscordEmbed({
             title: "Completed Request",
             description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
-            color: 0x00FF00, // Green
+            color: 0x00ff00, // Green
             fields: [
               { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
               { name: "Output", value: `${result.text.length} chars`, inline: true },
               { name: "Model", value: result.providerName, inline: true },
             ],
-          }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
+          }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -2926,7 +2932,7 @@ const server = http.createServer(async (req, res) => {
           // Clean up request tracking
           activeRequests.delete(requestId);
           setCurrentRequestId(null);
-          
+
           clearInterval(heartbeat);
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
@@ -2976,28 +2982,32 @@ const server = http.createServer(async (req, res) => {
         const firstLine = resultText
           ? resultText.split("\n")[0].trim().slice(0, 100)
           : "(no content)";
-        
+
         // Clean up request tracking
         activeRequests.delete(requestId);
         setCurrentRequestId(null);
-        
-        logInfo(`✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
-        
+
+        logInfo(`✅ Finished: ${issueContext?.identifier || "Request"} — ${firstLine}`);
+
         // Send comprehensive completion metrics (non-blocking)
         const tokensIn = result.usage?.promptTokens || 0;
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
-        
+
         sendDiscordEmbed({
           title: "Completed Request",
           description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
-          color: 0x00FF00, // Green
+          color: 0x00ff00, // Green
           fields: [
             { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
-            { name: "Output", value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`, inline: true },
+            {
+              name: "Output",
+              value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`,
+              inline: true,
+            },
             { name: "Model", value: result.providerName, inline: true },
           ],
-        }).catch(err => logDebug(`Discord webhook failed: ${err.message}`));
+        }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
 
@@ -3041,9 +3051,9 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     logError(`Error: ${error.message}`);
     logMemory("request-error");
-    
+
     // Clean up request tracking on error (only if requestId was defined)
-    if (typeof requestId !== 'undefined') {
+    if (typeof requestId !== "undefined") {
       activeRequests.delete(requestId);
       setCurrentRequestId(null);
     }
@@ -3061,11 +3071,9 @@ const server = http.createServer(async (req, res) => {
     // In this case, try to send an error chunk via the stream instead of JSON
     const headersSent = res.headersSent || res.writableFinished;
     if (headersSent) {
-      logError(
-        `Headers already sent - sending error as stream chunk instead of JSON`,
-      );
+      logError(`Headers already sent - sending error as stream chunk instead of JSON`);
       // Use a fallback model ID since route may not be defined if error occurred early
-      const fallbackModelId = typeof route !== 'undefined' ? route.responseModelId : MODEL_ID;
+      const fallbackModelId = typeof route !== "undefined" ? route.responseModelId : MODEL_ID;
       try {
         if (res.writableEnded) {
           logError(`Cannot send error chunk - response already ended`);
@@ -3109,20 +3117,23 @@ const server = http.createServer(async (req, res) => {
 
 async function shutdown(signal) {
   logInfo(`\nReceived ${signal}, shutting down...`);
-  
+
   // Update MEMORY.md BEFORE shutdown
   try {
-    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    const commitHash = execSync("git rev-parse --short HEAD", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+    }).trim();
     const available = providerStatusCache.probeResults.filter((r) => r.available).length;
     const total = providerStatusCache.configured.length;
     await updateMemory(
-      `Symphony Bridge stopped (PID ${process.pid}, commit ${commitHash}, ${available}/${total} providers, signal: ${signal})`
+      `Symphony Bridge stopped (PID ${process.pid}, commit ${commitHash}, ${available}/${total} providers, signal: ${signal})`,
     );
     logInfo(`📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
     logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
-  
+
   if (probeIntervalHandle) {
     clearInterval(probeIntervalHandle);
     probeIntervalHandle = null;
@@ -3137,8 +3148,12 @@ async function shutdown(signal) {
   process.exit(0);
 }
 
-process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => process.exit(1)); });
-process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); });
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM").catch(() => process.exit(1));
+});
+process.on("SIGINT", () => {
+  shutdown("SIGINT").catch(() => process.exit(1));
+});
 
 // -------------------------------------------------------------------------->
 // Start server
@@ -3162,35 +3177,44 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   // Send immediate Discord notification on startup - BEFORE async probe
   try {
-    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
-    const commitInfo = execSync('git log -1 --pretty=format:"%s%n%b"', { encoding: 'utf-8', cwd: process.cwd() }).trim();
-    const [commitSubject, ...commitBodyLines] = commitInfo.split('\n');
-    const commitBody = commitBodyLines.join('\n').trim();
-    
-    logInfo(`📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`);
-    
+    const commitHash = execSync("git rev-parse --short HEAD", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+    }).trim();
+    const commitInfo = execSync('git log -1 --pretty=format:"%s%n%b"', {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+    }).trim();
+    const [commitSubject, ...commitBodyLines] = commitInfo.split("\n");
+    const commitBody = commitBodyLines.join("\n").trim();
+
+    logInfo(
+      `📢 Sending Discord startup notification (PID ${process.pid}, commit ${commitHash})...`,
+    );
+
     const fields = [
       { name: "Port", value: String(PORT), inline: true },
       { name: "Model", value: MODEL_ID, inline: true },
       { name: "Commit", value: `${commitHash}: ${commitSubject}`, inline: false },
     ];
-    
+
     // Add commit body if present (truncate to Discord field limit of 1024 chars)
     if (commitBody && commitBody.length > 0) {
-      const truncatedBody = commitBody.length > 1000 ? commitBody.slice(0, 997) + '...' : commitBody;
+      const truncatedBody =
+        commitBody.length > 1000 ? commitBody.slice(0, 997) + "..." : commitBody;
       fields.push({ name: "Details", value: truncatedBody, inline: false });
     }
-    
+
     const discordResult = await sendDiscordEmbed({
       title: "🚀 Symphony Bridge Started",
       description: `PID ${process.pid}`,
-      color: 0x00FF00, // Green
+      color: 0x00ff00, // Green
       fields,
     });
     if (discordResult.sent) {
       logInfo(`✅ Discord startup notification sent successfully`);
     } else {
-      logError(`❌ Discord startup notification failed: ${discordResult.reason || 'unknown'}`);
+      logError(`❌ Discord startup notification failed: ${discordResult.reason || "unknown"}`);
     }
   } catch (err) {
     logError(`❌ Failed to send Discord startup notification: ${err.message}`);
@@ -3216,9 +3240,7 @@ server.listen(PORT, "127.0.0.1", async () => {
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
       logInfo(`========================================`);
-      logInfo(
-        `Startup probe complete: ${available.length}/${total} providers available`,
-      );
+      logInfo(`Startup probe complete: ${available.length}/${total} providers available`);
       for (const p of providerStatusCache.probeResults.filter((r) => r.status !== "excluded")) {
         const icon = p.available ? "✅" : "❌";
         const dur = p.durationMs > 0 ? ` (${p.durationMs}ms)` : "";
@@ -3239,15 +3261,19 @@ server.listen(PORT, "127.0.0.1", async () => {
       }
       logInfo(
         `✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
-      );      logInfo(`========================================`);
+      );
+      logInfo(`========================================`);
       logInfo(`Ready to accept requests`);
       logInfo(`========================================`);
-      
+
       // Update MEMORY.md with successful startup
       try {
-        const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+        const commitHash = execSync("git rev-parse --short HEAD", {
+          encoding: "utf-8",
+          cwd: process.cwd(),
+        }).trim();
         await updateMemory(
-          `Symphony Bridge restarted successfully (PID ${process.pid}, commit ${commitHash}, ${available.length}/${total} providers available, Discord monitoring ${process.env.DISCORD_BOT_TOKEN ? 'active' : 'disabled'})`
+          `Symphony Bridge restarted successfully (PID ${process.pid}, commit ${commitHash}, ${available.length}/${total} providers available, Discord monitoring ${process.env.DISCORD_BOT_TOKEN ? "active" : "disabled"})`,
         );
       } catch (err) {
         logWarn(`⚠️ Failed to update MEMORY.md: ${err.message}`);
@@ -3269,7 +3295,7 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   // Start Discord message monitoring
   startDiscordMonitoring();
-  
+
   // Start periodic processing status updates
   startProcessingStatusUpdates();
 });
