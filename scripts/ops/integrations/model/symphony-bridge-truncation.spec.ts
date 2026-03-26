@@ -549,8 +549,7 @@ describe("tool overhead in truncateMessagesForProvider", () => {
     const messages = [makeMessage("user", chars)];
     const result = truncateMessagesForProvider(messages, "groq", { useTools: true });
     expect(result).not.toBe(messages); // truncation occurred
-    const effectiveLimit =
-      PROVIDER_MAX_INPUT_TOKENS["groq"] - TOOL_DEFINITION_OVERHEAD_TOKENS;
+    const effectiveLimit = PROVIDER_MAX_INPUT_TOKENS["groq"] - TOOL_DEFINITION_OVERHEAD_TOKENS;
     expect(estimateMessagesTokens(result)).toBeLessThanOrEqual(effectiveLimit);
   });
 
@@ -590,8 +589,7 @@ describe("tool overhead in truncateMessagesForProvider", () => {
       makeMessage("user", 2_000), // ~500 tokens
     ]; // total ~7004 tokens > 4K effective limit
     const result = truncateMessagesForProvider(messages, "groq", { useTools: true });
-    const effectiveLimit =
-      PROVIDER_MAX_INPUT_TOKENS["groq"] - TOOL_DEFINITION_OVERHEAD_TOKENS;
+    const effectiveLimit = PROVIDER_MAX_INPUT_TOKENS["groq"] - TOOL_DEFINITION_OVERHEAD_TOKENS;
     expect(estimateMessagesTokens(result)).toBeLessThanOrEqual(effectiveLimit);
   });
 });

@@ -34,7 +34,7 @@ export const TOKEN_WINDOW_MS = 60_000;
 export const REQUEST_WINDOW_MS = 60_000;
 
 export const CONTEXT_SHRINK_FACTOR = 0.75;
-export const CONTEXT_SHRINK_BUFFER = 0.90;
+export const CONTEXT_SHRINK_BUFFER = 0.9;
 export const CONTEXT_EXPAND_FACTOR = 1.05;
 export const CONTEXT_EXPAND_THRESHOLD = 3;
 
@@ -261,7 +261,8 @@ export function classifyError(err) {
 
   if (statusCode === 413 || isContextError(errStr)) return ERROR_TYPES.CONTEXT_TOO_LARGE;
   if (statusCode === 429 || isRateLimitError(errStr)) return ERROR_TYPES.RATE_LIMITED;
-  if (statusCode === 401 || statusCode === 403 || isAuthError(errStr)) return ERROR_TYPES.AUTH_ERROR;
+  if (statusCode === 401 || statusCode === 403 || isAuthError(errStr))
+    return ERROR_TYPES.AUTH_ERROR;
   if (statusCode === 408 || isTimeoutError(errStr)) return ERROR_TYPES.TIMEOUT;
   if ((statusCode && statusCode >= 500) || isServerError(errStr)) return ERROR_TYPES.SERVER_ERROR;
   return ERROR_TYPES.UNKNOWN;
@@ -280,14 +281,16 @@ export function parseContextErrorDetails(err) {
   const youRequestedMatch = errStr.match(/you requested (\d+)/i);
   const isTpmRelated = /tokens per minute|tpm/i.test(errStr);
 
-  const reportedLimit =
-    limitMatch ? parseInt(limitMatch[1], 10) : contextLenMatch ? parseInt(contextLenMatch[1], 10) : null;
-  const requestedTokens =
-    requestedMatch
-      ? parseInt(requestedMatch[1], 10)
-      : youRequestedMatch
-        ? parseInt(youRequestedMatch[1], 10)
-        : null;
+  const reportedLimit = limitMatch
+    ? parseInt(limitMatch[1], 10)
+    : contextLenMatch
+      ? parseInt(contextLenMatch[1], 10)
+      : null;
+  const requestedTokens = requestedMatch
+    ? parseInt(requestedMatch[1], 10)
+    : youRequestedMatch
+      ? parseInt(youRequestedMatch[1], 10)
+      : null;
 
   return {
     reportedLimit,

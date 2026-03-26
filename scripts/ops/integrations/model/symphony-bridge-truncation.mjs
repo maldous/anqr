@@ -165,7 +165,10 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
     return [{ role: "user", content: "[Error: No messages provided]" }];
   }
 
-  const baseMaxTokens = options.maxTokensOverride || PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
+  const baseMaxTokens =
+    options.maxTokensOverride ||
+    PROVIDER_MAX_INPUT_TOKENS[providerName] ||
+    DEFAULT_MAX_INPUT_TOKENS;
   const toolOverhead = options.useTools === true ? TOOL_DEFINITION_OVERHEAD_TOKENS : 0;
   const maxTokens = Math.max(baseMaxTokens - toolOverhead, MIN_MESSAGE_BUDGET_TOKENS);
   let estimated = estimateMessagesTokens(messages);

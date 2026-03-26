@@ -107,10 +107,7 @@ describe("dynamic context limits", () => {
   it("shrinks by CONTEXT_SHRINK_FACTOR on context error with no details", () => {
     const base = PROVIDER_MAX_INPUT_TOKENS.groq;
     recordContextError("groq", {});
-    const expected = Math.max(
-      Math.floor(base * CONTEXT_SHRINK_FACTOR),
-      MIN_MESSAGE_BUDGET_TOKENS,
-    );
+    const expected = Math.max(Math.floor(base * CONTEXT_SHRINK_FACTOR), MIN_MESSAGE_BUDGET_TOKENS);
     expect(getEffectiveMaxTokens("groq")).toBe(expected);
   });
 
@@ -222,9 +219,7 @@ describe("classifyError", () => {
   });
 
   it("classifies 'request too large' message as CONTEXT_TOO_LARGE", () => {
-    const err = new Error(
-      "AI_APICallError: Request too large for model llama-3.3-70b-versatile",
-    );
+    const err = new Error("AI_APICallError: Request too large for model llama-3.3-70b-versatile");
     expect(classifyError(err)).toBe(ERROR_TYPES.CONTEXT_TOO_LARGE);
   });
 
@@ -386,9 +381,7 @@ describe("parseRateLimitInfo", () => {
   });
 
   it("parses TPM limit from error message when headers missing", () => {
-    const err = new Error(
-      "Rate limited on tokens per minute (TPM): Limit 12000",
-    );
+    const err = new Error("Rate limited on tokens per minute (TPM): Limit 12000");
     const info = parseRateLimitInfo(err);
     expect(info.tpmLimit).toBe(12000);
   });

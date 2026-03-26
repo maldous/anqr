@@ -14,17 +14,17 @@ Provides consistent restart/shutdown notifications for all ANQR services.
 ### Basic Example (Symphony Bridge)
 
 ```javascript
-import { notifyServiceRestart, notifyServiceShutdown } from './service-restart-notify.mjs';
+import { notifyServiceRestart, notifyServiceShutdown } from "./service-restart-notify.mjs";
 
 // On startup
 server.listen(PORT, async () => {
   await notifyServiceRestart({
-    serviceName: 'Symphony Bridge',
+    serviceName: "Symphony Bridge",
     port: 4319,
     metadata: {
-      'Model': 'symphony/main',
-      'Providers': '38/38 available',
-      'Tools': 'read, write, exec, glob, memory_search, memory_get',
+      Model: "symphony/main",
+      Providers: "38/38 available",
+      Tools: "read, write, exec, glob, memory_search, memory_get",
     },
   });
 });
@@ -32,34 +32,34 @@ server.listen(PORT, async () => {
 // On shutdown
 async function shutdown(signal) {
   await notifyServiceShutdown({
-    serviceName: 'Symphony Bridge',
+    serviceName: "Symphony Bridge",
     signal,
     metadata: {
-      'Providers': '38/38 available',
+      Providers: "38/38 available",
     },
     activeRequests: activeRequests.size,
   });
   process.exit(0);
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 ```
 
 ### Codebuff Bridge Example
 
 ```javascript
-import { notifyServiceRestart, notifyServiceShutdown } from '../../lib/service-restart-notify.mjs';
+import { notifyServiceRestart, notifyServiceShutdown } from "../../lib/service-restart-notify.mjs";
 
 // On startup
 server.listen(PORT, async () => {
   await notifyServiceRestart({
-    serviceName: 'Codebuff Bridge',
+    serviceName: "Codebuff Bridge",
     port: 4318,
     metadata: {
-      'Model': 'codebuff/base',
-      'Mode': 'paid',
-      'API Key': 'configured',
+      Model: "codebuff/base",
+      Mode: "paid",
+      "API Key": "configured",
     },
   });
 });
@@ -67,10 +67,10 @@ server.listen(PORT, async () => {
 // On shutdown
 async function shutdown(signal) {
   await notifyServiceShutdown({
-    serviceName: 'Codebuff Bridge',
+    serviceName: "Codebuff Bridge",
     signal,
     metadata: {
-      'Mode': 'paid',
+      Mode: "paid",
     },
   });
   process.exit(0);
@@ -82,17 +82,17 @@ async function shutdown(signal) {
 If you're implementing an OpenClaw Gateway wrapper or monitoring service:
 
 ```javascript
-import { notifyServiceRestart, notifyServiceShutdown } from './service-restart-notify.mjs';
+import { notifyServiceRestart, notifyServiceShutdown } from "./service-restart-notify.mjs";
 
 // On startup
 gateway.listen(PORT, async () => {
   await notifyServiceRestart({
-    serviceName: 'OpenClaw Gateway',
+    serviceName: "OpenClaw Gateway",
     port: 18789,
     metadata: {
-      'Mode': 'local',
-      'Auth': 'token',
-      'Tools': 'message, memory_get, read, write, exec',
+      Mode: "local",
+      Auth: "token",
+      Tools: "message, memory_get, read, write, exec",
     },
   });
 });
@@ -100,11 +100,11 @@ gateway.listen(PORT, async () => {
 // On shutdown
 async function shutdown(signal) {
   await notifyServiceShutdown({
-    serviceName: 'OpenClaw Gateway',
+    serviceName: "OpenClaw Gateway",
     signal,
     metadata: {
-      'Port': 18789,
-      'Active Sessions': activeSessions.size,
+      Port: 18789,
+      "Active Sessions": activeSessions.size,
     },
     activeRequests: activeConnections.size,
   });
@@ -115,29 +115,29 @@ async function shutdown(signal) {
 ### Watchdog/Monitoring Service Example
 
 ```javascript
-import { notifyServiceRestart, notifyServiceShutdown } from '../../lib/service-restart-notify.mjs';
+import { notifyServiceRestart, notifyServiceShutdown } from "../../lib/service-restart-notify.mjs";
 
 // On startup
 async function startWatchdog() {
   await notifyServiceRestart({
-    serviceName: 'Bridge Watchdog',
+    serviceName: "Bridge Watchdog",
     metadata: {
-      'Monitored Services': 'symphony-bridge, codebuff-bridge',
-      'Check Interval': '60s',
-      'Grace Period': '60s',
+      "Monitored Services": "symphony-bridge, codebuff-bridge",
+      "Check Interval": "60s",
+      "Grace Period": "60s",
     },
   });
-  
+
   // Start monitoring loop...
 }
 
 // On shutdown
 async function shutdown(signal) {
   await notifyServiceShutdown({
-    serviceName: 'Bridge Watchdog',
+    serviceName: "Bridge Watchdog",
     signal,
     metadata: {
-      'Uptime': formatElapsed(Date.now() - startTime),
+      Uptime: formatElapsed(Date.now() - startTime),
     },
   });
   process.exit(0);
@@ -151,12 +151,14 @@ async function shutdown(signal) {
 Send notifications when a service starts or restarts.
 
 **Parameters:**
+
 - `options.serviceName` (string, required) - Human-readable service name
 - `options.port` (number, optional) - Service port number
 - `options.metadata` (object, optional) - Additional metadata as key-value pairs
 - `options.cwd` (string, optional) - Working directory for git commands (defaults to `process.cwd()`)
 
 **Example metadata keys:**
+
 - `Model`, `Mode`, `Providers`, `Tools`, `API Key`, `Auth`, etc.
 
 ### `notifyServiceShutdown(options)`
@@ -164,6 +166,7 @@ Send notifications when a service starts or restarts.
 Send notifications when a service shuts down.
 
 **Parameters:**
+
 - `options.serviceName` (string, required) - Human-readable service name
 - `options.signal` (string, required) - Signal that triggered shutdown (e.g., "SIGTERM", "SIGINT")
 - `options.metadata` (object, optional) - Additional metadata as key-value pairs
@@ -207,11 +210,13 @@ Active Requests: ⚠️ 3 in-flight
 ## MEMORY.md Format
 
 Restart:
+
 ```
 ### 2026-03-26 - Symphony Bridge restarted successfully (PID 123456, commit abc1234, Model: symphony/main, Providers: 38/38 available)
 ```
 
 Shutdown:
+
 ```
 ### 2026-03-26 - Symphony Bridge stopped (PID 123456, commit abc1234, Providers: 38/38 available, signal: SIGTERM)
 ```

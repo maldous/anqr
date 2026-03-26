@@ -1549,22 +1549,28 @@ export async function selectProvider(options = {}) {
   // Ignores ALL caller restrictions (allowedNames, excludedNames) because a
   // degraded response from a local model is always better than a total outage.
   // -------------------------------------------------------------------------
-  logWarn(`[selectProvider] All providers exhausted — invoking P0 safety-net override (ignoring allowedNames/excludedNames)`, {
-    allowedCount: allowedNames?.size || 0,
-    excludedCount: excludedNames?.size || 0,
-    totalProviders: PROVIDERS.length,
-  });
+  logWarn(
+    `[selectProvider] All providers exhausted — invoking P0 safety-net override (ignoring allowedNames/excludedNames)`,
+    {
+      allowedCount: allowedNames?.size || 0,
+      excludedCount: excludedNames?.size || 0,
+      totalProviders: PROVIDERS.length,
+    },
+  );
   for (const provider of PROVIDERS) {
     if (getProviderTier(provider) !== TIER_LOCAL_SAFETY_NET) continue;
     clearProviderFailure(provider.name);
     const selected = await tryProvider(provider);
     if (selected) {
-      logWarn(`[selectProvider] P0 SAFETY NET activated: ${selected.name} (all restrictions bypassed)`, {
-        providerName: selected.name,
-        tier: selected.tier,
-        bypassedAllowedNames: allowedNames ? Array.from(allowedNames) : null,
-        bypassedExcludedNames: excludedNames ? Array.from(excludedNames) : null,
-      });
+      logWarn(
+        `[selectProvider] P0 SAFETY NET activated: ${selected.name} (all restrictions bypassed)`,
+        {
+          providerName: selected.name,
+          tier: selected.tier,
+          bypassedAllowedNames: allowedNames ? Array.from(allowedNames) : null,
+          bypassedExcludedNames: excludedNames ? Array.from(excludedNames) : null,
+        },
+      );
       return selected;
     }
   }

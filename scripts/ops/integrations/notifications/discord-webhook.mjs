@@ -178,14 +178,17 @@ const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
  * @param {{ emoji?: string, timestamp?: boolean, requestId?: string }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
-export async function streamDiscordUpdate(message, { emoji = "🔄", timestamp = false, requestId = "default" } = {}) {
+export async function streamDiscordUpdate(
+  message,
+  { emoji = "🔄", timestamp = false, requestId = "default" } = {},
+) {
   // Get or create buffer for this request
   if (!discordStreamBuffers.has(requestId)) {
     discordStreamBuffers.set(requestId, { buffer: "", timer: null });
   }
-  
+
   const state = discordStreamBuffers.get(requestId);
-  
+
   // Accumulate text in per-request buffer
   state.buffer += message;
 
@@ -212,13 +215,17 @@ export async function streamDiscordUpdate(message, { emoji = "🔄", timestamp =
  * @param {{ emoji?: string, timestamp?: boolean, requestId?: string }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
-export async function flushDiscordStream({ emoji = "🔄", timestamp = false, requestId = "default" } = {}) {
+export async function flushDiscordStream({
+  emoji = "🔄",
+  timestamp = false,
+  requestId = "default",
+} = {}) {
   const state = discordStreamBuffers.get(requestId);
-  
+
   if (!state) {
     return { sent: false, reason: "no buffer for request" };
   }
-  
+
   if (state.timer) {
     clearTimeout(state.timer);
     state.timer = null;

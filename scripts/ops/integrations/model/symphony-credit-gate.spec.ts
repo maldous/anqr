@@ -279,16 +279,10 @@ describe("Symphony Credit Gate - Provider Selection", () => {
             ok: true,
             text: async () =>
               JSON.stringify({
-                models: [
-                  { name: "qwen2.5-coder:3b-instruct" },
-                  { name: "qwen2.5-coder:0.5b" },
-                ],
+                models: [{ name: "qwen2.5-coder:3b-instruct" }, { name: "qwen2.5-coder:0.5b" }],
               }),
             json: async () => ({
-              models: [
-                { name: "qwen2.5-coder:3b-instruct" },
-                { name: "qwen2.5-coder:0.5b" },
-              ],
+              models: [{ name: "qwen2.5-coder:3b-instruct" }, { name: "qwen2.5-coder:0.5b" }],
             }),
           };
         }
@@ -316,16 +310,10 @@ describe("Symphony Credit Gate - Provider Selection", () => {
             ok: true,
             text: async () =>
               JSON.stringify({
-                models: [
-                  { name: "qwen2.5-coder:3b-instruct" },
-                  { name: "qwen2.5-coder:0.5b" },
-                ],
+                models: [{ name: "qwen2.5-coder:3b-instruct" }, { name: "qwen2.5-coder:0.5b" }],
               }),
             json: async () => ({
-              models: [
-                { name: "qwen2.5-coder:3b-instruct" },
-                { name: "qwen2.5-coder:0.5b" },
-              ],
+              models: [{ name: "qwen2.5-coder:3b-instruct" }, { name: "qwen2.5-coder:0.5b" }],
             }),
           };
         }

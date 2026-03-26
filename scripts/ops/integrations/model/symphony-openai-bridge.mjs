@@ -84,7 +84,10 @@ import { z } from "zod";
 import { Codex } from "@openai/codex-sdk";
 
 // Truncation utilities (extracted for unit-testability)
-import { truncateMessagesForProvider, estimateMessagesTokens } from "./symphony-bridge-truncation.mjs";
+import {
+  truncateMessagesForProvider,
+  estimateMessagesTokens,
+} from "./symphony-bridge-truncation.mjs";
 
 // Adaptive context management (dynamic limits, TPM/RPM tracking, error classification)
 import {
@@ -244,11 +247,19 @@ function startDiscordMonitoring() {
               try {
                 const parsed = JSON.parse(dataMatch[1]);
                 const content = parsed.choices?.[0]?.delta?.content;
-                if (content) {
-                  fullText += content;
-                  streamDiscordUpdate(content, { emoji: "", requestId: `discord-cmd-${message.id}` }).catch(() => {
-                    /* ignore */
-                  });
+                if (content && content.trim().length > 0) {
+                  // Filter out internal activity markers that the AI SDK includes in result.text
+                  // These would duplicate what we already log via DEBUG
+                  const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
+                  if (!isActivityMarker.test(content.trim())) {
+                    fullText += content;
+                    streamDiscordUpdate(content, {
+                      emoji: "",
+                      requestId: `discord-cmd-${message.id}`,
+                    }).catch(() => {
+                      /* ignore */
+                    });
+                  }
                 }
               } catch {
                 // Parse error - ignore malformed JSON chunk
@@ -260,16 +271,20 @@ function startDiscordMonitoring() {
         }
 
         // Flush any remaining buffered text to Discord
-        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(() => {
-          /* ignore */
-        });
+        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(
+          () => {
+            /* ignore */
+          },
+        );
 
         logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
         // Flush buffer on error too so partial text reaches Discord
-        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(() => {
-          /* ignore */
-        });
+        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(
+          () => {
+            /* ignore */
+          },
+        );
         logError(`❌ Discord command error: ${err.message}`);
       }
     }
@@ -1033,19 +1048,19 @@ async function runContinuousProviderProbe() {
           );
         }
         logInfo(`🔍 Full ranking cached in provider stats`);
-        
+
         // Send Discord embedded card with updated rankings
         try {
           const available = providerStatusCache.probeResults.filter((r) => r.available);
           const total = providerStatusCache.configured.length;
-          
+
           // Build concise top 10 list (just position, model, score)
           const topProviders = ranked.slice(0, 10);
           const rankingLines = topProviders.map(({ rank, name, score }) => {
             const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
             return `${rank}. ${name}: ${scoreDisplay}`;
           });
-          
+
           await sendDiscordEmbed({
             title: "🔍 Provider Rankings (Probe Cycle Complete)",
             description: rankingLines.join("\n"),
@@ -1058,7 +1073,7 @@ async function runContinuousProviderProbe() {
               },
             ],
           });
-          
+
           logInfo(`📊 Sent updated provider rankings to Discord (top ${topProviders.length})`);
         } catch (err) {
           logError(`❌ Failed to send provider rankings to Discord: ${err.message}`);
@@ -1322,7 +1337,9 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
       // and allow ALL providers. Never restrict allowedNames to a single unavailable
       // provider — that causes the "No providers available" P0 outage.
       if (excludeSet.has(providerName)) {
-        safeLogDebug(`⚠️ Sticky provider ${providerName} is excluded — clearing sticky, allowing all providers`);
+        safeLogDebug(
+          `⚠️ Sticky provider ${providerName} is excluded — clearing sticky, allowing all providers`,
+        );
         clearSessionProvider(sessionId);
         // Fall through to return unrestricted options below
       } else if (tier === "paid" && mode === "paid") {
@@ -1538,7 +1555,9 @@ async function probeToolCapabilityForProvider(providerDef) {
       logInfo(
         `✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`,
       );
-      logInfo(`✅ DETERMINATION: ${name} marked as TOOL-CAPABLE (supports structured tool calling)`);
+      logInfo(
+        `✅ DETERMINATION: ${name} marked as TOOL-CAPABLE (supports structured tool calling)`,
+      );
       return { name, status: "capable", durationMs, answer: text };
     }
 
@@ -1546,7 +1565,9 @@ async function probeToolCapabilityForProvider(providerDef) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - Emitted raw JSON instead of structured tool calls`);
-      logWarn(`❌ DETERMINATION: ${name} marked as NON-TOOL-CAPABLE (excluded from future selection)`);
+      logWarn(
+        `❌ DETERMINATION: ${name} marked as NON-TOOL-CAPABLE (excluded from future selection)`,
+      );
       return { name, status: "non-capable-raw-json" };
     }
 
@@ -1648,7 +1669,7 @@ async function probeAllToolCapability() {
   // Use full provider definitions (with envVar, baseUrl, loadToken) for probing
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
   const allDefs = getProviderDefinitions({ excludeNames });
-  
+
   // CHANGED: Always probe ALL available providers to collect fresh metrics,
   // even if they're already classified. This ensures we get comprehensive
   // metrics from every provider after startup while still allowing fast startup
@@ -1799,9 +1820,14 @@ async function invokeWithAI(provider, messages, options = {}) {
   let effectiveMax = getEffectiveMaxTokens(provider.name);
   if (shouldReduceContextForTPM(provider.name, estimatedInputTokens)) {
     effectiveMax = Math.max(Math.floor(effectiveMax * 0.5), 1000);
-    logInfo(`⚡ Proactive TPM reduction for ${provider.name}: effectiveMax halved to ${effectiveMax}`);
+    logInfo(
+      `⚡ Proactive TPM reduction for ${provider.name}: effectiveMax halved to ${effectiveMax}`,
+    );
   }
-  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, { useTools, maxTokensOverride: effectiveMax });
+  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, {
+    useTools,
+    maxTokensOverride: effectiveMax,
+  });
   logDebug(`[invokeWithAI] Messages after truncation`, {
     aiMessageCount: aiMessages?.length,
     providerName: provider.name,
@@ -2072,9 +2098,10 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     // Handle truncated responses — but distinguish between actual step limit vs API errors
     if (finishReason === "tool-calls") {
-      const truncationNote = errorCount > 0
-        ? "\n\n---\n⚠️ Response truncated: the stream ended during tool execution due to API error(s). The results above may be incomplete."
-        : "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
+      const truncationNote =
+        errorCount > 0
+          ? "\n\n---\n⚠️ Response truncated: the stream ended during tool execution due to API error(s). The results above may be incomplete."
+          : "\n\n---\n⚠️ Response truncated: the model was still working when it reached the tool-execution step limit. The results above may be incomplete.";
       fullText += truncationNote;
       if (onChunk) {
         onChunk({ type: "text", text: truncationNote });
@@ -2812,7 +2839,7 @@ const server = http.createServer(async (req, res) => {
       const ranked = getRankedProviders({ excludeNames: nonToolCapableProviders });
 
       const adaptiveContext = getAdaptiveStats();
-      
+
       // Include concurrent request count and details
       const concurrentRequests = {
         count: activeRequests.size,
@@ -2826,10 +2853,10 @@ const server = http.createServer(async (req, res) => {
           requestPreview: req.requestText?.slice(0, 100) || "(no description)",
         })),
       };
-      
-      return sendJson(res, 200, { 
-        rankedProviders: ranked, 
-        providerStats: stats, 
+
+      return sendJson(res, 200, {
+        rankedProviders: ranked,
+        providerStats: stats,
         adaptiveContext,
         concurrentRequests,
       });
@@ -3175,9 +3202,13 @@ const server = http.createServer(async (req, res) => {
               ? null
               : (text) => {
                   if (text && text.length > 0) {
-                    streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
-                      /* ignore */
-                    });
+                    // Filter out internal activity markers to avoid duplicate messages in Discord
+                    const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
+                    if (!isActivityMarker.test(text.trim())) {
+                      streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
+                        /* ignore */
+                      });
+                    }
                   }
                 };
 
@@ -3701,14 +3732,14 @@ server.listen(PORT, "127.0.0.1", async () => {
       // Send Discord embedded card with provider rankings
       try {
         const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
-        
+
         // Build concise top 10 list (just position, model, score)
         const topProviders = ranked.slice(0, 10);
         const rankingLines = topProviders.map(({ rank, name, score }) => {
           const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
           return `${rank}. ${name}: ${scoreDisplay}`;
         });
-        
+
         await sendDiscordEmbed({
           title: "🔍 Provider Rankings (Startup Probe Complete)",
           description: rankingLines.join("\n"),
@@ -3721,7 +3752,7 @@ server.listen(PORT, "127.0.0.1", async () => {
             },
           ],
         });
-        
+
         logInfo(`📊 Sent provider rankings to Discord (top ${topProviders.length})`);
       } catch (err) {
         logError(`❌ Failed to send provider rankings to Discord: ${err.message}`);

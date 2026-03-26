@@ -85,7 +85,9 @@ export async function notifyServiceRestart({
     const commitHash = getCommitHash(cwd);
     const commitInfo = getCommitInfo(cwd);
 
-    logInfo(`📢 Sending ${serviceName} restart notification (PID ${process.pid}, commit ${commitHash})...`);
+    logInfo(
+      `📢 Sending ${serviceName} restart notification (PID ${process.pid}, commit ${commitHash})...`,
+    );
 
     const fields = [
       { name: "PID", value: String(process.pid), inline: true },
@@ -122,7 +124,9 @@ export async function notifyServiceRestart({
     if (discordResult.sent) {
       logInfo(`✅ ${serviceName} restart notification sent successfully`);
     } else {
-      logError(`❌ ${serviceName} restart notification failed: ${discordResult.reason || "unknown"}`);
+      logError(
+        `❌ ${serviceName} restart notification failed: ${discordResult.reason || "unknown"}`,
+      );
     }
 
     // Update MEMORY.md
@@ -188,7 +192,10 @@ export async function notifyServiceShutdown({
       description: `**Service interruption in progress**\n\nThe service is shutting down and will restart momentarily.`,
       color: 0xffa500, // Orange - warning color
       fields,
-      footer: activeRequests > 0 ? "⚠️ Active requests will be terminated" : "Service will resume shortly",
+      footer:
+        activeRequests > 0
+          ? "⚠️ Active requests will be terminated"
+          : "Service will resume shortly",
     });
 
     logInfo(`📢 Sent ${serviceName} shutdown notification`);
