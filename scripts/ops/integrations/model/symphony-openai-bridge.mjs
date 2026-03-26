@@ -1393,9 +1393,10 @@ function providerSupportsTools(providerName) {
 async function probeToolCapabilityForProvider(providerDef) {
   const name = providerDef.name;
 
-  if (KNOWN_TOOL_CAPABLE.has(name)) return { name, status: "known-capable" };
-  if (toolCapableProviders.has(name)) return { name, status: "cached-capable" };
-  if (nonToolCapableProviders.has(name)) return { name, status: "cached-non-capable" };
+  // CHANGED: Skip early-exit for already-classified providers to ensure we always
+  // collect fresh metrics. Classification is still used for provider selection,
+  // but we probe everyone every cycle to maintain up-to-date performance data.
+  // Cached classification allows fast startup; fresh probes provide ongoing metrics.
 
   // P0 FIX: Safety-net providers (local Ollama) are NEVER excluded from selection.
   // They may not support structured tool calling, but a degraded response is always
@@ -1596,16 +1597,15 @@ async function probeAllToolCapability() {
   // Use full provider definitions (with envVar, baseUrl, loadToken) for probing
   const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
   const allDefs = getProviderDefinitions({ excludeNames });
-  const toProbe = allDefs.filter(
-    (p) =>
-      availableSet.has(p.name) &&
-      !KNOWN_TOOL_CAPABLE.has(p.name) &&
-      !toolCapableProviders.has(p.name) &&
-      !nonToolCapableProviders.has(p.name),
-  );
+  
+  // CHANGED: Always probe ALL available providers to collect fresh metrics,
+  // even if they're already classified. This ensures we get comprehensive
+  // metrics from every provider after startup while still allowing fast startup
+  // via cached classification for provider selection.
+  const toProbe = allDefs.filter((p) => availableSet.has(p.name));
 
   if (toProbe.length === 0) {
-    logDebug(`🔧 Tool probe: all providers already classified`);
+    logDebug(`🔧 Tool probe: no available providers to probe`);
     return;
   }
 
