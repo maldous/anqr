@@ -59,14 +59,22 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
 - **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
 - **Discord Streaming**: Discord webhooks batch text chunks and send every 5 seconds (or when buffer exceeds 1900 chars) to preserve natural formatting and prevent fragmented messages. The buffer is automatically flushed at the end of each response.
-- **Bridge Restart Procedure** (CRITICAL HARD RULE):
+- **Service Restart Procedure** (CRITICAL HARD RULE):
   1. **COMMIT & PUSH FIRST**: Always commit and push changes BEFORE restarting: `git add -A && git commit -m "..." && git push`
   2. **WAIT FOR SAFE CONCURRENCY**: Check Discord notifications for "(0 concurrent)" - NEVER restart while requests are active
-     - **EXCEPTION**: When the user explicitly requests a bridge restart (e.g., "restart the bridge", "please restart"), proceed immediately regardless of concurrency count, as the user is aware and accepting of the interruption
-     - **RATIONALE**: Discord users cannot restart bridges themselves and may need urgent restarts for bug fixes or configuration changes
-  3. **THEN RESTART**: Only after concurrency = 0 (or user has explicitly requested restart), restart the bridge: `systemctl --user restart anqr-symphony-bridge` (or `anqr-codebuff-bridge`)
-  4. The bridges run as **user services** (not system services) and won't pick up code changes until restarted
+     - **EXCEPTION**: When the user explicitly requests a service restart (e.g., "restart the bridge", "please restart"), proceed immediately regardless of concurrency count, as the user is aware and accepting of the interruption
+     - **RATIONALE**: Discord users cannot restart services themselves and may need urgent restarts for bug fixes or configuration changes
+  3. **THEN RESTART**: Only after concurrency = 0 (or user has explicitly requested restart), restart the service:
+     - Symphony Bridge: `systemctl --user restart anqr-symphony-bridge`
+     - Codebuff Bridge: `systemctl --user restart anqr-codebuff-bridge`
+     - OpenClaw Gateway: Managed externally (not a systemd service in this repo)
+     - Other services: Use appropriate systemctl command
+  4. Services run as **user services** (not system services) and won't pick up code changes until restarted
   5. **Violation consequences**: Restarting during active concurrency (without explicit user request) terminates in-flight requests and breaks the user experience
+  6. **Restart Notifications**: All services should send Discord notifications and update MEMORY.md on restart/shutdown
+     - Use `scripts/ops/lib/service-restart-notify.mjs` for consistent notifications
+     - Notifications include: PID, commit hash, metadata (providers, ports, etc.), active requests warning
+     - Applies to: Symphony Bridge, Codebuff Bridge, OpenClaw Gateway, and any other long-running services
 
 ### Current 1.0 Claim
 

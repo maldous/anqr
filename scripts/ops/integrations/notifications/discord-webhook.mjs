@@ -162,8 +162,8 @@ export async function sendDiscordEmbed({
 }
 
 // Streaming state for Discord updates - send in chunks every 5 seconds for proper formatting
-let discordStreamBuffer = "";
-let discordStreamTimer = null;
+// Per-request buffers to prevent mixing output from concurrent requests
+const discordStreamBuffers = new Map(); // requestId -> { buffer: string, timer: NodeJS.Timeout | null }
 const DISCORD_STREAM_INTERVAL_MS = 5000; // Send every 5 seconds to preserve formatting
 const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
 
@@ -172,23 +172,32 @@ const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
  * Accumulates text and sends every 5 seconds OR when buffer exceeds 1900 chars.
  * This preserves natural formatting and prevents fragmented messages.
  *
+ * Per-request buffering prevents text from concurrent requests getting mixed.
+ *
  * @param {string} message
- * @param {{ emoji?: string, timestamp?: boolean }} options
+ * @param {{ emoji?: string, timestamp?: boolean, requestId?: string }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
-export async function streamDiscordUpdate(message, { emoji = "🔄", timestamp = false } = {}) {
-  // Accumulate text in buffer
-  discordStreamBuffer += message;
+export async function streamDiscordUpdate(message, { emoji = "🔄", timestamp = false, requestId = "default" } = {}) {
+  // Get or create buffer for this request
+  if (!discordStreamBuffers.has(requestId)) {
+    discordStreamBuffers.set(requestId, { buffer: "", timer: null });
+  }
+  
+  const state = discordStreamBuffers.get(requestId);
+  
+  // Accumulate text in per-request buffer
+  state.buffer += message;
 
   // Send immediately if buffer exceeds max length
-  if (discordStreamBuffer.length >= DISCORD_STREAM_MAX_LENGTH) {
-    return await flushDiscordStream({ emoji, timestamp });
+  if (state.buffer.length >= DISCORD_STREAM_MAX_LENGTH) {
+    return await flushDiscordStream({ emoji, timestamp, requestId });
   }
 
-  // Schedule periodic flush if not already scheduled
-  if (!discordStreamTimer) {
-    discordStreamTimer = setTimeout(() => {
-      flushDiscordStream({ emoji, timestamp }).catch(() => {
+  // Schedule periodic flush if not already scheduled for this request
+  if (!state.timer) {
+    state.timer = setTimeout(() => {
+      flushDiscordStream({ emoji, timestamp, requestId }).catch(() => {
         /* ignore */
       });
     }, DISCORD_STREAM_INTERVAL_MS);
@@ -198,18 +207,26 @@ export async function streamDiscordUpdate(message, { emoji = "🔄", timestamp =
 }
 
 /**
- * Flush accumulated Discord stream buffer immediately.
+ * Flush accumulated Discord stream buffer immediately for a specific request.
  *
- * @param {{ emoji?: string, timestamp?: boolean }} options
+ * @param {{ emoji?: string, timestamp?: boolean, requestId?: string }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
-export async function flushDiscordStream({ emoji = "🔄", timestamp = false } = {}) {
-  if (discordStreamTimer) {
-    clearTimeout(discordStreamTimer);
-    discordStreamTimer = null;
+export async function flushDiscordStream({ emoji = "🔄", timestamp = false, requestId = "default" } = {}) {
+  const state = discordStreamBuffers.get(requestId);
+  
+  if (!state) {
+    return { sent: false, reason: "no buffer for request" };
+  }
+  
+  if (state.timer) {
+    clearTimeout(state.timer);
+    state.timer = null;
   }
 
-  if (discordStreamBuffer.length === 0) {
+  if (state.buffer.length === 0) {
+    // Clean up empty buffer
+    discordStreamBuffers.delete(requestId);
     return { sent: false, reason: "empty buffer" };
   }
 
@@ -217,12 +234,13 @@ export async function flushDiscordStream({ emoji = "🔄", timestamp = false } =
   const suffix = timestamp ? ` (${new Date().toLocaleTimeString()})` : "";
   const maxLength = 2000 - prefix.length - suffix.length;
 
-  let content = discordStreamBuffer;
+  let content = state.buffer;
   if (content.length > maxLength) {
     content = content.substring(0, maxLength - 3) + "...";
   }
 
-  discordStreamBuffer = ""; // Clear buffer
+  // Clear buffer and remove from map
+  discordStreamBuffers.delete(requestId);
 
   return sendDiscordMessage(prefix + content + suffix);
 }

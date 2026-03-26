@@ -245,7 +245,7 @@ function startDiscordMonitoring() {
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
                   fullText += content;
-                  streamDiscordUpdate(content, { emoji: "" }).catch(() => {
+                  streamDiscordUpdate(content, { emoji: "", requestId: `discord-cmd-${message.id}` }).catch(() => {
                     /* ignore */
                   });
                 }
@@ -259,14 +259,14 @@ function startDiscordMonitoring() {
         }
 
         // Flush any remaining buffered text to Discord
-        await flushDiscordStream({ emoji: "" }).catch(() => {
+        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(() => {
           /* ignore */
         });
 
         logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
         // Flush buffer on error too so partial text reaches Discord
-        await flushDiscordStream({ emoji: "" }).catch(() => {
+        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(() => {
           /* ignore */
         });
         logError(`❌ Discord command error: ${err.message}`);
@@ -288,7 +288,7 @@ function stopDiscordMonitoring() {
 
 /**
  * Send periodic Processing Status embedded card to Discord
- * Shows all concurrent requests with runtime and file changes
+ * Shows all concurrent requests with runtime, model, and file changes
  */
 async function sendProcessingStatusUpdate() {
   if (activeRequests.size === 0) return;
@@ -302,10 +302,11 @@ async function sendProcessingStatusUpdate() {
     const filesChanged = req.filesChanged || 0;
     const issueLabel = req.issueId || reqId;
     const requestPreview = req.requestText ? req.requestText.slice(0, 100) : "(no description)";
+    const modelInfo = req.model ? ` | Model: ${req.model}` : "";
 
     fields.push({
       name: `${issueLabel} (${runtime})`,
-      value: `Files: ${filesChanged} | ${requestPreview}`,
+      value: `Files: ${filesChanged}${modelInfo} | ${requestPreview}`,
       inline: false,
     });
   }
@@ -2990,7 +2991,10 @@ const server = http.createServer(async (req, res) => {
         (r) => r.startTime !== startTime, // Exclude current request
       );
 
-      const fields = [];
+      const fields = [
+        { name: "Model", value: route.responseModelId, inline: true },
+        { name: "Stream", value: stream ? "Yes" : "No", inline: true },
+      ];
 
       if (concurrentCount > 0) {
         // Build detailed concurrent request summary with actual request text
@@ -3118,7 +3122,7 @@ const server = http.createServer(async (req, res) => {
               ? null
               : (text) => {
                   if (text && text.length > 0) {
-                    streamDiscordUpdate(text, { emoji: "" }).catch(() => {
+                    streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
                       /* ignore */
                     });
                   }
@@ -3447,6 +3451,34 @@ const server = http.createServer(async (req, res) => {
 
 async function shutdown(signal) {
   logInfo(`\nReceived ${signal}, shutting down...`);
+
+  // Send Discord notification about bridge restart
+  try {
+    const commitHash = execSync("git rev-parse --short HEAD", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+    }).trim();
+    const available = providerStatusCache.probeResults.filter((r) => r.available).length;
+    const total = providerStatusCache.configured.length;
+    const concurrent = activeRequests.size;
+
+    await sendDiscordEmbed({
+      title: "⚠️ Symphony Bridge Restarting",
+      description: `**Service interruption in progress**\n\nThe bridge is shutting down and will restart momentarily.`,
+      color: 0xffa500, // Orange - warning color
+      fields: [
+        { name: "Signal", value: signal, inline: true },
+        { name: "PID", value: String(process.pid), inline: true },
+        { name: "Commit", value: commitHash, inline: true },
+        { name: "Providers", value: `${available}/${total} available`, inline: true },
+        { name: "Active Requests", value: concurrent > 0 ? `⚠️ ${concurrent} in-flight` : "None", inline: true },
+      ],
+      footer: concurrent > 0 ? "⚠️ Active requests will be terminated" : "Service will resume shortly",
+    });
+    logInfo(`📢 Sent Discord restart notification`);
+  } catch (err) {
+    logError(`⚠️ Failed to send Discord restart notification: ${err.message}`);
+  }
 
   // Update MEMORY.md BEFORE shutdown
   try {
