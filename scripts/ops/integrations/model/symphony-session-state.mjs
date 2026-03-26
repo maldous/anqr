@@ -332,7 +332,7 @@ export function shouldTriggerEvalCycle() {
  * Get the next provider to force-sample during evaluation cycle
  * Returns null if no evaluation needed
  * @param {Array<string>} allProviderNames - All available provider names
- * @param {Map<string, object>} providerStats - Current provider statistics
+ * @param {object} providerStats - Current provider statistics (plain object, not Map)
  * @returns {string|null}
  */
 export function getEvaluationSampleProvider(allProviderNames, providerStats) {
@@ -342,7 +342,7 @@ export function getEvaluationSampleProvider(allProviderNames, providerStats) {
 
   // Find providers that haven't been selected recently or at all
   const providerScores = allProviderNames.map((name) => {
-    const stats = providerStats.get(name) || { selections: 0, lastUsed: 0 };
+    const stats = providerStats[name] || { selections: 0, lastUsed: 0 };
     const timeSinceUsed = Date.now() - (stats.lastUsed || 0);
     const selectionsCount = stats.selections || 0;
     
