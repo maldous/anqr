@@ -314,11 +314,11 @@ The Symphony Bridge includes a fully dynamic adaptive context system (`symphony-
 
 The adaptive context system runs **in parallel** with the credit-gate's failure cooldown mechanism (above). The credit-gate provides a blunt 6-minute cooldown for any failure. The adaptive system provides finer-grained feedback:
 
-| Error type | Credit-gate response | Adaptive system response |
-|---|---|---|
-| 413 / context too large | 6-min cooldown | Shrink context limit; next request uses reduced ceiling |
-| 429 / rate limit | 6-min cooldown | Precise backoff from headers; exclude from selection until timer expires |
-| Success | Clear failure record | Increment success counter; expand ceiling after 3 consecutive successes |
+| Error type              | Credit-gate response | Adaptive system response                                                 |
+| ----------------------- | -------------------- | ------------------------------------------------------------------------ |
+| 413 / context too large | 6-min cooldown       | Shrink context limit; next request uses reduced ceiling                  |
+| 429 / rate limit        | 6-min cooldown       | Precise backoff from headers; exclude from selection until timer expires |
+| Success                 | Clear failure record | Increment success counter; expand ceiling after 3 consecutive successes  |
 
 ### Integration
 

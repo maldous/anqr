@@ -1466,6 +1466,16 @@ async function probeToolCapabilityForProvider(providerDef) {
     return { name, status: "sdk-capable" };
   }
 
+  // Known tool-capable providers (e.g., codebuff) skip the actual probe.
+  // Codebuff routes through its own bridge (port 4318) and uses internal tools
+  // (spawn_agent_inline, set_messages, end_turn) rather than OpenAI-style function
+  // calling. Probing it wastes ~15s (paid->free fallback) and always returns
+  // INCONCLUSIVE. Since we trust the configuration, skip the probe entirely.
+  if (KNOWN_TOOL_CAPABLE.has(name)) {
+    toolCapableProviders.add(name);
+    return { name, status: "known-capable" };
+  }
+
   // OpenRouter: all models share the same API key and gateway.
   // If another OpenRouter model already proved capable/non-capable,
   // infer the same for this model (saves API quota and avoids rate limits).
@@ -2325,6 +2335,13 @@ async function invokeWithFallback(messages, route, sessionId = null) {
         recordProviderFailureCount(provider.name);
       }
 
+      // Clear sticky session immediately so concurrent requests on the same
+      // session don't keep trying the failed provider.
+      if (sessionId) {
+        clearSessionProvider(sessionId);
+        logInfo(`🔓 Cleared sticky session after ${provider.name} failure`);
+      }
+
       // Continue to next provider in the loop
     }
   }
@@ -2601,6 +2618,16 @@ async function invokeWithFallbackStream(
       } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
         const rlInfo = parseRateLimitInfo(err);
         recordRateLimit(provider.name, rlInfo);
+      }
+
+      // Clear sticky session immediately so concurrent requests on the same
+      // session don't keep trying the failed provider. The next call to
+      // buildSelectionOptions will see no sticky and allow all providers.
+      if (sessionId) {
+        clearSessionProvider(sessionId);
+        logInfo(
+          `🔓 Cleared sticky session after ${provider.name} streaming failure (${errorType})`,
+        );
       }
 
       // Continue to next provider in the loop

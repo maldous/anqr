@@ -344,9 +344,7 @@ describe("parseContextErrorDetails", () => {
   });
 
   it("extracts reportedLimit from GitHub Models 'Max size' format", () => {
-    const err = new Error(
-      "Request body too large for gpt-4.1-mini model. Max size: 8000 tokens.",
-    );
+    const err = new Error("Request body too large for gpt-4.1-mini model. Max size: 8000 tokens.");
     const details = parseContextErrorDetails(err);
     expect(details.reportedLimit).toBe(8000);
     expect(details.isTpmRelated).toBe(false);

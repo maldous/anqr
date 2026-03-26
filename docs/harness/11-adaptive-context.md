@@ -59,26 +59,26 @@ All adaptive state is **in-memory only** and resets on bridge restart. The stati
 
 Each provider gets an independent state object created on first access:
 
-| Field | Type | Description |
-|---|---|---|
-| `providerName` | `string` | Provider identifier |
-| `baseMaxTokens` | `number` | Initial ceiling from `PROVIDER_MAX_INPUT_TOKENS` (immutable) |
-| `dynamicMaxTokens` | `number` | Current effective ceiling (mutates on errors/successes) |
-| `consecutiveContextErrors` | `number` | Running count of context-too-large errors |
-| `consecutiveContextSuccesses` | `number` | Running count of successful requests (resets on error) |
-| `lastContextErrorAt` | `number\|null` | Epoch ms of most recent context error |
-| `lastContextSuccessAt` | `number\|null` | Epoch ms of most recent success |
-| `tokenEvents` | `Array<{ts, inputTokens, outputTokens}>` | Sliding window (60s) of token usage |
-| `requestEvents` | `Array<{ts}>` | Sliding window (60s) of request timestamps |
-| `rateLimit.throttledUntil` | `number\|null` | Epoch ms — provider excluded from selection until this time |
-| `rateLimit.lastRetryAfterMs` | `number\|null` | Last backoff duration applied |
-| `rateLimit.rpmLimit` | `number\|null` | Learned RPM limit from headers |
-| `rateLimit.rpmRemaining` | `number\|null` | Last observed RPM remaining |
-| `rateLimit.rpmResetAt` | `number\|null` | Epoch ms when RPM resets |
-| `rateLimit.tpmLimit` | `number\|null` | Learned TPM limit from headers or error messages |
-| `rateLimit.tpmRemaining` | `number\|null` | Last observed TPM remaining |
-| `rateLimit.tpmResetAt` | `number\|null` | Epoch ms when TPM resets |
-| `errorCounts` | `Record<ErrorType, number>` | Cumulative error counts by classification |
+| Field                         | Type                                     | Description                                                  |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| `providerName`                | `string`                                 | Provider identifier                                          |
+| `baseMaxTokens`               | `number`                                 | Initial ceiling from `PROVIDER_MAX_INPUT_TOKENS` (immutable) |
+| `dynamicMaxTokens`            | `number`                                 | Current effective ceiling (mutates on errors/successes)      |
+| `consecutiveContextErrors`    | `number`                                 | Running count of context-too-large errors                    |
+| `consecutiveContextSuccesses` | `number`                                 | Running count of successful requests (resets on error)       |
+| `lastContextErrorAt`          | `number\|null`                           | Epoch ms of most recent context error                        |
+| `lastContextSuccessAt`        | `number\|null`                           | Epoch ms of most recent success                              |
+| `tokenEvents`                 | `Array<{ts, inputTokens, outputTokens}>` | Sliding window (60s) of token usage                          |
+| `requestEvents`               | `Array<{ts}>`                            | Sliding window (60s) of request timestamps                   |
+| `rateLimit.throttledUntil`    | `number\|null`                           | Epoch ms — provider excluded from selection until this time  |
+| `rateLimit.lastRetryAfterMs`  | `number\|null`                           | Last backoff duration applied                                |
+| `rateLimit.rpmLimit`          | `number\|null`                           | Learned RPM limit from headers                               |
+| `rateLimit.rpmRemaining`      | `number\|null`                           | Last observed RPM remaining                                  |
+| `rateLimit.rpmResetAt`        | `number\|null`                           | Epoch ms when RPM resets                                     |
+| `rateLimit.tpmLimit`          | `number\|null`                           | Learned TPM limit from headers or error messages             |
+| `rateLimit.tpmRemaining`      | `number\|null`                           | Last observed TPM remaining                                  |
+| `rateLimit.tpmResetAt`        | `number\|null`                           | Epoch ms when TPM resets                                     |
+| `errorCounts`                 | `Record<ErrorType, number>`              | Cumulative error counts by classification                    |
 
 ## Feedback Loops
 
@@ -144,7 +144,7 @@ Before sending a request, the bridge checks whether the provider is approaching 
 Every successful request records token usage:
 
 ```js
-recordTokenUsage(providerName, { inputTokens, outputTokens })
+recordTokenUsage(providerName, { inputTokens, outputTokens });
 ```
 
 - **Token events** and **request events** are stored in 60-second sliding windows
@@ -158,75 +158,75 @@ recordTokenUsage(providerName, { inputTokens, outputTokens })
 
 All errors are classified into one of six types:
 
-| Error Type | Detection | Triggers |
-|---|---|---|
-| `context_too_large` | HTTP 413, "request too large", "context_length_exceeded", "maximum context length", "too many tokens", "token limit", "input is too long" | Context shrink loop |
-| `rate_limited` | HTTP 429, "rate_limit", "too many requests", "quota exceeded", "throttled" | Rate-limit throttle loop |
-| `auth_error` | HTTP 401/403, "unauthorized", "invalid api key", "authentication", "forbidden" | Error count tracking |
-| `timeout` | HTTP 408, "timeout", "timed out", "etimedout", "econnaborted" | Error count tracking |
-| `server_error` | HTTP 5xx, "internal server error", "bad gateway", "service unavailable" | Error count tracking |
-| `unknown` | None of the above | Error count tracking |
+| Error Type          | Detection                                                                                                                                 | Triggers                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `context_too_large` | HTTP 413, "request too large", "context_length_exceeded", "maximum context length", "too many tokens", "token limit", "input is too long" | Context shrink loop      |
+| `rate_limited`      | HTTP 429, "rate_limit", "too many requests", "quota exceeded", "throttled"                                                                | Rate-limit throttle loop |
+| `auth_error`        | HTTP 401/403, "unauthorized", "invalid api key", "authentication", "forbidden"                                                            | Error count tracking     |
+| `timeout`           | HTTP 408, "timeout", "timed out", "etimedout", "econnaborted"                                                                             | Error count tracking     |
+| `server_error`      | HTTP 5xx, "internal server error", "bad gateway", "service unavailable"                                                                   | Error count tracking     |
+| `unknown`           | None of the above                                                                                                                         | Error count tracking     |
 
 The classifier traverses the AI SDK error cause chain to find nested status codes and messages (e.g., `err.cause.cause.statusCode`).
 
 ## Constants
 
-| Constant | Value | Description |
-|---|---|---|
-| `TOKEN_WINDOW_MS` | 60,000 | Sliding window duration for TPM tracking |
-| `REQUEST_WINDOW_MS` | 60,000 | Sliding window duration for RPM tracking |
-| `CONTEXT_SHRINK_FACTOR` | 0.75 | Flat shrink factor when no precise numbers available |
-| `CONTEXT_SHRINK_BUFFER` | 0.9 | Safety buffer multiplied against precise ratio |
-| `CONTEXT_EXPAND_FACTOR` | 1.05 | Expansion factor per successful cycle |
-| `CONTEXT_EXPAND_THRESHOLD` | 3 | Consecutive successes required before expansion |
-| `RATE_LIMIT_DEFAULT_BACKOFF_MS` | 30,000 | Default throttle duration when no Retry-After |
-| `RATE_LIMIT_MAX_BACKOFF_MS` | 300,000 | Maximum throttle duration (5 minutes) |
-| `MAX_WINDOW_EVENTS` | 512 | Maximum events per sliding window |
-| `TPM_PROACTIVE_THRESHOLD` | 0.85 | TPM usage fraction that triggers proactive reduction |
+| Constant                        | Value   | Description                                          |
+| ------------------------------- | ------- | ---------------------------------------------------- |
+| `TOKEN_WINDOW_MS`               | 60,000  | Sliding window duration for TPM tracking             |
+| `REQUEST_WINDOW_MS`             | 60,000  | Sliding window duration for RPM tracking             |
+| `CONTEXT_SHRINK_FACTOR`         | 0.75    | Flat shrink factor when no precise numbers available |
+| `CONTEXT_SHRINK_BUFFER`         | 0.9     | Safety buffer multiplied against precise ratio       |
+| `CONTEXT_EXPAND_FACTOR`         | 1.05    | Expansion factor per successful cycle                |
+| `CONTEXT_EXPAND_THRESHOLD`      | 3       | Consecutive successes required before expansion      |
+| `RATE_LIMIT_DEFAULT_BACKOFF_MS` | 30,000  | Default throttle duration when no Retry-After        |
+| `RATE_LIMIT_MAX_BACKOFF_MS`     | 300,000 | Maximum throttle duration (5 minutes)                |
+| `MAX_WINDOW_EVENTS`             | 512     | Maximum events per sliding window                    |
+| `TPM_PROACTIVE_THRESHOLD`       | 0.85    | TPM usage fraction that triggers proactive reduction |
 
 ## Exported Functions
 
 ### Context management
 
-| Function | Signature | Description |
-|---|---|---|
-| `getEffectiveMaxTokens` | `(providerName: string) → number` | Returns current dynamic ceiling for the provider |
-| `recordContextError` | `(providerName: string, details?: object) → void` | Shrinks dynamic ceiling based on error details |
-| `recordContextSuccess` | `(providerName: string) → void` | Increments success counter; expands ceiling after threshold |
+| Function                | Signature                                         | Description                                                 |
+| ----------------------- | ------------------------------------------------- | ----------------------------------------------------------- |
+| `getEffectiveMaxTokens` | `(providerName: string) → number`                 | Returns current dynamic ceiling for the provider            |
+| `recordContextError`    | `(providerName: string, details?: object) → void` | Shrinks dynamic ceiling based on error details              |
+| `recordContextSuccess`  | `(providerName: string) → void`                   | Increments success counter; expands ceiling after threshold |
 
 ### Rate-limit management
 
-| Function | Signature | Description |
-|---|---|---|
-| `recordRateLimit` | `(providerName: string, info?: object) → void` | Sets throttle timer and records rate-limit headers |
-| `isProviderThrottled` | `(providerName: string) → boolean` | Checks if provider is currently throttled |
-| `getThrottledProviders` | `() → string[]` | Returns names of all currently throttled providers |
+| Function                | Signature                                      | Description                                        |
+| ----------------------- | ---------------------------------------------- | -------------------------------------------------- |
+| `recordRateLimit`       | `(providerName: string, info?: object) → void` | Sets throttle timer and records rate-limit headers |
+| `isProviderThrottled`   | `(providerName: string) → boolean`             | Checks if provider is currently throttled          |
+| `getThrottledProviders` | `() → string[]`                                | Returns names of all currently throttled providers |
 
 ### Token/request tracking
 
-| Function | Signature | Description |
-|---|---|---|
-| `recordTokenUsage` | `(providerName: string, usage: object) → void` | Records input/output tokens in sliding window |
-| `getTokensPerMinute` | `(providerName: string) → number` | Current TPM from sliding window |
-| `getRequestsPerMinute` | `(providerName: string) → number` | Current RPM from sliding window |
-| `shouldReduceContextForTPM` | `(providerName: string, estimatedTokens: number) → boolean` | Proactive TPM check |
+| Function                    | Signature                                                   | Description                                   |
+| --------------------------- | ----------------------------------------------------------- | --------------------------------------------- |
+| `recordTokenUsage`          | `(providerName: string, usage: object) → void`              | Records input/output tokens in sliding window |
+| `getTokensPerMinute`        | `(providerName: string) → number`                           | Current TPM from sliding window               |
+| `getRequestsPerMinute`      | `(providerName: string) → number`                           | Current RPM from sliding window               |
+| `shouldReduceContextForTPM` | `(providerName: string, estimatedTokens: number) → boolean` | Proactive TPM check                           |
 
 ### Error handling
 
-| Function | Signature | Description |
-|---|---|---|
-| `classifyError` | `(err: Error) → string` | Classifies error into one of 6 types |
-| `parseContextErrorDetails` | `(err: Error) → object` | Extracts reportedLimit, requestedTokens, isTpmRelated, tpmLimit |
-| `parseRateLimitInfo` | `(err: Error) → object` | Extracts rate-limit headers and Retry-After from error |
-| `recordErrorType` | `(providerName: string, errorType: string) → void` | Increments per-provider error type counter |
+| Function                   | Signature                                          | Description                                                     |
+| -------------------------- | -------------------------------------------------- | --------------------------------------------------------------- |
+| `classifyError`            | `(err: Error) → string`                            | Classifies error into one of 6 types                            |
+| `parseContextErrorDetails` | `(err: Error) → object`                            | Extracts reportedLimit, requestedTokens, isTpmRelated, tpmLimit |
+| `parseRateLimitInfo`       | `(err: Error) → object`                            | Extracts rate-limit headers and Retry-After from error          |
+| `recordErrorType`          | `(providerName: string, errorType: string) → void` | Increments per-provider error type counter                      |
 
 ### Observability
 
-| Function | Signature | Description |
-|---|---|---|
-| `getAdaptiveStats` | `() → object` | Full adaptive state snapshot for all providers (used by `/v1/stats`) |
-| `getProviderAdaptiveState` | `(providerName: string) → object\|null` | Raw state for a single provider |
-| `resetAdaptiveState` | `() → void` | Clears all state (test use only) |
+| Function                   | Signature                               | Description                                                          |
+| -------------------------- | --------------------------------------- | -------------------------------------------------------------------- |
+| `getAdaptiveStats`         | `() → object`                           | Full adaptive state snapshot for all providers (used by `/v1/stats`) |
+| `getProviderAdaptiveState` | `(providerName: string) → object\|null` | Raw state for a single provider                                      |
+| `resetAdaptiveState`       | `() → void`                             | Clears all state (test use only)                                     |
 
 ## Bridge Integration Points
 
@@ -235,7 +235,10 @@ The adaptive context system integrates into the Symphony Bridge (`symphony-opena
 ### 1. Import (line ~85-107)
 
 ```js
-import { truncateMessagesForProvider, estimateMessagesTokens } from "./symphony-bridge-truncation.mjs";
+import {
+  truncateMessagesForProvider,
+  estimateMessagesTokens,
+} from "./symphony-bridge-truncation.mjs";
 import {
   getEffectiveMaxTokens,
   recordContextError,
@@ -361,12 +364,12 @@ The adaptive context state is exposed via the `adaptiveContext` key in the `/v1/
 
 ### Log messages
 
-| Emoji | Message | Level | When |
-|---|---|---|---|
-| 📉 | `Adaptive context: {provider} shrunk {old} → {new} tokens` | INFO | Context error recorded |
-| 📈 | `Adaptive context: {provider} expanded {old} → {new} tokens` | DEBUG | Expansion after threshold |
-| 🛑 | `Adaptive rate-limit: {provider} throttled for {ms}ms` | INFO | Rate-limit backoff applied |
-| ⚡ | `Proactive TPM reduction for {provider}: effectiveMax halved to {n}` | INFO | TPM threshold exceeded |
+| Emoji | Message                                                              | Level | When                       |
+| ----- | -------------------------------------------------------------------- | ----- | -------------------------- |
+| 📉    | `Adaptive context: {provider} shrunk {old} → {new} tokens`           | INFO  | Context error recorded     |
+| 📈    | `Adaptive context: {provider} expanded {old} → {new} tokens`         | DEBUG | Expansion after threshold  |
+| 🛑    | `Adaptive rate-limit: {provider} throttled for {ms}ms`               | INFO  | Rate-limit backoff applied |
+| ⚡    | `Proactive TPM reduction for {provider}: effectiveMax halved to {n}` | INFO  | TPM threshold exceeded     |
 
 ## Error message parsing
 
@@ -390,26 +393,26 @@ Extracts: `reportedLimit=8192`, `requestedTokens=10000`, `isTpmRelated=false`
 
 ### Rate-limit headers
 
-| Header | Parsed As |
-|---|---|
-| `Retry-After` | `retryAfterMs` (seconds → ms) |
-| `X-RateLimit-Limit-Requests` | `rpmLimit` |
-| `X-RateLimit-Remaining-Requests` | `rpmRemaining` |
-| `X-RateLimit-Limit-Tokens` | `tpmLimit` |
-| `X-RateLimit-Remaining-Tokens` | `tpmRemaining` |
-| `X-RateLimit-Reset-Requests` | `rpmResetAt` (supports `"1m30s"` and plain seconds) |
-| `X-RateLimit-Reset-Tokens` | `tpmResetAt` (supports `"1m30s"` and plain seconds) |
+| Header                           | Parsed As                                           |
+| -------------------------------- | --------------------------------------------------- |
+| `Retry-After`                    | `retryAfterMs` (seconds → ms)                       |
+| `X-RateLimit-Limit-Requests`     | `rpmLimit`                                          |
+| `X-RateLimit-Remaining-Requests` | `rpmRemaining`                                      |
+| `X-RateLimit-Limit-Tokens`       | `tpmLimit`                                          |
+| `X-RateLimit-Remaining-Tokens`   | `tpmRemaining`                                      |
+| `X-RateLimit-Reset-Requests`     | `rpmResetAt` (supports `"1m30s"` and plain seconds) |
+| `X-RateLimit-Reset-Tokens`       | `tpmResetAt` (supports `"1m30s"` and plain seconds) |
 
 Headers are read from both `Map` objects (standard `Headers`) and plain objects (some AI SDK error wrappers).
 
 ## Relationship to Other Modules
 
-| Module | Relationship |
-|---|---|
+| Module                           | Relationship                                                                                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `symphony-bridge-truncation.mjs` | Provides static `PROVIDER_MAX_INPUT_TOKENS` (base values) and `estimateMessagesTokens`; accepts `maxTokensOverride` from adaptive system |
-| `symphony-credit-gate.mjs` | Owns provider selection and failure cooldown; adaptive system adds throttle-based exclusion on top |
-| `symphony-openai-bridge.mjs` | Consumes all adaptive functions at 6 integration points (see above) |
-| `symphony-session-state.mjs` | Manages session turn limits; independent from adaptive context |
+| `symphony-credit-gate.mjs`       | Owns provider selection and failure cooldown; adaptive system adds throttle-based exclusion on top                                       |
+| `symphony-openai-bridge.mjs`     | Consumes all adaptive functions at 6 integration points (see above)                                                                      |
+| `symphony-session-state.mjs`     | Manages session turn limits; independent from adaptive context                                                                           |
 
 ## Design Decisions
 
