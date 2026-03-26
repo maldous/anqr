@@ -1035,39 +1035,27 @@ async function runContinuousProviderProbe() {
         
         // Send Discord embedded card with updated rankings
         try {
-          const stats = getProviderStats();
           const available = providerStatusCache.probeResults.filter((r) => r.available);
           const total = providerStatusCache.configured.length;
           
-          // Build fields for top 10 providers
-          const fields = [];
+          // Build concise top 10 list (just position, model, score)
           const topProviders = ranked.slice(0, 10);
-          
-          for (const { rank, name, score, tier } of topProviders) {
-            const provStats = stats[name];
-            const selections = provStats?.selections || 0;
-            const successRate = provStats?.successRate || "N/A";
+          const rankingLines = topProviders.map(({ rank, name, score }) => {
             const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
-            
-            fields.push({
-              name: `#${rank} ${name}`,
-              value: `[${tier}] score: ${scoreDisplay}\n${selections} selections, ${successRate} success`,
-              inline: true,
-            });
-          }
-          
-          // Add summary field
-          fields.push({
-            name: "Summary",
-            value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
-            inline: false,
+            return `${rank}. ${name}: ${scoreDisplay}`;
           });
           
           await sendDiscordEmbed({
             title: "🔍 Provider Rankings (Probe Cycle Complete)",
-            description: `Updated rankings after ${PROBE_COMPLETIONS_BEFORE_RANKING} probe completions`,
+            description: rankingLines.join("\n"),
             color: 0x3498db, // Blue
-            fields,
+            fields: [
+              {
+                name: "Summary",
+                value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
+                inline: false,
+              },
+            ],
           });
           
           logInfo(`📊 Sent updated provider rankings to Discord (top ${topProviders.length})`);
@@ -1851,9 +1839,14 @@ async function invokeWithAI(provider, messages, options = {}) {
       onStepFinish: (step) => {
         if (step.toolCalls && step.toolCalls.length > 0) {
           for (const tc of step.toolCalls) {
-            const input = tc.input ?? tc.args;
-            const summary = input ? JSON.stringify(input).slice(0, 200) : "";
-            logDebug(`🔧 ${tc.toolName}: ${summary}`);
+            // Suppress read tool output as it can be very long and noisy (from file explorer/fetcher agents)
+            if (tc.toolName === "read") {
+              logDebug(`🔧 ${tc.toolName}: (output suppressed)`);
+            } else {
+              const input = tc.input ?? tc.args;
+              const summary = input ? JSON.stringify(input).slice(0, 200) : "";
+              logDebug(`🔧 ${tc.toolName}: ${summary}`);
+            }
 
             // Track file changes for write tool
             if (tc.toolName === "write" && currentRequestId) {
@@ -3510,33 +3503,7 @@ const server = http.createServer(async (req, res) => {
 async function shutdown(signal) {
   logInfo(`\nReceived ${signal}, shutting down...`);
 
-  // Send Discord notification about bridge restart
-  try {
-    const commitHash = execSync("git rev-parse --short HEAD", {
-      encoding: "utf-8",
-      cwd: process.cwd(),
-    }).trim();
-    const available = providerStatusCache.probeResults.filter((r) => r.available).length;
-    const total = providerStatusCache.configured.length;
-    const concurrent = activeRequests.size;
-
-    await sendDiscordEmbed({
-      title: "⚠️ Symphony Bridge Restarting",
-      description: `**Service interruption in progress**\n\nThe bridge is shutting down and will restart momentarily.`,
-      color: 0xffa500, // Orange - warning color
-      fields: [
-        { name: "Signal", value: signal, inline: true },
-        { name: "PID", value: String(process.pid), inline: true },
-        { name: "Commit", value: commitHash, inline: true },
-        { name: "Providers", value: `${available}/${total} available`, inline: true },
-        { name: "Active Requests", value: concurrent > 0 ? `⚠️ ${concurrent} in-flight` : "None", inline: true },
-      ],
-      footer: concurrent > 0 ? "⚠️ Active requests will be terminated" : "Service will resume shortly",
-    });
-    logInfo(`📢 Sent Discord restart notification`);
-  } catch (err) {
-    logError(`⚠️ Failed to send Discord restart notification: ${err.message}`);
-  }
+  // Don't send shutdown notification - will send combined restart message on startup
 
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -3623,18 +3590,18 @@ server.listen(PORT, "127.0.0.1", async () => {
     }
 
     const discordResult = await sendDiscordEmbed({
-      title: "🚀 Symphony Bridge Started",
+      title: "🔄 Symphony Bridge Restarted",
       description: `PID ${process.pid}`,
       color: 0x00ff00, // Green
       fields,
     });
     if (discordResult.sent) {
-      logInfo(`✅ Discord startup notification sent successfully`);
+      logInfo(`✅ Discord restart notification sent successfully`);
     } else {
-      logError(`❌ Discord startup notification failed: ${discordResult.reason || "unknown"}`);
+      logError(`❌ Discord restart notification failed: ${discordResult.reason || "unknown"}`);
     }
   } catch (err) {
-    logError(`❌ Failed to send Discord startup notification: ${err.message}`);
+    logError(`❌ Failed to send Discord restart notification: ${err.message}`);
   }
 
   // Synchronously populate configured providers (no network calls)
@@ -3732,37 +3699,25 @@ server.listen(PORT, "127.0.0.1", async () => {
       // Send Discord embedded card with provider rankings
       try {
         const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
-        const stats = getProviderStats();
         
-        // Build fields for top 10 providers
-        const fields = [];
+        // Build concise top 10 list (just position, model, score)
         const topProviders = ranked.slice(0, 10);
-        
-        for (const { rank, name, score, tier } of topProviders) {
-          const provStats = stats[name];
-          const selections = provStats?.selections || 0;
-          const successRate = provStats?.successRate || "N/A";
+        const rankingLines = topProviders.map(({ rank, name, score }) => {
           const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
-          
-          fields.push({
-            name: `#${rank} ${name}`,
-            value: `[${tier}] score: ${scoreDisplay}\n${selections} selections, ${successRate} success`,
-            inline: true,
-          });
-        }
-        
-        // Add summary field
-        fields.push({
-          name: "Summary",
-          value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
-          inline: false,
+          return `${rank}. ${name}: ${scoreDisplay}`;
         });
         
         await sendDiscordEmbed({
           title: "🔍 Provider Rankings (Startup Probe Complete)",
-          description: `Probed ${total} providers across 3 cycles`,
+          description: rankingLines.join("\n"),
           color: 0x3498db, // Blue
-          fields,
+          fields: [
+            {
+              name: "Summary",
+              value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
+              inline: false,
+            },
+          ],
         });
         
         logInfo(`📊 Sent provider rankings to Discord (top ${topProviders.length})`);
