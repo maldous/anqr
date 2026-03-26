@@ -120,7 +120,7 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
       timeout: 30000,
     };
 
-    logDebug(`🔗 Proxying ${toolName} to OpenClaw Gateway (session: ${sessionId.slice(0, 8)}...)`);
+    logDebug(`🔗 Proxying ${toolName} to OpenClaw Gateway`, { toolName, sessionId: sessionId.slice(0, 12) + '...' });
 
     const req = httpModule.request(options, (res) => {
       let data = "";
@@ -649,11 +649,23 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 // auto-continuation loop with previousRun (memento mode), matching the old
 // symphony-bridge invokeWithCodebuff that was lost during extraction.
 async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = null, _proxyToolFn = null) {
+  logDebug(`[trySingleAccount] Starting`, {
+    label: attempt.label,
+    isPaid: attempt.isPaid,
+    costMode: attempt.costMode,
+    promptLength: prompt.length,
+    hasCwd: !!cwd,
+  });
+
   let lastSubgoalStatus = null;
   const toolsUsed = new Set();
 
   const client = new CodebuffClient({
     apiKey: attempt.apiKey,
+    cwd: cwd || DEFAULT_CWD,
+  });
+
+  logDebug(`[trySingleAccount] CodebuffClient created`, {
     cwd: cwd || DEFAULT_CWD,
   });
 
@@ -698,7 +710,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
         }
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
-        if (text) logDebug(`💡 ${text.slice(0, 80)}...`);
+        if (text) logDebug(`💡 Reasoning delta`, { text: text.slice(0, 100) });
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
           logDebug(`codebuff context-pruner (internal)`);
@@ -734,15 +746,23 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
+  logDebug(`[trySingleAccount] Running initial request`, { maxSteps: CODEBUFF_MAX_STEPS });
   let result = await Promise.race([client.run(runOpts), makeTimeout()]);
 
   // Error checks on initial run
   const output = result.output;
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
+  logDebug(`[trySingleAccount] Initial run complete`, {
+    outputLength: resultStr.length,
+    outputType: typeof output,
+  });
+
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
     const errorMatch = resultStr.match(/"message":"([^"]+)"/);
-    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+    const errorMsg = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
+    logError(`[trySingleAccount] Vercel AI error detected`, { errorMsg });
+    throw new Error(errorMsg);
   }
   checkResultForErrors(output, resultStr, attempt);
 
@@ -751,8 +771,9 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   let continuation = 0;
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
-    logDebug(
+    logInfo(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
+      { continuation, maxContinuations: CODEBUFF_MAX_CONTINUATIONS, lastSubgoalStatus }
     );
     maybeGC();
 
@@ -765,27 +786,42 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
     };
     if (attempt.costMode) contOpts.costMode = attempt.costMode;
 
+    logDebug(`[trySingleAccount] Running continuation ${continuation}`);
     result = await Promise.race([client.run(contOpts), makeTimeout()]);
 
     const contOutput = result.output;
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
+    logDebug(`[trySingleAccount] Continuation ${continuation} complete`, {
+      outputLength: contStr.length,
+    });
+
     if (contStr.includes("Symbol(vercel.ai.error)")) {
       const errorMatch = contStr.match(/"message":"([^"]+)"/);
-      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+      const errorMsg = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
+      logError(`[trySingleAccount] Continuation error`, { continuation, errorMsg });
+      throw new Error(errorMsg);
     }
     checkResultForErrors(contOutput, contStr, attempt);
   }
 
   if (continuation > 0) {
-    logDebug(
+    logInfo(
       `Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
+      { totalRuns: continuation + 1, finalSubgoalStatus: lastSubgoalStatus }
     );
   }
 
-  logDebug(`✅ Success on ${attempt.label}`);
+  logInfo(`✅ Success on ${attempt.label}`, {
+    label: attempt.label,
+    continuations: continuation,
+    toolsUsedCount: toolsUsed.size,
+  });
 
   if (toolsUsed.size > 0) {
-    logDebug(`📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
+    logInfo(`📊 Tools used: ${Array.from(toolsUsed).join(", ")}`, {
+      toolsUsed: Array.from(toolsUsed),
+      toolCount: toolsUsed.size,
+    });
   } else {
     logDebug(`📊 Tools used: none (text-only mode)`);
   }
@@ -837,25 +873,52 @@ async function revalidateAndSelectWinner() {
 
 // Use pre-warmed winner directly, with paid→free fallback on recoverable errors
 async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = null }) {
+  logDebug(`[invokeCodebuff] Entry`, {
+    messageCount: messages?.length,
+    hasCwd: !!cwd,
+    hasSessionId: !!sessionId,
+    hasProxyToolFn: !!proxyToolFn,
+  });
+
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
-    logInfo(`⏰ Time-based re-validation triggered`);
+    logInfo(`⏰ Time-based re-validation triggered`, {
+      lastRevalidation: new Date(lastRevalidationTime).toISOString(),
+      intervalMs: REVALIDATION_INTERVAL_MS,
+    });
     await revalidateAndSelectWinner();
   }
 
   const winner = getWinner();
-  logInfo(`Using: ${winner.label}`);
+  logInfo(`Using: ${winner.label}`, {
+    isPaid: winner.isPaid,
+    costMode: winner.costMode,
+  });
 
   const prompt = buildPrompt(messages);
+  logDebug(`[invokeCodebuff] Built prompt`, {
+    promptLength: prompt.length,
+    messageCount: messages?.length,
+  });
+
   const makeTimeout = () =>
     new Promise((_, reject) => {
       setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
     });
 
   try {
+    logDebug(`[invokeCodebuff] Invoking with winner`, { label: winner.label });
     return await trySingleAccount(winner, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
   } catch (err) {
+    logDebug(`[invokeCodebuff] Winner invocation failed`, {
+      label: winner.label,
+      errorMessage: err.message?.slice(0, 200),
+      isRecoverable: isRecoverableError(err.message),
+    });
     if (winner.isPaid && isRecoverableError(err.message)) {
-      logWarn(`⚠️ Paid mode failed: ${err.message}`);
+      logWarn(`⚠️ Paid mode failed: ${err.message}`, {
+        errorMessage: err.message?.slice(0, 200),
+        isPaid: winner.isPaid,
+      });
       logInfo(`🔄 Falling back to free mode...`);
 
       const freeAttempt = {
@@ -869,10 +932,17 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
-      logInfo(`🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+      logInfo(`🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`, {
+        revalidationIntervalHours: REVALIDATION_INTERVAL_MS / 3600000,
+      });
 
+      logDebug(`[invokeCodebuff] Attempting free mode fallback`);
       return await trySingleAccount(freeAttempt, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
     }
+    logError(`[invokeCodebuff] Unrecoverable error`, {
+      errorMessage: err.message?.slice(0, 200),
+      errorType: err.constructor?.name,
+    });
     throw err;
   }
 }
@@ -904,8 +974,8 @@ async function trySingleAccountStream(
   const streamActivity = (text) => {
     if (onChunk && text) {
       const chunk = makeSseChunk(completionId, created, text);
-      logDebug(`🌊 Streaming activity: ${text.slice(0, 80)}`);
-      logDebug(`📤 SSE chunk: ${JSON.stringify(chunk).slice(0, 200)}`);
+      logDebug(`🌊 Streaming activity`, { text: text.slice(0, 100) });
+      logDebug(`📤 SSE chunk`, { chunk: JSON.stringify(chunk).slice(0, 200) });
       onChunk(chunk);
     }
   };
@@ -947,7 +1017,7 @@ async function trySingleAccountStream(
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
-          logDebug(`💡 ${text.slice(0, 80)}...`);
+          logDebug(`💡 Reasoning delta`, { text: text.slice(0, 100) });
           streamActivity(`💡 ${text}\n`);
         }
       } else if (type === "subagent_start" || type === "subagent-start") {
@@ -1197,9 +1267,9 @@ const server = http.createServer(async (req, res) => {
   // Debug: log ALL requests before any processing
   logDebug(`===== REQUEST =====`);
   logDebug(`method: ${req.method}, url: ${req.url}`);
-  logDebug(`headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
+  logDebug(`headers`, { authorization: req.headers.authorization?.slice(0, 20) + '...' });
   if (req.headers["x-openclaw-session"]) {
-    logDebug(`session: ${req.headers["x-openclaw-session"].slice(0, 12)}...`);
+    logDebug(`session`, { sessionId: req.headers["x-openclaw-session"].slice(0, 12) + '...' });
   }
   logDebug(`===================`);
 

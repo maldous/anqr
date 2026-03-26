@@ -112,6 +112,10 @@ export function truncateMessagesForProvider(messages, providerName) {
   if (!messages || messages.length === 0) {
     logError(
       `⚠️ truncateMessagesForProvider: messages array is empty (provider: ${providerName}) - this should never happen`,
+      {
+        providerName,
+        messageCount: messages?.length,
+      }
     );
     // Return a minimal valid message to prevent AI SDK errors
     return [{ role: "user", content: "[Error: No messages provided]" }];
@@ -120,19 +124,48 @@ export function truncateMessagesForProvider(messages, providerName) {
   const maxTokens = PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
   let estimated = estimateMessagesTokens(messages);
 
+  logDebug(`[truncateMessagesForProvider] Entry`, {
+    providerName,
+    messageCount: messages.length,
+    estimatedTokens: estimated,
+    maxTokens,
+    needsTruncation: estimated > maxTokens,
+  });
+
   // Under budget — no truncation needed
-  if (estimated <= maxTokens) return messages;
+  if (estimated <= maxTokens) {
+    logDebug(`[truncateMessagesForProvider] No truncation needed`, {
+      providerName,
+      estimatedTokens: estimated,
+      maxTokens,
+    });
+    return messages;
+  }
 
   logInfo(
     `✂️ Context pruning for ${providerName}: ~${estimated} tokens > ${maxTokens} limit`,
+    {
+      providerName,
+      estimatedTokens: estimated,
+      maxTokens,
+      overBudgetBy: estimated - maxTokens,
+    }
   );
 
   // Pass 1: Truncate oversized individual messages
+  logDebug(`[truncateMessagesForProvider] Pass 1: Truncating large messages`, {
+    perMessageLimit: PER_MESSAGE_CHAR_LIMIT,
+  });
   let truncated = messages.map((msg) => truncateMessageContent(msg, PER_MESSAGE_CHAR_LIMIT));
   estimated = estimateMessagesTokens(truncated);
   if (estimated <= maxTokens) {
     logInfo(
       `✂️ Pass 1 (truncate large messages): ~${estimated} tokens — fits`,
+      {
+        estimatedTokens: estimated,
+        maxTokens,
+        messageCount: truncated.length,
+      }
     );
     return truncated;
   }
@@ -149,6 +182,11 @@ export function truncateMessagesForProvider(messages, providerName) {
     }
   }
 
+  logDebug(`[truncateMessagesForProvider] Pass 2: Dropping middle messages`, {
+    nonSystemCount: nonSystemMessages.length,
+    keepLast,
+    willDrop: nonSystemMessages.length > keepLast,
+  });
   if (nonSystemMessages.length > keepLast) {
     const dropped = nonSystemMessages.length - keepLast;
     const kept = nonSystemMessages.slice(-keepLast);
@@ -160,16 +198,32 @@ export function truncateMessagesForProvider(messages, providerName) {
     estimated = estimateMessagesTokens(truncated);
     logInfo(
       `✂️ Pass 2 (drop ${dropped} middle messages): ~${estimated} tokens`,
+      {
+        droppedCount: dropped,
+        estimatedTokens: estimated,
+        maxTokens,
+        messageCount: truncated.length,
+      }
     );
     if (estimated <= maxTokens) return truncated;
   }
 
   // Pass 3: Aggressively truncate remaining messages to half the per-message limit
   const aggressiveLimit = Math.floor(PER_MESSAGE_CHAR_LIMIT / 3);
+  logDebug(`[truncateMessagesForProvider] Pass 3: Aggressive truncation`, {
+    aggressiveLimit,
+    messageCount: truncated.length,
+  });
   truncated = truncated.map((msg) => truncateMessageContent(msg, aggressiveLimit));
   estimated = estimateMessagesTokens(truncated);
   logInfo(
     `✂️ Pass 3 (aggressive truncation to ${aggressiveLimit} chars/msg): ~${estimated} tokens`,
+    {
+      aggressiveLimit,
+      estimatedTokens: estimated,
+      maxTokens,
+      messageCount: truncated.length,
+    }
   );
 
   // Pass 4: Last resort — fresh start with only system + last 2 ORIGINAL messages.
@@ -177,6 +231,11 @@ export function truncateMessagesForProvider(messages, providerName) {
   // this is a complete reset rather than iterating on previous passes.
   if (estimated > maxTokens) {
     const lastResortLimit = Math.floor((maxTokens * CHARS_PER_TOKEN) / 3); // ~1/3 of total budget in chars
+    logDebug(`[truncateMessagesForProvider] Pass 4: Last resort`, {
+      lastResortLimit,
+      systemMessageCount: systemMessages.length,
+      originalNonSystemCount: nonSystemMessages.length,
+    });
     const sysMsg =
       systemMessages.length > 0 ? [truncateMessageContent(systemMessages[0], lastResortLimit)] : [];
     const lastTwo = nonSystemMessages
@@ -186,6 +245,12 @@ export function truncateMessagesForProvider(messages, providerName) {
     estimated = estimateMessagesTokens(truncated);
     logInfo(
       `✂️ Pass 4 (last resort — system + last 2): ~${estimated} tokens`,
+      {
+        lastResortLimit,
+        estimatedTokens: estimated,
+        maxTokens,
+        messageCount: truncated.length,
+      }
     );
   }
 
@@ -193,11 +258,23 @@ export function truncateMessagesForProvider(messages, providerName) {
   if (!truncated || truncated.length === 0) {
     logError(
       `⚠️ Truncation resulted in empty array — returning last message only`,
+      {
+        providerName,
+        originalMessageCount: messages.length,
+      }
     );
     const lastMsg = messages[messages.length - 1];
     const emergencyLimit = Math.floor((maxTokens * CHARS_PER_TOKEN) / 2);
     return [truncateMessageContent(lastMsg, emergencyLimit)];
   }
+
+  logInfo(`[truncateMessagesForProvider] Complete`, {
+    providerName,
+    originalMessageCount: messages.length,
+    truncatedMessageCount: truncated.length,
+    estimatedTokens: estimated,
+    maxTokens,
+  });
 
   return truncated;
 }

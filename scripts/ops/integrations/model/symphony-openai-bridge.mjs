@@ -256,6 +256,64 @@ function stopDiscordMonitoring() {
   }
 }
 
+/**
+ * Send periodic Processing Status embedded card to Discord
+ * Shows all concurrent requests with runtime and file changes
+ */
+async function sendProcessingStatusUpdate() {
+  if (activeRequests.size === 0) return;
+
+  const now = Date.now();
+  const fields = [];
+
+  // Build fields for each active request
+  for (const [reqId, req] of activeRequests.entries()) {
+    const runtime = formatElapsed(now - req.startTime);
+    const filesChanged = req.filesChanged || 0;
+    const issueLabel = req.issueId || reqId;
+    const requestPreview = req.requestText ? req.requestText.slice(0, 100) : '(no description)';
+
+    fields.push({
+      name: `${issueLabel} (${runtime})`,
+      value: `Files: ${filesChanged} | ${requestPreview}`,
+      inline: false,
+    });
+  }
+
+  await sendDiscordEmbed({
+    title: `⏳ Processing Status (${activeRequests.size} active)`,
+    description: 'Concurrent requests in progress',
+    color: 0x3498db, // Blue
+    fields,
+  }).catch(err => logDebug(`Processing status update failed: ${err.message}`));
+}
+
+/**
+ * Start periodic processing status updates (once per minute)
+ */
+function startProcessingStatusUpdates() {
+  if (processingStatusTimer) {
+    clearInterval(processingStatusTimer);
+  }
+
+  logInfo(`📊 Starting periodic processing status updates (every 60s)`);
+  
+  processingStatusTimer = setInterval(async () => {
+    await sendProcessingStatusUpdate();
+  }, 60000); // Every 60 seconds
+}
+
+/**
+ * Stop periodic processing status updates
+ */
+function stopProcessingStatusUpdates() {
+  if (processingStatusTimer) {
+    clearInterval(processingStatusTimer);
+    processingStatusTimer = null;
+    logInfo(`📊 Stopped periodic processing status updates`);
+  }
+}
+
 // Voice announcements removed - OpenClaw automatically speaks my responses in Discord sessions
 // Symphony bridge Discord notifications are text-only via webhook
 
@@ -390,6 +448,27 @@ async function execTool({ command, cwd }) {
 }
 
 /**
+ * Track file changes for the current request
+ */
+function trackFileChange(requestId) {
+  const req = activeRequests.get(requestId);
+  if (req) {
+    req.filesChanged = (req.filesChanged || 0) + 1;
+  }
+}
+
+/**
+ * Get current request ID from async context (stored in global for tracking)
+ */
+let currentRequestId = null;
+function setCurrentRequestId(id) {
+  currentRequestId = id;
+}
+function getCurrentRequestId() {
+  return currentRequestId;
+}
+
+/**
  * Read a file from the filesystem
  */
 async function readFileTool({ path: filePath, offset, lines }) {
@@ -430,6 +509,25 @@ async function readFileTool({ path: filePath, offset, lines }) {
 }
 
 /**
+ * Write a file (wrapper that tracks changes)
+ */
+async function writeFileTool({ path: filePath, content }) {
+  try {
+    fs.writeFileSync(filePath, content, "utf-8");
+    
+    // Track file change for current request
+    const reqId = getCurrentRequestId();
+    if (reqId) {
+      trackFileChange(reqId);
+    }
+    
+    return { success: true, path: filePath };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
  * List files matching a pattern
  */
 async function globTool({ pattern, cwd }) {
@@ -442,6 +540,80 @@ async function globTool({ pattern, cwd }) {
     return { files, count: files.length };
   } catch (error) {
     return { error: error.message, files: [] };
+  }
+}
+
+/**
+ * Search memory files (MEMORY.md and knowledge files)
+ */
+async function memorySearchTool({ query }) {
+  try {
+    const memoryFile = path.join(process.cwd(), "MEMORY.md");
+    const knowledgeFile = path.join(process.cwd(), "knowledge.md");
+    const results = [];
+
+    // Search MEMORY.md
+    if (fs.existsSync(memoryFile)) {
+      const content = fs.readFileSync(memoryFile, "utf-8");
+      const lines = content.split("\n");
+      const matches = lines
+        .map((line, idx) => ({ line, idx }))
+        .filter(({ line }) => line.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 10);
+      
+      if (matches.length > 0) {
+        results.push({
+          file: "MEMORY.md",
+          matches: matches.map(m => ({ line: m.line, lineNumber: m.idx + 1 })),
+        });
+      }
+    }
+
+    // Search knowledge.md
+    if (fs.existsSync(knowledgeFile)) {
+      const content = fs.readFileSync(knowledgeFile, "utf-8");
+      const lines = content.split("\n");
+      const matches = lines
+        .map((line, idx) => ({ line, idx }))
+        .filter(({ line }) => line.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 10);
+      
+      if (matches.length > 0) {
+        results.push({
+          file: "knowledge.md",
+          matches: matches.map(m => ({ line: m.line, lineNumber: m.idx + 1 })),
+        });
+      }
+    }
+
+    return { results, count: results.length };
+  } catch (error) {
+    return { error: error.message, results: [] };
+  }
+}
+
+/**
+ * Get full content of memory files
+ */
+async function memoryGetTool({ file }) {
+  try {
+    const validFiles = ["MEMORY.md", "knowledge.md", "CLAUDE.md"];
+    const fileName = file || "MEMORY.md";
+    
+    if (!validFiles.includes(fileName)) {
+      return { error: `Invalid file. Must be one of: ${validFiles.join(", ")}` };
+    }
+
+    const filePath = path.join(process.cwd(), fileName);
+    
+    if (!fs.existsSync(filePath)) {
+      return { error: `File ${fileName} not found`, content: "" };
+    }
+
+    const content = fs.readFileSync(filePath, "utf-8");
+    return { content, file: fileName, lines: content.split("\n").length };
+  } catch (error) {
+    return { error: error.message };
   }
 }
 
@@ -464,6 +636,14 @@ const tools = {
     }),
     execute: readFileTool,
   }),
+  write: tool({
+    description: "Write content to a file",
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file to write"),
+      content: z.string().describe("Content to write to the file"),
+    }),
+    execute: writeFileTool,
+  }),
   glob: tool({
     description: "Find files matching a glob pattern",
     inputSchema: z.object({
@@ -471,6 +651,20 @@ const tools = {
       cwd: z.string().optional().describe("Directory to search in"),
     }),
     execute: globTool,
+  }),
+  memory_search: tool({
+    description: "Search through memory and knowledge files (MEMORY.md, knowledge.md) for specific content",
+    inputSchema: z.object({
+      query: z.string().describe("Search query to find in memory files"),
+    }),
+    execute: memorySearchTool,
+  }),
+  memory_get: tool({
+    description: "Get the full content of a memory or knowledge file",
+    inputSchema: z.object({
+      file: z.string().optional().describe("File to read: MEMORY.md (default), knowledge.md, or CLAUDE.md"),
+    }),
+    execute: memoryGetTool,
   }),
 };
 
@@ -715,8 +909,9 @@ let explorationProbesThisPeriod = 0;
 let lastSelectedProvider = null;
 
 // Track concurrent requests for Discord notifications
-const activeRequests = new Map(); // requestId -> { startTime, issueId, model, stream }
+const activeRequests = new Map(); // requestId -> { startTime, issueId, model, stream, filesChanged }
 let requestIdCounter = 0;
+let processingStatusTimer = null;
 
 // ---------------------------------------------------------------------------
 // Provider status cache — populated by startup probe, refreshed periodically
@@ -1259,7 +1454,16 @@ async function probeAllToolCapability() {
 async function invokeWithAI(provider, messages, options = {}) {
   const { stream = false, onChunk } = options;
 
+  logDebug(`[invokeWithAI] Entry`, {
+    providerName: provider.name,
+    providerModel: provider.model,
+    stream,
+    messageCount: messages?.length,
+    hasOnChunk: !!onChunk,
+  });
+
   if (provider.driver === "codex-sdk" || provider.name === "codex") {
+    logDebug(`[invokeWithAI] Routing to Codex SDK`, { providerName: provider.name });
     return invokeWithCodex(provider, messages, options);
   }
 
@@ -1267,28 +1471,51 @@ async function invokeWithAI(provider, messages, options = {}) {
   const model = createProviderModel(provider);
 
   if (!model) {
+    logError(`[invokeWithAI] Failed to create provider model`, {
+      providerName: provider.name,
+      providerModel: provider.model,
+    });
     throw new Error(`Provider ${provider.name} not supported with AI SDK`);
   }
 
   const useTools = providerSupportsTools(provider.name);
-  logDebug(
+  logInfo(
     `Using AI SDK with provider: ${provider.name} (${provider.model})${useTools ? "" : " [no-tools]"}`,
   );
+  logDebug(`[invokeWithAI] Provider configuration`, {
+    providerName: provider.name,
+    providerModel: provider.model,
+    useTools,
+    hasBaseUrl: !!provider.baseUrl,
+    hasApiKey: !!provider.apiKey,
+  });
 
   // Convert messages to AI SDK format and truncate for provider's context limit
+  logDebug(`[invokeWithAI] Converting messages`, { messageCount: messages?.length });
   const rawMessages = convertMessages(messages);
+  logDebug(`[invokeWithAI] Messages after conversion`, {
+    rawMessageCount: rawMessages?.length,
+    totalChars: rawMessages?.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : 0), 0),
+  });
+
   const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
+  logDebug(`[invokeWithAI] Messages after truncation`, {
+    aiMessageCount: aiMessages?.length,
+    providerName: provider.name,
+    wasChanged: aiMessages?.length !== rawMessages?.length,
+  });
 
   // Validation: truncateMessagesForProvider guarantees at least one message,
   // but double-check to catch any edge cases
   if (!aiMessages || aiMessages.length === 0) {
     logError(
       `❌ CRITICAL: Message truncation failed for provider ${provider.name}`,
-    );
-    logError(`  Original messages: ${messages?.length || 0}`);
-    logError(`  Raw messages after conversion: ${rawMessages?.length || 0}`);
-    logError(
-      `  This should never happen - truncateMessagesForProvider has a fallback`,
+      {
+        originalMessageCount: messages?.length || 0,
+        rawMessageCount: rawMessages?.length || 0,
+        aiMessageCount: aiMessages?.length,
+        providerName: provider.name,
+      }
     );
     throw new Error(
       `CRITICAL: Message truncation failed for provider ${provider.name} - original had ${messages?.length || 0} messages`,
@@ -1296,6 +1523,11 @@ async function invokeWithAI(provider, messages, options = {}) {
   }
 
   if (stream) {
+    logDebug(`[invokeWithAI] Starting streaming invocation`, {
+      providerName: provider.name,
+      useTools,
+      maxIterations: MAX_TOOL_ITERATIONS,
+    });
     let finishReason = null;
 
     // Streaming with tool execution (tools disabled for providers that don't support them)
@@ -1311,19 +1543,33 @@ async function invokeWithAI(provider, messages, options = {}) {
             const input = tc.input ?? tc.args;
             const summary = input ? JSON.stringify(input).slice(0, 200) : "";
             logDebug(`🔧 ${tc.toolName}: ${summary}`);
+            
+            // Track file changes for write tool
+            if (tc.toolName === "write" && currentRequestId) {
+              trackFileChange(currentRequestId);
+            }
           }
         }
       },
       onFinish: (event) => {
         finishReason = event.finishReason;
+        logInfo(`[invokeWithAI] Stream finished`, {
+          finishReason,
+          textLength: event.text?.length || 0,
+          hasUsage: !!event.usage,
+          inputTokens: event.usage?.promptTokens,
+          outputTokens: event.usage?.completionTokens,
+        });
         if (finishReason === "error" || !event.text) {
           logWarn(
             `⚠️ Stream finished: reason=${finishReason}, text=${event.text?.length || 0} chars`,
+            { finishReason, textLength: event.text?.length || 0 }
           );
         }
         if (finishReason === "tool-calls") {
           logWarn(
             `⚠️ Model hit step limit (${MAX_TOOL_ITERATIONS}) while still executing tools — response may be truncated`,
+            { maxIterations: MAX_TOOL_ITERATIONS, finishReason }
           );
         }
       },
@@ -1334,11 +1580,19 @@ async function invokeWithAI(provider, messages, options = {}) {
     let fullTextCapped = false;
     let streamErrorDetail = null;
     let hasTextDeltas = false;
+    let partCount = 0;
+    let textDeltaCount = 0;
+    let toolCallCount = 0;
+    let errorCount = 0;
 
+    logDebug(`[invokeWithAI] Processing fullStream...`);
     for await (const part of result.fullStream) {
+      partCount++;
+      logDebug(`[invokeWithAI] Stream part ${partCount}`, { type: part.type });
       // Track if we're receiving text-delta events (for fallback detection)
       if (part.type === "text-delta") {
         hasTextDeltas = true;
+        textDeltaCount++;
       }
       if (part.type === "reasoning-start") {
         if (onChunk) onChunk({ type: "text", text: "\n💡 " });
@@ -1353,7 +1607,11 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (!fullTextCapped) {
           if (fullText.length + delta.length > MAX_RESPONSE_TEXT_BYTES) {
             fullTextCapped = true;
-            logDebug(`⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`);
+            logWarn(`⚠️ fullText capped at ${MAX_RESPONSE_TEXT_BYTES} bytes`, {
+              currentLength: fullText.length,
+              deltaLength: delta.length,
+              maxBytes: MAX_RESPONSE_TEXT_BYTES,
+            });
           } else {
             fullText += delta;
           }
@@ -1366,35 +1624,71 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (delta && delta.length > 0) {
           logDebug(
             `📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`,
+            { deltaLength: delta.length, totalLength: fullText.length }
           );
         }
       } else if (part.type === "tool-call") {
+        toolCallCount++;
         const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
-        logDebug(`🔧 ${part.toolName}: ${argsSummary}`);
+        logInfo(`🔧 ${part.toolName}: ${argsSummary}`);
+        logDebug(`[invokeWithAI] Tool call ${toolCallCount}`, {
+          toolName: part.toolName,
+          toolCallId: part.toolCallId,
+          argsKeys: part.args ? Object.keys(part.args) : [],
+        });
         if (onChunk) {
           onChunk({ type: "text", text: `\n🔧 ${part.toolName}: \n` });
         }
       } else if (part.type === "tool-result") {
-        logDebug(`✅ ${part.toolName} done`);
+        logInfo(`✅ ${part.toolName} done`);
+        logDebug(`[invokeWithAI] Tool result`, {
+          toolName: part.toolName,
+          toolCallId: part.toolCallId,
+          hasResult: !!part.result,
+          resultType: typeof part.result,
+        });
         if (onChunk) {
           onChunk({ type: "text", text: `✅ ${part.toolName} done\n` });
         }
       } else if (part.type === "error") {
+        errorCount++;
         const streamError = part.error || part;
         const rootError = unwrapAIError(streamError);
         const errorMsg = errorToString(rootError);
         streamErrorDetail = streamErrorDetail || errorMsg;
         // Log server-side only - internal provider errors are handled by auto-fallback
-        logDebug(
+        logWarn(
           `🔧 Internal provider error (auto-fallback will retry): ${errorMsg.slice(0, 150)}`,
+          {
+            providerName: provider.name,
+            errorType: streamError?.constructor?.name,
+            isRetryable: isRetryableErrorDeep(streamError),
+          }
         );
+        logDebug(`[invokeWithAI] Stream error ${errorCount}`, {
+          errorMsg: errorMsg.slice(0, 500),
+          errorType: streamError?.constructor?.name,
+          hasResponseBody: !!rootError?.responseBody,
+          statusCode: rootError?.statusCode,
+        });
         // DO NOT forward error events to client - these are internal Symphony routing errors
       } else if (part.type === "finish") {
         if (part.finishReason) {
           finishReason = part.finishReason;
         }
+        logDebug(`[invokeWithAI] Finish event`, { finishReason: part.finishReason });
       }
     }
+
+    logInfo(`[invokeWithAI] Stream processing complete`, {
+      partCount,
+      textDeltaCount,
+      toolCallCount,
+      errorCount,
+      finalTextLength: fullText.length,
+      hasTextDeltas,
+      finishReason,
+    });
 
     // Fallback: if fullStream produced no text-delta events, try result.text
     // (best-effort — result.text derives from the same stream, but internal
@@ -1527,14 +1821,25 @@ async function invokeWithFallback(messages, route, sessionId = null) {
   let lastError = null;
   let attemptNumber = 0;
 
+  logDebug(`[invokeWithFallback] Starting fallback cascade`, {
+    routeModelId: route.responseModelId,
+    allowedNames: route.allowedNames,
+    sessionId: sessionId ? sessionId.slice(0, 12) + '...' : null,
+    messageCount: messages?.length,
+  });
+
   // Check if it's time for periodic evaluation
   if (shouldTriggerEvalCycle()) {
-    logDebug(`🔍 Periodic evaluation cycle: sampling underused providers`);
+    logInfo(`🔍 Periodic evaluation cycle: sampling underused providers`);
   }
 
   // Keep trying providers until we run out
   while (attemptNumber < 10) {
     attemptNumber++;
+    logDebug(`[invokeWithFallback] Attempt ${attemptNumber}/10`, {
+      triedProviders,
+      lastError: lastError ? lastError.slice(0, 100) : null,
+    });
 
     // Get next provider from credit-gate (excluding already-tried ones)
     const provider = await selectProvider(buildSelectionOptions(route, triedProviders, sessionId));
@@ -1549,6 +1854,13 @@ async function invokeWithFallback(messages, route, sessionId = null) {
           : lastError
             ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
             : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      logError(`[invokeWithFallback] No provider available`, {
+        attemptNumber,
+        triedProviders,
+        excludedByProbe,
+        routeModelId: route.responseModelId,
+        lastError: lastError ? lastError.slice(0, 200) : null,
+      });
       throw new Error(errorMsg);
     }
 
@@ -1587,9 +1899,18 @@ async function invokeWithFallback(messages, route, sessionId = null) {
 
     try {
       const startedAt = Date.now();
+      logDebug(`[invokeWithFallback] Invoking provider`, {
+        providerName: provider.name,
+        attemptNumber,
+      });
       const result = await invokeWithAI(provider, messages, { stream: false });
 
-      logInfo(`✅ Success with ${provider.name} (attempt ${attemptNumber})`);
+      const durationMs = Date.now() - startedAt;
+      logInfo(`✅ Success with ${provider.name} (attempt ${attemptNumber})`, {
+        durationMs,
+        textLength: result.text?.length,
+        hasUsage: !!result.usage,
+      });
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage);
 
@@ -1614,11 +1935,24 @@ async function invokeWithFallback(messages, route, sessionId = null) {
     } catch (err) {
       const errStr = String(err);
       lastError = errStr;
+      const isRetryable = isRetryableErrorDeep(err);
       logWarn(
         `❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`,
+        {
+          providerName: provider.name,
+          attemptNumber,
+          isRetryable,
+          errorType: err?.constructor?.name,
+        }
       );
+      logDebug(`[invokeWithFallback] Provider failure details`, {
+        providerName: provider.name,
+        errorMessage: errStr.slice(0, 500),
+        isRetryable,
+        willRecordFailure: isRetryable,
+      });
 
-      if (isRetryableErrorDeep(err)) {
+      if (isRetryable) {
         recordProviderFailure(provider.name);
         recordProviderFailureCount(provider.name);
       }
@@ -1628,9 +1962,13 @@ async function invokeWithFallback(messages, route, sessionId = null) {
   }
 
   // If we exhausted all attempts
-  throw new Error(
-    `All providers failed after ${attemptNumber} attempts (tried ${triedProviders.join(", ")}). Last error: ${lastError || "unknown"}`,
-  );
+  const finalError = `All providers failed after ${attemptNumber} attempts (tried ${triedProviders.join(", ")}). Last error: ${lastError || "unknown"}`;
+  logError(`[invokeWithFallback] All providers exhausted`, {
+    attemptCount: attemptNumber,
+    triedProviders,
+    lastError: lastError ? lastError.slice(0, 200) : null,
+  });
+  throw new Error(finalError);
 }
 
 /**
@@ -2307,6 +2645,9 @@ const server = http.createServer(async (req, res) => {
       const startTime = Date.now();
       const requestId = `req-${++requestIdCounter}`;
       
+      // Set current request ID for file change tracking
+      setCurrentRequestId(requestId);
+      
       // Track this request
       activeRequests.set(requestId, {
         startTime,
@@ -2314,6 +2655,7 @@ const server = http.createServer(async (req, res) => {
         requestText: contentStr.slice(0, 200),
         model: route.responseModelId,
         stream,
+        filesChanged: 0,
       });
       
       // Fire-and-forget Discord notification (non-blocking)
@@ -2464,6 +2806,7 @@ const server = http.createServer(async (req, res) => {
 
             // Clean up request tracking
             activeRequests.delete(requestId);
+            setCurrentRequestId(null);
             
           logInfo(
             `✅ Finished: ${issueContext?.identifier || 'Request'} (provider: codebuff, ${result.text.length} chars)`,
@@ -2548,6 +2891,7 @@ const server = http.createServer(async (req, res) => {
 
           // Clean up request tracking
           activeRequests.delete(requestId);
+          setCurrentRequestId(null);
           
           logInfo(
             `✅ Finished: ${issueContext?.identifier || 'Request'} (provider: ${result.providerName})`,
@@ -2576,6 +2920,7 @@ const server = http.createServer(async (req, res) => {
         } catch (streamError) {
           // Clean up request tracking
           activeRequests.delete(requestId);
+          setCurrentRequestId(null);
           
           clearInterval(heartbeat);
           clearInterval(progressInterval);
@@ -2629,6 +2974,7 @@ const server = http.createServer(async (req, res) => {
         
         // Clean up request tracking
         activeRequests.delete(requestId);
+        setCurrentRequestId(null);
         
         logInfo(`✅ Finished: ${issueContext?.identifier || 'Request'} — ${firstLine}`);
         
@@ -2694,6 +3040,7 @@ const server = http.createServer(async (req, res) => {
     // Clean up request tracking on error (only if requestId was defined)
     if (typeof requestId !== 'undefined') {
       activeRequests.delete(requestId);
+      setCurrentRequestId(null);
     }
 
     // Prevent ERR_HTTP_HEADERS_SENT crash - don't try to send JSON response
@@ -2776,6 +3123,7 @@ async function shutdown(signal) {
     probeIntervalHandle = null;
   }
   stopDiscordMonitoring();
+  stopProcessingStatusUpdates();
   logProviderStats();
   server.close(() => {
     logInfo("Server closed");
@@ -2916,6 +3264,9 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   // Start Discord message monitoring
   startDiscordMonitoring();
+  
+  // Start periodic processing status updates
+  startProcessingStatusUpdates();
 });
 
 // Export for testing

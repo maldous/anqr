@@ -1236,36 +1236,59 @@ function toSelectedProvider(provider, apiKey) {
 }
 
 async function tryProvider(provider) {
+  logDebug(`[tryProvider] Attempting provider`, {
+    providerName: provider.name,
+    tier: provider.tier,
+    hasEnvVar: !!provider.envVar,
+    requiresSdk: !!provider.requiresSdk,
+  });
+
   const apiKey = await resolveProviderApiKey(provider);
 
   if (provider.envVar && !apiKey) {
-    logDebug(`${provider.name}: skipped (no ${provider.envVar})`);
+    logDebug(`${provider.name}: skipped (no ${provider.envVar})`, {
+      envVar: provider.envVar,
+    });
     return null;
   }
 
   if (isRecentlyFailed(provider.name)) {
-    logDebug(`${provider.name}: skipped (recently failed)`);
+    logDebug(`${provider.name}: skipped (recently failed)`, {
+      providerName: provider.name,
+    });
     return null;
   }
 
   if (provider.requiresSdk) {
-    logInfo(`${provider.name}: using SDK ✅`);
+    logInfo(`${provider.name}: using SDK ✅`, {
+      providerName: provider.name,
+      model: provider.model,
+    });
     clearProviderFailure(provider.name);
     recordProviderSelection(provider.name);
     return toSelectedProvider(provider, apiKey);
   }
 
-  logDebug(`${provider.name}: probing...`);
+  logDebug(`${provider.name}: probing...`, {
+    providerName: provider.name,
+    hasCustomProbe: !!provider.probe,
+  });
   const available = provider.probe
     ? await provider.probe(provider, apiKey)
     : await probeOpenAIModels(provider.baseUrl, provider.model, apiKey);
 
   if (!available) {
-    logDebug(`${provider.name}: unavailable ❌`);
+    logDebug(`${provider.name}: unavailable ❌`, {
+      providerName: provider.name,
+    });
     return null;
   }
 
-  logInfo(`${provider.name}: available ✅`);
+  logInfo(`${provider.name}: available ✅`, {
+    providerName: provider.name,
+    model: provider.model,
+    tier: provider.tier,
+  });
   clearProviderFailure(provider.name);
   recordProviderSelection(provider.name);
   return toSelectedProvider(provider, apiKey);
@@ -1282,6 +1305,16 @@ export async function selectProvider(options = {}) {
       ? new Set(options.excludeNames)
       : null;
 
+  logDebug(`[selectProvider] Entry`, {
+    allowedCount: allowedNames?.size || 0,
+    excludedCount: excludedNames?.size || 0,
+    allowedNames: allowedNames ? Array.from(allowedNames) : null,
+    excludedNames: excludedNames ? Array.from(excludedNames) : null,
+  });
+
+  logDebug(`[selectProvider] Trying preferred providers`, {
+    preferredOrder: PREFERRED_PROVIDER_ORDER,
+  });
   for (const providerName of PREFERRED_PROVIDER_ORDER) {
     const provider = PROVIDERS.find((candidate) => candidate.name === providerName);
     if (
@@ -1289,43 +1322,76 @@ export async function selectProvider(options = {}) {
       !matchesAllowedNames(provider, allowedNames) ||
       matchesExcludedNames(provider, excludedNames)
     ) {
+      logDebug(`[selectProvider] Skipping preferred provider`, {
+        providerName,
+        reason: !provider ? 'not found' : (!matchesAllowedNames(provider, allowedNames) ? 'not allowed' : 'excluded'),
+      });
       continue;
     }
     const selected = await tryProvider(provider);
     if (selected) {
+      logInfo(`[selectProvider] Selected preferred provider`, {
+        providerName: selected.name,
+        tier: selected.tier,
+      });
       return selected;
     }
   }
 
   // First: try providers in dynamic ranking order if we have enough data
   const ranked = getRankedProviders();
+  logDebug(`[selectProvider] Dynamic ranking`, {
+    rankedCount: ranked.length,
+    topProviders: ranked.slice(0, 5).map(r => ({ name: r.name, score: r.score, rank: r.rank })),
+  });
   if (ranked.length > 0) {
-    for (const { name } of ranked) {
+    for (const { name, score, rank } of ranked) {
       const provider = PROVIDERS.find((p) => p.name === name);
       if (
         !provider ||
         !matchesAllowedNames(provider, allowedNames) ||
         matchesExcludedNames(provider, excludedNames)
       ) {
+        logDebug(`[selectProvider] Skipping ranked provider`, {
+          providerName: name,
+          rank,
+          score,
+          reason: !provider ? 'not found' : (!matchesAllowedNames(provider, allowedNames) ? 'not allowed' : 'excluded'),
+        });
         continue;
       }
       const selected = await tryProvider(provider);
       if (selected) {
+        logInfo(`[selectProvider] Selected ranked provider`, {
+          providerName: selected.name,
+          rank,
+          score,
+          tier: selected.tier,
+        });
         return selected;
       }
     }
   }
 
   // Fallback: use fixed PROVIDERS order for providers with insufficient data or none ranked
+  logDebug(`[selectProvider] Trying fixed provider order (fallback)`);
   for (const provider of PROVIDERS) {
     if (
       !matchesAllowedNames(provider, allowedNames) ||
       matchesExcludedNames(provider, excludedNames)
     ) {
+      logDebug(`[selectProvider] Skipping fallback provider`, {
+        providerName: provider.name,
+        reason: !matchesAllowedNames(provider, allowedNames) ? 'not allowed' : 'excluded',
+      });
       continue;
     }
     const selected = await tryProvider(provider);
     if (selected) {
+      logInfo(`[selectProvider] Selected fallback provider`, {
+        providerName: selected.name,
+        tier: selected.tier,
+      });
       return selected;
     }
   }
@@ -1333,5 +1399,10 @@ export async function selectProvider(options = {}) {
   // Note: logProviderStats() can be called explicitly by callers for monitoring
   // Removed auto-logging to avoid ESM import side effects
 
+  logWarn(`[selectProvider] No provider available`, {
+    allowedCount: allowedNames?.size || 0,
+    excludedCount: excludedNames?.size || 0,
+    totalProviders: PROVIDERS.length,
+  });
   return null;
 }
