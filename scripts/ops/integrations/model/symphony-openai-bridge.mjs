@@ -949,10 +949,9 @@ async function runContinuousProviderProbe() {
 
     // Phase 1: Check reachability and API keys (parallel, all eligible providers)
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
-    const allProviders = getProviderDefinitions({ excludeNames });
     
     logInfo(
-      `🔍 Phase 1: Probing reachability for ${allProviders.length} providers (cooldown/excluded handled by credit-gate)...`,
+      `🔍 Phase 1: Probing reachability for all providers (excluding ${excludeNames.length} blocked)...`,
     );
 
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
