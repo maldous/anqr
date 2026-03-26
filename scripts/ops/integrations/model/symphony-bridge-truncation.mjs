@@ -37,7 +37,7 @@ export const PROVIDER_MAX_INPUT_TOKENS = {
   "gemini-lite": 200_000, // gemini-2.5-flash-lite: 1M context
   sambanova: 24_000, // Llama-3.3-70B: 128K context, conservative
   cerebras: 6_000, // llama3.1-8b: 8K context free tier
-  "github-models": 100_000, // gpt-4.1-mini: 128K context
+  "github-models": 8_000, // gpt-4.1-mini: 8K max request body
 
   // --- OpenRouter FREE models (context varies by underlying model) ---
   "openrouter-nemotron-super": 24_000, // 120B, 128K context

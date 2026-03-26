@@ -1906,6 +1906,7 @@ async function invokeWithAI(provider, messages, options = {}) {
     let fullText = "";
     let fullTextCapped = false;
     let streamErrorDetail = null;
+    let fatalStreamError = null;
     let hasTextDeltas = false;
     let partCount = 0;
     let textDeltaCount = 0;
@@ -2033,6 +2034,24 @@ async function invokeWithAI(provider, messages, options = {}) {
           hasResponseBody: !!rootError?.responseBody,
           statusCode: rootError?.statusCode,
         });
+        // Classify stream error for adaptive context — store fatal errors
+        // (context-too-large, rate-limited) so we can throw after stream completes
+        const streamErrType = classifyError(rootError);
+        if (
+          !fatalStreamError &&
+          (streamErrType === ERROR_TYPES.CONTEXT_TOO_LARGE ||
+            streamErrType === ERROR_TYPES.RATE_LIMITED)
+        ) {
+          fatalStreamError = rootError;
+          logInfo(
+            `🚨 Fatal stream error (${streamErrType}): will throw after stream completes to trigger adaptive context + fallback`,
+            {
+              providerName: provider.name,
+              errorType: streamErrType,
+              statusCode: rootError?.statusCode,
+            },
+          );
+        }
         // DO NOT forward error events to client - these are internal Symphony routing errors
       } else if (part.type === "finish") {
         if (part.finishReason) {
@@ -2050,7 +2069,15 @@ async function invokeWithAI(provider, messages, options = {}) {
       finalTextLength: fullText.length,
       hasTextDeltas,
       finishReason,
+      hasFatalStreamError: !!fatalStreamError,
     });
+
+    // If stream contained a fatal error (413/context or 429/rate-limit), throw
+    // the original error to trigger adaptive context recording and provider
+    // fallback in the invokeWithFallbackStream catch block
+    if (fatalStreamError) {
+      throw fatalStreamError;
+    }
 
     // Fallback: if fullStream produced no text-delta events, try result.text
     // (best-effort — result.text derives from the same stream, but internal

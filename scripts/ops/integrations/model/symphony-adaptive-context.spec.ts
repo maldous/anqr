@@ -213,6 +213,16 @@ describe("dynamic context limits", () => {
 // ---------------------------------------------------------------------------
 
 describe("classifyError", () => {
+  it("classifies 'body too large' message as CONTEXT_TOO_LARGE", () => {
+    const err = new Error("Request body too large for gpt-4.1-mini model. Max size: 8000 tokens.");
+    expect(classifyError(err)).toBe(ERROR_TYPES.CONTEXT_TOO_LARGE);
+  });
+
+  it("classifies 'max size' message as CONTEXT_TOO_LARGE", () => {
+    const err = new Error("Max size: 8000 tokens exceeded");
+    expect(classifyError(err)).toBe(ERROR_TYPES.CONTEXT_TOO_LARGE);
+  });
+
   it("classifies 413 status as CONTEXT_TOO_LARGE", () => {
     const err = { statusCode: 413, message: "some error" };
     expect(classifyError(err)).toBe(ERROR_TYPES.CONTEXT_TOO_LARGE);
@@ -330,6 +340,15 @@ describe("parseContextErrorDetails", () => {
     const details = parseContextErrorDetails(err);
     expect(details.reportedLimit).toBe(8192);
     expect(details.requestedTokens).toBe(10000);
+    expect(details.isTpmRelated).toBe(false);
+  });
+
+  it("extracts reportedLimit from GitHub Models 'Max size' format", () => {
+    const err = new Error(
+      "Request body too large for gpt-4.1-mini model. Max size: 8000 tokens.",
+    );
+    const details = parseContextErrorDetails(err);
+    expect(details.reportedLimit).toBe(8000);
     expect(details.isTpmRelated).toBe(false);
   });
 

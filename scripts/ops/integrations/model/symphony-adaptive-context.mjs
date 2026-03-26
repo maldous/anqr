@@ -208,11 +208,13 @@ function parseResetHeader(headers, key) {
 function isContextError(errStr) {
   return (
     errStr.includes("request too large") ||
+    errStr.includes("body too large") ||
     errStr.includes("context_length_exceeded") ||
     errStr.includes("maximum context length") ||
     errStr.includes("too many tokens") ||
     errStr.includes("token limit") ||
     errStr.includes("max_tokens") ||
+    errStr.includes("max size") ||
     errStr.includes("input is too long")
   );
 }
@@ -279,13 +281,16 @@ export function parseContextErrorDetails(err) {
   const requestedMatch = errStr.match(/requested\s+(\d+)/i);
   const contextLenMatch = errStr.match(/maximum context length is (\d+)/i);
   const youRequestedMatch = errStr.match(/you requested (\d+)/i);
+  const maxSizeMatch = errStr.match(/max size[:\s]+(\d+)/i);
   const isTpmRelated = /tokens per minute|tpm/i.test(errStr);
 
   const reportedLimit = limitMatch
     ? parseInt(limitMatch[1], 10)
     : contextLenMatch
       ? parseInt(contextLenMatch[1], 10)
-      : null;
+      : maxSizeMatch
+        ? parseInt(maxSizeMatch[1], 10)
+        : null;
   const requestedTokens = requestedMatch
     ? parseInt(requestedMatch[1], 10)
     : youRequestedMatch
