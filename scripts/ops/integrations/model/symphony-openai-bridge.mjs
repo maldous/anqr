@@ -1682,12 +1682,43 @@ async function invokeWithAI(provider, messages, options = {}) {
     logDebug(`[invokeWithAI] Processing fullStream...`);
     for await (const part of result.fullStream) {
       partCount++;
-      logDebug(`[invokeWithAI] Stream part ${partCount}`, { type: part.type });
-      // Track if we're receiving text-delta events (for fallback detection)
+      
+      // Build detailed log context based on part type
+      const logContext = { type: part.type };
+      
       if (part.type === "text-delta") {
+        const deltaText = part.textDelta || "";
+        logContext.length = deltaText.length;
+        logContext.preview = deltaText.slice(0, 100);
         hasTextDeltas = true;
         textDeltaCount++;
+      } else if (part.type === "tool-call") {
+        logContext.toolName = part.toolName;
+        logContext.toolCallId = part.toolCallId;
+        if (part.args) {
+          logContext.argsPreview = JSON.stringify(part.args).slice(0, 100);
+        }
+      } else if (part.type === "tool-result") {
+        logContext.toolName = part.toolName;
+        logContext.toolCallId = part.toolCallId;
+        if (part.result) {
+          const resultStr = typeof part.result === "string" ? part.result : JSON.stringify(part.result);
+          logContext.resultPreview = resultStr.slice(0, 100);
+        }
+      } else if (part.type === "reasoning-delta") {
+        const deltaText = part.textDelta || "";
+        logContext.length = deltaText.length;
+        logContext.preview = deltaText.slice(0, 100);
+      } else if (part.type === "error") {
+        const errorMsg = errorToString(part.error || part);
+        logContext.errorPreview = errorMsg.slice(0, 150);
+      } else if (part.type === "finish") {
+        logContext.finishReason = part.finishReason;
       }
+      
+      logDebug(`[invokeWithAI] Stream part ${partCount}`, logContext);
+      
+      // Process stream parts based on type
       if (part.type === "reasoning-start") {
         if (onChunk) onChunk({ type: "text", text: "\n💡 " });
       } else if (part.type === "reasoning-delta") {
@@ -3310,23 +3341,68 @@ server.listen(PORT, "127.0.0.1", async () => {
     }
   }
 
-  // Initial provider probe — test all providers for live availability
-  refreshProviderStatus()
-    .then(async () => {
+  // Startup exploration: run 3 complete probe cycles (reachability → tool probe)
+  // This builds a strong initial ranking before accepting any requests
+  (async () => {
+    try {
+      logInfo(`🔍 Starting 3-cycle startup exploration...`);
+
+      for (let cycle = 1; cycle <= 3; cycle++) {
+        logInfo(`========================================`);
+        logInfo(`🔍 Startup Probe Cycle ${cycle}/3`);
+        logInfo(`========================================`);
+
+        // Phase 1: Reachability probe (knock out unreachable providers)
+        await refreshProviderStatus();
+        const available = providerStatusCache.probeResults.filter((r) => r.available);
+        const total = providerStatusCache.configured.length;
+        logInfo(`✅ Reachability: ${available.length}/${total} providers available`);
+
+        // Brief summary of reachability results
+        for (const p of providerStatusCache.probeResults.filter((r) => r.status !== "excluded")) {
+          const icon = p.available ? "✅" : "❌";
+          logInfo(`  ${icon} ${p.name}: ${p.status}`);
+        }
+
+        // Phase 2: Tool probe (on remaining providers)
+        // probeAllToolCapability() already called by refreshProviderStatus()
+        const toolCapable = toolCapableProviders.size;
+        const toolExcluded = nonToolCapableProviders.size;
+        const unclassified = available
+          .map((r) => r.name)
+          .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n));
+        
+        logInfo(
+          `🔧 Tool probe: ${toolCapable} capable | ${toolExcluded} excluded | ${unclassified.length} unclassified`,
+        );
+
+        // Small delay between cycles to reduce rate-limit pressure
+        if (cycle < 3) {
+          logInfo(`⏳ Waiting 2s before next cycle...`);
+          await sleep(2000);
+        }
+      }
+
+      // Final summary after all 3 cycles
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
       logInfo(`========================================`);
-      logInfo(`Startup probe complete: ${available.length}/${total} providers available`);
+      logInfo(`Startup exploration complete (3 cycles)`);
+      logInfo(`========================================`);
+      logInfo(`Final status: ${available.length}/${total} providers available`);
+
       for (const p of providerStatusCache.probeResults.filter((r) => r.status !== "excluded")) {
         const icon = p.available ? "✅" : "❌";
         const dur = p.durationMs > 0 ? ` (${p.durationMs}ms)` : "";
         logInfo(`  ${icon} ${p.name}: ${p.status}${dur}`);
       }
+
       if (nonToolCapableProviders.size > 0) {
         logInfo(
           `🚫 Non-tool-capable (excluded from selection): ${[...nonToolCapableProviders].join(", ")}`,
         );
       }
+
       const unclassified = available
         .map((r) => r.name)
         .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n));
@@ -3335,6 +3411,7 @@ server.listen(PORT, "127.0.0.1", async () => {
           `❓ Unclassified (${unclassified.length}, left in pool): ${unclassified.join(", ")}`,
         );
       }
+
       logInfo(
         `✅ Tool-capable: ${toolCapableProviders.size} | 🚫 Excluded: ${nonToolCapableProviders.size} | ❓ Unclassified: ${unclassified.length} | ⛔ Blocked: ${BRIDGE_PROVIDER_BLOCKLIST.size}`,
       );
@@ -3354,13 +3431,13 @@ server.listen(PORT, "127.0.0.1", async () => {
       } catch (err) {
         logWarn(`⚠️ Failed to update MEMORY.md: ${err.message}`);
       }
-    })
-    .catch((err) => {
+    } catch (err) {
       logError(`Startup probe failed: ${err.message}`);
       logInfo(`========================================`);
       logInfo(`Ready to accept requests (probe incomplete)`);
       logInfo(`========================================`);
-    });
+    }
+  })();
 
   // Continuous background probe — runs in parallel, updates status continuously
   // Trigger probe cycle after each completion or every 30 minutes
@@ -3377,8 +3454,8 @@ server.listen(PORT, "127.0.0.1", async () => {
     }, delayMs);
   };
 
-  // Start continuous probe 5 minutes after startup (gives time for initial requests)
-  scheduleContinuousProbe(5 * 60 * 1000);
+  // Start continuous probe IMMEDIATELY on startup (alongside initial cache)
+  scheduleContinuousProbe(0);
 
   // Start Discord message monitoring
   startDiscordMonitoring();
