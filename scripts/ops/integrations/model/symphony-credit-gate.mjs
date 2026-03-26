@@ -1083,14 +1083,32 @@ export function logProviderStats(options = {}) {
     logInfo(`  (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`);
   }
 
-  logInfo(`📈 Provider Details:`);
-  for (const [name, data] of Object.entries(stats).sort(
-    (a, b) => b[1].selections - a[1].selections,
-  )) {
+  // Get ALL providers from PROVIDERS list (not just those with stats)
+  const allProviderNames = PROVIDERS.map(p => p.name);
+  
+  logInfo(`📈 Provider Details (${allProviderNames.length} total):`);
+  
+  // Sort by selections descending, then by name
+  const sortedProviders = allProviderNames.sort((a, b) => {
+    const statsA = stats[a]?.selections || 0;
+    const statsB = stats[b]?.selections || 0;
+    if (statsB !== statsA) return statsB - statsA;
+    return a.localeCompare(b);
+  });
+  
+  for (const name of sortedProviders) {
     if (excludeSet && excludeSet.has(name)) continue;
-    logInfo(
-      `  ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
-    );
+    const data = stats[name];
+    if (data) {
+      logInfo(
+        `  ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
+      );
+    } else {
+      // Provider has never been selected - show as "pending"
+      logInfo(
+        `  ${name}: 0 sel, 0✓ 0✗, N/A valid, -- ms avg (never selected)`,
+      );
+    }
   }
 }
 
