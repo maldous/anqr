@@ -952,7 +952,7 @@ async function runContinuousProviderProbe() {
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
     
     logInfo(
-      `🔍 Phase 1: Probing reachability for all providers (excluding ${excludeNames.length} blocked)...`,
+      `🔍 ACCESSIBILITY PROBE: Checking reachability for all providers (excluding ${excludeNames.length} blocked)...`,
     );
 
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
@@ -962,14 +962,22 @@ async function runContinuousProviderProbe() {
     const reachable = providerStatusCache.probeResults.filter((r) => r.available);
     const total = providerStatusCache.configured.length;
     logInfo(
-      `🔍 Phase 1 complete: ${reachable.length}/${total} providers reachable (API keys validated)`,
+      `✅ ACCESSIBILITY PROBE COMPLETE: ${reachable.length}/${total} providers reachable (API keys validated)`,
     );
+    
+    // Log detailed accessibility results
+    for (const probe of providerStatusCache.probeResults) {
+      if (probe.status === "excluded") continue;
+      const icon = probe.available ? "✅" : "❌";
+      const duration = probe.durationMs > 0 ? ` (${probe.durationMs}ms)` : "";
+      logInfo(`  ${icon} ACCESSIBILITY: ${probe.name} - ${probe.status}${duration}`);
+    }
 
     // Phase 2: Probe tool capability for reachable providers (parallel, no batching)
-    logInfo(`🔍 Phase 2: Probing tool capability for ${reachable.length} reachable providers (no batching)...`);
+    logInfo(`🔧 TOOL CAPABILITY PROBE: Testing ${reachable.length} reachable providers (parallel, no batching)...`);
     await probeAllToolCapability();
     logInfo(
-      `🔍 Phase 2 complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
+      `✅ TOOL CAPABILITY PROBE COMPLETE: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
     );
 
     // Increment completion counter
@@ -1402,6 +1410,7 @@ async function probeToolCapabilityForProvider(providerDef) {
   };
 
   const startTime = Date.now();
+  logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
   try {
     const result = await Promise.race([
       generateText({
@@ -1422,6 +1431,8 @@ async function probeToolCapabilityForProvider(providerDef) {
     const text = result.text || "";
     const hasRawToolJson = RAW_TOOL_JSON_RE.test(text);
 
+    logInfo(`🔧 TOOL PROBE RESULT: ${name} - hasStructuredToolCall=${hasStructuredToolCall}, hasRawToolJson=${hasRawToolJson}, answer="${text.slice(0, 50)}"`);
+
     if (hasStructuredToolCall && !hasRawToolJson) {
       toolCapableProviders.add(name);
       
@@ -1430,38 +1441,43 @@ async function probeToolCapabilityForProvider(providerDef) {
       recordProviderSuccess(name);
       recordSuccessfulMetrics(name, startTime, result.usage, true);
       
-      logDebug(`🔧 ${name}: tool probe successful (${durationMs}ms, answer: "${text.slice(0, 50)}")`);
+      logInfo(`✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`);
       return { name, status: "capable", durationMs, answer: text };
     }
 
     if (hasRawToolJson) {
       nonToolCapableProviders.add(name);
+      logWarn(`❌ TOOL PROBE FAIL: ${name} - Emitted raw JSON instead of structured tool calls`);
       return { name, status: "non-capable-raw-json" };
     }
 
     // Model responded with text but didn't use the tool — inconclusive.
     // Don't exclude; the runtime safety net will catch it if needed.
+    logWarn(`⚠️ TOOL PROBE INCONCLUSIVE: ${name} - No tool call detected, leaving in pool for runtime validation`);
     return { name, status: "no-tool-call" };
   } catch (err) {
     const errStr = String(err).slice(0, 300);
 
     // Rate limit — don't exclude; assume capable until proven otherwise
     if (/429|rate.?limit|too many|quota|resource.?exhausted/i.test(errStr)) {
+      logWarn(`⏳ TOOL PROBE RATE LIMITED: ${name} - Will retry later`);
       return { name, status: "rate-limited" };
     }
 
     // Explicit tool rejection by the API
     if (/tool_choice|tools.*not.*support|function.*call.*not|does not support/i.test(errStr)) {
       nonToolCapableProviders.add(name);
+      logWarn(`❌ TOOL PROBE FAIL: ${name} - API explicitly rejected tool support`);
       return { name, status: "non-capable-rejected" };
     }
 
     if (/timeout|tool-probe-timeout/i.test(errStr)) {
+      logWarn(`⏱️ TOOL PROBE TIMEOUT: ${name} - Exceeded ${TOOL_PROBE_TIMEOUT_MS}ms`);
       return { name, status: "timeout" };
     }
 
     // Log the actual error for debugging
-    logDebug(`🔧 ${name} probe error`, { name, error: errStr.slice(0, 150) });
+    logWarn(`❌ TOOL PROBE ERROR: ${name} - ${errStr.slice(0, 150)}`);
     return { name, status: "probe-error" };
   }
 }
@@ -2013,13 +2029,11 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const result = await invokeWithAI(provider, messages, { stream: false });
 
       const durationMs = Date.now() - startedAt;
-      logInfo(`✅ Success with ${provider.name} (attempt ${attemptNumber})`, {
-        durationMs,
-        textLength: result.text?.length,
-        hasUsage: !!result.usage,
-      });
+      const textPreview = result.text?.slice(0, 100) || "";
+      logInfo(`✅ AI RESULT VALIDATION PASS: ${provider.name} (attempt ${attemptNumber}, ${durationMs}ms, ${result.text?.length || 0} chars)`);
+      logInfo(`   Preview: ${textPreview}`);
       recordProviderSuccess(provider.name);
-      recordSuccessfulMetrics(provider.name, startedAt, result.usage);
+      recordSuccessfulMetrics(provider.name, startedAt, result.usage, true);
 
       // Update session state
       if (sessionId) {
@@ -2248,11 +2262,9 @@ async function invokeWithFallbackStream(
             ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
             : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       throw new Error(errorMsg);
-    }
-
-    logInfo(
-      `${attemptNumber === 1 ? "Streaming selected" : "Streaming fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
-    );
+    }      logInfo(
+        `${attemptNumber === 1 ? "🎯 PROVIDER SELECTED" : "🔄 FALLBACK ATTEMPT"}: ${provider.name} (${provider.model}) - attempt ${attemptNumber}`,
+      );
     triedProviders.push(provider.name);
 
     if (attemptNumber > 1) {
@@ -2267,9 +2279,11 @@ async function invokeWithFallbackStream(
       const startedAt = Date.now();
       const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
-      logInfo(`✅ Streaming success with ${provider.name} (attempt ${attemptNumber})`);
+      const textPreview = result.text?.slice(0, 100) || "";
+      logInfo(`✅ AI RESULT VALIDATION PASS (streaming): ${provider.name} (attempt ${attemptNumber}, ${result.text?.length || 0} chars)`);
+      logInfo(`   Preview: ${textPreview}`);
       recordProviderSuccess(provider.name);
-      recordSuccessfulMetrics(provider.name, startedAt);
+      recordSuccessfulMetrics(provider.name, startedAt, null, true);
 
       // Update session state
       if (sessionId) {
