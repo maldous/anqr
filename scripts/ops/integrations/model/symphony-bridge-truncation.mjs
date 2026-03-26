@@ -148,7 +148,7 @@ export function truncateMessageContent(msg, maxChars) {
  *
  * @param {Array} messages - AI SDK formatted messages
  * @param {string} providerName - Provider name for context limit lookup
- * @param {{ useTools?: boolean }} options - Options for truncation
+ * @param {{ useTools?: boolean, maxTokensOverride?: number }} options - Options for truncation
  * @returns {Array} - Truncated messages that fit within the provider's budget
  */
 export function truncateMessagesForProvider(messages, providerName, options = {}) {
@@ -165,7 +165,7 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
     return [{ role: "user", content: "[Error: No messages provided]" }];
   }
 
-  const baseMaxTokens = PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
+  const baseMaxTokens = options.maxTokensOverride || PROVIDER_MAX_INPUT_TOKENS[providerName] || DEFAULT_MAX_INPUT_TOKENS;
   const toolOverhead = options.useTools === true ? TOOL_DEFINITION_OVERHEAD_TOKENS : 0;
   const maxTokens = Math.max(baseMaxTokens - toolOverhead, MIN_MESSAGE_BUDGET_TOKENS);
   let estimated = estimateMessagesTokens(messages);

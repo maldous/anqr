@@ -83,7 +83,24 @@ import { z } from "zod";
 import { Codex } from "@openai/codex-sdk";
 
 // Truncation utilities (extracted for unit-testability)
-import { truncateMessagesForProvider } from "./symphony-bridge-truncation.mjs";
+import { truncateMessagesForProvider, estimateMessagesTokens } from "./symphony-bridge-truncation.mjs";
+
+// Adaptive context management (dynamic limits, TPM/RPM tracking, error classification)
+import {
+  getEffectiveMaxTokens,
+  recordContextError,
+  recordContextSuccess,
+  recordRateLimit,
+  recordTokenUsage,
+  recordErrorType,
+  classifyError,
+  getThrottledProviders,
+  getAdaptiveStats,
+  parseContextErrorDetails,
+  parseRateLimitInfo,
+  shouldReduceContextForTPM,
+  ERROR_TYPES,
+} from "./symphony-adaptive-context.mjs";
 
 // Discord webhook notifications
 import {
@@ -1240,7 +1257,8 @@ function sleep(ms) {
 const safeLogDebug = typeof logDebug === "function" ? logDebug : () => {};
 
 function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
-  const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders]);
+  const throttled = getThrottledProviders();
+  const excludeSet = new Set([...excludedNames, ...nonToolCapableProviders, ...throttled]);
 
   // Check if evaluation cycle wants to force-sample a specific provider
   const stats = getProviderStats();
@@ -1726,7 +1744,13 @@ async function invokeWithAI(provider, messages, options = {}) {
     ),
   });
 
-  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, { useTools });
+  const estimatedInputTokens = estimateMessagesTokens(rawMessages);
+  let effectiveMax = getEffectiveMaxTokens(provider.name);
+  if (shouldReduceContextForTPM(provider.name, estimatedInputTokens)) {
+    effectiveMax = Math.max(Math.floor(effectiveMax * 0.5), 1000);
+    logInfo(`⚡ Proactive TPM reduction for ${provider.name}: effectiveMax halved to ${effectiveMax}`);
+  }
+  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, { useTools, maxTokensOverride: effectiveMax });
   logDebug(`[invokeWithAI] Messages after truncation`, {
     aiMessageCount: aiMessages?.length,
     providerName: provider.name,
@@ -2401,6 +2425,11 @@ async function invokeWithFallbackStream(
       logInfo(`   Preview: ${textPreview}`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, null, true);
+      recordContextSuccess(provider.name);
+      recordTokenUsage(provider.name, {
+        inputTokens: estimateMessagesTokens(messages),
+        outputTokens: Math.ceil((result.text?.length || 0) / 4),
+      });
 
       // Update session state
       if (sessionId) {
@@ -2450,6 +2479,17 @@ async function invokeWithFallbackStream(
       if (isRetryableErrorDeep(err)) {
         recordProviderFailure(provider.name);
         recordProviderFailureCount(provider.name);
+      }
+
+      // Adaptive context: classify error and update provider limits dynamically
+      const errorType = classifyError(err);
+      recordErrorType(provider.name, errorType);
+      if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
+        const details = parseContextErrorDetails(err);
+        recordContextError(provider.name, details);
+      } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
+        const rlInfo = parseRateLimitInfo(err);
+        recordRateLimit(provider.name, rlInfo);
       }
 
       // Continue to next provider in the loop
@@ -2714,7 +2754,8 @@ const server = http.createServer(async (req, res) => {
       const stats = getProviderStats();
       const ranked = getRankedProviders({ excludeNames: nonToolCapableProviders });
 
-      return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats });
+      const adaptiveContext = getAdaptiveStats();
+      return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats, adaptiveContext });
     }
 
     // GET /v1/providers — detailed provider status with probe results and stats

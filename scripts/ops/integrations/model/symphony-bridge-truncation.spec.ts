@@ -487,6 +487,42 @@ describe("truncation constants", () => {
 });
 
 // ---------------------------------------------------------------------------
+// maxTokensOverride option
+// ---------------------------------------------------------------------------
+
+describe("truncateMessagesForProvider — maxTokensOverride", () => {
+  it("uses maxTokensOverride instead of static limit when provided", () => {
+    const msgs = [makeMessage("user", 600)];
+    const withoutOverride = truncateMessagesForProvider(msgs, "groq", {});
+    const withOverride = truncateMessagesForProvider(msgs, "groq", {
+      maxTokensOverride: 200,
+    });
+    expect(withOverride.length).toBeLessThanOrEqual(withoutOverride.length);
+  });
+
+  it("maxTokensOverride of 0 falls back to static limit", () => {
+    const msgs = [makeMessage("user", 100)];
+    const result = truncateMessagesForProvider(msgs, "groq", { maxTokensOverride: 0 });
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it("maxTokensOverride still subtracts tool overhead when useTools is true", () => {
+    const msgs = [makeMessage("user", 1200)];
+    const noTools = truncateMessagesForProvider(msgs, "groq", {
+      maxTokensOverride: 4000,
+    });
+    const withTools = truncateMessagesForProvider(msgs, "groq", {
+      maxTokensOverride: 4000,
+      useTools: true,
+    });
+    // With tools, effective budget is lower, so more aggressive truncation
+    const noToolsChars = JSON.stringify(noTools).length;
+    const withToolsChars = JSON.stringify(withTools).length;
+    expect(withToolsChars).toBeLessThanOrEqual(noToolsChars);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Tool overhead accounting
 // ---------------------------------------------------------------------------
 
