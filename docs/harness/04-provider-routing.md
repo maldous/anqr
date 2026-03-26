@@ -47,6 +47,7 @@ The Symphony Bridge runs a repeatable provider probe cycle with the following se
 4. **Ranking** (after 3 completions): Log all providers ranked by dynamic performance score to metrics cache
 
 The probe cycle repeats:
+
 - **Every 30 minutes** (time-based), OR
 - **Every 200 turns** of the current provider (usage-based)
 

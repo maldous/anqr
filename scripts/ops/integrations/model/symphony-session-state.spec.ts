@@ -378,10 +378,8 @@ describe("symphony-session-state.mjs", () => {
       const params = getAdaptiveParams();
       const threshold = params.evalCycle.requestThreshold;
 
-      // Trigger evaluation
-      for (let i = 0; i < threshold; i++) {
-        shouldTriggerEvalCycle();
-      }
+      // Manually set counter to threshold (don't call shouldTriggerEvalCycle which resets it)
+      params.evalCycle.counter = threshold;
 
       const providers = ["groq", "gemini", "mistral"];
       const stats = {
@@ -399,10 +397,8 @@ describe("symphony-session-state.mjs", () => {
       const params = getAdaptiveParams();
       const threshold = params.evalCycle.requestThreshold;
 
-      // Trigger evaluation
-      for (let i = 0; i < threshold; i++) {
-        shouldTriggerEvalCycle();
-      }
+      // Manually set counter to threshold (don't call shouldTriggerEvalCycle which resets it)
+      params.evalCycle.counter = threshold;
 
       const providers = ["new-provider", "groq"];
       const stats = {
@@ -418,10 +414,8 @@ describe("symphony-session-state.mjs", () => {
       const params = getAdaptiveParams();
       const threshold = params.evalCycle.requestThreshold;
 
-      // Trigger evaluation
-      for (let i = 0; i < threshold; i++) {
-        shouldTriggerEvalCycle();
-      }
+      // Manually set counter to threshold (don't call shouldTriggerEvalCycle which resets it)
+      params.evalCycle.counter = threshold;
 
       const sample = getEvaluationSampleProvider([], {});
       expect(sample).toBeUndefined();

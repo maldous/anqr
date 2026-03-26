@@ -294,7 +294,7 @@ export function tuneAdaptiveParams(providerStats) {
  * @returns {number} - Turn limit before rotation
  */
 export function getProviderTurnLimit(providerName) {
-  const params = loadAdaptiveParams();
+  const params = getAdaptiveParams();
   return params.freeTurnLimit.perProvider[providerName] || params.freeTurnLimit.base;
 }
 
@@ -303,7 +303,7 @@ export function getProviderTurnLimit(providerName) {
  * @returns {boolean}
  */
 export function shouldTriggerEvalCycle() {
-  const params = loadAdaptiveParams();
+  const params = getAdaptiveParams();
   const now = Date.now();
 
   params.evalCycle.counter++;
@@ -320,6 +320,9 @@ export function shouldTriggerEvalCycle() {
     logInfo(
       `[session-state] 🔄 Triggering periodic evaluation cycle (all providers will be sampled)`,
     );
+  } else {
+    // Save incremented counter even if not triggering
+    saveAdaptiveParams(params);
   }
 
   return shouldEval;
@@ -327,14 +330,35 @@ export function shouldTriggerEvalCycle() {
 
 /**
  * Get the next provider to force-sample during evaluation cycle
- * Returns null if no evaluation needed
+ * Returns null if no evaluation needed, undefined if empty provider list
  * @param {Array<string>} allProviderNames - All available provider names
  * @param {object} providerStats - Current provider statistics (plain object, not Map)
- * @returns {string|null}
+ * @returns {string|null|undefined}
  */
 export function getEvaluationSampleProvider(allProviderNames, providerStats) {
-  if (!shouldTriggerEvalCycle()) {
+  // Check if evaluation cycle should trigger (peek without incrementing)
+  const params = getAdaptiveParams();
+  const now = Date.now();
+  const timeSinceLastEval = now - params.evalCycle.lastEval;
+  const shouldEval =
+    params.evalCycle.counter >= params.evalCycle.requestThreshold ||
+    timeSinceLastEval >= params.evalCycle.timeThreshold;
+
+  if (!shouldEval) {
     return null;
+  }
+
+  // Reset the cycle since we're consuming it
+  params.evalCycle.counter = 0;
+  params.evalCycle.lastEval = now;
+  saveAdaptiveParams(params);
+  logInfo(
+    `[session-state] 🔄 Triggering periodic evaluation cycle (all providers will be sampled)`,
+  );
+
+  // Handle empty provider list
+  if (!allProviderNames || allProviderNames.length === 0) {
+    return undefined;
   }
 
   // Find providers that haven't been selected recently or at all
@@ -363,17 +387,25 @@ export function getEvaluationSampleProvider(allProviderNames, providerStats) {
   return selected;
 }
 
+// Shared params cache to handle in-memory modifications
+let paramsCache = null;
+
 /**
  * Get adaptive parameters (for debugging/monitoring)
+ * Returns a reference to the cached params for in-memory modifications
  */
 export function getAdaptiveParams() {
-  return loadAdaptiveParams();
+  if (!paramsCache) {
+    paramsCache = loadAdaptiveParams();
+  }
+  return paramsCache;
 }
 
 /**
  * Reset adaptive parameters to defaults
  */
 export function resetAdaptiveParams() {
-  saveAdaptiveParams({ ...DEFAULT_ADAPTIVE_PARAMS });
+  paramsCache = JSON.parse(JSON.stringify(DEFAULT_ADAPTIVE_PARAMS));
+  saveAdaptiveParams(paramsCache);
   logInfo(`[session-state] 🔄 Reset adaptive parameters to defaults`);
 }

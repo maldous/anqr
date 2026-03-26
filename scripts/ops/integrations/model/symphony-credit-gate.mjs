@@ -890,11 +890,11 @@ function calculateProviderScore(providerName, stats) {
 
 /**
  * Get providers sorted by dynamic score (best first)
- * 
+ *
  * Returns all providers that have been selected at least once OR are available
  * in probe results. Providers with insufficient data (< 3 selections) are marked
  * with score: "pending" and sorted to the end of their tier group.
- * 
+ *
  * @param {object} options - { excludeNames, includeAvailable }
  * @param {Array|Set} options.excludeNames - Provider names to exclude
  * @param {boolean} options.includeAvailable - Include available providers from probe (default: true)
@@ -954,7 +954,7 @@ export function getRankedProviders(options = {}) {
     for (const provider of PROVIDERS) {
       if (excludeSet && excludeSet.has(provider.name)) continue;
       if (seenProviders.has(provider.name)) continue;
-      
+
       const tier = getProviderTier(provider);
       const entry = { name: provider.name, score: "pending", tier, selections: 0 };
       if (tier === TIER_LOCAL_SAFETY_NET) {
@@ -969,15 +969,12 @@ export function getRankedProviders(options = {}) {
   ranked.sort((a, b) => b.score - a.score);
   safetyNets.sort((a, b) => b.score - a.score);
   pending.sort((a, b) => (b.selections || 0) - (a.selections || 0) || a.name.localeCompare(b.name));
-  pendingSafetyNets.sort((a, b) => (b.selections || 0) - (a.selections || 0) || a.name.localeCompare(b.name));
+  pendingSafetyNets.sort(
+    (a, b) => (b.selections || 0) - (a.selections || 0) || a.name.localeCompare(b.name),
+  );
 
   // Combine: ranked first, then pending, then safety nets (ranked + pending)
-  const combined = [
-    ...ranked,
-    ...pending,
-    ...safetyNets,
-    ...pendingSafetyNets,
-  ];
+  const combined = [...ranked, ...pending, ...safetyNets, ...pendingSafetyNets];
 
   // Add rank position
   return combined.map((item, index) => ({ ...item, rank: index + 1 }));
@@ -987,7 +984,7 @@ export function getProviderStats(options = {}) {
   const includeAllProviders = options.includeAllProviders !== false;
   const stats = loadStats();
   const result = {};
-  
+
   // Build list of providers to include
   const providerNames = new Set(Object.keys(stats.selections));
   // Also include providers with probe data (may have no runtime selections yet)
@@ -1000,7 +997,7 @@ export function getProviderStats(options = {}) {
       providerNames.add(provider.name);
     }
   }
-  
+
   for (const name of providerNames) {
     const selected = stats.selections[name] || 0;
     const success = stats.successes[name] || 0;
@@ -1149,10 +1146,10 @@ export function logProviderStats(options = {}) {
   }
 
   // Get ALL providers from PROVIDERS list (not just those with stats)
-  const allProviderNames = PROVIDERS.map(p => p.name);
-  
+  const allProviderNames = PROVIDERS.map((p) => p.name);
+
   logInfo(`📈 Provider Details (${allProviderNames.length} total):`);
-  
+
   // Sort by selections descending, then by name
   const sortedProviders = allProviderNames.sort((a, b) => {
     const statsA = stats[a]?.selections || 0;
@@ -1160,7 +1157,7 @@ export function logProviderStats(options = {}) {
     if (statsB !== statsA) return statsB - statsA;
     return a.localeCompare(b);
   });
-  
+
   for (const name of sortedProviders) {
     if (excludeSet && excludeSet.has(name)) continue;
     const data = stats[name];
@@ -1173,9 +1170,7 @@ export function logProviderStats(options = {}) {
         `  ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg${probeInfo}`,
       );
     } else {
-      logInfo(
-        `  ${name}: 0 sel, 0✓ 0✗, N/A valid, -- ms avg (never selected)`,
-      );
+      logInfo(`  ${name}: 0 sel, 0✓ 0✗, N/A valid, -- ms avg (never selected)`);
     }
   }
 }

@@ -366,7 +366,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
       recordProbeResult("ranked-probe", { success: true, durationMs: 250 });
 
       const ranked = getRankedProviders();
-      const found = ranked.find((r) => r.name === "ranked-probe");
+      const found = ranked.find((r: any) => r.name === "ranked-probe");
 
       expect(found).toBeDefined();
       expect(typeof found.score).toBe("number");

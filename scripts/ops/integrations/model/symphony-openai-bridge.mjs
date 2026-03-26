@@ -228,7 +228,9 @@ function startDiscordMonitoring() {
                 const content = parsed.choices?.[0]?.delta?.content;
                 if (content) {
                   fullText += content;
-                  streamDiscordUpdate(content, { emoji: "" }).catch(() => { /* ignore */ });
+                  streamDiscordUpdate(content, { emoji: "" }).catch(() => {
+                    /* ignore */
+                  });
                 }
               } catch {
                 // Parse error - ignore malformed JSON chunk
@@ -240,12 +242,16 @@ function startDiscordMonitoring() {
         }
 
         // Flush any remaining buffered text to Discord
-        await flushDiscordStream({ emoji: "" }).catch(() => { /* ignore */ });
+        await flushDiscordStream({ emoji: "" }).catch(() => {
+          /* ignore */
+        });
 
         logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
         // Flush buffer on error too so partial text reaches Discord
-        await flushDiscordStream({ emoji: "" }).catch(() => { /* ignore */ });
+        await flushDiscordStream({ emoji: "" }).catch(() => {
+          /* ignore */
+        });
         logError(`❌ Discord command error: ${err.message}`);
       }
     }
@@ -931,12 +937,12 @@ let processingStatusTimer = null;
 
 /**
  * Run continuous provider probe in background.
- * 
+ *
  * Sequential process:
  * 1. Check reachability and API keys (parallel, all eligible providers)
  * 2. Probe tool capability for reachable providers (parallel, no batching)
  * 3. After 3 completions, rank and log all providers in metrics cache
- * 
+ *
  * Repeats every 30 minutes OR 200 turns of the current provider.
  */
 async function runContinuousProviderProbe() {
@@ -955,7 +961,7 @@ async function runContinuousProviderProbe() {
 
     // Phase 1: Check reachability and API keys (parallel, all eligible providers)
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
-    
+
     logInfo(
       `🔍 ACCESSIBILITY PROBE: Checking reachability for all providers (excluding ${excludeNames.length} blocked)...`,
     );
@@ -969,7 +975,7 @@ async function runContinuousProviderProbe() {
     logInfo(
       `✅ ACCESSIBILITY PROBE COMPLETE: ${reachable.length}/${total} providers reachable (API keys validated)`,
     );
-    
+
     // Log detailed accessibility results
     for (const probe of providerStatusCache.probeResults) {
       if (probe.status === "excluded") continue;
@@ -979,7 +985,9 @@ async function runContinuousProviderProbe() {
     }
 
     // Phase 2: Probe tool capability for reachable providers (parallel, no batching)
-    logInfo(`🔧 TOOL CAPABILITY PROBE: Testing ${reachable.length} reachable providers (parallel, no batching)...`);
+    logInfo(
+      `🔧 TOOL CAPABILITY PROBE: Testing ${reachable.length} reachable providers (parallel, no batching)...`,
+    );
     await probeAllToolCapability();
     logInfo(
       `✅ TOOL CAPABILITY PROBE COMPLETE: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
@@ -990,9 +998,7 @@ async function runContinuousProviderProbe() {
 
     // Phase 3: After 3 completions, rank and log all providers in metrics cache
     if (probeCompletionCount >= PROBE_COMPLETIONS_BEFORE_RANKING) {
-      logInfo(
-        `🔍 Phase 3: Ranking providers after ${probeCompletionCount} probe completions...`,
-      );
+      logInfo(`🔍 Phase 3: Ranking providers after ${probeCompletionCount} probe completions...`);
       const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
       if (ranked.length > 0) {
         logInfo(`🔍 Provider Rankings (top 10):`);
@@ -1437,15 +1443,19 @@ async function probeToolCapabilityForProvider(providerDef) {
     const text = result.text || "";
     const hasRawToolJson = RAW_TOOL_JSON_RE.test(text);
 
-    logInfo(`🔧 TOOL PROBE RESULT: ${name} - hasStructuredToolCall=${hasStructuredToolCall}, hasRawToolJson=${hasRawToolJson}, answer="${text.slice(0, 50)}"`);
+    logInfo(
+      `🔧 TOOL PROBE RESULT: ${name} - hasStructuredToolCall=${hasStructuredToolCall}, hasRawToolJson=${hasRawToolJson}, answer="${text.slice(0, 50)}"`,
+    );
 
     if (hasStructuredToolCall && !hasRawToolJson) {
       toolCapableProviders.add(name);
-      
+
       // Record successful probe in dedicated probe metrics (separate from runtime)
       recordProbeResult(name, { success: true, durationMs });
-      
-      logInfo(`✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`);
+
+      logInfo(
+        `✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`,
+      );
       return { name, status: "capable", durationMs, answer: text };
     }
 
@@ -1458,7 +1468,9 @@ async function probeToolCapabilityForProvider(providerDef) {
 
     // Model responded with text but didn't use the tool — inconclusive.
     // Don't exclude; the runtime safety net will catch it if needed.
-    logWarn(`⚠️ TOOL PROBE INCONCLUSIVE: ${name} - No tool call detected, leaving in pool for runtime validation`);
+    logWarn(
+      `⚠️ TOOL PROBE INCONCLUSIVE: ${name} - No tool call detected, leaving in pool for runtime validation`,
+    );
     return { name, status: "no-tool-call" };
   } catch (err) {
     const errStr = String(err).slice(0, 300);
@@ -1471,7 +1483,11 @@ async function probeToolCapabilityForProvider(providerDef) {
     }
 
     // Explicit tool rejection by the API — definitive negative signal
-    if (/tool_choice|tools.*not.*support|function.*call.*not|does not support|no endpoints.*tool/i.test(errStr)) {
+    if (
+      /tool_choice|tools.*not.*support|function.*call.*not|does not support|no endpoints.*tool/i.test(
+        errStr,
+      )
+    ) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - API explicitly rejected tool support`);
@@ -1480,7 +1496,11 @@ async function probeToolCapabilityForProvider(providerDef) {
 
     // Infrastructure/config errors — NOT indicative of tool capability
     // (account guardrails, data policy restrictions, invalid/expired API keys, team membership)
-    if (/guardrail|data.?policy|invalid.*key|expired.*token|invalid.*format.*key|not part of team/i.test(errStr)) {
+    if (
+      /guardrail|data.?policy|invalid.*key|expired.*token|invalid.*format.*key|not part of team/i.test(
+        errStr,
+      )
+    ) {
       logWarn(`🔧 TOOL PROBE INFRA: ${name} - ${errStr.slice(0, 150)}`);
       return { name, status: "infrastructure-error" };
     }
@@ -1493,10 +1513,10 @@ async function probeToolCapabilityForProvider(providerDef) {
 
     // Log the actual error for debugging
     logWarn(`❌ TOOL PROBE ERROR: ${name} - ${errStr.slice(0, 150)}`);
-    
+
     // Record probe error in dedicated probe metrics (separate from runtime)
     recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
-    
+
     return { name, status: "probe-error" };
   }
 }
@@ -1520,7 +1540,9 @@ async function probeGatewayBatched(gatewayName, providers, batchSize, delayMs) {
   const results = [];
   for (let i = 0; i < providers.length; i += batchSize) {
     const batch = providers.slice(i, i + batchSize);
-    logDebug(`🔧 Gateway ${gatewayName}: batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(providers.length / batchSize)} (${batch.map((p) => p.name).join(", ")})`);
+    logDebug(
+      `🔧 Gateway ${gatewayName}: batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(providers.length / batchSize)} (${batch.map((p) => p.name).join(", ")})`,
+    );
     const batchResults = await Promise.allSettled(
       batch.map((p) => probeToolCapabilityForProvider(p)),
     );
@@ -1563,7 +1585,9 @@ async function probeAllToolCapability() {
   }
 
   const gatewayNames = [...gateways.entries()].map(([gw, ps]) => `${gw}(${ps.length})`);
-  logDebug(`🔧 Tool capability probe: ${toProbe.length} providers across ${gateways.size} gateways: ${gatewayNames.join(", ")}`);
+  logDebug(
+    `🔧 Tool capability probe: ${toProbe.length} providers across ${gateways.size} gateways: ${gatewayNames.join(", ")}`,
+  );
 
   // Probe gateways in parallel; batch sequentially within large gateways
   const gatewayPromises = [];
@@ -1774,10 +1798,10 @@ async function invokeWithAI(provider, messages, options = {}) {
     logDebug(`[invokeWithAI] Processing fullStream...`);
     for await (const part of result.fullStream) {
       partCount++;
-      
+
       // Build detailed log context based on part type
       const logContext = { type: part.type };
-      
+
       if (part.type === "text-delta") {
         const deltaText = part.textDelta || "";
         logContext.length = deltaText.length;
@@ -1794,7 +1818,8 @@ async function invokeWithAI(provider, messages, options = {}) {
         logContext.toolName = part.toolName;
         logContext.toolCallId = part.toolCallId;
         if (part.result) {
-          const resultStr = typeof part.result === "string" ? part.result : JSON.stringify(part.result);
+          const resultStr =
+            typeof part.result === "string" ? part.result : JSON.stringify(part.result);
           logContext.resultPreview = resultStr.slice(0, 100);
         }
       } else if (part.type === "reasoning-delta") {
@@ -1807,12 +1832,12 @@ async function invokeWithAI(provider, messages, options = {}) {
       } else if (part.type === "finish") {
         logContext.finishReason = part.finishReason;
       }
-      
+
       // Suppress blank DEBUG lines (text-delta with length 0)
       if (part.type !== "text-delta" || (part.textDelta && part.textDelta.length > 0)) {
         logDebug(`[invokeWithAI] Stream part ${partCount}`, logContext);
       }
-      
+
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
         if (onChunk) onChunk({ type: "text", text: "\n💡 " });
@@ -2102,7 +2127,9 @@ async function invokeWithFallback(messages, route, sessionId = null) {
 
       const durationMs = Date.now() - startedAt;
       const textPreview = result.text?.slice(0, 100) || "";
-      logInfo(`✅ AI RESULT VALIDATION PASS: ${provider.name} (attempt ${attemptNumber}, ${durationMs}ms, ${result.text?.length || 0} chars)`);
+      logInfo(
+        `✅ AI RESULT VALIDATION PASS: ${provider.name} (attempt ${attemptNumber}, ${durationMs}ms, ${result.text?.length || 0} chars)`,
+      );
       logInfo(`   Preview: ${textPreview}`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage, true);
@@ -2334,9 +2361,10 @@ async function invokeWithFallbackStream(
             ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
             : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       throw new Error(errorMsg);
-    }      logInfo(
-        `${attemptNumber === 1 ? "🎯 PROVIDER SELECTED" : "🔄 FALLBACK ATTEMPT"}: ${provider.name} (${provider.model}) - attempt ${attemptNumber}`,
-      );
+    }
+    logInfo(
+      `${attemptNumber === 1 ? "🎯 PROVIDER SELECTED" : "🔄 FALLBACK ATTEMPT"}: ${provider.name} (${provider.model}) - attempt ${attemptNumber}`,
+    );
     triedProviders.push(provider.name);
 
     if (attemptNumber > 1) {
@@ -2352,7 +2380,9 @@ async function invokeWithFallbackStream(
       const result = await invokeWithAI(provider, messages, { stream: true, onChunk });
 
       const textPreview = result.text?.slice(0, 100) || "";
-      logInfo(`✅ AI RESULT VALIDATION PASS (streaming): ${provider.name} (attempt ${attemptNumber}, ${result.text?.length || 0} chars)`);
+      logInfo(
+        `✅ AI RESULT VALIDATION PASS (streaming): ${provider.name} (attempt ${attemptNumber}, ${result.text?.length || 0} chars)`,
+      );
       logInfo(`   Preview: ${textPreview}`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, null, true);
@@ -2715,7 +2745,8 @@ const server = http.createServer(async (req, res) => {
       resetProviderStats();
       return sendJson(res, 200, {
         status: "reset",
-        message: "Provider stats have been reset. Fresh metrics will accumulate from new probes and requests.",
+        message:
+          "Provider stats have been reset. Fresh metrics will accumulate from new probes and requests.",
         timestamp: new Date().toISOString(),
       });
     }
@@ -3484,7 +3515,7 @@ server.listen(PORT, "127.0.0.1", async () => {
         const unclassified = available
           .map((r) => r.name)
           .filter((n) => !toolCapableProviders.has(n) && !nonToolCapableProviders.has(n));
-        
+
         logInfo(
           `🔧 Tool probe: ${toolCapable} capable | ${toolExcluded} excluded | ${unclassified.length} unclassified`,
         );
