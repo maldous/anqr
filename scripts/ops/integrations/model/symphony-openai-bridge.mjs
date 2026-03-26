@@ -1263,17 +1263,23 @@ function buildSelectionOptions(route, excludedNames = [], sessionId = null) {
       const { provider: providerName, mode, tier, turnCount } = sessionState;
       const turnLimit = getProviderTurnLimit(providerName);
 
-      // Paid providers: stick until exhausted
-      if (tier === "paid" && mode === "paid") {
+      // P0 FIX: If the sticky provider is already in the exclude set (e.g., recently
+      // failed, non-tool-capable, or explicitly excluded), clear the sticky immediately
+      // and allow ALL providers. Never restrict allowedNames to a single unavailable
+      // provider — that causes the "No providers available" P0 outage.
+      if (excludeSet.has(providerName)) {
+        safeLogDebug(`⚠️ Sticky provider ${providerName} is excluded — clearing sticky, allowing all providers`);
+        clearSessionProvider(sessionId);
+        // Fall through to return unrestricted options below
+      } else if (tier === "paid" && mode === "paid") {
+        // Paid providers: stick until exhausted
         safeLogDebug(`📌 Session sticky: ${providerName} (paid mode, ${turnCount} turns)`);
         return {
           allowedNames: [providerName],
           excludeNames: [...excludeSet],
         };
-      }
-
-      // Free providers: rotate after turn limit
-      if (turnCount < turnLimit) {
+      } else if (turnCount < turnLimit) {
+        // Free providers: rotate after turn limit
         safeLogDebug(`📌 Session sticky: ${providerName} (${turnCount}/${turnLimit} turns)`);
         return {
           allowedNames: [providerName],
@@ -1372,6 +1378,15 @@ async function probeToolCapabilityForProvider(providerDef) {
   if (KNOWN_TOOL_CAPABLE.has(name)) return { name, status: "known-capable" };
   if (toolCapableProviders.has(name)) return { name, status: "cached-capable" };
   if (nonToolCapableProviders.has(name)) return { name, status: "cached-non-capable" };
+
+  // P0 FIX: Safety-net providers (local Ollama) are NEVER excluded from selection.
+  // They may not support structured tool calling, but a degraded response is always
+  // preferable to a total outage. If tools fail at runtime, invokeWithAI will handle
+  // the provider without tools (useTools=false via providerSupportsTools).
+  if (providerDef.tier === "local-safety-net") {
+    toolCapableProviders.add(name);
+    return { name, status: "safety-net-always-allowed" };
+  }
 
   // SDK-based providers are handled outside AI SDK tool protocol
   if (providerDef.requiresSdk || providerDef.driver === "codex-sdk") {

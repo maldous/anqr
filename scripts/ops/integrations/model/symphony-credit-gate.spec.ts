@@ -7,7 +7,7 @@
  * Run: npx vitest run scripts/ops/integrations/model/symphony-credit-gate.spec.ts
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,6 +35,7 @@ const {
   getProviderStats,
   getRankedProviders,
   resetProviderStats,
+  getProviderDefinitions,
 } = creditGate;
 
 describe("Symphony Credit Gate - Provider Selection", () => {
@@ -255,6 +256,113 @@ describe("Symphony Credit Gate - Provider Selection", () => {
 
       expect(stats["fail-test"].score).not.toBe("pending");
       expect(typeof stats["fail-test"].score).toBe("number");
+    });
+  });
+
+  describe("P0 Safety Net — selectProvider never causes total outage", () => {
+    let originalFetch: typeof globalThis.fetch;
+
+    beforeEach(() => {
+      originalFetch = globalThis.fetch;
+    });
+
+    afterEach(() => {
+      globalThis.fetch = originalFetch;
+    });
+
+    it("should activate safety-net override when sticky provider is both allowed and excluded", async () => {
+      // Mock fetch: ollama returns success, everything else fails
+      globalThis.fetch = vi.fn().mockImplementation(async (url: string | URL) => {
+        const urlStr = String(url);
+        if (urlStr.includes("11434") || urlStr.includes("ollama")) {
+          return {
+            ok: true,
+            text: async () =>
+              JSON.stringify({
+                models: [
+                  { name: "qwen2.5-coder:3b-instruct" },
+                  { name: "qwen2.5-coder:0.5b" },
+                ],
+              }),
+            json: async () => ({
+              models: [
+                { name: "qwen2.5-coder:3b-instruct" },
+                { name: "qwen2.5-coder:0.5b" },
+              ],
+            }),
+          };
+        }
+        return { ok: false, status: 503, text: async () => "unavailable" };
+      }) as typeof globalThis.fetch;
+
+      // Exact scenario from P0 incident: sticky=cerebras, but cerebras is also excluded
+      const result = await selectProvider({
+        allowedNames: ["cerebras"],
+        excludeNames: ["cerebras", "ollama-qwen2.5-coder-3b", "ollama-qwen2.5-coder-0.5b"],
+      });
+
+      // P0 safety-net override should bypass ALL restrictions and select ollama
+      expect(result).not.toBeNull();
+      expect(result!.name).toMatch(/^ollama/);
+      expect(result!.tier).toBe("local-safety-net");
+    });
+
+    it("should activate safety-net when all providers are excluded by allowedNames", async () => {
+      // Mock fetch: ollama returns success
+      globalThis.fetch = vi.fn().mockImplementation(async (url: string | URL) => {
+        const urlStr = String(url);
+        if (urlStr.includes("11434") || urlStr.includes("ollama")) {
+          return {
+            ok: true,
+            text: async () =>
+              JSON.stringify({
+                models: [
+                  { name: "qwen2.5-coder:3b-instruct" },
+                  { name: "qwen2.5-coder:0.5b" },
+                ],
+              }),
+            json: async () => ({
+              models: [
+                { name: "qwen2.5-coder:3b-instruct" },
+                { name: "qwen2.5-coder:0.5b" },
+              ],
+            }),
+          };
+        }
+        return { ok: false, status: 503, text: async () => "unavailable" };
+      }) as typeof globalThis.fetch;
+
+      // allowedNames restricts to a nonexistent provider — everything is "not allowed"
+      const result = await selectProvider({
+        allowedNames: ["nonexistent-provider"],
+      });
+
+      // Safety-net override should still find ollama
+      expect(result).not.toBeNull();
+      expect(result!.name).toMatch(/^ollama/);
+    });
+
+    it("should return null only when safety-net providers are genuinely unreachable", async () => {
+      // Mock fetch: everything fails including ollama
+      globalThis.fetch = vi.fn().mockImplementation(async () => {
+        return { ok: false, status: 503, text: async () => "unavailable" };
+      }) as typeof globalThis.fetch;
+
+      const result = await selectProvider({
+        allowedNames: ["nonexistent-provider"],
+      });
+
+      // Should return null since even safety-net is unreachable
+      expect(result).toBeNull();
+    });
+
+    it("should verify safety-net tier providers exist in PROVIDERS list", () => {
+      // Structural test: ensure at least one safety-net provider is configured
+      const allProviders = getProviderDefinitions();
+      const safetyNets = allProviders.filter(
+        (p: { tier?: string }) => p.tier === "local-safety-net",
+      );
+      expect(safetyNets.length).toBeGreaterThanOrEqual(2);
     });
   });
 
