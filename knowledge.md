@@ -61,10 +61,12 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **Discord Streaming**: Discord webhooks batch text chunks and send every 5 seconds (or when buffer exceeds 1900 chars) to preserve natural formatting and prevent fragmented messages. The buffer is automatically flushed at the end of each response.
 - **Bridge Restart Procedure** (CRITICAL HARD RULE):
   1. **COMMIT & PUSH FIRST**: Always commit and push changes BEFORE restarting: `git add -A && git commit -m "..." && git push`
-  2. **WAIT FOR ZERO CONCURRENCY**: Check Discord notifications for "(0 concurrent)" - NEVER restart while requests are active
-  3. **THEN RESTART**: Only after concurrency = 0, restart the bridge: `systemctl --user restart anqr-symphony-bridge` (or `anqr-codebuff-bridge`)
+  2. **WAIT FOR SAFE CONCURRENCY**: Check Discord notifications for "(0 concurrent)" - NEVER restart while requests are active
+     - **EXCEPTION**: When the user explicitly requests a bridge restart (e.g., "restart the bridge", "please restart"), proceed immediately regardless of concurrency count, as the user is aware and accepting of the interruption
+     - **RATIONALE**: Discord users cannot restart bridges themselves and may need urgent restarts for bug fixes or configuration changes
+  3. **THEN RESTART**: Only after concurrency = 0 (or user has explicitly requested restart), restart the bridge: `systemctl --user restart anqr-symphony-bridge` (or `anqr-codebuff-bridge`)
   4. The bridges run as **user services** (not system services) and won't pick up code changes until restarted
-  5. **Violation consequences**: Restarting during active concurrency terminates in-flight requests and breaks the user experience
+  5. **Violation consequences**: Restarting during active concurrency (without explicit user request) terminates in-flight requests and breaks the user experience
 
 ### Current 1.0 Claim
 
