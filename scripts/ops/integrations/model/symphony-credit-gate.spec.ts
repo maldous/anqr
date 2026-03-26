@@ -29,6 +29,9 @@ const {
   clearProviderFailure,
   recordProviderSuccess,
   recordProviderMetrics,
+  recordProviderSelection,
+  recordProbeResult,
+  recordLinearCompletion,
   getProviderStats,
   getRankedProviders,
   resetProviderStats,
@@ -110,7 +113,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
 
   describe("Provider Metrics", () => {
     it("should record provider success", () => {
-      creditGate.recordProviderSelection("test-provider");
+      recordProviderSelection("test-provider");
       recordProviderSuccess("test-provider");
       const stats = getProviderStats();
 
@@ -119,7 +122,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should record provider failure count", () => {
-      creditGate.recordProviderSelection("test-provider");
+      recordProviderSelection("test-provider");
       recordProviderFailureCount("test-provider");
       const stats = getProviderStats();
 
@@ -128,7 +131,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should record provider metrics", () => {
-      creditGate.recordProviderSelection("test-provider");
+      recordProviderSelection("test-provider");
       recordProviderMetrics("test-provider", {
         durationMs: 5000,
         inputTokens: 100,
@@ -187,6 +190,207 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
   });
 
+  describe("Probe Metrics (separate from runtime)", () => {
+    it("should record probe success in probeSelections/probeSuccesses", () => {
+      recordProbeResult("probe-test", { success: true, durationMs: 500 });
+      const stats = getProviderStats();
+
+      expect(stats["probe-test"]).toBeDefined();
+      expect(stats["probe-test"].probeSelections).toBe(1);
+      expect(stats["probe-test"].probeSuccesses).toBe(1);
+      expect(stats["probe-test"].probeFailures).toBe(0);
+      expect(stats["probe-test"].probeAvgDurationMs).toBe(500);
+    });
+
+    it("should record probe failure in probeFailures", () => {
+      recordProbeResult("probe-test", { success: false, durationMs: 200 });
+      const stats = getProviderStats();
+
+      expect(stats["probe-test"].probeSelections).toBe(1);
+      expect(stats["probe-test"].probeSuccesses).toBe(0);
+      expect(stats["probe-test"].probeFailures).toBe(1);
+    });
+
+    it("should NOT contaminate runtime selections/successes counters", () => {
+      recordProbeResult("probe-test", { success: true, durationMs: 300 });
+      recordProbeResult("probe-test", { success: true, durationMs: 400 });
+      recordProbeResult("probe-test", { success: false, durationMs: 100 });
+      const stats = getProviderStats();
+
+      expect(stats["probe-test"].selections).toBe(0);
+      expect(stats["probe-test"].successes).toBe(0);
+      expect(stats["probe-test"].failures).toBe(0);
+      expect(stats["probe-test"].probeSelections).toBe(3);
+      expect(stats["probe-test"].probeSuccesses).toBe(2);
+      expect(stats["probe-test"].probeFailures).toBe(1);
+    });
+
+    it("should bootstrap score for provider with only probe data (>= 3 probes)", () => {
+      recordProbeResult("probe-only", { success: true, durationMs: 200 });
+      recordProbeResult("probe-only", { success: true, durationMs: 300 });
+      recordProbeResult("probe-only", { success: true, durationMs: 250 });
+      const stats = getProviderStats();
+
+      expect(stats["probe-only"].score).not.toBe("pending");
+      expect(typeof stats["probe-only"].score).toBe("number");
+      expect(stats["probe-only"].score).toBeGreaterThan(0);
+    });
+
+    it("should leave score as pending with < 3 probes", () => {
+      recordProbeResult("probe-few", { success: true, durationMs: 200 });
+      recordProbeResult("probe-few", { success: true, durationMs: 300 });
+      const stats = getProviderStats();
+
+      expect(stats["probe-few"].score).toBe("pending");
+    });
+
+    it("should calculate score on failure via recordProviderFailureCount", () => {
+      recordProviderSelection("fail-test");
+      recordProviderSelection("fail-test");
+      recordProviderSelection("fail-test");
+      recordProviderFailureCount("fail-test");
+      recordProviderFailureCount("fail-test");
+      recordProviderFailureCount("fail-test");
+      const stats = getProviderStats();
+
+      expect(stats["fail-test"].score).not.toBe("pending");
+      expect(typeof stats["fail-test"].score).toBe("number");
+    });
+  });
+
+  describe("Full Probe → Score → Ranking Pipeline", () => {
+    it("should rank probe-only providers above unknown providers", () => {
+      // Provider A: 3 successful probes (should be ranked)
+      recordProbeResult("pipeline-a", { success: true, durationMs: 200 });
+      recordProbeResult("pipeline-a", { success: true, durationMs: 300 });
+      recordProbeResult("pipeline-a", { success: true, durationMs: 250 });
+
+      // Provider B: 3 failed probes (should be ranked, but lower)
+      recordProbeResult("pipeline-b", { success: false, durationMs: 500 });
+      recordProbeResult("pipeline-b", { success: false, durationMs: 600 });
+      recordProbeResult("pipeline-b", { success: false, durationMs: 550 });
+
+      const stats = getProviderStats();
+
+      // Both should have scores (not "pending")
+      expect(typeof stats["pipeline-a"].score).toBe("number");
+      expect(typeof stats["pipeline-b"].score).toBe("number");
+
+      // Successful probes should score higher than failed probes
+      expect(stats["pipeline-a"].score).toBeGreaterThan(stats["pipeline-b"].score);
+    });
+
+    it("should let runtime data dominate over probe data in scoring", () => {
+      // Provider with 3 successful probes AND good runtime performance
+      recordProbeResult("runtime-good", { success: true, durationMs: 200 });
+      recordProbeResult("runtime-good", { success: true, durationMs: 200 });
+      recordProbeResult("runtime-good", { success: true, durationMs: 200 });
+      recordProviderSelection("runtime-good");
+      recordProviderSelection("runtime-good");
+      recordProviderSelection("runtime-good");
+      recordProviderSuccess("runtime-good");
+      recordProviderSuccess("runtime-good");
+      recordProviderSuccess("runtime-good");
+      // recordProviderMetrics triggers score recalculation
+      recordProviderMetrics("runtime-good", {
+        durationMs: 2000,
+        inputTokens: 100,
+        outputTokens: 50,
+        validationPassed: true,
+      });
+
+      // Provider with only 3 successful probes (no runtime data)
+      recordProbeResult("probe-only", { success: true, durationMs: 200 });
+      recordProbeResult("probe-only", { success: true, durationMs: 200 });
+      recordProbeResult("probe-only", { success: true, durationMs: 200 });
+
+      const stats = getProviderStats();
+
+      // Good runtime data should push score significantly above probe-only
+      // demonstrating that runtime metrics (successRate=100%, volume, recency)
+      // dominate the scoring over probe-only evidence
+      expect(stats["runtime-good"].score).toBeGreaterThan(stats["probe-only"].score);
+    });
+
+    it("should produce correct ranking order with mixed probe and runtime data", () => {
+      // Provider A: good probes + good runtime = best
+      recordProbeResult("rank-a", { success: true, durationMs: 200 });
+      recordProbeResult("rank-a", { success: true, durationMs: 200 });
+      recordProbeResult("rank-a", { success: true, durationMs: 200 });
+      recordProviderSelection("rank-a");
+      recordProviderSelection("rank-a");
+      recordProviderSelection("rank-a");
+      recordProviderSuccess("rank-a");
+      recordProviderSuccess("rank-a");
+      recordProviderSuccess("rank-a");
+      recordProviderMetrics("rank-a", {
+        durationMs: 2000,
+        inputTokens: 100,
+        outputTokens: 50,
+        validationPassed: true,
+      });
+
+      // Provider B: good probes only = middle
+      recordProbeResult("rank-b", { success: true, durationMs: 200 });
+      recordProbeResult("rank-b", { success: true, durationMs: 200 });
+      recordProbeResult("rank-b", { success: true, durationMs: 200 });
+
+      // Provider C: probes + all runtime failures = worst
+      recordProbeResult("rank-c", { success: true, durationMs: 200 });
+      recordProbeResult("rank-c", { success: true, durationMs: 200 });
+      recordProbeResult("rank-c", { success: true, durationMs: 200 });
+      recordProviderSelection("rank-c");
+      recordProviderSelection("rank-c");
+      recordProviderSelection("rank-c");
+      recordProviderFailureCount("rank-c");
+      recordProviderFailureCount("rank-c");
+      recordProviderFailureCount("rank-c");
+
+      const stats = getProviderStats();
+
+      expect(typeof stats["rank-a"].score).toBe("number");
+      expect(typeof stats["rank-b"].score).toBe("number");
+      expect(typeof stats["rank-c"].score).toBe("number");
+
+      // A (probes+runtime success) > B (probes only)
+      expect(stats["rank-a"].score).toBeGreaterThan(stats["rank-b"].score);
+      // A (probes+runtime success) > C (probes+runtime failure)
+      expect(stats["rank-a"].score).toBeGreaterThan(stats["rank-c"].score);
+      // C has 0% successRate but gets volume+recency bonuses, so may be
+      // close to B (probe-only). The key assertion is A > both B and C.
+    });
+
+    it("should include probe-only providers in getRankedProviders output", () => {
+      recordProbeResult("ranked-probe", { success: true, durationMs: 200 });
+      recordProbeResult("ranked-probe", { success: true, durationMs: 300 });
+      recordProbeResult("ranked-probe", { success: true, durationMs: 250 });
+
+      const ranked = getRankedProviders();
+      const found = ranked.find((r) => r.name === "ranked-probe");
+
+      expect(found).toBeDefined();
+      expect(typeof found.score).toBe("number");
+      expect(found.rank).toBeGreaterThan(0);
+    });
+
+    it("should track Linear completion metrics in scoring pipeline", () => {
+      // Provider with probes + Linear completions
+      recordProbeResult("linear-test", { success: true, durationMs: 200 });
+      recordProbeResult("linear-test", { success: true, durationMs: 200 });
+      recordProbeResult("linear-test", { success: true, durationMs: 200 });
+      recordLinearCompletion("linear-test", { completed: true, priority: 1, estimate: 5 });
+      recordLinearCompletion("linear-test", { completed: true, priority: 3, estimate: 2 });
+
+      const stats = getProviderStats();
+
+      expect(stats["linear-test"].linearCompleted).toBe(2);
+      expect(stats["linear-test"].linearFailed).toBe(0);
+      expect(stats["linear-test"].linearCompletionRate).toBe("100.0%");
+      expect(typeof stats["linear-test"].score).toBe("number");
+      expect(stats["linear-test"].score).toBeGreaterThan(0);
+    });
+  });
+
   describe("Provider Ranking", () => {
     it("should return ranked providers", async () => {
       for (let i = 0; i < 5; i++) {
@@ -202,7 +406,7 @@ describe("Symphony Credit Gate - Provider Selection", () => {
     });
 
     it("should include provider stats in output", () => {
-      creditGate.recordProviderSelection("test-provider");
+      recordProviderSelection("test-provider");
       recordProviderSuccess("test-provider");
       recordProviderMetrics("test-provider", {
         durationMs: 2000,

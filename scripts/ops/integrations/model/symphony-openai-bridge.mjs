@@ -47,10 +47,11 @@ import {
   recordProviderFailureCount,
   recordProviderMetrics,
   recordProviderSuccess,
-  recordProviderSelection,
+  recordProbeResult,
   getProviderStats,
   getRankedProviders,
   logProviderStats,
+  resetProviderStats,
   getConfiguredProviders,
   getProviderDefinitions,
   probeAllProviders,
@@ -1436,10 +1437,8 @@ async function probeToolCapabilityForProvider(providerDef) {
     if (hasStructuredToolCall && !hasRawToolJson) {
       toolCapableProviders.add(name);
       
-      // Record successful probe metrics for credit-gate scoring
-      recordProviderSelection(name);
-      recordProviderSuccess(name);
-      recordSuccessfulMetrics(name, startTime, result.usage, true);
+      // Record successful probe in dedicated probe metrics (separate from runtime)
+      recordProbeResult(name, { success: true, durationMs });
       
       logInfo(`✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`);
       return { name, status: "capable", durationMs, answer: text };
@@ -1447,6 +1446,7 @@ async function probeToolCapabilityForProvider(providerDef) {
 
     if (hasRawToolJson) {
       nonToolCapableProviders.add(name);
+      recordProbeResult(name, { success: false, durationMs });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - Emitted raw JSON instead of structured tool calls`);
       return { name, status: "non-capable-raw-json" };
     }
@@ -1459,25 +1459,32 @@ async function probeToolCapabilityForProvider(providerDef) {
     const errStr = String(err).slice(0, 300);
 
     // Rate limit — don't exclude; assume capable until proven otherwise
+    // Don't record probe failure for rate limits — not indicative of capability
     if (/429|rate.?limit|too many|quota|resource.?exhausted/i.test(errStr)) {
       logWarn(`⏳ TOOL PROBE RATE LIMITED: ${name} - Will retry later`);
       return { name, status: "rate-limited" };
     }
 
-    // Explicit tool rejection by the API
+    // Explicit tool rejection by the API — definitive negative signal
     if (/tool_choice|tools.*not.*support|function.*call.*not|does not support/i.test(errStr)) {
       nonToolCapableProviders.add(name);
+      recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - API explicitly rejected tool support`);
       return { name, status: "non-capable-rejected" };
     }
 
     if (/timeout|tool-probe-timeout/i.test(errStr)) {
+      recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
       logWarn(`⏱️ TOOL PROBE TIMEOUT: ${name} - Exceeded ${TOOL_PROBE_TIMEOUT_MS}ms`);
       return { name, status: "timeout" };
     }
 
     // Log the actual error for debugging
     logWarn(`❌ TOOL PROBE ERROR: ${name} - ${errStr.slice(0, 150)}`);
+    
+    // Record probe error in dedicated probe metrics (separate from runtime)
+    recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
+    
     return { name, status: "probe-error" };
   }
 }
@@ -2634,6 +2641,17 @@ const server = http.createServer(async (req, res) => {
         available: providerStatusCache.probeResults.filter((r) => r.available).length,
         lastProbeAt: providerStatusCache.lastProbeAt,
         providers,
+      });
+    }
+
+    // POST /v1/stats/reset — reset all provider stats (operational use)
+    if (req.method === "POST" && req.url === "/v1/stats/reset") {
+      logInfo(`🔄 Stats reset requested via API`);
+      resetProviderStats();
+      return sendJson(res, 200, {
+        status: "reset",
+        message: "Provider stats have been reset. Fresh metrics will accumulate from new probes and requests.",
+        timestamp: new Date().toISOString(),
       });
     }
 

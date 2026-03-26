@@ -111,6 +111,13 @@ const PROVIDER_STATS = {
   mediumIssuesTotal: {},
   largeIssuesCompleted: {},
   largeIssuesTotal: {},
+
+  // Probe metrics (separate from runtime to avoid contamination)
+  probeSelections: {},
+  probeSuccesses: {},
+  probeFailures: {},
+  probeTotalDuration: {},
+  probeAvgDuration: {},
 };
 
 // ---------------------------------------------------------------------------
@@ -137,8 +144,9 @@ const SCORE_WEIGHTS = {
   successRate: 0.15, // 15% - general success rate
   avgDuration: 0.08, // 8% - faster is better (normalized)
   validationRate: 0.12, // 12% - passes validation
-  volume: 0.05, // 5% - more usage = more data
-  recency: 0.05, // 5% - recent usage weighted higher
+  volume: 0.02, // 2% - more usage = more data
+  recency: 0.03, // 3% - recent usage weighted higher
+  probeCapability: 0.05, // 5% - tool probe success rate (bootstraps initial scores)
 
   // Linear issue metrics (55% total)
   linearCompletionRate: 0.15, // 15% - Linear issues completed vs failed
@@ -195,6 +203,7 @@ async function probeCodexSdk(model) {
     return true;
   }
 
+  const probeStart = Date.now();
   try {
     const codex = new Codex({
       env: process.env,
@@ -219,8 +228,11 @@ async function probeCodexSdk(model) {
     const finalResponse = String(result?.finalResponse || "")
       .trim()
       .toLowerCase();
-    return finalResponse.includes("ok");
+    const success = finalResponse.includes("ok");
+    recordProbeResult("codex", { success, durationMs: Date.now() - probeStart });
+    return success;
   } catch (err) {
+    recordProbeResult("codex", { success: false, durationMs: Date.now() - probeStart });
     // Log the error and record failure so credit-gate can try fallback providers
     const errStr = String(err).toLowerCase();
     if (errStr.includes("usage limit") || errStr.includes("quota")) {
@@ -610,6 +622,32 @@ export function recordProviderFailureCount(providerName) {
   const stats = loadStats();
   stats.failures[providerName] = (stats.failures[providerName] || 0) + 1;
   stats.lastFailure[providerName] = Date.now();
+  stats.score[providerName] = calculateProviderScore(providerName, stats);
+  saveStats(stats);
+}
+
+/**
+ * Record a probe result (tool capability or reachability) for a provider.
+ * Kept separate from runtime metrics to avoid contaminating scoring.
+ * @param {string} providerName - Provider name
+ * @param {object} result - { success: boolean, durationMs: number }
+ */
+export function recordProbeResult(providerName, { success, durationMs }) {
+  const stats = loadStats();
+  stats.probeSelections[providerName] = (stats.probeSelections[providerName] || 0) + 1;
+  if (success) {
+    stats.probeSuccesses[providerName] = (stats.probeSuccesses[providerName] || 0) + 1;
+  } else {
+    stats.probeFailures[providerName] = (stats.probeFailures[providerName] || 0) + 1;
+  }
+  if (typeof durationMs === "number" && durationMs > 0) {
+    stats.probeTotalDuration[providerName] =
+      (stats.probeTotalDuration[providerName] || 0) + durationMs;
+    const probeCount = stats.probeSelections[providerName];
+    stats.probeAvgDuration[providerName] =
+      probeCount > 0 ? Math.round(stats.probeTotalDuration[providerName] / probeCount) : 0;
+  }
+  stats.score[providerName] = calculateProviderScore(providerName, stats);
   saveStats(stats);
 }
 
@@ -751,9 +789,10 @@ export function recordProviderMetrics(
  */
 function calculateProviderScore(providerName, stats) {
   const selections = stats.selections[providerName] || 0;
+  const probeEvidence = stats.probeSelections[providerName] || 0;
 
-  // Not enough data yet
-  if (selections < MIN_SELECTIONS_FOR_RANKING) {
+  // Not enough data yet — probe evidence can bootstrap initial ranking
+  if (selections + probeEvidence < MIN_SELECTIONS_FOR_RANKING) {
     return null; // Not ranked yet
   }
 
@@ -817,6 +856,10 @@ function calculateProviderScore(providerName, stats) {
   // 12. Estimate Throughput - log scale of total completed estimate points
   const estimateThroughput = Math.min(1, Math.log10(completedEst + 1) / 4); // Maxes at 10k points
 
+  // 13. Probe Capability (0-1) — from tool probe results, separate from runtime
+  const probeSuccessCount = stats.probeSuccesses[providerName] || 0;
+  const probeCapabilityRate = probeEvidence > 0 ? probeSuccessCount / probeEvidence : 0.5;
+
   // Weighted combination
   const score =
     successRate * SCORE_WEIGHTS.successRate +
@@ -824,6 +867,7 @@ function calculateProviderScore(providerName, stats) {
     validationRate * SCORE_WEIGHTS.validationRate +
     volumeScore * SCORE_WEIGHTS.volume +
     recencyScore * SCORE_WEIGHTS.recency +
+    probeCapabilityRate * SCORE_WEIGHTS.probeCapability +
     linearCompletionRate * SCORE_WEIGHTS.linearCompletionRate +
     highPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess +
     mediumPrioritySuccessRate * SCORE_WEIGHTS.linearComplexitySuccess +
@@ -871,8 +915,14 @@ export function getRankedProviders(options = {}) {
   const pendingSafetyNets = [];
   const seenProviders = new Set();
 
-  // First pass: include providers with stats and scores
-  for (const name of Object.keys(stats.selections)) {
+  // Build set of all providers with any data (runtime or probe)
+  const providersWithData = new Set(Object.keys(stats.selections));
+  for (const name of Object.keys(stats.probeSelections || {})) {
+    providersWithData.add(name);
+  }
+
+  // First pass: include providers with stats and/or probe data
+  for (const name of providersWithData) {
     if (excludeSet && excludeSet.has(name)) continue;
     seenProviders.add(name);
     const score = stats.score[name];
@@ -940,6 +990,10 @@ export function getProviderStats(options = {}) {
   
   // Build list of providers to include
   const providerNames = new Set(Object.keys(stats.selections));
+  // Also include providers with probe data (may have no runtime selections yet)
+  for (const name of Object.keys(stats.probeSelections || {})) {
+    providerNames.add(name);
+  }
   if (includeAllProviders) {
     // Include all providers from PROVIDERS list, even if never selected
     for (const provider of PROVIDERS) {
@@ -994,6 +1048,11 @@ export function getProviderStats(options = {}) {
     const provider = PROVIDERS.find((p) => p.name === name);
     const tier = provider ? getProviderTier(provider) : TIER_FREE_CLOUD;
 
+    const probeSelected = stats.probeSelections[name] || 0;
+    const probeSuccess = stats.probeSuccesses[name] || 0;
+    const probeFail = stats.probeFailures[name] || 0;
+    const probeAvgDur = stats.probeAvgDuration[name] || 0;
+
     result[name] = {
       tier,
       // Basic counts
@@ -1043,6 +1102,12 @@ export function getProviderStats(options = {}) {
 
       // Score
       score: stats.score[name] === null ? "pending" : stats.score[name], // null = not enough data
+
+      // Probe metrics (separate from runtime)
+      probeSelections: probeSelected,
+      probeSuccesses: probeSuccess,
+      probeFailures: probeFail,
+      probeAvgDurationMs: probeAvgDur,
 
       // Timestamps
       lastSelected: stats.lastSelected[name]
@@ -1100,11 +1165,14 @@ export function logProviderStats(options = {}) {
     if (excludeSet && excludeSet.has(name)) continue;
     const data = stats[name];
     if (data) {
+      const probeInfo =
+        data.probeSelections > 0
+          ? ` | probe: ${data.probeSelections}p ${data.probeSuccesses}✓ ${data.probeFailures}✗`
+          : "";
       logInfo(
-        `  ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg`,
+        `  ${name}: ${data.selections} sel, ${data.successes}✓ ${data.failures}✗, ${data.validationRate} valid, ${data.avgDurationMs}ms avg${probeInfo}`,
       );
     } else {
-      // Provider has never been selected - show as "pending"
       logInfo(
         `  ${name}: 0 sel, 0✓ 0✗, N/A valid, -- ms avg (never selected)`,
       );
