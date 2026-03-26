@@ -47,6 +47,7 @@ import {
   recordProviderFailureCount,
   recordProviderMetrics,
   recordProviderSuccess,
+  recordProviderSelection,
   getProviderStats,
   getRankedProviders,
   logProviderStats,
