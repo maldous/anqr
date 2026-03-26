@@ -43,6 +43,7 @@ import { createLogger } from "../../lib/logger.mjs";
 const { logDebug, logInfo, logWarn, logError } = createLogger();
 import {
   selectProvider,
+  recordProviderSelection,
   recordProviderFailure,
   recordProviderFailureCount,
   recordProviderMetrics,
