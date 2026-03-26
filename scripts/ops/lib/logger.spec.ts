@@ -154,7 +154,7 @@ describe("logger.mjs", () => {
       logWarn("warn msg");
       logError("error msg");
       
-      const calls = stderrSpy.mock.calls.map(c => c[0] as string);
+      const calls = stderrSpy.mock.calls.map((c: any) => c[0] as string);
       expect(calls[0]).toContain("[DEBUG]");
       expect(calls[1]).toContain("[INFO]");
       expect(calls[2]).toContain("[WARN]");
