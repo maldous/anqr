@@ -911,6 +911,7 @@ const PROBE_COMPLETIONS_BEFORE_RANKING = 3; // Rank providers after 3 probe comp
 let probeCompletionCount = 0;
 let probeTurnCounter = 0; // Tracks turns since last probe
 let lastProbeStartTime = Date.now();
+let lastProbeTimeCheck = Date.now(); // Track time-based trigger
 let isProbeRunning = false;
 
 // Track concurrent requests for Discord notifications
@@ -926,10 +927,9 @@ let processingStatusTimer = null;
  * Run continuous provider probe in background.
  * 
  * Sequential process:
- * 1. Filter out failed/excluded/cooldown providers
- * 2. Check reachability and API keys (parallel, all eligible providers)
- * 3. Probe tool capability for reachable providers (parallel, all providers)
- * 4. After 3 completions, rank and log all providers in metrics cache
+ * 1. Check reachability and API keys (parallel, all eligible providers)
+ * 2. Probe tool capability for reachable providers (parallel, no batching)
+ * 3. After 3 completions, rank and log all providers in metrics cache
  * 
  * Repeats every 30 minutes OR 200 turns of the current provider.
  */
@@ -941,22 +941,20 @@ async function runContinuousProviderProbe() {
 
   isProbeRunning = true;
   lastProbeStartTime = Date.now();
+  lastProbeTimeCheck = Date.now(); // Reset time check
   probeTurnCounter = 0; // Reset turn counter
 
   try {
     logInfo(`🔍 Starting continuous provider probe cycle ${probeCompletionCount + 1}...`);
 
-    // Phase 1: Filter out failed/excluded/cooldown providers
+    // Phase 1: Check reachability and API keys (parallel, all eligible providers)
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
     const allProviders = getProviderDefinitions({ excludeNames });
-    const eligibleProviders = allProviders.filter((p) => !isRecentlyFailed(p.name));
     
     logInfo(
-      `🔍 Phase 1: Filtered ${allProviders.length} providers → ${eligibleProviders.length} eligible (excluded cooldown/failed)`,
+      `🔍 Phase 1: Probing reachability for ${allProviders.length} providers (cooldown/excluded handled by credit-gate)...`,
     );
 
-    // Phase 2: Check reachability and API keys (parallel, all eligible providers)
-    logInfo(`🔍 Phase 2: Probing reachability for ${eligibleProviders.length} providers...`);
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
     providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
     providerStatusCache.lastProbeAt = new Date().toISOString();
@@ -964,23 +962,23 @@ async function runContinuousProviderProbe() {
     const reachable = providerStatusCache.probeResults.filter((r) => r.available);
     const total = providerStatusCache.configured.length;
     logInfo(
-      `🔍 Phase 2 complete: ${reachable.length}/${total} providers reachable (API keys validated)`,
+      `🔍 Phase 1 complete: ${reachable.length}/${total} providers reachable (API keys validated)`,
     );
 
-    // Phase 3: Probe tool capability for reachable providers (parallel, all providers)
-    logInfo(`🔍 Phase 3: Probing tool capability for ${reachable.length} reachable providers...`);
+    // Phase 2: Probe tool capability for reachable providers (parallel, no batching)
+    logInfo(`🔍 Phase 2: Probing tool capability for ${reachable.length} reachable providers (no batching)...`);
     await probeAllToolCapability();
     logInfo(
-      `🔍 Phase 3 complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
+      `🔍 Phase 2 complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
     );
 
     // Increment completion counter
     probeCompletionCount++;
 
-    // Phase 4: After 3 completions, rank and log all providers in metrics cache
+    // Phase 3: After 3 completions, rank and log all providers in metrics cache
     if (probeCompletionCount >= PROBE_COMPLETIONS_BEFORE_RANKING) {
       logInfo(
-        `🔍 Phase 4: Ranking providers after ${probeCompletionCount} probe completions...`,
+        `🔍 Phase 3: Ranking providers after ${probeCompletionCount} probe completions...`,
       );
       const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
       if (ranked.length > 0) {
@@ -1336,7 +1334,6 @@ const KNOWN_TOOL_CAPABLE = new Set(["codex", "codebuff"]);
 const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
 const nonToolCapableProviders = new Set();
 const TOOL_PROBE_TIMEOUT_MS = 20_000;
-const TOOL_PROBE_BATCH_SIZE = 5;
 const TOOL_PROBE_RETRY_DELAY_MS = 60_000;
 let toolProbeRetryScheduled = false;
 const RAW_TOOL_JSON_RE = /\{\s*"name"\s*:\s*"|"function_call"\s*:|"tool_calls"\s*:/;
@@ -1481,19 +1478,16 @@ async function probeAllToolCapability() {
     return;
   }
 
-  logDebug(`🔧 Tool capability probe: testing ${toProbe.length} providers...`);
+  logDebug(`🔧 Tool capability probe: testing ${toProbe.length} providers (no batching)...`);
 
+  // Probe all providers in parallel (no batching)
+  const batchResults = await Promise.allSettled(
+    toProbe.map((p) => probeToolCapabilityForProvider(p)),
+  );
   const results = [];
-  for (let i = 0; i < toProbe.length; i += TOOL_PROBE_BATCH_SIZE) {
-    if (i > 0) await sleep(1000); // throttle between batches to reduce rate-limit pressure
-    const batch = toProbe.slice(i, i + TOOL_PROBE_BATCH_SIZE);
-    const batchResults = await Promise.allSettled(
-      batch.map((p) => probeToolCapabilityForProvider(p)),
-    );
-    for (const r of batchResults) {
-      if (r.status === "fulfilled") {
-        results.push(r.value);
-      }
+  for (const r of batchResults) {
+    if (r.status === "fulfilled") {
+      results.push(r.value);
     }
   }
 
@@ -2277,11 +2271,16 @@ async function invokeWithFallbackStream(
         logBridgeStats();
       }
 
-      // Trigger probe cycle if turn threshold reached
-      if (probeTurnCounter >= PROBE_CYCLE_TURN_THRESHOLD) {
-        logInfo(
-          `🔍 Turn threshold reached (${probeTurnCounter}/${PROBE_CYCLE_TURN_THRESHOLD}), scheduling probe cycle...`,
-        );
+      // Trigger probe cycle if turn threshold reached OR 30 minutes elapsed
+      const timeSinceProbe = Date.now() - lastProbeTimeCheck;
+      const shouldProbeByTurns = probeTurnCounter >= PROBE_CYCLE_TURN_THRESHOLD;
+      const shouldProbeByTime = timeSinceProbe >= PROBE_CYCLE_INTERVAL_MS;
+
+      if (shouldProbeByTurns || shouldProbeByTime) {
+        const reason = shouldProbeByTurns
+          ? `turn threshold (${probeTurnCounter}/${PROBE_CYCLE_TURN_THRESHOLD})`
+          : `time threshold (${Math.round(timeSinceProbe / 60000)}min / 30min)`;
+        logInfo(`🔍 Probe trigger: ${reason}, scheduling probe cycle...`);
         // Schedule probe asynchronously (don't block response)
         setTimeout(() => {
           runContinuousProviderProbe().catch((err) => {
