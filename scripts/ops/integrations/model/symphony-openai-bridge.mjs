@@ -1032,6 +1032,48 @@ async function runContinuousProviderProbe() {
           );
         }
         logInfo(`🔍 Full ranking cached in provider stats`);
+        
+        // Send Discord embedded card with updated rankings
+        try {
+          const stats = getProviderStats();
+          const available = providerStatusCache.probeResults.filter((r) => r.available);
+          const total = providerStatusCache.configured.length;
+          
+          // Build fields for top 10 providers
+          const fields = [];
+          const topProviders = ranked.slice(0, 10);
+          
+          for (const { rank, name, score, tier } of topProviders) {
+            const provStats = stats[name];
+            const selections = provStats?.selections || 0;
+            const successRate = provStats?.successRate || "N/A";
+            const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
+            
+            fields.push({
+              name: `#${rank} ${name}`,
+              value: `[${tier}] score: ${scoreDisplay}\n${selections} selections, ${successRate} success`,
+              inline: true,
+            });
+          }
+          
+          // Add summary field
+          fields.push({
+            name: "Summary",
+            value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
+            inline: false,
+          });
+          
+          await sendDiscordEmbed({
+            title: "🔍 Provider Rankings (Probe Cycle Complete)",
+            description: `Updated rankings after ${PROBE_COMPLETIONS_BEFORE_RANKING} probe completions`,
+            color: 0x3498db, // Blue
+            fields,
+          });
+          
+          logInfo(`📊 Sent updated provider rankings to Discord (top ${topProviders.length})`);
+        } catch (err) {
+          logError(`❌ Failed to send provider rankings to Discord: ${err.message}`);
+        }
       }
       // Reset counter but keep probing
       probeCompletionCount = 0;
@@ -3686,6 +3728,47 @@ server.listen(PORT, "127.0.0.1", async () => {
       logInfo(`========================================`);
       logInfo(`Ready to accept requests`);
       logInfo(`========================================`);
+
+      // Send Discord embedded card with provider rankings
+      try {
+        const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
+        const stats = getProviderStats();
+        
+        // Build fields for top 10 providers
+        const fields = [];
+        const topProviders = ranked.slice(0, 10);
+        
+        for (const { rank, name, score, tier } of topProviders) {
+          const provStats = stats[name];
+          const selections = provStats?.selections || 0;
+          const successRate = provStats?.successRate || "N/A";
+          const scoreDisplay = typeof score === "number" ? score.toFixed(2) : score;
+          
+          fields.push({
+            name: `#${rank} ${name}`,
+            value: `[${tier}] score: ${scoreDisplay}\n${selections} selections, ${successRate} success`,
+            inline: true,
+          });
+        }
+        
+        // Add summary field
+        fields.push({
+          name: "Summary",
+          value: `${available.length}/${total} available | ${toolCapableProviders.size} tool-capable | ${nonToolCapableProviders.size} excluded`,
+          inline: false,
+        });
+        
+        await sendDiscordEmbed({
+          title: "🔍 Provider Rankings (Startup Probe Complete)",
+          description: `Probed ${total} providers across 3 cycles`,
+          color: 0x3498db, // Blue
+          fields,
+        });
+        
+        logInfo(`📊 Sent provider rankings to Discord (top ${topProviders.length})`);
+      } catch (err) {
+        logError(`❌ Failed to send provider rankings to Discord: ${err.message}`);
+      }
 
       // Update MEMORY.md with successful startup
       try {

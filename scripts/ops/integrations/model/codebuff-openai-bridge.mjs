@@ -63,6 +63,7 @@ const CODEBUFF_NOISY_TOOLS = new Set([
   "lookup_agent_info",
   "spawn_agent_inline",
   "context-pruner",
+  "read_files",
 ]);
 const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
