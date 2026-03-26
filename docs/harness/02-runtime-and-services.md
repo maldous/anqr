@@ -26,6 +26,8 @@ Integrations and support:
 - `scripts/ops/symphony-credit-gate.mjs`
 - `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 - `scripts/ops/integrations/model/symphony-openai-bridge.mjs` — AI SDK-based bridge with tool execution
+- `scripts/ops/integrations/model/symphony-adaptive-context.mjs` — dynamic per-provider token ceilings and rate management
+- `scripts/ops/integrations/model/symphony-bridge-truncation.mjs` — static token limits and message truncation
 - `scripts/ops/integrations/model/ollama-local-audit.mjs`
 - `scripts/ops/integrations/model/codebuff-sdk-runner.mjs` (DEPRECATED, exports shared constants only)
 - `scripts/ops/linear-all.mjs` — Fetches all backlog issues from Linear

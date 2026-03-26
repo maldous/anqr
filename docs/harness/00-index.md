@@ -9,13 +9,14 @@ This section is the canonical harness doctrine for ANQR 1.0 foundation work.
 3. [03-workspace-governance.md](/home/user/src/anqr/docs/harness/03-workspace-governance.md)
 4. [04-provider-routing.md](/home/user/src/anqr/docs/harness/04-provider-routing.md)
 5. [05-quality-gates.md](/home/user/src/anqr/docs/harness/05-quality-gates.md)
-6. [06-evidence-and-reporting.md](/home/user/src/anqr/docs/harness/06-evidence-and-reporting.md)
-7. [07-secrets-redaction-and-operator-access.md](/home/user/src/anqr/docs/harness/07-secrets-redaction-and-operator-access.md)
-8. [08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
-9. [09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
-10. [10-audit-reference.md](/home/user/src/anqr/docs/harness/10-audit-reference.md)
-11. [11-adaptive-context.md](/home/user/src/anqr/docs/harness/11-adaptive-context.md)
-12. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
+6. [05-runtime-contract.md](/home/user/src/anqr/docs/harness/05-runtime-contract.md)
+7. [06-evidence-and-reporting.md](/home/user/src/anqr/docs/harness/06-evidence-and-reporting.md)
+8. [07-secrets-redaction-and-operator-access.md](/home/user/src/anqr/docs/harness/07-secrets-redaction-and-operator-access.md)
+9. [08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
+10. [09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
+11. [10-audit-reference.md](/home/user/src/anqr/docs/harness/10-audit-reference.md)
+12. [11-adaptive-context.md](/home/user/src/anqr/docs/harness/11-adaptive-context.md)
+13. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
 
 ## Scope
 

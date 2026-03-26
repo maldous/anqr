@@ -262,7 +262,7 @@ Tool execution is handled automatically by AI SDK via `maxSteps` (default: 10 it
 
 **Dynamic Tool-Capability Probing**:
 
-At startup, the bridge probes each available provider with a minimal `generateText` call using `toolChoice: "auto"` and a simple `add(2, 2)` tool to determine whether it supports structured tool calling. Providers that emit raw JSON tool output instead of structured `toolCalls` are excluded from selection. A delayed retry (60s) re-probes rate-limited or errored providers. OpenRouter models share probe results (one probe covers all 27 models).
+At startup, the bridge probes each available provider with a minimal `generateText` call using `toolChoice: "auto"` and a simple `add(2, 2)` tool to determine whether it supports structured tool calling. Providers in `KNOWN_TOOL_CAPABLE` (`codex`, `codebuff`) skip probing entirely and return `known-capable` immediately. Providers that emit raw JSON tool output instead of structured `toolCalls` are excluded from selection. A delayed retry (60s) re-probes rate-limited or errored providers. OpenRouter models share probe results (one probe covers all 27 models).
 
 The `GET /health` endpoint exposes `toolProbe` with:
 
@@ -537,10 +537,12 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 **In-memory state** (not persisted, rebuilt at startup):
 
-| State                     | Location                 | Purpose                                                |
-| ------------------------- | ------------------------ | ------------------------------------------------------ |
-| `toolCapableProviders`    | Symphony Bridge (memory) | Set of providers confirmed to support structured tools |
-| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests   |
+| State                     | Location                 | Purpose                                                                |
+| ------------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| `toolCapableProviders`    | Symphony Bridge (memory) | Set of providers confirmed to support structured tools                 |
+| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests                   |
+| Adaptive context state    | Symphony Bridge (memory) | Per-provider dynamic token ceilings, rate-limit throttles, TPM/RPM windows |
+| Session provider map      | Symphony Bridge (memory) | Sticky session → provider assignments (cleared on failure)             |
 
 ---
 
@@ -580,4 +582,4 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 ---
 
-_Last updated: 2026-03-24_
+_Last updated: 2026-03-27_

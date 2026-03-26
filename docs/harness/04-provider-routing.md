@@ -68,8 +68,8 @@ The Symphony Bridge dynamically discovers which providers support structured too
 
 ##### How it works
 
-1. **Known-capable shortcut**: `codex` and `codebuff` are pre-classified as tool-capable (skip probing).
-2. **Live probe**: For each available provider, the bridge sends a minimal `generateText` call with `toolChoice: "auto"` and a simple `add(2, 2)` tool. If the response contains a structured `toolCalls` array, the provider is classified as **capable**. If the response contains raw JSON tool output (e.g. `{"name":"add","arguments":{...}}`) in the text, the provider is classified as **non-capable** and excluded from future selection.
+1. **Known-capable shortcut**: Providers in the `KNOWN_TOOL_CAPABLE` set (`codex`, `codebuff`) return `known-capable` immediately without running a probe. Codebuff routes through its own bridge (port 4318) and uses internal tools (`spawn_agent_inline`, `set_messages`, `end_turn`) rather than OpenAI-style function calling — probing it would waste ~15s on the paid→free fallback and always return INCONCLUSIVE. SDK-based providers (e.g., `codex`) also skip probing and return `sdk-capable`.
+2. **Live probe**: For each remaining available provider, the bridge sends a minimal `generateText` call with `toolChoice: "auto"` and a simple `add(2, 2)` tool. If the response contains a structured `toolCalls` array, the provider is classified as **capable**. If the response contains raw JSON tool output (e.g. `{"name":"add","arguments":{...}}`) in the text, the provider is classified as **non-capable** and excluded from future selection.
 3. **OpenRouter deduplication**: All OpenRouter models share the same API and tool protocol. Once any single OpenRouter provider is probed, the result is inferred for all 27 others — saving 26 API calls.
 4. **Inconclusive results**: Rate-limited (`429`), timed-out, or errored providers are left unclassified and remain in the pool. The runtime safety net (below) catches any that slip through.
 
@@ -148,7 +148,7 @@ The credit-gate (`symphony-credit-gate.mjs`) owns the shared provider inventory.
 - **codebuff** (`paid`): Routes through codebuff-bridge (port 4318) which handles paid → free mode fallback internally; paid availability re-validated every 5 hours by the bridge
 - **openclaw** (`local-proxy`): Local OpenClaw gateway, probed for port reachability; blocked from Symphony Bridge to prevent routing loop (bridge → openclaw → bridge)
 - **openrouter-free** (`free-cloud`, positions 8-35): 27 free tier models ranked by quality score
-- **github-models** (`free-cloud`): GitHub Models API with gpt-4.1-mini
+- **github-models** (`free-cloud`): GitHub Models API with gpt-4.1-mini; actual model limit is 8K tokens (static `PROVIDER_MAX_INPUT_TOKENS` corrected from 100K to 8,000)
 - **ollama-\*** (`local-safety-net`): Local fallback models, score-capped at 0.25 — only activate when all cloud providers are unavailable
 
 ## Codebuff bridge
@@ -309,6 +309,8 @@ The Symphony Bridge includes a fully dynamic adaptive context system (`symphony-
 - **TPM/RPM tracking**: Maintains 60-second sliding windows of token and request counts per provider
 - **Proactive TPM reduction**: Before sending a request, checks if the provider is approaching 85% of its known TPM limit and halves the context budget proactively
 - **Error classification**: Classifies every error into one of 6 types (context, rate-limit, auth, timeout, server, unknown), enabling type-specific feedback loops
+- **Stream error interception**: Fatal stream errors (413/context, 429/rate-limit) arriving as `part.type === "error"` events are classified in-flight, stored as `fatalStreamError`, and thrown after the stream completes — routing them through the catch block for adaptive recording and provider fallback
+- **Sticky session clearing**: When a provider fails in either streaming or non-streaming mode, the sticky session is cleared immediately so concurrent requests don't keep trying the broken provider
 
 ### Relationship to failure cooldown
 
@@ -322,7 +324,7 @@ The adaptive context system runs **in parallel** with the credit-gate's failure 
 
 ### Integration
 
-The adaptive system integrates into the bridge at 6 points: pre-request truncation override, provider selection filtering, success recording, error classification and recording, and the `/v1/stats` observability endpoint.
+The adaptive system integrates into the bridge at 8 points: pre-request truncation override, provider selection filtering, success recording (both streaming and non-streaming), error classification and recording (both catch blocks), stream error interception (`fatalStreamError`), sticky session clearing on failure, and the `/v1/stats` observability endpoint.
 
 See [11-adaptive-context.md](./11-adaptive-context.md) for full technical documentation including all exported functions, constants, data structures, and integration details.
 
@@ -617,4 +619,4 @@ Provider routing currently depends on:
 
 Use [README.md](/home/user/src/anqr/README.md) and [MCP-MIGRATION.md](/home/user/src/anqr/MCP-MIGRATION.md) for the broader launch and migration backlog around external AI services.
 
-_Last updated: 2026-03-26_
+_Last updated: 2026-03-27_

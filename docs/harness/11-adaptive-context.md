@@ -10,7 +10,7 @@ Static context limits waste capacity and cause repeated failures. The adaptive c
 
 **Source**: `scripts/ops/integrations/model/symphony-adaptive-context.mjs`
 
-**Tests**: `scripts/ops/integrations/model/symphony-adaptive-context.spec.ts` (72 tests)
+**Tests**: `scripts/ops/integrations/model/symphony-adaptive-context.spec.ts` (75 tests)
 
 **Run tests**:
 
@@ -160,7 +160,7 @@ All errors are classified into one of six types:
 
 | Error Type          | Detection                                                                                                                                 | Triggers                 |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `context_too_large` | HTTP 413, "request too large", "context_length_exceeded", "maximum context length", "too many tokens", "token limit", "input is too long" | Context shrink loop      |
+| `context_too_large` | HTTP 413, "request too large", "body too large", "context_length_exceeded", "maximum context length", "too many tokens", "token limit", "max size", "input is too long" | Context shrink loop      |
 | `rate_limited`      | HTTP 429, "rate_limit", "too many requests", "quota exceeded", "throttled"                                                                | Rate-limit throttle loop |
 | `auth_error`        | HTTP 401/403, "unauthorized", "invalid api key", "authentication", "forbidden"                                                            | Error count tracking     |
 | `timeout`           | HTTP 408, "timeout", "timed out", "etimedout", "econnaborted"                                                                             | Error count tracking     |
@@ -230,7 +230,7 @@ The classifier traverses the AI SDK error cause chain to find nested status code
 
 ## Bridge Integration Points
 
-The adaptive context system integrates into the Symphony Bridge (`symphony-openai-bridge.mjs`) at 6 locations:
+The adaptive context system integrates into the Symphony Bridge (`symphony-openai-bridge.mjs`) at 8 integration points:
 
 ### 1. Import (line ~85-107)
 
@@ -279,7 +279,9 @@ const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, {
 });
 ```
 
-### 4. Success path — record success + token usage (invokeWithFallbackStream)
+### 4. Success path — record success + token usage (both streaming and non-streaming)
+
+Both `invokeWithFallbackStream` and `invokeWithFallback` record success and token usage:
 
 ```js
 recordContextSuccess(provider.name);
@@ -289,7 +291,9 @@ recordTokenUsage(provider.name, {
 });
 ```
 
-### 5. Error path — classify, record, and trigger appropriate feedback (catch block)
+### 5. Error path — classify, record, and trigger appropriate feedback (both catch blocks)
+
+Both streaming and non-streaming catch blocks perform identical adaptive context classification:
 
 ```js
 const errorType = classifyError(err);
@@ -303,7 +307,34 @@ if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
 }
 ```
 
-### 6. Observability — /v1/stats endpoint
+### 6. Stream error interception — fatalStreamError (invokeWithFallbackStream only)
+
+Stream errors arriving as `part.type === "error"` events are classified in-flight. If the error is `CONTEXT_TOO_LARGE` or `RATE_LIMITED`, it is stored as `fatalStreamError` and thrown **after** the stream loop completes. This routes the error through the existing catch block (point 5) so the adaptive system records it and provider fallback activates:
+
+```js
+if (part.type === "error") {
+  const errorType = classifyError(part.error);
+  if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE || errorType === ERROR_TYPES.RATE_LIMITED) {
+    fatalStreamError = part.error;
+  }
+}
+// ... after stream loop:
+if (fatalStreamError) throw fatalStreamError;
+```
+
+Without this interception, stream errors would bypass the adaptive system entirely — the stream "completes" with a finishReason, the success path records `recordContextSuccess()`, and the provider never learns its limit was exceeded.
+
+### 7. Sticky session clearing on failure (both catch blocks)
+
+When a provider fails, `clearSessionProvider(sessionId)` is called immediately in the catch block so concurrent requests on the same session don't keep trying the broken provider:
+
+```js
+clearSessionProvider(sessionId);
+```
+
+Previously the sticky was only cleared on the next `buildSelectionOptions` call when the failed provider appeared in the exclude set.
+
+### 8. Observability — /v1/stats endpoint
 
 ```js
 const adaptiveContext = getAdaptiveStats();
@@ -391,6 +422,16 @@ This model's maximum context length is 8192 tokens. You requested 10000 tokens.
 
 Extracts: `reportedLimit=8192`, `requestedTokens=10000`, `isTpmRelated=false`
 
+### GitHub Models format
+
+```
+Request body too large for gpt-4.1-mini model. Max size: 8000 tokens.
+```
+
+Extracts: `reportedLimit=8000`, `requestedTokens=null`, `isTpmRelated=false`
+
+The `"body too large"` substring matches `isContextError()`, and the `maxSizeMatch` regex `/max size[:\s]+(\d+)/i` extracts the `reportedLimit`. Without `requestedTokens`, the system falls back to `CONTEXT_SHRINK_BUFFER` ratio shrink.
+
 ### Rate-limit headers
 
 | Header                           | Parsed As                                           |
@@ -426,4 +467,4 @@ Headers are read from both `Map` objects (standard `Headers`) and plain objects 
 
 5. **Conservative expansion**: 5% expansion per cycle with a 3-success threshold means it takes ~15-20 successful requests to recover from a single shrink. This prevents oscillation.
 
-_Last updated: 2026-03-26_
+_Last updated: 2026-03-27_
