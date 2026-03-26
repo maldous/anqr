@@ -846,6 +846,15 @@ function calculateProviderScore(providerName, stats) {
 
 /**
  * Get providers sorted by dynamic score (best first)
+ * 
+ * Returns all providers that have been selected at least once OR are available
+ * in probe results. Providers with insufficient data (< 3 selections) are marked
+ * with score: "pending" and sorted to the end of their tier group.
+ * 
+ * @param {object} options - { excludeNames, includeAvailable }
+ * @param {Array|Set} options.excludeNames - Provider names to exclude
+ * @param {boolean} options.includeAvailable - Include available providers from probe (default: true)
+ * @returns {Array} Ranked providers with { name, score, tier, rank }
  */
 export function getRankedProviders(options = {}) {
   const excludeSet =
@@ -854,40 +863,91 @@ export function getRankedProviders(options = {}) {
       : Array.isArray(options.excludeNames)
         ? new Set(options.excludeNames)
         : null;
+  const includeAvailable = options.includeAvailable !== false;
   const stats = loadStats();
   const ranked = [];
   const safetyNets = [];
+  const pending = [];
+  const pendingSafetyNets = [];
+  const seenProviders = new Set();
 
+  // First pass: include providers with stats and scores
   for (const name of Object.keys(stats.selections)) {
     if (excludeSet && excludeSet.has(name)) continue;
+    seenProviders.add(name);
     const score = stats.score[name];
+    const provider = PROVIDERS.find((p) => p.name === name);
+    const tier = provider ? getProviderTier(provider) : TIER_FREE_CLOUD;
+    const selections = stats.selections[name] || 0;
+
     if (score !== null && score !== undefined) {
-      const provider = PROVIDERS.find((p) => p.name === name);
-      const tier = provider ? getProviderTier(provider) : TIER_FREE_CLOUD;
-      const entry = { name, score, tier };
+      // Has enough data for ranking
+      const entry = { name, score, tier, selections };
       if (tier === TIER_LOCAL_SAFETY_NET) {
         safetyNets.push(entry);
       } else {
         ranked.push(entry);
       }
+    } else {
+      // Not enough data yet (< 3 selections)
+      const entry = { name, score: "pending", tier, selections };
+      if (tier === TIER_LOCAL_SAFETY_NET) {
+        pendingSafetyNets.push(entry);
+      } else {
+        pending.push(entry);
+      }
     }
   }
 
-  // Sort each group by score descending
+  // Second pass: include available providers from probe that haven't been used yet
+  if (includeAvailable) {
+    for (const provider of PROVIDERS) {
+      if (excludeSet && excludeSet.has(provider.name)) continue;
+      if (seenProviders.has(provider.name)) continue;
+      
+      const tier = getProviderTier(provider);
+      const entry = { name: provider.name, score: "pending", tier, selections: 0 };
+      if (tier === TIER_LOCAL_SAFETY_NET) {
+        pendingSafetyNets.push(entry);
+      } else {
+        pending.push(entry);
+      }
+    }
+  }
+
+  // Sort each group by score descending (or by name for pending)
   ranked.sort((a, b) => b.score - a.score);
   safetyNets.sort((a, b) => b.score - a.score);
+  pending.sort((a, b) => (b.selections || 0) - (a.selections || 0) || a.name.localeCompare(b.name));
+  pendingSafetyNets.sort((a, b) => (b.selections || 0) - (a.selections || 0) || a.name.localeCompare(b.name));
 
-  // Safety nets always come after all other providers regardless of score
-  const combined = [...ranked, ...safetyNets];
+  // Combine: ranked first, then pending, then safety nets (ranked + pending)
+  const combined = [
+    ...ranked,
+    ...pending,
+    ...safetyNets,
+    ...pendingSafetyNets,
+  ];
 
   // Add rank position
   return combined.map((item, index) => ({ ...item, rank: index + 1 }));
 }
 
-export function getProviderStats() {
+export function getProviderStats(options = {}) {
+  const includeAllProviders = options.includeAllProviders !== false;
   const stats = loadStats();
   const result = {};
-  for (const name of Object.keys(stats.selections)) {
+  
+  // Build list of providers to include
+  const providerNames = new Set(Object.keys(stats.selections));
+  if (includeAllProviders) {
+    // Include all providers from PROVIDERS list, even if never selected
+    for (const provider of PROVIDERS) {
+      providerNames.add(provider.name);
+    }
+  }
+  
+  for (const name of providerNames) {
     const selected = stats.selections[name] || 0;
     const success = stats.successes[name] || 0;
     const fail = stats.failures[name] || 0;
