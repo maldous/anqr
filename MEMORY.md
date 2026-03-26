@@ -570,3 +570,15 @@ This prevents work duplication and ensures continuity across restarts.
 ### 2026-03-26 - Symphony Bridge restarted successfully (PID 2215100, commit dd01b7f64, 38/38 providers available, Discord monitoring active)
 
 ### 2026-03-26 - Changed scripts logging default level from ERROR to DEBUG (commit pending)
+
+### 2026-03-26 - Symphony Bridge stopped (PID 2215100, commit 70bae07c3, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-26 - Codebuff Bridge stopped (PID 2215118, commit 70bae07c3, mode: free, signal: SIGTERM)
+
+### 2026-03-26 - Symphony Bridge restarted successfully (PID 2220148, commit 70bae07c3, 38/38 providers available, Discord monitoring active)
+
+---
+
+## CURRENT SESSION (Post-Restart)
+
+All messages above this line are from before the bridge restart. Only errors/warnings below this line are relevant to the current session.

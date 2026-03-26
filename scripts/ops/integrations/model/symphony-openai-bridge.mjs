@@ -909,6 +909,7 @@ let probeIntervalHandle = null;
 // Provider exploration — re-discover providers whose rate-limit windows may have reset (5h matches Codex/Codebuff session limits)
 const EXPLORATION_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5h — matches Codex/Codebuff session limit windows
 const EXPLORATION_MIN_PROBES = 3;
+const STARTUP_EXPLORATION_PROVIDERS = 5; // Number of providers to explore at startup
 let lastExplorationTime = Date.now();
 let explorationProbesThisPeriod = 0;
 let lastSelectedProvider = null;
@@ -917,6 +918,102 @@ let lastSelectedProvider = null;
 const activeRequests = new Map(); // requestId -> { startTime, issueId, model, stream, filesChanged }
 let requestIdCounter = 0;
 let processingStatusTimer = null;
+
+// ---------------------------------------------------------------------------
+// Startup exploration — discover underused providers in parallel
+// ---------------------------------------------------------------------------
+
+/**
+ * Run parallel exploration cycle during startup to discover underused providers.
+ * This runs alongside the main provider probe to warm up provider selection.
+ */
+async function runStartupExploration() {
+  logInfo(`🔍 Starting parallel exploration cycle...`);
+  
+  try {
+    // Wait for initial provider configuration to complete
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    
+    const stats = getProviderStats();
+    const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
+    
+    // Select providers that are available but underused
+    const underused = ranked
+      .filter((p) => {
+        const providerStats = stats[p.name];
+        return !providerStats || providerStats.selections < 3;
+      })
+      .slice(0, STARTUP_EXPLORATION_PROVIDERS);
+    
+    if (underused.length === 0) {
+      logInfo(`🔍 No underused providers found for exploration`);
+      return;
+    }
+    
+    logInfo(`🔍 Exploring ${underused.length} underused providers: ${underused.map((p) => p.name).join(", ")}`);
+    
+    // Clear old failures for these providers to allow discovery
+    for (const p of underused) {
+      clearProviderFailure(p.name);
+    }
+    
+    // Run lightweight test calls in parallel
+    const explorationResults = await Promise.allSettled(
+      underused.map(async (p) => {
+        try {
+          const provider = await selectProvider({ allowedNames: [p.name] });
+          if (!provider) {
+            return { name: p.name, status: "unavailable" };
+          }
+          
+          const startTime = Date.now();
+          
+          // Simple echo test - minimal token usage
+          const testMessages = [
+            { role: "user", content: "Reply with just 'OK'" },
+          ];
+          
+          const result = await invokeWithAI(provider, testMessages, { stream: false });
+          const duration = Date.now() - startTime;
+          
+          if (result.text && result.text.trim().length > 0) {
+            recordProviderSuccess(p.name);
+            recordSuccessfulMetrics(p.name, startTime, result.usage);
+            logInfo(`🔍 ✅ ${p.name}: explored successfully (${duration}ms)`);
+            return { name: p.name, status: "success", duration };
+          }
+          
+          return { name: p.name, status: "no_output" };
+        } catch (err) {
+          const errStr = String(err).slice(0, 200);
+          if (isRetryableErrorDeep(err)) {
+            recordProviderFailure(p.name);
+          }
+          logDebug(`🔍 ❌ ${p.name}: ${errStr}`);
+          return { name: p.name, status: "error", error: errStr };
+        }
+      }),
+    );
+    
+    // Log results
+    const successful = explorationResults.filter(
+      (r) => r.status === "fulfilled" && r.value.status === "success",
+    );
+    const failed = explorationResults.filter(
+      (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.status !== "success"),
+    );
+    
+    logInfo(
+      `🔍 Exploration complete: ${successful.length} succeeded, ${failed.length} failed`,
+    );
+    
+    // Update exploration counters
+    explorationProbesThisPeriod = successful.length;
+    lastExplorationTime = Date.now();
+  } catch (err) {
+    logError(`🔍 Startup exploration failed: ${err.message}`);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Provider status cache — populated by startup probe, refreshed periodically
@@ -2661,10 +2758,7 @@ const server = http.createServer(async (req, res) => {
         (r) => r.startTime !== startTime, // Exclude current request
       );
 
-      const fields = [
-        { name: "Model", value: route.responseModelId, inline: true },
-        { name: "Stream", value: stream ? "yes" : "no", inline: true },
-      ];
+      const fields = [];
 
       if (concurrentCount > 0) {
         // Build detailed concurrent request summary with actual request text
@@ -3235,7 +3329,11 @@ server.listen(PORT, "127.0.0.1", async () => {
   }
 
   // Async startup probe — test all providers for live availability
-  refreshProviderStatus()
+  // Run in parallel with exploration cycle
+  Promise.all([
+    refreshProviderStatus(),
+    runStartupExploration(),
+  ])
     .then(async () => {
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
