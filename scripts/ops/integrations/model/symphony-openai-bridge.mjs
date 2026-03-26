@@ -2286,18 +2286,6 @@ const server = http.createServer(async (req, res) => {
       );
       logMemory("request-start");
 
-      const startTime = Date.now();
-      const requestId = `req-${++requestIdCounter}`;
-      
-      // Track this request
-      activeRequests.set(requestId, {
-        startTime,
-        issueId: issueContext?.identifier || null,
-        requestText: contentStr.slice(0, 200),
-        model: route.responseModelId,
-        stream,
-      });
-
       // Send Discord notification that we're starting to process (for ALL requests)
       const lastUserMessage = messages[messages.length - 1];
       const rawContent = lastUserMessage?.content;
@@ -2315,6 +2303,18 @@ const server = http.createServer(async (req, res) => {
       } else if (rawContent && typeof rawContent === "object") {
         contentStr = JSON.stringify(rawContent);
       }
+
+      const startTime = Date.now();
+      const requestId = `req-${++requestIdCounter}`;
+      
+      // Track this request
+      activeRequests.set(requestId, {
+        startTime,
+        issueId: issueContext?.identifier || null,
+        requestText: contentStr.slice(0, 200),
+        model: route.responseModelId,
+        stream,
+      });
       
       // Fire-and-forget Discord notification (non-blocking)
       const concurrentCount = activeRequests.size - 1; // Exclude current request
