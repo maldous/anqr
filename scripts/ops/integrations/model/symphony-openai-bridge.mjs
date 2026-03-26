@@ -1358,19 +1358,20 @@ async function probeToolCapabilityForProvider(providerDef) {
   }
 
   // OpenRouter: all models share the same API key and tool protocol support.
-  // If any openrouter provider was already probed, reuse its result.
-  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
-    for (const orName of OPENROUTER_PROVIDER_NAME_SET) {
-      if (toolCapableProviders.has(orName)) {
-        toolCapableProviders.add(name);
-        return { name, status: "inferred-capable" };
-      }
-      if (nonToolCapableProviders.has(orName)) {
-        nonToolCapableProviders.add(name);
-        return { name, status: "inferred-non-capable" };
-      }
-    }
-  }
+  // Skip inference to collect real metrics from each provider's "2+2" query.
+  // This trades API quota for actual performance data.
+  // if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
+  //   for (const orName of OPENROUTER_PROVIDER_NAME_SET) {
+  //     if (toolCapableProviders.has(orName)) {
+  //       toolCapableProviders.add(name);
+  //       return { name, status: "inferred-capable" };
+  //     }
+  //     if (nonToolCapableProviders.has(orName)) {
+  //       nonToolCapableProviders.add(name);
+  //       return { name, status: "inferred-non-capable" };
+  //     }
+  //   }
+  // }
 
   // Resolve API key (mirrors credit-gate's resolveProviderApiKey)
   let apiKey = providerDef.envVar ? process.env[providerDef.envVar] : null;
