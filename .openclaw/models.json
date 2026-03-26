@@ -61,17 +61,6 @@
         }
       ]
     },
-    "symphony": {
-      "baseUrl": "http://127.0.0.1:4319/v1",
-      "apiKey": "local-symphony",
-      "api": "openai-completions",
-      "models": [
-        {
-          "id": "symphony/main",
-          "name": "Symphony Main (direct)"
-        }
-      ]
-    },
     "ollama": {
       "baseUrl": "http://localhost:11434/v1",
       "apiKey": "ollama",
@@ -84,6 +73,10 @@
         {
           "id": "qwen2.5-coder:3b-instruct",
           "name": "Qwen2.5 Coder 3B Instruct"
+        },
+        {
+          "id": "qwen3-coder-next:latest",
+          "name": "Qwen3 Coder Next"
         }
       ]
     },
@@ -120,6 +113,36 @@
           "ollama/qwen2.5-coder:3b-instruct",
           "ollama/qwen3-coder-next:latest",
           "codebuff-bridge/codebuff/base"
+        ]
+      },
+      "tools": {
+        "alsoAllow": [
+          "browser",
+          "canvas",
+          "message",
+          "gateway",
+          "nodes",
+          "agents_list",
+          "tts",
+          "read",
+          "write",
+          "edit",
+          "apply_patch",
+          "exec",
+          "process",
+          "web_search",
+          "web_fetch",
+          "memory_search",
+          "memory_get",
+          "sessions_spawn",
+          "sessions_yield",
+          "subagents",
+          "cron",
+          "image",
+          "spawn_agents",
+          "spawn_agent_inline",
+          "think_deeply",
+          "thinker"
         ]
       }
     }

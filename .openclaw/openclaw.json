@@ -334,6 +334,36 @@
           "codebuff-bridge/codebuff/base"
         ]
       },
+      "tools": {
+        "alsoAllow": [
+          "browser",
+          "canvas",
+          "message",
+          "gateway",
+          "nodes",
+          "agents_list",
+          "tts",
+          "read",
+          "write",
+          "edit",
+          "apply_patch",
+          "exec",
+          "process",
+          "web_search",
+          "web_fetch",
+          "memory_search",
+          "memory_get",
+          "sessions_spawn",
+          "sessions_yield",
+          "subagents",
+          "cron",
+          "image",
+          "spawn_agents",
+          "spawn_agent_inline",
+          "think_deeply",
+          "thinker"
+        ]
+      },
       "models": {
         "codebuff-bridge/codebuff/base": {},
         "symphony-bridge/symphony/main": {},
@@ -383,7 +413,11 @@
             "sessions_yield",
             "subagents",
             "cron",
-            "image"
+            "image",
+            "spawn_agents",
+            "spawn_agent_inline",
+            "think_deeply",
+            "thinker"
           ]
         }
       }

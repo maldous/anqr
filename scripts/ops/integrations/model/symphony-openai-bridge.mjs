@@ -874,6 +874,11 @@ const ADVERTISED_MODELS = [
     ownedBy: "ollama-qwen2.5-coder-0.5b",
     allowedNames: ["ollama-qwen2.5-coder-0.5b"],
   },
+  {
+    id: "symphony/ollama-qwen3-coder-next",
+    ownedBy: "ollama-local",
+    allowedNames: ["ollama-local"],
+  },
 ];
 
 // Accept multiple valid tokens - configured via env var or default
@@ -1356,7 +1361,7 @@ async function probeToolCapabilityForProvider(providerDef) {
     }
 
     // Log the actual error for debugging
-    logDebug(`🔧 ${name} probe error: ${errStr.slice(0, 150)}`);
+    logDebug(`🔧 ${name} probe error`, { name, error: errStr.slice(0, 150) });
     return { name, status: "probe-error" };
   }
 }
@@ -2002,7 +2007,7 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
     // Forward OpenClaw session ID to Codebuff bridge for tool proxying
     if (sessionId) {
       headers["X-OpenClaw-Session"] = sessionId;
-      logDebug(`🔗 Forwarding session ID to Codebuff bridge (${sessionId.slice(0, 12)}...)`);
+      logDebug(`🔗 Forwarding session ID to Codebuff bridge`, { sessionId: sessionId.slice(0, 12) + '...' });
     }
 
     const options = {
