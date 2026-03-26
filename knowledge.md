@@ -55,7 +55,7 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 
 - **Symphony Bridge** (port 4319): OpenAI-compatible HTTP gateway using AI SDK with tool execution for provider communication. Primary route for harness and OpenClaw integration. Uses transparent SSE relay for Codebuff to preserve real-time streaming without AI SDK buffering. Discord notifications include concurrent request tracking (shows how many other requests are being processed simultaneously).
 - **Codebuff Bridge** (port 4318): OpenAI-compatible HTTP gateway for Codebuff SDK with paid → free mode fallback. Streams user-facing tool activity (📖, ✏️, 💻, ✅) while filtering internal SDK activity server-side.
-- **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 42 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests. **Note**: Cerebras is neither a paid nor preferred service provider.
+- **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 38 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests. **Note**: Cerebras is neither a paid nor preferred service provider.
 - **Adaptive Context**: Per-provider dynamic context and rate management (`symphony-adaptive-context.mjs`). Shrinks token ceilings on 413/context errors (25% flat or precise ratio from error details), expands 5% after 3 consecutive successes, applies rate-limit throttle timers from parsed `Retry-After`/`X-RateLimit-*` headers on 429 errors, tracks TPM/RPM via 60-second sliding windows, and proactively halves context when approaching 85% of known TPM limits. All state is in-memory (resets on bridge restart). Errors are classified into 6 types (context, rate-limit, auth, timeout, server, unknown) for type-specific feedback loops. Exposed via `/v1/stats` endpoint. See `docs/harness/11-adaptive-context.md` for full documentation.
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
 - **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
@@ -168,7 +168,7 @@ ANQR uses a hexagonal/layered testing approach aligned with strict contract boun
 - **Contract tests**: Schema validation for all boundary types in `packages/contracts/*`. Each contract package has colocated `*-contracts.spec.ts` tests.
 - **Unit tests**: Cover pure functions in `packages/domain` and `packages/application`. No network, storage, or real SDKs.
 - **Integration tests**: Validate boundaries with fakes for analytics, ads, telemetry, and storage. Harness integration tests cover provider routing, credit gate, and bridge contracts.
-- **E2E tests**: 90+ tests in `tests/e2e/openclaw-symphony.spec.ts` covering OpenClaw model configuration, Symphony/Codebuff bridge routing, provider cascade with 42 providers across 4 tiers, and TUI validation. Additional Playwright tests for web critical flows.
+- **E2E tests**: 90+ tests in `tests/e2e/openclaw-symphony.spec.ts` covering OpenClaw model configuration, Symphony/Codebuff bridge routing, provider cascade with 38 providers across 4 tiers, and TUI validation. Additional Playwright tests for web critical flows.
 - **Parity tests**: Compare local/browser/API paths against a shared scenario corpus to ensure consistency across platforms.
 - **Property‑based & fuzz tests**: Randomized payloads and option combinations to stress‑test decoding success and error handling.
 
@@ -299,7 +299,7 @@ See `docs/harness/05-quality-gates.md` for complete gate classification.
 
 ### Local Development
 
-- **Node**: 20.x (see `package.json` engines)
+- **Node**: 25.x (see `package.json` engines: `>=25.8.0 <26`)
 - **Package manager**: npm 10.x
 - **Setup**: `npm install` to install dependencies.
 - **Env file**: Copy `.env.example` to `.env` and fill required values (see below).

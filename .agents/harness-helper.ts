@@ -1,4 +1,4 @@
-import { AgentDefinition } from './types/agent-definition'
+import { AgentDefinition } from './types/agent-definition.types'
 
 const definition: AgentDefinition = {
   id: 'harness-helper',

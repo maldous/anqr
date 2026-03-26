@@ -427,7 +427,12 @@
     "pexpect",
     "sendcontrol",
     "PYSCRIPT",
-    "lcov"
+    "lcov",
+    "quantizations",
+    "spawnable",
+    "deepseek",
+    "moonshotai",
+    "kimi"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
