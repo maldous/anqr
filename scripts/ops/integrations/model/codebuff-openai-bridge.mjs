@@ -473,8 +473,8 @@ function isRecoverableError(errMsg) {
 // Format tool call display for rich event logging (matches old symphony-bridge invokeWithCodebuff)
 function formatToolCallDisplay(toolName, input) {
   if (toolName === "read_files" && input.paths) {
-    const paths = input.paths.map((p) => p.split("/").pop()).join(", ");
-    return `📖 Reading: ${paths}`;
+    // Suppress read_files output as it can be very long and noisy
+    return null;
   } else if (toolName === "str_replace") {
     return `✏️ Editing: ${input.path || "file"}`;
   } else if (toolName === "write_file") {

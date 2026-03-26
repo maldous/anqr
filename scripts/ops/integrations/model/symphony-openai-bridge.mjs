@@ -1493,6 +1493,17 @@ async function probeToolCapabilityForProvider(providerDef) {
       // Record successful probe in dedicated probe metrics (separate from runtime)
       recordProbeResult(name, { success: true, durationMs });
 
+      // ALSO record as runtime metrics to populate rankings immediately
+      // This ensures providers appear in rankings even before real requests
+      recordProviderSelection(name);
+      recordProviderSuccess(name);
+      recordProviderMetrics(name, {
+        durationMs,
+        inputTokens: result.usage?.promptTokens || 0,
+        outputTokens: result.usage?.completionTokens || 0,
+        validationPassed: true,
+      });
+
       logInfo(
         `✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`,
       );
