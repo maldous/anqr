@@ -302,11 +302,10 @@ async function sendProcessingStatusUpdate() {
     const filesChanged = req.filesChanged || 0;
     const issueLabel = req.issueId || reqId;
     const requestPreview = req.requestText ? req.requestText.slice(0, 100) : "(no description)";
-    const modelInfo = req.model ? ` | Model: ${req.model}` : "";
 
     fields.push({
       name: `${issueLabel} (${runtime})`,
-      value: `Files: ${filesChanged}${modelInfo} | ${requestPreview}`,
+      value: `Files: ${filesChanged} | ${requestPreview}`,
       inline: false,
     });
   }
@@ -983,6 +982,7 @@ async function runContinuousProviderProbe() {
     logInfo(
       `🔍 ACCESSIBILITY PROBE: Checking reachability for all providers (excluding ${excludeNames.length} blocked)...`,
     );
+    logInfo(`⏳ PROBE CYCLE STARTED: Beginning provider accessibility validation...`);
 
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
     providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
@@ -993,6 +993,7 @@ async function runContinuousProviderProbe() {
     logInfo(
       `✅ ACCESSIBILITY PROBE COMPLETE: ${reachable.length}/${total} providers reachable (API keys validated)`,
     );
+    logInfo(`✅ PROBE PHASE 1 COMPLETE: Accessibility validation finished`);
 
     // Log detailed accessibility results
     for (const probe of providerStatusCache.probeResults) {
@@ -1006,10 +1007,12 @@ async function runContinuousProviderProbe() {
     logInfo(
       `🔧 TOOL CAPABILITY PROBE: Testing ${reachable.length} reachable providers (parallel, no batching)...`,
     );
+    logInfo(`⏳ PROBE PHASE 2 STARTED: Beginning tool capability validation...`);
     await probeAllToolCapability();
     logInfo(
       `✅ TOOL CAPABILITY PROBE COMPLETE: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
     );
+    logInfo(`✅ PROBE PHASE 2 COMPLETE: Tool capability validation finished`);
 
     // Increment completion counter
     probeCompletionCount++;
@@ -1037,6 +1040,7 @@ async function runContinuousProviderProbe() {
     logInfo(
       `🔍 Probe cycle complete (${probeCompletionCount}/${PROBE_COMPLETIONS_BEFORE_RANKING} before next ranking)`,
     );
+    logInfo(`✅ PROBE CYCLE COMPLETE: All phases finished successfully`);
   } catch (err) {
     logError(`🔍 Continuous probe error: ${err.message}`);
   } finally {
@@ -1458,6 +1462,7 @@ async function probeToolCapabilityForProvider(providerDef) {
 
   const startTime = Date.now();
   logInfo(`🔧 TOOL PROBE START: ${name} - Testing structured tool calling with add(2, 2)`);
+  logInfo(`⏳ PROBING: ${name} - Sending test request to validate tool capability...`);
   try {
     const result = await Promise.race([
       generateText({
@@ -1491,6 +1496,7 @@ async function probeToolCapabilityForProvider(providerDef) {
       logInfo(
         `✅ TOOL PROBE PASS: ${name} - Structured tool calling validated (${durationMs}ms, answer: "${text.slice(0, 50)}")`,
       );
+      logInfo(`✅ DETERMINATION: ${name} marked as TOOL-CAPABLE (supports structured tool calling)`);
       return { name, status: "capable", durationMs, answer: text };
     }
 
@@ -1498,6 +1504,7 @@ async function probeToolCapabilityForProvider(providerDef) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - Emitted raw JSON instead of structured tool calls`);
+      logWarn(`❌ DETERMINATION: ${name} marked as NON-TOOL-CAPABLE (excluded from future selection)`);
       return { name, status: "non-capable-raw-json" };
     }
 
@@ -1526,6 +1533,7 @@ async function probeToolCapabilityForProvider(providerDef) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - API explicitly rejected tool support`);
+      logWarn(`❌ DETERMINATION: ${name} marked as NON-TOOL-CAPABLE (API rejected tools)`);
       return { name, status: "non-capable-rejected" };
     }
 
@@ -2991,10 +2999,7 @@ const server = http.createServer(async (req, res) => {
         (r) => r.startTime !== startTime, // Exclude current request
       );
 
-      const fields = [
-        { name: "Model", value: route.responseModelId, inline: true },
-        { name: "Stream", value: stream ? "Yes" : "No", inline: true },
-      ];
+      const fields = [];
 
       if (concurrentCount > 0) {
         // Build detailed concurrent request summary with actual request text
