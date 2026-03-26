@@ -1399,6 +1399,7 @@ async function probeToolCapabilityForProvider(providerDef) {
     }),
   };
 
+  const startTime = Date.now();
   try {
     const result = await Promise.race([
       generateText({
@@ -1414,13 +1415,21 @@ async function probeToolCapabilityForProvider(providerDef) {
       ),
     ]);
 
+    const durationMs = Date.now() - startTime;
     const hasStructuredToolCall = result.steps?.some((s) => s.toolCalls?.length > 0);
     const text = result.text || "";
     const hasRawToolJson = RAW_TOOL_JSON_RE.test(text);
 
     if (hasStructuredToolCall && !hasRawToolJson) {
       toolCapableProviders.add(name);
-      return { name, status: "capable" };
+      
+      // Record successful probe metrics for credit-gate scoring
+      recordProviderSelection(name);
+      recordProviderSuccess(name);
+      recordSuccessfulMetrics(name, startTime, result.usage, true);
+      
+      logDebug(`🔧 ${name}: tool probe successful (${durationMs}ms, answer: "${text.slice(0, 50)}")`);
+      return { name, status: "capable", durationMs, answer: text };
     }
 
     if (hasRawToolJson) {
@@ -1709,7 +1718,10 @@ async function invokeWithAI(provider, messages, options = {}) {
         logContext.finishReason = part.finishReason;
       }
       
-      logDebug(`[invokeWithAI] Stream part ${partCount}`, logContext);
+      // Suppress blank DEBUG lines (text-delta with length 0)
+      if (part.type !== "text-delta" || (part.textDelta && part.textDelta.length > 0)) {
+        logDebug(`[invokeWithAI] Stream part ${partCount}`, logContext);
+      }
       
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
