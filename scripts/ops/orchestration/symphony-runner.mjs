@@ -81,8 +81,6 @@ const LEASE_TTL_MS = Number(
 const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319/v1";
 const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_RUNNER_MODEL || "symphony/main";
 
-
-
 function getRunnerProvider() {
   return {
     name: "symphony-bridge",
@@ -267,7 +265,8 @@ async function maybeRunPreflights() {
   const cachedHead = getGlobalValue("baseline.head");
   const cachedHash = getGlobalValue("baseline.manifestHash");
   const cachedPass = getGlobalValue("baseline.pass");
-  if (cachedHead === head && cachedHash === manifestHash && cachedPass === true) {    logDebug("[runner] Baseline cache hit — skipping full pre-flights");
+  if (cachedHead === head && cachedHash === manifestHash && cachedPass === true) {
+    logDebug("[runner] Baseline cache hit — skipping full pre-flights");
     return { pass: true, cached: true };
   }
   const result = runGlobalPreflights(ROOT);
@@ -622,9 +621,9 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
-      logDebug(
-        `[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`,
-      );
+        logDebug(
+          `[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`,
+        );
         // Track active subgoals without messages as failure
         if (provider?.name) {
           recordLinearCompletion(metricsProviderName, {

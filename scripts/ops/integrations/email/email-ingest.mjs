@@ -32,8 +32,6 @@ const ALLOWED_SENDERS = ["matthew.aldous@gmail.com", "alexander.emmalyn.thomas@g
 const DRY_RUN = process.argv.includes("--dry-run");
 const NOTMUCH_QUERY = `(from:${INGEST_EMAIL} OR to:${INGEST_EMAIL}) AND tag:inbox AND NOT tag:anqr-processed AND NOT tag:anqr-rejected`;
 
-
-
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }

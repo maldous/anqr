@@ -60,7 +60,10 @@ import {
   runTests,
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
-import { streamDiscordUpdate, flushDiscordStream } from "../../integrations/notifications/discord-webhook.mjs";
+import {
+  streamDiscordUpdate,
+  flushDiscordStream,
+} from "../../integrations/notifications/discord-webhook.mjs";
 
 const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
@@ -195,8 +198,6 @@ const ALLOWED_COMMANDS = new Set([
 ]);
 
 const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom for large-context turns
-
-
 
 // ---------------------------------------------------------------------------
 // Tool implementations
@@ -457,9 +458,11 @@ async function callLLM(provider, messages, taskDescription) {
             if (content) {
               fullContent += content;
               logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
-              
+
               // Stream to Discord in real-time (non-blocking)
-              streamDiscordUpdate(content, { emoji: "" }).catch(() => {/* ignore */});
+              streamDiscordUpdate(content, { emoji: "" }).catch(() => {
+                /* ignore */
+              });
             }
           } catch {
             // Skip non-JSON chunks
@@ -470,9 +473,11 @@ async function callLLM(provider, messages, taskDescription) {
       if (fullContent) {
         process.stdout.write("\n"); // Final newline
       }
-      
+
       // Flush any remaining Discord stream buffer
-      await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
+      await flushDiscordStream({ emoji: "" }).catch(() => {
+        /* ignore */
+      });
 
       return {
         choices: [
@@ -556,9 +561,11 @@ async function callLLM(provider, messages, taskDescription) {
             if (deltaContent) {
               content += deltaContent;
               logDebug(`[agent] 🌊 ${deltaContent.slice(0, 200)}`);
-              
+
               // Stream to Discord in real-time (non-blocking)
-              streamDiscordUpdate(deltaContent, { emoji: "" }).catch(() => {/* ignore */});
+              streamDiscordUpdate(deltaContent, { emoji: "" }).catch(() => {
+                /* ignore */
+              });
             }
             const reason = parsed.choices?.[0]?.finish_reason;
             if (reason) {
@@ -573,9 +580,11 @@ async function callLLM(provider, messages, taskDescription) {
       if (content) {
         process.stdout.write("\n"); // Final newline
       }
-      
+
       // Flush any remaining Discord stream buffer
-      await flushDiscordStream({ emoji: "" }).catch(() => {/* ignore */});
+      await flushDiscordStream({ emoji: "" }).catch(() => {
+        /* ignore */
+      });
 
       // The bridge returns completion tokens but we need to detect if agent wants continuation
       // Check finish_reason - if "length", agent has more work to do
@@ -766,7 +775,8 @@ async function runToolLoop({
         messages,
         providerName: provider.name,
       };
-    }      logDebug(`[agent] Turn ${turn + 1}/${maxTurns}`);
+    }
+    logDebug(`[agent] Turn ${turn + 1}/${maxTurns}`);
 
     let response;
     try {

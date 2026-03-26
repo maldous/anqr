@@ -27,7 +27,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "../lib/logger.mjs";
 
-const { logInfo, logError } = createLogger();
+const { logInfo, logError, logDebug, logWarn } = createLogger();
 import {
   createIssue,
   updateIssue,
@@ -154,7 +154,7 @@ function logAction(type, detail) {
   const entry = { type, detail, ts: new Date().toISOString() };
   actions.push(entry);
   const icons = { create: "🆕", comment: "💬", hygiene: "🏷️", skip: "⏭️", stale: "⏰", info: "ℹ️" };
-  const logLevel = type === 'skip' ? logDebug : type === 'stale' ? logWarn : logInfo;
+  const logLevel = type === "skip" ? logDebug : type === "stale" ? logWarn : logInfo;
   logLevel(`${icons[type] || "•"} ${type}: ${detail}`);
 }
 

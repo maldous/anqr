@@ -1020,9 +1020,7 @@ export function logProviderStats(options = {}) {
       );
     }
   } else {
-    logInfo(
-      `  (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`,
-    );
+    logInfo(`  (not enough data for ranking - need ${MIN_SELECTIONS_FOR_RANKING}+ selections)`);
   }
 
   logInfo(`📈 Provider Details:`);
@@ -1181,9 +1179,7 @@ export async function probeAllProviders(options = {}) {
   const available = probeResults.filter((r) => r.available);
   const unavailable = probeResults.filter((r) => !r.available && r.status !== "excluded");
   logDebug(`Probed ${probeResults.length} providers in ${elapsed}ms`);
-  logDebug(
-    `  ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`,
-  );
+  logDebug(`  ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`);
   if (unavailable.length > 0) {
     logWarn(
       `  ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`,
@@ -1324,7 +1320,11 @@ export async function selectProvider(options = {}) {
     ) {
       logDebug(`[selectProvider] Skipping preferred provider`, {
         providerName,
-        reason: !provider ? 'not found' : (!matchesAllowedNames(provider, allowedNames) ? 'not allowed' : 'excluded'),
+        reason: !provider
+          ? "not found"
+          : !matchesAllowedNames(provider, allowedNames)
+            ? "not allowed"
+            : "excluded",
       });
       continue;
     }
@@ -1342,7 +1342,7 @@ export async function selectProvider(options = {}) {
   const ranked = getRankedProviders();
   logDebug(`[selectProvider] Dynamic ranking`, {
     rankedCount: ranked.length,
-    topProviders: ranked.slice(0, 5).map(r => ({ name: r.name, score: r.score, rank: r.rank })),
+    topProviders: ranked.slice(0, 5).map((r) => ({ name: r.name, score: r.score, rank: r.rank })),
   });
   if (ranked.length > 0) {
     for (const { name, score, rank } of ranked) {
@@ -1356,7 +1356,11 @@ export async function selectProvider(options = {}) {
           providerName: name,
           rank,
           score,
-          reason: !provider ? 'not found' : (!matchesAllowedNames(provider, allowedNames) ? 'not allowed' : 'excluded'),
+          reason: !provider
+            ? "not found"
+            : !matchesAllowedNames(provider, allowedNames)
+              ? "not allowed"
+              : "excluded",
         });
         continue;
       }
@@ -1382,7 +1386,7 @@ export async function selectProvider(options = {}) {
     ) {
       logDebug(`[selectProvider] Skipping fallback provider`, {
         providerName: provider.name,
-        reason: !matchesAllowedNames(provider, allowedNames) ? 'not allowed' : 'excluded',
+        reason: !matchesAllowedNames(provider, allowedNames) ? "not allowed" : "excluded",
       });
       continue;
     }

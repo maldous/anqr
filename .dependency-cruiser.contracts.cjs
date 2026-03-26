@@ -14,6 +14,13 @@ module.exports = {
         ],
       },
     },
+    {
+      comment:
+        "Allow analyze contracts to import from generator contracts for shared types (e.g., ecc-level). " +
+        "This is the only cross-contract dependency permitted.",
+      from: { path: "^packages/contracts/analyze/" },
+      to: { path: "^packages/contracts/generator/(index|src/index)\\." },
+    },
   ],
   forbidden: [
     {

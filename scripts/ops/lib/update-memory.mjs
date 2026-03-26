@@ -1,9 +1,9 @@
 /**
  * update-memory.mjs — Shared utility for updating MEMORY.md
- * 
+ *
  * Centralizes MEMORY.md updates to prevent duplication across:
  * - Symphony bridge
- * - Codebuff bridge  
+ * - Codebuff bridge
  * - Watchdog services
  * - Other operational scripts
  */
@@ -21,7 +21,7 @@ const { logInfo, logWarn } = createLogger();
  * @returns {Promise<void>}
  */
 export async function updateMemory(note, cwd = process.cwd()) {
-  const timestamp = new Date().toISOString().split('T')[0];
+  const timestamp = new Date().toISOString().split("T")[0];
   const entry = `\n### ${timestamp} - ${note}\n`;
   try {
     await appendFile(path.join(cwd, "MEMORY.md"), entry);

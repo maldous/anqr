@@ -39,18 +39,19 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 120 * 60 * 1000; // 120 min to match RUNNER_MAX_EXECUTION_MS from symphony-config
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
-
-
 // OpenClaw Gateway API configuration for tool proxying
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
 const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
-const OPENCLAW_GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || `http://${OPENCLAW_GATEWAY_HOST}:${OPENCLAW_GATEWAY_PORT}`;
+const OPENCLAW_GATEWAY_URL =
+  process.env.OPENCLAW_GATEWAY_URL || `http://${OPENCLAW_GATEWAY_HOST}:${OPENCLAW_GATEWAY_PORT}`;
 const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
 const OPENCLAW_TOOL_PROXY_ENABLED = process.env.OPENCLAW_TOOL_PROXY_ENABLED !== "false";
 
 // Validate config on startup
 if (OPENCLAW_TOOL_PROXY_ENABLED && !OPENCLAW_GATEWAY_TOKEN) {
-  logError("⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail");
+  logError(
+    "⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail",
+  );
 }
 
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
@@ -67,13 +68,7 @@ const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 
 // OpenClaw-specific tools that should be proxied to the Gateway API
 // Note: These are checked but not yet fully integrated - tool proxying is in progress
-const _OPENCLAW_PROXY_TOOLS = [
-  "message",
-  "memory_get",
-  "read",
-  "write",
-  "exec"
-];
+const _OPENCLAW_PROXY_TOOLS = ["message", "memory_get", "read", "write", "exec"];
 
 /**
  * Call OpenClaw Gateway API to execute a tool
@@ -84,11 +79,15 @@ const _OPENCLAW_PROXY_TOOLS = [
  */
 async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
   if (!OPENCLAW_TOOL_PROXY_ENABLED) {
-    throw new Error(`Tool ${toolName} requires OpenClaw Gateway API (OPENCLAW_TOOL_PROXY_ENABLED=false)`);
+    throw new Error(
+      `Tool ${toolName} requires OpenClaw Gateway API (OPENCLAW_TOOL_PROXY_ENABLED=false)`,
+    );
   }
 
   if (!sessionId) {
-    throw new Error(`Tool ${toolName} requires session context (X-OpenClaw-Session header missing)`);
+    throw new Error(
+      `Tool ${toolName} requires session context (X-OpenClaw-Session header missing)`,
+    );
   }
 
   if (!OPENCLAW_GATEWAY_TOKEN) {
@@ -114,13 +113,16 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(requestBody),
-        "Authorization": `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
+        Authorization: `Bearer ${OPENCLAW_GATEWAY_TOKEN}`,
         "X-OpenClaw-Session": sessionId,
       },
       timeout: 30000,
     };
 
-    logDebug(`🔗 Proxying ${toolName} to OpenClaw Gateway`, { toolName, sessionId: sessionId.slice(0, 12) + '...' });
+    logDebug(`🔗 Proxying ${toolName} to OpenClaw Gateway`, {
+      toolName,
+      sessionId: sessionId.slice(0, 12) + "...",
+    });
 
     const req = httpModule.request(options, (res) => {
       let data = "";
@@ -132,7 +134,8 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
             logDebug(`✅ ${toolName} proxied successfully`);
             resolve(parsed.output || parsed.result || parsed);
           } else {
-            const errorMsg = parsed.error?.message || parsed.error || data || `Gateway returned ${res.statusCode}`;
+            const errorMsg =
+              parsed.error?.message || parsed.error || data || `Gateway returned ${res.statusCode}`;
             logWarn(`❌ ${toolName} proxy failed: ${errorMsg}`);
             reject(new Error(`OpenClaw Gateway returned ${res.statusCode}: ${errorMsg}`));
           }
@@ -338,9 +341,7 @@ async function testApiKey(apiKey, index) {
     }
 
     // Free mode also failed - return error with clear message for symphony-bridge fallback
-    logWarn(
-      `Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`,
-    );
+    logWarn(`Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`);
     return { works: false, mode: null, error: "both_modes_exhausted" };
   }
 
@@ -367,9 +368,7 @@ async function testApiKey(apiKey, index) {
     return { works: true, mode: "free" };
   }
 
-  logWarn(
-    `Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`,
-  );
+  logWarn(`Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`);
   return { works: false, mode: null, error: "both_modes_exhausted" };
 }
 
@@ -470,8 +469,6 @@ function isRecoverableError(errMsg) {
     s.includes("codebuff sdk error")
   );
 }
-
-
 
 // Format tool call display for rich event logging (matches old symphony-bridge invokeWithCodebuff)
 function formatToolCallDisplay(toolName, input) {
@@ -648,7 +645,14 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 // Try a single account — includes rich event handling, subgoal tracking, and
 // auto-continuation loop with previousRun (memento mode), matching the old
 // symphony-bridge invokeWithCodebuff that was lost during extraction.
-async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = null, _proxyToolFn = null) {
+async function trySingleAccount(
+  attempt,
+  prompt,
+  makeTimeout,
+  cwd,
+  _sessionId = null,
+  _proxyToolFn = null,
+) {
   logDebug(`[trySingleAccount] Starting`, {
     label: attempt.label,
     isPaid: attempt.isPaid,
@@ -773,7 +777,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
     continuation++;
     logInfo(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
-      { continuation, maxContinuations: CODEBUFF_MAX_CONTINUATIONS, lastSubgoalStatus }
+      { continuation, maxContinuations: CODEBUFF_MAX_CONTINUATIONS, lastSubgoalStatus },
     );
     maybeGC();
 
@@ -805,10 +809,10 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   }
 
   if (continuation > 0) {
-    logInfo(
-      `Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
-      { totalRuns: continuation + 1, finalSubgoalStatus: lastSubgoalStatus }
-    );
+    logInfo(`Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`, {
+      totalRuns: continuation + 1,
+      finalSubgoalStatus: lastSubgoalStatus,
+    });
   }
 
   logInfo(`✅ Success on ${attempt.label}`, {
@@ -1115,9 +1119,7 @@ async function trySingleAccountStream(
   }
 
   if (continuation > 0) {
-    logDebug(
-      `Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
-    );
+    logDebug(`Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`);
   }
 
   logDebug(`✅ Success on ${attempt.label}`);
@@ -1146,7 +1148,15 @@ async function trySingleAccountStream(
 }
 
 // Use pre-warmed winner directly for streaming, with paid→free fallback on recoverable errors
-async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created, sessionId = null, proxyToolFn = null }) {
+async function invokeCodebuffStream({
+  messages,
+  cwd,
+  onChunk,
+  completionId,
+  created,
+  sessionId = null,
+  proxyToolFn = null,
+}) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
     logInfo(`⏰ Time-based re-validation triggered (streaming)`);
     await revalidateAndSelectWinner();
@@ -1234,7 +1244,7 @@ function unauthorized(res) {
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
-  // Extract OpenClaw session ID from request headers (passed by Symphony bridge)
+    // Extract OpenClaw session ID from request headers (passed by Symphony bridge)
     const _openclawSessionId = req.headers["x-openclaw-session"] || null;
     let data = "";
     req.on("data", (chunk) => {
@@ -1267,9 +1277,9 @@ const server = http.createServer(async (req, res) => {
   // Debug: log ALL requests before any processing
   logDebug(`===== REQUEST =====`);
   logDebug(`method: ${req.method}, url: ${req.url}`);
-  logDebug(`headers`, { authorization: req.headers.authorization?.slice(0, 20) + '...' });
+  logDebug(`headers`, { authorization: req.headers.authorization?.slice(0, 20) + "..." });
   if (req.headers["x-openclaw-session"]) {
-    logDebug(`session`, { sessionId: req.headers["x-openclaw-session"].slice(0, 12) + '...' });
+    logDebug(`session`, { sessionId: req.headers["x-openclaw-session"].slice(0, 12) + "..." });
   }
   logDebug(`===================`);
 
@@ -1304,15 +1314,13 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, getHealthStatus());
     }
 
-
-
     // POST /v1/chat/completions or /chat/completions (OpenClaw might use either)
     if (
       req.method === "POST" &&
       (req.url === "/v1/chat/completions" || req.url === "/chat/completions")
     ) {
       const body = await parseBody(req);
-      
+
       // Store session ID for tool proxy access
       req.openclawSessionId = openclawSessionId;
       const model = body.model || MODEL_ID;
@@ -1521,27 +1529,29 @@ const server = http.createServer(async (req, res) => {
           "Content-Type": "application/json",
           "X-Codebuff-Mode": STARTUP_WINNER?.isPaid ? "paid" : "free",
         });
-        return res.end(JSON.stringify({
-          id: `chatcmpl-${Date.now()}`,
-          object: "chat.completion",
-          created: Math.floor(Date.now() / 1000),
-          model,
-          choices: [
-            {
-              index: 0,
-              finish_reason: finishReason,
-              message: {
-                role: "assistant",
-                content: filteredContent ?? "",
+        return res.end(
+          JSON.stringify({
+            id: `chatcmpl-${Date.now()}`,
+            object: "chat.completion",
+            created: Math.floor(Date.now() / 1000),
+            model,
+            choices: [
+              {
+                index: 0,
+                finish_reason: finishReason,
+                message: {
+                  role: "assistant",
+                  content: filteredContent ?? "",
+                },
               },
+            ],
+            usage: {
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0,
             },
-          ],
-          usage: {
-            prompt_tokens: 0,
-            completion_tokens: 0,
-            total_tokens: 0,
-          },
-        }));
+          }),
+        );
       }
     } else {
       // 404 for other routes
@@ -1564,20 +1574,23 @@ import { updateMemory } from "../../lib/update-memory.mjs";
 // Graceful shutdown
 async function shutdown(signal) {
   logInfo(`\nReceived ${signal}, shutting down...`);
-  
+
   // Update MEMORY.md BEFORE shutdown
   try {
-    const { execSync } = await import('node:child_process');
-    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+    const { execSync } = await import("node:child_process");
+    const commitHash = execSync("git rev-parse --short HEAD", {
+      encoding: "utf-8",
+      cwd: process.cwd(),
+    }).trim();
     const mode = STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "unknown";
     await updateMemory(
-      `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`
+      `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`,
     );
     logInfo(`📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
     logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
-  
+
   server.close(() => {
     logInfo("Server closed");
   });
@@ -1585,8 +1598,12 @@ async function shutdown(signal) {
   process.exit(0);
 }
 
-process.on("SIGTERM", () => { shutdown("SIGTERM").catch(() => process.exit(1)); });
-process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); });
+process.on("SIGTERM", () => {
+  shutdown("SIGTERM").catch(() => process.exit(1));
+});
+process.on("SIGINT", () => {
+  shutdown("SIGINT").catch(() => process.exit(1));
+});
 
 // Initialize at startup - validate key and determine paid/free mode
 async function initializeBridge() {

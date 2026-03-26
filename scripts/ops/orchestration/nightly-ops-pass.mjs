@@ -16,8 +16,6 @@ const dryRun = process.argv.includes("--dry-run");
 const dryRunFlag = dryRun ? " --dry-run" : "";
 const steps = [];
 
-
-
 function runStep(step) {
   const start = Date.now();
   logInfo(`\n${"=".repeat(60)}`);

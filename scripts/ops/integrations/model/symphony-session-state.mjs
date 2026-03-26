@@ -248,14 +248,12 @@ export function tuneAdaptiveParams(providerStats) {
     const successRate = parseFloat(stats.successRate) / 100 || 0;
     const linearRate = parseFloat(stats.linearCompletionRate) / 100 || 0.5;
 
-    const currentLimit = params.freeTurnLimit.perProvider[providerName] || params.freeTurnLimit.base;
+    const currentLimit =
+      params.freeTurnLimit.perProvider[providerName] || params.freeTurnLimit.base;
 
     // If provider is performing well (>80% success), increase turn limit
     if (successRate > 0.8 && linearRate > 0.7) {
-      const newLimit = Math.min(
-        Math.round(currentLimit * 1.2),
-        params.freeTurnLimit.max,
-      );
+      const newLimit = Math.min(Math.round(currentLimit * 1.2), params.freeTurnLimit.max);
       if (newLimit !== currentLimit) {
         params.freeTurnLimit.perProvider[providerName] = newLimit;
         logInfo(
@@ -267,10 +265,7 @@ export function tuneAdaptiveParams(providerStats) {
 
     // If provider is underperforming (<60% success), decrease turn limit
     if (successRate < 0.6 || linearRate < 0.4) {
-      const newLimit = Math.max(
-        Math.round(currentLimit * 0.8),
-        params.freeTurnLimit.min,
-      );
+      const newLimit = Math.max(Math.round(currentLimit * 0.8), params.freeTurnLimit.min);
       if (newLimit !== currentLimit) {
         params.freeTurnLimit.perProvider[providerName] = newLimit;
         logInfo(
@@ -322,7 +317,9 @@ export function shouldTriggerEvalCycle() {
     params.evalCycle.counter = 0;
     params.evalCycle.lastEval = now;
     saveAdaptiveParams(params);
-    logInfo(`[session-state] 🔄 Triggering periodic evaluation cycle (all providers will be sampled)`);
+    logInfo(
+      `[session-state] 🔄 Triggering periodic evaluation cycle (all providers will be sampled)`,
+    );
   }
 
   return shouldEval;
@@ -345,7 +342,7 @@ export function getEvaluationSampleProvider(allProviderNames, providerStats) {
     const stats = providerStats[name] || { selections: 0, lastUsed: 0 };
     const timeSinceUsed = Date.now() - (stats.lastUsed || 0);
     const selectionsCount = stats.selections || 0;
-    
+
     // Score: prefer providers with fewer selections and longer time since use
     return {
       name,
@@ -359,7 +356,7 @@ export function getEvaluationSampleProvider(allProviderNames, providerStats) {
   const selected = providerScores[0]?.name;
   if (selected) {
     logInfo(
-      `[session-state] 🎯 Evaluation cycle: forcing sample of underused provider "${selected}"`
+      `[session-state] 🎯 Evaluation cycle: forcing sample of underused provider "${selected}"`,
     );
   }
 

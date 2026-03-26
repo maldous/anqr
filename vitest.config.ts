@@ -28,25 +28,15 @@ export default defineConfig({
       "apps/**/*.spec.ts",
       "apps/**/*.test.ts",
     ],
-    exclude: [
-      "node_modules",
-      "dist",
-      "android",
-      "ios",
-      "tests/e2e/**",
-      "tests/integration/**",
-    ],
+    exclude: ["node_modules", "dist", "android", "ios", "tests/e2e/**", "tests/integration/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov", "json-summary"],
       reportsDirectory: "coverage",
-      all: true,
       skipFull: false,
       clean: true,
       cleanOnRerun: true,
-      include: [
-        "packages/**/*.{ts,tsx}",
-      ],
+      include: ["packages/**/*.{ts,tsx}"],
       exclude: [
         "**/*.d.ts",
         "**/*.test.ts",

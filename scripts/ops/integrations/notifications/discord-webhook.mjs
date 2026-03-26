@@ -10,7 +10,7 @@
  *
  * Usage:
  *   import { sendDiscordNotification } from './discord-webhook.mjs';
- *   
+ *
  *   sendDiscordNotification({
  *     content: "Working on your request...",
  *     embeds: [{
@@ -28,11 +28,12 @@ import { createLogger } from "../../lib/logger.mjs";
 const { logInfo, logWarn, logError } = createLogger();
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "";
-const DISCORD_WEBHOOK_ENABLED = process.env.DISCORD_WEBHOOK_ENABLED !== "false" && !!DISCORD_WEBHOOK_URL;
+const DISCORD_WEBHOOK_ENABLED =
+  process.env.DISCORD_WEBHOOK_ENABLED !== "false" && !!DISCORD_WEBHOOK_URL;
 
 /**
  * Send a notification to Discord via webhook.
- * 
+ *
  * @param {{
  *   content?: string,
  *   embeds?: Array<{
@@ -115,7 +116,7 @@ export async function sendDiscordNotification(payload) {
 
 /**
  * Send a simple text message to Discord.
- * 
+ *
  * @param {string} message
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
@@ -125,7 +126,7 @@ export async function sendDiscordMessage(message) {
 
 /**
  * Send an embedded message to Discord with formatting.
- * 
+ *
  * @param {{
  *   title: string,
  *   description?: string,
@@ -135,7 +136,13 @@ export async function sendDiscordMessage(message) {
  * }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
-export async function sendDiscordEmbed({ title, description, color = 0x5865F2, fields = [], footer }) {
+export async function sendDiscordEmbed({
+  title,
+  description,
+  color = 0x5865f2,
+  fields = [],
+  footer,
+}) {
   const embed = {
     title,
     description,
@@ -164,7 +171,7 @@ const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
  * Stream a progress update to Discord with automatic batching.
  * Accumulates text and sends every 5 seconds OR when buffer exceeds 1900 chars.
  * This preserves natural formatting and prevents fragmented messages.
- * 
+ *
  * @param {string} message
  * @param {{ emoji?: string, timestamp?: boolean }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
@@ -172,25 +179,27 @@ const DISCORD_STREAM_MAX_LENGTH = 1900; // Leave room for prefix/suffix
 export async function streamDiscordUpdate(message, { emoji = "🔄", timestamp = false } = {}) {
   // Accumulate text in buffer
   discordStreamBuffer += message;
-  
+
   // Send immediately if buffer exceeds max length
   if (discordStreamBuffer.length >= DISCORD_STREAM_MAX_LENGTH) {
     return await flushDiscordStream({ emoji, timestamp });
   }
-  
+
   // Schedule periodic flush if not already scheduled
   if (!discordStreamTimer) {
     discordStreamTimer = setTimeout(() => {
-      flushDiscordStream({ emoji, timestamp }).catch(() => {/* ignore */});
+      flushDiscordStream({ emoji, timestamp }).catch(() => {
+        /* ignore */
+      });
     }, DISCORD_STREAM_INTERVAL_MS);
   }
-  
+
   return { sent: false, reason: "buffered" };
 }
 
 /**
  * Flush accumulated Discord stream buffer immediately.
- * 
+ *
  * @param {{ emoji?: string, timestamp?: boolean }} options
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
@@ -199,21 +208,21 @@ export async function flushDiscordStream({ emoji = "🔄", timestamp = false } =
     clearTimeout(discordStreamTimer);
     discordStreamTimer = null;
   }
-  
+
   if (discordStreamBuffer.length === 0) {
     return { sent: false, reason: "empty buffer" };
   }
-  
+
   const prefix = emoji ? `${emoji} ` : "";
   const suffix = timestamp ? ` (${new Date().toLocaleTimeString()})` : "";
   const maxLength = 2000 - prefix.length - suffix.length;
-  
+
   let content = discordStreamBuffer;
   if (content.length > maxLength) {
     content = content.substring(0, maxLength - 3) + "...";
   }
-  
+
   discordStreamBuffer = ""; // Clear buffer
-  
+
   return sendDiscordMessage(prefix + content + suffix);
 }

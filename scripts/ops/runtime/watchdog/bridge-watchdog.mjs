@@ -51,10 +51,10 @@ async function updateMemory(note) {
 
 function getServiceStatus(serviceName) {
   try {
-    const output = execSync(
-      `systemctl --user is-active ${serviceName} 2>&1 || true`,
-      { encoding: "utf-8", timeout: 5000 }
-    );
+    const output = execSync(`systemctl --user is-active ${serviceName} 2>&1 || true`, {
+      encoding: "utf-8",
+      timeout: 5000,
+    });
     return output.trim();
   } catch {
     return "unknown";
@@ -65,7 +65,7 @@ function getServicePID(serviceName) {
   try {
     const output = execSync(
       `systemctl --user show ${serviceName} --property=MainPID --value 2>&1 || true`,
-      { encoding: "utf-8", timeout: 5000 }
+      { encoding: "utf-8", timeout: 5000 },
     );
     const pid = parseInt(output.trim());
     return pid > 0 ? pid : null;
@@ -78,7 +78,7 @@ function getServiceActiveTime(serviceName) {
   try {
     const output = execSync(
       `systemctl --user show ${serviceName} --property=ActiveEnterTimestamp --value 2>&1 || true`,
-      { encoding: "utf-8", timeout: 5000 }
+      { encoding: "utf-8", timeout: 5000 },
     );
     const timestamp = output.trim();
     if (!timestamp || timestamp === "0") return null;
@@ -115,14 +115,14 @@ function getPreviousCommit() {
 }
 
 async function verifyAndNotifyRecovery(serviceName, shortName) {
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
   const recoveryStatus = getServiceStatus(serviceName);
   if (recoveryStatus === "active") {
     try {
       await sendDiscordEmbed({
         title: "🎉 Recovery Successful",
         description: `${shortName.toUpperCase()} bridge is now healthy after rollback`,
-        color: 0x00FF00, // Green
+        color: 0x00ff00, // Green
         fields: [
           { name: "Service", value: serviceName, inline: true },
           { name: "Status", value: "Active", inline: true },
@@ -151,7 +151,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     await sendDiscordEmbed({
       title: "🚨 WATCHDOG ROLLBACK TRIGGERED",
       description: `**${shortName.toUpperCase()} BRIDGE FAILED TO START**\n\nAutomatic rollback in progress...`,
-      color: 0xFF0000, // Red
+      color: 0xff0000, // Red
       fields: [
         { name: "Service", value: serviceName, inline: true },
         { name: "Reason", value: reason, inline: true },
@@ -159,9 +159,10 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
         { name: "Rolling Back To", value: `\`${previousCommit}\``, inline: true },
       ],
       footer: "⚠️ Review the failed commit before attempting fixes",
-    });    } catch (err) {
-      logError(`[watchdog] ⚠️ Failed to send rollback alert: ${err.message}`);
-    }
+    });
+  } catch (err) {
+    logError(`[watchdog] ⚠️ Failed to send rollback alert: ${err.message}`);
+  }
 
   try {
     // 1. Stop the service
@@ -188,7 +189,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     logInfo(`[watchdog]    Reason: Rollback recovery from ${currentCommit} to ${previousCommit}`);
     logInfo(`[watchdog] ════════════════════════════════════════════════════════════════`);
     logInfo(``);
-    
+
     execSync(`systemctl --user restart ${serviceName}`, {
       encoding: "utf-8",
       cwd: process.cwd(),
@@ -210,7 +211,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     ].join("\n");
 
     await updateMemory(
-      `Watchdog rolled back ${shortName} bridge from ${currentCommit} to ${previousCommit} (${reason})\n\n${memoryBanner}`
+      `Watchdog rolled back ${shortName} bridge from ${currentCommit} to ${previousCommit} (${reason})\n\n${memoryBanner}`,
     );
 
     // Send Discord success notification
@@ -218,7 +219,7 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
       await sendDiscordEmbed({
         title: "✅ Rollback Complete",
         description: `${shortName.toUpperCase()} bridge successfully rolled back and restarted`,
-        color: 0x00FF00, // Green
+        color: 0x00ff00, // Green
         fields: [
           { name: "Previous Commit", value: `\`${previousCommit}\``, inline: true },
           { name: "Status", value: "Service restarted", inline: true },
@@ -233,13 +234,13 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     return true;
   } catch (err) {
     logError(`[watchdog] ❌ Rollback failed for ${shortName}: ${err.message}`);
-    
+
     // Send critical failure notification
     try {
       await sendDiscordEmbed({
         title: "🚨 ROLLBACK FAILED",
         description: `**CRITICAL: ${shortName.toUpperCase()} BRIDGE ROLLBACK FAILED**\n\nManual intervention required!`,
-        color: 0xFF0000, // Red
+        color: 0xff0000, // Red
         fields: [
           { name: "Service", value: serviceName, inline: true },
           { name: "Error", value: err.message.slice(0, 200), inline: false },
@@ -249,10 +250,8 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     } catch (discordErr) {
       logError(`[watchdog] ⚠️ Failed to send rollback failure notification: ${discordErr.message}`);
     }
-    
-    await updateMemory(
-      `Watchdog rollback FAILED for ${shortName} bridge: ${err.message}`
-    );
+
+    await updateMemory(`Watchdog rollback FAILED for ${shortName} bridge: ${err.message}`);
     return false;
   }
 }
@@ -284,37 +283,33 @@ async function checkService(service) {
   // Check for stuck activation with proper state tracking
   if (status === "activating") {
     const activatingStart = activatingStateStart.get(serviceName);
-    
+
     if (!activatingStart) {
       // First time seeing "activating" - record start time
       logInfo(`[watchdog] ⏳ ${shortName}: Activating (starting grace period)`);
       activatingStateStart.set(serviceName, now);
       return;
     }
-    
+
     // Check how long we've been in activating state
     const activatingDuration = now - activatingStart;
     if (activatingDuration > STARTUP_GRACE_PERIOD_MS) {
       const stuckSeconds = Math.round(activatingDuration / 1000);
-      logWarn(
-        `[watchdog] ❌ ${shortName}: Stuck in activating for ${stuckSeconds}s`
-      );
+      logWarn(`[watchdog] ❌ ${shortName}: Stuck in activating for ${stuckSeconds}s`);
       activatingStateStart.delete(serviceName);
-      await rollbackAndRestart(
-        serviceName,
-        shortName,
-        `stuck in activating for ${stuckSeconds}s`
-      );
+      await rollbackAndRestart(serviceName, shortName, `stuck in activating for ${stuckSeconds}s`);
       await verifyAndNotifyRecovery(serviceName, shortName);
       return;
     }
-    
+
     // Still within grace period
     const elapsed = Math.round(activatingDuration / 1000);
-    logDebug(`[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`);
+    logDebug(
+      `[watchdog] ⏳ ${shortName}: Activating (${elapsed}s / ${STARTUP_GRACE_PERIOD_MS / 1000}s grace)`,
+    );
     return;
   }
-  
+
   // Clear activating state if service is no longer activating
   if (activatingStateStart.has(serviceName)) {
     activatingStateStart.delete(serviceName);
@@ -332,17 +327,19 @@ async function monitorLoop() {
   logInfo(`[watchdog] 🐕 Bridge watchdog starting...`);
   logInfo(`[watchdog]    Check interval: ${CHECK_INTERVAL_MS / 1000}s`);
   logInfo(`[watchdog]    Grace period: ${STARTUP_GRACE_PERIOD_MS / 1000}s`);
-  logInfo(`[watchdog]    Monitored services: ${MONITORED_SERVICES.map(s => s.shortName).join(", ")}`);
+  logInfo(
+    `[watchdog]    Monitored services: ${MONITORED_SERVICES.map((s) => s.shortName).join(", ")}`,
+  );
 
   while (true) {
     logInfo(`[watchdog] 🔍 Checking services...`);
-    
+
     for (const service of MONITORED_SERVICES) {
       await checkService(service);
     }
 
     // Wait for next check
-    await new Promise(resolve => setTimeout(resolve, CHECK_INTERVAL_MS));
+    await new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL_MS));
   }
 }
 
@@ -356,7 +353,7 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
 // Start monitoring
-monitorLoop().catch(err => {
+monitorLoop().catch((err) => {
   logError(`[watchdog] Fatal error: ${err.message}`);
   process.exit(1);
 });

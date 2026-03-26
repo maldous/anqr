@@ -49,9 +49,7 @@ async function collectFiles(rootPath) {
 
 async function main() {
   if (!(await pathExists(contractsRoot))) {
-    logInfo(
-      "contracts-check: packages/contracts/ does not exist yet; structural checks skipped.",
-    );
+    logInfo("contracts-check: packages/contracts/ does not exist yet; structural checks skipped.");
     return;
   }
 
