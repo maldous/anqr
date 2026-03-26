@@ -298,6 +298,34 @@ Format:
 
 Where values are Unix timestamps. The credit-gate automatically cleans up old entries when checking for recent failures.
 
+## Adaptive Context and Rate Management
+
+The Symphony Bridge includes a fully dynamic adaptive context system (`symphony-adaptive-context.mjs`) that adjusts per-provider context limits and rate budgets at runtime based on observed errors and successes.
+
+### What it does
+
+- **Dynamic context limits**: Shrinks a provider's token ceiling when 413/`context_length_exceeded` errors are observed; slowly expands back toward the base value after consecutive successes
+- **Rate-limit throttling**: Parses `Retry-After` and `X-RateLimit-*` headers from 429 responses; applies per-provider backoff timers that exclude the provider from selection until the timer expires
+- **TPM/RPM tracking**: Maintains 60-second sliding windows of token and request counts per provider
+- **Proactive TPM reduction**: Before sending a request, checks if the provider is approaching 85% of its known TPM limit and halves the context budget proactively
+- **Error classification**: Classifies every error into one of 6 types (context, rate-limit, auth, timeout, server, unknown), enabling type-specific feedback loops
+
+### Relationship to failure cooldown
+
+The adaptive context system runs **in parallel** with the credit-gate's failure cooldown mechanism (above). The credit-gate provides a blunt 6-minute cooldown for any failure. The adaptive system provides finer-grained feedback:
+
+| Error type | Credit-gate response | Adaptive system response |
+|---|---|---|
+| 413 / context too large | 6-min cooldown | Shrink context limit; next request uses reduced ceiling |
+| 429 / rate limit | 6-min cooldown | Precise backoff from headers; exclude from selection until timer expires |
+| Success | Clear failure record | Increment success counter; expand ceiling after 3 consecutive successes |
+
+### Integration
+
+The adaptive system integrates into the bridge at 6 points: pre-request truncation override, provider selection filtering, success recording, error classification and recording, and the `/v1/stats` observability endpoint.
+
+See [11-adaptive-context.md](./11-adaptive-context.md) for full technical documentation including all exported functions, constants, data structures, and integration details.
+
 ## Provider Metrics and Dynamic Scoring
 
 The credit-gate tracks comprehensive provider metrics to enable dynamic provider ranking based on actual performance:
@@ -589,4 +617,4 @@ Provider routing currently depends on:
 
 Use [README.md](/home/user/src/anqr/README.md) and [MCP-MIGRATION.md](/home/user/src/anqr/MCP-MIGRATION.md) for the broader launch and migration backlog around external AI services.
 
-_Last updated: 2026-03-25_
+_Last updated: 2026-03-26_

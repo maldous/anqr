@@ -14,7 +14,8 @@ This section is the canonical harness doctrine for ANQR 1.0 foundation work.
 8. [08-runbooks.md](/home/user/src/anqr/docs/harness/08-runbooks.md)
 9. [09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
 10. [10-audit-reference.md](/home/user/src/anqr/docs/harness/10-audit-reference.md)
-11. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
+11. [11-adaptive-context.md](/home/user/src/anqr/docs/harness/11-adaptive-context.md)
+12. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
 
 ## Scope
 
