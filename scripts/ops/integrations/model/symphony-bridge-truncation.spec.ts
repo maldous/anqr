@@ -19,8 +19,14 @@ import {
   PER_MESSAGE_CHAR_LIMIT,
   CHARS_PER_TOKEN,
   MESSAGE_TRUNCATION_MARKER,
+  TOOL_DEFINITION_OVERHEAD_TOKENS,
+  MIN_MESSAGE_BUDGET_TOKENS,
   // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-bridge-truncation.mjs";
+import {
+  getProviderDefinitions,
+  // @ts-expect-error -- .mjs has no declaration file
+} from "./symphony-credit-gate.mjs";
 import { makeArrayContentMessage } from "./symphony-bridge-truncation.make-array-content-message";
 
 // ---------------------------------------------------------------------------
@@ -421,7 +427,7 @@ describe("truncation constants", () => {
   });
 
   it("has a conservative default", () => {
-    expect(DEFAULT_MAX_INPUT_TOKENS).toBe(24_000);
+    expect(DEFAULT_MAX_INPUT_TOKENS).toBe(16_000);
   });
 
   it("uses 4 chars per token", () => {
@@ -434,5 +440,122 @@ describe("truncation constants", () => {
 
   it("has a truncation marker", () => {
     expect(MESSAGE_TRUNCATION_MARKER).toContain("truncated");
+  });
+
+  it("exports tool definition overhead constant", () => {
+    expect(TOOL_DEFINITION_OVERHEAD_TOKENS).toBe(2_000);
+  });
+
+  it("exports minimum message budget floor", () => {
+    expect(MIN_MESSAGE_BUDGET_TOKENS).toBe(1_000);
+  });
+
+  it("has explicit limits for all known providers", () => {
+    const requiredProviders = [
+      "groq",
+      "cerebras",
+      "mistral",
+      "gemini",
+      "gemini-lite",
+      "sambanova",
+      "github-models",
+      "ollama-qwen2.5-coder-3b",
+      "ollama-qwen2.5-coder-0.5b",
+    ];
+    for (const name of requiredProviders) {
+      expect(PROVIDER_MAX_INPUT_TOKENS[name]).toBeGreaterThan(0);
+    }
+  });
+
+  it("has explicit limits for OpenRouter providers", () => {
+    const orProviders = Object.keys(PROVIDER_MAX_INPUT_TOKENS).filter((k: string) =>
+      k.startsWith("openrouter-"),
+    );
+    expect(orProviders.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it("has explicit limits for EVERY provider in the PROVIDERS list (cross-reference)", () => {
+    const providerDefs = getProviderDefinitions();
+    const missing: string[] = [];
+    for (const def of providerDefs) {
+      if (!(def.name in PROVIDER_MAX_INPUT_TOKENS)) {
+        missing.push(def.name);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tool overhead accounting
+// ---------------------------------------------------------------------------
+
+describe("tool overhead in truncateMessagesForProvider", () => {
+  it("does NOT subtract tool overhead when useTools is not specified", () => {
+    // groq: 6K limit. Message just under 6K tokens should pass without truncation.
+    const chars = 6_000 * CHARS_PER_TOKEN - 100; // just under 6K tokens worth
+    const messages = [makeMessage("user", chars)];
+    const result = truncateMessagesForProvider(messages, "groq");
+    expect(result).toBe(messages); // no truncation
+  });
+
+  it("does NOT subtract tool overhead when useTools is false", () => {
+    const chars = 6_000 * CHARS_PER_TOKEN - 100;
+    const messages = [makeMessage("user", chars)];
+    const result = truncateMessagesForProvider(messages, "groq", { useTools: false });
+    expect(result).toBe(messages); // no truncation
+  });
+
+  it("subtracts tool overhead when useTools is true", () => {
+    // groq: 6K base - 2K tool overhead = 4K effective limit.
+    // A message of 5K tokens should be truncated.
+    const chars = 5_000 * CHARS_PER_TOKEN;
+    const messages = [makeMessage("user", chars)];
+    const result = truncateMessagesForProvider(messages, "groq", { useTools: true });
+    expect(result).not.toBe(messages); // truncation occurred
+    const effectiveLimit =
+      PROVIDER_MAX_INPUT_TOKENS["groq"] - TOOL_DEFINITION_OVERHEAD_TOKENS;
+    expect(estimateMessagesTokens(result)).toBeLessThanOrEqual(effectiveLimit);
+  });
+
+  it("allows more tokens when tools are off vs on", () => {
+    // 4500 tokens: fits in groq without tools (6K) but NOT with tools (4K)
+    const chars = 4_500 * CHARS_PER_TOKEN;
+    const messages = [makeMessage("user", chars)];
+    const withoutTools = truncateMessagesForProvider(messages, "groq", { useTools: false });
+    const withTools = truncateMessagesForProvider(messages, "groq", { useTools: true });
+    expect(withoutTools).toBe(messages); // fits without tools
+    expect(withTools).not.toBe(messages); // truncated with tools
+  });
+
+  it("never reduces effective budget below MIN_MESSAGE_BUDGET_TOKENS", () => {
+    // A hypothetical provider with a very small budget
+    // openrouter-lfm-2.5-thinking: 8K base - 2K overhead = 6K (above floor, fine)
+    // For the floor test, we use the MIN directly
+    const chars = MIN_MESSAGE_BUDGET_TOKENS * CHARS_PER_TOKEN - 50;
+    const messages = [makeMessage("user", chars)];
+    // Even with tools, a message under MIN_MESSAGE_BUDGET_TOKENS should fit
+    // for any provider whose base limit >= TOOL_DEFINITION_OVERHEAD_TOKENS + MIN_MESSAGE_BUDGET_TOKENS
+    const result = truncateMessagesForProvider(messages, "openrouter-lfm-2.5-thinking", {
+      useTools: true,
+    });
+    expect(result).toBe(messages);
+  });
+
+  it("truncates groq conversation to fit within TPM with tools", () => {
+    // Simulate a multi-turn conversation that would exceed 12K TPM
+    // groq effective with tools: 6K - 2K = 4K tokens
+    const messages = [
+      makeMessage("system", 2_000), // ~500 tokens
+      makeMessage("user", 4_000), // ~1000 tokens
+      makeMessage("assistant", 8_000), // ~2000 tokens
+      makeMessage("user", 4_000), // ~1000 tokens
+      makeMessage("assistant", 8_000), // ~2000 tokens
+      makeMessage("user", 2_000), // ~500 tokens
+    ]; // total ~7004 tokens > 4K effective limit
+    const result = truncateMessagesForProvider(messages, "groq", { useTools: true });
+    const effectiveLimit =
+      PROVIDER_MAX_INPUT_TOKENS["groq"] - TOOL_DEFINITION_OVERHEAD_TOKENS;
+    expect(estimateMessagesTokens(result)).toBeLessThanOrEqual(effectiveLimit);
   });
 });

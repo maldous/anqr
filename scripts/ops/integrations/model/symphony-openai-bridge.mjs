@@ -1726,7 +1726,7 @@ async function invokeWithAI(provider, messages, options = {}) {
     ),
   });
 
-  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name);
+  const aiMessages = truncateMessagesForProvider(rawMessages, provider.name, { useTools });
   logDebug(`[invokeWithAI] Messages after truncation`, {
     aiMessageCount: aiMessages?.length,
     providerName: provider.name,
