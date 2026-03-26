@@ -584,3 +584,9 @@ This prevents work duplication and ensures continuity across restarts.
 All messages above this line are from before the bridge restart. Only errors/warnings below this line are relevant to the current session.
 
 ### 2026-03-26 - Symphony Bridge stopped (PID 2220148, commit 386355e17, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-26 - Symphony Bridge restarted successfully (PID 2226826, commit a91080e7e, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-26 - Symphony Bridge stopped (PID 2226826, commit a91080e7e, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-26 - Symphony Bridge restarted successfully (PID 2227829, commit a91080e7e, 38/38 providers available, Discord monitoring active)

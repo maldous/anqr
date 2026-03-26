@@ -50,7 +50,6 @@ import {
   getProviderStats,
   getRankedProviders,
   logProviderStats,
-  clearProviderFailure,
   getConfiguredProviders,
   getProviderDefinitions,
   probeAllProviders,
@@ -904,15 +903,13 @@ const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
 let requestCount = 0;
-let probeIntervalHandle = null;
 
-// Provider exploration — re-discover providers whose rate-limit windows may have reset (5h matches Codex/Codebuff session limits)
-const EXPLORATION_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5h — matches Codex/Codebuff session limit windows
-const EXPLORATION_MIN_PROBES = 3;
-const STARTUP_EXPLORATION_PROVIDERS = 5; // Number of providers to explore at startup
-let lastExplorationTime = Date.now();
-let explorationProbesThisPeriod = 0;
-let lastSelectedProvider = null;
+// Continuous provider probe — runs in parallel, re-evaluates after 3 completions
+const PROBE_CYCLE_INTERVAL_MS = 30 * 60 * 1000; // 30 min between probe cycles
+const PROBE_COMPLETIONS_BEFORE_REEVAL = 3; // Re-evaluate after 3 probe completions // cspell:disable-line
+let probeCompletionCount = 0;
+let lastProbeStartTime = Date.now();
+let isProbeRunning = false;
 
 // Track concurrent requests for Discord notifications
 const activeRequests = new Map(); // requestId -> { startTime, issueId, model, stream, filesChanged }
@@ -920,106 +917,66 @@ let requestIdCounter = 0;
 let processingStatusTimer = null;
 
 // ---------------------------------------------------------------------------
-// Startup exploration — discover underused providers in parallel
+// Continuous provider probe — runs in parallel, updating status continuously
 // ---------------------------------------------------------------------------
 
 /**
- * Run parallel exploration cycle during startup to discover underused providers.
- * This runs alongside the main provider probe to warm up provider selection.
+ * Run continuous provider probe in background.
+ * Updates provider status as it discovers them, re-evaluates selection after 3 completions.
+ * This ensures metrics heuristics gate always has fresh data.
  */
-async function runStartupExploration() {
-  logInfo(`🔍 Starting parallel exploration cycle...`);
-  
+async function runContinuousProviderProbe() {
+  if (isProbeRunning) {
+    logDebug(`🔍 Probe already running, skipping duplicate`);
+    return;
+  }
+
+  isProbeRunning = true;
+  lastProbeStartTime = Date.now();
+
   try {
-    // Wait for initial provider configuration to complete
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    const stats = getProviderStats();
-    const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
-    
-    // Select providers that are available but underused
-    const underused = ranked
-      .filter((p) => {
-        const providerStats = stats[p.name];
-        return !providerStats || providerStats.selections < 3;
-      })
-      .slice(0, STARTUP_EXPLORATION_PROVIDERS);
-    
-    if (underused.length === 0) {
-      logInfo(`🔍 No underused providers found for exploration`);
-      return;
-    }
-    
-    logInfo(`🔍 Exploring ${underused.length} underused providers: ${underused.map((p) => p.name).join(", ")}`);
-    
-    // Clear old failures for these providers to allow discovery
-    for (const p of underused) {
-      clearProviderFailure(p.name);
-    }
-    
-    // Run lightweight test calls in parallel
-    const explorationResults = await Promise.allSettled(
-      underused.map(async (p) => {
-        try {
-          const provider = await selectProvider({ allowedNames: [p.name] });
-          if (!provider) {
-            return { name: p.name, status: "unavailable" };
-          }
-          
-          const startTime = Date.now();
-          
-          // Simple echo test - minimal token usage
-          const testMessages = [
-            { role: "user", content: "Reply with just 'OK'" },
-          ];
-          
-          const result = await invokeWithAI(provider, testMessages, { stream: false });
-          const duration = Date.now() - startTime;
-          
-          if (result.text && result.text.trim().length > 0) {
-            recordProviderSuccess(p.name);
-            recordSuccessfulMetrics(p.name, startTime, result.usage);
-            logInfo(`🔍 ✅ ${p.name}: explored successfully (${duration}ms)`);
-            return { name: p.name, status: "success", duration };
-          }
-          
-          return { name: p.name, status: "no_output" };
-        } catch (err) {
-          const errStr = String(err).slice(0, 200);
-          if (isRetryableErrorDeep(err)) {
-            recordProviderFailure(p.name);
-          }
-          logDebug(`🔍 ❌ ${p.name}: ${errStr}`);
-          return { name: p.name, status: "error", error: errStr };
+    logInfo(`🔍 Starting continuous provider probe cycle ${probeCompletionCount + 1}...`);
+
+    const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
+    providerStatusCache.configured = getConfiguredProviders({ excludeNames });
+    providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
+    providerStatusCache.lastProbeAt = new Date().toISOString();
+
+    const available = providerStatusCache.probeResults.filter((r) => r.available).length;
+    const total = providerStatusCache.configured.length;
+    logInfo(`🔍 Probe cycle complete: ${available}/${total} providers available`);
+
+    // Probe tool capability for newly available providers
+    await probeAllToolCapability();
+
+    // Increment completion counter
+    probeCompletionCount++;
+
+    // Re-evaluate provider selection after 3 completions
+    if (probeCompletionCount >= PROBE_COMPLETIONS_BEFORE_REEVAL) { // cspell:disable-line
+      logInfo(
+        `🔍 Re-evaluating provider selection after ${probeCompletionCount} probe completions...`,
+      );
+      const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
+      if (ranked.length > 0) {
+        logInfo(`🔍 Top 5 providers after re-evaluation:`);
+        for (const { rank, name, score, tier } of ranked.slice(0, 5)) {
+          logInfo(`  #${rank} ${name} [${tier}]: score=${score}`);
         }
-      }),
-    );
-    
-    // Log results
-    const successful = explorationResults.filter(
-      (r) => r.status === "fulfilled" && r.value.status === "success",
-    );
-    const failed = explorationResults.filter(
-      (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.status !== "success"),
-    );
-    
-    logInfo(
-      `🔍 Exploration complete: ${successful.length} succeeded, ${failed.length} failed`,
-    );
-    
-    // Update exploration counters
-    explorationProbesThisPeriod = successful.length;
-    lastExplorationTime = Date.now();
+      }
+      // Reset counter but keep probing
+      probeCompletionCount = 0;
+    }
   } catch (err) {
-    logError(`🔍 Startup exploration failed: ${err.message}`);
+    logError(`🔍 Continuous probe error: ${err.message}`);
+  } finally {
+    isProbeRunning = false;
   }
 }
 
 // ---------------------------------------------------------------------------
-// Provider status cache — populated by startup probe, refreshed periodically
+// Provider status cache — continuously updated by background probe
 // ---------------------------------------------------------------------------
-
-const PROVIDER_PROBE_INTERVAL_MS = 30 * 60 * 1000; // Re-probe every 30 minutes
 
 const providerStatusCache = {
   configured: [],
@@ -1964,31 +1921,10 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       throw new Error(errorMsg);
     }
 
-    // Check exploration
-    const timeSinceLastExploration = Date.now() - lastExplorationTime;
-    const needsExploration =
-      timeSinceLastExploration > EXPLORATION_INTERVAL_MS ||
-      explorationProbesThisPeriod < EXPLORATION_MIN_PROBES;
-
-    if (needsExploration && lastSelectedProvider) {
-      logDebug(`🔍 Exploration mode: clearing failures to discover new providers`);
-      clearProviderFailure(lastSelectedProvider);
-    }
-
     logInfo(
       `${attemptNumber === 1 ? "Selected" : "Fallback"} provider (attempt ${attemptNumber}): ${provider.name} (${provider.model})`,
     );
     triedProviders.push(provider.name);
-
-    // Track exploration
-    if (provider.name !== lastSelectedProvider) {
-      explorationProbesThisPeriod++;
-      lastSelectedProvider = provider.name;
-      if (timeSinceLastExploration > EXPLORATION_INTERVAL_MS) {
-        lastExplorationTime = Date.now();
-        explorationProbesThisPeriod = 1;
-      }
-    }
 
     if (attemptNumber > 1) {
       BRIDGE_METRICS.totalFallbacks++;
@@ -2455,9 +2391,9 @@ function logBridgeStats() {
 
   logProviderStats({ excludeNames: nonToolCapableProviders });
 
-  const elapsedHours = Math.round((Date.now() - lastExplorationTime) / 3600000);
+  const timeSinceProbe = Math.round((Date.now() - lastProbeStartTime) / 60000);
   logDebug(
-    `🔍 Exploration: ${elapsedHours}h since last, ${explorationProbesThisPeriod} unique providers tried`,
+    `🔍 Provider probe: ${probeCompletionCount}/${PROBE_COMPLETIONS_BEFORE_REEVAL} completions, ${timeSinceProbe}min since last cycle`, // cspell:disable-line
   );
 
   // Log adaptive params
@@ -3228,10 +3164,7 @@ async function shutdown(signal) {
     logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
 
-  if (probeIntervalHandle) {
-    clearInterval(probeIntervalHandle);
-    probeIntervalHandle = null;
-  }
+  // No cleanup needed - setTimeout will be cleared on process exit
   stopDiscordMonitoring();
   stopProcessingStatusUpdates();
   logProviderStats();
@@ -3328,12 +3261,8 @@ server.listen(PORT, "127.0.0.1", async () => {
     }
   }
 
-  // Async startup probe — test all providers for live availability
-  // Run in parallel with exploration cycle
-  Promise.all([
-    refreshProviderStatus(),
-    runStartupExploration(),
-  ])
+  // Initial provider probe — test all providers for live availability
+  refreshProviderStatus()
     .then(async () => {
       const available = providerStatusCache.probeResults.filter((r) => r.available);
       const total = providerStatusCache.configured.length;
@@ -3384,12 +3313,23 @@ server.listen(PORT, "127.0.0.1", async () => {
       logInfo(`========================================`);
     });
 
-  // Periodic re-probe to keep provider status fresh
-  probeIntervalHandle = setInterval(() => {
-    refreshProviderStatus().catch((err) => {
-      logError(`Periodic probe failed: ${err.message}`);
-    });
-  }, PROVIDER_PROBE_INTERVAL_MS);
+  // Continuous background probe — runs in parallel, updates status continuously
+  // Trigger probe cycle after each completion or every 30 minutes
+  const scheduleContinuousProbe = (delayMs = PROBE_CYCLE_INTERVAL_MS) => {
+    setTimeout(() => {
+      runContinuousProviderProbe()
+        .catch((err) => {
+          logError(`Continuous probe failed: ${err.message}`);
+        })
+        .finally(() => {
+          // Schedule next probe cycle (full 30min interval)
+          scheduleContinuousProbe();
+        });
+    }, delayMs);
+  };
+
+  // Start continuous probe 5 minutes after startup (gives time for initial requests)
+  scheduleContinuousProbe(5 * 60 * 1000);
 
   // Start Discord message monitoring
   startDiscordMonitoring();
