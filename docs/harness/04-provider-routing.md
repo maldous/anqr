@@ -37,6 +37,21 @@ Symphony Bridge uses the credit-gate provider cascade with **tier-based dynamic 
 
 The credit-gate selects providers based on dynamic scoring, but `codex` is always retried first. Codebuff routes through the codebuff-bridge (port 4318) which handles paid → free mode fallback internally, with paid availability re-probed every 5 hours. The exploration mechanism clears old failures every 5 hours to re-discover providers whose rate-limit windows (e.g. Codex/Codebuff 5-hour session limits) may have reset. Temporary failures enter cooldown (2 min for paid providers, 6 min for others), then are retried so Symphony continuously learns the best route.
 
+#### Continuous Provider Probing
+
+The Symphony Bridge runs a repeatable provider probe cycle with the following sequential phases:
+
+1. **Filter**: Exclude failed providers (in cooldown), blocklisted providers, and providers without credentials
+2. **Reachability Check**: Probe all eligible providers in parallel for network reachability and API key validation
+3. **Tool Capability Check**: Test all reachable providers in parallel for structured tool calling support
+4. **Ranking** (after 3 completions): Log all providers ranked by dynamic performance score to metrics cache
+
+The probe cycle repeats:
+- **Every 30 minutes** (time-based), OR
+- **Every 200 turns** of the current provider (usage-based)
+
+This ensures the metrics heuristics always have fresh data without overwhelming provider APIs.
+
 #### Tier-based ranking guarantee
 
 The `getRankedProviders()` function partitions providers into two groups:

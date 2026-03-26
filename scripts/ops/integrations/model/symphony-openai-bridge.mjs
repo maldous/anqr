@@ -906,8 +906,10 @@ let requestCount = 0;
 
 // Continuous provider probe — runs in parallel, re-evaluates after 3 completions
 const PROBE_CYCLE_INTERVAL_MS = 30 * 60 * 1000; // 30 min between probe cycles
-const PROBE_COMPLETIONS_BEFORE_REEVAL = 3; // Re-evaluate after 3 probe completions // cspell:disable-line
+const PROBE_CYCLE_TURN_THRESHOLD = 200; // Re-evaluate after 200 turns of current provider
+const PROBE_COMPLETIONS_BEFORE_RANKING = 3; // Rank providers after 3 probe completions
 let probeCompletionCount = 0;
+let probeTurnCounter = 0; // Tracks turns since last probe
 let lastProbeStartTime = Date.now();
 let isProbeRunning = false;
 
@@ -922,8 +924,14 @@ let processingStatusTimer = null;
 
 /**
  * Run continuous provider probe in background.
- * Updates provider status as it discovers them, re-evaluates selection after 3 completions.
- * This ensures metrics heuristics gate always has fresh data.
+ * 
+ * Sequential process:
+ * 1. Filter out failed/excluded/cooldown providers
+ * 2. Check reachability and API keys (parallel, all eligible providers)
+ * 3. Probe tool capability for reachable providers (parallel, all providers)
+ * 4. After 3 completions, rank and log all providers in metrics cache
+ * 
+ * Repeats every 30 minutes OR 200 turns of the current provider.
  */
 async function runContinuousProviderProbe() {
   if (isProbeRunning) {
@@ -933,40 +941,67 @@ async function runContinuousProviderProbe() {
 
   isProbeRunning = true;
   lastProbeStartTime = Date.now();
+  probeTurnCounter = 0; // Reset turn counter
 
   try {
     logInfo(`🔍 Starting continuous provider probe cycle ${probeCompletionCount + 1}...`);
 
+    // Phase 1: Filter out failed/excluded/cooldown providers
     const excludeNames = [...BRIDGE_PROVIDER_BLOCKLIST];
+    const allProviders = getProviderDefinitions({ excludeNames });
+    const eligibleProviders = allProviders.filter((p) => !isRecentlyFailed(p.name));
+    
+    logInfo(
+      `🔍 Phase 1: Filtered ${allProviders.length} providers → ${eligibleProviders.length} eligible (excluded cooldown/failed)`,
+    );
+
+    // Phase 2: Check reachability and API keys (parallel, all eligible providers)
+    logInfo(`🔍 Phase 2: Probing reachability for ${eligibleProviders.length} providers...`);
     providerStatusCache.configured = getConfiguredProviders({ excludeNames });
     providerStatusCache.probeResults = await probeAllProviders({ excludeNames });
     providerStatusCache.lastProbeAt = new Date().toISOString();
 
-    const available = providerStatusCache.probeResults.filter((r) => r.available).length;
+    const reachable = providerStatusCache.probeResults.filter((r) => r.available);
     const total = providerStatusCache.configured.length;
-    logInfo(`🔍 Probe cycle complete: ${available}/${total} providers available`);
+    logInfo(
+      `🔍 Phase 2 complete: ${reachable.length}/${total} providers reachable (API keys validated)`,
+    );
 
-    // Probe tool capability for newly available providers
+    // Phase 3: Probe tool capability for reachable providers (parallel, all providers)
+    logInfo(`🔍 Phase 3: Probing tool capability for ${reachable.length} reachable providers...`);
     await probeAllToolCapability();
+    logInfo(
+      `🔍 Phase 3 complete: ${toolCapableProviders.size} capable, ${nonToolCapableProviders.size} excluded`,
+    );
 
     // Increment completion counter
     probeCompletionCount++;
 
-    // Re-evaluate provider selection after 3 completions
-    if (probeCompletionCount >= PROBE_COMPLETIONS_BEFORE_REEVAL) { // cspell:disable-line
+    // Phase 4: After 3 completions, rank and log all providers in metrics cache
+    if (probeCompletionCount >= PROBE_COMPLETIONS_BEFORE_RANKING) {
       logInfo(
-        `🔍 Re-evaluating provider selection after ${probeCompletionCount} probe completions...`,
+        `🔍 Phase 4: Ranking providers after ${probeCompletionCount} probe completions...`,
       );
       const ranked = getRankedProviders({ excludeNames: [...nonToolCapableProviders] });
       if (ranked.length > 0) {
-        logInfo(`🔍 Top 5 providers after re-evaluation:`);
-        for (const { rank, name, score, tier } of ranked.slice(0, 5)) {
-          logInfo(`  #${rank} ${name} [${tier}]: score=${score}`);
+        logInfo(`🔍 Provider Rankings (top 10):`);
+        for (const { rank, name, score, tier } of ranked.slice(0, 10)) {
+          const stats = getProviderStats()[name];
+          const selections = stats?.selections || 0;
+          const successRate = stats?.successRate || "N/A";
+          logInfo(
+            `  #${rank} ${name} [${tier}]: score=${score}, ${selections} sel, ${successRate} success`,
+          );
         }
+        logInfo(`🔍 Full ranking cached in provider stats`);
       }
       // Reset counter but keep probing
       probeCompletionCount = 0;
     }
+
+    logInfo(
+      `🔍 Probe cycle complete (${probeCompletionCount}/${PROBE_COMPLETIONS_BEFORE_RANKING} before next ranking)`,
+    );
   } catch (err) {
     logError(`🔍 Continuous probe error: ${err.message}`);
   } finally {
@@ -2206,8 +2241,22 @@ async function invokeWithFallbackStream(
       }
 
       requestCount++;
+      probeTurnCounter++; // Track turns for probe triggering
       if (requestCount % STATS_LOG_INTERVAL === 0) {
         logBridgeStats();
+      }
+
+      // Trigger probe cycle if turn threshold reached
+      if (probeTurnCounter >= PROBE_CYCLE_TURN_THRESHOLD) {
+        logInfo(
+          `🔍 Turn threshold reached (${probeTurnCounter}/${PROBE_CYCLE_TURN_THRESHOLD}), scheduling probe cycle...`,
+        );
+        // Schedule probe asynchronously (don't block response)
+        setTimeout(() => {
+          runContinuousProviderProbe().catch((err) => {
+            logError(`Scheduled probe failed: ${err.message}`);
+          });
+        }, 0);
       }
 
       return {
@@ -2393,7 +2442,7 @@ function logBridgeStats() {
 
   const timeSinceProbe = Math.round((Date.now() - lastProbeStartTime) / 60000);
   logDebug(
-    `🔍 Provider probe: ${probeCompletionCount}/${PROBE_COMPLETIONS_BEFORE_REEVAL} completions, ${timeSinceProbe}min since last cycle`, // cspell:disable-line
+    `🔍 Provider probe: ${probeCompletionCount}/${PROBE_COMPLETIONS_BEFORE_RANKING} completions, ${probeTurnCounter}/${PROBE_CYCLE_TURN_THRESHOLD} turns, ${timeSinceProbe}min since last cycle`,
   );
 
   // Log adaptive params
