@@ -2293,6 +2293,11 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       logInfo(`   Preview: ${textPreview}`);
       recordProviderSuccess(provider.name);
       recordSuccessfulMetrics(provider.name, startedAt, result.usage, true);
+      recordContextSuccess(provider.name);
+      recordTokenUsage(provider.name, {
+        inputTokens: estimateMessagesTokens(messages),
+        outputTokens: Math.ceil((result.text?.length || 0) / 4),
+      });
 
       // Update session state
       if (sessionId) {
@@ -2314,10 +2319,11 @@ async function invokeWithFallback(messages, route, sessionId = null) {
         triedProviders: [...triedProviders],
       };
     } catch (err) {
-      const errStr = String(err);
+      const rootErr = unwrapAIError(err);
+      const errStr = errorToString(rootErr !== err ? rootErr : err);
       lastError = errStr;
       const isRetryable = isRetryableErrorDeep(err);
-      logWarn(`❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 100)}`, {
+      logWarn(`❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`, {
         providerName: provider.name,
         attemptNumber,
         isRetryable,
@@ -2335,11 +2341,22 @@ async function invokeWithFallback(messages, route, sessionId = null) {
         recordProviderFailureCount(provider.name);
       }
 
+      // Adaptive context: classify error and update provider limits dynamically
+      const errorType = classifyError(err);
+      recordErrorType(provider.name, errorType);
+      if (errorType === ERROR_TYPES.CONTEXT_TOO_LARGE) {
+        const details = parseContextErrorDetails(err);
+        recordContextError(provider.name, details);
+      } else if (errorType === ERROR_TYPES.RATE_LIMITED) {
+        const rlInfo = parseRateLimitInfo(err);
+        recordRateLimit(provider.name, rlInfo);
+      }
+
       // Clear sticky session immediately so concurrent requests on the same
       // session don't keep trying the failed provider.
       if (sessionId) {
         clearSessionProvider(sessionId);
-        logInfo(`🔓 Cleared sticky session after ${provider.name} failure`);
+        logInfo(`🔓 Cleared sticky session after ${provider.name} failure (${errorType})`);
       }
 
       // Continue to next provider in the loop
