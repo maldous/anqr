@@ -2755,7 +2755,27 @@ const server = http.createServer(async (req, res) => {
       const ranked = getRankedProviders({ excludeNames: nonToolCapableProviders });
 
       const adaptiveContext = getAdaptiveStats();
-      return sendJson(res, 200, { rankedProviders: ranked, providerStats: stats, adaptiveContext });
+      
+      // Include concurrent request count and details
+      const concurrentRequests = {
+        count: activeRequests.size,
+        requests: Array.from(activeRequests.entries()).map(([id, req]) => ({
+          id,
+          issueId: req.issueId,
+          model: req.model,
+          stream: req.stream,
+          filesChanged: req.filesChanged,
+          runtimeMs: Date.now() - req.startTime,
+          requestPreview: req.requestText?.slice(0, 100) || "(no description)",
+        })),
+      };
+      
+      return sendJson(res, 200, { 
+        rankedProviders: ranked, 
+        providerStats: stats, 
+        adaptiveContext,
+        concurrentRequests,
+      });
     }
 
     // GET /v1/providers — detailed provider status with probe results and stats
