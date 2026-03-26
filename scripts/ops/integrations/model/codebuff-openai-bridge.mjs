@@ -50,7 +50,7 @@ const OPENCLAW_TOOL_PROXY_ENABLED = process.env.OPENCLAW_TOOL_PROXY_ENABLED !== 
 
 // Validate config on startup
 if (OPENCLAW_TOOL_PROXY_ENABLED && !OPENCLAW_GATEWAY_TOKEN) {
-  logError("[bridge] ⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail");
+  logError("⚠️ OPENCLAW_TOOL_PROXY_ENABLED=true but OPENCLAW_GATEWAY_TOKEN not set - tool proxying will fail");
 }
 
 const CODEBUFF_MAX_STEPS = 200; // Codebuff SDK has internal context pruning; cap to limit memory
@@ -120,7 +120,7 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
       timeout: 30000,
     };
 
-    logDebug(`[bridge] 🔗 Proxying ${toolName} to OpenClaw Gateway (session: ${sessionId.slice(0, 8)}...)`);
+    logDebug(`🔗 Proxying ${toolName} to OpenClaw Gateway (session: ${sessionId.slice(0, 8)}...)`);
 
     const req = httpModule.request(options, (res) => {
       let data = "";
@@ -129,11 +129,11 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
         try {
           const parsed = JSON.parse(data);
           if (res.statusCode === 200) {
-            logDebug(`[bridge] ✅ ${toolName} proxied successfully`);
+            logDebug(`✅ ${toolName} proxied successfully`);
             resolve(parsed.output || parsed.result || parsed);
           } else {
             const errorMsg = parsed.error?.message || parsed.error || data || `Gateway returned ${res.statusCode}`;
-            logWarn(`[bridge] ❌ ${toolName} proxy failed: ${errorMsg}`);
+            logWarn(`❌ ${toolName} proxy failed: ${errorMsg}`);
             reject(new Error(`OpenClaw Gateway returned ${res.statusCode}: ${errorMsg}`));
           }
         } catch (parseErr) {
@@ -143,7 +143,7 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
     });
 
     req.on("error", (err) => {
-      logError(`[bridge] ❌ ${toolName} proxy connection failed: ${err.message}`);
+      logError(`❌ ${toolName} proxy connection failed: ${err.message}`);
       reject(new Error(`OpenClaw Gateway connection error: ${err.message}`));
     });
 
@@ -167,7 +167,7 @@ function logMemory(label) {
   const mem = process.memoryUsage();
   const heapMB = Math.round(mem.heapUsed / 1024 / 1024);
   const rssMB = Math.round(mem.rss / 1024 / 1024);
-  logDebug(`[bridge] 💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
+  logDebug(`💾 ${label}: heap=${heapMB}MB rss=${rssMB}MB`);
 }
 
 // Re-validation interval - probe paid availability at least every 5 hours.
@@ -309,66 +309,66 @@ async function testApiKey(apiKey, index) {
   const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
 
   // Phase 1: Test in paid mode (no costMode)
-  logDebug(`[bridge] Key ${index + 1} (${masked}): Testing paid mode...`);
+  logDebug(`Key ${index + 1} (${masked}): Testing paid mode...`);
   const paidResult = await testApiKeyInMode(apiKey, index, undefined);
 
   if (paidResult.success) {
-    logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (paid mode)`);
+    logDebug(`Key ${index + 1} (${masked}): ✅ working (paid mode)`);
     return { works: true, mode: "paid" };
   }
 
   if (paidResult.error === "auth") {
-    logError(`[bridge] Key ${index + 1} (${masked}): ❌ auth failed`);
+    logError(`Key ${index + 1} (${masked}): ❌ auth failed`);
     return { works: false, mode: null };
   }
 
   if (paidResult.error === "rate_limit") {
-    logWarn(`[bridge] Key ${index + 1} (${masked}): ❌ rate limited`);
+    logWarn(`Key ${index + 1} (${masked}): ❌ rate limited`);
     return { works: false, mode: null };
   }
 
   if (paidResult.error === "payment_required" && !paidResult.isFreeAccount) {
     // Paid account out of credits - try free mode
-    logDebug(`[bridge] Key ${index + 1} (${masked}): Paid mode failed, testing free mode...`);
+    logDebug(`Key ${index + 1} (${masked}): Paid mode failed, testing free mode...`);
     const freeResult = await testApiKeyInMode(apiKey, index, "free");
 
     if (freeResult.success) {
-      logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+      logDebug(`Key ${index + 1} (${masked}): ✅ working (free mode)`);
       return { works: true, mode: "free" };
     }
 
     // Free mode also failed - return error with clear message for symphony-bridge fallback
     logWarn(
-      `[bridge] Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`,
+      `Key ${index + 1} (${masked}): ❌ out of credits (both paid and free modes exhausted)`,
     );
     return { works: false, mode: null, error: "both_modes_exhausted" };
   }
 
   if (paidResult.error === "payment_required" && paidResult.isFreeAccount) {
     // This IS a free account - no paid credits, test free mode
-    logDebug(`[bridge] Key ${index + 1} (${masked}): Free account, testing free mode...`);
+    logDebug(`Key ${index + 1} (${masked}): Free account, testing free mode...`);
     const freeResult = await testApiKeyInMode(apiKey, index, "free");
 
     if (freeResult.success) {
-      logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+      logDebug(`Key ${index + 1} (${masked}): ✅ working (free mode)`);
       return { works: true, mode: "free" };
     }
 
-    logWarn(`[bridge] Key ${index + 1} (${masked}): ❌ free mode also failed`);
+    logWarn(`Key ${index + 1} (${masked}): ❌ free mode also failed`);
     return { works: false, mode: null };
   }
 
   // Other error - try free mode as fallback
-  logDebug(`[bridge] Key ${index + 1} (${masked}): Paid mode error, testing free mode...`);
+  logDebug(`Key ${index + 1} (${masked}): Paid mode error, testing free mode...`);
   const fallbackResult = await testApiKeyInMode(apiKey, index, "free");
 
   if (fallbackResult.success) {
-    logDebug(`[bridge] Key ${index + 1} (${masked}): ✅ working (free mode)`);
+    logDebug(`Key ${index + 1} (${masked}): ✅ working (free mode)`);
     return { works: true, mode: "free" };
   }
 
   logWarn(
-    `[bridge] Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`,
+    `Key ${index + 1} (${masked}): ❌ both modes failed (all attempts exhausted)`,
   );
   return { works: false, mode: null, error: "both_modes_exhausted" };
 }
@@ -376,13 +376,13 @@ async function testApiKey(apiKey, index) {
 // Test the API key at startup and determine the best mode (paid or free)
 async function testKeyAndSelectWinner(apiKey) {
   const masked = apiKey.slice(0, 6) + "..." + apiKey.slice(-4);
-  logDebug(`[bridge] Testing API key (${masked})...`);
+  logDebug(`Testing API key (${masked})...`);
 
   const result = await testApiKey(apiKey, 0);
 
   if (result.works) {
     const isPaid = result.mode === "paid";
-    logDebug(`[bridge] 🎯 Key working in ${result.mode} mode`);
+    logDebug(`🎯 Key working in ${result.mode} mode`);
     STARTUP_WINNER = {
       apiKey,
       costMode: isPaid ? undefined : "free",
@@ -398,7 +398,7 @@ async function testKeyAndSelectWinner(apiKey) {
   }
 
   // Other failures - set as fallback anyway (will fail at runtime with clear error)
-  logWarn(`[bridge] ⚠️ Key failed at startup — using paid mode as fallback`);
+  logWarn(`⚠️ Key failed at startup — using paid mode as fallback`);
   STARTUP_WINNER = {
     apiKey,
     costMode: undefined,
@@ -580,7 +580,7 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
   // If content is a string, return it directly
   if (typeof content === "string") {
-    logDebug(`[bridge] 📝 Content: string (${content.length} chars)`);
+    logDebug(`📝 Content: string (${content.length} chars)`);
     return content;
   }
 
@@ -596,7 +596,7 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
 
       // Skip tool-call parts if filtering is enabled (for cleaner client output)
       if (filterToolCalls && (isToolUIPart(part) || part.type === "tool-call")) {
-        logDebug(`[bridge] 📝 Part: tool-call (filtered out)`);
+        logDebug(`📝 Part: tool-call (filtered out)`);
         continue;
       }
 
@@ -608,36 +608,36 @@ function extractTextFromMessage(msg, filterToolCalls = true) {
         const text = part.text || part.content || "";
         if (text) {
           textParts.push(text);
-          logDebug(`[bridge] 📝 Part: text (${text.length} chars)`);
+          logDebug(`📝 Part: text (${text.length} chars)`);
         }
       } else if (isReasoningUIPart(part)) {
         // Model reasoning/rationale
         const reasoning = part.reasoning || part.content || "";
         if (reasoning) {
           textParts.push(reasoning);
-          logDebug(`[bridge] 📝 Part: reasoning (${reasoning.length} chars)`);
+          logDebug(`📝 Part: reasoning (${reasoning.length} chars)`);
         }
       } else if (isDataUIPart(part)) {
         // Data parts - skip
-        logDebug(`[bridge] 📝 Part: data (skipped)`);
+        logDebug(`📝 Part: data (skipped)`);
       } else {
         // Unknown type - try common fields
         const text = part.text || part.content || part.result || "";
         if (text) {
           const textStr = typeof text === "string" ? text : JSON.stringify(text);
           textParts.push(textStr);
-          logDebug(`[bridge] 📝 Part: ${partType} (${textStr.length} chars)`);
+          logDebug(`📝 Part: ${partType} (${textStr.length} chars)`);
         } else {
-          logDebug(`[bridge] 📝 Part: ${partType} (no extractable text)`);
+          logDebug(`📝 Part: ${partType} (no extractable text)`);
         }
       }
     }
 
-    logDebug(`[bridge] 📝 Content types found: ${partTypes.join(", ")}`);
+    logDebug(`📝 Content types found: ${partTypes.join(", ")}`);
 
     if (textParts.length > 0) {
       const result = textParts.join("\n");
-      logDebug(`[bridge] 📝 Extracted ${result.length} chars total`);
+      logDebug(`📝 Extracted ${result.length} chars total`);
       return result;
     }
   }
@@ -676,7 +676,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
         toolsUsed.add(toolName);
 
         if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          logDebug(`[bridge] codebuff ${toolName} (internal)`);
+          logDebug(`codebuff ${toolName} (internal)`);
           return;
         }
 
@@ -689,35 +689,35 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
         }
 
         const display = formatToolCallDisplay(toolName, input);
-        if (display) logDebug(`[bridge] ${display}`);
+        if (display) logDebug(`${display}`);
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
         if (!CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          logDebug(`[bridge] ✅ codebuff ${toolName} done`);
+          logDebug(`✅ codebuff ${toolName} done`);
           streamActivity(`✅ ${toolName} done\n`);
         }
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
-        if (text) logDebug(`[bridge] 💡 ${text.slice(0, 80)}...`);
+        if (text) logDebug(`💡 ${text.slice(0, 80)}...`);
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
-          logDebug(`[bridge] codebuff context-pruner (internal)`);
+          logDebug(`codebuff context-pruner (internal)`);
           return;
         }
         const name = event.displayName || event.agentType || "subagent";
-        logDebug(`[bridge] 🤖 codebuff subagent: ${name}`);
+        logDebug(`🤖 codebuff subagent: ${name}`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
         const name = event.displayName || event.agentType || "subagent";
-        logDebug(`[bridge] 🤖 codebuff ${name} done`);
+        logDebug(`🤖 codebuff ${name} done`);
         streamActivity(`🤖 ${name} done\n`);
       } else if (type === "agent_start" || type === "agent_finish") {
-        logDebug(`[bridge] 🤖 codebuff ${type}`);
+        logDebug(`🤖 codebuff ${type}`);
       } else if (type === "error") {
-        logDebug(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+        logDebug(`❌ codebuff error: ${event.message || JSON.stringify(event)}`);
       }
     } catch (err) {
-      logDebug(`[bridge] handleEvent error: ${err.message}`);
+      logDebug(`handleEvent error: ${err.message}`);
     }
   };
 
@@ -752,7 +752,7 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
     logDebug(
-      `[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
+      `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
     );
     maybeGC();
 
@@ -778,16 +778,16 @@ async function trySingleAccount(attempt, prompt, makeTimeout, cwd, _sessionId = 
 
   if (continuation > 0) {
     logDebug(
-      `[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
+      `Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
     );
   }
 
-  logDebug(`[bridge] ✅ Success on ${attempt.label}`);
+  logDebug(`✅ Success on ${attempt.label}`);
 
   if (toolsUsed.size > 0) {
-    logDebug(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
+    logDebug(`📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
   } else {
-    logDebug(`[bridge] 📊 Tools used: none (text-only mode)`);
+    logDebug(`📊 Tools used: none (text-only mode)`);
   }
 
   const finalOutput = result.output;
@@ -821,29 +821,29 @@ function getWinner() {
 async function revalidateAndSelectWinner() {
   const apiKey = getApiKey();
   if (!apiKey) {
-    logWarn(`[bridge] No API key available for re-validation`);
+    logWarn(`No API key available for re-validation`);
     return;
   }
 
-  logInfo(`[bridge] 🔄 Re-validating API key...`);
+  logInfo(`🔄 Re-validating API key...`);
   lastRevalidationTime = Date.now();
 
   await testKeyAndSelectWinner(apiKey);
 
   if (STARTUP_WINNER) {
-    logInfo(`[bridge] 🔄 Re-validation complete: ${STARTUP_WINNER.label}`);
+    logInfo(`🔄 Re-validation complete: ${STARTUP_WINNER.label}`);
   }
 }
 
 // Use pre-warmed winner directly, with paid→free fallback on recoverable errors
 async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = null }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
-    logInfo(`[bridge] ⏰ Time-based re-validation triggered`);
+    logInfo(`⏰ Time-based re-validation triggered`);
     await revalidateAndSelectWinner();
   }
 
   const winner = getWinner();
-  logInfo(`[bridge] Using: ${winner.label}`);
+  logInfo(`Using: ${winner.label}`);
 
   const prompt = buildPrompt(messages);
   const makeTimeout = () =>
@@ -855,8 +855,8 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
     return await trySingleAccount(winner, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message)) {
-      logWarn(`[bridge] ⚠️ Paid mode failed: ${err.message}`);
-      logInfo(`[bridge] 🔄 Falling back to free mode...`);
+      logWarn(`⚠️ Paid mode failed: ${err.message}`);
+      logInfo(`🔄 Falling back to free mode...`);
 
       const freeAttempt = {
         apiKey: winner.apiKey,
@@ -869,7 +869,7 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
-      logInfo(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+      logInfo(`🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
       return await trySingleAccount(freeAttempt, prompt, makeTimeout, cwd, sessionId, proxyToolFn);
     }
@@ -904,8 +904,8 @@ async function trySingleAccountStream(
   const streamActivity = (text) => {
     if (onChunk && text) {
       const chunk = makeSseChunk(completionId, created, text);
-      logDebug(`[bridge] 🌊 Streaming activity: ${text.slice(0, 80)}`);
-      logDebug(`[bridge] 📤 SSE chunk: ${JSON.stringify(chunk).slice(0, 200)}`);
+      logDebug(`🌊 Streaming activity: ${text.slice(0, 80)}`);
+      logDebug(`📤 SSE chunk: ${JSON.stringify(chunk).slice(0, 200)}`);
       onChunk(chunk);
     }
   };
@@ -923,7 +923,7 @@ async function trySingleAccountStream(
         toolsUsed.add(toolName);
 
         if (CODEBUFF_NOISY_TOOLS.has(toolName)) {
-          logDebug(`[bridge] codebuff ${toolName} (internal)`);
+          logDebug(`codebuff ${toolName} (internal)`);
           return;
         }
 
@@ -937,40 +937,40 @@ async function trySingleAccountStream(
 
         const display = formatToolCallDisplay(toolName, input);
         if (display) {
-          logDebug(`[bridge] ${display}`);
+          logDebug(`${display}`);
           streamActivity("\n" + display + "\n");
         }
       } else if (type === "tool_result" || type === "tool-result") {
         const toolName = event.toolName || "tool";
         // Log completion server-side but do NOT stream to client
-        logDebug(`[bridge] ✅ codebuff ${toolName} done`);
+        logDebug(`✅ codebuff ${toolName} done`);
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
-          logDebug(`[bridge] 💡 ${text.slice(0, 80)}...`);
+          logDebug(`💡 ${text.slice(0, 80)}...`);
           streamActivity(`💡 ${text}\n`);
         }
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
-          logDebug(`[bridge] codebuff context-pruner (internal)`);
+          logDebug(`codebuff context-pruner (internal)`);
           return;
         }
         const name = event.displayName || event.agentType || "subagent";
-        logDebug(`[bridge] 🤖 codebuff subagent: ${name}`);
+        logDebug(`🤖 codebuff subagent: ${name}`);
         streamActivity(`🤖 ${name}\n`);
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
         const name = event.displayName || event.agentType || "subagent";
-        logDebug(`[bridge] 🤖 codebuff ${name} done`);
+        logDebug(`🤖 codebuff ${name} done`);
         streamActivity(`🤖 ${name} done\n`);
       } else if (type === "agent_start" || type === "agent_finish") {
-        logDebug(`[bridge] 🤖 codebuff ${type}`);
+        logDebug(`🤖 codebuff ${type}`);
       } else if (type === "error") {
-        logDebug(`[bridge] ❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+        logDebug(`❌ codebuff error: ${event.message || JSON.stringify(event)}`);
         streamActivity(`❌ Error: ${event.message || "unknown error"}\n`);
       }
     } catch (err) {
-      logDebug(`[bridge] handleEvent error: ${err.message}`);
+      logDebug(`handleEvent error: ${err.message}`);
     }
   };
 
@@ -987,7 +987,7 @@ async function trySingleAccountStream(
         onChunk(makeSseChunk(completionId, created, text));
       }
     } catch (err) {
-      logDebug(`[bridge] handleStreamChunk error: ${err.message}`);
+      logDebug(`handleStreamChunk error: ${err.message}`);
     }
   };
 
@@ -1019,7 +1019,7 @@ async function trySingleAccountStream(
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
     logDebug(
-      `[bridge] 🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
+      `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
     );
     streamActivity(`\n🔄 Continuing (${continuation}/${CODEBUFF_MAX_CONTINUATIONS})...\n`);
     maybeGC();
@@ -1046,16 +1046,16 @@ async function trySingleAccountStream(
 
   if (continuation > 0) {
     logDebug(
-      `[bridge] Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
+      `Completed after ${continuation + 1} runs (subgoal: ${lastSubgoalStatus})`,
     );
   }
 
-  logDebug(`[bridge] ✅ Success on ${attempt.label}`);
+  logDebug(`✅ Success on ${attempt.label}`);
 
   if (toolsUsed.size > 0) {
-    logDebug(`[bridge] 📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
+    logDebug(`📊 Tools used: ${Array.from(toolsUsed).join(", ")}`);
   } else {
-    logDebug(`[bridge] 📊 Tools used: none (text-only mode)`);
+    logDebug(`📊 Tools used: none (text-only mode)`);
   }
 
   const needsContinuation = lastSubgoalStatus === "IN_PROGRESS";
@@ -1078,12 +1078,12 @@ async function trySingleAccountStream(
 // Use pre-warmed winner directly for streaming, with paid→free fallback on recoverable errors
 async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, created, sessionId = null, proxyToolFn = null }) {
   if (Date.now() - lastRevalidationTime > REVALIDATION_INTERVAL_MS) {
-    logInfo(`[bridge] ⏰ Time-based re-validation triggered (streaming)`);
+    logInfo(`⏰ Time-based re-validation triggered (streaming)`);
     await revalidateAndSelectWinner();
   }
 
   const winner = getWinner();
-  logInfo(`[bridge] Streaming: Using ${winner.label}`);
+  logInfo(`Streaming: Using ${winner.label}`);
 
   const prompt = buildPrompt(messages);
   const makeTimeout = () =>
@@ -1114,8 +1114,8 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
     );
   } catch (err) {
     if (winner.isPaid && isRecoverableError(err.message) && chunksSent === 0) {
-      logWarn(`[bridge] ⚠️ Paid mode failed (streaming, 0 chunks sent): ${err.message}`);
-      logInfo(`[bridge] 🔄 Falling back to free mode...`);
+      logWarn(`⚠️ Paid mode failed (streaming, 0 chunks sent): ${err.message}`);
+      logInfo(`🔄 Falling back to free mode...`);
 
       const freeAttempt = {
         apiKey: winner.apiKey,
@@ -1128,7 +1128,7 @@ async function invokeCodebuffStream({ messages, cwd, onChunk, completionId, crea
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
-      logInfo(`[bridge] 🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
+      logInfo(`🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
 
       return await trySingleAccountStream(
         freeAttempt,
@@ -1195,13 +1195,13 @@ function checkAuth(req) {
 // Main request handler
 const server = http.createServer(async (req, res) => {
   // Debug: log ALL requests before any processing
-  logDebug(`[bridge] ===== REQUEST =====`);
-  logDebug(`[bridge] method: ${req.method}, url: ${req.url}`);
-  logDebug(`[bridge] headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
+  logDebug(`===== REQUEST =====`);
+  logDebug(`method: ${req.method}, url: ${req.url}`);
+  logDebug(`headers: authorization=${req.headers.authorization?.slice(0, 20)}...`);
   if (req.headers["x-openclaw-session"]) {
-    logDebug(`[bridge] session: ${req.headers["x-openclaw-session"].slice(0, 12)}...`);
+    logDebug(`session: ${req.headers["x-openclaw-session"].slice(0, 12)}...`);
   }
-  logDebug(`[bridge] ===================`);
+  logDebug(`===================`);
 
   // Extract OpenClaw session ID for tool proxying
   const openclawSessionId = req.headers["x-openclaw-session"] || null;
@@ -1210,7 +1210,7 @@ const server = http.createServer(async (req, res) => {
     // Auth check (skip for health check and model list)
     const skipAuth = req.url === "/health" || req.url === "/v1/models";
     if (!skipAuth && !checkAuth(req)) {
-      logWarn(`[bridge] Auth failed for ${req.method} ${req.url}`);
+      logWarn(`Auth failed for ${req.method} ${req.url}`);
       return unauthorized(res);
     }
 
@@ -1267,11 +1267,11 @@ const server = http.createServer(async (req, res) => {
 
       // Log start for new requests (only on first message)
       if (issueContext && isNewRequest) {
-        logInfo(`[bridge] 🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
+        logInfo(`🚀 Starting: ${issueContext.identifier} — ${issueContext.title}`);
       }
 
       logInfo(
-        `[bridge] Chat completion request: model=${model}, messages=${messages.length}, stream=${stream}`,
+        `Chat completion request: model=${model}, messages=${messages.length}, stream=${stream}`,
       );
       logMemory("request-start");
       const requestStartTime = Date.now();
@@ -1300,7 +1300,7 @@ const server = http.createServer(async (req, res) => {
         let streamResult = null;
 
         try {
-          logInfo(`[bridge] ⏱️ Starting streaming invocation...`);
+          logInfo(`⏱️ Starting streaming invocation...`);
           streamResult = await invokeCodebuffStream({
             messages,
             cwd: DEFAULT_CWD,
@@ -1315,7 +1315,7 @@ const server = http.createServer(async (req, res) => {
           });
 
           logInfo(
-            `[bridge] ⏱️ Streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
+            `⏱️ Streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
           );
           logMemory("stream-done");
 
@@ -1348,15 +1348,15 @@ const server = http.createServer(async (req, res) => {
             finishReason = "length"; // Signal more work needed
             if (streamResult.hasSubgoals) {
               logInfo(
-                `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals)`,
+                `🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals)`,
               );
             } else {
               logInfo(
-                `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending work)`,
+                `🔄 More work needed: ${issueContext?.identifier || "request"} (pending work)`,
               );
             }
           } else if (issueContext) {
-            logInfo(`[bridge] ✅ Finished: ${issueContext.identifier}`);
+            logInfo(`✅ Finished: ${issueContext.identifier}`);
           }
 
           // Send final chunk with appropriate finish_reason
@@ -1381,7 +1381,7 @@ const server = http.createServer(async (req, res) => {
         } catch (streamError) {
           // Send error as SSE event before closing
           logError(
-            `[bridge] Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`,
+            `Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`,
           );
           logMemory("stream-error");
           const errorChunk = {
@@ -1407,7 +1407,7 @@ const server = http.createServer(async (req, res) => {
         return;
       } else {
         // Non-streaming mode
-        logInfo(`[bridge] ⏱️ Starting non-streaming invocation...`);
+        logInfo(`⏱️ Starting non-streaming invocation...`);
         const result = await invokeCodebuff({
           messages,
           cwd: DEFAULT_CWD,
@@ -1415,7 +1415,7 @@ const server = http.createServer(async (req, res) => {
           proxyToolFn: openclawSessionId ? callOpenClawGatewayTool : null,
         });
         logInfo(
-          `[bridge] ⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
+          `⏱️ Non-streaming invocation complete (elapsed: ${formatElapsed(Date.now() - requestStartTime)})`,
         );
         logMemory("invoke-done");
 
@@ -1430,18 +1430,18 @@ const server = http.createServer(async (req, res) => {
 
           if (result.hasSubgoals) {
             logInfo(
-              `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals - continuation required)`,
+              `🔄 More work needed: ${issueContext?.identifier || "request"} (active subgoals - continuation required)`,
             );
           } else {
             logInfo(
-              `[bridge] 🔄 More work needed: ${issueContext?.identifier || "request"} (pending tool calls)`,
+              `🔄 More work needed: ${issueContext?.identifier || "request"} (pending tool calls)`,
             );
           }
         } else if (issueContext) {
           // Extract first line of summary for logging
           const summary = result.text || "";
           const firstLine = summary.split("\n")[0].trim().slice(0, 100) || "(no summary)";
-          logInfo(`[bridge] ✅ Finished: ${issueContext.identifier} — ${firstLine}`);
+          logInfo(`✅ Finished: ${issueContext.identifier} — ${firstLine}`);
         }
 
         // Extract text content, filtering out tool-call metadata for clean response
@@ -1478,7 +1478,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 404, { error: { message: "Not found" } });
     }
   } catch (error) {
-    logError(`[bridge] Error: ${error.message}`);
+    logError(`Error: ${error.message}`);
     sendJson(res, 500, {
       error: {
         message: error instanceof Error ? error.message : String(error),
@@ -1493,7 +1493,7 @@ import { updateMemory } from "../../lib/update-memory.mjs";
 
 // Graceful shutdown
 async function shutdown(signal) {
-  logInfo(`\n[bridge] Received ${signal}, shutting down...`);
+  logInfo(`\nReceived ${signal}, shutting down...`);
   
   // Update MEMORY.md BEFORE shutdown
   try {
@@ -1503,13 +1503,13 @@ async function shutdown(signal) {
     await updateMemory(
       `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`
     );
-    logInfo(`[bridge] 📝 Updated MEMORY.md before shutdown`);
+    logInfo(`📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
-    logError(`[bridge] ⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+    logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
   
   server.close(() => {
-    logInfo("[bridge] Server closed");
+    logInfo("Server closed");
   });
   // Exit immediately without waiting for active connections
   process.exit(0);
@@ -1522,28 +1522,28 @@ process.on("SIGINT", () => { shutdown("SIGINT").catch(() => process.exit(1)); })
 async function initializeBridge() {
   const apiKey = getApiKey();
 
-  logInfo(`[bridge] ========================================`);
-  logInfo(`[bridge] Codebuff OpenAI Bridge Starting`);
-  logInfo(`[bridge] ========================================`);
-  logInfo(`[bridge] Listening: http://127.0.0.1:${PORT}/v1`);
-  logInfo(`[bridge] Model: ${MODEL_ID}`);
-  logInfo(`[bridge] API key: ${apiKey ? "configured" : "NOT SET"}`);
-  logInfo(`[bridge] Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
-  logInfo(`[bridge] Streaming: enabled`);
-  logInfo(`[bridge] Working directory: ${DEFAULT_CWD}`);
-  logInfo(`[bridge] Log level: configurable via SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env`);
+  logInfo(`========================================`);
+  logInfo(`Codebuff OpenAI Bridge Starting`);
+  logInfo(`========================================`);
+  logInfo(`Listening: http://127.0.0.1:${PORT}/v1`);
+  logInfo(`Model: ${MODEL_ID}`);
+  logInfo(`API key: ${apiKey ? "configured" : "NOT SET"}`);
+  logInfo(`Auth token: Bearer ${API_KEY.slice(0, 10)}...`);
+  logInfo(`Streaming: enabled`);
+  logInfo(`Working directory: ${DEFAULT_CWD}`);
+  logInfo(`Log level: configurable via SIGUSR1/SIGUSR2 or CODEBUFF_BRIDGE_LOG_LEVEL env`);
 
   if (apiKey) {
-    logInfo(`[bridge] Testing API key (paid mode first, then free)...`);
+    logInfo(`Testing API key (paid mode first, then free)...`);
     await testKeyAndSelectWinner(apiKey);
   } else {
-    logError(`[bridge] WARNING: CODEBUFF_API_KEY not set!`);
+    logError(`WARNING: CODEBUFF_API_KEY not set!`);
   }
 
   STARTUP_INITIALIZED = true;
-  logInfo(`[bridge] ========================================`);
-  logInfo(`[bridge] Ready to accept requests`);
-  logInfo(`[bridge] ========================================`);
+  logInfo(`========================================`);
+  logInfo(`Ready to accept requests`);
+  logInfo(`========================================`);
 }
 
 // Health check - include initialization status

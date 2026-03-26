@@ -101,7 +101,7 @@ async function checkModelResponds() {
 }
 
 async function main() {
-  logInfo(`[ollama-local-audit] Checking ${PINNED_MODEL} at ${OLLAMA_BASE}\n`);
+  logInfo(`Checking ${PINNED_MODEL} at ${OLLAMA_BASE}\n`);
 
   const reachable = await checkReachable();
   if (!reachable) {
@@ -125,7 +125,7 @@ async function main() {
 function printSummary() {
   const passed = results.filter((r) => r.pass).length;
   const total = results.length;
-  logInfo(`\n[ollama-local-audit] ${passed}/${total} checks passed`);
+  logInfo(`\n${passed}/${total} checks passed`);
 }
 
 await main();
