@@ -1344,6 +1344,8 @@ const toolCapableProviders = new Set(KNOWN_TOOL_CAPABLE);
 const nonToolCapableProviders = new Set();
 const TOOL_PROBE_TIMEOUT_MS = 20_000;
 const TOOL_PROBE_RETRY_DELAY_MS = 60_000;
+const GATEWAY_BATCH_SIZE = 3; // Max concurrent probes per shared API gateway
+const GATEWAY_BATCH_DELAY_MS = 3_000; // Delay between batches within a gateway
 let toolProbeRetryScheduled = false;
 const RAW_TOOL_JSON_RE = /\{\s*"name"\s*:\s*"|"function_call"\s*:|"tool_calls"\s*:/;
 
@@ -1367,21 +1369,20 @@ async function probeToolCapabilityForProvider(providerDef) {
     return { name, status: "sdk-capable" };
   }
 
-  // OpenRouter: all models share the same API key and tool protocol support.
-  // Skip inference to collect real metrics from each provider's "2+2" query.
-  // This trades API quota for actual performance data.
-  // if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
-  //   for (const orName of OPENROUTER_PROVIDER_NAME_SET) {
-  //     if (toolCapableProviders.has(orName)) {
-  //       toolCapableProviders.add(name);
-  //       return { name, status: "inferred-capable" };
-  //     }
-  //     if (nonToolCapableProviders.has(orName)) {
-  //       nonToolCapableProviders.add(name);
-  //       return { name, status: "inferred-non-capable" };
-  //     }
-  //   }
-  // }
+  // OpenRouter: all models share the same API key and gateway.
+  // If another OpenRouter model already proved capable/non-capable,
+  // infer the same for this model (saves API quota and avoids rate limits).
+  // Models that genuinely lack tool support return a distinct "No endpoints
+  // found that support tool use" error, so inference from a capable sibling
+  // is safe — non-capable models will still be caught by their own probes.
+  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) {
+    for (const orName of OPENROUTER_PROVIDER_NAME_SET) {
+      if (toolCapableProviders.has(orName) && !KNOWN_TOOL_CAPABLE.has(orName)) {
+        toolCapableProviders.add(name);
+        return { name, status: "inferred-capable" };
+      }
+    }
+  }
 
   // Resolve API key (mirrors credit-gate's resolveProviderApiKey)
   let apiKey = providerDef.envVar ? process.env[providerDef.envVar] : null;
@@ -1466,11 +1467,18 @@ async function probeToolCapabilityForProvider(providerDef) {
     }
 
     // Explicit tool rejection by the API — definitive negative signal
-    if (/tool_choice|tools.*not.*support|function.*call.*not|does not support/i.test(errStr)) {
+    if (/tool_choice|tools.*not.*support|function.*call.*not|does not support|no endpoints.*tool/i.test(errStr)) {
       nonToolCapableProviders.add(name);
       recordProbeResult(name, { success: false, durationMs: Date.now() - startTime });
       logWarn(`❌ TOOL PROBE FAIL: ${name} - API explicitly rejected tool support`);
       return { name, status: "non-capable-rejected" };
+    }
+
+    // Infrastructure/config errors — NOT indicative of tool capability
+    // (account guardrails, data policy restrictions, invalid/expired API keys, team membership)
+    if (/guardrail|data.?policy|invalid.*key|expired.*token|invalid.*format.*key|not part of team/i.test(errStr)) {
+      logWarn(`🔧 TOOL PROBE INFRA: ${name} - ${errStr.slice(0, 150)}`);
+      return { name, status: "infrastructure-error" };
     }
 
     if (/timeout|tool-probe-timeout/i.test(errStr)) {
@@ -1487,6 +1495,37 @@ async function probeToolCapabilityForProvider(providerDef) {
     
     return { name, status: "probe-error" };
   }
+}
+
+/**
+ * Classify providers by their shared API gateway/key.
+ * Providers sharing a gateway are batched sequentially to avoid rate-limit storms.
+ */
+function getProviderGateway(name) {
+  if (OPENROUTER_PROVIDER_NAME_SET.has(name)) return "openrouter";
+  if (name === "gemini" || name === "gemini-lite") return "gemini";
+  if (name.startsWith("ollama")) return "ollama";
+  return name;
+}
+
+/**
+ * Probe providers within a single gateway in small sequential batches.
+ * Prevents rate-limit storms when many models share one API key.
+ */
+async function probeGatewayBatched(gatewayName, providers, batchSize, delayMs) {
+  const results = [];
+  for (let i = 0; i < providers.length; i += batchSize) {
+    const batch = providers.slice(i, i + batchSize);
+    logDebug(`🔧 Gateway ${gatewayName}: batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(providers.length / batchSize)} (${batch.map((p) => p.name).join(", ")})`);
+    const batchResults = await Promise.allSettled(
+      batch.map((p) => probeToolCapabilityForProvider(p)),
+    );
+    for (const r of batchResults) {
+      if (r.status === "fulfilled") results.push(r.value);
+    }
+    if (i + batchSize < providers.length) await sleep(delayMs);
+  }
+  return results;
 }
 
 async function probeAllToolCapability() {
@@ -1511,16 +1550,38 @@ async function probeAllToolCapability() {
     return;
   }
 
-  logDebug(`🔧 Tool capability probe: testing ${toProbe.length} providers (no batching)...`);
+  // Group by API gateway to avoid rate-limit storms (e.g., 27 OpenRouter models share one key)
+  const gateways = new Map();
+  for (const p of toProbe) {
+    const gw = getProviderGateway(p.name);
+    if (!gateways.has(gw)) gateways.set(gw, []);
+    gateways.get(gw).push(p);
+  }
 
-  // Probe all providers in parallel (no batching)
-  const batchResults = await Promise.allSettled(
-    toProbe.map((p) => probeToolCapabilityForProvider(p)),
-  );
+  const gatewayNames = [...gateways.entries()].map(([gw, ps]) => `${gw}(${ps.length})`);
+  logDebug(`🔧 Tool capability probe: ${toProbe.length} providers across ${gateways.size} gateways: ${gatewayNames.join(", ")}`);
+
+  // Probe gateways in parallel; batch sequentially within large gateways
+  const gatewayPromises = [];
+  for (const [gw, providers] of gateways) {
+    if (providers.length <= GATEWAY_BATCH_SIZE) {
+      gatewayPromises.push(
+        Promise.allSettled(providers.map((p) => probeToolCapabilityForProvider(p))).then(
+          (settled) => settled.filter((r) => r.status === "fulfilled").map((r) => r.value),
+        ),
+      );
+    } else {
+      gatewayPromises.push(
+        probeGatewayBatched(gw, providers, GATEWAY_BATCH_SIZE, GATEWAY_BATCH_DELAY_MS),
+      );
+    }
+  }
+
+  const gatewayResults = await Promise.allSettled(gatewayPromises);
   const results = [];
-  for (const r of batchResults) {
-    if (r.status === "fulfilled") {
-      results.push(r.value);
+  for (const gr of gatewayResults) {
+    if (gr.status === "fulfilled" && Array.isArray(gr.value)) {
+      results.push(...gr.value);
     }
   }
 

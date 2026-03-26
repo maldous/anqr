@@ -180,39 +180,7 @@ symphony-bridge: ## Start the Symphony OpenAI-compatible bridge with AI SDK
 	node scripts/ops/integrations/model/symphony-openai-bridge.mjs
 
 show-metrics: ## Show provider metrics in formatted columns
-	@curl -sf http://127.0.0.1:4319/v1/stats \
-		-H "Authorization: Bearer local-symphony" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-ranked = data.get('rankedProviders', [])
-stats = data.get('providerStats', {})
-if not stats:
-    print('No provider stats available.'); sys.exit(0)
-print()
-print('\033[1m' + '  {:3s}  {:<30s} {:<14s} {:>5s} {:>5s} {:>5s} {:>8s} {:>8s} {:>7s} {:>5s} {:>5s} {:>5s}'.format(
-    '#', 'PROVIDER', 'TIER', 'SEL', 'OK', 'FAIL', 'RATE', 'AVG MS', 'SCORE', 'pSEL', 'pOK', 'pFAIL') + '\033[0m')
-print('  ' + '-' * 120)
-rank_map = {r['name']: r.get('rank', '-') for r in ranked}
-for name in sorted(stats, key=lambda n: (rank_map.get(n, 999) if isinstance(rank_map.get(n, 999), int) else 999, n)):
-    s = stats[name]
-    r = rank_map.get(name, '-')
-    score = s.get('score', 'pending')
-    score_str = '{:.2f}'.format(score) if isinstance(score, (int, float)) else str(score)
-    print('  {:>3s}  {:<30s} {:<14s} {:>5d} {:>5d} {:>5d} {:>8s} {:>8s} {:>7s} {:>5d} {:>5d} {:>5d}'.format(
-        str(r), name[:30], s.get('tier','?')[:14],
-        s.get('selections',0), s.get('successes',0), s.get('failures',0),
-        str(s.get('successRate','N/A')), str(s.get('avgDurationMs',0)) + 'ms',
-        score_str,
-        s.get('probeSelections',0), s.get('probeSuccesses',0), s.get('probeFailures',0)))
-print()
-total_sel = sum(s.get('selections',0) for s in stats.values())
-total_ok = sum(s.get('successes',0) for s in stats.values())
-total_fail = sum(s.get('failures',0) for s in stats.values())
-ranked_count = len([r for r in ranked if r.get('score') not in (None, 'pending')])
-print('  Totals: {} selections, {} successes, {} failures | {} providers ranked'.format(
-    total_sel, total_ok, total_fail, ranked_count))
-print()
-" || echo "\n❌ Symphony bridge not reachable at http://127.0.0.1:4319"
+	@python3 scripts/show-metrics.py
 
 update-metrics: ## Reset provider stats and trigger a fresh probe cycle
 	@echo "🔄 Resetting provider stats..."

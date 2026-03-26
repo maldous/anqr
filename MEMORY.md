@@ -638,3 +638,9 @@ All messages above this line are from before the bridge restart. Only errors/war
 ### 2026-03-26 - Symphony Bridge stopped (PID 2311347, commit a03dacb43, 38/38 providers, signal: SIGTERM)
 
 ### 2026-03-26 - Symphony Bridge restarted successfully (PID 2313910, commit a03dacb43, 38/38 providers available, Discord monitoring active)
+
+### 2026-03-26 - Symphony Bridge stopped (PID 2313910, commit 6cb71c649, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-26 - Codebuff Bridge stopped (PID 2311386, commit 6cb71c649, mode: paid, signal: SIGTERM)
+
+### 2026-03-26 - Symphony Bridge restarted successfully (PID 2435804, commit 6cb71c649, 38/38 providers available, Discord monitoring active)
