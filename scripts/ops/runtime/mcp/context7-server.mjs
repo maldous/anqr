@@ -173,7 +173,7 @@ function sendRequest(method, params = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
  * @param {string} reason - Human-readable reason for the rejection
  */
 function rejectAllPending(reason) {
-  for (const [_id, { reject, timer }] of pendingRequests) {
+  for (const [, { reject, timer }] of pendingRequests) {
     clearTimeout(timer);
     reject(new Error(reason));
   }
