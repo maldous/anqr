@@ -436,10 +436,7 @@
     "libsodium",
     "submitbutton",
     "unmatched",
-    "chunker",
-    "minisearch",
-    "normalise",
-    "scannerwork"
+    "chunker"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
