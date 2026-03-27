@@ -787,8 +787,7 @@ async function trySingleAccount(
   // update_subgoal or add_subgoal tools are processed during client.run()
   let continuation = 0;
   // eslint-disable-next-line no-unmodified-loop-condition -- lastSubgoalStatus modified by handleEvent callback
-  // NOSONAR: lastSubgoalStatus is modified via handleEvent callback (tool_call event handler)
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") { // NOSONAR javascript:S2189 - lastSubgoalStatus modified via handleEvent callback
     continuation++;
     logInfo(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
@@ -1099,8 +1098,7 @@ async function trySingleAccountStream(
   // update_subgoal or add_subgoal tools are processed during client.run()
   let continuation = 0;
   // eslint-disable-next-line no-unmodified-loop-condition -- lastSubgoalStatus modified by handleEvent callback
-  // NOSONAR: lastSubgoalStatus is modified via handleEvent callback (tool_call event handler)
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") { // NOSONAR javascript:S2189 - lastSubgoalStatus modified via handleEvent callback
     continuation++;
     logDebug(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
