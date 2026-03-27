@@ -173,7 +173,7 @@ function sendRequest(method, params = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
  * @param {string} reason - Human-readable reason for the rejection
  */
 function rejectAllPending(reason) {
-  for (const [id, { reject, timer }] of pendingRequests) {
+  for (const [_id, { reject, timer }] of pendingRequests) {
     clearTimeout(timer);
     reject(new Error(reason));
   }
@@ -283,9 +283,6 @@ export async function startContext7Server() {
 
   return new Promise((resolve) => {
     const env = { ...process.env };
-    if (env.CONTEXT7_API_KEY) {
-      env.CONTEXT7_API_KEY = env.CONTEXT7_API_KEY;
-    }
 
     serverProcess = spawn("npx", ["-y", "@upstash/context7-mcp"], {
       stdio: ["pipe", "pipe", "pipe"],

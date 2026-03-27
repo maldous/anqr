@@ -150,7 +150,7 @@ export async function generateEmbeddings(texts) {
 
   logInfo(`Generating embeddings for ${texts.length} texts (concurrency: ${MAX_CONCURRENCY})`);
 
-  const results = new Array(texts.length).fill(null);
+  const results = Array.from({ length: texts.length }, () => null);
   let completed = 0;
 
   // Process in batches of MAX_CONCURRENCY
