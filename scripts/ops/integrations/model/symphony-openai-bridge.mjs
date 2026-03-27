@@ -2322,7 +2322,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       };
     } catch (err) {
       const rootErr = unwrapAIError(err);
-      const errStr = errorToString(rootErr !== err ? rootErr : err);
+      const errStr = errorToString(rootErr === err ? err : rootErr);
       lastError = errStr;
       const isRetryable = isRetryableErrorDeep(err);
       logWarn(`❌ ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`, {
@@ -2617,7 +2617,7 @@ async function invokeWithFallbackStream(
       };
     } catch (err) {
       const rootErr = unwrapAIError(err);
-      const errStr = errorToString(rootErr !== err ? rootErr : err);
+      const errStr = errorToString(rootErr === err ? err : rootErr);
       lastError = errStr;
       logWarn(
         `❌ Streaming ${provider.name} failed (attempt ${attemptNumber}): ${errStr.slice(0, 200)}`,
