@@ -32,7 +32,7 @@ const MONITORED_SERVICES = [
 
 import { createLogger } from "../../lib/logger.mjs";
 
-const { logInfo, logWarn, logError } = createLogger();
+const { logDebug, logInfo, logWarn, logError } = createLogger();
 
 // Track restart timestamps and activating state
 const restartTimestamps = new Map();

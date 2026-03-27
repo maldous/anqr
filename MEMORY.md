@@ -79,3 +79,5 @@ Documented in: scripts/ops/integrations/model/symphony-session-state.mjs header 
 Related files: symphony-openai-bridge.mjs, symphony-bridge-truncation.mjs, symphony-adaptive-context.mjs
 
 Note: Unable to create Linear issue - workspace exceeded free issue limit. Architectural concern documented in code comments and MEMORY.md for future review.
+
+### 2026-03-27 - Symphony Bridge stopped (PID 3270213, commit f36fbbe9b, 38/38 providers, signal: SIGTERM)
