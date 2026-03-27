@@ -832,7 +832,11 @@ async function runToolLoop({
         // Continuation signal from response
         response.needsContinuation;
 
-      if (!isLegitimateWork) {
+      if (isLegitimateWork) {
+        // Reset counter if this is legitimate work
+        logDebug("[agent] No tool calls, but legitimate work detected - not counting as stuck");
+        consecutiveNoToolCalls = 0;
+      } else {
         consecutiveNoToolCalls++;
         if (consecutiveNoToolCalls >= 3) {
           logWarn("[agent] Too many consecutive turns without tool calls — aborting");
@@ -849,10 +853,6 @@ async function runToolLoop({
             providerName: actualProviderName,
           };
         }
-      } else {
-        // Reset counter if this is legitimate work
-        logDebug("[agent] No tool calls, but legitimate work detected - not counting as stuck");
-        consecutiveNoToolCalls = 0;
       }
       messages.push(msg);
 
