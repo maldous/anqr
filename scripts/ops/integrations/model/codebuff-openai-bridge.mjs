@@ -65,7 +65,7 @@ const CODEBUFF_NOISY_TOOLS = new Set([
   "context-pruner",
   "read_files",
 ]);
-const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
+const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : () => {};
 
 // OpenClaw-specific tools that should be proxied to the Gateway API
 // Note: These are checked but not yet fully integrated - tool proxying is in progress
