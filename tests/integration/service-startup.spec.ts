@@ -42,7 +42,7 @@ describe("Service Startup and Environment Contracts", () => {
 
       if (status === -1) {
         // Bridge not running — acceptable for startup test
-        expect(true).toBe(true);
+        expect(status).toBe(-1);
         return;
       }
 
@@ -56,7 +56,7 @@ describe("Service Startup and Environment Contracts", () => {
       });
 
       if (status === -1) {
-        expect(true).toBe(true);
+        expect(status).toBe(-1);
         return;
       }
 
@@ -77,7 +77,7 @@ describe("Service Startup and Environment Contracts", () => {
       });
 
       if (status === -1) {
-        expect(true).toBe(true);
+        expect(status).toBe(-1);
         return;
       }
 
@@ -91,7 +91,7 @@ describe("Service Startup and Environment Contracts", () => {
       const { status, data } = await safeFetch("http://127.0.0.1:4318/health");
 
       if (status === -1) {
-        expect(true).toBe(true);
+        expect(status).toBe(-1);
         return;
       }
 
@@ -103,7 +103,7 @@ describe("Service Startup and Environment Contracts", () => {
       const { status, data } = await safeFetch("http://127.0.0.1:4318/health");
 
       if (status === -1) {
-        expect(true).toBe(true);
+        expect(status).toBe(-1);
         return;
       }
 

@@ -23,33 +23,42 @@ describe("Queue Control Scripts", () => {
 
     it("should support --check flag for state inspection", () => {
       let exitCode = 0;
+      let output = "";
       try {
-        execSync("node scripts/ops/symphony-queue-control.mjs --help", {
+        const result = execSync("node scripts/ops/symphony-queue-control.mjs --help 2>&1", {
           stdio: "pipe",
           timeout: 10_000,
         });
+        output = String(result);
       } catch (e) {
         // May fail if no args provided, but should not crash - check exit code
         exitCode = (e as { status?: number }).status ?? 1;
       }
       // Script should either succeed or fail gracefully (not crash)
-      expect(typeof exitCode).toBe("number");
+      expect(exitCode).toBeGreaterThanOrEqual(0);
+      expect(output.length).toBeGreaterThan(0);
     });
 
     it("should support --dry-run flag", () => {
-      let didNotCrash = false;
+      let output = "";
+      let exitCode = 0;
       try {
-        execSync("node scripts/ops/symphony-queue-control.mjs --all --dry-run", {
+        const result = execSync("node scripts/ops/symphony-queue-control.mjs --all --dry-run 2>&1", {
           stdio: "pipe",
           timeout: 10_000,
         });
-        didNotCrash = true;
-      } catch {
+        output = String(result);
+        exitCode = 0;
+      } catch (e) {
         // May fail for various reasons but interface should exist
-        didNotCrash = true;
+        exitCode = (e as { status?: number }).status ?? 1;
+        const stdout = (e as { stdout?: unknown }).stdout;
+        output = stdout ? String(stdout) : "";
       }
       // Script should not crash when called with dry-run flag
-      expect(didNotCrash).toBe(true);
+      expect(exitCode).toBeGreaterThanOrEqual(0);
+      // Should produce some output or have valid exit code
+      expect(output.length).toBeGreaterThan(0);
     });
   });
 

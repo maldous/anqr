@@ -22,7 +22,7 @@ import { appendFile } from "node:fs/promises";
 import path from "node:path";
 import { sendDiscordEmbed } from "../../integrations/notifications/discord-webhook.mjs";
 
-const CHECK_INTERVAL_MS = (parseInt(process.env.WATCHDOG_CHECK_INTERVAL) || 60) * 1000;
+const CHECK_INTERVAL_MS = (Number.parseInt(process.env.WATCHDOG_CHECK_INTERVAL) || 60) * 1000;
 const STARTUP_GRACE_PERIOD_MS = 60 * 1000; // 60 seconds grace period for startup
 
 const MONITORED_SERVICES = [
@@ -37,6 +37,9 @@ const { logInfo, logWarn, logError } = createLogger();
 // Track restart timestamps and activating state
 const restartTimestamps = new Map();
 const activatingStateStart = new Map();
+
+// Shutdown flag for graceful loop exit
+let shuttingDown = false;
 
 async function updateMemory(note) {
   const timestamp = new Date().toISOString();
@@ -67,7 +70,7 @@ function getServicePID(serviceName) {
       `systemctl --user show ${serviceName} --property=MainPID --value 2>&1 || true`,
       { encoding: "utf-8", timeout: 5000 },
     );
-    const pid = parseInt(output.trim());
+    const pid = Number.parseInt(output.trim());
     return pid > 0 ? pid : null;
   } catch {
     return null;
@@ -247,8 +250,8 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
         ],
         footer: "⚠️ Manual recovery needed immediately",
       });
-    } catch (discordErr) {
-      logError(`[watchdog] ⚠️ Failed to send rollback failure notification: ${discordErr.message}`);
+    } catch (error_) {
+      logError(`[watchdog] ⚠️ Failed to send rollback failure notification: ${error_.message}`);
     }
 
     await updateMemory(`Watchdog rollback FAILED for ${shortName} bridge: ${err.message}`);
@@ -331,22 +334,29 @@ async function monitorLoop() {
     `[watchdog]    Monitored services: ${MONITORED_SERVICES.map((s) => s.shortName).join(", ")}`,
   );
 
-  while (true) {
+  while (!shuttingDown) {
     logInfo(`[watchdog] 🔍 Checking services...`);
 
     for (const service of MONITORED_SERVICES) {
       await checkService(service);
     }
 
-    // Wait for next check
+    // Wait for next check (but check shutdown flag periodically)
     await new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL_MS));
   }
+
+  logInfo(`[watchdog] 🛑 Monitor loop exiting gracefully`);
 }
 
 // Graceful shutdown
 function shutdown(signal) {
   logInfo(`\n[watchdog] Received ${signal}, shutting down...`);
-  process.exit(0);
+  shuttingDown = true;
+  // Give the loop a moment to exit cleanly
+  setTimeout(() => {
+    logInfo(`[watchdog] Exit complete`);
+    process.exit(0);
+  }, 100);
 }
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
