@@ -327,9 +327,9 @@ export function parseRateLimitInfo(err) {
       if (!Number.isNaN(seconds)) info.retryAfterMs = Math.ceil(seconds * 1_000);
     }
     info.rpmLimit = parseHeaderInt(headers, "x-ratelimit-limit-requests");
-    info.rpmRemaining = Number.parseInt(String(parseHeaderInt(headers, "x-ratelimit-remaining-requests") || ""), 10);
+    info.rpmRemaining = parseHeaderInt(headers, "x-ratelimit-remaining-requests");
     info.tpmLimit = parseHeaderInt(headers, "x-ratelimit-limit-tokens");
-    info.tpmRemaining = Number.parseInt(String(parseHeaderInt(headers, "x-ratelimit-remaining-tokens") || ""), 10);
+    info.tpmRemaining = parseHeaderInt(headers, "x-ratelimit-remaining-tokens");
     info.rpmResetAt = parseResetHeader(headers, "x-ratelimit-reset-requests");
     info.tpmResetAt = parseResetHeader(headers, "x-ratelimit-reset-tokens");
   }

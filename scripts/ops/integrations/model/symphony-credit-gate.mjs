@@ -42,6 +42,13 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Codex } from "@openai/codex-sdk";
 import { createLogger } from "../../lib/logger.mjs";
+import {
+  getProviderTimeout,
+  getProviderHealthState,
+  recordProviderHealthSuccess,
+  recordProviderHealthFailure,
+  shouldRetryProvider,
+} from "./symphony-provider-health.mjs";
 
 const { logDebug, logInfo, logWarn } = createLogger();
 import {
@@ -566,13 +573,22 @@ function isRecentlyFailed(providerName) {
   const now = Math.floor(Date.now() / 1000);
   const provider = PROVIDERS.find((p) => p.name === providerName);
   const windowSecs = provider?.failureWindowSecs || RUNNER_PROVIDER_FAILURE_WINDOW_SECS;
-  return now - failedAt < windowSecs;
+  const isRecent = now - failedAt < windowSecs;
+  
+  // Also check health state - if provider is disabled or blocked, don't retry
+  if (!shouldRetryProvider(providerName, windowSecs * 1000)) {
+    return true; // Treat as recently failed if health check says don't retry
+  }
+  
+  return isRecent;
 }
 
-export function recordProviderFailure(providerName) {
+export function recordProviderFailure(providerName, errorType = "unknown") {
   const failures = loadFailures();
   failures[providerName] = Math.floor(Date.now() / 1000);
   saveFailures(failures);
+  // Update health state tracking
+  recordProviderHealthFailure(providerName, errorType);
 }
 
 export function clearProviderFailure(providerName) {
@@ -616,6 +632,8 @@ export function recordProviderSuccess(providerName) {
   stats.successes[providerName] = (stats.successes[providerName] || 0) + 1;
   stats.lastSuccess[providerName] = Date.now();
   saveStats(stats);
+  // Update health state tracking
+  recordProviderHealthSuccess(providerName);
 }
 
 export function recordProviderFailureCount(providerName) {
@@ -1350,6 +1368,27 @@ function matchesExcludedNames(provider, excludedNames) {
 }
 
 const PREFERRED_PROVIDER_ORDER = ["codex"];
+
+/**
+ * Get timeout in milliseconds for a provider based on whether it's local or hosted.
+ * Used by the bridge to configure request timeouts.
+ */
+export function getProviderTimeoutMs(providerName) {
+  const provider = PROVIDERS.find((p) => p.name === providerName);
+  return getProviderTimeout(providerName, provider?.baseUrl || "");
+}
+
+/**
+ * Get health state summary for all providers.
+ * Used by health endpoints to expose provider health status.
+ */
+export function getAllProviderHealthStates() {
+  const states = {};
+  for (const provider of PROVIDERS) {
+    states[provider.name] = getProviderHealthState(provider.name);
+  }
+  return states;
+}
 
 async function resolveProviderApiKey(provider) {
   let apiKey = provider.envVar ? process.env[provider.envVar] : null;
