@@ -761,7 +761,6 @@ async function trySingleAccount(
 
   // NOTE: lastSubgoalStatus is modified via the handleEvent callback when
   // 'update_subgoal' tool calls are processed, so the loop will eventually exit.
-  let loopStatus = lastSubgoalStatus;
   logDebug(`[trySingleAccount] Running initial request`, { maxSteps: CODEBUFF_MAX_STEPS });
   let result = await Promise.race([client.run(runOpts), makeTimeout()]);
 
@@ -786,7 +785,7 @@ async function trySingleAccount(
   // auto-continue with previousRun to let it finish the task (memento mode)
   // NOTE: lastSubgoalStatus is modified via the handleEvent callback
   let continuation = 0;
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && loopStatus === "IN_PROGRESS") {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
     logInfo(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
@@ -816,9 +815,6 @@ async function trySingleAccount(
       throw new Error(errorMsg);
     }
     checkResultForErrors(contOutput, contStr, attempt);
-
-    // Update loopStatus from lastSubgoalStatus (modified by handleEvent callback)
-    loopStatus = lastSubgoalStatus;
   }
 
   if (continuation > 0) {
@@ -1081,12 +1077,10 @@ async function trySingleAccountStream(
     agent: MODEL_ID,
     prompt,
     maxAgentSteps: CODEBUFF_MAX_STEPS,
-    ...callbacks,
-  };
+    ...callbacks,  };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
   // NOTE: lastSubgoalStatus is modified via the handleEvent callback
-  let loopStatus = lastSubgoalStatus;
   let result = await Promise.race([client.run(runOpts), makeTimeout()]);
 
   // Error checks on initial run
@@ -1094,13 +1088,12 @@ async function trySingleAccountStream(
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
-    const errorMatch = resultStr.match(/"message":"([^"]+)"/);
-    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+    const errorMatch = resultStr.match(/"message":"([^"]+)"/);    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
   }
   checkResultForErrors(output, resultStr, attempt);  // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
   let continuation = 0;
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && loopStatus === "IN_PROGRESS") {
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
     logDebug(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
@@ -1125,9 +1118,6 @@ async function trySingleAccountStream(
       const errorMatch = contStr.match(/"message":"([^"]+)"/);      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
     }
     checkResultForErrors(contOutput, contStr, attempt);
-
-    // Update loopStatus from lastSubgoalStatus (modified by handleEvent callback)
-    loopStatus = lastSubgoalStatus;
   }
 
   if (continuation > 0) {
