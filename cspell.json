@@ -439,7 +439,12 @@
     "chunker",
     "minisearch",
     "normalise",
-    "scannerwork"
+    "scannerwork",
+    "mypassword",
+    "hexkey",
+    "MSCHAPV",
+    "deprioritize",
+    "deprioritized"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

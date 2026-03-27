@@ -68,8 +68,17 @@ const CODEBUFF_NOISY_TOOLS = new Set([
   "end_turn",
   "lookup_agent_info",
   "spawn_agent_inline",
+  "spawn_agents",
   "context-pruner",
+  "codebuff/context-pruner@0.0.29",
   "read_files",
+  "read_subtree",
+  "file-explorer",
+  "codebuff/file-explorer@0.0.7",
+  "file-picker",
+  "codebuff/file-picker@0.0.5",
+  "find-all-referencer",
+  "codebuff/find-all-referencer@0.0.4",
 ]);
 const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : () => {};
 
@@ -499,6 +508,12 @@ function formatToolCallDisplay(toolName, input) {
     return null;
   } else if (toolName === "spawn_agents") {
     // Suppress spawn_agents output as it's distracting
+    return null;
+  } else if (toolName === "file-explorer" || toolName.includes("file-explorer")) {
+    // Suppress file-explorer output as it's very noisy
+    return null;
+  } else if (toolName === "file-picker" || toolName.includes("file-picker")) {
+    // Suppress file-picker output as it's very noisy
     return null;
   } else if (toolName === "add_subgoal") {
     const obj = (input.objective || "").slice(0, 120);
