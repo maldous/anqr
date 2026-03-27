@@ -2253,12 +2253,12 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-    let errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
-    if (excludedByProbe.length > 0) {
-      errorMsg = `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`;
-    } else if (lastError) {
-      errorMsg = `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`;
-    }
+      const errorMsg =
+        excludedByProbe.length > 0
+          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+          : lastError
+            ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
+            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       logError(`[invokeWithFallback] No provider available`, {
         attemptNumber,
         triedProviders,
@@ -2580,14 +2580,12 @@ async function invokeWithFallbackStream(
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-      let errorMsg;
-      if (excludedByProbe.length > 0) {
-        errorMsg = `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`;
-      } else if (lastError) {
-        errorMsg = `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`;
-      } else {
-        errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
-      }
+      const errorMsg =
+        excludedByProbe.length > 0
+          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
+          : lastError
+            ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
+            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
       throw new Error(errorMsg);
     }
     logInfo(
