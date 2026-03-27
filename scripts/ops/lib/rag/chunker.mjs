@@ -75,7 +75,7 @@ let chunkIdCounter = 0;
  */
 function makeChunkId(filePath, index) {
   chunkIdCounter += 1;
-  const safePath = filePath.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+  const safePath = filePath.replaceAll(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
   return `${safePath}__${index}__${chunkIdCounter}`;
 }
 
