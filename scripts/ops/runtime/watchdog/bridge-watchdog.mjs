@@ -334,6 +334,8 @@ async function monitorLoop() {
     `[watchdog]    Monitored services: ${MONITORED_SERVICES.map((s) => s.shortName).join(", ")}`,
   );
 
+  // shuttingDown is modified by signal handlers (SIGTERM, SIGINT)
+  // eslint-disable-next-line no-unmodified-loop-condition
   while (!shuttingDown) {
     logInfo(`[watchdog] 🔍 Checking services...`);
 

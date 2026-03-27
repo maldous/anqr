@@ -2013,9 +2013,8 @@ async function invokeWithAI(provider, messages, options = {}) {
           toolCallId: part.toolCallId,
           argsKeys: part.args ? Object.keys(part.args) : [],
         });
-        if (onChunk) {
-          onChunk({ type: "text", text: `\n🔧 ${part.toolName}: \n` });
-        }
+        // Tool activity messages are logged server-side but NOT sent to client/Discord
+        // to avoid noise in Discord notifications
       } else if (part.type === "tool-result") {
         logInfo(`✅ ${part.toolName} done`);
         logDebug(`[invokeWithAI] Tool result`, {
@@ -2024,9 +2023,8 @@ async function invokeWithAI(provider, messages, options = {}) {
           hasResult: !!part.result,
           resultType: typeof part.result,
         });
-        if (onChunk) {
-          onChunk({ type: "text", text: `✅ ${part.toolName} done\n` });
-        }
+        // Tool activity messages are logged server-side but NOT sent to client/Discord
+        // to avoid noise in Discord notifications
       } else if (part.type === "error") {
         errorCount++;
         const streamError = part.error || part;
