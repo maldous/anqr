@@ -476,6 +476,9 @@ function formatToolCallDisplay(toolName, input) {
   if (toolName === "read_files" && input.paths) {
     // Suppress read_files output as it can be very long and noisy
     return null;
+  } else if (toolName === "read_subtree") {
+    // Suppress read_subtree output as it can be very long and noisy
+    return null;
   } else if (toolName === "str_replace") {
     return `✏️ Editing: ${input.path || "file"}`;
   } else if (toolName === "write_file") {
@@ -486,13 +489,11 @@ function formatToolCallDisplay(toolName, input) {
   } else if (toolName === "code_search") {
     return `🔍 Searching: ${input.pattern || input.query || ""}`;
   } else if (toolName === "spawn_agent_inline") {
-    const agentType = input.agent_type || "agent";
-    if (agentType === "context-pruner") return null;
-    return `🤖 Spawning: ${agentType}`;
+    // Suppress spawn_agent_inline output as it's distracting
+    return null;
   } else if (toolName === "spawn_agents") {
-    const agents = input.agents || [];
-    const types = agents.map((a) => a.agent_type).filter(Boolean);
-    return `🤖 Spawning: ${types.length > 0 ? types.join(", ") : "agents"}`;
+    // Suppress spawn_agents output as it's distracting
+    return null;
   } else if (toolName === "add_subgoal") {
     const obj = (input.objective || "").slice(0, 120);
     return `🎯 Goal: ${obj}`;
@@ -723,11 +724,12 @@ async function trySingleAccount(
         }
         const name = event.displayName || event.agentType || "subagent";
         logDebug(`🤖 codebuff subagent: ${name}`);
+        // Suppress subagent start messages from streaming output (distracting)
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
         const name = event.displayName || event.agentType || "subagent";
         logDebug(`🤖 codebuff ${name} done`);
-        streamActivity(`🤖 ${name} done\n`);
+        // Suppress subagent finish messages from streaming output (distracting)
       } else if (type === "agent_start" || type === "agent_finish") {
         logDebug(`🤖 codebuff ${type}`);
       } else if (type === "error") {
