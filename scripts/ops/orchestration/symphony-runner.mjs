@@ -266,7 +266,7 @@ async function maybeRunPreflights() {
   const cachedHash = getGlobalValue("baseline.manifestHash");
   const cachedPass = getGlobalValue("baseline.pass");
   if (cachedHead === head && cachedHash === manifestHash && cachedPass === true) {
-    logDebug("[runner] Baseline cache hit — skipping full pre-flights");
+    logInfo("[runner] Baseline cache hit — skipping full pre-flights");
     return { pass: true, cached: true };
   }
   const result = runGlobalPreflights(ROOT);
@@ -349,7 +349,7 @@ async function executeIssue(issue, dryRun = false) {
 
   const state = getIssueState(issue.identifier);
   const attempt = Number(state.retry_count || 0) + 1;
-  logDebug(
+  logInfo(
     `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
   );
 
@@ -387,7 +387,7 @@ async function executeIssue(issue, dryRun = false) {
     ttlMs: LEASE_TTL_MS,
   });
   if (!lease.ok) {
-    logDebug(`[runner] Lease unavailable for ${issue.identifier} — skipping`);
+    logInfo(`[runner] Lease unavailable for ${issue.identifier} — skipping`);
     return "skip";
   }
 
@@ -621,7 +621,7 @@ async function executeIssue(issue, dryRun = false) {
           to: "Todo",
           runId: RUN_ID,
         });
-        logDebug(
+        logInfo(
           `[runner] 🔄 Continuing (no messages): ${issue.identifier} — ${issue.title} (active subgoals)`,
         );
         // Track active subgoals without messages as failure
