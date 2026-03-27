@@ -345,8 +345,15 @@ async function runSonarPostCommit(issueIdentifier) {
 }
 
 async function executeIssue(issue, dryRun = false) {
+  // Pre-execution check: verify issue wasn't already completed externally
   const detail = await getIssueDetail(issue.id);
   if (!detail) return "skip";
+  
+  // Deterministic external completion check: use Linear API state, not text inference
+  if (detail.state?.name === "Done" || detail.state?.name === "Canceled") {
+    logInfo(`[runner] Issue ${issue.identifier} already completed externally — skipping`);
+    return "skip";
+  }
 
   const state = getIssueState(issue.identifier);
   const attempt = Number(state.retry_count || 0) + 1;
@@ -500,17 +507,11 @@ async function executeIssue(issue, dryRun = false) {
       // Check if agent needs continuation (has active subgoals)
       const needsContinuation = agentResult.needsContinuation === true;
 
-      // Check if work was completed externally (by human or another process)
-      // by checking if the issue has been resolved/closed externally
-      const summary = agentResult.summary?.toLowerCase() || "";
+      // Deterministic external completion check: re-check Linear API state after execution
+      // (human or another process may have resolved it during agent execution)
+      const postDetail = await getIssueDetail(issue.id);
       const isExternallyCompleted =
-        detail?.state?.name === "Done" ||
-        detail?.state?.name === "Canceled" ||
-        summary.includes("already") ||
-        summary.includes("completed") ||
-        summary.includes("external") ||
-        summary.includes("human") ||
-        summary.includes("no longer needed");
+        postDetail?.state?.name === "Done" || postDetail?.state?.name === "Canceled";
 
       // If agent needs continuation with active subgoals, continue the work
       // instead of returning to Todo for a fresh start

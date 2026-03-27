@@ -818,6 +818,7 @@ async function runToolLoop({
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       // Check if this is legitimate work before counting as "stuck"
       const content = msg.content || "";
+      
       const isLegitimateWork =
         // Streaming responses from Symphony/Codebuff bridges are active work
         provider.name === "symphony-bridge" ||

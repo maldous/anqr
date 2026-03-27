@@ -74,7 +74,7 @@ async function main() {
     logWarn(`  Created: ${issue.createdAt.split('T')[0]}`);
     
     if (issue.description) {
-      const preview = issue.description.substring(0, 300).replaceAll('\\n', ' ');
+      const preview = issue.description.substring(0, 300).replaceAll(/\n/g, ' ');
       logWarn(`  Description: ${preview}${issue.description.length > 300 ? '...' : ''}`);
     }
   }
