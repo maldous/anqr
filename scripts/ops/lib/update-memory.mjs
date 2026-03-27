@@ -1,32 +1,36 @@
 /**
- * update-memory.mjs — Shared utility for updating MEMORY.md
+ * update-memory.mjs — Shared utility for runtime event logging
  *
- * Centralizes MEMORY.md updates to prevent duplication across:
- * - Symphony bridge
- * - Codebuff bridge
- * - Watchdog services
- * - Other operational scripts
+ * Writes runtime events to reports/runtime-events.log (gitignored)
+ * to avoid tainting git status during Symphony runner operations.
+ *
+ * MEMORY.md remains for human-curated summaries only (updated via Linear issues).
  */
 
-import { appendFile } from "node:fs/promises";
+import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { createLogger } from "./logger.mjs";
 
 const { logInfo, logWarn } = createLogger();
 
 /**
- * Append a timestamped note to MEMORY.md
- * @param {string} note - The note to append (without timestamp/formatting)
+ * Append a timestamped runtime event to reports/runtime-events.log
+ * @param {string} note - The event to log (without timestamp/formatting)
  * @param {string} [cwd] - Working directory (defaults to process.cwd())
  * @returns {Promise<void>}
  */
 export async function updateMemory(note, cwd = process.cwd()) {
-  const timestamp = new Date().toISOString().split("T")[0];
-  const entry = `\n### ${timestamp} - ${note}\n`;
+  const timestamp = new Date().toISOString();
+  const entry = `[${timestamp}] ${note}\n`;
+  const reportsDir = path.join(cwd, "reports");
+  const logFile = path.join(reportsDir, "runtime-events.log");
+  
   try {
-    await appendFile(path.join(cwd, "MEMORY.md"), entry);
-    logInfo(`[update-memory] 📝 Updated MEMORY.md: ${note}`);
+    // Ensure reports directory exists
+    await mkdir(reportsDir, { recursive: true });
+    await appendFile(logFile, entry);
+    logInfo(`[update-memory] 📝 Logged runtime event: ${note}`);
   } catch (err) {
-    logWarn(`[update-memory] ⚠️ Failed to update MEMORY.md: ${err.message}`);
+    logWarn(`[update-memory] ⚠️ Failed to log runtime event: ${err.message}`);
   }
 }

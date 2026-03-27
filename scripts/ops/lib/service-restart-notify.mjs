@@ -3,8 +3,10 @@
  *
  * Provides consistent restart/shutdown notifications for all services:
  * - Discord webhook notifications with service status
- * - MEMORY.md updates for audit trail
+ * - Runtime event logging to reports/runtime-events.log (gitignored)
  * - Consistent formatting and metadata
+ *
+ * Note: MEMORY.md is reserved for human-curated summaries only (updated via Linear issues).
  *
  * Usage:
  *   import { notifyServiceRestart, notifyServiceShutdown } from './service-restart-notify.mjs';
@@ -129,7 +131,7 @@ export async function notifyServiceRestart({
       );
     }
 
-    // Update MEMORY.md
+    // Log runtime event
     const metadataStr = Object.entries(metadata)
       .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
@@ -200,13 +202,13 @@ export async function notifyServiceShutdown({
 
     logInfo(`📢 Sent ${serviceName} shutdown notification`);
 
-    // Update MEMORY.md
+    // Log runtime event
     const metadataStr = Object.entries(metadata)
       .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
     const memoryNote = `${serviceName} stopped (PID ${process.pid}, commit ${commitHash}${metadataStr ? `, ${metadataStr}` : ""}, signal: ${signal})`;
     await updateMemory(memoryNote, cwd);
-    logInfo(`📝 Updated MEMORY.md before shutdown`);
+    logInfo(`📝 Logged runtime event before shutdown`);
   } catch (err) {
     logError(`⚠️ Failed to send ${serviceName} shutdown notification: ${err.message}`);
   }
