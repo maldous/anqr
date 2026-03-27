@@ -901,12 +901,13 @@ function calculateProviderScore(providerName, stats) {
  * @returns {Array} Ranked providers with { name, score, tier, rank }
  */
 export function getRankedProviders(options = {}) {
-  const excludeSet =
-    options.excludeNames instanceof Set
-      ? options.excludeNames
-      : Array.isArray(options.excludeNames)
-        ? new Set(options.excludeNames)
-        : null;
+  let excludeNames = null;
+  if (options.excludeNames instanceof Set) {
+    excludeNames = options.excludeNames;
+  } else if (Array.isArray(options.excludeNames)) {
+    excludeNames = new Set(options.excludeNames);
+  }
+  const excludeSet = excludeNames;
   const includeAvailable = options.includeAvailable !== false;
   const stats = loadStats();
   const ranked = [];
@@ -1213,16 +1214,16 @@ export function getConfiguredProviders(options = {}) {
     }
 
     if (hasCredential) {
-      const type =
-        provider.requiresSdk || provider.driver === "codex-sdk"
-          ? "sdk"
-          : provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")
-            ? "local"
-            : "api";
+      let providerType = "api";
+      if (provider.requiresSdk || provider.driver === "codex-sdk") {
+        providerType = "sdk";
+      } else if (provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")) {
+        providerType = "local";
+      }
       configured.push({
         name: provider.name,
         model: provider.model,
-        type,
+        type: providerType,
         tier: getProviderTier(provider),
       });
     }
@@ -1463,9 +1464,7 @@ export async function selectProvider(options = {}) {
         providerName,
         reason: !provider
           ? "not found"
-          : !matchesAllowedNames(provider, allowedNames)
-            ? "not allowed"
-            : "excluded",
+          : matchesAllowedNames(provider, allowedNames) ? "excluded" : "not allowed",
       });
       continue;
     }
@@ -1527,7 +1526,7 @@ export async function selectProvider(options = {}) {
     ) {
       logDebug(`[selectProvider] Skipping fallback provider`, {
         providerName: provider.name,
-        reason: !matchesAllowedNames(provider, allowedNames) ? "not allowed" : "excluded",
+        reason: matchesAllowedNames(provider, allowedNames) ? "excluded" : "not allowed",
       });
       continue;
     }

@@ -9,6 +9,15 @@
 - **Streaming Reconstruction**: When processing requests, reconstruct the natural stream of communication with proper line feeds before emojis, markdown formatting, and clear progress markers so the user can follow along in real-time.
 - **No Raw JSON**: Never display raw JSON tool results or internal message formats. Always format responses as natural language with proper markdown. The user should never see unformatted data structures like `{"type":"lastMessage","value":[...]}`.
 
+## Issue Tracking
+
+**GitHub Issues are disabled.** All issue tracking is managed through Linear.
+
+- Linear workspace: ANQR 1.0
+- Workspace governance: `docs/harness/03-workspace-governance.md`
+- Issue template: `docs/harness/workspace/issue-template.md`
+- Linear scripts: `scripts/ops/integrations/linear/`
+
 ## System Overview
 
 ### Purpose

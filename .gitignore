@@ -19,3 +19,4 @@ all.txt
 err.txt
 ok.txt
 test-output.log
+.sonar_tmp/

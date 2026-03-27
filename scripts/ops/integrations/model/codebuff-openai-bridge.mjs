@@ -140,8 +140,8 @@ async function callOpenClawGatewayTool(toolName, toolInput, sessionId) {
             logWarn(`❌ ${toolName} proxy failed: ${errorMsg}`);
             reject(new Error(`OpenClaw Gateway returned ${res.statusCode}: ${errorMsg}`));
           }
-        } catch (parseErr) {
-          reject(new Error(`Failed to parse OpenClaw Gateway response: ${parseErr.message}`));
+        } catch (error_) {
+          reject(new Error(`Failed to parse OpenClaw Gateway response: ${error_.message}`));
         }
       });
     });
@@ -1587,7 +1587,12 @@ async function shutdown(signal) {
       encoding: "utf-8",
       cwd: process.cwd(),
     }).trim();
-    const mode = STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "unknown";
+    let mode = "unknown";
+  if (STARTUP_WINNER?.isPaid) {
+    mode = "paid";
+  } else if (STARTUP_WINNER) {
+    mode = "free";
+  }
     await updateMemory(
       `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`,
     );
@@ -1644,7 +1649,11 @@ function getHealthStatus() {
     status: STARTUP_INITIALIZED ? "ok" : "initializing",
     model: MODEL_ID,
     apiKeyConfigured: !!getApiKey(),
-    mode: STARTUP_WINNER?.isPaid ? "paid" : STARTUP_WINNER ? "free" : "none",
+    mode: (() => {
+    if (STARTUP_WINNER?.isPaid) return "paid";
+    if (STARTUP_WINNER) return "free";
+    return "none";
+  })(),
   };
 }
 

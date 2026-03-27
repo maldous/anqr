@@ -265,8 +265,8 @@ export function tuneAdaptiveParams(providerStats) {
     const selections = stats.selections || 0;
     if (selections < 10) continue; // Not enough data
 
-    const successRate = parseFloat(stats.successRate) / 100 || 0;
-    const linearRate = parseFloat(stats.linearCompletionRate) / 100 || 0.5;
+  const successRate = Number.parseFloat(stats.successRate) / 100 || 0;
+  const linearRate = Number.parseFloat(stats.linearCompletionRate) / 100 || 0.5;
 
     const currentLimit =
       params.freeTurnLimit.perProvider[providerName] || params.freeTurnLimit.base;

@@ -183,8 +183,8 @@ function getHeaderValue(headers, key) {
 function parseHeaderInt(headers, key) {
   const val = getHeaderValue(headers, key);
   if (val === null) return null;
-  const parsed = parseInt(val, 10);
-  return isNaN(parsed) ? null : parsed;
+  const parsed = Number.parseInt(val, 10);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 function parseResetHeader(headers, key) {
@@ -193,11 +193,11 @@ function parseResetHeader(headers, key) {
   const secondsMatch = val.match(/(\d+\.?\d*)s/);
   const minutesMatch = val.match(/(\d+\.?\d*)m/);
   let ms = 0;
-  if (minutesMatch) ms += parseFloat(minutesMatch[1]) * 60_000;
-  if (secondsMatch) ms += parseFloat(secondsMatch[1]) * 1_000;
+  if (minutesMatch) ms += Number.parseFloat(minutesMatch[1]) * 60_000;
+  if (secondsMatch) ms += Number.parseFloat(secondsMatch[1]) * 1_000;
   if (ms > 0) return Date.now() + ms;
-  const seconds = parseFloat(val);
-  if (!isNaN(seconds)) return Date.now() + seconds * 1_000;
+  const seconds = Number.parseFloat(val);
+  if (!Number.isNaN(seconds)) return Date.now() + seconds * 1_000;
   return null;
 }
 
@@ -284,18 +284,21 @@ export function parseContextErrorDetails(err) {
   const maxSizeMatch = errStr.match(/max size[:\s]+(\d+)/i);
   const isTpmRelated = /tokens per minute|tpm/i.test(errStr);
 
-  const reportedLimit = limitMatch
-    ? parseInt(limitMatch[1], 10)
-    : contextLenMatch
-      ? parseInt(contextLenMatch[1], 10)
-      : maxSizeMatch
-        ? parseInt(maxSizeMatch[1], 10)
-        : null;
-  const requestedTokens = requestedMatch
-    ? parseInt(requestedMatch[1], 10)
-    : youRequestedMatch
-      ? parseInt(youRequestedMatch[1], 10)
-      : null;
+  let reportedLimit = null;
+  if (limitMatch) {
+    reportedLimit = Number.parseInt(limitMatch[1], 10);
+  } else if (contextLenMatch) {
+    reportedLimit = Number.parseInt(contextLenMatch[1], 10);
+  } else if (maxSizeMatch) {
+    reportedLimit = Number.parseInt(maxSizeMatch[1], 10);
+  }
+
+  let requestedTokens = null;
+  if (requestedMatch) {
+    requestedTokens = Number.parseInt(requestedMatch[1], 10);
+  } else if (youRequestedMatch) {
+    requestedTokens = Number.parseInt(youRequestedMatch[1], 10);
+  }
 
   return {
     reportedLimit,
@@ -320,13 +323,13 @@ export function parseRateLimitInfo(err) {
   if (headers) {
     const retryAfter = getHeaderValue(headers, "retry-after");
     if (retryAfter) {
-      const seconds = parseFloat(retryAfter);
-      if (!isNaN(seconds)) info.retryAfterMs = Math.ceil(seconds * 1_000);
+      const seconds = Number.parseFloat(retryAfter);
+      if (!Number.isNaN(seconds)) info.retryAfterMs = Math.ceil(seconds * 1_000);
     }
     info.rpmLimit = parseHeaderInt(headers, "x-ratelimit-limit-requests");
-    info.rpmRemaining = parseHeaderInt(headers, "x-ratelimit-remaining-requests");
+    info.rpmRemaining = Number.parseInt(String(parseHeaderInt(headers, "x-ratelimit-remaining-requests") || ""), 10);
     info.tpmLimit = parseHeaderInt(headers, "x-ratelimit-limit-tokens");
-    info.tpmRemaining = parseHeaderInt(headers, "x-ratelimit-remaining-tokens");
+    info.tpmRemaining = Number.parseInt(String(parseHeaderInt(headers, "x-ratelimit-remaining-tokens") || ""), 10);
     info.rpmResetAt = parseResetHeader(headers, "x-ratelimit-reset-requests");
     info.tpmResetAt = parseResetHeader(headers, "x-ratelimit-reset-tokens");
   }
@@ -334,12 +337,12 @@ export function parseRateLimitInfo(err) {
   const errStr = extractErrorString(err);
   const tpmLimitMatch = errStr.match(/tokens per minute.*?limit\s+(\d+)/i);
   if (tpmLimitMatch && !info.tpmLimit) {
-    info.tpmLimit = parseInt(tpmLimitMatch[1], 10);
+    info.tpmLimit = Number.parseInt(tpmLimitMatch[1], 10);
   }
 
   const retryMatch = errStr.match(/retry.after[:\s]+(\d+)/i);
   if (retryMatch && !info.retryAfterMs) {
-    info.retryAfterMs = parseInt(retryMatch[1], 10) * 1_000;
+    info.retryAfterMs = Number.parseInt(retryMatch[1], 10) * 1_000;
   }
 
   return info;

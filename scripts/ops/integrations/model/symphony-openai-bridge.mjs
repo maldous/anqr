@@ -326,9 +326,12 @@ async function sendProcessingStatusUpdate() {
     });
   }
 
+  // Only show "concurrent requests" if there's more than 1 active
+  const description = activeRequests.size > 1 ? "Concurrent requests in progress" : "Request in progress";
+
   await sendDiscordEmbed({
     title: `⏳ Processing Status (${activeRequests.size} active)`,
-    description: "Concurrent requests in progress",
+    description,
     color: 0x3498db, // Blue
     fields,
   }).catch((err) => logDebug(`Processing status update failed: ${err.message}`));
@@ -943,7 +946,7 @@ const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
 
 // Opportunistic GC between requests (requires --expose-gc flag)
-const maybeGC = typeof global.gc === "function" ? () => global.gc() : () => {};
+const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : () => {};
 
 // Periodic stats logging interval (every 10 requests)
 const STATS_LOG_INTERVAL = 10;
@@ -1729,11 +1732,12 @@ async function probeAllToolCapability() {
   }
 
   for (const r of results) {
-    const icon = toolCapableProviders.has(r.name)
-      ? "✅"
-      : nonToolCapableProviders.has(r.name)
-        ? "🚫"
-        : "❓";
+    let icon = "❓";
+    if (toolCapableProviders.has(r.name)) {
+      icon = "✅";
+    } else if (nonToolCapableProviders.has(r.name)) {
+      icon = "🚫";
+    }
     logDebug(`  ${icon} ${r.name}: ${r.status}`);
   }
 
@@ -2117,9 +2121,9 @@ async function invokeWithAI(provider, messages, options = {}) {
             }
           }
         }
-      } catch (textErr) {
-        // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
-        logDebug(`⚠️ result.text fallback also failed: ${String(textErr).slice(0, 100)}`);
+    } catch (error_) {
+      // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
+      logDebug(`⚠️ result.text fallback also failed: ${String(error_).slice(0, 100)}`);
       }
     }
 
@@ -2251,12 +2255,12 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-      const errorMsg =
-        excludedByProbe.length > 0
-          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-          : lastError
-            ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
-            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+    let errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+    if (excludedByProbe.length > 0) {
+      errorMsg = `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`;
+    } else if (lastError) {
+      errorMsg = `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`;
+    }
       logError(`[invokeWithFallback] No provider available`, {
         attemptNumber,
         triedProviders,
@@ -3001,8 +3005,8 @@ const server = http.createServer(async (req, res) => {
       let body;
       try {
         body = await parseBody(req);
-      } catch (parseErr) {
-        logWarn(`⚠️ Request parse error: ${parseErr.message}`);
+    } catch (error_) {
+      logWarn(`⚠️ Request parse error: ${error_.message}`);
         return sendJson(res, 400, {
           error: {
             message: "Invalid request body: not valid JSON",
@@ -3336,8 +3340,8 @@ const server = http.createServer(async (req, res) => {
             }
             maybeGC();
             return;
-          } catch (codebuffErr) {
-            const errMsg = String(codebuffErr.message || codebuffErr).slice(0, 200);
+    } catch (error_) {
+      const errMsg = String(error_.message || error_).slice(0, 200);
             logWarn(`⚠️ Codebuff transparent relay failed: ${errMsg}`);
 
             // Record failure and fall through to standard cascade
@@ -3585,8 +3589,8 @@ const server = http.createServer(async (req, res) => {
         res.write("data: [DONE]\n\n");
         res.end();
         return;
-      } catch (streamErr) {
-        logError(`Failed to send error chunk: ${streamErr.message}`);
+    } catch (error_) {
+      logError(`Failed to send error chunk: ${error_.message}`);
         return;
       }
     }

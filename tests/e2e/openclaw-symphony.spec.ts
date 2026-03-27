@@ -184,11 +184,10 @@ test.describe("Command Execution Modes", () => {
 test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
   test.setTimeout(120_000);
 
-  test("Symphony bridge health check", async () => {
+  test("Symphony bridge health check", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -211,11 +210,10 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     }
   });
 
-  test("Symphony bridge /v1/models lists all expected models", async () => {
+  test("Symphony bridge /v1/models lists all expected models", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/v1/models`, {
@@ -233,11 +231,10 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     console.log(`[openclaw-e2e] Symphony models: ${modelIds.join(", ")}`);
   });
 
-  test("Symphony bridge non-streaming completion", async () => {
+  test("Symphony bridge non-streaming completion", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, data, elapsed } = await sendCompletion(
@@ -248,8 +245,7 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
 
     if (isTransientError(status, errMsg)) {
       console.log(`[openclaw-e2e] Symphony completion: transient error, skipping (${errMsg})`);
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status).toBe(200);
@@ -266,11 +262,10 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     );
   });
 
-  test("Symphony bridge streaming completion", async () => {
+  test("Symphony bridge streaming completion", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
@@ -280,8 +275,7 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
 
     if (isTransientError(status, errMsg)) {
       console.log(`[openclaw-e2e] Symphony streaming: transient error, skipping (${errMsg})`);
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status).toBe(200);
@@ -292,11 +286,10 @@ test.describe("Live Symphony Bridge Tests (requires running bridge)", () => {
     console.log(`[openclaw-e2e] Streamed content: ${content.slice(0, 200)}`);
   });
 
-  test("Symphony bridge /v1/stats returns provider statistics", async () => {
+  test("Symphony bridge /v1/stats returns provider statistics", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/v1/stats`, {
@@ -451,11 +444,10 @@ const LOCAL_SERVICE_ROUTES = [
 test.describe("Provider Inventory (requires running bridge)", () => {
   test.setTimeout(30_000);
 
-  test("all expected providers are configured in the bridge", async () => {
+  test("all expected providers are configured in the bridge", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -492,11 +484,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     ).toHaveLength(0);
   });
 
-  test("all expected routes are exposed by the bridge", async () => {
+  test("all expected routes are exposed by the bridge", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/v1/models`, {
@@ -528,11 +519,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     ).toHaveLength(0);
   });
 
-  test("all direct providers report available", async () => {
+  test("all direct providers report available", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -558,11 +548,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     ).toBeLessThanOrEqual(1);
   });
 
-  test("blocklisted providers are not configured in the bridge", async () => {
+  test("blocklisted providers are not configured in the bridge", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -579,11 +568,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
     ).toHaveLength(0);
   });
 
-  test("all openrouter providers report available", async () => {
+  test("all openrouter providers report available", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -614,11 +602,10 @@ test.describe("Provider Inventory (requires running bridge)", () => {
 test.describe("Tool-Capability Probe Validation (requires running bridge)", () => {
   test.setTimeout(30_000);
 
-  test("toolProbe health fields are present and valid", async () => {
+  test("toolProbe health fields are present and valid", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -660,11 +647,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
     );
   });
 
-  test("excluded providers are NOT in health rankedProviders", async () => {
+  test("excluded providers are NOT in health rankedProviders", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -688,11 +674,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
     );
   });
 
-  test("excluded providers are NOT in /v1/stats rankedProviders", async () => {
+  test("excluded providers are NOT in /v1/stats rankedProviders", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const healthRes = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -723,11 +708,10 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
     );
   });
 
-  test("pinned routes for excluded providers return clear error", async () => {
+  test("pinned routes for excluded providers return clear error", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const healthRes = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -738,8 +722,7 @@ test.describe("Tool-Capability Probe Validation (requires running bridge)", () =
 
     if (excluded.length === 0) {
       console.log("[openclaw-e2e] No excluded providers — skipping pinned route error test");
-      test.skip('No excluded providers - this is a valid state where all providers are capable');
-      return;
+      skip('No excluded providers - this is a valid state where all providers are capable');
     }
 
     // Map excluded provider names to their pinned routes
@@ -772,11 +755,10 @@ test.describe("Remote API Route Completions (requires running bridge)", () => {
   test.setTimeout(120_000);
 
   for (const { route, provider } of REMOTE_API_ROUTES) {
-    test(`${provider} — completion via ${route}`, async () => {
+    test(`${provider} — completion via ${route}`, async ({ skip }) => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
       if (!reachable) {
-        test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-        return;
+        skip('Symphony bridge not reachable - requires running bridge on port 4319');
       }
 
       const { status, data, elapsed } = await sendCompletion(route);
@@ -784,8 +766,7 @@ test.describe("Remote API Route Completions (requires running bridge)", () => {
 
       if (isTransientError(status, errMsg)) {
         console.log(`[openclaw-e2e] ${provider}: transient error, skipping (${errMsg})`);
-        test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-        return;
+        skip('Transient error (rate limit or quota) - test valid but environment-dependent');
       }
 
       expect(status, `${provider} returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -810,11 +791,10 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
   test.setTimeout(120_000);
 
   for (const { route, description } of HEURISTIC_ROUTES) {
-    test(`${route} — ${description}`, async () => {
+    test(`${route} — ${description}`, async ({ skip }) => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
       if (!reachable) {
-        test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-        return;
+        skip('Symphony bridge not reachable - requires running bridge on port 4319');
       }
 
       const { status, data, elapsed } = await sendCompletion(route);
@@ -822,8 +802,7 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
 
       if (isTransientError(status, errMsg)) {
         console.log(`[openclaw-e2e] ${route}: transient error, skipping (${errMsg})`);
-        test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-        return;
+        skip('Transient error (rate limit or quota) - test valid but environment-dependent');
       }
 
       expect(status, `${route} returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -837,11 +816,10 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
     });
   }
 
-  test("symphony/openrouter selects from the openrouter pool", async () => {
+  test("symphony/openrouter selects from the openrouter pool", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const orNames = new Set(OPENROUTER_PROVIDERS.map((p) => p.name));
@@ -880,8 +858,7 @@ test.describe("Heuristic & Pool Route Completions (requires running bridge)", ()
       console.log(
         `[openclaw-e2e] openrouter rotation: all requests were transient errors, skipping`,
       );
-      test.skip('All requests were transient errors - provider availability issue, not test issue');
-      return;
+      skip('All requests were transient errors - provider availability issue, not test issue');
     }
 
     expect(selectedProviders.size).toBeGreaterThanOrEqual(1);
@@ -897,11 +874,10 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
 
   for (const { route, provider, description } of LOCAL_SERVICE_ROUTES) {
     test(`${route} — ${description}`, async () => {
-      const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
-      if (!reachable) {
-        test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-        return;
-      }
+    const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
+    if (!reachable) {
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
+    }
 
       const { status, data, elapsed } = await sendCompletion(route);
       const errMsg = (data.error as Record<string, string>)?.message ?? "";
@@ -910,7 +886,7 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
         console.log(
           `[openclaw-e2e] ${route} (${provider}): transient/unavailable, skipping (${errMsg})`,
         );
-        test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
+        skip('Transient error (rate limit or quota) - test valid but environment-dependent');
         return;
       }
 
@@ -923,8 +899,7 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
         console.log(
           `[openclaw-e2e] ${route} (${provider}): service unavailable, skipping (${errMsg})`,
         );
-        test.skip('Service unavailable - provider not configured or not running, test is valid');
-        return;
+        skip('Service unavailable - provider not configured or not running, test is valid');
       }
 
       expect(status, `${route} returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -945,11 +920,10 @@ test.describe("Local & Special Service Routes (requires running bridge)", () => 
 test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
   test.setTimeout(300_000);
 
-  test("all 27 openrouter models are in the configured provider list", async () => {
+  test("all 27 openrouter models are in the configured provider list", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -972,11 +946,10 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
     ).toHaveLength(0);
   });
 
-  test("openrouter models are exercised via pool route", async () => {
+  test("openrouter models are exercised via pool route", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const selectedProviders = new Set<string>();
@@ -1015,11 +988,10 @@ test.describe("OpenRouter Model Coverage (requires running bridge)", () => {
 test.describe("Full Provider Cascade Summary (requires running bridge)", () => {
   test.setTimeout(180_000);
 
-  test("remote API routes — majority succeed in parallel", async () => {
+  test("remote API routes — majority succeed in parallel", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const results: Array<{ route: string; provider: string; status: number }> = [];
@@ -1069,11 +1041,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
   test.setTimeout(120_000);
 
   for (const { route, provider } of REMOTE_API_ROUTES) {
-    test(`${provider} — streaming via ${route}`, async () => {
+    test(`${provider} — streaming via ${route}`, async ({ skip }) => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
       if (!reachable) {
-        test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-        return;
+        skip('Symphony bridge not reachable - requires running bridge on port 4319');
       }
 
       const { status, chunks, content, elapsed, contentType, errMsg } =
@@ -1081,7 +1052,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
       if (isTransientError(status, errMsg)) {
         console.log(`[openclaw-e2e] ${provider} streaming: transient error, skipping (${errMsg})`);
-        test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
+        skip('Transient error (rate limit or quota) - test valid but environment-dependent');
         return;
       }
 
@@ -1107,11 +1078,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     });
   }
 
-  test("symphony/main — streaming with schema validation", async () => {
+  test("symphony/main — streaming with schema validation", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
@@ -1120,8 +1090,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     );
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status).toBe(200);
@@ -1137,11 +1106,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     );
   });
 
-  test("symphony/text — streaming with schema validation", async () => {
+  test("symphony/text — streaming with schema validation", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
@@ -1150,8 +1118,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     );
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status).toBe(200);
@@ -1167,11 +1134,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     );
   });
 
-  test("symphony/openrouter — streaming with schema validation", async () => {
+  test("symphony/openrouter — streaming with schema validation", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, chunks, content, elapsed, contentType, errMsg } = await sendStreamingCompletion(
@@ -1180,8 +1146,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     );
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status).toBe(200);
@@ -1198,11 +1163,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
   });
 
   for (const { route, provider, description } of LOCAL_SERVICE_ROUTES) {
-    test(`${route} — streaming (${description})`, async () => {
+    test(`${route} — streaming (${description})`, async ({ skip }) => {
       const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
       if (!reachable) {
-        test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-        return;
+        skip('Symphony bridge not reachable - requires running bridge on port 4319');
       }
 
       const { status, chunks, content, elapsed, contentType, errMsg } =
@@ -1210,7 +1174,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 
       if (isTransientError(status, errMsg)) {
         console.log(`[openclaw-e2e] ${route} streaming: transient error, skipping (${errMsg})`);
-        test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
+        skip('Transient error (rate limit or quota) - test valid but environment-dependent');
         return;
       }
 
@@ -1223,8 +1187,7 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
         console.log(
           `[openclaw-e2e] ${route} streaming (${provider}): service unavailable, skipping (${errMsg})`,
         );
-        test.skip('Service unavailable - provider not configured or not running, test is valid');
-        return;
+        skip('Service unavailable - provider not configured or not running, test is valid');
       }
 
       expect(status, `${route} streaming returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -1245,11 +1208,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
     });
   }
 
-  test("streaming cascade — majority of remote routes stream successfully", async () => {
+  test("streaming cascade — majority of remote routes stream successfully", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const results: Array<{ provider: string; ok: boolean; chunks: number }> = [];
@@ -1281,11 +1243,10 @@ test.describe("Per-Provider Streaming Completions (requires running bridge)", ()
 test.describe("Live Tool-Use & Command Execution (requires running bridge)", () => {
   test.setTimeout(120_000);
 
-  test("exec tool — bridge executes shell command and returns output", async () => {
+  test("exec tool — bridge executes shell command and returns output", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, data, elapsed } = await sendCompletion(
@@ -1295,8 +1256,7 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status, `tool-use exec returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -1311,11 +1271,10 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
   });
 
-  test("read tool — bridge reads a file and returns content", async () => {
+  test("read tool — bridge reads a file and returns content", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, data, elapsed } = await sendCompletion(
@@ -1325,8 +1284,7 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status, `tool-use read returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -1341,11 +1299,10 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
   });
 
-  test("glob tool — bridge lists files matching a pattern", async () => {
+  test("glob tool — bridge lists files matching a pattern", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, data, elapsed } = await sendCompletion(
@@ -1355,8 +1312,7 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status, `tool-use glob returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -1371,11 +1327,10 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
   });
 
-  test("streaming tool-use — exec via streaming mode", async () => {
+  test("streaming tool-use — exec via streaming mode", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, chunks, content, elapsed, errMsg } = await sendStreamingCompletion(
@@ -1384,8 +1339,7 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
     );
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status, `streaming tool-use returned HTTP ${status}: ${errMsg}`).toBe(200);
@@ -1405,11 +1359,10 @@ test.describe("Live Tool-Use & Command Execution (requires running bridge)", () 
 test.describe("Provider Degradation & Recovery (requires running bridge)", () => {
   test.setTimeout(120_000);
 
-  test("invalid route returns error without crashing the bridge", async () => {
+  test("invalid route returns error without crashing the bridge", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status, data } = await sendCompletion("symphony/nonexistent-provider-xyz");
@@ -1427,11 +1380,10 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     }
   });
 
-  test("bridge recovers after invalid route error", async () => {
+  test("bridge recovers after invalid route error", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     await sendCompletion("symphony/nonexistent-provider-xyz");
@@ -1440,8 +1392,7 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status, `Recovery request failed with HTTP ${status}: ${errMsg}`).toBe(200);
@@ -1451,11 +1402,10 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     );
   });
 
-  test("bridge recovers after malformed request", async () => {
+  test("bridge recovers after malformed request", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     await fetch(`${SYMPHONY_BASE_URL}/v1/chat/completions`, {
@@ -1469,19 +1419,17 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
     const errMsg = (data.error as Record<string, string>)?.message ?? "";
 
     if (isTransientError(status, errMsg)) {
-      test.skip('Transient error (rate limit or quota) - test valid but environment-dependent');
-      return;
+      skip('Transient error (rate limit or quota) - test valid but environment-dependent');
     }
 
     expect(status, `Post-malformed recovery failed: ${errMsg}`).toBe(200);
     console.log(`[openclaw-e2e] Post-malformed recovery: provider=${data._symphony_provider} ✅`);
   });
 
-  test("bridge health remains ok after error sequence", async () => {
+  test("bridge health remains ok after error sequence", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const res = await fetch(`${SYMPHONY_BASE_URL}/health`, {
@@ -1504,11 +1452,10 @@ test.describe("Provider Degradation & Recovery (requires running bridge)", () =>
 test.describe("Regression: Known Incident Classes (requires running bridge)", () => {
   test.setTimeout(120_000);
 
-  test("REGRESSION: AI SDK v6 /v1/responses path — third-party providers use /v1/chat/completions", async () => {
+  test("REGRESSION: AI SDK v6 /v1/responses path — third-party providers use /v1/chat/completions", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     // cerebras removed: dynamically excluded by tool-capability probe
@@ -1533,11 +1480,10 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
     }
   });
 
-  test("REGRESSION: .chat() vs () — providers return content, not endpoint errors", async () => {
+  test("REGRESSION: .chat() vs () — providers return content, not endpoint errors", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const routes = [
@@ -1565,11 +1511,10 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
     expect(successes, "At least 2 of 3 regression routes should succeed").toBeGreaterThanOrEqual(2);
   });
 
-  test("REGRESSION: provider cascade does not get stuck after single provider failure", async () => {
+  test("REGRESSION: provider cascade does not get stuck after single provider failure", async ({ skip }) => {
     const reachable = await isBridgeReachable(SYMPHONY_BASE_URL);
     if (!reachable) {
-      test.skip('Symphony bridge not reachable - requires running bridge on port 4319');
-      return;
+      skip('Symphony bridge not reachable - requires running bridge on port 4319');
     }
 
     const { status: s1 } = await sendCompletion("symphony/main", "Say 1.");
@@ -1592,11 +1537,10 @@ test.describe("Regression: Known Incident Classes (requires running bridge)", ()
 test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
   test.setTimeout(120_000);
 
-  test("Codebuff bridge health check", async () => {
+  test("Codebuff bridge health check", async ({ skip }) => {
     const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
     if (!reachable) {
-      test.skip('Codebuff bridge not reachable - requires running bridge on port 4318');
-      return;
+      skip('Codebuff bridge not reachable - requires running bridge on port 4318');
     }
 
     const res = await fetch(`${CODEBUFF_BASE_URL}/health`, {
@@ -1612,11 +1556,10 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
     );
   });
 
-  test("Codebuff bridge /v1/models lists codebuff model", async () => {
+  test("Codebuff bridge /v1/models lists codebuff model", async ({ skip }) => {
     const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
     if (!reachable) {
-      test.skip('Codebuff bridge not reachable - requires running bridge on port 4318');
-      return;
+      skip('Codebuff bridge not reachable - requires running bridge on port 4318');
     }
 
     const res = await fetch(`${CODEBUFF_BASE_URL}/v1/models`, {
@@ -1629,11 +1572,10 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
     expect(modelIds).toContain("codebuff/base");
   });
 
-  test("Codebuff bridge non-streaming completion", async () => {
+  test("Codebuff bridge non-streaming completion", async ({ skip }) => {
     const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
     if (!reachable) {
-      test.skip('Codebuff bridge not reachable - requires running bridge on port 4318');
-      return;
+      skip('Codebuff bridge not reachable - requires running bridge on port 4318');
     }
 
     const startTime = Date.now();
@@ -1668,11 +1610,10 @@ test.describe("Live Codebuff Bridge Tests (requires running bridge)", () => {
     }
   });
 
-  test("Codebuff bridge streaming completion", async () => {
+  test("Codebuff bridge streaming completion", async ({ skip }) => {
     const reachable = await isBridgeReachable(CODEBUFF_BASE_URL);
     if (!reachable) {
-      test.skip('Codebuff bridge not reachable - requires running bridge on port 4318');
-      return;
+      skip('Codebuff bridge not reachable - requires running bridge on port 4318');
     }
 
     const startTime = Date.now();
@@ -1746,8 +1687,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
       data = runCliJson<ModelsListOutput>("models list --json");
     } catch {
       console.log("[openclaw-e2e] openclaw CLI not available, skipping");
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     expect(data.count).toBeGreaterThanOrEqual(17);
@@ -1771,8 +1711,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     try {
       data = runCliJson<ModelsListOutput>("models list --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const defaultModel = data.models.find((m) => m.tags.includes("default"));
@@ -1785,8 +1724,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     expect(data.defaultModel).toBe("symphony-bridge/symphony/main");
@@ -1804,8 +1742,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const { fallbacks } = data;
@@ -1837,8 +1774,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const expectedSymphonyRoutes = [
@@ -1874,8 +1810,7 @@ test.describe("OpenClaw CLI Model Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const lastFallback = data.fallbacks[data.fallbacks.length - 1];
@@ -1895,8 +1830,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const expectedModels = [
@@ -1932,8 +1866,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const ollamaModels = ["ollama/qwen2.5-coder:0.5b", "ollama/qwen2.5-coder:3b-instruct"];
@@ -1949,8 +1882,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     try {
       data = runCliJson<ModelsStatusOutput>("models status --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     expect(data.allowed, "codebuff-bridge/codebuff/base not in allowed list").toContain(
@@ -1963,8 +1895,7 @@ test.describe("OpenClaw Model Selection Validation", () => {
     try {
       data = runCliJson<ModelsListOutput>("models list --json");
     } catch {
-      test.skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
-      return;
+      skip('OpenClaw CLI not installed or not in PATH - test requires openclaw CLI');
     }
 
     const configuredModels = data.models.filter((m) => m.tags.includes("configured"));
@@ -1984,12 +1915,11 @@ test.describe("OpenClaw Model Selection Validation", () => {
 test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
   test.setTimeout(60_000);
 
-  test("gateway is healthy (prerequisite for TUI)", () => {
+  test("gateway is healthy (prerequisite for TUI)", ({ skip }) => {
     const reachable = isGatewayReachable();
     if (!reachable) {
       console.log("[openclaw-e2e] Gateway not reachable, skipping TUI tests");
-      test.skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
-      return;
+      skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
     }
 
     const output = runCli("health");
@@ -1997,11 +1927,10 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
     console.log(`[openclaw-e2e] Gateway health: ${output.split("\n")[0]}`);
   });
 
-  test("openclaw tui starts and produces output", async () => {
+  test("openclaw tui starts and produces output", async ({ skip }) => {
     const reachable = isGatewayReachable();
     if (!reachable) {
-      test.skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
-      return;
+      skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
     }
 
     const { output, exitCode } = await spawnTuiAndCapture("Say ok", 15_000);
@@ -2022,11 +1951,10 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
     ).toBeGreaterThan(0);
   });
 
-  test("openclaw tui connects to gateway and receives response", async () => {
+  test("openclaw tui connects to gateway and receives response", async ({ skip }) => {
     const reachable = isGatewayReachable();
     if (!reachable) {
-      test.skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
-      return;
+      skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
     }
 
     const { output } = await spawnTuiAndCapture("Reply with only the word pong", 20_000);
@@ -2055,13 +1983,12 @@ test.describe("OpenClaw TUI Validation (requires running gateway)", () => {
     expect(hasResponse, "TUI should show a connection indicator or model response").toBe(true);
   });
 
-  test("openclaw tui sends prompt through pipeline and validates response via API", async () => {
+  test("openclaw tui sends prompt through pipeline and validates response via API", async ({ skip }) => {
     test.setTimeout(180_000);
 
     const reachable = isGatewayReachable();
     if (!reachable) {
-      test.skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
-      return;
+      skip('OpenClaw gateway not reachable - requires running gateway on port 4320');
     }
 
     const sessionId = `e2e-content-${Date.now()}`;

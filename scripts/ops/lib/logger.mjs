@@ -100,7 +100,7 @@ export function createLogger(scriptName = "", options = {}) {
       if (!fullPath) return { filename: "", lineNumber: "" };
 
       // Extract filename (without directories) and line number
-      const fileMatch = fullPath.match(/([^/\\]+):([0-9]+):[0-9]+/);
+      const fileMatch = fullPath.match(/([^/\\]+):(\d+):\d+/);
       if (!fileMatch) return { filename: "", lineNumber: "" };
 
       return {
