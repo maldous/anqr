@@ -660,6 +660,83 @@ async function memoryGetTool({ file }) {
   }
 }
 
+/**
+ * Execute file change hooks
+ */
+async function runFileChangeHooksTool({ files }) {
+  try {
+    // Check if codebuff.json has fileChangeHooks configured
+    const codebuffConfigPath = path.join(process.cwd(), "codebuff.json");
+    let hooks = [];
+    
+    if (fs.existsSync(codebuffConfigPath)) {
+      const config = JSON.parse(fs.readFileSync(codebuffConfigPath, "utf-8"));
+      hooks = config.fileChangeHooks || [];
+    }
+    
+    if (hooks.length === 0) {
+      return { success: true, message: "No file change hooks configured" };
+    }
+    
+    const results = [];
+    for (const hook of hooks) {
+      try {
+        const command = hook.replace("{files}", files.join(" "));
+        const result = execSync(command, {
+          encoding: "utf-8",
+          timeout: 60000,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        results.push({ hook, success: true, output: result });
+      } catch (err) {
+        results.push({ hook, success: false, error: err.message });
+      }
+    }
+    
+    return { success: true, results };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Think deeply about a problem
+ */
+async function thinkDeeplyTool({ thought }) {
+  // Log the thinking for observability
+  logInfo(`💭 Deep thinking: ${thought.slice(0, 200)}`);
+  return { acknowledged: true, thought };
+}
+
+/**
+ * Update a subgoal (track progress)
+ */
+async function updateSubgoalTool({ id, status, log, plan }) {
+  logInfo(`📋 Subgoal ${id}: ${status || "update"}${log ? ` - ${log.slice(0, 100)}` : ""}`);
+  return { 
+    acknowledged: true, 
+    id, 
+    status: status || "IN_PROGRESS",
+    log,
+    plan 
+  };
+}
+
+/**
+ * Add a new subgoal
+ */
+async function addSubgoalTool({ id, objective, status, log, plan }) {
+  logInfo(`🎯 New subgoal ${id}: ${objective.slice(0, 100)}`);
+  return { 
+    acknowledged: true, 
+    id, 
+    objective,
+    status: status || "NOT_STARTED",
+    log,
+    plan 
+  };
+}
+
 // Available tools for the AI SDK
 const tools = {
   exec: tool({
@@ -712,6 +789,41 @@ const tools = {
         .describe("File to read: MEMORY.md (default), knowledge.md, or CLAUDE.md"),
     }),
     execute: memoryGetTool,
+  }),
+  run_file_change_hooks: tool({
+    description: "Execute file change hooks for modified files",
+    inputSchema: z.object({
+      files: z.array(z.string()).describe("List of file paths that were changed"),
+    }),
+    execute: runFileChangeHooksTool,
+  }),
+  think_deeply: tool({
+    description: "Deeply consider complex tasks by brainstorming approaches and tradeoffs step-by-step",
+    inputSchema: z.object({
+      thought: z.string().describe("Detailed step-by-step analysis"),
+    }),
+    execute: thinkDeeplyTool,
+  }),
+  update_subgoal: tool({
+    description: "Update a subgoal to track progress on multi-step tasks",
+    inputSchema: z.object({
+      id: z.string().describe("The id of the subgoal to update"),
+      status: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE", "ABORTED"]).optional().describe("Change the status of the subgoal"),
+      log: z.string().optional().describe("Add a log message to the subgoal"),
+      plan: z.string().optional().describe("Change the plan for the subgoal"),
+    }),
+    execute: updateSubgoalTool,
+  }),
+  add_subgoal: tool({
+    description: "Add a new subgoal for tracking progress on complex requests",
+    inputSchema: z.object({
+      id: z.string().describe("A unique identifier for the subgoal"),
+      objective: z.string().describe("The objective of the subgoal, concisely and clearly stated"),
+      status: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE", "ABORTED"]).optional().describe("The status of the subgoal"),
+      log: z.string().optional().describe("A log message for the subgoal progress"),
+      plan: z.string().optional().describe("A plan for the subgoal"),
+    }),
+    execute: addSubgoalTool,
   }),
 };
 
@@ -2253,12 +2365,14 @@ async function invokeWithFallback(messages, route, sessionId = null) {
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-      const errorMsg =
-        excludedByProbe.length > 0
-          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-          : lastError
-            ? `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
-            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      let errorMsg;
+      if (excludedByProbe.length > 0) {
+        errorMsg = `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`;
+      } else if (lastError) {
+        errorMsg = `All providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`;
+      } else {
+        errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      }
       logError(`[invokeWithFallback] No provider available`, {
         attemptNumber,
         triedProviders,
@@ -2580,12 +2694,14 @@ async function invokeWithFallbackStream(
       const excludedByProbe = (route.allowedNames || []).filter((n) =>
         nonToolCapableProviders.has(n),
       );
-      const errorMsg =
-        excludedByProbe.length > 0
-          ? `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`
-          : lastError
-            ? `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`
-            : `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      let errorMsg;
+      if (excludedByProbe.length > 0) {
+        errorMsg = `No providers available for ${route.responseModelId} - ${excludedByProbe.join(", ")} excluded by tool-capability probe (non-tool-capable)`;
+      } else if (lastError) {
+        errorMsg = `All streaming providers failed (tried ${triedProviders.join(", ")}). Last error: ${lastError}`;
+      } else {
+        errorMsg = `No providers available for ${route.responseModelId} - check env vars and provider failures`;
+      }
       throw new Error(errorMsg);
     }
     logInfo(
