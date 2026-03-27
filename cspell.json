@@ -432,7 +432,9 @@
     "spawnable",
     "deepseek",
     "moonshotai",
-    "kimi"
+    "kimi",
+    "submitbutton",
+    "unmatched"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

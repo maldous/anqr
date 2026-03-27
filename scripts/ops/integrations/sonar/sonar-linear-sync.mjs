@@ -17,7 +17,7 @@ import {
   addComment,
   TEAM_ID,
   STATES,
-} from "../../linear-client.mjs";
+} from "../linear/linear-client.mjs";
 import { createLogger } from "../../lib/logger.mjs";
 
 const { logInfo } = createLogger();
