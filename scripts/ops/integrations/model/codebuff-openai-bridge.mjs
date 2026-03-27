@@ -810,15 +810,15 @@ async function trySingleAccount(
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
     logDebug(`[trySingleAccount] Continuation ${continuation} complete`, {
       outputLength: contStr.length,
-    });
-
-    if (contStr.includes("Symbol(vercel.ai.error)")) {
-      const errorMatch = contStr.match(/"message":"([^"]+)"/);
-      const errorMsg = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
+    });    if (contStr.includes("Symbol(vercel.ai.error)")) {
+      const errorMatch = contStr.match(/"message":"([^"]+)"/);      const errorMsg = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
       logError(`[trySingleAccount] Continuation error`, { continuation, errorMsg });
       throw new Error(errorMsg);
     }
     checkResultForErrors(contOutput, contStr, attempt);
+
+    // Update loopStatus from lastSubgoalStatus (modified by handleEvent callback)
+    loopStatus = lastSubgoalStatus;
   }
 
   if (continuation > 0) {
@@ -1097,9 +1097,7 @@ async function trySingleAccountStream(
     const errorMatch = resultStr.match(/"message":"([^"]+)"/);
     throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
   }
-  checkResultForErrors(output, resultStr, attempt);
-
-  // Continuation loop — if the agent set a subgoal but didn't complete it,
+  checkResultForErrors(output, resultStr, attempt);  // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
   let continuation = 0;
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && loopStatus === "IN_PROGRESS") {
@@ -1124,10 +1122,12 @@ async function trySingleAccountStream(
     const contOutput = result.output || "";
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
     if (contStr.includes("Symbol(vercel.ai.error)")) {
-      const errorMatch = contStr.match(/"message":"([^"]+)"/);
-      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+      const errorMatch = contStr.match(/"message":"([^"]+)"/);      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
     }
     checkResultForErrors(contOutput, contStr, attempt);
+
+    // Update loopStatus from lastSubgoalStatus (modified by handleEvent callback)
+    loopStatus = lastSubgoalStatus;
   }
 
   if (continuation > 0) {
