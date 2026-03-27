@@ -46,7 +46,7 @@ async function main() {
       logInfo(`  Updated: ${issue.updatedAt.split('T')[0]}`);
       
       if (issue.description) {
-        const preview = issue.description.substring(0, 150).replace(/\n/g, ' ');
+        const preview = issue.description.substring(0, 150).replaceAll('\n', ' ');
         logInfo(`  Description: ${preview}${issue.description.length > 150 ? '...' : ''}`);
       }
     }
