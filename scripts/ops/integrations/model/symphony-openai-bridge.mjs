@@ -2376,6 +2376,111 @@ async function invokeWithFallback(messages, route, sessionId = null) {
 }
 
 /**
+ * Internal SDK activity patterns (complete markers to filter out of logs)
+ */
+const INTERNAL_PATTERNS = [
+  /✅ set_messages done\n?/,
+  /✅ spawn_agent_inline done\n?/,
+  /✅ context-pruner done\n?/,
+  /✅ end_turn done\n?/,
+];
+
+const LOG_BUFFER_THRESHOLD = 150; // Log when buffer exceeds ~150 chars
+
+/**
+ * Process SSE line and extract content for logging and streaming
+ */
+function processSSELine(line, state, onDiscordChunk) {
+  const dataMatch = line.match(/^data: (.+)$/);
+  if (!dataMatch || dataMatch[1] === "[DONE]") return;
+
+  try {
+    const parsed = JSON.parse(dataMatch[1]);
+    const content = parsed.choices?.[0]?.delta?.content;
+    if (!content || content.length === 0) return;
+
+    state.fullText += content;
+    state.logBuffer += content;
+
+    // Stream ALL content to Discord (including activity messages)
+    if (onDiscordChunk) {
+      onDiscordChunk(content);
+    }
+
+    maybeFlushLogBuffer(state);
+  } catch {
+    // Parse error - ignore
+  }
+}
+
+/**
+ * Check if log buffer should be flushed and do so if needed
+ */
+function maybeFlushLogBuffer(state) {
+  // Filter out internal activity markers for logging only
+  let filteredLogBuffer = state.logBuffer;
+  for (const pattern of INTERNAL_PATTERNS) {
+    filteredLogBuffer = filteredLogBuffer.replace(pattern, "");
+  }
+
+  // Log when buffer exceeds threshold or contains sentence boundary
+  const hasSentenceEnd =
+    /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
+  if (filteredLogBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
+    const toLog = filteredLogBuffer.trim();
+    if (toLog.length > 0) {
+      logDebug(`🌊 ${toLog.slice(0, 200)}`);
+    }
+    state.logBuffer = ""; // Clear buffer after logging
+  }
+}
+
+/**
+ * Handle data chunk from proxy response
+ */
+function handleProxyDataChunk(chunk, res, state, onDiscordChunk) {
+  const chunkStr = chunk.toString();
+
+  // Forward raw chunks directly to OpenClaw (no filtering)
+  res.write(chunk);
+
+  // Extract content for logging, accumulation, and Discord streaming
+  const lines = chunkStr.split("\n");
+  for (const line of lines) {
+    processSSELine(line, state, onDiscordChunk);
+  }
+}
+
+/**
+ * Handle proxy response end event
+ */
+async function handleProxyEnd(state, resolve) {
+  // Log any remaining buffered text
+  if (state.logBuffer.trim().length > 0) {
+    logDebug(`🌊 ${state.logBuffer.trim().slice(0, 200)}`);
+  }
+
+  // Flush any remaining Discord stream buffer
+  await flushDiscordStream({ emoji: "" }).catch(() => {
+    /* ignore */
+  });
+
+  logDebug(`🌊 Relay complete: ${state.fullText.length} chars`);
+  resolve({ text: state.fullText, providerName: "codebuff" });
+}
+
+/**
+ * Handle error response from proxy
+ */
+function handleErrorResponse(proxyRes, reject) {
+  let errorBody = "";
+  proxyRes.on("data", (chunk) => (errorBody += chunk));
+  proxyRes.on("end", () => {
+    reject(new Error(`Codebuff bridge returned ${proxyRes.statusCode}: ${errorBody}`));
+  });
+}
+
+/**
  * Transparent SSE relay for Codebuff - forwards raw SSE chunks directly to OpenClaw
  * without AI SDK buffering. This preserves real-time activity messages (✅ done, 🔧 read:, etc.)
  * that the AI SDK would otherwise buffer until the end.
@@ -2417,88 +2522,23 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
       headers,
     };
 
+    const state = {
+      fullText: "",
+      logBuffer: "",
+    };
+
     const proxyReq = http.request(options, (proxyRes) => {
       if (proxyRes.statusCode !== 200) {
-        let errorBody = "";
-        proxyRes.on("data", (chunk) => (errorBody += chunk));
-        proxyRes.on("end", () => {
-          reject(new Error(`Codebuff bridge returned ${proxyRes.statusCode}: ${errorBody}`));
-        });
+        handleErrorResponse(proxyRes, reject);
         return;
       }
 
-      let fullText = "";
-      let logBuffer = ""; // Accumulate text for readable logging
-      const LOG_BUFFER_THRESHOLD = 150; // Log when buffer exceeds ~150 chars
-
-      // Internal SDK activity patterns (complete markers to filter out of logs)
-      const INTERNAL_PATTERNS = [
-        /✅ set_messages done\n?/,
-        /✅ spawn_agent_inline done\n?/,
-        /✅ context-pruner done\n?/,
-        /✅ end_turn done\n?/,
-      ];
-
       proxyRes.on("data", (chunk) => {
-        const chunkStr = chunk.toString();
-
-        // Forward raw chunks directly to OpenClaw (no filtering)
-        res.write(chunk);
-
-        // Extract content for logging, accumulation, and Discord streaming
-        const lines = chunkStr.split("\n");
-        for (const line of lines) {
-          const dataMatch = line.match(/^data: (.+)$/);
-          if (!dataMatch || dataMatch[1] === "[DONE]") continue;
-
-          try {
-            const parsed = JSON.parse(dataMatch[1]);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content && content.length > 0) {
-              fullText += content;
-              logBuffer += content;
-
-              // Stream ALL content to Discord (including activity messages)
-              if (onDiscordChunk) {
-                onDiscordChunk(content);
-              }
-
-              // Filter out internal activity markers for logging only
-              let filteredLogBuffer = logBuffer;
-              for (const pattern of INTERNAL_PATTERNS) {
-                filteredLogBuffer = filteredLogBuffer.replace(pattern, "");
-              }
-
-              // Log when buffer exceeds threshold or contains sentence boundary
-              const hasSentenceEnd =
-                /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
-              if (filteredLogBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
-                const toLog = filteredLogBuffer.trim();
-                if (toLog.length > 0) {
-                  logDebug(`🌊 ${toLog.slice(0, 200)}`);
-                }
-                logBuffer = ""; // Clear buffer after logging
-              }
-            }
-          } catch {
-            // Parse error - ignore
-          }
-        }
+        handleProxyDataChunk(chunk, res, state, onDiscordChunk);
       });
 
       proxyRes.on("end", async () => {
-        // Log any remaining buffered text
-        if (logBuffer.trim().length > 0) {
-          logDebug(`🌊 ${logBuffer.trim().slice(0, 200)}`);
-        }
-
-        // Flush any remaining Discord stream buffer
-        await flushDiscordStream({ emoji: "" }).catch(() => {
-          /* ignore */
-        });
-
-        logDebug(`🌊 Relay complete: ${fullText.length} chars`);
-        resolve({ text: fullText, providerName: "codebuff" });
+        await handleProxyEnd(state, resolve);
       });
 
       proxyRes.on("error", (err) => {
