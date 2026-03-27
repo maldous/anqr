@@ -18,10 +18,22 @@ const OPENCLAW_GATEWAY_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || null;
 
 /**
  * Send a voice announcement via OpenClaw message tool (Discord TTS)
+ *
+ * NOTE: Voice functionality is owned by OpenClaw Gateway, not ANQR.
+ * This test validates the integration between ANQR and OpenClaw's message tool.
+ *
+ * Prerequisites:
+ * - OpenClaw Gateway must be running (port 18789)
+ * - OPENCLAW_GATEWAY_TOKEN must be set
+ * - OpenClaw must have Discord bot configured with voice capabilities
+ * - Discord bot must have Connect/Speak permissions and GUILD_VOICE_STATES intent
+ *
+ * If this test fails, see docs/harness/discord-voice-integration.md for troubleshooting.
  */
 async function testVoiceAnnouncement(text) {
   if (!OPENCLAW_GATEWAY_TOKEN) {
     logInfo("❌ Voice test skipped: OPENCLAW_GATEWAY_TOKEN not set");
+    logInfo("   💡 Voice requires OpenClaw Gateway configuration (external service)");
     return { sent: false, reason: "OPENCLAW_GATEWAY_TOKEN not set" };
   }
 
@@ -59,6 +71,9 @@ async function testVoiceAnnouncement(text) {
             resolve({ sent: true });
           } else {
             logError(`❌ Voice announcement failed: ${res.statusCode} ${data}`);
+            logError(`   💡 This indicates OpenClaw Gateway received the request but voice failed`);
+            logError(`   📚 Check Discord bot permissions, intents, and voice dependencies`);
+            logError(`   📖 See docs/harness/discord-voice-integration.md for details`);
             resolve({ sent: false, reason: `HTTP ${res.statusCode}` });
           }
         });
@@ -66,6 +81,8 @@ async function testVoiceAnnouncement(text) {
 
       req.on("error", (err) => {
         logError(`❌ Voice announcement error: ${err.message}`);
+        logError(`   💡 Check OpenClaw Gateway is running and Discord bot is configured`);
+        logError(`   📚 See docs/harness/discord-voice-integration.md for troubleshooting`);
         resolve({ sent: false, reason: err.message });
       });
 
