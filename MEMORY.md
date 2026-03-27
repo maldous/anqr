@@ -61,3 +61,21 @@ Coverage Plan:
 ### 2026-03-26 - Symphony Bridge restarted successfully (PID 3135873, commit ec4ba12cd, 38/38 providers available, Discord monitoring active)
 
 ### 2026-03-27 - Codebuff Bridge stopped (PID 3145342, commit 6f6050c88, mode: free, signal: SIGTERM)
+
+### 2026-03-27 - Codebuff Bridge stopped (PID 3307702, commit e06e6d062, mode: free, signal: SIGTERM)
+
+### 2026-03-27 - ARCHITECTURAL CONCERN RAISED: Session state tracks provider, not messages
+
+The session state implementation (symphony-session-state.mjs) tracks provider selection but not message history. The system relies on OpenClaw maintaining conversation state. When switching providers mid-conversation (rotation, failure, evaluation), there's no server-side verification that context is complete, coherent, or uncorrupted.
+
+**Known failure**: Groq switching mid-conversation (2026-03-27) "had no idea what was going on"
+
+**Potential solutions**:
+- Option 1: Store message hash, verify continuity when switching providers
+- Option 2: Store full message array server-side as source of truth
+- Option 3: Validate context coherence (role alternation, message integrity)
+
+Documented in: scripts/ops/integrations/model/symphony-session-state.mjs header comments
+Related files: symphony-openai-bridge.mjs, symphony-bridge-truncation.mjs, symphony-adaptive-context.mjs
+
+Note: Unable to create Linear issue - workspace exceeded free issue limit. Architectural concern documented in code comments and MEMORY.md for future review.

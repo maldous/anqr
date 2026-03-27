@@ -9,6 +9,26 @@
  * - Automatically detects codebuff paid vs free mode
  * - Self-tunes rotation parameters based on observed performance
  * - Periodically samples all providers to keep scoring fresh
+ *
+ * ARCHITECTURAL CONCERN (2026-03-27):
+ * This module tracks provider selection (which provider, turn count, tier) but does NOT
+ * track the actual message history. The system relies on OpenClaw maintaining conversation
+ * state. When switching providers mid-conversation (due to rotation, failure, or evaluation),
+ * there is NO server-side verification that:
+ *   1. The context sent by OpenClaw is complete and coherent
+ *   2. The context hasn't been corrupted during transmission
+ *   3. The truncated context (for providers with smaller windows) maintains coherence
+ *
+ * Known failure: Groq switching mid-conversation (2026-03-27) "had no idea what was going on"
+ *
+ * Potential solutions:
+ *   - Option 1: Store message hash, verify continuity when switching providers
+ *   - Option 2: Store full message array server-side, use as source of truth
+ *   - Option 3: Validate context coherence (role alternation, last assistant message, etc.)
+ *
+ * See: symphony-openai-bridge.mjs (buildSelectionOptions, invokeWithFallbackStream)
+ *      symphony-bridge-truncation.mjs (truncateMessagesForProvider)
+ *      symphony-adaptive-context.mjs (context window management)
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
