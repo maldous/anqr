@@ -24,7 +24,8 @@ import { createLogger } from "../../lib/logger.mjs";
 const { logInfo } = createLogger();
 
 const WATCHDOG_ENABLED = process.env.WATCHDOG_ENABLED !== "false";
-const WATCHDOG_TIMEOUT_MS = parseInt(process.env.WATCHDOG_TIMEOUT_MS || "60000", 10);
+// SONAR S7773: Use Number.parseInt instead of parseInt
+const WATCHDOG_TIMEOUT_MS = Number.parseInt(process.env.WATCHDOG_TIMEOUT_MS || "60000", 10);
 const WATCHDOG_ROLLBACK = process.env.WATCHDOG_ROLLBACK !== "false";
 const SYMPHONY_PORT = 4319;
 const CODEBUFF_PORT = 4318;

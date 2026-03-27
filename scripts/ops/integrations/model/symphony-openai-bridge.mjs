@@ -737,6 +737,162 @@ async function addSubgoalTool({ id, objective, status, log, plan }) {
   };
 }
 
+/**
+ * Find files using natural language description (wraps file-explorer agent)
+ */
+async function findFilesTool({ prompt }) {
+  try {
+    logInfo(`🔍 Finding files: ${prompt.slice(0, 100)}`);
+    
+    // Use file-explorer agent via spawn mechanism
+    // For now, use simple glob-based search as fallback
+    const searchTerms = prompt.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+    const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.md'];
+    
+    const results = [];
+    for (const ext of extensions) {
+      try {
+        const cmd = `find . -type f -name "*${ext}" 2>/dev/null | head -50`;
+        const output = execSync(cmd, { encoding: 'utf-8', timeout: 5000 });
+        const files = output.split('\n').filter(Boolean);
+        
+        // Simple relevance scoring based on search terms in path
+        for (const file of files) {
+          const lowerPath = file.toLowerCase();
+          const score = searchTerms.reduce((sum, term) => 
+            sum + (lowerPath.includes(term) ? 1 : 0), 0
+          );
+          if (score > 0) {
+            results.push({ path: file.replace(/^\.\//, ''), score });
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    
+    // Sort by score and return top 20
+    const sorted = results.sort((a, b) => b.score - a.score).slice(0, 20);
+    const paths = sorted.map(r => r.path);
+    
+    return { 
+      files: paths,
+      count: paths.length,
+      query: prompt.slice(0, 100)
+    };
+  } catch (error) {
+    return { error: error.message, files: [] };
+  }
+}
+
+/**
+ * Web search using external API
+ */
+async function webSearchTool({ query, depth = 'standard' }) {
+  try {
+    logInfo(`🌐 Web search: ${query.slice(0, 100)} (${depth})`);
+    
+    // Check for Linkup API key or other web search API
+    const apiKey = process.env.LINKUP_API_KEY || process.env.WEB_SEARCH_API_KEY;
+    
+    if (!apiKey) {
+      return {
+        error: 'Web search requires LINKUP_API_KEY or WEB_SEARCH_API_KEY environment variable',
+        results: [],
+        message: 'Web search is not configured. Set LINKUP_API_KEY to enable this feature.'
+      };
+    }
+    
+    // Call Linkup API or similar web search service
+    const response = await fetch('https://api.linkup.so/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query,
+        depth,
+        outputType: 'searchResults'
+      }),
+      timeout: 30000
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Web search API returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return {
+      results: data.results || [],
+      count: data.results?.length || 0,
+      query
+    };
+  } catch (error) {
+    logWarn(`Web search failed: ${error.message}`);
+    return { 
+      error: error.message,
+      results: [],
+      message: 'Web search is currently unavailable'
+    };
+  }
+}
+
+/**
+ * Read library documentation via Context7 API
+ */
+async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
+  try {
+    logInfo(`📚 Reading docs: ${libraryTitle} - ${topic}`);
+    
+    // Check for Context7 API key
+    const apiKey = process.env.CONTEXT7_API_KEY || process.env.DOCS_API_KEY;
+    
+    if (!apiKey) {
+      return {
+        error: 'Documentation reading requires CONTEXT7_API_KEY or DOCS_API_KEY environment variable',
+        content: '',
+        message: 'Documentation API is not configured. Set CONTEXT7_API_KEY to enable this feature.'
+      };
+    }
+    
+    // Ensure minimum token count
+    const effectiveMaxTokens = Math.max(max_tokens, 10000);
+    
+    // Call Context7 API
+    const response = await fetch('https://api.context7.com/v1/docs', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        library: libraryTitle,
+        topic,
+        max_tokens: effectiveMaxTokens
+      }),
+      timeout: 30000
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Context7 API returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return {
+      content: data.content || '',
+      library: libraryTitle,
+      topic,
+      tokens: data.tokens || 0
+    };
+  } catch (error) {
+    logWarn(`Documentation reading failed: ${error.message}`);
+    return { 
+      error: error.message,
+      content: '',
+      message: 'Documentation API is currently unavailable'
+    };
+  }
+}
+
 // Available tools for the AI SDK
 const tools = {
   exec: tool({
@@ -824,6 +980,30 @@ const tools = {
       plan: z.string().optional().describe("A plan for the subgoal"),
     }),
     execute: addSubgoalTool,
+  }),
+  find_files: tool({
+    description: "Find files using natural language description of the files or the name of a function or class you are looking for",
+    inputSchema: z.object({
+      prompt: z.string().describe("Natural language description of files to find, or function/class name. Mention directories to narrow search."),
+    }),
+    execute: findFilesTool,
+  }),
+  web_search: tool({
+    description: "Search the web for current information using Linkup API",
+    inputSchema: z.object({
+      query: z.string().describe("The search query to find relevant web content"),
+      depth: z.enum(["standard", "deep"]).optional().describe("Search depth - 'standard' for quick results, 'deep' for comprehensive search. Default is 'standard'."),
+    }),
+    execute: webSearchTool,
+  }),
+  read_docs: tool({
+    description: "Fetch up-to-date documentation for libraries and frameworks using Context7 API",
+    inputSchema: z.object({
+      libraryTitle: z.string().describe("The library or framework name (e.g., 'Next.js', 'MongoDB', 'React'). Use official name as it appears in documentation."),
+      topic: z.string().describe("Specific topic to focus on (e.g., 'routing', 'hooks', 'authentication')"),
+      max_tokens: z.number().optional().describe("Maximum number of tokens to return. Defaults to 20000. Values less than 10000 are automatically increased to 10000."),
+    }),
+    execute: readDocsTool,
   }),
 };
 

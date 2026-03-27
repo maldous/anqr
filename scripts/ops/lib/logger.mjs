@@ -16,6 +16,48 @@
 const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
 
 /**
+ * Get filename and line number from call stack
+ * @returns {object} { filename: string, lineNumber: string }
+ */
+function getCallerInfo() {
+  try {
+    // SONAR S7722: Pass a message to the Error constructor
+    const stack = new Error("stack trace").stack;
+    if (!stack) return { filename: "", lineNumber: "" };
+
+    const lines = stack.split("\n");
+    // Skip:
+    // 0: Error
+    // 1: getCallerInfo
+    // 2: formatLogEntry
+    // 3: logDebug/logInfo/logWarn/logError
+    // 4: actual caller (what we want)
+    const callerLine = lines[4];
+    if (!callerLine) return { filename: "", lineNumber: "" };
+
+    // Extract filename and line number from patterns like:
+    // "    at functionName (/path/to/file.mjs:123:45)"
+    // "    at /path/to/file.mjs:123:45"
+    const pathMatch = callerLine.match(/\(([^)]+)\)|\s+at\s+(.+)/);
+    if (!pathMatch) return { filename: "", lineNumber: "" };
+
+    const fullPath = pathMatch[1] || pathMatch[2];
+    if (!fullPath) return { filename: "", lineNumber: "" };
+
+    // Extract filename (without directories) and line number
+    const fileMatch = fullPath.match(/([^/\\]+):(\d+):\d+/);
+    if (!fileMatch) return { filename: "", lineNumber: "" };
+
+    return {
+      filename: fileMatch[1],
+      lineNumber: fileMatch[2],
+    };
+  } catch {
+    return { filename: "", lineNumber: "" };
+  }
+}
+
+/**
  * Create a logger instance for a script
  * @param {string} scriptName - Name of the script (e.g., 'symphony-agent')
  * @param {object} options - Configuration options
@@ -25,15 +67,14 @@ const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
  */
 export function createLogger(scriptName = "", options = {}) {
   const envVarName = scriptName
-    ? options.envVar || `${scriptName.toUpperCase().replace(/-/g, "_")}_LOG_LEVEL`
+    ? options.envVar || `${scriptName.toUpperCase().replaceAll("-", "_")}_LOG_LEVEL`
     : "LOG_LEVEL";
   const defaultLevel = options.defaultLevel || "DEBUG";
 
   const envLogLevel = process.env[envVarName]?.toUpperCase();
   const initialLevel = LOG_LEVELS[envLogLevel] ?? LOG_LEVELS[defaultLevel];
-  let currentLogLevel = initialLevel;
-
   const prefix = scriptName ? `[${scriptName}]` : "";
+  let currentLogLevel = initialLevel;
 
   function setLogLevel(level) {
     const levelName = Object.keys(LOG_LEVELS).find((k) => LOG_LEVELS[k] === level);
@@ -70,47 +111,6 @@ export function createLogger(scriptName = "", options = {}) {
     process.stderr.write(`${prefix} [INFO] Received SIGUSR2 - increasing verbosity\n`);
     decrementLogLevel();
   });
-
-  /**
-   * Get filename and line number from call stack
-   * @returns {object} { filename: string, lineNumber: string }
-   */
-  function getCallerInfo() {
-    try {
-      const stack = new Error().stack;
-      if (!stack) return { filename: "", lineNumber: "" };
-
-      const lines = stack.split("\n");
-      // Skip:
-      // 0: Error
-      // 1: getCallerInfo
-      // 2: formatLogEntry
-      // 3: logDebug/logInfo/logWarn/logError
-      // 4: actual caller (what we want)
-      const callerLine = lines[4];
-      if (!callerLine) return { filename: "", lineNumber: "" };
-
-      // Extract filename and line number from patterns like:
-      // "    at functionName (/path/to/file.mjs:123:45)"
-      // "    at /path/to/file.mjs:123:45"
-      const pathMatch = callerLine.match(/\(([^)]+)\)|\s+at\s+(.+)/);
-      if (!pathMatch) return { filename: "", lineNumber: "" };
-
-      const fullPath = pathMatch[1] || pathMatch[2];
-      if (!fullPath) return { filename: "", lineNumber: "" };
-
-      // Extract filename (without directories) and line number
-      const fileMatch = fullPath.match(/([^/\\]+):(\d+):\d+/);
-      if (!fileMatch) return { filename: "", lineNumber: "" };
-
-      return {
-        filename: fileMatch[1],
-        lineNumber: fileMatch[2],
-      };
-    } catch {
-      return { filename: "", lineNumber: "" };
-    }
-  }
 
   /**
    * Format a log entry with optional data payload

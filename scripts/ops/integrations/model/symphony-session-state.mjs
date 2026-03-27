@@ -101,11 +101,12 @@ function saveSessionState(state) {
 function loadAdaptiveParams() {
   try {
     if (existsSync(ADAPTIVE_PARAMS_FILE)) {
+      // SONAR S7784: Use structuredClone instead of JSON.parse(JSON.stringify(...))
       const saved = JSON.parse(readFileSync(ADAPTIVE_PARAMS_FILE, "utf-8"));
-      return { ...DEFAULT_ADAPTIVE_PARAMS, ...saved };
+      return structuredClone({ ...DEFAULT_ADAPTIVE_PARAMS, ...saved });
     }
   } catch {}
-  return { ...DEFAULT_ADAPTIVE_PARAMS };
+  return structuredClone(DEFAULT_ADAPTIVE_PARAMS);
 }
 
 function saveAdaptiveParams(params) {
