@@ -126,7 +126,9 @@ async function main() {
   return issue;
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(`❌ Failed to create issue: ${err.message}`);
   process.exit(1);
-});
+}

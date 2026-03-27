@@ -284,7 +284,7 @@ async function probeOllamaModel(modelName) {
   try {
     const data = await res.json();
     const models = (data.models || []).map((m) => m.name);
-    return models.some((m) => m === modelName);
+    return models.includes(modelName);
   } catch {
     return false;
   }
@@ -1145,12 +1145,12 @@ export function resetProviderStats() {
 export function logProviderStats(options = {}) {
   const ranked = getRankedProviders(options);
   const stats = getProviderStats();
-  const excludeSet =
-    options.excludeNames instanceof Set
-      ? options.excludeNames
-      : Array.isArray(options.excludeNames)
-        ? new Set(options.excludeNames)
-        : null;
+  let excludeSet = null;
+  if (options.excludeNames instanceof Set) {
+    excludeSet = options.excludeNames;
+  } else if (Array.isArray(options.excludeNames)) {
+    excludeSet = new Set(options.excludeNames);
+  }
 
   logInfo(`📊 Provider Rankings (dynamic scoring):`);
   if (ranked.length > 0) {
@@ -1341,8 +1341,9 @@ export async function probeAllProviders(options = {}) {
   logDebug(`Probed ${probeResults.length} providers in ${elapsed}ms`);
   logDebug(`  ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`);
   if (unavailable.length > 0) {
+    const unavailableList = unavailable.map((r) => r.name + "(" + r.status + ")").join(", ");
     logWarn(
-      `  ❌ Unavailable (${unavailable.length}): ${unavailable.map((r) => `${r.name}(${r.status})`).join(", ")}`,
+      `  ❌ Unavailable (${unavailable.length}): ${unavailableList}`,
     );
   }
 
@@ -1499,11 +1500,17 @@ export async function selectProvider(options = {}) {
       !matchesAllowedNames(provider, allowedNames) ||
       matchesExcludedNames(provider, excludedNames)
     ) {
+      let reason;
+      if (!provider) {
+        reason = "not found";
+      } else if (matchesAllowedNames(provider, allowedNames)) {
+        reason = "excluded";
+      } else {
+        reason = "not allowed";
+      }
       logDebug(`[selectProvider] Skipping preferred provider`, {
         providerName,
-        reason: !provider
-          ? "not found"
-          : matchesAllowedNames(provider, allowedNames) ? "excluded" : "not allowed",
+        reason,
       });
       continue;
     }
@@ -1531,15 +1538,19 @@ export async function selectProvider(options = {}) {
         !matchesAllowedNames(provider, allowedNames) ||
         matchesExcludedNames(provider, excludedNames)
       ) {
+        let reason;
+        if (!provider) {
+          reason = "not found";
+        } else if (matchesAllowedNames(provider, allowedNames)) {
+          reason = "excluded";
+        } else {
+          reason = "not allowed";
+        }
         logDebug(`[selectProvider] Skipping ranked provider`, {
           providerName: name,
           rank,
           score,
-          reason: !provider
-            ? "not found"
-            : !matchesAllowedNames(provider, allowedNames)
-              ? "not allowed"
-              : "excluded",
+          reason,
         });
         continue;
       }

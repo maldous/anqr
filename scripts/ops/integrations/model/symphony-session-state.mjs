@@ -426,7 +426,7 @@ export function getAdaptiveParams() {
  * Reset adaptive parameters to defaults
  */
 export function resetAdaptiveParams() {
-  paramsCache = JSON.parse(JSON.stringify(DEFAULT_ADAPTIVE_PARAMS));
+  paramsCache = structuredClone(DEFAULT_ADAPTIVE_PARAMS);
   saveAdaptiveParams(paramsCache);
   logInfo(`[session-state] 🔄 Reset adaptive parameters to defaults`);
 }

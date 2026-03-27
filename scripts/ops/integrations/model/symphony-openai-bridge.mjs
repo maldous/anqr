@@ -116,6 +116,16 @@ import {
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
 
+// Enhancement 1: Local Context7 MCP server for documentation fetching
+import {
+  startContext7Server,
+  stopContext7Server,
+  resolveDocsLocally,
+} from "../../runtime/mcp/context7-server.mjs";
+
+// Enhancement 3: Hybrid search (BM25 + embeddings) for find_files
+import { searchFiles as hybridSearchFiles } from "../../lib/search/hybrid-search.mjs";
+
 // Discord message monitoring (listen for user input from Discord text channel)
 let lastDiscordMessageId = null;
 let discordMonitorInterval = null;
@@ -712,7 +722,8 @@ async function thinkDeeplyTool({ thought }) {
  * Update a subgoal (track progress)
  */
 async function updateSubgoalTool({ id, status, log, plan }) {
-  logInfo(`📋 Subgoal ${id}: ${status || "update"}${log ? ` - ${log.slice(0, 100)}` : ""}`);
+  const logSuffix = log ? " - " + log.slice(0, 100) : "";
+  logInfo(`📋 Subgoal ${id}: ${status || "update"}${logSuffix}`);
   return { 
     acknowledged: true, 
     id, 
@@ -738,28 +749,47 @@ async function addSubgoalTool({ id, objective, status, log, plan }) {
 }
 
 /**
- * Find files using natural language description (wraps file-explorer agent)
+ * Find files using hybrid search (BM25 + semantic embeddings via Ollama)
+ * Falls back to basic glob-based search if hybrid search is unavailable.
  */
 async function findFilesTool({ prompt }) {
   try {
     logInfo(`🔍 Finding files: ${prompt.slice(0, 100)}`);
-    
-    // Use file-explorer agent via spawn mechanism
-    // For now, use simple glob-based search as fallback
+
+    // Attempt hybrid search (BM25 + optional embedding re-ranking)
+    try {
+      const result = await hybridSearchFiles(prompt, {
+        topK: 20,
+        useEmbeddings: true,
+      });
+
+      if (result.files.length > 0) {
+        logInfo(`📊 Hybrid search (${result.method}): ${result.count} results for "${prompt.slice(0, 60)}"`);
+        return {
+          files: result.files,
+          count: result.count,
+          query: prompt.slice(0, 100),
+          method: result.method,
+        };
+      }
+    } catch (err) {
+      logWarn(`Hybrid search failed, falling back to basic: ${err.message}`);
+    }
+
+    // Fallback: basic glob-based search
     const searchTerms = prompt.toLowerCase().split(/\s+/).filter(t => t.length > 2);
     const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.md'];
-    
+
     const results = [];
     for (const ext of extensions) {
       try {
-        const cmd = `find . -type f -name "*${ext}" 2>/dev/null | head -50`;
+        const cmd = `find . -type f -name "*${ext}" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -50`;
         const output = execSync(cmd, { encoding: 'utf-8', timeout: 5000 });
         const files = output.split('\n').filter(Boolean);
-        
-        // Simple relevance scoring based on search terms in path
+
         for (const file of files) {
           const lowerPath = file.toLowerCase();
-          const score = searchTerms.reduce((sum, term) => 
+          const score = searchTerms.reduce((sum, term) =>
             sum + (lowerPath.includes(term) ? 1 : 0), 0
           );
           if (score > 0) {
@@ -768,15 +798,15 @@ async function findFilesTool({ prompt }) {
         }
       } catch { /* ignore */ }
     }
-    
-    // Sort by score and return top 20
+
     const sorted = results.sort((a, b) => b.score - a.score).slice(0, 20);
     const paths = sorted.map(r => r.path);
-    
-    return { 
+
+    return {
       files: paths,
       count: paths.length,
-      query: prompt.slice(0, 100)
+      query: prompt.slice(0, 100),
+      method: 'basic',
     };
   } catch (error) {
     return { error: error.message, files: [] };
@@ -813,7 +843,7 @@ async function webSearchTool({ query, depth = 'standard' }) {
         depth,
         outputType: 'searchResults'
       }),
-      timeout: 30000
+      signal: AbortSignal.timeout(30000),
     });
     
     if (!response.ok) {
@@ -837,58 +867,79 @@ async function webSearchTool({ query, depth = 'standard' }) {
 }
 
 /**
- * Read library documentation via Context7 API
+ * Read library documentation via local Context7 MCP server with cloud API fallback
  */
 async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
   try {
     logInfo(`📚 Reading docs: ${libraryTitle} - ${topic}`);
-    
-    // Check for Context7 API key
+
+    const effectiveMaxTokens = Math.max(max_tokens, 10000);
+
+    // Attempt 1: Local Context7 MCP server (no API cost, faster)
+    try {
+      const result = await resolveDocsLocally({
+        libraryTitle,
+        topic,
+        max_tokens: effectiveMaxTokens,
+      });
+
+      if (result.documentation) {
+        logInfo(`📚 Docs resolved via ${result.source} for "${libraryTitle}"`);
+        return {
+          content: result.documentation,
+          library: libraryTitle,
+          topic,
+          source: result.source,
+          tokens: Math.ceil(result.documentation.length / 4),
+        };
+      }
+    } catch (err) {
+      logWarn(`Local Context7 resolution failed: ${err.message}`);
+    }
+
+    // Attempt 2: Direct Context7 cloud API (legacy fallback)
     const apiKey = process.env.CONTEXT7_API_KEY || process.env.DOCS_API_KEY;
-    
+
     if (!apiKey) {
       return {
         error: 'Documentation reading requires CONTEXT7_API_KEY or DOCS_API_KEY environment variable',
         content: '',
-        message: 'Documentation API is not configured. Set CONTEXT7_API_KEY to enable this feature.'
+        message: 'Documentation API is not configured. Set CONTEXT7_API_KEY to enable this feature.',
       };
     }
-    
-    // Ensure minimum token count
-    const effectiveMaxTokens = Math.max(max_tokens, 10000);
-    
-    // Call Context7 API
+
     const response = await fetch('https://api.context7.com/v1/docs', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         library: libraryTitle,
         topic,
-        max_tokens: effectiveMaxTokens
+        max_tokens: effectiveMaxTokens,
       }),
-      timeout: 30000
+      signal: AbortSignal.timeout(30000),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Context7 API returned ${response.status}`);
     }
-    
+
     const data = await response.json();
     return {
       content: data.content || '',
       library: libraryTitle,
       topic,
-      tokens: data.tokens || 0
+      source: 'cloud-direct',
+      tokens: data.tokens || 0,
     };
   } catch (error) {
     logWarn(`Documentation reading failed: ${error.message}`);
-    return { 
+    return {
       error: error.message,
       content: '',
-      message: 'Documentation API is currently unavailable'
+      message: 'Documentation API is currently unavailable',
     };
   }
 }
@@ -3900,7 +3951,7 @@ const server = http.createServer(async (req, res) => {
     if (headersSent) {
       logError(`Headers already sent - sending error as stream chunk instead of JSON`);
       // Use a fallback model ID since route may not be defined if error occurred early
-      const fallbackModelId = typeof route !== "undefined" ? route.responseModelId : MODEL_ID;
+      const fallbackModelId = typeof route === "undefined" ? MODEL_ID : route.responseModelId;
       try {
         if (res.writableEnded) {
           logError(`Cannot send error chunk - response already ended`);
@@ -3961,6 +4012,13 @@ async function shutdown(signal) {
     logInfo(`📝 Updated MEMORY.md before shutdown`);
   } catch (err) {
     logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
+  }
+
+  // Stop Context7 MCP server
+  try {
+    await stopContext7Server();
+  } catch (err) {
+    logWarn(`Context7 server stop failed: ${err.message}`);
   }
 
   // No cleanup needed - setTimeout will be cleared on process exit
@@ -4204,6 +4262,19 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   // Start continuous probe IMMEDIATELY on startup (alongside initial cache)
   scheduleContinuousProbe(0);
+
+  // Start Context7 MCP server (background, non-blocking)
+  startContext7Server()
+    .then((ok) => {
+      if (ok) {
+        logInfo(`✅ Context7 MCP server started successfully`);
+      } else {
+        logWarn(`⚠️ Context7 MCP server failed to start — will use cloud API fallback`);
+      }
+    })
+    .catch((err) => {
+      logWarn(`⚠️ Context7 MCP server error: ${err.message} — will use cloud API fallback`);
+    });
 
   // Start Discord message monitoring
   startDiscordMonitoring();

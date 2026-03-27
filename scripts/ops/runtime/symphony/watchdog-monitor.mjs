@@ -207,12 +207,12 @@ function restartBridge(name) {
   log(``);
 
   const result = exec(`systemctl --user restart ${serviceName}`);
-  if (result !== null) {
-    log(`✅ ${name} restart initiated`);
-    return true;
-  } else {
+  if (result === null) {
     log(`❌ ${name} restart failed`);
     return false;
+  } else {
+    log(`✅ ${name} restart initiated`);
+    return true;
   }
 }
 
@@ -334,7 +334,9 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   log(`❌ Watchdog error: ${err.message}`);
   process.exit(1);
-});
+}

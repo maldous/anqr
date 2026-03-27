@@ -365,7 +365,9 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
 
 // Start monitoring
-monitorLoop().catch((err) => {
+try {
+  await monitorLoop();
+} catch (err) {
   logError(`[watchdog] Fatal error: ${err.message}`);
   process.exit(1);
-});
+}

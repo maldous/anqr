@@ -39,6 +39,12 @@ const MODEL_ID = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
 const TIMEOUT_MS = 120 * 60 * 1000; // 120 min to match RUNNER_MAX_EXECUTION_MS from symphony-config
 const DEFAULT_CWD = process.env.CODEBUFF_BRIDGE_CWD || PROJECT_ROOT;
 
+function makeTimeout() {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
+  });
+}
+
 // OpenClaw Gateway API configuration for tool proxying
 const OPENCLAW_GATEWAY_HOST = process.env.OPENCLAW_GATEWAY_HOST || "127.0.0.1";
 const OPENCLAW_GATEWAY_PORT = process.env.OPENCLAW_GATEWAY_PORT || 18789;
@@ -805,8 +811,6 @@ async function trySingleAccount(
     logDebug(`[trySingleAccount] Continuation ${continuation} complete`, {
       outputLength: contStr.length,
     });
-    // Update loop status for next iteration check
-    loopStatus = lastSubgoalStatus;
 
     if (contStr.includes("Symbol(vercel.ai.error)")) {
       const errorMatch = contStr.match(/"message":"([^"]+)"/);
@@ -912,11 +916,6 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
     promptLength: prompt.length,
     messageCount: messages?.length,
   });
-
-  const makeTimeout = () =>
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-    });
 
   try {
     logDebug(`[invokeCodebuff] Invoking with winner`, { label: winner.label });
@@ -1124,8 +1123,6 @@ async function trySingleAccountStream(
 
     const contOutput = result.output || "";
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
-    // Update loop status for next iteration check
-    loopStatus = lastSubgoalStatus;
     if (contStr.includes("Symbol(vercel.ai.error)")) {
       const errorMatch = contStr.match(/"message":"([^"]+)"/);
       throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
@@ -1181,10 +1178,6 @@ async function invokeCodebuffStream({
   logInfo(`Streaming: Using ${winner.label}`);
 
   const prompt = buildPrompt(messages);
-  const makeTimeout = () =>
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS);
-    });
 
   // Track how many chunks were sent so we know if it's safe to retry.
   // The error case (rate limit, session limit) produces zero streaming output

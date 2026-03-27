@@ -166,7 +166,9 @@ async function main() {
   return updated;
 }
 
-main().catch((err) => {
+try {
+  await main();
+} catch (err) {
   console.error(`❌ Failed to update issue: ${err.message}`);
   process.exit(1);
-});
+}

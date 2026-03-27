@@ -479,4 +479,4 @@ async function main() {
   console.log(`   Total effort: 26 story points across 6 issue groups`);
 }
 
-main();
+await main();

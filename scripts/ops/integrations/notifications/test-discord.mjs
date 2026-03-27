@@ -143,7 +143,9 @@ async function runTests() {
   }
 }
 
-runTests().catch((err) => {
+try {
+  await runTests();
+} catch (err) {
   logError(`❌ Test error: ${err.message}`);
   process.exit(1);
-});
+}
