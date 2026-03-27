@@ -340,7 +340,7 @@ export function parseRateLimitInfo(err) {
     info.tpmLimit = Number.parseInt(tpmLimitMatch[1], 10);
   }
 
-  const retryMatch = errStr.match(/retry.after[:\s]+(\d+)/i);
+  const retryMatch = errStr.match(/retry[.-]after[:\s]+(\d+)/i);
   if (retryMatch && !info.retryAfterMs) {
     info.retryAfterMs = Number.parseInt(retryMatch[1], 10) * 1_000;
   }
