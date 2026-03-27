@@ -34,6 +34,7 @@ import {
 import { createLogger } from "../lib/logger.mjs";
 
 const { logInfo, logWarn, logError } = createLogger();
+import { sendDiscordEmbed } from "../integrations/notifications/discord-webhook.mjs";
 import { feedQueue, getQueueSnapshot } from "../symphony-queue-control.mjs";
 import { recordLinearCompletion, recordProviderSuccess } from "../symphony-credit-gate.mjs";
 import { runAgent, continueAgent } from "../symphony-agent.mjs";
@@ -410,6 +411,9 @@ async function executeIssue(issue, dryRun = false) {
     startingCommentId = startComment.id;
     if (dryRun) return "done";
 
+    // NOTE: Discord notification removed from here to eliminate duplicate messages.
+    // Only the final completion notification (below) is sent to Discord.
+
     let systemPrompt = "You are a coding agent. Implement the requested changes.";
     if (existsSync(WORKFLOW_PATH)) systemPrompt = readFileSync(WORKFLOW_PATH, "utf-8");
 
@@ -784,32 +788,51 @@ ${String(r.detail).slice(0, 1000)}\n`,
       }
     }
 
-    await addComment(
-      issue.id,
-      [
-        `✅ **Symphony agent completed** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})`,
-        "",
-        `**Run:** ${RUN_ID}`,
-        `**Gateway:** ${provider.name} (${provider.model})`,
-        `**Routed provider:** ${metricsProviderName}`,
-        `**Turns:** ${agentResult.turns}`,
-        `**Tool calls:** ${agentResult.toolCalls}`,
-        `**Files changed:** ${changedFiles.length}`,
-        `**Validation fix attempts:** ${validationFixAttempts}`,
-        `**Promotion state:** ${finalStateName}`,
-        "",
-        "### Agent Summary",
-        agentResult.summary,
-        "",
-        "### Diff",
-        "```",
-        diffStat || "(no diff stat)",
-        "```",
-        "",
-        "### Validation",
-        ...validation.results.map((r) => `- ${r.pass ? "✅" : "❌"} ${r.check}`),
-      ].join("\n"),
-    );
+    const completionComment = [
+      `✅ **Symphony agent completed** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})`,
+      "",
+      `**Run:** ${RUN_ID}`,
+      `**Gateway:** ${provider.name} (${provider.model})`,
+      `**Routed provider:** ${metricsProviderName}`,
+      `**Turns:** ${agentResult.turns}`,
+      `**Tool calls:** ${agentResult.toolCalls}`,
+      `**Files changed:** ${changedFiles.length}`,
+      `**Validation fix attempts:** ${validationFixAttempts}`,
+      `**Promotion state:** ${finalStateName}`,
+      "",
+      "### Agent Summary",
+      agentResult.summary,
+      "",
+      "### Diff",
+      "```",
+      diffStat || "(no diff stat)",
+      "```",
+      "",
+      "### Validation",
+      ...validation.results.map((r) => `- ${r.pass ? "✅" : "❌"} ${r.check}`),
+    ].join("\n");
+
+    await addComment(issue.id, completionComment);
+
+    const commitHash = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+      cwd: ROOT,
+      encoding: "utf-8",
+    }).trim();
+
+    // Send single consolidated Discord notification on completion
+    await sendDiscordEmbed({
+      title: issue.identifier,
+      description: issue.title,
+      color: finalStateId === STATES.done ? 0x00ff00 : 0xffa500, // Green for Done, Orange for In Review
+      fields: [
+        { name: "Status", value: finalStateName, inline: true },
+        { name: "Provider", value: metricsProviderName, inline: true },
+        { name: "Files Changed", value: String(changedFiles.length), inline: true },
+        { name: "Turns", value: String(agentResult.turns), inline: true },
+        { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
+        { name: "Commit", value: commitHash || "N/A", inline: true },
+      ],
+    }).catch((err) => logWarn(`Discord notification failed: ${err.message}`));
 
     await runSonarPostCommit(issue.identifier);
     await updateIssue(issue.id, { stateId: finalStateId });
