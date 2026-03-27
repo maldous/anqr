@@ -3,15 +3,11 @@
 /**
  * build-index.mjs — Build the RAG vector index for the ANQR project
  *
- * Indexes key source directories using the RAG pipeline (chunker → embeddings → vector store).
- * Designed to be run as a one-shot script or periodically via systemd timer.
+ * Indexes all git-tracked files in the repository using the RAG pipeline
+ * (chunker → Ollama embeddings → vector store). Uses `git ls-files` to
+ * discover files, which naturally excludes everything in .gitignore.
  *
- * Directories indexed (in priority order):
- *   1. scripts/ops/     — Harness code (bridges, runners, tools)
- *   2. docs/            — Project documentation
- *   3. Root *.md files  — Knowledge base (MEMORY.md, knowledge.md, etc.)
- *   4. netlify/         — API and MCP functions
- *   5. vite-config/     — Build configuration
+ * Designed to be run as a one-shot script or periodically via systemd timer.
  *
  * Usage:
  *   node scripts/ops/lib/rag/build-index.mjs
@@ -22,46 +18,60 @@
  */
 
 import { resolve } from "node:path";
-import { readdir } from "node:fs/promises";
+import { execSync } from "node:child_process";
 import { createLogger } from "../logger.mjs";
-import { indexDirectory, indexFile, getIndexStats, clearIndex, isIndexReady } from "./vector-store.mjs";
+import { indexFile, flushIndex, getIndexStats, clearIndex, isIndexReady } from "./vector-store.mjs";
 import { isOllamaAvailable } from "./embeddings.mjs";
 
 const { logInfo, logWarn, logError } = createLogger("rag-build-index");
 
 const PROJECT_ROOT = resolve(process.cwd());
 
-/** Directories to index, in priority order */
-const INDEX_TARGETS = [
-  "scripts/ops",
-  "docs",
-  "netlify",
-  "vite-config",
-];
+/** File extensions the chunker can meaningfully process */
+const SUPPORTED_EXTENSIONS = new Set([
+  ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
+  ".md",
+  ".json",
+  ".css", ".html",
+  ".yml", ".yaml",
+  ".sh", ".py",
+  ".service", ".timer",
+]);
 
-/** Root-level files to index individually */
-const ROOT_FILES = [
-  "knowledge.md",
-  "MEMORY.md",
-  "CLAUDE.md",
-  "CODEBUFF.md",
-  "AGENTS.md",
-  "IDENTITY.md",
-  "SOUL.md",
-  "TOOLS.md",
-  "USER.md",
-  "README.md",
-  "plan.md",
-  "MCP-MIGRATION.md",
-  "HEARTBEAT.md",
-];
+/** Flush to disk every N indexed files to prevent data loss */
+const SAVE_INTERVAL = 25;
+
+/**
+ * Discover all git-tracked files with supported extensions.
+ * Uses `git ls-files` so .gitignore'd files are automatically excluded.
+ *
+ * @returns {string[]} Array of relative file paths
+ */
+function discoverFiles() {
+  const raw = execSync("git ls-files", {
+    cwd: PROJECT_ROOT,
+    encoding: "utf-8",
+    maxBuffer: 10 * 1024 * 1024,
+  });
+
+  return raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (line.length === 0) return false;
+      const dotIdx = line.lastIndexOf(".");
+      if (dotIdx === -1) return false;
+      const ext = line.slice(dotIdx).toLowerCase();
+      return SUPPORTED_EXTENSIONS.has(ext);
+    });
+}
 
 async function main() {
   const startTime = Date.now();
   const shouldClear = process.argv.includes("--clear");
 
   logInfo("========================================");
-  logInfo("RAG Index Builder — Starting");
+  logInfo("RAG Index Builder — Starting (full repo)");
   logInfo("========================================");
 
   // Check Ollama availability
@@ -88,48 +98,49 @@ async function main() {
     logInfo("📊 No existing index found — building from scratch");
   }
 
-  let totalFiles = 0;
+  // Discover all tracked files with supported extensions
+  const allFiles = discoverFiles();
+  logInfo(`📂 Discovered ${allFiles.length} tracked files with supported extensions`);
+
+  let totalFiles = allFiles.length;
   let totalIndexed = 0;
   let totalChunks = 0;
+  let dirtyCount = 0;
 
-  // Index directories
-  for (const dir of INDEX_TARGETS) {
-    const dirPath = resolve(PROJECT_ROOT, dir);
-    logInfo(`\n📁 Indexing directory: ${dir}`);
-
-    try {
-      const result = await indexDirectory(dirPath);
-      totalFiles += result.totalFiles;
-      totalIndexed += result.indexedFiles;
-      totalChunks += result.totalChunks;
-      logInfo(`   ✅ ${dir}: ${result.indexedFiles}/${result.totalFiles} files indexed, ${result.totalChunks} chunks`);
-    } catch (err) {
-      logWarn(`   ⚠️ Failed to index ${dir}: ${err.message}`);
-    }
-  }
-
-  // Index root-level files
-  logInfo("\n📄 Indexing root-level files...");
-  for (const file of ROOT_FILES) {
+  for (let i = 0; i < allFiles.length; i++) {
+    const file = allFiles[i];
     const filePath = resolve(PROJECT_ROOT, file);
+
     try {
-      const result = await indexFile(filePath);
+      const result = await indexFile(filePath, { skipSave: true });
       if (result.indexed) {
         totalIndexed++;
         totalChunks += result.chunks;
-        logInfo(`   ✅ ${file}: ${result.chunks} chunks`);
+        dirtyCount++;
       } else if (result.chunks > 0) {
-        logInfo(`   ⏭️  ${file}: unchanged (${result.chunks} chunks cached)`);
+        totalChunks += result.chunks;
       }
-      totalFiles++;
     } catch (err) {
-      // File may not exist — that's OK
-      if (err.message?.includes("ENOENT")) {
-        logInfo(`   ⏭️  ${file}: not found, skipping`);
-      } else {
+      if (!err.message?.includes("ENOENT")) {
         logWarn(`   ⚠️ ${file}: ${err.message}`);
       }
     }
+
+    // Flush to disk periodically to prevent data loss
+    if (dirtyCount >= SAVE_INTERVAL) {
+      await flushIndex();
+      dirtyCount = 0;
+    }
+
+    // Progress log every 200 files
+    if ((i + 1) % 200 === 0) {
+      logInfo(`   📈 Progress: ${i + 1}/${allFiles.length} files processed, ${totalIndexed} indexed`);
+    }
+  }
+
+  // Final flush
+  if (dirtyCount > 0) {
+    await flushIndex();
   }
 
   // Final stats

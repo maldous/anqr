@@ -37,6 +37,19 @@ Integrations and support:
 - `scripts/ops/integrations/sonar/sonar-linear-audit.mjs` — Nightly SonarQube to Linear sync
 - `scripts/ops/notifications/notify-impl.mjs` — Notification implementation details (path constants)
 
+RAG pipeline and search:
+
+- `scripts/ops/lib/rag/chunker.mjs` — Semantic code/document chunker (function/class/heading boundaries)
+- `scripts/ops/lib/rag/embeddings.mjs` — Ollama embedding generation (`qwen2.5-coder:3b-instruct`)
+- `scripts/ops/lib/rag/vector-store.mjs` — File-based vector store in `reports/rag-index/` with incremental indexing
+- `scripts/ops/lib/rag/build-index.mjs` — Full-repo RAG index builder using `git ls-files` (respects .gitignore)
+- `scripts/ops/lib/search/hybrid-search.mjs` — BM25 + semantic search with Reciprocal Rank Fusion (RRF)
+
+MCP runtime:
+
+- `scripts/ops/runtime/mcp/context7-server.mjs` — Local Context7 MCP server wrapper (JSON-RPC over stdio)
+- `scripts/ops/runtime/mcp/context7-http-service.mjs` — HTTP service wrapping Context7 MCP (port 4320)
+
 Restructured copies under subdirectories may exist. The root entrypoints remain the stable operator contract until a deliberate cleanup replaces them.
 
 ## Systemd units
@@ -45,13 +58,15 @@ Scheduled automation:
 
 - `anqr-symphony-runner.service` / `.timer`
 - `anqr-queue-feeder.service` / `.timer`
-- `anqr-nightly.service` / `.timer`
+- `anqr-nightly.service` / `.timer` — 02:00 daily
+- `anqr-rag-rebuild.service` / `.timer` — 03:00 daily, full-repo RAG vector index rebuild via Ollama embeddings
 - `anqr-email-ingest.service` / `.timer`
 
 Long-running services:
 
 - `anqr-codebuff-bridge.service` — OpenAI-compatible HTTP gateway for Codebuff SDK
-- `anqr-symphony-bridge.service` — OpenAI-compatible HTTP gateway for Symphony with AI SDK and tool execution (NEW)
+- `anqr-symphony-bridge.service` — OpenAI-compatible HTTP gateway for Symphony with AI SDK and tool execution
+- `anqr-context7-mcp.service` — Context7 MCP documentation service (HTTP on port 4320)
 
 Shared environment:
 
@@ -80,7 +95,8 @@ Optional local support:
 Documented harness ports:
 
 - `4318` — Codebuff bridge (OpenAI-compatible HTTP gateway)
-- `4319` — Symphony bridge (AI SDK-based with tool execution) [NEW]
+- `4319` — Symphony bridge (AI SDK-based with tool execution)
+- `4320` — Context7 MCP documentation service (POST /v1/resolve-docs, GET /health)
 - `18789` — OpenClaw gateway (local AI agent, /v1/chat/completions)
 
 Additional port truth must be documented in follow-up runbooks instead of inferred.

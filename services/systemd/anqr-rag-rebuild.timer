@@ -1,0 +1,24 @@
+# anqr-rag-rebuild.timer — Schedule RAG index rebuilds
+#
+# Fires at 03:00 local time daily (one hour after nightly ops at 02:00).
+# Persistent=true ensures a missed run (e.g. machine was off) is caught up.
+#
+# Install:
+#   cp services/systemd/anqr-rag-rebuild.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now anqr-rag-rebuild.timer
+#
+# Check status:
+#   systemctl --user list-timers
+#   journalctl --user -u anqr-rag-rebuild.service --since today
+
+[Unit]
+Description=ANQR RAG vector index rebuild timer
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

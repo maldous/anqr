@@ -435,7 +435,8 @@
     "kimi",
     "libsodium",
     "submitbutton",
-    "unmatched"
+    "unmatched",
+    "chunker"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

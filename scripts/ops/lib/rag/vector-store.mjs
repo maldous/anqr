@@ -18,7 +18,7 @@
  *   const results = await search('authentication middleware', 5);
  */
 
-import { readFile, writeFile, rename, unlink, mkdir, readdir, stat } from "node:fs/promises";
+import { readFile, writeFile, rename, unlink, mkdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { createLogger } from "../logger.mjs";
@@ -190,6 +190,7 @@ async function getFileMtime(filePath) {
  *
  * @param {string} filePath - Path to the file to index
  * @param {object} [options] - Options passed through to the chunker
+ * @param {boolean} [options.skipSave=false] - If true, skip persisting to disk (caller is responsible for calling flushIndex)
  * @returns {Promise<{ indexed: boolean, chunks: number }>} Result summary
  */
 export async function indexFile(filePath, options = {}) {
@@ -222,7 +223,7 @@ export async function indexFile(filePath, options = {}) {
   if (chunks.length === 0) {
     logDebug(`No chunks produced for ${filePath}`);
     metaCache.set(resolvedPath, { lastModified: mtime, chunkCount: 0 });
-    await saveIndex();
+    if (!options.skipSave) await saveIndex();
     return { indexed: true, chunks: 0 };
   }
 
@@ -254,11 +255,21 @@ export async function indexFile(filePath, options = {}) {
   // Update metadata
   metaCache.set(resolvedPath, { lastModified: mtime, chunkCount: addedCount });
 
-  // Persist
-  await saveIndex();
+  // Persist (unless caller handles batching)
+  if (!options.skipSave) await saveIndex();
 
   logInfo(`Indexed ${filePath}: ${addedCount} chunks embedded`);
   return { indexed: true, chunks: addedCount };
+}
+
+/**
+ * Flush the in-memory index to disk.
+ * Use after batch-indexing with `{ skipSave: true }` to persist changes.
+ *
+ * @returns {Promise<void>}
+ */
+export async function flushIndex() {
+  await saveIndex();
 }
 
 /** Supported extensions for indexing (mirrors chunker defaults) */

@@ -66,6 +66,9 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **Codebuff Bridge** (port 4318): OpenAI-compatible HTTP gateway for Codebuff SDK with paid → free mode fallback. Streams user-facing tool activity (📖, ✏️, 💻, ✅) while filtering internal SDK activity server-side.
 - **Provider Routing**: 4-tier system (`paid`, `free-cloud`, `local-proxy`, `local-safety-net`) with 38 providers, dynamic scoring, safety-net score ceiling of 0.25, and dynamic tool-capability probing to ensure only providers with structured tool support are selected for tool-bearing requests. **Note**: Cerebras is neither a paid nor preferred service provider. **Groq Known Issue (2026-03-27)**: Groq had no idea what was going on when switched to mid-conversation - likely context/state management issue. Fallback cascade worked correctly to route around the failure.
 - **Adaptive Context**: Per-provider dynamic context and rate management (`symphony-adaptive-context.mjs`). Shrinks token ceilings on 413/context errors (25% flat or precise ratio from error details), expands 5% after 3 consecutive successes, applies rate-limit throttle timers from parsed `Retry-After`/`X-RateLimit-*` headers on 429 errors, tracks TPM/RPM via 60-second sliding windows, and proactively halves context when approaching 85% of known TPM limits. All state is in-memory (resets on bridge restart). Errors are classified into 6 types (context, rate-limit, auth, timeout, server, unknown) for type-specific feedback loops. Exposed via `/v1/stats` endpoint. See `docs/harness/11-adaptive-context.md` for full documentation.
+- **Context7 Documentation Service** (port 4320): Standalone HTTP service wrapping a local Context7 MCP server (`@upstash/context7-mcp` v2.1.4) via JSON-RPC stdio. Exposes `POST /v1/resolve-docs` and `GET /health`. Symphony Bridge calls this via HTTP fetch instead of spawning its own MCP child process. Falls back to Context7 cloud API if the local server is unavailable. Runs as `anqr-context7-mcp.service` (systemd user service).
+- **RAG Pipeline** (`scripts/ops/lib/rag/`): Local-first Retrieval Augmented Generation using Ollama embeddings (`qwen2.5-coder:3b-instruct`). Chunks source files into semantic pieces (function/class boundaries for code, headings for markdown), generates vector embeddings, and stores them in `reports/rag-index/` (gitignored). Supports incremental indexing (skips unchanged files via mtime). Nightly full-repo rebuild via `anqr-rag-rebuild.timer` at 03:00.
+- **Hybrid Search** (`scripts/ops/lib/search/hybrid-search.mjs`): Combines BM25 keyword search (via MiniSearch) with embedding-based semantic search using Reciprocal Rank Fusion (RRF). Powers the `find_files` bridge tool. Gracefully degrades: hybrid → bm25 → basic substring.
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
 - **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
 - **Discord Streaming**: Discord webhooks batch text chunks and send every 5 seconds (or when buffer exceeds 1900 chars) to preserve natural formatting and prevent fragmented messages. The buffer is automatically flushed at the end of each response.
@@ -96,6 +99,7 @@ scripts/ops/*               # Harness and automation (outside product runtime)
   3. **THEN RESTART**: Only after concurrency = 0 (or user has explicitly requested restart), restart the service:
      - Symphony Bridge: `systemctl --user restart anqr-symphony-bridge`
      - Codebuff Bridge: `systemctl --user restart anqr-codebuff-bridge`
+     - Context7 MCP: `systemctl --user restart anqr-context7-mcp`
      - OpenClaw Gateway: Managed externally (not a systemd service in this repo)
      - Other services: Use appropriate systemctl command
   4. Services run as **user services** (not system services) and won't pick up code changes until restarted
@@ -103,7 +107,7 @@ scripts/ops/*               # Harness and automation (outside product runtime)
   6. **Restart Notifications**: All services send Discord notifications and log to reports/runtime-events.log on restart/shutdown
      - Use `scripts/ops/lib/service-restart-notify.mjs` for consistent notifications
      - Notifications include: PID, commit hash, metadata (providers, ports, etc.), active requests warning
-     - Applies to: Symphony Bridge, Codebuff Bridge, OpenClaw Gateway, and any other long-running services
+     - Applies to: Symphony Bridge, Codebuff Bridge, Context7 MCP, OpenClaw Gateway, and any other long-running services
 
 ### Current 1.0 Claim
 
@@ -455,4 +459,4 @@ See `.env` for full local development variables.
 
 ---
 
-_Last updated: 2026‑03‑26_
+_Last updated: 2026‑03‑27_

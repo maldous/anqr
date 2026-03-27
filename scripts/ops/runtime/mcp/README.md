@@ -16,7 +16,38 @@ This directory contains a wrapper around the [`@upstash/context7-mcp`](https://w
 | File | Purpose |
 |---|---|
 | `context7-server.mjs` | Server wrapper — spawns, manages, and communicates with the local MCP server |
+| `context7-http-service.mjs` | Standalone HTTP service wrapping the MCP server (port 4320) |
 | `README.md` | This file |
+
+## HTTP Service
+
+The `context7-http-service.mjs` exposes the MCP server over HTTP so other services
+(Symphony Bridge, etc.) can resolve documentation without spawning their own MCP
+child processes.
+
+**Endpoints:**
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/v1/resolve-docs` | Resolve library documentation. Body: `{ libraryTitle, topic?, max_tokens? }` |
+| `GET` | `/health` | Health check. Response: `{ status, serverReady, uptime }` |
+
+**Systemd service:**
+
+```bash
+# Install and enable
+cp services/systemd/anqr-context7-mcp.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now anqr-context7-mcp.service
+
+# Check status
+curl http://127.0.0.1:4320/health
+systemctl --user status anqr-context7-mcp
+```
+
+The Symphony Bridge calls `POST http://127.0.0.1:4320/v1/resolve-docs` in its
+`read_docs` tool implementation. The URL is configurable via `CONTEXT7_HTTP_URL`
+environment variable (default: `http://127.0.0.1:4320`).
 
 ## Quick Start
 

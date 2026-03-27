@@ -116,12 +116,8 @@ import {
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
 
-// Enhancement 1: Local Context7 MCP server for documentation fetching
-import {
-  startContext7Server,
-  stopContext7Server,
-  resolveDocsLocally,
-} from "../../runtime/mcp/context7-server.mjs";
+// Enhancement 1: Context7 documentation via HTTP service (port 4320)
+const CONTEXT7_HTTP_BASE = process.env.CONTEXT7_HTTP_URL || "http://127.0.0.1:4320";
 
 // Enhancement 3: Hybrid search (BM25 + embeddings) for find_files
 import { searchFiles as hybridSearchFiles } from "../../lib/search/hybrid-search.mjs";
@@ -875,26 +871,32 @@ async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
 
     const effectiveMaxTokens = Math.max(max_tokens, 10000);
 
-    // Attempt 1: Local Context7 MCP server (no API cost, faster)
+    // Attempt 1: Context7 HTTP service (dedicated systemd service on port 4320)
     try {
-      const result = await resolveDocsLocally({
-        libraryTitle,
-        topic,
-        max_tokens: effectiveMaxTokens,
+      const httpRes = await fetch(`${CONTEXT7_HTTP_BASE}/v1/resolve-docs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ libraryTitle, topic, max_tokens: effectiveMaxTokens }),
+        signal: AbortSignal.timeout(35000),
       });
 
-      if (result.documentation) {
-        logInfo(`📚 Docs resolved via ${result.source} for "${libraryTitle}"`);
-        return {
-          content: result.documentation,
-          library: libraryTitle,
-          topic,
-          source: result.source,
-          tokens: Math.ceil(result.documentation.length / 4),
-        };
+      if (httpRes.ok) {
+        const result = await httpRes.json();
+        if (result.documentation) {
+          logInfo(`📚 Docs resolved via ${result.source} for "${libraryTitle}"`);
+          return {
+            content: result.documentation,
+            library: libraryTitle,
+            topic,
+            source: result.source,
+            tokens: Math.ceil(result.documentation.length / 4),
+          };
+        }
+      } else {
+        logWarn(`Context7 HTTP service returned ${httpRes.status}`);
       }
     } catch (err) {
-      logWarn(`Local Context7 resolution failed: ${err.message}`);
+      logWarn(`Context7 HTTP service unavailable: ${err.message}`);
     }
 
     // Attempt 2: Direct Context7 cloud API (legacy fallback)
@@ -4014,13 +4016,6 @@ async function shutdown(signal) {
     logError(`⚠️ Failed to update MEMORY.md on shutdown: ${err.message}`);
   }
 
-  // Stop Context7 MCP server
-  try {
-    await stopContext7Server();
-  } catch (err) {
-    logWarn(`Context7 server stop failed: ${err.message}`);
-  }
-
   // No cleanup needed - setTimeout will be cleared on process exit
   stopDiscordMonitoring();
   stopProcessingStatusUpdates();
@@ -4263,17 +4258,18 @@ server.listen(PORT, "127.0.0.1", async () => {
   // Start continuous probe IMMEDIATELY on startup (alongside initial cache)
   scheduleContinuousProbe(0);
 
-  // Start Context7 MCP server (background, non-blocking)
-  startContext7Server()
-    .then((ok) => {
-      if (ok) {
-        logInfo(`✅ Context7 MCP server started successfully`);
+  // Verify Context7 HTTP service reachability (non-blocking)
+  fetch(`${CONTEXT7_HTTP_BASE}/health`, { signal: AbortSignal.timeout(5000) })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.serverReady) {
+        logInfo(`✅ Context7 HTTP service reachable (uptime: ${data.uptime}s)`);
       } else {
-        logWarn(`⚠️ Context7 MCP server failed to start — will use cloud API fallback`);
+        logWarn(`⚠️ Context7 HTTP service degraded — will use cloud API fallback`);
       }
     })
-    .catch((err) => {
-      logWarn(`⚠️ Context7 MCP server error: ${err.message} — will use cloud API fallback`);
+    .catch(() => {
+      logWarn(`⚠️ Context7 HTTP service not reachable at ${CONTEXT7_HTTP_BASE} — will use cloud API fallback`);
     });
 
   // Start Discord message monitoring
