@@ -16,7 +16,7 @@ import { createLogger } from '../../lib/logger.mjs';
 
 const { logInfo, logWarn, logError } = createLogger();
 
-const STUCK_PATTERN = new RegExp(String.raw`Stuck:\s*\d+\s*consecutive turns without tool calls`, 'i');
+const STUCK_PATTERN = /Stuck:\s*\d+\s*consecutive turns without tool calls/i;
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
