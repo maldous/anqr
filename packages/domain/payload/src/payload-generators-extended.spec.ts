@@ -359,25 +359,25 @@ describe("domain/payload generators (extended)", () => {
   describe("appendGasParams", () => {
     it("appends gas to URLSearchParams", () => {
       const params = new URLSearchParams();
-      appendGasParams(params, { targetAddress: "0x1", gas: 21000 });
+      appendGasParams(params, { gas: 21000 });
       expect(params.get("gas")).toBe("21000");
     });
 
     it("appends gasLimit to URLSearchParams", () => {
       const params = new URLSearchParams();
-      appendGasParams(params, { targetAddress: "0x1", gasLimit: 50000 });
+      appendGasParams(params, { gasLimit: 50000 });
       expect(params.get("gasLimit")).toBe("50000");
     });
 
     it("appends gasPrice to URLSearchParams", () => {
       const params = new URLSearchParams();
-      appendGasParams(params, { targetAddress: "0x1", gasPrice: "20000000000" });
+      appendGasParams(params, { gasPrice: "20000000000" });
       expect(params.get("gasPrice")).toBe("20000000000");
     });
 
     it("does nothing when no gas params", () => {
       const params = new URLSearchParams();
-      appendGasParams(params, { targetAddress: "0x1" });
+      appendGasParams(params, {});
       expect(params.toString()).toBe("");
     });
   });
