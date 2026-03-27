@@ -783,8 +783,10 @@ async function trySingleAccount(
 
   // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
-  // NOTE: lastSubgoalStatus is modified via the handleEvent callback
+  // NOTE: lastSubgoalStatus is modified via the handleEvent callback when
+  // update_subgoal or add_subgoal tools are processed during client.run()
   let continuation = 0;
+  // eslint-disable-next-line no-unmodified-loop-condition -- lastSubgoalStatus modified by handleEvent callback
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
     logInfo(
@@ -1092,7 +1094,10 @@ async function trySingleAccountStream(
   }
   checkResultForErrors(output, resultStr, attempt);  // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
+  // NOTE: lastSubgoalStatus is modified via the handleEvent callback when
+  // update_subgoal or add_subgoal tools are processed during client.run()
   let continuation = 0;
+  // eslint-disable-next-line no-unmodified-loop-condition -- lastSubgoalStatus modified by handleEvent callback
   while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
     continuation++;
     logDebug(
