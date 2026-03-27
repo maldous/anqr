@@ -464,10 +464,7 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
       });
 
       const libraryId = extractLibraryId(resolveResult);
-      if (!libraryId) {
-        logWarn(`Local resolve-library-id returned no ID for "${libraryTitle}"`);
-        // Fall through to cloud fallback
-      } else {
+      if (libraryId) {
         // Step 2 — get-library-docs via MCP tools/call
         const docsArgs = { context7CompatibleLibraryID: libraryId, tokens: max_tokens };
         if (topic) docsArgs.topic = topic;
@@ -484,6 +481,9 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
         }
 
         logWarn(`Local get-library-docs returned empty for "${libraryTitle}"`);
+      } else {
+        logWarn(`Local resolve-library-id returned no ID for "${libraryTitle}"`);
+        // Fall through to cloud fallback
       }
     } catch (err) {
       logWarn(`Local MCP request failed for "${libraryTitle}": ${err.message}`);
