@@ -1034,12 +1034,14 @@ async function trySingleAccountStream(
         }
         const name = event.displayName || event.agentType || "subagent";
         logDebug(`🤖 codebuff subagent: ${name}`);
-        streamActivity(`🤖 ${name}\n`);
+        // Suppress subagent start messages from client (distracting)
+        return;
       } else if (type === "subagent_finish" || type === "subagent-finish") {
         if (isContextPrunerEvent(event)) return;
         const name = event.displayName || event.agentType || "subagent";
         logDebug(`🤖 codebuff ${name} done`);
-        streamActivity(`🤖 ${name} done\n`);
+        // Suppress subagent finish messages from client (distracting)
+        return;
       } else if (type === "agent_start" || type === "agent_finish") {
         logDebug(`🤖 codebuff ${type}`);
       } else if (type === "error") {

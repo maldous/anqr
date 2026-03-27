@@ -60,6 +60,25 @@ scripts/ops/*               # Harness and automation (outside product runtime)
 - **Harness Runtime**: `scripts/ops/*` for orchestration, Linear integration, queue control, and nightly operations. Separate from product runtime (`packages/*/*`, `apps/web`, `netlify/*`).
 - **Real-time Streaming**: Symphony forwards raw SSE chunks from Codebuff directly to OpenClaw. Internal provider errors (rate limits, quota) and SDK activity (set_messages, spawn_agent_inline) are filtered from client streams but logged server-side for debugging.
 - **Discord Streaming**: Discord webhooks batch text chunks and send every 5 seconds (or when buffer exceeds 1900 chars) to preserve natural formatting and prevent fragmented messages. The buffer is automatically flushed at the end of each response.
+- **Agent Activity Suppression**: Codebuff bridge suppresses internal agent activity messages (🤖 Dora, Fletcher, Liszt spawning/completion) from streaming output to reduce noise. These are logged server-side but not sent to the client.
+- **AI Operating Model & Git Coexistence** (CRITICAL PROTOCOL):
+  - **File Classification**:
+    - `reports/*` - **Gitignored**, contains all dynamic harness state (state.json, session-state.json, adaptive-params.json, runtime-events.log)
+    - `MEMORY.md` - **Tracked**, reserved for human-curated summaries only (updated via Linear issues)
+    - `knowledge.md` - **Tracked**, updated via Linear issues when operating interactively
+    - All code/config - **Tracked**, updated via Linear issues when operating interactively
+  - **Operating Modes**:
+    - **Interactive mode** (Discord/OpenClaw/Codebuff): When AI is assisting the user directly
+      - ✅ **Can modify**: `reports/*` files (gitignored dynamic state)
+      - ❌ **Must create Linear issue for**: `MEMORY.md`, `knowledge.md`, code, config, docs
+      - **Rationale**: Symphony runner checks `gitIsClean()` and refuses to run if working tree is dirty. Creating Linear issues allows Symphony to process changes through proper workflow.
+    - **Runner mode** (Symphony runner with exclusive lease): When AI has acquired task lease
+      - ✅ **Can modify**: All files (runner has exclusive lock and will commit)
+      - **Rationale**: Runner owns the git working tree during lease period
+  - **Runtime Event Logging**:
+    - Service restarts/shutdowns → `reports/runtime-events.log` (gitignored, append-only)
+    - Human summaries → `MEMORY.md` (tracked, curated via Linear issues)
+    - Uses `scripts/ops/lib/service-restart-notify.mjs` and `scripts/ops/lib/update-memory.mjs`
 - **Service Restart Procedure** (CRITICAL HARD RULE):
   1. **COMMIT & PUSH FIRST**: Always commit and push changes BEFORE restarting: `git add -A && git commit -m "..." && git push`
   2. **WAIT FOR SAFE CONCURRENCY**: Check Discord notifications for "(0 concurrent)" - NEVER restart while requests are active
@@ -72,7 +91,7 @@ scripts/ops/*               # Harness and automation (outside product runtime)
      - Other services: Use appropriate systemctl command
   4. Services run as **user services** (not system services) and won't pick up code changes until restarted
   5. **Violation consequences**: Restarting during active concurrency (without explicit user request) terminates in-flight requests and breaks the user experience
-  6. **Restart Notifications**: All services should send Discord notifications and update MEMORY.md on restart/shutdown
+  6. **Restart Notifications**: All services send Discord notifications and log to reports/runtime-events.log on restart/shutdown
      - Use `scripts/ops/lib/service-restart-notify.mjs` for consistent notifications
      - Notifications include: PID, commit hash, metadata (providers, ports, etc.), active requests warning
      - Applies to: Symphony Bridge, Codebuff Bridge, OpenClaw Gateway, and any other long-running services
