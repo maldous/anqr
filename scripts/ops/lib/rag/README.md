@@ -21,6 +21,7 @@ Ollama embeddings running on the same GPU that serves Symphony agents.
 | **Chunker** | `chunker.mjs` | Split source files into semantic chunks |
 | **Embeddings** | `embeddings.mjs` | Generate vector embeddings via Ollama |
 | **Vector Store** | `vector-store.mjs` | Persist, index, and search embeddings |
+| **Index Builder** | `build-index.mjs` | Full-repo index builder using `git ls-files` |
 
 ## Quick Start
 
@@ -113,6 +114,7 @@ File-based vector store that persists to `reports/rag-index/` (gitignored).
 - **Atomic writes**: Writes to temp file, then renames to prevent corruption
 - **Lazy loading**: Index loaded from disk only on first access
 - **Cosine similarity search**: Brute-force ranking over all stored embeddings
+- **Batch save support**: `indexFile({ skipSave: true })` + `flushIndex()` for efficient bulk indexing
 
 **Storage format:**
 ```
@@ -120,6 +122,29 @@ reports/rag-index/
 ├── index.json   # Array of { id, filePath, content, embedding, startLine, endLine, type, lastModified }
 └── meta.json    # Per-file metadata: { filePath: { lastModified, chunkCount } }
 ```
+
+### Index Builder (`build-index.mjs`)
+
+Full-repo RAG index builder. Uses `git ls-files` to discover all tracked files
+(naturally excludes `.gitignore`'d paths), filters to supported extensions, and
+indexes them incrementally with periodic disk flushes every 25 files.
+
+**Supported extensions:** `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.md`,
+`.json`, `.css`, `.html`, `.yml`, `.yaml`, `.sh`, `.py`, `.service`, `.timer`
+
+**Usage:**
+```bash
+# Build/update index (incremental — skips unchanged files)
+node --max-old-space-size=8192 scripts/ops/lib/rag/build-index.mjs
+
+# Clear and rebuild from scratch
+node --max-old-space-size=8192 scripts/ops/lib/rag/build-index.mjs --clear
+```
+
+**Nightly automation:**
+- `anqr-rag-rebuild.timer` fires at 03:00 daily (one hour after nightly ops)
+- Service: `anqr-rag-rebuild.service` with 8GB heap and 30-minute timeout
+- Install: `systemctl --user enable --now anqr-rag-rebuild.timer`
 
 ## Prerequisites
 

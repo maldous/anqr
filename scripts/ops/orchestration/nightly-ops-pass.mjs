@@ -91,6 +91,11 @@ async function main() {
     ...(process.env.SONAR_TOKEN
       ? [
           {
+            name: "sonar-cleanup",
+            command: "rm -rf .scannerwork",
+            severity: "advisory",
+          },
+          {
             name: "sonar-scan",
             command:
               "test -f coverage/lcov.info || { echo 'ERROR: coverage/lcov.info missing'; exit 1; } && NODE_OPTIONS='' SONAR_SCANNER_OPTS='-Xms128m -Xmx256m' sonar-scanner",
