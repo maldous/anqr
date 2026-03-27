@@ -15,8 +15,8 @@
  *   const allChunks = await chunkDirectory('src/');
  */
 
-import { readFile, readdir, stat } from "node:fs/promises";
-import { join, extname, relative, resolve } from "node:path";
+import { readFile, readdir } from "node:fs/promises";
+import { join, extname, resolve } from "node:path";
 import { createLogger } from "../logger.mjs";
 
 const { logDebug, logInfo, logWarn, logError } = createLogger("rag-chunker");
@@ -98,7 +98,7 @@ function classifyChunk(content, ext) {
     if (/class\s+\w+/.test(firstLine)) return "class";
     if (/function\s+\w+/.test(firstLine) || /=>\s*[{(]?/.test(firstLine)) return "function";
     if (/^export\s+/.test(firstLine)) return "function";
-    if (/^\/\*\*/.test(firstLine)) return "function";
+    if (firstLine.startsWith('/**')) return "function";
     return "block";
   }
 
@@ -334,9 +334,20 @@ function chunkJSON(text, filePath, options) {
 function splitBySize(text, maxSize, overlap) {
   const chunks = [];
   let start = 0;
+  const safeOverlap = Math.min(overlap, Math.floor(maxSize * 0.5)); // Cap overlap at 50% of maxSize
+  let iterationCount = 0;
+  const maxIterations = Math.ceil(text.length / (maxSize - safeOverlap)) + 10; // Safety ceiling
 
   while (start < text.length) {
-    let end = start + maxSize;
+    iterationCount++;
+    
+    // Fail-safe: prevent infinite loops
+    if (iterationCount > maxIterations) {
+      logError(`splitBySize exceeded max iterations (${maxIterations}) - text may be too large or overlap too high`);
+      break;
+    }
+
+    let end = Math.min(start + maxSize, text.length);
 
     if (end < text.length) {
       // Try to break at a newline boundary
@@ -344,8 +355,6 @@ function splitBySize(text, maxSize, overlap) {
       if (lastNewline > start + maxSize * 0.5) {
         end = lastNewline + 1;
       }
-    } else {
-      end = text.length;
     }
 
     const chunk = text.slice(start, end).trim();
@@ -353,10 +362,13 @@ function splitBySize(text, maxSize, overlap) {
       chunks.push(chunk);
     }
 
-    // Move forward, accounting for overlap
-    start = end - overlap;
-    if (start <= (chunks.length > 1 ? end - maxSize : 0)) {
-      start = end; // Prevent infinite loops
+    // Move forward - ensure we always make progress
+    const nextStart = end - safeOverlap;
+    if (nextStart <= start) {
+      // No progress would be made - force forward movement
+      start = end;
+    } else {
+      start = nextStart;
     }
   }
 
