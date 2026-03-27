@@ -816,21 +816,43 @@ async function runToolLoop({
     const msg = choice.message;
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
-      consecutiveNoToolCalls++;
-      if (consecutiveNoToolCalls >= 3) {
-        logWarn("[agent] Too many consecutive turns without tool calls — aborting");
-        const snippet = msg.content?.slice(0, 150).replaceAll("\n", " ") || "(empty)";
-        return {
-          completed: false,
-          summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls. Last: ${snippet}`,
-          turns: turn + 1,
-          toolCalls: totalToolCalls,
-          filesChanged: [...filesChanged],
-          timedOut: false,
-          error: null,
-          messages,
-          providerName: actualProviderName,
-        };
+      // Check if this is legitimate work before counting as "stuck"
+      const content = msg.content || "";
+      const isLegitimateWork =
+        // Streaming responses from Symphony/Codebuff bridges are active work
+        provider.name === "symphony-bridge" ||
+        provider.requiresSdk ||
+        // Subgoal management is active work
+        content.includes("Subgoal") ||
+        content.includes("subgoal") ||
+        // Planning/thinking phrases indicate agent is working
+        /let me understand|first,? i need to|let me read|i'?ll start by|here'?s my plan|steps:|approach:/i.test(
+          content,
+        ) ||
+        // Continuation signal from response
+        response.needsContinuation;
+
+      if (!isLegitimateWork) {
+        consecutiveNoToolCalls++;
+        if (consecutiveNoToolCalls >= 3) {
+          logWarn("[agent] Too many consecutive turns without tool calls — aborting");
+          const snippet = msg.content?.slice(0, 150).replaceAll("\n", " ") || "(empty)";
+          return {
+            completed: false,
+            summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls. Last: ${snippet}`,
+            turns: turn + 1,
+            toolCalls: totalToolCalls,
+            filesChanged: [...filesChanged],
+            timedOut: false,
+            error: null,
+            messages,
+            providerName: actualProviderName,
+          };
+        }
+      } else {
+        // Reset counter if this is legitimate work
+        logDebug("[agent] No tool calls, but legitimate work detected - not counting as stuck");
+        consecutiveNoToolCalls = 0;
       }
       messages.push(msg);
 
