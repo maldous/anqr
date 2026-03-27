@@ -458,6 +458,17 @@ See `.env` for full local development variables.
 - **Testing standards**: `docs/standards/testing-standards.md`
 - **API/MCP schema**: `docs/api/` (generated)
 
+## Known Integration Issues
+
+### OpenClaw Gateway: run_file_change_hooks Parameter Type (ANQ-1063)
+
+- **Issue**: OpenClaw Gateway calls `run_file_change_hooks` with a string instead of an array
+- **Actual (incorrect)**: `{ files: "single-file.ts" }` ❌
+- **Expected (correct)**: `{ files: ["single-file.ts"] }` ✅
+- **Workaround**: Symphony bridge now accepts both string and array types, automatically normalizing strings to arrays
+- **Status**: Workaround implemented in `symphony-openai-bridge.mjs` (2026-03-27)
+- **Upstream**: Bug reported to OpenClaw maintainers, workaround will be removed once upstream fix is released
+
 ---
 
 _Last updated: 2026‑03‑27_

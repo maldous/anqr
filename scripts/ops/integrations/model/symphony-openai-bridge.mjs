@@ -1002,7 +1002,9 @@ const tools = {
   run_file_change_hooks: tool({
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
-      files: z.array(z.string()).describe("List of file paths that were changed"),
+      files: z.union([z.string(), z.array(z.string())]).transform(val => 
+        Array.isArray(val) ? val : [val]
+      ).describe("List of file paths that were changed (accepts string or array)"),
     }),
     execute: runFileChangeHooksTool,
   }),
