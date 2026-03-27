@@ -135,7 +135,8 @@ export async function notifyServiceRestart({
     const metadataStr = Object.entries(metadata)
       .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
-    const memoryNote = `${serviceName} restarted successfully (PID ${process.pid}, commit ${commitHash}${metadataStr ? `, ${metadataStr}` : ""})`;
+    const metadataSuffix = metadataStr ? `, ${metadataStr}` : "";
+    const memoryNote = `${serviceName} restarted successfully (PID ${process.pid}, commit ${commitHash}${metadataSuffix})`;
     await updateMemory(memoryNote, cwd);
   } catch (err) {
     logError(`❌ Failed to send ${serviceName} restart notification: ${err.message}`);
@@ -206,7 +207,8 @@ export async function notifyServiceShutdown({
     const metadataStr = Object.entries(metadata)
       .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
-    const memoryNote = `${serviceName} stopped (PID ${process.pid}, commit ${commitHash}${metadataStr ? `, ${metadataStr}` : ""}, signal: ${signal})`;
+    const metadataSuffix = metadataStr ? `, ${metadataStr}` : "";
+    const memoryNote = `${serviceName} stopped (PID ${process.pid}, commit ${commitHash}${metadataSuffix}, signal: ${signal})`;
     await updateMemory(memoryNote, cwd);
     logInfo(`📝 Logged runtime event before shutdown`);
   } catch (err) {
