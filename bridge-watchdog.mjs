@@ -316,6 +316,22 @@ async function checkService(service) {
     activatingStateStart.delete(serviceName);
   }
 
+  // Check for inactive (service stopped but not failed)
+  if (status === "inactive" || status === "unknown") {
+    logWarn(`[watchdog] ⚠️ ${shortName}: ${status} - attempting restart...`);
+    try {
+      execSync(`systemctl --user start ${serviceName}`, {
+        encoding: "utf-8",
+        cwd: process.cwd(),
+        timeout: 15000,
+      });
+      logInfo(`[watchdog] 🔄 ${shortName}: Restarted successfully`);
+    } catch (err) {
+      logError(`[watchdog] ❌ ${shortName}: Failed to restart: ${err.message}`);
+    }
+    return;
+  }
+
   // Normal status
   if (status === "active") {
     logDebug(`[watchdog] ✅ ${shortName}: OK (PID ${pid || "unknown"})`);
@@ -339,9 +355,8 @@ async function monitorLoop() {
       await checkService(service);
     }
 
-    // Wait for next check (but check shutdown flag periodically)
+    // Wait for next check cycle
     await new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL_MS));
-    shuttingDown = true;
   }
 
   logInfo(`[watchdog] 🛑 Monitor loop exiting gracefully`);

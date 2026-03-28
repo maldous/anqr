@@ -14,6 +14,8 @@ const REPORTS_DIR = resolve(ROOT, "reports");
 const LATEST_REPORT = resolve(REPORTS_DIR, "latest.json");
 const dryRun = process.argv.includes("--dry-run");
 const dryRunFlag = dryRun ? " --dry-run" : "";
+const skipTests = process.argv.includes("--skip-tests");
+const skipSonar = process.argv.includes("--skip-sonar");
 const steps = [];
 
 function runStep(step) {
@@ -82,13 +84,17 @@ async function main() {
         'bash -c \'output=$(node scripts/audit-ast-density.mjs --threshold 1); if [ -n "$output" ]; then echo "$output"; exit 1; fi\'',
       severity: "advisory",
     },
-    {
-      name: "test-unit-coverage",
-      command: "npm run test:unit:coverage",
-      severity: "blocking",
-      timeout: 400_000,
-    },
-    ...(process.env.SONAR_TOKEN
+    ...(skipTests
+      ? []
+      : [
+          {
+            name: "test-unit-coverage",
+            command: "npm run test:unit:coverage",
+            severity: "blocking",
+            timeout: 400_000,
+          },
+        ]),
+    ...(process.env.SONAR_TOKEN && !skipSonar
       ? [
           {
             name: "sonar-cleanup",
