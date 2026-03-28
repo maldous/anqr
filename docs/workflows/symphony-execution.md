@@ -159,7 +159,6 @@ The queue controller (`scripts/ops/symphony-queue-control.mjs`) enforces executi
 | **Feed**       | `queueDepth < target_min`            | Promote highest-priority Backlog → Todo            |
 | **Drain**      | `queueDepth > target_max`            | Demote lowest-priority Todo → Backlog with comment |
 | **Concurrent** | `inProgress > max_concurrent_agents` | Keep highest-priority, demote rest to Todo         |
-| **Stuck**      | In Progress > 5min without update    | Comment with split recommendation                  |
 | **Stale**      | In Progress > 30min without update   | Move to Todo with escalation comment               |
 
 ### Configuration
@@ -238,7 +237,7 @@ The nightly sonar audit (`scripts/ops/sonar-linear-audit.mjs`) runs after sonar-
 | --------------- | ----------------------------------------- | ----------------------------------------------------------- |
 | `priority`      | 1 (Urgent)                                | Sonar findings must be resolved before other work           |
 | `resolveStale`  | true                                      | Close Linear issues whose findings disappeared              |
-| `requeueToTodo` | true                                      | Move stuck issues (Backlog, In Progress, etc.) back to Todo |
+| `requeueToTodo` | true                                      | Move stale issues (Backlog, In Progress, etc.) back to Todo |
 | Exit code       | 0 = clean, 1 = findings, 2 = config error | Blocking gate in nightly pipeline                           |
 
 The nightly audit also **promotes** existing issues: if the runner created an issue at P2 (High) during the day, the nightly promotes it to P1 (Urgent) with an explanatory comment.

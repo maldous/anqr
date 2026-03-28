@@ -1,7 +1,7 @@
 # anqr-queue-feeder.timer — Queue maintenance + backup feed schedule
 #
 # Fires every 15 minutes for queue maintenance (drain, enforce,
-# stuck detection) and backup feeding. Primary feeding is handled
+# stale detection) and backup feeding. Primary feeding is handled
 # by the Symphony runner after each issue completion.
 # Persistent=true catches missed runs if the machine was off.
 #

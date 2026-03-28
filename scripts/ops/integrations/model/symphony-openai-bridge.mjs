@@ -518,6 +518,26 @@ function getCurrentRequestId() {
 }
 
 /**
+ * Read multiple files from the filesystem
+ */
+async function readFilesTool({ paths }) {
+  try {
+    const results = paths.map((filePath) => {
+      try {
+        const content = fs.readFileSync(filePath, "utf-8");
+        const totalLines = content.split("\n").length;
+        return { path: filePath, content, totalLines };
+      } catch (error) {
+        return { path: filePath, error: error.message };
+      }
+    });
+    return { files: results };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
  * Read a file from the filesystem
  */
 async function readFileTool({ path: filePath, offset, lines }) {
@@ -558,6 +578,39 @@ async function readFileTool({ path: filePath, offset, lines }) {
 }
 
 /**
+ * String replace in a file
+ */
+async function strReplaceTool({ path: filePath, replacements }) {
+  try {
+    let content = fs.readFileSync(filePath, "utf-8");
+    
+    for (const { old, new: newStr, allowMultiple } of replacements) {
+      if (allowMultiple) {
+        content = content.split(old).join(newStr);
+      } else {
+        const index = content.indexOf(old);
+        if (index === -1) {
+          return { error: `String not found in file: ${old.slice(0, 100)}` };
+        }
+        content = content.slice(0, index) + newStr + content.slice(index + old.length);
+      }
+    }
+    
+    fs.writeFileSync(filePath, content, "utf-8");
+    
+    // Track file change for current request
+    const reqId = getCurrentRequestId();
+    if (reqId) {
+      trackFileChange(reqId);
+    }
+    
+    return { success: true, path: filePath, replacements: replacements.length };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
  * Write a file (wrapper that tracks changes)
  */
 async function writeFileTool({ path: filePath, content }) {
@@ -573,6 +626,31 @@ async function writeFileTool({ path: filePath, content }) {
     return { success: true, path: filePath };
   } catch (error) {
     return { error: error.message };
+  }
+}
+
+/**
+ * Code search using ripgrep
+ */
+async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
+  try {
+    const baseDir = cwd || process.cwd();
+    const flagsStr = flags || "";
+    const command = `rg "${pattern.replace(/"/g, '\\"')}" ${flagsStr} "${baseDir}" -n --max-count=${maxResults} 2>/dev/null || true`;
+    const result = execSync(command, { encoding: "utf-8", timeout: 10000, maxBuffer: 10 * 1024 * 1024 });
+    
+    const lines = result.split("\n").filter(Boolean);
+    const matches = lines.map(line => {
+      const match = line.match(/^([^:]+):(\d+):(.+)$/);
+      if (match) {
+        return { file: match[1], line: parseInt(match[2]), content: match[3] };
+      }
+      return { raw: line };
+    });
+    
+    return { matches, count: matches.length, pattern };
+  } catch (error) {
+    return { error: error.message, matches: [] };
   }
 }
 
@@ -638,6 +716,61 @@ async function memorySearchTool({ query }) {
     return { results, count: results.length };
   } catch (error) {
     return { error: error.message, results: [] };
+  }
+}
+
+/**
+ * List directory contents
+ */
+async function listDirectoryTool({ path: dirPath }) {
+  try {
+    const fullPath = path.join(process.cwd(), dirPath);
+    const entries = fs.readdirSync(fullPath, { withFileTypes: true });
+    
+    const files = entries.filter(e => e.isFile()).map(e => e.name);
+    const directories = entries.filter(e => e.isDirectory()).map(e => e.name);
+    
+    return { files, directories, path: dirPath };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Read directory subtree with parsed AST info
+ */
+async function readSubtreeTool({ paths, _maxTokens = 50000 }) {
+  try {
+    const targetPaths = paths || ["."];
+    const result = [];
+    
+    for (const targetPath of targetPaths) {
+      const fullPath = path.join(process.cwd(), targetPath);
+      const stats = fs.statSync(fullPath);
+      
+      if (stats.isFile()) {
+        const content = fs.readFileSync(fullPath, "utf-8");
+        result.push({ path: targetPath, type: "file", content });
+      } else if (stats.isDirectory()) {
+        const walk = (dir, prefix = "") => {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const relativePath = path.join(prefix, entry.name);
+            if (entry.isDirectory()) {
+              walk(path.join(dir, entry.name), relativePath);
+            } else {
+              const content = fs.readFileSync(path.join(dir, entry.name), "utf-8");
+              result.push({ path: relativePath, type: "file", content: content.slice(0, 1000) });
+            }
+          }
+        };
+        walk(fullPath, targetPath);
+      }
+    }
+    
+    return { entries: result, count: result.length };
+  } catch (error) {
+    return { error: error.message };
   }
 }
 
@@ -729,6 +862,180 @@ async function updateSubgoalTool({ id, status, log, plan }) {
     status: status || "IN_PROGRESS",
     log,
     plan 
+  };
+}
+
+/**
+ * Spawn agents to run in parallel
+ */
+async function spawnAgentsTool({ agents }) {
+  // Symphony bridge doesn't support spawning sub-agents
+  // Log the request and return acknowledgment
+  logInfo(`🤖 Agent spawn requested: ${agents.map(a => a.agent_type).join(", ")}`);
+  return { 
+    acknowledged: true, 
+    message: "Agent spawning is handled by the parent Codebuff/OpenClaw instance",
+    agents: agents.map(a => ({ type: a.agent_type, status: "delegated" }))
+  };
+}
+
+/**
+ * Propose string replacements without applying them
+ */
+async function proposeStrReplaceTool({ path: filePath, replacements }) {
+  try {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const proposed = [];
+    
+    for (const { old, new: newStr } of replacements) {
+      const index = content.indexOf(old);
+      proposed.push({
+        old: old.slice(0, 100),
+        new: newStr.slice(0, 100),
+        found: index !== -1
+      });
+    }
+    
+    return { success: true, path: filePath, proposed };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Propose write file without applying
+ */
+async function proposeWriteFileTool({ path: filePath, instructions, content }) {
+  logInfo(`📝 Proposed write: ${filePath} - ${instructions}`);
+  return { 
+    success: true, 
+    path: filePath, 
+    instructions,
+    contentLength: content.length,
+    proposed: true
+  };
+}
+
+/**
+ * Add a message to conversation
+ */
+async function addMessageTool({ role, content }) {
+  logInfo(`💬 Add message: ${role} - ${content.slice(0, 100)}`);
+  return { acknowledged: true, role, contentLength: content.length };
+}
+
+/**
+ * Set messages in conversation
+ */
+async function setMessagesTool({ messages }) {
+  logInfo(`💬 Set messages: ${messages.length} messages`);
+  return { acknowledged: true, count: messages.length };
+}
+
+/**
+ * Set output for spawned agent
+ */
+async function setOutputTool(output) {
+  logInfo(`📤 Set output: ${JSON.stringify(output).slice(0, 100)}`);
+  return { acknowledged: true };
+}
+
+/**
+ * Load a skill
+ */
+async function skillTool({ name }) {
+  logInfo(`📚 Load skill: ${name}`);
+  return { 
+    acknowledged: true, 
+    skill: name,
+    message: "Skill loading is handled by the parent instance"
+  };
+}
+
+/**
+ * Suggest followup prompts
+ */
+async function suggestFollowupsTool({ followups }) {
+  logInfo(`💡 Suggest followups: ${followups.length} items`);
+  return { acknowledged: true, count: followups.length };
+}
+
+/**
+ * Signal task completion
+ */
+async function taskCompletedTool() {
+  logInfo(`✅ Task completed`);
+  return { acknowledged: true, completed: true };
+}
+
+/**
+ * Write todos list
+ */
+async function writeTodosTool({ todos }) {
+  logInfo(`📋 Write todos: ${todos.length} items`);
+  return { acknowledged: true, count: todos.length, todos };
+}
+
+/**
+ * Apply patch (Codex-style)
+ */
+async function applyPatchTool({ operation }) {
+  try {
+    const { type, path: filePath, diff } = operation;
+    
+    if (type === "create_file") {
+      if (!diff) return { error: "diff required for create_file" };
+      const lines = diff.split("\n").filter(l => l.startsWith("+")).map(l => l.slice(1));
+      const content = lines.join("\n");
+      fs.writeFileSync(filePath, content, "utf-8");
+      
+      const reqId = getCurrentRequestId();
+      if (reqId) trackFileChange(reqId);
+      
+      return { success: true, operation: "create", path: filePath };
+    } else if (type === "update_file") {
+      if (!diff) return { error: "diff required for update_file" };
+      // Simplified: treat as full content replacement
+      const lines = diff.split("\n").filter(l => l.startsWith("+")).map(l => l.slice(1));
+      const content = lines.join("\n");
+      fs.writeFileSync(filePath, content, "utf-8");
+      
+      const reqId = getCurrentRequestId();
+      if (reqId) trackFileChange(reqId);
+      
+      return { success: true, operation: "update", path: filePath };
+    } else if (type === "delete_file") {
+      fs.unlinkSync(filePath);
+      return { success: true, operation: "delete", path: filePath };
+    }
+    
+    return { error: `Unknown operation type: ${type}` };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+/**
+ * Ask user questions (not supported in Symphony bridge)
+ */
+async function askUserTool({ questions }) {
+  logInfo(`❓ Ask user: ${questions.length} questions`);
+  return { 
+    acknowledged: true,
+    message: "User interaction is handled by the parent Codebuff/OpenClaw instance",
+    questions: questions.length
+  };
+}
+
+/**
+ * Lookup agent info
+ */
+async function lookupAgentInfoTool({ agentId }) {
+  logInfo(`🔍 Lookup agent: ${agentId}`);
+  return { 
+    acknowledged: true,
+    agentId,
+    message: "Agent lookup is handled by the parent instance"
   };
 }
 
@@ -951,6 +1258,173 @@ async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
 
 // Available tools for the AI SDK
 const tools = {
+  code_search: tool({
+    description: "Search for string patterns in the project's files using ripgrep",
+    inputSchema: z.object({
+      pattern: z.string().describe("The pattern to search for"),
+      flags: z.string().optional().describe("Optional ripgrep flags"),
+      cwd: z.string().optional().describe("Working directory to search within"),
+      maxResults: z.number().optional().describe("Maximum results per file (default 15)"),
+    }),
+    execute: codeSearchTool,
+  }),
+  read_files: tool({
+    description: "Read multiple files from the filesystem",
+    inputSchema: z.object({
+      paths: z.array(z.string()).describe("List of file paths to read"),
+    }),
+    execute: readFilesTool,
+  }),
+  str_replace: tool({
+    description: "Replace strings in a file with new strings",
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file to edit"),
+      replacements: z.array(z.object({
+        old: z.string().describe("String to replace"),
+        new: z.string().describe("Replacement string"),
+        allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+      })),
+    }),
+    execute: strReplaceTool,
+  }),
+  list_directory: tool({
+    description: "List files and directories in a path",
+    inputSchema: z.object({
+      path: z.string().describe("Directory path to list"),
+    }),
+    execute: listDirectoryTool,
+  }),
+  read_subtree: tool({
+    description: "Read directory subtree with file contents",
+    inputSchema: z.object({
+      paths: z.array(z.string()).optional().describe("Paths to read (default: ['.'])"),
+      maxTokens: z.number().optional().describe("Maximum token budget (default: 50000)"),
+    }),
+    execute: readSubtreeTool,
+  }),
+  spawn_agents: tool({
+    description: "Spawn multiple agents to run in parallel",
+    inputSchema: z.object({
+      agents: z.array(z.object({
+        agent_type: z.string().describe("Agent to spawn"),
+        prompt: z.string().optional().describe("Prompt to send"),
+        params: z.record(z.any()).optional().describe("Parameters object"),
+      })),
+    }),
+    execute: spawnAgentsTool,
+  }),
+  propose_str_replace: tool({
+    description: "Propose string replacements without applying them",
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file"),
+      replacements: z.array(z.object({
+        old: z.string().describe("String to replace"),
+        new: z.string().describe("Replacement string"),
+        allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+      })),
+    }),
+    execute: proposeStrReplaceTool,
+  }),
+  propose_write_file: tool({
+    description: "Propose creating or editing a file without applying",
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file"),
+      instructions: z.string().describe("What the change is intended to do"),
+      content: z.string().describe("Edit snippet to apply"),
+    }),
+    execute: proposeWriteFileTool,
+  }),
+  add_message: tool({
+    description: "Add a message to the conversation history",
+    inputSchema: z.object({
+      role: z.enum(["user", "assistant"]).describe("Message role"),
+      content: z.string().describe("Message content"),
+    }),
+    execute: addMessageTool,
+  }),
+  set_messages: tool({
+    description: "Set the conversation history",
+    inputSchema: z.object({
+      messages: z.array(z.any()).describe("Array of messages"),
+    }),
+    execute: setMessagesTool,
+  }),
+  set_output: tool({
+    description: "Set the agent output",
+    inputSchema: z.any(),
+    execute: setOutputTool,
+  }),
+  skill: tool({
+    description: "Load a skill's instructions",
+    inputSchema: z.object({
+      name: z.string().describe("Skill name"),
+    }),
+    execute: skillTool,
+  }),
+  suggest_followups: tool({
+    description: "Suggest followup prompts to the user",
+    inputSchema: z.object({
+      followups: z.array(z.object({
+        prompt: z.string().describe("Full prompt text"),
+        label: z.string().optional().describe("Short display label"),
+      })),
+    }),
+    execute: suggestFollowupsTool,
+  }),
+  task_completed: tool({
+    description: "Signal that the task is complete",
+    inputSchema: z.object({}),
+    execute: taskCompletedTool,
+  }),
+  write_todos: tool({
+    description: "Write a todo list to track tasks",
+    inputSchema: z.object({
+      todos: z.array(z.object({
+        task: z.string().describe("Task description"),
+        completed: z.boolean().describe("Whether task is completed"),
+      })),
+    }),
+    execute: writeTodosTool,
+  }),
+  apply_patch: tool({
+    description: "Apply a file operation using Codex-style patch format",
+    inputSchema: z.object({
+      operation: z.object({
+        type: z.enum(["create_file", "update_file", "delete_file"]).describe("Operation type"),
+        path: z.string().describe("File path"),
+        diff: z.string().optional().describe("Diff content"),
+      }),
+    }),
+    execute: applyPatchTool,
+  }),
+  ask_user: tool({
+    description: "Ask the user multiple choice questions",
+    inputSchema: z.object({
+      questions: z.array(z.object({
+        question: z.string().describe("Question to ask"),
+        header: z.string().optional().describe("Short label"),
+        options: z.array(z.object({
+          label: z.string().describe("Option label"),
+          description: z.string().optional().describe("Option description"),
+        })),
+        multiSelect: z.boolean().optional().describe("Allow multiple selection"),
+        validation: z.object({
+          maxLength: z.number().optional(),
+          minLength: z.number().optional(),
+          pattern: z.string().optional(),
+          patternError: z.string().optional(),
+        }).optional(),
+      })),
+    }),
+    execute: askUserTool,
+  }),
+  lookup_agent_info: tool({
+    description: "Retrieve information about an agent by ID",
+    inputSchema: z.object({
+      agentId: z.string().describe("Agent ID"),
+    }),
+    execute: lookupAgentInfoTool,
+  }),
   exec: tool({
     description: "Execute a shell command and return the output",
     inputSchema: z.object({

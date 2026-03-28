@@ -941,7 +941,7 @@ async function main() {
     }
 
     if (!dryRun) {
-      // FIRST: Clean up expired leases and recover stuck In Progress issues BEFORE picking new work
+      // FIRST: Clean up expired leases and recover stale In Progress issues BEFORE picking new work
       const { findExpiredLeases } = await import("../symphony-state.mjs");
       const expiredLeases = findExpiredLeases();
       for (const { issueIdentifier } of expiredLeases) {
@@ -950,10 +950,10 @@ async function main() {
         releaseLease(issueIdentifier);
       }
 
-      // Now check for stuck In Progress issues - recover them to Todo so they can be picked up
+      // Now check for stale In Progress issues - recover them to Todo so they can be picked up
       const snap = await getQueueSnapshot();
       if (snap.inProgress.all.length > 0) {
-        logInfo(`[runner] Checking for stuck In Progress issues...`);
+        logInfo(`[runner] Checking for stale In Progress issues...`);
         const { detectStuckWork } = await import("./symphony-queue-control.mjs");
         await detectStuckWork(snap, false);
       }

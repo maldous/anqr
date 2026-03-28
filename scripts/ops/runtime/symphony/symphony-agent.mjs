@@ -698,10 +698,10 @@ async function callLLM(provider, messages, taskDescription) {
 // ---------------------------------------------------------------------------
 
 function buildIssuePrompt(issue) {
-  const lines = [`## Issue: ${issue.identifier} — ${issue.title}`, ""];
+  const lines = [`## Goal: ${issue.identifier} — ${issue.title}`, ""];
 
   if (issue.description) {
-    lines.push("### Description", "", issue.description, "");
+    lines.push("### Goal Description", "", issue.description, "");
   }
 
   const aiHints = (issue.comments?.nodes || [])
@@ -712,24 +712,26 @@ function buildIssuePrompt(issue) {
   }
 
   lines.push(
-    "### Instructions",
+    "### Your Goal",
     "",
-    "Implement the changes described above. Follow these steps:",
-    "1. Read relevant files to understand the current state",
-    "2. Plan your changes",
-    "3. Make the minimal necessary changes using write_file, patch_file, or delete_file",
-    "4. Run run_typecheck to verify there are no type errors",
-    "5. If there are type errors, fix them and run run_typecheck again",
-    "6. Run run_lint to verify there are no lint errors or warnings",
-    "7. If there are lint errors or warnings, fix them and run run_lint again",
-    "8. Run run_cspell to verify there are no spelling errors",
-    '9. If there are spelling errors, fix them or add domain-specific words to the "words" array in cspell.json',
-    "10. Run run_ast_density to verify no file has more than 1 top-level declaration",
-    "11. Run run_tests to verify the unit test suite passes",
-    "12. If there are density violations or test failures, fix them before proceeding",
-    "13. Call task_complete with a summary of what you changed",
+    "Your goal is to achieve the outcome described above. To accomplish this goal, you should:",
     "",
-    "Keep changes minimal. Do not modify files unnecessarily.",
+    "1. Create appropriate subtasks (using subgoal tools if available) to break down the goal into achievable steps",
+    "2. Read relevant files to understand the current state",
+    "3. Plan your changes to achieve the goal",
+    "4. Make the minimal necessary changes using write_file, patch_file, or delete_file",
+    "5. Run run_typecheck to verify there are no type errors",
+    "6. If there are type errors, fix them and run run_typecheck again",
+    "7. Run run_lint to verify there are no lint errors or warnings",
+    "8. If there are lint errors or warnings, fix them and run run_lint again",
+    "9. Run run_cspell to verify there are no spelling errors",
+    '10. If there are spelling errors, fix them or add domain-specific words to the "words" array in cspell.json',
+    "11. Run run_ast_density to verify no file has more than 1 top-level declaration",
+    "12. Run run_tests to verify the unit test suite passes",
+    "13. If there are density violations or test failures, fix them before proceeding",
+    "14. Call task_complete with a summary of how you achieved the goal",
+    "",
+    "Keep changes minimal. Focus on achieving the goal with the least amount of modification.",
     "IMPORTANT: Always run run_typecheck, run_lint, run_cspell, run_ast_density, AND run_tests before calling task_complete. Fix all errors and warnings first.",
   );
 
@@ -751,7 +753,7 @@ async function runToolLoop({
 }) {
   const filesChanged = new Set();
   let totalToolCalls = 0;
-  let consecutiveNoToolCalls = 0;
+
   let turn = 0;
   const validationsAfterMutation = {
     typecheck: false,
@@ -816,45 +818,6 @@ async function runToolLoop({
     const msg = choice.message;
 
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
-      // Check if this is legitimate work before counting as "stuck"
-      const content = msg.content || "";
-      
-      const isLegitimateWork =
-        // Streaming responses from Symphony/Codebuff bridges are active work
-        provider.name === "symphony-bridge" ||
-        provider.requiresSdk ||
-        // Subgoal management is active work
-        content.includes("Subgoal") ||
-        content.includes("subgoal") ||
-        // Planning/thinking phrases indicate agent is working
-        /let me understand|first,? i need to|let me read|i'?ll start by|here'?s my plan|steps:|approach:/i.test(
-          content,
-        ) ||
-        // Continuation signal from response
-        response.needsContinuation;
-
-      if (isLegitimateWork) {
-        // Reset counter if this is legitimate work
-        logDebug("[agent] No tool calls, but legitimate work detected - not counting as stuck");
-        consecutiveNoToolCalls = 0;
-      } else {
-        consecutiveNoToolCalls++;
-        if (consecutiveNoToolCalls >= 3) {
-          logWarn("[agent] Too many consecutive turns without tool calls — aborting");
-          const snippet = msg.content?.slice(0, 150).replaceAll("\n", " ") || "(empty)";
-          return {
-            completed: false,
-            summary: `Stuck: ${consecutiveNoToolCalls} consecutive turns without tool calls. Last: ${snippet}`,
-            turns: turn + 1,
-            toolCalls: totalToolCalls,
-            filesChanged: [...filesChanged],
-            timedOut: false,
-            error: null,
-            messages,
-            providerName: actualProviderName,
-          };
-        }
-      }
       messages.push(msg);
 
       // Handle autonomous agents (like Codebuff) that complete in one run
@@ -994,8 +957,6 @@ async function runToolLoop({
         continue;
       }
       break;
-    } else {
-      consecutiveNoToolCalls = 0;
     }
 
     messages.push(msg);

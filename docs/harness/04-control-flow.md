@@ -38,7 +38,7 @@ The maintained flow is:
 - purpose:
   - feed execution-ready work
   - enforce queue limits
-  - detect stale or stuck work
+  - detect stale work
   - act as the maintenance layer behind the runner
 
 ### 4. Symphony runner

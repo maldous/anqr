@@ -3,11 +3,11 @@
 # Runs queue:all every 15 minutes as a safety net for Symphony:
 #   - Feed: backup promote Backlog → Todo if runner self-feed missed
 #   - Drain: demote overflow when queue > target_max
-#   - Enforce: max concurrent agents, stuck/stale detection
+#   - Enforce: max concurrent agents, stale detection
 #
 # Primary feeding is handled by the Symphony runner itself
 # (symphony-runner.mjs calls feedQueue after each issue completion).
-# This timer handles maintenance duties (drain, enforce, stuck
+# This timer handles maintenance duties (drain, enforce, stale
 # detection) and acts as a backup feeder in case the runner
 # crashes or exits without feeding.
 #
