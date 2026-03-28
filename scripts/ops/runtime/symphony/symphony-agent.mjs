@@ -820,9 +820,9 @@ async function runToolLoop({
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       messages.push(msg);
 
-      // Handle autonomous agents (like Codebuff) that complete in one run
-      // They return a summary in content without tool calls
-      if (provider.requiresSdk && msg.content && msg.content.trim().length > 0) {
+      // Handle autonomous agents (like Codebuff) and streaming responses
+      // that complete in one run or return content without tool calls
+      if ((provider.requiresSdk || provider.name === "symphony-bridge" || response.needsContinuation) && msg.content && msg.content.trim().length > 0) {
         const content = msg.content;
 
         // Refined failure detection based on actual Codebuff outputs:
@@ -947,6 +947,35 @@ async function runToolLoop({
         };
       }
 
+      // Check if this is a legitimate non-tool turn (planning, thinking, continuation signal)
+      const content = msg.content || "";
+      const isLegitimateNonToolTurn = 
+        // Bridge signaled continuation needed
+        response.needsContinuation ||
+        // Streaming response received (active work)
+        (provider.name === "symphony-bridge" && content.length > 0) ||
+        // Planning/understanding phrases
+        /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(content) ||
+        // Subgoal management activity
+        /\bsubgoal/i.test(content) ||
+        // Reading/context gathering
+        /\b(reading|examining|looking at|checking) (the |files?|code)/i.test(content);
+
+      if (isLegitimateNonToolTurn) {
+        logDebug("[agent] Legitimate non-tool turn detected (planning/streaming/continuation)");
+        if (turn < maxTurns - 1) {
+          messages.push({
+            role: "user",
+            content:
+              "Continue implementing the changes. Use the available tools to read and modify files. Call task_complete when done.",
+          });
+          continue;
+        }
+        break;
+      }
+
+      // Not a legitimate turn - this might be stuck behavior
+      // But give the agent a few chances before aborting
       if (turn < maxTurns - 1) {
         logDebug("[agent] No tool calls — prompting to continue");
         messages.push({
