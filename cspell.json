@@ -444,7 +444,8 @@
     "hexkey",
     "MSCHAPV",
     "deprioritize",
-    "deprioritized"
+    "deprioritized",
+    "oneline"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
