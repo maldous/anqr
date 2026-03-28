@@ -463,16 +463,87 @@ async function executeIssue(issue, dryRun = false) {
       const failureKind = classifyProviderFailure(
         `${agentResult.summary} ${agentResult.error || ""}`,
       );
+      const failureMsg = agentResult.error || agentResult.summary || "Unknown failure";
+
       if (failureKind === "local_busy") {
         await updateIssue(issue.id, { stateId: STATES.todo });
         setCooldown(issue.identifier, 2 * 60 * 1000, "local_busy");
         await addComment(
           issue.id,
-          "⏳ **Local model busy** — returned to Todo with short cooldown.",
+          `⏳ **Local model busy** — returned to Todo with short cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
         );
         recordTransition(issue.identifier, {
           actor: "runner",
           reason: "local_busy",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      }
+
+      // Handle provider failures (LLM call failed, no choices, etc.) with moderate cooldown
+      if (failureKind === "provider") {
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "provider_failure");
+        await addComment(
+          issue.id,
+          `🔴 **Provider failure** — returned to Todo with cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "provider_failure",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      }
+
+      // Handle quota/rate-limit failures with longer cooldown
+      if (failureKind === "quota") {
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        setCooldown(issue.identifier, 15 * 60 * 1000, "quota_exhausted");
+        await addComment(
+          issue.id,
+          `🚫 **Quota exhausted** — returned to Todo with extended cooldown (15min).\n\nError: ${failureMsg.slice(0, 500)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "quota_exhausted",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+        recordLinearCompletion(metricsProviderName, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
+        return "done";
+      }
+
+      // Handle other failures with standard cooldown
+      if (failureKind === "other") {
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "other_failure");
+        await addComment(
+          issue.id,
+          `⚠️ **Execution failed** — returned to Todo with cooldown.\n\nError: ${failureMsg.slice(0, 500)}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "other_failure",
           from: "In Progress",
           to: "Todo",
           runId: RUN_ID,
