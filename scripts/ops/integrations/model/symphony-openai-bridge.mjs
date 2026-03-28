@@ -671,6 +671,9 @@ async function memoryGetTool({ file }) {
  */
 async function runFileChangeHooksTool({ files }) {
   try {
+    // Normalize files to array (workaround for Codebuff SDK bug in ^0.10.7)
+    const filesList = Array.isArray(files) ? files : [files];
+    
     // Check if codebuff.json has fileChangeHooks configured
     const codebuffConfigPath = path.join(process.cwd(), "codebuff.json");
     let hooks = [];
@@ -687,7 +690,7 @@ async function runFileChangeHooksTool({ files }) {
     const results = [];
     for (const hook of hooks) {
       try {
-        const command = hook.replace("{files}", files.join(" "));
+        const command = hook.replace("{files}", filesList.join(" "));
         const result = execSync(command, {
           encoding: "utf-8",
           timeout: 60000,
@@ -1002,9 +1005,10 @@ const tools = {
   run_file_change_hooks: tool({
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
-      files: z.union([z.string(), z.array(z.string())]).transform(val => 
-        Array.isArray(val) ? val : [val]
-      ).describe("List of file paths that were changed (accepts string or array)"),
+      files: z
+        .union([z.string(), z.array(z.string())])
+        .transform((val) => (Array.isArray(val) ? val : [val]))
+        .describe("List of file paths that were changed (accepts string or array)"),
     }),
     execute: runFileChangeHooksTool,
   }),
