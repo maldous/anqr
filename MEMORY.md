@@ -81,3 +81,16 @@ Related files: symphony-openai-bridge.mjs, symphony-bridge-truncation.mjs, symph
 Note: Unable to create Linear issue - workspace exceeded free issue limit. Architectural concern documented in code comments and MEMORY.md for future review.
 
 ### 2026-03-27 - Symphony Bridge stopped (PID 3270213, commit f36fbbe9b, 38/38 providers, signal: SIGTERM)
+
+### 2026-03-28T04:58:32.127Z - Watchdog rolled back codebuff bridge from d0f43fc26 to 64799d5e2 (stuck in activating for 66s)
+
+╔════════════════════════════════════════════════════════════════╗
+║ 🚨 WATCHDOG AUTOMATIC ROLLBACK 🚨                              ║
+╠════════════════════════════════════════════════════════════════╣
+║ Service:        codebuff                                        ║
+║ Failed Commit:  d0f43fc26                                       ║
+║ Rolled Back To: 64799d5e2                                       ║
+║ Reason:         stuck in activating for 66s                     ║
+╠════════════════════════════════════════════════════════════════╣
+║ ⚠️  REVIEW THE FAILED COMMIT BEFORE MAKING NEW CHANGES         ║
+╚════════════════════════════════════════════════════════════════╝
