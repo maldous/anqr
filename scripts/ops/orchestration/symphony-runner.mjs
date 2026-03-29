@@ -69,9 +69,11 @@ import {
   validationManifestHash,
 } from "../symphony-validation.mjs";
 
+import { PROJECT_ROOT, getWorktreePath } from "../core/worktree-config.mjs";
+
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
-const ROOT = process.env.ANQR_WORKTREE_PATH || resolve(__dirname, "..", "..", "..");
+const ROOT = process.env.ANQR_WORKTREE_PATH || (WORKTREE_ID === "main" ? PROJECT_ROOT : getWorktreePath(WORKTREE_ID.replace(/^wt/, "")));
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
 const uid = process.getuid?.() ?? 1000;
@@ -84,6 +86,8 @@ if (!existsSync(STATE_DIR)) {
 
 const LOCK_FILE = resolve(STATE_DIR, `lock-${WORKTREE_ID}`);
 const RUN_ID = `run-${Date.now()}-${process.pid}`;
+const SYNC_FAILURE_THRESHOLD = 3;
+let syncFailCount = 0;
 const LEASE_TTL_MS = Number(
   process.env.ANQR_SYMPHONY_LEASE_MS || Math.max(RUNNER_STUCK_THRESHOLD_MS, 20 * 60 * 1000),
 );
@@ -422,13 +426,31 @@ async function executeIssue(issue, dryRun = false) {
       execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] Worktree ${WORKTREE_ID} synced with main`);
+      syncFailCount = 0; // Reset counter on successful sync
     } catch (err) {
-      logError(`[runner] Worktree sync failed: ${err.message}`);
-      logError(`[runner] This likely indicates conflicting changes in the worktree.`);
-      logError(`[runner] Exiting immediately to avoid wasting lease cycles.`);
-      // Release lock immediately on sync failure - no lease was acquired yet
-      releaseLock();
-      return "skip";
+      syncFailCount++;
+      logError(`[runner] Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`);
+      
+      if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
+        logWarn(`[runner] ⚠️ Too many sync failures (${syncFailCount}), resetting worktree to origin/main`);
+        try {
+          execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
+          execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
+          logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} reset to origin/main successfully`);
+          syncFailCount = 0; // Reset counter after successful recovery
+        } catch (resetErr) {
+          logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
+          logError(`[runner] Manual intervention required for worktree ${WORKTREE_ID}`);
+          releaseLock();
+          return "skip";
+        }
+      } else {
+        logError(`[runner] This likely indicates conflicting changes in the worktree.`);
+        logError(`[runner] Exiting immediately to avoid wasting lease cycles.`);
+        // Release lock immediately on sync failure - no lease was acquired yet
+        releaseLock();
+        return "skip";
+      }
     }
   }
 

@@ -74,6 +74,16 @@ async function main() {
   logInfo(`[nightly]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   const plan = [
     {
+      name: "worktree-prune",
+      command: "git worktree prune",
+      severity: "advisory",
+    },
+    {
+      name: "worktree-repair",
+      command: "git worktree repair",
+      severity: "advisory",
+    },
+    {
       name: "harness-report",
       command: "node scripts/ops/harness-report.mjs full",
       severity: "advisory",

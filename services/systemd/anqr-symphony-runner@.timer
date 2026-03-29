@@ -15,7 +15,8 @@
 Description=ANQR Symphony runner timer (worktree %i)
 
 [Timer]
-OnBootSec=1min
+# Stagger startup to distribute load: 15s * instance number
+OnBootSec=15s
 OnUnitActiveSec=2min
 AccuracySec=10s
 

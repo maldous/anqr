@@ -220,7 +220,7 @@ Catch block swallows errors without logging which branch failed to delete.
 
 ---
 
-### Issue #12: Worktree Path Calculation Inconsistency
+### Issue #12: Worktree Path Calculation Inconsistency ✅ RESOLVED
 
 **Severity:** MEDIUM - Configuration drift risk  
 **Location:** Multiple files
@@ -234,11 +234,11 @@ These could diverge if not kept in sync.
 
 **Impact:** Mismatch between systemd and script expectations.
 
-**Fix Required:** Single source of truth for worktree path calculation (shared config module).
+**Resolution:** Created `scripts/ops/core/worktree-config.mjs` as single source of truth with `getWorktreePath()` and `getWorktreeBranch()` functions. Updated `symphony-runner.mjs` and `symphony-worktree-pool.mjs` to use shared functions. (ANQ-1117)
 
 ---
 
-### Issue #13: Potential for Infinite Merge Loops
+### Issue #13: Potential for Infinite Merge Loops ✅ RESOLVED
 
 **Severity:** MEDIUM - Stuck worktree risk  
 **Location:** `symphony-runner.mjs:415-418`
@@ -252,7 +252,7 @@ execFileSync("git", ["merge", "origin/main", "--ff-only"], { ... });
 
 **Impact:** Worktree becomes permanently out-of-sync.
 
-**Fix Required:** Add rebase or hard reset fallback after N consecutive skip attempts.
+**Resolution:** Added sync failure counter tracking and hard reset fallback after `SYNC_FAILURE_THRESHOLD` (3) consecutive failures. Now performs `git reset --hard origin/main` + `git clean -fd` when threshold reached, with proper error handling and logging. (ANQ-1118)
 
 ---
 

@@ -54,32 +54,164 @@ This file is the **first-read execution contract** for AI agents working on ANQR
   - This defensive handling works around AI SDK/provider bugs that send strings instead of arrays
 - Web search and docs tools require API keys to be configured
 
-**Tool implementation by context:**
+## Tool implementation by context
 
-**All contexts support:**
-- Core file operations: `read_files`, `write_file`, `str_replace`
-- Code navigation: `code_search`, `list_directory`, `read_subtree`, `find_files`
-- Execution: `run_terminal_command`, `run_file_change_hooks`
-- Memory: `memory_search`, `memory_get`
-- External APIs: `web_search`, `read_docs` (when API keys configured)
-- Progress tracking: `think_deeply`, `add_subgoal`, `update_subgoal`
+Tools are available in different execution contexts (Codebuff, Symphony bridge, OpenClaw). This section clarifies which tools work where.
 
-**Agent spawning** (delegated to parent):
-- `spawn_agents` — Acknowledged in Symphony bridge but delegated to parent Codebuff/OpenClaw instance
-- `lookup_agent_info` — Codebuff context only
+### All contexts (Codebuff, Symphony, OpenClaw)
 
-**Codebuff-only tools** (NOT available in Symphony/OpenClaw bridge):
-- Proposal tools: `propose_str_replace`, `propose_write_file`
-- Conversation control: `add_message`, `set_messages`
-- Interactive prompts: `ask_user`
-- Turn control: `end_turn`
+**Core file operations:**
+- `read_files` — Read multiple files from filesystem
+- `write_file` — Create or overwrite files
+- `str_replace` — Replace strings in files
+- `read` — Read single file (alias for `read_files`)
+- `write` — Write file (alias for `write_file`)
 
-**Symphony bridge implementation:**
-- `think_deeply`, `add_subgoal`, `update_subgoal`, `spawn_agents` are implemented as acknowledgment-only tools
-- They log activity server-side but don't block execution or spawn actual agents
-- `spawn_agents` delegates to the parent Codebuff/OpenClaw instance — the Symphony bridge only acknowledges the request
-- Allow agents to organize work and track progress across all provider contexts
-- See `scripts/ops/integrations/model/symphony-openai-bridge.mjs` for implementations
+**Code navigation:**
+- `code_search` — Search code using ripgrep
+- `list_directory` — List directory contents
+- `read_subtree` — Read directory tree with contents
+- `find_files` — Find files by natural language description
+- `glob` — Find files matching patterns
+
+**Execution:**
+- `run_terminal_command` — Execute shell commands (Codebuff-native name)
+- `exec` — Execute shell commands (AI SDK name)
+- `shell` — Execute shell commands (OpenAI compatibility alias)
+- `local_shell` — Execute shell commands (cross-provider alias)
+- `run_file_change_hooks` — Execute file change hooks
+
+**Memory:**
+- `memory_search` — Search MEMORY.md and knowledge files
+- `memory_get` — Get full memory file content
+
+**External APIs** (when API keys configured):
+- `web_search` — Search web via Linkup API (requires `LINKUP_API_KEY`)
+- `read_docs` — Fetch library documentation via Context7 API (requires `CONTEXT7_API_KEY`)
+- `browser_search` — Web search (Groq compatibility alias)
+- `visit_website` — Fetch web pages (best-effort via web search)
+
+**Progress tracking:**
+- `think_deeply` — Deep reasoning for complex tasks
+- `add_subgoal` — Add new subgoal for complex tasks
+- `update_subgoal` — Update task progress tracking
+- `thinker` — Think deeply (compatibility alias)
+
+### Agent spawning (delegated to parent)
+
+**Available in all contexts but delegated:**
+- `spawn_agents` — Spawn multiple agents in parallel
+  - **Codebuff:** Spawns actual sub-agents
+  - **Symphony bridge:** Acknowledges request, delegates to parent Codebuff/OpenClaw instance
+  - **OpenClaw:** Routes to gateway for agent orchestration
+
+**Codebuff context only:**
+- `lookup_agent_info` — Get agent metadata (not available in Symphony/OpenClaw)
+
+### Codebuff-only tools
+
+These tools are **NOT available** in Symphony bridge or OpenClaw contexts:
+
+**Proposal tools** (preview mode):
+- `propose_str_replace` — Propose edits without applying
+- `propose_write_file` — Propose file write without applying
+
+**Conversation control:**
+- `add_message` — Add message to conversation history
+- `set_messages` — Set conversation history
+- `message` — Add message (compatibility alias)
+
+**Interactive prompts:**
+- `ask_user` — Ask user questions (requires interactive session)
+
+**Turn control:**
+- `end_turn` — Signal turn completion
+- `task_completed` — Signal task completion (alias)
+
+**Planning:**
+- `create_plan` — Create step-by-step plan
+- `write_todos` — Write task list
+- `suggest_followups` — Suggest followup prompts
+
+**Other Codebuff-native tools:**
+- `set_output` — Set agent output
+- `skill` — Load skill instructions
+- `apply_patch` — Apply Codex-style patches
+- `browser_logs` — Check browser console (limited in headless environments)
+
+### Symphony bridge acknowledgment-only tools
+
+**Implementation location:** `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
+
+These tools are implemented in Symphony bridge as **acknowledgment-only** — they log activity server-side but don't block execution or spawn actual agents:
+
+- `think_deeply` — Logs thinking activity, returns `{ acknowledged: true }`
+- `add_subgoal` — Logs subgoal creation, returns `{ acknowledged: true }`
+- `update_subgoal` — Logs subgoal updates, returns `{ acknowledged: true }`
+- `spawn_agents` — Logs spawn request, delegates to parent, returns `{ acknowledged: true, message: "delegated" }`
+
+This allows agents to organize work and track progress across all provider contexts without requiring Symphony bridge to implement full agent orchestration.
+
+### Cross-provider compatibility tools
+
+Symphony bridge includes compatibility shims for tools from other platforms:
+
+**Groq/OpenAI compatibility:**
+- `code_interpreter` — Execute code (routes to `exec` or language-specific runtime)
+- `file_search` — Search files (routes to `code_search` or `find_files`)
+- `image_generation` — Not available (returns helpful error)
+- `wolfram_alpha` — Not available (suggests `code_interpreter` instead)
+
+**UI automation (not available in headless environment):**
+- `browser_automation` — Not available (suggests Playwright tests)
+- `computer_use` — Not available (headless server environment)
+- `tts` — Not available (no audio output)
+
+**Connectors (Groq-specific, not available):**
+- `connector_gmail` — Not available
+- `connector_googlecalendar` — Not available
+- `connector_googledrive` — Not available
+
+**MCP tools:**
+- `mcp_list_tools` — Returns available local tools (MCP servers not configured)
+
+These tools return graceful error messages with suggestions for alternatives rather than crashing.
+
+### Why tools differ by context
+
+**Codebuff-only tools** require interactive sessions or Codebuff SDK features:
+- `ask_user` — Needs interactive prompt UI
+- `add_message`, `set_messages` — Conversation control (Codebuff SDK)
+- `end_turn` — Turn management (Codebuff SDK)
+- `propose_*` — Preview mode (Codebuff UI feature)
+
+**Symphony acknowledgment-only tools** allow progress tracking without full orchestration:
+- `think_deeply`, `add_subgoal`, `update_subgoal` — Log server-side, don't block
+- `spawn_agents` — Delegates to parent (Symphony bridge doesn't spawn sub-agents)
+
+**Cross-provider compatibility** ensures models trained on different platforms can still work:
+- Models expecting Groq tools get graceful fallbacks
+- Models expecting OpenAI tools get compatible aliases
+- Unknown tools return helpful error messages (catch-all Proxy)
+
+### Implementation references
+
+**Symphony bridge tools:**
+- Main implementation: `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (lines 664-2200)
+- Tool definitions use AI SDK `tool()` with Zod schemas
+- Includes defensive parameter normalization for array inputs
+- Catch-all Proxy for unknown tool names (graceful no-ops)
+
+**Codebuff bridge tools:**
+- Implementation: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
+- Routes to Codebuff SDK (port 4318)
+- Full Codebuff tool set available
+
+**Tool capability probing:**
+- Symphony bridge probes all providers at startup
+- Tests structured tool calling with `add(2, 2)` tool
+- Excludes providers that emit raw JSON instead of structured `toolCalls`
+- See `scripts/ops/integrations/model/symphony-openai-bridge.mjs` lines 1800-2000
 
 ## Core execution rules
 

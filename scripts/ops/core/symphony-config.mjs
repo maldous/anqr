@@ -15,8 +15,8 @@
 import { LABELS } from "../linear-client.mjs";
 
 export const TARGET_MIN = 1;
-export const TARGET_MAX = 2;
-export const MAX_CONCURRENT_AGENTS = 1;
+export const TARGET_MAX = 8;
+export const MAX_CONCURRENT_AGENTS = 8;
 
 // ---------------------------------------------------------------------------
 // Timing policy (all constants must be strictly ordered — see chain below)
@@ -66,6 +66,6 @@ export const RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS = 120; // 2 min — paid p
 export const RUNNER_AUTO_PUSH = false; // Disabled until harness stability is restored (see goal.txt acceptance criteria)
 export const RUNNER_STUCK_THRESHOLD_MS = 15 * 60 * 1000; // 15 min — if In Progress with no update, assume runner was killed
 export const RUNNER_TURN_BUDGET_WARNING = 5; // inject wrap-up warning when this many turns remain
-export const RUNNER_MAX_VALIDATION_FIXES = 2; // times the agent can attempt to fix validation errors before revert
+export const RUNNER_MAX_VALIDATION_FIXES = 3; // times the agent can attempt to fix validation errors before revert
 export const RUNNER_VALIDATION_FIX_TURNS = 20; // turn budget per validation-fix attempt
 export const RUNNER_ISSUE_COOLDOWN_MS = 10 * 60 * 1000; // 10 min — skip recently-failed issues to prevent tight retry loops

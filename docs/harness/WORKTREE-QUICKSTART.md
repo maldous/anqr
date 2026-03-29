@@ -107,6 +107,26 @@ systemctl --user disable anqr-symphony-runner@3.timer
 **Problem: Disk space low**
 - Garbage collect: `cd /home/user/src/anqr && git gc --aggressive --prune=now`
 
+**Problem: All worktrees corrupted (disk full, etc.)**
+
+If all worktrees are corrupted simultaneously:
+
+```bash
+# Step 1: Stop all runners
+systemctl --user stop 'anqr-symphony-runner@*.timer'
+
+# Step 2: Remove all worktrees
+node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
+
+# Step 3: Recreate fresh pool
+node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
+
+# Step 4: Restart runners
+systemctl --user start 'anqr-symphony-runner@*.timer'
+```
+
+**No data loss** — all state preserved in `reports/symphony/state.json`.
+
 ## Emergency Rollback
 
 If concurrent execution causes issues, return to single runner:

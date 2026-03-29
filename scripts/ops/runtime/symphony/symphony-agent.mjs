@@ -60,10 +60,7 @@ import {
   runTests,
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
-import {
-  streamDiscordUpdate,
-  flushDiscordStream,
-} from "../../integrations/notifications/discord-webhook.mjs";
+
 
 const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
@@ -489,14 +486,9 @@ async function callLLM(provider, messages, taskDescription) {
             const parsed = JSON.parse(data);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
-              fullContent += content;
-              logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
-
-              // Stream to Discord in real-time (non-blocking)
-              streamDiscordUpdate(content, { emoji: "" }).catch(() => {
-                /* ignore */
-              });
-            }
+                fullContent += content;
+                logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
+              }
             // Capture structured result from bridge (embedded in any SSE chunk)
             if (parsed._symphony_result) {
               symphonyResult = parsed._symphony_result;
@@ -512,11 +504,6 @@ async function callLLM(provider, messages, taskDescription) {
       if (fullContent) {
         process.stdout.write("\n"); // Final newline
       }
-
-      // Flush any remaining Discord stream buffer
-      await flushDiscordStream({ emoji: "" }).catch(() => {
-        /* ignore */
-      });
 
       return {
         choices: [
@@ -601,11 +588,6 @@ async function callLLM(provider, messages, taskDescription) {
             if (deltaContent) {
               content += deltaContent;
               logDebug(`[agent] 🌊 ${deltaContent.slice(0, 200)}`);
-
-              // Stream to Discord in real-time (non-blocking)
-              streamDiscordUpdate(deltaContent, { emoji: "" }).catch(() => {
-                /* ignore */
-              });
             }
             const reason = parsed.choices?.[0]?.finish_reason;
             if (reason) {
@@ -620,11 +602,6 @@ async function callLLM(provider, messages, taskDescription) {
       if (content) {
         process.stdout.write("\n"); // Final newline
       }
-
-      // Flush any remaining Discord stream buffer
-      await flushDiscordStream({ emoji: "" }).catch(() => {
-        /* ignore */
-      });
 
       // The bridge returns completion tokens but we need to detect if agent wants continuation
       // Check finish_reason - if "length", agent has more work to do

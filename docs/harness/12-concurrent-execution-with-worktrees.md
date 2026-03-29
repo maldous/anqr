@@ -146,6 +146,14 @@ Worktree 3 → symphony/wt3 (tracks origin/main)
 
 ### Worktree Operations
 
+**Centralized path configuration:**
+
+Worktree paths are calculated via `scripts/ops/core/worktree-config.mjs`:
+- `getWorktreePath(id)` — Returns absolute path to worktree directory
+- `getWorktreeBranch(id)` — Returns branch name for worktree
+
+This ensures consistency across Symphony runner, worktree pool manager, and systemd services.
+
 **Create worktree:**
 ```bash
 git worktree add /home/user/src/anqr-wt1 -b symphony/wt1 main
@@ -583,7 +591,7 @@ journalctl --user -u 'anqr-symphony-runner@*.service' --since '7 days ago' | gre
 node scripts/ops/orchestration/symphony-queue-control.mjs --check
 ```
 
-**Emergency recovery:**
+**Emergency recovery (single worktree corrupted):**
 
 ```bash
 # Stop all runners
@@ -600,6 +608,26 @@ done
 # Restart runners
 systemctl --user start 'anqr-symphony-runner@*.timer'
 ```
+
+### Total Worktree Corruption Recovery
+
+If all worktrees are corrupted (e.g., disk full scenario):
+
+```bash
+# Step 1: Stop all runners
+systemctl --user stop 'anqr-symphony-runner@*.timer'
+
+# Step 2: Remove all worktrees
+node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
+
+# Step 3: Recreate fresh pool
+node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
+
+# Step 4: Restart runners
+systemctl --user start 'anqr-symphony-runner@*.timer'
+```
+
+**No data loss** — all state preserved in `reports/symphony/state.json`.
 
 ## Performance and Resource Impact
 

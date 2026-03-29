@@ -16,16 +16,16 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, statfsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createLogger } from "../lib/logger.mjs";
+import {
+  PROJECT_ROOT,
+  WORKTREE_PREFIX,
+  WORKTREE_BRANCH_PREFIX,
+  getWorktreePath,
+  getWorktreeBranch,
+} from "../core/worktree-config.mjs";
 
 const { logInfo, logWarn, logError } = createLogger();
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = resolve(__dirname, "..", "..", "..");
-const WORKTREE_PREFIX = "anqr-wt";
-const WORKTREE_BRANCH_PREFIX = "symphony/wt";
 
 /**
  * Create a new worktree for concurrent Symphony execution
@@ -33,8 +33,8 @@ const WORKTREE_BRANCH_PREFIX = "symphony/wt";
  * @returns {string} - Worktree path
  */
 export function createWorktree(id) {
-  const worktreePath = resolve(PROJECT_ROOT, "..", `${WORKTREE_PREFIX}${id}`);
-  const branchName = `${WORKTREE_BRANCH_PREFIX}${id}`;
+  const worktreePath = getWorktreePath(id);
+  const branchName = getWorktreeBranch(id);
 
   if (existsSync(worktreePath)) {
     logInfo(`Worktree already exists: ${worktreePath}`);
@@ -69,8 +69,8 @@ export function createWorktree(id) {
  * @param {number} id - Worktree ID
  */
 export function removeWorktree(id) {
-  const worktreePath = resolve(PROJECT_ROOT, "..", `${WORKTREE_PREFIX}${id}`);
-  const branchName = `${WORKTREE_BRANCH_PREFIX}${id}`;
+  const worktreePath = getWorktreePath(id);
+  const branchName = getWorktreeBranch(id);
 
   try {
     if (existsSync(worktreePath)) {
@@ -89,7 +89,7 @@ export function removeWorktree(id) {
       });
       logInfo(`🗑️  Deleted branch: ${branchName}`);
     } catch {
-      // Branch might not exist, that's okay
+      logWarn(`Branch deletion failed (may not exist): ${branchName}`);
     }
   } catch (err) {
     logError(`Failed to remove worktree ${id}: ${err.message}`);

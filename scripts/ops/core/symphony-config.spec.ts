@@ -31,11 +31,11 @@ describe("symphony-config.mjs", () => {
     it("should have TARGET_MIN = 1", () => {
       expect(TARGET_MIN).toBe(1);
     });
-    it("should have TARGET_MAX = 2", () => {
-      expect(TARGET_MAX).toBe(2);
+    it("should have TARGET_MAX = 8", () => {
+      expect(TARGET_MAX).toBe(8);
     });
-    it("should allow only one concurrent agent", () => {
-      expect(MAX_CONCURRENT_AGENTS).toBe(1);
+    it("should allow up to 8 concurrent agents", () => {
+      expect(MAX_CONCURRENT_AGENTS).toBe(8);
     });
   });
 
@@ -108,7 +108,7 @@ describe("symphony-config.mjs", () => {
       expect(RUNNER_TURN_BUDGET_WARNING).toBe(5);
     });
     it("should have validation fix limits", () => {
-      expect(RUNNER_MAX_VALIDATION_FIXES).toBe(2);
+      expect(RUNNER_MAX_VALIDATION_FIXES).toBe(3);
       expect(RUNNER_VALIDATION_FIX_TURNS).toBe(20);
     });
   });
