@@ -216,7 +216,7 @@ Use the hybrid Linear model:
 
 - All reduced capability requirements
 - `services/systemd/anqr-ops.env` or secret-managed equivalent
-- systemd access or documented runner mechanism
+- systemd user service access (`systemctl --user`) or documented runner mechanism
 - AI provider credentials
 - Linear credentials
 - Netlify/Sentry/Sonar credentials when in scope
