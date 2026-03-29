@@ -307,7 +307,7 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   }
 }
 
-function gitPush() {
+async function gitPush() {
   const MAX_PUSH_RETRIES = 3;
 
   for (let attempt = 1; attempt <= MAX_PUSH_RETRIES; attempt++) {
@@ -330,11 +330,12 @@ function gitPush() {
     } catch (err) {
       if (attempt < MAX_PUSH_RETRIES) {
         // Check if it's a non-fast-forward error (race condition with another worktree)
+        const stderr = err.stderr ? err.stderr.toString() : "";
         const isRaceCondition =
           err.message?.includes("non-fast-forward") ||
           err.message?.includes("rejected") ||
-          err.stderr?.includes("non-fast-forward") ||
-          err.stderr?.includes("rejected");
+          stderr.includes("non-fast-forward") ||
+          stderr.includes("rejected");
 
         if (isRaceCondition) {
           logWarn(
@@ -359,10 +360,7 @@ function gitPush() {
           // For non-race-condition errors, wait briefly and retry
           const waitMs = attempt * 1000; // 1s, 2s backoff
           logInfo(`[runner] Waiting ${waitMs}ms before retry...`);
-          const start = Date.now();
-          while (Date.now() - start < waitMs) {
-            // Busy wait to avoid async complexity
-          }
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
         }
       } else {
         logError(`[runner] Git push failed after ${MAX_PUSH_RETRIES} attempts: ${err.message}`);
@@ -1088,22 +1086,24 @@ async function executeIssue(issue, dryRun = false) {
     if (WORKTREE_ID !== "main") {
       try {
         execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
-        execFileSync("git", ["merge", "origin/main", "--no-commit", "--no-ff"], {
+        // Try to merge - will auto-complete if no conflicts
+        execFileSync("git", ["merge", "origin/main"], {
           cwd: ROOT,
           stdio: "pipe",
         });
-        // Check for conflicts
-        const statusOutput = execFileSync("git", ["status", "--porcelain"], {
-          cwd: ROOT,
-          encoding: "utf-8",
-        });
-        const hasConflicts = statusOutput
-          .split("\n")
-          .some((line) => line.startsWith("UU ") || line.startsWith("AA "));
+        logInfo(`[runner] Pre-validation sync: merged latest changes from main`);
+      } catch (err) {
+        // Check if merge is in progress (indicates conflict)
+        const mergeHeadPath = resolve(ROOT, ".git", "MERGE_HEAD");
+        const hasConflicts = existsSync(mergeHeadPath);
+
         if (hasConflicts) {
           // Abort merge and revert our changes - another worktree's work takes precedence
-          execFileSync("git", ["merge", "--abort"], { cwd: ROOT, stdio: "pipe" });
+          try {
+            execFileSync("git", ["merge", "--abort"], { cwd: ROOT, stdio: "pipe" });
+          } catch {}
           gitRevert();
+
           const conflictSignature = "merge_conflict_before_validation";
           if (priorFailureSignature === conflictSignature) {
             markRetryExhausted(issue.identifier, {
@@ -1148,15 +1148,11 @@ async function executeIssue(issue, dryRun = false) {
             estimate: issue.estimate,
           });
           return "done";
+        } else {
+          // Other merge error (not conflicts)
+          logWarn(`[runner] Pre-validation sync failed (non-fatal): ${err.message}`);
+          // Continue with validation using original changes
         }
-        // No conflicts - finalize the merge
-        execFileSync("git", ["commit", "--no-edit"], { cwd: ROOT, stdio: "pipe" });
-        logInfo(`[runner] Pre-validation sync: merged latest changes from main`);
-        // Re-read changed files after merge
-        changedFiles = gitDiffNames();
-      } catch (err) {
-        logWarn(`[runner] Pre-validation sync failed (non-fatal): ${err.message}`);
-        // Continue with validation using original changes
       }
     }
 

@@ -461,7 +461,11 @@
     "googledrive",
     "lifecycles",
     "Runsheet",
-    "conflictstyle"
+    "conflictstyle",
+    "testids",
+    "textareas",
+    "unstub",
+    "unstub"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

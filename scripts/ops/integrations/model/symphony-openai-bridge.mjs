@@ -319,37 +319,33 @@ function stopDiscordMonitoring() {
 
 /**
  * Send periodic Processing Status embedded card to Discord
- * Shows all concurrent requests with runtime, model, and file changes
+ * Shows all concurrent requests with brief summaries
  */
 async function sendProcessingStatusUpdate() {
   if (activeRequests.size === 0) return;
 
   const now = Date.now();
-  const fields = [];
+  const summaries = [];
 
-  // Build fields for each active request
+  // Build brief one-line summaries for each active request
   for (const [reqId, req] of activeRequests.entries()) {
     const runtime = formatElapsed(now - req.startTime);
     const filesChanged = req.filesChanged || 0;
     const issueLabel = req.issueId || reqId;
-    const requestPreview = req.requestText ? req.requestText.slice(0, 100) : "(no description)";
 
-    fields.push({
-      name: `${issueLabel} (${runtime})`,
-      value: `Files: ${filesChanged} | ${requestPreview}`,
-      inline: false,
-    });
+    // Create brief summary: "ANQ-123 (2.5min, 3 files)"
+    const summary = `${issueLabel} (${runtime}${filesChanged > 0 ? `, ${filesChanged} files` : ""})`;
+    summaries.push(summary);
   }
 
-  // Only show "concurrent requests" if there's more than 1 active
-  const description =
-    activeRequests.size > 1 ? "Concurrent requests in progress" : "Request in progress";
+  // Combine all summaries into a single description
+  const description = summaries.join("\n");
 
   await sendDiscordEmbed({
-    title: `⏳ Processing Status (${activeRequests.size} active)`,
+    title: `⏳ Processing (${activeRequests.size} active)`,
     description,
     color: 0x3498db, // Blue
-    fields,
+    fields: [], // No fields - all info in description for simplicity
   }).catch((err) => logDebug(`Processing status update failed: ${err.message}`));
 }
 

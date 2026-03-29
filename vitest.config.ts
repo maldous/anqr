@@ -17,7 +17,14 @@ export default defineConfig({
   },
   test: {
     globals: false,
-    environment: "node",
+    environment: "jsdom",
+    environmentMatchGlobs: [
+      ["**/*.spec.tsx", "jsdom"],
+      ["**/packages/ui/**/*.spec.ts", "jsdom"],
+      ["**/packages/analytics/**/*.spec.tsx", "jsdom"],
+      ["**/*.spec.ts", "node"],
+      ["**/*.test.ts", "node"],
+    ],
     include: [
       "tests/unit/**/*.spec.ts",
       "tests/unit/**/*.test.ts",

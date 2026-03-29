@@ -150,6 +150,11 @@ async function main() {
       command: `node scripts/ops/notify.mjs --channel=all${dryRunFlag}`,
       severity: "independent",
     },
+    {
+      name: "latency-report",
+      command: `node scripts/ops/orchestration/latency-report.mjs --alert`,
+      severity: "advisory",
+    },
   ];
 
   let hardFailure = false;
