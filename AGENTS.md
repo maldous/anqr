@@ -670,7 +670,7 @@ The harness uses two OpenAI-compatible bridges:
 4. Restart: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
 5. Update `MEMORY.md` with stop/start entries, then commit & push again
 
-**Never restart bridges during active concurrent requests** — data loss will occur
+**Never restart bridges during active concurrent requests** — data loss will occur. Restarting during active concurrent requests drops streaming connections and causes partial results to be lost.
 
 ### Bootstrap contract
 

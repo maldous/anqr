@@ -3588,6 +3588,16 @@ async function invokeWithAI(provider, messages, options = {}) {
       // Build detailed log context based on part type
       const logContext = { type: part.type };
 
+      // DIAGNOSTIC: Log all event types for non-Codebuff providers to identify streaming issues
+      if (provider.name !== "codebuff" && provider.name !== "codex") {
+        logInfo(`🔍 [${provider.name}] Stream event: ${part.type}`, { 
+          type: part.type,
+          hasTextDelta: !!part.textDelta,
+          hasToolName: !!part.toolName,
+          preview: part.textDelta?.slice(0, 50) || part.toolName || ""
+        });
+      }
+
       if (part.type === "text-delta") {
         const deltaText = part.textDelta || "";
         logContext.length = deltaText.length;
@@ -3612,6 +3622,15 @@ async function invokeWithAI(provider, messages, options = {}) {
         const deltaText = part.textDelta || "";
         logContext.length = deltaText.length;
         logContext.preview = deltaText.slice(0, 100);
+        // DIAGNOSTIC: Verify reasoning-delta events are being emitted
+        logInfo(`💡 [${provider.name}] reasoning-delta event detected`, {
+          length: deltaText.length,
+          preview: deltaText.slice(0, 100)
+        });
+      } else if (part.type === "reasoning-start") {
+        logInfo(`💡 [${provider.name}] reasoning-start event`, { providerName: provider.name });
+      } else if (part.type === "reasoning-end") {
+        logInfo(`💡 [${provider.name}] reasoning-end event`, { providerName: provider.name });
       } else if (part.type === "error") {
         const errorMsg = errorToString(part.error || part);
         logContext.errorPreview = errorMsg.slice(0, 150);
@@ -3657,7 +3676,10 @@ async function invokeWithAI(provider, messages, options = {}) {
             inThinkBlock = true;
             // Emit newline when thinking starts (no emoji for Discord)
             if (onChunk) onChunk({ type: "text", text: "\n" });
-            logDebug(`💭 Thinking block detected in text-delta`);
+            logInfo(`💭 [${provider.name}] <think> block start detected in text-delta`, {
+              providerName: provider.name,
+              deltaPreview: delta.slice(0, 100)
+            });
           }
         }
 
@@ -3680,6 +3702,9 @@ async function invokeWithAI(provider, messages, options = {}) {
             inThinkBlock = false;
             // Emit newline when thinking ends
             if (onChunk) onChunk({ type: "text", text: "\n" });
+            logInfo(`💭 [${provider.name}] <think> block end detected in text-delta`, {
+              providerName: provider.name
+            });
           }
         }
 

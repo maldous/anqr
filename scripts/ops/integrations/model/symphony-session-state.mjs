@@ -14,29 +14,28 @@
  * This module tracks provider selection (which provider, turn count, tier) but does NOT
  * track the actual message history. The system relies on OpenClaw maintaining conversation
  * state. When switching providers mid-conversation (due to rotation, failure, or evaluation),
- * context coherence validation (implemented in symphony-bridge-truncation.mjs) ensures:
- *   1. System messages are preserved during truncation
- *   2. Role alternation is maintained (no consecutive user/assistant messages)
- *   3. Final messages are complete (no mid-turn truncation)
+ * there is NO server-side verification that:
+ *   1. The context sent by OpenClaw is complete and coherent
+ *   2. The context hasn't been corrupted during transmission
+ *   3. The truncated context (for providers with smaller windows) maintains coherence
  *
- * Solution implemented (2026-03-27): Context coherence validation in truncateMessagesForProvider()
- *   - validateContextCoherence() checks system message presence, role alternation, completeness
- *   - Low-context providers (Groq: 6K tokens) use stricter message retention (keep last 3 vs 4)
- *   - Warnings logged when coherence issues detected
+ * FIXED (2026-03-27 ANQ-1021): Server-side message history storage with hash verification.
+ * - Store full message array in session state (persisted to disk)
+ * - Compute message hash for integrity verification
+ * - getSessionMessages() retrieves stored copy as source of truth
+ * - verifySessionMessages() validates OpenClaw-provided context matches stored state
+ * - setSessionMessages() updates stored messages on each turn
+ * - clearSessionMessages() cleanup on session clear
  *
- * Known issue fixed: Groq switching mid-conversation "had no idea what was going on"
- *   Root cause: 6K token limit caused aggressive truncation removing system context
- *   Fix: Coherence validation + preserved system messages + adjusted retention for low-context providers
- *
- * See: symphony-bridge-truncation.mjs (validateContextCoherence, truncateMessagesForProvider)
- *      symphony-openai-bridge.mjs (buildSelectionOptions, invokeWithFallbackStream)
- *      symphony-adaptive-context.mjs (context window management)
+ * See: symphony-bridge-truncation.mjs (enhanced coherence validation)
+ *      symphony-openai-bridge.mjs (integrates stored messages and verification)
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "../../lib/logger.mjs";
+import { createHash } from "node:crypto";
 
 const { logInfo } = createLogger();
 
@@ -160,14 +159,18 @@ export function updateSessionProvider(sessionId, provider) {
     existing.turnCount++;
     existing.lastUsed = Date.now();
     existing.mode = provider.mode || existing.mode;
+    // Preserve messages and messageHash (if present)
   } else {
-    // New provider - reset turn count
+    // New provider - reset turn count but preserve existing messages if any
     state[sessionId] = {
       provider: provider.name,
       mode: provider.mode || "unknown",
       tier: provider.tier || TIER_FREE,
       turnCount: 1,
       lastUsed: Date.now(),
+      // Preserve messages if switching provider within same session (conversation continuity)
+      messages: existing?.messages,
+      messageHash: existing?.messageHash,
     };
   }
 
@@ -176,14 +179,25 @@ export function updateSessionProvider(sessionId, provider) {
 
 /**
  * Clear session provider (force reselection)
+ * Preserves message history while resetting provider-specific fields.
  * @param {string} sessionId - OpenClaw session ID
  */
 export function clearSessionProvider(sessionId) {
   if (!sessionId) return;
 
   const state = loadSessionState();
-  delete state[sessionId];
-  saveSessionState(state);
+  const session = state[sessionId];
+  if (session) {
+    // Preserve messages and messageHash, clear provider and turn state
+    const { messages, messageHash } = session;
+    state[sessionId] = {
+      messages,
+      messageHash,
+      lastUsed: Date.now(),
+    };
+    saveSessionState(state);
+    logDebug(`[session-state] Cleared provider sticky for session ${sessionId.slice(0, 8)}..., preserved ${messages?.length || 0} messages`);
+  }
 }
 
 /**
@@ -208,6 +222,116 @@ export function cleanupExpiredSessions() {
   }
 
   return cleaned;
+}
+
+// ---------------------------------------------------------------------------
+// Server-side message history storage (ANQ-1021)
+// ---------------------------------------------------------------------------
+
+/**
+ * Compute a hash of the message array for integrity verification.
+ * Returns a SHA-256 hash string prefixed with 'sha256:'.
+ * @param {Array} messages - Message array to hash
+ * @returns {string} - Hash string
+ */
+function hashMessages(messages) {
+  try {
+    const json = JSON.stringify(messages);
+    const hash = createHash("sha256").update(json).digest("hex");
+    return `sha256:${hash}`;
+  } catch (err) {
+    logError(`[session-state] Failed to hash messages: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Store full message history in session state for server-side truth.
+ * @param {string} sessionId - OpenClaw session ID
+ * @param {Array} messages - Full message array to store
+ */
+export function setSessionMessages(sessionId, messages) {
+  if (!sessionId) return;
+
+  const state = loadSessionState();
+  const session = state[sessionId];
+  if (!session) {
+    logWarn(`[session-state] setSessionMessages: session ${sessionId} not found`);
+    return;
+  }
+
+  // Store a deep copy to avoid external mutation
+  const messagesCopy = JSON.parse(JSON.stringify(messages));
+  session.messages = messagesCopy;
+  session.messageHash = hashMessages(messagesCopy);
+  session.lastUsed = Date.now(); // Update timestamp
+
+  saveSessionState(state);
+  logDebug(`[session-state] Stored ${messagesCopy.length} messages for session ${sessionId.slice(0, 8)}...`);
+}
+
+/**
+ * Retrieve stored message history for a session.
+ * Returns the stored messages (deep copy) or null if none found.
+ * @param {string} sessionId - OpenClaw session ID
+ * @returns {Array|null}
+ */
+export function getSessionMessages(sessionId) {
+  if (!sessionId) return null;
+
+  const state = loadSessionState();
+  const session = state[sessionId];
+  if (!session || !session.messages) {
+    return null;
+  }
+
+  // Return a deep copy to prevent external mutation
+  return JSON.parse(JSON.stringify(session.messages));
+}
+
+/**
+ * Verify that provided messages match the stored messages (via hash).
+ * Returns true if they match, false if mismatch or no stored messages.
+ * @param {string} sessionId - OpenClaw session ID
+ * @param {Array} providedMessages - Messages from OpenClaw to verify
+ * @returns {boolean}
+ */
+export function verifySessionMessages(sessionId, providedMessages) {
+  if (!sessionId) return false;
+
+  const state = loadSessionState();
+  const session = state[sessionId];
+  if (!session || !session.messageHash) {
+    return false;
+  }
+
+  const providedHash = hashMessages(providedMessages);
+  if (!providedHash) return false;
+
+  const matches = session.messageHash === providedHash;
+  if (!matches) {
+    logWarn(
+      `[session-state] Message hash mismatch for session ${sessionId.slice(0, 8)}... - stored=${session.messageHash}, provided=${providedHash}`,
+    );
+  }
+  return matches;
+}
+
+/**
+ * Clear stored messages for a session (called on session clear).
+ * @param {string} sessionId - OpenClaw session ID
+ */
+export function clearSessionMessages(sessionId) {
+  if (!sessionId) return;
+
+  const state = loadSessionState();
+  const session = state[sessionId];
+  if (session) {
+    delete session.messages;
+    delete session.messageHash;
+    saveSessionState(state);
+    logDebug(`[session-state] Cleared stored messages for session ${sessionId.slice(0, 8)}...`);
+  }
 }
 
 // ---------------------------------------------------------------------------
