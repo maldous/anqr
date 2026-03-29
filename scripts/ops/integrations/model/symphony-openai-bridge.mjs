@@ -3655,8 +3655,8 @@ async function invokeWithAI(provider, messages, options = {}) {
         if (delta.includes("<think>")) {
           if (!inThinkBlock) {
             inThinkBlock = true;
-            // Emit lightbulb prefix when thinking starts
-            if (onChunk) onChunk({ type: "text", text: "\n💡 " });
+            // Emit newline when thinking starts (no emoji for Discord)
+            if (onChunk) onChunk({ type: "text", text: "\n" });
             logDebug(`💭 Thinking block detected in text-delta`);
           }
         }
