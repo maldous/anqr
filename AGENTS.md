@@ -340,6 +340,36 @@ const detail = await getIssueDetail(issueId);
 - `scripts/ops/integrations/linear/close-reviewed-issues.mjs` — bulk state transitions
 - `scripts/ops/integrations/linear/reopen-marked-issues.mjs` — conditional updates with comments
 
+**CRITICAL: Read entire issue before starting work**
+
+Before working on ANY Linear issue:
+
+1. **ALWAYS call `getIssueDetail(issueId)`** to get the FULL issue including ALL comments
+2. **Read ALL existing comments** to understand what work has already been done
+3. **Check for duplicate findings** — never repeat findings already documented in comments
+4. **Mark issues as Done properly** when work is complete to prevent reopening and rework
+5. **Update existing comments** when adding to prior findings (use `updateComment`)
+
+```javascript
+// ALWAYS do this first when starting work on an issue:
+const detail = await getIssueDetail(issue.id);
+const allComments = detail.comments.nodes || [];
+
+// Review all comments to understand prior work:
+for (const comment of allComments) {
+  console.log(`[${comment.createdAt}] ${comment.body.slice(0, 200)}...`);
+}
+
+// Check if findings already exist before adding new ones
+```
+
+**Issue state transitions:**
+
+- When work is complete and all acceptance criteria met → `STATES.done`
+- When work needs human review (secrets, billing, etc.) → `STATES.inReview` (Human Review state)
+- When blocked by external dependency → `STATES.todo` with comment explaining blocker
+- Never leave completed issues in `In Progress` or `Todo`
+
 ### Symphony bridge architecture
 
 The harness uses two OpenAI-compatible bridges:
