@@ -118,6 +118,7 @@ import {
 
 // MEMORY.md updates for persistence across restarts
 import { updateMemory } from "../../lib/update-memory.mjs";
+import { inferSymphonyResultFromCompletion } from "../../runtime/symphony/bridge-result.mjs";
 
 // Enhancement 1: Context7 documentation via HTTP service (port 4320)
 const CONTEXT7_HTTP_BASE = process.env.CONTEXT7_HTTP_URL || "http://127.0.0.1:4320";
@@ -4116,27 +4117,56 @@ const LOG_BUFFER_THRESHOLD = 150; // Log when buffer exceeds ~150 chars
  */
 function processSSELine(line, state, onDiscordChunk) {
   const dataMatch = line.match(/^data: (.+)$/);
-  if (!dataMatch || dataMatch[1] === "[DONE]") return;
+  if (!dataMatch) {
+    return line;
+  }
+
+  if (dataMatch[1] === "[DONE]") {
+    state.sawDone = true;
+    return line;
+  }
 
   try {
     const parsed = JSON.parse(dataMatch[1]);
-    const content = parsed.choices?.[0]?.delta?.content;
-    if (!content || content.length === 0) return;
-
-    state.fullText += content;
-    state.logBuffer += content; // Stream content to Discord (filter out standalone light bulb emoji)
-    if (onDiscordChunk) {
-      const trimmed = content.trim();
-      const isLightbulb = trimmed === "💡" || content === "\n💡 ";
-      if (!isLightbulb) {
-        onDiscordChunk(content);
+    const choice = parsed.choices?.[0];
+    const content = choice?.delta?.content;
+    if (content && content.length > 0) {
+      state.fullText += content;
+      state.logBuffer += content; // Stream content to Discord (filter out standalone light bulb emoji)
+      if (onDiscordChunk) {
+        const trimmed = content.trim();
+        const isLightbulb = trimmed === "💡" || content === "\n💡 ";
+        if (!isLightbulb) {
+          onDiscordChunk(content);
+        }
       }
+
+      maybeFlushLogBuffer(state);
     }
 
-    maybeFlushLogBuffer(state);
+    const finishReason = choice?.finish_reason;
+    if (finishReason) {
+      state.finishReason = finishReason;
+    }
+
+    if (parsed._symphonyResult) {
+      state.symphonyResult = parsed._symphonyResult;
+    } else if (finishReason) {
+      const inferred = inferSymphonyResultFromCompletion({
+        finishReason,
+        text: state.fullText,
+      });
+      if (inferred) {
+        state.symphonyResult = inferred;
+        parsed._symphonyResult = inferred;
+        return `data: ${JSON.stringify(parsed)}`;
+      }
+    }
   } catch {
-    // Parse error - ignore
+    // Parse error - ignore and forward the original line.
   }
+
+  return line;
 }
 
 /**
@@ -4164,22 +4194,29 @@ function maybeFlushLogBuffer(state) {
  * Handle data chunk from proxy response
  */
 function handleProxyDataChunk(chunk, res, state, onDiscordChunk) {
-  const chunkStr = chunk.toString();
+  state.partialBuffer += chunk.toString();
+  const lines = state.partialBuffer.split("\n");
+  state.partialBuffer = lines.pop() || "";
 
-  // Forward raw chunks directly to OpenClaw (no filtering)
-  res.write(chunk);
-
-  // Extract content for logging, accumulation, and Discord streaming
-  const lines = chunkStr.split("\n");
   for (const line of lines) {
-    processSSELine(line, state, onDiscordChunk);
+    const transformed = processSSELine(line, state, onDiscordChunk);
+    if (transformed === null) continue;
+    res.write(`${transformed}\n`);
   }
 }
 
 /**
  * Handle proxy response end event
  */
-async function handleProxyEnd(state, resolve) {
+async function handleProxyEnd(res, state, resolve) {
+  if (state.partialBuffer.length > 0) {
+    const transformed = processSSELine(state.partialBuffer, state, null);
+    if (transformed !== null) {
+      res.write(`${transformed}\n`);
+    }
+    state.partialBuffer = "";
+  }
+
   // Log any remaining buffered text
   if (state.logBuffer.trim().length > 0) {
     logDebug(`🌊 ${state.logBuffer.trim().slice(0, 200)}`);
@@ -4190,8 +4227,28 @@ async function handleProxyEnd(state, resolve) {
     /* ignore */
   });
 
+  if (!state.sawDone) {
+    if (state.symphonyResult && state.finishReason) {
+      const finalChunk = {
+        id: `chatcmpl-symphony-${Date.now()}`,
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "codebuff/base",
+        choices: [{ index: 0, delta: {}, finish_reason: state.finishReason }],
+        _symphonyResult: state.symphonyResult,
+      };
+      res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
+    }
+    res.write("data: [DONE]\n\n");
+  }
+
   logDebug(`🌊 Relay complete: ${state.fullText.length} chars`);
-  resolve({ text: state.fullText, providerName: "codebuff" });
+  resolve({
+    text: state.fullText,
+    providerName: "codebuff",
+    finishReason: state.finishReason,
+    _symphonyResult: state.symphonyResult,
+  });
 }
 
 /**
@@ -4250,6 +4307,10 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
     const state = {
       fullText: "",
       logBuffer: "",
+      partialBuffer: "",
+      finishReason: null,
+      symphonyResult: null,
+      sawDone: false,
     };
 
     const proxyReq = http.request(options, (proxyRes) => {
@@ -4263,7 +4324,7 @@ function invokeCodebuffDirectStream(messages, res, sessionId = null, onDiscordCh
       });
 
       proxyRes.on("end", async () => {
-        await handleProxyEnd(state, resolve);
+        await handleProxyEnd(res, state, resolve);
       });
 
       proxyRes.on("error", (err) => {
@@ -5108,9 +5169,9 @@ const server = http.createServer(async (req, res) => {
             clearInterval(progressInterval);
             clearTimeout(requestTimeoutHandle);
 
-            // Codebuff bridge already sends [DONE], but send it again to ensure completion
-            res.write("data: [DONE]\n\n");
-            res.end();
+            if (!res.writableEnded) {
+              res.end();
+            }
 
             // Clean up request tracking
             activeRequests.delete(requestId);

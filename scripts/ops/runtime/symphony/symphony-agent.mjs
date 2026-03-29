@@ -60,6 +60,7 @@ import {
   runTests,
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
+import { inferSymphonyResultFromCompletion } from "./bridge-result.mjs";
 
 const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
@@ -431,6 +432,7 @@ async function callLLM(provider, messages, taskDescription) {
       // Stream the response and accumulate content
       let fullContent = "";
       let symphonyResult = null;
+      let finishReason = null;
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -455,9 +457,14 @@ async function callLLM(provider, messages, taskDescription) {
 
             try {
               const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
+              const choice = parsed.choices?.[0];
+              const content = choice?.delta?.content;
               if (content) {
                 fullContent += content;
+              }
+              const reason = choice?.finish_reason;
+              if (reason) {
+                finishReason = reason;
               }
               // Capture structured result from bridge (embedded in final SSE chunk)
               if (parsed._symphonyResult) {
@@ -483,10 +490,15 @@ async function callLLM(provider, messages, taskDescription) {
 
           try {
             const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
+            const choice = parsed.choices?.[0];
+            const content = choice?.delta?.content;
             if (content) {
               fullContent += content;
               logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
+            }
+            const reason = choice?.finish_reason;
+            if (reason) {
+              finishReason = reason;
             }
             // Capture structured result from bridge (embedded in any SSE chunk)
             if (parsed._symphonyResult) {
@@ -502,6 +514,18 @@ async function callLLM(provider, messages, taskDescription) {
 
       if (fullContent) {
         process.stdout.write("\n"); // Final newline
+      }
+
+      if (!symphonyResult) {
+        symphonyResult = inferSymphonyResultFromCompletion({
+          finishReason,
+          text: fullContent,
+        });
+        if (symphonyResult) {
+          logDebug(
+            `[agent] 🛟 Inferred _symphonyResult from bridge stream (finish_reason=${finishReason || "unknown"})`,
+          );
+        }
       }
 
       return {
