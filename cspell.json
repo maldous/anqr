@@ -459,7 +459,8 @@
     "bsize",
     "googlecalendar",
     "googledrive",
-    "lifecycles"
+    "lifecycles",
+    "Runsheet"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

@@ -35,6 +35,12 @@ Environment=ANQR_WORKTREE_ID=wt%i
 Environment=ANQR_WORKTREE_PATH=%h/src/anqr-wt%i
 Environment=DISCORD_WORKTREE=true
 
+# Discord configuration
+Environment=DISCORD_BOT_TOKEN
+Environment=DISCORD_SERVER_ID=1486262757543121021
+Environment=DISCORD_TEXT_CHANNEL_ID=1486262758256410646
+Environment=DISCORD_VOICE_CHANNEL_ID=1486262758256410647
+
 # OpenClaw Gateway configuration - unique port per worktree (18795-18798)
 Environment=OPENCLAW_PORT=1879%i
 Environment=OPENCLAW_GATEWAY_HOST=127.0.0.1

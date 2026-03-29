@@ -129,8 +129,11 @@ import { searchFiles as hybridSearchFiles } from "../../lib/search/hybrid-search
 let lastDiscordMessageId = null;
 let discordMonitorInterval = null;
 
-// Discord channel IDs
-const DISCORD_TEXT_CHANNEL_ID = "1486262758256410646";
+// Discord channel IDs (from environment or fallback defaults)
+const DISCORD_TEXT_CHANNEL_ID = process.env.DISCORD_TEXT_CHANNEL_ID || "1486262758256410646";
+// Voice channel ID passed to OpenClaw for voice announcements
+const DISCORD_VOICE_CHANNEL_ID = process.env.DISCORD_VOICE_CHANNEL_ID || "1486262758256410647";
+logDebug(`Discord channels: text=${DISCORD_TEXT_CHANNEL_ID}, voice=${DISCORD_VOICE_CHANNEL_ID}`);
 
 // Voice announcements removed - not possible to send spontaneous voice from Symphony bridge to Discord
 // User will use Discord-based text-to-speech instead
