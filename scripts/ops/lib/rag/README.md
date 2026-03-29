@@ -91,6 +91,7 @@ console.log(`${stats.totalEntries} chunks across ${stats.totalFiles} files`);
 - `RAG_BUILD_INCLUDE_I18N` — set `1/true` to include excluded i18n trees
 - `RAG_BUILD_VERBOSE` — set `1/true` for per-file skip logging
 - `RAG_PROJECT_ROOT` — force the repo root used by the vector store
+- `RAG_MAX_SHARD_SIZE_BYTES` — max shard size before splitting (default `52428800` = 50MB)
 
 ### Embeddings
 
@@ -128,9 +129,26 @@ The index lives in `reports/rag-index/`:
 
 ```text
 reports/rag-index/
-├── index.json   # chunk entries with embeddings
-└── meta.json    # per-file mtime + chunk counts
+├── index.json      # legacy single-file format (small indexes)
+├── manifest.json   # shard manifest (v2 format, large indexes)
+├── index-0.json    # shard 0 (when sharded)
+├── index-1.json    # shard 1 (when sharded)
+├── ...             # additional shards as needed
+└── meta.json       # per-file mtime + chunk counts
 ```
+
+### Sharding Strategy
+
+To prevent `JSON.stringify` overflow errors with large indexes (>512MB), the
+vector store automatically shards the index when it exceeds `RAG_MAX_SHARD_SIZE_BYTES`
+(default: 50MB per shard):
+
+- **Small indexes**: Written as a single `index.json` file (legacy format)
+- **Large indexes**: Split across multiple `index-N.json` shards tracked by
+  `manifest.json` (v2 format)
+- **Loading**: Automatically detects and loads either format
+- **Migration**: Existing single-file indexes are automatically migrated to
+  sharded format on the next rebuild if they exceed the size threshold
 
 Stored `filePath` values are repo-relative when the file lives inside the git
 root, which makes retrieved context easier for agents to read and replay.

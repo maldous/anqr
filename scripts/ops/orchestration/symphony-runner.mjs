@@ -308,23 +308,70 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
 }
 
 function gitPush() {
-  try {
-    // For worktrees: push current branch (symphony/wtN) to main
-    // For main worktree: push to tracking branch (default behavior)
-    if (WORKTREE_ID !== "main") {
-      execFileSync("git", ["push", "origin", "HEAD:main"], {
-        cwd: ROOT,
-        stdio: "pipe",
-        timeout: 30_000,
-      });
-    } else {
-      execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+  const MAX_PUSH_RETRIES = 3;
+
+  for (let attempt = 1; attempt <= MAX_PUSH_RETRIES; attempt++) {
+    try {
+      // For worktrees: push current branch (symphony/wtN) to main
+      // For main worktree: push to tracking branch (default behavior)
+      if (WORKTREE_ID !== "main") {
+        execFileSync("git", ["push", "origin", "HEAD:main"], {
+          cwd: ROOT,
+          stdio: "pipe",
+          timeout: 30_000,
+        });
+      } else {
+        execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+      }
+      if (attempt > 1) {
+        logInfo(`[runner] Git push succeeded on attempt ${attempt}/${MAX_PUSH_RETRIES}`);
+      }
+      return true;
+    } catch (err) {
+      if (attempt < MAX_PUSH_RETRIES) {
+        // Check if it's a non-fast-forward error (race condition with another worktree)
+        const isRaceCondition =
+          err.message?.includes("non-fast-forward") ||
+          err.message?.includes("rejected") ||
+          err.stderr?.includes("non-fast-forward") ||
+          err.stderr?.includes("rejected");
+
+        if (isRaceCondition) {
+          logWarn(
+            `[runner] Push rejected (attempt ${attempt}/${MAX_PUSH_RETRIES}) - another worktree pushed first. Rebasing...`,
+          );
+          try {
+            // Fetch latest and rebase our commit on top
+            execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
+            execFileSync("git", ["rebase", "origin/main"], { cwd: ROOT, stdio: "pipe" });
+            logInfo(`[runner] Rebase successful, retrying push...`);
+            // Continue to next attempt
+          } catch (rebaseErr) {
+            logError(`[runner] Rebase failed: ${rebaseErr.message}`);
+            // Try to abort rebase and return failure
+            try {
+              execFileSync("git", ["rebase", "--abort"], { cwd: ROOT, stdio: "pipe" });
+            } catch {}
+            return false;
+          }
+        } else {
+          logWarn(`[runner] Push failed (attempt ${attempt}/${MAX_PUSH_RETRIES}): ${err.message}`);
+          // For non-race-condition errors, wait briefly and retry
+          const waitMs = attempt * 1000; // 1s, 2s backoff
+          logInfo(`[runner] Waiting ${waitMs}ms before retry...`);
+          const start = Date.now();
+          while (Date.now() - start < waitMs) {
+            // Busy wait to avoid async complexity
+          }
+        }
+      } else {
+        logError(`[runner] Git push failed after ${MAX_PUSH_RETRIES} attempts: ${err.message}`);
+        return false;
+      }
     }
-    return true;
-  } catch (err) {
-    logError(`[runner] Git push failed: ${err.message}`);
-    return false;
   }
+
+  return false;
 }
 
 function isBaselineRepairIssue(issue) {
@@ -1035,6 +1082,82 @@ async function executeIssue(issue, dryRun = false) {
         estimate: issue.estimate,
       });
       return "done";
+    }
+
+    // Sync with main before validation to catch conflicts early and validate against current code
+    if (WORKTREE_ID !== "main") {
+      try {
+        execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
+        execFileSync("git", ["merge", "origin/main", "--no-commit", "--no-ff"], {
+          cwd: ROOT,
+          stdio: "pipe",
+        });
+        // Check for conflicts
+        const statusOutput = execFileSync("git", ["status", "--porcelain"], {
+          cwd: ROOT,
+          encoding: "utf-8",
+        });
+        const hasConflicts = statusOutput
+          .split("\n")
+          .some((line) => line.startsWith("UU ") || line.startsWith("AA "));
+        if (hasConflicts) {
+          // Abort merge and revert our changes - another worktree's work takes precedence
+          execFileSync("git", ["merge", "--abort"], { cwd: ROOT, stdio: "pipe" });
+          gitRevert();
+          const conflictSignature = "merge_conflict_before_validation";
+          if (priorFailureSignature === conflictSignature) {
+            markRetryExhausted(issue.identifier, {
+              reason: "merge_conflict_repeated",
+              signature: conflictSignature,
+            });
+            await updateIssue(issue.id, { stateId: STATES.backlog });
+            await addComment(
+              issue.id,
+              `🚫 **Merge conflict with main (repeated)** — another worktree's changes conflict with this work. Moved to Backlog for manual review.`,
+            );
+            recordTransition(issue.identifier, {
+              actor: "runner",
+              reason: "merge_conflict_repeated",
+              from: "In Progress",
+              to: "Backlog",
+              runId: RUN_ID,
+            });
+          } else {
+            setCooldown(
+              issue.identifier,
+              RUNNER_ISSUE_COOLDOWN_MS,
+              "merge_conflict_before_validation",
+              conflictSignature,
+            );
+            await updateIssue(issue.id, { stateId: STATES.todo });
+            await addComment(
+              issue.id,
+              `⚠️ **Merge conflict with main** — another worktree completed conflicting changes. Returned to Todo with cooldown.`,
+            );
+            recordTransition(issue.identifier, {
+              actor: "runner",
+              reason: "merge_conflict_before_validation",
+              from: "In Progress",
+              to: "Todo",
+              runId: RUN_ID,
+            });
+          }
+          recordLinearCompletion(metricsProviderName, {
+            completed: false,
+            priority: issue.priority,
+            estimate: issue.estimate,
+          });
+          return "done";
+        }
+        // No conflicts - finalize the merge
+        execFileSync("git", ["commit", "--no-edit"], { cwd: ROOT, stdio: "pipe" });
+        logInfo(`[runner] Pre-validation sync: merged latest changes from main`);
+        // Re-read changed files after merge
+        changedFiles = gitDiffNames();
+      } catch (err) {
+        logWarn(`[runner] Pre-validation sync failed (non-fatal): ${err.message}`);
+        // Continue with validation using original changes
+      }
     }
 
     let validation = runValidation(ROOT, changedFiles);

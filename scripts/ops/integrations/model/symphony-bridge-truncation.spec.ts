@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-// @ts-expect-error - No type declarations for .mjs module
+// @ts-ignore - No type declarations for .mjs module
 import { validateContextCoherence } from "./symphony-bridge-truncation.mjs";
 
 type Message = {

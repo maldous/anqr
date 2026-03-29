@@ -51,7 +51,7 @@ describe("symphony-queue-control MAX_CONCURRENT_AGENTS validation", () => {
     mockExecFileSync.mockReturnValue("");
 
     const { countEnabledTimers } =
-      // @ts-expect-error - No type declarations for .mjs module
+      // @ts-ignore - No type declarations for .mjs module
       await import("../../scripts/ops/orchestration/symphony-queue-control.mjs");
 
     expect(countEnabledTimers()).toBe(0);
@@ -64,7 +64,7 @@ describe("symphony-queue-control MAX_CONCURRENT_AGENTS validation", () => {
     );
 
     const { countEnabledTimers } =
-      // @ts-expect-error - No type declarations for .mjs module
+      // @ts-ignore - No type declarations for .mjs module
       await import("../../scripts/ops/orchestration/symphony-queue-control.mjs");
 
     expect(countEnabledTimers()).toBe(2);
@@ -80,7 +80,7 @@ describe("symphony-queue-control MAX_CONCURRENT_AGENTS validation", () => {
     );
 
     const { countEnabledTimers } =
-      // @ts-expect-error - No type declarations for .mjs module
+      // @ts-ignore - No type declarations for .mjs module
       await import("../../scripts/ops/orchestration/symphony-queue-control.mjs");
 
     expect(countEnabledTimers()).toBe(4);
@@ -93,7 +93,7 @@ describe("symphony-queue-control MAX_CONCURRENT_AGENTS validation", () => {
     });
 
     const { countEnabledTimers } =
-      // @ts-expect-error - No type declarations for .mjs module
+      // @ts-ignore - No type declarations for .mjs module
       await import("../../scripts/ops/orchestration/symphony-queue-control.mjs");
 
     expect(countEnabledTimers()).toBe(0);
@@ -104,7 +104,7 @@ describe("symphony-queue-control MAX_CONCURRENT_AGENTS validation", () => {
     mockExecFileSync.mockReturnValue("");
 
     const { validateConcurrencyConfig } =
-      // @ts-expect-error - No type declarations for .mjs module
+      // @ts-ignore - No type declarations for .mjs module
       await import("../../scripts/ops/orchestration/symphony-queue-control.mjs");
 
     // Should not throw or log warnings

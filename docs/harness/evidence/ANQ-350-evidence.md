@@ -5,6 +5,7 @@
 **Problem:** Issues can accumulate excessive failure comments and outdated metadata, creating noise and obscuring useful information.
 
 **Solution:** Implemented automated issue hygiene that:
+
 - Identifies issues with excessive failure comments
 - Archives comment history by consolidating into issue description
 - Flags systemic failure patterns for human review
@@ -77,7 +78,7 @@ Also fixed p95 percentile calculation:
 // Before
 const p95Index = Math.floor(latencies.length * 0.95);
 
-// After  
+// After
 const p95Index = Math.ceil(latencies.length * 0.95) - 1;
 ```
 
@@ -119,7 +120,7 @@ The automated issue hygiene system was **already implemented and operational**:
 4. **Archive consolidation:**
    - Builds failure history summary with:
      - Total comment count
-     - Failure comment count  
+     - Failure comment count
      - Stale execution count
      - Unique failure signature count
      - Duration (first to last failure)
@@ -343,13 +344,15 @@ journalctl --user -u anqr-nightly.service -f
 
 **This task:** Verified existing implementation, fixed test isolation bug in symphony-state.mjs.
 
-**Impact:** 
+**Impact:**
+
 - No application code changes needed
 - Test suite now reliable (all tests pass)
 - State management supports test isolation
 - p95 latency calculation fixed
 
 **System benefits:**
+
 - Automated cleanup of excessive failure comments
 - Systemic failure detection and flagging
 - Preserved history via Linear version control

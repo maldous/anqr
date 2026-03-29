@@ -180,20 +180,32 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 
 **How worktrees see each other's work:**
 
-- Each worktree syncs with `origin/main` before starting work (via `git fetch origin main && git merge origin/main --ff-only`)
-- Completed work is pushed to `origin/main` immediately after commit
-- **This means:** Work from other worktrees becomes visible only AFTER it's pushed to origin
-- **Agents must push immediately** to make their changes available to other concurrent workers
+- Each worktree syncs with `origin/main` **twice** during execution:
+  1. **Initial sync** before starting work (via `git fetch origin main && git merge origin/main --ff-only`)
+  2. **Pre-validation sync** before validation (via `git merge origin/main --no-commit --no-ff`)
+- Completed work is pushed to `origin/main` immediately after commit (with automatic retry + rebase)
+- **This means:** Work from other worktrees becomes visible when syncing with origin
+- **Pre-validation sync catches conflicts early** before wasting time on validation
 
 **Example flow:**
 
 ```
-Worktree 1: Syncs main → Works on ANQ-100 → Commits → Pushes to origin/main
-Worktree 2: Syncs main (gets ANQ-100 changes) → Works on ANQ-101 → Commits → Pushes
-Worktree 3: Syncs main (gets ANQ-100 + ANQ-101 changes) → Works on ANQ-102
+Worktree 1: Initial sync → Works on ANQ-100 → Pre-validation sync → Validates → Commits → Pushes to origin/main
+Worktree 2: Initial sync (gets ANQ-100) → Works on ANQ-101 → Pre-validation sync → Validates → Commits → Pushes
+Worktree 3: Initial sync (gets ANQ-100 + ANQ-101) → Works on ANQ-102 → Pre-validation sync → Validates → Commits → Pushes
 ```
 
-This ensures all worktrees have access to the latest work from their peers.
+**Conflict handling:**
+
+- If pre-validation sync detects conflicts, the worktree aborts and returns the issue to Todo
+- This prevents wasted validation cycles on code that will conflict anyway
+- The issue can be retried later with the latest changes already merged
+
+**Push retry mechanism:**
+
+- If multiple worktrees push simultaneously, rejected pushes automatically rebase and retry
+- Up to 3 retry attempts with automatic conflict resolution
+- This ensures all completed work reaches `origin/main` reliably
 
 ## Next Steps
 

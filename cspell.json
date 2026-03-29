@@ -460,7 +460,8 @@
     "googlecalendar",
     "googledrive",
     "lifecycles",
-    "Runsheet"
+    "Runsheet",
+    "conflictstyle"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

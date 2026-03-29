@@ -234,12 +234,12 @@ git worktree prune   # Remove stale worktree metadata
    ├─ If locked by active process → exit (other instance running)
    └─ If stale lock → clean up and continue
 
-2. Sync with main branch
+2. Sync with main branch (initial)
    ├─ git fetch origin main
    └─ git merge origin/main --ff-only
    ├─ This brings in all work from other worktrees that has been pushed to origin/main
    ├─ IMPORTANT: Work committed in other worktrees but not yet pushed won't be visible
-   └─ Agents should push completed work immediately to make it available to other worktrees
+   └─ Agents push completed work immediately to make it available to other worktrees
 
 3. Acquire issue lease (via symphony-state.mjs)
    ├─ Read state.json with file lock
@@ -251,24 +251,36 @@ git worktree prune   # Remove stale worktree metadata
    ├─ Read issue context and workflow
    ├─ Call LLM via Symphony bridge
    ├─ Apply file changes
-   └─ Run validation gates
+   └─ **Sync with main before validation** (NEW)
+      ├─ git fetch origin main
+      ├─ git merge origin/main --no-commit --no-ff
+      ├─ Detect merge conflicts early
+      ├─ If conflicts: abort merge, revert changes, return to Todo
+      └─ If clean: finalize merge and proceed to validation
 
-5. Commit and push
+5. Run validation gates
+   ├─ Now validates against latest code from all worktrees
+   └─ Reduces validation failures from stale dependencies
+
+6. Commit and push
    ├─ git add changed files
    ├─ git commit with evidence
-   └─ git push origin HEAD:main  # Push immediately to make work available to other worktrees
+   └─ git push origin HEAD:main (with retry + rebase)
+      ├─ Retry up to 3 times on push rejection
+      ├─ If rejected: fetch + rebase + retry
+      └─ Handles race conditions when multiple worktrees push simultaneously
 
-6. Release lease and notify
+7. Release lease and notify
    ├─ Update state.json (issue → Done)
    ├─ Post Discord notification
    └─ Release PID lock
 
-7. Cleanup and sync
+8. Cleanup and sync
    ├─ git fetch origin main
    ├─ git reset --hard origin/main
    └─ git clean -fd
 
-8. Wait for timer (2 minutes) and repeat
+9. Wait for timer (2 minutes) and repeat
 ```
 
 ### Lock Hierarchy

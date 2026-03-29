@@ -102,7 +102,7 @@ describe("Discord Request Router", () => {
     });
 
     it("should distribute evenly when loads are equal", () => {
-      const worktrees = [
+      const worktrees: WorktreeState[] = [
         { id: 5, activeRequests: 1 },
         { id: 6, activeRequests: 1 },
         { id: 7, activeRequests: 1 },
