@@ -82,6 +82,73 @@ const LEASE_TTL_MS = Number(
 );
 const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1:4319/v1";
 const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_RUNNER_MODEL || "symphony/main";
+const DEFAULT_ALLOWED_DIRTY_PATH_PATTERNS = [
+  /^reports\/rag-index\//,
+  /^reports\/symphony\/state\.json(?:\.lock)?$/,
+  /^reports\/runtime-events\.log$/,
+  /^reports\/notify\//,
+  /^reports\/email-ingest\//,
+  /^reports\/codebuff\//,
+  /^reports\/doctor\.json$/,
+  /^reports\/latest\.json$/,
+  /^task_requests\/tasks\//,
+];
+
+function normalizeRepoPath(value) {
+  return String(value || "").replace(/\\/g, "/").trim();
+}
+
+function parseAllowedDirtyPathEnv() {
+  return String(process.env.ANQR_RUNNER_ALLOWED_DIRTY_PATHS || "")
+    .split(",")
+    .map((item) => normalizeRepoPath(item))
+    .filter(Boolean);
+}
+
+function isAllowedDirtyPath(filePath) {
+  const normalized = normalizeRepoPath(filePath);
+  if (!normalized) return false;
+  if (DEFAULT_ALLOWED_DIRTY_PATH_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+  return parseAllowedDirtyPathEnv().some((prefix) => normalized === prefix || normalized.startsWith(`${prefix.replace(/\/+$/g, "")}/`));
+}
+
+function getWorkingTreeEntries() {
+  try {
+    const status = execFileSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf-8" });
+    return status
+      .split("\n")
+      .map((line) => line.trimEnd())
+      .filter(Boolean)
+      .map((line) => {
+        const xy = line.slice(0, 2);
+        let file = line.slice(3).trim();
+        if (file.includes(" -> ")) file = file.split(" -> ").pop().trim();
+        const normalizedPath = normalizeRepoPath(file);
+        return { status: xy, file: normalizedPath, allowed: isAllowedDirtyPath(normalizedPath) };
+      });
+  } catch {
+    return [];
+  }
+}
+
+function getWorkingTreeStatus() {
+  const entries = getWorkingTreeEntries();
+  return {
+    entries,
+    allowed: entries.filter((entry) => entry.allowed),
+    blocked: entries.filter((entry) => !entry.allowed),
+  };
+}
+
+function logWorkingTreeEntries(prefix, entries) {
+  for (const entry of entries.slice(0, 25)) {
+    logWarn(`${prefix} ${entry.status} ${entry.file}`);
+  }
+  if (entries.length > 25) {
+    logWarn(`${prefix} ... and ${entries.length - 25} more`);
+  }
+}
+
 
 function getRunnerProvider() {
   return {
@@ -128,32 +195,15 @@ function isProcessAlive(pid) {
   }
 }
 
-function gitIsClean() {
-  try {
-    // Check ALL changes: tracked modifications, staged changes, AND untracked files
-    const status = execFileSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf-8" });
-    return status.trim().length === 0;
-  } catch {
-    return false;
-  }
-}
-
 function gitDiffNames() {
-  try {
-    const diff = execFileSync("git", ["diff", "--name-only"], { cwd: ROOT, encoding: "utf-8" });
-    const untracked = execFileSync("git", ["ls-files", "--others", "--exclude-standard"], {
-      cwd: ROOT,
-      encoding: "utf-8",
-    });
-    return [...diff.trim().split("\n"), ...untracked.trim().split("\n")].filter(Boolean);
-  } catch {
-    return [];
-  }
+  return [...new Set(getWorkingTreeStatus().blocked.map((entry) => entry.file))];
 }
 
 function gitDiffStat() {
   try {
-    return execFileSync("git", ["diff", "--stat"], { cwd: ROOT, encoding: "utf-8" }).trim();
+    const files = gitDiffNames();
+    if (files.length === 0) return "";
+    return execFileSync("git", ["diff", "--stat", "--", ...files], { cwd: ROOT, encoding: "utf-8" }).trim();
   } catch {
     return "";
   }
@@ -204,12 +254,12 @@ function sanitizeCommitSubject(title) {
 
 function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   try {
-    // Stage only the changed files (avoid committing unrelated untracked files)
-    if (changedFiles.length > 0) {
-      execFileSync("git", ["add", "--", ...changedFiles], { cwd: ROOT, stdio: "pipe" });
-    } else {
-      execFileSync("git", ["add", "-A"], { cwd: ROOT, stdio: "pipe" });
+    const filesToStage = [...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean))];
+    if (filesToStage.length === 0) {
+      throw new Error("No changed source files available to stage");
     }
+
+    execFileSync("git", ["add", "--", ...filesToStage], { cwd: ROOT, stdio: "pipe" });
     const scope = inferCommitScope(changedFiles);
     const subject = sanitizeCommitSubject(issueTitle);
     const prefix = `fix(${scope}): `;
@@ -1083,7 +1133,14 @@ function showStatus() {
   } else {
     logInfo("  Lock: 🔓 available");
   }
-  logInfo(`  Git clean: ${gitIsClean() ? "✅" : "❌"}`);
+  const workingTree = getWorkingTreeStatus();
+  if (workingTree.blocked.length === 0 && workingTree.allowed.length === 0) {
+    logInfo(`  Git clean: ✅`);
+  } else if (workingTree.blocked.length === 0) {
+    logInfo(`  Git clean: ⚠️ runtime-generated dirty paths ignored (${workingTree.allowed.length})`);
+  } else {
+    logInfo(`  Git clean: ❌ (${workingTree.blocked.length} blocking path(s))`);
+  }
   logInfo(`  LINEAR_API_KEY: ${process.env.LINEAR_API_KEY ? "✅" : "❌ not set"}`);
   logInfo(`  Run ID: ${RUN_ID}`);
 }
@@ -1121,10 +1178,18 @@ async function main() {
   });
 
   try {
-    if (!gitIsClean()) {
-      logError(
-        "[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree",
+    const workingTree = getWorkingTreeStatus();
+    if (workingTree.allowed.length > 0) {
+      logWarn(
+        `[runner] Ignoring ${workingTree.allowed.length} allowed runtime-generated dirty path(s)`,
       );
+      logWorkingTreeEntries("[runner] allowed-dirty", workingTree.allowed);
+    }
+    if (workingTree.blocked.length > 0) {
+      logError(
+        `[runner] Git working tree is dirty — refusing to run in a shared or unsafe worktree (${workingTree.blocked.length} blocking path(s))`,
+      );
+      logWorkingTreeEntries("[runner] blocking-dirty", workingTree.blocked);
       process.exit(1);
     }
 

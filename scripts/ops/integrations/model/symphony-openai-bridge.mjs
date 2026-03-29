@@ -517,12 +517,62 @@ function getCurrentRequestId() {
   return currentRequestId;
 }
 
+function coerceStringArrayInput(value, { fallback = undefined } = {}) {
+  if (Array.isArray(value)) {
+    const cleaned = value.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+    return cleaned.length > 0 ? cleaned : fallback;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return fallback;
+    if ((trimmed.startsWith("[") && trimmed.endsWith("]")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+      try {
+        return coerceStringArrayInput(JSON.parse(trimmed), { fallback });
+      } catch {
+        // Fall through and treat as a literal path string.
+      }
+    }
+    return [trimmed];
+  }
+
+  if (value && typeof value === "object") {
+    if (typeof value.path === "string") return [value.path.trim()].filter(Boolean);
+    if (typeof value.paths === "string" || Array.isArray(value.paths)) {
+      return coerceStringArrayInput(value.paths, { fallback });
+    }
+  }
+
+  return fallback;
+}
+
+function coerceOptionalNumberInput(value, fallback = undefined) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return fallback;
+    const parsed = Number(trimmed);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function isProbablyBinaryContent(content) {
+  return content.includes("\0");
+}
+
+
 /**
  * Read multiple files from the filesystem
  */
 async function readFilesTool({ paths }) {
   try {
-    const results = paths.map((filePath) => {
+    const normalizedPaths = coerceStringArrayInput(paths, { fallback: [] }) || [];
+    if (normalizedPaths.length === 0) {
+      return { error: "invalid_paths_payload: paths must contain at least one file path" };
+    }
+
+    const results = normalizedPaths.map((filePath) => {
       try {
         const content = fs.readFileSync(filePath, "utf-8");
         const totalLines = content.split("\n").length;
@@ -746,36 +796,72 @@ async function listDirectoryTool({ path: dirPath }) {
 /**
  * Read directory subtree with parsed AST info
  */
-async function readSubtreeTool({ paths, _maxTokens = 50000 }) {
+async function readSubtreeTool({ paths, maxTokens = 50000 }) {
   try {
-    const targetPaths = paths || ["."];
+    const targetPaths = coerceStringArrayInput(paths, { fallback: ["."] }) || ["."];
+    const normalizedMaxTokens = Math.max(1000, Math.floor(coerceOptionalNumberInput(maxTokens, 50000) || 50000));
+    const maxChars = normalizedMaxTokens * 4;
     const result = [];
-    
-    for (const targetPath of targetPaths) {
-      const fullPath = path.join(process.cwd(), targetPath);
+    let usedChars = 0;
+    let truncated = false;
+
+    const pushEntry = (entryPath, content) => {
+      if (usedChars >= maxChars) {
+        truncated = true;
+        return false;
+      }
+
+      const remainingChars = maxChars - usedChars;
+      let safeContent = content;
+      if (safeContent.length > remainingChars) {
+        safeContent = safeContent.slice(0, Math.max(0, remainingChars - 16)) + "\n... (truncated)";
+        truncated = true;
+      }
+
+      usedChars += safeContent.length;
+      result.push({ path: entryPath, type: "file", content: safeContent });
+      return usedChars < maxChars;
+    };
+
+    const walk = (fullPath, relativePath) => {
+      if (usedChars >= maxChars) {
+        truncated = true;
+        return;
+      }
+
       const stats = fs.statSync(fullPath);
-      
       if (stats.isFile()) {
         const content = fs.readFileSync(fullPath, "utf-8");
-        result.push({ path: targetPath, type: "file", content });
-      } else if (stats.isDirectory()) {
-        const walk = (dir, prefix = "") => {
-          const entries = fs.readdirSync(dir, { withFileTypes: true });
-          for (const entry of entries) {
-            const relativePath = path.join(prefix, entry.name);
-            if (entry.isDirectory()) {
-              walk(path.join(dir, entry.name), relativePath);
-            } else {
-              const content = fs.readFileSync(path.join(dir, entry.name), "utf-8");
-              result.push({ path: relativePath, type: "file", content: content.slice(0, 1000) });
-            }
-          }
-        };
-        walk(fullPath, targetPath);
+        if (!isProbablyBinaryContent(content)) {
+          pushEntry(relativePath, content);
+        }
+        return;
       }
+
+      if (!stats.isDirectory()) return;
+
+      const entries = fs.readdirSync(fullPath, { withFileTypes: true });
+      for (const entry of entries) {
+        if ([".git", "node_modules", "dist", "build", "coverage"].includes(entry.name)) continue;
+        const nextFullPath = path.join(fullPath, entry.name);
+        const nextRelativePath = path.join(relativePath, entry.name);
+        if (entry.isDirectory()) {
+          walk(nextFullPath, nextRelativePath);
+        } else if (entry.isFile()) {
+          const content = fs.readFileSync(nextFullPath, "utf-8");
+          if (!isProbablyBinaryContent(content) && !pushEntry(nextRelativePath, content)) return;
+        }
+        if (usedChars >= maxChars) return;
+      }
+    };
+
+    for (const targetPath of targetPaths) {
+      const fullPath = path.join(process.cwd(), targetPath);
+      walk(fullPath, targetPath);
+      if (usedChars >= maxChars) break;
     }
-    
-    return { entries: result, count: result.length };
+
+    return { entries: result, count: result.length, truncated, maxTokens: normalizedMaxTokens };
   } catch (error) {
     return { error: error.message };
   }
@@ -1285,7 +1371,10 @@ const tools = {
   read_files: tool({
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
-      paths: z.array(z.string()).describe("List of file paths to read"),
+      paths: z.preprocess(
+        (val) => coerceStringArrayInput(val, { fallback: [] }),
+        z.array(z.string()).min(1)
+      ).describe("List of file paths to read (accepts string or array)"),
     }),
     execute: readFilesTool,
   }),
@@ -1319,8 +1408,14 @@ const tools = {
   read_subtree: tool({
     description: "Read directory subtree with file contents",
     inputSchema: z.object({
-      paths: z.array(z.string()).optional().describe("Paths to read (default: ['.'])"),
-      maxTokens: z.number().optional().describe("Maximum token budget (default: 50000)"),
+      paths: z.preprocess(
+        (val) => coerceStringArrayInput(val, { fallback: ["."] }),
+        z.array(z.string()).min(1).optional()
+      ).describe("Paths to read (default: ['.']; accepts string or array)"),
+      maxTokens: z.preprocess(
+        (val) => coerceOptionalNumberInput(val, undefined),
+        z.number().int().positive().optional()
+      ).describe("Maximum token budget (default: 50000; accepts numeric string)"),
     }),
     execute: readSubtreeTool,
   }),

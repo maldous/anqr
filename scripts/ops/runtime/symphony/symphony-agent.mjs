@@ -847,9 +847,26 @@ async function runToolLoop({
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       messages.push(msg);
 
+      if (provider.name === "symphony-bridge" && !response._symphonyResult) {
+        const content = (msg.content || "").trim();
+        return {
+          completed: false,
+          summary: content
+            ? `Symphony bridge returned text without structured result: ${content.slice(0, 500)}`
+            : "Symphony bridge returned no structured result",
+          turns: turn + 1,
+          toolCalls: totalToolCalls,
+          filesChanged: [...filesChanged],
+          timedOut: false,
+          error: "bridge_contract_missing",
+          messages,
+          providerName: actualProviderName,
+        };
+      }
+
       // Handle autonomous agents (like Codebuff) and streaming responses
       // that complete in one run or return content without tool calls
-      if ((provider.requiresSdk || provider.name === "symphony-bridge" || response.needsContinuation) && msg.content && msg.content.trim().length > 0) {
+      if ((provider.requiresSdk || response.needsContinuation) && msg.content && msg.content.trim().length > 0) {
         const content = msg.content;
 
         // Refined failure detection based on actual Codebuff outputs:
@@ -979,8 +996,6 @@ async function runToolLoop({
       const isLegitimateNonToolTurn = 
         // Bridge signaled continuation needed
         response.needsContinuation ||
-        // Streaming response received (active work)
-        (provider.name === "symphony-bridge" && content.length > 0) ||
         // Planning/understanding phrases
         /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(content) ||
         // Subgoal management activity

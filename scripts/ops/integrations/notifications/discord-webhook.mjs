@@ -31,6 +31,54 @@ const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "";
 const DISCORD_WEBHOOK_ENABLED =
   process.env.DISCORD_WEBHOOK_ENABLED !== "false" && !!DISCORD_WEBHOOK_URL;
 
+function trimToUndefined(value) {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function sanitizeDiscordEmbed(embed = {}) {
+  const title = trimToUndefined(embed.title);
+  const description = trimToUndefined(embed.description);
+  const fields = Array.isArray(embed.fields)
+    ? embed.fields
+        .map((field) => ({
+          name: trimToUndefined(field?.name),
+          value: trimToUndefined(field?.value),
+          inline: Boolean(field?.inline),
+        }))
+        .filter((field) => field.name && field.value)
+    : [];
+
+  if (!title && !description && fields.length === 0) return null;
+
+  const sanitized = { ...embed };
+  if (title) sanitized.title = title;
+  else delete sanitized.title;
+  if (description) sanitized.description = description;
+  else delete sanitized.description;
+  if (fields.length > 0) sanitized.fields = fields;
+  else delete sanitized.fields;
+  return sanitized;
+}
+
+function sanitizeDiscordPayload(payload = {}) {
+  const content = trimToUndefined(payload.content);
+  const embeds = Array.isArray(payload.embeds)
+    ? payload.embeds.map(sanitizeDiscordEmbed).filter(Boolean)
+    : [];
+
+  if (!content && embeds.length === 0) return null;
+
+  const sanitized = { ...payload };
+  if (content) sanitized.content = content;
+  else delete sanitized.content;
+  if (embeds.length > 0) sanitized.embeds = embeds;
+  else delete sanitized.embeds;
+  return sanitized;
+}
+
+
 /**
  * Send a notification to Discord via webhook.
  *
@@ -58,8 +106,14 @@ export async function sendDiscordNotification(payload) {
   }
 
   try {
+    const sanitizedPayload = sanitizeDiscordPayload(payload);
+    if (!sanitizedPayload) {
+      logWarn(`[discord-webhook] Skipping empty payload`);
+      return { sent: false, reason: "empty payload" };
+    }
+
     const url = new URL(DISCORD_WEBHOOK_URL);
-    const postData = JSON.stringify(payload);
+    const postData = JSON.stringify(sanitizedPayload);
 
     const options = {
       hostname: url.hostname,
@@ -84,7 +138,7 @@ export async function sendDiscordNotification(payload) {
 
         res.on("end", () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            logInfo(`[discord-webhook] ✅ Sent: ${payload.content?.substring(0, 50) || "embed"}`);
+            logInfo(`[discord-webhook] ✅ Sent: ${sanitizedPayload.content?.substring(0, 50) || "embed"}`);
             resolve({ sent: true });
           } else {
             const error = `HTTP ${res.statusCode}: ${data}`;
@@ -121,7 +175,9 @@ export async function sendDiscordNotification(payload) {
  * @returns {Promise<{ sent: boolean, reason?: string }>}
  */
 export async function sendDiscordMessage(message) {
-  return sendDiscordNotification({ content: message });
+  const content = trimToUndefined(message);
+  if (!content) return { sent: false, reason: "empty message" };
+  return sendDiscordNotification({ content });
 }
 
 /**
@@ -144,10 +200,10 @@ export async function sendDiscordEmbed({
   footer,
 }) {
   const embed = {
-    title,
-    description,
+    title: trimToUndefined(title),
+    description: trimToUndefined(description),
     color,
-    fields,
+    fields: Array.isArray(fields) ? fields : [],
     timestamp: new Date().toISOString(),
   };
 
