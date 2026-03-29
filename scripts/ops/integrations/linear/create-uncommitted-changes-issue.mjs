@@ -7,7 +7,8 @@
 import { createIssue, STATES, LABELS } from "./linear-client.mjs";
 
 const issueInput = {
-  title: "Review and commit uncommitted harness changes (tool suppression, watchdog fix, bridge-watchdog misplacement)",
+  title:
+    "Review and commit uncommitted harness changes (tool suppression, watchdog fix, bridge-watchdog misplacement)",
   description: `## Summary
 
 Review and properly commit uncommitted changes in working tree from interactive mode:

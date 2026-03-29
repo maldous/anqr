@@ -802,7 +802,8 @@ async function trySingleAccount(
   // update_subgoal or add_subgoal tools are processed during client.run()
   let continuation = 0;
   // eslint-disable-next-line no-unmodified-loop-condition -- lastSubgoalStatus modified by handleEvent callback
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") { // NOSONAR javascript:S2189 - lastSubgoalStatus modified via handleEvent callback
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
+    // NOSONAR javascript:S2189 - lastSubgoalStatus modified via handleEvent callback
     continuation++;
     logInfo(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
@@ -826,8 +827,10 @@ async function trySingleAccount(
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
     logDebug(`[trySingleAccount] Continuation ${continuation} complete`, {
       outputLength: contStr.length,
-    });    if (contStr.includes("Symbol(vercel.ai.error)")) {
-      const errorMatch = contStr.match(/"message":"([^"]+)"/);      const errorMsg = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
+    });
+    if (contStr.includes("Symbol(vercel.ai.error)")) {
+      const errorMatch = contStr.match(/"message":"([^"]+)"/);
+      const errorMsg = errorMatch ? errorMatch[1] : "SDK error (output parsing failed)";
       logError(`[trySingleAccount] Continuation error`, { continuation, errorMsg });
       throw new Error(errorMsg);
     }
@@ -1098,7 +1101,8 @@ async function trySingleAccountStream(
     agent: MODEL_ID,
     prompt,
     maxAgentSteps: CODEBUFF_MAX_STEPS,
-    ...callbacks,  };
+    ...callbacks,
+  };
   if (attempt.costMode) runOpts.costMode = attempt.costMode;
 
   // NOTE: lastSubgoalStatus is modified via the handleEvent callback
@@ -1109,15 +1113,17 @@ async function trySingleAccountStream(
   const resultStr = typeof output === "string" ? output : JSON.stringify(output);
 
   if (resultStr.includes("Symbol(vercel.ai.error)")) {
-    const errorMatch = resultStr.match(/"message":"([^"]+)"/);    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+    const errorMatch = resultStr.match(/"message":"([^"]+)"/);
+    throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
   }
-  checkResultForErrors(output, resultStr, attempt);  // Continuation loop — if the agent set a subgoal but didn't complete it,
+  checkResultForErrors(output, resultStr, attempt); // Continuation loop — if the agent set a subgoal but didn't complete it,
   // auto-continue with previousRun to let it finish the task (memento mode)
   // NOTE: lastSubgoalStatus is modified via the handleEvent callback when
   // update_subgoal or add_subgoal tools are processed during client.run()
   let continuation = 0;
   // eslint-disable-next-line no-unmodified-loop-condition -- lastSubgoalStatus modified by handleEvent callback
-  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") { // NOSONAR javascript:S2189 - lastSubgoalStatus modified via handleEvent callback
+  while (continuation < CODEBUFF_MAX_CONTINUATIONS && lastSubgoalStatus === "IN_PROGRESS") {
+    // NOSONAR javascript:S2189 - lastSubgoalStatus modified via handleEvent callback
     continuation++;
     logDebug(
       `🔄 Auto-continue ${continuation}/${CODEBUFF_MAX_CONTINUATIONS} (subgoal still IN_PROGRESS)`,
@@ -1139,7 +1145,8 @@ async function trySingleAccountStream(
     const contOutput = result.output || "";
     const contStr = typeof contOutput === "string" ? contOutput : JSON.stringify(contOutput);
     if (contStr.includes("Symbol(vercel.ai.error)")) {
-      const errorMatch = contStr.match(/"message":"([^"]+)"/);      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
+      const errorMatch = contStr.match(/"message":"([^"]+)"/);
+      throw new Error(errorMatch ? errorMatch[1] : "SDK error (output parsing failed)");
     }
     checkResultForErrors(contOutput, contStr, attempt);
   }
@@ -1603,11 +1610,11 @@ async function shutdown(signal) {
       cwd: process.cwd(),
     }).trim();
     let mode = "unknown";
-  if (STARTUP_WINNER?.isPaid) {
-    mode = "paid";
-  } else if (STARTUP_WINNER) {
-    mode = "free";
-  }
+    if (STARTUP_WINNER?.isPaid) {
+      mode = "paid";
+    } else if (STARTUP_WINNER) {
+      mode = "free";
+    }
     await updateMemory(
       `Codebuff Bridge stopped (PID ${process.pid}, commit ${commitHash}, mode: ${mode}, signal: ${signal})`,
     );
@@ -1665,10 +1672,10 @@ function getHealthStatus() {
     model: MODEL_ID,
     apiKeyConfigured: !!getApiKey(),
     mode: (() => {
-    if (STARTUP_WINNER?.isPaid) return "paid";
-    if (STARTUP_WINNER) return "free";
-    return "none";
-  })(),
+      if (STARTUP_WINNER?.isPaid) return "paid";
+      if (STARTUP_WINNER) return "free";
+      return "none";
+    })(),
   };
 }
 

@@ -12,7 +12,7 @@ describe("getLostPoint", () => {
     } as unknown as QRCodeInstance;
 
     const penalty = getLostPoint(mockQRCode);
-    
+
     expect(penalty).toBeGreaterThan(0);
     expect(typeof penalty).toBe("number");
   });
@@ -26,14 +26,14 @@ describe("getLostPoint", () => {
     } as unknown as QRCodeInstance;
 
     const penalty = getLostPoint(uniformQRCode);
-    
+
     expect(penalty).toBeGreaterThan(1000);
   });
 
   it("should work with different module counts", () => {
     const sizes = [21, 25, 29, 33, 41];
-    
-    sizes.forEach(size => {
+
+    sizes.forEach((size) => {
       const qrCode: QRCodeInstance = {
         getModuleCount: vi.fn(() => size),
         isDark: vi.fn((row, col) => (row + col) % 3 === 0),

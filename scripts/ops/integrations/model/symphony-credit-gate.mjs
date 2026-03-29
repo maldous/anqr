@@ -574,12 +574,12 @@ function isRecentlyFailed(providerName) {
   const provider = PROVIDERS.find((p) => p.name === providerName);
   const windowSecs = provider?.failureWindowSecs || RUNNER_PROVIDER_FAILURE_WINDOW_SECS;
   const isRecent = now - failedAt < windowSecs;
-  
+
   // Also check health state - if provider is disabled or blocked, don't retry
   if (!shouldRetryProvider(providerName, windowSecs * 1000)) {
     return true; // Treat as recently failed if health check says don't retry
   }
-  
+
   return isRecent;
 }
 
@@ -1235,7 +1235,10 @@ export function getConfiguredProviders(options = {}) {
       let providerType = "api";
       if (provider.requiresSdk || provider.driver === "codex-sdk") {
         providerType = "sdk";
-      } else if (provider.baseUrl?.includes("127.0.0.1") || provider.baseUrl?.includes("localhost")) {
+      } else if (
+        provider.baseUrl?.includes("127.0.0.1") ||
+        provider.baseUrl?.includes("localhost")
+      ) {
         providerType = "local";
       }
       configured.push({
@@ -1342,9 +1345,7 @@ export async function probeAllProviders(options = {}) {
   logDebug(`  ✅ Available (${available.length}): ${available.map((r) => r.name).join(", ")}`);
   if (unavailable.length > 0) {
     const unavailableList = unavailable.map((r) => r.name + "(" + r.status + ")").join(", ");
-    logWarn(
-      `  ❌ Unavailable (${unavailable.length}): ${unavailableList}`,
-    );
+    logWarn(`  ❌ Unavailable (${unavailable.length}): ${unavailableList}`);
   }
 
   return probeResults;

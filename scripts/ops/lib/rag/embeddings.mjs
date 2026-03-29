@@ -12,8 +12,14 @@ import { createLogger } from "../logger.mjs";
 
 const { logDebug, logInfo, logWarn, logError } = createLogger("rag-embeddings");
 
-const OLLAMA_BASE = String(process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434").replace(/\/+$/, "");
-const EMBEDDING_MODEL = process.env.RAG_EMBEDDING_MODEL || process.env.OLLAMA_EMBEDDING_MODEL || "qwen2.5-coder:3b-instruct";
+const OLLAMA_BASE = String(process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434").replace(
+  /\/+$/,
+  "",
+);
+const EMBEDDING_MODEL =
+  process.env.RAG_EMBEDDING_MODEL ||
+  process.env.OLLAMA_EMBEDDING_MODEL ||
+  "qwen2.5-coder:3b-instruct";
 const EMBEDDING_TIMEOUT_MS = toPositiveInt(process.env.RAG_EMBEDDING_TIMEOUT_MS, 15_000);
 const PING_TIMEOUT_MS = toPositiveInt(process.env.RAG_OLLAMA_PING_TIMEOUT_MS, 3_000);
 const MAX_CONCURRENCY = toPositiveInt(process.env.RAG_EMBEDDING_MAX_CONCURRENCY, 2);
@@ -54,16 +60,21 @@ function rememberHealth(value) {
 
 function normalizeEmbeddingResponse(data) {
   if (Array.isArray(data?.embedding)) return data.embedding;
-  if (Array.isArray(data?.embeddings) && Array.isArray(data.embeddings[0])) return data.embeddings[0];
+  if (Array.isArray(data?.embeddings) && Array.isArray(data.embeddings[0]))
+    return data.embeddings[0];
   return null;
 }
 
 async function requestEmbeddingOnce(endpoint, payload) {
-  const response = await fetchJsonWithTimeout(`${OLLAMA_BASE}${endpoint}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  }, EMBEDDING_TIMEOUT_MS);
+  const response = await fetchJsonWithTimeout(
+    `${OLLAMA_BASE}${endpoint}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    EMBEDDING_TIMEOUT_MS,
+  );
 
   if (!response.ok) {
     const body = await response.text().catch(() => "");
@@ -144,7 +155,9 @@ export async function generateEmbedding(text, options = {}) {
     }
 
     rememberHealth(true);
-    logDebug(`Generated embedding: ${result.embedding.length} dimensions for ${prompt.length} chars`);
+    logDebug(
+      `Generated embedding: ${result.embedding.length} dimensions for ${prompt.length} chars`,
+    );
     return result.embedding;
   } catch (err) {
     if (err?.name === "AbortError") {

@@ -8,7 +8,7 @@ describe("countSameNeighbors", () => {
     qr.addData("TEST");
     qr.make();
     const moduleCount = qr.getModuleCount();
-    
+
     const count = countSameNeighbors(qr, 5, 5, moduleCount);
     expect(count).toBeGreaterThanOrEqual(0);
     expect(count).toBeLessThanOrEqual(8);
@@ -19,7 +19,7 @@ describe("countSameNeighbors", () => {
     qr.addData("A");
     qr.make();
     const moduleCount = qr.getModuleCount();
-    
+
     // Find a module with different colored neighbors
     let found = false;
     for (let r = 1; r < moduleCount - 1; r++) {
@@ -40,12 +40,12 @@ describe("countSameNeighbors", () => {
     qr.addData("EDGE");
     qr.make();
     const moduleCount = qr.getModuleCount();
-    
+
     // Top-left corner
     const topLeft = countSameNeighbors(qr, 0, 0, moduleCount);
     expect(topLeft).toBeGreaterThanOrEqual(0);
     expect(topLeft).toBeLessThanOrEqual(3);
-    
+
     // Top edge
     const topEdge = countSameNeighbors(qr, 0, 5, moduleCount);
     expect(topEdge).toBeGreaterThanOrEqual(0);
@@ -57,7 +57,7 @@ describe("countSameNeighbors", () => {
     qr.addData("CORNER");
     qr.make();
     const moduleCount = qr.getModuleCount();
-    
+
     // Bottom-right corner
     const count = countSameNeighbors(qr, moduleCount - 1, moduleCount - 1, moduleCount);
     expect(count).toBeGreaterThanOrEqual(0);
@@ -69,7 +69,7 @@ describe("countSameNeighbors", () => {
     qr.addData("CONSISTENT");
     qr.make();
     const moduleCount = qr.getModuleCount();
-    
+
     const c1 = countSameNeighbors(qr, 10, 10, moduleCount);
     const c2 = countSameNeighbors(qr, 10, 10, moduleCount);
     expect(c1).toBe(c2);

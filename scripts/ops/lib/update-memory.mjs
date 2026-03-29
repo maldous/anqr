@@ -24,7 +24,7 @@ export async function updateMemory(note, cwd = process.cwd()) {
   const entry = `[${timestamp}] ${note}\n`;
   const reportsDir = path.join(cwd, "reports");
   const logFile = path.join(reportsDir, "runtime-events.log");
-  
+
   try {
     // Ensure reports directory exists
     await mkdir(reportsDir, { recursive: true });

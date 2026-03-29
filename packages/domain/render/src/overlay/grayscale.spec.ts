@@ -22,7 +22,7 @@ describe("grayscale", () => {
   it("should convert color to grayscale", () => {
     const imageData = new ImageData(new Uint8ClampedArray([255, 0, 0, 255]), 1, 1);
     grayscale(imageData);
-    
+
     expect(imageData.data[0]).toBe(imageData.data[1]);
     expect(imageData.data[1]).toBe(imageData.data[2]);
     expect(imageData.data[3]).toBe(255); // Alpha unchanged
@@ -31,7 +31,7 @@ describe("grayscale", () => {
   it("should not change already grayscale pixels", () => {
     const imageData = new ImageData(new Uint8ClampedArray([128, 128, 128, 255]), 1, 1);
     grayscale(imageData);
-    
+
     expect(imageData.data[0]).toBe(128);
     expect(imageData.data[1]).toBe(128);
     expect(imageData.data[2]).toBe(128);
@@ -40,7 +40,7 @@ describe("grayscale", () => {
   it("should handle black", () => {
     const imageData = new ImageData(new Uint8ClampedArray([0, 0, 0, 255]), 1, 1);
     grayscale(imageData);
-    
+
     expect(imageData.data[0]).toBe(0);
     expect(imageData.data[1]).toBe(0);
     expect(imageData.data[2]).toBe(0);
@@ -49,20 +49,20 @@ describe("grayscale", () => {
   it("should handle white", () => {
     const imageData = new ImageData(new Uint8ClampedArray([255, 255, 255, 255]), 1, 1);
     grayscale(imageData);
-    
+
     expect(imageData.data[0]).toBe(255);
     expect(imageData.data[1]).toBe(255);
     expect(imageData.data[2]).toBe(255);
   });
 
   it("should handle multiple pixels", () => {
-    const imageData = new ImageData(new Uint8ClampedArray([
-      255, 0, 0, 255,
-      0, 255, 0, 255,
-      0, 0, 255, 255,
-    ]), 3, 1);
+    const imageData = new ImageData(
+      new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255]),
+      3,
+      1,
+    );
     grayscale(imageData);
-    
+
     // Each pixel should have equal RGB values
     expect(imageData.data[0]).toBe(imageData.data[1]);
     expect(imageData.data[1]).toBe(imageData.data[2]);

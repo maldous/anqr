@@ -9,12 +9,14 @@ ANQR's Discord integration consists of two distinct components:
 **Location**: `scripts/ops/integrations/notifications/discord-webhook.mjs`
 
 **Capabilities**:
+
 - Send text notifications to Discord channels
 - Send embedded messages with formatting
 - Stream progress updates with batching (every 5s or 1900 chars)
 - Per-request buffering to prevent message mixing
 
 **Environment Variables**:
+
 - `DISCORD_WEBHOOK_URL` - Discord webhook URL for notifications
 - `DISCORD_WEBHOOK_ENABLED` - Enable/disable webhook (default: true if URL set)
 
@@ -25,29 +27,33 @@ ANQR's Discord integration consists of two distinct components:
 **Location**: External service (port 18789), managed outside ANQR repository
 
 **Capabilities**:
+
 - Full Discord bot functionality via OpenClaw's `message` tool
 - Voice channel joining and TTS announcements
 - Discord.js integration with voice dependencies
 
 **Configuration Required**:
+
 - Discord bot token in OpenClaw Gateway configuration
 - Bot permissions: Connect, Speak (in Discord server settings)
 - Bot intents: GUILD_VOICE_STATES
 - Dependencies: `@discordjs/voice`, `libsodium-wrappers`, `ffmpeg`
 
-**Scope**: Managed externally. ANQR code can *invoke* voice features via OpenClaw Gateway but cannot configure them.
+**Scope**: Managed externally. ANQR code can _invoke_ voice features via OpenClaw Gateway but cannot configure them.
 
 ## Testing Voice Functionality
 
 The test script `scripts/ops/integrations/notifications/test-discord.mjs` includes a voice announcement test that calls OpenClaw Gateway's message tool.
 
 **Prerequisites**:
+
 1. OpenClaw Gateway must be running (port 18789)
 2. `OPENCLAW_GATEWAY_TOKEN` environment variable must be set
 3. OpenClaw must have Discord bot configured with voice capabilities
 4. Discord bot must have proper permissions and intents
 
 **Expected Behavior**:
+
 - If `OPENCLAW_GATEWAY_TOKEN` is not set: Test skipped with clear message
 - If OpenClaw Gateway is not reachable: HTTP error
 - If Discord bot lacks voice permissions: OpenClaw error response
@@ -76,6 +82,7 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 **Resolution Steps**:
 
 1. Verify OpenClaw Gateway is running:
+
    ```bash
    curl http://127.0.0.1:18789/health
    ```
@@ -111,13 +118,13 @@ The test script `scripts/ops/integrations/notifications/test-discord.mjs` includ
 
 ## Scope Boundaries
 
-| Component | Owned By | Repository | Can Modify |
-|-----------|----------|------------|------------|
-| Discord webhooks | ANQR Harness | anqr | ✅ Yes |
-| Voice bot configuration | OpenClaw Gateway | External | ❌ No |
-| Voice bot dependencies | OpenClaw Gateway | External | ❌ No |
-| Discord server permissions | Human operators | Discord UI | ❌ No |
-| Bot intents | Human operators | Discord Developer Portal | ❌ No |
+| Component                  | Owned By         | Repository               | Can Modify |
+| -------------------------- | ---------------- | ------------------------ | ---------- |
+| Discord webhooks           | ANQR Harness     | anqr                     | ✅ Yes     |
+| Voice bot configuration    | OpenClaw Gateway | External                 | ❌ No      |
+| Voice bot dependencies     | OpenClaw Gateway | External                 | ❌ No      |
+| Discord server permissions | Human operators  | Discord UI               | ❌ No      |
+| Bot intents                | Human operators  | Discord Developer Portal | ❌ No      |
 
 ## Related Files
 

@@ -23,5 +23,6 @@ See `docs/harness/05-quality-gates.md` for the complete quality gate matrix.
 ## Contributing
 
 For contribution guidelines and workflow, see:
+
 - `docs/harness/01-operating-model.md`
 - `docs/harness/04-control-flow.md`

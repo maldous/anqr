@@ -23,7 +23,7 @@ describe("contrast", () => {
     const imageData = new ImageData(new Uint8ClampedArray([100, 150, 200, 255]), 1, 1);
     const original = [imageData.data[0], imageData.data[1], imageData.data[2]];
     contrast(imageData, 50);
-    
+
     expect(imageData.data[0]).not.toBe(original[0]);
     expect(imageData.data[3]).toBe(255); // Alpha unchanged
   });
@@ -32,7 +32,7 @@ describe("contrast", () => {
     const imageData = new ImageData(new Uint8ClampedArray([50, 128, 200, 255]), 1, 1);
     const original = [imageData.data[0], imageData.data[1], imageData.data[2]];
     contrast(imageData, -50);
-    
+
     expect(imageData.data[0]).not.toBe(original[0]);
     expect(imageData.data[3]).toBe(255);
   });
@@ -40,7 +40,7 @@ describe("contrast", () => {
   it("should clamp values to 0-255 range", () => {
     const imageData = new ImageData(new Uint8ClampedArray([250, 10, 200, 255]), 1, 1);
     contrast(imageData, 200);
-    
+
     expect(imageData.data[0]).toBeGreaterThanOrEqual(0);
     expect(imageData.data[0]).toBeLessThanOrEqual(255);
     expect(imageData.data[1]).toBeGreaterThanOrEqual(0);
@@ -48,12 +48,13 @@ describe("contrast", () => {
   });
 
   it("should handle multiple pixels", () => {
-    const imageData = new ImageData(new Uint8ClampedArray([
-      100, 100, 100, 255,
-      150, 150, 150, 255,
-    ]), 2, 1);
+    const imageData = new ImageData(
+      new Uint8ClampedArray([100, 100, 100, 255, 150, 150, 150, 255]),
+      2,
+      1,
+    );
     contrast(imageData, 25);
-    
+
     expect(imageData.data[0]).toBeGreaterThanOrEqual(0);
     expect(imageData.data[4]).toBeGreaterThanOrEqual(0);
   });

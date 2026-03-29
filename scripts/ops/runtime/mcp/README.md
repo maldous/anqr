@@ -13,11 +13,11 @@ This directory contains a wrapper around the [`@upstash/context7-mcp`](https://w
 
 ## Files
 
-| File | Purpose |
-|---|---|
-| `context7-server.mjs` | Server wrapper — spawns, manages, and communicates with the local MCP server |
-| `context7-http-service.mjs` | Standalone HTTP service wrapping the MCP server (port 4320) |
-| `README.md` | This file |
+| File                        | Purpose                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| `context7-server.mjs`       | Server wrapper — spawns, manages, and communicates with the local MCP server |
+| `context7-http-service.mjs` | Standalone HTTP service wrapping the MCP server (port 4320)                  |
+| `README.md`                 | This file                                                                    |
 
 ## HTTP Service
 
@@ -27,10 +27,10 @@ child processes.
 
 **Endpoints:**
 
-| Method | Path | Purpose |
-|---|---|---|
+| Method | Path               | Purpose                                                                      |
+| ------ | ------------------ | ---------------------------------------------------------------------------- |
 | `POST` | `/v1/resolve-docs` | Resolve library documentation. Body: `{ libraryTitle, topic?, max_tokens? }` |
-| `GET` | `/health` | Health check. Response: `{ status, serverReady, uptime }` |
+| `GET`  | `/health`          | Health check. Response: `{ status, serverReady, uptime }`                    |
 
 **Systemd service:**
 
@@ -57,23 +57,23 @@ import {
   stopContext7Server,
   resolveDocsLocally,
   isContext7ServerHealthy,
-} from './context7-server.mjs';
+} from "./context7-server.mjs";
 
 // 1. Start the local MCP server
 const started = await startContext7Server();
-console.log('Server started:', started);
+console.log("Server started:", started);
 
 // 2. Check health
 const healthy = await isContext7ServerHealthy();
-console.log('Server healthy:', healthy);
+console.log("Server healthy:", healthy);
 
 // 3. Resolve documentation
 const result = await resolveDocsLocally({
-  libraryTitle: 'react',
-  topic: 'hooks',
+  libraryTitle: "react",
+  topic: "hooks",
   max_tokens: 5000,
 });
-console.log(`Source: ${result.source}`);  // "local" or "cloud"
+console.log(`Source: ${result.source}`); // "local" or "cloud"
 console.log(result.documentation);
 
 // 4. Stop the server when done
@@ -103,19 +103,19 @@ Two-step documentation resolution:
 
 Returns an object:
 
-| Field | Type | Description |
-|---|---|---|
-| `source` | `string` | `"local"`, `"cloud"`, or `"error"` |
+| Field           | Type             | Description                                           |
+| --------------- | ---------------- | ----------------------------------------------------- |
+| `source`        | `string`         | `"local"`, `"cloud"`, or `"error"`                    |
 | `documentation` | `string \| null` | The resolved documentation text, or `null` on failure |
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `CONTEXT7_API_KEY` | For cloud fallback | — | API key for the Context7 cloud REST API |
-| `CONTEXT7_STARTUP_TIMEOUT_MS` | No | `15000` | Max time to wait for the local server to initialize |
-| `CONTEXT7_REQUEST_TIMEOUT_MS` | No | `30000` | Per-request timeout for JSON-RPC and cloud API calls |
-| `CONTEXT7_SERVER_LOG_LEVEL` | No | `DEBUG` | Log level for this module (`DEBUG`, `INFO`, `WARN`, `ERROR`) |
+| Variable                      | Required           | Default | Description                                                  |
+| ----------------------------- | ------------------ | ------- | ------------------------------------------------------------ |
+| `CONTEXT7_API_KEY`            | For cloud fallback | —       | API key for the Context7 cloud REST API                      |
+| `CONTEXT7_STARTUP_TIMEOUT_MS` | No                 | `15000` | Max time to wait for the local server to initialize          |
+| `CONTEXT7_REQUEST_TIMEOUT_MS` | No                 | `30000` | Per-request timeout for JSON-RPC and cloud API calls         |
+| `CONTEXT7_SERVER_LOG_LEVEL`   | No                 | `DEBUG` | Log level for this module (`DEBUG`, `INFO`, `WARN`, `ERROR`) |
 
 ## Architecture
 
@@ -161,8 +161,8 @@ All communication is newline-delimited JSON over the child process stdio streams
 Uses the shared logger from `scripts/ops/lib/logger.mjs`:
 
 ```js
-import { createLogger } from '../../lib/logger.mjs';
-const { logDebug, logInfo, logWarn, logError } = createLogger('context7-server');
+import { createLogger } from "../../lib/logger.mjs";
+const { logDebug, logInfo, logWarn, logError } = createLogger("context7-server");
 ```
 
 Log output goes to stderr (for systemd journal capture). Control verbosity via:

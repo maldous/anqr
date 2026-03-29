@@ -43,10 +43,13 @@ describe("Queue Control Scripts", () => {
       let output = "";
       let exitCode = 0;
       try {
-        const result = execSync("node scripts/ops/symphony-queue-control.mjs --all --dry-run 2>&1", {
-          stdio: "pipe",
-          timeout: 10_000,
-        });
+        const result = execSync(
+          "node scripts/ops/symphony-queue-control.mjs --all --dry-run 2>&1",
+          {
+            stdio: "pipe",
+            timeout: 10_000,
+          },
+        );
         output = String(result);
         exitCode = 0;
       } catch (e) {

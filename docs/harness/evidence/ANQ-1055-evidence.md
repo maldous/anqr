@@ -1,17 +1,21 @@
 # ANQ-1055 Evidence: think_deeply Tool Implementation
 
 ## Issue Status
+
 **ALREADY RESOLVED** ✅
 
 ## Summary
+
 The `think_deeply` tool requested in ANQ-1055 was already fully implemented in the Symphony bridge before this issue was created.
 
 ## Implementation Location
 
 ### Symphony Bridge
+
 File: `scripts/ops/integrations/model/symphony-openai-bridge.mjs`
 
 **Tool Definition (lines 1005-1012):**
+
 ```javascript
 think_deeply: tool({
   description: "Deeply consider complex tasks by brainstorming approaches and tradeoffs step-by-step",
@@ -23,6 +27,7 @@ think_deeply: tool({
 ```
 
 **Implementation Function (lines 821-825):**
+
 ```javascript
 async function thinkDeeplyTool({ thought }) {
   // Log the thinking for observability
@@ -32,6 +37,7 @@ async function thinkDeeplyTool({ thought }) {
 ```
 
 ### Codebuff Bridge
+
 The Codebuff bridge (`scripts/ops/integrations/model/codebuff-openai-bridge.mjs`) does not need this tool because it uses the Codebuff SDK's internal tool system rather than defining OpenAI-style tools.
 
 ## Acceptance Criteria Status
@@ -62,5 +68,6 @@ All quality gates passed:
 The knowledge file has been updated to reflect that all missing tools issues (including `think_deeply`, `run_file_change_hooks`, `update_subgoal`, `add_subgoal`) have been resolved.
 
 ---
+
 Generated: 2025-01-XX
 Status: Issue Already Resolved

@@ -31,9 +31,8 @@ describe("Bridge Tools Integration - File Change Tracking", () => {
   });
 
   it("should track file changes from write tool", async () => {
-    const { writeFileTool, setCurrentRequestId, getCurrentRequestId } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { writeFileTool, setCurrentRequestId, getCurrentRequestId } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "tracked.txt");
     setCurrentRequestId("test-req-1");
@@ -45,9 +44,8 @@ describe("Bridge Tools Integration - File Change Tracking", () => {
   });
 
   it("should track file changes from str_replace tool", async () => {
-    const { strReplaceTool, setCurrentRequestId } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { strReplaceTool, setCurrentRequestId } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "replace-tracked.txt");
     fs.writeFileSync(testFile, "original content");
@@ -64,9 +62,8 @@ describe("Bridge Tools Integration - File Change Tracking", () => {
   });
 
   it("should track file changes from apply_patch tool", async () => {
-    const { applyPatchTool, setCurrentRequestId } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { applyPatchTool, setCurrentRequestId } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "patch-tracked.txt");
     setCurrentRequestId("test-req-3");
@@ -97,9 +94,8 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
   });
 
   it("should support read-modify-write workflow", async () => {
-    const { readFileTool, strReplaceTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { readFileTool, strReplaceTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "workflow.txt");
     fs.writeFileSync(testFile, "Step 1\nStep 2\nStep 3\n");
@@ -120,15 +116,11 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
   });
 
   it("should support search and replace workflow", async () => {
-    const { codeSearchTool, strReplaceTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { codeSearchTool, strReplaceTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "search-replace.ts");
-    fs.writeFileSync(
-      testFile,
-      "function oldName() {\n  return 42;\n}\nconst x = oldName();\n"
-    );
+    fs.writeFileSync(testFile, "function oldName() {\n  return 42;\n}\nconst x = oldName();\n");
 
     // Search
     const searchResult = await codeSearchTool({
@@ -150,9 +142,8 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
   });
 
   it("should support directory exploration workflow", async () => {
-    const { listDirectoryTool, readSubtreeTool, readFilesTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { listDirectoryTool, readSubtreeTool, readFilesTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Create structure
     fs.writeFileSync(path.join(FIXTURES_DIR, "file1.txt"), "content1");
@@ -176,10 +167,7 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
 
     // Read specific files
     const filesResult = await readFilesTool({
-      paths: [
-        path.join(FIXTURES_DIR, "file1.txt"),
-        path.join(FIXTURES_DIR, "file2.txt"),
-      ],
+      paths: [path.join(FIXTURES_DIR, "file1.txt"), path.join(FIXTURES_DIR, "file2.txt")],
     });
     expect(filesResult.files).toHaveLength(2);
   });
@@ -187,18 +175,16 @@ describe("Bridge Tools Integration - File Operations Workflow", () => {
 
 describe("Bridge Tools Integration - Error Handling", () => {
   it("should handle file not found gracefully", async () => {
-    const { readFileTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { readFileTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await readFileTool({ path: "/nonexistent/file.txt" });
     expect(result.error).toBeDefined();
   });
 
   it("should handle permission errors gracefully", async () => {
-    const { writeFileTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { writeFileTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await writeFileTool({
       path: "/root/protected.txt",
@@ -210,9 +196,8 @@ describe("Bridge Tools Integration - Error Handling", () => {
   });
 
   it("should handle invalid regex patterns in code search", async () => {
-    const { codeSearchTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { codeSearchTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Invalid regex should be caught and return empty results
     const result = await codeSearchTool({
@@ -225,9 +210,8 @@ describe("Bridge Tools Integration - Error Handling", () => {
   });
 
   it("should handle command timeout in exec tool", async () => {
-    const { execTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { execTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await execTool({
       command: "sleep 120", // Will be killed by 60s timeout
@@ -251,9 +235,8 @@ describe("Bridge Tools Integration - Proposal Tools Safety", () => {
   });
 
   it("should not modify files with propose_str_replace", async () => {
-    const { proposeStrReplaceTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { proposeStrReplaceTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "propose-test.txt");
     const originalContent = "original content";
@@ -269,9 +252,8 @@ describe("Bridge Tools Integration - Proposal Tools Safety", () => {
   });
 
   it("should not create files with propose_write_file", async () => {
-    const { proposeWriteFileTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { proposeWriteFileTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "proposed-new.txt");
 
@@ -285,9 +267,8 @@ describe("Bridge Tools Integration - Proposal Tools Safety", () => {
   });
 
   it("should validate proposal feasibility", async () => {
-    const { proposeStrReplaceTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { proposeStrReplaceTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const testFile = path.join(FIXTURES_DIR, "validate-proposal.txt");
     fs.writeFileSync(testFile, "content");
@@ -320,14 +301,8 @@ describe("Bridge Tools Integration - Memory Operations", () => {
       knowledgeBackup = fs.readFileSync(KNOWLEDGE_FILE, "utf-8");
     }
 
-    fs.writeFileSync(
-      MEMORY_FILE,
-      "# Memory\n\n## Recent Work\n\nCompleted: test feature\n"
-    );
-    fs.writeFileSync(
-      KNOWLEDGE_FILE,
-      "# Knowledge\n\n## Best Practices\n\nAlways test code\n"
-    );
+    fs.writeFileSync(MEMORY_FILE, "# Memory\n\n## Recent Work\n\nCompleted: test feature\n");
+    fs.writeFileSync(KNOWLEDGE_FILE, "# Knowledge\n\n## Best Practices\n\nAlways test code\n");
   });
 
   afterEach(() => {
@@ -345,9 +320,8 @@ describe("Bridge Tools Integration - Memory Operations", () => {
   });
 
   it("should support memory search and retrieval workflow", async () => {
-    const { memorySearchTool, memoryGetTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { memorySearchTool, memoryGetTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Search for content
     const searchResult = await memorySearchTool({ query: "test feature" });
@@ -359,13 +333,12 @@ describe("Bridge Tools Integration - Memory Operations", () => {
   });
 
   it("should search across both memory and knowledge files", async () => {
-    const { memorySearchTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { memorySearchTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await memorySearchTool({ query: "test" });
 
-    const fileNames = result.results.map((r) => r.file);
+    const fileNames = result.results.map((r: { file: string }) => r.file);
     expect(fileNames).toContain("MEMORY.md");
     expect(fileNames).toContain("knowledge.md");
   });
@@ -373,9 +346,8 @@ describe("Bridge Tools Integration - Memory Operations", () => {
 
 describe("Bridge Tools Integration - Execution Safety", () => {
   it("should enforce timeout on long-running commands", async () => {
-    const { execTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { execTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const startTime = Date.now();
     const result = await execTool({
@@ -389,9 +361,8 @@ describe("Bridge Tools Integration - Execution Safety", () => {
   });
 
   it("should limit output buffer size", async () => {
-    const { execTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { execTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     // Generate large output
     const result = await execTool({
@@ -403,9 +374,8 @@ describe("Bridge Tools Integration - Execution Safety", () => {
   });
 
   it("should isolate command execution by cwd", async () => {
-    const { execTool } = await import(
-      "../../scripts/ops/integrations/model/symphony-openai-bridge.mjs"
-    );
+    const { execTool } =
+      await import("../../scripts/ops/integrations/model/symphony-openai-bridge.mjs");
 
     const result = await execTool({
       command: "pwd",

@@ -41,12 +41,7 @@ export const PROVIDER_TIMEOUTS = {
 };
 
 // Local provider patterns
-const LOCAL_PROVIDER_PATTERNS = [
-  /^ollama/i,
-  /^localhost/i,
-  /127\.0\.0\.1/,
-  /^local-/i,
-];
+const LOCAL_PROVIDER_PATTERNS = [/^ollama/i, /^localhost/i, /127\.0\.0\.1/, /^local-/i];
 
 // State file
 const PROJECT_ROOT = resolve(process.cwd());
@@ -58,7 +53,7 @@ const HEALTH_STATE_FILE = resolve(STATE_DIR, "provider-health.json");
  */
 export function isLocalProvider(providerName, baseUrl = "") {
   return LOCAL_PROVIDER_PATTERNS.some(
-    (pattern) => pattern.test(providerName) || pattern.test(baseUrl)
+    (pattern) => pattern.test(providerName) || pattern.test(baseUrl),
   );
 }
 
@@ -101,12 +96,14 @@ function saveHealthState(state) {
  */
 export function getProviderHealthState(providerName) {
   const state = loadHealthState();
-  return state[providerName] || {
-    state: HEALTH_STATES.UNKNOWN,
-    lastUpdated: null,
-    consecutiveFailures: 0,
-    consecutiveSuccesses: 0,
-  };
+  return (
+    state[providerName] || {
+      state: HEALTH_STATES.UNKNOWN,
+      lastUpdated: null,
+      consecutiveFailures: 0,
+      consecutiveSuccesses: 0,
+    }
+  );
 }
 
 /**
@@ -132,8 +129,7 @@ export function recordProviderHealthSuccess(providerName) {
   const consecutiveFailures = 0;
 
   // Transition to healthy after 2 consecutive successes
-  const newState =
-    consecutiveSuccesses >= 2 ? HEALTH_STATES.HEALTHY : current.state;
+  const newState = consecutiveSuccesses >= 2 ? HEALTH_STATES.HEALTHY : current.state;
 
   setProviderHealthState(providerName, newState, {
     consecutiveSuccesses,
@@ -181,10 +177,7 @@ export function shouldRetryProvider(providerName, cooldownMs = 360_000) {
   const health = getProviderHealthState(providerName);
 
   // Never retry disabled or blocked providers
-  if (
-    health.state === HEALTH_STATES.DISABLED ||
-    health.state === HEALTH_STATES.BLOCKED
-  ) {
+  if (health.state === HEALTH_STATES.DISABLED || health.state === HEALTH_STATES.BLOCKED) {
     return false;
   }
 
@@ -214,7 +207,7 @@ export function resetProviderHealth(providerName) {
  */
 export function checkPreferredProviderHealth(preferredProviders = []) {
   const healthStates = loadHealthState();
-  
+
   for (const providerName of preferredProviders) {
     const health = healthStates[providerName];
     if (!health) continue;
@@ -229,7 +222,7 @@ export function checkPreferredProviderHealth(preferredProviders = []) {
     if (health.state === HEALTH_STATES.COOLING_DOWN) {
       const timeSinceFailure = Date.now() - (health.lastFailure || 0);
       const cooldownMs = isLocalProvider(providerName) ? 120_000 : 360_000;
-      
+
       if (timeSinceFailure >= cooldownMs) {
         // Reset to unknown so it can be re-probed
         setProviderHealthState(providerName, HEALTH_STATES.UNKNOWN, {

@@ -158,14 +158,14 @@ recordTokenUsage(providerName, { inputTokens, outputTokens });
 
 All errors are classified into one of six types:
 
-| Error Type          | Detection                                                                                                                                 | Triggers                 |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Error Type          | Detection                                                                                                                                                               | Triggers                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | `context_too_large` | HTTP 413, "request too large", "body too large", "context_length_exceeded", "maximum context length", "too many tokens", "token limit", "max size", "input is too long" | Context shrink loop      |
-| `rate_limited`      | HTTP 429, "rate_limit", "too many requests", "quota exceeded", "throttled"                                                                | Rate-limit throttle loop |
-| `auth_error`        | HTTP 401/403, "unauthorized", "invalid api key", "authentication", "forbidden"                                                            | Error count tracking     |
-| `timeout`           | HTTP 408, "timeout", "timed out", "etimedout", "econnaborted"                                                                             | Error count tracking     |
-| `server_error`      | HTTP 5xx, "internal server error", "bad gateway", "service unavailable"                                                                   | Error count tracking     |
-| `unknown`           | None of the above                                                                                                                         | Error count tracking     |
+| `rate_limited`      | HTTP 429, "rate_limit", "too many requests", "quota exceeded", "throttled"                                                                                              | Rate-limit throttle loop |
+| `auth_error`        | HTTP 401/403, "unauthorized", "invalid api key", "authentication", "forbidden"                                                                                          | Error count tracking     |
+| `timeout`           | HTTP 408, "timeout", "timed out", "etimedout", "econnaborted"                                                                                                           | Error count tracking     |
+| `server_error`      | HTTP 5xx, "internal server error", "bad gateway", "service unavailable"                                                                                                 | Error count tracking     |
+| `unknown`           | None of the above                                                                                                                                                       | Error count tracking     |
 
 The classifier traverses the AI SDK error cause chain to find nested status codes and messages (e.g., `err.cause.cause.statusCode`).
 

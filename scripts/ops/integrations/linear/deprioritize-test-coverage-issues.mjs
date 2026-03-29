@@ -2,7 +2,7 @@
 
 /**
  * deprioritize-test-coverage-issues.mjs — Set test coverage issues to low priority
- * 
+ *
  * Focus areas are harness job stability, invalid tools, and Symphony features.
  * Test generation is deprioritized.
  */

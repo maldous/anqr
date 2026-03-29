@@ -26,11 +26,11 @@ Combines **BM25 keyword search** (via [MiniSearch](https://lucaong.github.io/min
 
 The module automatically falls back when components are unavailable:
 
-| Scenario | Method |
-|---|---|
-| Embeddings + BM25 available | `hybrid` — full RRF fusion |
-| Embeddings unavailable | `bm25` — keyword search only |
-| No results from either | `basic` — substring matching |
+| Scenario                    | Method                       |
+| --------------------------- | ---------------------------- |
+| Embeddings + BM25 available | `hybrid` — full RRF fusion   |
+| Embeddings unavailable      | `bm25` — keyword search only |
+| No results from either      | `basic` — substring matching |
 
 ## Exports
 
@@ -39,15 +39,16 @@ The module automatically falls back when components are unavailable:
 Build (or rebuild) the BM25 index from an array of file objects.
 
 ```js
-import { createHybridSearchIndex } from './hybrid-search.mjs';
+import { createHybridSearchIndex } from "./hybrid-search.mjs";
 
 createHybridSearchIndex([
-  { path: 'src/auth.ts', content: 'export function authenticate() { ... }' },
-  { path: 'src/db.ts',   content: 'export class Database { ... }' },
+  { path: "src/auth.ts", content: "export function authenticate() { ... }" },
+  { path: "src/db.ts", content: "export class Database { ... }" },
 ]);
 ```
 
 **Parameters:**
+
 - `files` — `Array<{ path: string, content: string }>` — files to index.
 
 **Returns:** the `MiniSearch` instance (also cached internally).
@@ -59,9 +60,9 @@ createHybridSearchIndex([
 Perform a hybrid search over the indexed files.
 
 ```js
-import { hybridSearch } from './hybrid-search.mjs';
+import { hybridSearch } from "./hybrid-search.mjs";
 
-const results = await hybridSearch('authentication middleware', {
+const results = await hybridSearch("authentication middleware", {
   topK: 10,
   bm25Weight: 0.5,
   embeddingWeight: 0.5,
@@ -73,12 +74,12 @@ const results = await hybridSearch('authentication middleware', {
 
 **Options:**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `topK` | `number` | `20` | Maximum results to return |
-| `bm25Weight` | `number` | `0.5` | Weight for BM25 scores in RRF (0–1) |
-| `embeddingWeight` | `number` | `0.5` | Weight for embedding scores in RRF (0–1) |
-| `useEmbeddings` | `boolean` | `true` | Whether to attempt embedding search |
+| Option            | Type      | Default | Description                              |
+| ----------------- | --------- | ------- | ---------------------------------------- |
+| `topK`            | `number`  | `20`    | Maximum results to return                |
+| `bm25Weight`      | `number`  | `0.5`   | Weight for BM25 scores in RRF (0–1)      |
+| `embeddingWeight` | `number`  | `0.5`   | Weight for embedding scores in RRF (0–1) |
+| `useEmbeddings`   | `boolean` | `true`  | Whether to attempt embedding search      |
 
 **Returns:** `Promise<Array<{ path, score, bm25Score, embeddingScore, snippet }>>`
 
@@ -89,19 +90,19 @@ const results = await hybridSearch('authentication middleware', {
 High-level entry point that handles file collection, index creation, and searching.
 
 ```js
-import { searchFiles } from './hybrid-search.mjs';
+import { searchFiles } from "./hybrid-search.mjs";
 
-const { files, count, query, method } = await searchFiles('database connection');
+const { files, count, query, method } = await searchFiles("database connection");
 // method: 'hybrid' | 'bm25' | 'basic'
 ```
 
 **Options:**
 
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `rootDir` | `string` | `process.cwd()` | Project root directory to scan |
-| `topK` | `number` | `20` | Maximum results to return |
-| `useEmbeddings` | `boolean` | `true` | Whether to attempt embedding search |
+| Option          | Type      | Default         | Description                         |
+| --------------- | --------- | --------------- | ----------------------------------- |
+| `rootDir`       | `string`  | `process.cwd()` | Project root directory to scan      |
+| `topK`          | `number`  | `20`            | Maximum results to return           |
+| `useEmbeddings` | `boolean` | `true`          | Whether to attempt embedding search |
 
 **Indexed file types:** `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.json`, `.md`
 
@@ -116,7 +117,7 @@ const { files, count, query, method } = await searchFiles('database connection')
 Returns statistics about the current search index.
 
 ```js
-import { getSearchStats } from './hybrid-search.mjs';
+import { getSearchStats } from "./hybrid-search.mjs";
 
 const stats = getSearchStats();
 // {
@@ -130,7 +131,7 @@ const stats = getSearchStats();
 
 ## Reciprocal Rank Fusion (RRF)
 
-RRF merges multiple ranked lists without requiring score normalisation. For each result in a ranked list:
+RRF merges multiple ranked lists without requiring score normalization. For each result in a ranked list:
 
 ```
 score(d) = 1 / (k + rank)

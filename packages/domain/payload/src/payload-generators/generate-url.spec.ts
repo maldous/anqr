@@ -18,39 +18,69 @@ describe("generateUrl", () => {
   });
 
   it("should append UTM source parameter", () => {
-    const result = generateUrl({ href: "https://example.com", forceHttps: false, utmSource: "qrcode" });
+    const result = generateUrl({
+      href: "https://example.com",
+      forceHttps: false,
+      utmSource: "qrcode",
+    });
     expect(result).toContain("utm_source=qrcode");
   });
 
   it("should append UTM medium parameter", () => {
-    const result = generateUrl({ href: "https://example.com", forceHttps: false, utmMedium: "print" });
+    const result = generateUrl({
+      href: "https://example.com",
+      forceHttps: false,
+      utmMedium: "print",
+    });
     expect(result).toContain("utm_medium=print");
   });
 
   it("should append UTM campaign parameter", () => {
-    const result = generateUrl({ href: "https://example.com", forceHttps: false, utmCampaign: "summer2024" });
+    const result = generateUrl({
+      href: "https://example.com",
+      forceHttps: false,
+      utmCampaign: "summer2024",
+    });
     expect(result).toContain("utm_campaign=summer2024");
   });
 
   it("should append UTM term parameter", () => {
-    const result = generateUrl({ href: "https://example.com", forceHttps: false, utmTerm: "keywords" });
+    const result = generateUrl({
+      href: "https://example.com",
+      forceHttps: false,
+      utmTerm: "keywords",
+    });
     expect(result).toContain("utm_term=keywords");
   });
 
   it("should append UTM content parameter", () => {
-    const result = generateUrl({ href: "https://example.com", forceHttps: false, utmContent: "banner" });
+    const result = generateUrl({
+      href: "https://example.com",
+      forceHttps: false,
+      utmContent: "banner",
+    });
     expect(result).toContain("utm_content=banner");
   });
 
   it("should append multiple UTM parameters", () => {
-    const result = generateUrl({ href: "https://example.com", forceHttps: false, utmSource: "qrcode", utmMedium: "print", utmCampaign: "summer2024" });
+    const result = generateUrl({
+      href: "https://example.com",
+      forceHttps: false,
+      utmSource: "qrcode",
+      utmMedium: "print",
+      utmCampaign: "summer2024",
+    });
     expect(result).toContain("utm_source=qrcode");
     expect(result).toContain("utm_medium=print");
     expect(result).toContain("utm_campaign=summer2024");
   });
 
   it("should handle URL with existing query parameters", () => {
-    const result = generateUrl({ href: "https://example.com?foo=bar", forceHttps: false, utmSource: "qrcode" });
+    const result = generateUrl({
+      href: "https://example.com?foo=bar",
+      forceHttps: false,
+      utmSource: "qrcode",
+    });
     expect(result).toContain("foo=bar");
     expect(result).toContain("utm_source=qrcode");
   });
@@ -68,7 +98,7 @@ describe("generateUrl", () => {
       utmMedium: "print",
       utmCampaign: "summer2024",
       utmTerm: "keywords",
-      utmContent: "banner"
+      utmContent: "banner",
     });
     expect(result).toContain("utm_source=qrcode");
     expect(result).toContain("utm_medium=print");

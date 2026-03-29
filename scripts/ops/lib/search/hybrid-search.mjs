@@ -14,32 +14,29 @@
  *   const { files, count, method } = await searchFiles('auth middleware');
  */
 
-import MiniSearch from 'minisearch';
-import { readFile } from 'node:fs/promises';
-import { basename, extname, join, relative } from 'node:path';
-import { createLogger } from '../logger.mjs';
+import MiniSearch from "minisearch";
+import { readFile } from "node:fs/promises";
+import { basename, extname, join, relative } from "node:path";
+import { createLogger } from "../logger.mjs";
 
 // Optional peer modules – may not exist yet; we handle import failures gracefully.
 let generateEmbedding, cosineSimilarity, isOllamaAvailable;
 let vectorSearch, isIndexReady;
 
 try {
-  ({ generateEmbedding, cosineSimilarity, isOllamaAvailable } = await import(
-    '../rag/embeddings.mjs'
-  ));
+  ({ generateEmbedding, cosineSimilarity, isOllamaAvailable } =
+    await import("../rag/embeddings.mjs"));
 } catch {
   // embeddings module not available – will fall back to BM25-only
 }
 
 try {
-  ({ search: vectorSearch, isIndexReady } = await import(
-    '../rag/vector-store.mjs'
-  ));
+  ({ search: vectorSearch, isIndexReady } = await import("../rag/vector-store.mjs"));
 } catch {
   // vector-store module not available – will fall back to BM25-only
 }
 
-const { logDebug, logInfo, logWarn, logError } = createLogger('hybrid-search');
+const { logDebug, logInfo, logWarn, logError } = createLogger("hybrid-search");
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -49,14 +46,10 @@ const { logDebug, logInfo, logWarn, logError } = createLogger('hybrid-search');
 const RRF_K = 60;
 
 /** File extensions to index when scanning a project. */
-const INDEXABLE_EXTENSIONS = new Set([
-  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.md',
-]);
+const INDEXABLE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".json", ".md"]);
 
 /** Directories to skip when scanning. */
-const EXCLUDED_DIRS = new Set([
-  'node_modules', '.git', 'coverage', 'dist', 'build',
-]);
+const EXCLUDED_DIRS = new Set(["node_modules", ".git", "coverage", "dist", "build"]);
 
 /** Maximum file size (bytes) we will read and index. */
 const MAX_FILE_BYTES = 512 * 1024; // 512 KB
@@ -69,7 +62,7 @@ const MAX_FILE_BYTES = 512 * 1024; // 512 KB
 let miniSearchIndex = null;
 
 /** Fingerprint of the file set used to build the current index. */
-let indexFingerprint = '';
+let indexFingerprint = "";
 
 /** Total number of documents in the current index. */
 let indexedDocCount = 0;
@@ -91,7 +84,7 @@ let indexBuiltAt = 0;
 function computeFingerprint(files) {
   // Sort for deterministic output; join paths + count is cheap and sufficient.
   const sorted = files.map((f) => f.path).sort();
-  return `${sorted.length}:${sorted[0] ?? ''}:${sorted[sorted.length - 1] ?? ''}`;
+  return `${sorted.length}:${sorted[0] ?? ""}:${sorted[sorted.length - 1] ?? ""}`;
 }
 
 /**
@@ -103,12 +96,9 @@ function computeFingerprint(files) {
  * @returns {string}
  */
 function extractSnippet(content, query, radius = 120) {
-  if (!content || !query) return '';
+  if (!content || !query) return "";
 
-  const terms = query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
 
   const lower = content.toLowerCase();
   let bestIdx = -1;
@@ -130,8 +120,8 @@ function extractSnippet(content, query, radius = 120) {
   const end = Math.min(content.length, bestIdx + radius);
   let snippet = content.slice(start, end).trim();
 
-  if (start > 0) snippet = '…' + snippet;
-  if (end < content.length) snippet = snippet + '…';
+  if (start > 0) snippet = "…" + snippet;
+  if (end < content.length) snippet = snippet + "…";
 
   return snippet;
 }
@@ -158,7 +148,7 @@ async function embeddingsAvailable() {
  */
 function vectorStoreReady() {
   try {
-    return typeof isIndexReady === 'function' && isIndexReady();
+    return typeof isIndexReady === "function" && isIndexReady();
   } catch {
     return false;
   }
@@ -179,8 +169,8 @@ export function createHybridSearchIndex(files) {
   logInfo(`Building BM25 index over ${files.length} files`);
 
   const index = new MiniSearch({
-    fields: ['path', 'content', 'filename'],
-    storeFields: ['path', 'content'],
+    fields: ["path", "content", "filename"],
+    storeFields: ["path", "content"],
     searchOptions: {
       boost: { filename: 3, path: 2, content: 1 },
       prefix: true,
@@ -221,12 +211,7 @@ export function createHybridSearchIndex(files) {
  * @param {number} embeddingWeight Weight for embedding scores (0–1)
  * @returns {Array<{path: string, score: number, bm25Score: number, embeddingScore: number}>}
  */
-function reciprocalRankFusion(
-  bm25Results,
-  embeddingResults,
-  bm25Weight,
-  embeddingWeight,
-) {
+function reciprocalRankFusion(bm25Results, embeddingResults, bm25Weight, embeddingWeight) {
   /** @type {Map<string, {bm25Score: number, embeddingScore: number, data: object}>} */
   const merged = new Map();
 
@@ -260,8 +245,7 @@ function reciprocalRankFusion(
   // Combine weighted scores.
   const results = [];
   for (const [path, entry] of merged) {
-    const score =
-      entry.bm25Score * bm25Weight + entry.embeddingScore * embeddingWeight;
+    const score = entry.bm25Score * bm25Weight + entry.embeddingScore * embeddingWeight;
     results.push({
       path,
       score,
@@ -294,15 +278,10 @@ function reciprocalRankFusion(
  * @returns {Promise<Array<{path: string, score: number, bm25Score: number, embeddingScore: number, snippet: string}>>}
  */
 export async function hybridSearch(query, options = {}) {
-  const {
-    topK = 20,
-    bm25Weight = 0.5,
-    embeddingWeight = 0.5,
-    useEmbeddings = true,
-  } = options;
+  const { topK = 20, bm25Weight = 0.5, embeddingWeight = 0.5, useEmbeddings = true } = options;
 
-  if (!query || typeof query !== 'string') {
-    logWarn('hybridSearch called with empty or invalid query');
+  if (!query || typeof query !== "string") {
+    logWarn("hybridSearch called with empty or invalid query");
     return [];
   }
 
@@ -313,16 +292,16 @@ export async function hybridSearch(query, options = {}) {
     try {
       const raw = miniSearchIndex.search(query, { limit: 50 });
       bm25Results = raw.map((hit) => ({
-        path: hit.path ?? '',
-        content: hit.content ?? '',
+        path: hit.path ?? "",
+        content: hit.content ?? "",
         score: hit.score,
       }));
       logDebug(`BM25 returned ${bm25Results.length} results for "${query}"`);
     } catch (err) {
-      logError('BM25 search failed', { error: err.message });
+      logError("BM25 search failed", { error: err.message });
     }
   } else {
-    logWarn('BM25 index not built — skipping keyword search');
+    logWarn("BM25 index not built — skipping keyword search");
   }
 
   // ---- Step 2: Embedding / vector search (optional) ----
@@ -336,25 +315,21 @@ export async function hybridSearch(query, options = {}) {
       if (canEmbed && vectorReady && vectorSearch) {
         const raw = await vectorSearch(query, 50);
         embeddingResults = (raw ?? []).map((hit) => ({
-          path: hit.path ?? hit.id ?? '',
-          content: hit.content ?? '',
+          path: hit.path ?? hit.id ?? "",
+          content: hit.content ?? "",
           score: hit.score ?? 0,
         }));
-        logDebug(
-          `Embedding search returned ${embeddingResults.length} results for "${query}"`,
-        );
+        logDebug(`Embedding search returned ${embeddingResults.length} results for "${query}"`);
       } else if (canEmbed && generateEmbedding && bm25Results.length > 0) {
         // Fallback: re-rank BM25 results using cosine similarity when vector
         // store is not ready but embeddings are available.
-        logDebug('Vector store not ready — re-ranking BM25 via embeddings');
+        logDebug("Vector store not ready — re-ranking BM25 via embeddings");
         const queryEmbedding = await generateEmbedding(query);
         if (queryEmbedding) {
           const scored = [];
           for (const r of bm25Results.slice(0, 50)) {
             try {
-              const docEmbedding = await generateEmbedding(
-                r.content.slice(0, 2048),
-              );
+              const docEmbedding = await generateEmbedding(r.content.slice(0, 2048));
               if (docEmbedding) {
                 const sim = cosineSimilarity(queryEmbedding, docEmbedding);
                 scored.push({ ...r, score: sim });
@@ -367,10 +342,10 @@ export async function hybridSearch(query, options = {}) {
           embeddingResults = scored;
         }
       } else {
-        logDebug('Embeddings unavailable — using BM25-only search');
+        logDebug("Embeddings unavailable — using BM25-only search");
       }
     } catch (err) {
-      logWarn('Embedding search failed — falling back to BM25-only', {
+      logWarn("Embedding search failed — falling back to BM25-only", {
         error: err.message,
       });
     }
@@ -380,12 +355,7 @@ export async function hybridSearch(query, options = {}) {
   let finalResults;
 
   if (embeddingResults.length > 0 && bm25Results.length > 0) {
-    finalResults = reciprocalRankFusion(
-      bm25Results,
-      embeddingResults,
-      bm25Weight,
-      embeddingWeight,
-    );
+    finalResults = reciprocalRankFusion(bm25Results, embeddingResults, bm25Weight, embeddingWeight);
   } else if (bm25Results.length > 0) {
     // BM25-only — normalise scores to 0–1 range.
     const maxScore = bm25Results[0]?.score || 1;
@@ -414,7 +384,7 @@ export async function hybridSearch(query, options = {}) {
     score: r.score,
     bm25Score: r.bm25Score,
     embeddingScore: r.embeddingScore,
-    snippet: extractSnippet(r.content ?? '', query),
+    snippet: extractSnippet(r.content ?? "", query),
   }));
 }
 
@@ -438,7 +408,7 @@ async function collectProjectFiles(rootDir) {
   async function walk(dir) {
     let entries;
     try {
-      const { readdir } = await import('node:fs/promises');
+      const { readdir } = await import("node:fs/promises");
       entries = await readdir(dir, { withFileTypes: true });
     } catch {
       return;
@@ -460,7 +430,7 @@ async function collectProjectFiles(rootDir) {
       if (!INDEXABLE_EXTENSIONS.has(ext)) continue;
 
       try {
-        const content = await readFile(fullPath, 'utf-8');
+        const content = await readFile(fullPath, "utf-8");
         if (content.length > MAX_FILE_BYTES) continue; // skip very large files
 
         files.push({
@@ -491,14 +461,10 @@ async function collectProjectFiles(rootDir) {
  * @returns {Promise<{files: string[], count: number, query: string, method: 'hybrid'|'bm25'|'basic'}>}
  */
 export async function searchFiles(query, options = {}) {
-  const {
-    rootDir = process.cwd(),
-    topK = 20,
-    useEmbeddings = true,
-  } = options;
+  const { rootDir = process.cwd(), topK = 20, useEmbeddings = true } = options;
 
-  if (!query || typeof query !== 'string') {
-    return { files: [], count: 0, query: query ?? '', method: 'basic' };
+  if (!query || typeof query !== "string") {
+    return { files: [], count: 0, query: query ?? "", method: "basic" };
   }
 
   try {
@@ -515,7 +481,7 @@ export async function searchFiles(query, options = {}) {
 
     if (results.length > 0) {
       const hasEmbeddings = results.some((r) => r.embeddingScore > 0);
-      const method = hasEmbeddings ? 'hybrid' : 'bm25';
+      const method = hasEmbeddings ? "hybrid" : "bm25";
       return {
         files: results.map((r) => r.path),
         count: results.length,
@@ -525,13 +491,12 @@ export async function searchFiles(query, options = {}) {
     }
 
     // ---- Fallback: basic substring search ----
-    logDebug('No BM25/hybrid results — falling back to basic substring search');
+    logDebug("No BM25/hybrid results — falling back to basic substring search");
     const lowerQuery = query.toLowerCase();
     const basicMatches = projectFiles
       .filter(
         (f) =>
-          f.path.toLowerCase().includes(lowerQuery) ||
-          f.content.toLowerCase().includes(lowerQuery),
+          f.path.toLowerCase().includes(lowerQuery) || f.content.toLowerCase().includes(lowerQuery),
       )
       .slice(0, topK)
       .map((f) => f.path);
@@ -540,11 +505,11 @@ export async function searchFiles(query, options = {}) {
       files: basicMatches,
       count: basicMatches.length,
       query,
-      method: 'basic',
+      method: "basic",
     };
   } catch (err) {
-    logError('searchFiles failed', { error: err.message });
-    return { files: [], count: 0, query, method: 'basic' };
+    logError("searchFiles failed", { error: err.message });
+    return { files: [], count: 0, query, method: "basic" };
   }
 }
 
@@ -568,7 +533,7 @@ export function getSearchStats() {
     indexed: miniSearchIndex !== null,
     documentCount: indexedDocCount,
     builtAt: indexBuiltAt ? new Date(indexBuiltAt).toISOString() : null,
-    embeddingsAvailable: typeof generateEmbedding === 'function',
+    embeddingsAvailable: typeof generateEmbedding === "function",
     vectorStoreReady: vectorStoreReady(),
   };
 }

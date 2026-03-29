@@ -78,7 +78,6 @@ function sanitizeDiscordPayload(payload = {}) {
   return sanitized;
 }
 
-
 /**
  * Send a notification to Discord via webhook.
  *
@@ -138,7 +137,9 @@ export async function sendDiscordNotification(payload) {
 
         res.on("end", () => {
           if (res.statusCode >= 200 && res.statusCode < 300) {
-            logInfo(`[discord-webhook] ✅ Sent: ${sanitizedPayload.content?.substring(0, 50) || "embed"}`);
+            logInfo(
+              `[discord-webhook] ✅ Sent: ${sanitizedPayload.content?.substring(0, 50) || "embed"}`,
+            );
             resolve({ sent: true });
           } else {
             const error = `HTTP ${res.statusCode}: ${data}`;

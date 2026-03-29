@@ -2,7 +2,7 @@
 
 /**
  * update-anq-1063.mjs
- * 
+ *
  * Updates ANQ-1063 to reflect that this is an OpenClaw Gateway integration issue,
  * not a Codebuff SDK bug.
  */

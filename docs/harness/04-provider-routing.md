@@ -18,6 +18,7 @@ The harness tracks explicit health states for each provider:
 - **unknown**: Provider state not yet determined
 
 Health state transitions are automatic based on consecutive failures/successes:
+
 - 1 failure → degraded
 - 3 failures → cooling-down
 - 2 successes → healthy
@@ -29,7 +30,6 @@ Provider timeouts are differentiated based on infrastructure type:
 - **Local models** (Ollama): 60 seconds
   - Longer timeout accounts for local GPU inference
   - Patterns: `ollama*`, `localhost`, `127.0.0.1`, `local-*`
-  
 - **Hosted models** (cloud APIs): 30 seconds
   - Faster timeout for cloud API responsiveness
   - All other providers
@@ -44,6 +44,7 @@ The system automatically returns to preferred providers (e.g., `codex`) when the
 4. Successful responses transition provider back to `healthy`
 
 Cooldown periods:
+
 - Paid providers (codex, codebuff): 2 minutes
 - Free cloud providers: 6 minutes
 - Local providers: 2 minutes

@@ -35,7 +35,7 @@ describe("closeBitmapSource", () => {
   it("handles HTMLImageElement without close method", () => {
     const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
     const img = dom.window.document.createElement("img");
-    
+
     expect(() => closeBitmapSource(img as unknown as HTMLImageElement)).not.toThrow();
   });
 });

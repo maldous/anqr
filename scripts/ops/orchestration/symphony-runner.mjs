@@ -95,7 +95,9 @@ const DEFAULT_ALLOWED_DIRTY_PATH_PATTERNS = [
 ];
 
 function normalizeRepoPath(value) {
-  return String(value || "").replace(/\\/g, "/").trim();
+  return String(value || "")
+    .replace(/\\/g, "/")
+    .trim();
 }
 
 function parseAllowedDirtyPathEnv() {
@@ -109,7 +111,9 @@ function isAllowedDirtyPath(filePath) {
   const normalized = normalizeRepoPath(filePath);
   if (!normalized) return false;
   if (DEFAULT_ALLOWED_DIRTY_PATH_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
-  return parseAllowedDirtyPathEnv().some((prefix) => normalized === prefix || normalized.startsWith(`${prefix.replace(/\/+$/g, "")}/`));
+  return parseAllowedDirtyPathEnv().some(
+    (prefix) => normalized === prefix || normalized.startsWith(`${prefix.replace(/\/+$/g, "")}/`),
+  );
 }
 
 function getWorkingTreeEntries() {
@@ -148,7 +152,6 @@ function logWorkingTreeEntries(prefix, entries) {
     logWarn(`${prefix} ... and ${entries.length - 25} more`);
   }
 }
-
 
 function getRunnerProvider() {
   return {
@@ -203,7 +206,10 @@ function gitDiffStat() {
   try {
     const files = gitDiffNames();
     if (files.length === 0) return "";
-    return execFileSync("git", ["diff", "--stat", "--", ...files], { cwd: ROOT, encoding: "utf-8" }).trim();
+    return execFileSync("git", ["diff", "--stat", "--", ...files], {
+      cwd: ROOT,
+      encoding: "utf-8",
+    }).trim();
   } catch {
     return "";
   }
@@ -254,7 +260,9 @@ function sanitizeCommitSubject(title) {
 
 function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   try {
-    const filesToStage = [...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean))];
+    const filesToStage = [
+      ...new Set((changedFiles || []).map((file) => normalizeRepoPath(file)).filter(Boolean)),
+    ];
     if (filesToStage.length === 0) {
       throw new Error("No changed source files available to stage");
     }
@@ -404,7 +412,7 @@ async function executeIssue(issue, dryRun = false) {
   // Pre-execution check: verify issue wasn't already completed externally
   const detail = await getIssueDetail(issue.id);
   if (!detail) return "skip";
-  
+
   // Deterministic external completion check: use Linear API state, not text inference
   if (detail.state?.name === "Done" || detail.state?.name === "Canceled") {
     logInfo(`[runner] Issue ${issue.identifier} already completed externally — skipping`);
@@ -471,7 +479,9 @@ async function executeIssue(issue, dryRun = false) {
     heartbeatTimer = setInterval(() => {
       const hb = heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
       if (!hb.ok) {
-        logWarn(`[runner] Heartbeat failed for ${issue.identifier}: ${hb.reason} — marking lease lost`);
+        logWarn(
+          `[runner] Heartbeat failed for ${issue.identifier}: ${hb.reason} — marking lease lost`,
+        );
         leaseValid = false;
       }
     }, HEARTBEAT_INTERVAL_MS);
@@ -514,22 +524,58 @@ async function executeIssue(issue, dryRun = false) {
       if (remainingMs <= 0) {
         const signature = "wall_clock_exhausted";
         if (priorFailureSignature === signature) {
-          markRetryExhausted(issue.identifier, { reason: "wall_clock_exhausted_repeated", signature });
+          markRetryExhausted(issue.identifier, {
+            reason: "wall_clock_exhausted_repeated",
+            signature,
+          });
           await updateIssue(issue.id, { stateId: STATES.backlog });
-          await addComment(issue.id, `🚫 **Wall-clock budget exhausted (repeated)** — quarantined to Backlog.`);
-          recordTransition(issue.identifier, { actor: "runner", reason: "wall_clock_exhausted_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+          await addComment(
+            issue.id,
+            `🚫 **Wall-clock budget exhausted (repeated)** — quarantined to Backlog.`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "wall_clock_exhausted_repeated",
+            from: "In Progress",
+            to: "Backlog",
+            runId: RUN_ID,
+          });
         } else {
-          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "wall_clock_exhausted", signature);
+          setCooldown(
+            issue.identifier,
+            RUNNER_ISSUE_COOLDOWN_MS,
+            "wall_clock_exhausted",
+            signature,
+          );
           await updateIssue(issue.id, { stateId: STATES.todo });
-          await addComment(issue.id, `⏰ **Wall-clock budget exhausted** — returned to Todo with cooldown.`);
-          recordTransition(issue.identifier, { actor: "runner", reason: "wall_clock_exhausted", from: "In Progress", to: "Todo", runId: RUN_ID });
+          await addComment(
+            issue.id,
+            `⏰ **Wall-clock budget exhausted** — returned to Todo with cooldown.`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "wall_clock_exhausted",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
         }
-        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
+        recordLinearCompletion(provider.name, {
+          completed: false,
+          priority: issue.priority,
+          estimate: issue.estimate,
+        });
         return "done";
       }
       heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
       try {
-        agentResult = await runAgent({ provider, issue: detail, projectRoot: ROOT, systemPrompt, maxMs: remainingMs });
+        agentResult = await runAgent({
+          provider,
+          issue: detail,
+          projectRoot: ROOT,
+          systemPrompt,
+          maxMs: remainingMs,
+        });
       } catch (err) {
         agentResult = {
           completed: false,
@@ -548,7 +594,13 @@ async function executeIssue(issue, dryRun = false) {
     if (!leaseValid) {
       logWarn(`[runner] Lease lost during execution of ${issue.identifier} — aborting safely`);
       gitRevert();
-      recordTransition(issue.identifier, { actor: "runner", reason: "lease_lost", from: "In Progress", to: "Abandoned", runId: RUN_ID });
+      recordTransition(issue.identifier, {
+        actor: "runner",
+        reason: "lease_lost",
+        from: "In Progress",
+        to: "Abandoned",
+        runId: RUN_ID,
+      });
       return "done";
     }
     heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
@@ -690,11 +742,29 @@ async function executeIssue(issue, dryRun = false) {
         const contRemainingMs = getRemainingMs();
         if (contRemainingMs <= 0) {
           logWarn(`[runner] Wall-clock budget exhausted before continuation — aborting`);
-          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "wall_clock_exhausted", "wall_clock_exhausted");
+          setCooldown(
+            issue.identifier,
+            RUNNER_ISSUE_COOLDOWN_MS,
+            "wall_clock_exhausted",
+            "wall_clock_exhausted",
+          );
           await updateIssue(issue.id, { stateId: STATES.todo });
-          await addComment(issue.id, `⏰ **Wall-clock budget exhausted** before continuation — returned to Todo.`);
-          recordTransition(issue.identifier, { actor: "runner", reason: "wall_clock_exhausted", from: "In Progress", to: "Todo", runId: RUN_ID });
-          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
+          await addComment(
+            issue.id,
+            `⏰ **Wall-clock budget exhausted** before continuation — returned to Todo.`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "wall_clock_exhausted",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
+          recordLinearCompletion(provider.name, {
+            completed: false,
+            priority: issue.priority,
+            estimate: issue.estimate,
+          });
           return "done";
         }
         heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
@@ -720,7 +790,13 @@ async function executeIssue(issue, dryRun = false) {
         if (!leaseValid) {
           logWarn(`[runner] Lease lost during continuation of ${issue.identifier} — aborting`);
           gitRevert();
-          recordTransition(issue.identifier, { actor: "runner", reason: "lease_lost", from: "In Progress", to: "Abandoned", runId: RUN_ID });
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "lease_lost",
+            from: "In Progress",
+            to: "Abandoned",
+            runId: RUN_ID,
+          });
           return "done";
         }
 
@@ -733,15 +809,41 @@ async function executeIssue(issue, dryRun = false) {
           {
             const contSignature = "continuation_exhausted";
             if (priorFailureSignature === contSignature) {
-              markRetryExhausted(issue.identifier, { reason: "continuation_exhausted_repeated", signature: contSignature });
+              markRetryExhausted(issue.identifier, {
+                reason: "continuation_exhausted_repeated",
+                signature: contSignature,
+              });
               await updateIssue(issue.id, { stateId: STATES.backlog });
-              await addComment(issue.id, `🚫 **Continuation exhausted (repeated)** — same failure fingerprint. Moved to Backlog.`);
-              recordTransition(issue.identifier, { actor: "runner", reason: "continuation_exhausted_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+              await addComment(
+                issue.id,
+                `🚫 **Continuation exhausted (repeated)** — same failure fingerprint. Moved to Backlog.`,
+              );
+              recordTransition(issue.identifier, {
+                actor: "runner",
+                reason: "continuation_exhausted_repeated",
+                from: "In Progress",
+                to: "Backlog",
+                runId: RUN_ID,
+              });
             } else {
-              setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "continuation_exhausted", contSignature);
+              setCooldown(
+                issue.identifier,
+                RUNNER_ISSUE_COOLDOWN_MS,
+                "continuation_exhausted",
+                contSignature,
+              );
               await updateIssue(issue.id, { stateId: STATES.todo });
-              await addComment(issue.id, `🔄 **Continuation exhausted** — agent still has active subgoals after second attempt. Returned to Todo with cooldown.`);
-              recordTransition(issue.identifier, { actor: "runner", reason: "continuation_exhausted", from: "In Progress", to: "Todo", runId: RUN_ID });
+              await addComment(
+                issue.id,
+                `🔄 **Continuation exhausted** — agent still has active subgoals after second attempt. Returned to Todo with cooldown.`,
+              );
+              recordTransition(issue.identifier, {
+                actor: "runner",
+                reason: "continuation_exhausted",
+                from: "In Progress",
+                to: "Todo",
+                runId: RUN_ID,
+              });
             }
           }
           logWarn(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
@@ -881,7 +983,9 @@ async function executeIssue(issue, dryRun = false) {
       // Wall-clock + lease check before each validation fix attempt
       const fixRemainingMs = getRemainingMs();
       if (fixRemainingMs <= 0 || !leaseValid) {
-        logWarn(`[runner] ${!leaseValid ? "Lease lost" : "Wall-clock exhausted"} during validation fixes — breaking`);
+        logWarn(
+          `[runner] ${!leaseValid ? "Lease lost" : "Wall-clock exhausted"} during validation fixes — breaking`,
+        );
         break;
       }
       validationFixAttempts += 1;
@@ -912,7 +1016,13 @@ async function executeIssue(issue, dryRun = false) {
     if (!leaseValid) {
       logWarn(`[runner] Lease lost during validation fixes of ${issue.identifier} — aborting`);
       gitRevert();
-      recordTransition(issue.identifier, { actor: "runner", reason: "lease_lost", from: "In Progress", to: "Abandoned", runId: RUN_ID });
+      recordTransition(issue.identifier, {
+        actor: "runner",
+        reason: "lease_lost",
+        from: "In Progress",
+        to: "Abandoned",
+        runId: RUN_ID,
+      });
       return "done";
     }
 
@@ -951,7 +1061,10 @@ ${String(r.detail).slice(0, 1000)}\n`,
         const valSignature = `validation_failed:${validation.signature || "unknown"}`;
         if (priorFailureSignature === valSignature) {
           await updateIssue(issue.id, { stateId: STATES.backlog });
-          markRetryExhausted(issue.identifier, { reason: "validation_failed_repeated", signature: valSignature });
+          markRetryExhausted(issue.identifier, {
+            reason: "validation_failed_repeated",
+            signature: valSignature,
+          });
           await addComment(
             issue.id,
             `🚫 **Validation failed (repeated same signature)** after ${validationFixAttempts} fix attempt(s). Quarantined to Backlog.\n\n${validation.results
@@ -959,9 +1072,20 @@ ${String(r.detail).slice(0, 1000)}\n`,
               .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 1000)}\n`)
               .join("\n")}`,
           );
-          recordTransition(issue.identifier, { actor: "runner", reason: "validation_failed_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "validation_failed_repeated",
+            from: "In Progress",
+            to: "Backlog",
+            runId: RUN_ID,
+          });
         } else {
-          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed", valSignature);
+          setCooldown(
+            issue.identifier,
+            RUNNER_ISSUE_COOLDOWN_MS,
+            "validation_failed",
+            valSignature,
+          );
           await updateIssue(issue.id, { stateId: STATES.todo });
           await addComment(
             issue.id,
@@ -996,10 +1120,19 @@ ${String(r.detail).slice(0, 1000)}\n`,
       gitRevert();
       const gcfSignature = "git_commit_failed";
       if (priorFailureSignature === gcfSignature) {
-        markRetryExhausted(issue.identifier, { reason: "git_commit_failed_repeated", signature: gcfSignature });
+        markRetryExhausted(issue.identifier, {
+          reason: "git_commit_failed_repeated",
+          signature: gcfSignature,
+        });
         await updateIssue(issue.id, { stateId: STATES.backlog });
         await addComment(issue.id, "🚫 **Git commit failed (repeated)** — quarantined to Backlog.");
-        recordTransition(issue.identifier, { actor: "runner", reason: "git_commit_failed_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "git_commit_failed_repeated",
+          from: "In Progress",
+          to: "Backlog",
+          runId: RUN_ID,
+        });
       } else {
         setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "git_commit_failed", gcfSignature);
         await updateIssue(issue.id, { stateId: STATES.todo });
@@ -1137,7 +1270,9 @@ function showStatus() {
   if (workingTree.blocked.length === 0 && workingTree.allowed.length === 0) {
     logInfo(`  Git clean: ✅`);
   } else if (workingTree.blocked.length === 0) {
-    logInfo(`  Git clean: ⚠️ runtime-generated dirty paths ignored (${workingTree.allowed.length})`);
+    logInfo(
+      `  Git clean: ⚠️ runtime-generated dirty paths ignored (${workingTree.allowed.length})`,
+    );
   } else {
     logInfo(`  Git clean: ❌ (${workingTree.blocked.length} blocking path(s))`);
   }

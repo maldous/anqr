@@ -22,7 +22,9 @@ export function isLegitimateNonToolTurn(content, provider, response) {
   return (
     response?.needsContinuation === true ||
     (provider?.name === "symphony-bridge" && str.length > 0) ||
-    /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(str) ||
+    /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(
+      str,
+    ) ||
     /\bsubgoal/i.test(str) ||
     /\b(reading|examining|looking at|checking) (the |files?|code)/i.test(str)
   );

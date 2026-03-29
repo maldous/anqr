@@ -11,6 +11,7 @@
     "tests/**/*.tsx",
     "scripts/**/*.spec.ts",
     "scripts/**/*.test.ts",
+    "scripts/**/*.d.ts",
     "playwright.config.ts",
     "vitest.config.ts",
     "src/**/*.d.ts"

@@ -16,7 +16,12 @@ import { randomUUID } from "node:crypto";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { createLogger } from "../logger.mjs";
 import { chunkFile, collectFiles } from "./chunker.mjs";
-import { cosineSimilarity, generateEmbedding, generateEmbeddings, isOllamaAvailable } from "./embeddings.mjs";
+import {
+  cosineSimilarity,
+  generateEmbedding,
+  generateEmbeddings,
+  isOllamaAvailable,
+} from "./embeddings.mjs";
 
 const { logDebug, logInfo, logWarn, logError } = createLogger("rag-vector-store");
 
@@ -41,16 +46,32 @@ const INDEX_DIR = resolve(PROJECT_ROOT, "reports/rag-index");
 const INDEX_FILE = join(INDEX_DIR, "index.json");
 const META_FILE = join(INDEX_DIR, "meta.json");
 const DEFAULT_EXTENSIONS = [
-  ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
-  ".md", ".mdx",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".md",
+  ".mdx",
   ".json",
-  ".css", ".html",
-  ".yml", ".yaml",
-  ".sh", ".py",
-  ".service", ".timer",
-  ".java", ".kt", ".swift",
-  ".gradle", ".properties", ".xml",
-  ".plist", ".pbxproj", ".xcconfig",
+  ".css",
+  ".html",
+  ".yml",
+  ".yaml",
+  ".sh",
+  ".py",
+  ".service",
+  ".timer",
+  ".java",
+  ".kt",
+  ".swift",
+  ".gradle",
+  ".properties",
+  ".xml",
+  ".plist",
+  ".pbxproj",
+  ".xcconfig",
 ];
 const DIRECTORY_SAVE_INTERVAL = 10;
 
@@ -87,14 +108,16 @@ function sanitizeMetaRecord(value) {
 }
 
 function isValidEntry(entry) {
-  return entry
-    && typeof entry === "object"
-    && typeof entry.filePath === "string"
-    && typeof entry.content === "string"
-    && Array.isArray(entry.embedding)
-    && Number.isFinite(entry.startLine)
-    && Number.isFinite(entry.endLine)
-    && typeof entry.type === "string";
+  return (
+    entry &&
+    typeof entry === "object" &&
+    typeof entry.filePath === "string" &&
+    typeof entry.content === "string" &&
+    Array.isArray(entry.embedding) &&
+    Number.isFinite(entry.startLine) &&
+    Number.isFinite(entry.endLine) &&
+    typeof entry.type === "string"
+  );
 }
 
 async function ensureIndexDir() {
@@ -136,7 +159,10 @@ async function loadIndex() {
   try {
     const raw = await readFile(META_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    const entries = Object.entries(parsed || {}).map(([filePath, value]) => [toResolvedPath(filePath), sanitizeMetaRecord(value)]);
+    const entries = Object.entries(parsed || {}).map(([filePath, value]) => [
+      toResolvedPath(filePath),
+      sanitizeMetaRecord(value),
+    ]);
     metaCache = new Map(entries);
     logDebug(`Loaded metadata for ${metaCache.size} files`);
   } catch (err) {
@@ -186,7 +212,9 @@ async function getFileMtime(filePath) {
 
 function removeEntriesForResolvedPath(resolvedPath) {
   const before = (indexCache || []).length;
-  indexCache = (indexCache || []).filter((entry) => toResolvedPath(entry.filePath) !== resolvedPath);
+  indexCache = (indexCache || []).filter(
+    (entry) => toResolvedPath(entry.filePath) !== resolvedPath,
+  );
   if (indexCache.length !== before) {
     markDirty();
   }
@@ -263,13 +291,19 @@ export async function flushIndex() {
 export async function pruneIndex(eligibleFilePaths) {
   await loadIndex();
 
-  const eligibleResolved = new Set(Array.from(eligibleFilePaths || []).map((filePath) => toResolvedPath(filePath)));
+  const eligibleResolved = new Set(
+    Array.from(eligibleFilePaths || []).map((filePath) => toResolvedPath(filePath)),
+  );
   const previousEntryCount = (indexCache || []).length;
   const previousMetaCount = (metaCache || new Map()).size;
 
-  indexCache = (indexCache || []).filter((entry) => eligibleResolved.has(toResolvedPath(entry.filePath)));
+  indexCache = (indexCache || []).filter((entry) =>
+    eligibleResolved.has(toResolvedPath(entry.filePath)),
+  );
   metaCache = new Map(
-    Array.from(metaCache || new Map()).filter(([filePath]) => eligibleResolved.has(toResolvedPath(filePath))),
+    Array.from(metaCache || new Map()).filter(([filePath]) =>
+      eligibleResolved.has(toResolvedPath(filePath)),
+    ),
   );
 
   const prunedEntries = previousEntryCount - indexCache.length;
@@ -322,7 +356,9 @@ export async function indexDirectory(dirPath, options = {}) {
     await saveIndex();
   }
 
-  logInfo(`Directory indexing complete: ${indexedFiles}/${files.length} files indexed, ${totalChunks} total chunks`);
+  logInfo(
+    `Directory indexing complete: ${indexedFiles}/${files.length} files indexed, ${totalChunks} total chunks`,
+  );
   return { totalFiles: files.length, indexedFiles, totalChunks };
 }
 
@@ -344,9 +380,10 @@ export async function search(query, topK = 5, options = {}) {
   }
 
   const limit = Math.max(1, Number(topK) || 5);
-  const perFileLimit = Number.isFinite(options.perFileLimit) && options.perFileLimit > 0
-    ? Math.floor(options.perFileLimit)
-    : Number.POSITIVE_INFINITY;
+  const perFileLimit =
+    Number.isFinite(options.perFileLimit) && options.perFileLimit > 0
+      ? Math.floor(options.perFileLimit)
+      : Number.POSITIVE_INFINITY;
 
   const scored = [];
   for (const entry of indexCache) {
@@ -377,7 +414,9 @@ export async function search(query, topK = 5, options = {}) {
     if (results.length >= limit) break;
   }
 
-  logInfo(`Search for "${String(query).slice(0, 60)}": ${results.length} results (top score: ${results[0]?.score?.toFixed(4) || "N/A"})`);
+  logInfo(
+    `Search for "${String(query).slice(0, 60)}": ${results.length} results (top score: ${results[0]?.score?.toFixed(4) || "N/A"})`,
+  );
   return results;
 }
 

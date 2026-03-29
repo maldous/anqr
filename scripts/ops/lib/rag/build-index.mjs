@@ -40,16 +40,32 @@ const INCLUDE_I18N = isTruthy(process.env.RAG_BUILD_INCLUDE_I18N);
 const VERBOSE = isTruthy(process.env.RAG_BUILD_VERBOSE) || process.argv.includes("--verbose");
 
 const SUPPORTED_EXTENSIONS = new Set([
-  ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
-  ".md", ".mdx",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".md",
+  ".mdx",
   ".json",
-  ".css", ".html",
-  ".yml", ".yaml",
-  ".sh", ".py",
-  ".service", ".timer",
-  ".java", ".kt", ".swift",
-  ".gradle", ".properties", ".xml",
-  ".plist", ".pbxproj", ".xcconfig",
+  ".css",
+  ".html",
+  ".yml",
+  ".yaml",
+  ".sh",
+  ".py",
+  ".service",
+  ".timer",
+  ".java",
+  ".kt",
+  ".swift",
+  ".gradle",
+  ".properties",
+  ".xml",
+  ".plist",
+  ".pbxproj",
+  ".xcconfig",
 ]);
 
 const SUPPORTED_BASENAMES = new Set([
@@ -96,9 +112,7 @@ const I18N_EXCLUDED_PATH_PATTERNS = [
   /(^|\/)apps\/web\/src\/i18n\/static\//i,
 ];
 
-const MIRROR_PREFERENCES = [
-  { from: "android/", to: "apps/android/" },
-];
+const MIRROR_PREFERENCES = [{ from: "android/", to: "apps/android/" }];
 
 const PRIORITY_RULES = [
   [/^scripts\/ops\//i, 0],
@@ -151,13 +165,16 @@ function shouldSkipMirroredPath(relPath, trackedSet) {
 function shouldIncludeJson(relPath) {
   const name = basename(relPath);
   if (JSON_EXCLUDED_NAMES.has(name)) return false;
-  if (!INCLUDE_I18N && I18N_EXCLUDED_PATH_PATTERNS.some((pattern) => pattern.test(relPath))) return false;
+  if (!INCLUDE_I18N && I18N_EXCLUDED_PATH_PATTERNS.some((pattern) => pattern.test(relPath)))
+    return false;
   return true;
 }
 
 function classifyFile(relPath, trackedSet) {
-  if (shouldSkipMirroredPath(relPath, trackedSet)) return { include: false, reason: "mirrored_duplicate" };
-  if (EXCLUDED_PATH_PATTERNS.some((pattern) => pattern.test(relPath))) return { include: false, reason: "excluded_path" };
+  if (shouldSkipMirroredPath(relPath, trackedSet))
+    return { include: false, reason: "mirrored_duplicate" };
+  if (EXCLUDED_PATH_PATTERNS.some((pattern) => pattern.test(relPath)))
+    return { include: false, reason: "excluded_path" };
   if (!INCLUDE_I18N && I18N_EXCLUDED_PATH_PATTERNS.some((pattern) => pattern.test(relPath))) {
     return { include: false, reason: "i18n_noise" };
   }
@@ -257,7 +274,9 @@ async function main() {
   const ollamaOk = await isOllamaAvailable({ force: true });
   if (!ollamaOk) {
     logError("Ollama is not available. Cannot build RAG index.");
-    logError(`Ensure Ollama is running at ${process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434"}`);
+    logError(
+      `Ensure Ollama is running at ${process.env.OLLAMA_API_BASE || "http://127.0.0.1:11434"}`,
+    );
     process.exit(1);
   }
   logInfo("✅ Ollama is available");
@@ -280,13 +299,19 @@ async function main() {
     logSkipSummary(discovery.statsByReason);
   }
 
-  const pruneResult = shouldClear ? { prunedEntries: 0, prunedMeta: 0 } : await pruneIndex(eligibleAbsPaths);
+  const pruneResult = shouldClear
+    ? { prunedEntries: 0, prunedMeta: 0 }
+    : await pruneIndex(eligibleAbsPaths);
   if (pruneResult.prunedEntries > 0 || pruneResult.prunedMeta > 0) {
-    logInfo(`🧹 Pruned stale index state: ${pruneResult.prunedEntries} entries, ${pruneResult.prunedMeta} file metadata records`);
+    logInfo(
+      `🧹 Pruned stale index state: ${pruneResult.prunedEntries} entries, ${pruneResult.prunedMeta} file metadata records`,
+    );
   }
 
   const beforeStats = await getIndexStats();
-  logInfo(`📊 Existing index: ${beforeStats.totalEntries} entries, ${beforeStats.totalFiles} files`);
+  logInfo(
+    `📊 Existing index: ${beforeStats.totalEntries} entries, ${beforeStats.totalFiles} files`,
+  );
 
   let totalIndexed = 0;
   let totalChunks = 0;
@@ -319,7 +344,9 @@ async function main() {
     }
 
     if (processed % PROGRESS_EVERY === 0) {
-      logInfo(`📈 Progress: ${processed}/${discovery.included.length} files processed, ${totalIndexed} indexed, ${failures} failures`);
+      logInfo(
+        `📈 Progress: ${processed}/${discovery.included.length} files processed, ${totalIndexed} indexed, ${failures} failures`,
+      );
     }
   }
 
@@ -339,12 +366,16 @@ async function main() {
   logInfo(`📝 Files indexed this run: ${totalIndexed}`);
   logInfo(`🧩 Chunks touched this run: ${totalChunks}`);
   logInfo(`⚠️  Failures: ${failures}`);
-  logInfo(`📊 Index size: ${finalStats.totalEntries} entries, ${(finalStats.indexSizeBytes / 1024).toFixed(1)} KB on disk`);
+  logInfo(
+    `📊 Index size: ${finalStats.totalEntries} entries, ${(finalStats.indexSizeBytes / 1024).toFixed(1)} KB on disk`,
+  );
   logInfo(`📂 Files in index: ${finalStats.totalFiles}`);
 
   if (finalStats.types && Object.keys(finalStats.types).length > 0) {
     logInfo("📋 Chunk types:");
-    for (const [type, count] of Object.entries(finalStats.types).sort((a, b) => a[0].localeCompare(b[0]))) {
+    for (const [type, count] of Object.entries(finalStats.types).sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    )) {
       logInfo(`   ${type}: ${count}`);
     }
   }

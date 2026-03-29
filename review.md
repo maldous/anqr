@@ -25,32 +25,32 @@ Review all open backlog issues, determine if still applicable, update with comme
 
 ## Open Issues to Review (24 total)
 
-| #   | ID       | Title                                                      | Status   | Decision | Notes                                 |
-| --- | -------- | ---------------------------------------------------------- | -------- | -------- | ------------------------------------- |
-| 1   | ANQ-1098 | Remove single line light bulb from Discord thinking output | REVIEWED | KEEP     | Still valid - 💡 appears in line 3055 |
+| #   | ID       | Title                                                      | Status   | Decision | Notes                                  |
+| --- | -------- | ---------------------------------------------------------- | -------- | -------- | -------------------------------------- |
+| 1   | ANQ-1098 | Remove single line light bulb from Discord thinking output | REVIEWED | KEEP     | Still valid - 💡 appears in line 3055  |
 | 2   | ANQ-1093 | [Sonar] String.raw should be used                          | REVIEWED | DELETE   | File reopened-stuck-issues.mjs deleted |
-| 3   | ANQ-1089 | Tool permission error: run_terminal_command not available  | REVIEWED | CLOSE    | FIXED - tool now in agent definitions |
-| 4   | ANQ-1077 | Cerebras hallucinated file read command                    | REVIEWED | KEEP     | Still valid - model behavior          |
-| 5   | ANQ-1064 | Cerebras model hallucinating task_complete                 | REVIEWED | KEEP     | Still valid - model behavior          |
-| 6   | ANQ-1062 | UI & Analytics Coverage (+3%)                              | REVIEWED | KEEP     | Ongoing work                          |
-| 7   | ANQ-1061 | Testing Infrastructure (+2%)                               | REVIEWED | KEEP     | Ongoing work                          |
-| 8   | ANQ-1060 | Phase 5: Harness Model Routing Tests                       | REVIEWED | KEEP     | Ongoing work                          |
-| 9   | ANQ-1059 | Phase 4: Platform & Netlify Adapters                       | REVIEWED | KEEP     | Ongoing work                          |
-| 10  | ANQ-1057 | Phase 2: Domain Core Unit Tests                            | REVIEWED | KEEP     | Ongoing work                          |
-| 11  | ANQ-1056 | Implement missing tools in Symphony/Codebuff               | REVIEWED | CLOSE    | FIXED - tools implemented             |
-| 12  | ANQ-1053 | Fix improper issue closure with 'Stuck' error              | REVIEWED | CLOSE    | FIXED - stability overhaul            |
-| 13  | ANQ-1042 | Review and commit uncommitted harness changes              | REVIEWED | KEEP     | Still valid - git has changes         |
-| 14  | ANQ-1021 | Grok model context understanding during startup            | REVIEWED | KEEP     | Still valid                           |
-| 15  | ANQ-350  | Automated issue hygiene                                    | REVIEWED | KEEP     | Infrastructure work                   |
-| 16  | ANQ-349  | Incident auto-creation with evidence                       | REVIEWED | KEEP     | Infrastructure work                   |
-| 17  | ANQ-348  | Escalation and notification system                         | REVIEWED | KEEP     | Infrastructure work                   |
-| 18  | ANQ-345  | Self-healing automation                                    | REVIEWED | KEEP     | Infrastructure work                   |
-| 19  | ANQ-321  | Pipeline task latency monitoring                           | REVIEWED | KEEP     | Governance work                       |
-| 20  | ANQ-320  | Linear guardian orchestration                              | REVIEWED | KEEP     | Infrastructure work                   |
-| 21  | ANQ-318  | Watchdog monitoring system                                 | REVIEWED | KEEP     | Infrastructure work                   |
-| 22  | ANQ-317  | Retry and failover pipeline                                | REVIEWED | KEEP     | Infrastructure work                   |
-| 23  | ANQ-307  | TypeScript baseline compliance                             | REVIEWED | KEEP     | Governance work                       |
-| 24  | ANQ-306  | Enforce architecture boundary rules                        | REVIEWED | KEEP     | Governance work                       |
+| 3   | ANQ-1089 | Tool permission error: run_terminal_command not available  | REVIEWED | CLOSE    | FIXED - tool now in agent definitions  |
+| 4   | ANQ-1077 | Cerebras hallucinated file read command                    | REVIEWED | KEEP     | Still valid - model behavior           |
+| 5   | ANQ-1064 | Cerebras model hallucinating task_complete                 | REVIEWED | KEEP     | Still valid - model behavior           |
+| 6   | ANQ-1062 | UI & Analytics Coverage (+3%)                              | REVIEWED | KEEP     | Ongoing work                           |
+| 7   | ANQ-1061 | Testing Infrastructure (+2%)                               | REVIEWED | KEEP     | Ongoing work                           |
+| 8   | ANQ-1060 | Phase 5: Harness Model Routing Tests                       | REVIEWED | KEEP     | Ongoing work                           |
+| 9   | ANQ-1059 | Phase 4: Platform & Netlify Adapters                       | REVIEWED | KEEP     | Ongoing work                           |
+| 10  | ANQ-1057 | Phase 2: Domain Core Unit Tests                            | REVIEWED | KEEP     | Ongoing work                           |
+| 11  | ANQ-1056 | Implement missing tools in Symphony/Codebuff               | REVIEWED | CLOSE    | FIXED - tools implemented              |
+| 12  | ANQ-1053 | Fix improper issue closure with 'Stuck' error              | REVIEWED | CLOSE    | FIXED - stability overhaul             |
+| 13  | ANQ-1042 | Review and commit uncommitted harness changes              | REVIEWED | KEEP     | Still valid - git has changes          |
+| 14  | ANQ-1021 | Grok model context understanding during startup            | REVIEWED | KEEP     | Still valid                            |
+| 15  | ANQ-350  | Automated issue hygiene                                    | REVIEWED | KEEP     | Infrastructure work                    |
+| 16  | ANQ-349  | Incident auto-creation with evidence                       | REVIEWED | KEEP     | Infrastructure work                    |
+| 17  | ANQ-348  | Escalation and notification system                         | REVIEWED | KEEP     | Infrastructure work                    |
+| 18  | ANQ-345  | Self-healing automation                                    | REVIEWED | KEEP     | Infrastructure work                    |
+| 19  | ANQ-321  | Pipeline task latency monitoring                           | REVIEWED | KEEP     | Governance work                        |
+| 20  | ANQ-320  | Linear guardian orchestration                              | REVIEWED | KEEP     | Infrastructure work                    |
+| 21  | ANQ-318  | Watchdog monitoring system                                 | REVIEWED | KEEP     | Infrastructure work                    |
+| 22  | ANQ-317  | Retry and failover pipeline                                | REVIEWED | KEEP     | Infrastructure work                    |
+| 23  | ANQ-307  | TypeScript baseline compliance                             | REVIEWED | KEEP     | Governance work                        |
+| 24  | ANQ-306  | Enforce architecture boundary rules                        | REVIEWED | KEEP     | Governance work                        |
 
 ## Review Process
 

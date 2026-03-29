@@ -22,6 +22,7 @@ ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenA
 ### Adaptive context system
 
 The bridge dynamically adjusts per-provider context limits at runtime:
+
 - **413/context errors** → shrink provider's token ceiling (precise ratio or 25% flat)
 - **429/rate-limit** → throttle provider with backoff timer from headers
 - **Stream errors** → fatal stream errors (part.type === "error") are classified and thrown after the stream completes to trigger adaptive recording + provider fallback
@@ -38,6 +39,7 @@ The bridge dynamically adjusts per-provider context limits at runtime:
 ### Validation commands
 
 For harness work:
+
 ```bash
 npx vitest run scripts/ops/integrations/model/symphony-adaptive-context.spec.ts
 npx vitest run scripts/ops/integrations/model/symphony-bridge-truncation.spec.ts
@@ -46,6 +48,7 @@ npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-fallback.sp
 ```
 
 For product work:
+
 ```bash
 npm run typecheck:all
 npm run lint:all

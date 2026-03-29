@@ -25,7 +25,7 @@ describe("calculateOptimalVersion", () => {
     const levelM = calculateOptimalVersion(data, "M");
     const levelQ = calculateOptimalVersion(data, "Q");
     const levelH = calculateOptimalVersion(data, "H");
-    
+
     expect(levelL).toBeLessThanOrEqual(levelM);
     expect(levelM).toBeLessThanOrEqual(levelQ);
     expect(levelQ).toBeLessThanOrEqual(levelH);

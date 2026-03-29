@@ -1,12 +1,12 @@
-import { AgentDefinition } from './types/agent-definition.types'
+import { AgentDefinition } from "./types/agent-definition.types";
 
 const definition: AgentDefinition = {
-  id: 'harness-helper',
-  displayName: 'ANQR Harness Helper',
-  model: 'anthropic/claude-sonnet-4.5',
+  id: "harness-helper",
+  displayName: "ANQR Harness Helper",
+  model: "anthropic/claude-sonnet-4.5",
 
   spawnerPrompt:
-    'Spawn this agent when working on ANQR harness, Symphony Bridge, Codebuff Bridge, provider routing, adaptive context, or credit-gate code. It has deep context on the harness architecture and can help debug provider issues, update bridge code, and run the correct validation commands.',
+    "Spawn this agent when working on ANQR harness, Symphony Bridge, Codebuff Bridge, provider routing, adaptive context, or credit-gate code. It has deep context on the harness architecture and can help debug provider issues, update bridge code, and run the correct validation commands.",
 
   includeMessageHistory: true,
 
@@ -79,17 +79,17 @@ journalctl --user -u anqr-symphony-bridge.service --no-pager -n 50
 `,
 
   toolNames: [
-    'read_files',
-    'code_search',
-    'glob',
-    'list_directory',
-    'run_terminal_command',
-    'str_replace',
-    'write_file',
-    'spawn_agents',
-    'set_output',
-    'end_turn',
+    "read_files",
+    "code_search",
+    "glob",
+    "list_directory",
+    "run_terminal_command",
+    "str_replace",
+    "write_file",
+    "spawn_agents",
+    "set_output",
+    "end_turn",
   ],
-}
+};
 
-export default definition
+export default definition;

@@ -4,10 +4,10 @@
  * Create Linear issue for Discord double message bug fix
  */
 
-import { createIssue, STATES, LABELS } from './ops/integrations/linear/linear-client.mjs';
+import { createIssue, STATES, LABELS } from "./ops/integrations/linear/linear-client.mjs";
 
 const issue = await createIssue({
-  title: 'Fix double messages in Discord notifications from Linear/Symphony integration',
+  title: "Fix double messages in Discord notifications from Linear/Symphony integration",
   description: `## Summary
 
 Discord notifications are showing duplicate messages when Linear issues are being processed through Symphony/Codebuff integration.

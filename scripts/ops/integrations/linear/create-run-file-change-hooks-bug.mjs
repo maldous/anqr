@@ -2,7 +2,7 @@
 
 /**
  * create-run-file-change-hooks-bug.mjs
- * 
+ *
  * Raises Linear issue for Codebuff SDK bug: run_file_change_hooks receiving
  * string instead of array for files parameter.
  */
@@ -122,7 +122,7 @@ async function main() {
   console.log(`   URL: https://linear.app/anqr/issue/${issue.identifier}`);
   console.log(`   State: ${issue.state.name}`);
   console.log(`   Labels: ${issue.labels.nodes.map((l) => l.name).join(", ")}`);
-  
+
   return issue;
 }
 

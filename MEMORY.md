@@ -71,6 +71,7 @@ The session state implementation (symphony-session-state.mjs) tracks provider se
 **Known failure**: Groq switching mid-conversation (2026-03-27) "had no idea what was going on"
 
 **Potential solutions**:
+
 - Option 1: Store message hash, verify continuity when switching providers
 - Option 2: Store full message array server-side as source of truth
 - Option 3: Validate context coherence (role alternation, message integrity)
@@ -85,12 +86,12 @@ Note: Unable to create Linear issue - workspace exceeded free issue limit. Archi
 ### 2026-03-28T04:58:32.127Z - Watchdog rolled back codebuff bridge from d0f43fc26 to 64799d5e2 (stuck in activating for 66s)
 
 ╔════════════════════════════════════════════════════════════════╗
-║ 🚨 WATCHDOG AUTOMATIC ROLLBACK 🚨                              ║
+║ 🚨 WATCHDOG AUTOMATIC ROLLBACK 🚨 ║
 ╠════════════════════════════════════════════════════════════════╣
-║ Service:        codebuff                                        ║
-║ Failed Commit:  d0f43fc26                                       ║
-║ Rolled Back To: 64799d5e2                                       ║
-║ Reason:         stuck in activating for 66s                     ║
+║ Service: codebuff ║
+║ Failed Commit: d0f43fc26 ║
+║ Rolled Back To: 64799d5e2 ║
+║ Reason: stuck in activating for 66s ║
 ╠════════════════════════════════════════════════════════════════╣
-║ ⚠️  REVIEW THE FAILED COMMIT BEFORE MAKING NEW CHANGES         ║
+║ ⚠️ REVIEW THE FAILED COMMIT BEFORE MAKING NEW CHANGES ║
 ╚════════════════════════════════════════════════════════════════╝

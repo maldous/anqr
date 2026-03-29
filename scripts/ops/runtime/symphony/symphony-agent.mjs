@@ -866,7 +866,11 @@ async function runToolLoop({
 
       // Handle autonomous agents (like Codebuff) and streaming responses
       // that complete in one run or return content without tool calls
-      if ((provider.requiresSdk || response.needsContinuation) && msg.content && msg.content.trim().length > 0) {
+      if (
+        (provider.requiresSdk || response.needsContinuation) &&
+        msg.content &&
+        msg.content.trim().length > 0
+      ) {
         const content = msg.content;
 
         // Refined failure detection based on actual Codebuff outputs:
@@ -993,11 +997,13 @@ async function runToolLoop({
 
       // Check if this is a legitimate non-tool turn (planning, thinking, continuation signal)
       const content = msg.content || "";
-      const isLegitimateNonToolTurn = 
+      const isLegitimateNonToolTurn =
         // Bridge signaled continuation needed
         response.needsContinuation ||
         // Planning/understanding phrases
-        /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(content) ||
+        /\b(let me (understand|read|check|analyze|review)|I('ll| will) (start by|need to|first)|here('s| is) my plan|steps?:|approach:|thinking:|analyzing:|reviewing:)/i.test(
+          content,
+        ) ||
         // Subgoal management activity
         /\bsubgoal/i.test(content) ||
         // Reading/context gathering

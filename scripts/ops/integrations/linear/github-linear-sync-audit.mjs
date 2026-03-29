@@ -2,9 +2,9 @@
 
 /**
  * github-linear-sync-audit.mjs — Audit GitHub issues against Linear
- * 
+ *
  * Identifies GitHub issues that are no longer linked to active Linear issues.
- * 
+ *
  * Usage:
  *   GITHUB_TOKEN=... LINEAR_API_KEY=... node scripts/ops/integrations/linear/github-linear-sync-audit.mjs
  *   GITHUB_TOKEN=... LINEAR_API_KEY=... node scripts/ops/integrations/linear/github-linear-sync-audit.mjs --close-orphans
@@ -51,9 +51,9 @@ async function fetchGitHubIssues(state = "open") {
       }
 
       const data = await res.json();
-      
+
       // Filter out pull requests (they show up in the issues API)
-      const actualIssues = data.filter(issue => !issue.pull_request);
+      const actualIssues = data.filter((issue) => !issue.pull_request);
       issues.push(...actualIssues);
 
       hasMore = data.length === 100;
@@ -69,7 +69,7 @@ async function fetchGitHubIssues(state = "open") {
 async function closeGitHubIssue(issueNumber, reason) {
   const token = getGitHubToken();
   const url = `${GITHUB_API}/repos/${GITHUB_REPO}/issues/${issueNumber}`;
-  
+
   const res = await fetch(url, {
     method: "PATCH",
     headers: {
@@ -137,12 +137,21 @@ async function auditSync(closeOrphans = false) {
 
   // Fetch Linear issues (all states)
   logInfo("📥 Fetching Linear issues...");
-  const allStates = ["Backlog", "Todo", "In Progress", "In Review", "Blocked", "Human Review", "Done", "Canceled"];
+  const allStates = [
+    "Backlog",
+    "Todo",
+    "In Progress",
+    "In Review",
+    "Blocked",
+    "Human Review",
+    "Done",
+    "Canceled",
+  ];
   const linearIssues = await listIssuesByState(allStates);
   logInfo(`Found ${linearIssues.length} Linear issues (all states)\n`);
 
   // Build Linear identifier map
-  const linearIdentifiers = new Set(linearIssues.map(i => i.identifier));
+  const linearIdentifiers = new Set(linearIssues.map((i) => i.identifier));
   logDebug(`Linear identifiers: ${Array.from(linearIdentifiers).slice(0, 10).join(", ")}...\n`);
 
   // Analyze GitHub issues
@@ -186,8 +195,8 @@ async function auditSync(closeOrphans = false) {
       }
     } else {
       // Multiple Linear IDs found
-      const activeIds = linkedIds.filter(id => linearIdentifiers.has(id));
-      
+      const activeIds = linkedIds.filter((id) => linearIdentifiers.has(id));
+
       if (activeIds.length === 0) {
         orphanedIssues.push({
           number: ghIssue.number,
@@ -210,18 +219,18 @@ async function auditSync(closeOrphans = false) {
   }
 
   // Report findings
-  logInfo("=" .repeat(80));
+  logInfo("=".repeat(80));
   logInfo("AUDIT RESULTS");
-  logInfo("=" .repeat(80) + "\n");
+  logInfo("=".repeat(80) + "\n");
 
   logInfo(`✅ Linked issues: ${linkedIssues.length}`);
   logInfo(`❌ Orphaned issues: ${orphanedIssues.length}`);
   logInfo(`⚠️  Ambiguous issues: ${ambiguousIssues.length}\n`);
 
   if (orphanedIssues.length > 0) {
-    logWarn("=" .repeat(80));
+    logWarn("=".repeat(80));
     logWarn("ORPHANED GITHUB ISSUES (not linked to active Linear issues)");
-    logWarn("=" .repeat(80) + "\n");
+    logWarn("=".repeat(80) + "\n");
 
     for (const issue of orphanedIssues) {
       logWarn(`#${issue.number}: ${issue.title}`);
@@ -233,9 +242,9 @@ async function auditSync(closeOrphans = false) {
   }
 
   if (ambiguousIssues.length > 0) {
-    logInfo("=" .repeat(80));
+    logInfo("=".repeat(80));
     logInfo("AMBIGUOUS GITHUB ISSUES (multiple Linear references)");
-    logInfo("=" .repeat(80) + "\n");
+    logInfo("=".repeat(80) + "\n");
 
     for (const issue of ambiguousIssues) {
       logInfo(`#${issue.number}: ${issue.title}`);
@@ -246,17 +255,17 @@ async function auditSync(closeOrphans = false) {
 
   if (closeOrphans && orphanedIssues.length > 0) {
     logWarn(`\n🔒 Closing ${orphanedIssues.length} orphaned issues...\n`);
-    
+
     let closedCount = 0;
     let failedCount = 0;
     const batchSize = 10;
-    
+
     for (let i = 0; i < orphanedIssues.length; i += batchSize) {
       const batch = orphanedIssues.slice(i, i + batchSize);
       const results = await Promise.allSettled(
-        batch.map(issue => closeGitHubIssue(issue.number, issue.reason))
+        batch.map((issue) => closeGitHubIssue(issue.number, issue.reason)),
       );
-      
+
       for (let j = 0; j < results.length; j++) {
         const issue = batch[j];
         if (results[j].status === "fulfilled") {
@@ -269,24 +278,30 @@ async function auditSync(closeOrphans = false) {
           logError(`❌ Failed to close #${issue.number}: ${results[j].reason.message}`);
         }
       }
-      
+
       // Rate limit: wait 500ms between batches
       if (i + batchSize < orphanedIssues.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     }
-    
+
     logInfo(`\n📊 Closed ${closedCount} issues, ${failedCount} failed\n`);
   }
 
   // Summary
-  logInfo("=" .repeat(80));
+  logInfo("=".repeat(80));
   logInfo("SUMMARY");
-  logInfo("=" .repeat(80));
+  logInfo("=".repeat(80));
   logInfo(`Total GitHub issues: ${githubIssues.length}`);
-  logInfo(`Properly linked: ${linkedIssues.length} (${((linkedIssues.length / githubIssues.length) * 100).toFixed(1)}%)`);
-  logInfo(`Orphaned: ${orphanedIssues.length} (${((orphanedIssues.length / githubIssues.length) * 100).toFixed(1)}%)`);
-  logInfo(`Ambiguous: ${ambiguousIssues.length} (${((ambiguousIssues.length / githubIssues.length) * 100).toFixed(1)}%)`);
+  logInfo(
+    `Properly linked: ${linkedIssues.length} (${((linkedIssues.length / githubIssues.length) * 100).toFixed(1)}%)`,
+  );
+  logInfo(
+    `Orphaned: ${orphanedIssues.length} (${((orphanedIssues.length / githubIssues.length) * 100).toFixed(1)}%)`,
+  );
+  logInfo(
+    `Ambiguous: ${ambiguousIssues.length} (${((ambiguousIssues.length / githubIssues.length) * 100).toFixed(1)}%)`,
+  );
 
   return {
     total: githubIssues.length,

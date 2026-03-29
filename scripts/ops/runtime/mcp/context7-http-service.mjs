@@ -47,8 +47,8 @@ const { logDebug, logInfo, logWarn, logError } = createLogger("context7-http");
 
 const PORT = Number.parseInt(
   process.argv.find((a, i) => process.argv[i - 1] === "--port") ||
-  process.env.CONTEXT7_HTTP_PORT ||
-  "4320",
+    process.env.CONTEXT7_HTTP_PORT ||
+    "4320",
   10,
 );
 

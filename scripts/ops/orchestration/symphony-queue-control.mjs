@@ -216,8 +216,9 @@ export async function detectStuckWork(snap = null, dryRun = false) {
     const hasActiveLease = leaseIsActive(state);
     // Grace period: also skip recovery if heartbeat was recent (within RECOVERY_GRACE_MS)
     // This prevents recovering issues where the lease just barely expired but the runner is still alive
-    const recentHeartbeat = state.lease?.heartbeat_at &&
-      (Date.now() - new Date(state.lease.heartbeat_at).getTime()) < RECOVERY_GRACE_MS;
+    const recentHeartbeat =
+      state.lease?.heartbeat_at &&
+      Date.now() - new Date(state.lease.heartbeat_at).getTime() < RECOVERY_GRACE_MS;
     if (hasActiveLease || recentHeartbeat) {
       logAction(
         "skip",

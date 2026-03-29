@@ -21,7 +21,6 @@ The SDK incorrectly passes the `files` parameter as a string instead of an array
 ]
 ```
 
-
 ## Root Cause
 
 - The tool interface expects `files` to be a string array (`string[]`).

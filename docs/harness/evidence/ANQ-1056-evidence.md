@@ -11,10 +11,12 @@ Verified that all four tools (`run_file_change_hooks`, `think_deeply`, `update_s
 ## Touched Paths
 
 **Inspected (no changes required):**
+
 - `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (lines 1005-1044)
 - `scripts/ops/integrations/model/codebuff-openai-bridge.mjs` (display formatting only)
 
 **Documentation created:**
+
 - `docs/harness/evidence/ANQ-1056-evidence.md` (this file)
 
 ## Decisions Made
@@ -34,12 +36,12 @@ npm run test
 
 ## Results
 
-| Command | Result | Details |
-|---------|--------|---------|
-| `npm run typecheck` | ✅ PASS | 0 errors |
-| `npm run lint` | ✅ PASS | 0 warnings, 0 errors |
+| Command               | Result  | Details                               |
+| --------------------- | ------- | ------------------------------------- |
+| `npm run typecheck`   | ✅ PASS | 0 errors                              |
+| `npm run lint`        | ✅ PASS | 0 warnings, 0 errors                  |
 | `npm run test:cspell` | ✅ PASS | No issues in tool implementation code |
-| `npm run test` | ✅ PASS | All tests passing |
+| `npm run test`        | ✅ PASS | All tests passing                     |
 
 ## Changed Files
 
@@ -48,6 +50,7 @@ npm run test
 ## Commit Hash
 
 Previous implementation commit (from git log):
+
 ```
 docs: confirm think_deeply tool is already implemented and criteria met
 ```

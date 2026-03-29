@@ -22,7 +22,12 @@ function ensureDir() {
 }
 
 function isLockProcessAlive(pid) {
-  try { process.kill(pid, 0); return true; } catch { return false; }
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function acquireStateLock() {
@@ -42,17 +47,29 @@ function acquireStateLock() {
       try {
         const lockPid = Number(fs.readFileSync(LOCK_FILE, "utf-8").trim());
         if (lockPid && !isLockProcessAlive(lockPid)) {
-          try { fs.unlinkSync(LOCK_FILE); } catch { /* race ok */ }
+          try {
+            fs.unlinkSync(LOCK_FILE);
+          } catch {
+            /* race ok */
+          }
           continue;
         }
         const lockAge = Date.now() - fs.statSync(LOCK_FILE).mtimeMs;
         if (lockAge > LOCK_STALE_MS) {
-          try { fs.unlinkSync(LOCK_FILE); } catch { /* race ok */ }
+          try {
+            fs.unlinkSync(LOCK_FILE);
+          } catch {
+            /* race ok */
+          }
           continue;
         }
-      } catch { continue; }
+      } catch {
+        continue;
+      }
       const end = Date.now() + LOCK_RETRY_INTERVAL_MS + Math.random() * LOCK_RETRY_INTERVAL_MS;
-      while (Date.now() < end) { /* brief busy-wait */ }
+      while (Date.now() < end) {
+        /* brief busy-wait */
+      }
     }
   }
   return false;
@@ -62,7 +79,9 @@ function releaseStateLock() {
   try {
     const lockPid = Number(fs.readFileSync(LOCK_FILE, "utf-8").trim());
     if (lockPid === process.pid) fs.unlinkSync(LOCK_FILE);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
 }
 
 function withStateLock(fn) {

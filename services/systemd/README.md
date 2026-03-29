@@ -15,22 +15,22 @@ systemctl --user daemon-reload
 
 ## Long-running services
 
-| Service | Port | Purpose |
-|---|---|---|
-| `anqr-symphony-bridge.service` | 4319 | OpenAI-compatible HTTP gateway with AI SDK and tool execution |
-| `anqr-codebuff-bridge.service` | 4318 | OpenAI-compatible HTTP gateway for Codebuff SDK |
-| `anqr-context7-mcp.service` | 4320 | Context7 MCP documentation service (HTTP wrapper over local MCP server) |
-| `anqr-watchdog.service` | — | Symphony/Codebuff bridge health monitoring |
+| Service                        | Port | Purpose                                                                 |
+| ------------------------------ | ---- | ----------------------------------------------------------------------- |
+| `anqr-symphony-bridge.service` | 4319 | OpenAI-compatible HTTP gateway with AI SDK and tool execution           |
+| `anqr-codebuff-bridge.service` | 4318 | OpenAI-compatible HTTP gateway for Codebuff SDK                         |
+| `anqr-context7-mcp.service`    | 4320 | Context7 MCP documentation service (HTTP wrapper over local MCP server) |
+| `anqr-watchdog.service`        | —    | Symphony/Codebuff bridge health monitoring                              |
 
 ## Scheduled automation (timers)
 
-| Timer | Schedule | Service | Purpose |
-|---|---|---|---|
-| `anqr-symphony-runner.timer` | Periodic | `anqr-symphony-runner.service` | Process Linear issues via Symphony |
-| `anqr-queue-feeder.timer` | Periodic | `anqr-queue-feeder.service` | Feed work queue |
-| `anqr-nightly.timer` | 02:00 daily | `anqr-nightly.service` | Full nightly operations pass |
-| `anqr-rag-rebuild.timer` | 03:00 daily | `anqr-rag-rebuild.service` | Rebuild RAG vector index (full repo) |
-| `anqr-email-ingest.timer` | Periodic | `anqr-email-ingest.service` | Process inbound operational emails |
+| Timer                        | Schedule    | Service                        | Purpose                              |
+| ---------------------------- | ----------- | ------------------------------ | ------------------------------------ |
+| `anqr-symphony-runner.timer` | Periodic    | `anqr-symphony-runner.service` | Process Linear issues via Symphony   |
+| `anqr-queue-feeder.timer`    | Periodic    | `anqr-queue-feeder.service`    | Feed work queue                      |
+| `anqr-nightly.timer`         | 02:00 daily | `anqr-nightly.service`         | Full nightly operations pass         |
+| `anqr-rag-rebuild.timer`     | 03:00 daily | `anqr-rag-rebuild.service`     | Rebuild RAG vector index (full repo) |
+| `anqr-email-ingest.timer`    | Periodic    | `anqr-email-ingest.service`    | Process inbound operational emails   |
 
 ## Shared environment
 

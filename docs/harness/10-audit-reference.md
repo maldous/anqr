@@ -537,12 +537,12 @@ codebuff-bridge        # Start Codebuff OpenAI-compatible bridge
 
 **In-memory state** (not persisted, rebuilt at startup):
 
-| State                     | Location                 | Purpose                                                                |
-| ------------------------- | ------------------------ | ---------------------------------------------------------------------- |
-| `toolCapableProviders`    | Symphony Bridge (memory) | Set of providers confirmed to support structured tools                 |
-| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests                   |
+| State                     | Location                 | Purpose                                                                    |
+| ------------------------- | ------------------------ | -------------------------------------------------------------------------- |
+| `toolCapableProviders`    | Symphony Bridge (memory) | Set of providers confirmed to support structured tools                     |
+| `nonToolCapableProviders` | Symphony Bridge (memory) | Set of providers excluded from tool-bearing requests                       |
 | Adaptive context state    | Symphony Bridge (memory) | Per-provider dynamic token ceilings, rate-limit throttles, TPM/RPM windows |
-| Session provider map      | Symphony Bridge (memory) | Sticky session → provider assignments (cleared on failure)             |
+| Session provider map      | Symphony Bridge (memory) | Sticky session → provider assignments (cleared on failure)                 |
 
 ---
 

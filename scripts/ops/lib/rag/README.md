@@ -35,21 +35,21 @@ that materially affect unattended rebuild quality:
 
 ## Modules
 
-| Module | File | Purpose |
-|--------|------|---------|
-| Chunker | `chunker.mjs` | Split code, docs, and config into line-aware semantic chunks |
-| Embeddings | `embeddings.mjs` | Generate vector embeddings via Ollama with cached health checks |
-| Vector Store | `vector-store.mjs` | Persist, prune, index, and search embeddings |
-| Index Builder | `build-index.mjs` | Full-repo tracked-file index builder with noise filtering |
+| Module        | File               | Purpose                                                         |
+| ------------- | ------------------ | --------------------------------------------------------------- |
+| Chunker       | `chunker.mjs`      | Split code, docs, and config into line-aware semantic chunks    |
+| Embeddings    | `embeddings.mjs`   | Generate vector embeddings via Ollama with cached health checks |
+| Vector Store  | `vector-store.mjs` | Persist, prune, index, and search embeddings                    |
+| Index Builder | `build-index.mjs`  | Full-repo tracked-file index builder with noise filtering       |
 
 ## Quick start
 
 ```js
-import { indexDirectory, search, getIndexStats } from './vector-store.mjs';
+import { indexDirectory, search, getIndexStats } from "./vector-store.mjs";
 
-await indexDirectory('src/');
+await indexDirectory("src/");
 
-const results = await search('authentication middleware', 5);
+const results = await search("authentication middleware", 5);
 for (const r of results) {
   console.log(`${r.filePath}:${r.startLine}-${r.endLine} (score: ${r.score.toFixed(4)})`);
   console.log(r.content.slice(0, 200));

@@ -18,30 +18,63 @@ const DEFAULT_OPTIONS = {
   maxChunkSize: 2_000,
   overlap: 120,
   extensions: [
-    ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
-    ".md", ".mdx",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".md",
+    ".mdx",
     ".json",
-    ".css", ".html",
-    ".yml", ".yaml",
-    ".sh", ".py",
-    ".service", ".timer",
-    ".java", ".kt", ".swift",
-    ".gradle", ".properties", ".xml",
-    ".plist", ".pbxproj", ".xcconfig",
+    ".css",
+    ".html",
+    ".yml",
+    ".yaml",
+    ".sh",
+    ".py",
+    ".service",
+    ".timer",
+    ".java",
+    ".kt",
+    ".swift",
+    ".gradle",
+    ".properties",
+    ".xml",
+    ".plist",
+    ".pbxproj",
+    ".xcconfig",
   ],
 };
 
 const CODE_EXTENSIONS = new Set([
-  ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs",
-  ".py", ".sh",
-  ".java", ".kt", ".swift",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".py",
+  ".sh",
+  ".java",
+  ".kt",
+  ".swift",
   ".gradle",
 ]);
 const MARKDOWN_EXTENSIONS = new Set([".md", ".mdx"]);
 const JSON_EXTENSIONS = new Set([".json"]);
 const TEXT_CONFIG_EXTENSIONS = new Set([
-  ".css", ".html", ".yml", ".yaml", ".service", ".timer",
-  ".properties", ".xml", ".plist", ".pbxproj", ".xcconfig",
+  ".css",
+  ".html",
+  ".yml",
+  ".yaml",
+  ".service",
+  ".timer",
+  ".properties",
+  ".xml",
+  ".plist",
+  ".pbxproj",
+  ".xcconfig",
 ]);
 
 const CODE_BOUNDARY_PATTERNS = [
@@ -67,7 +100,9 @@ function normalizeExtensions(extensions) {
 }
 
 function normalizePathFragment(filePath) {
-  return String(filePath).replaceAll(/[^a-zA-Z0-9._/-]/g, "_").slice(-120);
+  return String(filePath)
+    .replaceAll(/[^a-zA-Z0-9._/-]/g, "_")
+    .slice(-120);
 }
 
 function hashString(input) {
@@ -158,7 +193,15 @@ function classifyChunk(content, ext) {
   return "block";
 }
 
-function makeChunkFromOffsets(text, lineStarts, filePath, ext, startOffset, endOffset, explicitType = null) {
+function makeChunkFromOffsets(
+  text,
+  lineStarts,
+  filePath,
+  ext,
+  startOffset,
+  endOffset,
+  explicitType = null,
+) {
   const { start, end } = trimSegmentBounds(text, startOffset, endOffset);
   if (end <= start) return null;
 
@@ -227,18 +270,45 @@ function splitRangeBySize(text, startOffset, endOffset, maxChunkSize, overlap) {
   return ranges;
 }
 
-function pushSegmentedRange(chunks, text, lineStarts, filePath, ext, startOffset, endOffset, maxChunkSize, overlap, type = null) {
+function pushSegmentedRange(
+  chunks,
+  text,
+  lineStarts,
+  filePath,
+  ext,
+  startOffset,
+  endOffset,
+  maxChunkSize,
+  overlap,
+  type = null,
+) {
   const length = endOffset - startOffset;
   if (length <= 0) return;
 
   if (length <= maxChunkSize) {
-    const chunk = makeChunkFromOffsets(text, lineStarts, filePath, ext, startOffset, endOffset, type);
+    const chunk = makeChunkFromOffsets(
+      text,
+      lineStarts,
+      filePath,
+      ext,
+      startOffset,
+      endOffset,
+      type,
+    );
     if (chunk) chunks.push(chunk);
     return;
   }
 
   for (const range of splitRangeBySize(text, startOffset, endOffset, maxChunkSize, overlap)) {
-    const chunk = makeChunkFromOffsets(text, lineStarts, filePath, ext, range.startOffset, range.endOffset, type);
+    const chunk = makeChunkFromOffsets(
+      text,
+      lineStarts,
+      filePath,
+      ext,
+      range.startOffset,
+      range.endOffset,
+      type,
+    );
     if (chunk) chunks.push(chunk);
   }
 }

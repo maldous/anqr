@@ -136,7 +136,8 @@ export async function notifyServiceRestart({
       .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
     const metadataSuffix = metadataStr ? `, ${metadataStr}` : "";
-    const memoryNote = serviceName +
+    const memoryNote =
+      serviceName +
       " restarted successfully (PID " +
       process.pid +
       ", commit " +
@@ -214,7 +215,8 @@ export async function notifyServiceShutdown({
       .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
     const metadataSuffix = metadataStr ? `, ${metadataStr}` : "";
-    const memoryNote = serviceName +
+    const memoryNote =
+      serviceName +
       " stopped (PID " +
       process.pid +
       ", commit " +

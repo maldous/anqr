@@ -223,11 +223,13 @@ The following tools are defined in type systems but **NOT implemented** in Symph
 ### Recently Implemented (2026-03-27)
 
 **✅ Completed - Priority 1 tools**:
+
 - `run_file_change_hooks` - Executes file change hooks after modifications
 - `think_deeply` - Deep reasoning for complex tasks
 - `update_subgoal` / `add_subgoal` - Task progress tracking
 
 **✅ Completed - Priority 2 tools**:
+
 - `find_files` - Natural language file search (simple implementation, can be enhanced with file-explorer agent)
 - `web_search` - Web search via Linkup API (requires API key configuration)
 - `read_docs` - Library documentation via Context7 API (requires API key configuration)
@@ -235,11 +237,13 @@ The following tools are defined in type systems but **NOT implemented** in Symph
 ### Recommendations
 
 **Optional enhancements**:
+
 - Integrate `codebuff/file-explorer@0.0.7` agent into `find_files` for better search quality
 - Add alternative web search providers (DuckDuckGo, Google Custom Search API)
 - Cache documentation responses to reduce API calls
 
 **Not needed (SDK-internal or OpenClaw-specific)**:
+
 - `set_messages`, `set_output`, `end_turn` - Codebuff SDK internal
 - `ask_user`, `message`, `browser`, `canvas` - OpenClaw Gateway tools
 
@@ -250,6 +254,7 @@ The following tools are defined in type systems but **NOT implemented** in Symph
 ### AI SDK Providers (via Symphony Bridge)
 
 All AI SDK providers support the same 6 tools listed in Section 1:
+
 - OpenAI (Codex)
 - Groq
 - Google Gemini

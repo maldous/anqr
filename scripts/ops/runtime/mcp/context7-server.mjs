@@ -331,11 +331,15 @@ export async function startContext7Server() {
     // Give the process a brief moment to start before sending initialize
     setTimeout(async () => {
       try {
-        const result = await sendRequest("initialize", {
-          protocolVersion: "2024-11-05",
-          capabilities: {},
-          clientInfo: { name: "context7-server-wrapper", version: "1.0.0" },
-        }, STARTUP_TIMEOUT_MS - 1000);
+        const result = await sendRequest(
+          "initialize",
+          {
+            protocolVersion: "2024-11-05",
+            capabilities: {},
+            clientInfo: { name: "context7-server-wrapper", version: "1.0.0" },
+          },
+          STARTUP_TIMEOUT_MS - 1000,
+        );
 
         logInfo("Context7 MCP server initialized", {
           serverInfo: result?.serverInfo,
@@ -344,7 +348,8 @@ export async function startContext7Server() {
 
         // Send initialized notification (MCP protocol requirement)
         if (serverProcess && serverProcess.stdin) {
-          const notification = JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n";
+          const notification =
+            JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n";
           serverProcess.stdin.write(notification, "utf-8");
         }
 
@@ -476,7 +481,10 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
 
         const documentation = extractDocumentation(docsResult);
         if (documentation) {
-          logInfo(`Resolved docs locally for "${libraryTitle}"`, { topic, chars: documentation.length });
+          logInfo(`Resolved docs locally for "${libraryTitle}"`, {
+            topic,
+            chars: documentation.length,
+          });
           return { source: "local", documentation };
         }
 
@@ -506,7 +514,10 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
 
     const documentation = await getLibraryDocsCloud(libraryId, topic, max_tokens);
     if (documentation) {
-      logInfo(`Resolved docs via cloud for "${libraryTitle}"`, { topic, chars: documentation.length });
+      logInfo(`Resolved docs via cloud for "${libraryTitle}"`, {
+        topic,
+        chars: documentation.length,
+      });
     }
     return { source: "cloud", documentation: documentation || null };
   } catch (err) {

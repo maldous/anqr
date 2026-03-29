@@ -333,7 +333,8 @@ async function sendProcessingStatusUpdate() {
   }
 
   // Only show "concurrent requests" if there's more than 1 active
-  const description = activeRequests.size > 1 ? "Concurrent requests in progress" : "Request in progress";
+  const description =
+    activeRequests.size > 1 ? "Concurrent requests in progress" : "Request in progress";
 
   await sendDiscordEmbed({
     title: `⏳ Processing Status (${activeRequests.size} active)`,
@@ -519,14 +520,20 @@ function getCurrentRequestId() {
 
 function coerceStringArrayInput(value, { fallback = undefined } = {}) {
   if (Array.isArray(value)) {
-    const cleaned = value.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+    const cleaned = value
+      .filter((item) => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
     return cleaned.length > 0 ? cleaned : fallback;
   }
 
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!trimmed) return fallback;
-    if ((trimmed.startsWith("[") && trimmed.endsWith("]")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+    if (
+      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
       try {
         return coerceStringArrayInput(JSON.parse(trimmed), { fallback });
       } catch {
@@ -560,7 +567,6 @@ function coerceOptionalNumberInput(value, fallback = undefined) {
 function isProbablyBinaryContent(content) {
   return content.includes("\0");
 }
-
 
 /**
  * Read multiple files from the filesystem
@@ -633,12 +639,14 @@ async function readFileTool({ path: filePath, offset, lines }) {
 async function strReplaceTool({ path: filePath, replacements }) {
   try {
     let content = fs.readFileSync(filePath, "utf-8");
-    
+
     // Defensive normalization (workaround for SDK bug sending string instead of array)
     const replacementsList = Array.isArray(replacements) ? replacements : [replacements];
 
     if (replacementsList.length === 0) {
-      return { error: "invalid_replacements_payload: replacements array is empty — no changes made" };
+      return {
+        error: "invalid_replacements_payload: replacements array is empty — no changes made",
+      };
     }
 
     for (const { old, new: newStr, allowMultiple } of replacementsList) {
@@ -652,15 +660,15 @@ async function strReplaceTool({ path: filePath, replacements }) {
         content = content.slice(0, index) + newStr + content.slice(index + old.length);
       }
     }
-    
+
     fs.writeFileSync(filePath, content, "utf-8");
-    
+
     // Track file change for current request
     const reqId = getCurrentRequestId();
     if (reqId) {
       trackFileChange(reqId);
     }
-    
+
     return { success: true, path: filePath, replacements: replacementsList.length };
   } catch (error) {
     return { error: error.message };
@@ -694,17 +702,21 @@ async function codeSearchTool({ pattern, flags, cwd, maxResults = 15 }) {
     const baseDir = cwd || process.cwd();
     const flagsStr = flags || "";
     const command = `rg "${pattern.replace(/"/g, '\\"')}" ${flagsStr} "${baseDir}" -n --max-count=${maxResults} 2>/dev/null || true`;
-    const result = execSync(command, { encoding: "utf-8", timeout: 10000, maxBuffer: 10 * 1024 * 1024 });
-    
+    const result = execSync(command, {
+      encoding: "utf-8",
+      timeout: 10000,
+      maxBuffer: 10 * 1024 * 1024,
+    });
+
     const lines = result.split("\n").filter(Boolean);
-    const matches = lines.map(line => {
+    const matches = lines.map((line) => {
       const match = line.match(/^([^:]+):(\d+):(.+)$/);
       if (match) {
         return { file: match[1], line: parseInt(match[2]), content: match[3] };
       }
       return { raw: line };
     });
-    
+
     return { matches, count: matches.length, pattern };
   } catch (error) {
     return { error: error.message, matches: [] };
@@ -783,10 +795,10 @@ async function listDirectoryTool({ path: dirPath }) {
   try {
     const fullPath = path.join(process.cwd(), dirPath);
     const entries = fs.readdirSync(fullPath, { withFileTypes: true });
-    
-    const files = entries.filter(e => e.isFile()).map(e => e.name);
-    const directories = entries.filter(e => e.isDirectory()).map(e => e.name);
-    
+
+    const files = entries.filter((e) => e.isFile()).map((e) => e.name);
+    const directories = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+
     return { files, directories, path: dirPath };
   } catch (error) {
     return { error: error.message };
@@ -799,7 +811,10 @@ async function listDirectoryTool({ path: dirPath }) {
 async function readSubtreeTool({ paths, maxTokens = 50000 }) {
   try {
     const targetPaths = coerceStringArrayInput(paths, { fallback: ["."] }) || ["."];
-    const normalizedMaxTokens = Math.max(1000, Math.floor(coerceOptionalNumberInput(maxTokens, 50000) || 50000));
+    const normalizedMaxTokens = Math.max(
+      1000,
+      Math.floor(coerceOptionalNumberInput(maxTokens, 50000) || 50000),
+    );
     const maxChars = normalizedMaxTokens * 4;
     const result = [];
     let usedChars = 0;
@@ -899,20 +914,20 @@ async function runFileChangeHooksTool({ files }) {
   try {
     // Normalize files to array (workaround for Codebuff SDK bug in ^0.10.7)
     const filesList = Array.isArray(files) ? files : [files];
-    
+
     // Check if codebuff.json has fileChangeHooks configured
     const codebuffConfigPath = path.join(process.cwd(), "codebuff.json");
     let hooks = [];
-    
+
     if (fs.existsSync(codebuffConfigPath)) {
       const config = JSON.parse(fs.readFileSync(codebuffConfigPath, "utf-8"));
       hooks = config.fileChangeHooks || [];
     }
-    
+
     if (hooks.length === 0) {
       return { success: true, message: "No file change hooks configured" };
     }
-    
+
     const results = [];
     for (const hook of hooks) {
       try {
@@ -927,7 +942,7 @@ async function runFileChangeHooksTool({ files }) {
         results.push({ hook, success: false, error: err.message });
       }
     }
-    
+
     return { success: true, results };
   } catch (error) {
     return { success: false, error: error.message };
@@ -949,12 +964,12 @@ async function thinkDeeplyTool({ thought }) {
 async function updateSubgoalTool({ id, status, log, plan }) {
   const logSuffix = log ? " - " + log.slice(0, 100) : "";
   logInfo(`📋 Subgoal ${id}: ${status || "update"}${logSuffix}`);
-  return { 
-    acknowledged: true, 
-    id, 
+  return {
+    acknowledged: true,
+    id,
     status: status || "IN_PROGRESS",
     log,
-    plan 
+    plan,
   };
 }
 
@@ -964,11 +979,11 @@ async function updateSubgoalTool({ id, status, log, plan }) {
 async function spawnAgentsTool({ agents }) {
   // Symphony bridge doesn't support spawning sub-agents
   // Log the request and return acknowledgment
-  logInfo(`🤖 Agent spawn requested: ${agents.map(a => a.agent_type).join(", ")}`);
-  return { 
-    acknowledged: true, 
+  logInfo(`🤖 Agent spawn requested: ${agents.map((a) => a.agent_type).join(", ")}`);
+  return {
+    acknowledged: true,
     message: "Agent spawning is handled by the parent Codebuff/OpenClaw instance",
-    agents: agents.map(a => ({ type: a.agent_type, status: "delegated" }))
+    agents: agents.map((a) => ({ type: a.agent_type, status: "delegated" })),
   };
 }
 
@@ -979,7 +994,7 @@ async function proposeStrReplaceTool({ path: filePath, replacements }) {
   try {
     const content = fs.readFileSync(filePath, "utf-8");
     const proposed = [];
-    
+
     // Defensive normalization (workaround for SDK bug sending string instead of array)
     const replacementsList = Array.isArray(replacements) ? replacements : [replacements];
 
@@ -992,10 +1007,10 @@ async function proposeStrReplaceTool({ path: filePath, replacements }) {
       proposed.push({
         old: old.slice(0, 100),
         new: newStr.slice(0, 100),
-        found: index !== -1
+        found: index !== -1,
       });
     }
-    
+
     return { success: true, path: filePath, proposed };
   } catch (error) {
     return { error: error.message };
@@ -1007,12 +1022,12 @@ async function proposeStrReplaceTool({ path: filePath, replacements }) {
  */
 async function proposeWriteFileTool({ path: filePath, instructions, content }) {
   logInfo(`📝 Proposed write: ${filePath} - ${instructions}`);
-  return { 
-    success: true, 
-    path: filePath, 
+  return {
+    success: true,
+    path: filePath,
     instructions,
     contentLength: content.length,
-    proposed: true
+    proposed: true,
   };
 }
 
@@ -1045,10 +1060,10 @@ async function setOutputTool(output) {
  */
 async function skillTool({ name }) {
   logInfo(`📚 Load skill: ${name}`);
-  return { 
-    acknowledged: true, 
+  return {
+    acknowledged: true,
     skill: name,
-    message: "Skill loading is handled by the parent instance"
+    message: "Skill loading is handled by the parent instance",
   };
 }
 
@@ -1082,33 +1097,39 @@ async function writeTodosTool({ todos }) {
 async function applyPatchTool({ operation }) {
   try {
     const { type, path: filePath, diff } = operation;
-    
+
     if (type === "create_file") {
       if (!diff) return { error: "diff required for create_file" };
-      const lines = diff.split("\n").filter(l => l.startsWith("+")).map(l => l.slice(1));
+      const lines = diff
+        .split("\n")
+        .filter((l) => l.startsWith("+"))
+        .map((l) => l.slice(1));
       const content = lines.join("\n");
       fs.writeFileSync(filePath, content, "utf-8");
-      
+
       const reqId = getCurrentRequestId();
       if (reqId) trackFileChange(reqId);
-      
+
       return { success: true, operation: "create", path: filePath };
     } else if (type === "update_file") {
       if (!diff) return { error: "diff required for update_file" };
       // Simplified: treat as full content replacement
-      const lines = diff.split("\n").filter(l => l.startsWith("+")).map(l => l.slice(1));
+      const lines = diff
+        .split("\n")
+        .filter((l) => l.startsWith("+"))
+        .map((l) => l.slice(1));
       const content = lines.join("\n");
       fs.writeFileSync(filePath, content, "utf-8");
-      
+
       const reqId = getCurrentRequestId();
       if (reqId) trackFileChange(reqId);
-      
+
       return { success: true, operation: "update", path: filePath };
     } else if (type === "delete_file") {
       fs.unlinkSync(filePath);
       return { success: true, operation: "delete", path: filePath };
     }
-    
+
     return { error: `Unknown operation type: ${type}` };
   } catch (error) {
     return { error: error.message };
@@ -1120,10 +1141,10 @@ async function applyPatchTool({ operation }) {
  */
 async function askUserTool({ questions }) {
   logInfo(`❓ Ask user: ${questions.length} questions`);
-  return { 
+  return {
     acknowledged: true,
     message: "User interaction is handled by the parent Codebuff/OpenClaw instance",
-    questions: questions.length
+    questions: questions.length,
   };
 }
 
@@ -1132,10 +1153,10 @@ async function askUserTool({ questions }) {
  */
 async function lookupAgentInfoTool({ agentId }) {
   logInfo(`🔍 Lookup agent: ${agentId}`);
-  return { 
+  return {
     acknowledged: true,
     agentId,
-    message: "Agent lookup is handled by the parent instance"
+    message: "Agent lookup is handled by the parent instance",
   };
 }
 
@@ -1144,13 +1165,13 @@ async function lookupAgentInfoTool({ agentId }) {
  */
 async function addSubgoalTool({ id, objective, status, log, plan }) {
   logInfo(`🎯 New subgoal ${id}: ${objective.slice(0, 100)}`);
-  return { 
-    acknowledged: true, 
-    id, 
+  return {
+    acknowledged: true,
+    id,
     objective,
     status: status || "NOT_STARTED",
     log,
-    plan 
+    plan,
   };
 }
 
@@ -1170,7 +1191,9 @@ async function findFilesTool({ prompt }) {
       });
 
       if (result.files.length > 0) {
-        logInfo(`📊 Hybrid search (${result.method}): ${result.count} results for "${prompt.slice(0, 60)}"`);
+        logInfo(
+          `📊 Hybrid search (${result.method}): ${result.count} results for "${prompt.slice(0, 60)}"`,
+        );
         return {
           files: result.files,
           count: result.count,
@@ -1183,36 +1206,42 @@ async function findFilesTool({ prompt }) {
     }
 
     // Fallback: basic glob-based search
-    const searchTerms = prompt.toLowerCase().split(/\s+/).filter(t => t.length > 2);
-    const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.md'];
+    const searchTerms = prompt
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 2);
+    const extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json", ".md"];
 
     const results = [];
     for (const ext of extensions) {
       try {
         const cmd = `find . -type f -name "*${ext}" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | head -50`;
-        const output = execSync(cmd, { encoding: 'utf-8', timeout: 5000 });
-        const files = output.split('\n').filter(Boolean);
+        const output = execSync(cmd, { encoding: "utf-8", timeout: 5000 });
+        const files = output.split("\n").filter(Boolean);
 
         for (const file of files) {
           const lowerPath = file.toLowerCase();
-          const score = searchTerms.reduce((sum, term) =>
-            sum + (lowerPath.includes(term) ? 1 : 0), 0
+          const score = searchTerms.reduce(
+            (sum, term) => sum + (lowerPath.includes(term) ? 1 : 0),
+            0,
           );
           if (score > 0) {
-            results.push({ path: file.replace(/^\.\//, ''), score });
+            results.push({ path: file.replace(/^\.\//, ""), score });
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
 
     const sorted = results.sort((a, b) => b.score - a.score).slice(0, 20);
-    const paths = sorted.map(r => r.path);
+    const paths = sorted.map((r) => r.path);
 
     return {
       files: paths,
       count: paths.length,
       query: prompt.slice(0, 100),
-      method: 'basic',
+      method: "basic",
     };
   } catch (error) {
     return { error: error.message, files: [] };
@@ -1222,52 +1251,52 @@ async function findFilesTool({ prompt }) {
 /**
  * Web search using external API
  */
-async function webSearchTool({ query, depth = 'standard' }) {
+async function webSearchTool({ query, depth = "standard" }) {
   try {
     logInfo(`🌐 Web search: ${query.slice(0, 100)} (${depth})`);
-    
+
     // Check for Linkup API key or other web search API
     const apiKey = process.env.LINKUP_API_KEY || process.env.WEB_SEARCH_API_KEY;
-    
+
     if (!apiKey) {
       return {
-        error: 'Web search requires LINKUP_API_KEY or WEB_SEARCH_API_KEY environment variable',
+        error: "Web search requires LINKUP_API_KEY or WEB_SEARCH_API_KEY environment variable",
         results: [],
-        message: 'Web search is not configured. Set LINKUP_API_KEY to enable this feature.'
+        message: "Web search is not configured. Set LINKUP_API_KEY to enable this feature.",
       };
     }
-    
+
     // Call Linkup API or similar web search service
-    const response = await fetch('https://api.linkup.so/v1/search', {
-      method: 'POST',
+    const response = await fetch("https://api.linkup.so/v1/search", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         query,
         depth,
-        outputType: 'searchResults'
+        outputType: "searchResults",
       }),
       signal: AbortSignal.timeout(30000),
     });
-    
+
     if (!response.ok) {
       throw new Error(`Web search API returned ${response.status}`);
     }
-    
+
     const data = await response.json();
     return {
       results: data.results || [],
       count: data.results?.length || 0,
-      query
+      query,
     };
   } catch (error) {
     logWarn(`Web search failed: ${error.message}`);
-    return { 
+    return {
       error: error.message,
       results: [],
-      message: 'Web search is currently unavailable'
+      message: "Web search is currently unavailable",
     };
   }
 }
@@ -1314,17 +1343,19 @@ async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
 
     if (!apiKey) {
       return {
-        error: 'Documentation reading requires CONTEXT7_API_KEY or DOCS_API_KEY environment variable',
-        content: '',
-        message: 'Documentation API is not configured. Set CONTEXT7_API_KEY to enable this feature.',
+        error:
+          "Documentation reading requires CONTEXT7_API_KEY or DOCS_API_KEY environment variable",
+        content: "",
+        message:
+          "Documentation API is not configured. Set CONTEXT7_API_KEY to enable this feature.",
       };
     }
 
-    const response = await fetch('https://api.context7.com/v1/docs', {
-      method: 'POST',
+    const response = await fetch("https://api.context7.com/v1/docs", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         library: libraryTitle,
@@ -1340,18 +1371,18 @@ async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
 
     const data = await response.json();
     return {
-      content: data.content || '',
+      content: data.content || "",
       library: libraryTitle,
       topic,
-      source: 'cloud-direct',
+      source: "cloud-direct",
       tokens: data.tokens || 0,
     };
   } catch (error) {
     logWarn(`Documentation reading failed: ${error.message}`);
     return {
       error: error.message,
-      content: '',
-      message: 'Documentation API is currently unavailable',
+      content: "",
+      message: "Documentation API is currently unavailable",
     };
   }
 }
@@ -1371,10 +1402,12 @@ const tools = {
   read_files: tool({
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
-      paths: z.preprocess(
-        (val) => coerceStringArrayInput(val, { fallback: [] }),
-        z.array(z.string()).min(1)
-      ).describe("List of file paths to read (accepts string or array)"),
+      paths: z
+        .preprocess(
+          (val) => coerceStringArrayInput(val, { fallback: [] }),
+          z.array(z.string()).min(1),
+        )
+        .describe("List of file paths to read (accepts string or array)"),
     }),
     execute: readFilesTool,
   }),
@@ -1385,15 +1418,24 @@ const tools = {
       replacements: z.preprocess(
         (val) => {
           if (Array.isArray(val)) return val;
-          if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; } }
-          if (val && typeof val === 'object') return [val];
+          if (typeof val === "string") {
+            try {
+              const p = JSON.parse(val);
+              return Array.isArray(p) ? p : [p];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
           return [];
         },
-        z.array(z.object({
-          old: z.string().describe("String to replace"),
-          new: z.string().describe("Replacement string"),
-          allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-        }))
+        z.array(
+          z.object({
+            old: z.string().describe("String to replace"),
+            new: z.string().describe("Replacement string"),
+            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+          }),
+        ),
       ),
     }),
     execute: strReplaceTool,
@@ -1408,25 +1450,31 @@ const tools = {
   read_subtree: tool({
     description: "Read directory subtree with file contents",
     inputSchema: z.object({
-      paths: z.preprocess(
-        (val) => coerceStringArrayInput(val, { fallback: ["."] }),
-        z.array(z.string()).min(1).optional()
-      ).describe("Paths to read (default: ['.']; accepts string or array)"),
-      maxTokens: z.preprocess(
-        (val) => coerceOptionalNumberInput(val, undefined),
-        z.number().int().positive().optional()
-      ).describe("Maximum token budget (default: 50000; accepts numeric string)"),
+      paths: z
+        .preprocess(
+          (val) => coerceStringArrayInput(val, { fallback: ["."] }),
+          z.array(z.string()).min(1).optional(),
+        )
+        .describe("Paths to read (default: ['.']; accepts string or array)"),
+      maxTokens: z
+        .preprocess(
+          (val) => coerceOptionalNumberInput(val, undefined),
+          z.number().int().positive().optional(),
+        )
+        .describe("Maximum token budget (default: 50000; accepts numeric string)"),
     }),
     execute: readSubtreeTool,
   }),
   spawn_agents: tool({
     description: "Spawn multiple agents to run in parallel",
     inputSchema: z.object({
-      agents: z.array(z.object({
-        agent_type: z.string().describe("Agent to spawn"),
-        prompt: z.string().optional().describe("Prompt to send"),
-        params: z.record(z.any()).optional().describe("Parameters object"),
-      })),
+      agents: z.array(
+        z.object({
+          agent_type: z.string().describe("Agent to spawn"),
+          prompt: z.string().optional().describe("Prompt to send"),
+          params: z.record(z.any()).optional().describe("Parameters object"),
+        }),
+      ),
     }),
     execute: spawnAgentsTool,
   }),
@@ -1437,15 +1485,24 @@ const tools = {
       replacements: z.preprocess(
         (val) => {
           if (Array.isArray(val)) return val;
-          if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; } }
-          if (val && typeof val === 'object') return [val];
+          if (typeof val === "string") {
+            try {
+              const p = JSON.parse(val);
+              return Array.isArray(p) ? p : [p];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
           return [];
         },
-        z.array(z.object({
-          old: z.string().describe("String to replace"),
-          new: z.string().describe("Replacement string"),
-          allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-        }))
+        z.array(
+          z.object({
+            old: z.string().describe("String to replace"),
+            new: z.string().describe("Replacement string"),
+            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+          }),
+        ),
       ),
     }),
     execute: proposeStrReplaceTool,
@@ -1489,10 +1546,12 @@ const tools = {
   suggest_followups: tool({
     description: "Suggest followup prompts to the user",
     inputSchema: z.object({
-      followups: z.array(z.object({
-        prompt: z.string().describe("Full prompt text"),
-        label: z.string().optional().describe("Short display label"),
-      })),
+      followups: z.array(
+        z.object({
+          prompt: z.string().describe("Full prompt text"),
+          label: z.string().optional().describe("Short display label"),
+        }),
+      ),
     }),
     execute: suggestFollowupsTool,
   }),
@@ -1504,10 +1563,12 @@ const tools = {
   write_todos: tool({
     description: "Write a todo list to track tasks",
     inputSchema: z.object({
-      todos: z.array(z.object({
-        task: z.string().describe("Task description"),
-        completed: z.boolean().describe("Whether task is completed"),
-      })),
+      todos: z.array(
+        z.object({
+          task: z.string().describe("Task description"),
+          completed: z.boolean().describe("Whether task is completed"),
+        }),
+      ),
     }),
     execute: writeTodosTool,
   }),
@@ -1525,21 +1586,27 @@ const tools = {
   ask_user: tool({
     description: "Ask the user multiple choice questions",
     inputSchema: z.object({
-      questions: z.array(z.object({
-        question: z.string().describe("Question to ask"),
-        header: z.string().optional().describe("Short label"),
-        options: z.array(z.object({
-          label: z.string().describe("Option label"),
-          description: z.string().optional().describe("Option description"),
-        })),
-        multiSelect: z.boolean().optional().describe("Allow multiple selection"),
-        validation: z.object({
-          maxLength: z.number().optional(),
-          minLength: z.number().optional(),
-          pattern: z.string().optional(),
-          patternError: z.string().optional(),
-        }).optional(),
-      })),
+      questions: z.array(
+        z.object({
+          question: z.string().describe("Question to ask"),
+          header: z.string().optional().describe("Short label"),
+          options: z.array(
+            z.object({
+              label: z.string().describe("Option label"),
+              description: z.string().optional().describe("Option description"),
+            }),
+          ),
+          multiSelect: z.boolean().optional().describe("Allow multiple selection"),
+          validation: z
+            .object({
+              maxLength: z.number().optional(),
+              minLength: z.number().optional(),
+              pattern: z.string().optional(),
+              patternError: z.string().optional(),
+            })
+            .optional(),
+        }),
+      ),
     }),
     execute: askUserTool,
   }),
@@ -1604,15 +1671,15 @@ const tools = {
   run_file_change_hooks: tool({
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
-      files: z.preprocess(
-        (val) => (Array.isArray(val) ? val : [val]),
-        z.array(z.string())
-      ).describe("List of file paths that were changed (accepts string or array)"),
+      files: z
+        .preprocess((val) => (Array.isArray(val) ? val : [val]), z.array(z.string()))
+        .describe("List of file paths that were changed (accepts string or array)"),
     }),
     execute: runFileChangeHooksTool,
   }),
   think_deeply: tool({
-    description: "Deeply consider complex tasks by brainstorming approaches and tradeoffs step-by-step",
+    description:
+      "Deeply consider complex tasks by brainstorming approaches and tradeoffs step-by-step",
     inputSchema: z.object({
       thought: z.string().describe("Detailed step-by-step analysis"),
     }),
@@ -1622,7 +1689,10 @@ const tools = {
     description: "Update a subgoal to track progress on multi-step tasks",
     inputSchema: z.object({
       id: z.string().describe("The id of the subgoal to update"),
-      status: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE", "ABORTED"]).optional().describe("Change the status of the subgoal"),
+      status: z
+        .enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE", "ABORTED"])
+        .optional()
+        .describe("Change the status of the subgoal"),
       log: z.string().optional().describe("Add a log message to the subgoal"),
       plan: z.string().optional().describe("Change the plan for the subgoal"),
     }),
@@ -1633,16 +1703,24 @@ const tools = {
     inputSchema: z.object({
       id: z.string().describe("A unique identifier for the subgoal"),
       objective: z.string().describe("The objective of the subgoal, concisely and clearly stated"),
-      status: z.enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE", "ABORTED"]).optional().describe("The status of the subgoal"),
+      status: z
+        .enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETE", "ABORTED"])
+        .optional()
+        .describe("The status of the subgoal"),
       log: z.string().optional().describe("A log message for the subgoal progress"),
       plan: z.string().optional().describe("A plan for the subgoal"),
     }),
     execute: addSubgoalTool,
   }),
   find_files: tool({
-    description: "Find files using natural language description of the files or the name of a function or class you are looking for",
+    description:
+      "Find files using natural language description of the files or the name of a function or class you are looking for",
     inputSchema: z.object({
-      prompt: z.string().describe("Natural language description of files to find, or function/class name. Mention directories to narrow search."),
+      prompt: z
+        .string()
+        .describe(
+          "Natural language description of files to find, or function/class name. Mention directories to narrow search.",
+        ),
     }),
     execute: findFilesTool,
   }),
@@ -1650,16 +1728,32 @@ const tools = {
     description: "Search the web for current information using Linkup API",
     inputSchema: z.object({
       query: z.string().describe("The search query to find relevant web content"),
-      depth: z.enum(["standard", "deep"]).optional().describe("Search depth - 'standard' for quick results, 'deep' for comprehensive search. Default is 'standard'."),
+      depth: z
+        .enum(["standard", "deep"])
+        .optional()
+        .describe(
+          "Search depth - 'standard' for quick results, 'deep' for comprehensive search. Default is 'standard'.",
+        ),
     }),
     execute: webSearchTool,
   }),
   read_docs: tool({
     description: "Fetch up-to-date documentation for libraries and frameworks using Context7 API",
     inputSchema: z.object({
-      libraryTitle: z.string().describe("The library or framework name (e.g., 'Next.js', 'MongoDB', 'React'). Use official name as it appears in documentation."),
-      topic: z.string().describe("Specific topic to focus on (e.g., 'routing', 'hooks', 'authentication')"),
-      max_tokens: z.number().optional().describe("Maximum number of tokens to return. Defaults to 20000. Values less than 10000 are automatically increased to 10000."),
+      libraryTitle: z
+        .string()
+        .describe(
+          "The library or framework name (e.g., 'Next.js', 'MongoDB', 'React'). Use official name as it appears in documentation.",
+        ),
+      topic: z
+        .string()
+        .describe("Specific topic to focus on (e.g., 'routing', 'hooks', 'authentication')"),
+      max_tokens: z
+        .number()
+        .optional()
+        .describe(
+          "Maximum number of tokens to return. Defaults to 20000. Values less than 10000 are automatically increased to 10000.",
+        ),
     }),
     execute: readDocsTool,
   }),
@@ -2853,7 +2947,11 @@ async function invokeWithAI(provider, messages, options = {}) {
             }
 
             // Track mutations (write, str_replace, apply_patch)
-            if (tc.toolName === "write" || tc.toolName === "str_replace" || tc.toolName === "apply_patch") {
+            if (
+              tc.toolName === "write" ||
+              tc.toolName === "str_replace" ||
+              tc.toolName === "apply_patch"
+            ) {
               executionMetrics.mutationCount++;
               const filePath = input?.path || input?.operation?.path;
               if (filePath) executionMetrics.changedFiles.add(filePath);
@@ -2861,7 +2959,13 @@ async function invokeWithAI(provider, messages, options = {}) {
             }
 
             // Track validation tool usage
-            if (tc.toolName === "run_typecheck" || tc.toolName === "run_lint" || tc.toolName === "run_cspell" || tc.toolName === "run_ast_density" || tc.toolName === "run_tests") {
+            if (
+              tc.toolName === "run_typecheck" ||
+              tc.toolName === "run_lint" ||
+              tc.toolName === "run_cspell" ||
+              tc.toolName === "run_ast_density" ||
+              tc.toolName === "run_tests"
+            ) {
               executionMetrics.validationToolsRun.add(tc.toolName);
             }
 
@@ -3095,9 +3199,9 @@ async function invokeWithAI(provider, messages, options = {}) {
             }
           }
         }
-    } catch (error_) {
-      // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
-      logDebug(`⚠️ result.text fallback also failed: ${String(error_).slice(0, 100)}`);
+      } catch (error_) {
+        // result.text can also throw AI_NoOutputGeneratedError — don't mask the original issue
+        logDebug(`⚠️ result.text fallback also failed: ${String(error_).slice(0, 100)}`);
       }
     }
 
@@ -3147,9 +3251,16 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     // Build structured result contract for runner/agent consumption
     const _symphonyResult = {
-      completed: executionMetrics.taskCompleted || (finishReason === "stop" && errorCount === 0 && fullText.length > 0),
+      completed:
+        executionMetrics.taskCompleted ||
+        (finishReason === "stop" && errorCount === 0 && fullText.length > 0),
       needsContinuation: finishReason === "tool-calls" || finishReason === "length",
-      failureClass: errorCount > 0 ? "stream_error" : (finishReason === "tool-calls" ? "step_limit_reached" : null),
+      failureClass:
+        errorCount > 0
+          ? "stream_error"
+          : finishReason === "tool-calls"
+            ? "step_limit_reached"
+            : null,
       mutationCount: executionMetrics.mutationCount,
       changedFiles: [...executionMetrics.changedFiles],
       validationIntent: executionMetrics.validationToolsRun.size > 0,
@@ -3416,8 +3527,7 @@ function maybeFlushLogBuffer(state) {
   }
 
   // Log when buffer exceeds threshold or contains sentence boundary
-  const hasSentenceEnd =
-    /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
+  const hasSentenceEnd = /[.!?]\s/.test(filteredLogBuffer) || filteredLogBuffer.includes("\n\n");
   if (filteredLogBuffer.length >= LOG_BUFFER_THRESHOLD || hasSentenceEnd) {
     const toLog = filteredLogBuffer.trim();
     if (toLog.length > 0) {
@@ -4038,8 +4148,8 @@ const server = http.createServer(async (req, res) => {
       let body;
       try {
         body = await parseBody(req);
-    } catch (error_) {
-      logWarn(`⚠️ Request parse error: ${error_.message}`);
+      } catch (error_) {
+        logWarn(`⚠️ Request parse error: ${error_.message}`);
         return sendJson(res, 400, {
           error: {
             message: "Invalid request body: not valid JSON",
@@ -4373,8 +4483,8 @@ const server = http.createServer(async (req, res) => {
             }
             maybeGC();
             return;
-    } catch (error_) {
-      const errMsg = String(error_.message || error_).slice(0, 200);
+          } catch (error_) {
+            const errMsg = String(error_.message || error_).slice(0, 200);
             logWarn(`⚠️ Codebuff transparent relay failed: ${errMsg}`);
 
             // Record failure and fall through to standard cascade
@@ -4624,8 +4734,8 @@ const server = http.createServer(async (req, res) => {
         res.write("data: [DONE]\n\n");
         res.end();
         return;
-    } catch (error_) {
-      logError(`Failed to send error chunk: ${error_.message}`);
+      } catch (error_) {
+        logError(`Failed to send error chunk: ${error_.message}`);
         return;
       }
     }
@@ -4706,17 +4816,39 @@ server.listen(PORT, "127.0.0.1", async () => {
   {
     const replacementsPreprocess = (val) => {
       if (Array.isArray(val)) return val;
-      if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; } }
-      if (val && typeof val === 'object') return [val];
+      if (typeof val === "string") {
+        try {
+          const p = JSON.parse(val);
+          return Array.isArray(p) ? p : [p];
+        } catch {
+          return [];
+        }
+      }
+      if (val && typeof val === "object") return [val];
       return [];
     };
     const filesPreprocess = (val) => (Array.isArray(val) ? val : [val]);
     const selfTests = [
-      { name: 'replacements_array', fn: replacementsPreprocess, input: [{old:'a',new:'b'}], expected: 1 },
-      { name: 'replacements_string', fn: replacementsPreprocess, input: JSON.stringify([{old:'a',new:'b'}]), expected: 1 },
-      { name: 'replacements_object', fn: replacementsPreprocess, input: {old:'a',new:'b'}, expected: 1 },
-      { name: 'files_array', fn: filesPreprocess, input: ['test.txt'], expected: 1 },
-      { name: 'files_string', fn: filesPreprocess, input: 'test.txt', expected: 1 },
+      {
+        name: "replacements_array",
+        fn: replacementsPreprocess,
+        input: [{ old: "a", new: "b" }],
+        expected: 1,
+      },
+      {
+        name: "replacements_string",
+        fn: replacementsPreprocess,
+        input: JSON.stringify([{ old: "a", new: "b" }]),
+        expected: 1,
+      },
+      {
+        name: "replacements_object",
+        fn: replacementsPreprocess,
+        input: { old: "a", new: "b" },
+        expected: 1,
+      },
+      { name: "files_array", fn: filesPreprocess, input: ["test.txt"], expected: 1 },
+      { name: "files_string", fn: filesPreprocess, input: "test.txt", expected: 1 },
     ];
     let selfTestPassed = 0;
     for (const { name, fn, input, expected } of selfTests) {
@@ -4728,7 +4860,9 @@ server.listen(PORT, "127.0.0.1", async () => {
       }
     }
     if (selfTestPassed < selfTests.length) {
-      logError(`🧪 Tool schema self-test FAILED (${selfTestPassed}/${selfTests.length}) — refusing to start`);
+      logError(
+        `🧪 Tool schema self-test FAILED (${selfTestPassed}/${selfTests.length}) — refusing to start`,
+      );
       process.exit(1);
     }
     logInfo(`🧪 Tool schema self-test: ${selfTestPassed}/${selfTests.length} passed`);
@@ -4949,7 +5083,9 @@ server.listen(PORT, "127.0.0.1", async () => {
       }
     })
     .catch(() => {
-      logWarn(`⚠️ Context7 HTTP service not reachable at ${CONTEXT7_HTTP_BASE} — will use cloud API fallback`);
+      logWarn(
+        `⚠️ Context7 HTTP service not reachable at ${CONTEXT7_HTTP_BASE} — will use cloud API fallback`,
+      );
     });
 
   // Start Discord message monitoring
