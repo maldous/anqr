@@ -1584,7 +1584,7 @@ const server = http.createServer(async (req, res) => {
             logInfo(`✅ Finished: ${issueContext.identifier}`);
           }
 
-          // Send final chunk with appropriate finish_reason
+          // Send final chunk with appropriate finish_reason and structured result
           const finalChunk = {
             id: completionId,
             object: "chat.completion.chunk",
@@ -1597,6 +1597,16 @@ const server = http.createServer(async (req, res) => {
                 finish_reason: finishReason,
               },
             ],
+            _symphonyResult: {
+              completed: finishReason === "stop" && !streamResult?.needsContinuation,
+              needsContinuation: streamResult?.needsContinuation || false,
+              failureClass: null,
+              mutationCount: 0,
+              changedFiles: [],
+              validationIntent: false,
+              toolCallCount: 0,
+              stepCount: 0,
+            },
           };
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
 
@@ -1621,6 +1631,16 @@ const server = http.createServer(async (req, res) => {
                 finish_reason: "stop",
               },
             ],
+            _symphonyResult: {
+              completed: false,
+              needsContinuation: false,
+              failureClass: "stream_error",
+              mutationCount: 0,
+              changedFiles: [],
+              validationIntent: false,
+              toolCallCount: 0,
+              stepCount: 0,
+            },
           };
           res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
@@ -1696,6 +1716,16 @@ const server = http.createServer(async (req, res) => {
               prompt_tokens: 0,
               completion_tokens: 0,
               total_tokens: 0,
+            },
+            _symphonyResult: {
+              completed: finishReason === "stop" && !result.needsContinuation,
+              needsContinuation: result.needsContinuation || false,
+              failureClass: null,
+              mutationCount: 0,
+              changedFiles: [],
+              validationIntent: false,
+              toolCallCount: 0,
+              stepCount: 0,
             },
           }),
         );
