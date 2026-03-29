@@ -3035,6 +3035,10 @@ async function invokeWithAI(provider, messages, options = {}) {
     let errorCount = 0;
 
     logDebug(`[invokeWithAI] Processing fullStream...`);
+    
+    // Track <think> blocks in text-delta for models that embed reasoning in text
+    let inThinkBlock = false;
+    
     for await (const part of result.fullStream) {
       partCount++;
 
@@ -3100,15 +3104,47 @@ async function invokeWithAI(provider, messages, options = {}) {
             fullText += delta;
           }
         }
-        // Forward non-empty text deltas to client immediately (including Codebuff activity messages)
-        if (onChunk && delta && delta.length > 0) {
-          onChunk({ type: "text", text: delta });
+
+        // Detect <think> blocks for models that embed reasoning in text
+        // (e.g., Qwen, DeepSeek, and other models that don't emit reasoning-delta events)
+        // Simple boundary detection - handles multi-chunk blocks correctly
+        if (delta.includes("<think>")) {
+          if (!inThinkBlock) {
+            inThinkBlock = true;
+            // Emit lightbulb prefix when thinking starts
+            if (onChunk) onChunk({ type: "text", text: "\n💡 " });
+            logDebug(`💭 Thinking block detected in text-delta`);
+          }
         }
+
+        if (inThinkBlock) {
+          // We're inside a think block - stream all content (including tags for now)
+          // This handles multi-chunk blocks correctly
+          if (onChunk && delta && delta.length > 0) {
+            onChunk({ type: "text", text: delta });
+          }
+        } else {
+          // Normal text-delta outside thinking blocks
+          // Forward non-empty text deltas to client immediately (including Codebuff activity messages)
+          if (onChunk && delta && delta.length > 0) {
+            onChunk({ type: "text", text: delta });
+          }
+        }
+
+        if (delta.includes("</think>")) {
+          if (inThinkBlock) {
+            inThinkBlock = false;
+            // Emit newline when thinking ends
+            if (onChunk) onChunk({ type: "text", text: "\n" });
+          }
+        }
+
         // Log non-empty text-delta events for debugging (first 200 chars)
         if (delta && delta.length > 0) {
           logDebug(`📨 text-delta (${delta.length} chars): ${delta.slice(0, 200)}`, {
             deltaLength: delta.length,
             totalLength: fullText.length,
+            inThinkBlock,
           });
         }
       } else if (part.type === "tool-call") {

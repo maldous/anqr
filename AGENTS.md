@@ -151,6 +151,8 @@ Supporting jobs:
 - Sonar sync and audit
 - provider credit/routing checks
 
+**Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `scripts/ops/.workspace/` (already in `.gitignore`) for such temporary files.
+
 ### Provider routing
 
 The harness uses a cascading provider model with failure cooldown:
