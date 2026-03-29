@@ -194,7 +194,7 @@ const ALLOWED_COMMANDS = new Set([
   "pwd",
 ]);
 
-const REQUEST_TIMEOUT_MS = 600_000; // 10 min — local Ollama needs headroom for large-context turns
+const REQUEST_TIMEOUT_MS = 900_000; // 15 min — sufficient for large-context turns and complex operations
 
 // ---------------------------------------------------------------------------
 // Tool implementations
@@ -560,7 +560,7 @@ async function callLLM(provider, messages, taskDescription) {
     });
 
     const controller = new AbortController();
-    const timeoutMs = 5 * 60 * 1000; // 5 min
+    const timeoutMs = 15 * 60 * 1000; // 15 min - match symphony-bridge timeout
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
@@ -587,6 +587,7 @@ async function callLLM(provider, messages, taskDescription) {
       // Stream the response and accumulate content
       let content = "";
       let finishReason = "stop";
+      let symphonyResult = null;
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -615,6 +616,11 @@ async function callLLM(provider, messages, taskDescription) {
             const reason = parsed.choices?.[0]?.finish_reason;
             if (reason) {
               finishReason = reason;
+            }
+            // Capture structured result from bridge if present
+            if (parsed._symphonyResult) {
+              symphonyResult = parsed._symphonyResult;
+              logDebug(`[agent] 📦 Captured _symphonyResult from codebuff bridge`);
             }
           } catch {
             // Skip non-JSON chunks
@@ -650,6 +656,17 @@ async function callLLM(provider, messages, taskDescription) {
       writeFileSync(reportFile, JSON.stringify(report, null, 2) + "\n");
       logDebug(`[agent] Codebuff bridge report written to: ${reportFile}`);
 
+      // Infer symphony result if not captured from bridge
+      if (!symphonyResult) {
+        symphonyResult = inferSymphonyResultFromCompletion({
+          finishReason,
+          text: content,
+        });
+        if (symphonyResult) {
+          logDebug(`[agent] 🛟 Inferred _symphonyResult from codebuff bridge (finish_reason=${finishReason})`);
+        }
+      }
+
       return {
         choices: [
           {
@@ -661,6 +678,7 @@ async function callLLM(provider, messages, taskDescription) {
           },
         ],
         providerName: provider.name,
+        _symphonyResult: symphonyResult,
         needsContinuation, // Pass through for continuation logic
       };
     } catch (err) {
