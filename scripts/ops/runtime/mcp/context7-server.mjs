@@ -492,7 +492,7 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
         // Step 2 — query-docs via MCP tools/call
         // The MCP tool requires libraryId and query as required parameters
         const docsArgs = { 
-          libraryId: libraryId,
+          libraryId,
           query: topic || `Documentation and examples for ${libraryTitle}` 
         };
 
