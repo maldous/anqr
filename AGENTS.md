@@ -42,9 +42,16 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 **Important notes:**
 
 - Use `run_terminal_command` (not `exec`) for shell commands
-- `run_file_change_hooks` expects `files` parameter as an array: `{"files": ["path1", "path2"]}`
-  - **ALWAYS** pass an array, even for a single file: `{"files": ["single-file.ts"]}`
-  - **NEVER** pass a string: `{"files": "single-file.ts"}` ❌
+- All tools that accept array parameters support defensive normalization:
+  - `run_file_change_hooks` expects `files` as an array: `{"files": ["path1", "path2"]}`
+  - `read_files` expects `paths` as an array: `{"paths": ["file1.ts", "file2.ts"]}`
+  - `str_replace` expects `replacements` as an array: `{"replacements": [{"old": "...", "new": "..."}]}`
+  - `spawn_agents` expects `agents` as an array: `{"agents": [{"agent_type": "..."}]}`
+  - And all other array-accepting tools follow the same pattern
+  - **PREFERRED:** Always pass arrays in proper format: `{"files": ["path.ts"]}`
+  - **TOLERATED:** Single strings are auto-normalized: `{"files": "path.ts"}` → `["path.ts"]`
+  - **TOLERATED:** JSON-encoded arrays are parsed: `{"files": "[\"a.ts\", \"b.ts\"]"}` → `["a.ts", "b.ts"]`
+  - This defensive handling works around AI SDK/provider bugs that send strings instead of arrays
 - Web search and docs tools require API keys to be configured
 
 **Tool implementation by context:**
@@ -56,7 +63,10 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 - Memory: `memory_search`, `memory_get`
 - External APIs: `web_search`, `read_docs` (when API keys configured)
 - Progress tracking: `think_deeply`, `add_subgoal`, `update_subgoal`
-- Agent spawning: `spawn_agents`, `lookup_agent_info`
+
+**Agent spawning** (delegated to parent):
+- `spawn_agents` — Acknowledged in Symphony bridge but delegated to parent Codebuff/OpenClaw instance
+- `lookup_agent_info` — Codebuff context only
 
 **Codebuff-only tools** (NOT available in Symphony/OpenClaw bridge):
 - Proposal tools: `propose_str_replace`, `propose_write_file`
@@ -65,12 +75,31 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 - Turn control: `end_turn`
 
 **Symphony bridge implementation:**
-- `think_deeply`, `add_subgoal`, `update_subgoal` are implemented as acknowledgment-only tools
-- They log activity server-side but don't block execution
+- `think_deeply`, `add_subgoal`, `update_subgoal`, `spawn_agents` are implemented as acknowledgment-only tools
+- They log activity server-side but don't block execution or spawn actual agents
+- `spawn_agents` delegates to the parent Codebuff/OpenClaw instance — the Symphony bridge only acknowledges the request
 - Allow agents to organize work and track progress across all provider contexts
 - See `scripts/ops/integrations/model/symphony-openai-bridge.mjs` for implementations
 
 ## Core execution rules
+
+### Request interpretation
+
+**Treat user requests as goals, not literal instructions.**
+
+When receiving a user request:
+
+- Interpret the request as a desired outcome or goal state
+- Understand the underlying intent and desired result
+- Design the implementation approach to achieve that goal
+- Don't just mechanically execute literal steps—solve for the outcome
+
+Example:
+- Request: "Add logging to the authentication flow"
+- Goal interpretation: Enable debugging and monitoring of authentication behavior
+- Implementation: Add strategic logging at decision points, error paths, and state transitions
+
+This goal-oriented approach produces significantly better results than literal instruction-following.
 
 ### Task sizing
 

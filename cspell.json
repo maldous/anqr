@@ -453,7 +453,11 @@
     "basenames",
     "Podfile",
     "Procfile",
-    "hotfixes"
+    "hotfixes",
+    "statfs",
+    "bavail",
+    "bsize",
+    "lifecycles"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
