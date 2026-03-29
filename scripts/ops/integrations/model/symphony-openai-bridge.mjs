@@ -5191,7 +5191,7 @@ const server = http.createServer(async (req, res) => {
             created,
             model: route.responseModelId,
             choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
-            _symphony_result: result._symphonyResult || null,
+            _symphonyResult: result._symphonyResult || null,
           };
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
@@ -5340,7 +5340,7 @@ const server = http.createServer(async (req, res) => {
           _symphony_attempts: result.attempts,
           _symphony_tried: result.triedProviders,
           _symphony_duration_ms: durationMs,
-          _symphony_result: result._symphonyResult || null,
+          _symphonyResult: result._symphonyResult || null,
         });
       }
     } else {
