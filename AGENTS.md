@@ -275,10 +275,8 @@ Use this structure for task handover:
 ## Escalate if
 
 - paid spend, prod auth changes, store/signing work, operator secrets, launch scope changes
-
 ```
 
 ---
 
 For human/operator read order, see [README.md](/home/user/src/anqr/README.md).
-```
