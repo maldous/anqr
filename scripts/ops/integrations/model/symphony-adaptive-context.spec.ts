@@ -315,6 +315,36 @@ describe("classifyError", () => {
     (err as unknown as Record<string, unknown>).statusCode = 413;
     expect(classifyError(err)).toBe(ERROR_TYPES.CONTEXT_TOO_LARGE);
   });
+
+  it("classifies 'unknown tool' as TOOL_HALLUCINATION", () => {
+    const err = new Error("Error: Unknown tool: read");
+    expect(classifyError(err)).toBe(ERROR_TYPES.TOOL_HALLUCINATION);
+  });
+
+  it("classifies 'tool not found' as TOOL_HALLUCINATION", () => {
+    const err = new Error("Tool not found: hallucinated_tool");
+    expect(classifyError(err)).toBe(ERROR_TYPES.TOOL_HALLUCINATION);
+  });
+
+  it("classifies 'invalid tool' as TOOL_HALLUCINATION", () => {
+    const err = new Error("Invalid tool name provided");
+    expect(classifyError(err)).toBe(ERROR_TYPES.TOOL_HALLUCINATION);
+  });
+
+  it("classifies 'no such tool' as TOOL_HALLUCINATION", () => {
+    const err = new Error("No such tool exists in schema");
+    expect(classifyError(err)).toBe(ERROR_TYPES.TOOL_HALLUCINATION);
+  });
+
+  it("classifies 'tool does not exist' as TOOL_HALLUCINATION", () => {
+    const err = new Error("The requested tool does not exist");
+    expect(classifyError(err)).toBe(ERROR_TYPES.TOOL_HALLUCINATION);
+  });
+
+  it("classifies 'unrecognized tool' as TOOL_HALLUCINATION", () => {
+    const err = new Error("Unrecognized tool in request");
+    expect(classifyError(err)).toBe(ERROR_TYPES.TOOL_HALLUCINATION);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -638,6 +668,16 @@ describe("recordErrorType", () => {
     recordErrorType("groq", "nonexistent_type");
     const state = getProviderAdaptiveState("groq");
     expect(state.errorCounts[ERROR_TYPES.UNKNOWN]).toBe(1);
+  });
+
+  it("increments tool hallucination counter correctly", () => {
+    recordErrorType("cerebras", ERROR_TYPES.TOOL_HALLUCINATION);
+    recordErrorType("cerebras", ERROR_TYPES.TOOL_HALLUCINATION);
+    recordErrorType("cerebras", ERROR_TYPES.CONTEXT_TOO_LARGE);
+
+    const state = getProviderAdaptiveState("cerebras");
+    expect(state.errorCounts[ERROR_TYPES.TOOL_HALLUCINATION]).toBe(2);
+    expect(state.errorCounts[ERROR_TYPES.CONTEXT_TOO_LARGE]).toBe(1);
   });
 });
 

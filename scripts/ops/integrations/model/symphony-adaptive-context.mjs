@@ -50,6 +50,7 @@ export const ERROR_TYPES = Object.freeze({
   TIMEOUT: "timeout",
   SERVER_ERROR: "server_error",
   UNKNOWN: "unknown",
+  TOOL_HALLUCINATION: "tool_hallucination",
 });
 
 // ---------------------------------------------------------------------------
@@ -87,6 +88,7 @@ function createProviderState(providerName) {
       [ERROR_TYPES.TIMEOUT]: 0,
       [ERROR_TYPES.SERVER_ERROR]: 0,
       [ERROR_TYPES.UNKNOWN]: 0,
+      [ERROR_TYPES.TOOL_HALLUCINATION]: 0,
     },
   };
 }
@@ -190,8 +192,8 @@ function parseHeaderInt(headers, key) {
 function parseResetHeader(headers, key) {
   const val = getHeaderValue(headers, key);
   if (!val) return null;
-  const secondsMatch = val.match(/(\d+\.?\d*)s/);
-  const minutesMatch = val.match(/(\d+\.?\d*)m/);
+  const secondsMatch = val.match(/(\\d+\\.?\\d*)s/);
+  const minutesMatch = val.match(/(\\d+\\.?\\d*)m/);
   let ms = 0;
   if (minutesMatch) ms += Number.parseFloat(minutesMatch[1]) * 60_000;
   if (secondsMatch) ms += Number.parseFloat(secondsMatch[1]) * 1_000;
@@ -257,6 +259,17 @@ function isServerError(errStr) {
   );
 }
 
+function isToolHallucinationError(errStr) {
+  return (
+    errStr.includes("unknown tool") ||
+    errStr.includes("tool not found") ||
+    errStr.includes("invalid tool") ||
+    errStr.includes("no such tool") ||
+    errStr.includes("tool does not exist") ||
+    errStr.includes("unrecognized tool")
+  );
+}
+
 export function classifyError(err) {
   const statusCode = getStatusCode(err);
   const errStr = extractErrorString(err);
@@ -267,6 +280,7 @@ export function classifyError(err) {
     return ERROR_TYPES.AUTH_ERROR;
   if (statusCode === 408 || isTimeoutError(errStr)) return ERROR_TYPES.TIMEOUT;
   if ((statusCode && statusCode >= 500) || isServerError(errStr)) return ERROR_TYPES.SERVER_ERROR;
+  if (isToolHallucinationError(errStr)) return ERROR_TYPES.TOOL_HALLUCINATION;
   return ERROR_TYPES.UNKNOWN;
 }
 
@@ -277,11 +291,11 @@ export function classifyError(err) {
 export function parseContextErrorDetails(err) {
   const errStr = extractErrorString(err);
 
-  const limitMatch = errStr.match(/limit\s+(\d+)/i);
-  const requestedMatch = errStr.match(/requested\s+(\d+)/i);
-  const contextLenMatch = errStr.match(/maximum context length is (\d+)/i);
-  const youRequestedMatch = errStr.match(/you requested (\d+)/i);
-  const maxSizeMatch = errStr.match(/max size[:\s]+(\d+)/i);
+  const limitMatch = errStr.match(/limit\\s+(\\d+)/i);
+  const requestedMatch = errStr.match(/requested\\s+(\\d+)/i);
+  const contextLenMatch = errStr.match(/maximum context length is (\\d+)/i);
+  const youRequestedMatch = errStr.match(/you requested (\\d+)/i);
+  const maxSizeMatch = errStr.match(/max size[:\\s]+(\\d+)/i);
   const isTpmRelated = /tokens per minute|tpm/i.test(errStr);
 
   let reportedLimit = null;
@@ -335,12 +349,12 @@ export function parseRateLimitInfo(err) {
   }
 
   const errStr = extractErrorString(err);
-  const tpmLimitMatch = errStr.match(/tokens per minute.*?limit\s+(\d+)/i);
+  const tpmLimitMatch = errStr.match(/tokens per minute.*?limit\\s+(\\d+)/i);
   if (tpmLimitMatch && !info.tpmLimit) {
     info.tpmLimit = Number.parseInt(tpmLimitMatch[1], 10);
   }
 
-  const retryMatch = errStr.match(/retry[.-]after[:\s]+(\d+)/i);
+  const retryMatch = errStr.match(/retry[.-]after[:\\s]+(\\d+)/i);
   if (retryMatch && !info.retryAfterMs) {
     info.retryAfterMs = Number.parseInt(retryMatch[1], 10) * 1_000;
   }
