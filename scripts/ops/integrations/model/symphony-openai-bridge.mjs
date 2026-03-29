@@ -263,7 +263,9 @@ function startDiscordMonitoring() {
                   // Filter out internal activity markers that the AI SDK includes in result.text
                   // These would duplicate what we already log via DEBUG
                   const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
-                  if (!isActivityMarker.test(content.trim())) {
+                  // Filter out standalone light bulb emoji from Discord notifications
+                  const isLightbulb = content.trim() === "💡" || content === "\n💡 ";
+                  if (!isActivityMarker.test(content.trim()) && !isLightbulb) {
                     fullText += content;
                     streamDiscordUpdate(content, {
                       emoji: "",
@@ -4078,12 +4080,14 @@ function processSSELine(line, state, onDiscordChunk) {
     if (!content || content.length === 0) return;
 
     state.fullText += content;
-    state.logBuffer += content;
-
-    // Stream ALL content to Discord (including activity messages)
-    if (onDiscordChunk) {
-      onDiscordChunk(content);
-    }
+    state.logBuffer += content;        // Stream content to Discord (filter out standalone light bulb emoji)
+        if (onDiscordChunk) {
+          const trimmed = content.trim();
+          const isLightbulb = trimmed === "💡" || content === "\n💡 ";
+          if (!isLightbulb) {
+            onDiscordChunk(content);
+          }
+        }
 
     maybeFlushLogBuffer(state);
   } catch {
@@ -4997,7 +5001,10 @@ const server = http.createServer(async (req, res) => {
                   if (text && text.length > 0) {
                     // Filter out internal activity markers to avoid duplicate messages in Discord
                     const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
-                    if (!isActivityMarker.test(text.trim())) {
+                    // Filter out standalone light bulb emoji from Discord notifications
+                    const trimmed = text.trim();
+                    const isLightbulb = trimmed === "💡" || text === "\n💡 ";
+                    if (!isActivityMarker.test(trimmed) && !isLightbulb) {
                       streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
                         /* ignore */
                       });

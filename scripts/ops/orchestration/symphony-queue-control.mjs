@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { listIssuesByState, updateIssue, addComment, STATES } from "../linear-client.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
@@ -71,6 +72,44 @@ export async function getQueueSnapshot() {
   };
 }
 
+function countEnabledTimers() {
+  try {
+    const output = execFileSync(
+      "systemctl",
+      ["--user", "list-unit-files", "anqr-symphony-runner@*.timer", "--state=enabled", "--no-legend"],
+      { encoding: "utf-8" },
+    );
+    const lines = output.trim().split("\n").filter(Boolean);
+    return lines.length;
+  } catch {
+    // If systemctl fails or no timers found, return 0
+    return 0;
+  }
+}
+
+function validateConcurrencyConfig() {
+  const enabledTimers = countEnabledTimers();
+  if (enabledTimers === 0) {
+    // No timers enabled - probably running manually or not using systemd
+    return;
+  }
+  if (enabledTimers > MAX_CONCURRENT_AGENTS) {
+    logAction(
+      "info",
+      `⚠️  WARNING: ${enabledTimers} timers enabled but MAX_CONCURRENT_AGENTS=${MAX_CONCURRENT_AGENTS}`,
+    );
+    logAction(
+      "info",
+      `⚠️  ${enabledTimers - MAX_CONCURRENT_AGENTS} runner(s) may starve. Update MAX_CONCURRENT_AGENTS in symphony-config.mjs`,
+    );
+  } else if (enabledTimers < MAX_CONCURRENT_AGENTS) {
+    logAction(
+      "info",
+      `ℹ️  ${enabledTimers} timers enabled, MAX_CONCURRENT_AGENTS=${MAX_CONCURRENT_AGENTS} (${MAX_CONCURRENT_AGENTS - enabledTimers} unused slot(s))`,
+    );
+  }
+}
+
 function printQueueHealth(snap) {
   logInfo("[queue-control] Queue health snapshot\n");
   logInfo(
@@ -86,6 +125,7 @@ function printQueueHealth(snap) {
   logInfo(
     `\n  target_min=${TARGET_MIN}  target_max=${TARGET_MAX}  max_concurrent=${MAX_CONCURRENT_AGENTS}`,
   );
+  validateConcurrencyConfig();
 }
 
 export async function feedQueue(snap = null, dryRun = false) {
