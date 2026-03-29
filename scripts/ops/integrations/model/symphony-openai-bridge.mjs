@@ -912,14 +912,9 @@ async function memoryGetTool({ file }) {
  */
 async function runFileChangeHooksTool({ files }) {
   try {
-    // Normalize files to array (workaround for Codebuff SDK bug in ^0.10.7)
-    // Filter out empty placeholder values that come from the transform
-    const filesList = Array.isArray(files) 
-      ? files.filter((f) => f && f !== "<empty>")
-      : files && files !== "<empty>" ? [files] : [];
-
-    // If no valid files after filtering, return early
-    if (filesList.length === 0) {
+    // files is already normalized to array by the schema transform
+    // If no files provided, return early with success
+    if (!files || files.length === 0) {
       return { success: true, message: "No files to process" };
     }
 
@@ -1411,10 +1406,14 @@ const tools = {
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
       paths: z
-        .preprocess(
-          (val) => coerceStringArrayInput(val, { fallback: [] }),
-          z.array(z.string()).min(1),
-        )
+        .any()
+        .transform((val) => {
+          const result = coerceStringArrayInput(val, { fallback: [] });
+          if (!result || result.length === 0) {
+            throw new Error("paths must contain at least one file path");
+          }
+          return result;
+        })
         .describe("List of file paths to read (accepts string or array)"),
     }),
     execute: readFilesTool,
@@ -1423,8 +1422,9 @@ const tools = {
     description: "Replace strings in a file with new strings",
     inputSchema: z.object({
       path: z.string().describe("Path to the file to edit"),
-      replacements: z.preprocess(
-        (val) => {
+      replacements: z
+        .any()
+        .transform((val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
             try {
@@ -1436,15 +1436,16 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        },
-        z.array(
-          z.object({
-            old: z.string().describe("String to replace"),
-            new: z.string().describe("Replacement string"),
-            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-          }),
+        })
+        .pipe(
+          z.array(
+            z.object({
+              old: z.string().describe("String to replace"),
+              new: z.string().describe("Replacement string"),
+              allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+            }),
+          ),
         ),
-      ),
     }),
     execute: strReplaceTool,
   }),
@@ -1459,16 +1460,14 @@ const tools = {
     description: "Read directory subtree with file contents",
     inputSchema: z.object({
       paths: z
-        .preprocess(
-          (val) => coerceStringArrayInput(val, { fallback: ["."] }),
-          z.array(z.string()).min(1).optional(),
-        )
+        .any()
+        .transform((val) => coerceStringArrayInput(val, { fallback: ["."] }))
+        .optional()
         .describe("Paths to read (default: ['.']; accepts string or array)"),
       maxTokens: z
-        .preprocess(
-          (val) => coerceOptionalNumberInput(val, undefined),
-          z.number().int().positive().optional(),
-        )
+        .any()
+        .transform((val) => coerceOptionalNumberInput(val, undefined))
+        .pipe(z.number().int().positive().optional())
         .describe("Maximum token budget (default: 50000; accepts numeric string)"),
     }),
     execute: readSubtreeTool,
@@ -1476,13 +1475,30 @@ const tools = {
   spawn_agents: tool({
     description: "Spawn multiple agents to run in parallel",
     inputSchema: z.object({
-      agents: z.array(
-        z.object({
-          agent_type: z.string().describe("Agent to spawn"),
-          prompt: z.string().optional().describe("Prompt to send"),
-          params: z.record(z.any()).optional().describe("Parameters object"),
-        }),
-      ),
+      agents: z
+        .any()
+        .transform((val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try {
+              const parsed = JSON.parse(val);
+              return Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
+          return [];
+        })
+        .pipe(
+          z.array(
+            z.object({
+              agent_type: z.string().describe("Agent to spawn"),
+              prompt: z.string().optional().describe("Prompt to send"),
+              params: z.record(z.any()).optional().describe("Parameters object"),
+            }),
+          ),
+        ),
     }),
     execute: spawnAgentsTool,
   }),
@@ -1490,8 +1506,9 @@ const tools = {
     description: "Propose string replacements without applying them",
     inputSchema: z.object({
       path: z.string().describe("Path to the file"),
-      replacements: z.preprocess(
-        (val) => {
+      replacements: z
+        .any()
+        .transform((val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
             try {
@@ -1503,15 +1520,16 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        },
-        z.array(
-          z.object({
-            old: z.string().describe("String to replace"),
-            new: z.string().describe("Replacement string"),
-            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-          }),
+        })
+        .pipe(
+          z.array(
+            z.object({
+              old: z.string().describe("String to replace"),
+              new: z.string().describe("Replacement string"),
+              allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+            }),
+          ),
         ),
-      ),
     }),
     execute: proposeStrReplaceTool,
   }),
@@ -1535,7 +1553,23 @@ const tools = {
   set_messages: tool({
     description: "Set the conversation history",
     inputSchema: z.object({
-      messages: z.array(z.any()).describe("Array of messages"),
+      messages: z
+        .any()
+        .transform((val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try {
+              const parsed = JSON.parse(val);
+              return Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
+          return [];
+        })
+        .pipe(z.array(z.any()))
+        .describe("Array of messages (accepts string or array)"),
     }),
     execute: setMessagesTool,
   }),
@@ -1554,12 +1588,29 @@ const tools = {
   suggest_followups: tool({
     description: "Suggest followup prompts to the user",
     inputSchema: z.object({
-      followups: z.array(
-        z.object({
-          prompt: z.string().describe("Full prompt text"),
-          label: z.string().optional().describe("Short display label"),
-        }),
-      ),
+      followups: z
+        .any()
+        .transform((val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try {
+              const parsed = JSON.parse(val);
+              return Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
+          return [];
+        })
+        .pipe(
+          z.array(
+            z.object({
+              prompt: z.string().describe("Full prompt text"),
+              label: z.string().optional().describe("Short display label"),
+            }),
+          ),
+        ),
     }),
     execute: suggestFollowupsTool,
   }),
@@ -1571,12 +1622,29 @@ const tools = {
   write_todos: tool({
     description: "Write a todo list to track tasks",
     inputSchema: z.object({
-      todos: z.array(
-        z.object({
-          task: z.string().describe("Task description"),
-          completed: z.boolean().describe("Whether task is completed"),
-        }),
-      ),
+      todos: z
+        .any()
+        .transform((val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try {
+              const parsed = JSON.parse(val);
+              return Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
+          return [];
+        })
+        .pipe(
+          z.array(
+            z.object({
+              task: z.string().describe("Task description"),
+              completed: z.boolean().describe("Whether task is completed"),
+            }),
+          ),
+        ),
     }),
     execute: writeTodosTool,
   }),
@@ -1594,27 +1662,61 @@ const tools = {
   ask_user: tool({
     description: "Ask the user multiple choice questions",
     inputSchema: z.object({
-      questions: z.array(
-        z.object({
-          question: z.string().describe("Question to ask"),
-          header: z.string().optional().describe("Short label"),
-          options: z.array(
+      questions: z
+        .any()
+        .transform((val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try {
+              const parsed = JSON.parse(val);
+              return Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+              return [];
+            }
+          }
+          if (val && typeof val === "object") return [val];
+          return [];
+        })
+        .pipe(
+          z.array(
             z.object({
-              label: z.string().describe("Option label"),
-              description: z.string().optional().describe("Option description"),
+              question: z.string().describe("Question to ask"),
+              header: z.string().optional().describe("Short label"),
+              options: z
+                .any()
+                .transform((val) => {
+                  if (Array.isArray(val)) return val;
+                  if (typeof val === "string") {
+                    try {
+                      const parsed = JSON.parse(val);
+                      return Array.isArray(parsed) ? parsed : [parsed];
+                    } catch {
+                      return [];
+                    }
+                  }
+                  if (val && typeof val === "object") return [val];
+                  return [];
+                })
+                .pipe(
+                  z.array(
+                    z.object({
+                      label: z.string().describe("Option label"),
+                      description: z.string().optional().describe("Option description"),
+                    }),
+                  ),
+                ),
+              multiSelect: z.boolean().optional().describe("Allow multiple selection"),
+              validation: z
+                .object({
+                  maxLength: z.number().optional(),
+                  minLength: z.number().optional(),
+                  pattern: z.string().optional(),
+                  patternError: z.string().optional(),
+                })
+                .optional(),
             }),
           ),
-          multiSelect: z.boolean().optional().describe("Allow multiple selection"),
-          validation: z
-            .object({
-              maxLength: z.number().optional(),
-              minLength: z.number().optional(),
-              pattern: z.string().optional(),
-              patternError: z.string().optional(),
-            })
-            .optional(),
-        }),
-      ),
+        ),
     }),
     execute: askUserTool,
   }),
@@ -1680,7 +1782,7 @@ const tools = {
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
       files: z
-        .any()
+        .union([z.array(z.string()), z.string()])
         .transform((val) => {
           // Normalize to array: handle string, array, or malformed input
           // This workaround handles the Codebuff SDK bug where it passes a single string
@@ -1688,18 +1790,18 @@ const tools = {
           if (Array.isArray(val)) {
             // Already an array - filter out non-strings and return
             const filtered = val.filter((item) => typeof item === "string" && item.trim());
-            return filtered.length > 0 ? filtered : ["<empty>"];
+            return filtered.length > 0 ? filtered : [];
           }
           if (typeof val === "string") {
             const trimmed = val.trim();
-            if (!trimmed) return ["<empty>"];
+            if (!trimmed) return [];
             // Handle JSON-encoded arrays like '["file1.ts", "file2.ts"]'
             if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
               try {
                 const parsed = JSON.parse(trimmed);
                 if (Array.isArray(parsed)) {
                   const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
-                  return filtered.length > 0 ? filtered : ["<empty>"];
+                  return filtered.length > 0 ? filtered : [];
                 }
                 return [trimmed];
               } catch {
@@ -1710,17 +1812,8 @@ const tools = {
             // Single string - wrap in array (this is the Codebuff SDK bug case)
             return [trimmed];
           }
-          // Handle object with path/paths properties (defensive)
-          if (val && typeof val === "object") {
-            if (typeof val.path === "string" && val.path.trim()) return [val.path.trim()];
-            if (Array.isArray(val.paths)) {
-              const filtered = val.paths.filter((item) => typeof item === "string" && item.trim());
-              return filtered.length > 0 ? filtered : ["<empty>"];
-            }
-            if (typeof val.paths === "string" && val.paths.trim()) return [val.paths.trim()];
-          }
-          // Fallback: return placeholder to avoid empty array (which would fail downstream validation)
-          return ["<empty>"];
+          // Fallback: return empty array
+          return [];
         })
         .describe("List of file paths that were changed (accepts string or array)"),
     }),

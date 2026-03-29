@@ -15,7 +15,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, statfsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLogger } from "../lib/logger.mjs";
@@ -169,6 +169,25 @@ export async function initWorktreePool(count = 2) {
     logError("Not in a git repository. Cannot create worktrees.");
     process.exit(1);
   }
+
+  // Check available disk space before creating worktrees
+  const worktreeParent = resolve(PROJECT_ROOT, "..");
+  const stats = statfsSync(worktreeParent);
+  const availableBytes = stats.bavail * stats.bsize;
+  const availableGB = availableBytes / (1024 ** 3);
+  
+  // Estimate space needed: 200MB per worktree + 50MB overhead for shared objects/logs
+  const worktreeSizeGB = 0.2;
+  const overheadGB = 0.05;
+  const requiredGB = (count * worktreeSizeGB) + overheadGB;
+  
+  if (availableGB < requiredGB) {
+    const errorMsg = `Insufficient disk space: need ${requiredGB.toFixed(2)}GB, have ${availableGB.toFixed(1)}GB available`;
+    logError(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  logInfo(`✅ Disk space check passed: ${availableGB.toFixed(1)}GB available, ${requiredGB.toFixed(2)}GB required`);
 
   // Create worktrees
   const created = [];
