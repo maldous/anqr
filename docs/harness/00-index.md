@@ -16,7 +16,8 @@ This section is the canonical harness doctrine for ANQR 1.0 foundation work.
 10. [09-archive-policy.md](/home/user/src/anqr/docs/harness/09-archive-policy.md)
 11. [10-audit-reference.md](/home/user/src/anqr/docs/harness/10-audit-reference.md)
 12. [11-adaptive-context.md](/home/user/src/anqr/docs/harness/11-adaptive-context.md)
-13. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
+13. [12-concurrent-execution-with-worktrees.md](/home/user/src/anqr/docs/harness/12-concurrent-execution-with-worktrees.md)
+14. [workspace/README.md](/home/user/src/anqr/docs/harness/workspace/README.md)
 
 ## Scope
 

@@ -16,6 +16,7 @@
   - product definition, scope, and program policy
 - `docs/harness/*`
   - harness operating model, runtime, governance, gates, and evidence rules
+  - includes concurrent execution with git worktrees (12-concurrent-execution-with-worktrees.md)
 - `docs/standards/*`
   - durable engineering standards
 - `docs/workflows/*`

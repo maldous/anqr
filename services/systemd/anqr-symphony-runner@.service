@@ -1,0 +1,55 @@
+# anqr-symphony-runner@.service — Symphony execution agent (worktree template)
+#
+# Template service for concurrent Symphony runners using git worktrees.
+# Each instance operates in its own worktree with isolated working directory.
+#
+# Usage:
+#   # First, initialize worktree pool:
+#   node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
+#
+#   # Enable multiple instances:
+#   systemctl --user enable --now anqr-symphony-runner@1.timer
+#   systemctl --user enable --now anqr-symphony-runner@2.timer
+#
+#   # Check status:
+#   systemctl --user status anqr-symphony-runner@1.service
+#   journalctl --user -u anqr-symphony-runner@1.service -f
+
+[Unit]
+Description=ANQR Symphony execution agent (worktree %i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/src/anqr-wt%i
+
+# Explicit PATH — nvm Node is not on default systemd PATH
+Environment=PATH=%h/.nvm/versions/node/v25.8.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=%h
+Environment=NODE_PATH=%h/.nvm/versions/node/v25.8.0/lib/node_modules
+Environment=NODE_OPTIONS=--max-old-space-size=512
+
+# Worktree identification
+Environment=ANQR_WORKTREE_ID=wt%i
+Environment=ANQR_WORKTREE_PATH=%h/src/anqr-wt%i
+
+# Secrets and overrides (LINEAR_API_KEY, etc.)
+EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
+
+# Provider API tokens (GROQ_TOKEN, GEMINI_TOKEN, OPENAI_API_KEY, etc.)
+EnvironmentFile=-%h/.config/symphony/anqr.env
+
+ExecStart=%h/.nvm/versions/node/v25.8.0/bin/node %h/src/anqr/scripts/ops/orchestration/symphony-runner.mjs --once
+
+# Logging to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=anqr-symphony-runner-wt%i
+
+# Safety limits — 125 min timeout (runner has 120 min internal limit)
+TimeoutStartSec=7500
+MemoryMax=4G
+
+[Install]
+WantedBy=default.target

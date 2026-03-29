@@ -32,11 +32,11 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 - `web_search` — Search web via Linkup API (requires API key)
 - `read_docs` — Fetch library documentation via Context7 API (requires API key)
 - `spawn_agents` — Spawn multiple agents in parallel
-- `add_message` — Add message to conversation
-- `set_messages` — Set conversation history
-- `propose_str_replace` — Propose edits without applying
-- `propose_write_file` — Propose file write without applying
-- `ask_user` — Ask user questions
+- `add_message` — Add message to conversation (Codebuff context only)
+- `set_messages` — Set conversation history (Codebuff context only)
+- `propose_str_replace` — Propose edits without applying (Codebuff context only)
+- `propose_write_file` — Propose file write without applying (Codebuff context only)
+- `ask_user` — Ask user questions (Codebuff context only)
 - `lookup_agent_info` — Get agent metadata
 
 **Important notes:**
@@ -45,8 +45,30 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 - `run_file_change_hooks` expects `files` parameter as an array: `{"files": ["path1", "path2"]}`
   - **ALWAYS** pass an array, even for a single file: `{"files": ["single-file.ts"]}`
   - **NEVER** pass a string: `{"files": "single-file.ts"}` ❌
-- Tools like `set_messages`, `set_output`, `end_turn` are SDK-internal only
 - Web search and docs tools require API keys to be configured
+
+**Tool implementation by context:**
+
+**All contexts support:**
+- Core file operations: `read_files`, `write_file`, `str_replace`
+- Code navigation: `code_search`, `list_directory`, `read_subtree`, `find_files`
+- Execution: `run_terminal_command`, `run_file_change_hooks`
+- Memory: `memory_search`, `memory_get`
+- External APIs: `web_search`, `read_docs` (when API keys configured)
+- Progress tracking: `think_deeply`, `add_subgoal`, `update_subgoal`
+- Agent spawning: `spawn_agents`, `lookup_agent_info`
+
+**Codebuff-only tools** (NOT available in Symphony/OpenClaw bridge):
+- Proposal tools: `propose_str_replace`, `propose_write_file`
+- Conversation control: `add_message`, `set_messages`
+- Interactive prompts: `ask_user`
+- Turn control: `end_turn`
+
+**Symphony bridge implementation:**
+- `think_deeply`, `add_subgoal`, `update_subgoal` are implemented as acknowledgment-only tools
+- They log activity server-side but don't block execution
+- Allow agents to organize work and track progress across all provider contexts
+- See `scripts/ops/integrations/model/symphony-openai-bridge.mjs` for implementations
 
 ## Core execution rules
 
@@ -188,7 +210,24 @@ Supporting jobs:
 - Sonar sync and audit
 - provider credit/routing checks
 
+**Concurrency model:**
+
+- Symphony runner supports concurrent execution via git worktrees
+- Each worktree runs independently with its own working directory, branch, and lock file
+- Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
+- Lease system prevents concurrent work on the same Linear issue
+- Default: 1 concurrent runner (configurable via `MAX_CONCURRENT_AGENTS` in `symphony-config.mjs`)
+- Worktree setup: `node scripts/ops/orchestration/symphony-worktree-pool.mjs init [count]`
+- Documentation: `scripts/ops/orchestration/README.md`
+
 **Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `scripts/ops/.workspace/` (already in `.gitignore`) for such temporary files.
+
+**Discord integration without git pollution:**
+
+- Interactive Discord sessions use isolated worktrees for experimentation
+- Discord worktrees are separate from Symphony runner worktrees
+- No changes pushed to main repository unless explicitly requested
+- Allows simultaneous Discord interaction and Symphony automation without conflicts
 
 ### Testing strategy
 
@@ -381,12 +420,14 @@ The harness uses two OpenAI-compatible bridges:
 - 42 providers with dynamic tool-capability probing
 - Adaptive context: shrinks ceilings on 413/context errors, throttles on 429/rate-limit
 - Service: `anqr-symphony-bridge.service`
+- **Concurrency-safe:** Handles multiple concurrent requests from worktree runners
 
 **Codebuff Bridge** (port 4318):
 
 - Codebuff SDK exposed as OpenAI-compatible HTTP
 - Automatic paid → free mode fallback with periodic re-validation
 - Service: `anqr-codebuff-bridge.service`
+- **Concurrency-safe:** Supports simultaneous Discord and Symphony requests
 
 **Key modules** (all under `scripts/ops/integrations/model/`):
 
@@ -398,10 +439,11 @@ The harness uses two OpenAI-compatible bridges:
 
 **Bridge restart procedure (CRITICAL):**
 
-1. Commit & push first: `git add -A && git commit -m "..." && git push`
-2. Wait for zero concurrency (check Discord for "(0 concurrent)")
-3. Restart: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
-4. Update `MEMORY.md` with stop/start entries, then commit & push again
+1. Check concurrent runner status: `node scripts/ops/orchestration/symphony-runner.mjs --status`
+2. Wait for zero concurrency (all runners idle) — check Discord for "(0 concurrent)"
+3. Commit & push first: `git add -A && git commit -m "..." && git push`
+4. Restart: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
+5. Update `MEMORY.md` with stop/start entries, then commit & push again
 
 **Never restart bridges during active concurrent requests** — data loss will occur
 

@@ -1,0 +1,23 @@
+# anqr-symphony-runner@.timer — Symphony execution agent timer (worktree template)
+#
+# Fires every 2 minutes after the last activation for each worktree instance.
+# Each instance runs independently with its own lock and working directory.
+#
+# Install:
+#   systemctl --user enable --now anqr-symphony-runner@1.timer
+#   systemctl --user enable --now anqr-symphony-runner@2.timer
+#
+# Check status:
+#   systemctl --user list-timers
+#   journalctl --user -u anqr-symphony-runner@1.service --since today
+
+[Unit]
+Description=ANQR Symphony runner timer (worktree %i)
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=2min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

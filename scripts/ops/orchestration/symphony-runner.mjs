@@ -70,12 +70,19 @@ import {
 } from "../symphony-validation.mjs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const ROOT = resolve(__dirname, "..", "..", "..");
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
+const ROOT = process.env.ANQR_WORKTREE_PATH || resolve(__dirname, "..", "..", "..");
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
 const uid = process.getuid?.() ?? 1000;
 const STATE_DIR = `/run/user/${uid}/symphony-runner`;
-const LOCK_FILE = resolve(STATE_DIR, "lock");
+
+// Ensure lock directory exists
+if (!existsSync(STATE_DIR)) {
+  mkdirSync(STATE_DIR, { recursive: true });
+}
+
+const LOCK_FILE = resolve(STATE_DIR, `lock-${WORKTREE_ID}`);
 const RUN_ID = `run-${Date.now()}-${process.pid}`;
 const LEASE_TTL_MS = Number(
   process.env.ANQR_SYMPHONY_LEASE_MS || Math.max(RUNNER_STUCK_THRESHOLD_MS, 20 * 60 * 1000),
@@ -409,6 +416,18 @@ async function runSonarPostCommit(issueIdentifier) {
 }
 
 async function executeIssue(issue, dryRun = false) {
+  // Worktree sync: ensure worktree is synced with main before starting
+  if (WORKTREE_ID !== "main") {
+    try {
+      execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
+      execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
+      logInfo(`[runner] Worktree ${WORKTREE_ID} synced with main`);
+    } catch (err) {
+      logWarn(`[runner] Worktree sync failed: ${err.message}`);
+      return "skip";
+    }
+  }
+
   // Pre-execution check: verify issue wasn't already completed externally
   const detail = await getIssueDetail(issue.id);
   if (!detail) return "skip";
@@ -1206,6 +1225,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
       fields: [
         { name: "Status", value: finalStateName, inline: true },
         { name: "Provider", value: metricsProviderName, inline: true },
+        { name: "Worktree", value: WORKTREE_ID, inline: true },
         { name: "Files Changed", value: String(changedFiles.length), inline: true },
         { name: "Turns", value: String(agentResult.turns), inline: true },
         { name: "Validation", value: validation.passed ? "✅ Passed" : "❌ Failed", inline: true },
@@ -1260,6 +1280,8 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
 function showStatus() {
   logInfo("[runner] Symphony Runner Status\n");
+  logInfo(`  Worktree: ${WORKTREE_ID}`);
+  logInfo(`  Root: ${ROOT}`);
   if (existsSync(LOCK_FILE)) {
     const pid = readFileSync(LOCK_FILE, "utf-8").trim();
     logInfo(`  Lock: ${isProcessAlive(Number(pid)) ? "🔒 LOCKED" : "🔓 stale"} (PID ${pid})`);
@@ -1294,6 +1316,7 @@ async function main() {
     process.exit(2);
   }
   logInfo(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
+  logInfo(`[runner] Worktree: ${WORKTREE_ID}, Root: ${ROOT}`);
   if (!process.env.LINEAR_API_KEY) {
     logError("[runner] LINEAR_API_KEY is not set");
     process.exit(1);
