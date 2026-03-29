@@ -52,6 +52,10 @@ Environment=OPENCLAW_GATEWAY_PORT=18789
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
+# Git sync: fetch and rebase origin/main before keeping alive
+# This ensures Discord worktrees stay up-to-date with main branch
+ExecStartPre=-/bin/bash -c 'git fetch origin main && git rebase origin/main || true'
+
 # Start a simple placeholder process - the actual gateway is shared at port 18789
 # This service exists for environment configuration and timer coordination
 ExecStart=/bin/sleep infinity
