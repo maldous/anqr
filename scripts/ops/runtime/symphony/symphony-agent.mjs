@@ -460,9 +460,9 @@ async function callLLM(provider, messages, taskDescription) {
                 fullContent += content;
               }
               // Capture structured result from bridge (embedded in final SSE chunk)
-              if (parsed._symphony_result) {
-                symphonyResult = parsed._symphony_result;
-                logDebug(`[agent] 📦 Captured _symphony_result from final buffer`);
+              if (parsed._symphonyResult) {
+                symphonyResult = parsed._symphonyResult;
+                logDebug(`[agent] 📦 Captured _symphonyResult from final buffer`);
               }
             } catch (parseErr) {
               logDebug(`[agent] ⚠️ Final buffer parse error: ${parseErr.message}`);
@@ -489,9 +489,9 @@ async function callLLM(provider, messages, taskDescription) {
               logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
             }
             // Capture structured result from bridge (embedded in any SSE chunk)
-            if (parsed._symphony_result) {
-              symphonyResult = parsed._symphony_result;
-              logDebug(`[agent] 📦 Captured _symphony_result from stream`);
+            if (parsed._symphonyResult) {
+              symphonyResult = parsed._symphonyResult;
+              logDebug(`[agent] 📦 Captured _symphonyResult from stream`);
             }
           } catch (parseErr) {
             // Skip non-JSON chunks but log for debugging
