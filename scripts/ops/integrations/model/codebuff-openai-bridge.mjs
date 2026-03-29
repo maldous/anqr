@@ -737,7 +737,7 @@ async function trySingleAccount(
         }
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
-        if (text) logDebug(`💡 Reasoning delta`, { text: text.slice(0, 100) });
+        if (text) logDebug(`Reasoning delta`, { text: text.slice(0, 100) });
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
           logDebug(`codebuff context-pruner (internal)`);
@@ -1042,8 +1042,12 @@ async function trySingleAccountStream(
       } else if (type === "reasoning_delta" || type === "reasoning") {
         const text = event.text || event.content || "";
         if (text) {
-          logDebug(`💡 Reasoning delta`, { text: text.slice(0, 100) });
-          streamActivity(`💡 ${text}\n`);
+          logDebug(`Reasoning delta`, { text: text.slice(0, 100) });
+          // Stream reasoning to client, but skip single emoji markers
+          const trimmed = text.trim();
+          if (trimmed && trimmed !== "💡") {
+            streamActivity(text);
+          }
         }
       } else if (type === "subagent_start" || type === "subagent-start") {
         if (isContextPrunerEvent(event)) {
