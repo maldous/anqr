@@ -7,9 +7,18 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../..");
-const STATE_DIR = process.env.ANQR_SYMPHONY_STATE_DIR || path.join(PROJECT_ROOT, "reports", "symphony");
-const STATE_FILE = path.join(STATE_DIR, "state.json");
-const LOCK_FILE = `${STATE_FILE}.lock`;
+
+function getStateDir() {
+  return process.env.ANQR_SYMPHONY_STATE_DIR || path.join(PROJECT_ROOT, "reports", "symphony");
+}
+
+function getStateFile() {
+  return path.join(getStateDir(), "state.json");
+}
+
+function getLockFile() {
+  return `${getStateFile()}.lock`;
+}
 const DEFAULT_LEASE_MS = Number(process.env.ANQR_SYMPHONY_LEASE_MS || 20 * 60 * 1000);
 const HISTORY_LIMIT = Number(process.env.ANQR_SYMPHONY_HISTORY_LIMIT || 50);
 const HOST_ID = process.env.ANQR_SYMPHONY_HOST_ID || os.hostname();
@@ -18,7 +27,8 @@ const LOCK_MAX_RETRIES = 100; // 5 seconds max wait
 const LOCK_STALE_MS = 60_000; // 1 minute — consider lock stale if holder is dead
 
 function ensureDir() {
-  if (!fs.existsSync(STATE_DIR)) fs.mkdirSync(STATE_DIR, { recursive: true });
+  const stateDir = getStateDir();
+  if (!fs.existsSync(stateDir)) fs.mkdirSync(stateDir, { recursive: true });
 }
 
 function isLockProcessAlive(pid) {
@@ -32,10 +42,11 @@ function isLockProcessAlive(pid) {
 
 function acquireStateLock() {
   ensureDir();
+  const lockFile = getLockFile();
   for (let attempt = 0; attempt < LOCK_MAX_RETRIES; attempt++) {
     try {
       const fd = fs.openSync(
-        LOCK_FILE,
+        lockFile,
         fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL,
         0o644,
       );
@@ -45,19 +56,19 @@ function acquireStateLock() {
     } catch (err) {
       if (err.code !== "EEXIST") throw err;
       try {
-        const lockPid = Number(fs.readFileSync(LOCK_FILE, "utf-8").trim());
+        const lockPid = Number(fs.readFileSync(lockFile, "utf-8").trim());
         if (lockPid && !isLockProcessAlive(lockPid)) {
           try {
-            fs.unlinkSync(LOCK_FILE);
+            fs.unlinkSync(lockFile);
           } catch {
             /* race ok */
           }
           continue;
         }
-        const lockAge = Date.now() - fs.statSync(LOCK_FILE).mtimeMs;
+        const lockAge = Date.now() - fs.statSync(lockFile).mtimeMs;
         if (lockAge > LOCK_STALE_MS) {
           try {
-            fs.unlinkSync(LOCK_FILE);
+            fs.unlinkSync(lockFile);
           } catch {
             /* race ok */
           }
@@ -77,8 +88,9 @@ function acquireStateLock() {
 
 function releaseStateLock() {
   try {
-    const lockPid = Number(fs.readFileSync(LOCK_FILE, "utf-8").trim());
-    if (lockPid === process.pid) fs.unlinkSync(LOCK_FILE);
+    const lockFile = getLockFile();
+    const lockPid = Number(fs.readFileSync(lockFile, "utf-8").trim());
+    if (lockPid === process.pid) fs.unlinkSync(lockFile);
   } catch {
     /* best effort */
   }
@@ -133,7 +145,8 @@ function normalizeRecord(record = {}) {
 
 export function loadState() {
   try {
-    const data = JSON.parse(fs.readFileSync(STATE_FILE, "utf-8"));
+    const stateFile = getStateFile();
+    const data = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
     const store = emptyStore();
     store.version = data.version || 1;
     store.updatedAt = data.updatedAt || store.updatedAt;
@@ -151,11 +164,12 @@ export function loadState() {
 
 export function saveState(store) {
   ensureDir();
+  const stateFile = getStateFile();
   store.updatedAt = new Date().toISOString();
   // Atomic write: temp file + rename prevents partial/corrupt state on crash or concurrent access
-  const tmpFile = `${STATE_FILE}.tmp.${process.pid}`;
+  const tmpFile = `${stateFile}.tmp.${process.pid}`;
   fs.writeFileSync(tmpFile, JSON.stringify(store, null, 2) + "\n");
-  fs.renameSync(tmpFile, STATE_FILE);
+  fs.renameSync(tmpFile, stateFile);
 }
 
 export function mutateState(mutator) {
@@ -391,7 +405,7 @@ export function getLatencyMetrics() {
   const sum = latencies.reduce((acc, val) => acc + val, 0);
   const average = sum / latencies.length;
   const median = latencies[Math.floor(latencies.length / 2)];
-  const p95Index = Math.floor(latencies.length * 0.95);
+  const p95Index = Math.ceil(latencies.length * 0.95) - 1;
   const p95 = latencies[p95Index] || latencies[latencies.length - 1];
 
   return {
