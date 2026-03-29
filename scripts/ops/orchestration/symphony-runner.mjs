@@ -70,13 +70,52 @@ import {
   validationManifestHash,
 } from "../symphony-validation.mjs";
 
-import { PROJECT_ROOT, getWorktreePath } from "../core/worktree-config.mjs";
+import { getWorktreePath } from "../core/worktree-config.mjs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
+
+// Auto-detect worktree: check if .git is a file (worktree) vs directory (main repo)
+const cwd = process.cwd();
+const gitPath = resolve(cwd, ".git");
+let autoDetectedWorktreeId = null;
+
+try {
+  if (existsSync(gitPath)) {
+    const gitStat = statSync(gitPath);
+    if (gitStat.isFile()) {
+      // This is a worktree - extract the worktree name from the gitdir reference
+      const gitContent = readFileSync(gitPath, "utf-8");
+      const match = gitContent.match(/gitdir:\s*(.+)/);
+      if (match && match[1]) {
+        const gitDir = match[1].trim();
+        // gitDir format: /path/to/repo/.git/worktrees/anqr-wt1
+        const wtMatch = gitDir.match(/anqr-(wt\d+)$/);
+        if (wtMatch) {
+          autoDetectedWorktreeId = wtMatch[1];
+        }
+      }
+    }
+  }
+} catch {
+  // Ignore errors - will fall through to env var check
+}
+
+// Determine WORKTREE_ID: prioritize env var, then auto-detect, fail if neither
+let WORKTREE_ID;
+if (process.env.ANQR_WORKTREE_ID) {
+  WORKTREE_ID = process.env.ANQR_WORKTREE_ID;
+} else if (autoDetectedWorktreeId) {
+  WORKTREE_ID = autoDetectedWorktreeId;
+} else {
+  // Running in main repo without worktree context - NOT ALLOWED
+  logError(`[runner] CRITICAL: Cannot run in main repo. Must run in a worktree (e.g., /home/user/src/anqr-wt1) or set ANQR_WORKTREE_ID environment variable.`);
+  logError(`[runner] Example: ANQR_WORKTREE_ID=wt1 node scripts/ops/orchestration/symphony-runner.mjs --once`);
+  process.exit(1);
+}
+
 const ROOT =
   process.env.ANQR_WORKTREE_PATH ||
-  (WORKTREE_ID === "main" ? PROJECT_ROOT : getWorktreePath(WORKTREE_ID.replace(/^wt/, "")));
+  getWorktreePath(WORKTREE_ID.replace(/^wt/, ""));
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
 const uid = process.getuid?.() ?? 1000;

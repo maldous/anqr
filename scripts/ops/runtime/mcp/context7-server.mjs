@@ -488,7 +488,6 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
       });
 
       const libraryId = extractLibraryId(resolveResult);
-      logDebug(`Local resolve-library-id response for "${libraryTitle}":`, { resolveResult });
       if (libraryId) {
         // Step 2 — query-docs via MCP tools/call
         // The MCP tool requires libraryId and query as required parameters

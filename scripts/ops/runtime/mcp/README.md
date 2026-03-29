@@ -69,7 +69,7 @@ console.log("Server healthy:", healthy);
 
 // 3. Resolve documentation
 const result = await resolveDocsLocally({
-  libraryTitle: "react",
+  libraryTitle: "React",  // Works with any casing: "React", "react", "REACT"
   topic: "hooks",
   max_tokens: 5000,
 });
@@ -151,10 +151,30 @@ The wrapper implements a minimal MCP client that:
 2. Sends a `notifications/initialized` notification after successful handshake
 3. Uses `tools/call` to invoke the two Context7 tools:
    - **`resolve-library-id`** — translates a library name to a Context7 library ID
-   - **`get-library-docs`** — fetches documentation for a resolved library ID
+     - Parameters: `{ query: string, libraryName: string }` (both required)
+     - Returns: Plain text response with multiple library options
+     - Example: `Context7-compatible library ID: /reactjs/react.dev`
+   - **`query-docs`** — fetches documentation for a resolved library ID
+     - Parameters: `{ libraryId: string, query: string }` (both required)
+     - Returns: Formatted documentation with code examples
 4. Uses `tools/list` as a lightweight health-check probe
 
 All communication is newline-delimited JSON over the child process stdio streams.
+
+### Library Name Normalization
+
+The wrapper accepts library names in any casing (e.g., "React", "react", "REACT") and passes them to the MCP server as-is. The Context7 MCP server handles normalization internally and returns the best matching library ID from its database.
+
+### Cloud API Fallback
+
+When the local MCP server is unavailable or returns no results, the wrapper falls back to the Upstash Context7 cloud API:
+
+- Base URL: `https://api.upstash.com/v1/context7`
+- Endpoints:
+  - `POST /resolve` — Resolve library ID from query
+  - `POST /docs` — Fetch documentation for library ID
+- Authentication: `Authorization: Bearer <CONTEXT7_API_KEY>`
+- Response format: JSON with `results` array containing documentation snippets
 
 ## Logging
 
