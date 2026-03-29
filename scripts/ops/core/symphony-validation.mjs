@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import crypto from "node:crypto";
 
 export const VALIDATION_MANIFEST = {
@@ -48,13 +48,10 @@ function trimOutput(text, max = 6000) {
 function runCommand(command, options = {}) {
   const { heartbeat, ...execOptions } = options;
   
-  // For commands with heartbeat support, we need to run them with periodic heartbeat calls
-  // However, execFileSync is blocking, so we send heartbeat before and after
+  // If heartbeat is provided, use spawn with periodic heartbeats
+  // Otherwise fall back to execFileSync for backwards compatibility
   if (heartbeat && typeof heartbeat === "function") {
-    const hbResult = heartbeat();
-    if (!hbResult || !hbResult.ok) {
-      return { ok: false, output: "Heartbeat failed before command execution", heartbeatFailed: true };
-    }
+    return runCommandWithHeartbeat(command, execOptions, heartbeat);
   }
   
   try {
@@ -64,27 +61,95 @@ function runCommand(command, options = {}) {
       maxBuffer: 2 * 1024 * 1024,
       ...execOptions,
     });
-    
-    // Send heartbeat after successful command
-    if (heartbeat && typeof heartbeat === "function") {
-      heartbeat();
-    }
-    
     return { ok: true, output: trimOutput(output) };
   } catch (err) {
-    // Send heartbeat after failed command
-    if (heartbeat && typeof heartbeat === "function") {
-      heartbeat();
-    }
-    
     const stdout = (err.stdout || "").toString();
     const stderr = (err.stderr || "").toString();
     return { ok: false, output: trimOutput(`${stdout}\n${stderr}`) };
   }
 }
 
-export function runTypecheck(projectRoot, opts = {}) {
-  const result = runCommand(VALIDATION_MANIFEST.typecheck.command, {
+function runCommandWithHeartbeat(command, execOptions, heartbeat) {
+  const HEARTBEAT_INTERVAL_MS = 60_000; // Send heartbeat every 60 seconds
+  
+  return new Promise((resolve) => {
+    // Send initial heartbeat
+    const initialHb = heartbeat();
+    if (!initialHb || !initialHb.ok) {
+      resolve({ ok: false, output: "Heartbeat failed before command execution", heartbeatFailed: true });
+      return;
+    }
+    
+    const child = spawn("/bin/sh", ["-c", command], {
+      cwd: execOptions.cwd,
+      env: execOptions.env || process.env,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    
+    let stdout = "";
+    let stderr = "";
+    let heartbeatFailed = false;
+    
+    // Set up periodic heartbeat
+    const heartbeatTimer = setInterval(() => {
+      const hbResult = heartbeat();
+      if (!hbResult || !hbResult.ok) {
+        heartbeatFailed = true;
+        clearInterval(heartbeatTimer);
+        // Kill the child process if heartbeat fails
+        try {
+          child.kill("SIGTERM");
+        } catch {}
+      }
+    }, HEARTBEAT_INTERVAL_MS);
+    
+    // Set up timeout if specified
+    let timeoutTimer = null;
+    if (execOptions.timeout) {
+      timeoutTimer = setTimeout(() => {
+        clearInterval(heartbeatTimer);
+        try {
+          child.kill("SIGTERM");
+        } catch {}
+      }, execOptions.timeout);
+    }
+    
+    child.stdout.on("data", (data) => {
+      stdout += data.toString();
+    });
+    
+    child.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+    
+    child.on("close", (code) => {
+      clearInterval(heartbeatTimer);
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      
+      // Send final heartbeat
+      if (!heartbeatFailed) {
+        heartbeat();
+      }
+      
+      if (heartbeatFailed) {
+        resolve({ ok: false, output: "Heartbeat failed during command execution", heartbeatFailed: true });
+      } else if (code === 0) {
+        resolve({ ok: true, output: trimOutput(stdout) });
+      } else {
+        resolve({ ok: false, output: trimOutput(`${stdout}\n${stderr}`) });
+      }
+    });
+    
+    child.on("error", (err) => {
+      clearInterval(heartbeatTimer);
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      resolve({ ok: false, output: trimOutput(err.message) });
+    });
+  });
+}
+
+export async function runTypecheck(projectRoot, opts = {}) {
+  const result = await runCommand(VALIDATION_MANIFEST.typecheck.command, {
     cwd: projectRoot,
     timeout: VALIDATION_MANIFEST.typecheck.timeoutMs,
     env: { ...process.env, NODE_OPTIONS: "--max-old-space-size=2048" },
@@ -94,8 +159,8 @@ export function runTypecheck(projectRoot, opts = {}) {
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }
 
-export function runLint(projectRoot, opts = {}) {
-  const result = runCommand(VALIDATION_MANIFEST.lint.command, {
+export async function runLint(projectRoot, opts = {}) {
+  const result = await runCommand(VALIDATION_MANIFEST.lint.command, {
     cwd: projectRoot,
     timeout: VALIDATION_MANIFEST.lint.timeoutMs,
     heartbeat: opts.heartbeat,
@@ -113,13 +178,13 @@ export function filterChangedFiles(changedFiles, regex) {
   return (changedFiles || []).filter((file) => regex.test(file));
 }
 
-export function runCspell(projectRoot, changedFiles = [], opts = {}) {
+export async function runCspell(projectRoot, changedFiles = [], opts = {}) {
   const eligible = filterChangedFiles(changedFiles, VALIDATION_MANIFEST.cspell.extensions);
   const targets = opts.fullProject
     ? VALIDATION_MANIFEST.cspell.fullProjectGlobs
     : eligible.map((file) => JSON.stringify(file));
   if (targets.length === 0) return { pass: true, detail: "" };
-  const result = runCommand(`${VALIDATION_MANIFEST.cspell.command} ${targets.join(" ")}`, {
+  const result = await runCommand(`${VALIDATION_MANIFEST.cspell.command} ${targets.join(" ")}`, {
     cwd: projectRoot,
     timeout: VALIDATION_MANIFEST.cspell.timeoutMs,
     heartbeat: opts.heartbeat,
@@ -128,11 +193,11 @@ export function runCspell(projectRoot, changedFiles = [], opts = {}) {
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }
 
-export function runAstDensity(projectRoot, changedFiles = [], opts = {}) {
+export async function runAstDensity(projectRoot, changedFiles = [], opts = {}) {
   const eligible = filterChangedFiles(changedFiles, VALIDATION_MANIFEST.astDensity.extensions);
   const quoted = opts.fullProject ? "" : eligible.map((file) => JSON.stringify(file)).join(" ");
   if (!opts.fullProject && eligible.length === 0) return { pass: true, detail: "" };
-  const result = runCommand(
+  const result = await runCommand(
     [VALIDATION_MANIFEST.astDensity.command, quoted].filter(Boolean).join(" "),
     {
       cwd: projectRoot,
@@ -147,8 +212,8 @@ export function runAstDensity(projectRoot, changedFiles = [], opts = {}) {
     : { pass: true, detail: "" };
 }
 
-export function runTests(projectRoot, opts = {}) {
-  const result = runCommand(VALIDATION_MANIFEST.tests.command, {
+export async function runTests(projectRoot, opts = {}) {
+  const result = await runCommand(VALIDATION_MANIFEST.tests.command, {
     cwd: projectRoot,
     timeout: VALIDATION_MANIFEST.tests.timeoutMs,
     env: { ...process.env, ANQR_LOG_LEVEL: "error" },
@@ -176,17 +241,16 @@ export function formatValidationFeedback(validation) {
   return lines.join("\n");
 }
 
-export function runValidation(projectRoot, changedFiles = [], opts = {}) {
-  const results = [];
+export async function runValidation(projectRoot, changedFiles = [], opts = {}) {
   const heartbeatOpts = opts.heartbeat ? { heartbeat: opts.heartbeat } : {};
   
-  results.push(
-    { check: "typecheck", ...runTypecheck(projectRoot, heartbeatOpts) },
-    { check: "lint", ...runLint(projectRoot, heartbeatOpts) },
-    { check: "cspell", ...runCspell(projectRoot, changedFiles, heartbeatOpts) },
-    { check: "ast-density", ...runAstDensity(projectRoot, changedFiles, heartbeatOpts) },
-    { check: "test-unit", ...runTests(projectRoot, heartbeatOpts) },
-  );
+  const results = [
+    { check: "typecheck", ...(await runTypecheck(projectRoot, heartbeatOpts)) },
+    { check: "lint", ...(await runLint(projectRoot, heartbeatOpts)) },
+    { check: "cspell", ...(await runCspell(projectRoot, changedFiles, heartbeatOpts)) },
+    { check: "ast-density", ...(await runAstDensity(projectRoot, changedFiles, heartbeatOpts)) },
+    { check: "test-unit", ...(await runTests(projectRoot, heartbeatOpts)) },
+  ];
   
   // Check if any validation failed due to heartbeat failure
   const heartbeatFailed = results.some((r) => r.heartbeatFailed);
@@ -202,16 +266,16 @@ export function runValidation(projectRoot, changedFiles = [], opts = {}) {
   };
 }
 
-export function runGlobalPreflights(projectRoot, opts = {}) {
+export async function runGlobalPreflights(projectRoot, opts = {}) {
   const heartbeatOpts = opts.heartbeat ? { heartbeat: opts.heartbeat } : {};
   
-  const tc = runTypecheck(projectRoot, heartbeatOpts);
+  const tc = await runTypecheck(projectRoot, heartbeatOpts);
   if (!tc.pass) return { pass: false, check: "typecheck", detail: tc.detail };
-  const lint = runLint(projectRoot, heartbeatOpts);
+  const lint = await runLint(projectRoot, heartbeatOpts);
   if (!lint.pass) return { pass: false, check: "lint", detail: lint.detail };
-  const cspell = runCspell(projectRoot, [], { fullProject: true, ...heartbeatOpts });
+  const cspell = await runCspell(projectRoot, [], { fullProject: true, ...heartbeatOpts });
   if (!cspell.pass) return { pass: false, check: "cspell", detail: cspell.detail };
-  const astDensity = runAstDensity(projectRoot, [], { fullProject: true, ...heartbeatOpts });
+  const astDensity = await runAstDensity(projectRoot, [], { fullProject: true, ...heartbeatOpts });
   if (!astDensity.pass) return { pass: false, check: "ast-density", detail: astDensity.detail };
   return { pass: true };
 }

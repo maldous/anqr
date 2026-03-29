@@ -41,20 +41,20 @@ Environment=DISCORD_SERVER_ID=1486262757543121021
 Environment=DISCORD_TEXT_CHANNEL_ID=1486262758256410646
 Environment=DISCORD_VOICE_CHANNEL_ID=1486262758256410647
 
-# OpenClaw Gateway configuration - unique port per worktree (18795-18798)
-Environment=OPENCLAW_PORT=1879%i
+# OpenClaw Gateway configuration
+# Use shared gateway at port 18789 to avoid Bonjour hostname conflicts
+# Each worktree still has its own configuration but all route to same gateway
+Environment=OPENCLAW_PORT=18789
 Environment=OPENCLAW_GATEWAY_HOST=127.0.0.1
-Environment=OPENCLAW_GATEWAY_PORT=1879%i
-
-# Port calculation: wt5->18795, wt6->18796, wt7->18797, wt8->18798
+Environment=OPENCLAW_GATEWAY_PORT=18789
 
 # Secrets and overrides
 EnvironmentFile=-%h/.config/systemd/user/anqr-ops.env
 EnvironmentFile=-%h/.config/symphony/anqr.env
 
-# Start OpenClaw Gateway in the worktree (handles Discord bot interactions)
-# Use --auth token with OPENCLAW_GATEWAY_TOKEN from env file
-ExecStart=%h/.nvm/versions/node/v25.8.0/bin/openclaw gateway run --port 1879%i --bind loopback --auth token
+# Start a simple placeholder process - the actual gateway is shared at port 18789
+# This service exists for environment configuration and timer coordination
+ExecStart=/bin/sleep infinity
 
 # Logging to journal
 StandardOutput=journal

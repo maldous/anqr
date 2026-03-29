@@ -466,6 +466,8 @@
     "gitdir",
     "reactjs",
     "testids",
+    "bfree",
+    "ffree",
     "textareas",
     "unstub"
   ],

@@ -529,11 +529,12 @@ async function runSonarPostCommit(issueIdentifier) {
 
 async function executeIssue(issue, dryRun = false) {
   // Worktree sync: ensure worktree is synced with main before starting
+  // IMPORTANT: This happens BEFORE lease acquisition to avoid wasting lease cycles on sync failures
   if (WORKTREE_ID !== "main") {
     try {
       execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
-      logInfo(`[runner] Worktree ${WORKTREE_ID} synced with main`);
+      logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} synced with main`);
       syncFailCount = 0; // Reset counter on successful sync
       // Persist reset counter
       try {
@@ -549,12 +550,13 @@ async function executeIssue(issue, dryRun = false) {
       } catch {}
       
       logError(
-        `[runner] Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
+        `[runner] ❌ Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
       );
+      logError(`[runner] This likely indicates conflicting changes in the worktree.`);
 
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
         logWarn(
-          `[runner] ⚠️ Too many sync failures (${syncFailCount}), resetting worktree to origin/main`,
+          `[runner] ⚠️ Sync failure threshold reached (${syncFailCount}/${SYNC_FAILURE_THRESHOLD}), attempting hard reset to origin/main`,
         );
         try {
           execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
@@ -569,14 +571,17 @@ async function executeIssue(issue, dryRun = false) {
           } catch {}
         } catch (resetErr) {
           logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
-          logError(`[runner] Manual intervention required for worktree ${WORKTREE_ID}`);
+          logError(`[runner] ⛔ Manual intervention required for worktree ${WORKTREE_ID}`);
+          logError(`[runner] Run: cd ${ROOT} && git reset --hard origin/main && git clean -fd`);
+          // Release lock immediately and exit - manual intervention required
           releaseLock();
           return "skip";
         }
       } else {
-        logError(`[runner] This likely indicates conflicting changes in the worktree.`);
-        logError(`[runner] Exiting immediately to avoid wasting lease cycles.`);
+        logError(`[runner] ⏭️  Skipping this cycle to avoid wasting lease acquisition.`);
+        logError(`[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`);
         // Release lock immediately on sync failure - no lease was acquired yet
+        // This is the key improvement: exit early instead of continuing to lease acquisition
         releaseLock();
         return "skip";
       }
@@ -1235,7 +1240,7 @@ async function executeIssue(issue, dryRun = false) {
       return hb;
     };
 
-    let validation = runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
+    let validation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
     let validationFixAttempts = 0;
     let previousSignature = validation.signature;
 
@@ -1283,7 +1288,7 @@ async function executeIssue(issue, dryRun = false) {
       if (fixResult.error || fixResult.turns === 0) break;
       changedFiles = gitDiffNames();
       if (changedFiles.length === 0) break;
-      const nextValidation = runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
+      const nextValidation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
       
       // Check if validation failed due to heartbeat failure
       if (nextValidation.heartbeatFailed) {

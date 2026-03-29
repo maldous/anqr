@@ -98,10 +98,12 @@ function proxyToWorktree(worktree, req, res) {
 
     const body = Buffer.concat(requestBody).toString();
 
+    // Route to shared gateway at port 18789 (to avoid Bonjour conflicts from multiple gateways)
+    // Note: The load balancing still works - we track concurrent requests per "virtual" worktree
     const proxyReq = http.request(
       {
         hostname: "127.0.0.1",
-        port: 18790 + worktree.id - 5, // wt5=18795, wt6=18796, wt7=18797, wt8=18798
+        port: 18789, // Shared gateway port (instead of per-worktree 18795-18798)
         path: "/v1/chat/completions",
         method: "POST",
         headers: {
