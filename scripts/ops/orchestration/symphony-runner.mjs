@@ -622,7 +622,10 @@ async function executeIssue(issue, dryRun = false) {
     `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
   );
 
-  if (attempt > RUNNER_MAX_RETRIES) {
+
+
+  // Check retry limit BEFORE acquiring lease or incrementing retry_count
+  if (state.retry_count >= RUNNER_MAX_RETRIES) {
     await updateIssue(issue.id, { stateId: STATES.backlog });
     markRetryExhausted(issue.identifier, { reason: "retry_exhausted" });
     recordTransition(issue.identifier, {
@@ -1052,13 +1055,42 @@ async function executeIssue(issue, dryRun = false) {
 
       // Document external completion in a log file for audit trail
       const externalLogPath = resolve(ROOT, "reports", "symphony", "external-completions.log");
-      const externalLogEntry = `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}\n  Agent: ${agentResult.summary?.slice(0, 200)}\n  Externally completed: ${isExternallyCompleted}\n`;
+      const externalLogEntry = `[${new Date().toISOString()}] ${issue.identifier}: ${issue.title}\n  Agent: ${agentResult.summary?.slice(0, 200)}\n  Externally completed: ${isExternallyCompleted}\n  Agent completed: ${agentResult.completed}\n`;
       try {
         const dir = resolve(ROOT, "reports", "symphony");
         if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
         appendFileSync(externalLogPath, externalLogEntry);
       } catch {
         /* best effort logging */
+      }
+
+      // NEW: Check if agent reports completion even with no file changes
+      // This handles cases where agent verified issue is already fixed, duplicate, or resolved without changes
+      if (agentResult.completed === true && !isExternallyCompleted) {
+        await updateIssue(issue.id, { stateId: STATES.done });
+        await addComment(
+          issue.id,
+          `✅ **Completed by agent** — no file changes required, but agent reported successful completion.\n\nAgent summary: ${agentResult.summary}`,
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "agent_completed_no_changes",
+          from: "In Progress",
+          to: "Done",
+          runId: RUN_ID,
+        });
+        // Track as successful completion (agent completed work even without file changes)
+        if (provider?.name) {
+          recordLinearCompletion(metricsProviderName, {
+            completed: true,
+            priority: issue.priority,
+            estimate: issue.estimate,
+          });
+          recordProviderSuccess(metricsProviderName);
+        }
+        clearCooldown(issue.identifier);
+        logInfo(`[runner] ✅ Completed: ${issue.identifier} — ${issue.title} (agent completed, no changes needed)`);
+        return "done";
       }
 
       if (isExternallyCompleted) {
