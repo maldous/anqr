@@ -33,11 +33,14 @@
  *   POST /v1/providers/refresh — Manually trigger provider re-probe
  */
 
+// MUST be first import — sets process.setMaxListeners(0) before other modules
+// register signal handlers, preventing MaxListenersExceededWarning at startup.
+import "./_set-max-listeners.mjs";
 import http from "node:http";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import { createLogger } from "../../lib/logger.mjs";
 
 const { logDebug, logInfo, logWarn, logError } = createLogger();
@@ -934,7 +937,7 @@ async function runFileChangeHooksTool({ files }) {
     const results = [];
     for (const hook of hooks) {
       try {
-        const command = hook.replace("{files}", filesList.join(" "));
+        const command = hook.replace("{files}", files.join(" "));
         const result = execSync(command, {
           encoding: "utf-8",
           timeout: 60000,
@@ -1906,7 +1909,390 @@ const tools = {
     }),
     execute: readDocsTool,
   }),
+
+  // ========================================================================
+  // Codebuff-native aliases (critical — these are the canonical tool names
+  // used by the Codebuff SDK and many models trained on Codebuff docs)
+  // ========================================================================
+
+  run_terminal_command: tool({
+    description: "Execute a shell command and return the output (Codebuff-native name for exec/shell)",
+    inputSchema: z.object({
+      command: z.string().describe("CLI command valid for user's OS"),
+      cwd: z.string().optional().describe("Working directory for the command"),
+      timeout_seconds: z.preprocess(
+        (val) => coerceOptionalNumberInput(val, undefined),
+        z.number().optional().describe("Timeout in seconds (default 30, -1 for no timeout)"),
+      ),
+    }),
+    execute: async ({ command, cwd, timeout_seconds }) => {
+      const timeoutMs = timeout_seconds != null && timeout_seconds > 0
+        ? timeout_seconds * 1000
+        : timeout_seconds === -1
+          ? 0
+          : 60000;
+      try {
+        const result = execSync(command, {
+          cwd: cwd || process.cwd(),
+          encoding: "utf-8",
+          timeout: timeoutMs || undefined,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return {
+          output: error.stdout || error.message,
+          exitCode: error.status || 1,
+          error: error.message,
+        };
+      }
+    },
+  }),
+  write_file: tool({
+    description: "Create or overwrite a file with the given content (Codebuff-native)",
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file relative to the project root"),
+      instructions: z.string().optional().describe("What the change is intended to do"),
+      content: z.string().describe("Complete file content to write"),
+    }),
+    execute: async ({ path: filePath, content }) => writeFileTool({ path: filePath, content }),
+  }),
+  end_turn: tool({
+    description: "Signal that the current turn is complete",
+    inputSchema: z.object({}),
+    execute: taskCompletedTool,
+  }),
+  create_plan: tool({
+    description: "Create a step-by-step plan for a task (alias for write_todos)",
+    inputSchema: z.object({
+      steps: z.preprocess(
+        (val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; }
+          }
+          if (val && typeof val === "object") return [val];
+          return [];
+        },
+        z.array(z.object({
+          step: z.string().optional().describe("Step description"),
+          task: z.string().optional().describe("Task description"),
+          completed: z.boolean().optional().describe("Whether step is done"),
+        })),
+      ),
+    }),
+    execute: async ({ steps }) => {
+      const todos = steps.map((s) => ({
+        task: s.task || s.step || "(unnamed step)",
+        completed: s.completed || false,
+      }));
+      return writeTodosTool({ todos });
+    },
+  }),
+  browser_logs: tool({
+    description: "Check browser console logs (limited — no live browser in this environment)",
+    inputSchema: z.object({
+      url: z.string().optional().describe("URL to check"),
+    }),
+    execute: async () => ({
+      message: "Browser logs are not available in this headless environment. Use run_terminal_command with a linter or test runner instead.",
+      logs: [],
+    }),
+  }),
+
+  // ========================================================================
+  // Cross-provider compatibility shims (map external provider tool names
+  // to our canonical implementations)
+  // ========================================================================
+
+  message: tool({
+    description: "Add a message to the conversation (compatibility alias for add_message)",
+    inputSchema: z.object({
+      role: z.enum(["user", "assistant"]).optional().describe("Message role"),
+      content: z.string().describe("Message content"),
+    }),
+    execute: async ({ role, content }) => addMessageTool({ role: role || "assistant", content }),
+  }),
+  thinker: tool({
+    description: "Think deeply about a problem (alias for think_deeply)",
+    inputSchema: z.object({
+      thought: z.string().optional().describe("The thought or problem to analyze"),
+      prompt: z.string().optional().describe("The problem to think about"),
+    }),
+    execute: async ({ thought, prompt }) =>
+      thinkDeeplyTool({ thought: thought || prompt || "(no thought provided)" }),
+  }),
+  shell: tool({
+    description: "Execute a shell command (OpenAI shell tool compatibility)",
+    inputSchema: z.object({
+      command: z.string().describe("Shell command to execute"),
+      cwd: z.string().optional().describe("Working directory"),
+    }),
+    execute: execTool,
+  }),
+  local_shell: tool({
+    description: "Execute a command on the local machine (alias for exec/shell)",
+    inputSchema: z.object({
+      command: z.string().describe("Shell command to execute"),
+      cwd: z.string().optional().describe("Working directory"),
+    }),
+    execute: execTool,
+  }),
+  code_interpreter: tool({
+    description: "Execute code in a sandbox (runs via local shell — Python, Node, etc.)",
+    inputSchema: z.object({
+      code: z.string().optional().describe("Code to execute"),
+      command: z.string().optional().describe("Shell command to execute the code"),
+      language: z.string().optional().describe("Programming language (python, javascript, etc.)"),
+    }),
+    execute: async ({ code, command, language }) => {
+      // If a raw shell command is provided, use execTool directly
+      if (command) return execTool({ command });
+      if (!code) return { error: "No code or command provided" };
+
+      // Use execFileSync to avoid shell escaping issues with user-provided code
+      const lang = (language || "python").toLowerCase();
+      let bin, args;
+      if (lang === "python" || lang === "python3") {
+        bin = "python3"; args = ["-c", code];
+      } else if (lang === "javascript" || lang === "node" || lang === "js") {
+        bin = "node"; args = ["-e", code];
+      } else if (lang === "bash" || lang === "sh") {
+        bin = "bash"; args = ["-c", code];
+      } else {
+        bin = "python3"; args = ["-c", code];
+      }
+      try {
+        const result = execFileSync(bin, args, {
+          cwd: process.cwd(),
+          encoding: "utf-8",
+          timeout: 60000,
+          maxBuffer: 10 * 1024 * 1024,
+        });
+        return { output: result, exitCode: 0 };
+      } catch (error) {
+        return {
+          output: error.stdout || error.message,
+          exitCode: error.status || 1,
+          error: error.message,
+        };
+      }
+    },
+  }),
+  file_search: tool({
+    description: "Search indexed files for RAG-style retrieval (uses local code search)",
+    inputSchema: z.object({
+      query: z.string().optional().describe("Search query"),
+      pattern: z.string().optional().describe("Search pattern"),
+      prompt: z.string().optional().describe("Natural language file description"),
+    }),
+    execute: async ({ query, pattern, prompt }) => {
+      if (pattern || query) {
+        return codeSearchTool({ pattern: pattern || query });
+      }
+      if (prompt) {
+        return findFilesTool({ prompt });
+      }
+      return { error: "Provide a query, pattern, or prompt to search" };
+    },
+  }),
+  browser_search: tool({
+    description: "Search the web interactively (Groq GPT-OSS compatibility — uses web_search)",
+    inputSchema: z.object({
+      query: z.string().describe("Search query"),
+    }),
+    execute: async ({ query }) => webSearchTool({ query }),
+  }),
+  visit_website: tool({
+    description: "Fetch or navigate to a specific web page (uses web search as best-effort)",
+    inputSchema: z.object({
+      url: z.string().optional().describe("URL to visit"),
+      query: z.string().optional().describe("Search query if no URL"),
+    }),
+    execute: async ({ url, query }) => {
+      const searchQuery = url || query || "";
+      if (!searchQuery) return { error: "Provide a url or query" };
+      return webSearchTool({ query: searchQuery });
+    },
+  }),
+
+  // ========================================================================
+  // Graceful no-ops for tools that exist on other platforms but cannot be
+  // implemented locally. Return a helpful message instead of crashing.
+  // ========================================================================
+
+  image_generation: tool({
+    description: "Generate or edit images from prompts (not available in this environment)",
+    inputSchema: z.object({
+      prompt: z.string().optional().describe("Image generation prompt"),
+      size: z.string().optional().describe("Image size"),
+    }),
+    execute: async ({ prompt }) => ({
+      error: "image_generation is not available in this environment",
+      message: `Cannot generate image for: ${(prompt || "").slice(0, 100)}. Use a web-based image generation service instead.`,
+      available: false,
+    }),
+  }),
+  wolfram_alpha: tool({
+    description: "Query Wolfram Alpha for computation (not available — use code_interpreter instead)",
+    inputSchema: z.object({
+      query: z.string().describe("Mathematical or scientific query"),
+    }),
+    execute: async ({ query }) => {
+      // Best-effort: try to evaluate with python (using execFileSync to avoid shell escaping issues)
+      try {
+        const output = execFileSync("python3", ["-c", `print(eval(${JSON.stringify(query)}))`], {
+          encoding: "utf-8", timeout: 10000, maxBuffer: 1024 * 1024,
+        });
+        return { result: output, source: "python_eval" };
+      } catch { /* fall through */ }
+      return {
+        error: "wolfram_alpha is not available in this environment",
+        message: `Use code_interpreter or run_terminal_command with python to compute: ${query.slice(0, 100)}`,
+        suggestion: "Use python3 or node for mathematical computation",
+      };
+    },
+  }),
+  browser_automation: tool({
+    description: "Automate browser interactions (not available in this headless environment)",
+    inputSchema: z.object({
+      action: z.string().optional().describe("Browser action to perform"),
+      url: z.string().optional().describe("URL to navigate to"),
+    }),
+    execute: async () => ({
+      error: "browser_automation is not available in this environment",
+      message: "Use Playwright tests (npm run test:basic) or web_search for web interactions.",
+      available: false,
+    }),
+  }),
+  computer_use: tool({
+    description: "Control computer UI (not available in this headless environment)",
+    inputSchema: z.object({
+      action: z.string().optional().describe("UI action to perform"),
+      coordinate: z.array(z.number()).optional().describe("Screen coordinates"),
+      text: z.string().optional().describe("Text to type"),
+    }),
+    execute: async () => ({
+      error: "computer_use is not available in this environment",
+      message: "This is a headless server environment. Use run_terminal_command for CLI operations.",
+      available: false,
+    }),
+  }),
+  tts: tool({
+    description: "Text-to-speech synthesis (not available in this environment)",
+    inputSchema: z.object({
+      text: z.string().optional().describe("Text to synthesize"),
+      input: z.string().optional().describe("Text input"),
+    }),
+    execute: async () => ({
+      error: "tts is not available in this environment",
+      message: "Text-to-speech is not supported in this headless server environment.",
+      available: false,
+    }),
+  }),
+  connector_gmail: tool({
+    description: "Gmail connector (not available — requires Groq connector setup)",
+    inputSchema: z.object({
+      action: z.string().optional().describe("Gmail action"),
+      query: z.string().optional().describe("Search query"),
+    }),
+    execute: async () => ({
+      error: "connector_gmail is not available in this environment",
+      message: "Gmail connector requires Groq platform. Not available locally.",
+      available: false,
+    }),
+  }),
+  connector_googlecalendar: tool({
+    description: "Google Calendar connector (not available — requires Groq connector setup)",
+    inputSchema: z.object({
+      action: z.string().optional().describe("Calendar action"),
+    }),
+    execute: async () => ({
+      error: "connector_googlecalendar is not available in this environment",
+      message: "Google Calendar connector requires Groq platform. Not available locally.",
+      available: false,
+    }),
+  }),
+  connector_googledrive: tool({
+    description: "Google Drive connector (not available — requires Groq connector setup)",
+    inputSchema: z.object({
+      action: z.string().optional().describe("Drive action"),
+      query: z.string().optional().describe("Search query"),
+    }),
+    execute: async () => ({
+      error: "connector_googledrive is not available in this environment",
+      message: "Google Drive connector requires Groq platform. Not available locally.",
+      available: false,
+    }),
+  }),
+  mcp_list_tools: tool({
+    description: "List tools from an MCP server (MCP tools not configured in this bridge)",
+    inputSchema: z.object({
+      server: z.string().optional().describe("MCP server name"),
+    }),
+    execute: async () => ({
+      available_tools: Object.keys(tools),
+      message: "MCP server tools are not directly available. Here are the locally available tools.",
+    }),
+  }),
 };
+
+// --------------------------------------------------------------------------
+// Catch-all Proxy for unknown tools
+// --------------------------------------------------------------------------
+//
+// Models sometimes hallucinate tool names that don't exist in our tools map.
+// Without a catch-all, the AI SDK throws an error and the request fails.
+// This Proxy intercepts property access and dynamically creates a graceful
+// no-op tool definition for any unknown tool name, returning a helpful message
+// instead of crashing. Known tools pass through unchanged.
+//
+// The Proxy only intercepts `get` — Object.keys(), Object.entries(), etc.
+// still return only the explicitly defined tools (via the default `ownKeys`).
+// --------------------------------------------------------------------------
+
+const knownToolNames = new Set(Object.keys(tools));
+
+const toolsProxy = new Proxy(tools, {
+  get(target, prop, receiver) {
+    // Pass through existing tools, symbols, and non-string properties
+    if (typeof prop !== "string" || prop in target) {
+      return Reflect.get(target, prop, receiver);
+    }
+
+    // Ignore internal JS/Node properties that aren't tool names
+    if (prop === "then" || prop === "toJSON" || prop === "constructor" || prop.startsWith("_")) {
+      return undefined;
+    }
+
+    logWarn(`⚠️ Unknown tool requested: "${prop}" — returning graceful no-op`);
+
+    return tool({
+      description: `Unknown tool "${prop}" (catch-all — this tool is not available)`,
+      inputSchema: z.object({}).passthrough(),
+      execute: async (args) => {
+        logWarn(`🔧 Catch-all invoked for unknown tool "${prop}"`, {
+          argsKeys: Object.keys(args || {}),
+        });
+        return {
+          error: `Tool "${prop}" is not available in this environment`,
+          message: `The tool "${prop}" does not exist. Available tools: ${[...knownToolNames].slice(0, 20).join(", ")}...`,
+          available: false,
+          suggestion: "Check available tools with mcp_list_tools or use one of the listed tools above.",
+        };
+      },
+    });
+  },
+
+  has(target, prop) {
+    // Report all string properties as present so the AI SDK doesn't reject
+    // unknown tool calls before they reach our execute handler
+    if (typeof prop === "string" && prop !== "then" && !prop.startsWith("_")) {
+      return true;
+    }
+    return Reflect.has(target, prop);
+  },
+});
 
 // --------------------------------------------------------------------------
 // Provider mapping
@@ -3078,7 +3464,7 @@ async function invokeWithAI(provider, messages, options = {}) {
       model,
       messages: aiMessages,
       ...(useTools
-        ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
+        ? { tools: toolsProxy, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
         : {}),
       onStepFinish: (step) => {
         executionMetrics.stepCount++;
@@ -3095,9 +3481,10 @@ async function invokeWithAI(provider, messages, options = {}) {
               logDebug(`🔧 ${tc.toolName}: ${summary}`);
             }
 
-            // Track mutations (write, str_replace, apply_patch)
+            // Track mutations (write, write_file, str_replace, apply_patch)
             if (
               tc.toolName === "write" ||
+              tc.toolName === "write_file" ||
               tc.toolName === "str_replace" ||
               tc.toolName === "apply_patch"
             ) {
@@ -3464,7 +3851,7 @@ async function invokeWithAI(provider, messages, options = {}) {
       model,
       messages: aiMessages,
       ...(useTools
-        ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
+        ? { tools: toolsProxy, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
         : {}),
     });
 
@@ -5027,8 +5414,59 @@ server.listen(PORT, "127.0.0.1", async () => {
       { tool: "read_subtree", name: "paths_string", input: { paths: "." } },
       { tool: "read_subtree", name: "maxTokens_number", input: { maxTokens: 1000 } },
       { tool: "read_subtree", name: "maxTokens_string", input: { maxTokens: "1000" } },
+
+      // run_terminal_command (Codebuff-native alias)
+      { tool: "run_terminal_command", name: "basic", input: { command: "echo hello" } },
+      { tool: "run_terminal_command", name: "with_cwd", input: { command: "ls", cwd: "." } },
+      { tool: "run_terminal_command", name: "with_timeout_number", input: { command: "echo hi", timeout_seconds: 30 } },
+      { tool: "run_terminal_command", name: "with_timeout_string", input: { command: "echo hi", timeout_seconds: "30" } },
+
+      // write_file (Codebuff-native alias)
+      { tool: "write_file", name: "basic", input: { path: "test.txt", content: "hello" } },
+      { tool: "write_file", name: "with_instructions", input: { path: "test.txt", instructions: "Create a test", content: "hello" } },
+
+      // Cross-provider compatibility tools
+      { tool: "shell", name: "basic", input: { command: "echo test" } },
+      { tool: "local_shell", name: "basic", input: { command: "echo test" } },
+      { tool: "thinker", name: "with_thought", input: { thought: "thinking..." } },
+      { tool: "thinker", name: "with_prompt", input: { prompt: "thinking..." } },
+      { tool: "message", name: "basic", input: { content: "hello" } },
+      { tool: "code_interpreter", name: "with_code", input: { code: "print(1+1)" } },
+      { tool: "code_interpreter", name: "with_command", input: { command: "echo test" } },
+      { tool: "file_search", name: "with_query", input: { query: "test" } },
+      { tool: "file_search", name: "with_prompt", input: { prompt: "find config files" } },
+      { tool: "browser_search", name: "basic", input: { query: "test" } },
+      { tool: "visit_website", name: "with_url", input: { url: "https://example.com" } },
+      { tool: "end_turn", name: "basic", input: {} },
+
+      // No-op tools (verify schemas parse without error)
+      { tool: "image_generation", name: "basic", input: { prompt: "a cat" } },
+      { tool: "wolfram_alpha", name: "basic", input: { query: "2+2" } },
+      { tool: "tts", name: "basic", input: { text: "hello" } },
+      { tool: "browser_automation", name: "basic", input: { action: "click" } },
+      { tool: "computer_use", name: "basic", input: { action: "screenshot" } },
+      { tool: "mcp_list_tools", name: "basic", input: {} },
     ];
-    
+
+    // Verify catch-all proxy returns a tool for unknown names
+    // (the proxy emits a logWarn for unknown tool access — expected during self-test)
+    const catchAllTool = toolsProxy["completely_hallucinated_tool_name_xyz"];
+    if (!catchAllTool || !catchAllTool.execute) {
+      logError(`❌ Catch-all proxy self-test FAILED: did not return a tool for unknown name`);
+      process.exit(1);
+    }
+    // Verify known tools still pass through the proxy
+    if (toolsProxy["exec"] !== tools["exec"]) {
+      logError(`❌ Catch-all proxy self-test FAILED: known tool "exec" was not passed through`);
+      process.exit(1);
+    }
+    // Verify Object.keys only returns known tools (proxy doesn't leak catch-all names)
+    if (Object.keys(toolsProxy).length !== Object.keys(tools).length) {
+      logError(`❌ Catch-all proxy self-test FAILED: Object.keys(toolsProxy) leaked unknown tools`);
+      process.exit(1);
+    }
+    logInfo(`🧪 Catch-all proxy self-test: passed (unknown tools return graceful no-op, known tools pass through)`);
+
     let selfTestPassed = 0;
     const failedTests = [];
     
@@ -5306,7 +5744,7 @@ export {
   invokeWithFallback,
   invokeWithFallbackStream,
   MODEL_ID,
-  tools,
+  toolsProxy as tools,
   // Export individual tool functions for testing
   execTool,
   readFilesTool,

@@ -457,6 +457,8 @@
     "statfs",
     "bavail",
     "bsize",
+    "googlecalendar",
+    "googledrive",
     "lifecycles"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],

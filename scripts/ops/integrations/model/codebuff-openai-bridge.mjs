@@ -82,6 +82,107 @@ const CODEBUFF_NOISY_TOOLS = new Set([
 ]);
 const maybeGC = typeof globalThis.gc === "function" ? () => globalThis.gc() : () => {};
 
+// Parameter validation error tracking — counts per tool to monitor SDK-internal failures
+const paramValidationErrorCounts = new Map();
+
+// Detect SDK-internal parameter validation errors ("Invalid parameters for <tool>")
+// These are non-fatal: the SDK returns the error to the model which may retry.
+function isParamValidationError(message) {
+  return typeof message === "string" && message.startsWith("Invalid parameters for ");
+}
+
+// Shared error event handler for both streaming and non-streaming modes.
+// Returns true if the error was a known param validation issue (should NOT be streamed to client).
+function handleSdkErrorEvent(msg) {
+  if (isParamValidationError(msg)) {
+    const toolMatch = msg.match(/^Invalid parameters for (\S+?):/);
+    const toolName = toolMatch ? toolMatch[1] : "unknown";
+    const count = (paramValidationErrorCounts.get(toolName) || 0) + 1;
+    paramValidationErrorCounts.set(toolName, count);
+    logWarn(`⚠️ SDK param validation failed for ${toolName} (count: ${count}) — model will retry with correct format`);
+    return true;
+  }
+  return false;
+}
+
+// Knowledge file injected into every CodebuffClient run to enforce strict parameter formats.
+// This overrides the "TOLERATED" messaging in AGENTS.md which is only true for the symphony
+// bridge (which has z.preprocess normalization) but NOT true for the Codebuff SDK context.
+// NOTE: Keep in sync with @codebuff/sdk tool definitions. Written against @codebuff/sdk@0.10.7.
+const TOOL_PARAMETER_RULES = `# Tool Parameter Format Rules (MANDATORY)
+
+You MUST follow these rules for ALL tool calls. The runtime does NOT auto-normalize parameters.
+Violating these rules causes tool execution failures.
+
+## Array parameters MUST be JSON arrays, NEVER strings
+
+These tools require array-typed parameters. You MUST pass actual JSON arrays, not strings:
+
+- \`read_files\`: \`paths\` MUST be \`["file1.ts", "file2.ts"]\` — NEVER \`"file1.ts"\`
+- \`run_file_change_hooks\`: \`files\` MUST be \`["file.ts"]\` — NEVER \`"file.ts"\`
+- \`str_replace\`: \`replacements\` MUST be \`[{"old": "...", "new": "..."}]\` — NEVER a single object
+- \`propose_str_replace\`: \`replacements\` MUST be an array of objects
+- \`spawn_agents\`: \`agents\` MUST be \`[{"agent_type": "..."}]\` — NEVER a single object
+- \`set_messages\`: \`messages\` MUST be an array
+- \`suggest_followups\`: \`followups\` MUST be an array of objects
+- \`write_todos\`: \`todos\` MUST be an array of objects
+- \`ask_user\`: \`questions\` MUST be an array; each question's \`options\` MUST be an array
+- \`read_subtree\`: \`paths\` MUST be an array (if provided)
+
+## Correct examples
+
+\`\`\`json
+// read_files — CORRECT
+{"paths": ["src/index.ts"]}
+// read_files — WRONG (will fail!)
+{"paths": "src/index.ts"}
+
+// run_file_change_hooks — CORRECT
+{"files": ["src/app.ts", "src/utils.ts"]}
+// run_file_change_hooks — WRONG (will fail!)
+{"files": "src/app.ts"}
+
+// str_replace — CORRECT
+{"path": "file.ts", "replacements": [{"old": "foo", "new": "bar"}]}
+// str_replace — WRONG (will fail!)
+{"path": "file.ts", "replacements": {"old": "foo", "new": "bar"}}
+
+// spawn_agents — CORRECT
+{"agents": [{"agent_type": "basher", "prompt": "..."}]}
+// spawn_agents — WRONG (will fail!)
+{"agents": {"agent_type": "basher", "prompt": "..."}}
+\`\`\`
+
+Remember: ALL array parameters MUST be actual JSON arrays \`[]\`, never strings or bare objects.
+
+## Available tools
+
+Only use tools that are listed in your tool definitions. The canonical Codebuff tool names are:
+- \`run_terminal_command\` — execute shell commands (NOT \`exec\`, \`shell\`, or \`local_shell\`)
+- \`read_files\` — read files (NOT \`read\`)
+- \`write_file\` — write files (NOT \`write\`)
+- \`str_replace\` — edit files with string replacements
+- \`code_search\` — search code with ripgrep
+- \`think_deeply\` — deep reasoning (NOT \`thinker\`)
+- \`spawn_agents\` — spawn subagents (NOT \`spawn_agent\`)
+- \`suggest_followups\` — suggest next steps
+- \`write_todos\` — track tasks (NOT \`create_plan\`)
+
+Do NOT attempt to call these non-existent tools:
+- \`exec\` — use \`run_terminal_command\` instead
+- \`read\` — use \`read_files\` instead  
+- \`write\` — use \`write_file\` instead
+- \`shell\` / \`local_shell\` — use \`run_terminal_command\` instead
+- \`thinker\` — use \`think_deeply\` instead
+- \`memory_search\` / \`memory_get\` — not available in this context
+- \`message\` — use \`add_message\` instead
+- \`tts\` — not available in this context
+- \`image_generation\` — not available in this context
+- \`code-searcher\` — not a valid agent; use \`code_search\` tool directly
+- \`wolfram_alpha\` — use \`run_terminal_command\` with python instead
+- \`browser_automation\` / \`computer_use\` — not available in this context
+`;
+
 // OpenClaw-specific tools that should be proxied to the Gateway API
 // Note: These are checked but not yet fully integrated - tool proxying is in progress
 const _OPENCLAW_PROXY_TOOLS = ["message", "memory_get", "read", "write", "exec"];
@@ -423,14 +524,19 @@ async function testKeyAndSelectWinner(apiKey) {
 }
 
 // Build prompt from OpenAI-style messages
+// Prepends a critical instruction about array parameter formats to reduce SDK validation errors.
 function buildPrompt(messages) {
-  return messages
+  const body = messages
     .map((m) => {
       const role = m.role?.toUpperCase() || "USER";
       const content = typeof m.content === "string" ? m.content : JSON.stringify(m.content);
       return `${role}:\n${content}`;
     })
     .join("\n\n");
+
+  return `CRITICAL: All tool parameters that expect arrays (files, paths, replacements, agents, todos, questions, followups, messages) MUST be passed as JSON arrays [], never as strings or bare objects. Example: {"paths": ["file.ts"]} not {"paths": "file.ts"}.
+
+${body}`;
 }
 
 // Check SDK result for structured error responses (rate limit, payment, type:"error")
@@ -690,6 +796,9 @@ async function trySingleAccount(
   const client = new CodebuffClient({
     apiKey: attempt.apiKey,
     cwd: cwd || DEFAULT_CWD,
+    knowledgeFiles: {
+      "tool-parameter-rules.knowledge.md": TOOL_PARAMETER_RULES,
+    },
   });
 
   logDebug(`[trySingleAccount] CodebuffClient created`, {
@@ -754,7 +863,10 @@ async function trySingleAccount(
       } else if (type === "agent_start" || type === "agent_finish") {
         logDebug(`🤖 codebuff ${type}`);
       } else if (type === "error") {
-        logDebug(`❌ codebuff error: ${event.message || JSON.stringify(event)}`);
+        const msg = event.message || JSON.stringify(event);
+        if (!handleSdkErrorEvent(msg)) {
+          logDebug(`❌ codebuff error: ${msg}`);
+        }
       }
     } catch (err) {
       logDebug(`handleEvent error: ${err.message}`);
@@ -996,6 +1108,9 @@ async function trySingleAccountStream(
   const client = new CodebuffClient({
     apiKey: attempt.apiKey,
     cwd: cwd || DEFAULT_CWD,
+    knowledgeFiles: {
+      "tool-parameter-rules.knowledge.md": TOOL_PARAMETER_RULES,
+    },
   });
 
   // Stream a text fragment to the client as an SSE chunk
@@ -1070,8 +1185,11 @@ async function trySingleAccountStream(
       } else if (type === "agent_start" || type === "agent_finish") {
         logDebug(`🤖 codebuff ${type}`);
       } else if (type === "error") {
-        logDebug(`❌ codebuff error: ${event.message || JSON.stringify(event)}`);
-        streamActivity(`❌ Error: ${event.message || "unknown error"}\n`);
+        const msg = event.message || JSON.stringify(event);
+        if (!handleSdkErrorEvent(msg)) {
+          logDebug(`❌ codebuff error: ${msg}`);
+          streamActivity(`❌ Error: ${msg}\n`);
+        }
       }
     } catch (err) {
       logDebug(`handleEvent error: ${err.message}`);
@@ -1660,12 +1778,13 @@ async function initializeBridge() {
   }
 
   STARTUP_INITIALIZED = true;
+  logInfo(`Knowledge files: tool-parameter-rules.knowledge.md injected (${TOOL_PARAMETER_RULES.length} chars)`);
   logInfo(`========================================`);
   logInfo(`Ready to accept requests`);
   logInfo(`========================================`);
 }
 
-// Health check - include initialization status
+// Health check - include initialization status and param validation error counts
 function getHealthStatus() {
   return {
     status: STARTUP_INITIALIZED ? "ok" : "initializing",
@@ -1676,6 +1795,7 @@ function getHealthStatus() {
       if (STARTUP_WINNER) return "free";
       return "none";
     })(),
+    paramValidationErrors: Object.fromEntries(paramValidationErrorCounts),
   };
 }
 
