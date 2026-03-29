@@ -13,7 +13,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 // Dynamic import for the .mjs module (ESM-compatible)
-// @ts-expect-error -- .mjs has no declaration file
 const loggerModule = await import("./logger.mjs");
 
 const { createLogger } = loggerModule;

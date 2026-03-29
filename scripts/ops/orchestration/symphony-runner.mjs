@@ -1345,7 +1345,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
     let finalStateName = "In Review";
     let pushConfirmed = false;
     if (RUNNER_AUTO_PUSH) {
-      pushConfirmed = gitPush();
+      pushConfirmed = await gitPush();
       if (pushConfirmed) {
         finalStateId = STATES.done;
         finalStateName = "Done";

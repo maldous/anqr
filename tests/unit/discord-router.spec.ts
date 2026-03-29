@@ -77,7 +77,7 @@ describe("Discord Request Router", () => {
 
     const getLeastLoadedWorktree = (worktrees: WorktreeState[]): WorktreeState | null => {
       let minLoad = Infinity;
-      let selected = null;
+      let selected: WorktreeState | null = null;
 
       for (const wt of worktrees) {
         if (wt.activeRequests < minLoad) {

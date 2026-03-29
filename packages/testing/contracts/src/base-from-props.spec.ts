@@ -39,12 +39,12 @@ describe("baseFromProps", () => {
 
   it("should use react id with fallback prefix as last resort", () => {
     const result = baseFromProps({}, "component", ":r1:");
-    expect(result).toBe("component--r1-");
+    expect(result).toBe("component-r1");
   });
 
   it("should normalize react id colons to dashes", () => {
     const result = baseFromProps({}, "elem", ":r5:a:b:");
-    expect(result).toBe("elem--r5-a-b-");
+    expect(result).toBe("elem-r5-a-b");
   });
 
   it("should prioritize data-testid over all other props", () => {

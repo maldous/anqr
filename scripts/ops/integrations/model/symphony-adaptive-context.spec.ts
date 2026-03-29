@@ -36,14 +36,12 @@ import {
   RATE_LIMIT_MAX_BACKOFF_MS,
   TPM_PROACTIVE_THRESHOLD,
   TOKEN_WINDOW_MS,
-  // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-adaptive-context.mjs";
 
 import {
   PROVIDER_MAX_INPUT_TOKENS,
   DEFAULT_MAX_INPUT_TOKENS,
   MIN_MESSAGE_BUDGET_TOKENS,
-  // @ts-expect-error -- .mjs has no declaration file
 } from "./symphony-bridge-truncation.mjs";
 
 // ---------------------------------------------------------------------------
