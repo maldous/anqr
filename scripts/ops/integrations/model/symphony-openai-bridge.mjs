@@ -1479,10 +1479,10 @@ const tools = {
   run_file_change_hooks: tool({
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
-      files: z
-        .union([z.string(), z.array(z.string())])
-        .transform((val) => (Array.isArray(val) ? val : [val]))
-        .describe("List of file paths that were changed (accepts string or array)"),
+      files: z.preprocess(
+        (val) => (Array.isArray(val) ? val : [val]),
+        z.array(z.string())
+      ).describe("List of file paths that were changed (accepts string or array)"),
     }),
     execute: runFileChangeHooksTool,
   }),
@@ -4760,4 +4760,35 @@ server.listen(PORT, "127.0.0.1", async () => {
 });
 
 // Export for testing
-export { invokeWithFallback, invokeWithFallbackStream, MODEL_ID, tools };
+export {
+  invokeWithFallback,
+  invokeWithFallbackStream,
+  MODEL_ID,
+  tools,
+  // Export individual tool functions for testing
+  execTool,
+  readFilesTool,
+  strReplaceTool,
+  writeFileTool,
+  readFileTool,
+  codeSearchTool,
+  globTool,
+  listDirectoryTool,
+  readSubtreeTool,
+  memorySearchTool,
+  memoryGetTool,
+  runFileChangeHooksTool,
+  thinkDeeplyTool,
+  updateSubgoalTool,
+  addSubgoalTool,
+  spawnAgentsTool,
+  proposeStrReplaceTool,
+  proposeWriteFileTool,
+  addMessageTool,
+  setMessagesTool,
+  askUserTool,
+  lookupAgentInfoTool,
+  applyPatchTool,
+  webSearchTool,
+  readDocsTool,
+};
