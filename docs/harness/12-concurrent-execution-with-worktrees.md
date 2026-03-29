@@ -237,6 +237,9 @@ git worktree prune   # Remove stale worktree metadata
 2. Sync with main branch
    ├─ git fetch origin main
    └─ git merge origin/main --ff-only
+   ├─ This brings in all work from other worktrees that has been pushed to origin/main
+   ├─ IMPORTANT: Work committed in other worktrees but not yet pushed won't be visible
+   └─ Agents should push completed work immediately to make it available to other worktrees
 
 3. Acquire issue lease (via symphony-state.mjs)
    ├─ Read state.json with file lock
@@ -253,7 +256,7 @@ git worktree prune   # Remove stale worktree metadata
 5. Commit and push
    ├─ git add changed files
    ├─ git commit with evidence
-   └─ git push origin HEAD:main  # Push worktree branch commits directly to main
+   └─ git push origin HEAD:main  # Push immediately to make work available to other worktrees
 
 6. Release lease and notify
    ├─ Update state.json (issue → Done)

@@ -176,6 +176,25 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 - 6-8 issues/hour (150% increase)
 - 10-20% idle time
 
+## Important: Work Visibility Between Worktrees
+
+**How worktrees see each other's work:**
+
+- Each worktree syncs with `origin/main` before starting work (via `git fetch origin main && git merge origin/main --ff-only`)
+- Completed work is pushed to `origin/main` immediately after commit
+- **This means:** Work from other worktrees becomes visible only AFTER it's pushed to origin
+- **Agents must push immediately** to make their changes available to other concurrent workers
+
+**Example flow:**
+
+```
+Worktree 1: Syncs main → Works on ANQ-100 → Commits → Pushes to origin/main
+Worktree 2: Syncs main (gets ANQ-100 changes) → Works on ANQ-101 → Commits → Pushes
+Worktree 3: Syncs main (gets ANQ-100 + ANQ-101 changes) → Works on ANQ-102
+```
+
+This ensures all worktrees have access to the latest work from their peers.
+
 ## Next Steps
 
 After 24 hours of operation:

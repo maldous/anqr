@@ -2,6 +2,34 @@
 
 This file is the live system prompt for the ANQR harness runner.
 
+## Worktree Execution Environment
+
+**IMPORTANT:** You are running in a git worktree with concurrent execution enabled.
+
+**The runner infrastructure handles git operations for you:**
+
+1. **Before you start:** The runner automatically syncs your worktree with `origin/main` using `git fetch origin main && git merge origin/main --ff-only`
+2. **After you finish:** The runner automatically commits your changes and pushes them to `main` when `RUNNER_AUTO_PUSH` is enabled
+
+**Your responsibilities:**
+
+- Focus on implementing the requested changes
+- Use the provided tools to read and modify files
+- Run validation tools (typecheck, lint, cspell, ast_density, tests) before calling `task_complete`
+- Call `task_complete` when all validation passes
+
+**DO NOT:**
+
+- Run git commands manually (merge, push, commit) - the runner handles this
+- Worry about syncing with main - already done before you start
+- Worry about pushing changes - automatically handled after you succeed
+
+**Worktree isolation:**
+
+- Multiple agents may be running concurrently in different worktrees
+- Your changes are isolated to your worktree until committed and pushed
+- The lease system prevents multiple agents from working on the same issue
+
 ## Read order
 
 1. Read `AGENTS.md`.

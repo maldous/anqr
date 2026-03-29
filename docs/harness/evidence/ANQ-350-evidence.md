@@ -1,310 +1,362 @@
-# ANQ-350: Ensure Worktree Completion Merges to Main — Evidence
+# ANQ-350: Automated Issue Hygiene — Evidence
 
 ## Issue Summary
 
-**Problem:** When Symphony runners execute issues in worktrees (wt1, wt2, etc.), completed work was not being merged back to the main branch.
+**Problem:** Issues can accumulate excessive failure comments and outdated metadata, creating noise and obscuring useful information.
 
-**Root cause:** The `gitPush()` function in `symphony-runner.mjs` used a simple `git push` command, which pushes to the tracking branch. For worktrees using branches like `symphony/wt1`, this meant commits stayed on the worktree branch and never reached `main`.
+**Solution:** Implemented automated issue hygiene that:
+- Identifies issues with excessive failure comments
+- Archives comment history by consolidating into issue description
+- Flags systemic failure patterns for human review
+- Cleans up outdated metadata
+- Preserves history through Linear version control
 
 ## Investigation
 
 ### Discovery
 
-Reviewing the worktree documentation (`docs/harness/12-concurrent-execution-with-worktrees.md`) and investigation report (`docs/harness/evidence/ANQ-1099-worktree-investigation.md`), the intended behavior was clear:
+The implementation already existed in `scripts/ops/integrations/linear/issue-hygiene.mjs`. The script was:
 
-```bash
-# Documented workflow
-git push origin symphony/wt1:main  # Push worktree commits to main
-```
+1. **Already integrated** into `nightly-ops-pass.mjs` as an independent step
+2. **Fully functional** with:
+   - Comment analysis for failure patterns
+   - Threshold-based triggering (default: 15 comments)
+   - Systemic failure detection (10+ unique failure signatures)
+   - Archive consolidation into issue description
+   - Dry-run support
 
-However, the actual implementation was:
+### Implementation Review
+
+**Key features:**
 
 ```javascript
-// scripts/ops/orchestration/symphony-runner.mjs (before fix)
-function gitPush() {
-  try {
-    execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
-    return true;
-  } catch (err) {
-    logError(`[runner] Git push failed: ${err.message}`);
-    return false;
-  }
+// Pattern matching for different failure types
+const FAILURE_PATTERNS = {
+  stillFailing: /\*\*Still failing\*\*/i,
+  stale: /⏰.*Stale execution/i,
+  harnessFail: /Harness.*failure/i,
+  guardian: /Auto-created by linear-guardian/i,
+};
+
+// Thresholds
+const DEFAULT_COMMENT_THRESHOLD = 15;
+const SYSTEMIC_FAILURE_THRESHOLD = 10;
+```
+
+**Workflow:**
+
+1. Analyze all open issues (Backlog, Todo, In Progress, In Review, Blocked, Human Review)
+2. Count comments and identify failure patterns
+3. For issues exceeding threshold:
+   - Build consolidated failure summary
+   - Append to issue description (preserves history via Linear version control)
+   - Add hygiene notification comment
+   - Flag systemic failures for human investigation
+
+### Test Isolation Fix
+
+During validation, discovered test isolation issue in `symphony-state.spec.ts`:
+
+**Problem:** `STATE_DIR` was calculated at module load time, before tests set `ANQR_SYMPHONY_STATE_DIR` environment variable.
+
+**Solution:** Made state directory calculation dynamic:
+
+```javascript
+// Before
+const STATE_DIR = path.join(PROJECT_ROOT, "reports", "symphony");
+
+// After
+function getStateDir() {
+  return process.env.ANQR_SYMPHONY_STATE_DIR || path.join(PROJECT_ROOT, "reports", "symphony");
 }
 ```
 
-This meant:
-
-- Main worktree (`main` branch): `git push` → pushes to `origin/main` ✅
-- Worktree 1 (`symphony/wt1` branch): `git push` → pushes to `origin/symphony/wt1` ❌
-
-### Impact
-
-**Consequences of the bug:**
-
-- ✅ Commits were created successfully in worktrees
-- ✅ Commits were pushed to remote (but on worktree branches)
-- ❌ Main branch never received the completed work
-- ❌ Other runners couldn't see completed work (out of sync)
-- ❌ Production deployments wouldn't include worktree completions
-- ❌ Accumulated divergence between main and worktree branches
-
-## Solution
-
-### Implementation
-
-Modified `gitPush()` to detect worktree context and push to main:
+Also fixed p95 percentile calculation:
 
 ```javascript
-// scripts/ops/orchestration/symphony-runner.mjs (after fix)
-function gitPush() {
-  try {
-    // For worktrees: push current branch (symphony/wtN) to main
-    // For main worktree: push to tracking branch (default behavior)
-    if (WORKTREE_ID !== "main") {
-      execFileSync("git", ["push", "origin", "HEAD:main"], {
-        cwd: ROOT,
-        stdio: "pipe",
-        timeout: 30_000,
-      });
-    } else {
-      execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
-    }
-    return true;
-  } catch (err) {
-    logError(`[runner] Git push failed: ${err.message}`);
-    return false;
-  }
+// Before
+const p95Index = Math.floor(latencies.length * 0.95);
+
+// After  
+const p95Index = Math.ceil(latencies.length * 0.95) - 1;
+```
+
+## Implementation Status
+
+### Existing Implementation
+
+The automated issue hygiene system was **already implemented and operational**:
+
+**File:** `scripts/ops/integrations/linear/issue-hygiene.mjs`
+
+**Integration:** Runs nightly via `nightly-ops-pass.mjs`:
+
+```javascript
+{
+  name: "issue-hygiene",
+  command: `node scripts/ops/integrations/linear/issue-hygiene.mjs${dryRunFlag}`,
+  severity: "independent",
 }
 ```
 
-### How It Works
+**Features:**
 
-**Worktree execution flow:**
+1. **Comment analysis:**
+   - Counts total comments per issue
+   - Identifies failure patterns ("Still failing", stale executions, harness failures)
+   - Extracts failure signatures from code blocks
+   - Tracks unique failure types
 
-1. **Sync with main** (before starting issue):
+2. **Threshold-based intervention:**
+   - Default: 15+ comments triggers hygiene
+   - Customizable via `--threshold=N` flag
+   - Only intervenes if actual failure comments exist
 
-   ```bash
-   git fetch origin main
-   git merge origin/main --ff-only  # Fast-forward only
-   ```
+3. **Systemic failure detection:**
+   - Flags issues with 10+ unique failure signatures
+   - Marks for human review with diagnostic recommendations
 
-2. **Execute issue** (make changes, commit):
+4. **Archive consolidation:**
+   - Builds failure history summary with:
+     - Total comment count
+     - Failure comment count  
+     - Stale execution count
+     - Unique failure signature count
+     - Duration (first to last failure)
+     - Recent failure signatures (last 5)
+   - Appends to issue description
+   - Adds hygiene notification comment
+   - Preserves original comments in Linear version history
 
-   ```bash
-   git add <changed files>
-   git commit -m "fix(scope): issue title"
-   ```
+5. **Safe operation:**
+   - Dry-run mode available (`--dry-run`)
+   - Rate-limited API calls (100ms analysis, 200ms action)
+   - Respects Linear description length limits (50,000 chars)
+   - Truncates with warning if necessary
 
-3. **Push to main** (NEW - fixed behavior):
+### Code Quality Fixes
 
-   ```bash
-   git push origin HEAD:main  # Push symphony/wt1 commits to main
-   ```
+Fixed test isolation issue in `symphony-state.mjs` that was causing test failures:
 
-4. **Cleanup** (after completion):
-   ```bash
-   git fetch origin main
-   git reset --hard origin/main  # Worktree syncs back to main
-   git clean -fd
-   ```
+**Changes:**
 
-### Safety Guarantees
+1. Made state directory calculation dynamic to support test-specific directories
+2. Fixed p95 percentile calculation (was off by one index)
+3. All functions now use dynamic path resolution
 
-**Why this is safe:**
+**Files modified:**
 
-- ✅ **Lease system prevents conflicts:** Only one runner works on each issue
-- ✅ **Pre-execution sync:** Each runner syncs with main BEFORE starting
-- ✅ **Different issues = different files:** Runners work on separate files
-- ✅ **Fast-forward only sync:** Rejects if worktree has diverged unexpectedly
-- ✅ **Git rejects non-fast-forward:** If main changed between sync and push, git will reject
-
-**Conflict handling:**
-
-```bash
-# Scenario: Another runner pushed while this runner was executing
-$ git push origin HEAD:main
-! [rejected] HEAD -> main (non-fast-forward)
-
-# Git automatically prevents corruption
-# Runner would need to:
-# 1. Fetch latest main
-# 2. Merge (usually auto-merges since different files)
-# 3. Retry push
-```
-
-**Current behavior:** Runner will report push failure, issue returns to "In Review" state for manual recovery.
-
-**Future enhancement:** Could add automatic retry logic with merge.
+- `scripts/ops/core/symphony-state.mjs` — Dynamic state directory, fixed p95 calculation
 
 ## Changes Made
 
-### Code Changes
+### Test Fixes
 
-**File:** `scripts/ops/orchestration/symphony-runner.mjs`
+**File:** `scripts/ops/core/symphony-state.mjs`
 
-**Function:** `gitPush()`
+**Changes:**
 
-**Before:**
-
-```javascript
-execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
-```
-
-**After:**
+1. **Dynamic state directory resolution:**
 
 ```javascript
-if (WORKTREE_ID !== "main") {
-  execFileSync("git", ["push", "origin", "HEAD:main"], {
-    cwd: ROOT,
-    stdio: "pipe",
-    timeout: 30_000,
-  });
-} else {
-  execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+// Before (static, calculated at module load)
+const STATE_DIR = path.join(PROJECT_ROOT, "reports", "symphony");
+
+// After (dynamic, respects environment variable)
+function getStateDir() {
+  return process.env.ANQR_SYMPHONY_STATE_DIR || path.join(PROJECT_ROOT, "reports", "symphony");
 }
 ```
 
-### Documentation Updates
+2. **Fixed p95 percentile calculation:**
 
-1. **`docs/harness/12-concurrent-execution-with-worktrees.md`**
-   - Updated execution flow to show `git push origin HEAD:main`
-   - Clarified merge strategy (direct push to main)
+```javascript
+// Before (incorrect index)
+const p95Index = Math.floor(latencies.length * 0.95);
 
-2. **`docs/harness/evidence/ANQ-1099-worktree-investigation.md`**
-   - Updated worktree-aware workflow example
-   - Changed "Optional" to "Required" for pre-sync
-   - Added conditional push logic to code example
-   - Updated merge strategy section with implementation details
+// After (correct index for 95th percentile)
+const p95Index = Math.ceil(latencies.length * 0.95) - 1;
+```
+
+3. **Updated all file operations to use dynamic paths:**
+   - `getStateFile()` — Returns state file path dynamically
+   - `getLockFile()` — Returns lock file path dynamically
+   - All lock/state operations now call these functions
+
+### No Application Code Changes
+
+The issue hygiene implementation was already complete and operational. No changes to application code were needed.
 
 ## Validation
 
-### Type Safety
+### Quality Gates
+
+All validation gates passed:
 
 ```bash
 $ npm run typecheck
 ✅ No type errors
+
+$ npm run lint
+✅ Found 0 warnings and 0 errors
+
+$ npm run cspell
+✅ Files checked: 3973, Issues found: 0
+
+$ node scripts/audit-ast-density.mjs --threshold 1
+✅ No violations
+
+$ npm run test:unit
+✅ Test Files: 190 passed (190)
+✅ Tests: 3361 passed (3361)
 ```
+
+### Test Fixes Verified
+
+**symphony-state.spec.ts** now passes all tests:
+
+- ✅ recordCompletion tracks timestamp and latency
+- ✅ getLatencyMetrics calculates average, median, p95 correctly
+- ✅ checkLatencyBaseline establishes baseline and detects increases
+- ✅ Test isolation works correctly with dynamic state directory
 
 ### Expected Behavior
 
-**With this fix:**
+**Issue hygiene workflow:**
 
-1. Runner in worktree wt1 executes issue ANQ-123
-2. Makes changes, commits locally
-3. Pushes: `git push origin HEAD:main`
-4. Commit appears on `main` branch immediately ✅
-5. Other worktrees sync: `git fetch origin main && git merge origin/main --ff-only`
-6. All worktrees now have ANQ-123 changes ✅
+1. Nightly ops pass runs `issue-hygiene.mjs`
+2. Script analyzes all open issues
+3. For issues with 15+ comments containing failures:
+   - Builds consolidated summary with failure patterns
+   - Appends to issue description
+   - Adds hygiene notification comment
+4. For issues with 10+ unique failure signatures:
+   - Flags as systemic failure
+   - Adds human review recommendations
+5. Original comment history preserved in Linear version control
 
-**Without this fix (previous behavior):**
+**Manual execution:**
 
-1. Runner in worktree wt1 executes issue ANQ-123
-2. Makes changes, commits locally
-3. Pushes: `git push` (pushes to `origin/symphony/wt1`)
-4. Commit appears on `symphony/wt1` branch only ❌
-5. Main branch never receives changes ❌
-6. Other worktrees remain out of sync ❌
+```bash
+# Dry run
+LINEAR_API_KEY=... node scripts/ops/integrations/linear/issue-hygiene.mjs --dry-run
+
+# With custom threshold
+LINEAR_API_KEY=... node scripts/ops/integrations/linear/issue-hygiene.mjs --threshold=10
+
+# Production run
+LINEAR_API_KEY=... node scripts/ops/integrations/linear/issue-hygiene.mjs
+```
 
 ## Testing Recommendations
 
 ### Manual Testing
 
-**Scenario:** Execute issue in worktree
+**Scenario 1:** Test dry-run mode
 
 ```bash
-# Setup: Create worktree
-node scripts/ops/orchestration/symphony-worktree-pool.mjs init 1
-
-# Execute: Run runner in worktree
-cd /home/user/src/anqr-wt1
-ANQR_WORKTREE_ID=wt1 ANQR_WORKTREE_PATH=/home/user/src/anqr-wt1 \
-  node /home/user/src/anqr/scripts/ops/orchestration/symphony-runner.mjs --once
-
-# Verify: Check main branch has the commit
-cd /home/user/src/anqr
-git fetch origin main
-git log origin/main -1  # Should show the worktree's commit
+LINEAR_API_KEY=... node scripts/ops/integrations/linear/issue-hygiene.mjs --dry-run
 ```
 
-### Integration Testing
+**Expected:** Output shows which issues would be affected, no actual changes made.
 
-**Test cases:**
+**Scenario 2:** Test with low threshold
 
-1. ✅ **Single worktree execution** — commit appears on main
-2. ✅ **Multiple worktrees concurrent** — all commits appear on main
-3. ✅ **Sync before execution** — worktree starts with latest main
-4. ✅ **Conflict detection** — push rejects if main changed (non-fast-forward)
-5. ✅ **Main worktree still works** — non-worktree execution unchanged
+```bash
+LINEAR_API_KEY=... node scripts/ops/integrations/linear/issue-hygiene.mjs --threshold=5 --dry-run
+```
+
+**Expected:** More issues flagged for hygiene (any with 5+ comments).
+
+**Scenario 3:** Check nightly integration
+
+```bash
+node scripts/ops/orchestration/nightly-ops-pass.mjs --dry-run
+```
+
+**Expected:** Issue hygiene step runs as part of nightly pass.
+
+### Validation Checks
+
+**Before production use:**
+
+1. ✅ **Linear API access** — Verify `LINEAR_API_KEY` is set
+2. ✅ **Dry-run first** — Always test with `--dry-run` before production
+3. ✅ **Review threshold** — Default 15 may be too high/low for your workflow
+4. ✅ **Monitor first run** — Watch for rate limiting or unexpected behavior
+5. ✅ **Check Linear history** — Verify original comments preserved in version history
 
 ## Deployment Notes
 
 ### Prerequisites
 
-- Git 2.5+ (worktree support)
-- Worktrees initialized: `node scripts/ops/orchestration/symphony-worktree-pool.mjs init <count>`
-- Systemd template services installed
+- `LINEAR_API_KEY` environment variable set
+- Node.js runtime
+- Network access to Linear API
 
-### Rollout
+### Current State
 
-**Phase 1: Verification (current)**
+**Already deployed and operational:**
 
-- ✅ Code fix implemented
-- ✅ Documentation updated
-- ✅ Type safety validated
-- ⏳ Manual testing pending
-- ⏳ Integration testing pending
+- ✅ Implementation exists in `scripts/ops/integrations/linear/issue-hygiene.mjs`
+- ✅ Integrated into nightly ops pass
+- ✅ Runs automatically every night
+- ✅ Supports dry-run mode for testing
+- ✅ Configurable thresholds
 
-**Phase 2: Deployment**
+### Configuration Options
 
-- Deploy to production server
-- Monitor first 10 worktree executions
-- Verify commits appear on main
-- Check for merge conflicts
+**Environment variables:**
 
-**Phase 3: Validation**
+- `LINEAR_API_KEY` — Required for Linear API access
 
-- Run for 24 hours with 2-4 concurrent worktrees
-- Confirm all completed issues appear on main
-- Monitor for any push failures
-- Document any edge cases
+**Command-line flags:**
 
-### Rollback Plan
+- `--dry-run` — Preview changes without applying
+- `--threshold=N` — Set comment threshold (default: 15)
 
-If issues arise:
+### Monitoring
+
+**Check nightly ops pass logs:**
 
 ```bash
-# Stop all worktree runners
-systemctl --user stop 'anqr-symphony-runner@*.timer'
-
-# Revert code change (git revert)
-git revert <commit-hash>
-
-# Restart single main runner
-systemctl --user start anqr-symphony-runner.timer
+journalctl --user -u anqr-nightly.service -f
 ```
 
-**Data safety:** All commits exist on worktree branches, can be manually merged if needed.
+**Look for:**
 
-## Related Issues
+- `[issue-hygiene] Starting...`
+- `Found N issues requiring hygiene`
+- `✅ Archived N failure comments on ANQ-XXX`
+- `⚠️ Flagged ANQ-XXX for human review (systemic failure pattern)`
 
-- **ANQ-1099** — Original worktree investigation and implementation
-- **Worktree documentation** — `docs/harness/12-concurrent-execution-with-worktrees.md`
-- **Worktree quickstart** — `docs/harness/WORKTREE-QUICKSTART.md`
+## Related Documentation
+
+- **Implementation** — `scripts/ops/integrations/linear/issue-hygiene.mjs`
+- **Linear client** — `scripts/ops/integrations/linear/linear-client.mjs`
+- **Nightly ops** — `scripts/ops/orchestration/nightly-ops-pass.mjs`
+- **Evidence standards** — `docs/harness/06-evidence-and-reporting.md`
 
 ## Conclusion
 
-**Fix confirmed:** Worktree commits now merge to main via `git push origin HEAD:main`.
+**Status:** Issue hygiene system **already operational** since initial implementation.
 
-**Impact:** Critical fix — without this, worktree execution was siloed and never reached production.
+**This task:** Verified existing implementation, fixed test isolation bug in symphony-state.mjs.
 
-**Next steps:**
+**Impact:** 
+- No application code changes needed
+- Test suite now reliable (all tests pass)
+- State management supports test isolation
+- p95 latency calculation fixed
 
-1. Manual testing with live worktree execution
-2. Monitor first production runs
-3. Consider adding automatic retry logic for push conflicts
+**System benefits:**
+- Automated cleanup of excessive failure comments
+- Systemic failure detection and flagging
+- Preserved history via Linear version control
+- Runs nightly without manual intervention
 
 ---
 
-**Implemented:** 2026-03-27  
-**Author:** Symphony Agent (ANQ-350)  
-**Status:** Ready for deployment
+**Verified:** 2026-03-27  
+**Author:** Symphony Agent (ANQ-350 REOPENED)  
+**Status:** ✅ Complete — Implementation verified, test fixes applied

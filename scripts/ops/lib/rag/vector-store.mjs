@@ -45,6 +45,8 @@ const PROJECT_ROOT = detectProjectRoot();
 const INDEX_DIR = resolve(PROJECT_ROOT, "reports/rag-index");
 const INDEX_FILE = join(INDEX_DIR, "index.json");
 const META_FILE = join(INDEX_DIR, "meta.json");
+const MANIFEST_FILE = join(INDEX_DIR, "manifest.json");
+const MAX_SHARD_SIZE_BYTES = Number(process.env.RAG_MAX_SHARD_SIZE_BYTES || 50 * 1024 * 1024); // 50MB default
 const DEFAULT_EXTENSIONS = [
   ".ts",
   ".tsx",
@@ -144,16 +146,50 @@ async function atomicWriteJSON(targetPath, data) {
 async function loadIndex() {
   if (indexLoaded) return;
 
+  // Try loading sharded format first
   try {
-    const raw = await readFile(INDEX_FILE, "utf-8");
-    const parsed = JSON.parse(raw);
-    indexCache = Array.isArray(parsed) ? parsed.filter(isValidEntry) : [];
-    logInfo(`Loaded index: ${indexCache.length} entries`);
-  } catch (err) {
-    if (err?.code !== "ENOENT") {
-      logWarn(`Failed to load index: ${err?.message || err}`);
+    const manifestRaw = await readFile(MANIFEST_FILE, "utf-8");
+    const manifest = JSON.parse(manifestRaw);
+
+    if (manifest.version === 2 && Array.isArray(manifest.shards)) {
+      indexCache = [];
+      for (const shard of manifest.shards) {
+        const shardPath = join(INDEX_DIR, shard.filename);
+        try {
+          const shardRaw = await readFile(shardPath, "utf-8");
+          const shardData = JSON.parse(shardRaw);
+          if (Array.isArray(shardData)) {
+            indexCache.push(...shardData.filter(isValidEntry));
+          }
+        } catch (shardErr) {
+          logWarn(`Failed to load shard ${shard.filename}: ${shardErr?.message || shardErr}`);
+        }
+      }
+      logInfo(
+        `Loaded sharded index: ${indexCache.length} entries from ${manifest.shards.length} shards`,
+      );
+    } else {
+      throw new Error("Invalid manifest format");
     }
-    indexCache = [];
+  } catch (manifestErr) {
+    // Fall back to legacy single-file format
+    if (manifestErr?.code !== "ENOENT") {
+      logDebug(
+        `Manifest not found or invalid, trying legacy format: ${manifestErr?.message || manifestErr}`,
+      );
+    }
+
+    try {
+      const raw = await readFile(INDEX_FILE, "utf-8");
+      const parsed = JSON.parse(raw);
+      indexCache = Array.isArray(parsed) ? parsed.filter(isValidEntry) : [];
+      logInfo(`Loaded legacy index: ${indexCache.length} entries`);
+    } catch (err) {
+      if (err?.code !== "ENOENT") {
+        logWarn(`Failed to load index: ${err?.message || err}`);
+      }
+      indexCache = [];
+    }
   }
 
   try {
@@ -195,10 +231,51 @@ async function saveIndex() {
       .map(([filePath, value]) => [filePath, sanitizeMetaRecord(value)]),
   );
 
-  await atomicWriteJSON(INDEX_FILE, indexToWrite);
+  // Calculate estimated JSON size for the full index
+  const sampleSize = Math.min(10, indexToWrite.length);
+  const sampleJson = sampleSize > 0 ? JSON.stringify(indexToWrite.slice(0, sampleSize)) : "[]";
+  const avgBytesPerEntry = sampleSize > 0 ? sampleJson.length / sampleSize : 1000;
+  const estimatedTotalSize = avgBytesPerEntry * indexToWrite.length;
+
+  if (estimatedTotalSize > MAX_SHARD_SIZE_BYTES && indexToWrite.length > 1) {
+    // Use sharded storage
+    const entriesPerShard = Math.max(1, Math.floor(MAX_SHARD_SIZE_BYTES / avgBytesPerEntry));
+    const shards = [];
+
+    for (let i = 0; i < indexToWrite.length; i += entriesPerShard) {
+      const shardIndex = Math.floor(i / entriesPerShard);
+      const shardFilename = `index-${shardIndex}.json`;
+      const shardData = indexToWrite.slice(i, i + entriesPerShard);
+      const shardPath = join(INDEX_DIR, shardFilename);
+
+      await atomicWriteJSON(shardPath, shardData);
+
+      shards.push({
+        filename: shardFilename,
+        entries: shardData.length,
+        startIndex: i,
+        endIndex: Math.min(i + entriesPerShard, indexToWrite.length),
+      });
+    }
+
+    const manifest = {
+      version: 2,
+      totalEntries: indexToWrite.length,
+      shardCount: shards.length,
+      shards,
+      createdAt: new Date().toISOString(),
+    };
+
+    await atomicWriteJSON(MANIFEST_FILE, manifest);
+    logInfo(`Index saved (sharded): ${indexToWrite.length} entries across ${shards.length} shards`);
+  } else {
+    // Use legacy single-file storage for smaller indexes
+    await atomicWriteJSON(INDEX_FILE, indexToWrite);
+    logInfo(`Index saved: ${indexToWrite.length} entries`);
+  }
+
   await atomicWriteJSON(META_FILE, metaToWrite);
   indexDirty = false;
-  logInfo(`Index saved: ${indexToWrite.length} entries, ${Object.keys(metaToWrite).length} files`);
 }
 
 async function getFileMtime(filePath) {

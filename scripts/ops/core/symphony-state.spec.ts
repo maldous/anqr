@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdirSync, rmSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 // @ts-expect-error - No type declarations for .mjs module
-import type {} from "./symphony-state.mjs";
 import {
   recordCompletion,
   getLatencyMetrics,

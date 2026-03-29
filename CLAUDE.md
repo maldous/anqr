@@ -18,7 +18,11 @@ Symphony runner supports concurrent execution via git worktrees. When enabled:
 - Each runner instance operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
 - Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, or `main`) and `ANQR_WORKTREE_PATH`
 - Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`) tracking `origin/main`
-- Worktrees sync with `origin/main` before each issue execution
+- **Worktree sync workflow:**
+  - Before each issue: `git fetch origin main && git merge origin/main --ff-only` (brings in all pushed work from other worktrees)
+  - After commit: `git push origin HEAD:main` (makes work immediately available to other worktrees)
+  - **CRITICAL:** Work from other worktrees is only visible AFTER it's pushed to `origin/main`
+  - **CRITICAL:** Always push completed work immediately to enable other worktrees to build on it
 - Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`

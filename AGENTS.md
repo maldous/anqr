@@ -418,6 +418,9 @@ When running in a worktree (Symphony runner with concurrency enabled):
 - **Branch isolation:** Each worktree uses a unique branch (e.g., `symphony/wt1`, `symphony/wt2`) that tracks `origin/main`
 - **Git operations:** All git commands (status, add, commit, push) operate on the worktree's isolated working directory and index
 - **Sync workflow:** Worktrees sync with `origin/main` before each issue execution via `git fetch origin main && git merge origin/main --ff-only`
+  - **CRITICAL:** This brings in all work from other worktrees that has been pushed to `origin/main`
+  - **CRITICAL:** Work committed in other worktrees but not yet pushed to origin won't be visible
+  - **CRITICAL:** Push completed work immediately (via `git push origin HEAD:main`) to make it available to other worktrees
 - **Lock files:** Each worktree has its own PID lock file (e.g., `/run/user/${UID}/symphony-runner/lock-wt1`)
 - **Validation commands:** All validation commands (typecheck, lint, tests) run in the worktree's isolated environment
 - **Dependencies:** Each worktree has its own `node_modules` directory (installed during worktree creation)
