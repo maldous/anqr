@@ -97,12 +97,29 @@ Keep or recreate:
 - mobile distribution
 - self-care and corrective-healing work
 
-## 9. Enable local execution
+## 9. Configure git for ANQR development
+
+All developers must configure git with weave merge for concurrent worktree execution:
+
+```bash
+./scripts/git-setup.sh
+```
+
+This configures:
+
+- Weave merge driver for reduced conflicts in concurrent development
+- diff3 conflict markers for better conflict resolution
+- Line ending handling for cross-platform compatibility
+- Optional patience diff algorithm
+
+See [docs/standards/git-weave-merge.md](standards/git-weave-merge.md) for details on why weave merge is critical for concurrent worktree execution.
+
+## 10. Enable local execution
 
 Keep ChatGPT Project as planning/governance brain.
 Keep Symphony/Linear/Codex/Ollama/systemd as local execution engine.
 
-## 10. Start build order
+## 11. Start build order
 
 Build in this order:
 

@@ -18,6 +18,7 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "jsdom",
+    // @ts-expect-error - environmentMatchGlobs is valid in vitest but not in types
     environmentMatchGlobs: [
       ["**/*.spec.tsx", "jsdom"],
       ["**/packages/ui/**/*.spec.ts", "jsdom"],

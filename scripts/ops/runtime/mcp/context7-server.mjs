@@ -44,7 +44,7 @@ const { logDebug, logInfo, logWarn, logError } = createLogger("context7-server")
 
 const STARTUP_TIMEOUT_MS = Number.parseInt(process.env.CONTEXT7_STARTUP_TIMEOUT_MS || "15000", 10);
 const REQUEST_TIMEOUT_MS = Number.parseInt(process.env.CONTEXT7_REQUEST_TIMEOUT_MS || "30000", 10);
-const CLOUD_API_BASE = "https://mcp.context7.com";
+const CLOUD_API_BASE = "https://api.upstash.com/v1/context7";
 
 // ---------------------------------------------------------------------------
 // Module state
@@ -197,13 +197,13 @@ async function resolveLibraryIdCloud(libraryTitle) {
   }
 
   try {
-    const response = await fetch(`${CLOUD_API_BASE}/v1/resolve`, {
+    const response = await fetch(`${CLOUD_API_BASE}/resolve`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ libraryName: libraryTitle }),
+      body: JSON.stringify({ query: libraryTitle }),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
@@ -213,7 +213,7 @@ async function resolveLibraryIdCloud(libraryTitle) {
     }
 
     const data = await response.json();
-    return data?.libraryId || data?.context7CompatibleLibraryID || null;
+    return data?.id || data?.libraryId || data?.context7CompatibleLibraryID || null;
   } catch (err) {
     logError(`Cloud resolve-library-id error: ${err.message}`);
     return null;
@@ -227,7 +227,7 @@ async function resolveLibraryIdCloud(libraryTitle) {
  * @param {number} [maxTokens] - Maximum tokens to return (default: 5000)
  * @returns {Promise<string|null>} Documentation text or null
  */
-async function getLibraryDocsCloud(libraryId, topic, maxTokens = 5000) {
+async function getLibraryDocsCloud(libraryId, topic, _maxTokens = 5000) {
   const apiKey = process.env.CONTEXT7_API_KEY;
   if (!apiKey) {
     logWarn("CONTEXT7_API_KEY not set — cloud fallback unavailable");
@@ -235,10 +235,10 @@ async function getLibraryDocsCloud(libraryId, topic, maxTokens = 5000) {
   }
 
   try {
-    const body = { libraryId, tokens: maxTokens };
-    if (topic) body.topic = topic;
+    const body = { libraryId };
+    if (topic) body.query = topic;
 
-    const response = await fetch(`${CLOUD_API_BASE}/v1/docs`, {
+    const response = await fetch(`${CLOUD_API_BASE}/docs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -254,6 +254,21 @@ async function getLibraryDocsCloud(libraryId, topic, maxTokens = 5000) {
     }
 
     const data = await response.json();
+    // Context7 returns an array of result objects with snippets
+    if (data?.results && Array.isArray(data.results)) {
+      const docs = data.results
+        .map((r) => {
+          const parts = [];
+          if (r.title) parts.push(`## ${r.title}`);
+          if (r.description) parts.push(r.description);
+          if (r.codeExample) parts.push(`\`\`\`\n${r.codeExample}\n\`\`\``);
+          if (r.snippet) parts.push(r.snippet);
+          if (r.sourceUrl) parts.push(`Source: ${r.sourceUrl}`);
+          return parts.join("\n\n");
+        })
+        .join("\n\n---\n\n");
+      return docs || null;
+    }
     return data?.documentation || data?.content || JSON.stringify(data);
   } catch (err) {
     logError(`Cloud get-library-docs error: ${err.message}`);
@@ -463,19 +478,27 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
       logDebug(`Resolving docs locally: ${libraryTitle}`, { topic, max_tokens });
 
       // Step 1 — resolve-library-id via MCP tools/call
+      // The MCP tool requires both query and libraryName as required parameters
       const resolveResult = await sendRequest("tools/call", {
         name: "resolve-library-id",
-        arguments: { libraryName: libraryTitle },
+        arguments: { 
+          query: `Documentation for ${libraryTitle}${topic ? ` focusing on ${topic}` : ''}`,
+          libraryName: libraryTitle 
+        },
       });
 
       const libraryId = extractLibraryId(resolveResult);
+      logDebug(`Local resolve-library-id response for "${libraryTitle}":`, { resolveResult });
       if (libraryId) {
-        // Step 2 — get-library-docs via MCP tools/call
-        const docsArgs = { context7CompatibleLibraryID: libraryId, tokens: max_tokens };
-        if (topic) docsArgs.topic = topic;
+        // Step 2 — query-docs via MCP tools/call
+        // The MCP tool requires libraryId and query as required parameters
+        const docsArgs = { 
+          libraryId: libraryId,
+          query: topic || `Documentation and examples for ${libraryTitle}` 
+        };
 
         const docsResult = await sendRequest("tools/call", {
-          name: "get-library-docs",
+          name: "query-docs",
           arguments: docsArgs,
         });
 
@@ -551,8 +574,14 @@ function extractLibraryId(result) {
           // Sometimes the ID is returned as a plain string
           if (typeof parsed === "string") return parsed;
         } catch {
-          // Not JSON — the text itself might be the library ID
-          if (block.text.startsWith("/")) return block.text.trim();
+          // Not JSON — parse plain text response
+          // Format: "Context7-compatible library ID: /org/project"
+          const match = block.text.match(/Context7-compatible library ID:\s*(\/[^\s\n]+)/);
+          if (match && match[1]) {
+            return match[1].trim();
+          }
+          // Fallback: if the text starts with /, assume it's the ID
+          if (block.text.trim().startsWith("/")) return block.text.trim();
         }
       }
     }
