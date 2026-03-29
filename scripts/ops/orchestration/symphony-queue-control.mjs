@@ -11,6 +11,7 @@ import {
   MAX_CONCURRENT_AGENTS,
   STALE_THRESHOLD_MS,
   TASK_TIMEOUT_MS,
+  RECOVERY_GRACE_MS,
   QUEUE_STATES,
 } from "../symphony-config.mjs";
 import {
@@ -24,7 +25,6 @@ import {
 } from "../symphony-state.mjs";
 
 const actions = [];
-const RECOVERY_GRACE_MS = Number(process.env.ANQR_SYMPHONY_RECOVERY_GRACE_MS || 5 * 60 * 1000);
 
 function logAction(type, detail) {
   actions.push({ type, detail, ts: new Date().toISOString() });
@@ -214,10 +214,14 @@ export async function detectStuckWork(snap = null, dryRun = false) {
     const age = minutesAgo(issue, "updatedAt");
     const state = getIssueState(issue.identifier);
     const hasActiveLease = leaseIsActive(state);
-    if (hasActiveLease) {
+    // Grace period: also skip recovery if heartbeat was recent (within RECOVERY_GRACE_MS)
+    // This prevents recovering issues where the lease just barely expired but the runner is still alive
+    const recentHeartbeat = state.lease?.heartbeat_at &&
+      (Date.now() - new Date(state.lease.heartbeat_at).getTime()) < RECOVERY_GRACE_MS;
+    if (hasActiveLease || recentHeartbeat) {
       logAction(
         "skip",
-        `Lease still active for ${issue.identifier} — not recovering (${age}min stale)`,
+        `${hasActiveLease ? "Lease still active" : "Recent heartbeat detected"} for ${issue.identifier} — not recovering (${age}min stale)`,
       );
       continue;
     }

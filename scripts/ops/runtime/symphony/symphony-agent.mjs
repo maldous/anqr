@@ -434,6 +434,7 @@ async function callLLM(provider, messages, taskDescription) {
 
       // Stream the response and accumulate content
       let fullContent = "";
+      let symphonyResult = null;
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
@@ -464,6 +465,10 @@ async function callLLM(provider, messages, taskDescription) {
                 /* ignore */
               });
             }
+            // Capture structured result from bridge (embedded in final SSE chunk)
+            if (parsed._symphony_result) {
+              symphonyResult = parsed._symphony_result;
+            }
           } catch {
             // Skip non-JSON chunks
           }
@@ -490,6 +495,7 @@ async function callLLM(provider, messages, taskDescription) {
           },
         ],
         providerName: provider.name,
+        _symphonyResult: symphonyResult,
       };
     } catch (err) {
       clearTimeout(timer);
@@ -817,6 +823,27 @@ async function runToolLoop({
 
     const msg = choice.message;
 
+    // Structured result contract: if bridge returned _symphonyResult, use it directly
+    // This bypasses ALL heuristic text analysis for symphony-bridge (P1-2 / P2-7)
+    if (response._symphonyResult) {
+      const sr = response._symphonyResult;
+      messages.push(msg);
+      return {
+        completed: sr.completed,
+        summary: (msg.content || "").slice(0, 1000),
+        turns: sr.stepCount || turn + 1,
+        toolCalls: sr.toolCallCount || totalToolCalls,
+        filesChanged: sr.changedFiles || [...filesChanged],
+        timedOut: false,
+        error: sr.failureClass,
+        messages,
+        needsContinuation: sr.needsContinuation,
+        providerName: actualProviderName,
+        mutationCount: sr.mutationCount,
+        validationIntent: sr.validationIntent,
+      };
+    }
+
     if (!msg.tool_calls || msg.tool_calls.length === 0) {
       messages.push(msg);
 
@@ -1104,7 +1131,7 @@ async function runToolLoop({
 // Public: start a new agent session
 // ---------------------------------------------------------------------------
 
-export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
+export async function runAgent({ provider, issue, projectRoot, systemPrompt, maxMs }) {
   const messages = [
     { role: "system", content: systemPrompt },
     { role: "user", content: buildIssuePrompt(issue) },
@@ -1115,7 +1142,7 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt }) {
     messages,
     projectRoot,
     maxTurns: RUNNER_MAX_TURNS,
-    maxMs: RUNNER_MAX_EXECUTION_MS,
+    maxMs: maxMs || RUNNER_MAX_EXECUTION_MS,
     startTime: Date.now(),
     taskDescription,
   });

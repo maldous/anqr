@@ -30,6 +30,7 @@ import {
   QUEUE_STATES,
   TARGET_MIN,
   RUNNER_STUCK_THRESHOLD_MS,
+  HEARTBEAT_INTERVAL_MS,
 } from "../symphony-config.mjs";
 import { createLogger } from "../lib/logger.mjs";
 
@@ -129,8 +130,8 @@ function isProcessAlive(pid) {
 
 function gitIsClean() {
   try {
-    // Only consider tracked file modifications; ignore untracked files
-    const status = execFileSync("git", ["diff", "--name-only"], { cwd: ROOT, encoding: "utf-8" });
+    // Check ALL changes: tracked modifications, staged changes, AND untracked files
+    const status = execFileSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf-8" });
     return status.trim().length === 0;
   } catch {
     return false;
@@ -203,7 +204,12 @@ function sanitizeCommitSubject(title) {
 
 function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
   try {
-    execFileSync("git", ["add", "-A"], { cwd: ROOT, stdio: "pipe" });
+    // Stage only the changed files (avoid committing unrelated untracked files)
+    if (changedFiles.length > 0) {
+      execFileSync("git", ["add", "--", ...changedFiles], { cwd: ROOT, stdio: "pipe" });
+    } else {
+      execFileSync("git", ["add", "-A"], { cwd: ROOT, stdio: "pipe" });
+    }
     const scope = inferCommitScope(changedFiles);
     const subject = sanitizeCommitSubject(issueTitle);
     const prefix = `fix(${scope}): `;
@@ -355,7 +361,13 @@ async function executeIssue(issue, dryRun = false) {
     return "skip";
   }
 
+  const issueStartMs = Date.now();
+  const getRemainingMs = () => RUNNER_MAX_EXECUTION_MS - (Date.now() - issueStartMs);
+  let leaseValid = true;
   const state = getIssueState(issue.identifier);
+  // Capture prior failure info BEFORE noteAttemptStart clears it (used for fingerprinting)
+  const _priorFailureReason = state.last_failure_reason;
+  const priorFailureSignature = state.last_failure_signature;
   const attempt = Number(state.retry_count || 0) + 1;
   logInfo(
     `[runner] Attempt ${attempt}/${RUNNER_MAX_RETRIES} for ${issue.identifier}: ${issue.title}`,
@@ -400,9 +412,19 @@ async function executeIssue(issue, dryRun = false) {
   }
 
   let startingCommentId = null;
+  let heartbeatTimer = null;
   try {
     noteAttemptStart(issue.identifier, { runId: RUN_ID });
     clearCooldown(issue.identifier);
+    // Background heartbeat keeps lease alive during long bridge calls.
+    // On failure (lease_mismatch), mark lease lost — runner aborts safely after current call.
+    heartbeatTimer = setInterval(() => {
+      const hb = heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
+      if (!hb.ok) {
+        logWarn(`[runner] Heartbeat failed for ${issue.identifier}: ${hb.reason} — marking lease lost`);
+        leaseValid = false;
+      }
+    }, HEARTBEAT_INTERVAL_MS);
     await updateIssue(issue.id, { stateId: STATES.inProgress });
     recordTransition(issue.identifier, {
       actor: "runner",
@@ -436,21 +458,48 @@ async function executeIssue(issue, dryRun = false) {
         `🤖 **Symphony agent starting** (Attempt ${attempt}/${RUNNER_MAX_RETRIES})\n\n**Route:** ${provider.model}\n**Gateway:** ${provider.name}\n**Run:** ${RUN_ID}`,
       );
     }
-    heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
-    try {
-      agentResult = await runAgent({ provider, issue: detail, projectRoot: ROOT, systemPrompt });
-    } catch (err) {
-      agentResult = {
-        completed: false,
-        summary: `Agent execution failed: ${err.message}`,
-        error: err.message,
-        turns: 0,
-        toolCalls: 0,
-        filesChanged: [],
-        timedOut: false,
-        messages: [],
-        providerName: provider.name,
-      };
+    // Wall-clock budget enforcement: abort if no time remains before starting agent
+    {
+      const remainingMs = getRemainingMs();
+      if (remainingMs <= 0) {
+        const signature = "wall_clock_exhausted";
+        if (priorFailureSignature === signature) {
+          markRetryExhausted(issue.identifier, { reason: "wall_clock_exhausted_repeated", signature });
+          await updateIssue(issue.id, { stateId: STATES.backlog });
+          await addComment(issue.id, `🚫 **Wall-clock budget exhausted (repeated)** — quarantined to Backlog.`);
+          recordTransition(issue.identifier, { actor: "runner", reason: "wall_clock_exhausted_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+        } else {
+          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "wall_clock_exhausted", signature);
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(issue.id, `⏰ **Wall-clock budget exhausted** — returned to Todo with cooldown.`);
+          recordTransition(issue.identifier, { actor: "runner", reason: "wall_clock_exhausted", from: "In Progress", to: "Todo", runId: RUN_ID });
+        }
+        recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
+        return "done";
+      }
+      heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
+      try {
+        agentResult = await runAgent({ provider, issue: detail, projectRoot: ROOT, systemPrompt, maxMs: remainingMs });
+      } catch (err) {
+        agentResult = {
+          completed: false,
+          summary: `Agent execution failed: ${err.message}`,
+          error: err.message,
+          turns: 0,
+          toolCalls: 0,
+          filesChanged: [],
+          timedOut: false,
+          messages: [],
+          providerName: provider.name,
+        };
+      }
+    }
+    // Lease validity check: if heartbeat lost the lease, abort safely
+    if (!leaseValid) {
+      logWarn(`[runner] Lease lost during execution of ${issue.identifier} — aborting safely`);
+      gitRevert();
+      recordTransition(issue.identifier, { actor: "runner", reason: "lease_lost", from: "In Progress", to: "Abandoned", runId: RUN_ID });
+      return "done";
     }
     heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
 
@@ -588,6 +637,16 @@ async function executeIssue(issue, dryRun = false) {
       // instead of returning to Todo for a fresh start
       if (needsContinuation && agentResult.messages && agentResult.messages.length > 0) {
         logInfo(`[runner] 🔄 Agent has active subgoals - continuing with previous session...`);
+        const contRemainingMs = getRemainingMs();
+        if (contRemainingMs <= 0) {
+          logWarn(`[runner] Wall-clock budget exhausted before continuation — aborting`);
+          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "wall_clock_exhausted", "wall_clock_exhausted");
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(issue.id, `⏰ **Wall-clock budget exhausted** before continuation — returned to Todo.`);
+          recordTransition(issue.identifier, { actor: "runner", reason: "wall_clock_exhausted", from: "In Progress", to: "Todo", runId: RUN_ID });
+          recordLinearCompletion(provider.name, { completed: false, priority: issue.priority, estimate: issue.estimate });
+          return "done";
+        }
         heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
 
         try {
@@ -598,7 +657,7 @@ async function executeIssue(issue, dryRun = false) {
             feedback:
               "Continue working on the active subgoals. Complete the remaining tasks and call task_complete when done. Make sure to run run_typecheck, run_lint, run_cspell, run_ast_density, and run_tests before calling task_complete.",
             maxTurns: RUNNER_MAX_TURNS,
-            maxMs: RUNNER_MAX_EXECUTION_MS,
+            maxMs: contRemainingMs,
           });
           agentResult = continueResult;
           changedFiles = gitDiffNames();
@@ -607,26 +666,34 @@ async function executeIssue(issue, dryRun = false) {
           // Fall through to handle as no changes
         }
 
+        // Lease check after continuation
+        if (!leaseValid) {
+          logWarn(`[runner] Lease lost during continuation of ${issue.identifier} — aborting`);
+          gitRevert();
+          recordTransition(issue.identifier, { actor: "runner", reason: "lease_lost", from: "In Progress", to: "Abandoned", runId: RUN_ID });
+          return "done";
+        }
+
         // Check result after continuation
         if (changedFiles.length > 0) {
           // Continuation produced changes - proceed to validation
           logInfo(`[runner] ✅ Continuation produced changes: ${changedFiles.length} files`);
         } else if (agentResult.needsContinuation) {
-          // Still needs continuation after second attempt - return to Todo with cooldown
-          // to avoid infinite loop
-          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "continuation_exhausted");
-          await updateIssue(issue.id, { stateId: STATES.todo });
-          await addComment(
-            issue.id,
-            `🔄 **Continuation exhausted** — agent still has active subgoals after second attempt. Returned to Todo with cooldown for manual review.`,
-          );
-          recordTransition(issue.identifier, {
-            actor: "runner",
-            reason: "continuation_exhausted",
-            from: "In Progress",
-            to: "Todo",
-            runId: RUN_ID,
-          });
+          // Still needs continuation — fingerprint and possibly quarantine
+          {
+            const contSignature = "continuation_exhausted";
+            if (priorFailureSignature === contSignature) {
+              markRetryExhausted(issue.identifier, { reason: "continuation_exhausted_repeated", signature: contSignature });
+              await updateIssue(issue.id, { stateId: STATES.backlog });
+              await addComment(issue.id, `🚫 **Continuation exhausted (repeated)** — same failure fingerprint. Moved to Backlog.`);
+              recordTransition(issue.identifier, { actor: "runner", reason: "continuation_exhausted_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+            } else {
+              setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "continuation_exhausted", contSignature);
+              await updateIssue(issue.id, { stateId: STATES.todo });
+              await addComment(issue.id, `🔄 **Continuation exhausted** — agent still has active subgoals after second attempt. Returned to Todo with cooldown.`);
+              recordTransition(issue.identifier, { actor: "runner", reason: "continuation_exhausted", from: "In Progress", to: "Todo", runId: RUN_ID });
+            }
+          }
           logWarn(`[runner] 🔄 Continuation exhausted: ${issue.identifier}`);
           // Track continuation exhausted as failure
           if (provider?.name) {
@@ -711,20 +778,42 @@ async function executeIssue(issue, dryRun = false) {
         return "done";
       }
 
-      // Unknown reason for no changes - return to Todo with cooldown for manual review
-      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes");
-      await updateIssue(issue.id, { stateId: STATES.todo });
-      await addComment(
-        issue.id,
-        `⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`,
-      );
-      recordTransition(issue.identifier, {
-        actor: "runner",
-        reason: "no_file_changes",
-        from: "In Progress",
-        to: "Todo",
-        runId: RUN_ID,
-      });
+      // Generalized failure fingerprinting: quarantine if same signature repeats
+      {
+        const nfcSignature = "no_file_changes";
+        if (priorFailureSignature === nfcSignature) {
+          await updateIssue(issue.id, { stateId: STATES.backlog });
+          markRetryExhausted(issue.identifier, {
+            reason: "no_file_changes_repeated",
+            signature: nfcSignature,
+          });
+          await addComment(
+            issue.id,
+            `🚫 **No file changes produced (repeated)** — same failure fingerprint. Moved to Backlog and blocked from automatic retry.\n\nAgent summary: ${agentResult.summary}`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "no_file_changes_repeated",
+            from: "In Progress",
+            to: "Backlog",
+            runId: RUN_ID,
+          });
+        } else {
+          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "no_file_changes", nfcSignature);
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(
+            issue.id,
+            `⚠️ **No file changes produced** — returned to Todo with cooldown for manual review.\n\nAgent summary: ${agentResult.summary}`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "no_file_changes",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
+        }
+      }
       // Track failure (no files changed = failed)
       recordLinearCompletion(metricsProviderName, {
         completed: false,
@@ -739,6 +828,12 @@ async function executeIssue(issue, dryRun = false) {
     let previousSignature = validation.signature;
 
     while (!validation.passed && validationFixAttempts < RUNNER_MAX_VALIDATION_FIXES) {
+      // Wall-clock + lease check before each validation fix attempt
+      const fixRemainingMs = getRemainingMs();
+      if (fixRemainingMs <= 0 || !leaseValid) {
+        logWarn(`[runner] ${!leaseValid ? "Lease lost" : "Wall-clock exhausted"} during validation fixes — breaking`);
+        break;
+      }
       validationFixAttempts += 1;
       const feedback = formatValidationFeedback(validation);
       const fixResult = await continueAgent({
@@ -747,7 +842,7 @@ async function executeIssue(issue, dryRun = false) {
         projectRoot: ROOT,
         feedback,
         maxTurns: RUNNER_VALIDATION_FIX_TURNS,
-        maxMs: RUNNER_VALIDATION_FIX_TURNS * 15_000,
+        maxMs: Math.min(RUNNER_VALIDATION_FIX_TURNS * 15_000, fixRemainingMs),
       });
       agentResult.turns += fixResult.turns;
       agentResult.toolCalls += fixResult.toolCalls;
@@ -761,6 +856,14 @@ async function executeIssue(issue, dryRun = false) {
       validation = nextValidation;
       if (sameSignature) break;
       previousSignature = validation.signature;
+    }
+
+    // Lease check after validation fixes
+    if (!leaseValid) {
+      logWarn(`[runner] Lease lost during validation fixes of ${issue.identifier} — aborting`);
+      gitRevert();
+      recordTransition(issue.identifier, { actor: "runner", reason: "lease_lost", from: "In Progress", to: "Abandoned", runId: RUN_ID });
+      return "done";
     }
 
     if (!validation.passed) {
@@ -795,25 +898,39 @@ ${String(r.detail).slice(0, 1000)}\n`,
           estimate: issue.estimate,
         });
       } else {
-        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed");
-        await updateIssue(issue.id, { stateId: STATES.todo });
-        await addComment(
-          issue.id,
-          `❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Returned to Todo with cooldown.\n\n${validation.results
-            .filter((r) => !r.pass)
-            .map(
-              (r) => `### ${r.check}\n\
+        const valSignature = `validation_failed:${validation.signature || "unknown"}`;
+        if (priorFailureSignature === valSignature) {
+          await updateIssue(issue.id, { stateId: STATES.backlog });
+          markRetryExhausted(issue.identifier, { reason: "validation_failed_repeated", signature: valSignature });
+          await addComment(
+            issue.id,
+            `🚫 **Validation failed (repeated same signature)** after ${validationFixAttempts} fix attempt(s). Quarantined to Backlog.\n\n${validation.results
+              .filter((r) => !r.pass)
+              .map((r) => `### ${r.check}\n${String(r.detail).slice(0, 1000)}\n`)
+              .join("\n")}`,
+          );
+          recordTransition(issue.identifier, { actor: "runner", reason: "validation_failed_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+        } else {
+          setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "validation_failed", valSignature);
+          await updateIssue(issue.id, { stateId: STATES.todo });
+          await addComment(
+            issue.id,
+            `❌ **Validation failed** after ${validationFixAttempts} fix attempt(s). Returned to Todo with cooldown.\n\n${validation.results
+              .filter((r) => !r.pass)
+              .map(
+                (r) => `### ${r.check}\n\
 ${String(r.detail).slice(0, 1000)}\n`,
-            )
-            .join("\n")}`,
-        );
-        recordTransition(issue.identifier, {
-          actor: "runner",
-          reason: "validation_failed_retryable",
-          from: "In Progress",
-          to: "Todo",
-          runId: RUN_ID,
-        });
+              )
+              .join("\n")}`,
+          );
+          recordTransition(issue.identifier, {
+            actor: "runner",
+            reason: "validation_failed_retryable",
+            from: "In Progress",
+            to: "Todo",
+            runId: RUN_ID,
+          });
+        }
         // Track Linear issue failure
         recordLinearCompletion(metricsProviderName, {
           completed: false,
@@ -827,20 +944,27 @@ ${String(r.detail).slice(0, 1000)}\n`,
     const diffStat = gitDiffStat();
     if (!gitCommit(issue.identifier, issue.title, agentResult.summary, changedFiles)) {
       gitRevert();
-      setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "git_commit_failed");
-      await updateIssue(issue.id, { stateId: STATES.todo });
-      await addComment(
-        issue.id,
-        "❌ **Git commit failed** after successful validation. Reverted and returned to Todo with cooldown.",
-      );
-      recordTransition(issue.identifier, {
-        actor: "runner",
-        reason: "git_commit_failed",
-        from: "In Progress",
-        to: "Todo",
-        runId: RUN_ID,
-      });
-      // Track git commit failure
+      const gcfSignature = "git_commit_failed";
+      if (priorFailureSignature === gcfSignature) {
+        markRetryExhausted(issue.identifier, { reason: "git_commit_failed_repeated", signature: gcfSignature });
+        await updateIssue(issue.id, { stateId: STATES.backlog });
+        await addComment(issue.id, "🚫 **Git commit failed (repeated)** — quarantined to Backlog.");
+        recordTransition(issue.identifier, { actor: "runner", reason: "git_commit_failed_repeated", from: "In Progress", to: "Backlog", runId: RUN_ID });
+      } else {
+        setCooldown(issue.identifier, RUNNER_ISSUE_COOLDOWN_MS, "git_commit_failed", gcfSignature);
+        await updateIssue(issue.id, { stateId: STATES.todo });
+        await addComment(
+          issue.id,
+          "❌ **Git commit failed** after successful validation. Reverted and returned to Todo with cooldown.",
+        );
+        recordTransition(issue.identifier, {
+          actor: "runner",
+          reason: "git_commit_failed",
+          from: "In Progress",
+          to: "Todo",
+          runId: RUN_ID,
+        });
+      }
       recordLinearCompletion(metricsProviderName, {
         completed: false,
         priority: issue.priority,
@@ -946,6 +1070,7 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
     return "done";
   } finally {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
     releaseLease(issue.identifier, leaseNonce);
   }
 }

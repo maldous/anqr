@@ -584,7 +584,14 @@ async function strReplaceTool({ path: filePath, replacements }) {
   try {
     let content = fs.readFileSync(filePath, "utf-8");
     
-    for (const { old, new: newStr, allowMultiple } of replacements) {
+    // Defensive normalization (workaround for SDK bug sending string instead of array)
+    const replacementsList = Array.isArray(replacements) ? replacements : [replacements];
+
+    if (replacementsList.length === 0) {
+      return { error: "invalid_replacements_payload: replacements array is empty — no changes made" };
+    }
+
+    for (const { old, new: newStr, allowMultiple } of replacementsList) {
       if (allowMultiple) {
         content = content.split(old).join(newStr);
       } else {
@@ -604,7 +611,7 @@ async function strReplaceTool({ path: filePath, replacements }) {
       trackFileChange(reqId);
     }
     
-    return { success: true, path: filePath, replacements: replacements.length };
+    return { success: true, path: filePath, replacements: replacementsList.length };
   } catch (error) {
     return { error: error.message };
   }
@@ -887,7 +894,14 @@ async function proposeStrReplaceTool({ path: filePath, replacements }) {
     const content = fs.readFileSync(filePath, "utf-8");
     const proposed = [];
     
-    for (const { old, new: newStr } of replacements) {
+    // Defensive normalization (workaround for SDK bug sending string instead of array)
+    const replacementsList = Array.isArray(replacements) ? replacements : [replacements];
+
+    if (replacementsList.length === 0) {
+      return { error: "invalid_replacements_payload: replacements array is empty" };
+    }
+
+    for (const { old, new: newStr } of replacementsList) {
       const index = content.indexOf(old);
       proposed.push({
         old: old.slice(0, 100),
@@ -1279,11 +1293,19 @@ const tools = {
     description: "Replace strings in a file with new strings",
     inputSchema: z.object({
       path: z.string().describe("Path to the file to edit"),
-      replacements: z.array(z.object({
-        old: z.string().describe("String to replace"),
-        new: z.string().describe("Replacement string"),
-        allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-      })),
+      replacements: z.preprocess(
+        (val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; } }
+          if (val && typeof val === 'object') return [val];
+          return [];
+        },
+        z.array(z.object({
+          old: z.string().describe("String to replace"),
+          new: z.string().describe("Replacement string"),
+          allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+        }))
+      ),
     }),
     execute: strReplaceTool,
   }),
@@ -1317,11 +1339,19 @@ const tools = {
     description: "Propose string replacements without applying them",
     inputSchema: z.object({
       path: z.string().describe("Path to the file"),
-      replacements: z.array(z.object({
-        old: z.string().describe("String to replace"),
-        new: z.string().describe("Replacement string"),
-        allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-      })),
+      replacements: z.preprocess(
+        (val) => {
+          if (Array.isArray(val)) return val;
+          if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; } }
+          if (val && typeof val === 'object') return [val];
+          return [];
+        },
+        z.array(z.object({
+          old: z.string().describe("String to replace"),
+          new: z.string().describe("Replacement string"),
+          allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+        }))
+      ),
     }),
     execute: proposeStrReplaceTool,
   }),
@@ -1765,7 +1795,7 @@ if (VALID_TOKENS.size > 1) {
   logDebug(`Auth: accepting ${VALID_TOKENS.size} tokens`);
 }
 
-const MAX_TOOL_ITERATIONS = 10000; // Maximum tool call loops for AI SDK providers
+const MAX_TOOL_ITERATIONS = 200; // Maximum tool call loops for AI SDK providers (lowered from 10000 for bounded autonomous work)
 const REQUEST_TIMEOUT_MS = 30 * 60 * 1000; // 30 min — hard timeout per HTTP request (prevents infinite hangs)
 const FALLBACK_DELAY_MS = 1000;
 const MAX_RESPONSE_TEXT_BYTES = 512 * 1024; // 512KB cap on accumulated response text
@@ -2695,6 +2725,16 @@ async function invokeWithAI(provider, messages, options = {}) {
     });
     let finishReason = null;
 
+    // Execution metrics for structured result contract (passed to runner via _symphonyResult)
+    const executionMetrics = {
+      mutationCount: 0,
+      changedFiles: new Set(),
+      taskCompleted: false,
+      toolCallCount: 0,
+      stepCount: 0,
+      validationToolsRun: new Set(),
+    };
+
     // Streaming with tool execution (tools disabled for providers that don't support them)
     const result = await streamText({
       model,
@@ -2703,20 +2743,36 @@ async function invokeWithAI(provider, messages, options = {}) {
         ? { tools, toolChoice: "auto", stopWhen: stepCountIs(MAX_TOOL_ITERATIONS) }
         : {}),
       onStepFinish: (step) => {
+        executionMetrics.stepCount++;
         if (step.toolCalls && step.toolCalls.length > 0) {
           for (const tc of step.toolCalls) {
-            // Suppress read tool output as it can be very long and noisy (from file explorer/fetcher agents)
+            executionMetrics.toolCallCount++;
+            const input = tc.input ?? tc.args;
+
+            // Suppress read tool output as it can be very long and noisy
             if (tc.toolName === "read") {
               logDebug(`🔧 ${tc.toolName}: (output suppressed)`);
             } else {
-              const input = tc.input ?? tc.args;
               const summary = input ? JSON.stringify(input).slice(0, 200) : "";
               logDebug(`🔧 ${tc.toolName}: ${summary}`);
             }
 
-            // Track file changes for write tool
-            if (tc.toolName === "write" && currentRequestId) {
-              trackFileChange(currentRequestId);
+            // Track mutations (write, str_replace, apply_patch)
+            if (tc.toolName === "write" || tc.toolName === "str_replace" || tc.toolName === "apply_patch") {
+              executionMetrics.mutationCount++;
+              const filePath = input?.path || input?.operation?.path;
+              if (filePath) executionMetrics.changedFiles.add(filePath);
+              if (currentRequestId) trackFileChange(currentRequestId);
+            }
+
+            // Track validation tool usage
+            if (tc.toolName === "run_typecheck" || tc.toolName === "run_lint" || tc.toolName === "run_cspell" || tc.toolName === "run_ast_density" || tc.toolName === "run_tests") {
+              executionMetrics.validationToolsRun.add(tc.toolName);
+            }
+
+            // Track task completion signal
+            if (tc.toolName === "task_completed") {
+              executionMetrics.taskCompleted = true;
             }
           }
         }
@@ -2994,9 +3050,22 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     logDebug(`Streaming completed (${fullText.length} chars)`);
 
+    // Build structured result contract for runner/agent consumption
+    const _symphonyResult = {
+      completed: executionMetrics.taskCompleted || (finishReason === "stop" && errorCount === 0 && fullText.length > 0),
+      needsContinuation: finishReason === "tool-calls" || finishReason === "length",
+      failureClass: errorCount > 0 ? "stream_error" : (finishReason === "tool-calls" ? "step_limit_reached" : null),
+      mutationCount: executionMetrics.mutationCount,
+      changedFiles: [...executionMetrics.changedFiles],
+      validationIntent: executionMetrics.validationToolsRun.size > 0,
+      toolCallCount: executionMetrics.toolCallCount,
+      stepCount: executionMetrics.stepCount,
+    };
+
     return {
       text: fullText,
       providerName: provider.name,
+      _symphonyResult,
     };
   } else {
     // Non-streaming with tool execution (tools disabled for providers that don't support them)
@@ -3146,6 +3215,7 @@ async function invokeWithFallback(messages, route, sessionId = null) {
         providerName: provider.name,
         attempts: attemptNumber,
         triedProviders: [...triedProviders],
+        _symphonyResult: result._symphonyResult || null,
       };
     } catch (err) {
       const rootErr = unwrapAIError(err);
@@ -3483,6 +3553,7 @@ async function invokeWithFallbackStream(
         providerName: provider.name,
         attempts: attemptNumber,
         triedProviders: [...triedProviders],
+        _symphonyResult: result._symphonyResult || null,
       };
     } catch (err) {
       const rootErr = unwrapAIError(err);
@@ -4212,7 +4283,7 @@ const server = http.createServer(async (req, res) => {
             logWarn(`⚠️ Codebuff transparent relay failed: ${errMsg}`);
 
             // Record failure and fall through to standard cascade
-            if (isRetryableErrorDeep(codebuffErr)) {
+            if (isRetryableErrorDeep(error_)) {
               recordProviderFailure("codebuff");
               recordProviderFailureCount("codebuff");
             }
@@ -4248,13 +4319,14 @@ const server = http.createServer(async (req, res) => {
           clearInterval(progressInterval);
           clearTimeout(requestTimeoutHandle);
 
-          // Send final chunk
+          // Send final chunk (includes structured result for runner/agent consumption)
           const finalChunk = {
             id: completionId,
             object: "chat.completion.chunk",
             created,
             model: route.responseModelId,
             choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+            _symphony_result: result._symphonyResult || null,
           };
           res.write(`data: ${JSON.stringify(finalChunk)}\n\n`);
           res.write("data: [DONE]\n\n");
@@ -4403,6 +4475,7 @@ const server = http.createServer(async (req, res) => {
           _symphony_attempts: result.attempts,
           _symphony_tried: result.triedProviders,
           _symphony_duration_ms: durationMs,
+          _symphony_result: result._symphonyResult || null,
         });
       }
     } else {
@@ -4533,6 +4606,38 @@ server.listen(PORT, "127.0.0.1", async () => {
   logInfo(`Auto-fallback: enabled (credit-gate)`);
   logInfo(`Tools available: ${Object.keys(tools).join(", ")}`);
   logInfo(`========================================`);
+
+  // Startup self-test: verify tool schemas accept both string and array input forms
+  {
+    const replacementsPreprocess = (val) => {
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') { try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; } }
+      if (val && typeof val === 'object') return [val];
+      return [];
+    };
+    const filesPreprocess = (val) => (Array.isArray(val) ? val : [val]);
+    const selfTests = [
+      { name: 'replacements_array', fn: replacementsPreprocess, input: [{old:'a',new:'b'}], expected: 1 },
+      { name: 'replacements_string', fn: replacementsPreprocess, input: JSON.stringify([{old:'a',new:'b'}]), expected: 1 },
+      { name: 'replacements_object', fn: replacementsPreprocess, input: {old:'a',new:'b'}, expected: 1 },
+      { name: 'files_array', fn: filesPreprocess, input: ['test.txt'], expected: 1 },
+      { name: 'files_string', fn: filesPreprocess, input: 'test.txt', expected: 1 },
+    ];
+    let selfTestPassed = 0;
+    for (const { name, fn, input, expected } of selfTests) {
+      const result = fn(input);
+      if (Array.isArray(result) && result.length === expected) {
+        selfTestPassed++;
+      } else {
+        logError(`❌ Schema self-test FAILED: ${name} — got ${JSON.stringify(result)}`);
+      }
+    }
+    if (selfTestPassed < selfTests.length) {
+      logError(`🧪 Tool schema self-test FAILED (${selfTestPassed}/${selfTests.length}) — refusing to start`);
+      process.exit(1);
+    }
+    logInfo(`🧪 Tool schema self-test: ${selfTestPassed}/${selfTests.length} passed`);
+  }
 
   // Send immediate Discord notification on startup - BEFORE async probe
   try {

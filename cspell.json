@@ -445,7 +445,13 @@
     "MSCHAPV",
     "deprioritize",
     "deprioritized",
-    "oneline"
+    "oneline",
+    "artefacts",
+    "pbxproj",
+    "xcconfig",
+    "basenames",
+    "Podfile",
+    "Procfile"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [
