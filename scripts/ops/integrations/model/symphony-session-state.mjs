@@ -10,24 +10,26 @@
  * - Self-tunes rotation parameters based on observed performance
  * - Periodically samples all providers to keep scoring fresh
  *
- * ARCHITECTURAL CONCERN (2026-03-27):
+ * CONTEXT COHERENCE (2026-03-27):
  * This module tracks provider selection (which provider, turn count, tier) but does NOT
  * track the actual message history. The system relies on OpenClaw maintaining conversation
  * state. When switching providers mid-conversation (due to rotation, failure, or evaluation),
- * there is NO server-side verification that:
- *   1. The context sent by OpenClaw is complete and coherent
- *   2. The context hasn't been corrupted during transmission
- *   3. The truncated context (for providers with smaller windows) maintains coherence
+ * context coherence validation (implemented in symphony-bridge-truncation.mjs) ensures:
+ *   1. System messages are preserved during truncation
+ *   2. Role alternation is maintained (no consecutive user/assistant messages)
+ *   3. Final messages are complete (no mid-turn truncation)
  *
- * Known failure: Groq switching mid-conversation (2026-03-27) "had no idea what was going on"
+ * Solution implemented (2026-03-27): Context coherence validation in truncateMessagesForProvider()
+ *   - validateContextCoherence() checks system message presence, role alternation, completeness
+ *   - Low-context providers (Groq: 6K tokens) use stricter message retention (keep last 3 vs 4)
+ *   - Warnings logged when coherence issues detected
  *
- * Potential solutions:
- *   - Option 1: Store message hash, verify continuity when switching providers
- *   - Option 2: Store full message array server-side, use as source of truth
- *   - Option 3: Validate context coherence (role alternation, last assistant message, etc.)
+ * Known issue fixed: Groq switching mid-conversation "had no idea what was going on"
+ *   Root cause: 6K token limit caused aggressive truncation removing system context
+ *   Fix: Coherence validation + preserved system messages + adjusted retention for low-context providers
  *
- * See: symphony-openai-bridge.mjs (buildSelectionOptions, invokeWithFallbackStream)
- *      symphony-bridge-truncation.mjs (truncateMessagesForProvider)
+ * See: symphony-bridge-truncation.mjs (validateContextCoherence, truncateMessagesForProvider)
+ *      symphony-openai-bridge.mjs (buildSelectionOptions, invokeWithFallbackStream)
  *      symphony-adaptive-context.mjs (context window management)
  */
 

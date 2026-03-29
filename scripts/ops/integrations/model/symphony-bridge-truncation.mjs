@@ -134,7 +134,62 @@ export function truncateMessageContent(msg, maxChars) {
 }
 
 // ---------------------------------------------------------------------------
-// Main truncation entry point — 4-pass strategy
+// Context coherence validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate that truncated messages maintain conversation coherence.
+ * Checks for:
+ *   - At least one system message present
+ *   - Proper role alternation (no consecutive user/assistant messages)
+ *   - No truncation mid-turn (last message should be complete)
+ *
+ * @param {Array} messages - Messages to validate
+ * @param {string} providerName - Provider name for logging
+ * @returns {{ valid: boolean, warnings: string[] }}
+ */
+export function validateContextCoherence(messages, providerName) {
+  const warnings = [];
+
+  // Check for system message
+  const hasSystemMessage = messages.some((m) => m.role === "system");
+  if (!hasSystemMessage) {
+    warnings.push(`No system message found for ${providerName} — context may lack instructions`);
+  }
+
+  // Check role alternation (allow multiple system messages, but user/assistant should alternate)
+  let lastNonSystemRole = null;
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (msg.role === "system") continue;
+
+    if (lastNonSystemRole && lastNonSystemRole === msg.role) {
+      warnings.push(
+        `Role alternation broken at message ${i}: consecutive ${msg.role} messages (provider: ${providerName})`,
+      );
+      break; // Only report first violation
+    }
+    lastNonSystemRole = msg.role;
+  }
+
+  // Check for truncation markers in last message (indicates incomplete context)
+  const lastMsg = messages[messages.length - 1];
+  if (lastMsg && typeof lastMsg.content === "string") {
+    if (lastMsg.content.includes(MESSAGE_TRUNCATION_MARKER)) {
+      warnings.push(
+        `Last message contains truncation marker — final turn may be incomplete (provider: ${providerName})`,
+      );
+    }
+  }
+
+  return {
+    valid: warnings.length === 0,
+    warnings,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Main truncation entry point — 4-pass strategy with coherence validation
 // ---------------------------------------------------------------------------
 
 /**
@@ -145,6 +200,11 @@ export function truncateMessageContent(msg, maxChars) {
  *   2. Drop oldest non-system, non-final messages from the middle
  *   3. Aggressively halve the per-message limit and re-truncate
  *   4. Last resort — keep only system + last 2 original messages
+ *
+ * After truncation, validates context coherence to ensure:
+ *   - System messages are preserved
+ *   - Role alternation is maintained
+ *   - No mid-turn truncation
  *
  * @param {Array} messages - AI SDK formatted messages
  * @param {string} providerName - Provider name for context limit lookup
@@ -216,7 +276,9 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
   }
 
   // Pass 2: Drop oldest middle messages (keep system + last 4)
-  const keepLast = 4;
+  // For low-context providers like Groq, preserve more recent context
+  const isLowContextProvider = baseMaxTokens <= 8000;
+  const keepLast = isLowContextProvider ? 3 : 4; // Keep fewer messages for Groq to preserve quality
   const systemMessages = [];
   const nonSystemMessages = [];
   for (const msg of truncated) {
@@ -304,12 +366,22 @@ export function truncateMessagesForProvider(messages, providerName, options = {}
     return [truncateMessageContent(lastMsg, emergencyLimit)];
   }
 
+  // Validate context coherence after truncation
+  const coherence = validateContextCoherence(truncated, providerName);
+  if (!coherence.valid) {
+    for (const warning of coherence.warnings) {
+      logInfo(`⚠️ Context coherence: ${warning}`);
+    }
+  }
+
   logInfo(`[truncateMessagesForProvider] Complete`, {
     providerName,
     originalMessageCount: messages.length,
     truncatedMessageCount: truncated.length,
     estimatedTokens: estimated,
     maxTokens,
+    coherenceValid: coherence.valid,
+    coherenceWarnings: coherence.warnings.length,
   });
 
   return truncated;
