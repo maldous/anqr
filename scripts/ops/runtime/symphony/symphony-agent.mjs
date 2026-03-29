@@ -901,6 +901,16 @@ async function runToolLoop({
 
       if (provider.name === "symphony-bridge" && !response._symphonyResult) {
         const content = (msg.content || "").trim();
+        // TRACE: Detailed logging to diagnose bridge_contract_missing
+        logError(`[agent] 🚨 bridge_contract_missing DETECTED`);
+        logError(`[agent]   Provider: ${provider.name}`);
+        logError(`[agent]   Response keys: ${Object.keys(response).join(", ")}`);
+        logError(`[agent]   Response._symphonyResult: ${response._symphonyResult ? "present" : "MISSING"}`);
+        logError(`[agent]   Response.providerName: ${response.providerName}`);
+        logError(`[agent]   Message.content length: ${(msg.content || "").length}`);
+        logError(`[agent]   Message.tool_calls: ${msg.tool_calls?.length || 0}`);
+        logError(`[agent]   Choice keys: ${Object.keys(choice).join(", ")}`);
+        logError(`[agent]   Content preview: ${content.slice(0, 300)}`);
         return {
           completed: false,
           summary: content
