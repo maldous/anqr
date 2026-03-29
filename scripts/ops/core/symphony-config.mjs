@@ -14,7 +14,7 @@
 
 import { LABELS } from "../linear-client.mjs";
 
-export const TARGET_MIN = 1;
+export const TARGET_MIN = 3;
 export const TARGET_MAX = 8;
 export const MAX_CONCURRENT_AGENTS = 8;
 
