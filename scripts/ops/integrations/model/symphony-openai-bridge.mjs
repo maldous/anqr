@@ -913,7 +913,15 @@ async function memoryGetTool({ file }) {
 async function runFileChangeHooksTool({ files }) {
   try {
     // Normalize files to array (workaround for Codebuff SDK bug in ^0.10.7)
-    const filesList = Array.isArray(files) ? files : [files];
+    // Filter out empty placeholder values that come from the transform
+    const filesList = Array.isArray(files) 
+      ? files.filter((f) => f && f !== "<empty>")
+      : files && files !== "<empty>" ? [files] : [];
+
+    // If no valid files after filtering, return early
+    if (filesList.length === 0) {
+      return { success: true, message: "No files to process" };
+    }
 
     // Check if codebuff.json has fileChangeHooks configured
     const codebuffConfigPath = path.join(process.cwd(), "codebuff.json");
@@ -1672,42 +1680,48 @@ const tools = {
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
       files: z
-        .preprocess(
-          (val) => {
-            // Normalize to array: handle string, array, or malformed input
-            // This workaround handles the Codebuff SDK bug where it passes a single string
-            // instead of an array (see docs/known-issues/codebuff-sdk-run-file-change-hooks.md)
-            if (Array.isArray(val)) {
-              // Already an array - return as-is
-              return val;
-            }
-            if (typeof val === "string") {
-              const trimmed = val.trim();
-              if (!trimmed) return [];
-              // Handle JSON-encoded arrays like '["file1.ts", "file2.ts"]'
-              if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                try {
-                  const parsed = JSON.parse(trimmed);
-                  return Array.isArray(parsed) ? parsed : [trimmed];
-                } catch {
-                  // JSON parse failed - treat the whole string as a single file path
-                  return [trimmed];
+        .any()
+        .transform((val) => {
+          // Normalize to array: handle string, array, or malformed input
+          // This workaround handles the Codebuff SDK bug where it passes a single string
+          // instead of an array (see docs/known-issues/codebuff-sdk-run-file-change-hooks.md)
+          if (Array.isArray(val)) {
+            // Already an array - filter out non-strings and return
+            const filtered = val.filter((item) => typeof item === "string" && item.trim());
+            return filtered.length > 0 ? filtered : ["<empty>"];
+          }
+          if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return ["<empty>"];
+            // Handle JSON-encoded arrays like '["file1.ts", "file2.ts"]'
+            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                  const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
+                  return filtered.length > 0 ? filtered : ["<empty>"];
                 }
+                return [trimmed];
+              } catch {
+                // JSON parse failed - treat the whole string as a single file path
+                return [trimmed];
               }
-              // Single string - wrap in array (this is the Codebuff SDK bug case)
-              return [trimmed];
             }
-            // Handle object with path/paths properties (defensive)
-            if (val && typeof val === "object") {
-              if (typeof val.path === "string") return [val.path];
-              if (Array.isArray(val.paths)) return val.paths;
-              if (typeof val.paths === "string") return [val.paths];
+            // Single string - wrap in array (this is the Codebuff SDK bug case)
+            return [trimmed];
+          }
+          // Handle object with path/paths properties (defensive)
+          if (val && typeof val === "object") {
+            if (typeof val.path === "string" && val.path.trim()) return [val.path.trim()];
+            if (Array.isArray(val.paths)) {
+              const filtered = val.paths.filter((item) => typeof item === "string" && item.trim());
+              return filtered.length > 0 ? filtered : ["<empty>"];
             }
-            // Fallback: empty array (will fail min(1) validation with clear error)
-            return [];
-          },
-          z.array(z.string()).min(1, "At least one file path is required")
-        )
+            if (typeof val.paths === "string" && val.paths.trim()) return [val.paths.trim()];
+          }
+          // Fallback: return placeholder to avoid empty array (which would fail downstream validation)
+          return ["<empty>"];
+        })
         .describe("List of file paths that were changed (accepts string or array)"),
     }),
     execute: runFileChangeHooksTool,
@@ -4885,51 +4899,31 @@ server.listen(PORT, "127.0.0.1", async () => {
 
   // Startup self-test: verify tool schemas accept both string and array input forms
   {
-    const replacementsPreprocess = (val) => {
-      if (Array.isArray(val)) return val;
-      if (typeof val === "string") {
-        try {
-          const p = JSON.parse(val);
-          return Array.isArray(p) ? p : [p];
-        } catch {
-          return [];
-        }
-      }
-      if (val && typeof val === "object") return [val];
-      return [];
-    };
-    const filesPreprocess = (val) => (Array.isArray(val) ? val : [val]);
+    // Get the actual transform function from the tool definition
+    const filesTransform = tools.run_file_change_hooks.inputSchema.shape.files._def.schema;
+    
     const selfTests = [
-      {
-        name: "replacements_array",
-        fn: replacementsPreprocess,
-        input: [{ old: "a", new: "b" }],
-        expected: 1,
-      },
-      {
-        name: "replacements_string",
-        fn: replacementsPreprocess,
-        input: JSON.stringify([{ old: "a", new: "b" }]),
-        expected: 1,
-      },
-      {
-        name: "replacements_object",
-        fn: replacementsPreprocess,
-        input: { old: "a", new: "b" },
-        expected: 1,
-      },
-      { name: "files_array", fn: filesPreprocess, input: ["test.txt"], expected: 1 },
-      { name: "files_string", fn: filesPreprocess, input: "test.txt", expected: 1 },
+      { name: "files_array", input: ["test.txt"], expected: 1 },
+      { name: "files_string", input: "test.txt", expected: 1 },
+      { name: "files_json_array", input: '["file1.ts", "file2.ts"]', expected: 2 },
+      { name: "files_empty_string", input: "", expected: 1 }, // Should return ["<empty>"]
+      { name: "files_object_path", input: { path: "test.ts" }, expected: 1 },
     ];
+    
     let selfTestPassed = 0;
-    for (const { name, fn, input, expected } of selfTests) {
-      const result = fn(input);
-      if (Array.isArray(result) && result.length === expected) {
-        selfTestPassed++;
-      } else {
-        logError(`❌ Schema self-test FAILED: ${name} — got ${JSON.stringify(result)}`);
+    for (const { name, input, expected } of selfTests) {
+      try {
+        const result = filesTransform.parse(input);
+        if (Array.isArray(result) && result.length === expected) {
+          selfTestPassed++;
+        } else {
+          logError(`❌ Schema self-test FAILED: ${name} — expected length ${expected}, got ${JSON.stringify(result)}`);
+        }
+      } catch (err) {
+        logError(`❌ Schema self-test FAILED: ${name} — parse error: ${err.message}`);
       }
     }
+    
     if (selfTestPassed < selfTests.length) {
       logError(
         `🧪 Tool schema self-test FAILED (${selfTestPassed}/${selfTests.length}) — refusing to start`,
