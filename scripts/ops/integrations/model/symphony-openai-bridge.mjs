@@ -3495,12 +3495,23 @@ async function invokeWithAI(provider, messages, options = {}) {
             executionMetrics.toolCallCount++;
             const input = tc.input ?? tc.args;
 
-            // Suppress read tool output as it can be very long and noisy
+            // Log tool call with resolved arguments (from tc.input after tool-input-delta accumulation)
+            // This is the accurate representation of what the tool actually received
             if (tc.toolName === "read") {
-              logDebug(`🔧 ${tc.toolName}: (output suppressed)`);
+              logInfo(`🔧 ${tc.toolName}: (output suppressed)`);
+              logDebug(`[invokeWithAI] Tool call resolved`, {
+                toolName: tc.toolName,
+                toolCallId: tc.toolCallId,
+                argsKeys: input ? Object.keys(input) : [],
+              });
             } else {
-              const summary = input ? JSON.stringify(input).slice(0, 200) : "";
-              logDebug(`🔧 ${tc.toolName}: ${summary}`);
+              const summary = input ? JSON.stringify(input).slice(0, 200) : "(no args)";
+              logInfo(`🔧 ${tc.toolName}: ${summary}`);
+              logDebug(`[invokeWithAI] Tool call resolved`, {
+                toolName: tc.toolName,
+                toolCallId: tc.toolCallId,
+                argsKeys: input ? Object.keys(input) : [],
+              });
             }
 
             // Track mutations (write, write_file, str_replace, apply_patch)
@@ -3681,12 +3692,14 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
       } else if (part.type === "tool-call") {
         toolCallCount++;
-        const argsSummary = part.args ? JSON.stringify(part.args).slice(0, 200) : "";
-        logInfo(`🔧 ${part.toolName}: ${argsSummary}`);
+        // Note: At this point, part.args may be empty because args are streamed separately
+        // via tool-input-delta events. The actual resolved arguments are available in
+        // onStepFinish where we log using tc.input (which has the final resolved args).
+        // We log a placeholder here and the real logging happens in onStepFinish.
         logDebug(`[invokeWithAI] Tool call ${toolCallCount}`, {
           toolName: part.toolName,
           toolCallId: part.toolCallId,
-          argsKeys: part.args ? Object.keys(part.args) : [],
+          note: "args populated via tool-input-delta, see onStepFinish for resolved input",
         });
         // Tool activity messages are logged server-side but NOT sent to client/Discord
         // to avoid noise in Discord notifications
