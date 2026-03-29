@@ -423,7 +423,11 @@ async function executeIssue(issue, dryRun = false) {
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] Worktree ${WORKTREE_ID} synced with main`);
     } catch (err) {
-      logWarn(`[runner] Worktree sync failed: ${err.message}`);
+      logError(`[runner] Worktree sync failed: ${err.message}`);
+      logError(`[runner] This likely indicates conflicting changes in the worktree.`);
+      logError(`[runner] Exiting immediately to avoid wasting lease cycles.`);
+      // Release lock immediately on sync failure - no lease was acquired yet
+      releaseLock();
       return "skip";
     }
   }

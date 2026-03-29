@@ -1405,16 +1405,16 @@ const tools = {
   read_files: tool({
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
-      paths: z
-        .any()
-        .transform((val) => {
+      paths: z.preprocess(
+        (val) => {
           const result = coerceStringArrayInput(val, { fallback: [] });
           if (!result || result.length === 0) {
             throw new Error("paths must contain at least one file path");
           }
           return result;
-        })
-        .describe("List of file paths to read (accepts string or array)"),
+        },
+        z.array(z.string()).describe("List of file paths to read (accepts string or array)"),
+      ),
     }),
     execute: readFilesTool,
   }),
@@ -1422,30 +1422,38 @@ const tools = {
     description: "Replace strings in a file with new strings",
     inputSchema: z.object({
       path: z.string().describe("Path to the file to edit"),
-      replacements: z
-        .any()
-        .transform((val) => {
+      replacements: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
+            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                return Array.isArray(parsed) ? parsed : [parsed];
+              } catch {
+                return [];
+              }
+            }
             try {
-              const p = JSON.parse(val);
-              return Array.isArray(p) ? p : [p];
+              const parsed = JSON.parse(trimmed);
+              return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
             }
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(
-          z.array(
-            z.object({
-              old: z.string().describe("String to replace"),
-              new: z.string().describe("Replacement string"),
-              allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-            }),
-          ),
+        },
+        z.array(
+          z.object({
+            old: z.string().describe("String to replace"),
+            new: z.string().describe("Replacement string"),
+            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+          }),
         ),
+      ),
     }),
     execute: strReplaceTool,
   }),
@@ -1459,29 +1467,28 @@ const tools = {
   read_subtree: tool({
     description: "Read directory subtree with file contents",
     inputSchema: z.object({
-      paths: z
-        .any()
-        .transform((val) => coerceStringArrayInput(val, { fallback: ["."] }))
-        .optional()
-        .describe("Paths to read (default: ['.']; accepts string or array)"),
-      maxTokens: z
-        .any()
-        .transform((val) => coerceOptionalNumberInput(val, undefined))
-        .pipe(z.number().int().positive().optional())
-        .describe("Maximum token budget (default: 50000; accepts numeric string)"),
+      paths: z.preprocess(
+        (val) => coerceStringArrayInput(val, { fallback: ["."] }),
+        z.array(z.string()).optional().describe("Paths to read (default: ['.']; accepts string or array)"),
+      ),
+      maxTokens: z.preprocess(
+        (val) => coerceOptionalNumberInput(val, undefined),
+        z.number().int().positive().optional().describe("Maximum token budget (default: 50000; accepts numeric string)"),
+      ),
     }),
     execute: readSubtreeTool,
   }),
   spawn_agents: tool({
     description: "Spawn multiple agents to run in parallel",
     inputSchema: z.object({
-      agents: z
-        .any()
-        .transform((val) => {
+      agents: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
             try {
-              const parsed = JSON.parse(val);
+              const parsed = JSON.parse(trimmed);
               return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
@@ -1489,16 +1496,15 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(
-          z.array(
-            z.object({
-              agent_type: z.string().describe("Agent to spawn"),
-              prompt: z.string().optional().describe("Prompt to send"),
-              params: z.record(z.any()).optional().describe("Parameters object"),
-            }),
-          ),
+        },
+        z.array(
+          z.object({
+            agent_type: z.string().describe("Agent to spawn"),
+            prompt: z.string().optional().describe("Prompt to send"),
+            params: z.record(z.any()).optional().describe("Parameters object"),
+          }),
         ),
+      ),
     }),
     execute: spawnAgentsTool,
   }),
@@ -1506,30 +1512,30 @@ const tools = {
     description: "Propose string replacements without applying them",
     inputSchema: z.object({
       path: z.string().describe("Path to the file"),
-      replacements: z
-        .any()
-        .transform((val) => {
+      replacements: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
             try {
-              const p = JSON.parse(val);
-              return Array.isArray(p) ? p : [p];
+              const parsed = JSON.parse(trimmed);
+              return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
             }
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(
-          z.array(
-            z.object({
-              old: z.string().describe("String to replace"),
-              new: z.string().describe("Replacement string"),
-              allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
-            }),
-          ),
+        },
+        z.array(
+          z.object({
+            old: z.string().describe("String to replace"),
+            new: z.string().describe("Replacement string"),
+            allowMultiple: z.boolean().optional().describe("Allow multiple replacements"),
+          }),
         ),
+      ),
     }),
     execute: proposeStrReplaceTool,
   }),
@@ -1553,13 +1559,14 @@ const tools = {
   set_messages: tool({
     description: "Set the conversation history",
     inputSchema: z.object({
-      messages: z
-        .any()
-        .transform((val) => {
+      messages: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
             try {
-              const parsed = JSON.parse(val);
+              const parsed = JSON.parse(trimmed);
               return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
@@ -1567,9 +1574,9 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(z.array(z.any()))
-        .describe("Array of messages (accepts string or array)"),
+        },
+        z.array(z.any()).describe("Array of messages (accepts string or array)"),
+      ),
     }),
     execute: setMessagesTool,
   }),
@@ -1588,13 +1595,14 @@ const tools = {
   suggest_followups: tool({
     description: "Suggest followup prompts to the user",
     inputSchema: z.object({
-      followups: z
-        .any()
-        .transform((val) => {
+      followups: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
             try {
-              const parsed = JSON.parse(val);
+              const parsed = JSON.parse(trimmed);
               return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
@@ -1602,15 +1610,14 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(
-          z.array(
-            z.object({
-              prompt: z.string().describe("Full prompt text"),
-              label: z.string().optional().describe("Short display label"),
-            }),
-          ),
+        },
+        z.array(
+          z.object({
+            prompt: z.string().describe("Full prompt text"),
+            label: z.string().optional().describe("Short display label"),
+          }),
         ),
+      ),
     }),
     execute: suggestFollowupsTool,
   }),
@@ -1622,13 +1629,14 @@ const tools = {
   write_todos: tool({
     description: "Write a todo list to track tasks",
     inputSchema: z.object({
-      todos: z
-        .any()
-        .transform((val) => {
+      todos: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
             try {
-              const parsed = JSON.parse(val);
+              const parsed = JSON.parse(trimmed);
               return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
@@ -1636,15 +1644,14 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(
-          z.array(
-            z.object({
-              task: z.string().describe("Task description"),
-              completed: z.boolean().describe("Whether task is completed"),
-            }),
-          ),
+        },
+        z.array(
+          z.object({
+            task: z.string().describe("Task description"),
+            completed: z.boolean().describe("Whether task is completed"),
+          }),
         ),
+      ),
     }),
     execute: writeTodosTool,
   }),
@@ -1662,13 +1669,14 @@ const tools = {
   ask_user: tool({
     description: "Ask the user multiple choice questions",
     inputSchema: z.object({
-      questions: z
-        .any()
-        .transform((val) => {
+      questions: z.preprocess(
+        (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
             try {
-              const parsed = JSON.parse(val);
+              const parsed = JSON.parse(trimmed);
               return Array.isArray(parsed) ? parsed : [parsed];
             } catch {
               return [];
@@ -1676,47 +1684,46 @@ const tools = {
           }
           if (val && typeof val === "object") return [val];
           return [];
-        })
-        .pipe(
-          z.array(
-            z.object({
-              question: z.string().describe("Question to ask"),
-              header: z.string().optional().describe("Short label"),
-              options: z
-                .any()
-                .transform((val) => {
-                  if (Array.isArray(val)) return val;
-                  if (typeof val === "string") {
-                    try {
-                      const parsed = JSON.parse(val);
-                      return Array.isArray(parsed) ? parsed : [parsed];
-                    } catch {
-                      return [];
-                    }
+        },
+        z.array(
+          z.object({
+            question: z.string().describe("Question to ask"),
+            header: z.string().optional().describe("Short label"),
+            options: z.preprocess(
+              (val) => {
+                if (Array.isArray(val)) return val;
+                if (typeof val === "string") {
+                  const trimmed = val.trim();
+                  if (!trimmed) return [];
+                  try {
+                    const parsed = JSON.parse(trimmed);
+                    return Array.isArray(parsed) ? parsed : [parsed];
+                  } catch {
+                    return [];
                   }
-                  if (val && typeof val === "object") return [val];
-                  return [];
-                })
-                .pipe(
-                  z.array(
-                    z.object({
-                      label: z.string().describe("Option label"),
-                      description: z.string().optional().describe("Option description"),
-                    }),
-                  ),
-                ),
-              multiSelect: z.boolean().optional().describe("Allow multiple selection"),
-              validation: z
-                .object({
-                  maxLength: z.number().optional(),
-                  minLength: z.number().optional(),
-                  pattern: z.string().optional(),
-                  patternError: z.string().optional(),
-                })
-                .optional(),
-            }),
-          ),
+                }
+                if (val && typeof val === "object") return [val];
+                return [];
+              },
+              z.array(
+                z.object({
+                  label: z.string().describe("Option label"),
+                  description: z.string().optional().describe("Option description"),
+                }),
+              ),
+            ),
+            multiSelect: z.boolean().optional().describe("Allow multiple selection"),
+            validation: z
+              .object({
+                maxLength: z.number().optional(),
+                minLength: z.number().optional(),
+                pattern: z.string().optional(),
+                patternError: z.string().optional(),
+              })
+              .optional(),
+          }),
         ),
+      ),
     }),
     execute: askUserTool,
   }),
@@ -1781,9 +1788,8 @@ const tools = {
   run_file_change_hooks: tool({
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
-      files: z
-        .union([z.array(z.string()), z.string()])
-        .transform((val) => {
+      files: z.preprocess(
+        (val) => {
           // Normalize to array: handle string, array, or malformed input
           // This workaround handles the Codebuff SDK bug where it passes a single string
           // instead of an array (see docs/known-issues/codebuff-sdk-run-file-change-hooks.md)
@@ -1814,8 +1820,9 @@ const tools = {
           }
           // Fallback: return empty array
           return [];
-        })
-        .describe("List of file paths that were changed (accepts string or array)"),
+        },
+        z.array(z.string()).describe("List of file paths that were changed (accepts string or array)"),
+      ),
     }),
     execute: runFileChangeHooksTool,
   }),
@@ -4990,28 +4997,67 @@ server.listen(PORT, "127.0.0.1", async () => {
   logInfo(`Tools available: ${Object.keys(tools).join(", ")}`);
   logInfo(`========================================`);
 
-  // Startup self-test: verify run_file_change_hooks schema accepts both string and array
+  // Startup self-test: verify ALL array parameter tools accept both string and array input
   {
     const selfTests = [
-      { name: "files_array", input: { files: ["test.txt"] } },
-      { name: "files_string", input: { files: "test.txt" } },
-      { name: "files_json_array", input: { files: '["file1.ts", "file2.ts"]' } },
-      { name: "files_empty_string", input: { files: "" } }, // Returns ["<empty>"]
-      { name: "files_object_path", input: { files: { path: "test.ts" } } },
+      // run_file_change_hooks
+      { tool: "run_file_change_hooks", name: "files_array", input: { files: ["test.txt"] } },
+      { tool: "run_file_change_hooks", name: "files_string", input: { files: "test.txt" } },
+      { tool: "run_file_change_hooks", name: "files_json_array", input: { files: '["file1.ts", "file2.ts"]' } },
+      { tool: "run_file_change_hooks", name: "files_empty_string", input: { files: "" } },
+      { tool: "run_file_change_hooks", name: "files_object_path", input: { files: { path: "test.ts" } } },
+      
+      // read_files
+      { tool: "read_files", name: "paths_array", input: { paths: ["package.json"] } },
+      { tool: "read_files", name: "paths_string", input: { paths: "package.json" } },
+      { tool: "read_files", name: "paths_json_array", input: { paths: '["package.json"]' } },
+      
+      // str_replace
+      { tool: "str_replace", name: "replacements_array", input: { path: "test.txt", replacements: [{ old: "a", new: "b" }] } },
+      { tool: "str_replace", name: "replacements_object", input: { path: "test.txt", replacements: { old: "a", new: "b" } } },
+      { tool: "str_replace", name: "replacements_json", input: { path: "test.txt", replacements: '[{"old":"a","new":"b"}]' } },
+      
+      // spawn_agents
+      { tool: "spawn_agents", name: "agents_array", input: { agents: [{ agent_type: "test" }] } },
+      { tool: "spawn_agents", name: "agents_object", input: { agents: { agent_type: "test" } } },
+      { tool: "spawn_agents", name: "agents_json", input: { agents: '[{"agent_type":"test"}]' } },
+      
+      // read_subtree
+      { tool: "read_subtree", name: "paths_array", input: { paths: ["."] } },
+      { tool: "read_subtree", name: "paths_string", input: { paths: "." } },
+      { tool: "read_subtree", name: "maxTokens_number", input: { maxTokens: 1000 } },
+      { tool: "read_subtree", name: "maxTokens_string", input: { maxTokens: "1000" } },
     ];
     
     let selfTestPassed = 0;
-    for (const { name, input } of selfTests) {
+    const failedTests = [];
+    
+    for (const { tool: toolName, name, input } of selfTests) {
       try {
-        const result = await runFileChangeHooksTool(input);
-        // Tool always returns success:true (no hooks configured in test)
-        if (result.success === true) {
-          selfTestPassed++;
-        } else {
-          logError(`❌ Schema self-test FAILED: ${name} — tool returned error: ${JSON.stringify(result)}`);
+        // Validate using the tool schema directly (doesn't execute, just validates)
+        const toolDef = tools[toolName];
+        if (!toolDef) {
+          logError(`❌ Schema self-test FAILED: ${toolName}/${name} — tool not found`);
+          failedTests.push(`${toolName}/${name}: tool not found`);
+          continue;
         }
+        
+        // Parse input through the schema
+        const parsed = await toolDef.inputSchema.parseAsync(input);
+        
+        // Verify array normalization worked correctly
+        if (toolName === "run_file_change_hooks" || toolName === "read_files") {
+          const key = toolName === "run_file_change_hooks" ? "files" : "paths";
+          if (!Array.isArray(parsed[key])) {
+            throw new Error(`Expected ${key} to be normalized to array, got ${typeof parsed[key]}`);
+          }
+        }
+        
+        selfTestPassed++;
+        logDebug(`✅ Schema test passed: ${toolName}/${name}`);
       } catch (err) {
-        logError(`❌ Schema self-test FAILED: ${name} — error: ${err.message}`);
+        logError(`❌ Schema self-test FAILED: ${toolName}/${name} — ${err.message}`);
+        failedTests.push(`${toolName}/${name}: ${err.message}`);
       }
     }
     
@@ -5019,9 +5065,13 @@ server.listen(PORT, "127.0.0.1", async () => {
       logError(
         `🧪 Tool schema self-test FAILED (${selfTestPassed}/${selfTests.length}) — refusing to start`,
       );
+      logError(`Failed tests:`);
+      for (const failure of failedTests) {
+        logError(`  - ${failure}`);
+      }
       process.exit(1);
     }
-    logInfo(`🧪 Tool schema self-test: ${selfTestPassed}/${selfTests.length} passed`);
+    logInfo(`🧪 Tool schema self-test: ${selfTestPassed}/${selfTests.length} passed (all array normalization working)`);
   }
 
   // Send immediate Discord notification on startup - BEFORE async probe
