@@ -11,6 +11,43 @@ This file is the **first-read execution contract** for AI agents working on ANQR
 5. [docs/harness/00-index.md](/home/user/src/anqr/docs/harness/00-index.md) — harness doctrine
 6. Relevant standards, workflows, or issue context
 
+## Tool availability
+
+**Available tools for agents:**
+
+- `read_files` — Read multiple files from filesystem
+- `str_replace` — Replace strings in files
+- `write_file` — Create or overwrite files
+- `run_terminal_command` — Execute shell commands (use this, not `exec`)
+- `code_search` — Search code using ripgrep
+- `list_directory` — List directory contents
+- `read_subtree` — Read directory tree with contents
+- `memory_search` — Search MEMORY.md and knowledge files
+- `memory_get` — Get full memory file content
+- `run_file_change_hooks` — Execute file change hooks (accepts `files` as array)
+- `think_deeply` — Deep reasoning for complex tasks
+- `update_subgoal` — Update task progress tracking
+- `add_subgoal` — Add new subgoal for complex tasks
+- `find_files` — Find files by natural language description
+- `web_search` — Search web via Linkup API (requires API key)
+- `read_docs` — Fetch library documentation via Context7 API (requires API key)
+- `spawn_agents` — Spawn multiple agents in parallel
+- `add_message` — Add message to conversation
+- `set_messages` — Set conversation history
+- `propose_str_replace` — Propose edits without applying
+- `propose_write_file` — Propose file write without applying
+- `ask_user` — Ask user questions
+- `lookup_agent_info` — Get agent metadata
+
+**Important notes:**
+
+- Use `run_terminal_command` (not `exec`) for shell commands
+- `run_file_change_hooks` expects `files` parameter as an array: `{"files": ["path1", "path2"]}`
+  - **ALWAYS** pass an array, even for a single file: `{"files": ["single-file.ts"]}`
+  - **NEVER** pass a string: `{"files": "single-file.ts"}` ❌
+- Tools like `set_messages`, `set_output`, `end_turn` are SDK-internal only
+- Web search and docs tools require API keys to be configured
+
 ## Core execution rules
 
 ### Task sizing
@@ -153,6 +190,23 @@ Supporting jobs:
 
 **Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `scripts/ops/.workspace/` (already in `.gitignore`) for such temporary files.
 
+### Testing strategy
+
+**Current approach:** Intentional rebuild around current architecture, not wholesale legacy import.
+
+**Coverage strategy:** 7-phase protected scope defined in `coverage-scope.json`
+
+- Phase 1 (active): Contracts & Domain Primitives
+- Phases 2-7 (deferred): Application, UI, Platform, Analytics, Observability, Config/Testing
+
+**Test suites:**
+
+- Unit tests — `npm run test:unit`
+- E2E tests — 90+ tests for OpenClaw/Symphony integration
+- Playwright — `npm run test:basic` (critical flows), `npm run test:advanced` (gallery/export)
+
+**Test location:** `tests/` with intentional architecture ownership
+
 ### Provider routing
 
 The harness uses a cascading provider model with failure cooldown:
@@ -194,6 +248,16 @@ When degraded, **say so explicitly** instead of pretending full capability.
 - `docs/generated/*` — generated artifacts (not doctrine source)
 - `migration/*` — archive-only (no new operational truth)
 
+**Single sources of truth:**
+
+- Launch scope → `docs/program/01-anqr-1.0-definition.md`
+- Bootstrap → `README.md`
+- Agent rules → `AGENTS.md` (this file)
+- Docs index → `docs/README.md`
+- Harness doctrine → `docs/harness/00-index.md`
+
+**Migration ledger:** `MCP-MIGRATION.md` (preserved reference, not live doctrine)
+
 ### Workspace governance
 
 Use the hybrid Linear model:
@@ -204,6 +268,112 @@ Use the hybrid Linear model:
 - Use `Human Review` for approvals, secrets, legal, store, billing
 - Use `Blocked` only for external blockers
 - Preserve evidence in issue body or linked artifacts
+
+### Linear integration
+
+Agents can efficiently CRUD Linear issues using the canonical client library:
+
+**Location:** `scripts/ops/integrations/linear/linear-client.mjs`
+
+**Key functions:**
+
+```javascript
+// Import from: scripts/ops/integrations/linear/linear-client.mjs
+import { createIssue, updateIssue, addComment, applyLabels, 
+         findOpenIssuesByTitle, findOpenIssuesByDescriptionFragment,
+         listIssuesByState, getIssueDetail, getQueueDepth,
+         TEAM_ID, STATES, LABELS } from 'linear-client.mjs';
+
+// Create issue (returns issue object with id, identifier, title, state, labels)
+const issue = await createIssue({
+  title: "Issue title",
+  description: "Issue description",
+  stateId: STATES.backlog,  // or .todo, .inProgress, .inReview, .done, .canceled
+  labelIds: [LABELS.harness, LABELS.bug],  // See taxonomy below
+  priority: 1  // 0=none, 1=urgent, 2=high, 3=normal, 4=low (optional)
+});
+
+// Update issue
+await updateIssue(issue.id, { 
+  stateId: STATES.done,
+  priority: 2 
+});
+
+// Add comment
+await addComment(issue.id, "Comment body");
+
+// Find issues
+const issues = await findOpenIssuesByTitle("fragment");
+const byDesc = await findOpenIssuesByDescriptionFragment("text");
+const inState = await listIssuesByState(["Todo", "In Progress"]);
+
+// Get full issue detail with comments
+const detail = await getIssueDetail(issueId);
+```
+
+**Available states:**
+
+- `STATES.backlog`, `STATES.todo`, `STATES.inProgress`, `STATES.inReview`, `STATES.done`, `STATES.canceled`
+- Note: "Blocked" and "Human Review" states exist in workspace but aren't currently exposed in constants
+
+**Available label taxonomy** (from `docs/program/04-taxonomy.md`):
+
+- `LABELS.harness` — harness/ops work
+- `LABELS.governance` — workspace/policy work
+- `LABELS.hygiene` — cleanup/maintenance
+- `LABELS.product` — product features
+- `LABELS.release` — release/deployment
+- `LABELS.growth` — marketing/analytics
+- `LABELS.incident` — incidents/hotfixes
+- `LABELS.research` — exploratory work
+- `LABELS.bug` — defects (legacy)
+- `LABELS.reliability` — stability (legacy)
+
+**Environment requirement:**
+
+- Requires `LINEAR_API_KEY` environment variable
+- Team ID is hardcoded to ANQR workspace: `01534c1e-4041-474d-a81e-24f917f33912`
+
+**Example scripts for reference:**
+
+- `scripts/ops/integrations/linear/create-*.mjs` — issue creation patterns
+- `scripts/ops/integrations/linear/close-reviewed-issues.mjs` — bulk state transitions
+- `scripts/ops/integrations/linear/reopen-marked-issues.mjs` — conditional updates with comments
+
+### Symphony bridge architecture
+
+The harness uses two OpenAI-compatible bridges:
+
+**Symphony Bridge** (port 4319):
+
+- AI SDK-based with tool execution
+- 4-tier provider cascade (paid → free-cloud → local-proxy → local-safety-net)
+- 42 providers with dynamic tool-capability probing
+- Adaptive context: shrinks ceilings on 413/context errors, throttles on 429/rate-limit
+- Service: `anqr-symphony-bridge.service`
+
+**Codebuff Bridge** (port 4318):
+
+- Codebuff SDK exposed as OpenAI-compatible HTTP
+- Automatic paid → free mode fallback with periodic re-validation
+- Service: `anqr-codebuff-bridge.service`
+
+**Key modules** (all under `scripts/ops/integrations/model/`):
+
+- `symphony-openai-bridge.mjs` — main bridge with streaming, tool execution
+- `symphony-credit-gate.mjs` — 4-tier provider selection
+- `symphony-adaptive-context.mjs` — dynamic token ceilings, rate-limit tracking
+- `symphony-bridge-truncation.mjs` — static limits and message truncation
+- `codebuff-openai-bridge.mjs` — Codebuff SDK bridge
+
+**Bridge restart procedure (CRITICAL):**
+
+1. Commit & push first: `git add -A && git commit -m "..." && git push`
+2. Wait for zero concurrency (check Discord for "(0 concurrent)")
+3. Restart: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
+4. Update `MEMORY.md` with stop/start entries, then commit & push again
+
+**Never restart bridges during active concurrent requests** — data loss will occur
 
 ### Bootstrap contract
 
@@ -229,6 +399,26 @@ Use the hybrid Linear model:
 - iOS/Xcode toolchain
 - fastlane/bundler
 - Store credentials and signing material
+
+### Repository context
+
+**Current architecture surface:**
+
+- `packages/<group>/<package>` — two-level reusable architecture (e.g., `packages/domain/qr`)
+- `apps/web` — canonical web delivery
+- `netlify/*` — canonical API/MCP delivery
+- `scripts/ops/*` — harness runtime (outside depcruise product claim)
+- `services/systemd/*` — operator automation (outside depcruise product claim)
+- `public/*` — static/public assets
+- `docs/*` — canonical knowledge
+
+**Reserved/deferred:**
+
+- `src/*` — transitional residue, never regains authority
+- `apps/api` — reserved for future promotion
+- Android/iPhone — not yet in 1.0 claim
+
+**Current phase:** Phase 4 (current platform refinement) — harness fully operational, product architecture maintained
 
 ### Truth rules
 

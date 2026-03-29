@@ -452,7 +452,8 @@
     "xcconfig",
     "basenames",
     "Podfile",
-    "Procfile"
+    "Procfile",
+    "hotfixes"
   ],
   "dictionaries": ["typescript", "node", "html", "css", "bash"],
   "overrides": [

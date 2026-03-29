@@ -1675,27 +1675,35 @@ const tools = {
         .preprocess(
           (val) => {
             // Normalize to array: handle string, array, or malformed input
-            if (Array.isArray(val)) return val;
+            // This workaround handles the Codebuff SDK bug where it passes a single string
+            // instead of an array (see docs/known-issues/codebuff-sdk-run-file-change-hooks.md)
+            if (Array.isArray(val)) {
+              // Already an array - return as-is
+              return val;
+            }
             if (typeof val === "string") {
               const trimmed = val.trim();
               if (!trimmed) return [];
-              // Handle JSON-encoded arrays
+              // Handle JSON-encoded arrays like '["file1.ts", "file2.ts"]'
               if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
                 try {
                   const parsed = JSON.parse(trimmed);
                   return Array.isArray(parsed) ? parsed : [trimmed];
                 } catch {
+                  // JSON parse failed - treat the whole string as a single file path
                   return [trimmed];
                 }
               }
+              // Single string - wrap in array (this is the Codebuff SDK bug case)
               return [trimmed];
             }
-            // Handle object with path/paths properties
+            // Handle object with path/paths properties (defensive)
             if (val && typeof val === "object") {
               if (typeof val.path === "string") return [val.path];
               if (Array.isArray(val.paths)) return val.paths;
               if (typeof val.paths === "string") return [val.paths];
             }
+            // Fallback: empty array (will fail min(1) validation with clear error)
             return [];
           },
           z.array(z.string()).min(1, "At least one file path is required")
@@ -3118,7 +3126,7 @@ async function invokeWithAI(provider, messages, options = {}) {
         }
 
         if (inThinkBlock) {
-          // We're inside a think block - stream all content (including tags for now)
+          // We're inside a think block - stream the thinking content in real-time
           // This handles multi-chunk blocks correctly
           if (onChunk && delta && delta.length > 0) {
             onChunk({ type: "text", text: delta });

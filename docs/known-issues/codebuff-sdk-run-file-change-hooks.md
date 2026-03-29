@@ -40,10 +40,19 @@ The SDK incorrectly passes the `files` parameter as a string instead of an array
 
 ## Workarounds
 
-- None; configuration does not affect this.
-- SDK internal bug.
+**Symphony Bridge**: The Symphony bridge (port 4319) includes robust preprocessing logic that automatically normalizes the `files` parameter to an array, handling all of these cases:
+
+- ✅ Single string → wraps in array: `"file.ts"` → `["file.ts"]`
+- ✅ JSON-encoded array string → parses: `'["file1.ts", "file2.ts"]'` → `["file1.ts", "file2.ts"]`
+- ✅ Array → passes through: `["file.ts"]` → `["file.ts"]`
+- ✅ Object with path/paths properties → extracts to array
+
+This preprocessing is defined in `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (line ~1671) using Zod's `z.preprocess()` function.
+
+**Result**: The SDK bug causes no functional issues when using the Symphony bridge. Validation errors are eliminated by the normalization layer.
 
 ## Next Steps
 
-- Reported to Codebuff SDK maintainers.
-- Monitor for SDK releases with fix.
+- ✅ **Mitigated**: Symphony bridge preprocessing handles all cases
+- Monitor for SDK releases with fix
+- Consider reporting to Codebuff SDK maintainers if not already done
