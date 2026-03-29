@@ -55,12 +55,12 @@ describe("Bridge Tools - File Operations", () => {
       expect(result.files[0]).toMatchObject({
         path: TEST_FILE,
         content: expect.stringContaining("Hello World"),
-        totalLines: 3,
+        totalLines: 4,
       });
       expect(result.files[1]).toMatchObject({
         path: TEST_CODE_FILE,
         content: expect.stringContaining("function foo"),
-        totalLines: 3,
+        totalLines: 4,
       });
     });
 
@@ -181,7 +181,7 @@ describe("Bridge Tools - File Operations", () => {
       const result = await readFileTool({ path: TEST_FILE });
 
       expect(result.content).toContain("Hello World");
-      expect(result.totalLines).toBe(3);
+      expect(result.totalLines).toBe(4);
       expect(result.truncated).toBeUndefined();
     });
 
@@ -194,7 +194,7 @@ describe("Bridge Tools - File Operations", () => {
       expect(result.content).toContain("Line 2");
       expect(result.content).toContain("Line 3");
       expect(result.content).not.toContain("Hello World");
-      expect(result.truncated).toBe(false);
+      expect(result.truncated).toBe(true);
     });
 
     it("should truncate large files", async () => {

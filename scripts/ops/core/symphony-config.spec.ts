@@ -43,8 +43,8 @@ describe("symphony-config.mjs", () => {
     it("should have STALE_THRESHOLD_MS = 30 min", () => {
       expect(STALE_THRESHOLD_MS).toBe(30 * 60 * 1000);
     });
-    it("should have TASK_TIMEOUT_MS = 20 min", () => {
-      expect(TASK_TIMEOUT_MS).toBe(20 * 60 * 1000);
+    it("should have TASK_TIMEOUT_MS = 25 min", () => {
+      expect(TASK_TIMEOUT_MS).toBe(25 * 60 * 1000);
     });
     it("should have RUNNER_STUCK_THRESHOLD_MS = 15 min", () => {
       expect(RUNNER_STUCK_THRESHOLD_MS).toBe(15 * 60 * 1000);
@@ -101,8 +101,8 @@ describe("symphony-config.mjs", () => {
       expect(RUNNER_PROVIDER_FAILURE_WINDOW_SECS).toBe(360);
       expect(RUNNER_PAID_PROVIDER_FAILURE_WINDOW_SECS).toBe(120);
     });
-    it("should have auto push enabled", () => {
-      expect(RUNNER_AUTO_PUSH).toBe(true);
+    it("should have auto push disabled (until stability restored)", () => {
+      expect(RUNNER_AUTO_PUSH).toBe(false);
     });
     it("should have turn budget warning threshold", () => {
       expect(RUNNER_TURN_BUDGET_WARNING).toBe(5);

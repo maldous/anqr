@@ -291,11 +291,11 @@ export function classifyError(err) {
 export function parseContextErrorDetails(err) {
   const errStr = extractErrorString(err);
 
-  const limitMatch = errStr.match(/limit\\s+(\\d+)/i);
-  const requestedMatch = errStr.match(/requested\\s+(\\d+)/i);
-  const contextLenMatch = errStr.match(/maximum context length is (\\d+)/i);
-  const youRequestedMatch = errStr.match(/you requested (\\d+)/i);
-  const maxSizeMatch = errStr.match(/max size[:\\s]+(\\d+)/i);
+  const limitMatch = errStr.match(/limit\s+(\d+)/i);
+  const requestedMatch = errStr.match(/requested\s+(\d+)/i);
+  const contextLenMatch = errStr.match(/maximum context length is (\d+)/i);
+  const youRequestedMatch = errStr.match(/you requested (\d+)/i);
+  const maxSizeMatch = errStr.match(/max size[:\s]+(\d+)/i);
   const isTpmRelated = /tokens per minute|tpm/i.test(errStr);
 
   let reportedLimit = null;
@@ -349,12 +349,12 @@ export function parseRateLimitInfo(err) {
   }
 
   const errStr = extractErrorString(err);
-  const tpmLimitMatch = errStr.match(/tokens per minute.*?limit\\s+(\\d+)/i);
+  const tpmLimitMatch = errStr.match(/tokens per minute.*?limit\s+(\d+)/i);
   if (tpmLimitMatch && !info.tpmLimit) {
     info.tpmLimit = Number.parseInt(tpmLimitMatch[1], 10);
   }
 
-  const retryMatch = errStr.match(/retry[.-]after[:\\s]+(\\d+)/i);
+  const retryMatch = errStr.match(/retry[.-]after[:\s]+(\d+)/i);
   if (retryMatch && !info.retryAfterMs) {
     info.retryAfterMs = Number.parseInt(retryMatch[1], 10) * 1_000;
   }
