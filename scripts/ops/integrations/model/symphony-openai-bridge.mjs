@@ -3905,10 +3905,23 @@ async function invokeWithAI(provider, messages, options = {}) {
 
     logDebug(`Completion done`);
 
+    // Build structured result contract (simplified for non-streaming - no tool execution metrics)
+    const _symphonyResult = {
+      completed: result.finishReason === "stop" && text.length > 0,
+      needsContinuation: result.finishReason === "tool-calls" || result.finishReason === "length",
+      failureClass: result.finishReason === "tool-calls" ? "step_limit_reached" : null,
+      mutationCount: 0,
+      changedFiles: [],
+      validationIntent: false,
+      toolCallCount: 0,
+      stepCount: 0,
+    };
+
     return {
       text,
       providerName: provider.name,
       usage: result.usage,
+      _symphonyResult,
     };
   }
 }

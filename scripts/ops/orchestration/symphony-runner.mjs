@@ -130,7 +130,17 @@ if (!existsSync(STATE_DIR)) {
 const LOCK_FILE = resolve(STATE_DIR, `lock-${WORKTREE_ID}`);
 const RUN_ID = `run-${Date.now()}-${process.pid}`;
 const SYNC_FAILURE_THRESHOLD = 3;
+const SYNC_FAIL_COUNT_FILE = resolve(STATE_DIR, `sync-fail-${WORKTREE_ID}`);
+
+// Load persisted sync failure count
 let syncFailCount = 0;
+try {
+  if (existsSync(SYNC_FAIL_COUNT_FILE)) {
+    syncFailCount = Number(readFileSync(SYNC_FAIL_COUNT_FILE, "utf-8").trim()) || 0;
+  }
+} catch {
+  syncFailCount = 0;
+}
 const LEASE_TTL_MS = Number(
   process.env.ANQR_SYMPHONY_LEASE_MS || Math.max(RUNNER_STUCK_THRESHOLD_MS, 20 * 60 * 1000),
 );
@@ -525,8 +535,19 @@ async function executeIssue(issue, dryRun = false) {
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] Worktree ${WORKTREE_ID} synced with main`);
       syncFailCount = 0; // Reset counter on successful sync
+      // Persist reset counter
+      try {
+        if (existsSync(SYNC_FAIL_COUNT_FILE)) {
+          unlinkSync(SYNC_FAIL_COUNT_FILE);
+        }
+      } catch {}
     } catch (err) {
       syncFailCount++;
+      // Persist incremented counter
+      try {
+        writeFileSync(SYNC_FAIL_COUNT_FILE, String(syncFailCount));
+      } catch {}
+      
       logError(
         `[runner] Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
       );
@@ -540,6 +561,12 @@ async function executeIssue(issue, dryRun = false) {
           execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
           logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} reset to origin/main successfully`);
           syncFailCount = 0; // Reset counter after successful recovery
+          // Persist reset counter
+          try {
+            if (existsSync(SYNC_FAIL_COUNT_FILE)) {
+              unlinkSync(SYNC_FAIL_COUNT_FILE);
+            }
+          } catch {}
         } catch (resetErr) {
           logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
           logError(`[runner] Manual intervention required for worktree ${WORKTREE_ID}`);
@@ -1196,9 +1223,40 @@ async function executeIssue(issue, dryRun = false) {
       }
     }
 
-    let validation = runValidation(ROOT, changedFiles);
+    // Create heartbeat callback for validation steps
+    const validationHeartbeat = () => {
+      const hb = heartbeatLease(issue.identifier, leaseNonce, LEASE_TTL_MS);
+      if (!hb.ok) {
+        logWarn(
+          `[runner] Validation heartbeat failed for ${issue.identifier}: ${hb.reason} — marking lease lost`,
+        );
+        leaseValid = false;
+      }
+      return hb;
+    };
+
+    let validation = runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
     let validationFixAttempts = 0;
     let previousSignature = validation.signature;
+
+    // Check if validation failed due to heartbeat failure
+    if (validation.heartbeatFailed) {
+      logWarn(`[runner] Validation aborted due to heartbeat failure for ${issue.identifier}`);
+      gitRevert();
+      recordTransition(issue.identifier, {
+        actor: "runner",
+        reason: "lease_lost_during_validation",
+        from: "In Progress",
+        to: "Abandoned",
+        runId: RUN_ID,
+      });
+      recordLinearCompletion(metricsProviderName, {
+        completed: false,
+        priority: issue.priority,
+        estimate: issue.estimate,
+      });
+      return "done";
+    }
 
     while (!validation.passed && validationFixAttempts < RUNNER_MAX_VALIDATION_FIXES) {
       // Wall-clock + lease check before each validation fix attempt
@@ -1225,7 +1283,15 @@ async function executeIssue(issue, dryRun = false) {
       if (fixResult.error || fixResult.turns === 0) break;
       changedFiles = gitDiffNames();
       if (changedFiles.length === 0) break;
-      const nextValidation = runValidation(ROOT, changedFiles);
+      const nextValidation = runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
+      
+      // Check if validation failed due to heartbeat failure
+      if (nextValidation.heartbeatFailed) {
+        logWarn(`[runner] Validation fix aborted due to heartbeat failure for ${issue.identifier}`);
+        leaseValid = false;
+        break;
+      }
+      
       const sameSignature =
         nextValidation.signature && nextValidation.signature === previousSignature;
       validation = nextValidation;

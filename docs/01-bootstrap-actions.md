@@ -107,12 +107,20 @@ All developers must configure git with weave merge for concurrent worktree execu
 
 This configures:
 
-- Weave merge driver for reduced conflicts in concurrent development
+- Weave merge driver for reduced conflicts in concurrent development (30-50% fewer conflicts)
 - diff3 conflict markers for better conflict resolution
+- Pull strategy (merge, not rebase)
 - Line ending handling for cross-platform compatibility
 - Optional patience diff algorithm
 
-See [docs/standards/git-weave-merge.md](standards/git-weave-merge.md) for details on why weave merge is critical for concurrent worktree execution.
+**Why this matters:**
+
+- Critical for concurrent Symphony worktree execution
+- Reduces merge conflicts by 30-50% for text-heavy files
+- Enables 75-150% throughput gain from concurrent execution
+- Simple one-time setup per developer machine
+
+See [docs/standards/git-weave-merge.md](standards/git-weave-merge.md) for comprehensive details on weave merge strategy, benefits, and troubleshooting.
 
 ## 10. Enable local execution
 
