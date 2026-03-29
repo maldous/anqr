@@ -32,12 +32,14 @@ logInfo(`✅ Dependencies installed in worktree ${id}`);
 The implementation matches the exact specification from the issue:
 
 **Issue Specification:**
+
 ```javascript
 // After git worktree add, run:
 execFileSync("npm", ["install"], { cwd: worktreePath, stdio: "inherit" });
 ```
 
 **Actual Implementation:**
+
 ```javascript
 execFileSync("npm", ["install"], {
   cwd: worktreePath,
@@ -50,6 +52,7 @@ execFileSync("npm", ["install"], {
 ### Execution Flow
 
 1. **Worktree creation** (line 48-51):
+
    ```javascript
    execFileSync("git", ["worktree", "add", "-b", branchName, worktreePath, "main"], {
      cwd: PROJECT_ROOT,
@@ -58,6 +61,7 @@ execFileSync("npm", ["install"], {
    ```
 
 2. **Log confirmation** (line 52):
+
    ```javascript
    logInfo(`✅ Created worktree: ${worktreePath} (branch: ${branchName})`);
    ```
@@ -100,14 +104,15 @@ All harness validation gates passed:
 
 ```bash
 ✅ npm run typecheck — No errors
-✅ npm run lint — No errors  
+✅ npm run lint — No errors
 ✅ npm run cspell — No errors
 ✅ npm run audit:ast — No errors
 ```
 
 Note: Unit test failures exist but are unrelated to worktree functionality:
+
 - `tests/unit/worktree-pool.spec.ts` — Mock setup issues in test file
-- `tests/unit/queue-control.spec.ts` — Mock setup issues in test file  
+- `tests/unit/queue-control.spec.ts` — Mock setup issues in test file
 - `packages/application/generator/src/generator-app.spec.ts` — Pre-existing failure
 
 These test issues should be addressed separately (not blocking for this issue).
@@ -115,6 +120,7 @@ These test issues should be addressed separately (not blocking for this issue).
 ## Additional Changes Made
 
 During this session, fixed lint warnings in `tests/unit/worktree-pool.spec.ts`:
+
 - Removed unused import: `resolve` from `node:path`
 - Renamed unused parameter `opts` to `_opts` in mock implementations
 
@@ -125,6 +131,7 @@ This ensures the test file follows coding standards, even though the tests thems
 **ANQ-1106 is already complete.** The `npm install` step was implemented as part of the original worktree feature development (likely during ANQ-1099). No code changes were required to fulfill this issue's requirements.
 
 The implementation:
+
 - ✅ Matches the specification exactly
 - ✅ Includes proper logging
 - ✅ Uses correct working directory (`cwd: worktreePath`)

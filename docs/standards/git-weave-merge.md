@@ -88,12 +88,14 @@ Result: Clean merge (both additions preserved in order)
 **Problem:** Symphony runners in multiple worktrees work on different issues simultaneously and push to `origin/main` frequently.
 
 **Without weave merge:**
+
 - Two runners add functions to the same file → conflict
 - Two runners add imports to different files → conflict
 - Two runners modify different test files → conflict
 - Frequent push conflicts require manual resolution
 
 **With weave merge:**
+
 - Additive changes in different locations merge cleanly
 - Function additions interleave automatically
 - Import statements merge in document order
@@ -113,11 +115,13 @@ Weave merge: 0 conflicts (all three functions interleave cleanly)
 ### Throughput Impact
 
 **With standard recursive merge:**
+
 - 2-3 issues/hour with 1 worktree
 - Conflicts limit scaling to 2-3 worktrees
 - ~40% of pushes require conflict resolution
 
 **With weave merge:**
+
 - 4-5 issues/hour with 2 worktrees (75% increase)
 - 6-8 issues/hour with 4 worktrees (150% increase)
 - ~10% of pushes require conflict resolution
@@ -163,6 +167,7 @@ git config --global merge.weave.name "Weave merge with diff3 markers"
 ```
 
 This script configures:
+
 - Weave merge driver
 - diff3 conflict markers
 - Pull strategy (merge, not rebase)
@@ -214,6 +219,7 @@ function baz() {
 ```
 
 **Benefits:**
+
 - Shows original code (base) for context
 - Easier to understand what changed on each side
 - Better informed conflict resolution
@@ -237,6 +243,7 @@ Result: CONFLICT (both modified same line)
 ```
 
 **Weave merge only helps with:**
+
 - ✅ Concurrent line additions in different locations
 - ✅ Interleaved function/method additions
 - ✅ Import statement additions
@@ -244,6 +251,7 @@ Result: CONFLICT (both modified same line)
 - ✅ Documentation additions
 
 **Weave merge does NOT help with:**
+
 - ❌ Same line modified by both branches
 - ❌ Overlapping deletions
 - ❌ Structural refactoring conflicts
@@ -262,7 +270,7 @@ export function validateEmail(email: string): boolean {
 }
 
 export function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 export function parseJSON(input: string): unknown {
@@ -283,11 +291,13 @@ export const utils = {
 ### File Organization for Concurrent Development
 
 **Prefer:**
+
 - One export per file (function, class, constant)
 - Additive changes (new files, new functions)
 - Vertical growth (add lines at end)
 
 **Avoid:**
+
 - Large single-file modules modified by multiple agents
 - Frequent refactoring during concurrent development
 - Horizontal growth (modify existing lines)
@@ -297,9 +307,9 @@ export const utils = {
 **Good (merge-friendly):**
 
 ```typescript
-import { validateEmail } from './validate-email';
-import { formatDate } from './format-date';
-import { parseJSON } from './parse-json';
+import { validateEmail } from "./validate-email";
+import { formatDate } from "./format-date";
+import { parseJSON } from "./parse-json";
 // ← new imports added here merge cleanly
 ```
 
@@ -310,7 +320,7 @@ import {
   validateEmail,
   formatDate,
   parseJSON, // ← both branches add here (conflict)
-} from './utils';
+} from "./utils";
 ```
 
 ### Test File Organization
@@ -318,16 +328,22 @@ import {
 **Good (merge-friendly):**
 
 ```typescript
-describe('validateEmail', () => {
-  it('should accept valid email', () => { /* ... */ });
+describe("validateEmail", () => {
+  it("should accept valid email", () => {
+    /* ... */
+  });
 });
 
-describe('formatDate', () => {
-  it('should format date as YYYY-MM-DD', () => { /* ... */ });
+describe("formatDate", () => {
+  it("should format date as YYYY-MM-DD", () => {
+    /* ... */
+  });
 });
 
-describe('parseJSON', () => {
-  it('should parse valid JSON', () => { /* ... */ });
+describe("parseJSON", () => {
+  it("should parse valid JSON", () => {
+    /* ... */
+  });
 });
 // ← new test suites added here merge cleanly
 ```
@@ -343,7 +359,7 @@ describe('parseJSON', () => {
    ```bash
    # Check configuration
    git config --get merge.weave.driver
-   
+
    # If empty, run setup
    ./scripts/git-setup.sh
    ```
@@ -355,7 +371,7 @@ describe('parseJSON', () => {
 3. **Binary files or files not in .gitattributes**
 
    Check if file type is covered:
-   
+
    ```bash
    git check-attr merge <file>
    # Should show: <file>: merge: weave
@@ -409,11 +425,13 @@ function bar() {
 **This is rare but possible with incomplete commits.**
 
 **Prevention:**
+
 - Run validation gates before committing
 - Symphony runner includes pre-validation sync (catches early)
 - Retry with rebase if validation fails
 
 **Resolution:**
+
 - Fix syntax errors manually
 - Run typecheck/lint to verify
 - Commit corrected version
@@ -502,6 +520,7 @@ git commit -m "Merge origin/main"
 ```
 
 **Benefits:**
+
 - Catches conflicts before wasting time on validation
 - Validates against latest code from all worktrees
 - Reduces validation failures from stale dependencies
@@ -537,22 +556,22 @@ If conflicts occur despite weave merge:
 
 ### Merge Time Comparison
 
-| File Size | Recursive Merge | Weave Merge | Overhead |
-|-----------|----------------|-------------|----------|
-| 100 lines | 2 ms           | 3 ms        | +50%     |
-| 1,000 lines | 15 ms        | 25 ms       | +67%     |
-| 10,000 lines | 150 ms      | 400 ms      | +167%    |
+| File Size    | Recursive Merge | Weave Merge | Overhead |
+| ------------ | --------------- | ----------- | -------- |
+| 100 lines    | 2 ms            | 3 ms        | +50%     |
+| 1,000 lines  | 15 ms           | 25 ms       | +67%     |
+| 10,000 lines | 150 ms          | 400 ms      | +167%    |
 
 **Conclusion:** Weave merge is slower but overhead is acceptable for typical file sizes.
 
 ### Conflict Reduction
 
-| Scenario | Recursive Conflicts | Weave Conflicts | Reduction |
-|----------|-------------------|-----------------|-----------|
-| Concurrent function additions | 80% | 10% | 88% |
-| Concurrent import additions | 90% | 5% | 94% |
-| Concurrent test additions | 85% | 15% | 82% |
-| Same-line modifications | 100% | 100% | 0% |
+| Scenario                      | Recursive Conflicts | Weave Conflicts | Reduction |
+| ----------------------------- | ------------------- | --------------- | --------- |
+| Concurrent function additions | 80%                 | 10%             | 88%       |
+| Concurrent import additions   | 90%                 | 5%              | 94%       |
+| Concurrent test additions     | 85%                 | 15%             | 82%       |
+| Same-line modifications       | 100%                | 100%            | 0%        |
 
 **Average reduction:** 30-50% across typical concurrent development scenarios.
 
@@ -572,11 +591,13 @@ If conflicts occur despite weave merge:
 Standard three-way merge algorithm.
 
 **Good for:**
+
 - Single-developer workflows
 - Infrequent merges
 - Structural refactoring
 
 **Poor for:**
+
 - Concurrent development
 - Frequent merges
 - Additive changes
@@ -613,6 +634,7 @@ git config --global diff.algorithm patience
 ```
 
 **Good for:**
+
 - Code with many blank lines
 - Indentation changes
 - Better human-readable diffs
@@ -643,5 +665,6 @@ git config --get merge.weave.driver
 ```
 
 **See also:**
+
 - [docs/01-bootstrap-actions.md](../01-bootstrap-actions.md) — Developer onboarding (includes git setup)
 - [docs/harness/12-concurrent-execution-with-worktrees.md](../harness/12-concurrent-execution-with-worktrees.md) — Comprehensive worktree guide

@@ -109,14 +109,16 @@ if (process.env.ANQR_WORKTREE_ID) {
   WORKTREE_ID = autoDetectedWorktreeId;
 } else {
   // Running in main repo without worktree context - NOT ALLOWED
-  logError(`[runner] CRITICAL: Cannot run in main repo. Must run in a worktree (e.g., /home/user/src/anqr-wt1) or set ANQR_WORKTREE_ID environment variable.`);
-  logError(`[runner] Example: ANQR_WORKTREE_ID=wt1 node scripts/ops/orchestration/symphony-runner.mjs --once`);
+  logError(
+    `[runner] CRITICAL: Cannot run in main repo. Must run in a worktree (e.g., /home/user/src/anqr-wt1) or set ANQR_WORKTREE_ID environment variable.`,
+  );
+  logError(
+    `[runner] Example: ANQR_WORKTREE_ID=wt1 node scripts/ops/orchestration/symphony-runner.mjs --once`,
+  );
   process.exit(1);
 }
 
-const ROOT =
-  process.env.ANQR_WORKTREE_PATH ||
-  getWorktreePath(WORKTREE_ID.replace(/^wt/, ""));
+const ROOT = process.env.ANQR_WORKTREE_PATH || getWorktreePath(WORKTREE_ID.replace(/^wt/, ""));
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
 const uid = process.getuid?.() ?? 1000;
@@ -549,12 +551,14 @@ async function executeIssue(issue, dryRun = false) {
       try {
         writeFileSync(SYNC_FAIL_COUNT_FILE, String(syncFailCount));
       } catch {}
-      
+
       logError(
         `[runner] ❌ Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
       );
       logError(`[runner] This likely indicates conflicting changes in the worktree.`);
-      logError(`[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`);
+      logError(
+        `[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`,
+      );
 
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
         logWarn(
@@ -585,10 +589,12 @@ async function executeIssue(issue, dryRun = false) {
           return "skip";
         }
       }
-      
+
       // ROLLBACK: Release lock immediately on sync failure - no lease was acquired yet
       // This is the key improvement: exit early instead of continuing to lease acquisition
-      logError(`[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`);
+      logError(
+        `[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`,
+      );
       releaseLock();
       return "skip";
     }
@@ -1294,15 +1300,17 @@ async function executeIssue(issue, dryRun = false) {
       if (fixResult.error || fixResult.turns === 0) break;
       changedFiles = gitDiffNames();
       if (changedFiles.length === 0) break;
-      const nextValidation = await runValidation(ROOT, changedFiles, { heartbeat: validationHeartbeat });
-      
+      const nextValidation = await runValidation(ROOT, changedFiles, {
+        heartbeat: validationHeartbeat,
+      });
+
       // Check if validation failed due to heartbeat failure
       if (nextValidation.heartbeatFailed) {
         logWarn(`[runner] Validation fix aborted due to heartbeat failure for ${issue.identifier}`);
         leaseValid = false;
         break;
       }
-      
+
       const sameSignature =
         nextValidation.signature && nextValidation.signature === previousSignature;
       validation = nextValidation;

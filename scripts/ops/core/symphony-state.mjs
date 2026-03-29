@@ -6,10 +6,22 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = path.resolve(__dirname, "../..");
+// PROJECT_ROOT is kept for reference but state dir is now shared across worktrees
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _PROJECT_ROOT = path.resolve(__dirname, "../..");
 
 function getStateDir() {
-  return process.env.ANQR_SYMPHONY_STATE_DIR || path.join(PROJECT_ROOT, "reports", "symphony");
+  // CRITICAL: Use a shared central state directory for ALL worktrees.
+  // Each worktree maintaining its own state.json causes lease race conditions
+  // where multiple runners can pick up the same issue because they can't see
+  // each other's leases.
+  // Default to user-local state directory which is shared across all worktrees.
+  if (process.env.ANQR_SYMPHONY_STATE_DIR) {
+    return process.env.ANQR_SYMPHONY_STATE_DIR;
+  }
+  // Use XDG_RUNTIME_DIR or fallback to /tmp for shared state
+  const runtimeDir = process.env.XDG_RUNTIME_DIR || "/tmp";
+  return path.join(runtimeDir, "anqr-symphony-state");
 }
 
 function getStateFile() {

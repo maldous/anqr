@@ -47,13 +47,13 @@ function trimOutput(text, max = 6000) {
 
 function runCommand(command, options = {}) {
   const { heartbeat, ...execOptions } = options;
-  
+
   // If heartbeat is provided, use spawn with periodic heartbeats
   // Otherwise fall back to execFileSync for backwards compatibility
   if (heartbeat && typeof heartbeat === "function") {
     return runCommandWithHeartbeat(command, execOptions, heartbeat);
   }
-  
+
   try {
     const output = execFileSync("/bin/sh", ["-c", command], {
       encoding: "utf-8",
@@ -71,25 +71,29 @@ function runCommand(command, options = {}) {
 
 function runCommandWithHeartbeat(command, execOptions, heartbeat) {
   const HEARTBEAT_INTERVAL_MS = 60_000; // Send heartbeat every 60 seconds
-  
+
   return new Promise((resolve) => {
     // Send initial heartbeat
     const initialHb = heartbeat();
     if (!initialHb || !initialHb.ok) {
-      resolve({ ok: false, output: "Heartbeat failed before command execution", heartbeatFailed: true });
+      resolve({
+        ok: false,
+        output: "Heartbeat failed before command execution",
+        heartbeatFailed: true,
+      });
       return;
     }
-    
+
     const child = spawn("/bin/sh", ["-c", command], {
       cwd: execOptions.cwd,
       env: execOptions.env || process.env,
       stdio: ["pipe", "pipe", "pipe"],
     });
-    
+
     let stdout = "";
     let stderr = "";
     let heartbeatFailed = false;
-    
+
     // Set up periodic heartbeat
     const heartbeatTimer = setInterval(() => {
       const hbResult = heartbeat();
@@ -102,7 +106,7 @@ function runCommandWithHeartbeat(command, execOptions, heartbeat) {
         } catch {}
       }
     }, HEARTBEAT_INTERVAL_MS);
-    
+
     // Set up timeout if specified
     let timeoutTimer = null;
     if (execOptions.timeout) {
@@ -113,33 +117,37 @@ function runCommandWithHeartbeat(command, execOptions, heartbeat) {
         } catch {}
       }, execOptions.timeout);
     }
-    
+
     child.stdout.on("data", (data) => {
       stdout += data.toString();
     });
-    
+
     child.stderr.on("data", (data) => {
       stderr += data.toString();
     });
-    
+
     child.on("close", (code) => {
       clearInterval(heartbeatTimer);
       if (timeoutTimer) clearTimeout(timeoutTimer);
-      
+
       // Send final heartbeat
       if (!heartbeatFailed) {
         heartbeat();
       }
-      
+
       if (heartbeatFailed) {
-        resolve({ ok: false, output: "Heartbeat failed during command execution", heartbeatFailed: true });
+        resolve({
+          ok: false,
+          output: "Heartbeat failed during command execution",
+          heartbeatFailed: true,
+        });
       } else if (code === 0) {
         resolve({ ok: true, output: trimOutput(stdout) });
       } else {
         resolve({ ok: false, output: trimOutput(`${stdout}\n${stderr}`) });
       }
     });
-    
+
     child.on("error", (err) => {
       clearInterval(heartbeatTimer);
       if (timeoutTimer) clearTimeout(timeoutTimer);
@@ -155,7 +163,8 @@ export async function runTypecheck(projectRoot, opts = {}) {
     env: { ...process.env, NODE_OPTIONS: "--max-old-space-size=2048" },
     heartbeat: opts.heartbeat,
   });
-  if (result.heartbeatFailed) return { pass: false, detail: "Heartbeat failed during typecheck", heartbeatFailed: true };
+  if (result.heartbeatFailed)
+    return { pass: false, detail: "Heartbeat failed during typecheck", heartbeatFailed: true };
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }
 
@@ -165,7 +174,8 @@ export async function runLint(projectRoot, opts = {}) {
     timeout: VALIDATION_MANIFEST.lint.timeoutMs,
     heartbeat: opts.heartbeat,
   });
-  if (result.heartbeatFailed) return { pass: false, detail: "Heartbeat failed during lint", heartbeatFailed: true };
+  if (result.heartbeatFailed)
+    return { pass: false, detail: "Heartbeat failed during lint", heartbeatFailed: true };
   if (!result.ok) return { pass: false, detail: result.output };
   const warningMatch = result.output.match(/Found (\d+) warning/);
   const warnings = warningMatch ? Number(warningMatch[1]) : 0;
@@ -189,7 +199,8 @@ export async function runCspell(projectRoot, changedFiles = [], opts = {}) {
     timeout: VALIDATION_MANIFEST.cspell.timeoutMs,
     heartbeat: opts.heartbeat,
   });
-  if (result.heartbeatFailed) return { pass: false, detail: "Heartbeat failed during cspell", heartbeatFailed: true };
+  if (result.heartbeatFailed)
+    return { pass: false, detail: "Heartbeat failed during cspell", heartbeatFailed: true };
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }
 
@@ -205,7 +216,8 @@ export async function runAstDensity(projectRoot, changedFiles = [], opts = {}) {
       heartbeat: opts.heartbeat,
     },
   );
-  if (result.heartbeatFailed) return { pass: false, detail: "Heartbeat failed during ast-density", heartbeatFailed: true };
+  if (result.heartbeatFailed)
+    return { pass: false, detail: "Heartbeat failed during ast-density", heartbeatFailed: true };
   if (!result.ok) return { pass: false, detail: result.output };
   return result.output.trim().length > 0
     ? { pass: false, detail: result.output }
@@ -219,7 +231,8 @@ export async function runTests(projectRoot, opts = {}) {
     env: { ...process.env, ANQR_LOG_LEVEL: "error" },
     heartbeat: opts.heartbeat,
   });
-  if (result.heartbeatFailed) return { pass: false, detail: "Heartbeat failed during tests", heartbeatFailed: true };
+  if (result.heartbeatFailed)
+    return { pass: false, detail: "Heartbeat failed during tests", heartbeatFailed: true };
   return result.ok ? { pass: true, detail: "" } : { pass: false, detail: result.output };
 }
 
@@ -243,7 +256,7 @@ export function formatValidationFeedback(validation) {
 
 export async function runValidation(projectRoot, changedFiles = [], opts = {}) {
   const heartbeatOpts = opts.heartbeat ? { heartbeat: opts.heartbeat } : {};
-  
+
   const results = [
     { check: "typecheck", ...(await runTypecheck(projectRoot, heartbeatOpts)) },
     { check: "lint", ...(await runLint(projectRoot, heartbeatOpts)) },
@@ -251,10 +264,10 @@ export async function runValidation(projectRoot, changedFiles = [], opts = {}) {
     { check: "ast-density", ...(await runAstDensity(projectRoot, changedFiles, heartbeatOpts)) },
     { check: "test-unit", ...(await runTests(projectRoot, heartbeatOpts)) },
   ];
-  
+
   // Check if any validation failed due to heartbeat failure
   const heartbeatFailed = results.some((r) => r.heartbeatFailed);
-  
+
   return {
     passed: results.every((r) => r.pass),
     results,
@@ -268,7 +281,7 @@ export async function runValidation(projectRoot, changedFiles = [], opts = {}) {
 
 export async function runGlobalPreflights(projectRoot, opts = {}) {
   const heartbeatOpts = opts.heartbeat ? { heartbeat: opts.heartbeat } : {};
-  
+
   const tc = await runTypecheck(projectRoot, heartbeatOpts);
   if (!tc.pass) return { pass: false, check: "typecheck", detail: tc.detail };
   const lint = await runLint(projectRoot, heartbeatOpts);

@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-29  
 **Issue:** ANQ-1112  
-**Scope:** `docs-harness`  
+**Scope:** `docs-harness`
 
 ## Problem Statement
 
@@ -38,12 +38,14 @@ return "skip";
 ### Flow Improvement
 
 **Before:**
+
 1. Acquire PID lock ✓
 2. Try to sync with main (may fail) ❌
 3. Try to acquire lease (wasted if sync failed)
 4. Skip execution
 
 **After:**
+
 1. Acquire PID lock ✓
 2. Try to sync with main (may fail) ❌
 3. **ROLLBACK: Release lock immediately and exit early**
@@ -58,6 +60,7 @@ npm run harness:quick
 ```
 
 **Results:**
+
 - ✅ repo-structure (0ms)
 - ✅ typecheck (13.9s)
 - ✅ lint (1.6s)

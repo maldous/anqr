@@ -481,9 +481,9 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
       // The MCP tool requires both query and libraryName as required parameters
       const resolveResult = await sendRequest("tools/call", {
         name: "resolve-library-id",
-        arguments: { 
-          query: `Documentation for ${libraryTitle}${topic ? ` focusing on ${topic}` : ''}`,
-          libraryName: libraryTitle 
+        arguments: {
+          query: `Documentation for ${libraryTitle}${topic ? ` focusing on ${topic}` : ""}`,
+          libraryName: libraryTitle,
         },
       });
 
@@ -491,9 +491,9 @@ export async function resolveDocsLocally({ libraryTitle, topic, max_tokens = 500
       if (libraryId) {
         // Step 2 — query-docs via MCP tools/call
         // The MCP tool requires libraryId and query as required parameters
-        const docsArgs = { 
+        const docsArgs = {
           libraryId,
-          query: topic || `Documentation and examples for ${libraryTitle}` 
+          query: topic || `Documentation and examples for ${libraryTitle}`,
         };
 
         const docsResult = await sendRequest("tools/call", {

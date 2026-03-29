@@ -69,7 +69,7 @@ console.log("Server healthy:", healthy);
 
 // 3. Resolve documentation
 const result = await resolveDocsLocally({
-  libraryTitle: "React",  // Works with any casing: "React", "react", "REACT"
+  libraryTitle: "React", // Works with any casing: "React", "react", "REACT"
   topic: "hooks",
   max_tokens: 5000,
 });

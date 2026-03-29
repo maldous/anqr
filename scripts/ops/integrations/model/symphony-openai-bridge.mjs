@@ -5060,29 +5060,29 @@ const server = http.createServer(async (req, res) => {
         clearInterval(progressInterval);
         try {
           if (stream && !res.writableEnded) {
-        const errorChunk = {
-          id: `chatcmpl-timeout-${Date.now()}`,
-          object: "chat.completion.chunk",
-          created: Math.floor(Date.now() / 1000),
-          model: route.responseModelId,
-          choices: [
-            {
-              index: 0,
-              delta: {
-                content: `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
+            const errorChunk = {
+              id: `chatcmpl-timeout-${Date.now()}`,
+              object: "chat.completion.chunk",
+              created: Math.floor(Date.now() / 1000),
+              model: route.responseModelId,
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    content: `\n[Error: Request timed out after ${formatElapsed(elapsed)}]`,
+                  },
+                  finish_reason: "stop",
+                },
+              ],
+              _symphonyResult: {
+                completed: false,
+                failureClass: "timeout",
+                stepCount: 0,
+                toolCallCount: 0,
+                needsContinuation: false,
               },
-              finish_reason: "stop",
-            },
-          ],
-          _symphonyResult: {
-            completed: false,
-            failureClass: "timeout",
-            stepCount: 0,
-            toolCallCount: 0,
-            needsContinuation: false,
-          },
-        };
-        res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
+            };
+            res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
             res.write("data: [DONE]\n\n");
             res.end();
           } else if (!res.writableEnded) {
@@ -5452,27 +5452,27 @@ const server = http.createServer(async (req, res) => {
           logError(`Cannot send error chunk - response already ended`);
           return;
         }
-    const errorChunk = {
-      id: `chatcmpl-error-${Date.now()}`,
-      object: "chat.completion.chunk",
-      created: Math.floor(Date.now() / 1000),
-      model: fallbackModelId,
-      choices: [
-        {
-          index: 0,
-          delta: { content: `\n[Server Error: ${error.message}]` },
-          finish_reason: "stop",
-        },
-      ],
-      _symphonyResult: {
-        completed: false,
-        failureClass: "server_error",
-        stepCount: 0,
-        toolCallCount: 0,
-        needsContinuation: false,
-      },
-    };
-    res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
+        const errorChunk = {
+          id: `chatcmpl-error-${Date.now()}`,
+          object: "chat.completion.chunk",
+          created: Math.floor(Date.now() / 1000),
+          model: fallbackModelId,
+          choices: [
+            {
+              index: 0,
+              delta: { content: `\n[Server Error: ${error.message}]` },
+              finish_reason: "stop",
+            },
+          ],
+          _symphonyResult: {
+            completed: false,
+            failureClass: "server_error",
+            stepCount: 0,
+            toolCallCount: 0,
+            needsContinuation: false,
+          },
+        };
+        res.write(`data: ${JSON.stringify(errorChunk)}\n\n`);
         res.write("data: [DONE]\n\n");
         res.end();
         return;

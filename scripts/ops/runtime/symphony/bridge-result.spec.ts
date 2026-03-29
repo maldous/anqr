@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  inferSymphonyResultFromCompletion,
-  normalizeSymphonyResult,
-} from "./bridge-result.mjs";
+import { inferSymphonyResultFromCompletion, normalizeSymphonyResult } from "./bridge-result.mjs";
 
 describe("bridge-result helpers", () => {
   it("normalizes an existing structured result", () => {
