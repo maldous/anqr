@@ -66,11 +66,13 @@ Worktree 2:
 ### Throughput Multiplication
 
 **Current (single runner):**
+
 - Pick issue → execute → validate → commit → push → pick next issue
 - **Throughput:** 2-3 issues/hour (with 20-40 min execution time per issue)
 - **Idle time:** High (runner waits for AI provider, validation, git operations)
 
 **With concurrent worktrees (2-4 runners):**
+
 - Multiple runners execute different issues simultaneously
 - **Expected throughput:** 4-8 issues/hour (75-150% increase)
 - **Idle time:** Low (one runner's wait time is another runner's execution time)
@@ -149,21 +151,26 @@ Worktree 3 → symphony/wt3 (tracks origin/main)
 **Centralized path configuration:**
 
 Worktree paths are calculated via `scripts/ops/core/worktree-config.mjs`:
+
 - `getWorktreePath(id)` — Returns absolute path to worktree directory
 - `getWorktreeBranch(id)` — Returns branch name for worktree
 
 This ensures consistency across Symphony runner, worktree pool manager, and systemd services.
 
 **Create worktree:**
+
 ```bash
 git worktree add /home/user/src/anqr-wt1 -b symphony/wt1 main
 ```
+
 This creates:
+
 - New directory `/home/user/src/anqr-wt1`
 - New branch `symphony/wt1` pointing to `main`
 - Pointer file `.git` in worktree directory
 
 **List worktrees:**
+
 ```bash
 git worktree list
 # /home/user/src/anqr       abc1234 [main]
@@ -172,12 +179,14 @@ git worktree list
 ```
 
 **Remove worktree:**
+
 ```bash
 git worktree remove /home/user/src/anqr-wt1
 git branch -D symphony/wt1  # Clean up branch
 ```
 
 **Repair corrupted worktree:**
+
 ```bash
 git worktree repair  # Fix broken worktree links
 git worktree prune   # Remove stale worktree metadata
@@ -244,7 +253,7 @@ git worktree prune   # Remove stale worktree metadata
 5. Commit and push
    ├─ git add changed files
    ├─ git commit with evidence
-   └─ git push origin symphony/wt1:main
+   └─ git push origin HEAD:main  # Push worktree branch commits directly to main
 
 6. Release lease and notify
    ├─ Update state.json (issue → Done)
@@ -264,16 +273,19 @@ git worktree prune   # Remove stale worktree metadata
 **Three levels of locking prevent conflicts:**
 
 **Level 1: PID lock** (per-worktree)
+
 - **File:** `/run/user/${UID}/symphony-runner/lock-wt1`
 - **Purpose:** Prevent multiple systemd instances of same worktree runner
 - **Scope:** Single worktree only
 
 **Level 2: Issue lease** (cross-worktree)
+
 - **File:** `reports/symphony/state.json` (with `state.json.lock`)
 - **Purpose:** Prevent multiple runners from picking same issue
 - **Scope:** All worktrees share this state
 
 **Level 3: Git branch lock** (git-enforced)
+
 - **Mechanism:** Git prevents same branch checkout in multiple worktrees
 - **Purpose:** Prevent branch-level conflicts
 - **Scope:** All worktrees in repository
@@ -329,6 +341,7 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs status
 ```
 
 **Expected output:**
+
 ```
 === Worktree Status ===
 
@@ -370,6 +383,7 @@ systemctl --user list-timers | grep symphony
 ```
 
 **Expected output:**
+
 ```
 NEXT                         LEFT        LAST PASSED UNIT                              ACTIVATES
 Thu 2026-03-27 12:36:00 UTC  1min 30s    -    -      anqr-symphony-runner@1.timer     anqr-symphony-runner@1.service
@@ -383,16 +397,16 @@ Thu 2026-03-27 12:36:10 UTC  1min 40s    -    -      anqr-symphony-runner@2.time
 ```javascript
 // Maximum concurrent issue executions
 // Should match number of enabled worktree runners
-export const MAX_CONCURRENT_AGENTS = 1;  // ← Update to 2, 3, or 4 when enabling worktrees
+export const MAX_CONCURRENT_AGENTS = 1; // ← Update to 2, 3, or 4 when enabling worktrees
 
 // Queue depth targets (concurrent runners may increase consumption rate)
-export const TARGET_MIN = 3;  // Feed more issues when queue drops below this
-export const TARGET_MAX = 8;  // Drain issues when queue exceeds this
+export const TARGET_MIN = 3; // Feed more issues when queue drops below this
+export const TARGET_MAX = 8; // Drain issues when queue exceeds this
 
 // Timeouts and grace periods
-export const RUNNER_MAX_EXECUTION_MS = 120 * 60 * 1000;  // 120 minutes
-export const HEARTBEAT_INTERVAL_MS = 60 * 1000;           // 1 minute
-export const RECOVERY_GRACE_MS = 10 * 60 * 1000;          // 10 minutes
+export const RUNNER_MAX_EXECUTION_MS = 120 * 60 * 1000; // 120 minutes
+export const HEARTBEAT_INTERVAL_MS = 60 * 1000; // 1 minute
+export const RECOVERY_GRACE_MS = 10 * 60 * 1000; // 10 minutes
 ```
 
 **Systemd template service:**
@@ -635,12 +649,12 @@ systemctl --user start 'anqr-symphony-runner@*.timer'
 
 **Per worktree:**
 
-| Resource       | Idle     | Active (execution) | Peak (validation) |
-|----------------|----------|---------------------|-------------------|
-| Disk           | 200 MB   | 200 MB              | 250 MB            |
-| Memory         | 50 MB    | 300-500 MB          | 1-2 GB            |
-| CPU            | 0%       | 5-10%               | 50-100%           |
-| Network        | 0 KB/s   | 10-50 KB/s (LLM)    | 100-500 KB/s      |
+| Resource | Idle   | Active (execution) | Peak (validation) |
+| -------- | ------ | ------------------ | ----------------- |
+| Disk     | 200 MB | 200 MB             | 250 MB            |
+| Memory   | 50 MB  | 300-500 MB         | 1-2 GB            |
+| CPU      | 0%     | 5-10%              | 50-100%           |
+| Network  | 0 KB/s | 10-50 KB/s (LLM)   | 100-500 KB/s      |
 
 **Shared resources:**
 

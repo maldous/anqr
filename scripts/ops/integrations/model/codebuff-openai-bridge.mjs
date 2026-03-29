@@ -99,7 +99,9 @@ function handleSdkErrorEvent(msg) {
     const toolName = toolMatch ? toolMatch[1] : "unknown";
     const count = (paramValidationErrorCounts.get(toolName) || 0) + 1;
     paramValidationErrorCounts.set(toolName, count);
-    logWarn(`⚠️ SDK param validation failed for ${toolName} (count: ${count}) — model will retry with correct format`);
+    logWarn(
+      `⚠️ SDK param validation failed for ${toolName} (count: ${count}) — model will retry with correct format`,
+    );
     return true;
   }
   return false;
@@ -1778,7 +1780,9 @@ async function initializeBridge() {
   }
 
   STARTUP_INITIALIZED = true;
-  logInfo(`Knowledge files: tool-parameter-rules.knowledge.md injected (${TOOL_PARAMETER_RULES.length} chars)`);
+  logInfo(
+    `Knowledge files: tool-parameter-rules.knowledge.md injected (${TOOL_PARAMETER_RULES.length} chars)`,
+  );
   logInfo(`========================================`);
   logInfo(`Ready to accept requests`);
   logInfo(`========================================`);

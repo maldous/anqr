@@ -163,6 +163,7 @@ done
 ## Contact
 
 If issues arise:
+
 - Check Discord #anqr-harness channel
 - Review journalctl logs
 - Check /health endpoint

@@ -1,9 +1,15 @@
 import { describe, it, expect } from "vitest";
+// @ts-expect-error - No type declarations for .mjs module
 import { validateContextCoherence } from "./symphony-bridge-truncation.mjs";
+
+type Message = {
+  role: string;
+  content: string | Array<{ type: string; text: string }>;
+};
 
 describe("validateContextCoherence", () => {
   it("should pass for valid conversation with system message and role alternation", () => {
-    const messages = [
+    const messages: Message[] = [
       { role: "system", content: "You are a helpful assistant." },
       { role: "user", content: "Hello" },
       { role: "assistant", content: "Hi there!" },
@@ -61,7 +67,7 @@ describe("validateContextCoherence", () => {
   });
 
   it("should allow multiple system messages without warning", () => {
-    const messages = [
+    const messages: Message[] = [
       { role: "system", content: "You are a helpful assistant." },
       { role: "system", content: "Additional context." },
       { role: "user", content: "Hello" },
@@ -75,7 +81,7 @@ describe("validateContextCoherence", () => {
   });
 
   it("should detect multiple coherence issues", () => {
-    const messages = [
+    const messages: Message[] = [
       { role: "user", content: "Hello" }, // No system message
       { role: "user", content: "Anyone there?" }, // Broken alternation
     ];
@@ -87,7 +93,7 @@ describe("validateContextCoherence", () => {
   });
 
   it("should handle empty messages array gracefully", () => {
-    const messages = [];
+    const messages: Message[] = [];
 
     const result = validateContextCoherence(messages, "test-provider");
 
@@ -111,7 +117,7 @@ describe("validateContextCoherence", () => {
   });
 
   it("should handle array content in messages", () => {
-    const messages = [
+    const messages: Message[] = [
       { role: "system", content: "You are a helpful assistant." },
       {
         role: "user",

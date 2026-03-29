@@ -113,10 +113,10 @@ it("test", async () => {
 
 ## Port Allocation Strategy
 
-| Environment | Symphony Port | Codebuff Port | Notes |
-|-------------|---------------|---------------|-------|
-| Production | 4319 | 4318 | Managed by systemd |
-| Tests (base) | 14319+ | 14318+ | Auto-increments if occupied |
+| Environment        | Symphony Port  | Codebuff Port  | Notes                       |
+| ------------------ | -------------- | -------------- | --------------------------- |
+| Production         | 4319           | 4318           | Managed by systemd          |
+| Tests (base)       | 14319+         | 14318+         | Auto-increments if occupied |
 | Tests (concurrent) | 15319+, 16319+ | 15318+, 16318+ | Each suite gets unique port |
 
 ## Validation Commands

@@ -21,31 +21,31 @@ This report documents every tool available in the ANQR harness, their current op
 
 ## Tool Availability Matrix
 
-| Tool | Symphony Bridge | Codebuff Bridge | Status | Notes |
-|------|----------------|-----------------|--------|-------|
-| `read_files` | ✅ | ✅ | Available | Accepts array or string (normalized) |
-| `str_replace` | ✅ | ✅ | Available | Accepts array or string (normalized) |
-| `write_file` | ✅ | ✅ | Available | Single file operation |
-| `run_terminal_command` | ✅ | ✅ | Available | Aliased as `exec` |
-| `code_search` | ✅ | ✅ | Available | Uses ripgrep |
-| `list_directory` | ✅ | ✅ | Available | File/directory listing |
-| `read_subtree` | ✅ | ✅ | Available | Recursive tree read |
-| `memory_search` | ✅ | ✅ | Available | Searches MEMORY.md |
-| `memory_get` | ✅ | ✅ | Available | Gets full memory file |
-| `run_file_change_hooks` | ✅ | ❌ | Available | **Known Issue:** Parameter validation |
-| `think_deeply` | ✅ | ✅ | Available | Acknowledgment-only |
-| `update_subgoal` | ✅ | ✅ | Available | Acknowledgment-only |
-| `add_subgoal` | ✅ | ✅ | Available | Acknowledgment-only |
-| `find_files` | ✅ | ❌ | Available | Hybrid search |
-| `web_search` | ✅ | ❌ | Available | Requires API key |
-| `read_docs` | ✅ | ❌ | Available | Context7 API |
-| `spawn_agents` | ✅ | ❌ | Available | Acknowledgment-only (delegated) |
-| `propose_str_replace` | ✅ | ❌ | Available | Codebuff-only context |
-| `propose_write_file` | ✅ | ❌ | Available | Codebuff-only context |
-| `add_message` | ✅ | ❌ | Available | Codebuff-only context |
-| `set_messages` | ✅ | ❌ | Available | Codebuff-only context |
-| `ask_user` | ✅ | ❌ | Available | Codebuff-only context |
-| `lookup_agent_info` | ✅ | ❌ | Available | Codebuff-only context |
+| Tool                    | Symphony Bridge | Codebuff Bridge | Status    | Notes                                 |
+| ----------------------- | --------------- | --------------- | --------- | ------------------------------------- |
+| `read_files`            | ✅              | ✅              | Available | Accepts array or string (normalized)  |
+| `str_replace`           | ✅              | ✅              | Available | Accepts array or string (normalized)  |
+| `write_file`            | ✅              | ✅              | Available | Single file operation                 |
+| `run_terminal_command`  | ✅              | ✅              | Available | Aliased as `exec`                     |
+| `code_search`           | ✅              | ✅              | Available | Uses ripgrep                          |
+| `list_directory`        | ✅              | ✅              | Available | File/directory listing                |
+| `read_subtree`          | ✅              | ✅              | Available | Recursive tree read                   |
+| `memory_search`         | ✅              | ✅              | Available | Searches MEMORY.md                    |
+| `memory_get`            | ✅              | ✅              | Available | Gets full memory file                 |
+| `run_file_change_hooks` | ✅              | ❌              | Available | **Known Issue:** Parameter validation |
+| `think_deeply`          | ✅              | ✅              | Available | Acknowledgment-only                   |
+| `update_subgoal`        | ✅              | ✅              | Available | Acknowledgment-only                   |
+| `add_subgoal`           | ✅              | ✅              | Available | Acknowledgment-only                   |
+| `find_files`            | ✅              | ❌              | Available | Hybrid search                         |
+| `web_search`            | ✅              | ❌              | Available | Requires API key                      |
+| `read_docs`             | ✅              | ❌              | Available | Context7 API                          |
+| `spawn_agents`          | ✅              | ❌              | Available | Acknowledgment-only (delegated)       |
+| `propose_str_replace`   | ✅              | ❌              | Available | Codebuff-only context                 |
+| `propose_write_file`    | ✅              | ❌              | Available | Codebuff-only context                 |
+| `add_message`           | ✅              | ❌              | Available | Codebuff-only context                 |
+| `set_messages`          | ✅              | ❌              | Available | Codebuff-only context                 |
+| `ask_user`              | ✅              | ❌              | Available | Codebuff-only context                 |
+| `lookup_agent_info`     | ✅              | ❌              | Available | Codebuff-only context                 |
 
 ### Tools Not Available (By Design)
 
@@ -76,6 +76,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 **Purpose:** Read multiple files from filesystem
 
 **Schema:**
+
 ```typescript
 {
   paths: string[] | string  // Auto-normalized to array
@@ -83,22 +84,27 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 ```
 
 **Parameter Validation:**
+
 - **Preferred:** `{"paths": ["file1.ts", "file2.ts"]}`
 - **Tolerated:** `{"paths": "file.ts"}` → auto-normalized to `["file.ts"]`
 - **Tolerated:** `{"paths": "[\"a.ts\", \"b.ts\"]"}` → parsed to `["a.ts", "b.ts"]`
 - **Minimum:** At least one file path required after normalization
 
 **Returns:**
+
 ```typescript
 {
-  files: Array<{
-    path: string;
-    content: string;
-    totalLines: number;
-  } | {
-    path: string;
-    error: string;
-  }>
+  files: Array<
+    | {
+        path: string;
+        content: string;
+        totalLines: number;
+      }
+    | {
+        path: string;
+        error: string;
+      }
+  >;
 }
 ```
 
@@ -113,6 +119,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 **Purpose:** Replace strings in a file with new strings
 
 **Schema:**
+
 ```typescript
 {
   path: string;
@@ -120,17 +127,21 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
     old: string;
     new: string;
     allowMultiple?: boolean;
-  }> | string | object
+  }> |
+    string |
+    object;
 }
 ```
 
 **Parameter Validation:**
+
 - **Preferred:** `{"path": "file.ts", "replacements": [{"old": "...", "new": "..."}]}`
 - **Tolerated:** Single object auto-wrapped: `{"old": "...", "new": "..."}` → `[{...}]`
 - **Tolerated:** JSON string parsed: `"[{\"old\": \"...\", \"new\": \"...\"}]"` → array
 - **Error:** Empty array → `"invalid_replacements_payload: replacements array is empty"`
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -154,6 +165,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 **Purpose:** Write content to a file
 
 **Schema:**
+
 ```typescript
 {
   path: string;
@@ -162,6 +174,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -184,6 +197,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 **Purpose:** Execute a shell command and return output
 
 **Schema:**
+
 ```typescript
 {
   command: string;
@@ -192,6 +206,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 ```
 
 **Returns:**
+
 ```typescript
 {
   output: string;
@@ -214,6 +229,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 **Purpose:** Execute file change hooks for modified files
 
 **Schema:**
+
 ```typescript
 {
   files: string[] | string  // Auto-normalized to array
@@ -221,6 +237,7 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 ```
 
 **Parameter Validation:**
+
 - **Preferred:** `{"files": ["path.ts"]}`
 - **Tolerated:** `{"files": "path.ts"}` → auto-normalized to `["path.ts"]`
 - **Tolerated:** `{"files": "[\"a.ts\", \"b.ts\"]"}` → parsed to `["a.ts", "b.ts"]`
@@ -230,15 +247,14 @@ These tools are **acknowledged** in Symphony bridge but **delegate execution** t
 Codebuff SDK ^0.10.7 has a bug where it passes a single string instead of an array. The bridge implements defensive normalization:
 
 ```javascript
-files: z
-  .union([z.array(z.string()), z.string()])
-  .transform((val) => {
-    // Handles string, array, or JSON-encoded array
-    // Returns empty array for invalid input
-  })
+files: z.union([z.array(z.string()), z.string()]).transform((val) => {
+  // Handles string, array, or JSON-encoded array
+  // Returns empty array for invalid input
+});
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -253,6 +269,7 @@ files: z
 ```
 
 **Error Messages:**
+
 - `"No files to process"` → Valid, returned when input normalizes to empty array
 
 **Implementation:** `symphony-openai-bridge.mjs:1781-1819`
@@ -270,6 +287,7 @@ files: z
 **Purpose:** Search for string patterns using ripgrep
 
 **Schema:**
+
 ```typescript
 {
   pattern: string;
@@ -280,15 +298,19 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
-  matches: Array<{
-    file: string;
-    line: number;
-    content: string;
-  } | {
-    raw: string;
-  }>;
+  matches: Array<
+    | {
+        file: string;
+        line: number;
+        content: string;
+      }
+    | {
+        raw: string;
+      }
+  >;
   count: number;
   pattern: string;
 }
@@ -305,13 +327,15 @@ files: z
 **Purpose:** Find files using hybrid search (BM25 + embeddings)
 
 **Schema:**
+
 ```typescript
 {
-  prompt: string;  // Natural language description
+  prompt: string; // Natural language description
 }
 ```
 
 **Returns:**
+
 ```typescript
 {
   files: string[];
@@ -334,6 +358,7 @@ files: z
 **Purpose:** List files and directories in a path
 
 **Schema:**
+
 ```typescript
 {
   path: string;
@@ -341,6 +366,7 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
   files: string[];
@@ -358,6 +384,7 @@ files: z
 **Purpose:** Read directory subtree with file contents
 
 **Schema:**
+
 ```typescript
 {
   paths?: string[] | string;  // Default: ["."]
@@ -366,11 +393,13 @@ files: z
 ```
 
 **Parameter Validation:**
+
 - `paths` auto-normalized to array
 - `maxTokens` accepts numeric string, converted to number
 - Minimum enforced: 1000 tokens
 
 **Returns:**
+
 ```typescript
 {
   entries: Array<{
@@ -397,6 +426,7 @@ files: z
 **Purpose:** Search through MEMORY.md and knowledge files
 
 **Schema:**
+
 ```typescript
 {
   query: string;
@@ -404,6 +434,7 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
   results: Array<{
@@ -428,6 +459,7 @@ files: z
 **Purpose:** Get full content of memory files
 
 **Schema:**
+
 ```typescript
 {
   file?: "MEMORY.md" | "knowledge.md" | "CLAUDE.md";
@@ -436,6 +468,7 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
   content: string;
@@ -458,6 +491,7 @@ files: z
 **Purpose:** Deeply consider complex tasks (logs server-side, doesn't block)
 
 **Schema:**
+
 ```typescript
 {
   thought: string;
@@ -465,6 +499,7 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
   acknowledged: boolean;
@@ -483,6 +518,7 @@ files: z
 **Purpose:** Add new subgoal for tracking progress
 
 **Schema:**
+
 ```typescript
 {
   id: string;
@@ -494,6 +530,7 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
   acknowledged: boolean;
@@ -514,6 +551,7 @@ files: z
 **Purpose:** Update subgoal progress
 
 **Schema:**
+
 ```typescript
 {
   id: string;
@@ -524,6 +562,7 @@ files: z
 ```
 
 **Returns:**
+
 ```typescript
 {
   acknowledged: boolean;
@@ -545,6 +584,7 @@ files: z
 **Purpose:** Search web using Linkup API
 
 **Schema:**
+
 ```typescript
 {
   query: string;
@@ -555,6 +595,7 @@ files: z
 **Environment:** Requires `LINKUP_API_KEY` or `WEB_SEARCH_API_KEY`
 
 **Returns:**
+
 ```typescript
 {
   results: any[];
@@ -578,6 +619,7 @@ files: z
 **Purpose:** Fetch documentation via Context7 API
 
 **Schema:**
+
 ```typescript
 {
   libraryTitle: string;  // e.g., "Next.js", "React"
@@ -591,6 +633,7 @@ files: z
 **Fallback:** Tries Context7 HTTP service (port 4320) first, then cloud API
 
 **Returns:**
+
 ```typescript
 {
   content: string;
@@ -617,17 +660,21 @@ These tools are **only available in Codebuff context**, not in Symphony/OpenClaw
 **Purpose:** Spawn multiple agents to run in parallel
 
 **Schema:**
+
 ```typescript
 {
   agents: Array<{
     agent_type: string;
     prompt?: string;
     params?: Record<string, any>;
-  }> | string | object
+  }> |
+    string |
+    object;
 }
 ```
 
 **Returns:**
+
 ```typescript
 {
   acknowledged: boolean;
@@ -655,6 +702,7 @@ When an agent running through Symphony makes a `spawn_agents` call, the tool ret
 4. **Resource management:** Centralized agent lifecycle management prevents resource leaks and enables proper cleanup
 
 **Expected behavior:** When you call `spawn_agents` through Symphony, you'll see:
+
 - Server-side log: `🤖 Agent spawn requested: agent-type-1, agent-type-2`
 - Acknowledgment response: `{"acknowledged": true, "message": "Agent spawning is handled by...", ...}`
 - Actual agent spawning happens in parent layer (not visible to Symphony)
@@ -671,6 +719,7 @@ This is **correct and intentional behavior**, not a bug.
 **Schema:** Same as `str_replace`
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -691,6 +740,7 @@ This is **correct and intentional behavior**, not a bug.
 **Purpose:** Propose file write without applying
 
 **Schema:**
+
 ```typescript
 {
   path: string;
@@ -700,6 +750,7 @@ This is **correct and intentional behavior**, not a bug.
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: boolean;
@@ -718,6 +769,7 @@ This is **correct and intentional behavior**, not a bug.
 **Purpose:** Conversation history management
 
 **Schemas:**
+
 ```typescript
 // add_message
 {
@@ -739,6 +791,7 @@ This is **correct and intentional behavior**, not a bug.
 **Purpose:** Ask user multiple choice questions
 
 **Schema:**
+
 ```typescript
 {
   questions: Array<{
@@ -755,7 +808,9 @@ This is **correct and intentional behavior**, not a bug.
       pattern?: string;
       patternError?: string;
     };
-  }> | string | object
+  }> |
+    string |
+    object;
 }
 ```
 
@@ -770,22 +825,20 @@ This is **correct and intentional behavior**, not a bug.
 **Fix Applied:** Use `.union([z.array(z.string()), z.string()])` for proper type validation
 
 **Before (broken):**
+
 ```javascript
-files: z
-  .any()
-  .transform((val) => {
-    // .any() doesn't validate - allows non-string/non-array through
-  })
+files: z.any().transform((val) => {
+  // .any() doesn't validate - allows non-string/non-array through
+});
 ```
 
 **After (fixed):**
+
 ```javascript
-files: z
-  .union([z.array(z.string()), z.string()])
-  .transform((val) => {
-    // Validates input is string OR array before transformation
-    // Normalizes to array, handles JSON-encoded arrays
-  })
+files: z.union([z.array(z.string()), z.string()]).transform((val) => {
+  // Validates input is string OR array before transformation
+  // Normalizes to array, handles JSON-encoded arrays
+});
 ```
 
 **Documentation:** `docs/known-issues/codebuff-sdk-run-file-change-hooks.md`
@@ -802,11 +855,13 @@ files: z
 ### Issue 3: Tools Not Available in Current Context
 
 **Error Messages:**
+
 - `exec — Tool 'exec' is not currently available`
 - `tts — Tool 'tts' is not currently available`
 - `read — Tool 'read' is not currently available`
 
 **Resolution:**
+
 - `exec` → Use `run_terminal_command` instead
 - `read` → Use `read_files` instead
 - `tts` → Not implemented (feature request)
@@ -904,27 +959,35 @@ paramName: z
 ### By Purpose
 
 **File Operations:**
+
 - `read_files`, `write_file`, `str_replace`
 
 **Execution:**
+
 - `run_terminal_command`, `run_file_change_hooks`
 
 **Search & Discovery:**
+
 - `code_search`, `find_files`, `list_directory`, `read_subtree`
 
 **Memory & Knowledge:**
+
 - `memory_search`, `memory_get`
 
 **Progress Tracking:**
+
 - `think_deeply`, `add_subgoal`, `update_subgoal`
 
 **External APIs:**
+
 - `web_search`, `read_docs`
 
 **Agent Management:**
+
 - `spawn_agents` (delegated), `lookup_agent_info`
 
 **Codebuff Context:**
+
 - `propose_str_replace`, `propose_write_file`, `add_message`, `set_messages`, `ask_user`
 
 ---

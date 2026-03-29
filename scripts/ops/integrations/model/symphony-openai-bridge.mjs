@@ -264,8 +264,9 @@ function startDiscordMonitoring() {
                   // These would duplicate what we already log via DEBUG
                   const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
                   // Filter out standalone light bulb emoji from Discord notifications
-                  const isLightbulb = content.trim() === "💡" || content === "\n💡 ";
-                  if (!isActivityMarker.test(content.trim()) && !isLightbulb) {
+                  const trimmed = content.trim();
+                  const isLightbulb = trimmed === "💡" || content === "\n💡 " || content === "💡 ";
+                  if (!isActivityMarker.test(trimmed) && !isLightbulb) {
                     fullText += content;
                     streamDiscordUpdate(content, {
                       emoji: "",
@@ -1413,16 +1414,13 @@ const tools = {
   read_files: tool({
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
-      paths: z.preprocess(
-        (val) => {
-          const result = coerceStringArrayInput(val, { fallback: [] });
-          if (!result || result.length === 0) {
-            throw new Error("paths must contain at least one file path");
-          }
-          return result;
-        },
-        z.array(z.string()).describe("List of file paths to read (accepts string or array)"),
-      ),
+      paths: z.preprocess((val) => {
+        const result = coerceStringArrayInput(val, { fallback: [] });
+        if (!result || result.length === 0) {
+          throw new Error("paths must contain at least one file path");
+        }
+        return result;
+      }, z.array(z.string()).describe("List of file paths to read (accepts string or array)")),
     }),
     execute: readFilesTool,
   }),
@@ -1477,11 +1475,19 @@ const tools = {
     inputSchema: z.object({
       paths: z.preprocess(
         (val) => coerceStringArrayInput(val, { fallback: ["."] }),
-        z.array(z.string()).optional().describe("Paths to read (default: ['.']; accepts string or array)"),
+        z
+          .array(z.string())
+          .optional()
+          .describe("Paths to read (default: ['.']; accepts string or array)"),
       ),
       maxTokens: z.preprocess(
         (val) => coerceOptionalNumberInput(val, undefined),
-        z.number().int().positive().optional().describe("Maximum token budget (default: 50000; accepts numeric string)"),
+        z
+          .number()
+          .int()
+          .positive()
+          .optional()
+          .describe("Maximum token budget (default: 50000; accepts numeric string)"),
       ),
     }),
     execute: readSubtreeTool,
@@ -1567,24 +1573,21 @@ const tools = {
   set_messages: tool({
     description: "Set the conversation history",
     inputSchema: z.object({
-      messages: z.preprocess(
-        (val) => {
-          if (Array.isArray(val)) return val;
-          if (typeof val === "string") {
-            const trimmed = val.trim();
-            if (!trimmed) return [];
-            try {
-              const parsed = JSON.parse(trimmed);
-              return Array.isArray(parsed) ? parsed : [parsed];
-            } catch {
-              return [];
-            }
+      messages: z.preprocess((val) => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === "string") {
+          const trimmed = val.trim();
+          if (!trimmed) return [];
+          try {
+            const parsed = JSON.parse(trimmed);
+            return Array.isArray(parsed) ? parsed : [parsed];
+          } catch {
+            return [];
           }
-          if (val && typeof val === "object") return [val];
-          return [];
-        },
-        z.array(z.any()).describe("Array of messages (accepts string or array)"),
-      ),
+        }
+        if (val && typeof val === "object") return [val];
+        return [];
+      }, z.array(z.any()).describe("Array of messages (accepts string or array)")),
     }),
     execute: setMessagesTool,
   }),
@@ -1796,41 +1799,38 @@ const tools = {
   run_file_change_hooks: tool({
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
-      files: z.preprocess(
-        (val) => {
-          // Normalize to array: handle string, array, or malformed input
-          // This workaround handles the Codebuff SDK bug where it passes a single string
-          // instead of an array (see docs/known-issues/codebuff-sdk-run-file-change-hooks.md)
-          if (Array.isArray(val)) {
-            // Already an array - filter out non-strings and return
-            const filtered = val.filter((item) => typeof item === "string" && item.trim());
-            return filtered.length > 0 ? filtered : [];
-          }
-          if (typeof val === "string") {
-            const trimmed = val.trim();
-            if (!trimmed) return [];
-            // Handle JSON-encoded arrays like '["file1.ts", "file2.ts"]'
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-              try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed)) {
-                  const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
-                  return filtered.length > 0 ? filtered : [];
-                }
-                return [trimmed];
-              } catch {
-                // JSON parse failed - treat the whole string as a single file path
-                return [trimmed];
+      files: z.preprocess((val) => {
+        // Normalize to array: handle string, array, or malformed input
+        // This workaround handles the Codebuff SDK bug where it passes a single string
+        // instead of an array (see docs/known-issues/codebuff-sdk-run-file-change-hooks.md)
+        if (Array.isArray(val)) {
+          // Already an array - filter out non-strings and return
+          const filtered = val.filter((item) => typeof item === "string" && item.trim());
+          return filtered.length > 0 ? filtered : [];
+        }
+        if (typeof val === "string") {
+          const trimmed = val.trim();
+          if (!trimmed) return [];
+          // Handle JSON-encoded arrays like '["file1.ts", "file2.ts"]'
+          if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            try {
+              const parsed = JSON.parse(trimmed);
+              if (Array.isArray(parsed)) {
+                const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
+                return filtered.length > 0 ? filtered : [];
               }
+              return [trimmed];
+            } catch {
+              // JSON parse failed - treat the whole string as a single file path
+              return [trimmed];
             }
-            // Single string - wrap in array (this is the Codebuff SDK bug case)
-            return [trimmed];
           }
-          // Fallback: return empty array
-          return [];
-        },
-        z.array(z.string()).describe("List of file paths that were changed (accepts string or array)"),
-      ),
+          // Single string - wrap in array (this is the Codebuff SDK bug case)
+          return [trimmed];
+        }
+        // Fallback: return empty array
+        return [];
+      }, z.array(z.string()).describe("List of file paths that were changed (accepts string or array)")),
     }),
     execute: runFileChangeHooksTool,
   }),
@@ -1921,7 +1921,8 @@ const tools = {
   // ========================================================================
 
   run_terminal_command: tool({
-    description: "Execute a shell command and return the output (Codebuff-native name for exec/shell)",
+    description:
+      "Execute a shell command and return the output (Codebuff-native name for exec/shell)",
     inputSchema: z.object({
       command: z.string().describe("CLI command valid for user's OS"),
       cwd: z.string().optional().describe("Working directory for the command"),
@@ -1931,11 +1932,12 @@ const tools = {
       ),
     }),
     execute: async ({ command, cwd, timeout_seconds }) => {
-      const timeoutMs = timeout_seconds != null && timeout_seconds > 0
-        ? timeout_seconds * 1000
-        : timeout_seconds === -1
-          ? 0
-          : 60000;
+      const timeoutMs =
+        timeout_seconds != null && timeout_seconds > 0
+          ? timeout_seconds * 1000
+          : timeout_seconds === -1
+            ? 0
+            : 60000;
       try {
         const result = execSync(command, {
           cwd: cwd || process.cwd(),
@@ -1974,16 +1976,23 @@ const tools = {
         (val) => {
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
-            try { const p = JSON.parse(val); return Array.isArray(p) ? p : [p]; } catch { return []; }
+            try {
+              const p = JSON.parse(val);
+              return Array.isArray(p) ? p : [p];
+            } catch {
+              return [];
+            }
           }
           if (val && typeof val === "object") return [val];
           return [];
         },
-        z.array(z.object({
-          step: z.string().optional().describe("Step description"),
-          task: z.string().optional().describe("Task description"),
-          completed: z.boolean().optional().describe("Whether step is done"),
-        })),
+        z.array(
+          z.object({
+            step: z.string().optional().describe("Step description"),
+            task: z.string().optional().describe("Task description"),
+            completed: z.boolean().optional().describe("Whether step is done"),
+          }),
+        ),
       ),
     }),
     execute: async ({ steps }) => {
@@ -2000,7 +2009,8 @@ const tools = {
       url: z.string().optional().describe("URL to check"),
     }),
     execute: async () => ({
-      message: "Browser logs are not available in this headless environment. Use run_terminal_command with a linter or test runner instead.",
+      message:
+        "Browser logs are not available in this headless environment. Use run_terminal_command with a linter or test runner instead.",
       logs: [],
     }),
   }),
@@ -2059,13 +2069,17 @@ const tools = {
       const lang = (language || "python").toLowerCase();
       let bin, args;
       if (lang === "python" || lang === "python3") {
-        bin = "python3"; args = ["-c", code];
+        bin = "python3";
+        args = ["-c", code];
       } else if (lang === "javascript" || lang === "node" || lang === "js") {
-        bin = "node"; args = ["-e", code];
+        bin = "node";
+        args = ["-e", code];
       } else if (lang === "bash" || lang === "sh") {
-        bin = "bash"; args = ["-c", code];
+        bin = "bash";
+        args = ["-c", code];
       } else {
-        bin = "python3"; args = ["-c", code];
+        bin = "python3";
+        args = ["-c", code];
       }
       try {
         const result = execFileSync(bin, args, {
@@ -2139,7 +2153,8 @@ const tools = {
     }),
   }),
   wolfram_alpha: tool({
-    description: "Query Wolfram Alpha for computation (not available — use code_interpreter instead)",
+    description:
+      "Query Wolfram Alpha for computation (not available — use code_interpreter instead)",
     inputSchema: z.object({
       query: z.string().describe("Mathematical or scientific query"),
     }),
@@ -2147,10 +2162,14 @@ const tools = {
       // Best-effort: try to evaluate with python (using execFileSync to avoid shell escaping issues)
       try {
         const output = execFileSync("python3", ["-c", `print(eval(${JSON.stringify(query)}))`], {
-          encoding: "utf-8", timeout: 10000, maxBuffer: 1024 * 1024,
+          encoding: "utf-8",
+          timeout: 10000,
+          maxBuffer: 1024 * 1024,
         });
         return { result: output, source: "python_eval" };
-      } catch { /* fall through */ }
+      } catch {
+        /* fall through */
+      }
       return {
         error: "wolfram_alpha is not available in this environment",
         message: `Use code_interpreter or run_terminal_command with python to compute: ${query.slice(0, 100)}`,
@@ -2179,7 +2198,8 @@ const tools = {
     }),
     execute: async () => ({
       error: "computer_use is not available in this environment",
-      message: "This is a headless server environment. Use run_terminal_command for CLI operations.",
+      message:
+        "This is a headless server environment. Use run_terminal_command for CLI operations.",
       available: false,
     }),
   }),
@@ -2283,7 +2303,8 @@ const toolsProxy = new Proxy(tools, {
           error: `Tool "${prop}" is not available in this environment`,
           message: `The tool "${prop}" does not exist. Available tools: ${[...knownToolNames].slice(0, 20).join(", ")}...`,
           available: false,
-          suggestion: "Check available tools with mcp_list_tools or use one of the listed tools above.",
+          suggestion:
+            "Check available tools with mcp_list_tools or use one of the listed tools above.",
         };
       },
     });
@@ -3549,10 +3570,10 @@ async function invokeWithAI(provider, messages, options = {}) {
     let errorCount = 0;
 
     logDebug(`[invokeWithAI] Processing fullStream...`);
-    
+
     // Track <think> blocks in text-delta for models that embed reasoning in text
     let inThinkBlock = false;
-    
+
     for await (const part of result.fullStream) {
       partCount++;
 
@@ -3597,7 +3618,8 @@ async function invokeWithAI(provider, messages, options = {}) {
 
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
-        if (onChunk) onChunk({ type: "text", text: "\n💡 " });
+        // Light bulb emoji filtered out for Discord - remains in logs only
+        if (onChunk) onChunk({ type: "text", text: "\n" });
       } else if (part.type === "reasoning-delta") {
         if (onChunk && part.textDelta) {
           onChunk({ type: "text", text: part.textDelta });
@@ -4080,14 +4102,14 @@ function processSSELine(line, state, onDiscordChunk) {
     if (!content || content.length === 0) return;
 
     state.fullText += content;
-    state.logBuffer += content;        // Stream content to Discord (filter out standalone light bulb emoji)
-        if (onDiscordChunk) {
-          const trimmed = content.trim();
-          const isLightbulb = trimmed === "💡" || content === "\n💡 ";
-          if (!isLightbulb) {
-            onDiscordChunk(content);
-          }
-        }
+    state.logBuffer += content; // Stream content to Discord (filter out standalone light bulb emoji)
+    if (onDiscordChunk) {
+      const trimmed = content.trim();
+      const isLightbulb = trimmed === "💡" || content === "\n💡 ";
+      if (!isLightbulb) {
+        onDiscordChunk(content);
+      }
+    }
 
     maybeFlushLogBuffer(state);
   } catch {
@@ -4873,6 +4895,40 @@ const server = http.createServer(async (req, res) => {
 
       const fields = [];
 
+      // Read in-progress issues from symphony state
+      let inProgressIssues = [];
+      try {
+        const { loadState, leaseIsActive } = await import("../../core/symphony-state.mjs");
+        const state = loadState();
+        const now = Date.now();
+        inProgressIssues = Object.entries(state.issues)
+          .filter(([_, record]) => leaseIsActive(record, now))
+          .map(([issueIdentifier, record]) => ({
+            issueIdentifier,
+            owner: record.lease?.owner || "unknown",
+            runId: record.lease?.run_id || null,
+          }));
+      } catch (err) {
+        logDebug(`Failed to read in-progress issues from state: ${err.message}`);
+      }
+
+      // Show in-progress issues from state (if any)
+      if (inProgressIssues.length > 0) {
+        const inProgressText = inProgressIssues
+          .slice(0, 5)
+          .map((item) => `${item.issueIdentifier} (${item.owner})`)
+          .join("\n");
+        const remainingCount = inProgressIssues.length - 5;
+        const finalText =
+          remainingCount > 0 ? `${inProgressText}\n...and ${remainingCount} more` : inProgressText;
+
+        fields.push({
+          name: `In Progress (${inProgressIssues.length})`,
+          value: finalText,
+          inline: false,
+        });
+      }
+
       if (concurrentCount > 0) {
         // Build detailed concurrent request summary with actual request text
         const concurrentSummaries = concurrentRequests.slice(0, 3).map((r) => {
@@ -4887,7 +4943,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         fields.push({
-          name: `Concurrent (${concurrentCount})`,
+          name: `Bridge Active (${concurrentCount})`,
           value: concurrentText,
           inline: false,
         });
@@ -5003,7 +5059,7 @@ const server = http.createServer(async (req, res) => {
                     const isActivityMarker = /^🔧\s+\w+:?\s*$|^✅\s+\w+\s+done\s*$/;
                     // Filter out standalone light bulb emoji from Discord notifications
                     const trimmed = text.trim();
-                    const isLightbulb = trimmed === "💡" || text === "\n💡 ";
+                    const isLightbulb = trimmed === "💡" || text === "\n💡 " || text === "💡 ";
                     if (!isActivityMarker.test(trimmed) && !isLightbulb) {
                       streamDiscordUpdate(text, { emoji: "", requestId }).catch(() => {
                         /* ignore */
@@ -5400,25 +5456,45 @@ server.listen(PORT, "127.0.0.1", async () => {
       // run_file_change_hooks
       { tool: "run_file_change_hooks", name: "files_array", input: { files: ["test.txt"] } },
       { tool: "run_file_change_hooks", name: "files_string", input: { files: "test.txt" } },
-      { tool: "run_file_change_hooks", name: "files_json_array", input: { files: '["file1.ts", "file2.ts"]' } },
+      {
+        tool: "run_file_change_hooks",
+        name: "files_json_array",
+        input: { files: '["file1.ts", "file2.ts"]' },
+      },
       { tool: "run_file_change_hooks", name: "files_empty_string", input: { files: "" } },
-      { tool: "run_file_change_hooks", name: "files_object_path", input: { files: { path: "test.ts" } } },
-      
+      {
+        tool: "run_file_change_hooks",
+        name: "files_object_path",
+        input: { files: { path: "test.ts" } },
+      },
+
       // read_files
       { tool: "read_files", name: "paths_array", input: { paths: ["package.json"] } },
       { tool: "read_files", name: "paths_string", input: { paths: "package.json" } },
       { tool: "read_files", name: "paths_json_array", input: { paths: '["package.json"]' } },
-      
+
       // str_replace
-      { tool: "str_replace", name: "replacements_array", input: { path: "test.txt", replacements: [{ old: "a", new: "b" }] } },
-      { tool: "str_replace", name: "replacements_object", input: { path: "test.txt", replacements: { old: "a", new: "b" } } },
-      { tool: "str_replace", name: "replacements_json", input: { path: "test.txt", replacements: '[{"old":"a","new":"b"}]' } },
-      
+      {
+        tool: "str_replace",
+        name: "replacements_array",
+        input: { path: "test.txt", replacements: [{ old: "a", new: "b" }] },
+      },
+      {
+        tool: "str_replace",
+        name: "replacements_object",
+        input: { path: "test.txt", replacements: { old: "a", new: "b" } },
+      },
+      {
+        tool: "str_replace",
+        name: "replacements_json",
+        input: { path: "test.txt", replacements: '[{"old":"a","new":"b"}]' },
+      },
+
       // spawn_agents
       { tool: "spawn_agents", name: "agents_array", input: { agents: [{ agent_type: "test" }] } },
       { tool: "spawn_agents", name: "agents_object", input: { agents: { agent_type: "test" } } },
       { tool: "spawn_agents", name: "agents_json", input: { agents: '[{"agent_type":"test"}]' } },
-      
+
       // read_subtree
       { tool: "read_subtree", name: "paths_array", input: { paths: ["."] } },
       { tool: "read_subtree", name: "paths_string", input: { paths: "." } },
@@ -5428,12 +5504,24 @@ server.listen(PORT, "127.0.0.1", async () => {
       // run_terminal_command (Codebuff-native alias)
       { tool: "run_terminal_command", name: "basic", input: { command: "echo hello" } },
       { tool: "run_terminal_command", name: "with_cwd", input: { command: "ls", cwd: "." } },
-      { tool: "run_terminal_command", name: "with_timeout_number", input: { command: "echo hi", timeout_seconds: 30 } },
-      { tool: "run_terminal_command", name: "with_timeout_string", input: { command: "echo hi", timeout_seconds: "30" } },
+      {
+        tool: "run_terminal_command",
+        name: "with_timeout_number",
+        input: { command: "echo hi", timeout_seconds: 30 },
+      },
+      {
+        tool: "run_terminal_command",
+        name: "with_timeout_string",
+        input: { command: "echo hi", timeout_seconds: "30" },
+      },
 
       // write_file (Codebuff-native alias)
       { tool: "write_file", name: "basic", input: { path: "test.txt", content: "hello" } },
-      { tool: "write_file", name: "with_instructions", input: { path: "test.txt", instructions: "Create a test", content: "hello" } },
+      {
+        tool: "write_file",
+        name: "with_instructions",
+        input: { path: "test.txt", instructions: "Create a test", content: "hello" },
+      },
 
       // Cross-provider compatibility tools
       { tool: "shell", name: "basic", input: { command: "echo test" } },
@@ -5475,11 +5563,13 @@ server.listen(PORT, "127.0.0.1", async () => {
       logError(`❌ Catch-all proxy self-test FAILED: Object.keys(toolsProxy) leaked unknown tools`);
       process.exit(1);
     }
-    logInfo(`🧪 Catch-all proxy self-test: passed (unknown tools return graceful no-op, known tools pass through)`);
+    logInfo(
+      `🧪 Catch-all proxy self-test: passed (unknown tools return graceful no-op, known tools pass through)`,
+    );
 
     let selfTestPassed = 0;
     const failedTests = [];
-    
+
     for (const { tool: toolName, name, input } of selfTests) {
       try {
         // Validate using the tool schema directly (doesn't execute, just validates)
@@ -5489,10 +5579,10 @@ server.listen(PORT, "127.0.0.1", async () => {
           failedTests.push(`${toolName}/${name}: tool not found`);
           continue;
         }
-        
+
         // Parse input through the schema
         const parsed = await toolDef.inputSchema.parseAsync(input);
-        
+
         // Verify array normalization worked correctly
         if (toolName === "run_file_change_hooks" || toolName === "read_files") {
           const key = toolName === "run_file_change_hooks" ? "files" : "paths";
@@ -5500,7 +5590,7 @@ server.listen(PORT, "127.0.0.1", async () => {
             throw new Error(`Expected ${key} to be normalized to array, got ${typeof parsed[key]}`);
           }
         }
-        
+
         selfTestPassed++;
         logDebug(`✅ Schema test passed: ${toolName}/${name}`);
       } catch (err) {
@@ -5508,7 +5598,7 @@ server.listen(PORT, "127.0.0.1", async () => {
         failedTests.push(`${toolName}/${name}: ${err.message}`);
       }
     }
-    
+
     if (selfTestPassed < selfTests.length) {
       logError(
         `🧪 Tool schema self-test FAILED (${selfTestPassed}/${selfTests.length}) — refusing to start`,
@@ -5519,7 +5609,9 @@ server.listen(PORT, "127.0.0.1", async () => {
       }
       process.exit(1);
     }
-    logInfo(`🧪 Tool schema self-test: ${selfTestPassed}/${selfTests.length} passed (all array normalization working)`);
+    logInfo(
+      `🧪 Tool schema self-test: ${selfTestPassed}/${selfTests.length} passed (all array normalization working)`,
+    );
   }
 
   // Send immediate Discord notification on startup - BEFORE async probe

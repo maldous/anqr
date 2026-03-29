@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, "../..");
-const STATE_DIR = path.join(PROJECT_ROOT, "reports", "symphony");
+const STATE_DIR = process.env.ANQR_SYMPHONY_STATE_DIR || path.join(PROJECT_ROOT, "reports", "symphony");
 const STATE_FILE = path.join(STATE_DIR, "state.json");
 const LOCK_FILE = `${STATE_FILE}.lock`;
 const DEFAULT_LEASE_MS = Number(process.env.ANQR_SYMPHONY_LEASE_MS || 20 * 60 * 1000);
@@ -126,6 +126,8 @@ function normalizeRecord(record = {}) {
     lease: record.lease && typeof record.lease === "object" ? record.lease : null,
     transitions: pruneHistory(Array.isArray(record.transitions) ? record.transitions : []),
     notes: record.notes || {},
+    latency_ms: Number(record.latency_ms) || null,
+    completed_at: record.completed_at || null,
   };
 }
 
@@ -359,4 +361,64 @@ export function findExpiredLeases(now = Date.now()) {
         record.lease?.expires_at && new Date(record.lease.expires_at).getTime() <= now,
     )
     .map(([issueIdentifier, record]) => ({ issueIdentifier, record: normalizeRecord(record) }));
+}
+
+export function recordCompletion(issueIdentifier, details = {}) {
+  return patchIssueState(issueIdentifier, {
+    completed_at: details.completedAt || new Date().toISOString(),
+    latency_ms: Number(details.latencyMs) || null,
+  });
+}
+
+export function getLatencyMetrics() {
+  const store = loadState();
+  const completedIssues = Object.values(store.issues).filter(
+    (record) => record.completed_at && record.latency_ms,
+  );
+
+  if (completedIssues.length === 0) {
+    return {
+      count: 0,
+      averageMs: null,
+      medianMs: null,
+      p95Ms: null,
+      minMs: null,
+      maxMs: null,
+    };
+  }
+
+  const latencies = completedIssues.map((r) => r.latency_ms).sort((a, b) => a - b);
+  const sum = latencies.reduce((acc, val) => acc + val, 0);
+  const average = sum / latencies.length;
+  const median = latencies[Math.floor(latencies.length / 2)];
+  const p95Index = Math.floor(latencies.length * 0.95);
+  const p95 = latencies[p95Index] || latencies[latencies.length - 1];
+
+  return {
+    count: completedIssues.length,
+    averageMs: Math.round(average),
+    medianMs: median,
+    p95Ms: p95,
+    minMs: latencies[0],
+    maxMs: latencies[latencies.length - 1],
+  };
+}
+
+export function checkLatencyBaseline(currentAverageMs) {
+  const baseline = getGlobalValue("latency.baseline_ms");
+  if (!baseline) {
+    setGlobalValue("latency.baseline_ms", currentAverageMs);
+    setGlobalValue("latency.baseline_set_at", new Date().toISOString());
+    return { alert: false, increase: 0, baseline: currentAverageMs };
+  }
+
+  const increase = ((currentAverageMs - baseline) / baseline) * 100;
+  const alert = increase > 50; // Alert on >50% increase
+
+  return {
+    alert,
+    increase: Math.round(increase),
+    baseline,
+    current: currentAverageMs,
+  };
 }

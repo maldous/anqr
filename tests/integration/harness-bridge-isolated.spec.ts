@@ -19,7 +19,7 @@ describe("Symphony Bridge (Isolated)", () => {
       preferredPort: 14319, // Higher port range to avoid conflicts
       apiKey: "test-symphony",
     });
-    
+
     console.log(`Symphony bridge started on port ${bridge.port}`);
   });
 
@@ -93,7 +93,7 @@ describe("Codebuff Bridge (Isolated)", () => {
       preferredPort: 14318, // Higher port range to avoid conflicts
       apiKey: "test-codebuff",
     });
-    
+
     console.log(`Codebuff bridge started on port ${bridge.port}`);
   });
 
@@ -129,7 +129,7 @@ describe("Codebuff Bridge (Isolated)", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.object).toBe("list");
-    
+
     const modelIds = data.data.map((m: { id: string }) => m.id);
     expect(modelIds).toContain("codebuff/base");
   });
@@ -145,19 +145,16 @@ describe("Multiple Bridges (Concurrent)", () => {
       spawnSymphonyBridge({ preferredPort: 15319 }),
       spawnCodebuffBridge({ preferredPort: 15318 }),
     ]);
-    
+
     console.log(
-      `Bridges started: Symphony=${symphonyBridge.port}, Codebuff=${codebuffBridge.port}`
+      `Bridges started: Symphony=${symphonyBridge.port}, Codebuff=${codebuffBridge.port}`,
     );
   });
 
   afterAll(async () => {
     // Clean up both bridges
-    await Promise.all([
-      symphonyBridge?.cleanup(),
-      codebuffBridge?.cleanup(),
-    ]);
-    
+    await Promise.all([symphonyBridge?.cleanup(), codebuffBridge?.cleanup()]);
+
     console.log("All test bridges stopped");
   });
 
@@ -174,7 +171,7 @@ describe("Multiple Bridges (Concurrent)", () => {
 
     expect(symphonyHealth.status).toBe("ok");
     expect(codebuffHealth.status).toMatch(/^(ok|initializing)$/);
-    
+
     // Verify they're on different ports
     expect(symphonyBridge.port).not.toBe(codebuffBridge.port);
   });

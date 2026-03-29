@@ -61,6 +61,7 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 ### All contexts (Codebuff, Symphony, OpenClaw)
 
 **Core file operations:**
+
 - `read_files` — Read multiple files from filesystem
 - `write_file` — Create or overwrite files
 - `str_replace` — Replace strings in files
@@ -68,6 +69,7 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 - `write` — Write file (alias for `write_file`)
 
 **Code navigation:**
+
 - `code_search` — Search code using ripgrep
 - `list_directory` — List directory contents
 - `read_subtree` — Read directory tree with contents
@@ -75,6 +77,7 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 - `glob` — Find files matching patterns
 
 **Execution:**
+
 - `run_terminal_command` — Execute shell commands (Codebuff-native name)
 - `exec` — Execute shell commands (AI SDK name)
 - `shell` — Execute shell commands (OpenAI compatibility alias)
@@ -82,16 +85,19 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 - `run_file_change_hooks` — Execute file change hooks
 
 **Memory:**
+
 - `memory_search` — Search MEMORY.md and knowledge files
 - `memory_get` — Get full memory file content
 
 **External APIs** (when API keys configured):
+
 - `web_search` — Search web via Linkup API (requires `LINKUP_API_KEY`)
 - `read_docs` — Fetch library documentation via Context7 API (requires `CONTEXT7_API_KEY`)
 - `browser_search` — Web search (Groq compatibility alias)
 - `visit_website` — Fetch web pages (best-effort via web search)
 
 **Progress tracking:**
+
 - `think_deeply` — Deep reasoning for complex tasks
 - `add_subgoal` — Add new subgoal for complex tasks
 - `update_subgoal` — Update task progress tracking
@@ -100,12 +106,14 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 ### Agent spawning (delegated to parent)
 
 **Available in all contexts but delegated:**
+
 - `spawn_agents` — Spawn multiple agents in parallel
   - **Codebuff:** Spawns actual sub-agents
   - **Symphony bridge:** Acknowledges request, delegates to parent Codebuff/OpenClaw instance
   - **OpenClaw:** Routes to gateway for agent orchestration
 
 **Codebuff context only:**
+
 - `lookup_agent_info` — Get agent metadata (not available in Symphony/OpenClaw)
 
 ### Codebuff-only tools
@@ -113,27 +121,33 @@ Tools are available in different execution contexts (Codebuff, Symphony bridge, 
 These tools are **NOT available** in Symphony bridge or OpenClaw contexts:
 
 **Proposal tools** (preview mode):
+
 - `propose_str_replace` — Propose edits without applying
 - `propose_write_file` — Propose file write without applying
 
 **Conversation control:**
+
 - `add_message` — Add message to conversation history
 - `set_messages` — Set conversation history
 - `message` — Add message (compatibility alias)
 
 **Interactive prompts:**
+
 - `ask_user` — Ask user questions (requires interactive session)
 
 **Turn control:**
+
 - `end_turn` — Signal turn completion
 - `task_completed` — Signal task completion (alias)
 
 **Planning:**
+
 - `create_plan` — Create step-by-step plan
 - `write_todos` — Write task list
 - `suggest_followups` — Suggest followup prompts
 
 **Other Codebuff-native tools:**
+
 - `set_output` — Set agent output
 - `skill` — Load skill instructions
 - `apply_patch` — Apply Codex-style patches
@@ -157,22 +171,26 @@ This allows agents to organize work and track progress across all provider conte
 Symphony bridge includes compatibility shims for tools from other platforms:
 
 **Groq/OpenAI compatibility:**
+
 - `code_interpreter` — Execute code (routes to `exec` or language-specific runtime)
 - `file_search` — Search files (routes to `code_search` or `find_files`)
 - `image_generation` — Not available (returns helpful error)
 - `wolfram_alpha` — Not available (suggests `code_interpreter` instead)
 
 **UI automation (not available in headless environment):**
+
 - `browser_automation` — Not available (suggests Playwright tests)
 - `computer_use` — Not available (headless server environment)
 - `tts` — Not available (no audio output)
 
 **Connectors (Groq-specific, not available):**
+
 - `connector_gmail` — Not available
 - `connector_googlecalendar` — Not available
 - `connector_googledrive` — Not available
 
 **MCP tools:**
+
 - `mcp_list_tools` — Returns available local tools (MCP servers not configured)
 
 These tools return graceful error messages with suggestions for alternatives rather than crashing.
@@ -180,16 +198,19 @@ These tools return graceful error messages with suggestions for alternatives rat
 ### Why tools differ by context
 
 **Codebuff-only tools** require interactive sessions or Codebuff SDK features:
+
 - `ask_user` — Needs interactive prompt UI
 - `add_message`, `set_messages` — Conversation control (Codebuff SDK)
 - `end_turn` — Turn management (Codebuff SDK)
 - `propose_*` — Preview mode (Codebuff UI feature)
 
 **Symphony acknowledgment-only tools** allow progress tracking without full orchestration:
+
 - `think_deeply`, `add_subgoal`, `update_subgoal` — Log server-side, don't block
 - `spawn_agents` — Delegates to parent (Symphony bridge doesn't spawn sub-agents)
 
 **Cross-provider compatibility** ensures models trained on different platforms can still work:
+
 - Models expecting Groq tools get graceful fallbacks
 - Models expecting OpenAI tools get compatible aliases
 - Unknown tools return helpful error messages (catch-all Proxy)
@@ -197,17 +218,20 @@ These tools return graceful error messages with suggestions for alternatives rat
 ### Implementation references
 
 **Symphony bridge tools:**
+
 - Main implementation: `scripts/ops/integrations/model/symphony-openai-bridge.mjs` (lines 664-2200)
 - Tool definitions use AI SDK `tool()` with Zod schemas
 - Includes defensive parameter normalization for array inputs
 - Catch-all Proxy for unknown tool names (graceful no-ops)
 
 **Codebuff bridge tools:**
+
 - Implementation: `scripts/ops/integrations/model/codebuff-openai-bridge.mjs`
 - Routes to Codebuff SDK (port 4318)
 - Full Codebuff tool set available
 
 **Tool capability probing:**
+
 - Symphony bridge probes all providers at startup
 - Tests structured tool calling with `add(2, 2)` tool
 - Excludes providers that emit raw JSON instead of structured `toolCalls`
@@ -227,6 +251,7 @@ When receiving a user request:
 - Don't just mechanically execute literal steps—solve for the outcome
 
 Example:
+
 - Request: "Add logging to the authentication flow"
 - Goal interpretation: Enable debugging and monitoring of authentication behavior
 - Implementation: Add strategic logging at decision points, error paths, and state transitions
@@ -377,9 +402,35 @@ Supporting jobs:
 - Each worktree runs independently with its own working directory, branch, and lock file
 - Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
-- Default: 1 concurrent runner (configurable via `MAX_CONCURRENT_AGENTS` in `symphony-config.mjs`)
+- Default: 8 concurrent agents (4 Symphony runners wt1-wt4 + 4 Discord bridges wt5-wt8)
+- Configurable via `MAX_CONCURRENT_AGENTS` in `symphony-config.mjs`
 - Worktree setup: `node scripts/ops/orchestration/symphony-worktree-pool.mjs init [count]`
-- Documentation: `scripts/ops/orchestration/README.md`
+- Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
+
+**Worktree execution environment:**
+
+When running in a worktree (Symphony runner with concurrency enabled):
+
+- **Working directory:** Each runner operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
+- **Environment variables:**
+  - `ANQR_WORKTREE_ID` — Worktree identifier (e.g., `wt1`, `wt2`, or `main` for non-worktree)
+  - `ANQR_WORKTREE_PATH` — Absolute path to worktree directory
+- **Branch isolation:** Each worktree uses a unique branch (e.g., `symphony/wt1`, `symphony/wt2`) that tracks `origin/main`
+- **Git operations:** All git commands (status, add, commit, push) operate on the worktree's isolated working directory and index
+- **Sync workflow:** Worktrees sync with `origin/main` before each issue execution via `git fetch origin main && git merge origin/main --ff-only`
+- **Lock files:** Each worktree has its own PID lock file (e.g., `/run/user/${UID}/symphony-runner/lock-wt1`)
+- **Validation commands:** All validation commands (typecheck, lint, tests) run in the worktree's isolated environment
+- **Dependencies:** Each worktree has its own `node_modules` directory (installed during worktree creation)
+
+**Agent awareness:**
+
+Agents running in Symphony bridge should be aware that:
+
+- Multiple agents may be executing different issues concurrently in different worktrees
+- File changes are isolated to the specific worktree until committed and pushed
+- The lease system ensures no two agents work on the same Linear issue simultaneously
+- Discord notifications include worktree ID to distinguish concurrent executions
+- Worktree failures (sync errors, corruption) are handled with automatic recovery or hard reset
 
 **Important:** Temporary working scripts (e.g., one-off issue creation scripts, test scripts) must be placed in git-ignored directories to ensure concurrent operations do not conflict. Use `scripts/ops/.workspace/` (already in `.gitignore`) for such temporary files.
 
@@ -479,24 +530,34 @@ Agents can efficiently CRUD Linear issues using the canonical client library:
 
 ```javascript
 // Import from: scripts/ops/integrations/linear/linear-client.mjs
-import { createIssue, updateIssue, addComment, applyLabels, 
-         findOpenIssuesByTitle, findOpenIssuesByDescriptionFragment,
-         listIssuesByState, getIssueDetail, getQueueDepth,
-         TEAM_ID, STATES, LABELS } from 'linear-client.mjs';
+import {
+  createIssue,
+  updateIssue,
+  addComment,
+  applyLabels,
+  findOpenIssuesByTitle,
+  findOpenIssuesByDescriptionFragment,
+  listIssuesByState,
+  getIssueDetail,
+  getQueueDepth,
+  TEAM_ID,
+  STATES,
+  LABELS,
+} from "linear-client.mjs";
 
 // Create issue (returns issue object with id, identifier, title, state, labels)
 const issue = await createIssue({
   title: "Issue title",
   description: "Issue description",
-  stateId: STATES.backlog,  // or .todo, .inProgress, .inReview, .done, .canceled
-  labelIds: [LABELS.harness, LABELS.bug],  // See taxonomy below
-  priority: 1  // 0=none, 1=urgent, 2=high, 3=normal, 4=low (optional)
+  stateId: STATES.backlog, // or .todo, .inProgress, .inReview, .done, .canceled
+  labelIds: [LABELS.harness, LABELS.bug], // See taxonomy below
+  priority: 1, // 0=none, 1=urgent, 2=high, 3=normal, 4=low (optional)
 });
 
 // Update issue
-await updateIssue(issue.id, { 
+await updateIssue(issue.id, {
   stateId: STATES.done,
-  priority: 2 
+  priority: 2,
 });
 
 // Add comment
@@ -700,8 +761,10 @@ Use this structure for task handover:
 ## Escalate if
 
 - paid spend, prod auth changes, store/signing work, operator secrets, launch scope changes
+
 ```
 
 ---
 
 For human/operator read order, see [README.md](/home/user/src/anqr/README.md).
+```

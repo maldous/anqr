@@ -10,6 +10,7 @@
 The `run_file_change_hooks` tool was failing with validation errors when Codebuff SDK passed a string instead of an array for the `files` parameter. This caused Linear status updates to fail, breaking Symphony automation.
 
 **Error Message:**
+
 ```
 Expected array but received string
 ```
@@ -25,8 +26,8 @@ files: z.preprocess(
     if (typeof val === "string") return [val];
     return [];
   },
-  z.array(z.string()).min(1, "At least one file path is required")
-)
+  z.array(z.string()).min(1, "At least one file path is required"),
+);
 ```
 
 **Problem:** The preprocessing function would return `[]` for empty strings, which then failed the `.min(1)` validation. Additionally, Zod's preprocessing behavior was inconsistent across different input types, sometimes not applying the transform at all.
@@ -36,40 +37,38 @@ files: z.preprocess(
 Changed to `z.any().transform()` which ALWAYS applies the transformation before validation:
 
 ```javascript
-files: z
-  .any()
-  .transform((val) => {
-    // Normalize ALL input types to arrays
-    if (Array.isArray(val)) {
-      const filtered = val.filter((item) => typeof item === "string" && item.trim());
+files: z.any().transform((val) => {
+  // Normalize ALL input types to arrays
+  if (Array.isArray(val)) {
+    const filtered = val.filter((item) => typeof item === "string" && item.trim());
+    return filtered.length > 0 ? filtered : ["<empty>"];
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed) return ["<empty>"];
+    // Handle JSON-encoded arrays
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
+          return filtered.length > 0 ? filtered : ["<empty>"];
+        }
+      } catch {}
+    }
+    return [trimmed];
+  }
+  // Handle object with path/paths properties
+  if (val && typeof val === "object") {
+    if (typeof val.path === "string" && val.path.trim()) return [val.path.trim()];
+    if (Array.isArray(val.paths)) {
+      const filtered = val.paths.filter((item) => typeof item === "string" && item.trim());
       return filtered.length > 0 ? filtered : ["<empty>"];
     }
-    if (typeof val === "string") {
-      const trimmed = val.trim();
-      if (!trimmed) return ["<empty>"];
-      // Handle JSON-encoded arrays
-      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (Array.isArray(parsed)) {
-            const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
-            return filtered.length > 0 ? filtered : ["<empty>"];
-          }
-        } catch {}
-      }
-      return [trimmed];
-    }
-    // Handle object with path/paths properties
-    if (val && typeof val === "object") {
-      if (typeof val.path === "string" && val.path.trim()) return [val.path.trim()];
-      if (Array.isArray(val.paths)) {
-        const filtered = val.paths.filter((item) => typeof item === "string" && item.trim());
-        return filtered.length > 0 ? filtered : ["<empty>"];
-      }
-      if (typeof val.paths === "string" && val.paths.trim()) return [val.paths.trim()];
-    }
-    return ["<empty>"];
-  })
+    if (typeof val.paths === "string" && val.paths.trim()) return [val.paths.trim()];
+  }
+  return ["<empty>"];
+});
 ```
 
 **Key improvements:**
@@ -84,14 +83,16 @@ files: z
 ```javascript
 async function runFileChangeHooksTool({ files }) {
   // Filter out <empty> placeholder values
-  const filesList = Array.isArray(files) 
+  const filesList = Array.isArray(files)
     ? files.filter((f) => f && f !== "<empty>")
-    : files && files !== "<empty>" ? [files] : [];
+    : files && files !== "<empty>"
+      ? [files]
+      : [];
 
   if (filesList.length === 0) {
     return { success: true, message: "No files to process" };
   }
-  
+
   // ... rest of implementation
 }
 ```
@@ -124,11 +125,13 @@ async function runFileChangeHooksTool({ files }) {
 ## Evidence
 
 **Before fix:**
+
 - Multiple Linear issues stuck in "In Progress" state
 - Symphony runner failing with validation errors
 - Error: "Expected array but received string"
 
 **After fix:**
+
 - Symphony bridge running successfully (active 1min+)
 - Self-test: 5/5 passed
 - No validation errors in journal logs

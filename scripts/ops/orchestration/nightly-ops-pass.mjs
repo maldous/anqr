@@ -131,6 +131,11 @@ async function main() {
         ]
       : []),
     {
+      name: "issue-hygiene",
+      command: `node scripts/ops/integrations/linear/issue-hygiene.mjs${dryRunFlag}`,
+      severity: "independent",
+    },
+    {
       name: "queue-control",
       command: `node scripts/ops/symphony-queue-control.mjs --all${dryRunFlag}`,
       severity: "independent",

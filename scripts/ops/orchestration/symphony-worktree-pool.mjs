@@ -16,6 +16,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, statfsSync } from "node:fs";
+import { resolve } from "node:path";
 import { createLogger } from "../lib/logger.mjs";
 import {
   PROJECT_ROOT,
@@ -117,7 +118,7 @@ export function listWorktrees() {
       } else if (line.startsWith("HEAD ")) {
         current.head = line.slice(5);
       } else if (line.startsWith("branch ")) {
-        current.branch = line.slice(7);
+        current.branch = line.slice(7).replace("refs/heads/", "");
       } else if (line === "prunable") {
         current.prunable = true;
       }
@@ -139,8 +140,7 @@ export function getSymphonyWorktrees() {
   const allWorktrees = listWorktrees();
   return allWorktrees
     .filter(
-      (wt) =>
-        wt.path.includes(WORKTREE_PREFIX) && wt.branch?.startsWith(WORKTREE_BRANCH_PREFIX),
+      (wt) => wt.path.includes(WORKTREE_PREFIX) && wt.branch?.startsWith(WORKTREE_BRANCH_PREFIX),
     )
     .map((wt) => {
       const match = wt.path.match(new RegExp(`${WORKTREE_PREFIX}(\\d+)`));
@@ -174,20 +174,22 @@ export async function initWorktreePool(count = 2) {
   const worktreeParent = resolve(PROJECT_ROOT, "..");
   const stats = statfsSync(worktreeParent);
   const availableBytes = stats.bavail * stats.bsize;
-  const availableGB = availableBytes / (1024 ** 3);
-  
+  const availableGB = availableBytes / 1024 ** 3;
+
   // Estimate space needed: 200MB per worktree + 50MB overhead for shared objects/logs
   const worktreeSizeGB = 0.2;
   const overheadGB = 0.05;
-  const requiredGB = (count * worktreeSizeGB) + overheadGB;
-  
+  const requiredGB = count * worktreeSizeGB + overheadGB;
+
   if (availableGB < requiredGB) {
     const errorMsg = `Insufficient disk space: need ${requiredGB.toFixed(2)}GB, have ${availableGB.toFixed(1)}GB available`;
     logError(errorMsg);
     throw new Error(errorMsg);
   }
-  
-  logInfo(`✅ Disk space check passed: ${availableGB.toFixed(1)}GB available, ${requiredGB.toFixed(2)}GB required`);
+
+  logInfo(
+    `✅ Disk space check passed: ${availableGB.toFixed(1)}GB available, ${requiredGB.toFixed(2)}GB required`,
+  );
 
   // Create worktrees
   const created = [];

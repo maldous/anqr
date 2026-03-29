@@ -28,8 +28,8 @@ import {
 
 describe("symphony-config.mjs", () => {
   describe("queue targets", () => {
-    it("should have TARGET_MIN = 1", () => {
-      expect(TARGET_MIN).toBe(1);
+    it("should have TARGET_MIN = 3", () => {
+      expect(TARGET_MIN).toBe(3);
     });
     it("should have TARGET_MAX = 8", () => {
       expect(TARGET_MAX).toBe(8);

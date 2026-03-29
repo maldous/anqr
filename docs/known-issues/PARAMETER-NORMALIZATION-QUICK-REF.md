@@ -24,13 +24,13 @@ AI SDKs send strings instead of arrays → Zod rejects before transform runs →
 
 ## Accepted Input Formats (All Tools)
 
-| Format | Example | Result |
-|--------|---------|--------|
-| Array | `["a.ts", "b.ts"]` | `["a.ts", "b.ts"]` |
-| String | `"a.ts"` | `["a.ts"]` |
-| JSON | `'["a.ts"]'` | `["a.ts"]` |
-| Object | `{path: "a.ts"}` | `["a.ts"]` |
-| Empty | `""` or `null` | `[]` |
+| Format | Example            | Result             |
+| ------ | ------------------ | ------------------ |
+| Array  | `["a.ts", "b.ts"]` | `["a.ts", "b.ts"]` |
+| String | `"a.ts"`           | `["a.ts"]`         |
+| JSON   | `'["a.ts"]'`       | `["a.ts"]`         |
+| Object | `{path: "a.ts"}`   | `["a.ts"]`         |
+| Empty  | `""` or `null`     | `[]`               |
 
 ## Deployment Commands
 

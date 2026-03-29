@@ -17,6 +17,7 @@ Git worktrees are feasible and beneficial for concurrent Symphony runner operati
 ### Single Working Tree Constraints
 
 **Lock mechanism:**
+
 ```javascript
 // scripts/ops/orchestration/symphony-runner.mjs (lines 110-120)
 const LOCK_FILE = resolve(STATE_DIR, "lock");
@@ -33,6 +34,7 @@ function acquireLock() {
 ```
 
 **Working tree cleanliness requirement:**
+
 ```javascript
 // scripts/ops/orchestration/symphony-runner.mjs (lines 75-90)
 function getWorkingTreeStatus() {
@@ -52,6 +54,7 @@ if (workingTree.blocked.length > 0) {
 ```
 
 **Current concurrency:**
+
 ```javascript
 // scripts/ops/core/symphony-config.mjs
 MAX_CONCURRENT_AGENTS = 1;
@@ -62,6 +65,7 @@ MAX_CONCURRENT_AGENTS = 1;
 The state management system (`symphony-state.mjs`) already implements distributed lease-based concurrency:
 
 **Lease system:**
+
 ```javascript
 // scripts/ops/core/symphony-state.mjs (lines 160-180)
 export function acquireLease(issueIdentifier, details = {}) {
@@ -92,16 +96,19 @@ export function acquireLease(issueIdentifier, details = {}) {
 ### How Git Worktrees Work
 
 **Shared object store:**
+
 - All worktrees share `.git/objects`, `.git/refs`, `.git/packed-refs`
 - Commits, trees, blobs stored once and referenced by all worktrees
 - Branches are globally visible; changes in one worktree update shared refs immediately
 
 **Per-worktree isolation:**
+
 - Each worktree has its own `.git` file (pointer to `.git/worktrees/<name>`)
 - Separate `HEAD`, `index`, and working directory
 - Independent `git status`, `git add`, `git commit` operations
 
 **Branch locking:**
+
 - A branch checked out in any worktree is locked (prevents deletion or force-move)
 - Git prevents checking out the same branch in multiple worktrees
 - Solution: Use unique branches per worktree (e.g., `symphony/wt1`, `symphony/wt2`)
@@ -151,14 +158,15 @@ git branch -D symphony/wt1
 
 **Resource analysis:**
 
-| Resource       | Per worktree | 4 concurrent | Notes                                    |
-|----------------|--------------|--------------|------------------------------------------|
-| Disk space     | ~200 MB      | 800 MB       | Working files only (objects shared)      |
-| Memory         | 512 MB       | 2 GB         | Runner + Node.js heap                    |
-| CPU            | 1-2 cores    | 4-8 cores    | LLM calls are network-bound              |
-| Network        | Minimal      | Minimal      | Symphony bridge is local HTTP            |
+| Resource   | Per worktree | 4 concurrent | Notes                               |
+| ---------- | ------------ | ------------ | ----------------------------------- |
+| Disk space | ~200 MB      | 800 MB       | Working files only (objects shared) |
+| Memory     | 512 MB       | 2 GB         | Runner + Node.js heap               |
+| CPU        | 1-2 cores    | 4-8 cores    | LLM calls are network-bound         |
+| Network    | Minimal      | Minimal      | Symphony bridge is local HTTP       |
 
 **Recommendation:** Start with 2-4 concurrent worktrees based on system specs:
+
 - **Development machine:** 2 worktrees (4 GB RAM, 4 cores)
 - **Production server:** 4 worktrees (8 GB RAM, 8+ cores)
 
@@ -182,6 +190,7 @@ git branch -D symphony/wt1
 - `/run/user/${uid}/symphony-runner/lock` — **NEEDS CHANGE:** make worktree-specific
 
 **Proposed change:**
+
 ```javascript
 // Instead of single shared lock:
 const LOCK_FILE = resolve(STATE_DIR, "lock");
@@ -200,29 +209,43 @@ const LOCK_FILE = resolve(STATE_DIR, `lock-${WORKTREE_ID}`);
 - ✅ Same commit workflow (git add, commit, push)
 - ⚠️ Different branch per worktree (requires merge strategy)
 
-**Merge strategy options:**
+**Merge strategy: Direct push to main (IMPLEMENTED)**
 
-**Option A: Direct push to main (current behavior)**
+**Implementation:** Worktree commits are pushed directly to `main` using `git push origin HEAD:main`
+
 ```bash
-# Each worktree branch tracks main
-git checkout symphony/wt1
-git merge origin/main  # sync before starting
-# ... make changes ...
-git push origin symphony/wt1:main  # push directly to main
-```
-**Pros:** Simple, no merge overhead  
-**Cons:** Risk of conflicts if multiple runners complete simultaneously
+# Worktree execution workflow:
+# 1. Sync with main before starting
+git fetch origin main
+git merge origin/main --ff-only
 
-**Option B: Push to branch + auto-merge**
+# 2. Execute issue (make changes, commit)
+git add <changed files>
+git commit -m "fix(scope): issue title"
+
+# 3. Push worktree commits directly to main
+git push origin HEAD:main  # symphony/wt1 -> main
+```
+
+**Why this works safely:**
+
+- ✅ Lease system prevents multiple runners from working on same issue
+- ✅ Each runner syncs with main BEFORE starting (fast-forward only)
+- ✅ Different runners work on different issues = different files = no conflicts
+- ✅ If push fails due to upstream changes, git will reject (non-fast-forward)
+- ✅ Failed pushes trigger retry with fresh sync
+
+**Conflict handling:**
+
 ```bash
-# Each worktree pushes to its own branch
-git push origin symphony/wt1
-# GitHub Actions or webhook merges to main if CI passes
-```
-**Pros:** Safe, validates before merge  
-**Cons:** Requires CI/CD setup
+# If another runner pushed between sync and push:
+! [rejected] HEAD -> main (non-fast-forward)
 
-**Recommendation:** Start with Option A (direct push) since symphony-state.mjs lease system already prevents concurrent work on same issue.
+# Resolution (would require manual intervention or retry logic):
+git fetch origin main
+git merge origin/main  # Usually auto-merges (different files)
+git push origin HEAD:main  # Retry
+```
 
 #### 8. Validation, commit, and push workflows?
 
@@ -236,18 +259,23 @@ execFileSync("git", ["push"], { cwd: ROOT });
 ```
 
 **Worktree-aware workflow:**
+
 ```javascript
 // ROOT points to worktree directory (not main repo)
 const ROOT = process.env.ANQR_WORKTREE_PATH || resolve(__dirname, "..", "..", "..");
 
-// Optional: sync with main before starting
+// Required: sync with main before starting (implemented in symphony-runner.mjs)
 execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT });
 execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT });
 
 // ... execute issue ...
 
-// Push to main (or worktree branch)
-execFileSync("git", ["push", "origin", "HEAD:main"], { cwd: ROOT });
+// Push worktree commits directly to main (implemented in gitPush())
+if (WORKTREE_ID !== "main") {
+  execFileSync("git", ["push", "origin", "HEAD:main"], { cwd: ROOT });
+} else {
+  execFileSync("git", ["push"], { cwd: ROOT });
+}
 ```
 
 #### 9. Sonar post-commit scanning with worktrees?
@@ -508,6 +536,7 @@ WantedBy=timers.target
 ```
 
 **Usage:**
+
 ```bash
 # Enable multiple instances
 systemctl --user enable --now anqr-symphony-runner@1.timer
@@ -532,13 +561,14 @@ journalctl --user -u anqr-symphony-runner@2.service -f
 
 **Test scenarios:**
 
-| Scenario                  | Worktrees | Expected throughput | Expected conflicts |
-|---------------------------|-----------|---------------------|--------------------|
-| Baseline (current)        | 1         | 2-3 issues/hour     | 0%                 |
-| Parallel (2 worktrees)    | 2         | 4-5 issues/hour     | <5%                |
-| Parallel (4 worktrees)    | 4         | 6-8 issues/hour     | <10%               |
+| Scenario               | Worktrees | Expected throughput | Expected conflicts |
+| ---------------------- | --------- | ------------------- | ------------------ |
+| Baseline (current)     | 1         | 2-3 issues/hour     | 0%                 |
+| Parallel (2 worktrees) | 2         | 4-5 issues/hour     | <5%                |
+| Parallel (4 worktrees) | 4         | 6-8 issues/hour     | <10%               |
 
 **Measurement method:**
+
 ```bash
 # Run for 4 hours, capture metrics
 npm run symphony:benchmark -- --worktrees=1 --duration=4h
@@ -577,16 +607,17 @@ node scripts/ops/symphony-benchmark-report.mjs
 ### Cleanup Strategy
 
 **Per-cycle cleanup (after each issue):**
+
 ```javascript
 // In symphony-runner.mjs after issue completion:
 if (WORKTREE_ID !== "main") {
   // 1. Sync with main (pull latest changes)
   execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT });
   execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT });
-  
+
   // 2. Clean untracked files
   execFileSync("git", ["clean", "-fd"], { cwd: ROOT });
-  
+
   // 3. Verify clean state
   const status = execFileSync("git", ["status", "--porcelain"], { cwd: ROOT, encoding: "utf-8" });
   if (status.trim()) {
@@ -596,6 +627,7 @@ if (WORKTREE_ID !== "main") {
 ```
 
 **Periodic maintenance (daily):**
+
 ```bash
 # Prune stale worktrees
 git worktree prune
@@ -608,6 +640,7 @@ git gc --auto
 ```
 
 **Emergency recovery:**
+
 ```bash
 # If worktree becomes corrupted
 systemctl --user stop anqr-symphony-runner@N.timer
@@ -620,13 +653,13 @@ systemctl --user start anqr-symphony-runner@N.timer
 
 ### Risks
 
-| Risk                              | Likelihood | Impact | Mitigation                                       |
-|-----------------------------------|------------|--------|--------------------------------------------------|
-| Git merge conflicts               | Medium     | Medium | Lease system prevents concurrent issue work     |
-| Worktree corruption               | Low        | High   | Automated repair + emergency recovery procedure  |
-| Increased disk usage              | Low        | Low    | Shared object store minimizes overhead           |
-| Complex debugging                 | Medium     | Medium | Worktree-specific logging + journalctl filtering |
-| State file contention             | Low        | Medium | Existing file lock mechanism handles this        |
+| Risk                  | Likelihood | Impact | Mitigation                                       |
+| --------------------- | ---------- | ------ | ------------------------------------------------ |
+| Git merge conflicts   | Medium     | Medium | Lease system prevents concurrent issue work      |
+| Worktree corruption   | Low        | High   | Automated repair + emergency recovery procedure  |
+| Increased disk usage  | Low        | Low    | Shared object store minimizes overhead           |
+| Complex debugging     | Medium     | Medium | Worktree-specific logging + journalctl filtering |
+| State file contention | Low        | Medium | Existing file lock mechanism handles this        |
 
 ### Rollback Procedure
 
@@ -652,12 +685,14 @@ node scripts/ops/symphony-worktree-pool.mjs cleanup
 ### Phase 1: Prototype (1 week)
 
 **Goals:**
+
 - [ ] Create `symphony-worktree-pool.mjs` script
 - [ ] Modify `symphony-runner.mjs` for worktree awareness
 - [ ] Create systemd template services
 - [ ] Test with 2 concurrent worktrees locally
 
 **Acceptance criteria:**
+
 - Both runners complete issues without conflicts
 - symphony-state.mjs lease system prevents duplicate work
 - Logs clearly distinguish worktree instances
@@ -665,12 +700,14 @@ node scripts/ops/symphony-worktree-pool.mjs cleanup
 ### Phase 2: Validation (1 week)
 
 **Goals:**
+
 - [ ] Run 4-hour benchmark (1 vs 2 vs 4 worktrees)
 - [ ] Measure throughput, idle time, conflict rate
 - [ ] Monitor resource usage (CPU, memory, disk)
 - [ ] Identify and fix any edge cases
 
 **Acceptance criteria:**
+
 - Throughput increase ≥75% with 2 worktrees
 - Conflict rate <5%
 - No memory leaks or disk space issues
@@ -678,12 +715,14 @@ node scripts/ops/symphony-worktree-pool.mjs cleanup
 ### Phase 3: Production Rollout (1 week)
 
 **Goals:**
+
 - [ ] Deploy to production server with 2-4 worktrees
 - [ ] Monitor for 7 days
 - [ ] Document operational procedures
 - [ ] Create runbooks for common issues
 
 **Acceptance criteria:**
+
 - 7 days of stable operation
 - No regressions in issue completion quality
 - Observability dashboards updated
@@ -693,6 +732,7 @@ node scripts/ops/symphony-worktree-pool.mjs cleanup
 **Git worktrees are a strong fit for concurrent Symphony operations.**
 
 **Key benefits:**
+
 - ✅ Clean isolation without heavyweight clones
 - ✅ Minimal changes to existing architecture
 - ✅ State management already concurrency-ready
@@ -764,6 +804,7 @@ node scripts/ops/symphony-worktree-pool.mjs cleanup
 - [ ] Update `MAX_CONCURRENT_AGENTS` in `symphony-config.mjs` when enabling concurrency
 
 **Files modified:**
+
 - `scripts/ops/orchestration/symphony-worktree-pool.mjs` (created)
 - `scripts/ops/orchestration/symphony-runner.mjs` (modified)
 - `scripts/ops/orchestration/README.md` (updated)

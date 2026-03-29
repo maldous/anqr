@@ -22,6 +22,7 @@ Identified **15 issues** requiring attention, ranging from blocking (Priority 1)
 **Impact:** Worktrees cannot execute issues — feature is non-functional.
 
 **Fix Required:**
+
 ```javascript
 // After git worktree add, run:
 execFileSync("npm", ["install"], { cwd: worktreePath, stdio: "inherit" });
@@ -37,6 +38,7 @@ execFileSync("npm", ["install"], { cwd: worktreePath, stdio: "inherit" });
 **Location:** `services/systemd/anqr-symphony-runner@.service`
 
 **Problem:**
+
 ```ini
 WorkingDirectory=/home/user/src/anqr-wt%i
 Environment=ANQR_WORKTREE_PATH=/home/user/src/anqr-wt%i
@@ -47,6 +49,7 @@ Hard-coded `/home/user/` won't work for other users or deployment environments.
 **Impact:** Feature only works for single user — not portable.
 
 **Fix Required:**
+
 ```ini
 WorkingDirectory=%h/src/anqr-wt%i
 Environment=ANQR_WORKTREE_PATH=%h/src/anqr-wt%i
@@ -61,7 +64,8 @@ Use systemd's `%h` variable for home directory.
 **Severity:** CRITICAL - Blocking  
 **Location:** `scripts/ops/orchestration/symphony-runner.mjs:79`
 
-**Problem:** 
+**Problem:**
+
 ```javascript
 const LOCK_FILE = resolve(STATE_DIR, `lock-${WORKTREE_ID}`);
 ```
@@ -71,6 +75,7 @@ const LOCK_FILE = resolve(STATE_DIR, `lock-${WORKTREE_ID}`);
 **Impact:** Runner crashes on first lock acquisition attempt.
 
 **Fix Required:** Add directory creation before lock operations:
+
 ```javascript
 if (!existsSync(STATE_DIR)) {
   mkdirSync(STATE_DIR, { recursive: true });
@@ -100,6 +105,7 @@ if (!existsSync(STATE_DIR)) {
 **Location:** `symphony-worktree-pool.mjs:47`
 
 **Problem:**
+
 ```javascript
 if (existsSync(worktreePath)) {
   logInfo(`Worktree already exists: ${worktreePath}`);
@@ -125,6 +131,7 @@ Returns existing path without verifying it's actually a valid worktree registere
 **Impact:** Partial worktree pool creation, wasted resources, unclear error state.
 
 **Fix Required:** Check available disk space before creating worktrees:
+
 ```javascript
 const { availableGB } = checkDiskSpace();
 const requiredGB = count * 0.2;
@@ -156,6 +163,7 @@ if (availableGB < requiredGB) {
 **Location:** `symphony-config.mjs:17`
 
 **Problem:**
+
 ```javascript
 export const MAX_CONCURRENT_AGENTS = 1;
 ```
@@ -178,6 +186,7 @@ Documentation says to update this when enabling worktrees, but there's no valida
 **Impact:** Stale worktree metadata accumulates.
 
 **Fix Required:** Add worktree maintenance to nightly ops pass:
+
 ```javascript
 execFileSync("git", ["worktree", "prune"], { cwd: PROJECT_ROOT });
 execFileSync("git", ["worktree", "repair"], { cwd: PROJECT_ROOT });
@@ -191,6 +200,7 @@ execFileSync("git", ["worktree", "repair"], { cwd: PROJECT_ROOT });
 **Location:** `symphony-worktree-pool.mjs:68-76`
 
 **Problem:**
+
 ```javascript
 try {
   execFileSync("git", ["branch", "-D", branchName], { ... });
@@ -226,6 +236,7 @@ Catch block swallows errors without logging which branch failed to delete.
 **Location:** Multiple files
 
 **Problem:**
+
 - `symphony-runner.mjs:73`: Uses `process.env.ANQR_WORKTREE_PATH`
 - `symphony-worktree-pool.mjs:34`: Calculates as `resolve(PROJECT_ROOT, "..", "anqr-wt${id}")`
 - `systemd service`: Hard-codes `/home/user/src/anqr-wt%i`
@@ -244,6 +255,7 @@ These could diverge if not kept in sync.
 **Location:** `symphony-runner.mjs:415-418`
 
 **Problem:**
+
 ```javascript
 execFileSync("git", ["merge", "origin/main", "--ff-only"], { ... });
 ```
@@ -266,6 +278,7 @@ execFileSync("git", ["merge", "origin/main", "--ff-only"], { ... });
 **Impact:** Operators don't know emergency recovery procedure.
 
 **Fix Required:** Add "nuclear option" recovery procedure:
+
 ```bash
 # Stop all runners
 systemctl --user stop 'anqr-symphony-runner@*.timer'
@@ -295,12 +308,12 @@ systemctl --user start 'anqr-symphony-runner@*.timer'
 
 ## Summary Statistics
 
-| Priority | Count | Status |
-|----------|-------|--------|
-| Priority 1 (Blocking) | 3 | Must fix before Phase 2 |
-| Priority 2 (High Risk) | 4 | Should fix before production |
-| Priority 3 (Operational) | 7 | Fix during stabilization |
-| False Positives | 1 | Document only |
+| Priority                 | Count | Status                       |
+| ------------------------ | ----- | ---------------------------- |
+| Priority 1 (Blocking)    | 3     | Must fix before Phase 2      |
+| Priority 2 (High Risk)   | 4     | Should fix before production |
+| Priority 3 (Operational) | 7     | Fix during stabilization     |
+| False Positives          | 1     | Document only                |
 
 **Total Issues:** 15 (14 real, 1 false positive)
 

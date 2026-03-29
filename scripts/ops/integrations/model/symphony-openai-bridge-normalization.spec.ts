@@ -17,7 +17,7 @@ import { z } from "zod";
 
 // Helper functions for parameter normalization (match symphony-openai-bridge implementation)
 const helpers = {
-  coerceStringArrayInput(value: any, { fallback = undefined }: { fallback?: any } = {}) {
+  coerceStringArrayInput(value: any, { fallback = undefined }: { fallback?: any } = {}): any {
     if (Array.isArray(value)) {
       const cleaned = value
         .filter((item) => typeof item === "string")
@@ -68,33 +68,30 @@ const { coerceStringArrayInput, coerceOptionalNumberInput } = helpers;
 
 describe("Tool Parameter Normalization (Symphony Bridge)", () => {
   describe("run_file_change_hooks (files parameter)", () => {
-    const schema = z.preprocess(
-      (val) => {
-        if (Array.isArray(val)) {
-          const filtered = val.filter((item) => typeof item === "string" && item.trim());
-          return filtered.length > 0 ? filtered : [];
-        }
-        if (typeof val === "string") {
-          const trimmed = val.trim();
-          if (!trimmed) return [];
-          if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-            try {
-              const parsed = JSON.parse(trimmed);
-              if (Array.isArray(parsed)) {
-                const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
-                return filtered.length > 0 ? filtered : [];
-              }
-              return [trimmed];
-            } catch {
-              return [trimmed];
+    const schema = z.preprocess((val) => {
+      if (Array.isArray(val)) {
+        const filtered = val.filter((item) => typeof item === "string" && item.trim());
+        return filtered.length > 0 ? filtered : [];
+      }
+      if (typeof val === "string") {
+        const trimmed = val.trim();
+        if (!trimmed) return [];
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
+              return filtered.length > 0 ? filtered : [];
             }
+            return [trimmed];
+          } catch {
+            return [trimmed];
           }
-          return [trimmed];
         }
-        return [];
-      },
-      z.array(z.string()),
-    );
+        return [trimmed];
+      }
+      return [];
+    }, z.array(z.string()));
 
     it("should accept array of strings", async () => {
       const result = await schema.parseAsync(["file1.ts", "file2.ts"]);
@@ -128,16 +125,13 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
   });
 
   describe("read_files (paths parameter)", () => {
-    const schema = z.preprocess(
-      (val) => {
-        const result = coerceStringArrayInput(val, { fallback: [] });
-        if (!result || result.length === 0) {
-          throw new Error("paths must contain at least one file path");
-        }
-        return result;
-      },
-      z.array(z.string()),
-    );
+    const schema = z.preprocess((val) => {
+      const result = coerceStringArrayInput(val, { fallback: [] });
+      if (!result || result.length === 0) {
+        throw new Error("paths must contain at least one file path");
+      }
+      return result;
+    }, z.array(z.string()));
 
     it("should accept array of paths", async () => {
       const result = await schema.parseAsync(["src/file1.ts", "src/file2.ts"]);
@@ -155,11 +149,15 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
     });
 
     it("should reject empty array", async () => {
-      await expect(schema.parseAsync([])).rejects.toThrow("paths must contain at least one file path");
+      await expect(schema.parseAsync([])).rejects.toThrow(
+        "paths must contain at least one file path",
+      );
     });
 
     it("should reject empty string", async () => {
-      await expect(schema.parseAsync("")).rejects.toThrow("paths must contain at least one file path");
+      await expect(schema.parseAsync("")).rejects.toThrow(
+        "paths must contain at least one file path",
+      );
     });
   });
 
@@ -447,7 +445,7 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
       });
 
       it("should treat incomplete JSON array as literal string", () => {
-        const result = coerceStringArrayInput("[\"incomplete");
+        const result = coerceStringArrayInput('["incomplete');
         expect(result).toEqual(['["incomplete']);
       });
     });
@@ -460,33 +458,30 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
       // With z.preprocess(), this should now work:
 
       const runFileChangeHooksSchema = z.object({
-        files: z.preprocess(
-          (val) => {
-            if (Array.isArray(val)) {
-              const filtered = val.filter((item) => typeof item === "string" && item.trim());
-              return filtered.length > 0 ? filtered : [];
-            }
-            if (typeof val === "string") {
-              const trimmed = val.trim();
-              if (!trimmed) return [];
-              if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                try {
-                  const parsed = JSON.parse(trimmed);
-                  if (Array.isArray(parsed)) {
-                    const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
-                    return filtered.length > 0 ? filtered : [];
-                  }
-                  return [trimmed];
-                } catch {
-                  return [trimmed];
+        files: z.preprocess((val) => {
+          if (Array.isArray(val)) {
+            const filtered = val.filter((item) => typeof item === "string" && item.trim());
+            return filtered.length > 0 ? filtered : [];
+          }
+          if (typeof val === "string") {
+            const trimmed = val.trim();
+            if (!trimmed) return [];
+            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                  const filtered = parsed.filter((item) => typeof item === "string" && item.trim());
+                  return filtered.length > 0 ? filtered : [];
                 }
+                return [trimmed];
+              } catch {
+                return [trimmed];
               }
-              return [trimmed];
             }
-            return [];
-          },
-          z.array(z.string()),
-        ),
+            return [trimmed];
+          }
+          return [];
+        }, z.array(z.string())),
       });
 
       // This exact case was failing before:

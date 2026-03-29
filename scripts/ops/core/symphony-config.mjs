@@ -16,7 +16,7 @@ import { LABELS } from "../linear-client.mjs";
 
 export const TARGET_MIN = 3;
 export const TARGET_MAX = 8;
-export const MAX_CONCURRENT_AGENTS = 8;
+export const MAX_CONCURRENT_AGENTS = 8; // 4 Symphony (wt1-wt4) + 4 Discord (wt5-wt8)
 
 // ---------------------------------------------------------------------------
 // Timing policy (all constants must be strictly ordered — see chain below)

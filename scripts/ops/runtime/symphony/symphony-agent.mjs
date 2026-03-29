@@ -61,7 +61,6 @@ import {
 } from "../../symphony-validation.mjs";
 import { REPORTS_DIR, PROJECT_ROOT } from "../../integrations/model/codebuff-sdk-runner.mjs";
 
-
 const CODEBUFF_BRIDGE_URL = process.env.CODEBUFF_BRIDGE_URL || "http://127.0.0.1:4318";
 const CODEBUFF_BRIDGE_API_KEY = process.env.CODEBUFF_BRIDGE_API_KEY || "local-bridge";
 const CODEBUFF_BRIDGE_MODEL = process.env.CODEBUFF_MODEL_ID || "codebuff/base";
@@ -438,12 +437,12 @@ async function callLLM(provider, messages, taskDescription) {
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         // Process the current chunk BEFORE checking done
         if (value) {
           buffer += decoder.decode(value, { stream: true });
         }
-        
+
         // If done, process all remaining buffer content (including the final chunk)
         if (done) {
           // Split buffer into lines and process ALL of them
@@ -486,9 +485,9 @@ async function callLLM(provider, messages, taskDescription) {
             const parsed = JSON.parse(data);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
-                fullContent += content;
-                logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
-              }
+              fullContent += content;
+              logDebug(`[agent] 🌊 ${content.slice(0, 200)}`);
+            }
             // Capture structured result from bridge (embedded in any SSE chunk)
             if (parsed._symphony_result) {
               symphonyResult = parsed._symphony_result;

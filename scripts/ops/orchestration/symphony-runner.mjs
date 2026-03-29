@@ -61,6 +61,7 @@ import {
   setGlobalValue,
   getGlobalValue,
   patchIssueState,
+  recordCompletion,
 } from "../symphony-state.mjs";
 import {
   runValidation,
@@ -73,7 +74,9 @@ import { PROJECT_ROOT, getWorktreePath } from "../core/worktree-config.mjs";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || "main";
-const ROOT = process.env.ANQR_WORKTREE_PATH || (WORKTREE_ID === "main" ? PROJECT_ROOT : getWorktreePath(WORKTREE_ID.replace(/^wt/, "")));
+const ROOT =
+  process.env.ANQR_WORKTREE_PATH ||
+  (WORKTREE_ID === "main" ? PROJECT_ROOT : getWorktreePath(WORKTREE_ID.replace(/^wt/, "")));
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
 const uid = process.getuid?.() ?? 1000;
@@ -306,7 +309,17 @@ function gitCommit(issueIdentifier, issueTitle, summary, changedFiles) {
 
 function gitPush() {
   try {
-    execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+    // For worktrees: push current branch (symphony/wtN) to main
+    // For main worktree: push to tracking branch (default behavior)
+    if (WORKTREE_ID !== "main") {
+      execFileSync("git", ["push", "origin", "HEAD:main"], {
+        cwd: ROOT,
+        stdio: "pipe",
+        timeout: 30_000,
+      });
+    } else {
+      execFileSync("git", ["push"], { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+    }
     return true;
   } catch (err) {
     logError(`[runner] Git push failed: ${err.message}`);
@@ -429,10 +442,14 @@ async function executeIssue(issue, dryRun = false) {
       syncFailCount = 0; // Reset counter on successful sync
     } catch (err) {
       syncFailCount++;
-      logError(`[runner] Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`);
-      
+      logError(
+        `[runner] Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
+      );
+
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
-        logWarn(`[runner] ⚠️ Too many sync failures (${syncFailCount}), resetting worktree to origin/main`);
+        logWarn(
+          `[runner] ⚠️ Too many sync failures (${syncFailCount}), resetting worktree to origin/main`,
+        );
         try {
           execFileSync("git", ["reset", "--hard", "origin/main"], { cwd: ROOT, stdio: "pipe" });
           execFileSync("git", ["clean", "-fd"], { cwd: ROOT, stdio: "pipe" });
@@ -1261,6 +1278,14 @@ ${String(r.detail).slice(0, 1000)}\n`,
 
     await runSonarPostCommit(issue.identifier);
     await updateIssue(issue.id, { stateId: finalStateId });
+
+    // Record completion with latency tracking
+    const latencyMs = Date.now() - issueStartMs;
+    recordCompletion(issue.identifier, {
+      latencyMs,
+      completedAt: new Date().toISOString(),
+    });
+
     recordTransition(issue.identifier, {
       actor: "runner",
       reason: pushConfirmed ? "push_confirmed" : "local_commit_complete",

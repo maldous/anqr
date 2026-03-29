@@ -16,6 +16,7 @@ Invalid parameters for run_file_change_hooks: [
 ```
 
 This affected multiple tools:
+
 - `run_file_change_hooks` (`files` parameter)
 - `read_files` (`paths` parameter)
 - `str_replace` (`replacements` parameter)
@@ -34,16 +35,14 @@ The original normalization logic used Zod's `.transform()` method, which runs **
 
 ```typescript
 z.object({
-  files: z
-    .union([z.array(z.string()), z.string()])
-    .transform((val) => {
-      // This transform runs AFTER validation
-      // If SDK sends a string, Zod rejects before reaching here
-      if (Array.isArray(val)) return val;
-      if (typeof val === "string") return [val];
-      return [];
-    })
-})
+  files: z.union([z.array(z.string()), z.string()]).transform((val) => {
+    // This transform runs AFTER validation
+    // If SDK sends a string, Zod rejects before reaching here
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string") return [val];
+    return [];
+  }),
+});
 ```
 
 ## Solution
@@ -54,53 +53,50 @@ Use Zod's `.preprocess()` method instead, which runs **before** validation. This
 
 ```typescript
 z.object({
-  files: z.preprocess(
-    (val) => {
-      // This preprocessing runs BEFORE validation
-      // We can normalize any input format into an array
-      if (Array.isArray(val)) {
-        return val.filter((item) => typeof item === "string" && item.trim());
-      }
-      if (typeof val === "string") {
-        const trimmed = val.trim();
-        if (!trimmed) return [];
-        // Handle JSON-encoded arrays
-        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (Array.isArray(parsed)) {
-              return parsed.filter((item) => typeof item === "string" && item.trim());
-            }
-            return [trimmed];
-          } catch {
-            return [trimmed];
+  files: z.preprocess((val) => {
+    // This preprocessing runs BEFORE validation
+    // We can normalize any input format into an array
+    if (Array.isArray(val)) {
+      return val.filter((item) => typeof item === "string" && item.trim());
+    }
+    if (typeof val === "string") {
+      const trimmed = val.trim();
+      if (!trimmed) return [];
+      // Handle JSON-encoded arrays
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((item) => typeof item === "string" && item.trim());
           }
+          return [trimmed];
+        } catch {
+          return [trimmed];
         }
-        // Single string - wrap in array
-        return [trimmed];
       }
-      return [];
-    },
-    z.array(z.string()).describe("List of file paths (accepts string or array)"),
-  ),
-})
+      // Single string - wrap in array
+      return [trimmed];
+    }
+    return [];
+  }, z.array(z.string()).describe("List of file paths (accepts string or array)")),
+});
 ```
 
 ## Key Differences: `.transform()` vs `.preprocess()`
 
-| Feature | `.transform()` | `.preprocess()` |
-|---------|---------------|-----------------|
-| **Execution order** | After validation | Before validation |
-| **Use case** | Transform valid data | Normalize malformed data |
-| **Error handling** | Cannot fix validation errors | Can prevent validation errors |
-| **Chaining** | Requires `.pipe()` | Direct schema as second argument |
+| Feature             | `.transform()`               | `.preprocess()`                  |
+| ------------------- | ---------------------------- | -------------------------------- |
+| **Execution order** | After validation             | Before validation                |
+| **Use case**        | Transform valid data         | Normalize malformed data         |
+| **Error handling**  | Cannot fix validation errors | Can prevent validation errors    |
+| **Chaining**        | Requires `.pipe()`           | Direct schema as second argument |
 
 ## Implementation
 
 All affected tools in `symphony-openai-bridge.mjs` have been updated to use `.preprocess()`:
 
 1. **run_file_change_hooks** — `files` parameter
-2. **read_files** — `paths` parameter  
+2. **read_files** — `paths` parameter
 3. **str_replace** — `replacements` parameter
 4. **spawn_agents** — `agents` parameter
 5. **propose_str_replace** — `replacements` parameter
@@ -115,6 +111,7 @@ All affected tools in `symphony-openai-bridge.mjs` have been updated to use `.pr
 ### Startup Self-Tests
 
 The Symphony Bridge now runs comprehensive schema validation tests at startup, testing:
+
 - Array inputs
 - Single string inputs (wrapped to array)
 - JSON-encoded array strings
@@ -133,6 +130,7 @@ npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-normalizati
 ```
 
 **52 tests** cover:
+
 - All tool parameter types
 - Edge cases (empty, null, undefined)
 - Malformed inputs (invalid JSON, mixed types)
@@ -145,26 +143,31 @@ npx vitest run scripts/ops/integrations/model/symphony-openai-bridge-normalizati
 All array parameters now accept these formats:
 
 ### 1. Native Array (ideal)
+
 ```json
 { "files": ["file1.ts", "file2.ts"] }
 ```
 
 ### 2. Single String (auto-wrapped)
+
 ```json
 { "files": "file1.ts" }
 ```
 
 ### 3. JSON-Encoded String
+
 ```json
 { "files": "[\"file1.ts\", \"file2.ts\"]" }
 ```
 
 ### 4. Object with path property
+
 ```json
 { "files": { "path": "file1.ts" } }
 ```
 
 ### 5. Empty/Null (fallback)
+
 ```json
 { "files": "" }  // Returns []
 { "files": null }  // Returns []
@@ -173,6 +176,7 @@ All array parameters now accept these formats:
 ## Backward Compatibility
 
 This change is **100% backward compatible**:
+
 - All valid inputs continue to work
 - Previously failing inputs now work correctly
 - No breaking changes to the API
@@ -230,11 +234,13 @@ journalctl --user -u anqr-symphony-bridge.service -f | grep -E "(Invalid|❌)"
 ## Success Criteria
 
 After restart, you should see:
+
 ```
 🧪 Tool schema self-test: 29/29 passed (all array normalization working)
 ```
 
 And **NO** validation errors in journalctl for:
+
 - `run_file_change_hooks`
 - `read_files`
 - `str_replace`

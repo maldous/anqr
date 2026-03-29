@@ -32,7 +32,7 @@ const EVIDENCE_DIR = resolve(PROJECT_ROOT, "docs", "harness", "evidence");
  */
 function extractBenchmarkMetrics(startTime, endTime, worktreeCount) {
   const stateFile = resolve(REPORTS_DIR, "state.json");
-  
+
   if (!existsSync(stateFile)) {
     throw new Error(`State file not found: ${stateFile}`);
   }
@@ -63,7 +63,7 @@ function extractBenchmarkMetrics(startTime, endTime, worktreeCount) {
         (t.reason.includes("git") ||
           t.reason.includes("conflict") ||
           t.reason.includes("merge") ||
-          t.reason.includes("push"))
+          t.reason.includes("push")),
     );
   });
 
@@ -76,9 +76,8 @@ function extractBenchmarkMetrics(startTime, endTime, worktreeCount) {
 
   // Calculate throughput
   const throughput = completedIssues.length / durationHours;
-  const conflictRate = completedIssues.length > 0 
-    ? (gitConflicts.length / completedIssues.length) * 100 
-    : 0;
+  const conflictRate =
+    completedIssues.length > 0 ? (gitConflicts.length / completedIssues.length) * 100 : 0;
 
   return {
     worktreeCount,
@@ -237,10 +236,10 @@ ${
     ? `- **Throughput:** Only ${comparison.comparison.throughputIncrease}% increase (target: ≥75%)\\n  - Review runner contention and lease acquisition delays\\n  - Check for queue starvation or idle gaps\\n`
     : ""
 }${
-  !comparison.thresholds.conflictRate
-    ? `- **Conflicts:** ${comparison.concurrent.conflicts}% conflict rate (target: <5%)\\n  - Review git push collision handling\\n  - Consider serializing final push operations\\n`
-    : ""
-}
+        !comparison.thresholds.conflictRate
+          ? `- **Conflicts:** ${comparison.concurrent.conflicts}% conflict rate (target: <5%)\\n  - Review git push collision handling\\n  - Consider serializing final push operations\\n`
+          : ""
+      }
 
 **Action:** Create remediation issues and rollback to single-runner mode.
 `
@@ -311,10 +310,14 @@ Examples:
       const concurrent = JSON.parse(readFileSync(concurrentFile, "utf-8"));
       const comparison = compareBenchmarks(baseline, concurrent);
       const reportPath = generateEvidenceReport(comparison, baseline, concurrent);
-      
+
       console.log("\n=== Benchmark Comparison ===\n");
-      console.log(`Throughput: ${comparison.baseline.throughput} → ${comparison.concurrent.throughput} issues/hour (+${comparison.comparison.throughputIncrease}%)`);
-      console.log(`Conflicts: ${comparison.baseline.conflicts}% → ${comparison.concurrent.conflicts}% (Δ${comparison.comparison.conflictIncrease}%)`);
+      console.log(
+        `Throughput: ${comparison.baseline.throughput} → ${comparison.concurrent.throughput} issues/hour (+${comparison.comparison.throughputIncrease}%)`,
+      );
+      console.log(
+        `Conflicts: ${comparison.baseline.conflicts}% → ${comparison.concurrent.conflicts}% (Δ${comparison.comparison.conflictIncrease}%)`,
+      );
       console.log(`\nResult: ${comparison.pass ? "✅ PASS" : "❌ FAIL"}`);
       console.log(`\nEvidence report: ${reportPath}`);
     } else if (args[0] === "--report") {
@@ -328,30 +331,34 @@ Examples:
         !concurrentWorktrees
       ) {
         throw new Error(
-          "Missing required arguments: start-baseline, end-baseline, start-concurrent, end-concurrent, concurrent-worktrees"
+          "Missing required arguments: start-baseline, end-baseline, start-concurrent, end-concurrent, concurrent-worktrees",
         );
       }
       const baseline = extractBenchmarkMetrics(startBaseline, endBaseline, 1);
       const concurrent = extractBenchmarkMetrics(
         startConcurrent,
         endConcurrent,
-        Number(concurrentWorktrees)
+        Number(concurrentWorktrees),
       );
       const comparison = compareBenchmarks(baseline, concurrent);
       const reportPath = generateEvidenceReport(comparison, baseline, concurrent);
-      
+
       // Save intermediate results
       const resultsFile = resolve(REPORTS_DIR, "benchmark-results.json");
       writeFileSync(
         resultsFile,
         JSON.stringify({ baseline, concurrent, comparison }, null, 2),
-        "utf-8"
+        "utf-8",
       );
       logInfo(`Benchmark results saved: ${resultsFile}`);
-      
+
       console.log("\n=== Benchmark Comparison ===\n");
-      console.log(`Throughput: ${comparison.baseline.throughput} → ${comparison.concurrent.throughput} issues/hour (+${comparison.comparison.throughputIncrease}%)`);
-      console.log(`Conflicts: ${comparison.baseline.conflicts}% → ${comparison.concurrent.conflicts}% (Δ${comparison.comparison.conflictIncrease}%)`);
+      console.log(
+        `Throughput: ${comparison.baseline.throughput} → ${comparison.concurrent.throughput} issues/hour (+${comparison.comparison.throughputIncrease}%)`,
+      );
+      console.log(
+        `Conflicts: ${comparison.baseline.conflicts}% → ${comparison.concurrent.conflicts}% (Δ${comparison.comparison.conflictIncrease}%)`,
+      );
       console.log(`\nResult: ${comparison.pass ? "✅ PASS" : "❌ FAIL"}`);
       console.log(`\nEvidence report: ${reportPath}`);
     } else {

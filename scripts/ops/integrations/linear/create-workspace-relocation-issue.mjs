@@ -2,7 +2,7 @@
 
 /**
  * create-workspace-relocation-issue.mjs
- * 
+ *
  * Creates a Linear issue to investigate git worktree usage for concurrent
  * Symphony runner operations without impacting the main working tree.
  */

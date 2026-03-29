@@ -22,6 +22,7 @@ Resolved persistent "Invalid parameters" errors affecting 10+ tools in the Symph
 ```
 
 **Affected Tools**:
+
 - `run_file_change_hooks`, `read_files`, `str_replace`, `spawn_agents`
 - `read_subtree`, `set_messages`, `suggest_followups`, `write_todos`
 - `ask_user` (and nested `options`)
@@ -33,35 +34,37 @@ Used `.transform()` (runs **after** validation) instead of `.preprocess()` (runs
 ## The Solution
 
 Changed all array parameter tools from:
+
 ```typescript
 // ❌ BROKEN - transform runs after validation
 z.object({
-  files: z.union([z.array(z.string()), z.string()])
-    .transform(val => Array.isArray(val) ? val : [val])
-})
+  files: z
+    .union([z.array(z.string()), z.string()])
+    .transform((val) => (Array.isArray(val) ? val : [val])),
+});
 
-// ✅ FIXED - preprocess runs before validation  
+// ✅ FIXED - preprocess runs before validation
 z.object({
-  files: z.preprocess(
-    val => Array.isArray(val) ? val : [val],
-    z.array(z.string())
-  )
-})
+  files: z.preprocess((val) => (Array.isArray(val) ? val : [val]), z.array(z.string())),
+});
 ```
 
 ## Changes Made
 
 ### 1. Symphony Bridge (`symphony-openai-bridge.mjs`)
+
 - Converted 10 tools from `.transform()` to `.preprocess()`
 - Added comprehensive startup self-tests (29 test cases)
 - Bridge now **refuses to start** if any schema test fails
 
 ### 2. Test Suite (`symphony-openai-bridge-normalization.spec.ts`)
+
 - **52 comprehensive tests** covering all edge cases
 - Tests malformed inputs, Unicode, performance, edge cases
 - All tests passing ✅
 
 ### 3. Documentation (`symphony-bridge-parameter-normalization.md`)
+
 - Complete technical explanation
 - Deployment guide
 - Verification commands
@@ -72,7 +75,7 @@ z.object({
 ```bash
 ✅ symphony-openai-bridge-normalization.spec.ts (52 tests) — ALL PASSING
 ✅ symphony-adaptive-context.spec.ts (82 tests) — ALL PASSING
-✅ symphony-bridge-truncation.spec.ts (9 tests) — ALL PASSING  
+✅ symphony-bridge-truncation.spec.ts (9 tests) — ALL PASSING
 ✅ symphony-credit-gate.spec.ts (28 tests) — ALL PASSING
 
 Total: 171 tests passing
@@ -89,9 +92,11 @@ Total: 171 tests passing
    systemctl --user restart anqr-symphony-bridge
    ```
 4. **Verify startup self-tests**:
+
    ```bash
    journalctl --user -u anqr-symphony-bridge.service --no-pager -n 100 | grep "self-test"
    ```
+
    Expected: `🧪 Tool schema self-test: 29/29 passed (all array normalization working)`
 
 5. **Monitor for validation errors** (should be ZERO):
@@ -143,12 +148,14 @@ After successful deployment:
 ## Emergency Rollback
 
 If issues occur, rollback is straightforward:
+
 ```bash
 git revert <commit-hash>
 systemctl --user restart anqr-symphony-bridge
 ```
 
 However, rollback is **not expected to be needed** — the fix is:
+
 - Thoroughly tested (171 tests)
 - 100% backward compatible
 - Has startup self-tests to catch any issues before accepting requests

@@ -9,12 +9,14 @@ This directory contains the core Symphony harness orchestration scripts.
 Main execution agent that picks up Linear issues and implements them via AI agent.
 
 **Features:**
+
 - Lease-based concurrency control
 - Validation and commit workflow
 - Provider routing via Symphony bridge
 - Worktree-aware for concurrent execution
 
 **Usage:**
+
 ```bash
 # Single execution cycle
 node scripts/ops/orchestration/symphony-runner.mjs --once
@@ -34,6 +36,7 @@ Set `ANQR_WORKTREE_ID` and `ANQR_WORKTREE_PATH` environment variables to run in 
 Queue management for Symphony execution pipeline.
 
 **Usage:**
+
 ```bash
 # Check queue health
 node scripts/ops/orchestration/symphony-queue-control.mjs --check
@@ -59,12 +62,14 @@ node scripts/ops/orchestration/symphony-queue-control.mjs --all --dry-run
 Git worktree pool management for concurrent Symphony execution.
 
 **Features:**
+
 - Create/destroy Symphony worktrees
 - List and monitor worktree status
 - Repair corrupted worktrees
 - Automatic cleanup
 
 **Usage:**
+
 ```bash
 # Initialize worktree pool (default: 2 worktrees)
 node scripts/ops/orchestration/symphony-worktree-pool.mjs init [count]
@@ -86,6 +91,7 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 ```
 
 **Worktree naming:**
+
 - Worktrees: `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`, etc.
 - Branches: `symphony/wt1`, `symphony/wt2`, etc.
 
@@ -94,11 +100,13 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs cleanup
 ### Setup
 
 1. **Initialize worktree pool:**
+
    ```bash
    node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
    ```
 
 2. **Install systemd template services:**
+
    ```bash
    cp services/systemd/anqr-symphony-runner@.service ~/.config/systemd/user/
    cp services/systemd/anqr-symphony-runner@.timer ~/.config/systemd/user/
@@ -132,6 +140,7 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs status
 ### Scaling
 
 **Scale up (add more concurrent runners):**
+
 ```bash
 # Create additional worktree
 node scripts/ops/orchestration/symphony-worktree-pool.mjs init 3
@@ -141,6 +150,7 @@ systemctl --user enable --now anqr-symphony-runner@3.timer
 ```
 
 **Scale down (reduce concurrent runners):**
+
 ```bash
 # Stop and disable instance
 systemctl --user stop anqr-symphony-runner@3.timer
@@ -153,6 +163,7 @@ systemctl --user disable anqr-symphony-runner@3.timer
 ### Troubleshooting
 
 **Worktree corruption:**
+
 ```bash
 # Repair all worktrees
 node scripts/ops/orchestration/symphony-worktree-pool.mjs repair
@@ -163,6 +174,7 @@ node scripts/ops/orchestration/symphony-worktree-pool.mjs init 2
 ```
 
 **Stuck runner:**
+
 ```bash
 # Check for stuck work
 node scripts/ops/orchestration/symphony-queue-control.mjs --enforce
@@ -172,6 +184,7 @@ systemctl --user restart anqr-symphony-runner@1.service
 ```
 
 **Lock issues:**
+
 ```bash
 # Check lock status
 node scripts/ops/orchestration/symphony-runner.mjs --status
@@ -239,8 +252,10 @@ Edit `scripts/ops/core/symphony-config.mjs` to adjust:
 ## Documentation
 
 **Quick Start:**
+
 - [WORKTREE-QUICKSTART.md](/home/user/src/anqr/docs/harness/WORKTREE-QUICKSTART.md) — 10-minute setup guide
 
 **Comprehensive Guides:**
+
 - [12-concurrent-execution-with-worktrees.md](/home/user/src/anqr/docs/harness/12-concurrent-execution-with-worktrees.md) — complete worktree documentation
 - [ANQ-1099-worktree-investigation.md](/home/user/src/anqr/docs/harness/evidence/ANQ-1099-worktree-investigation.md) — investigation and design decisions

@@ -11,6 +11,18 @@ Read order:
 
 ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenAI-compatible gateways. Both run as user-level systemd services.
 
+### Worktree execution environment
+
+Symphony runner supports concurrent execution via git worktrees. When enabled:
+
+- Each runner instance operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
+- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, or `main`) and `ANQR_WORKTREE_PATH`
+- Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`) tracking `origin/main`
+- Worktrees sync with `origin/main` before each issue execution
+- Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
+- Lease system prevents concurrent work on the same Linear issue
+- Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
+
 ### Key modules (all under `scripts/ops/integrations/model/`)
 
 - `symphony-openai-bridge.mjs` — AI SDK bridge with tool execution, provider fallback, streaming

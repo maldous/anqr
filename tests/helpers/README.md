@@ -62,10 +62,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await Promise.all([
-    symphonyBridge.cleanup(),
-    codebuffBridge.cleanup(),
-  ]);
+  await Promise.all([symphonyBridge.cleanup(), codebuffBridge.cleanup()]);
 });
 ```
 
@@ -89,17 +86,19 @@ const bridge = await spawnSymphonyBridge({
 Spawns a Symphony bridge instance on a dynamic port.
 
 **Options:**
+
 - `preferredPort?: number` - Starting port (default: 14319). Will increment if occupied.
 - `apiKey?: string` - API key for authentication (default: "test-symphony")
 - `env?: Record<string, string>` - Additional environment variables
 
 **Returns:**
+
 ```typescript
 {
-  process: ChildProcess;    // Node.js process
-  port: number;             // Actual port assigned
-  baseUrl: string;          // "http://127.0.0.1:{port}"
-  apiKey: string;           // API key for auth headers
+  process: ChildProcess; // Node.js process
+  port: number; // Actual port assigned
+  baseUrl: string; // "http://127.0.0.1:{port}"
+  apiKey: string; // API key for auth headers
   cleanup: () => Promise<void>; // Stop the bridge
 }
 ```
@@ -117,6 +116,7 @@ Same as `spawnSymphonyBridge` but for Codebuff bridge (default port: 14318).
 ### Cleanup
 
 **Always** call `cleanup()` in `afterAll()` to prevent:
+
 - Orphaned bridge processes
 - Port leaks
 - Resource exhaustion
@@ -128,6 +128,7 @@ afterAll(async () => {
 ```
 
 The cleanup function:
+
 1. Sends SIGTERM to bridge process
 2. Waits for graceful shutdown
 3. Force-kills (SIGKILL) after 5 seconds if needed

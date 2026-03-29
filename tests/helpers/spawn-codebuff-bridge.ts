@@ -12,24 +12,26 @@ import { waitForBridgeReady } from "./wait-for-bridge-ready";
 /**
  * Spawn a Codebuff bridge instance on a dynamic port
  */
-export async function spawnCodebuffBridge(options: {
-  preferredPort?: number;
-  apiKey?: string;
-  env?: Record<string, string>;
-} = {}): Promise<BridgeInstance> {
+export async function spawnCodebuffBridge(
+  options: {
+    preferredPort?: number;
+    apiKey?: string;
+    env?: Record<string, string>;
+  } = {},
+): Promise<BridgeInstance> {
   const preferredPort = options.preferredPort ?? 14318; // Higher port range for tests
   const apiKey = options.apiKey ?? "test-codebuff";
-  
+
   // Find available port
   const port = await findAvailablePort(preferredPort);
   const baseUrl = `http://127.0.0.1:${port}`;
-  
+
   // Spawn bridge process
   const scriptPath = join(
     process.cwd(),
-    "scripts/ops/integrations/model/codebuff-openai-bridge.mjs"
+    "scripts/ops/integrations/model/codebuff-openai-bridge.mjs",
   );
-  
+
   const bridgeProcess = spawn("node", [scriptPath], {
     env: {
       ...process.env,
@@ -40,7 +42,7 @@ export async function spawnCodebuffBridge(options: {
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
-  
+
   // Collect logs for debugging
   const logs: string[] = [];
   bridgeProcess.stdout?.on("data", (chunk) => {
@@ -49,30 +51,28 @@ export async function spawnCodebuffBridge(options: {
   bridgeProcess.stderr?.on("data", (chunk) => {
     logs.push(chunk.toString());
   });
-  
+
   // Wait for bridge to be ready
   const ready = await waitForBridgeReady(baseUrl);
-  
+
   if (!ready) {
     bridgeProcess.kill("SIGTERM");
-    throw new Error(
-      `Codebuff bridge failed to start on port ${port}. Logs:\n${logs.join("\n")}`
-    );
+    throw new Error(`Codebuff bridge failed to start on port ${port}. Logs:\n${logs.join("\n")}`);
   }
-  
+
   const cleanup = async () => {
     return new Promise<void>((resolve) => {
       if (bridgeProcess.killed) {
         resolve();
         return;
       }
-      
+
       bridgeProcess.once("exit", () => {
         resolve();
       });
-      
+
       bridgeProcess.kill("SIGTERM");
-      
+
       // Force kill after 5 seconds
       setTimeout(() => {
         if (!bridgeProcess.killed) {
@@ -81,7 +81,7 @@ export async function spawnCodebuffBridge(options: {
       }, 5000);
     });
   };
-  
+
   return {
     process: bridgeProcess,
     port,

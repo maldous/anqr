@@ -72,11 +72,17 @@ export async function getQueueSnapshot() {
   };
 }
 
-function countEnabledTimers() {
+export function countEnabledTimers() {
   try {
     const output = execFileSync(
       "systemctl",
-      ["--user", "list-unit-files", "anqr-symphony-runner@*.timer", "--state=enabled", "--no-legend"],
+      [
+        "--user",
+        "list-unit-files",
+        "anqr-symphony-runner@*.timer",
+        "--state=enabled",
+        "--no-legend",
+      ],
       { encoding: "utf-8" },
     );
     const lines = output.trim().split("\n").filter(Boolean);
@@ -87,7 +93,7 @@ function countEnabledTimers() {
   }
 }
 
-function validateConcurrencyConfig() {
+export function validateConcurrencyConfig() {
   const enabledTimers = countEnabledTimers();
   if (enabledTimers === 0) {
     // No timers enabled - probably running manually or not using systemd
