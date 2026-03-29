@@ -543,6 +543,7 @@ async function executeIssue(issue, dryRun = false) {
         }
       } catch {}
     } catch (err) {
+      // Sync failed - release lock immediately and exit to avoid wasting lease cycles
       syncFailCount++;
       // Persist incremented counter
       try {
@@ -553,6 +554,7 @@ async function executeIssue(issue, dryRun = false) {
         `[runner] ❌ Worktree sync failed (attempt ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}): ${err.message}`,
       );
       logError(`[runner] This likely indicates conflicting changes in the worktree.`);
+      logError(`[runner] ⏭️  Releasing lock and exiting immediately to avoid wasting lease acquisition cycle.`);
 
       if (syncFailCount >= SYNC_FAILURE_THRESHOLD) {
         logWarn(
@@ -569,22 +571,26 @@ async function executeIssue(issue, dryRun = false) {
               unlinkSync(SYNC_FAIL_COUNT_FILE);
             }
           } catch {}
+          logInfo(`[runner] Next cycle will use clean worktree — releasing lock and exiting.`);
+          // ROLLBACK: Release lock and exit after successful reset
+          // Next cycle will start fresh with clean worktree
+          releaseLock();
+          return "skip";
         } catch (resetErr) {
           logError(`[runner] ❌ Hard reset failed: ${resetErr.message}`);
           logError(`[runner] ⛔ Manual intervention required for worktree ${WORKTREE_ID}`);
           logError(`[runner] Run: cd ${ROOT} && git reset --hard origin/main && git clean -fd`);
-          // Release lock immediately and exit - manual intervention required
+          // ROLLBACK: Release lock immediately and exit - manual intervention required
           releaseLock();
           return "skip";
         }
-      } else {
-        logError(`[runner] ⏭️  Skipping this cycle to avoid wasting lease acquisition.`);
-        logError(`[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`);
-        // Release lock immediately on sync failure - no lease was acquired yet
-        // This is the key improvement: exit early instead of continuing to lease acquisition
-        releaseLock();
-        return "skip";
       }
+      
+      // ROLLBACK: Release lock immediately on sync failure - no lease was acquired yet
+      // This is the key improvement: exit early instead of continuing to lease acquisition
+      logError(`[runner] Will retry sync on next runner cycle (${syncFailCount}/${SYNC_FAILURE_THRESHOLD} failures so far).`);
+      releaseLock();
+      return "skip";
     }
   }
 

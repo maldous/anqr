@@ -3625,7 +3625,7 @@ async function invokeWithAI(provider, messages, options = {}) {
 
       // Process stream parts based on type
       if (part.type === "reasoning-start") {
-        // Light bulb emoji filtered out for Discord - remains in logs only
+        // Emit newline when reasoning starts (no emoji for Discord)
         if (onChunk) onChunk({ type: "text", text: "\n" });
       } else if (part.type === "reasoning-delta") {
         if (onChunk && part.textDelta) {
