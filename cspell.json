@@ -43,6 +43,7 @@
     "Preflights",
     "SKRS",
     "worktree",
+    "worktrees",
     "creds",
     "anqr",
     "depcruise",

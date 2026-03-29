@@ -11,6 +11,7 @@ dist/
 node_modules/
 reports/
 scripts/ops/__pycache__/
+scripts/ops/.workspace/
 scripts/reports/
 test-results/
 memory/

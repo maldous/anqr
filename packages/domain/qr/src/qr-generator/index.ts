@@ -1,4 +1,4 @@
-export type { GradientConfig } from "../core/types";
+export type { GradientConfig } from "@/domain/share";
 export {
   alignmentCache,
   canvasHashCache,

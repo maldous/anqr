@@ -1672,7 +1672,34 @@ const tools = {
     description: "Execute file change hooks for modified files",
     inputSchema: z.object({
       files: z
-        .preprocess((val) => (Array.isArray(val) ? val : [val]), z.array(z.string()))
+        .preprocess(
+          (val) => {
+            // Normalize to array: handle string, array, or malformed input
+            if (Array.isArray(val)) return val;
+            if (typeof val === "string") {
+              const trimmed = val.trim();
+              if (!trimmed) return [];
+              // Handle JSON-encoded arrays
+              if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+                try {
+                  const parsed = JSON.parse(trimmed);
+                  return Array.isArray(parsed) ? parsed : [trimmed];
+                } catch {
+                  return [trimmed];
+                }
+              }
+              return [trimmed];
+            }
+            // Handle object with path/paths properties
+            if (val && typeof val === "object") {
+              if (typeof val.path === "string") return [val.path];
+              if (Array.isArray(val.paths)) return val.paths;
+              if (typeof val.paths === "string") return [val.paths];
+            }
+            return [];
+          },
+          z.array(z.string()).min(1, "At least one file path is required")
+        )
         .describe("List of file paths that were changed (accepts string or array)"),
     }),
     execute: runFileChangeHooksTool,
