@@ -441,7 +441,34 @@ async function callLLM(provider, messages, taskDescription) {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          // Process any remaining buffer content to catch the final SSE chunk
+          if (buffer.trim()) {
+            const lines = buffer.split("\n");
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+              if (!data.trim()) continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullContent += content;
+                }
+                // Capture structured result from bridge (embedded in final SSE chunk)
+                if (parsed._symphony_result) {
+                  symphonyResult = parsed._symphony_result;
+                  logDebug(`[agent] 📦 Captured _symphony_result from final chunk`);
+                }
+              } catch (parseErr) {
+                logDebug(`[agent] ⚠️ Final chunk parse error: ${parseErr.message}`);
+              }
+            }
+          }
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
@@ -469,8 +496,9 @@ async function callLLM(provider, messages, taskDescription) {
             if (parsed._symphony_result) {
               symphonyResult = parsed._symphony_result;
             }
-          } catch {
-            // Skip non-JSON chunks
+          } catch (parseErr) {
+            // Skip non-JSON chunks but log for debugging
+            logDebug(`[agent] ⚠️ SSE chunk parse error: ${parseErr.message}`);
           }
         }
       }
