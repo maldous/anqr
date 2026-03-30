@@ -230,6 +230,11 @@ function startDiscordMonitoring() {
 
       // Process the command via Symphony bridge (Discord streaming handled in SSE consumption loop below)
       try {
+        if (!message || !message.id) {
+          logWarn(`⚠️ Discord command skipped: invalid message object`);
+          return;
+        }
+
         const response = await fetch("http://127.0.0.1:4319/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -297,7 +302,9 @@ function startDiscordMonitoring() {
         }
 
         // Flush any remaining buffered text to Discord
-        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(
+        // Use a safe requestId even if message.id is undefined
+        const safeRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
+        await flushDiscordStream({ emoji: "", requestId: safeRequestId }).catch(
           () => {
             /* ignore */
           },
@@ -305,8 +312,9 @@ function startDiscordMonitoring() {
 
         logInfo(`✅ Discord command processed: ${fullText.slice(0, 100)}`);
       } catch (err) {
-        // Flush buffer on error too so partial text reaches Discord
-        await flushDiscordStream({ emoji: "", requestId: `discord-cmd-${message.id}` }).catch(
+        // Flush buffer on error too so partial text reaches Discord (use safe requestId)
+        const safeRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
+        await flushDiscordStream({ emoji: "", requestId: safeRequestId }).catch(
           () => {
             /* ignore */
           },
@@ -1340,6 +1348,7 @@ async function webSearchTool({ query, depth = "standard" }) {
     });
 
     if (!response.ok) {
+      logError(`Web search API returned ${response.status}`);
       throw new Error(`Web search API returned ${response.status}`);
     }
 
@@ -1424,6 +1433,7 @@ async function readDocsTool({ libraryTitle, topic, max_tokens = 20000 }) {
     });
 
     if (!response.ok) {
+      logError(`Context7 API returned ${response.status}`);
       throw new Error(`Context7 API returned ${response.status}`);
     }
 
@@ -1483,6 +1493,7 @@ const tools = {
       paths: z.preprocess((val) => {
         const result = coerceStringArrayInput(val, { fallback: [] });
         if (!result || result.length === 0) {
+          logError("paths must contain at least one file path");
           throw new Error("paths must contain at least one file path");
         }
         return result;
@@ -2536,6 +2547,7 @@ function createProviderModel(provider) {
     );
   }
   if (!baseUrl) {
+    logError(`Provider ${name} not supported - no baseUrl for default fallback`);
     throw new Error(`Provider ${name} not supported - no baseUrl for default fallback`);
   }
   return createOpenAiCompatibleModel(model, apiKey, baseUrl);
@@ -3260,7 +3272,10 @@ async function probeToolCapabilityForProvider(providerDef) {
         maxSteps: 2,
       }),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("tool-probe-timeout")), TOOL_PROBE_TIMEOUT_MS),
+        setTimeout(() => {
+          logError("Tool probe timeout exceeded");
+          reject(new Error("tool-probe-timeout"));
+        }, TOOL_PROBE_TIMEOUT_MS),
       ),
     ]);
 
@@ -3968,9 +3983,11 @@ async function invokeWithAIInner(provider, messages, options = {}) {
 
     // Check for embedded errors — some providers return 200 with error in body
     if ((!fullText || fullText.trim() === "") && finishReason !== "tool-calls") {
+      logError(`Stream completed but produced no content (finishReason: ${finishReason})`);
       throw new Error(`Stream completed but produced no content (finishReason: ${finishReason})`);
     }
     if (finishReason === "error") {
+      logError(`Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`);
       throw new Error(
         `Stream finished with error: ${streamErrorDetail || "unknown"} (text: ${fullText.length} chars)`,
       );
@@ -3995,6 +4012,7 @@ async function invokeWithAIInner(provider, messages, options = {}) {
         response[Symbol.for("vercel.ai.error")] ||
         response[Symbol.for("vercel.ai.error.AI_APICallError")];
       if (hasErrorSymbol) {
+        logError(`Response contains embedded error`);
         throw new Error(`Response contains embedded error`);
       }
     }
