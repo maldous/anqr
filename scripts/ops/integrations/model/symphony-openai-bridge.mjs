@@ -284,9 +284,11 @@ function startDiscordMonitoring() {
                   const isLightbulb = trimmed === "💡" || content === "\n💡 " || content === "💡 ";
                   if (!isActivityMarker.test(trimmed) && !isLightbulb) {
                     fullText += content;
+                    // Use safe requestId in case message became undefined during stream processing
+                    const streamRequestId = message?.id ? `discord-cmd-${message.id}` : `discord-cmd-${Date.now()}`;
                     streamDiscordUpdate(content, {
                       emoji: "",
-                      requestId: `discord-cmd-${message.id}`,
+                      requestId: streamRequestId,
                     }).catch(() => {
                       /* ignore */
                     });
