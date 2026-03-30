@@ -347,7 +347,7 @@ async function sendProcessingStatusUpdate() {
     description,
     color: 0x3498db, // Blue
     fields: [], // No fields - all info in description for simplicity
-  }).catch((err) => logDebug(`Processing status update failed: ${err.message}`));
+  }).catch((err) => safeLogDebug(`Processing status update failed: ${err.message}`));
 }
 
 /**
@@ -5062,7 +5062,7 @@ const server = http.createServer(async (req, res) => {
         description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
         color: 0xffa500, // Orange
         fields,
-      }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
+      }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
       // AND send Discord updates every 30 seconds
@@ -5216,7 +5216,7 @@ const server = http.createServer(async (req, res) => {
                 { name: "Output", value: `${result.text.length} chars`, inline: true },
                 { name: "Model", value: "codebuff", inline: true },
               ],
-            }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
+            }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -5308,7 +5308,7 @@ const server = http.createServer(async (req, res) => {
               { name: "Output", value: `${result.text.length} chars`, inline: true },
               { name: "Model", value: result.providerName, inline: true },
             ],
-          }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
+          }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
           recordBridgeMetrics({
@@ -5404,7 +5404,7 @@ const server = http.createServer(async (req, res) => {
             },
             { name: "Model", value: result.providerName, inline: true },
           ],
-        }).catch((err) => logDebug(`Discord webhook failed: ${err.message}`));
+        }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
 
