@@ -29,6 +29,7 @@ const WATCHDOG_TIMEOUT_MS = Number.parseInt(process.env.WATCHDOG_TIMEOUT_MS || "
 const WATCHDOG_ROLLBACK = process.env.WATCHDOG_ROLLBACK !== "false";
 const SYMPHONY_PORT = 4319;
 const CODEBUFF_PORT = 4318;
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
 
 const args = process.argv.slice(2);
 const bridgeArg = args.find((a) => a.startsWith("--bridge="))?.split("=")[1] || "both";
@@ -119,10 +120,11 @@ async function rollbackGit() {
 
   // Send Discord notification about rollback
   sendDiscordEmbed({
-    title: "🚨 WATCHDOG AUTOMATIC ROLLBACK TRIGGERED",
+    title: `🚨 WATCHDOG ROLLBACK | ${WORKTREE_ID}`,
     description: `Bridge failed to become healthy after restart.\n\nRolling back to previous commit...`,
     color: 0xff0000, // Red
     fields: [
+      { name: "Worktree", value: WORKTREE_ID, inline: true },
       { name: "Failed Commit", value: currentCommit.slice(0, 7), inline: true },
       { name: "Rolling Back To", value: previousCommit.slice(0, 7), inline: true },
       { name: "Timeout", value: `${WATCHDOG_TIMEOUT_MS}ms`, inline: true },
@@ -145,10 +147,11 @@ async function rollbackGit() {
 
     // Send Discord success notification
     sendDiscordEmbed({
-      title: "✅ Watchdog Rollback Successful",
+      title: `✅ Watchdog Rollback Success | ${WORKTREE_ID}`,
       description: `Successfully rolled back to previous commit.\n\nBridge services will be restarted.`,
       color: 0x00ff00, // Green
       fields: [
+        { name: "Worktree", value: WORKTREE_ID, inline: true },
         { name: "Reverted Commit", value: currentCommit.slice(0, 7), inline: true },
         { name: "Current Commit", value: newHead.slice(0, 7), inline: true },
       ],
@@ -286,10 +289,11 @@ async function main() {
 
       // Send final success notification to Discord
       await sendDiscordEmbed({
-        title: "🎉 WATCHDOG RECOVERY COMPLETE",
+        title: `🎉 WATCHDOG RECOVERY COMPLETE | ${WORKTREE_ID}`,
         description: `All bridges are healthy after automatic rollback.\n\nSystem is operational.`,
         color: 0x00ff00, // Green
         fields: [
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
           { name: "Symphony Bridge", value: "✅ Healthy", inline: true },
           { name: "Codebuff Bridge", value: "✅ Healthy", inline: true },
         ],
@@ -312,10 +316,11 @@ async function main() {
 
       // Send critical failure notification to Discord
       await sendDiscordEmbed({
-        title: "🚨 WATCHDOG RECOVERY FAILED - MANUAL INTERVENTION REQUIRED",
+        title: `🚨 WATCHDOG RECOVERY FAILED | ${WORKTREE_ID}`,
         description: `Automatic rollback did not fix the issue.\n\n**ACTION NEEDED**: Manual investigation required!`,
         color: 0xff0000, // Red
         fields: [
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
           {
             name: "Symphony Bridge",
             value: afterRollback.symphony ? "✅ Healthy" : "❌ Failed",

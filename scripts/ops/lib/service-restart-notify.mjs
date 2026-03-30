@@ -32,6 +32,7 @@ import { updateMemory } from "./update-memory.mjs";
 import { createLogger } from "./logger.mjs";
 
 const { logInfo, logError } = createLogger();
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
 
 /**
  * Get current git commit hash
@@ -92,12 +93,13 @@ export async function notifyServiceRestart({
     );
 
     const fields = [
+      { name: "Worktree", value: WORKTREE_ID, inline: true },
       { name: "PID", value: String(process.pid), inline: true },
       { name: "Commit", value: `${commitHash}: ${commitInfo.subject}`, inline: false },
     ];
 
     if (port) {
-      fields.unshift({ name: "Port", value: String(port), inline: true });
+      fields.splice(1, 0, { name: "Port", value: String(port), inline: true });
     }
 
     // Add metadata fields
@@ -117,7 +119,7 @@ export async function notifyServiceRestart({
     }
 
     const discordResult = await sendDiscordEmbed({
-      title: `🚀 ${serviceName} Started`,
+      title: `🚀 ${serviceName} Started | ${WORKTREE_ID}`,
       description: `PID ${process.pid}`,
       color: 0x00ff00, // Green
       fields,
@@ -174,6 +176,7 @@ export async function notifyServiceShutdown({
     logInfo(`📢 Sending ${serviceName} shutdown notification...`);
 
     const fields = [
+      { name: "Worktree", value: WORKTREE_ID, inline: true },
       { name: "Signal", value: signal, inline: true },
       { name: "PID", value: String(process.pid), inline: true },
       { name: "Commit", value: commitHash, inline: true },
@@ -198,7 +201,7 @@ export async function notifyServiceShutdown({
     }
 
     await sendDiscordEmbed({
-      title: `⚠️ ${serviceName} Restarting`,
+      title: `⚠️ ${serviceName} Restarting | ${WORKTREE_ID}`,
       description: `**Service interruption in progress**\n\nThe service is shutting down and will restart momentarily.`,
       color: 0xffa500, // Orange - warning color
       fields,

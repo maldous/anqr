@@ -4669,7 +4669,11 @@ async function invokeWithFallbackStream(
 
       // Send error notification to client (but don't end the stream yet)
       if (onChunk) {
-        const errorNotice = `\n⚠️ ${provider.name} failed (${errorType}), trying next provider...\n`;
+        // Include actual error details when errorType is generic/unknown
+        const errorDetail = errorType === ERROR_TYPES.UNKNOWN || errorType === "unknown"
+          ? errStr.slice(0, 100) 
+          : errorType;
+        const errorNotice = `\n⚠️ ${provider.name} failed (${errorDetail}), trying next provider...\n`;
         onChunk({ type: "text", text: errorNotice });
       }
 
@@ -5243,12 +5247,30 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      // Build message preview for Discord notifications
+      const messagePreview = contentStr.slice(0, 150) + (contentStr.length > 150 ? '...' : '');
+      const embedTitle = issueContext?.identifier 
+        ? `⏳ ${issueContext.identifier}` 
+        : "⏳ Processing Request";
+      const embedDescription = issueContext?.title 
+        ? issueContext.title 
+        : messagePreview || "(no description)";
+      
+      // Add message preview field if no Linear issue
+      if (!issueContext?.identifier && messagePreview) {
+        fields.push({
+          name: "Message",
+          value: messagePreview,
+          inline: false,
+        });
+      }
+      
       sendDiscordEmbed({
-        title: issueContext?.identifier || "Processing Request",
-        description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+        title: embedTitle,
+        description: embedDescription,
         color: 0xffa500, // Orange
         fields,
-        footer: worktreeId ? `Runner: ${worktreeId}` : undefined,
+        footer: worktreeId ? `Worktree: ${worktreeId}` : undefined,
       }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
@@ -5403,9 +5425,12 @@ const server = http.createServer(async (req, res) => {
           if (worktreeId) {
             completionFields.push({ name: "Worktree", value: worktreeId, inline: true });
           }
+          const completionTitle = issueContext?.identifier 
+            ? `✅ ${issueContext.identifier}` 
+            : "✅ Completed Request";
           sendDiscordEmbed({
-            title: "Completed Request",
-            description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+            title: completionTitle,
+            description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
             color: 0x00ff00, // Green
             fields: completionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -5502,9 +5527,12 @@ const server = http.createServer(async (req, res) => {
           if (worktreeId) {
             streamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
           }
+          const streamCompletionTitle = issueContext?.identifier 
+            ? `✅ ${issueContext.identifier}` 
+            : "✅ Completed Request";
           sendDiscordEmbed({
-            title: "Completed Request",
-            description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+            title: streamCompletionTitle,
+            description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
             color: 0x00ff00, // Green
             fields: streamCompletionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
@@ -5602,9 +5630,12 @@ const server = http.createServer(async (req, res) => {
         if (worktreeId) {
           nonStreamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
         }
+        const nonStreamCompletionTitle = issueContext?.identifier 
+          ? `✅ ${issueContext.identifier}` 
+          : "✅ Completed Request";
         sendDiscordEmbed({
-          title: "Completed Request",
-          description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+          title: nonStreamCompletionTitle,
+          description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
           color: 0x00ff00, // Green
           fields: nonStreamCompletionFields,
         }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));

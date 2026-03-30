@@ -1186,6 +1186,29 @@ async function runToolLoop({
         `[agent]   Tool: ${toolName}(${toolCall.function.arguments.slice(0, 100)}${toolCall.function.arguments.length > 100 ? "..." : ""})`,
       );
 
+      // ENFORCEMENT: Assert mutation context BEFORE executing any file modification tool
+      if (toolName === "write_file" || toolName === "patch_file" || toolName === "delete_file") {
+        try {
+          assertMutationContext({
+            executionMode,
+            worktreeId,
+            leaseId,
+            projectRoot,
+            worktreeRoot,
+          });
+        } catch (err) {
+          // Mutation blocked - return error to agent
+          const errorMsg = `MUTATION BLOCKED: ${err.message}`;
+          logError(`[agent] ${errorMsg}`);
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: errorMsg,
+          });
+          continue;
+        }
+      }
+
       let result;
       try {
         result = executeTool(projectRoot, toolCall, { filesChanged });
@@ -1194,14 +1217,6 @@ async function runToolLoop({
       }
 
       if (toolName === "write_file" || toolName === "patch_file" || toolName === "delete_file") {
-        // ENFORCEMENT: Assert mutation context before allowing any file modification
-        assertMutationContext({
-          executionMode,
-          worktreeId,
-          leaseId,
-          projectRoot,
-          worktreeRoot,
-        });
         try {
           const args = JSON.parse(toolCall.function.arguments);
           if (args.path) filesChanged.add(args.path);

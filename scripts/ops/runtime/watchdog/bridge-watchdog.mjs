@@ -33,6 +33,9 @@ const RAPID_RESTART_THRESHOLD = 3; // 3 restarts in 2 minutes = catastrophic fai
 // Health check timeout
 const HEALTH_CHECK_TIMEOUT_MS = 5000;
 
+// Worktree identifier
+const WORKTREE_ID = process.env.ANQR_WORKTREE_ID || 'main';
+
 const MONITORED_SERVICES = [
   {
     name: "anqr-symphony-bridge.service",
@@ -353,10 +356,11 @@ async function verifyAndNotifyRecovery(serviceName, shortName) {
   if (recoveryStatus === "active") {
     try {
       await sendDiscordEmbed({
-        title: "🎉 Recovery Successful",
+        title: `🎉 Recovery Successful | ${WORKTREE_ID}`,
         description: `${shortName.toUpperCase()} bridge is now healthy after rollback`,
         color: 0x00ff00, // Green
         fields: [
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
           { name: "Service", value: serviceName, inline: true },
           { name: "Status", value: "Active", inline: true },
         ],
@@ -400,10 +404,11 @@ async function trackWatchdogTrigger(serviceName, reason) {
       
       try {
         await sendDiscordEmbed({
-          title: "🚨 WATCHDOG HIGH TRIGGER RATE ALERT",
+          title: `🚨 WATCHDOG HIGH TRIGGER RATE | ${WORKTREE_ID}`,
           description: `**CRITICAL: Watchdog triggered ${recentTriggers.length} times in the last hour**\n\nThis indicates systemic instability requiring immediate investigation.`,
           color: 0xff0000, // Red
           fields: [
+            { name: "Worktree", value: WORKTREE_ID, inline: true },
             { name: "Trigger Count", value: `${recentTriggers.length} (threshold: ${TRIGGER_RATE_THRESHOLD})`, inline: true },
             { name: "Time Window", value: "Last 60 minutes", inline: true },
             { name: "Recent Triggers", value: triggerSummary, inline: false },
@@ -460,10 +465,11 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
   // Send immediate Discord alert about rollback
   try {
     await sendDiscordEmbed({
-      title: "🚨 WATCHDOG ROLLBACK TRIGGERED",
+      title: `🚨 WATCHDOG ROLLBACK | ${WORKTREE_ID}`,
       description: `**${shortName.toUpperCase()} BRIDGE FAILED TO START**\n\nAutomatic rollback in progress...`,
       color: 0xff0000, // Red
       fields: [
+        { name: "Worktree", value: WORKTREE_ID, inline: true },
         { name: "Service", value: serviceName, inline: true },
         { name: "Reason", value: reason, inline: true },
         { name: "Failed Commit", value: `\`${currentCommit}\``, inline: true },
@@ -531,10 +537,11 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     // Send Discord success notification
     try {
       await sendDiscordEmbed({
-        title: "✅ Rollback Complete",
+        title: `✅ Rollback Complete | ${WORKTREE_ID}`,
         description: `${shortName.toUpperCase()} bridge successfully rolled back and restarted`,
         color: 0x00ff00, // Green
         fields: [
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
           { name: "Previous Commit", value: `\`${previousCommit}\``, inline: true },
           { name: "Status", value: "Service restarted", inline: true },
         ],
@@ -552,10 +559,11 @@ async function rollbackAndRestart(serviceName, shortName, reason) {
     // Send critical failure notification
     try {
       await sendDiscordEmbed({
-        title: "🚨 ROLLBACK FAILED",
+        title: `🚨 ROLLBACK FAILED | ${WORKTREE_ID}`,
         description: `**CRITICAL: ${shortName.toUpperCase()} BRIDGE ROLLBACK FAILED**\n\nManual intervention required!`,
         color: 0xff0000, // Red
         fields: [
+          { name: "Worktree", value: WORKTREE_ID, inline: true },
           { name: "Service", value: serviceName, inline: true },
           { name: "Error", value: err.message.slice(0, 200), inline: false },
         ],

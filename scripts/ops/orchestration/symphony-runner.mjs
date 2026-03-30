@@ -1751,13 +1751,14 @@ ${String(r.detail).slice(0, 1000)}\n`,
     const queueValue = `${queueSnap.readyDepth} issues ready`;
 
     await sendDiscordEmbed({
-      title: issue.identifier,
+      title: `${issue.identifier} | ${WORKTREE_ID}`,
       description: issue.title,
       color: finalStateId === STATES.done ? 0x00ff00 : 0xffa500, // Green for Done, Orange for In Review
       fields: [
+        { name: "ANQ ID", value: issue.identifier, inline: true },
+        { name: "Worktree", value: worktreeValue, inline: true },
         { name: "Status", value: finalStateName, inline: true },
         { name: "Provider", value: metricsProviderName, inline: true },
-        { name: "Worktree", value: worktreeValue, inline: true },
         { name: "Queue", value: queueValue, inline: true },
         { name: "Files Changed", value: String(changedFiles.length), inline: true },
         { name: "Turns", value: String(agentResult.turns), inline: true },
