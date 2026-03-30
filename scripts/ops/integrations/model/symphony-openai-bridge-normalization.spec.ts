@@ -127,9 +127,7 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
   describe("read_files (paths parameter)", () => {
     const schema = z.preprocess((val) => {
       const result = coerceStringArrayInput(val, { fallback: [] });
-      if (!result || result.length === 0) {
-        throw new Error("paths must contain at least one file path");
-      }
+      // Do not throw on empty; let tool execution handle it
       return result;
     }, z.array(z.string()));
 
@@ -148,16 +146,19 @@ describe("Tool Parameter Normalization (Symphony Bridge)", () => {
       expect(result).toEqual(["src/file1.ts"]);
     });
 
-    it("should reject empty array", async () => {
-      await expect(schema.parseAsync([])).rejects.toThrow(
-        "paths must contain at least one file path",
-      );
+    it("should accept empty array (normalize to empty)", async () => {
+      const result = await schema.parseAsync([]);
+      expect(result).toEqual([]);
     });
 
-    it("should reject empty string", async () => {
-      await expect(schema.parseAsync("")).rejects.toThrow(
-        "paths must contain at least one file path",
-      );
+    it("should accept empty string (normalize to empty)", async () => {
+      const result = await schema.parseAsync("");
+      expect(result).toEqual([]);
+    });
+
+    it("should handle whitespace-only string as empty", async () => {
+      const result = await schema.parseAsync("   ");
+      expect(result).toEqual([]);
     });
   });
 

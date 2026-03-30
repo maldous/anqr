@@ -1503,14 +1503,7 @@ const tools = {
   read_files: tool({
     description: "Read multiple files from the filesystem",
     inputSchema: z.object({
-      paths: z.preprocess((val) => {
-        const result = coerceStringArrayInput(val, { fallback: [] });
-        if (!result || result.length === 0) {
-          logError("paths must contain at least one file path");
-          throw new Error("paths must contain at least one file path");
-        }
-        return result;
-      }, z.array(z.string()).describe("List of file paths to read (accepts string or array)")),
+      paths: z.preprocess((val) => coerceStringArrayInput(val, { fallback: [] }), z.array(z.string()).describe("List of file paths to read (accepts string or array)")),
     }),
     execute: readFilesTool,
   }),
@@ -1845,6 +1838,15 @@ const tools = {
   }),
   read: tool({
     description: "Read a file from the filesystem",
+    inputSchema: z.object({
+      path: z.string().describe("Path to the file to read"),
+      offset: z.number().optional().describe("Line offset to start reading from"),
+      lines: z.number().optional().describe("Number of lines to read"),
+    }),
+    execute: readFileTool,
+  }),
+  read_file: tool({
+    description: "Read a file from the filesystem (alias for read)",
     inputSchema: z.object({
       path: z.string().describe("Path to the file to read"),
       offset: z.number().optional().describe("Line offset to start reading from"),
