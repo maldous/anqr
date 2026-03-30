@@ -69,6 +69,32 @@ const SYMPHONY_BRIDGE_URL = process.env.SYMPHONY_BRIDGE_URL || "http://127.0.0.1
 const SYMPHONY_BRIDGE_API_KEY = process.env.SYMPHONY_BRIDGE_API_KEY || "local-symphony";
 const SYMPHONY_BRIDGE_MODEL = process.env.SYMPHONY_MODEL_ID || "symphony/main";
 
+// Main repo root - mutations to this directory are FORBIDDEN
+const MAIN_REPO_ROOT = "/home/user/src/anqr";
+
+// Mutation context assertion - enforce that mutating requests must run in worktrees
+function assertMutationContext(ctx) {
+  if (ctx.executionMode !== "mutating") return; // Read-only requests can pass through
+
+  if (!ctx.worktreeId) {
+    throw new Error("Mutation blocked: missing worktreeId - mutating requests must have assigned worktree");
+  }
+  if (!ctx.leaseId) {
+    throw new Error("Mutation blocked: missing leaseId - mutating requests must have valid lease");
+  }
+  if (!ctx.projectRoot) {
+    throw new Error("Mutation blocked: missing projectRoot - mutating requests must specify project root");
+  }
+  const resolvedProjectRoot = ctx.projectRoot.replace(/\\/g, "/");
+  const resolvedMainRoot = MAIN_REPO_ROOT;
+  if (resolvedProjectRoot === resolvedMainRoot) {
+    throw new Error("Mutation blocked: main repo is forbidden for mutating requests - must use worktree");
+  }
+  if (ctx.worktreeRoot && resolvedProjectRoot !== ctx.worktreeRoot.replace(/\\/g, "/")) {
+    throw new Error("Mutation blocked: projectRoot must equal worktreeRoot for mutating requests");
+  }
+}
+
 function isRateLimitError(errStr) {
   const s = errStr.toLowerCase();
   return (
@@ -402,18 +428,22 @@ function executeTool(projectRoot, toolCall, context = {}) {
 // LLM API call
 // ---------------------------------------------------------------------------
 
-async function callLLM(provider, messages, taskDescription, projectRoot = PROJECT_ROOT) {
+async function callLLM(provider, messages, taskDescription, projectRoot = PROJECT_ROOT, _worktreeId = null, _worktreeRoot = null, _leaseId = null, _executionMode = null) {
   if (provider.name === "symphony-bridge") {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SYMPHONY_BRIDGE_API_KEY}`,
+      };
+      if (worktreeId) {
+        headers["X-Worktree-ID"] = worktreeId;
+      }
       const res = await fetch(`${SYMPHONY_BRIDGE_URL}/v1/chat/completions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SYMPHONY_BRIDGE_API_KEY}`,
-        },
+        headers,
         body: JSON.stringify({
           model: provider.model || SYMPHONY_BRIDGE_MODEL,
           messages,
@@ -564,12 +594,16 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${CODEBUFF_BRIDGE_API_KEY}`,
+      };
+      if (worktreeId) {
+        headers["X-Worktree-ID"] = worktreeId;
+      }
       const res = await fetch(`${CODEBUFF_BRIDGE_URL}/v1/chat/completions`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${CODEBUFF_BRIDGE_API_KEY}`,
-        },
+        headers,
         body: JSON.stringify({
           model: CODEBUFF_BRIDGE_MODEL,
           messages: bridgeMessages,
@@ -725,6 +759,9 @@ async function callLLM(provider, messages, taskDescription, projectRoot = PROJEC
     if (provider.apiKey) {
       headers["Authorization"] = `Bearer ${provider.apiKey}`;
     }
+    if (worktreeId) {
+      headers["X-Worktree-ID"] = worktreeId;
+    }
     const res = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: "POST",
       headers,
@@ -812,6 +849,10 @@ async function runToolLoop({
   provider,
   messages,
   projectRoot,
+  worktreeId,
+  worktreeRoot,
+  leaseId,
+  executionMode,
   maxTurns,
   maxMs,
   startTime,
@@ -848,7 +889,7 @@ async function runToolLoop({
 
     let response;
     try {
-      response = await callLLM(provider, messages, taskDescription, projectRoot);
+      response = await callLLM(provider, messages, taskDescription, projectRoot, worktreeId, worktreeRoot, leaseId, executionMode);
     } catch (err) {
       logError(`[agent] LLM call failed: ${err.message}`);
       return {
@@ -1153,6 +1194,14 @@ async function runToolLoop({
       }
 
       if (toolName === "write_file" || toolName === "patch_file" || toolName === "delete_file") {
+        // ENFORCEMENT: Assert mutation context before allowing any file modification
+        assertMutationContext({
+          executionMode,
+          worktreeId,
+          leaseId,
+          projectRoot,
+          worktreeRoot,
+        });
         try {
           const args = JSON.parse(toolCall.function.arguments);
           if (args.path) filesChanged.add(args.path);
@@ -1222,7 +1271,7 @@ async function runToolLoop({
 // Public: start a new agent session
 // ---------------------------------------------------------------------------
 
-export async function runAgent({ provider, issue, projectRoot, systemPrompt, maxMs }) {
+export async function runAgent({ provider, issue, projectRoot, worktreeId, worktreeRoot, leaseId, executionMode, systemPrompt, maxMs }) {
   const messages = [
     { role: "system", content: systemPrompt },
     { role: "user", content: buildIssuePrompt(issue) },
@@ -1232,6 +1281,10 @@ export async function runAgent({ provider, issue, projectRoot, systemPrompt, max
     provider,
     messages,
     projectRoot,
+    worktreeId,
+    worktreeRoot,
+    leaseId,
+    executionMode,
     maxTurns: RUNNER_MAX_TURNS,
     maxMs: maxMs || RUNNER_MAX_EXECUTION_MS,
     startTime: Date.now(),
@@ -1247,6 +1300,10 @@ export async function continueAgent({
   provider,
   messages,
   projectRoot,
+  worktreeId,
+  worktreeRoot,
+  leaseId,
+  executionMode,
   feedback,
   maxTurns,
   maxMs,
@@ -1257,6 +1314,10 @@ export async function continueAgent({
     provider,
     messages,
     projectRoot,
+    worktreeId,
+    worktreeRoot,
+    leaseId,
+    executionMode,
     maxTurns,
     maxMs,
     startTime: Date.now(),

@@ -339,6 +339,45 @@ let lastRevalidationTime = Date.now();
 let STARTUP_INITIALIZED = false;
 let STARTUP_WINNER = null; // Pre-selected winning key + mode for fast requests
 
+// Singleton CodebuffClient - created once at startup and reused for all requests
+// This avoids re-fetching the agent list on every request, which can fail if API is slow
+let SHARED_CLIENT = null;
+let SHARED_CLIENT_COST_MODE = null;
+
+// Create a shared CodebuffClient instance
+function getSharedClient(apiKey, costMode, cwd) {
+  const normalizedCwd = cwd || DEFAULT_CWD;
+  
+  // Return existing client if cost mode matches (no need to recreate)
+  if (SHARED_CLIENT && SHARED_CLIENT_COST_MODE === costMode) {
+    return SHARED_CLIENT;
+  }
+  
+  // Create new client with the specified cost mode
+  SHARED_CLIENT = new CodebuffClient({
+    apiKey,
+    cwd: normalizedCwd,
+    knowledgeFiles: {
+      "tool-parameter-rules.knowledge.md": TOOL_PARAMETER_RULES,
+    },
+  });
+  SHARED_CLIENT_COST_MODE = costMode;
+  
+  logDebug(`[getSharedClient] Created new client for costMode: ${costMode}`, {
+    costMode,
+    cwd: normalizedCwd,
+  });
+  
+  return SHARED_CLIENT;
+}
+
+// Reset shared client (call when switching modes)
+function resetSharedClient() {
+  SHARED_CLIENT = null;
+  SHARED_CLIENT_COST_MODE = null;
+  logDebug(`[resetSharedClient] Client cache cleared`);
+}
+
 // Get the Codebuff API key from environment
 function getApiKey() {
   return process.env.CODEBUFF_API_KEY || null;
@@ -834,15 +873,10 @@ async function trySingleAccount(
   let lastSubgoalStatus = null;
   const toolsUsed = new Set();
 
-  const client = new CodebuffClient({
-    apiKey: attempt.apiKey,
-    cwd: cwd || DEFAULT_CWD,
-    knowledgeFiles: {
-      "tool-parameter-rules.knowledge.md": TOOL_PARAMETER_RULES,
-    },
-  });
+  // Use shared client (singleton) - avoids re-fetching agent list on every request
+  const client = getSharedClient(attempt.apiKey, attempt.costMode, cwd);
 
-  logDebug(`[trySingleAccount] CodebuffClient created`, {
+  logDebug(`[trySingleAccount] Using shared client`, {
     cwd: cwd || DEFAULT_CWD,
   });
 
@@ -1111,6 +1145,8 @@ async function invokeCodebuff({ messages, cwd, sessionId = null, proxyToolFn = n
 
       // Update STARTUP_WINNER so subsequent requests use free mode until re-probe.
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
+      // Reset the shared client so the next request creates a fresh one for free mode
+      resetSharedClient();
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
       logInfo(`🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`, {
@@ -1146,13 +1182,8 @@ async function trySingleAccountStream(
   let lastSubgoalStatus = null;
   const toolsUsed = new Set();
 
-  const client = new CodebuffClient({
-    apiKey: attempt.apiKey,
-    cwd: cwd || DEFAULT_CWD,
-    knowledgeFiles: {
-      "tool-parameter-rules.knowledge.md": TOOL_PARAMETER_RULES,
-    },
-  });
+  // Use shared client (singleton) - avoids re-fetching agent list on every request
+  const client = getSharedClient(attempt.apiKey, attempt.costMode, cwd);
 
   // Stream a text fragment to the client as an SSE chunk
   const streamActivity = (text) => {
@@ -1394,6 +1425,8 @@ async function invokeCodebuffStream({
 
       // Update STARTUP_WINNER so subsequent requests use free mode until re-probe.
       // Reset revalidation timer so paid mode is re-probed in 5 hours.
+      // Reset the shared client so the next request creates a fresh one for free mode
+      resetSharedClient();
       STARTUP_WINNER = freeAttempt;
       lastRevalidationTime = Date.now();
       logInfo(`🕐 Will re-probe paid mode in ${REVALIDATION_INTERVAL_MS / 3600000}h`);
@@ -1511,6 +1544,7 @@ const server = http.createServer(async (req, res) => {
       req.openclawSessionId = openclawSessionId;
       const model = body.model || MODEL_ID;
       const messages = Array.isArray(body.messages) ? body.messages : [];
+      const _worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = typeof body.cwd === "string" && body.cwd.trim() ? path.resolve(body.cwd.trim()) : DEFAULT_CWD;
       const stream = body.stream === true;
 

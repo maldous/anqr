@@ -343,9 +343,10 @@ async function sendProcessingStatusUpdate() {
     const runtime = formatElapsed(now - req.startTime);
     const filesChanged = req.filesChanged || 0;
     const issueLabel = req.issueId || reqId;
+    const worktreeLabel = req.worktreeId ? ` [${req.worktreeId}]` : "";
 
-    // Create brief summary: "ANQ-123 (2.5min, 3 files)"
-    const summary = `${issueLabel} (${runtime}${filesChanged > 0 ? `, ${filesChanged} files` : ""})`;
+    // Create brief summary: "ANQ-123 [wt5] (2.5min, 3 files)"
+    const summary = `${issueLabel}${worktreeLabel} (${runtime}${filesChanged > 0 ? `, ${filesChanged} files` : ""})`;
     summaries.push(summary);
   }
 
@@ -4635,7 +4636,14 @@ async function invokeWithFallbackStream(
         );
       }
 
+      // Send error notification to client (but don't end the stream yet)
+      if (onChunk) {
+        const errorNotice = `\n⚠️ ${provider.name} failed (${errorType}), trying next provider...\n`;
+        onChunk({ type: "text", text: errorNotice });
+      }
+
       // Continue to next provider in the loop
+      continue;
     }
   }
 
@@ -5001,6 +5009,7 @@ const server = http.createServer(async (req, res) => {
 
       const messages = Array.isArray(body.messages) ? body.messages : undefined;
       const sessionId = req.headers["x-openclaw-session"] || null;
+      const worktreeId = req.headers["x-worktree-id"] || null;
       const requestCwd = normalizeRequestCwd(body.cwd);
 
       // Fast validation BEFORE route resolution - fail immediately on invalid input
@@ -5129,6 +5138,7 @@ const server = http.createServer(async (req, res) => {
         model: route.responseModelId,
         stream,
         filesChanged: 0,
+        worktreeId: worktreeId || null,
       });
 
       // Fire-and-forget Discord notification (non-blocking)
@@ -5138,6 +5148,15 @@ const server = http.createServer(async (req, res) => {
       );
 
       const fields = [];
+
+      // Add worktree context if available
+      if (worktreeId) {
+        fields.push({
+          name: "Worktree",
+          value: worktreeId,
+          inline: true,
+        });
+      }
 
       // Read in-progress issues from symphony state
       let inProgressIssues = [];
@@ -5198,6 +5217,7 @@ const server = http.createServer(async (req, res) => {
         description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
         color: 0xffa500, // Orange
         fields,
+        footer: worktreeId ? `Runner: ${worktreeId}` : undefined,
       }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
@@ -5343,17 +5363,21 @@ const server = http.createServer(async (req, res) => {
               `✅ Finished: ${issueContext?.identifier || "Request"} (provider: codebuff, ${result.text.length} chars)`,
             );
 
-            // Send comprehensive completion metrics (non-blocking)
-            sendDiscordEmbed({
-              title: "Completed Request",
-              description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
-              color: 0x00ff00, // Green
-              fields: [
-                { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
-                { name: "Output", value: `${result.text.length} chars`, inline: true },
-                { name: "Model", value: "codebuff", inline: true },
-              ],
-            }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
+          // Send comprehensive completion metrics (non-blocking)
+          const completionFields = [
+            { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
+            { name: "Output", value: `${result.text.length} chars`, inline: true },
+            { name: "Model", value: "codebuff", inline: true },
+          ];
+          if (worktreeId) {
+            completionFields.push({ name: "Worktree", value: worktreeId, inline: true });
+          }
+          sendDiscordEmbed({
+            title: "Completed Request",
+            description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
+            color: 0x00ff00, // Green
+            fields: completionFields,
+          }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
             const durationMs = Date.now() - startTime;
             recordBridgeMetrics({
@@ -5439,15 +5463,19 @@ const server = http.createServer(async (req, res) => {
           );
 
           // Send comprehensive completion metrics (non-blocking)
+          const streamCompletionFields = [
+            { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
+            { name: "Output", value: `${result.text.length} chars`, inline: true },
+            { name: "Model", value: result.providerName, inline: true },
+          ];
+          if (worktreeId) {
+            streamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
+          }
           sendDiscordEmbed({
             title: "Completed Request",
             description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
             color: 0x00ff00, // Green
-            fields: [
-              { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
-              { name: "Output", value: `${result.text.length} chars`, inline: true },
-              { name: "Model", value: result.providerName, inline: true },
-            ],
+            fields: streamCompletionFields,
           }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
           const durationMs = Date.now() - startTime;
@@ -5531,19 +5559,23 @@ const server = http.createServer(async (req, res) => {
         const tokensOut = result.usage?.completionTokens || 0;
         const totalTokens = tokensIn + tokensOut;
 
+        const nonStreamCompletionFields = [
+          { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
+          {
+            name: "Output",
+            value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`,
+            inline: true,
+          },
+          { name: "Model", value: result.providerName, inline: true },
+        ];
+        if (worktreeId) {
+          nonStreamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
+        }
         sendDiscordEmbed({
           title: "Completed Request",
           description: issueContext?.title || contentStr.slice(0, 200) || "(no description)",
           color: 0x00ff00, // Green
-          fields: [
-            { name: "Issue", value: issueContext?.identifier || "N/A", inline: true },
-            {
-              name: "Output",
-              value: totalTokens > 0 ? `${totalTokens} tokens` : `${resultText.length} chars`,
-              inline: true,
-            },
-            { name: "Model", value: result.providerName, inline: true },
-          ],
+          fields: nonStreamCompletionFields,
         }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
         const durationMs = Date.now() - startTime;
