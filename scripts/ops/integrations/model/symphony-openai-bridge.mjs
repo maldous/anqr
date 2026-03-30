@@ -491,7 +491,7 @@ async function invokeWithCodex(provider, messages, options = {}) {
 
     for await (const event of streamed.events) {
       if ((event.type === "item.updated" || event.type === "item.completed") && event.item) {
-        if (event.item.type === "agent_message") {
+        if (event.item.type === "agent_message" && event.item.id) {
           const prior = emittedByItem.get(event.item.id) || "";
           const next = event.item.text || "";
           const delta = next.startsWith(prior) ? next.slice(prior.length) : next;
