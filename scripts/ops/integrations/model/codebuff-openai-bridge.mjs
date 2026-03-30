@@ -1696,6 +1696,7 @@ const server = http.createServer(async (req, res) => {
           // Send error as SSE event before closing
           logError(
             `Streaming error after ${formatElapsed(Date.now() - requestStartTime)}: ${streamError.message}`,
+            { stack: streamError.stack },
           );
           logMemory("stream-error");
           const errorChunk = {
