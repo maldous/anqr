@@ -2,12 +2,13 @@ import type { TestIdProps } from "./dynamic-testid-props.types";
 import { normalizeToken } from "./dynamic-testid-normalize";
 
 export function baseFromProps(props: TestIdProps, fallbackPrefix: string, reactId: string): string {
-  const explicit = props.testId?.trim();
-  if (explicit) return explicit;
-  const candidates = [props.label, props["aria-label"], props.title, props.name, props.id, reactId];
-  const first = candidates.find(
-    (value): value is string => typeof value === "string" && value.trim().length > 0,
-  );
-  const token = first ? normalizeToken(first) : "control";
-  return `${fallbackPrefix}-${token}`;
+  if (props["data-testid"]) return props["data-testid"];
+  if (props.id) return normalizeToken(props.id);
+  if (props.name) return normalizeToken(props.name);
+  if (props["aria-label"]) return `${fallbackPrefix}-${normalizeToken(props["aria-label"])}`;
+  if (props.title) return `${fallbackPrefix}-${normalizeToken(props.title)}`;
+  if (typeof props.placeholder === "string" && props.placeholder.trim().length > 0) {
+    return `${fallbackPrefix}-${normalizeToken(props.placeholder)}`;
+  }
+  return `${fallbackPrefix}-${normalizeToken(reactId.replaceAll(":", "-"))}`;
 }

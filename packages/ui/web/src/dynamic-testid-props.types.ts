@@ -1,8 +1,8 @@
 export type TestIdProps = {
-  testId?: string;
-  label?: string;
-  "aria-label"?: string;
-  title?: string;
-  name?: string;
+  "data-testid"?: string;
   id?: string;
+  name?: string;
+  title?: string;
+  placeholder?: string;
+  "aria-label"?: string;
 };
