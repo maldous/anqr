@@ -37,6 +37,11 @@ export function createWorktree(id) {
   const worktreePath = getWorktreePath(id);
   const branchName = getWorktreeBranch(id);
 
+  logDebug(`[worktree-pool] createWorktree(${id}) called`);
+  logDebug(`[worktree-pool] Calculated worktreePath: ${worktreePath}`);
+  logDebug(`[worktree-pool] Calculated branchName: ${branchName}`);
+  logDebug(`[worktree-pool] PROJECT_ROOT: ${PROJECT_ROOT}`);
+  
   if (existsSync(worktreePath)) {
     // Path exists - verify it's a valid registered worktree
     const worktrees = listWorktrees();
@@ -104,15 +109,25 @@ export function createWorktree(id) {
       stdio: "inherit",
     });
     logInfo(`✅ Created worktree: ${worktreePath} (branch: ${branchName}, base: ${baseRef})`);
+    logDebug(`[worktree-pool] Git worktree creation successful`);
 
     // Install dependencies in worktree
     logInfo(`📦 Installing dependencies in ${worktreePath}...`);
+    logDebug(`[worktree-pool] Executing: npm install (cwd: ${worktreePath})`);
     execFileSync("npm", ["install"], {
       cwd: worktreePath,
       stdio: "inherit",
     });
     logInfo(`✅ Dependencies installed in worktree ${id}`);
+    logDebug(`[worktree-pool] npm install completed successfully`);
 
+    // Verify worktree structure
+    logDebug(`[worktree-pool] Verifying worktree structure...`);
+    const nodeModulesPath = resolve(worktreePath, "node_modules");
+    const packageJsonPath = resolve(worktreePath, "package.json");
+    logDebug(`[worktree-pool] node_modules exists: ${existsSync(nodeModulesPath)}`);
+    logDebug(`[worktree-pool] package.json exists: ${existsSync(packageJsonPath)}`);
+    
     return worktreePath;
   } catch (err) {
     logError(`Failed to create worktree ${id}: ${err.message}`);
@@ -193,18 +208,29 @@ export function listWorktrees() {
  */
 export function getSymphonyWorktrees() {
   const allWorktrees = listWorktrees();
-  return allWorktrees
+  logDebug(`[worktree-pool] getSymphonyWorktrees() - total worktrees: ${allWorktrees.length}`);
+  
+  const filtered = allWorktrees
     .filter(
       (wt) => wt.path.includes(WORKTREE_PREFIX) && wt.branch?.startsWith(WORKTREE_BRANCH_PREFIX),
-    )
+    );
+  
+  logDebug(`[worktree-pool] Worktrees matching Symphony pattern: ${filtered.length}`);
+  
+  const result = filtered
     .map((wt) => {
       const match = wt.path.match(new RegExp(`${WORKTREE_PREFIX}(\\d+)`));
+      const id = match ? Number(match[1]) : null;
+      logDebug(`[worktree-pool] Mapped worktree: path=${wt.path}, id=${id}`);
       return {
-        id: match ? Number(match[1]) : null,
+        id,
         ...wt,
       };
     })
     .filter((wt) => wt.id !== null);
+  
+  logDebug(`[worktree-pool] Final Symphony worktrees count: ${result.length}`);
+  return result;
 }
 
 /**

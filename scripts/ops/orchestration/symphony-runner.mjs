@@ -83,33 +83,59 @@ const cwd = process.cwd();
 const gitPath = resolve(cwd, ".git");
 let autoDetectedWorktreeId = null;
 
+logDebug(`[worktree-debug] Starting worktree detection`);
+logDebug(`[worktree-debug] cwd: ${cwd}`);
+logDebug(`[worktree-debug] gitPath: ${gitPath}`);
+logDebug(`[worktree-debug] gitPath exists: ${existsSync(gitPath)}`);
+
 try {
   if (existsSync(gitPath)) {
     const gitStat = statSync(gitPath);
+    const isFile = gitStat.isFile();
+    const isDir = gitStat.isDirectory();
+    logDebug(`[worktree-debug] .git isFile: ${isFile}, isDirectory: ${isDir}`);
+    
     if (gitStat.isFile()) {
       // This is a worktree - extract the worktree name from the gitdir reference
       const gitContent = readFileSync(gitPath, "utf-8");
+      logDebug(`[worktree-debug] .git content: ${gitContent.trim()}`);
+      
       const match = gitContent.match(/gitdir:\s*(.+)/);
       if (match && match[1]) {
         const gitDir = match[1].trim();
+        logDebug(`[worktree-debug] extracted gitdir: ${gitDir}`);
+        
         // gitDir format: /path/to/repo/.git/worktrees/anqr-wt1
         const wtMatch = gitDir.match(/anqr-(wt\d+)$/);
         if (wtMatch) {
           autoDetectedWorktreeId = wtMatch[1];
+          logDebug(`[worktree-debug] auto-detected worktree ID: ${autoDetectedWorktreeId}`);
+        } else {
+          logDebug(`[worktree-debug] gitdir did not match worktree pattern`);
         }
+      } else {
+        logDebug(`[worktree-debug] no gitdir found in .git file`);
       }
+    } else {
+      logDebug(`[worktree-debug] .git is a directory - running in main repo`);
     }
   }
-} catch {
+} catch (err) {
+  logError(`[worktree-debug] Error during worktree detection: ${err.message}`);
   // Ignore errors - will fall through to env var check
 }
 
 // Determine WORKTREE_ID: prioritize env var, then auto-detect, fail if neither
 let WORKTREE_ID;
+logDebug(`[worktree-debug] ANQR_WORKTREE_ID env var: ${process.env.ANQR_WORKTREE_ID || '(not set)'}`);
+logDebug(`[worktree-debug] auto-detected ID: ${autoDetectedWorktreeId || '(none)'}`);
+
 if (process.env.ANQR_WORKTREE_ID) {
   WORKTREE_ID = process.env.ANQR_WORKTREE_ID;
+  logDebug(`[worktree-debug] Using WORKTREE_ID from env: ${WORKTREE_ID}`);
 } else if (autoDetectedWorktreeId) {
   WORKTREE_ID = autoDetectedWorktreeId;
+  logDebug(`[worktree-debug] Using auto-detected WORKTREE_ID: ${WORKTREE_ID}`);
 } else {
   // Running in main repo without worktree context - NOT ALLOWED
   logError(
@@ -122,6 +148,18 @@ if (process.env.ANQR_WORKTREE_ID) {
 }
 
 const ROOT = process.env.ANQR_WORKTREE_PATH || getWorktreePath(WORKTREE_ID.replace(/^wt/, ""));
+logDebug(`[worktree-debug] ANQR_WORKTREE_PATH env var: ${process.env.ANQR_WORKTREE_PATH || '(not set)'}`);
+logDebug(`[worktree-debug] Final ROOT directory: ${ROOT}`);
+logDebug(`[worktree-debug] ROOT exists: ${existsSync(ROOT)}`);
+logDebug(`[worktree-debug] ROOT is directory: ${existsSync(ROOT) && statSync(ROOT).isDirectory()}`);
+
+// Inline test: verify ROOT matches expected pattern
+const expectedPattern = new RegExp(`anqr-wt\\d+$`);
+const rootMatchesPattern = expectedPattern.test(ROOT);
+logDebug(`[worktree-debug] ROOT matches worktree pattern: ${rootMatchesPattern}`);
+if (!rootMatchesPattern && WORKTREE_ID !== 'main') {
+  logWarn(`[worktree-debug] WARNING: ROOT directory '${ROOT}' does not match expected worktree pattern`);
+}
 const WORKFLOW_PATH = resolve(ROOT, "scripts/ops/symphony/WORKFLOW.md");
 
 const uid = process.getuid?.() ?? 1000;
@@ -553,7 +591,9 @@ async function maybeRunPreflights() {
  */
 function isDiscordWorktree() {
   const wtId = WORKTREE_ID.replace(/^wt/, "");
-  return ["5", "6", "7", "8"].includes(wtId);
+  const isDiscord = ["5", "6", "7", "8"].includes(wtId);
+  logDebug(`[worktree-routing] isDiscordWorktree() - WORKTREE_ID: ${WORKTREE_ID}, wtId: ${wtId}, result: ${isDiscord}`);
+  return isDiscord;
 }
 
 /**
@@ -561,7 +601,9 @@ function isDiscordWorktree() {
  */
 function isSymphonyWorktree() {
   const wtId = WORKTREE_ID.replace(/^wt/, "");
-  return ["main", "1", "2", "3", "4"].includes(wtId);
+  const isSymphony = ["main", "1", "2", "3", "4"].includes(wtId);
+  logDebug(`[worktree-routing] isSymphonyWorktree() - WORKTREE_ID: ${WORKTREE_ID}, wtId: ${wtId}, result: ${isSymphony}`);
+  return isSymphony;
 }
 
 /**
@@ -569,17 +611,27 @@ function isSymphonyWorktree() {
  */
 function isDiscordIssue(issue) {
   const state = getIssueState(issue.identifier);
-  return (state.source || "").toLowerCase().includes("discord");
+  const source = state.source || "";
+  const isFromDiscord = source.toLowerCase().includes("discord");
+  logDebug(`[worktree-routing] isDiscordIssue(${issue.identifier}) - source: '${source}', result: ${isFromDiscord}`);
+  return isFromDiscord;
 }
 
 async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) {
   const todoIssues = await listIssuesByState(QUEUE_STATES.readyStates);
+  
+  logDebug(`[worktree-routing] pickIssue() called - WORKTREE_ID: ${WORKTREE_ID}, ROOT: ${ROOT}`);
+  logDebug(`[worktree-routing] Total todo issues: ${todoIssues.length}`);
+  logDebug(`[worktree-routing] Excluded IDs: ${excludeIds.size}`);
+  logDebug(`[worktree-routing] Baseline only: ${baselineOnly}`);
   
   // IMPORTANT: Worktree routing to prevent concurrent conflicts
   // - Discord issues (wt5-wt8) are routed to Discord worktrees only
   // - Symphony issues (wt1-wt4, main) handle all other work
   const isDiscordWt = isDiscordWorktree();
   const isSymphonyWt = isSymphonyWorktree();
+  
+  logDebug(`[worktree-routing] This worktree - isDiscord: ${isDiscordWt}, isSymphony: ${isSymphonyWt}`);
   
   const candidates = todoIssues
     .filter((issue) => !excludeIds.has(issue.id))
@@ -589,24 +641,35 @@ async function pickIssue({ excludeIds = new Set(), baselineOnly = false } = {}) 
       // Worktree routing based on issue source
       const fromDiscord = isDiscordIssue(issue);
       
+      logDebug(`[worktree-routing] Evaluating issue ${issue.identifier} - fromDiscord: ${fromDiscord}`);
+      
       // Discord worktrees (wt5-wt8) only handle Discord issues
       if (isDiscordWt && !fromDiscord) {
-        logDebug(`[runner] Skipping non-Discord issue ${issue.identifier} (Discord worktree)`);
+        logDebug(`[worktree-routing] ✗ Skipping non-Discord issue ${issue.identifier} (Discord worktree)`);
         return false;
       }
       
       // Symphony worktrees (wt1-wt4, main) only handle non-Discord issues
       if (isSymphonyWt && fromDiscord) {
-        logDebug(`[runner] Skipping Discord issue ${issue.identifier} (Symphony worktree)`);
+        logDebug(`[worktree-routing] ✗ Skipping Discord issue ${issue.identifier} (Symphony worktree)`);
         return false;
       }
       
+      logDebug(`[worktree-routing] ✓ Issue ${issue.identifier} matches worktree criteria`);
       return true;
     })
     .sort(
       (a, b) =>
         (a.priority ?? 99) - (b.priority ?? 99) || new Date(a.createdAt) - new Date(b.createdAt),
     );
+  
+  logDebug(`[worktree-routing] Candidate count after filtering: ${candidates.length}`);
+  if (candidates.length > 0) {
+    logDebug(`[worktree-routing] Selected issue: ${candidates[0].identifier}`);
+  } else {
+    logDebug(`[worktree-routing] No candidates available`);
+  }
+  
   return candidates[0] || null;
 }
 
@@ -667,11 +730,19 @@ async function executeIssue(issue, dryRun = false) {
   // Worktree sync: ensure worktree is synced with main before starting
   // IMPORTANT: This happens BEFORE lease acquisition to avoid wasting lease cycles on sync failures
   if (WORKTREE_ID !== "main") {
+    logDebug(`[worktree-sync] Starting sync for WORKTREE_ID: ${WORKTREE_ID}`);
+    logDebug(`[worktree-sync] Sync working directory (ROOT): ${ROOT}`);
+    logDebug(`[worktree-sync] Current sync failure count: ${syncFailCount}/${SYNC_FAILURE_THRESHOLD}`);
+    
     try {
       logInfo(`[runner] 🔄 Syncing worktree ${WORKTREE_ID} with main...`);
+      logDebug(`[worktree-sync] Executing: git fetch origin main (cwd: ${ROOT})`);
       execFileSync("git", ["fetch", "origin", "main"], { cwd: ROOT, stdio: "pipe" });
+      
+      logDebug(`[worktree-sync] Executing: git merge origin/main --ff-only (cwd: ${ROOT})`);
       execFileSync("git", ["merge", "origin/main", "--ff-only"], { cwd: ROOT, stdio: "pipe" });
       logInfo(`[runner] ✅ Worktree ${WORKTREE_ID} synced with main`);
+      logDebug(`[worktree-sync] Sync successful`);
       
       // Reset failure counter on successful sync
       syncFailCount = 0;
@@ -1859,6 +1930,38 @@ async function main() {
   }
   logInfo(`[runner]${dryRun ? " (DRY RUN)" : ""} starting at ${new Date().toISOString()}`);
   logInfo(`[runner] Worktree: ${WORKTREE_ID}, Root: ${ROOT}`);
+  
+  // Debug: Verify directory variables
+  logDebug(`[worktree-verify] ========== WORKTREE DIRECTORY VERIFICATION ==========`);
+  logDebug(`[worktree-verify] process.cwd(): ${process.cwd()}`);
+  logDebug(`[worktree-verify] ROOT: ${ROOT}`);
+  logDebug(`[worktree-verify] WORKTREE_ID: ${WORKTREE_ID}`);
+  logDebug(`[worktree-verify] ROOT === process.cwd(): ${ROOT === process.cwd()}`);
+  
+  // Inline test: Verify they're different for worktrees
+  if (WORKTREE_ID !== 'main' && ROOT === process.cwd()) {
+    logWarn(`[worktree-verify] ⚠️ WARNING: ROOT equals process.cwd() - worktree separation may not be working!`);
+  } else if (WORKTREE_ID !== 'main') {
+    logDebug(`[worktree-verify] ✓ ROOT differs from process.cwd() - worktree separation active`);
+  }
+  
+  // Test: Verify working directory
+  try {
+    const gitTopLevel = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: ROOT, encoding: 'utf-8' }).trim();
+    logDebug(`[worktree-verify] Git top-level directory: ${gitTopLevel}`);
+    logDebug(`[worktree-verify] gitTopLevel === ROOT: ${gitTopLevel === ROOT}`);
+  } catch (err) {
+    logError(`[worktree-verify] Failed to get git top-level: ${err.message}`);
+  }
+  
+  // Test: List actual worktrees
+  try {
+    const worktreeList = execFileSync('git', ['worktree', 'list', '--porcelain'], { cwd: ROOT, encoding: 'utf-8' });
+    logDebug(`[worktree-verify] Git worktree list:\n${worktreeList}`);
+  } catch (err) {
+    logError(`[worktree-verify] Failed to list worktrees: ${err.message}`);
+  }
+  logDebug(`[worktree-verify] ====================================================`);
   
   // Log worktree routing configuration
   if (isDiscordWorktree()) {
