@@ -5249,9 +5249,11 @@ const server = http.createServer(async (req, res) => {
 
       // Build message preview for Discord notifications
       const messagePreview = contentStr.slice(0, 150) + (contentStr.length > 150 ? '...' : '');
+      // Build title with worktree ID
+      const worktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
       const embedTitle = issueContext?.identifier 
-        ? `⏳ ${issueContext.identifier}` 
-        : "⏳ Processing Request";
+        ? `⏳ ${issueContext.identifier}${worktreeLabel}` 
+        : `⏳ Processing Request${worktreeLabel}`;
       const embedDescription = issueContext?.title 
         ? issueContext.title 
         : messagePreview || "(no description)";
@@ -5270,7 +5272,6 @@ const server = http.createServer(async (req, res) => {
         description: embedDescription,
         color: 0xffa500, // Orange
         fields,
-        footer: worktreeId ? `Worktree: ${worktreeId}` : undefined,
       }).catch((err) => safeLogDebug(`Discord webhook failed: ${err.message}`));
 
       // Progress logger — log elapsed time periodically during long requests
@@ -5425,9 +5426,10 @@ const server = http.createServer(async (req, res) => {
           if (worktreeId) {
             completionFields.push({ name: "Worktree", value: worktreeId, inline: true });
           }
+          const completionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
           const completionTitle = issueContext?.identifier 
-            ? `✅ ${issueContext.identifier}` 
-            : "✅ Completed Request";
+            ? `✅ ${issueContext.identifier}${completionWorktreeLabel}` 
+            : `✅ Completed Request${completionWorktreeLabel}`;
           sendDiscordEmbed({
             title: completionTitle,
             description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
@@ -5527,9 +5529,10 @@ const server = http.createServer(async (req, res) => {
           if (worktreeId) {
             streamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
           }
+          const streamCompletionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
           const streamCompletionTitle = issueContext?.identifier 
-            ? `✅ ${issueContext.identifier}` 
-            : "✅ Completed Request";
+            ? `✅ ${issueContext.identifier}${streamCompletionWorktreeLabel}` 
+            : `✅ Completed Request${streamCompletionWorktreeLabel}`;
           sendDiscordEmbed({
             title: streamCompletionTitle,
             description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",
@@ -5630,9 +5633,10 @@ const server = http.createServer(async (req, res) => {
         if (worktreeId) {
           nonStreamCompletionFields.push({ name: "Worktree", value: worktreeId, inline: true });
         }
+        const nonStreamCompletionWorktreeLabel = worktreeId ? ` | ${worktreeId}` : "";
         const nonStreamCompletionTitle = issueContext?.identifier 
-          ? `✅ ${issueContext.identifier}` 
-          : "✅ Completed Request";
+          ? `✅ ${issueContext.identifier}${nonStreamCompletionWorktreeLabel}` 
+          : `✅ Completed Request${nonStreamCompletionWorktreeLabel}`;
         sendDiscordEmbed({
           title: nonStreamCompletionTitle,
           description: issueContext?.title || contentStr.slice(0, 150) || "(no description)",

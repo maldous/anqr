@@ -13,11 +13,17 @@ ANQR uses a Symphony Bridge (port 4319) and Codebuff Bridge (port 4318) as OpenA
 
 ### Worktree execution environment
 
-Symphony runner supports concurrent execution via git worktrees. When enabled:
+Symphony runner supports concurrent execution via git worktrees with **8 concurrent worktrees**:
+
+**Symphony worktrees (wt1-wt4):** Handle Linear issues and general Symphony work
+**Discord worktrees (wt5-wt8):** Handle ONLY Discord-sourced issues (prevents conflicts)
 
 - Each runner instance operates in an isolated worktree directory (e.g., `/home/user/src/anqr-wt1`, `/home/user/src/anqr-wt2`)
-- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, or `main`) and `ANQR_WORKTREE_PATH`
-- Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`) tracking `origin/main`
+- Environment variables: `ANQR_WORKTREE_ID` (e.g., `wt1`, `wt2`, ..., `wt8`, or `main`) and `ANQR_WORKTREE_PATH`
+- Each worktree uses a unique branch (`symphony/wt1`, `symphony/wt2`, ..., `symphony/wt8`) tracking `origin/main`
+- **Issue routing:** Issues are automatically routed based on their `source` field in state.json:
+  - Discord issues (`source: "discord"`) → wt5-wt8 only
+  - All other issues → wt1-wt4, main only
 - **Worktree sync workflow:**
   - Before each issue: `git fetch origin main && git merge origin/main --ff-only` (brings in all pushed work from other worktrees)
   - After commit: `git push origin HEAD:main` (makes work immediately available to other worktrees)
@@ -26,6 +32,38 @@ Symphony runner supports concurrent execution via git worktrees. When enabled:
 - Shared state (`reports/symphony/state.json`) uses file-based locking for atomicity
 - Lease system prevents concurrent work on the same Linear issue
 - Documentation: `docs/harness/12-concurrent-execution-with-worktrees.md`, `docs/harness/WORKTREE-QUICKSTART.md`
+
+**Initial setup (one-time):**
+
+```bash
+# 1. Initialize all 8 worktrees
+node scripts/ops/orchestration/symphony-worktree-pool.mjs init 8
+
+# 2. Verify creation
+node scripts/ops/orchestration/symphony-worktree-pool.mjs status
+
+# 3. Enable all runners
+node scripts/ops/orchestration/symphony-control.mjs --start
+
+# 4. Verify runners are active
+systemctl --user list-timers | grep symphony
+```
+
+**Daily operations:**
+
+```bash
+# Check runner status
+node scripts/ops/orchestration/symphony-runner.mjs --status
+
+# Check queue depth
+node scripts/ops/orchestration/symphony-queue-control.mjs --check
+
+# Stop all runners (before bridge restart)
+node scripts/ops/orchestration/symphony-control.mjs --stop
+
+# Start all runners (after bridge restart)
+node scripts/ops/orchestration/symphony-control.mjs --start
+```
 
 ### Key modules (all under `scripts/ops/integrations/model/`)
 
@@ -37,10 +75,35 @@ Symphony runner supports concurrent execution via git worktrees. When enabled:
 
 ### Bridge restart procedure (CRITICAL)
 
-1. **Commit & push first**: `git add -A && git commit -m "..." && git push`
-2. **Wait for zero concurrency**: Check Discord for "(0 concurrent)"
-3. **Then restart**: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
-4. Update `MEMORY.md` with stop/start entries, then commit & push again
+**⚠️ WARNING: Never restart bridges during active concurrent requests — data loss will occur.**
+
+**Procedure:**
+
+1. **STOP TASK EXECUTION FIRST:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --stop
+   ```
+   - **CRITICAL:** This must be the FIRST step before any other actions
+   - Disables all Symphony runner timers to prevent new tasks from starting
+
+2. **Check concurrent runner status**: `node scripts/ops/orchestration/symphony-runner.mjs --status`
+
+3. **Wait for zero concurrency**: Check Discord for "(0 concurrent)"
+
+4. **Commit & push first**: `git add -A && git commit -m "..." && git push`
+
+5. **Restart bridge**: `systemctl --user restart anqr-symphony-bridge` or `anqr-codebuff-bridge`
+
+6. **RESTART TASK EXECUTION:**
+   ```bash
+   node scripts/ops/orchestration/symphony-control.mjs --start
+   ```
+   - **CRITICAL:** Must restart task execution after bridge restart
+   - Without this step, the system remains stopped and no work will be processed
+
+7. **Update MEMORY.md** with stop/start entries, then commit & push again
+
+**CRITICAL: Don't forget steps 1 and 6!** Skipping these will cause data loss or leave the system permanently disabled.
 
 ### Validation commands
 
