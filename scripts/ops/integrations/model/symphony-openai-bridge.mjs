@@ -548,6 +548,7 @@ async function execTool({ command, cwd }) {
     });
     return { output: result, exitCode: 0 };
   } catch (error) {
+    logError(`execTool failed: ${error.message}`, { command: command?.slice(0, 100) });
     return {
       output: error.stdout || error.message,
       exitCode: error.status || 1,
@@ -642,14 +643,16 @@ async function readFilesTool({ paths }) {
         const content = fs.readFileSync(resolveRequestPath(filePath), "utf-8");
         const totalLines = content.split("\n").length;
         return { path: filePath, content, totalLines };
-      } catch (error) {
-        return { path: filePath, error: error.message };
-      }
-    });
-    return { files: results };
-  } catch (error) {
-    return { error: error.message };
-  }
+    } catch (error) {
+      logError(`readFilesTool map failed: ${error.message}`, { path: filePath });
+      return { path: filePath, error: error.message };
+    }
+  });
+  return { files: results };
+} catch (error) {
+  logError(`readFilesTool failed: ${error.message}`);
+  return { error: error.message };
+}
 }
 
 /**
